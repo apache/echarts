@@ -18,7 +18,7 @@
 */
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
-import {getTooltipMarker, formatTpl, TooltipMarker} from '../../util/format';
+import {getTooltipMarker, formatTpl} from '../../util/format';
 import { getTooltipRenderMode } from '../../util/model';
 import { DataHost, DisplayState, TooltipRenderMode, DataParamsUserOutput } from '../../util/types';
 import GlobalModel from '../Global';
@@ -56,6 +56,7 @@ class DataFormatMixin {
         var color = data.getItemVisual(dataIndex, 'color');
         var borderColor = data.getItemVisual(dataIndex, 'borderColor');
         var tooltipModel = this.ecModel.getComponent('tooltip');
+        // @ts-ignore FIXME:TooltipModel
         var renderModeOption = tooltipModel && tooltipModel.get('renderMode');
         var renderMode = getTooltipRenderMode(renderModeOption);
         var mainType = this.mainType;
@@ -116,9 +117,9 @@ class DataFormatMixin {
             params.value = params.value[dimIndex];
         }
 
-        var formatter = itemModel.get(
-            status === 'normal'
-            ? [labelProp || 'label', 'formatter']
+        // @ts-ignore FIXME:TooltipModel
+        var formatter = itemModel.get(status === 'normal'
+            ? [(labelProp || 'label'), 'formatter']
             : [status, labelProp || 'label', 'formatter']
         );
 

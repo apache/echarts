@@ -36,7 +36,7 @@ import textStyleMixin from './mixin/textStyle';
 import {LineStyleMixin} from './mixin/lineStyle';
 import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
-import { ModelOption } from '../util/types';
+import { ModelOption, ECUnitOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
 var mixin = zrUtil.mixin;
@@ -44,9 +44,9 @@ var inner = makeInner();
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';
-type Key<Opt> = Opt extends Dictionary<any>
+type Key<Opt> = Opt extends ECUnitOption
     ? keyof Opt : string;
-type Value<Opt, R> = Opt extends Dictionary<any>
+type Value<Opt, R> = Opt extends ECUnitOption
     ? (R extends keyof Opt ? Opt[R] : ModelOption)
     : ModelOption;
 
@@ -108,17 +108,21 @@ class Model<Opt extends ModelOption = ModelOption> {
     // FIXME:TS consider there is parentModel,
     // return type have to be ModelOption or can be Option<R>?
     // (Is there any chance that parentModel value type is different?)
-    get<R extends Key<Opt>>(
+    get<R extends keyof Opt>(
+        path: R, ignoreParent?: boolean
+    ): Opt[R];
+    get<R extends keyof Opt>(
         path: [R], ignoreParent?: boolean
-    ): Value<Opt, R>;
-    get<R extends Key<Opt>, S extends Key<Value<Opt, R>>>(
+    ): Opt[R];
+    get<R extends keyof Opt, S extends keyof Opt[R]>(
         path: [R, S], ignoreParent?: boolean
-    ): Value<Value<Opt, R>, S>;
-    get<R extends Key<Opt>, S extends Key<Value<Opt, R>>, T extends Key<Value<Value<Opt, R>, S>>>(
+    ): Opt[R][S];
+    get<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
         path: [R, S, T], ignoreParent?: boolean
-    ): Value<Value<Value<Opt, R>, S>, T>;
+    ): Opt[R][S][T];
     // `path` can be 'xxx.yyy.zzz', so the return value type have to be `ModelOption`
-    get(path: string | string[], ignoreParent?: boolean): ModelOption;
+    // TODO: Type strict key check?
+    // get(path: string | string[], ignoreParent?: boolean): ModelOption;
     get(path: string | string[], ignoreParent?: boolean): ModelOption {
         if (path == null) {
             return this.option;
@@ -131,9 +135,9 @@ class Model<Opt extends ModelOption = ModelOption> {
         );
     }
 
-    getShallow<R extends Key<Opt>>(
+    getShallow<R extends keyof Opt>(
         key: R, ignoreParent?: boolean
-    ): Value<Opt, R> {
+    ): Opt[R] {
         var option = this.option;
 
         var val = option == null ? option : option[key];
@@ -145,17 +149,20 @@ class Model<Opt extends ModelOption = ModelOption> {
         return val;
     }
 
-    getModel<R extends Key<Opt>>(
+    getModel<R extends keyof Opt>(
+        path: R, parentModel?: Model
+    ): Model<Opt[R]>;
+    getModel<R extends keyof Opt>(
         path: [R], parentModel?: Model
-    ): Model<Value<Opt, R>>;
-    getModel<R extends Key<Opt>, S extends Key<Value<Opt, R>>>(
+    ): Model<Opt[R]>;
+    getModel<R extends keyof Opt, S extends keyof Opt[R]>(
         path: [R, S], parentModel?: Model
-    ): Model<Value<Value<Opt, R>, S>>;
-    getModel<R extends Key<Opt>, S extends Key<Value<Opt, R>>, T extends Key<Value<Value<Opt, R>, S>>>(
+    ): Model<Opt[R][S]>;
+    getModel<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
         path: [R, S, T], parentModel?: Model
-    ): Model<Value<Value<Value<Opt, R>, S>, T>>;
+    ): Model<Opt[R][S][T]>;
     // `path` can be 'xxx.yyy.zzz', so the return value type have to be `Model<ModelOption>`
-    getModel(path: string | string[], parentModel?: Model): Model;
+    // getModel(path: string | string[], parentModel?: Model): Model;
     getModel(path: string | string[], parentModel?: Model): Model<any> {
         var obj = path == null
             ? this.option
@@ -164,7 +171,7 @@ class Model<Opt extends ModelOption = ModelOption> {
         var thisParentModel;
         parentModel = parentModel || (
             (thisParentModel = getParent(this, path))
-                && thisParentModel.getModel(path)
+                && thisParentModel.getModel(path as string)
         );
 
         return new Model(obj, parentModel, this.ecModel);
@@ -222,7 +229,7 @@ class Model<Opt extends ModelOption = ModelOption> {
 
 };
 
-function doGet(obj: ModelOption, pathArr: string[], parentModel?: Model) {
+function doGet(obj: ModelOption, pathArr: string[], parentModel?: Model<Dictionary<any>>) {
     for (var i = 0; i < pathArr.length; i++) {
         // Ignore empty
         if (!pathArr[i]) {
@@ -235,7 +242,8 @@ function doGet(obj: ModelOption, pathArr: string[], parentModel?: Model) {
         }
     }
     if (obj == null && parentModel) {
-        obj = parentModel.get(pathArr);
+        // TODO At most 3 items array.
+        obj = parentModel.get(pathArr as [string, string, string]);
     }
     return obj;
 }

@@ -1,3 +1,4 @@
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -21,7 +22,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
-import SeriesModel from '../../model/Series';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, DisplayState } from '../../util/types';
@@ -122,7 +122,7 @@ class PiePiece extends graphic.Group {
 
         var seriesModel = data.hostModel as PieSeries;
         var itemModel = data.getItemModel(idx);
-        var layout = data.getItemLayout(idx);
+        var layout = data.getItemLayout(idx) as graphic.Sector['shape'];
         var sectorShape = zrUtil.extend({
             label: ''
         }, layout);
@@ -293,7 +293,7 @@ class PiePiece extends graphic.Group {
             labelModel,
             labelHoverModel,
             {
-                labelFetcher: data.hostModel,
+                labelFetcher: data.hostModel as PieSeries,
                 labelDataIndex: idx,
                 defaultText: labelLayout.text,
                 autoColor: visualColor,

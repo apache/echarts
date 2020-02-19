@@ -34,11 +34,18 @@ import * as layout from '../util/layout';
 import boxLayoutMixin from './mixin/boxLayout';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import GlobalModel from './Global';
-import { ComponentOption, ComponentMainType, ComponentSubType, ComponentFullType } from '../util/types';
+import {
+    ComponentOption,
+    ComponentMainType,
+    ComponentSubType,
+    ComponentFullType,
+    ComponentLayoutMode,
+    BoxLayoutOptionMixin
+} from '../util/types';
 
 var inner = makeInner();
 
-class ComponentModel extends Model {
+class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Model<Opt> {
 
     // [Caution]: for compat the previous "class extend"
     // publich and protected fields must be initialized on
@@ -115,7 +122,7 @@ class ComponentModel extends Model {
      * Support merge layout params.
      * Only support 'box' now (left/right/top/bottom/width/height).
      */
-    readonly layoutMode: string | {ignoreSize: boolean};
+    readonly layoutMode: ComponentLayoutMode;
 
     // Injectable properties:
     __viewId: string;
@@ -131,26 +138,26 @@ class ComponentModel extends Model {
     })();
 
 
-    constructor(option: ComponentOption, parentModel: Model, ecModel: GlobalModel) {
+    constructor(option: Opt, parentModel: Model, ecModel: GlobalModel) {
         super(option, parentModel, ecModel);
         this.uid = componentUtil.getUID('ec_cpt_model');
     }
 
-    init(option: ComponentOption, parentModel: Model, ecModel: GlobalModel): void {
+    init(option: Opt, parentModel: Model, ecModel: GlobalModel): void {
         this.mergeDefaultAndTheme(option, ecModel);
     }
 
-    mergeDefaultAndTheme(option: ComponentOption, ecModel: GlobalModel): void {
+    mergeDefaultAndTheme(option: Opt, ecModel: GlobalModel): void {
         var layoutMode = this.layoutMode;
         var inputPositionParams = layoutMode
-            ? layout.getLayoutParams(option) : {};
+            ? layout.getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
         var themeModel = ecModel.getTheme();
         zrUtil.merge(option, themeModel.get(this.mainType));
         zrUtil.merge(option, this.getDefaultOption());
 
         if (layoutMode) {
-            layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
+            layout.mergeLayoutParam(option as BoxLayoutOptionMixin, inputPositionParams, layoutMode);
         }
     }
 
@@ -159,7 +166,11 @@ class ComponentModel extends Model {
 
         var layoutMode = this.layoutMode;
         if (layoutMode) {
-            layout.mergeLayoutParam(this.option, option, layoutMode);
+            layout.mergeLayoutParam(
+                this.option as BoxLayoutOptionMixin,
+                option as BoxLayoutOptionMixin,
+                layoutMode
+            );
         }
     }
 
@@ -252,10 +263,12 @@ class ComponentModel extends Model {
     }
 
     getReferringComponents(mainType: ComponentMainType): ComponentModel[] {
+        const indexKey = (mainType + 'Index') as keyof Opt;
+        const idKey = (mainType + 'Id') as keyof Opt;
         return this.ecModel.queryComponents({
             mainType: mainType,
-            index: this.get(mainType + 'Index', true),
-            id: this.get(mainType + 'Id', true)
+            index: this.get(indexKey, true) as unknown as number,
+            id: this.get(idKey, true) as unknown as string
         });
     }
 
@@ -278,14 +291,14 @@ class ComponentModel extends Model {
 //     }
 // );
 
-type ComponentModelConstructor = typeof ComponentModel
+export type ComponentModelConstructor = typeof ComponentModel
     & ClassManager
     & componentUtil.SubTypeDefaulterManager
     & ExtendableConstructor
     & componentUtil.TopologicalTravelable<object>;
 
 mountExtend(ComponentModel, Model);
-enableClassManagement(ComponentModel as ComponentModelConstructor, {registerWhenExtend: true})
+enableClassManagement(ComponentModel as ComponentModelConstructor, {registerWhenExtend: true});
 componentUtil.enableSubTypeDefaulter(ComponentModel as ComponentModelConstructor);
 componentUtil.enableTopologicalTravel(ComponentModel as ComponentModelConstructor, getDependencies);
 
@@ -310,7 +323,5 @@ function getDependencies(componentType: string): string[] {
 }
 
 zrUtil.mixin(ComponentModel, boxLayoutMixin);
-
-export {ComponentModelConstructor};
 
 export default ComponentModel;

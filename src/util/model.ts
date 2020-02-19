@@ -19,11 +19,19 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import Component from '../model/Component';
 import GlobalModel, { QueryConditionKindB } from '../model/Global';
 import ComponentModel from '../model/Component';
 import List from '../data/List';
-import { Payload, ComponentOption, ComponentMainType, ComponentSubType, DisplayStateHostOption, OptionDataItem, OptionDataPrimitive, TooltipRenderMode } from './types';
+import {
+    Payload,
+    ComponentOption,
+    ComponentMainType,
+    ComponentSubType,
+    DisplayStateHostOption,
+    OptionDataItem,
+    OptionDataPrimitive,
+    TooltipRenderMode
+} from './types';
 import { Dictionary } from 'zrender/src/core/types';
 
 var each = zrUtil.each;
@@ -124,7 +132,7 @@ export function isDataItemOption(dataItem: OptionDataItem): boolean {
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
 }
 
-type MappingExistItem = {id?: string, name?: string} | Component;
+type MappingExistItem = {id?: string, name?: string} | ComponentModel;
 interface MappingResultItem<T> {
     exist?: T;
     option?: ComponentOption;
@@ -142,9 +150,9 @@ interface MappingResultItem<T> {
  * Mapping to exists for merge.
  *
  * @public
- * @param {Array.<Object>|Array.<module:echarts/model/Component>} exists
- * @param {Array.<Object>} newCptOptions
- * @return {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
+ * @param exists
+ * @param newCptOptions
+ * @return Result, like [{exist: ..., option: ...}, {}],
  *                          index of which is the same as exists.
  */
 export function mappingToExists<T extends MappingExistItem>(

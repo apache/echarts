@@ -19,7 +19,7 @@
 
 import {makeInner, normalizeToArray} from '../../util/model';
 import Model from '../Model';
-import { ZRColor } from '../../util/types';
+import { ZRColor, ColorPaletteOptionMixin } from '../../util/types';
 
 var inner = makeInner();
 
@@ -36,9 +36,11 @@ function getNearestColorPalette(
     return colors[paletteNum - 1];
 }
 
-interface ColorPaletteMixin extends Pick<Model, 'get'> {}
 
-class ColorPaletteMixin {
+interface ColorPaletteMixin<T extends ColorPaletteOptionMixin = ColorPaletteOptionMixin>
+    extends Pick<Model<T>, 'get'> {}
+
+class ColorPaletteMixin<T extends ColorPaletteOptionMixin = ColorPaletteOptionMixin> {
 
     clearColorPalette(this: ColorPaletteMixin) {
         inner(this).colorIdx = 0;

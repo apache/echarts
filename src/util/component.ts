@@ -113,7 +113,7 @@ export function enableTopologicalTravel<T>(
      * @param callback Params: componentType, dependencies.
      * @param context Scope of callback.
      */
-    entity.topologicalTravel = function <Ctx>(
+    entity.topologicalTravel = function<Ctx> (
         targetNameList: ComponentMainType[],
         fullNameList: ComponentMainType[],
         callback: (this: Ctx, mainType: ComponentMainType, dependencies: ComponentMainType[]) => void,

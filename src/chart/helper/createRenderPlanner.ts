@@ -21,7 +21,7 @@
 
 import {makeInner} from '../../util/model';
 import SeriesModel from '../../model/Series';
-import { StageHandlerPlanReturn, StageHandlerPlan } from '../../util/types';
+import { StageHandlerPlanReturn } from '../../util/types';
 
 /**
  * @return {string} If large mode changed, return string 'reset';

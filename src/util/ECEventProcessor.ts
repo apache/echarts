@@ -22,7 +22,7 @@
 import { EventProcessor, EventQuery } from 'zrender/src/core/Eventful';
 import { ECEvent, NormalizedEventQuery, EventQueryItem } from './types';
 import ComponentModel from '../model/Component';
-import ComponentView from '../view/Component'
+import ComponentView from '../view/Component';
 import ChartView from '../view/Chart';
 import * as zrUtil from 'zrender/src/core/util';
 import { parseClassType } from './clazz';

@@ -23,7 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
-import { BoxLayoutOptionMixin, ECUnitOption } from './types';
+import { BoxLayoutOptionMixin, ComponentLayoutMode } from './types';
 import { Group } from 'zrender/src/export';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
@@ -332,7 +332,7 @@ export function getLayoutRect(
  *               In this mode positionInfo.width/height can only be number.
  */
 export function positionElement(
-    el:  Element,
+    el: Element,
     positionInfo: BoxLayoutOptionMixin,
     containerRect: RectLike,
     margin: number[] | number,
@@ -417,18 +417,11 @@ export function sizeCalculable(option: BoxLayoutOptionMixin, hvIdx: number): boo
  * @param targetOption
  * @param newOption
  * @param opt
- * @param {boolean|Array.<boolean>} [opt.ignoreSize=false] Used for the components
- *  that width (or height) should not be calculated by left and right (or top and bottom).
  */
 export function mergeLayoutParam<T extends BoxLayoutOptionMixin>(
     targetOption: T,
     newOption: T,
-    opt?: {
-        /**
-         * Used for the components that width (or height) should not be calculated by left and right (or top and bottom).
-         */
-        ignoreSize?: boolean | [boolean, boolean]
-    }
+    opt?: Partial<ComponentLayoutMode>
 ) {
     !zrUtil.isObject(opt) && (opt = {});
 

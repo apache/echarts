@@ -42,13 +42,13 @@ import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
-import { Dictionary, ImageLike, PropType } from 'zrender/src/core/types';
+import { Dictionary, ImageLike } from 'zrender/src/core/types';
 import LRU from 'zrender/src/core/LRU';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
-import Style, { StyleProps } from 'zrender/src/graphic/Style';
+import { StyleProps } from 'zrender/src/graphic/Style';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
-import Element, { ElementEvent, ElementProps } from 'zrender/src/Element';
+import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
 import { AnimationOptionMixin, LabelOption, AnimationDelayCallbackParam } from './types';
 import GlobalModel from '../model/Global';
@@ -84,7 +84,7 @@ type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
 
-type ExtendedDisplayable = Displayable & {
+type ExtendedProps = {
     __hoverStlDirty?: boolean
     __hoverStl?: StyleProps
     __cachedNormalStl?: StyleProps
@@ -97,7 +97,10 @@ type ExtendedDisplayable = Displayable & {
     __highDownOnUpdate: (fromState: AvailableStates, toState: AvailableStates) => void
 
     __highDownDispatcher: boolean
+
 }
+type ExtendedElement = Element & ExtendedProps
+type ExtendedDisplayable = Displayable & ExtendedProps
 
 type ExtendedStyleProps = StyleProps & {
     insideRollback?: StyleProps
@@ -129,11 +132,6 @@ type TextCommonParams = {
     getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
     textStyle?: StyleProps
-}
-
-// Method for type guard
-function isExtendedDisplayable(el: Displayable): el is ExtendedDisplayable {
-    return true;
 }
 
 /**
@@ -399,7 +397,7 @@ function cacheElementStl(el: ExtendedDisplayable) {
     normalStyle.stroke = elStyle.stroke;
 }
 
-function singleEnterEmphasis(el:  ExtendedDisplayable) {
+function singleEnterEmphasis(el: ExtendedDisplayable) {
     var hoverStl = el.__hoverStl;
 
     if (!hoverStl || el.__highlighted) {
@@ -511,8 +509,8 @@ function singleEnterNormal(el: ExtendedDisplayable) {
 }
 
 function traverseUpdate<T>(
-    el: ExtendedDisplayable,
-    updater: (this: void, el: Displayable, commonParam?: T) => void,
+    el: ExtendedElement,
+    updater: (this: void, el: Element, commonParam?: T) => void,
     commonParam?: T
 ) {
     // If root is group, also enter updater for `highDownOnUpdate`.
@@ -547,11 +545,12 @@ function traverseUpdate<T>(
  *        as `false` to disable the hover style.
  *        Otherwise, use the default hover style if not provided.
  */
-export function setElementHoverStyle(el: ExtendedDisplayable, hoverStl: StyleProps) {
+export function setElementHoverStyle(el: Displayable, hoverStl: StyleProps) {
+    const extendedEl = el as ExtendedDisplayable;
     // For performance consideration, it might be better to make the "hover style" only the
     // difference properties from the "normal style", but not a entire copy of all styles.
-    hoverStl = el.__hoverStl = hoverStl !== false && (el.hoverStyle || hoverStl || {});
-    el.__hoverStlDirty = true;``
+    hoverStl = extendedEl.__hoverStl = hoverStl !== false && (extendedEl.hoverStyle || hoverStl || {});
+    extendedEl.__hoverStlDirty = true;
 
     // FIXME
     // It is not completely right to save "normal"/"emphasis" flag on elements.
@@ -559,19 +558,19 @@ export function setElementHoverStyle(el: ExtendedDisplayable, hoverStl: StylePro
     // (1) A highlighted elements are moved out of the view port and re-enter
     // again by dataZoom.
     // (2) call `setOption` and replace elements totally when they are highlighted.
-    if (el.__highlighted) {
+    if (extendedEl.__highlighted) {
         // Consider the case:
         // The styles of a highlighted `el` is being updated. The new "emphasis style"
         // should be adapted to the `el`. Notice here new "normal styles" should have
         // been set outside and the cached "normal style" is out of date.
-        el.__cachedNormalStl = null;
+        extendedEl.__cachedNormalStl = null;
         // Do not clear `__cachedNormalZ2` here, because setting `z2` is not a constraint
         // of this method. In most cases, `z2` is not set and hover style should be able
         // to rollback. Of course, that would bring bug, but only in a rare case, see
         // `doSingleLeaveHover` for details.
-        singleEnterNormal(el);
+        singleEnterNormal(extendedEl);
 
-        singleEnterEmphasis(el);
+        singleEnterEmphasis(extendedEl);
     }
 }
 
@@ -634,9 +633,9 @@ function shouldSilent(el: ExtendedDisplayable, e: ElementEvent) {
  *
  * (3) These input parameters can be set directly on `el`:
  */
-export function setHoverStyle(el: Displayable, hoverStyle?: StyleProps) {
+export function setHoverStyle(el: Element, hoverStyle?: StyleProps) {
     setAsHighDownDispatcher(el, true);
-    traverseUpdate(el as ExtendedDisplayable, setElementHoverStyle, hoverStyle);
+    traverseUpdate(el as ExtendedElement, setElementHoverStyle, hoverStyle);
 }
 
 /**
@@ -673,32 +672,31 @@ export function setHoverStyle(el: Displayable, hoverStyle?: StyleProps) {
  *        hover-highlight on touch device.
  * @param {boolean} [asDispatcher=true] If `false`, do not set as "highDownDispatcher".
  */
-export function setAsHighDownDispatcher(el: Displayable, asDispatcher: boolean) {
-    var disable = asDispatcher === false;
-    if (isExtendedDisplayable(el)) {
-        // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
-        // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
-        el.__highDownSilentOnTouch = el.highDownSilentOnTouch;
-        el.__highDownOnUpdate = el.highDownOnUpdate;
+export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
+    const disable = asDispatcher === false;
+    const extendedEl = el as ExtendedDisplayable;
+    // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
+    // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
+    extendedEl.__highDownSilentOnTouch = extendedEl.highDownSilentOnTouch;
+    extendedEl.__highDownOnUpdate = extendedEl.highDownOnUpdate;
 
-        // Simple optimize, since this method might be
-        // called for each elements of a group in some cases.
-        if (!disable || el.__highDownDispatcher) {
-            var method: 'on' | 'off' = disable ? 'off' : 'on';
+    // Simple optimize, since this method might be
+    // called for each elements of a group in some cases.
+    if (!disable || extendedEl.__highDownDispatcher) {
+        var method: 'on' | 'off' = disable ? 'off' : 'on';
 
-            // Duplicated function will be auto-ignored, see Eventful.js.
-            el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
-            // Emphasis, normal can be triggered manually by API or other components like hover link.
-            el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
-            // Also keep previous record.
-            el.__highByOuter = el.__highByOuter || 0;
+        // Duplicated function will be auto-ignored, see Eventful.js.
+        el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
+        // Emphasis, normal can be triggered manually by API or other components like hover link.
+        el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
+        // Also keep previous record.
+        extendedEl.__highByOuter = extendedEl.__highByOuter || 0;
 
-            el.__highDownDispatcher = !disable;
-        }
+        extendedEl.__highDownDispatcher = !disable;
     }
 }
 
-export function isHighDownDispatcher(el: Displayable): boolean {
+export function isHighDownDispatcher(el: Element): boolean {
     return !!(el && (el as ExtendedDisplayable).__highDownDispatcher);
 }
 
@@ -802,19 +800,18 @@ export function modifyLabelStyle(
     normalStyleProps?: StyleProps,
     emphasisStyleProps?: StyleProps
 ) {
-    var elStyle = el.style as StyleProps;
+    const extendedEl = el as ExtendedDisplayable;
+    var elStyle = extendedEl.style as StyleProps;
     if (normalStyleProps) {
         rollbackDefaultTextStyle(elStyle);
-        el.setStyle(normalStyleProps);
+        extendedEl.setStyle(normalStyleProps);
         applyDefaultTextStyle(elStyle);
     }
-    if (isExtendedDisplayable(el)) {
-        elStyle = el.__hoverStl;
-        if (emphasisStyleProps && elStyle) {
-            rollbackDefaultTextStyle(elStyle);
-            zrUtil.extend(elStyle, emphasisStyleProps);
-            applyDefaultTextStyle(elStyle);
-        }
+    elStyle = extendedEl.__hoverStl;
+    if (emphasisStyleProps && elStyle) {
+        rollbackDefaultTextStyle(elStyle);
+        zrUtil.extend(elStyle, emphasisStyleProps);
+        applyDefaultTextStyle(elStyle);
     }
 }
 
@@ -1164,12 +1161,12 @@ export function getFont(opt: LabelOption, ecModel: GlobalModel) {
     ].join(' '));
 }
 
-function animateOrSetProps(
+function animateOrSetProps<Props>(
     isUpdate: boolean,
-    el: Displayable,
-    props: DisplayableProps,
+    el: Displayable<Props>,
+    props: Props,
     animatableModel?: Model<AnimationOptionMixin> & {
-        getAnimationDelayParams?: (el: Displayable, dataIndex: number) => AnimationDelayCallbackParam
+        getAnimationDelayParams?: (el: Displayable<Props>, dataIndex: number) => AnimationDelayCallbackParam
     },
     dataIndex?: number,
     cb?: () => void
@@ -1232,9 +1229,9 @@ function animateOrSetProps(
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
-export function updateProps(
-    el: Displayable,
-    props: DisplayableProps,
+export function updateProps<Props>(
+    el: Displayable<Props>,
+    props: Props,
     // TODO: TYPE AnimatableModel
     animatableModel?: Model<AnimationOptionMixin>,
     dataIndex?: number,
@@ -1251,9 +1248,9 @@ export function updateProps(
  * So do not use this method to one element twice before
  * animation starts, unless you know what you are doing.
  */
-export function initProps(
-    el: Displayable,
-    props: DisplayableProps,
+export function initProps<Props>(
+    el: Displayable<Props>,
+    props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
     dataIndex?: number,
     cb?: () => void

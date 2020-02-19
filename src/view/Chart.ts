@@ -224,7 +224,7 @@ export type ChartViewConstructor = typeof Chart
     & clazzUtil.ExtendableConstructor
     & clazzUtil.ClassManager;
 
-clazzUtil.enableClassExtend(Chart as ChartViewConstructor, ['dispose'])
+clazzUtil.enableClassExtend(Chart as ChartViewConstructor, ['dispose']);
 clazzUtil.enableClassManagement(Chart as ChartViewConstructor, {registerWhenExtend: true});
 
 

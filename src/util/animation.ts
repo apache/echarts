@@ -64,7 +64,13 @@ export function createWrap() {
          *     add(el, target, time);
          *     add(el, target);
          */
-        add: function (el: Element, target: ElementProps, time?: number, delay?: number | easingType, easing?: easingType) {
+        add: function (
+            el: Element,
+            target: ElementProps,
+            time?: number,
+            delay?: number | easingType,
+            easing?: easingType
+        ) {
             if (zrUtil.isString(delay)) {
                 easing = delay;
                 delay = 0;

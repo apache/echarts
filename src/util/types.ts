@@ -51,6 +51,15 @@ export type RendererType = 'canvas' | 'svg';
 
 export type ColorString = string;
 export type ZRColor = ColorString | GradientObject | PatternObject
+export type ZRLineType = 'solid' | 'dotted'
+export type ZRAlign = 'left' | 'center' | 'right'
+export type ZRVerticalAlign = 'top' | 'middle' | 'bottom'
+
+export type ZRFontStyle = 'normal' | 'italic' | 'oblique'
+export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number
+
+export type ZREasing = easingType
+
 
 // Actually ComponentFullType is ComponentMainType.ComponentSubType
 // See `checkClassType` check the restict definition.
@@ -447,7 +456,22 @@ export type MediaUnit = {
     option: ECUnitOption
 };
 
+export type ComponentLayoutMode = {
+    // Only support 'box' now.
+    type: 'box',
+    ignoreSize: boolean | [boolean, boolean]
+};
 /******************* Mixins for Common Option Properties   ********************** */
+export interface ColorPaletteOptionMixin {
+    color?: ZRColor | ZRColor[]
+    colorLayer?: ZRColor[][]
+}
+
+export interface LarginOptionMixin {
+    large?: boolean
+    largeThreshold?: number
+}
+
 export interface BoxLayoutOptionMixin {
     width?: number | string;
     height?: number | string;
@@ -456,13 +480,15 @@ export interface BoxLayoutOptionMixin {
     bottom?: number | string;
     left?: number | string;
 }
-export type ComponentLayoutMode = {
-    // Only support 'box' now.
-    type: 'box',
-    ignoreSize: boolean
-};
 
-export type ShadowOptionMixin = {
+export interface CircleLayoutOptionMixin {
+    // Can be percent
+    center?: (number | string)[]
+    // Can specify [innerRadius, outerRadius]
+    radius?: (number | string)[] | number | string
+}
+
+export interface ShadowOptionMixin {
     shadowBlur?: number
     shadowColor?: string
     shadowOffsetX?: number
@@ -476,7 +502,7 @@ export type AnimationDelayCallbackParam = {
 export type AnimationDurationCallback = (idx: number) => number;
 export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
 
-export type AnimationOptionMixin = {
+export interface AnimationOptionMixin {
     animation?: boolean
     animationThreshold?: number
     // For init animation
@@ -489,27 +515,38 @@ export type AnimationOptionMixin = {
     animationDelayUpdate?: number | AnimationDelayCallback
 }
 
-export type ItemStyleOption = ShadowOptionMixin & {
-    color?: string | GradientObject | PatternObject
+export interface ItemStyleOption extends ShadowOptionMixin {
+    color?: ZRColor
     borderColor?: string
     borderWidth?: number
-    borderType?: 'solid' | 'dotted'
+    borderType?: ZRLineType
     opacity?: number
 }
 
-type TextCommonOption = ShadowOptionMixin & {
+export interface LineStyleOption extends ShadowOptionMixin {
+    width?: number
     color?: string
-    fontStyle?: 'normal' | 'italic' | 'oblique'
-    fontWeight?: 'normal' | 'bold' | 'bolder' | 'lighter' | number
+    opacity?: number
+    type?: ZRLineType
+}
+
+export interface AreaStyleOption extends ShadowOptionMixin {
+    color?: string
+}
+
+interface TextCommonOption extends ShadowOptionMixin {
+    color?: string
+    fontStyle?: ZRFontStyle
+    fontWeight?: ZRFontWeight
     fontFamily?: string
     fontSize?: number
-    align?: 'left' | 'center' | 'right'
-    verticalAlign?: 'top' | 'middle' | 'bottom'
+    align?: ZRAlign
+    verticalAlign?: ZRVerticalAlign
     // @deprecated
-    baseline?: 'top' | 'middle' | 'bottom'
+    baseline?: ZRVerticalAlign
 
     lineHeight?: number
-    backgroundColor?: string | {
+    backgroundColor?: ColorString | {
         image: ImageLike
     }
     borderColor?: string
@@ -530,29 +567,53 @@ type TextCommonOption = ShadowOptionMixin & {
     tag?: string
 }
 
-export type LabelOption = TextCommonOption & {
+export interface LabelOption extends TextCommonOption {
     show?: boolean
     // TODO: TYPE More specified 'inside', 'insideTop'....
     position?: string | number[] | string[]
     distance?: number
-    rotate?: number
+    rotate?: number | boolean
     offset?: number[]
     formatter?: (params: DataParamsUserOutput) => string
 
     rich?: Dictionary<TextCommonOption>
 }
 
+export interface LabelLineOption {
+    show?: boolean
+    length?: number
+    length2?: number
+    smooth?: boolean
+    lineStyle?: LineStyleOption
+}
+
 export interface ComponentOption {
     type?: string;
     id?: string;
     name?: string;
+
+    z?: number;
+    zlevel?: number;
     // FIXME:TS more
 }
 
-export interface SeriesOption extends ComponentOption{
-    z?: number;
-    zlevel?: number;
-    data?: any; // FIXME:TS more detail
-    emphasis?: Dictionary<any>;
+export interface SeriesOption extends
+    ComponentOption,
+    AnimationOptionMixin,
+    ColorPaletteOptionMixin
+{
+    silent?: boolean
+
+    blendMode?: string
+
+    // Needs to be override
+    data?: unknown;
+
+    legendHoverLink?: boolean
+
+    progressive?: number | false
+    progressiveThreshold?: number
+    progressiveChunkMode?: 'mod'
+
     // FIXME:TS more
 }

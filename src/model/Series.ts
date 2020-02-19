@@ -29,7 +29,7 @@ import {
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
-    SeriesOption, ComponentLayoutMode, TooltipRenderMode, AxisValue, ZRColor
+    SeriesOption, ComponentLayoutMode, TooltipRenderMode, AxisValue, ZRColor, BoxLayoutOptionMixin
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -47,7 +47,7 @@ import {
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from './Global';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
-import { ExtendableConstructor, mountExtend, ClassManager, Constructor } from '../util/clazz';
+import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
@@ -55,7 +55,7 @@ import Source from '../data/Source';
 
 var inner = modelUtil.makeInner();
 
-class SeriesModel extends ComponentModel {
+class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
 
     // [Caution]: for compat the previous "class extend"
     // publich and protected fields must be initialized on
@@ -90,7 +90,7 @@ class SeriesModel extends ComponentModel {
     visualBorderColorAccessPath: string;
 
     // Support merge layout params.
-    readonly layoutMode: ComponentLayoutMode['type'] | ComponentLayoutMode;
+    readonly layoutMode: ComponentLayoutMode;
 
     readonly preventUsingHoverLayer: boolean;
 
@@ -148,7 +148,7 @@ class SeriesModel extends ComponentModel {
     mergeDefaultAndTheme(option: SeriesOption, ecModel: GlobalModel): void {
         var layoutMode = this.layoutMode;
         var inputPositionParams = layoutMode
-            ? getLayoutParams(option) : {};
+            ? getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
         // Backward compat: using subType on theme.
         // But if name duplicate between series subType
@@ -167,10 +167,10 @@ class SeriesModel extends ComponentModel {
         // Default label emphasis `show`
         modelUtil.defaultEmphasis(option, 'label', ['show']);
 
-        this.fillDataTextStyle(option.data);
+        this.fillDataTextStyle(option.data as ArrayLike<any>);
 
         if (layoutMode) {
-            mergeLayoutParam(option, inputPositionParams, layoutMode);
+            mergeLayoutParam(option as BoxLayoutOptionMixin, inputPositionParams, layoutMode);
         }
     }
 
@@ -178,11 +178,15 @@ class SeriesModel extends ComponentModel {
         // this.settingTask.dirty();
 
         newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
-        this.fillDataTextStyle(newSeriesOption.data);
+        this.fillDataTextStyle(newSeriesOption.data as ArrayLike<any>);
 
         var layoutMode = this.layoutMode;
         if (layoutMode) {
-            mergeLayoutParam(this.option, newSeriesOption, layoutMode);
+            mergeLayoutParam(
+                this.option as BoxLayoutOptionMixin,
+                newSeriesOption as BoxLayoutOptionMixin,
+                layoutMode
+            );
         }
 
         prepareSource(this);
@@ -465,7 +469,6 @@ class SeriesModel extends ComponentModel {
         if (env.node) {
             return false;
         }
-
         var animationEnabled = this.getShallow('animation');
         if (animationEnabled) {
             if (this.getData().count() > this.getShallow('animationThreshold')) {
@@ -548,7 +551,8 @@ class SeriesModel extends ComponentModel {
     }
 }
 
-interface SeriesModel extends DataFormatMixin, ColorPaletteMixin, DataHost {}
+interface SeriesModel<Opt extends SeriesOption = SeriesOption>
+    extends DataFormatMixin, ColorPaletteMixin<Opt>, DataHost {}
 zrUtil.tsMixin(SeriesModel, DataFormatMixin);
 zrUtil.tsMixin(SeriesModel, ColorPaletteMixin);
 

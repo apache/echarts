@@ -22,7 +22,7 @@ import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
 import {TooltipRenderMode} from './types';
 import { Dictionary } from 'zrender/src/core/types';
-import Style, { StyleProps } from 'zrender/src/graphic/Style';
+import { StyleProps } from 'zrender/src/graphic/Style';
 // import Text from 'zrender/src/graphic/Text';
 
 /**

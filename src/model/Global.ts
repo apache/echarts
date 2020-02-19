@@ -43,7 +43,17 @@ import globalDefault from './globalDefault';
 import {ColorPaletteMixin} from './mixin/colorPalette';
 import {resetSourceDefaulter} from '../data/helper/sourceHelper';
 import SeriesModel from './Series';
-import { Payload, OptionPreprocessor, ECOption, ECUnitOption, ThemeOption, ComponentOption, ComponentMainType, ComponentSubType } from '../util/types';
+import {
+    Payload,
+    OptionPreprocessor,
+    ECOption,
+    ECUnitOption,
+    ThemeOption,
+    ComponentOption,
+    ComponentMainType,
+    ComponentSubType,
+    ColorPaletteOptionMixin
+} from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { Dictionary } from 'zrender/src/core/types';
@@ -613,7 +623,7 @@ class GlobalModel extends Model {
                     return series.componentIndex;
                 }) || []
             );
-        }
+        };
 
         assertSeriesInitialized = function (ecModel: GlobalModel): void {
             // Components that use _seriesIndices should depends on series component,
@@ -623,7 +633,7 @@ class GlobalModel extends Model {
                     throw new Error('Option should contains series.');
                 }
             }
-        }
+        };
 
         initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption): void {
             baseOption = baseOption;
@@ -784,7 +794,7 @@ function filterBySubType(
         : components;
 }
 
-
+// @ts-ignore FIXME:GlobalOption
 interface GlobalModel extends ColorPaletteMixin {}
 tsMixin(GlobalModel, ColorPaletteMixin);
 

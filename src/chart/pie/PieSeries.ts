@@ -21,29 +21,76 @@ import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
-import {DataSelectableMixin, SelectableTarget} from '../../component/helper/selectableMixin';
+import {DataSelectableMixin, SelectableTarget, DataSelectableOptionMixin} from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
-import { SeriesOption, DataParamsUserOutput, ParsedDataValue } from '../../util/types';
+import {
+    SeriesOption,
+    DataParamsUserOutput,
+    CircleLayoutOptionMixin,
+    LabelLineOption,
+    ItemStyleOption,
+    LabelOption,
+    BoxLayoutOptionMixin
+} from '../../util/types';
 import List from '../../data/List';
 
-export interface PieOption extends SeriesOption {
-    // FIXME:TS need more. [k: string]: any should be removed finally.
-    [k: string]: any,
 
-    animationType: string
+interface PieLabelOption extends LabelOption {
+    alignTo?: 'none' | 'labelLine' | 'edge'
+    margin?: string | number
+    bleedMargin?: number
+    distanceToLabelLine?: number
+}
+export interface PieSeriesOption extends
+    SeriesOption,
+    DataSelectableOptionMixin,
+    CircleLayoutOptionMixin,
+    BoxLayoutOptionMixin {
+
+    hoverAnimation?: boolean
+
+    roseType?: 'radius' | 'area'
+
+    itemStyle?: ItemStyleOption
+    label?: PieLabelOption
+    labelLine?: LabelLineOption
+
+    clockwise?: boolean
+    startAngle?: number
+    minAngle?: number
+    minShowLabelAngle?: number
+
+    selectedOffset?: number
+    hoverOffset?: number
+
+    avoidLabelOverlap?: boolean
+    percentPrecision?: number
+
+    stillShowZeroSum?: boolean
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+
+        label?: PieLabelOption
+
+        labelLine?: LabelLineOption
+    }
+
+    animationType?: 'expansion' | 'scale'
+    animationTypeUpdate?: 'transition' | 'expansion'
 }
 
-class PieSeries extends SeriesModel {
+class PieSeries extends SeriesModel<PieSeriesOption> {
 
     static type = 'series.pie';
 
     /**
      * @overwrite
      */
-    init(option: PieOption): void {
+    init(option: PieSeriesOption): void {
         super.init.apply(this, arguments as any);
 
         // Enable legend selection for each data item
@@ -113,7 +160,7 @@ class PieSeries extends SeriesModel {
         return params;
     }
 
-    private _defaultLabelLine(option: PieOption): void {
+    private _defaultLabelLine(option: PieSeriesOption): void {
         // Extend labelLine emphasis
         modelUtil.defaultEmphasis(option, 'labelLine', ['show']);
 
@@ -126,7 +173,7 @@ class PieSeries extends SeriesModel {
             && option.emphasis.label.show;
     }
 
-    static defaultOption: PieOption = {
+    static defaultOption: PieSeriesOption = {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
@@ -219,7 +266,7 @@ class PieSeries extends SeriesModel {
 
 }
 
-interface PieSeries extends DataSelectableMixin {}
+interface PieSeries extends DataSelectableMixin<PieSeriesOption> {}
 zrUtil.tsMixin(PieSeries, DataSelectableMixin);
 
 SeriesModel.registerClass(PieSeries);

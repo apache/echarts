@@ -25,16 +25,22 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../../model/Model';
+import { Dictionary } from 'zrender/src/core/types';
 
-export type SelectableTarget = {
+export interface SelectableTarget {
     name: string,
     value: any,
     selected: boolean
 };
 
-interface DataSelectableMixin extends Pick<Model, 'get'> {};
+export interface DataSelectableOptionMixin {
+    selected?: Dictionary<boolean>
+    selectedMode?: 'single' | 'multiple' | boolean
+}
 
-class DataSelectableMixin {
+interface DataSelectableMixin<Opt extends DataSelectableOptionMixin> extends Pick<Model<Opt>, 'get'> {};
+
+class DataSelectableMixin<Opt extends DataSelectableOptionMixin> {
 
     private _targetList: SelectableTarget[];
 
