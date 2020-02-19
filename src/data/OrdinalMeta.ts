@@ -19,20 +19,22 @@
 
 import {createHashMap, isObject, map, HashMap} from 'zrender/src/core/util';
 import Model from '../model/Model';
+import { OrdinalNumber, OrdinalRawValue } from '../util/types';
+
 
 class OrdinalMeta {
 
-    readonly categories: string[];
+    readonly categories: OrdinalRawValue[];
 
     private _needCollect: boolean;
 
     private _deduplication: boolean;
 
-    private _map: HashMap<number>;
+    private _map: HashMap<OrdinalNumber>;
 
 
     constructor(opt: {
-        categories?: string[],
+        categories?: OrdinalRawValue[],
         needCollect?: boolean
         deduplication?: boolean
     }) {
@@ -54,14 +56,14 @@ class OrdinalMeta {
         });
     };
 
-    getOrdinal(category: string): number {
+    getOrdinal(category: OrdinalRawValue): OrdinalNumber {
         return this._getOrCreateMap().get(category);
     }
 
     /**
      * @return The ordinal. If not found, return NaN.
      */
-    parseAndCollect(category: any): number {
+    parseAndCollect(category: OrdinalRawValue | OrdinalNumber): OrdinalNumber {
         var index;
         var needCollect = this._needCollect;
 
@@ -106,9 +108,9 @@ class OrdinalMeta {
     }
 
     // Consider big data, do not create map until needed.
-    private _getOrCreateMap(): HashMap<number> {
+    private _getOrCreateMap(): HashMap<OrdinalNumber> {
         return this._map || (
-            this._map = createHashMap<number>(this.categories)
+            this._map = createHashMap(this.categories)
         );
     }
 }

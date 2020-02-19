@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /*
 * A third-party license is embeded for some of the code in this file:
 * The "scaleLevels" was originally copied from "d3.js" with some
@@ -40,13 +38,12 @@
 // (2) By default, the input data string (e.g., '2011-01-02') should be displayed
 // as its original time, without any time difference.
 
-import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
+import Model from '../model/Model';
 
-var intervalScaleProto = IntervalScale.prototype;
 
 var mathCeil = Math.ceil;
 var mathFloor = Math.floor;
@@ -56,7 +53,12 @@ var ONE_HOUR = ONE_MINUTE * 60;
 var ONE_DAY = ONE_HOUR * 24;
 
 // FIXME 公用？
-var bisect = function (a, x, lo, hi) {
+var bisect = function (
+    a: [string, number][],
+    x: number,
+    lo: number,
+    hi: number
+): number {
     while (lo < hi) {
         var mid = lo + hi >>> 1;
         if (a[mid][1] < x) {
@@ -69,28 +71,30 @@ var bisect = function (a, x, lo, hi) {
     return lo;
 };
 
-/**
- * @alias module:echarts/coord/scale/Time
- * @constructor
- */
-var TimeScale = IntervalScale.extend({
-    type: 'time',
 
-    /**
-     * @override
-     */
-    getLabel: function (val) {
+class TimeScale extends IntervalScale {
+
+    static type = 'time';
+
+    private _stepLvl: [string, number];
+
+    getLabel(val: number): string {
         var stepLvl = this._stepLvl;
 
         var date = new Date(val);
 
         return formatUtil.formatTime(stepLvl[0], date, this.getSetting('useUTC'));
-    },
+    }
 
-    /**
-     * @override
-     */
-    niceExtent: function (opt) {
+    niceExtent(
+        opt?: {
+            splitNumber?: number,
+            fixMin?: boolean,
+            fixMax?: boolean,
+            minInterval?: number,
+            maxInterval?: number
+        }
+    ): void {
         var extent = this._extent;
         // If extent start and end are same, expand them
         if (extent[0] === extent[1]) {
@@ -116,12 +120,9 @@ var TimeScale = IntervalScale.extend({
         if (!opt.fixMax) {
             extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
         }
-    },
+    }
 
-    /**
-     * @override
-     */
-    niceTicks: function (approxTickNum, minInterval, maxInterval) {
+    niceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
         approxTickNum = approxTickNum || 10;
 
         var extent = this._extent;
@@ -156,7 +157,7 @@ var TimeScale = IntervalScale.extend({
         var niceExtent = [
             Math.round(mathCeil((extent[0] - timezoneOffset) / interval) * interval + timezoneOffset),
             Math.round(mathFloor((extent[1] - timezoneOffset) / interval) * interval + timezoneOffset)
-        ];
+        ] as [number, number];
 
         scaleHelper.fixExtent(niceExtent, extent);
 
@@ -164,19 +165,23 @@ var TimeScale = IntervalScale.extend({
         // Interval will be used in getTicks
         this._interval = interval;
         this._niceExtent = niceExtent;
-    },
+    }
 
-    parse: function (val) {
+    parse(val: any): number {
         // val might be float.
         return +numberUtil.parseDate(val);
     }
-});
 
-zrUtil.each(['contain', 'normalize'], function (methodName) {
-    TimeScale.prototype[methodName] = function (val) {
-        return intervalScaleProto[methodName].call(this, this.parse(val));
-    };
-});
+    contain(val: number): boolean {
+        return super.contain(this.parse(val));
+    }
+
+    normalize(val: number): number {
+        return super.normalize(this.parse(val));
+    }
+
+}
+
 
 /**
  * This implementation was originally copied from "d3.js"
@@ -221,14 +226,7 @@ var scaleLevels = [
     ['month', ONE_DAY * 31 * 8],       // 8M
     ['month', ONE_DAY * 31 * 10],      // 10M
     ['year', ONE_DAY * 380]            // 1Y
-];
+] as [string, number][];
 
-/**
- * @param {module:echarts/model/Model}
- * @return {module:echarts/scale/Time}
- */
-TimeScale.create = function (model) {
-    return new TimeScale({useUTC: model.ecModel.get('useUTC')});
-};
 
 export default TimeScale;

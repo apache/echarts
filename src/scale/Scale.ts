@@ -17,153 +17,160 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-/**
- * // Scale class management
- * @module echarts/scale/Scale
- */
 
 import * as clazzUtil from '../util/clazz';
+import { Dictionary } from 'zrender/src/core/types';
+import List from '../data/List';
+import { DimensionName } from '../util/types';
 
-/**
- * @param {Object} [setting]
- */
-function Scale(setting) {
-    this._setting = setting || {};
+
+abstract class Scale {
+
+    private _setting: Dictionary<any>;
+
+    protected _extent: [number, number];
+
+    private _isBlank: boolean;
+
+    constructor(setting?: Dictionary<any>) {
+        this._setting = setting || {};
+        this._extent = [Infinity, -Infinity];
+    }
 
     /**
-     * Extent
-     * @type {Array.<number>}
-     * @protected
+     * Parse input val to valid inner number.
      */
-    this._extent = [Infinity, -Infinity];
+    parse(val: any): any {
+        // Notice: This would be a trap here, If the implementation
+        // of this method depends on extent, and this method is used
+        // before extent set (like in dataZoom), it would be wrong.
+        // Nevertheless, parse does not depend on extent generally.
+        return val;
+    }
+
+    getSetting(name: string): any {
+        return this._setting[name];
+    }
+
+    contain(val: number): boolean {
+        var extent = this._extent;
+        return val >= extent[0] && val <= extent[1];
+    }
 
     /**
-     * Step is calculated in adjustExtent
-     * @type {Array.<number>}
-     * @protected
+     * Normalize value to linear [0, 1], return 0.5 if extent span is 0
      */
-    this._interval = 0;
+    normalize(val: number): number {
+        var extent = this._extent;
+        if (extent[1] === extent[0]) {
+            return 0.5;
+        }
+        return (val - extent[0]) / (extent[1] - extent[0]);
+    }
 
-    this.init && this.init.apply(this, arguments);
+    /**
+     * Scale normalized value
+     */
+    scale(val: number): number {
+        var extent = this._extent;
+        return val * (extent[1] - extent[0]) + extent[0];
+    }
+
+    /**
+     * Set extent from data
+     */
+    unionExtent(other: [number, number]): void {
+        var extent = this._extent;
+        other[0] < extent[0] && (extent[0] = other[0]);
+        other[1] > extent[1] && (extent[1] = other[1]);
+        // not setExtent because in log axis it may transformed to power
+        // this.setExtent(extent[0], extent[1]);
+    }
+
+    /**
+     * Set extent from data
+     */
+    unionExtentFromData(data: List, dim: DimensionName): void {
+        this.unionExtent(data.getApproximateExtent(dim));
+    }
+
+    /**
+     * Get extent
+     */
+    getExtent(): [number, number] {
+        return this._extent.slice() as [number, number];
+    }
+
+    /**
+     * Set extent
+     */
+    setExtent(start: number, end: number): void {
+        var thisExtent = this._extent;
+        if (!isNaN(start)) {
+            thisExtent[0] = start;
+        }
+        if (!isNaN(end)) {
+            thisExtent[1] = end;
+        }
+    }
+
+    /**
+     * When axis extent depends on data and no data exists,
+     * axis ticks should not be drawn, which is named 'blank'.
+     */
+    isBlank(): boolean {
+        return this._isBlank;
+    }
+
+    /**
+     * When axis extent depends on data and no data exists,
+     * axis ticks should not be drawn, which is named 'blank'.
+     */
+    setBlank(isBlank: boolean) {
+        this._isBlank = isBlank;
+    }
+
+    /**
+     * Update interval and extent of intervals for nice ticks
+     *
+     * @param splitNumber Approximated tick numbers. Optional.
+     *        The implementation of `niceTicks` should decide tick numbers
+     *        whether `splitNumber` is given.
+     * @param minInterval Optional.
+     * @param maxInterval Optional.
+     */
+    abstract niceTicks(
+        // FIXME:TS make them in a "opt", the same with `niceExtent`?
+        splitNumber?: number,
+        minInterval?: number,
+        maxInterval?: number
+    ): void;
+
+    abstract niceExtent(
+        opt?: {
+            splitNumber?: number,
+            fixMin?: boolean,
+            fixMax?: boolean,
+            minInterval?: number,
+            maxInterval?: number
+        }
+    ): void;
+
+    /**
+     * @return label of the tick.
+     */
+    abstract getLabel(tick: any): string;
+
+    abstract getTicks(expandToNicedExtent: boolean): number[];
+
+    abstract getMinorTicks(splitNumber: number): number[][];
+
+    static registerClass: clazzUtil.ClassManager['registerClass'];
+
 }
 
-/**
- * Parse input val to valid inner number.
- * @param {*} val
- * @return {number}
- */
-Scale.prototype.parse = function (val) {
-    // Notice: This would be a trap here, If the implementation
-    // of this method depends on extent, and this method is used
-    // before extent set (like in dataZoom), it would be wrong.
-    // Nevertheless, parse does not depend on extent generally.
-    return val;
-};
-
-Scale.prototype.getSetting = function (name) {
-    return this._setting[name];
-};
-
-Scale.prototype.contain = function (val) {
-    var extent = this._extent;
-    return val >= extent[0] && val <= extent[1];
-};
-
-/**
- * Normalize value to linear [0, 1], return 0.5 if extent span is 0
- * @param {number} val
- * @return {number}
- */
-Scale.prototype.normalize = function (val) {
-    var extent = this._extent;
-    if (extent[1] === extent[0]) {
-        return 0.5;
-    }
-    return (val - extent[0]) / (extent[1] - extent[0]);
-};
-
-/**
- * Scale normalized value
- * @param {number} val
- * @return {number}
- */
-Scale.prototype.scale = function (val) {
-    var extent = this._extent;
-    return val * (extent[1] - extent[0]) + extent[0];
-};
-
-/**
- * Set extent from data
- * @param {Array.<number>} other
- */
-Scale.prototype.unionExtent = function (other) {
-    var extent = this._extent;
-    other[0] < extent[0] && (extent[0] = other[0]);
-    other[1] > extent[1] && (extent[1] = other[1]);
-    // not setExtent because in log axis it may transformed to power
-    // this.setExtent(extent[0], extent[1]);
-};
-
-/**
- * Set extent from data
- * @param {module:echarts/data/List} data
- * @param {string} dim
- */
-Scale.prototype.unionExtentFromData = function (data, dim) {
-    this.unionExtent(data.getApproximateExtent(dim));
-};
-
-/**
- * Get extent
- * @return {Array.<number>}
- */
-Scale.prototype.getExtent = function () {
-    return this._extent.slice();
-};
-
-/**
- * Set extent
- * @param {number} start
- * @param {number} end
- */
-Scale.prototype.setExtent = function (start, end) {
-    var thisExtent = this._extent;
-    if (!isNaN(start)) {
-        thisExtent[0] = start;
-    }
-    if (!isNaN(end)) {
-        thisExtent[1] = end;
-    }
-};
-
-/**
- * When axis extent depends on data and no data exists,
- * axis ticks should not be drawn, which is named 'blank'.
- */
-Scale.prototype.isBlank = function () {
-    return this._isBlank;
-},
-
-/**
- * When axis extent depends on data and no data exists,
- * axis ticks should not be drawn, which is named 'blank'.
- */
-Scale.prototype.setBlank = function (isBlank) {
-    this._isBlank = isBlank;
-};
-
-/**
- * @abstract
- * @param {*} tick
- * @return {string} label of the tick.
- */
-Scale.prototype.getLabel = null;
-
-
-clazzUtil.enableClassExtend(Scale);
-clazzUtil.enableClassManagement(Scale, {
+type ScaleConstructor = typeof Scale & clazzUtil.ClassManager;
+clazzUtil.enableClassManagement(Scale as ScaleConstructor, {
     registerWhenExtend: true
 });
 

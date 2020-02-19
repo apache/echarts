@@ -125,14 +125,17 @@ export function parsePercent(percent: number | string, all: number): number {
  * (1) Fix rounding error of float numbers.
  * (2) Support return string to avoid scientific notation like '3.5e-7'.
  */
-export function round(x: number | string, precision: number, returnStr?: boolean): string | number {
+export function round(x: number | string, precision?: number): number;
+export function round(x: number | string, precision: number, returnStr: false): number;
+export function round(x: number | string, precision: number, returnStr: true): string;
+export function round(x: number | string, precision?: number, returnStr?: boolean): string | number {
     if (precision == null) {
         precision = 10;
     }
     // Avoid range error
     precision = Math.min(Math.max(0, precision), 20);
     x = (+x).toFixed(precision);
-    return returnStr ? x : +x;
+    return (returnStr ? x : +x);
 }
 
 /**

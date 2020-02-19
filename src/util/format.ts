@@ -196,7 +196,7 @@ function pad(str: string, len: number): string {
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl: string, value: number, isUTC?: boolean) {
+export function formatTime(tpl: string, value: number | string | Date, isUTC?: boolean) {
     if (tpl === 'week'
         || tpl === 'month'
         || tpl === 'quarter'

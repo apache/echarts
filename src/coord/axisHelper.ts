@@ -34,6 +34,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 
 import '../scale/Time';
 import '../scale/Log';
+import TimeScale from '../scale/Time';
 
 /**
  * Get axis scale extent before niced.
@@ -252,17 +253,19 @@ export function createScaleByModel(model, axisType) {
         switch (axisType) {
             // Buildin scale
             case 'category':
-                return new OrdinalScale(
-                    model.getOrdinalMeta
+                return new OrdinalScale({
+                    ordinalMeta: model.getOrdinalMeta
                         ? model.getOrdinalMeta()
                         : model.getCategories(),
-                    [Infinity, -Infinity]
-                );
-            case 'value':
-                return new IntervalScale();
-            // Extended scale, like time and log
+                    extent: [Infinity, -Infinity]
+                });
+            case 'time':
+                return new TimeScale({
+                    useUTC: model.ecModel.get('useUTC')
+                })
             default:
-                return (Scale.getClass(axisType) || IntervalScale).create(model);
+                // case 'value'/'interval', 'log', or others.
+                return new (Scale.getClass(axisType) || IntervalScale)();
         }
     }
 }

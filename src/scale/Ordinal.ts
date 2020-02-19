@@ -17,12 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Linear continuous scale
- * @module echarts/coord/scale/Ordinal
- *
  * http://en.wikipedia.org/wiki/Level_of_measurement
  */
 
@@ -31,56 +27,58 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
+import List from '../data/List';
+import { OrdinalRawValue, OrdinalNumber, DimensionLoose } from '../util/types';
 
-var scaleProto = Scale.prototype;
 
-var OrdinalScale = Scale.extend({
+class OrdinalScale extends Scale {
 
-    type: 'ordinal',
+    static type: 'ordinal';
 
-    /**
-     * @param {module:echarts/data/OrdianlMeta|Array.<string>} ordinalMeta
-     */
-    init: function (ordinalMeta, extent) {
+    private _ordinalMeta: OrdinalMeta;
+
+
+    constructor(setting?: {
+        ordinalMeta?: OrdinalMeta | OrdinalRawValue[],
+        extent?: [number, number]
+    }) {
+        super(setting);
+
+        var ordinalMeta = this.getSetting('ordinalMeta');
         // Caution: Should not use instanceof, consider ec-extensions using
         // import approach to get OrdinalMeta class.
         if (!ordinalMeta || zrUtil.isArray(ordinalMeta)) {
             ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
         }
         this._ordinalMeta = ordinalMeta;
-        this._extent = extent || [0, ordinalMeta.categories.length - 1];
-    },
+        this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
+    }
 
-    parse: function (val) {
+    parse(val: OrdinalRawValue | OrdinalNumber): OrdinalNumber {
         return typeof val === 'string'
             ? this._ordinalMeta.getOrdinal(val)
             // val might be float.
             : Math.round(val);
-    },
+    }
 
-    contain: function (rank) {
+    contain(rank: OrdinalRawValue | OrdinalNumber): boolean {
         rank = this.parse(rank);
-        return scaleProto.contain.call(this, rank)
+        return super.contain(rank)
             && this._ordinalMeta.categories[rank] != null;
-    },
+    }
 
     /**
      * Normalize given rank or name to linear [0, 1]
-     * @param {number|string} [val]
-     * @return {number}
      */
-    normalize: function (val) {
-        return scaleProto.normalize.call(this, this.parse(val));
-    },
+    normalize(val: OrdinalRawValue | OrdinalNumber): number {
+        return super.normalize(this.parse(val));
+    }
 
-    scale: function (val) {
-        return Math.round(scaleProto.scale.call(this, val));
-    },
+    scale(val: number): OrdinalNumber {
+        return Math.round(super.scale(val));
+    }
 
-    /**
-     * @return {Array}
-     */
-    getTicks: function () {
+    getTicks(): OrdinalNumber[] {
         var ticks = [];
         var extent = this._extent;
         var rank = extent[0];
@@ -91,47 +89,41 @@ var OrdinalScale = Scale.extend({
         }
 
         return ticks;
-    },
+    }
+
+    getMinorTicks(splitNumber: number): number[][] {
+        // Not support.
+        return;
+    }
 
     /**
      * Get item on rank n
-     * @param {number} n
-     * @return {string}
      */
-    getLabel: function (n) {
+    getLabel(n: OrdinalNumber): string {
         if (!this.isBlank()) {
             // Note that if no data, ordinalMeta.categories is an empty array.
-            return this._ordinalMeta.categories[n];
+            return this._ordinalMeta.categories[n] + '';
         }
-    },
+    }
 
-    /**
-     * @return {number}
-     */
-    count: function () {
+    count(): number {
         return this._extent[1] - this._extent[0] + 1;
-    },
+    }
 
-    /**
-     * @override
-     */
-    unionExtentFromData: function (data, dim) {
+    unionExtentFromData(data: List, dim: DimensionLoose) {
         this.unionExtent(data.getApproximateExtent(dim));
-    },
+    }
 
-    getOrdinalMeta: function () {
+    getOrdinalMeta(): OrdinalMeta {
         return this._ordinalMeta;
-    },
+    }
 
-    niceTicks: zrUtil.noop,
-    niceExtent: zrUtil.noop
-});
+    niceTicks() {}
 
-/**
- * @return {module:echarts/scale/Time}
- */
-OrdinalScale.create = function () {
-    return new OrdinalScale();
-};
+    niceExtent() {}
+
+}
+
+Scale.registerClass(OrdinalScale);
 
 export default OrdinalScale;

@@ -36,7 +36,7 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, ECElement, DimensionLoose, OptionDataItem,
-    ParsedDataValue, ParsedDataNumeric, OrdinalRawValueIndex, DimensionUserOuput, ModelOption
+    ParsedDataValue, ParsedDataNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -931,7 +931,7 @@ class List {
      * @param value ordinal index
      * @return rawIndex
      */
-    rawIndexOf(dim: DimensionName, value: OrdinalRawValueIndex): number {
+    rawIndexOf(dim: DimensionName, value: OrdinalNumber): number {
         var invertedIndices = dim && this._invertedIndicesMap[dim];
         if (__DEV__) {
             if (!invertedIndices) {
@@ -1933,7 +1933,7 @@ class List {
                     val = chunk[chunkOffset];
                     var ordinalMeta = list._dimensionInfos[dim].ordinalMeta;
                     if (ordinalMeta && ordinalMeta.categories.length) {
-                        val = ordinalMeta.categories[val as OrdinalRawValueIndex];
+                        val = ordinalMeta.categories[val as OrdinalNumber];
                     }
                 }
             }

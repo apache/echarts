@@ -61,7 +61,9 @@ export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number
 export type ZREasing = easingType
 
 
-// Actually ComponentFullType is ComponentMainType.ComponentSubType
+// ComponentFullType can be:
+//     'xxx.yyy': means ComponentMainType.ComponentSubType.
+//     'xxx': means ComponentMainType.
 // See `checkClassType` check the restict definition.
 export type ComponentFullType = string;
 export type ComponentMainType = keyof ECUnitOption & string;
@@ -221,9 +223,9 @@ export type TooltipRenderMode = 'html' | 'richText';
 // Ordinal/category data will be parsed to its index if possible, otherwise
 // keep its original string in list._storage.
 // Check `convertDataValue` for more details.
-export type OrdinalRawValue = string;
-export type OrdinalRawValueIndex = number;
-export type ParsedDataNumeric = number | OrdinalRawValueIndex;
+export type OrdinalRawValue = string | number;
+export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
+export type ParsedDataNumeric = number | OrdinalNumber;
 export type ParsedDataValue = ParsedDataNumeric | OrdinalRawValue;
 
 export type AxisValue = ParsedDataNumeric;

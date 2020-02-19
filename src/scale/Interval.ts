@@ -17,13 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-/**
- * Interval scale
- * @module echarts/scale/Interval
- */
-
 
 import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
@@ -32,67 +25,59 @@ import * as helper from './helper';
 
 var roundNumber = numberUtil.round;
 
-/**
- * @alias module:echarts/coord/scale/Interval
- * @constructor
- */
-var IntervalScale = Scale.extend({
+class IntervalScale extends Scale {
 
-    type: 'interval',
+    static type = 'interval';
 
-    _interval: 0,
+    // Step is calculated in adjustExtent.
+    protected _interval: number = 0;
+    protected _niceExtent: [number, number];
+    private _intervalPrecision: number = 2;
 
-    _intervalPrecision: 2,
 
-    setExtent: function (start, end) {
+    setExtent(start: number | string, end: number | string): void {
         var thisExtent = this._extent;
-        //start,end may be a Number like '25',so...
-        if (!isNaN(start)) {
-            thisExtent[0] = parseFloat(start);
+        // start,end may be a Number like '25',so...
+        if (!isNaN(start as any)) {
+            thisExtent[0] = parseFloat(start as any);
         }
-        if (!isNaN(end)) {
-            thisExtent[1] = parseFloat(end);
+        if (!isNaN(end as any)) {
+            thisExtent[1] = parseFloat(end as any);
         }
-    },
+    }
 
-    unionExtent: function (other) {
+    unionExtent(other: [number, number]): void {
         var extent = this._extent;
         other[0] < extent[0] && (extent[0] = other[0]);
         other[1] > extent[1] && (extent[1] = other[1]);
 
         // unionExtent may called by it's sub classes
-        IntervalScale.prototype.setExtent.call(this, extent[0], extent[1]);
-    },
-    /**
-     * Get interval
-     */
-    getInterval: function () {
-        return this._interval;
-    },
+        this.setExtent(extent[0], extent[1]);
+    }
 
-    /**
-     * Set interval
-     */
-    setInterval: function (interval) {
+    getInterval(): number {
+        return this._interval;
+    }
+
+    setInterval(interval: number): void {
         this._interval = interval;
         // Dropped auto calculated niceExtent and use user setted extent
         // We assume user wan't to set both interval, min, max to get a better result
-        this._niceExtent = this._extent.slice();
+        this._niceExtent = this._extent.slice() as [number, number];
 
         this._intervalPrecision = helper.getIntervalPrecision(interval);
-    },
+    }
 
     /**
-     * @param {boolean} [expandToNicedExtent=false] If expand the ticks to niced extent.
-     * @return {Array.<number>}
+     * @param expandToNicedExtent Whether expand the ticks to niced extent.
      */
-    getTicks: function (expandToNicedExtent) {
+    getTicks(expandToNicedExtent: boolean): number[] {
         var interval = this._interval;
         var extent = this._extent;
         var niceTickExtent = this._niceExtent;
         var intervalPrecision = this._intervalPrecision;
 
-        var ticks = [];
+        var ticks = [] as number[];
         // If interval is 0, return [];
         if (!interval) {
             return ticks;
@@ -137,13 +122,9 @@ var IntervalScale = Scale.extend({
         }
 
         return ticks;
-    },
+    }
 
-    /**
-     * @param {number} [splitNumber=5]
-     * @return {Array.<Array.<number>>}
-     */
-    getMinorTicks: function (splitNumber) {
+    getMinorTicks(splitNumber: number): number[][] {
         var ticks = this.getTicks(true);
         var minorTicks = [];
         var extent = this.getExtent();
@@ -157,7 +138,7 @@ var IntervalScale = Scale.extend({
             var minorInterval = interval / splitNumber;
 
             while (count < splitNumber - 1) {
-                var minorTick = numberUtil.round(prevTick + (count + 1) * minorInterval);
+                var minorTick = roundNumber(prevTick + (count + 1) * minorInterval);
 
                 // For the first and last interval. The count may be less than splitNumber.
                 if (minorTick > extent[0] && minorTick < extent[1]) {
@@ -169,16 +150,19 @@ var IntervalScale = Scale.extend({
         }
 
         return minorTicks;
-    },
+    }
 
     /**
-     * @param {number} data
-     * @param {Object} [opt]
-     * @param {number|string} [opt.precision] If 'auto', use nice presision.
-     * @param {boolean} [opt.pad] returns 1.50 but not 1.5 if precision is 2.
-     * @return {string}
+     * @param opt.precision If 'auto', use nice presision.
+     * @param opt.pad returns 1.50 but not 1.5 if precision is 2.
      */
-    getLabel: function (data, opt) {
+    getLabel(
+        data: number,
+        opt?: {
+            precision?: 'auto' | number,
+            pad?: boolean
+        }
+    ): string {
         if (data == null) {
             return '';
         }
@@ -195,19 +179,15 @@ var IntervalScale = Scale.extend({
 
         // (1) If `precision` is set, 12.005 should be display as '12.00500'.
         // (2) Use roundNumber (toFixed) to avoid scientific notation like '3.5e-7'.
-        data = roundNumber(data, precision, true);
+        var dataNum = roundNumber(data, precision as number, true);
 
-        return formatUtil.addCommas(data);
-    },
+        return formatUtil.addCommas(dataNum);
+    }
 
     /**
-     * Update interval and extent of intervals for nice ticks
-     *
-     * @param {number} [splitNumber = 5] Desired number of ticks
-     * @param {number} [minInterval]
-     * @param {number} [maxInterval]
+     * @param splitNumber By default `5`.
      */
-    niceTicks: function (splitNumber, minInterval, maxInterval) {
+    niceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
         splitNumber = splitNumber || 5;
         var extent = this._extent;
         var span = extent[1] - extent[0];
@@ -228,18 +208,15 @@ var IntervalScale = Scale.extend({
         this._intervalPrecision = result.intervalPrecision;
         this._interval = result.interval;
         this._niceExtent = result.niceTickExtent;
-    },
+    }
 
-    /**
-     * Nice extent.
-     * @param {Object} opt
-     * @param {number} [opt.splitNumber = 5] Given approx tick number
-     * @param {boolean} [opt.fixMin=false]
-     * @param {boolean} [opt.fixMax=false]
-     * @param {boolean} [opt.minInterval]
-     * @param {boolean} [opt.maxInterval]
-     */
-    niceExtent: function (opt) {
+    niceExtent(opt: {
+        splitNumber: number, // By default 5.
+        fixMin?: boolean,
+        fixMax?: boolean,
+        minInterval?: number,
+        maxInterval?: number
+    }): void {
         var extent = this._extent;
         // If extent start and end are same, expand them
         if (extent[0] === extent[1]) {
@@ -282,13 +259,9 @@ var IntervalScale = Scale.extend({
             extent[1] = roundNumber(Math.ceil(extent[1] / interval) * interval);
         }
     }
-});
 
-/**
- * @return {module:echarts/scale/Time}
- */
-IntervalScale.create = function () {
-    return new IntervalScale();
-};
+}
+
+Scale.registerClass(IntervalScale);
 
 export default IntervalScale;
