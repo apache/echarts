@@ -301,9 +301,12 @@ class Tree<HostModel extends Model, LevelOption, LeavesOption> {
 
     leavesModel: Model<LeavesOption>
 
-    private _nodes: TreeNode[]
+    private _nodes: TreeNode[] = []
 
     constructor(hostModel: HostModel, levelOptions: LevelOption[], leavesOption: LeavesOption) {
+
+        this.hostModel = hostModel;
+
         this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
             return new Model(levelDefine, hostModel, hostModel.ecModel);
         });

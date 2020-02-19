@@ -342,15 +342,6 @@ class GraphNode {
 
     constructor(id?: string, dataIndex?: number) {
         this.id = id == null ? '' : id;
-
-        this.inEdges = [];
-
-        this.outEdges = [];
-
-        this.edges = [];
-
-        this.hostGraph;
-
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
     }
 
