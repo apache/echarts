@@ -17,12 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Tree data structure
- *
- * @module echarts/data/Tree
  */
 
 import * as zrUtil from 'zrender/src/core/util';
@@ -30,81 +26,58 @@ import Model from '../model/Model';
 import linkList from './helper/linkList';
 import List from './List';
 import createDimensions from './helper/createDimensions';
+import { DimensionLoose, ParsedDataValue } from '../util/types';
+import { Dictionary } from 'zrender/src/core/types';
 
-/**
- * @constructor module:echarts/data/Tree~TreeNode
- * @param {string} name
- * @param {module:echarts/data/Tree} hostTree
- */
-var TreeNode = function (name, hostTree) {
-    /**
-     * @type {string}
-     */
-    this.name = name || '';
+type TreeTraverseOrder = 'preorder' | 'postorder';
+type TreeTraverseCallback<Ctx> = (this: Ctx, node: TreeNode) => boolean;
+type TreeTraverseOption = {
+    order?: TreeTraverseOrder
+    attr?: 'children' | 'viewChildren'
+};
 
-    /**
-     * Depth of node
-     *
-     * @type {number}
-     * @readOnly
-     */
-    this.depth = 0;
+interface TreeNodeData {
+    name?: string
+    value?: any
+    children?: TreeNodeData[]
+}
 
-    /**
-     * Height of the subtree rooted at this node.
-     * @type {number}
-     * @readOnly
-     */
-    this.height = 0;
+class TreeNode {
+    name: string
 
-    /**
-     * @type {module:echarts/data/Tree~TreeNode}
-     * @readOnly
-     */
-    this.parentNode = null;
+    depth: number = 0
 
+    height: number = 0
+
+    parentNode: TreeNode
     /**
      * Reference to list item.
      * Do not persistent dataIndex outside,
      * besause it may be changed by list.
      * If dataIndex -1,
      * this node is logical deleted (filtered) in list.
-     *
-     * @type {Object}
-     * @readOnly
      */
-    this.dataIndex = -1;
+    dataIndex: number = -1
 
-    /**
-     * @type {Array.<module:echarts/data/Tree~TreeNode>}
-     * @readOnly
-     */
-    this.children = [];
+    children: TreeNode[] = []
 
-    /**
-     * @type {Array.<module:echarts/data/Tree~TreeNode>}
-     * @pubilc
-     */
-    this.viewChildren = [];
+    viewChildren: TreeNode[] = []
 
-    /**
-     * @type {moduel:echarts/data/Tree}
-     * @readOnly
-     */
-    this.hostTree = hostTree;
-};
+    isExpand: boolean = false
 
-TreeNode.prototype = {
+    readonly hostTree: Tree<Model, any, any>    // TODO: TYPE TreeNode use generic?
 
-    constructor: TreeNode,
+    constructor(name: string, hostTree: Tree<Model, any, any>) {
+        this.name = name || '';
 
+        this.hostTree = hostTree;
+    }
     /**
      * The node is removed.
-     * @return {boolean} is removed.
      */
-    isRemoved: function () {
+    isRemoved(): boolean {
         return this.dataIndex < 0;
-    },
+    }
 
     /**
      * Travel this subtree (include this node).
@@ -117,16 +90,22 @@ TreeNode.prototype = {
      *        function () { ... }
      *    ); // postorder
      *
-     * @param {(Object|string)} options If string, means order.
-     * @param {string=} options.order 'preorder' or 'postorder'
-     * @param {string=} options.attr 'children' or 'viewChildren'
-     * @param {Function} cb If in preorder and return false,
+     * @param options If string, means order.
+     * @param options.order 'preorder' or 'postorder'
+     * @param options.attr 'children' or 'viewChildren'
+     * @param cb If in preorder and return false,
      *                      its subtree will not be visited.
-     * @param {Object} [context]
      */
-    eachNode: function (options, cb, context) {
+    eachNode<Ctx>(options: TreeTraverseOrder, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(options: TreeTraverseOption, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(
+        options: TreeTraverseOrder | TreeTraverseOption | TreeTraverseCallback<Ctx>,
+        cb?: TreeTraverseCallback<Ctx> | Ctx,
+        context?: Ctx
+    ) {
         if (typeof options === 'function') {
-            context = cb;
+            context = cb as Ctx;
             cb = options;
             options = null;
         }
@@ -136,25 +115,27 @@ TreeNode.prototype = {
             options = {order: options};
         }
 
-        var order = options.order || 'preorder';
-        var children = this[options.attr || 'children'];
+        var order = (options as TreeTraverseOption).order || 'preorder';
+        var children = this[(options as TreeTraverseOption).attr || 'children'];
 
         var suppressVisitSub;
-        order === 'preorder' && (suppressVisitSub = cb.call(context, this));
+        order === 'preorder' && (suppressVisitSub = (cb as TreeTraverseCallback<Ctx>).call(context as Ctx, this));
 
         for (var i = 0; !suppressVisitSub && i < children.length; i++) {
-            children[i].eachNode(options, cb, context);
+            children[i].eachNode(
+                options as TreeTraverseOption,
+                cb as TreeTraverseCallback<Ctx>,
+                context
+            );
         }
 
-        order === 'postorder' && cb.call(context, this);
-    },
+        order === 'postorder' && (cb as TreeTraverseCallback<Ctx>).call(context, this);
+    }
 
     /**
      * Update depth and height of this subtree.
-     *
-     * @param  {number} depth
      */
-    updateDepthAndHeight: function (depth) {
+    updateDepthAndHeight(depth: number) {
         var height = 0;
         this.depth = depth;
         for (var i = 0; i < this.children.length; i++) {
@@ -165,13 +146,9 @@ TreeNode.prototype = {
             }
         }
         this.height = height + 1;
-    },
+    }
 
-    /**
-     * @param  {string} id
-     * @return {module:echarts/data/Tree~TreeNode}
-     */
-    getNodeById: function (id) {
+    getNodeById(id: string): TreeNode {
         if (this.getId() === id) {
             return this;
         }
@@ -181,13 +158,9 @@ TreeNode.prototype = {
                 return res;
             }
         }
-    },
+    }
 
-    /**
-     * @param {module:echarts/data/Tree~TreeNode} node
-     * @return {boolean}
-     */
-    contains: function (node) {
+    contains(node: TreeNode): boolean {
         if (node === this) {
             return true;
         }
@@ -197,13 +170,13 @@ TreeNode.prototype = {
                 return res;
             }
         }
-    },
+    }
 
     /**
-     * @param {boolean} includeSelf Default false.
-     * @return {Array.<module:echarts/data/Tree~TreeNode>} order: [root, child, grandchild, ...]
+     * @param includeSelf Default false.
+     * @return order: [root, child, grandchild, ...]
      */
-    getAncestors: function (includeSelf) {
+    getAncestors(includeSelf?: boolean): TreeNode[] {
         var ancestors = [];
         var node = includeSelf ? this : this.parentNode;
         while (node) {
@@ -212,38 +185,27 @@ TreeNode.prototype = {
         }
         ancestors.reverse();
         return ancestors;
-    },
+    }
 
-    /**
-     * @param {string|Array=} [dimension='value'] Default 'value'. can be 0, 1, 2, 3
-     * @return {number} Value.
-     */
-    getValue: function (dimension) {
+    getValue(dimension: DimensionLoose): ParsedDataValue {
         var data = this.hostTree.data;
         return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
-    },
+    }
 
-    /**
-     * @param {Object} layout
-     * @param {boolean=} [merge=false]
-     */
-    setLayout: function (layout, merge) {
+    setLayout(layout: any, merge?: boolean) {
         this.dataIndex >= 0
             && this.hostTree.data.setItemLayout(this.dataIndex, layout, merge);
-    },
+    }
 
     /**
      * @return {Object} layout
      */
-    getLayout: function () {
+    getLayout(): any {
         return this.hostTree.data.getItemLayout(this.dataIndex);
-    },
+    }
 
-    /**
-     * @param {string} [path]
-     * @return {module:echarts/model/Model}
-     */
-    getModel: function (path) {
+    // TODO: TYPE Same type with Model#getModel
+    getModel(path: readonly string[] | string) {
         if (this.dataIndex < 0) {
             return;
         }
@@ -254,22 +216,19 @@ TreeNode.prototype = {
         if (!levelModel && (this.children.length === 0 || (this.children.length !== 0 && this.isExpand === false))) {
             leavesModel = this.getLeavesModel();
         }
-        return itemModel.getModel(path, (levelModel || leavesModel || hostTree.hostModel).getModel(path));
-    },
-
-    /**
-     * @return {module:echarts/model/Model}
-     */
-    getLevelModel: function () {
+        return itemModel.getModel(
+            path as [string],
+            (levelModel || leavesModel || hostTree.hostModel).getModel(path as [string])
+        );
+    }
+    // TODO: TYPE More specific model
+    getLevelModel(): Model {
         return (this.hostTree.levelModels || [])[this.depth];
-    },
+    }
 
-    /**
-     * @return {module:echarts/model/Model}
-     */
-    getLeavesModel: function () {
+    getLeavesModel(): Model {
         return this.hostTree.leavesModel;
-    },
+    }
 
     /**
      * @example
@@ -278,42 +237,35 @@ TreeNode.prototype = {
      *      'color': color
      *  });
      */
-    setVisual: function (key, value) {
+    setVisual(key: string, value: any): void
+    setVisual(obj: Dictionary<any>): void
+    setVisual(key: string | Dictionary<any>, value?: any) {
         this.dataIndex >= 0
-            && this.hostTree.data.setItemVisual(this.dataIndex, key, value);
-    },
+            && this.hostTree.data.setItemVisual(this.dataIndex, key as string, value);
+    }
 
     /**
      * Get item visual
      */
-    getVisual: function (key, ignoreParent) {
+    getVisual(key: string, ignoreParent?: boolean): any {
         return this.hostTree.data.getItemVisual(this.dataIndex, key, ignoreParent);
-    },
+    }
 
-    /**
-     * @public
-     * @return {number}
-     */
-    getRawIndex: function () {
+    getRawIndex(): number {
         return this.hostTree.data.getRawIndex(this.dataIndex);
-    },
+    }
 
-    /**
-     * @public
-     * @return {string}
-     */
-    getId: function () {
+    getId(): string {
         return this.hostTree.data.getId(this.dataIndex);
-    },
+    }
 
     /**
      * if this is an ancestor of another node
      *
-     * @public
-     * @param {TreeNode} node another node
-     * @return {boolean} if is ancestor
+     * @param node another node
+     * @return if is ancestor
      */
-    isAncestorOf: function (node) {
+    isAncestorOf(node: TreeNode): boolean {
         var parent = node.parentNode;
         while (parent) {
             if (parent === this) {
@@ -322,72 +274,46 @@ TreeNode.prototype = {
             parent = parent.parentNode;
         }
         return false;
-    },
+    }
 
     /**
      * if this is an descendant of another node
      *
-     * @public
-     * @param {TreeNode} node another node
-     * @return {boolean} if is descendant
+     * @param node another node
+     * @return if is descendant
      */
-    isDescendantOf: function (node) {
+    isDescendantOf(node: TreeNode): boolean {
         return node !== this && node.isAncestorOf(this);
     }
 };
 
-/**
- * @constructor
- * @alias module:echarts/data/Tree
- * @param {module:echarts/model/Model} hostModel
- * @param {Array.<Object>} levelOptions
- * @param {Object} leavesOption
- */
-function Tree(hostModel, levelOptions, leavesOption) {
-    /**
-     * @type {module:echarts/data/Tree~TreeNode}
-     * @readOnly
-     */
-    this.root;
+class Tree<HostModel extends Model, LevelOption, LeavesOption> {
 
-    /**
-     * @type {module:echarts/data/List}
-     * @readOnly
-     */
-    this.data;
+    type: 'tree' = 'tree'
 
-    /**
-     * Index of each item is the same as the raw index of coresponding list item.
-     * @private
-     * @type {Array.<module:echarts/data/Tree~TreeNode}
-     */
-    this._nodes = [];
+    root: TreeNode
 
-    /**
-     * @private
-     * @readOnly
-     * @type {module:echarts/model/Model}
-     */
-    this.hostModel = hostModel;
+    data: List
 
-    /**
-     * @private
-     * @readOnly
-     * @type {Array.<module:echarts/model/Model}
-     */
-    this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
-        return new Model(levelDefine, hostModel, hostModel.ecModel);
-    });
+    hostModel: HostModel
 
-    this.leavesModel = new Model(leavesOption || {}, hostModel, hostModel.ecModel);
-}
+    levelModels: Model<LevelOption>[]
 
-Tree.prototype = {
+    leavesModel: Model<LeavesOption>
 
-    constructor: Tree,
+    private _nodes: TreeNode[]
 
-    type: 'tree',
+    constructor(hostModel: HostModel, levelOptions: LevelOption[], leavesOption: LeavesOption) {
+        this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
+            return new Model(levelDefine, hostModel, hostModel.ecModel);
+        });
 
+        this.leavesModel = new Model<LeavesOption>(
+            leavesOption || {} as LeavesOption,
+            hostModel,
+            hostModel.ecModel
+        );
+    }
     /**
      * Travel this subtree (include this node).
      * Usage:
@@ -399,38 +325,37 @@ Tree.prototype = {
      *        function () { ... }
      *    ); // postorder
      *
-     * @param {(Object|string)} options If string, means order.
-     * @param {string=} options.order 'preorder' or 'postorder'
-     * @param {string=} options.attr 'children' or 'viewChildren'
-     * @param {Function} cb
-     * @param {Object}   [context]
+     * @param options If string, means order.
+     * @param options.order 'preorder' or 'postorder'
+     * @param options.attr 'children' or 'viewChildren'
+     * @param cb
+     * @param context
      */
-    eachNode: function (options, cb, context) {
-        this.root.eachNode(options, cb, context);
-    },
+    eachNode<Ctx>(options: TreeTraverseOrder, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(options: TreeTraverseOption, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(
+        options: TreeTraverseOrder | TreeTraverseOption | TreeTraverseCallback<Ctx>,
+        cb?: TreeTraverseCallback<Ctx> | Ctx,
+        context?: Ctx
+    ) {
+        this.root.eachNode(options as TreeTraverseOption, cb as TreeTraverseCallback<Ctx>, context);
+    }
 
-    /**
-     * @param {number} dataIndex
-     * @return {module:echarts/data/Tree~TreeNode}
-     */
-    getNodeByDataIndex: function (dataIndex) {
+    getNodeByDataIndex(dataIndex: number): TreeNode {
         var rawIndex = this.data.getRawIndex(dataIndex);
         return this._nodes[rawIndex];
-    },
+    }
 
-    /**
-     * @param {string} name
-     * @return {module:echarts/data/Tree~TreeNode}
-     */
-    getNodeByName: function (name) {
-        return this.root.getNodeByName(name);
-    },
+    getNodeById(name: string): TreeNode {
+        return this.root.getNodeById(name);
+    }
 
     /**
      * Update item available by list,
      * when list has been performed options like 'filterSelf' or 'map'.
      */
-    update: function () {
+    update() {
         var data = this.data;
         var nodes = this._nodes;
 
@@ -441,98 +366,95 @@ Tree.prototype = {
         for (var i = 0, len = data.count(); i < len; i++) {
             nodes[data.getRawIndex(i)].dataIndex = i;
         }
-    },
+    }
 
     /**
      * Clear all layouts
      */
-    clearLayouts: function () {
+    clearLayouts() {
         this.data.clearItemLayouts();
     }
-};
 
-/**
- * data node format:
- * {
- *     name: ...
- *     value: ...
- *     children: [
- *         {
- *             name: ...
- *             value: ...
- *             children: ...
- *         },
- *         ...
- *     ]
- * }
- *
- * @static
- * @param {Object} dataRoot Root node.
- * @param {module:echarts/model/Model} hostModel
- * @param {Object} treeOptions
- * @param {Array.<Object>} treeOptions.levels
- * @param {Array.<Object>} treeOptions.leaves
- * @return module:echarts/data/Tree
- */
-Tree.createTree = function (dataRoot, hostModel, treeOptions, beforeLink) {
 
-    var tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
-    var listData = [];
-    var dimMax = 1;
+    /**
+     * data node format:
+     * {
+     *     name: ...
+     *     value: ...
+     *     children: [
+     *         {
+     *             name: ...
+     *             value: ...
+     *             children: ...
+     *         },
+     *         ...
+     *     ]
+     * }
+     */
+    static createTree<T extends TreeNodeData, HostModel extends Model, LevelOption, LeavesOption>(
+        dataRoot: T,
+        hostModel: HostModel,
+        treeOptions?: {levels: LevelOption[], leaves: LeavesOption},
+        beforeLink?: (data: List) => void
+    ) {
 
-    buildHierarchy(dataRoot);
+        var tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
+        var listData: TreeNodeData[] = [];
+        var dimMax = 1;
 
-    function buildHierarchy(dataNode, parentNode) {
-        var value = dataNode.value;
-        dimMax = Math.max(dimMax, zrUtil.isArray(value) ? value.length : 1);
+        buildHierarchy(dataRoot);
 
-        listData.push(dataNode);
+        function buildHierarchy(dataNode: TreeNodeData, parentNode?: TreeNode) {
+            var value = dataNode.value;
+            dimMax = Math.max(dimMax, zrUtil.isArray(value) ? value.length : 1);
 
-        var node = new TreeNode(dataNode.name, tree);
-        parentNode
-            ? addChild(node, parentNode)
-            : (tree.root = node);
+            listData.push(dataNode);
 
-        tree._nodes.push(node);
+            var node = new TreeNode(dataNode.name, tree);
+            parentNode
+                ? addChild(node, parentNode)
+                : (tree.root = node);
 
-        var children = dataNode.children;
-        if (children) {
-            for (var i = 0; i < children.length; i++) {
-                buildHierarchy(children[i], node);
+            tree._nodes.push(node);
+
+            var children = dataNode.children;
+            if (children) {
+                for (var i = 0; i < children.length; i++) {
+                    buildHierarchy(children[i], node);
+                }
             }
         }
+
+        tree.root.updateDepthAndHeight(0);
+
+        var dimensionsInfo = createDimensions(listData, {
+            coordDimensions: ['value'],
+            dimensionsCount: dimMax
+        });
+
+        var list = new List(dimensionsInfo, hostModel);
+        list.initData(listData);
+
+        linkList({
+            mainData: list,
+            struct: tree,
+            structAttr: 'tree'
+        });
+
+        tree.update();
+
+        beforeLink && beforeLink(list);
+
+        return tree;
     }
 
-    tree.root.updateDepthAndHeight(0);
-
-    var dimensionsInfo = createDimensions(listData, {
-        coordDimensions: ['value'],
-        dimensionsCount: dimMax
-    });
-
-    var list = new List(dimensionsInfo, hostModel);
-    list.initData(listData);
-
-    linkList({
-        mainData: list,
-        struct: tree,
-        structAttr: 'tree'
-    });
-
-    tree.update();
-
-    beforeLink && beforeLink(list);
-
-    return tree;
-};
+}
 
 /**
  * It is needed to consider the mess of 'list', 'hostModel' when creating a TreeNote,
  * so this function is not ready and not necessary to be public.
- *
- * @param {(module:echarts/data/Tree~TreeNode|Object)} child
  */
-function addChild(child, node) {
+function addChild(child: TreeNode, node: TreeNode) {
     var children = node.children;
     if (child.parentNode === node) {
         return;

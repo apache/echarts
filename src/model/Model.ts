@@ -248,8 +248,8 @@ function doGet(obj: ModelOption, pathArr: readonly string[], parentModel?: Model
         }
     }
     if (obj == null && parentModel) {
-        // TODO At most 3 items array.
-        obj = parentModel.get(pathArr as [string, string, string]);
+        // TODO At most 3 items array. support string[]?
+        obj = parentModel.get(pathArr as [string]);
     }
     return obj;
 }

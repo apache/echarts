@@ -45,7 +45,8 @@ export type CreateDimensionsParams = {
  * @param opt.encodeDefaulter Make default encode if user not specified.
  */
 export default function (
-    source: Source | List,
+    // TODO: TYPE completeDimensions type
+    source: Source | List | any[],
     opt?: CreateDimensionsParams
 ): DataDimensionInfo[] {
     opt = opt || {};
