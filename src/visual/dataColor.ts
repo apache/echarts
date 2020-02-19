@@ -17,30 +17,34 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Pick color from palette for each data item.
 // Applicable for charts that require applying color palette
 // in data level (like pie, funnel, chord).
 import {createHashMap} from 'zrender/src/core/util';
+import { StageHandler } from '../util/types';
+import SeriesModel from '../model/Series';
 
-export default function (seriesType) {
+interface SeriesModelWithPaletteScope extends SeriesModel {
+    __paletteScope: any
+}
+
+export default function (seriesType: string): StageHandler {
     return {
         getTargetSeries: function (ecModel) {
             // Pie and funnel may use diferrent scope
             var paletteScope = {};
-            var seiresModelMap = createHashMap();
+            var seiresModelMap = createHashMap<SeriesModel>();
 
             ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-                seriesModel.__paletteScope = paletteScope;
+                (seriesModel as SeriesModelWithPaletteScope).__paletteScope = paletteScope;
                 seiresModelMap.set(seriesModel.uid, seriesModel);
             });
 
             return seiresModelMap;
         },
-        reset: function (seriesModel, ecModel) {
+        reset: function (seriesModel) {
             var dataAll = seriesModel.getRawData();
-            var idxMap = {};
+            var idxMap: {[key: number]: number} = {};
             var data = seriesModel.getData();
 
             data.each(function (idx) {
@@ -68,7 +72,7 @@ export default function (seriesType) {
                     var color = itemModel.get('itemStyle.color')
                         || seriesModel.getColorFromPalette(
                             dataAll.getName(rawIdx) || (rawIdx + ''),
-                            seriesModel.__paletteScope,
+                            (seriesModel as SeriesModelWithPaletteScope).__paletteScope,
                             dataAll.count()
                         );
                     // Data is not filtered

@@ -50,7 +50,7 @@ var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
  * @param  {*} value
  * @return {Array} [value] or value
  */
-export function normalizeToArray<T>(value: T | T[]): T[] {
+export function normalizeToArray<T>(value?: T | T[]): T[] {
     return value instanceof Array
         ? value
         : value == null

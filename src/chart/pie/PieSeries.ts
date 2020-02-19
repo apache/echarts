@@ -280,7 +280,7 @@ class PieSeries extends SeriesModel<PieSeriesOption> {
 }
 
 interface PieSeries extends DataSelectableMixin<PieSeriesOption> {}
-zrUtil.tsMixin(PieSeries, DataSelectableMixin);
+zrUtil.mixin(PieSeries, DataSelectableMixin);
 
 SeriesModel.registerClass(PieSeries);
 

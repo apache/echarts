@@ -1818,7 +1818,7 @@ var enableConnect: (chart: ECharts) => void;
 
 
 interface ECharts extends Eventful {}
-zrUtil.tsMixin(ECharts, Eventful);
+zrUtil.mixin(ECharts, Eventful);
 
 var echartsProto = ECharts.prototype;
 echartsProto.on = createRegisterEventWithLowercaseECharts('on');

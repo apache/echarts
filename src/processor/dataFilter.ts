@@ -1,3 +1,5 @@
+import { StageHandler } from '../util/types';
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,9 +19,7 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-export default function (seriesType) {
+export default function (seriesType: string): StageHandler {
     return {
         seriesType: seriesType,
         reset: function (seriesModel, ecModel) {
@@ -34,6 +34,7 @@ export default function (seriesType) {
                 var name = data.getName(idx);
                 // If in any legend component the status is not selected.
                 for (var i = 0; i < legendModels.length; i++) {
+                    // @ts-ignore FIXME: LegendModel
                     if (!legendModels[i].isSelected(name)) {
                         return false;
                     }

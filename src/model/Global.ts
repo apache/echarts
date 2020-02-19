@@ -34,7 +34,7 @@
 import {__DEV__} from '../config';
 import {
     each, filter, map, isArray, indexOf, isObject, isString,
-    createHashMap, assert, clone, merge, extend, tsMixin, HashMap
+    createHashMap, assert, clone, merge, extend, mixin, HashMap
 } from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
 import Model from './Model';
@@ -795,6 +795,6 @@ function filterBySubType(
 
 // @ts-ignore FIXME:GlobalOption
 interface GlobalModel extends ColorPaletteMixin {}
-tsMixin(GlobalModel, ColorPaletteMixin);
+mixin(GlobalModel, ColorPaletteMixin);
 
 export default GlobalModel;

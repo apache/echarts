@@ -189,7 +189,7 @@ rules:
 
 
     "@typescript-eslint/no-unused-vars":
-        - 2
+        - 1
         -
             vars: "local"
             args: "none"

@@ -19,7 +19,7 @@
 
 import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
-import { StyleOption } from 'zrender/src/graphic/Style';
+import { StyleProps } from 'zrender/src/graphic/Style';
 
 const STYLE_LIST = [
     ['fill', 'color'],
@@ -37,13 +37,13 @@ var getItemStyle = makeStyleMapper(STYLE_LIST);
 
 interface ItemStyleMixin extends Pick<Model, 'get'> {}
 
-type ItemStyleOption = Pick<
-    StyleOption, typeof STYLE_LIST[number][0]
+type ItemStyleProps = Pick<
+    StyleProps, typeof STYLE_LIST[number][0]
 >
 
 class ItemStyleMixin {
 
-    getItemStyle(excludes?: string[], includes?: string[]): ItemStyleOption {
+    getItemStyle(excludes?: string[], includes?: string[]): ItemStyleProps {
         var style = getItemStyle(this, excludes, includes);
         var lineDash = this.getBorderLineDash();
         lineDash && ((style as any).lineDash = lineDash);

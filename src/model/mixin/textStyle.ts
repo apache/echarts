@@ -17,50 +17,52 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as textContain from 'zrender/src/contain/text';
 import * as graphicUtil from '../../util/graphic';
+import Model from '../Model';
+import { LabelOption } from '../../util/types';
 
-var PATH_COLOR = ['textStyle', 'color'];
+var PATH_COLOR = ['textStyle', 'color'] as const;
 
-export default {
+class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color
      * @param {boolean} [isEmphasis]
      * @return {string}
      */
-    getTextColor: function (isEmphasis) {
+    getTextColor(this: Model, isEmphasis?: boolean) {
         var ecModel = this.ecModel;
         return this.getShallow('color')
             || (
                 (!isEmphasis && ecModel) ? ecModel.get(PATH_COLOR) : null
             );
-    },
+    }
 
     /**
      * Create font string from fontStyle, fontWeight, fontSize, fontFamily
      * @return {string}
      */
-    getFont: function () {
+    getFont(this: Model<LabelOption>) {
         return graphicUtil.getFont({
             fontStyle: this.getShallow('fontStyle'),
             fontWeight: this.getShallow('fontWeight'),
             fontSize: this.getShallow('fontSize'),
             fontFamily: this.getShallow('fontFamily')
         }, this.ecModel);
-    },
+    }
 
-    getTextRect: function (text) {
+    getTextRect(this: Model<LabelOption> & TextStyleMixin, text: string) {
         return textContain.getBoundingRect(
             text,
             this.getFont(),
             this.getShallow('align'),
             this.getShallow('verticalAlign') || this.getShallow('baseline'),
-            this.getShallow('padding'),
+            this.getShallow('padding') as number[],
             this.getShallow('lineHeight'),
-            this.getShallow('rich'),
-            this.getShallow('truncateText')
+            this.getShallow('rich')
+            // this.getShallow('truncateText')
         );
     }
 };
+
+export default TextStyleMixin;

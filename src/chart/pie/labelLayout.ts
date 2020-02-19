@@ -17,21 +17,55 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // FIXME emphasis label position is not same with normal label position
 
 import * as textContain from 'zrender/src/contain/text';
 import {parsePercent} from '../../util/number';
+import PieSeries, { PieSeriesOption } from './PieSeries';
+import { VectorArray } from 'zrender/src/core/vector';
+import { ZRAlign, ZRVerticalAlign } from '../../util/types';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 
 var RADIAN = Math.PI / 180;
 
-function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, viewLeft, viewTop, farthestX) {
+interface LabelLayout {
+    x: number
+    y: number
+    position: PieSeriesOption['label']['position'],
+    height: number
+    len: number
+    len2: number
+    linePoints: VectorArray[]
+    textAlign: ZRAlign
+    verticalAlign: ZRVerticalAlign,
+    rotation: number,
+    inside: boolean,
+    labelDistance: number,
+    labelAlignTo: PieSeriesOption['label']['alignTo'],
+    labelMargin: number,
+    bleedMargin: PieSeriesOption['label']['bleedMargin'],
+    textRect: RectLike,
+    text: string,
+    font: string
+}
+
+function adjustSingleSide(
+    list: LabelLayout[],
+    cx: number,
+    cy: number,
+    r: number,
+    dir: -1 | 1,
+    viewWidth: number,
+    viewHeight: number,
+    viewLeft: number,
+    viewTop: number,
+    farthestX: number
+) {
     list.sort(function (a, b) {
         return a.y - b.y;
     });
 
-    function shiftDown(start, end, delta, dir) {
+    function shiftDown(start: number, end: number, delta: number, dir: number) {
         for (var j = start; j < end; j++) {
             if (list[j].y + delta > viewTop + viewHeight) {
                 break;
@@ -50,7 +84,7 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, viewLeft,
         shiftUp(end - 1, delta / 2);
     }
 
-    function shiftUp(end, delta) {
+    function shiftUp(end: number, delta: number) {
         for (var j = end; j >= 0; j--) {
             if (list[j].y - delta < viewTop) {
                 break;
@@ -65,7 +99,11 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, viewLeft,
         }
     }
 
-    function changeX(list, isDownList, cx, cy, r, dir) {
+    function changeX(
+        list: LabelLayout[], isDownList: boolean,
+        cx: number, cy: number, r: number,
+        dir: 1 | -1
+    ) {
         var lastDeltaX = dir > 0
             ? isDownList                // right-side
                 ? Number.MAX_VALUE      // down
@@ -135,7 +173,16 @@ function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, viewLeft,
     changeX(downList, true, cx, cy, r, dir);
 }
 
-function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLeft, viewTop) {
+function avoidOverlap(
+    labelLayoutList: LabelLayout[],
+    cx: number,
+    cy: number,
+    r: number,
+    viewWidth: number,
+    viewHeight: number,
+    viewLeft: number,
+    viewTop: number
+) {
     var leftList = [];
     var rightList = [];
     var leftmostX = Number.MAX_VALUE;
@@ -218,14 +265,21 @@ function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLef
     }
 }
 
-function isPositionCenter(layout) {
+function isPositionCenter(layout: LabelLayout) {
     // Not change x for center label
     return layout.position === 'center';
 }
 
-export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTop) {
+export default function (
+    seriesModel: PieSeries,
+    r: number,
+    viewWidth: number,
+    viewHeight: number,
+    viewLeft: number,
+    viewTop: number
+) {
     var data = seriesModel.getData();
-    var labelLayoutList = [];
+    var labelLayoutList: LabelLayout[] = [];
     var cx;
     var cy;
     var hasLabelRotate = false;
@@ -268,9 +322,7 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
 
         var text = seriesModel.getFormattedLabel(idx, 'normal')
                 || data.getName(idx);
-        var textRect = textContain.getBoundingRect(
-            text, font, textAlign, 'top'
-        );
+        var textRect = textContain.getBoundingRect(text, font, textAlign, 'top');
 
         var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         if (labelPosition === 'center') {

@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 
@@ -43,6 +41,8 @@ createDataSelectAction('pie', [{
     event: 'pieunselected',
     method: 'unSelect'
 }]);
+
+// type PieLayoutParameters = Parameters<typeof pieLayout>;
 
 echarts.registerVisual(dataColor('pie'));
 echarts.registerLayout(zrUtil.curry(pieLayout, 'pie'));

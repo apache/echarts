@@ -27,7 +27,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import {normalizeToArray} from '../util/model';
 import {
-    StageHandler, StageHandlerOverallReset, VisualType, StageHandlerInput,
+    StageHandlerInternal, StageHandlerOverallReset, VisualType, StageHandler,
     Payload, StageHandlerReset, StageHandlerPlan, StageHandlerProgressExecutor, LarginOptionMixin, SeriesOption
 } from '../util/types';
 import { EChartsType } from '../echarts';
@@ -108,9 +108,9 @@ class Scheduler {
     // this file and echarts.js
     unfinished: number;
 
-    private _dataProcessorHandlers: StageHandler[];
-    private _visualHandlers: StageHandler[];
-    private _allHandlers: StageHandler[];
+    private _dataProcessorHandlers: StageHandlerInternal[];
+    private _visualHandlers: StageHandlerInternal[];
+    private _allHandlers: StageHandlerInternal[];
 
     // key: handlerUID
     private _stageTaskMap: HashMap<TaskRecord> = createHashMap<TaskRecord>();
@@ -121,8 +121,8 @@ class Scheduler {
     constructor(
         ecInstance: EChartsType,
         api: ExtensionAPI,
-        dataProcessorHandlers: StageHandler[],
-        visualHandlers: StageHandler[]
+        dataProcessorHandlers: StageHandlerInternal[],
+        visualHandlers: StageHandlerInternal[]
     ) {
         this.ecInstance = ecInstance;
         this.api = api;
@@ -295,7 +295,7 @@ class Scheduler {
     }
 
     private _performStageTasks(
-        stageHandlers: StageHandler[],
+        stageHandlers: StageHandlerInternal[],
         ecModel: GlobalModel,
         payload: Payload,
         opt?: PerformStageTaskOpt
@@ -397,7 +397,7 @@ class Scheduler {
     }
 
     private _createSeriesStageTask(
-        stageHandler: StageHandler,
+        stageHandler: StageHandlerInternal,
         stageHandlerRecord: TaskRecord,
         ecModel: GlobalModel,
         api: ExtensionAPI
@@ -456,7 +456,7 @@ class Scheduler {
     }
 
     private _createOverallStageTask(
-        stageHandler: StageHandler,
+        stageHandler: StageHandlerInternal,
         stageHandlerRecord: TaskRecord,
         ecModel: GlobalModel,
         api: ExtensionAPI
@@ -549,20 +549,20 @@ class Scheduler {
     }
 
     static wrapStageHandler(
-        stageHandler: StageHandlerInput | StageHandlerOverallReset,
+        stageHandler: StageHandler | StageHandlerOverallReset,
         visualType: VisualType
-    ): StageHandler {
+    ): StageHandlerInternal {
         if (isFunction(stageHandler)) {
             stageHandler = {
                 overallReset: stageHandler,
                 seriesType: detectSeriseType(stageHandler)
-            } as StageHandler;
+            } as StageHandlerInternal;
         }
 
-        (stageHandler as StageHandler).uid = getUID('stageHandler');
-        visualType && ((stageHandler as StageHandler).visualType = visualType);
+        (stageHandler as StageHandlerInternal).uid = getUID('stageHandler');
+        visualType && ((stageHandler as StageHandlerInternal).visualType = visualType);
 
-        return stageHandler as StageHandler;
+        return stageHandler as StageHandlerInternal;
     };
 
 }
@@ -599,9 +599,9 @@ function seriesTaskReset(
     if (context.useClearVisual) {
         context.data.clearAllVisual();
     }
-    var resetDefines = context.resetDefines = normalizeToArray<StageHandlerProgressExecutor>(
+    var resetDefines = context.resetDefines = normalizeToArray(
         context.reset(context.model, context.ecModel, context.api, context.payload)
-    );
+    ) as StageHandlerProgressExecutor[];
     return resetDefines.length > 1
         ? map(resetDefines, function (v, idx) {
             return makeSeriesTaskProgress(idx);

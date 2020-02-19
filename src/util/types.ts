@@ -161,6 +161,11 @@ export interface PostUpdater {
 
 export type VisualType = 'layout' | 'visual';
 
+
+export interface StageHandlerReset {
+    (seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload):
+        StageHandlerProgressExecutor | StageHandlerProgressExecutor[] | void
+}
 export interface StageHandlerOverallReset {
     (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
@@ -183,14 +188,12 @@ export interface StageHandlerInternal extends StageHandler {
     isVisual?: boolean; // PENDING: not used
     isLayout?: boolean; // PENDING: not used
 }
+
+
 export type StageHandlerProgressParams = TaskProgressParams;
 export interface StageHandlerProgressExecutor {
     dataEach?: (data: List, idx: number) => void;
     progress?: (params: StageHandlerProgressParams, data: List) => void;
-}
-export interface StageHandlerReset {
-    (seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload):
-        StageHandlerProgressExecutor | StageHandlerProgressExecutor[]
 }
 export type StageHandlerPlanReturn = TaskPlanCallbackReturn;
 export interface StageHandlerPlan {
@@ -380,7 +383,7 @@ export type OptionDataItem =
 export type OptionDataPrimitive = string | number | Date;
 
 // export type ModelOption = Dictionary<any> | any[] | string | number | boolean | ((...args: any) => any);
-export type ModelOption = Dictionary<any>;
+export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
 export type DisplayState = 'normal' | 'emphasis';
@@ -553,7 +556,7 @@ interface TextCommonOption extends ShadowOptionMixin {
     borderColor?: string
     borderWidth?: number
     borderRadius?: number | [number, number, number, number]
-    padding?: number | [number, number] | [number, number, number, number]
+    padding?: number | number[]
 
     width?: number | string// Percent
     height?: number

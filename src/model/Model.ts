@@ -112,18 +112,18 @@ class Model<Opt extends ModelOption = ModelOption> {
         path: R, ignoreParent?: boolean
     ): Opt[R];
     get<R extends keyof Opt>(
-        path: [R], ignoreParent?: boolean
+        path: readonly [R], ignoreParent?: boolean
     ): Opt[R];
     get<R extends keyof Opt, S extends keyof Opt[R]>(
-        path: [R, S], ignoreParent?: boolean
+        path: readonly [R, S], ignoreParent?: boolean
     ): Opt[R][S];
     get<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
-        path: [R, S, T], ignoreParent?: boolean
+        path: readonly [R, S, T], ignoreParent?: boolean
     ): Opt[R][S][T];
     // `path` can be 'xxx.yyy.zzz', so the return value type have to be `ModelOption`
     // TODO: TYPE strict key check?
     // get(path: string | string[], ignoreParent?: boolean): ModelOption;
-    get(path: string | string[], ignoreParent?: boolean): ModelOption {
+    get(path: string | readonly string[], ignoreParent?: boolean): ModelOption {
         if (path == null) {
             return this.option;
         }
@@ -151,29 +151,33 @@ class Model<Opt extends ModelOption = ModelOption> {
         return val;
     }
 
+    // TODO At most 3 depth?
     getModel<R extends keyof Opt>(
         path: R, parentModel?: Model
     ): Model<Opt[R]>;
     getModel<R extends keyof Opt>(
-        path: [R], parentModel?: Model
+        path: readonly [R], parentModel?: Model
     ): Model<Opt[R]>;
     getModel<R extends keyof Opt, S extends keyof Opt[R]>(
-        path: [R, S], parentModel?: Model
+        path: readonly [R, S], parentModel?: Model
     ): Model<Opt[R][S]>;
     getModel<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
-        path: [R, S, T], parentModel?: Model
+        path: readonly [R, S, T], parentModel?: Model
     ): Model<Opt[R][S][T]>;
     // `path` can be 'xxx.yyy.zzz', so the return value type have to be `Model<ModelOption>`
     // getModel(path: string | string[], parentModel?: Model): Model;
-    getModel(path: string | string[], parentModel?: Model): Model<any> {
-        var obj = path == null
-            ? this.option
-            : doGet(this.option, path = this.parsePath(path));
+    // TODO 'xxx.yyy.zzz' is deprecated
+    getModel(path: string | readonly string[], parentModel?: Model): Model<any> {
+        var hasPath = path != null;
+        var pathFinal = hasPath ? this.parsePath(path) : null;
+        var obj = hasPath
+            ? doGet(this.option, pathFinal)
+            : this.option;
 
         var thisParentModel;
         parentModel = parentModel || (
-            (thisParentModel = getParent(this, path))
-                && thisParentModel.getModel(path as string)
+            (thisParentModel = getParent(this, pathFinal))
+                && thisParentModel.getModel(pathFinal as readonly [string])
         );
 
         return new Model(obj, parentModel, this.ecModel);
@@ -199,9 +203,9 @@ class Model<Opt extends ModelOption = ModelOption> {
     // }
 
     // If path is null/undefined, return null/undefined.
-    parsePath(path: string | string[]): string[] {
+    parsePath(path: string | readonly string[]): readonly string[] {
         if (typeof path === 'string') {
-            path = path.split('.');
+            return path.split('.');
         }
         return path;
     }
@@ -231,7 +235,7 @@ class Model<Opt extends ModelOption = ModelOption> {
 
 };
 
-function doGet(obj: ModelOption, pathArr: string[], parentModel?: Model<Dictionary<any>>) {
+function doGet(obj: ModelOption, pathArr: readonly string[], parentModel?: Model<Dictionary<any>>) {
     for (var i = 0; i < pathArr.length; i++) {
         // Ignore empty
         if (!pathArr[i]) {
@@ -251,7 +255,7 @@ function doGet(obj: ModelOption, pathArr: string[], parentModel?: Model<Dictiona
 }
 
 // `path` can be null/undefined
-function getParent(model: Model, path: string | string[]): Model {
+function getParent(model: Model, path: string | readonly string[]): Model {
     var getParentMethod = inner(model).getParent;
     return getParentMethod ? getParentMethod.call(model, path) : model.parentModel;
 }
@@ -264,11 +268,10 @@ type ModelConstructor = typeof Model
 enableClassExtend(Model as ModelConstructor);
 enableClassCheck(Model as ModelConstructor);
 
-interface Model extends LineStyleMixin, ItemStyleMixin {}
-
-zrUtil.tsMixin(Model, LineStyleMixin);
+interface Model extends LineStyleMixin, ItemStyleMixin, textStyleMixin {}
+mixin(Model, LineStyleMixin);
+mixin(Model, ItemStyleMixin);
 mixin(Model, areaStyleMixin);
 mixin(Model, textStyleMixin);
-zrUtil.tsMixin(Model, ItemStyleMixin);
 
 export default Model;

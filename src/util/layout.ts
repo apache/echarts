@@ -196,7 +196,7 @@ export function getLayoutRect(
     positionInfo: BoxLayoutOptionMixin & {
         aspect?: number // aspect is width / height
     },
-    containerRect: RectLike,
+    containerRect: {width: number, height: number},
     margin?: number | number[]
 ): LayoutRect {
     margin = formatUtil.normalizeCssArray(margin || 0);

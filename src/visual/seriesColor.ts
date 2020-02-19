@@ -21,8 +21,9 @@
 
 import Gradient from 'zrender/src/graphic/Gradient';
 import {isFunction} from 'zrender/src/core/util';
+import { StageHandler } from '../util/types';
 
-export default {
+const seriesColorTask: StageHandler = {
     createOnAllSeries: true,
     performRawSeries: true,
     reset: function (seriesModel, ecModel) {
@@ -73,3 +74,4 @@ export default {
         }
     }
 };
+export default seriesColorTask;

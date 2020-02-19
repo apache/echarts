@@ -19,8 +19,12 @@
 
 // @ts-nocheck
 
+import { StageHandler } from '../util/types';
+import { Dictionary } from 'zrender/src/core/types';
 
-var samplers = {
+
+type Sampler = (frame: ArrayLike<number>) => number;
+var samplers: Dictionary<Sampler> = {
     average: function (frame) {
         var sum = 0;
         var count = 0;
@@ -64,11 +68,11 @@ var samplers = {
     }
 };
 
-var indexSampler = function (frame, value) {
+var indexSampler = function (frame: ArrayLike<number>) {
     return Math.round(frame.length / 2);
 };
 
-export default function (seriesType) {
+export default function (seriesType: string): StageHandler {
     return {
 
         seriesType: seriesType,

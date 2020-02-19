@@ -553,8 +553,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
 interface SeriesModel<Opt extends SeriesOption = SeriesOption>
     extends DataFormatMixin, ColorPaletteMixin<Opt>, DataHost {}
-zrUtil.tsMixin(SeriesModel, DataFormatMixin);
-zrUtil.tsMixin(SeriesModel, ColorPaletteMixin);
+zrUtil.mixin(SeriesModel, DataFormatMixin);
+zrUtil.mixin(SeriesModel, ColorPaletteMixin);
 
 export type SeriesModelConstructor = typeof SeriesModel & ExtendableConstructor;
 mountExtend(SeriesModel, ComponentModel as SeriesModelConstructor);

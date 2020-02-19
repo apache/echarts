@@ -17,17 +17,18 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {parsePercent, linearMap} from '../../util/number';
 import * as layout from '../../util/layout';
 import labelLayout from './labelLayout';
 import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import PieSeries from './PieSeries';
 
 var PI2 = Math.PI * 2;
 var RADIAN = Math.PI / 180;
 
-function getViewRect(seriesModel, api) {
+function getViewRect(seriesModel: PieSeries, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
@@ -36,8 +37,12 @@ function getViewRect(seriesModel, api) {
     );
 }
 
-export default function (seriesType, ecModel, api, payload) {
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+export default function (
+    seriesType: 'pie',
+    ecModel: GlobalModel,
+    api: ExtensionAPI
+) {
+    ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeries) {
         var data = seriesModel.getData();
         var valueDim = data.mapDimension('value');
         var viewRect = getViewRect(seriesModel, api);
@@ -65,7 +70,7 @@ export default function (seriesType, ecModel, api, payload) {
         var minAngle = seriesModel.get('minAngle') * RADIAN;
 
         var validDataCount = 0;
-        data.each(valueDim, function (value) {
+        data.each(valueDim, function (value: number) {
             !isNaN(value) && validDataCount++;
         });
 
@@ -89,7 +94,7 @@ export default function (seriesType, ecModel, api, payload) {
         var currentAngle = startAngle;
         var dir = clockwise ? 1 : -1;
 
-        data.each(valueDim, function (value, idx) {
+        data.each(valueDim, function (value: number, idx: number) {
             var angle;
             if (isNaN(value)) {
                 data.setItemLayout(idx, {
@@ -150,7 +155,7 @@ export default function (seriesType, ecModel, api, payload) {
             // Constrained by minAngle
             if (restAngle <= 1e-3) {
                 var angle = PI2 / validDataCount;
-                data.each(valueDim, function (value, idx) {
+                data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
                         var layout = data.getItemLayout(idx);
                         layout.angle = angle;
@@ -162,7 +167,7 @@ export default function (seriesType, ecModel, api, payload) {
             else {
                 unitRadian = restAngle / valueSumLargerThanMinAngle;
                 currentAngle = startAngle;
-                data.each(valueDim, function (value, idx) {
+                data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
                         var layout = data.getItemLayout(idx);
                         var angle = layout.angle === minAngle

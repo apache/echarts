@@ -31,7 +31,6 @@ import {
 } from '../util/clazz';
 import {makeInner} from '../util/model';
 import * as layout from '../util/layout';
-import boxLayoutMixin from './mixin/boxLayout';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import GlobalModel from './Global';
 import {
@@ -272,6 +271,20 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         });
     }
 
+
+    getBoxLayoutParams() {
+        // Consider itself having box layout configs.
+        const boxLayoutModel = this as Model<ComponentOption & BoxLayoutOptionMixin>;
+        return {
+            left: boxLayoutModel.get('left'),
+            top: boxLayoutModel.get('top'),
+            right: boxLayoutModel.get('right'),
+            bottom: boxLayoutModel.get('bottom'),
+            width: boxLayoutModel.get('width'),
+            height: boxLayoutModel.get('height')
+        };
+    }
+
     static registerClass: ClassManager['registerClass'];
 }
 
@@ -321,7 +334,5 @@ function getDependencies(componentType: string): string[] {
 
     return deps;
 }
-
-zrUtil.mixin(ComponentModel, boxLayoutMixin);
 
 export default ComponentModel;
