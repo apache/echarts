@@ -372,8 +372,8 @@ Calendar.prototype = {
             range.reverse();
         }
 
-        var allDay = Math.floor(range[1].time / PROXIMATE_ONE_DAY)
-            - Math.floor(range[0].time / PROXIMATE_ONE_DAY) + 1;
+        var allDay =
+            Math.round((range[1].time - range[0].time) / PROXIMATE_ONE_DAY) + 1;
 
         // Consider case:
         // Firstly set system timezone as "Time Zone: America/Toronto",
