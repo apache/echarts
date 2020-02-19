@@ -1555,13 +1555,9 @@ class List {
     /**
      * Get model of one data item.
      */
-    // FIXME Model proxy ?
     getItemModel(idx: number): Model {
         var hostModel = this.hostModel;
         var dataItem = this.getRawDataItem(idx) as ModelOption;
-        if (this._rawData.pure || !isDataItemOption(dataItem)) {
-            dataItem = { value: dataItem };
-        }
         return new Model(dataItem, hostModel, hostModel && hostModel.ecModel);
     }
 

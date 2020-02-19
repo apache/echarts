@@ -42,6 +42,14 @@ import { Dictionary } from 'zrender/src/core/types';
 var mixin = zrUtil.mixin;
 var inner = makeInner();
 
+// Since model.option can be not only `Dictionary` but also primary types,
+// we do this conditional type to avoid getting type 'never';
+type Key<Opt> = Opt extends Dictionary<any>
+    ? keyof Opt : string;
+type Value<Opt, R> = Opt extends Dictionary<any>
+    ? (R extends keyof Opt ? Opt[R] : ModelOption)
+    : ModelOption;
+
 /**
  * @alias module:echarts/model/Model
  * @constructor
@@ -132,11 +140,12 @@ class Model<Opt extends ModelOption = ModelOption> {
     ): Opt[R] {
         var option = this.option;
 
-        var val: Opt[R] = option == null ? null : option[key];
+        var val = option == null ? option : option[key];
         if (val == null) {
             var parentModel = !ignoreParent && getParent(this, key as string);
             if (parentModel) {
-                val = (parentModel as Model<Opt>).getShallow(key);
+                // FIXME:TS do not know how to make it works
+                val = parentModel.getShallow(key);
             }
         }
         return val;
@@ -229,7 +238,7 @@ function doGet(obj: ModelOption, pathArr: string[], parentModel?: Model<Dictiona
             continue;
         }
         // obj could be number/string/... (like 0)
-        obj = obj[pathArr[i]];
+        obj = (obj && typeof obj === 'object') ? obj[pathArr[i] as keyof ModelOption] : null;
         if (obj == null) {
             break;
         }
