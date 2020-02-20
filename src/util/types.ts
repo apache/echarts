@@ -161,9 +161,6 @@ export interface PostUpdater {
     (ecModel: GlobalModel, api: ExtensionAPI): void;
 }
 
-export type VisualType = 'layout' | 'visual';
-
-
 export interface StageHandlerReset {
     (seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload):
         StageHandlerProgressExecutor | StageHandlerProgressExecutor[] | void
@@ -183,7 +180,7 @@ export interface StageHandler {
 
 export interface StageHandlerInternal extends StageHandler {
     uid: string;
-    visualType?: VisualType;
+    visualType?: 'layout' | 'visual';
     // modifyOutputEnd?: boolean;
     __prio: number;
     __raw: StageHandler | StageHandlerOverallReset;
@@ -409,6 +406,7 @@ export interface OptionEncode extends OptionEncodeVisualDimensions {
 export type OptionEncodeValue = DimensionIndex[] | DimensionIndex | DimensionName[] | DimensionName;
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
 
+// TODO: TYPE Different callback param for different series
 export interface DataParamsUserOutput {
     // component main type
     componentType: string;
@@ -478,6 +476,9 @@ export interface LarginOptionMixin {
     largeThreshold?: number
 }
 
+/**
+ * Mixin of option set to control the box layout of each component.
+ */
 export interface BoxLayoutOptionMixin {
     width?: number | string;
     height?: number | string;
@@ -508,19 +509,73 @@ export type AnimationDelayCallbackParam = {
 export type AnimationDurationCallback = (idx: number) => number;
 export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
 
+/**
+ * Mixin of option set to control the animation of series.
+ */
 export interface AnimationOptionMixin {
+    /**
+     * If enable animation
+     */
     animation?: boolean
+    /**
+     * Disable animation when the number of elements exceeds the threshold
+     */
     animationThreshold?: number
     // For init animation
+    /**
+     * Duration of initialize animation.
+     * Can be a callback to specify duration of each element
+     */
     animationDuration?: number | AnimationDurationCallback
+    /**
+     * Easing of initialize animation
+     */
     animationEasing?: easingType
+    /**
+     * Delay of initialize animation
+     * Can be a callback to specify duration of each element
+     */
     animationDelay?: AnimationDelayCallback
     // For update animation
+    /**
+     * Delay of data update animation.
+     * Can be a callback to specify duration of each element
+     */
     animationDurationUpdate?: number | AnimationDurationCallback
+    /**
+     * Easing of data update animation.
+     */
     animationEasingUpdate?: easingType
+    /**
+     * Delay of data update animation.
+     * Can be a callback to specify duration of each element
+     */
     animationDelayUpdate?: number | AnimationDelayCallback
 }
 
+// TODO: TYPE value type?
+export type SymbolSizeCallback = (rawValue: any, params: DataParamsUserOutput) => number | number[]
+export type SymbolCallback = (rawValue: any, params: DataParamsUserOutput) => string
+/**
+ * Mixin of option set to control the element symbol.
+ * Include type of symbol, and size of symbol.
+ */
+export interface SymbolOptionMixin {
+    /**
+     * type of symbol, like `cirlce`, `rect`, or custom path and image.
+     */
+    symbol?: string | SymbolCallback
+    /**
+     * Size of symbol.
+     */
+    symbolSize?: number | number[] | SymbolSizeCallback
+    symbolKeepAspect?: boolean
+}
+
+/**
+ * ItemStyleOption is a most common used set to config element styles.
+ * It includes both fill and stroke style.
+ */
 export interface ItemStyleOption extends ShadowOptionMixin {
     color?: ZRColor
     borderColor?: string
@@ -529,6 +584,11 @@ export interface ItemStyleOption extends ShadowOptionMixin {
     opacity?: number
 }
 
+/**
+ * ItemStyleOption is a option set to control styles on lines.
+ * Used in the components or series like `line`, `axis`
+ * It includes stroke style.
+ */
 export interface LineStyleOption extends ShadowOptionMixin {
     width?: number
     color?: string
@@ -536,9 +596,55 @@ export interface LineStyleOption extends ShadowOptionMixin {
     type?: ZRLineType
 }
 
+/**
+ * ItemStyleOption is a option set to control styles on an area, like polygon, rectangle.
+ * It only include fill style.
+ */
 export interface AreaStyleOption extends ShadowOptionMixin {
     color?: string
 }
+
+type Arrayable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | T[key][] }
+type Dictionaryable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | Dictionary<T[key]>}
+
+export interface VisualOptionUnit {
+    symbol?: string
+    // TODO Support [number, number]?
+    symbolSize?: number
+    color?: ColorString
+    colorAlpha?: number
+    opacity?: number
+    colorLightness?: number
+    colorSaturation?: number
+    colorHue?: number
+
+    // Not exposed?
+    liftZ?: number
+}
+export type VisualOptionFixed = VisualOptionUnit;
+/**
+ * Option about visual properties used in piecewise mapping
+ * Used in each piece.
+ */
+export type VisualOptionPiecewise = VisualOptionUnit
+/**
+ * Option about visual properties used in linear mapping
+ */
+export type VisualOptionLinear = Arrayable<VisualOptionUnit>
+
+/**
+ * Option about visual properties can be encoded from ordinal categories.
+ * Each value can either be a dictonary to lookup with category name, or
+ * be an array to lookup with category index. In this case the array length should
+ * be same with categories
+ */
+export type VisualOptionCategory = Arrayable<VisualOptionUnit> | Dictionaryable<VisualOptionUnit>
+
+export type VisualOption = VisualOptionFixed | VisualOptionLinear | VisualOptionCategory | VisualOptionPiecewise
+/**
+ * All visual properties can be encoded.
+ */
+export type BuiltinVisualProperty = keyof VisualOptionUnit;
 
 interface TextCommonOption extends ShadowOptionMixin {
     color?: string
@@ -557,7 +663,7 @@ interface TextCommonOption extends ShadowOptionMixin {
     }
     borderColor?: string
     borderWidth?: number
-    borderRadius?: number | [number, number, number, number]
+    borderRadius?: number | number[]
     padding?: number | number[]
 
     width?: number | string// Percent
@@ -572,8 +678,14 @@ interface TextCommonOption extends ShadowOptionMixin {
 
     tag?: string
 }
-
+/**
+ * LabelOption is an option set to control the style of labels.
+ * Include color, background, shadow, truncate, rotation, distance, etc..
+ */
 export interface LabelOption extends TextCommonOption {
+    /**
+     * If show label
+     */
     show?: boolean
     // TODO: TYPE More specified 'inside', 'insideTop'....
     position?: string | number[] | string[]

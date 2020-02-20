@@ -94,7 +94,7 @@ rules:
     new-parens: 2
     no-array-constructor: 2
     no-multi-spaces:
-        - 2
+        - 1
         -
             ignoreEOLComments: true
             exceptions:

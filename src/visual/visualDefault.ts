@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * @file Visual mapping.
  */
@@ -26,11 +24,10 @@
 import * as zrUtil from 'zrender/src/core/util';
 
 var visualDefault = {
-
     /**
      * @public
      */
-    get: function (visualType, key, isCategory) {
+    get: function (visualType: string, key: 'active' | 'inactive', isCategory?: boolean) {
         var value = zrUtil.clone(
             (defaultOption[visualType] || {})[key]
         );
@@ -39,10 +36,12 @@ var visualDefault = {
             ? (zrUtil.isArray(value) ? value[value.length - 1] : value)
             : value;
     }
-
 };
 
-var defaultOption = {
+var defaultOption: {[key: string]: {
+    active: string[] | number[]
+    inactive: string[] | number[]
+}} = {
 
     color: {
         active: ['#006edd', '#e0ffff'],

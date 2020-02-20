@@ -55,7 +55,7 @@ import {
     Payload, PayloadItem, ECElement, RendererType, ECEvent,
     ActionHandler, ActionInfo, OptionPreprocessor, PostUpdater,
     LoadingEffect, LoadingEffectCreator, StageHandlerInternal,
-    StageHandlerOverallReset, VisualType, StageHandler,
+    StageHandlerOverallReset, StageHandler,
     ViewRootGroup, DimensionDefinitionLoose, ECEventData, ThemeOption,
     ECOption,
     ECUnitOption,
@@ -2163,7 +2163,7 @@ function normalizeRegister(
     priority: number | StageHandler | StageHandlerOverallReset,
     fn: StageHandler | StageHandlerOverallReset,
     defaultPriority: number,
-    visualType?: VisualType
+    visualType?: StageHandlerInternal['visualType']
 ): void {
     if (isFunction(priority) || isObject(priority)) {
         fn = priority as (StageHandler | StageHandlerOverallReset);

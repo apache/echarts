@@ -17,18 +17,29 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * @file Visual solution, for consistent option specification.
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import VisualMapping from './VisualMapping';
+import VisualMapping, { VisualMappingOption } from './VisualMapping';
+import { Dictionary } from 'zrender/src/core/types';
+import {
+    VisualOption,
+    BuiltinVisualProperty,
+    ParsedDataValue,
+    DimensionLoose,
+    StageHandlerProgressExecutor
+} from '../util/types';
+import List from '../data/List';
 
 var each = zrUtil.each;
 
-function hasKeys(obj) {
+type WithKey<T extends string, S> = { [key in T]?: S}
+type VisualMappingCollection<VisualState extends string>
+    = WithKey<VisualState, WithKey<BuiltinVisualProperty, VisualMapping>>
+
+function hasKeys(obj: Dictionary<any>) {
     if (obj) {
         for (var name in obj) {
             if (obj.hasOwnProperty(name)) {
@@ -38,19 +49,17 @@ function hasKeys(obj) {
     }
 }
 
-/**
- * @param {Object} option
- * @param {Array.<string>} stateList
- * @param {Function} [supplementVisualOption]
- * @return {Object} visualMappings <state, <visualType, module:echarts/visual/VisualMapping>>
- */
-export function createVisualMappings(option, stateList, supplementVisualOption) {
-    var visualMappings = {};
+export function createVisualMappings<VisualState extends string>(
+    option: Dictionary<VisualOption>,
+    stateList: readonly VisualState[],
+    supplementVisualOption: (mappingOption: VisualMappingOption, state: string) => void
+) {
+    var visualMappings: VisualMappingCollection<VisualState> = {};
 
     each(stateList, function (state) {
         var mappings = visualMappings[state] = createMappings();
 
-        each(option[state], function (visualData, visualType) {
+        each(option[state], function (visualData, visualType: BuiltinVisualProperty) {
             if (!VisualMapping.isValidType(visualType)) {
                 return;
             }
@@ -78,17 +87,14 @@ export function createVisualMappings(option, stateList, supplementVisualOption) 
         // Make sure hidden fields will not be visited by
         // object iteration (with hasOwnProperty checking).
         Creater.prototype.__hidden = Creater.prototype;
-        var obj = new Creater();
+        var obj = new (Creater as any)();
         return obj;
     }
 }
 
-/**
- * @param {Object} thisOption
- * @param {Object} newOption
- * @param {Array.<string>} keys
- */
-export function replaceVisualOption(thisOption, newOption, keys) {
+export function replaceVisualOption<T extends string>(
+    thisOption: WithKey<T, any>, newOption: WithKey<T, any>, keys: readonly T[]
+) {
     // Visual attributes merge is not supported, otherwise it
     // brings overcomplicated merge logic. See #2853. So if
     // newOption has anyone of these keys, all of these keys
@@ -110,28 +116,35 @@ export function replaceVisualOption(thisOption, newOption, keys) {
 }
 
 /**
- * @param {Array.<string>} stateList
- * @param {Object} visualMappings <state, Object.<visualType, module:echarts/visual/VisualMapping>>
- * @param {module:echarts/data/List} list
- * @param {Function} getValueState param: valueOrIndex, return: state.
- * @param {object} [scope] Scope for getValueState
- * @param {string} [dimension] Concrete dimension, if used.
+ * @param stateList
+ * @param visualMappings
+ * @param list
+ * @param getValueState param: valueOrIndex, return: state.
+ * @param scope Scope for getValueState
+ * @param dimension Concrete dimension, if used.
  */
 // ???! handle brush?
-export function applyVisual(stateList, visualMappings, data, getValueState, scope, dimension) {
-    var visualTypesMap = {};
+export function applyVisual<VisualState extends string, Scope>(
+    stateList: VisualState[],
+    visualMappings: VisualMappingCollection<VisualState>,
+    data: List,
+    getValueState: (this: Scope, valueOrIndex: ParsedDataValue | number) => VisualState,
+    scope?: Scope,
+    dimension?: DimensionLoose
+) {
+    var visualTypesMap: WithKey<VisualState, BuiltinVisualProperty[]> = {};
     zrUtil.each(stateList, function (state) {
         var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
     });
 
-    var dataIndex;
+    var dataIndex: number;
 
-    function getVisual(key) {
+    function getVisual(key: string) {
         return data.getItemVisual(dataIndex, key);
     }
 
-    function setVisual(key, value) {
+    function setVisual(key: string, value: any) {
         data.setItemVisual(dataIndex, key, value);
     }
 
@@ -142,11 +155,14 @@ export function applyVisual(stateList, visualMappings, data, getValueState, scop
         data.each([dimension], eachItem);
     }
 
-    function eachItem(valueOrIndex, index) {
-        dataIndex = dimension == null ? valueOrIndex : index;
+    function eachItem(valueOrIndex: ParsedDataValue | number, index?: number) {
+        dataIndex = dimension == null
+            ? valueOrIndex as number    // First argument is index
+            : index;
 
         var rawDataItem = data.getRawDataItem(dataIndex);
         // Consider performance
+        // @ts-ignore
         if (rawDataItem && rawDataItem.visualMap === false) {
             return;
         }
@@ -165,55 +181,62 @@ export function applyVisual(stateList, visualMappings, data, getValueState, scop
 }
 
 /**
- * @param {module:echarts/data/List} data
- * @param {Array.<string>} stateList
- * @param {Object} visualMappings <state, Object.<visualType, module:echarts/visual/VisualMapping>>
- * @param {Function} getValueState param: valueOrIndex, return: state.
- * @param {number} [dim] dimension or dimension index.
+ * @param data
+ * @param stateList
+ * @param visualMappings <state, Object.<visualType, module:echarts/visual/VisualMapping>>
+ * @param getValueState param: valueOrIndex, return: state.
+ * @param dim dimension or dimension index.
  */
-export function incrementalApplyVisual(stateList, visualMappings, getValueState, dim) {
-    var visualTypesMap = {};
+export function incrementalApplyVisual<VisualState extends string>(
+    stateList: VisualState[],
+    visualMappings: VisualMappingCollection<VisualState>,
+    getValueState: (valueOrIndex: ParsedDataValue | number) => VisualState,
+    dim?: DimensionLoose
+): StageHandlerProgressExecutor {
+    var visualTypesMap: WithKey<VisualState, BuiltinVisualProperty[]> = {};
     zrUtil.each(stateList, function (state) {
         var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
     });
 
-    function progress(params, data) {
-        if (dim != null) {
-            dim = data.getDimension(dim);
-        }
-
-        function getVisual(key) {
-            return data.getItemVisual(dataIndex, key);
-        }
-
-        function setVisual(key, value) {
-            data.setItemVisual(dataIndex, key, value);
-        }
-
-        var dataIndex;
-        while ((dataIndex = params.next()) != null) {
-            var rawDataItem = data.getRawDataItem(dataIndex);
-
-            // Consider performance
-            if (rawDataItem && rawDataItem.visualMap === false) {
-                continue;
+    return {
+        progress: function progress(params, data) {
+            let dimName: string;
+            if (dim != null) {
+                dimName = data.getDimension(dim);
             }
 
-            var value = dim != null
-                ? data.get(dim, dataIndex, true)
-                : dataIndex;
+            function getVisual(key: string) {
+                return data.getItemVisual(dataIndex, key);
+            }
 
-            var valueState = getValueState(value);
-            var mappings = visualMappings[valueState];
-            var visualTypes = visualTypesMap[valueState];
+            function setVisual(key: string, value: any) {
+                data.setItemVisual(dataIndex, key, value);
+            }
 
-            for (var i = 0, len = visualTypes.length; i < len; i++) {
-                var type = visualTypes[i];
-                mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
+            var dataIndex: number;
+            while ((dataIndex = params.next()) != null) {
+                var rawDataItem = data.getRawDataItem(dataIndex);
+
+                // Consider performance
+                // @ts-ignore
+                if (rawDataItem && rawDataItem.visualMap === false) {
+                    continue;
+                }
+
+                var value = dim != null
+                    ? data.get(dimName, dataIndex)
+                    : dataIndex;
+
+                var valueState = getValueState(value);
+                var mappings = visualMappings[valueState];
+                var visualTypes = visualTypesMap[valueState];
+
+                for (var i = 0, len = visualTypes.length; i < len; i++) {
+                    var type = visualTypes[i];
+                    mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
+                }
             }
         }
-    }
-
-    return {progress: progress};
+    };
 }

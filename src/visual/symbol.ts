@@ -17,11 +17,13 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {isFunction} from 'zrender/src/core/util';
+import { StageHandler, SeriesOption, SymbolOptionMixin, SymbolSizeCallback, SymbolCallback } from '../util/types';
+import List from '../data/List';
+import SeriesModel from '../model/Series';
+import GlobalModel from '../model/Global';
 
-export default function (seriesType, defaultSymbolType, legendSymbol) {
+export default function (seriesType: string, defaultSymbolType: string, legendSymbol: string): StageHandler {
     // Encoding visual for all series include which is filtered for legend drawing
     return {
         seriesType: seriesType,
@@ -29,7 +31,10 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
         // For legend.
         performRawSeries: true,
 
-        reset: function (seriesModel, ecModel, api) {
+        reset: function (
+            seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin>,
+            ecModel: GlobalModel
+        ) {
             var data = seriesModel.getData();
 
             var symbolType = seriesModel.get('symbol');
@@ -58,12 +63,16 @@ export default function (seriesType, defaultSymbolType, legendSymbol) {
                 return;
             }
 
-            function dataEach(data, idx) {
+            function dataEach(data: List, idx: number) {
                 if (hasCallback) {
                     var rawValue = seriesModel.getRawValue(idx);
                     var params = seriesModel.getDataParams(idx);
-                    hasSymbolTypeCallback && data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
-                    hasSymbolSizeCallback && data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
+                    hasSymbolTypeCallback && data.setItemVisual(
+                        idx, 'symbol', (symbolType as SymbolCallback)(rawValue, params)
+                    );
+                    hasSymbolSizeCallback && data.setItemVisual(
+                        idx, 'symbolSize', (symbolSize as SymbolSizeCallback)(rawValue, params)
+                    );
                 }
 
                 if (data.hasItemOption) {
