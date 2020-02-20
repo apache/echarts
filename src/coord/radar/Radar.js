@@ -195,6 +195,7 @@ Radar.prototype.update = function (ecModel, api) {
         var fixedMax = axisModel.getMax();
         var interval = scale.getInterval();
 
+
         if (fixedMin != null && fixedMax != null) {
             // User set min, max, divide to get new interval
             scale.setExtent(+fixedMin, +fixedMax);
@@ -230,13 +231,10 @@ Radar.prototype.update = function (ecModel, api) {
             if (nicedSplitNumber > splitNumber) {
                 interval = increaseInterval(interval);
             }
-            // PENDING
-            var center = Math.ceil((rawExtent[0] + rawExtent[1]) / 2 / interval) * interval;
-            var halfSplitNumber = Math.round(splitNumber / 2);
-            scale.setExtent(
-                numberUtil.round(center - halfSplitNumber * interval),
-                numberUtil.round(center + (splitNumber - halfSplitNumber) * interval)
-            );
+            // TODO
+            var max = Math.ceil(rawExtent[1] / interval) * interval;
+            var min = numberUtil.round(max - interval * splitNumber);
+            scale.setExtent(min, max);
             scale.setInterval(interval);
         }
     });
