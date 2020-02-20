@@ -31,12 +31,15 @@ module.exports = class Timeline {
         this._currentOpIndex = 0;
 
         this._client;
+
+        this._isLastOpMousewheel = false;
     }
 
     _reset() {
         this._currentOpIndex = 0;
         this._current = Date.now();
         this._elapsedTime = 0;
+        this._isLastOpMousewheel = false;
     }
 
 
@@ -102,6 +105,7 @@ module.exports = class Timeline {
         }
 
         let page = this._page;
+        let takenScreenshot = false;
         switch (op.type) {
             case 'mousedown':
                 await page.mouse.move(op.x, op.y);
@@ -130,7 +134,7 @@ module.exports = class Timeline {
 
                     element.dispatchEvent(event);
                 }, op.x, op.y, op.deltaX || 0, op.deltaY);
-
+                this._isLastOpMousewheel = true;
                 // console.log('mousewheel', op.x, op.y, op.deltaX, op.deltaY);
                 // await this._client.send('Input.dispatchMouseEvent', {
                 //     type: 'mouseWheel',
@@ -139,9 +143,10 @@ module.exports = class Timeline {
                 //     deltaX: op.deltaX,
                 //     deltaY: op.deltaY
                 // });
-                // break;
+                break;
             case 'screenshot':
                 await takeScreenshot();
+                takenScreenshot = true;
                 break;
             case 'valuechange':
                 if (op.target === 'select') {
@@ -159,7 +164,16 @@ module.exports = class Timeline {
             // TODO Configuration time
             await waitTime(delay / playbackSpeed);
             await takeScreenshot();
+            takenScreenshot = true;
             this._currentOpIndex++;
+        }
+
+        if (this._isLastOpMousewheel && op.type !== 'mousewheel') {
+            // Only take screenshot after mousewheel finished
+            if (!takenScreenshot) {
+                takeScreenshot();
+            }
+            this._isLastOpMousewheel = false;
         }
     }
 };
