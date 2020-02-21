@@ -17,19 +17,19 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Compatitable with 2.0
 
 import {each, isArray, isObject} from 'zrender/src/core/util';
 import compatStyle from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
+import { Dictionary } from 'zrender/src/core/types';
+import { ECUnitOption } from '../util/types';
 
-function get(opt, path) {
-    path = path.split(',');
+function get(opt: Dictionary<any>, path: string): any {
+    const pathArr = path.split(',');
     var obj = opt;
-    for (var i = 0; i < path.length; i++) {
-        obj = obj && obj[path[i]];
+    for (var i = 0; i < pathArr.length; i++) {
+        obj = obj && obj[pathArr[i]];
         if (obj == null) {
             break;
         }
@@ -37,23 +37,23 @@ function get(opt, path) {
     return obj;
 }
 
-function set(opt, path, val, overwrite) {
-    path = path.split(',');
+function set(opt: Dictionary<any>, path: string, val: any, overwrite?: boolean) {
+    const pathArr = path.split(',');
     var obj = opt;
     var key;
-    for (var i = 0; i < path.length - 1; i++) {
-        key = path[i];
+    for (var i = 0; i < pathArr.length - 1; i++) {
+        key = pathArr[i];
         if (obj[key] == null) {
             obj[key] = {};
         }
         obj = obj[key];
     }
-    if (overwrite || obj[path[i]] == null) {
-        obj[path[i]] = val;
+    if (overwrite || obj[pathArr[i]] == null) {
+        obj[pathArr[i]] = val;
     }
 }
 
-function compatLayoutProperties(option) {
+function compatLayoutProperties(option: Dictionary<any>) {
     each(LAYOUT_PROPERTIES, function (prop) {
         if (prop[0] in option && !(prop[1] in option)) {
             option[prop[1]] = option[prop[0]];
@@ -69,7 +69,7 @@ var COMPATITABLE_COMPONENTS = [
     'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
 ];
 
-export default function (option, isTheme) {
+export default function (option: ECUnitOption, isTheme?: boolean) {
     compatStyle(option, isTheme);
 
     // Make sure series array for model initialization.

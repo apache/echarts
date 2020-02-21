@@ -17,10 +17,9 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
+import { Dictionary } from 'zrender/src/core/types';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -30,7 +29,7 @@ var POSSIBLE_STYLES = [
     'chordStyle', 'label', 'labelLine'
 ];
 
-function compatEC2ItemStyle(opt) {
+function compatEC2ItemStyle(opt: Dictionary<any>) {
     var itemStyleOpt = opt && opt.itemStyle;
     if (!itemStyleOpt) {
         return;
@@ -62,7 +61,7 @@ function compatEC2ItemStyle(opt) {
     }
 }
 
-function convertNormalEmphasis(opt, optType, useExtend) {
+function convertNormalEmphasis(opt: Dictionary<any>, optType: string, useExtend?: boolean) {
     if (opt && opt[optType] && (opt[optType].normal || opt[optType].emphasis)) {
         var normalOpt = opt[optType].normal;
         var emphasisOpt = opt[optType].emphasis;
@@ -84,7 +83,7 @@ function convertNormalEmphasis(opt, optType, useExtend) {
     }
 }
 
-function removeEC3NormalStatus(opt) {
+function removeEC3NormalStatus(opt: Dictionary<any>) {
     convertNormalEmphasis(opt, 'itemStyle');
     convertNormalEmphasis(opt, 'lineStyle');
     convertNormalEmphasis(opt, 'areaStyle');
@@ -96,21 +95,21 @@ function removeEC3NormalStatus(opt) {
     convertNormalEmphasis(opt, 'edgeLabel');
 }
 
-function compatTextStyle(opt, propName) {
+function compatTextStyle(opt: any, propName: string) {
     // Check whether is not object (string\null\undefined ...)
     var labelOptSingle = isObject(opt) && opt[propName];
     var textStyle = isObject(labelOptSingle) && labelOptSingle.textStyle;
     if (textStyle) {
         for (var i = 0, len = modelUtil.TEXT_STYLE_OPTIONS.length; i < len; i++) {
-            var propName = modelUtil.TEXT_STYLE_OPTIONS[i];
-            if (textStyle.hasOwnProperty(propName)) {
-                labelOptSingle[propName] = textStyle[propName];
+            var textPropName = modelUtil.TEXT_STYLE_OPTIONS[i];
+            if (textStyle.hasOwnProperty(textPropName)) {
+                labelOptSingle[textPropName] = textStyle[textPropName];
             }
         }
     }
 }
 
-function compatEC3CommonStyles(opt) {
+function compatEC3CommonStyles(opt: Dictionary<any>) {
     if (opt) {
         removeEC3NormalStatus(opt);
         compatTextStyle(opt, 'label');
@@ -118,7 +117,7 @@ function compatEC3CommonStyles(opt) {
     }
 }
 
-function processSeries(seriesOpt) {
+function processSeries(seriesOpt: any) {
     if (!isObject(seriesOpt)) {
         return;
     }
@@ -221,15 +220,15 @@ function processSeries(seriesOpt) {
     // sunburst starts from ec4, so it does not need to compat levels.
 }
 
-function toArr(o) {
+function toArr(o: any) {
     return zrUtil.isArray(o) ? o : o ? [o] : [];
 }
 
-function toObj(o) {
+function toObj(o: any) {
     return (zrUtil.isArray(o) ? o[0] : o) || {};
 }
 
-export default function (option, isTheme) {
+export default function (option: any, isTheme?: boolean) {
     each(toArr(option.series), function (seriesOpt) {
         isObject(seriesOpt) && processSeries(seriesOpt);
     });

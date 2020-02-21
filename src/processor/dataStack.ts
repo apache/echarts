@@ -17,26 +17,38 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {createHashMap, each} from 'zrender/src/core/util';
+import GlobalModel from '../model/Global';
+import SeriesModel from '../model/Series';
+import { SeriesOption, StackOptionMixin, DimensionName } from '../util/types';
+import List from '../data/List';
 
+interface StackInfo {
+    stackedDimension: DimensionName
+    isStackedByIndex: boolean
+    stackedByDimension: DimensionName
+    stackResultDimension: DimensionName
+    stackedOverDimension: DimensionName
+    data: List
+    seriesModel: SeriesModel<SeriesOption & StackOptionMixin>
+}
 // (1) [Caution]: the logic is correct based on the premises:
 //     data processing stage is blocked in stream.
 //     See <module:echarts/stream/Scheduler#performDataProcessorTasks>
 // (2) Only register once when import repeatly.
 //     Should be executed after series filtered and before stack calculation.
-export default function (ecModel) {
-    var stackInfoMap = createHashMap();
-    ecModel.eachSeries(function (seriesModel) {
+export default function (ecModel: GlobalModel) {
+    var stackInfoMap = createHashMap<StackInfo[]>();
+    ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & StackOptionMixin>) {
         var stack = seriesModel.get('stack');
         // Compatibal: when `stack` is set as '', do not stack.
         if (stack) {
             var stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
             var data = seriesModel.getData();
 
-            var stackInfo = {
+            var stackInfo: StackInfo = {
                 // Used for calculate axis extent automatically.
+                // TODO: Type getCalculationInfo return more specific type?
                 stackResultDimension: data.getCalculationInfo('stackResultDimension'),
                 stackedOverDimension: data.getCalculationInfo('stackedOverDimension'),
                 stackedDimension: data.getCalculationInfo('stackedDimension'),
@@ -64,18 +76,18 @@ export default function (ecModel) {
     stackInfoMap.each(calculateStack);
 }
 
-function calculateStack(stackInfoList) {
+function calculateStack(stackInfoList: StackInfo[]) {
     each(stackInfoList, function (targetStackInfo, idxInStack) {
-        var resultVal = [];
+        var resultVal: number[] = [];
         var resultNaN = [NaN, NaN];
-        var dims = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
+        var dims: [string, string] = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
         var targetData = targetStackInfo.data;
         var isStackedByIndex = targetStackInfo.isStackedByIndex;
 
         // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
         var newData = targetData.map(dims, function (v0, v1, dataIndex) {
-            var sum = targetData.get(targetStackInfo.stackedDimension, dataIndex);
+            var sum = targetData.get(targetStackInfo.stackedDimension, dataIndex) as number;
 
             // Consider `connectNulls` of line area, if value is NaN, stackedOver
             // should also be NaN, to draw a appropriate belt area.
@@ -83,14 +95,14 @@ function calculateStack(stackInfoList) {
                 return resultNaN;
             }
 
-            var byValue;
+            var byValue: number;
             var stackedDataRawIndex;
 
             if (isStackedByIndex) {
                 stackedDataRawIndex = targetData.getRawIndex(dataIndex);
             }
             else {
-                byValue = targetData.get(targetStackInfo.stackedByDimension, dataIndex);
+                byValue = targetData.get(targetStackInfo.stackedByDimension, dataIndex) as number;
             }
 
             // If stackOver is NaN, chart view will render point on value start.
@@ -105,7 +117,9 @@ function calculateStack(stackInfoList) {
                 }
 
                 if (stackedDataRawIndex >= 0) {
-                    var val = stackInfo.data.getByRawIndex(stackInfo.stackResultDimension, stackedDataRawIndex);
+                    var val = stackInfo.data.getByRawIndex(
+                        stackInfo.stackResultDimension, stackedDataRawIndex
+                    ) as number;
 
                     // Considering positive stack, negative stack and empty data
                     if ((sum >= 0 && val > 0) // Positive stack

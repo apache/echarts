@@ -475,6 +475,9 @@ export interface LarginOptionMixin {
     large?: boolean
     largeThreshold?: number
 }
+export interface StackOptionMixin {
+    stack?: string
+}
 
 /**
  * Mixin of option set to control the box layout of each component.

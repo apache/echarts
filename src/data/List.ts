@@ -40,6 +40,7 @@ import {
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
+import SeriesModel from '../model/Series';
 
 
 var isObject = zrUtil.isObject;
@@ -131,7 +132,7 @@ class List {
     // Infomation of each data dimension, like data type.
     private _dimensionInfos: {[dimName: string]: DataDimensionInfo};
 
-    readonly hostModel: Model;
+    readonly hostModel: SeriesModel;
 
     readonly dataType: string;
 
@@ -225,7 +226,7 @@ class List {
      *        For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
      *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
      */
-    constructor(dimensions: Array<string | object | DataDimensionInfo>, hostModel: Model) {
+    constructor(dimensions: Array<string | object | DataDimensionInfo>, hostModel: SeriesModel) {
         dimensions = dimensions || ['x', 'y'];
 
         var dimensionInfos: Dictionary<DataDimensionInfo> = {};
@@ -841,7 +842,7 @@ class List {
         this._approximateExtent[dim] = extent.slice() as [number, number];
     }
 
-    getCalculationInfo(key: string): object {
+    getCalculationInfo(key: string): any {
         return this._calculationInfo[key];
     }
 

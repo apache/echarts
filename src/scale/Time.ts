@@ -42,7 +42,6 @@ import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
-import Model from '../model/Model';
 
 
 var mathCeil = Math.ceil;
