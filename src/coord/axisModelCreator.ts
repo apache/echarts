@@ -23,11 +23,12 @@ import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from './axisDefault';
 import ComponentModel from '../model/Component';
 import {
-    getLayoutMode,
     getLayoutParams,
     mergeLayoutParam
 } from '../util/layout';
 import OrdinalMeta from '../data/OrdinalMeta';
+import { DimensionName, ComponentOption } from '../util/types';
+import { OptionAxisType } from './axisCommonTypes';
 
 
 // FIXME axisType is fixed ?
@@ -35,12 +36,17 @@ var AXIS_TYPES = ['value', 'category', 'time', 'log'];
 
 /**
  * Generate sub axis model class
- * @param {string} axisName 'x' 'y' 'radius' 'angle' 'parallel'
+ * @param axisName 'x' 'y' 'radius' 'angle' 'parallel'
  * @param {module:echarts/model/Component} BaseAxisModelClass
  * @param {Function} axisTypeDefaulter
  * @param {Object} [extraDefaultOption]
  */
-export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraDefaultOption) {
+export default function (
+    axisName: DimensionName,
+    BaseAxisModelClass,
+    axisTypeDefaulter: (axisDim: DimensionName, option: ComponentOption) => OptionAxisType,
+    extraDefaultOption?: ComponentOption
+) {
 
     zrUtil.each(AXIS_TYPES, function (axisType) {
 

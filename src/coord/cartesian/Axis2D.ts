@@ -20,8 +20,9 @@
 import Axis from '../Axis';
 import { DimensionName } from '../../util/types';
 import Scale from '../../scale/Scale';
-import AxisModel, { Axis2DPosition } from './AxisModel';
+import AxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
+import { OptionAxisType } from '../axisCommonTypes';
 
 
 class Axis2D extends Axis {
@@ -32,9 +33,8 @@ class Axis2D extends Axis {
      *  - 'value'
      *  - 'time'
      *  - 'log'
-     *  ...
      */
-    readonly type: string;
+    readonly type: OptionAxisType;
 
     /**
      * Axis position
@@ -43,7 +43,7 @@ class Axis2D extends Axis {
      *  - 'left'
      *  - 'right'
      */
-    readonly position: Axis2DPosition;
+    readonly position: CartesianAxisPosition;
 
     /**
      * Index of axis, can be used as key
@@ -66,8 +66,8 @@ class Axis2D extends Axis {
         dim: DimensionName,
         scale: Scale,
         coordExtent: [number, number],
-        axisType?: string,
-        position?: Axis2DPosition
+        axisType?: OptionAxisType,
+        position?: CartesianAxisPosition
     ) {
         super(dim, scale, coordExtent);
         this.type = axisType || 'value';

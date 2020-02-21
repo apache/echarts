@@ -24,7 +24,10 @@ import {
 import { Dictionary } from 'zrender/src/core/types';
 
 
+export type OptionAxisType = 'category' | 'value' | 'time' | 'log';
+
 export interface AxisBaseOption extends ComponentOption {
+    type?: OptionAxisType;
     show?: boolean;
     // Inverse the axis.
     inverse?: boolean;

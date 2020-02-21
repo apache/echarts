@@ -27,12 +27,13 @@ import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
 
 
-export type Axis2DPosition = 'top' | 'bottom' | 'left' | 'right';
+export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
 interface CartesianAxisOption extends AxisBaseOption {
     gridIndex?: number;
     gridId?: string;
-    position?: Axis2DPosition;
+    position?: CartesianAxisPosition;
+    // Offset is for multiple axis on the same position.
     offset?: number;
 }
 
@@ -76,11 +77,9 @@ function getAxisType(axisDim: DimensionName, option: CartesianAxisOption) {
 interface AxisModel extends AxisModelCommonMixin<CartesianAxisOption> {}
 zrUtil.mixin(AxisModel, AxisModelCommonMixin);
 
-var extraOption = {
+var extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
-
-    // Offset is for multiple axis on the same position
     offset: 0
 };
 
