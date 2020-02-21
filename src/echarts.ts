@@ -52,7 +52,7 @@ import {CoordinateSystem, CoordinateSystemCreator} from './coord/CoordinateSyste
 import { parseClassType } from './util/clazz';
 import {ECEventProcessor} from './util/ECEventProcessor';
 import {
-    Payload, PayloadItem, ECElement, RendererType, ECEvent,
+    Payload, ECElement, RendererType, ECEvent,
     ActionHandler, ActionInfo, OptionPreprocessor, PostUpdater,
     LoadingEffect, LoadingEffectCreator, StageHandlerInternal,
     StageHandlerOverallReset, StageHandler,
@@ -1462,7 +1462,7 @@ class ECharts {
             // Batch action
             if (payload.batch) {
                 batched = true;
-                payloads = zrUtil.map<PayloadItem, Payload, unknown>(payload.batch, function (item) {
+                payloads = zrUtil.map<Payload['batch'][0], Payload, unknown>(payload.batch, function (item) {
                     item = zrUtil.defaults(zrUtil.extend({}, item), payload);
                     item.batch = null;
                     return item as Payload;

@@ -96,7 +96,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
-export interface PayloadItem {
+interface PayloadItem {
     excludeSeriesId?: string | string[];
     [other: string]: any;
 }
@@ -505,6 +505,12 @@ export interface ShadowOptionMixin {
     shadowOffsetY?: number
 }
 
+export interface BorderOptionMixin {
+    borderColor?: string
+    borderWidth?: number
+    borderType?: ZRLineType
+}
+
 export type AnimationDelayCallbackParam = {
     count: number
     index: number
@@ -579,11 +585,8 @@ export interface SymbolOptionMixin {
  * ItemStyleOption is a most common used set to config element styles.
  * It includes both fill and stroke style.
  */
-export interface ItemStyleOption extends ShadowOptionMixin {
+export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
     color?: ZRColor
-    borderColor?: string
-    borderWidth?: number
-    borderType?: ZRLineType
     opacity?: number
 }
 
@@ -709,6 +712,7 @@ export interface LabelLineOption {
 }
 
 export interface ComponentOption {
+    show?: boolean
     type?: string;
     id?: string;
     name?: string;

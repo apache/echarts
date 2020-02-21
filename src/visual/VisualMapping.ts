@@ -87,9 +87,13 @@ interface VisualHandler {
 }
 
 interface VisualMappingPiece {
-    value?: number
+    index?: number
+
+    value?: number | string
     interval?: [number, number]
     close?: [0 | 1, 0 | 1]
+
+    text?: string
 
     visual?: VisualOptionPiecewise
 }
@@ -479,7 +483,7 @@ class VisualMapping<VisualOption
                 ) {
                     return i;
                 }
-                findClosestWhenOutside && updatePossible(pieceValue, i);
+                findClosestWhenOutside && updatePossible(pieceValue as number, i);
             }
         }
 

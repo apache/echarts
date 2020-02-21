@@ -109,6 +109,10 @@ class DataDimensionInfo {
      * Mandatory.
      */
     isExtraCoord: boolean;
+    /**
+     * If this dimension if for calculated value like stacking
+     */
+    isCalculationCoord: boolean
 
     defaultTooltip: boolean;
 

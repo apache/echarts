@@ -62,6 +62,8 @@ export interface PieSeriesOption extends
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin {
 
+    type: 'pie'
+
     hoverAnimation?: boolean
 
     roseType?: 'radius' | 'area'
@@ -98,7 +100,7 @@ export interface PieSeriesOption extends
 
 class PieSeries extends SeriesModel<PieSeriesOption> {
 
-    static type = 'series.pie';
+    static type = 'series.pie' as const;
 
     /**
      * @overwrite
@@ -186,7 +188,7 @@ class PieSeries extends SeriesModel<PieSeriesOption> {
             && option.emphasis.label.show;
     }
 
-    static defaultOption: PieSeriesOption = {
+    static defaultOption: Omit<PieSeriesOption, 'type'> = {
         zlevel: 0,
         z: 2,
         legendHoverLink: true,

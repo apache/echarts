@@ -17,99 +17,128 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
-import VisualMapModel from './VisualMapModel';
-import VisualMapping from '../../visual/VisualMapping';
+import VisualMapModel, { VisualMapOption, VisualMeta } from './VisualMapModel';
+import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
 import visualDefault from '../../visual/visualDefault';
 import {reformIntervals} from '../../util/number';
+import { VisualOptionPiecewise, BuiltinVisualProperty } from '../../util/types';
+import { Dictionary } from 'zrender/src/core/types';
 
-var PiecewiseModel = VisualMapModel.extend({
 
-    type: 'visualMap.piecewise',
+interface VisualPiece extends VisualOptionPiecewise {
+    min?: number
+    max?: number
+    lt?: number
+    gt?: number
+    lte?: number
+    gte?: number
+    value?: number
+
+    label?: string
+}
+
+type VisualState = VisualMapModel['stateList'][number]
+
+type InnerVisualPiece = VisualMappingOption['pieceList'][number];
+
+type GetPieceValueType<T extends InnerVisualPiece>
+    = T extends { interval: InnerVisualPiece['interval'] } ? number : string
+
+/**
+ * Order Rule:
+ *
+ * option.categories / option.pieces / option.text / option.selected:
+ *     If !option.inverse,
+ *     Order when vertical: ['top', ..., 'bottom'].
+ *     Order when horizontal: ['left', ..., 'right'].
+ *     If option.inverse, the meaning of
+ *     the order should be reversed.
+ *
+ * this._pieceList:
+ *     The order is always [low, ..., high].
+ *
+ * Mapping from location to low-high:
+ *     If !option.inverse
+ *     When vertical, top is high.
+ *     When horizontal, right is high.
+ *     If option.inverse, reverse.
+ */
+
+export interface PiecewiseVisualMapOption extends VisualMapOption {
+    align?: 'auto' | 'left' | 'right'
+
+    minOpen?: boolean
+    maxOpen?: boolean
 
     /**
-     * Order Rule:
-     *
-     * option.categories / option.pieces / option.text / option.selected:
-     *     If !option.inverse,
-     *     Order when vertical: ['top', ..., 'bottom'].
-     *     Order when horizontal: ['left', ..., 'right'].
-     *     If option.inverse, the meaning of
-     *     the order should be reversed.
-     *
-     * this._pieceList:
-     *     The order is always [low, ..., high].
-     *
-     * Mapping from location to low-high:
-     *     If !option.inverse
-     *     When vertical, top is high.
-     *     When horizontal, right is high.
-     *     If option.inverse, reverse.
+     * When put the controller vertically, it is the length of
+     * horizontal side of each item. Otherwise, vertical side.
+     * When put the controller vertically, it is the length of
+     * vertical side of each item. Otherwise, horizontal side.
      */
+    itemWidth?: number
+    itemHeight?: number
+
+    itemSymbol?: string
+    pieces?: VisualPiece[]
 
     /**
-     * @protected
+     * category names, like: ['some1', 'some2', 'some3'].
+     * Attr min/max are ignored when categories set. See "Order Rule"
      */
-    defaultOption: {
-        selected: null,             // Object. If not specified, means selected.
-                                    // When pieces and splitNumber: {'0': true, '5': true}
-                                    // When categories: {'cate1': false, 'cate3': true}
-                                    // When selected === false, means all unselected.
+    categories?: string[]
 
-        minOpen: false,             // Whether include values that smaller than `min`.
-        maxOpen: false,             // Whether include values that bigger than `max`.
+    /**
+     * If set to 5, auto split five pieces equally.
+     * If set to 0 and component type not set, component type will be
+     * determined as "continuous". (It is less reasonable but for ec2
+     * compatibility, see echarts/component/visualMap/typeDefaulter)
+     */
+    splitNumber?: number
 
-        align: 'auto',              // 'auto', 'left', 'right'
-        itemWidth: 20,              // When put the controller vertically, it is the length of
-                                    // horizontal side of each item. Otherwise, vertical side.
-        itemHeight: 14,             // When put the controller vertically, it is the length of
-                                    // vertical side of each item. Otherwise, horizontal side.
-        itemSymbol: 'roundRect',
-        pieceList: null,            // Each item is Object, with some of those attrs:
-                                    // {min, max, lt, gt, lte, gte, value,
-                                    // color, colorSaturation, colorAlpha, opacity,
-                                    // symbol, symbolSize}, which customize the range or visual
-                                    // coding of the certain piece. Besides, see "Order Rule".
-        categories: null,           // category names, like: ['some1', 'some2', 'some3'].
-                                    // Attr min/max are ignored when categories set. See "Order Rule"
-        splitNumber: 5,             // If set to 5, auto split five pieces equally.
-                                    // If set to 0 and component type not set, component type will be
-                                    // determined as "continuous". (It is less reasonable but for ec2
-                                    // compatibility, see echarts/component/visualMap/typeDefaulter)
-        selectedMode: 'multiple',   // Can be 'multiple' or 'single'.
-        itemGap: 10,                // The gap between two items, in px.
-        hoverLink: true,            // Enable hover highlight.
+    /**
+     * Object. If not specified, means selected. When pieces and splitNumber: {'0': true, '5': true}
+     * When categories: {'cate1': false, 'cate3': true} When selected === false, means all unselected.
+     */
+    selected?: Dictionary<boolean>
+    selectedMode?: 'multiple' | 'single'
 
-        showLabel: null             // By default, when text is used, label will hide (the logic
-                                    // is remained for compatibility reason)
-    },
+    /**
+     * By default, when text is used, label will hide (the logic
+     * is remained for compatibility reason)
+     */
+    showLabel?: boolean
 
+    itemGap?: number
+
+    hoverLink?: boolean
+}
+
+class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
+
+    static type = 'visualMap.piecewise' as const
+    type = PiecewiseModel.type
+
+    /**
+     * The order is always [low, ..., high].
+     * [{text: string, interval: Array.<number>}, ...]
+     */
+    private _pieceList: InnerVisualPiece[] = [];
+
+    private _mode: 'pieces' | 'categories' | 'splitNumber'
     /**
      * @override
      */
-    optionUpdated: function (newOption, isInit) {
-        PiecewiseModel.superApply(this, 'optionUpdated', arguments);
-
-        /**
-         * The order is always [low, ..., high].
-         * [{text: string, interval: Array.<number>}, ...]
-         * @private
-         * @type {Array.<Object>}
-         */
-        this._pieceList = [];
+    optionUpdated(newOption: PiecewiseVisualMapOption, isInit?: boolean) {
+        super.optionUpdated.apply(this, arguments as any);
 
         this.resetExtent();
 
-        /**
-         * 'pieces', 'categories', 'splitNumber'
-         * @type {string}
-         */
         var mode = this._mode = this._determineMode();
 
-        resetMethods[this._mode].call(this);
+        resetMethods[this._mode].call(this, this._pieceList);
 
         this._resetSelected(newOption, isInit);
 
@@ -134,13 +163,13 @@ var PiecewiseModel = VisualMapModel.extend({
                 });
             }
         });
-    },
+    }
 
     /**
      * @protected
      * @override
      */
-    completeVisualOption: function () {
+    completeVisualOption() {
         // Consider this case:
         // visualMap: {
         //      pieces: [{symbol: 'circle', lt: 0}, {symbol: 'rect', gte: 0}]
@@ -150,7 +179,7 @@ var PiecewiseModel = VisualMapModel.extend({
         // appear in `pieces` will not be taken into account in visual encoding.
 
         var option = this.option;
-        var visualTypesInPieces = {};
+        var visualTypesInPieces: {[key in BuiltinVisualProperty]?: 0 | 1} = {};
         var visualTypes = VisualMapping.listVisualTypes();
         var isCategory = this.isCategory();
 
@@ -162,32 +191,28 @@ var PiecewiseModel = VisualMapModel.extend({
             });
         });
 
-        zrUtil.each(visualTypesInPieces, function (v, visualType) {
-            var exists = 0;
-            zrUtil.each(this.stateList, function (state) {
-                exists |= has(option, state, visualType)
+        zrUtil.each(visualTypesInPieces, function (v, visualType: BuiltinVisualProperty) {
+            var exists = false;
+            zrUtil.each(this.stateList, function (state: VisualState) {
+                exists = exists || has(option, state, visualType)
                     || has(option.target, state, visualType);
             }, this);
 
-            !exists && zrUtil.each(this.stateList, function (state) {
+            !exists && zrUtil.each(this.stateList, function (state: VisualState) {
                 (option[state] || (option[state] = {}))[visualType] = visualDefault.get(
                     visualType, state === 'inRange' ? 'active' : 'inactive', isCategory
                 );
             });
         }, this);
 
-        function has(obj, state, visualType) {
-            return obj && obj[state] && (
-                zrUtil.isObject(obj[state])
-                    ? obj[state].hasOwnProperty(visualType)
-                    : obj[state] === visualType // e.g., inRange: 'symbol'
-            );
+        function has(obj: PiecewiseVisualMapOption['target'], state: VisualState, visualType: BuiltinVisualProperty) {
+            return obj && obj[state] && obj[state].hasOwnProperty(visualType);
         }
 
-        VisualMapModel.prototype.completeVisualOption.apply(this, arguments);
-    },
+        super.completeVisualOption.apply(this, arguments as any);
+    }
 
-    _resetSelected: function (newOption, isInit) {
+    _resetSelected(newOption: PiecewiseVisualMapOption, isInit?: boolean) {
         var thisOption = this.option;
         var pieceList = this._pieceList;
 
@@ -217,28 +242,28 @@ var PiecewiseModel = VisualMapModel.extend({
             }, this);
         }
         // thisOption.selectedMode === 'multiple', default: all selected.
-    },
+    }
 
     /**
      * @public
      */
-    getSelectedMapKey: function (piece) {
+    getSelectedMapKey(piece: InnerVisualPiece) {
         return this._mode === 'categories'
             ? piece.value + '' : piece.index + '';
-    },
+    }
 
     /**
      * @public
      */
-    getPieceList: function () {
+    getPieceList(): InnerVisualPiece[] {
         return this._pieceList;
-    },
+    }
 
     /**
      * @private
      * @return {string}
      */
-    _determineMode: function () {
+    _determineMode() {
         var option = this.option;
 
         return option.pieces && option.pieces.length > 0
@@ -246,21 +271,21 @@ var PiecewiseModel = VisualMapModel.extend({
             : this.option.categories
             ? 'categories'
             : 'splitNumber';
-    },
+    }
 
     /**
      * @public
      * @override
      */
-    setSelected: function (selected) {
+    setSelected(selected: this['option']['selected']) {
         this.option.selected = zrUtil.clone(selected);
-    },
+    }
 
     /**
      * @public
      * @override
      */
-    getValueState: function (value) {
+    getValueState(value: number): VisualState {
         var index = VisualMapping.findPieceIndex(value, this._pieceList);
 
         return index != null
@@ -268,23 +293,29 @@ var PiecewiseModel = VisualMapModel.extend({
                 ? 'inRange' : 'outOfRange'
             )
             : 'outOfRange';
-    },
+    }
 
     /**
      * @public
      * @params {number} pieceIndex piece index in visualMapModel.getPieceList()
      * @return {Array.<Object>} [{seriesId, dataIndex: <Array.<number>>}, ...]
      */
-    findTargetDataIndices: function (pieceIndex) {
-        var result = [];
+    findTargetDataIndices(pieceIndex: number) {
+        type DataIndices = {
+            seriesId: string
+            dataIndex: number[]
+        }
+
+        const result: DataIndices[] = [];
+        const pieceList = this._pieceList;
 
         this.eachTargetSeries(function (seriesModel) {
-            var dataIndices = [];
+            var dataIndices: number[] = [];
             var data = seriesModel.getData();
 
-            data.each(this.getDataDimension(data), function (value, dataIndex) {
+            data.each(this.getDataDimension(data), function (value: number, dataIndex: number) {
                 // Should always base on model pieceList, because it is order sensitive.
-                var pIdx = VisualMapping.findPieceIndex(value, this._pieceList);
+                var pIdx = VisualMapping.findPieceIndex(value, pieceList);
                 pIdx === pieceIndex && dataIndices.push(dataIndex);
             }, this);
 
@@ -292,14 +323,14 @@ var PiecewiseModel = VisualMapModel.extend({
         }, this);
 
         return result;
-    },
+    }
 
     /**
      * @private
-     * @param {Object} piece piece.value or piece.interval is required.
-     * @return {number} Can be Infinity or -Infinity
+     * @param piece piece.value or piece.interval is required.
+     * @return  Can be Infinity or -Infinity
      */
-    getRepresentValue: function (piece) {
+    getRepresentValue<T extends InnerVisualPiece>(piece: T) {
         var representValue;
         if (this.isCategory()) {
             representValue = piece.value;
@@ -315,21 +346,26 @@ var PiecewiseModel = VisualMapModel.extend({
                     : (pieceInterval[0] + pieceInterval[1]) / 2;
             }
         }
-        return representValue;
-    },
+        //
+        return representValue as GetPieceValueType<T>;
+    }
 
-    getVisualMeta: function (getColorVisual) {
+    getVisualMeta(
+        getColorVisual: (value: number, valueState: VisualState) => string
+    ): VisualMeta {
         // Do not support category. (category axis is ordinal, numerical)
         if (this.isCategory()) {
             return;
         }
 
-        var stops = [];
-        var outerColors = [];
+        var stops: VisualMeta['stops'] = [];
+        var outerColors: VisualMeta['outerColors'] = ['', ''];
         var visualMapModel = this;
 
-        function setStop(interval, valueState) {
-            var representValue = visualMapModel.getRepresentValue({interval: interval});
+        function setStop(interval: [number, number], valueState?: VisualState) {
+            var representValue = visualMapModel.getRepresentValue({
+                interval: interval
+            });// Not category
             if (!valueState) {
                 valueState = visualMapModel.getValueState(representValue);
             }
@@ -366,7 +402,7 @@ var PiecewiseModel = VisualMapModel.extend({
             if (interval) {
                 // Fulfill gap.
                 interval[0] > curr && setStop([curr, interval[0]], 'outOfRange');
-                setStop(interval.slice());
+                setStop(interval.slice() as [number, number]);
                 curr = interval[1];
             }
         }, this);
@@ -374,22 +410,42 @@ var PiecewiseModel = VisualMapModel.extend({
         return {stops: stops, outerColors: outerColors};
     }
 
-});
 
+    static defaultOption: PiecewiseVisualMapOption = {
+        selected: null,
+        minOpen: false,             // Whether include values that smaller than `min`.
+        maxOpen: false,             // Whether include values that bigger than `max`.
+
+        align: 'auto',              // 'auto', 'left', 'right'
+        itemWidth: 20,
+
+        itemHeight: 14,
+
+        itemSymbol: 'roundRect',
+        pieces: null,
+        categories: null,
+        splitNumber: 5,
+        selectedMode: 'multiple',   // Can be 'multiple' or 'single'.
+        itemGap: 10,                // The gap between two items, in px.
+        hoverLink: true             // Enable hover highlight.
+    }
+
+};
+
+type ResetMethod = (pieceList: InnerVisualPiece[]) => void;
 /**
  * Key is this._mode
  * @type {Object}
  * @this {module:echarts/component/viusalMap/PiecewiseMode}
  */
-var resetMethods = {
+var resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 
-    splitNumber: function () {
+    splitNumber(pieceList) {
         var thisOption = this.option;
-        var pieceList = this._pieceList;
         var precision = Math.min(thisOption.precision, 20);
         var dataExtent = this.getExtent();
         var splitNumber = thisOption.splitNumber;
-        splitNumber = Math.max(parseInt(splitNumber, 10), 1);
+        splitNumber = Math.max(parseInt(splitNumber as unknown as string, 10), 1);
         thisOption.splitNumber = splitNumber;
 
         var splitStep = (dataExtent[1] - dataExtent[0]) / splitNumber;
@@ -432,31 +488,30 @@ var resetMethods = {
             });
         }
 
-        reformIntervals(pieceList);
+        reformIntervals(pieceList as Required<InnerVisualPiece>[]);
 
         zrUtil.each(pieceList, function (piece) {
             piece.text = this.formatValueText(piece.interval);
         }, this);
     },
 
-    categories: function () {
+    categories(pieceList) {
         var thisOption = this.option;
         zrUtil.each(thisOption.categories, function (cate) {
             // FIXME category模式也使用pieceList，但在visualMapping中不是使用pieceList。
             // 是否改一致。
-            this._pieceList.push({
+            pieceList.push({
                 text: this.formatValueText(cate, true),
                 value: cate
             });
         }, this);
 
         // See "Order Rule".
-        normalizeReverse(thisOption, this._pieceList);
+        normalizeReverse(thisOption, pieceList);
     },
 
-    pieces: function () {
+    pieces(pieceList) {
         var thisOption = this.option;
-        var pieceList = this._pieceList;
 
         zrUtil.each(thisOption.pieces, function (pieceListItem, index) {
 
@@ -464,7 +519,7 @@ var resetMethods = {
                 pieceListItem = {value: pieceListItem};
             }
 
-            var item = {text: '', index: index};
+            var item: InnerVisualPiece = {text: '', index: index};
 
             if (pieceListItem.label != null) {
                 item.text = pieceListItem.label;
@@ -478,15 +533,15 @@ var resetMethods = {
             else {
                 // `min` `max` is legacy option.
                 // `lt` `gt` `lte` `gte` is recommanded.
-                var interval = item.interval = [];
-                var close = item.close = [0, 0];
+                var interval = item.interval = [0, 0];
+                var close: typeof item.close = item.close = [0, 0];
 
-                var closeList = [1, 0, 1];
+                var closeList = [1, 0, 1] as const;
                 var infinityList = [-Infinity, Infinity];
 
                 var useMinMax = [];
                 for (var lg = 0; lg < 2; lg++) {
-                    var names = [['gte', 'gt', 'min'], ['lte', 'lt', 'max']][lg];
+                    var names = ([['gte', 'gt', 'min'], ['lte', 'lt', 'max']] as const)[lg];
                     for (var i = 0; i < 3 && interval[lg] == null; i++) {
                         interval[lg] = pieceListItem[names[i]];
                         close[lg] = closeList[i];
@@ -522,7 +577,7 @@ var resetMethods = {
         // See "Order Rule".
         normalizeReverse(thisOption, pieceList);
         // Only pieces
-        reformIntervals(pieceList);
+        reformIntervals(pieceList as Required<InnerVisualPiece>[]);
 
         zrUtil.each(pieceList, function (piece) {
             var close = piece.close;
@@ -536,7 +591,7 @@ var resetMethods = {
     }
 };
 
-function normalizeReverse(thisOption, pieceList) {
+function normalizeReverse(thisOption: PiecewiseVisualMapOption, pieceList: InnerVisualPiece[]) {
     var inverse = thisOption.inverse;
     if (thisOption.orient === 'vertical' ? !inverse : inverse) {
             pieceList.reverse();

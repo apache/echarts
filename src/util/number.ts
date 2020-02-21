@@ -142,7 +142,7 @@ export function round(x: number | string, precision?: number, returnStr?: boolea
  * Inplacd asc sort arr.
  * The input arr will be modified.
  */
-export function asc(arr: number[]): number[] {
+export function asc<T extends number[]>(arr: T): T {
     arr.sort(function (a, b) {
         return a - b;
     });
@@ -469,7 +469,7 @@ export function quantile(ascArr: number[], p: number): number {
 
 type IntervalItem = {
     interval: [number, number]
-    close: [number, number]
+    close: [0 | 1, 0 | 1]
 }
 /**
  * Order intervals asc, and split them when overlap.
@@ -507,7 +507,7 @@ export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
         for (var lg = 0; lg < 2; lg++) {
             if (interval[lg] <= curr) {
                 interval[lg] = curr;
-                close[lg] = !lg ? 1 - currClose : 1;
+                close[lg] = (!lg ? 1 - currClose : 1) as 0 | 1;
             }
             curr = interval[lg];
             currClose = close[lg];

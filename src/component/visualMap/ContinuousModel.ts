@@ -17,80 +17,98 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
-import VisualMapModel from './VisualMapModel';
+import VisualMapModel, { VisualMapOption, VisualMeta } from './VisualMapModel';
 import * as numberUtil from '../../util/number';
+import ComponentModel from '../../model/Component';
+import { VisualMappingOption } from '../../visual/VisualMapping';
 
 // Constant
 var DEFAULT_BAR_BOUND = [20, 140];
 
-var ContinuousModel = VisualMapModel.extend({
+type RangeWithAuto = {
+    auto?: 0 | 1
+}
 
-    type: 'visualMap.continuous',
+type VisualState = VisualMapModel['stateList'][number]
+
+export interface ContinousVisualMapOption extends VisualMapOption {
+
+    align?: 'auto' | 'left' | 'right' | 'top' | 'bottom'
 
     /**
-     * @protected
+     * This prop effect default component type determine
+     * @see echarts/component/visualMap/typeDefaulter.
      */
-    defaultOption: {
-        align: 'auto',           // 'auto', 'left', 'right', 'top', 'bottom'
-        calculable: false,       // This prop effect default component type determine,
-                                 // See echarts/component/visualMap/typeDefaulter.
-        range: null,             // selected range. In default case `range` is [min, max]
-                                 // and can auto change along with modification of min max,
-                                 // util use specifid a range.
-        realtime: true,          // Whether realtime update.
-        itemHeight: null,        // The length of the range control edge.
-        itemWidth: null,         // The length of the other side.
-        hoverLink: true,         // Enable hover highlight.
-        hoverLinkDataSize: null, // The size of hovered data.
-        hoverLinkOnHandle: null  // Whether trigger hoverLink when hover handle.
-                                 // If not specified, follow the value of `realtime`.
-    },
+    calculable?: boolean
+
+    /**
+     * selected range. In default case `range` is [min, max]
+     * and can auto change along with modification of min max,
+     * util user specifid a range.
+     */
+    range?: number[]
+    /**
+     * Whether to enable hover highlight.
+     */
+    hoverLink?: boolean
+
+    /**
+     * The extent of hovered data.
+     */
+    hoverLinkDataSize?: number
+    /**
+     * Whether trigger hoverLink when hover handle.
+     * If not specified, follow the value of `realtime`.
+     */
+    hoverLinkOnHandle?: boolean
+}
+
+class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
+
+    static type = 'visualMap.continuous' as const
+    type = ContinuousModel.type
 
     /**
      * @override
      */
-    optionUpdated: function (newOption, isInit) {
-        ContinuousModel.superApply(this, 'optionUpdated', arguments);
+    optionUpdated(newOption: ContinousVisualMapOption, isInit: boolean) {
+        super.optionUpdated.apply(this, arguments as any);
 
         this.resetExtent();
 
-        this.resetVisual(function (mappingOption) {
+        this.resetVisual(function (mappingOption?: VisualMappingOption) {
             mappingOption.mappingMethod = 'linear';
             mappingOption.dataExtent = this.getExtent();
         });
 
         this._resetRange();
-    },
+    }
 
     /**
      * @protected
      * @override
      */
-    resetItemSize: function () {
-        ContinuousModel.superApply(this, 'resetItemSize', arguments);
+    resetItemSize() {
+        super.resetItemSize.apply(this, arguments as any);
 
         var itemSize = this.itemSize;
 
-        this._orient === 'horizontal' && itemSize.reverse();
-
         (itemSize[0] == null || isNaN(itemSize[0])) && (itemSize[0] = DEFAULT_BAR_BOUND[0]);
         (itemSize[1] == null || isNaN(itemSize[1])) && (itemSize[1] = DEFAULT_BAR_BOUND[1]);
-    },
+    }
 
     /**
      * @private
      */
-    _resetRange: function () {
+    _resetRange() {
         var dataExtent = this.getExtent();
         var range = this.option.range;
 
-        if (!range || range.auto) {
+        if (!range || (range as RangeWithAuto).auto) {
             // `range` should always be array (so we dont use other
             // value like 'auto') for user-friend. (consider getOption).
-            dataExtent.auto = 1;
+            (dataExtent as RangeWithAuto).auto = 1;
             this.option.range = dataExtent;
         }
         else if (zrUtil.isArray(range)) {
@@ -100,40 +118,40 @@ var ContinuousModel = VisualMapModel.extend({
             range[0] = Math.max(range[0], dataExtent[0]);
             range[1] = Math.min(range[1], dataExtent[1]);
         }
-    },
+    }
 
     /**
      * @protected
      * @override
      */
-    completeVisualOption: function () {
-        VisualMapModel.prototype.completeVisualOption.apply(this, arguments);
+    completeVisualOption() {
+        super.completeVisualOption.apply(this, arguments as any);
 
-        zrUtil.each(this.stateList, function (state) {
+        zrUtil.each(this.stateList, function (state: VisualState) {
             var symbolSize = this.option.controller[state].symbolSize;
             if (symbolSize && symbolSize[0] !== symbolSize[1]) {
                 symbolSize[0] = 0; // For good looking.
             }
         }, this);
-    },
+    }
 
     /**
      * @override
      */
-    setSelected: function (selected) {
+    setSelected(selected: number[]) {
         this.option.range = selected.slice();
         this._resetRange();
-    },
+    }
 
     /**
      * @public
      */
-    getSelected: function () {
+    getSelected(): [number, number] {
         var dataExtent = this.getExtent();
 
         var dataInterval = numberUtil.asc(
             (this.get('range') || []).slice()
-        );
+        ) as [number, number];
 
         // Clamp
         dataInterval[0] > dataExtent[1] && (dataInterval[0] = dataExtent[1]);
@@ -142,12 +160,12 @@ var ContinuousModel = VisualMapModel.extend({
         dataInterval[1] < dataExtent[0] && (dataInterval[1] = dataExtent[0]);
 
         return dataInterval;
-    },
+    }
 
     /**
      * @override
      */
-    getValueState: function (value) {
+    getValueState(value: number): VisualState {
         var range = this.option.range;
         var dataExtent = this.getExtent();
 
@@ -157,38 +175,44 @@ var ContinuousModel = VisualMapModel.extend({
             (range[0] <= dataExtent[0] || range[0] <= value)
             && (range[1] >= dataExtent[1] || value <= range[1])
         ) ? 'inRange' : 'outOfRange';
-    },
+    }
 
-    /**
-     * @params {Array.<number>} range target value: range[0] <= value && value <= range[1]
-     * @return {Array.<Object>} [{seriesId, dataIndices: <Array.<number>>}, ...]
-     */
-    findTargetDataIndices: function (range) {
-        var result = [];
+    findTargetDataIndices(range: number[]) {
+        type DataIndices = {
+            seriesId: string
+            dataIndex: number[]
+        }
+        var result: DataIndices[] = [];
 
         this.eachTargetSeries(function (seriesModel) {
-            var dataIndices = [];
+            var dataIndices: number[] = [];
             var data = seriesModel.getData();
 
             data.each(this.getDataDimension(data), function (value, dataIndex) {
                 range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
             }, this);
 
-            result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
+            result.push({
+                seriesId: seriesModel.id,
+                dataIndex: dataIndices
+            });
         }, this);
 
         return result;
-    },
+    }
 
     /**
      * @implement
      */
-    getVisualMeta: function (getColorVisual) {
+    getVisualMeta(
+        getColorVisual: (value: number, valueState: VisualState) => string
+    ) {
+        type ColorStop = VisualMeta['stops'][number];
         var oVals = getColorStopValues(this, 'outOfRange', this.getExtent());
         var iVals = getColorStopValues(this, 'inRange', this.option.range.slice());
-        var stops = [];
+        var stops: ColorStop[] = [];
 
-        function setStop(value, valueState) {
+        function setStop(value: number, valueState: VisualState) {
             stops.push({
                 value: value,
                 color: getColorVisual(value, valueState)
@@ -231,13 +255,23 @@ var ContinuousModel = VisualMapModel.extend({
             outerColors: [
                 stopsLen ? stops[0].color : 'transparent',
                 stopsLen ? stops[stopsLen - 1].color : 'transparent'
-            ]
+            ] as VisualMeta['outerColors']
         };
     }
 
-});
+    static defaultOption: ContinousVisualMapOption = {
+        align: 'auto',           // 'auto', 'left', 'right', 'top', 'bottom'
+        calculable: false,
+        hoverLink: true
+    }
+}
 
-function getColorStopValues(visualMapModel, valueState, dataExtent) {
+
+function getColorStopValues(
+    visualMapModel: ContinuousModel,
+    valueState: VisualState,
+    dataExtent: number[]
+) {
     if (dataExtent[0] === dataExtent[1]) {
         return dataExtent.slice();
     }
@@ -259,5 +293,7 @@ function getColorStopValues(visualMapModel, valueState, dataExtent) {
 
     return stopValues;
 }
+
+ComponentModel.registerClass(ContinuousModel);
 
 export default ContinuousModel;

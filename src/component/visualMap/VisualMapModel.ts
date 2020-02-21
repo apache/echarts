@@ -17,151 +17,182 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import visualDefault from '../../visual/visualDefault';
-import VisualMapping from '../../visual/VisualMapping';
+import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
 import * as visualSolution from '../../visual/visualSolution';
 import * as modelUtil from '../../util/model';
 import * as numberUtil from '../../util/number';
+import {
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    LabelOption,
+    ColorString,
+    ZRColor,
+    BorderOptionMixin,
+    OptionDataPrimitive,
+    BuiltinVisualProperty
+} from '../../util/types';
+import ComponentModel from '../../model/Component';
+import Model from '../../model/Model';
+import GlobalModel from '../../model/Global';
+import SeriesModel from '../../model/Series';
+import List from '../../data/List';
 
-var mapVisual = VisualMapping.mapVisual;
-var eachVisual = VisualMapping.eachVisual;
-var isArray = zrUtil.isArray;
-var each = zrUtil.each;
-var asc = numberUtil.asc;
-var linearMap = numberUtil.linearMap;
-var noop = zrUtil.noop;
+const mapVisual = VisualMapping.mapVisual;
+const eachVisual = VisualMapping.eachVisual;
+const isArray = zrUtil.isArray;
+const each = zrUtil.each;
+const asc = numberUtil.asc;
+const linearMap = numberUtil.linearMap;
 
-var VisualMapModel = echarts.extendComponentModel({
+type VisualOptionBase = {[key in BuiltinVisualProperty]?: any}
 
-    type: 'visualMap',
+type LabelFormatter = (min: OptionDataPrimitive, max?: OptionDataPrimitive) => string
 
-    dependencies: ['series'],
+type VisualState = VisualMapModel['stateList'][number];
+export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> extends
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    BorderOptionMixin {
+
+    align?: string
+
+    realtime?: boolean
+    /**
+     * 'all' or null/undefined: all series.
+     * A number or an array of number: the specified series.
+     * set min: 0, max: 200, only for campatible with ec2.
+     * In fact min max should not have default value.
+     */
+    seriesIndex?: 'all' | number[] | number
 
     /**
-     * @readOnly
-     * @type {Array.<string>}
+     * min value, must specified if pieces is not specified.
      */
-    stateList: ['inRange', 'outOfRange'],
+    min?: number
 
     /**
-     * @readOnly
-     * @type {Array.<string>}
+     * max value, must specified if pieces is not specified.
      */
-    replacableOptionKeys: [
+    max?: number
+    /**
+     * Dimension to be encoded
+     */
+    dimension?: number
+
+    /**
+     * Visual configuration for the data in selection
+     */
+    inRange?: T
+    /**
+     * Visual configuration for the out of selection
+     */
+    outOfRange?: T
+
+    controller?: {
+        inRange?: T
+        outOfRange?: T
+    }
+    target?: {
+        inRange?: T
+        outOfRange?: T
+    }
+
+    /**
+     * Width of the display item
+     */
+    itemWidth?: number
+    /**
+     * Height of the display item
+     */
+    itemHeight?: number
+
+    inverse?: boolean
+
+    orient?: 'horizontal' | 'vertical'
+
+    backgroundColor?: ZRColor
+    contentColor?: ZRColor
+
+    inactiveColor?: ZRColor
+
+    /**
+     * Padding of the component. Can be an array similar to CSS
+     */
+    padding?: number[] | number
+    /**
+     * Gap between text and item
+     */
+    textGap?: number
+
+    precision?: number
+
+    /**
+     * @deprecated
+     * Option from version 2
+     */
+    color?: ColorString[]
+
+    formatter?: string | LabelFormatter
+
+    /**
+     * Text on the both end. Such as ['High', 'Low']
+     */
+    text?: string[]
+
+    textStyle?: LabelOption
+
+
+    categories?: unknown
+}
+
+export interface VisualMeta {
+    stops: { value: number, color: ColorString}[]
+    outerColors: [ColorString, ColorString]
+}
+
+class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends ComponentModel<Opts> {
+
+    static type = 'visualMap'
+    type = VisualMapModel.type
+
+    readonly dependencies = ['series']
+
+    readonly stateList = ['inRange', 'outOfRange'] as const
+
+    readonly replacableOptionKeys = [
         'inRange', 'outOfRange', 'target', 'controller', 'color'
-    ],
+    ] as const
+
+    readonly layoutMode = {
+        type: 'box', ignoreSize: true
+    } as const
 
     /**
      * [lowerBound, upperBound]
-     *
-     * @readOnly
-     * @type {Array.<number>}
      */
-    dataBound: [-Infinity, Infinity],
+    dataBound = [-Infinity, Infinity]
 
-    /**
-     * @readOnly
-     * @type {string|Object}
-     */
-    layoutMode: {type: 'box', ignoreSize: true},
+    protected _dataExtent: [number, number]
 
-    /**
-     * @protected
-     */
-    defaultOption: {
-        show: true,
+    targetVisuals = {}
 
-        zlevel: 0,
-        z: 4,
+    controllerVisuals = {}
 
-        seriesIndex: 'all',     // 'all' or null/undefined: all series.
-                                // A number or an array of number: the specified series.
+    textStyleModel: Model<LabelOption>
 
-                                // set min: 0, max: 200, only for campatible with ec2.
-                                // In fact min max should not have default value.
-        min: 0,                 // min value, must specified if pieces is not specified.
-        max: 200,               // max value, must specified if pieces is not specified.
+    itemSize: number[]
 
-        dimension: null,
-        inRange: null,          // 'color', 'colorHue', 'colorSaturation', 'colorLightness', 'colorAlpha',
-                                // 'symbol', 'symbolSize'
-        outOfRange: null,       // 'color', 'colorHue', 'colorSaturation',
-                                // 'colorLightness', 'colorAlpha',
-                                // 'symbol', 'symbolSize'
-
-        left: 0,                // 'center' ¦ 'left' ¦ 'right' ¦ {number} (px)
-        right: null,            // The same as left.
-        top: null,              // 'top' ¦ 'bottom' ¦ 'center' ¦ {number} (px)
-        bottom: 0,              // The same as top.
-
-        itemWidth: null,
-        itemHeight: null,
-        inverse: false,
-        orient: 'vertical',        // 'horizontal' ¦ 'vertical'
-
-        backgroundColor: 'rgba(0,0,0,0)',
-        borderColor: '#ccc',       // 值域边框颜色
-        contentColor: '#5793f3',
-        inactiveColor: '#aaa',
-        borderWidth: 0,            // 值域边框线宽，单位px，默认为0（无边框）
-        padding: 5,                // 值域内边距，单位px，默认各方向内边距为5，
-                                    // 接受数组分别设定上右下左边距，同css
-        textGap: 10,               //
-        precision: 0,              // 小数精度，默认为0，无小数点
-        color: null,               //颜色（deprecated，兼容ec2，顺序同pieces，不同于inRange/outOfRange）
-
-        formatter: null,
-        text: null,                // 文本，如['高', '低']，兼容ec2，text[0]对应高值，text[1]对应低值
-        textStyle: {
-            color: '#333'          // 值域文字颜色
-        }
-    },
-
-    /**
-     * @protected
-     */
-    init: function (option, parentModel, ecModel) {
-
-        /**
-         * @private
-         * @type {Array.<number>}
-         */
-        this._dataExtent;
-
-        /**
-         * @readOnly
-         */
-        this.targetVisuals = {};
-
-        /**
-         * @readOnly
-         */
-        this.controllerVisuals = {};
-
-        /**
-         * @readOnly
-         */
-        this.textStyleModel;
-
-        /**
-         * [width, height]
-         * @readOnly
-         * @type {Array.<number>}
-         */
-        this.itemSize;
-
+    init(option: Opts, parentModel: Model, ecModel: GlobalModel) {
         this.mergeDefaultAndTheme(option, ecModel);
-    },
+    }
 
     /**
      * @protected
      */
-    optionUpdated: function (newOption, isInit) {
+    optionUpdated(newOption: Opts, isInit?: boolean) {
         var thisOption = this.option;
 
         // FIXME
@@ -180,12 +211,14 @@ var VisualMapModel = echarts.extendComponentModel({
         this.resetItemSize();
 
         this.completeVisualOption();
-    },
+    }
 
     /**
      * @protected
      */
-    resetVisual: function (supplementVisualOption) {
+    resetVisual(
+        supplementVisualOption: (this: this, mappingOption: VisualMappingOption, state: string) => void
+    ) {
         var stateList = this.stateList;
         supplementVisualOption = zrUtil.bind(supplementVisualOption, this);
 
@@ -195,15 +228,15 @@ var VisualMapModel = echarts.extendComponentModel({
         this.targetVisuals = visualSolution.createVisualMappings(
             this.option.target, stateList, supplementVisualOption
         );
-    },
+    }
 
     /**
      * @protected
      * @return {Array.<number>} An array of series indices.
      */
-    getTargetSeriesIndices: function () {
+    getTargetSeriesIndices() {
         var optionSeriesIndex = this.option.seriesIndex;
-        var seriesIndices = [];
+        var seriesIndices: number[] = [];
 
         if (optionSeriesIndex == null || optionSeriesIndex === 'all') {
             this.ecModel.eachSeries(function (seriesModel, index) {
@@ -215,27 +248,30 @@ var VisualMapModel = echarts.extendComponentModel({
         }
 
         return seriesIndices;
-    },
+    }
 
     /**
      * @public
      */
-    eachTargetSeries: function (callback, context) {
+    eachTargetSeries<Ctx>(
+        callback: (this: Ctx, series: SeriesModel) => void,
+        context?: Ctx
+    ) {
         zrUtil.each(this.getTargetSeriesIndices(), function (seriesIndex) {
             callback.call(context, this.ecModel.getSeriesByIndex(seriesIndex));
         }, this);
-    },
+    }
 
     /**
      * @pubilc
      */
-    isTargetSeries: function (seriesModel) {
+    isTargetSeries(seriesModel: SeriesModel) {
         var is = false;
         this.eachTargetSeries(function (model) {
             model === seriesModel && (is = true);
         });
         return is;
-    },
+    }
 
     /**
      * @example
@@ -245,20 +281,23 @@ var VisualMapModel = echarts.extendComponentModel({
      * this.formatValueText([this.dataBound[0], max]); // using data lower bound.
      * this.formatValueText([min, this.dataBound[1]]); // using data upper bound.
      *
-     * @param {number|Array.<number>} value Real value, or this.dataBound[0 or 1].
-     * @param {boolean} [isCategory=false] Only available when value is number.
-     * @param {Array.<string>} edgeSymbols Open-close symbol when value is interval.
-     * @return {string}
+     * @param value Real value, or this.dataBound[0 or 1].
+     * @param isCategory Only available when value is number.
+     * @param edgeSymbols Open-close symbol when value is interval.
      * @protected
      */
-    formatValueText: function (value, isCategory, edgeSymbols) {
+    formatValueText(
+        value: number | string | number[],
+        isCategory?: boolean,
+        edgeSymbols?: string[]
+    ): string {
         var option = this.option;
         var precision = option.precision;
         var dataBound = this.dataBound;
         var formatter = option.formatter;
-        var isMinMax;
-        var textValue;
-        edgeSymbols = edgeSymbols || ['<', '>'];
+        var isMinMax: boolean;
+        var textValue: string | string[];
+        edgeSymbols = edgeSymbols || ['<', '>'] as [string, string];
 
         if (zrUtil.isArray(value)) {
             value = value.slice();
@@ -266,28 +305,28 @@ var VisualMapModel = echarts.extendComponentModel({
         }
 
         textValue = isCategory
-            ? value
+            ? value as string   // Value is string when isCategory
             : (isMinMax
-                ? [toFixed(value[0]), toFixed(value[1])]
-                : toFixed(value)
+                ? [toFixed((value as number[])[0]), toFixed((value as number[])[1])]
+                : toFixed(value as number)
             );
 
         if (zrUtil.isString(formatter)) {
             return formatter
-                .replace('{value}', isMinMax ? textValue[0] : textValue)
-                .replace('{value2}', isMinMax ? textValue[1] : textValue);
+                .replace('{value}', isMinMax ? (textValue as string[])[0] : textValue as string)
+                .replace('{value2}', isMinMax ? (textValue as string[])[1] : textValue as string);
         }
         else if (zrUtil.isFunction(formatter)) {
             return isMinMax
-                ? formatter(value[0], value[1])
-                : formatter(value);
+                ? formatter((value as number[])[0], (value as number[])[1])
+                : formatter(value as number);
         }
 
         if (isMinMax) {
-            if (value[0] === dataBound[0]) {
+            if ((value as number[])[0] === dataBound[0]) {
                 return edgeSymbols[0] + ' ' + textValue[1];
             }
-            else if (value[1] === dataBound[1]) {
+            else if ((value as number[])[1] === dataBound[1]) {
                 return edgeSymbols[1] + ' ' + textValue[0];
             }
             else {
@@ -295,40 +334,37 @@ var VisualMapModel = echarts.extendComponentModel({
             }
         }
         else { // Format single value (includes category case).
-            return textValue;
+            return textValue as string;
         }
 
-        function toFixed(val) {
+        function toFixed(val: number) {
             return val === dataBound[0]
                 ? 'min'
                 : val === dataBound[1]
                 ? 'max'
                 : (+val).toFixed(Math.min(precision, 20));
         }
-    },
+    }
 
     /**
      * @protected
      */
-    resetExtent: function () {
+    resetExtent() {
         var thisOption = this.option;
 
         // Can not calculate data extent by data here.
         // Because series and data may be modified in processing stage.
         // So we do not support the feature "auto min/max".
 
-        var extent = asc([thisOption.min, thisOption.max]);
+        var extent = asc([thisOption.min, thisOption.max] as [number, number]);
 
         this._dataExtent = extent;
-    },
+    }
 
     /**
-     * @public
-     * @param {module:echarts/data/List} list
-     * @return {string} Concrete dimention. If return null/undefined,
-     *                  no dimension used.
+     * Return  Concrete dimention. If return null/undefined, no dimension used.
      */
-    getDataDimension: function (list) {
+    getDataDimension(list: List) {
         var optDim = this.option.dimension;
         var listDimensions = list.dimensions;
         if (optDim == null && !listDimensions.length) {
@@ -347,20 +383,14 @@ var VisualMapModel = echarts.extendComponentModel({
                 return dimName;
             }
         }
-    },
+    }
 
-    /**
-     * @public
-     * @override
-     */
-    getExtent: function () {
-        return this._dataExtent.slice();
-    },
+    getExtent() {
+        return this._dataExtent.slice() as [number, number];
+    }
 
-    /**
-     * @protected
-     */
-    completeVisualOption: function () {
+    completeVisualOption() {
+
         var ecModel = this.ecModel;
         var thisOption = this.option;
         var base = {inRange: thisOption.inRange, outOfRange: thisOption.outOfRange};
@@ -379,7 +409,7 @@ var VisualMapModel = echarts.extendComponentModel({
         // completeInactive.call(this, target, 'outOfRange', 'inRange');
         completeController.call(this, controller);
 
-        function completeSingle(base) {
+        function completeSingle(this: VisualMapModel, base?: VisualMapOption['target']) {
             // Compatible with ec2 dataRange.color.
             // The mapping order of dataRange.color is: [high value, ..., low value]
             // whereas inRange.color and outOfRange.color is [low value, ..., high value]
@@ -399,32 +429,20 @@ var VisualMapModel = echarts.extendComponentModel({
             // constant DEFAULT_COLOR.
             // If user do not want the defualt color, set inRange: {color: null}.
             base.inRange = base.inRange || {color: ecModel.get('gradientColor')};
-
-            // If using shortcut like: {inRange: 'symbol'}, complete default value.
-            each(this.stateList, function (state) {
-                var visualType = base[state];
-
-                if (zrUtil.isString(visualType)) {
-                    var defa = visualDefault.get(visualType, 'active', isCategory);
-                    if (defa) {
-                        base[state] = {};
-                        base[state][visualType] = defa;
-                    }
-                    else {
-                        // Mark as not specified.
-                        delete base[state];
-                    }
-                }
-            }, this);
         }
 
-        function completeInactive(base, stateExist, stateAbsent) {
+        function completeInactive(
+            this: VisualMapModel,
+            base: VisualMapOption['target'],
+            stateExist: VisualState,
+            stateAbsent: VisualState
+        ) {
             var optExist = base[stateExist];
             var optAbsent = base[stateAbsent];
 
             if (optExist && !optAbsent) {
                 optAbsent = base[stateAbsent] = {};
-                each(optExist, function (visualData, visualType) {
+                each(optExist, function (visualData, visualType: BuiltinVisualProperty) {
                     if (!VisualMapping.isValidType(visualType)) {
                         return;
                     }
@@ -448,14 +466,14 @@ var VisualMapModel = echarts.extendComponentModel({
             }
         }
 
-        function completeController(controller) {
+        function completeController(this: VisualMapModel, controller?: VisualMapOption['controller']) {
             var symbolExists = (controller.inRange || {}).symbol
                 || (controller.outOfRange || {}).symbol;
             var symbolSizeExists = (controller.inRange || {}).symbolSize
                 || (controller.outOfRange || {}).symbolSize;
             var inactiveColor = this.get('inactiveColor');
 
-            each(this.stateList, function (state) {
+            each(this.stateList, function (state: VisualState) {
 
                 var itemSize = this.itemSize;
                 var visuals = controller[state];
@@ -501,39 +519,36 @@ var VisualMapModel = echarts.extendComponentModel({
 
             }, this);
         }
-    },
+    }
 
-    /**
-     * @protected
-     */
-    resetItemSize: function () {
+    resetItemSize() {
         this.itemSize = [
-            parseFloat(this.get('itemWidth')),
-            parseFloat(this.get('itemHeight'))
+            parseFloat(this.get('itemWidth') as unknown as string),
+            parseFloat(this.get('itemHeight') as unknown as string)
         ];
-    },
+    }
 
-    /**
-     * @public
-     */
-    isCategory: function () {
+    isCategory() {
         return !!this.option.categories;
-    },
+    }
 
     /**
      * @public
      * @abstract
      */
-    setSelected: noop,
+    setSelected(selected?: any) {}
+
+    getSelected(): any {
+        return null;
+    }
 
     /**
      * @public
      * @abstract
-     * @param {*|module:echarts/data/List} valueOrData
-     * @param {number} dataIndex
-     * @return {string} state See this.stateList
      */
-    getValueState: noop,
+    getValueState(value: any): VisualMapModel['stateList'][number] {
+        return null;
+    }
 
     /**
      * FIXME
@@ -543,15 +558,55 @@ var VisualMapModel = echarts.extendComponentModel({
      *
      * @pubilc
      * @abstract
-     * @param {Function} getColorVisual
+     * @param getColorVisual
      *        params: value, valueState
      *        return: color
      * @return {Object} visualMeta
      *        should includes {stops, outerColors}
      *        outerColor means [colorBeyondMinValue, colorBeyondMaxValue]
      */
-    getVisualMeta: noop
+    getVisualMeta(getColorVisual: (value: number, valueState: VisualState) => string): VisualMeta {
+        return null;
+    }
 
-});
+
+    defaultOption: VisualMapOption = {
+        show: true,
+
+        zlevel: 0,
+        z: 4,
+
+        seriesIndex: 'all',
+
+        min: 0,
+        max: 200,
+
+        left: 0,
+        right: null,
+        top: null,
+        bottom: 0,
+
+        itemWidth: null,
+        itemHeight: null,
+        inverse: false,
+        orient: 'vertical',        // 'horizontal' ¦ 'vertical'
+
+        backgroundColor: 'rgba(0,0,0,0)',
+        borderColor: '#ccc',       // 值域边框颜色
+        contentColor: '#5793f3',
+        inactiveColor: '#aaa',
+        borderWidth: 0,
+        padding: 5,
+                                    // 接受数组分别设定上右下左边距，同css
+        textGap: 10,               //
+        precision: 0,              // 小数精度，默认为0，无小数点
+
+        textStyle: {
+            color: '#333'          // 值域文字颜色
+        }
+    }
+}
+
+ComponentModel.registerClass(VisualMapModel);
 
 export default VisualMapModel;

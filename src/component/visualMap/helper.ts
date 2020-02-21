@@ -17,18 +17,29 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import {getLayoutRect} from '../../util/layout';
+import VisualMapModel from './VisualMapModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Payload } from '../../util/types';
+
+const paramsSet = [
+    ['left', 'right', 'width'],
+    ['top', 'bottom', 'height']
+] as const;
+type LayoutKey = (typeof paramsSet)[number][number];
 
 /**
- * @param {module:echarts/component/visualMap/VisualMapModel} visualMapModel\
- * @param {module:echarts/ExtensionAPI} api
- * @param {Array.<number>} itemSize always [short, long]
+ * @param visualMapModel
+ * @param api
+ * @param itemSize always [short, long]
  * @return {string} 'left' or 'right' or 'top' or 'bottom'
  */
-export function getItemAlign(visualMapModel, api, itemSize) {
+export function getItemAlign(
+    visualMapModel: VisualMapModel,
+    api: ExtensionAPI,
+    itemSize: number[]
+) {
     var modelOption = visualMapModel.option;
     var itemAlign = modelOption.align;
 
@@ -40,20 +51,18 @@ export function getItemAlign(visualMapModel, api, itemSize) {
     var ecSize = {width: api.getWidth(), height: api.getHeight()};
     var realIndex = modelOption.orient === 'horizontal' ? 1 : 0;
 
-    var paramsSet = [
-        ['left', 'right', 'width'],
-        ['top', 'bottom', 'height']
-    ];
     var reals = paramsSet[realIndex];
     var fakeValue = [0, null, 10];
 
-    var layoutInput = {};
+    var layoutInput = {} as {
+        [key in LayoutKey]: number | string
+    };
     for (var i = 0; i < 3; i++) {
         layoutInput[paramsSet[1 - realIndex][i]] = fakeValue[i];
         layoutInput[reals[i]] = i === 2 ? itemSize[0] : modelOption[reals[i]];
     }
 
-    var rParam = [['x', 'width', 3], ['y', 'height', 0]][realIndex];
+    var rParam = ([['x', 'width', 3], ['y', 'height', 0]] as const)[realIndex];
     var rect = getLayoutRect(layoutInput, ecSize, modelOption.padding);
 
     return reals[
@@ -66,7 +75,7 @@ export function getItemAlign(visualMapModel, api, itemSize) {
  * Prepare dataIndex for outside usage, where dataIndex means rawIndex, and
  * dataIndexInside means filtered index.
  */
-export function makeHighDownBatch(batch, visualMapModel) {
+export function makeHighDownBatch(batch: Payload['batch'], visualMapModel: VisualMapModel): Payload['batch'] {
     zrUtil.each(batch || [], function (batchItem) {
         if (batchItem.dataIndex != null) {
             batchItem.dataIndexInside = batchItem.dataIndex;

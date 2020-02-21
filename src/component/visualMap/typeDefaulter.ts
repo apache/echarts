@@ -17,21 +17,23 @@
 * under the License.
 */
 
-// @ts-nocheck
+import Component, { ComponentModelConstructor } from '../../model/Component';
+import {VisualMapOption} from './VisualMapModel';
+import {PiecewiseVisualMapOption} from './PiecewiseModel';
+import {ContinousVisualMapOption} from './ContinuousModel';
 
-import Component from '../../model/Component';
-
-Component.registerSubTypeDefaulter('visualMap', function (option) {
+(Component as ComponentModelConstructor).registerSubTypeDefaulter(
+    'visualMap', function (option: VisualMapOption) {
     // Compatible with ec2, when splitNumber === 0, continuous visualMap will be used.
     return (
             !option.categories
             && (
                 !(
-                    option.pieces
-                        ? option.pieces.length > 0
-                        : option.splitNumber > 0
+                    (option as PiecewiseVisualMapOption).pieces
+                        ? ((option as PiecewiseVisualMapOption)).pieces.length > 0
+                        : ((option as PiecewiseVisualMapOption)).splitNumber > 0
                 )
-                || option.calculable
+                || (option as ContinousVisualMapOption).calculable
             )
         )
         ? 'continuous' : 'piecewise';

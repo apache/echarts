@@ -17,9 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
+import VisualMapModel from './VisualMapModel';
 
 var actionInfo = {
     type: 'selectDataRange',
@@ -31,7 +30,6 @@ var actionInfo = {
 echarts.registerAction(actionInfo, function (payload, ecModel) {
 
     ecModel.eachComponent({mainType: 'visualMap', query: payload}, function (model) {
-        model.setSelected(payload.selected);
+        (model as VisualMapModel).setSelected(payload.selected);
     });
-
 });
