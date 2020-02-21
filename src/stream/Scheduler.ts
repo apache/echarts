@@ -27,7 +27,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import {normalizeToArray} from '../util/model';
 import {
-    StageHandlerInternal, StageHandlerOverallReset, VisualType, StageHandler,
+    StageHandlerInternal, StageHandlerOverallReset, StageHandler,
     Payload, StageHandlerReset, StageHandlerPlan, StageHandlerProgressExecutor, LarginOptionMixin, SeriesOption
 } from '../util/types';
 import { EChartsType } from '../echarts';
@@ -70,7 +70,7 @@ type TaskRecord = {
 type PerformStageTaskOpt = {
     block?: boolean,
     setDirty?: boolean,
-    visualType?: VisualType,
+    visualType?: StageHandlerInternal['visualType'],
     dirtyMap?: HashMap<any>
 };
 
@@ -550,7 +550,7 @@ class Scheduler {
 
     static wrapStageHandler(
         stageHandler: StageHandler | StageHandlerOverallReset,
-        visualType: VisualType
+        visualType: StageHandlerInternal['visualType']
     ): StageHandlerInternal {
         if (isFunction(stageHandler)) {
             stageHandler = {

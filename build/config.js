@@ -26,10 +26,13 @@ const nodePath = require('path');
 const preamble = require('./preamble');
 const ecDir = nodePath.resolve(__dirname, '..');
 const typescriptPlugin = require('rollup-plugin-typescript2');
-const progress = require('rollup-plugin-progress');
 const fs = require('fs');
+const progress = require('./progress');
 
-function preparePlugins({min, lang, sourcemap, removeDev, addBundleVersion}, {include, exclude}) {
+function preparePlugins(
+    {min, lang, sourcemap, removeDev, addBundleVersion, totalFiles},
+    {include, exclude}
+) {
     assert(include);
     // In case node_modules/zrender is a symlink
     const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
@@ -58,7 +61,11 @@ function preparePlugins({min, lang, sourcemap, removeDev, addBundleVersion}, {in
             exclude: exclude || []
         }),
         nodeResolvePlugin(),
-        progress()
+        progress({
+            scope: {
+                total: totalFiles || 0
+            }
+        })
     ];
 
     removeDev && plugins.push(
@@ -105,6 +112,7 @@ function preparePlugins({min, lang, sourcemap, removeDev, addBundleVersion}, {in
  * @param {boolean} [opt.removeDev]
  * @param {string} [opt.format='umd'] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
+ * @param {Object} [opt.totalFiles] Total files to bundle
  */
 exports.createECharts = function (opt = {}) {
     let min = opt.min;

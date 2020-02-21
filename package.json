@@ -59,7 +59,6 @@
     "rollup": "1.28.0",
     "rollup-plugin-commonjs": "8.4.1",
     "rollup-plugin-node-resolve": "3.0.0",
-    "rollup-plugin-progress": "^1.1.1",
     "rollup-plugin-typescript2": "0.25.3",
     "rollup-plugin-uglify": "6.0.4",
     "seedrandom": "3.0.3",
