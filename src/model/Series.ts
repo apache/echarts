@@ -240,7 +240,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * data in the stream procedure. So we fetch data from upstream
      * each time `task.perform` called.
      */
-    getData(dataType?: string): List {
+    getData(dataType?: string): List<SeriesModel<Opt>> {
         var task = getCurrentTask(this);
         if (task) {
             var data = task.context.data;

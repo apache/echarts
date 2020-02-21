@@ -138,7 +138,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
             return resultVal;
         });
 
-        targetData.hostModel.setData(newData);
+        (targetData.hostModel as SeriesModel).setData(newData);
         // Update for consequent calculation
         targetStackInfo.data = newData;
     });

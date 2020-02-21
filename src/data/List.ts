@@ -40,7 +40,6 @@ import {
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
-import SeriesModel from '../model/Series';
 
 
 var isObject = zrUtil.isObject;
@@ -123,7 +122,7 @@ var CLONE_PROPERTIES = [
 
 
 
-class List {
+class List <HostModel extends Model = Model> {
 
     readonly type = 'list';
 
@@ -132,7 +131,7 @@ class List {
     // Infomation of each data dimension, like data type.
     private _dimensionInfos: {[dimName: string]: DataDimensionInfo};
 
-    readonly hostModel: SeriesModel;
+    readonly hostModel: HostModel;
 
     readonly dataType: string;
 
@@ -226,7 +225,7 @@ class List {
      *        For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
      *        Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
      */
-    constructor(dimensions: Array<string | object | DataDimensionInfo>, hostModel: SeriesModel) {
+    constructor(dimensions: Array<string | object | DataDimensionInfo>, hostModel: HostModel) {
         dimensions = dimensions || ['x', 'y'];
 
         var dimensionInfos: Dictionary<DataDimensionInfo> = {};
@@ -1757,7 +1756,7 @@ class List {
      * Shallow clone a new list except visual and layout properties, and graph elements.
      * New list only change the indices.
      */
-    cloneShallow(list?: List): List {
+    cloneShallow(list?: List<HostModel>): List<HostModel> {
         if (!list) {
             var dimensionInfoList = zrUtil.map(this.dimensions, this.getDimensionInfo, this);
             list = new List(dimensionInfoList, this.hostModel);
