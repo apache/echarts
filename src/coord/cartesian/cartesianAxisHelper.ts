@@ -17,29 +17,37 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
+import GridModel from './GridModel';
+import AxisModel from './AxisModel';
+
+interface CartesianAxisLayout {
+    position: [number, number];
+    rotation: number;
+    labelOffset: number;
+    labelDirection: number; // 1 | -1;
+    tickDirection: number; // 1 | -1;
+    nameDirection: number; // 1 | -1;
+    labelRotate: number;
+    z2: number;
+}
 
 /**
  * Can only be called after coordinate system creation stage.
  * (Can be called before coordinate system update stage).
- *
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, z2
- * }
  */
-export function layout(gridModel, axisModel, opt) {
+export function layout(
+    gridModel: GridModel, axisModel: AxisModel, opt?: {labelInside?: boolean}
+): CartesianAxisLayout {
     opt = opt || {};
     var grid = gridModel.coordinateSystem;
     var axis = axisModel.axis;
-    var layout = {};
+    var layout = {} as CartesianAxisLayout;
     var otherAxisOnZeroOf = axis.getAxesOnZeroOf()[0];
 
     var rawAxisPosition = axis.position;
-    var axisPosition = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
+    var axisPosition: 'onZero' | typeof axis.position = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
     var axisDim = axis.dim;
 
     var rect = grid.getRect();
@@ -71,15 +79,15 @@ export function layout(gridModel, axisModel, opt) {
     layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
     layout.labelOffset = otherAxisOnZeroOf ? posBound[idx[rawAxisPosition]] - posBound[idx.onZero] : 0;
 
-    if (axisModel.get('axisTick.inside')) {
+    if (axisModel.get(['axisTick', 'inside'])) {
         layout.tickDirection = -layout.tickDirection;
     }
-    if (zrUtil.retrieve(opt.labelInside, axisModel.get('axisLabel.inside'))) {
+    if (zrUtil.retrieve(opt.labelInside, axisModel.get(['axisLabel', 'inside']))) {
         layout.labelDirection = -layout.labelDirection;
     }
 
     // Special label rotation
-    var labelRotate = axisModel.get('axisLabel.rotate');
+    var labelRotate = axisModel.get(['axisLabel', 'rotate']);
     layout.labelRotate = axisPosition === 'top' ? -labelRotate : labelRotate;
 
     // Over splitLine and splitArea

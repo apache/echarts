@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Scale from './Scale';
 import * as numberUtil from '../util/number';
+import * as scaleHelper from './helper';
 
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
@@ -41,7 +42,7 @@ var mathLog = Math.log;
 
 class LogScale extends Scale {
 
-    static type = 'log';
+    type = 'log';
 
     private base = 10;
 
@@ -54,6 +55,7 @@ class LogScale extends Scale {
     private _interval: number = 0;
     // FIXME:TS actually used by `IntervalScale`
     private _niceExtent: [number, number];
+
 
     /**
      * @param Whether expand the ticks to niced extent.
@@ -78,11 +80,6 @@ class LogScale extends Scale {
 
             return powVal;
         }, this);
-    }
-
-    scale(val: number): number {
-        val = super.scale(val);
-        return mathPow(this.base, val);
     }
 
     setExtent(start: number, end: number): void {
@@ -172,14 +169,23 @@ class LogScale extends Scale {
         this._fixMax = opt.fixMax;
     }
 
+    parse(val: any): number {
+        return val;
+    }
+
     contain(val: number): boolean {
         val = mathLog(val) / mathLog(this.base);
-        return super.contain(val);
+        return scaleHelper.contain(val, this._extent);
     }
 
     normalize(val: number): number {
         val = mathLog(val) / mathLog(this.base);
-        return super.normalize(val);
+        return scaleHelper.normalize(val, this._extent);
+    }
+
+    scale(val: number): number {
+        val = scaleHelper.scale(val, this._extent);
+        return mathPow(this.base, val);
     }
 
     getMinorTicks: IntervalScale['getMinorTicks'];

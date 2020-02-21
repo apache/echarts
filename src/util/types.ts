@@ -224,6 +224,10 @@ export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 export type ParsedDataNumeric = number | OrdinalNumber;
 export type ParsedDataValue = ParsedDataNumeric | OrdinalRawValue;
+// FIXME:TS better name?
+// This is not `OptionDataPrimitive` because the "dataProvider parse"
+// will not be performed. But "scale parse" will be performed.
+export type ScaleDataValue = ParsedDataValue | Date;
 
 export type AxisValue = ParsedDataNumeric;
 
@@ -319,6 +323,11 @@ export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYO
  * ```
  */
 export type ECUnitOption = {
+    // Exclude these reserverd word for `ECOption` to avoid to infer to "any".
+    baseOption?: never
+    options?: never
+    media?: never
+    timeline?: ComponentOption | ComponentOption[]
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<any> | any
 }
 
@@ -365,7 +374,7 @@ export type ECOption = ECUnitOption | {
     baseOption?: ECUnitOption,
     timeline?: ComponentOption,
     options?: ECUnitOption[],
-    media?: MediaUnit
+    media?: MediaUnit[],
 };
 
 // series.data or dataset.source
@@ -424,7 +433,7 @@ export interface DataParamsUserOutput {
     data: any;
     dataType?: string;
     value: any;
-    color?: string;
+    color?: ZRColor;
     borderColor?: string;
     dimensionNames?: DimensionName[];
     encode?: DimensionUserOuputEncode;
@@ -463,7 +472,7 @@ export type MediaUnit = {
 export type ComponentLayoutMode = {
     // Only support 'box' now.
     type: 'box',
-    ignoreSize: boolean | [boolean, boolean]
+    ignoreSize?: boolean | [boolean, boolean]
 };
 /******************* Mixins for Common Option Properties   ********************** */
 export interface ColorPaletteOptionMixin {
@@ -500,7 +509,7 @@ export interface CircleLayoutOptionMixin {
 
 export interface ShadowOptionMixin {
     shadowBlur?: number
-    shadowColor?: string
+    shadowColor?: ColorString
     shadowOffsetX?: number
     shadowOffsetY?: number
 }
@@ -595,9 +604,9 @@ export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
  * Used in the components or series like `line`, `axis`
  * It includes stroke style.
  */
-export interface LineStyleOption extends ShadowOptionMixin {
+export interface LineStyleOption<Clr = ZRColor>  extends ShadowOptionMixin {
     width?: number
-    color?: string
+    color?: Clr
     opacity?: number
     type?: ZRLineType
 }
@@ -606,8 +615,8 @@ export interface LineStyleOption extends ShadowOptionMixin {
  * ItemStyleOption is a option set to control styles on an area, like polygon, rectangle.
  * It only include fill style.
  */
-export interface AreaStyleOption extends ShadowOptionMixin {
-    color?: string
+export interface AreaStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
+    color?: Clr
 }
 
 type Arrayable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | T[key][] }
@@ -652,7 +661,7 @@ export type VisualOption = VisualOptionFixed | VisualOptionLinear | VisualOption
  */
 export type BuiltinVisualProperty = keyof VisualOptionUnit;
 
-interface TextCommonOption extends ShadowOptionMixin {
+export interface TextCommonOption extends ShadowOptionMixin {
     color?: string
     fontStyle?: ZRFontStyle
     fontWeight?: ZRFontWeight
@@ -698,7 +707,7 @@ export interface LabelOption extends TextCommonOption {
     distance?: number
     rotate?: number | boolean
     offset?: number[]
-    formatter?: (params: DataParamsUserOutput) => string
+    formatter?: string | ((params: DataParamsUserOutput) => string)
 
     rich?: Dictionary<TextCommonOption>
 }
@@ -739,6 +748,8 @@ export interface SeriesOption extends
     progressive?: number | false
     progressiveThreshold?: number
     progressiveChunkMode?: 'mod'
+
+    coordinateSystem?: string
 
     // FIXME:TS more
 }

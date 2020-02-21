@@ -59,7 +59,7 @@ export function createVisualMappings<VisualState extends string>(
     each(stateList, function (state) {
         var mappings = visualMappings[state] = createMappings();
 
-        each(option[state], function (visualData, visualType: BuiltinVisualProperty) {
+        each(option[state], function (visualData: VisualMappingOption['visual'], visualType: BuiltinVisualProperty) {
             if (!VisualMapping.isValidType(visualType)) {
                 return;
             }

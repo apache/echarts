@@ -28,12 +28,13 @@ import * as zrUtil from 'zrender/src/core/util';
 import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
 import List from '../data/List';
+import * as scaleHelper from './helper';
 import { OrdinalRawValue, OrdinalNumber, DimensionLoose } from '../util/types';
 
 
 class OrdinalScale extends Scale {
 
-    static type: 'ordinal';
+    type: 'ordinal';
 
     private _ordinalMeta: OrdinalMeta;
 
@@ -63,7 +64,7 @@ class OrdinalScale extends Scale {
 
     contain(rank: OrdinalRawValue | OrdinalNumber): boolean {
         rank = this.parse(rank);
-        return super.contain(rank)
+        return scaleHelper.contain(rank, this._extent)
             && this._ordinalMeta.categories[rank] != null;
     }
 
@@ -71,11 +72,11 @@ class OrdinalScale extends Scale {
      * Normalize given rank or name to linear [0, 1]
      */
     normalize(val: OrdinalRawValue | OrdinalNumber): number {
-        return super.normalize(this.parse(val));
+        return scaleHelper.normalize(this.parse(val), this._extent);
     }
 
     scale(val: number): OrdinalNumber {
-        return Math.round(super.scale(val));
+        return Math.round(scaleHelper.scale(val, this._extent));
     }
 
     getTicks(): OrdinalNumber[] {

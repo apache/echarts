@@ -22,7 +22,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import axisModelCreator from '../axisModelCreator';
-import axisModelCommonMixin from '../axisModelCommonMixin';
+import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 
 var AxisModel = ComponentModel.extend({
 
@@ -103,7 +103,7 @@ function getAxisType(axisName, option) {
     return option.type || (option.data ? 'category' : 'value');
 }
 
-zrUtil.merge(AxisModel.prototype, axisModelCommonMixin);
+zrUtil.mixin(AxisModel, {AxisModelCommonMixin});
 
 axisModelCreator('single', AxisModel, getAxisType, defaultOption);
 

@@ -17,66 +17,64 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import axisModelCreator from '../axisModelCreator';
-import axisModelCommonMixin from '../axisModelCommonMixin';
+import {AxisModelCommonMixin} from '../axisModelCommonMixin';
+import Axis2D from './Axis2D';
+import { DimensionName } from '../../util/types';
+import { AxisBaseOption } from '../axisCommonTypes';
+import GridModel from './GridModel';
 
-var AxisModel = ComponentModel.extend({
 
-    type: 'cartesian2dAxis',
+export type Axis2DPosition = 'top' | 'bottom' | 'left' | 'right';
 
-    /**
-     * @type {module:echarts/coord/cartesian/Axis2D}
-     */
-    axis: null,
+interface CartesianAxisOption extends AxisBaseOption {
+    gridIndex?: number;
+    gridId?: string;
+    position?: Axis2DPosition;
+    offset?: number;
+}
 
-    /**
-     * @override
-     */
-    init: function () {
-        AxisModel.superApply(this, 'init', arguments);
+class AxisModel extends ComponentModel<CartesianAxisOption> {
+
+    static type = 'cartesian2dAxis';
+
+    axis: Axis2D;
+
+    init(...args: any) {
+        super.init.apply(this, args);
         this.resetRange();
-    },
+    }
 
-    /**
-     * @override
-     */
-    mergeOption: function () {
-        AxisModel.superApply(this, 'mergeOption', arguments);
+    mergeOption(...args: any) {
+        super.mergeOption.apply(this, args);
         this.resetRange();
-    },
+    }
 
-    /**
-     * @override
-     */
-    restoreData: function () {
-        AxisModel.superApply(this, 'restoreData', arguments);
+    restoreData(...args: any) {
+        super.restoreData.apply(this, args);
         this.resetRange();
-    },
+    }
 
-    /**
-     * @override
-     * @return {module:echarts/model/Component}
-     */
-    getCoordSysModel: function () {
+    getCoordSysModel(): GridModel {
         return this.ecModel.queryComponents({
             mainType: 'grid',
             index: this.option.gridIndex,
             id: this.option.gridId
-        })[0];
+        })[0] as GridModel;
     }
+}
 
-});
+ComponentModel.registerClass(AxisModel);
 
-function getAxisType(axisDim, option) {
+function getAxisType(axisDim: DimensionName, option: CartesianAxisOption) {
     // Default axis with data is category axis
     return option.type || (option.data ? 'category' : 'value');
 }
 
-zrUtil.merge(AxisModel.prototype, axisModelCommonMixin);
+interface AxisModel extends AxisModelCommonMixin<CartesianAxisOption> {}
+zrUtil.mixin(AxisModel, AxisModelCommonMixin);
 
 var extraOption = {
     // gridIndex: 0,

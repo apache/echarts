@@ -17,32 +17,24 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import Axis from '../Axis';
+import { DimensionName } from '../../util/types';
+import Scale from '../../scale/Scale';
+import AxisModel, { Axis2DPosition } from './AxisModel';
+import Grid from './Grid';
 
-/**
- * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
-var Axis2D = function (dim, scale, coordExtent, axisType, position) {
-    Axis.call(this, dim, scale, coordExtent);
+
+class Axis2D extends Axis {
+
     /**
      * Axis type
      *  - 'category'
      *  - 'value'
      *  - 'time'
      *  - 'log'
-     * @type {string}
+     *  ...
      */
-    this.type = axisType || 'value';
+    readonly type: string;
 
     /**
      * Axis position
@@ -51,36 +43,48 @@ var Axis2D = function (dim, scale, coordExtent, axisType, position) {
      *  - 'left'
      *  - 'right'
      */
-    this.position = position || 'bottom';
-};
-
-Axis2D.prototype = {
-
-    constructor: Axis2D,
+    readonly position: Axis2DPosition;
 
     /**
      * Index of axis, can be used as key
+     * Injected outside.
      */
-    index: 0,
+    index: number = 0;
+
+    /**
+     * Axis model. Injected outside
+     */
+    model: AxisModel;
+
+    /**
+     * Injected outside.
+     */
+    grid: Grid;
+
+
+    constructor(
+        dim: DimensionName,
+        scale: Scale,
+        coordExtent: [number, number],
+        axisType?: string,
+        position?: Axis2DPosition
+    ) {
+        super(dim, scale, coordExtent);
+        this.type = axisType || 'value';
+        this.position = position || 'bottom';
+    }
 
     /**
      * Implemented in <module:echarts/coord/cartesian/Grid>.
-     * @return {Array.<module:echarts/coord/cartesian/Axis2D>}
-     *         If not on zero of other axis, return null/undefined.
+     * @return If not on zero of other axis, return null/undefined.
      *         If no axes, return an empty array.
      */
-    getAxesOnZeroOf: null,
+    getAxesOnZeroOf: () => Axis2D[];
 
-    /**
-     * Axis model
-     * @param {module:echarts/coord/cartesian/AxisModel}
-     */
-    model: null,
-
-    isHorizontal: function () {
+    isHorizontal(): boolean {
         var position = this.position;
         return position === 'top' || position === 'bottom';
-    },
+    }
 
     /**
      * Each item cooresponds to this.getExtent(), which
@@ -90,43 +94,32 @@ Axis2D.prototype = {
      * @param {boolean} [asc]
      * @return {Array.<number>}
      */
-    getGlobalExtent: function (asc) {
+    getGlobalExtent(asc?: boolean): [number, number] {
         var ret = this.getExtent();
         ret[0] = this.toGlobalCoord(ret[0]);
         ret[1] = this.toGlobalCoord(ret[1]);
         asc && ret[0] > ret[1] && ret.reverse();
         return ret;
-    },
+    }
 
-    getOtherAxis: function () {
-        this.grid.getOtherAxis();
-    },
-
-    /**
-     * @override
-     */
-    pointToData: function (point, clamp) {
+    pointToData(point: number[], clamp?: boolean): number {
         return this.coordToData(this.toLocalCoord(point[this.dim === 'x' ? 0 : 1]), clamp);
-    },
+    }
 
     /**
      * Transform global coord to local coord,
      * i.e. var localCoord = axis.toLocalCoord(80);
      * designate by module:echarts/coord/cartesian/Grid.
-     * @type {Function}
      */
-    toLocalCoord: null,
+    toLocalCoord: (coord: number) => number;
 
     /**
      * Transform global coord to local coord,
      * i.e. var globalCoord = axis.toLocalCoord(40);
      * designate by module:echarts/coord/cartesian/Grid.
-     * @type {Function}
      */
-    toGlobalCoord: null
+    toGlobalCoord: (coord: number) => number;
 
-};
-
-zrUtil.inherits(Axis2D, Axis);
+}
 
 export default Axis2D;

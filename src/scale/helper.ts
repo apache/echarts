@@ -87,3 +87,18 @@ export function fixExtent(
         niceTickExtent[0] = niceTickExtent[1];
     }
 }
+
+export function contain(val: number, extent: [number, number]): boolean {
+    return val >= extent[0] && val <= extent[1];
+}
+
+export function normalize(val: number, extent: [number, number]): number {
+    if (extent[1] === extent[0]) {
+        return 0.5;
+    }
+    return (val - extent[0]) / (extent[1] - extent[0]);
+}
+
+export function scale(val: number, extent: [number, number]): number {
+    return val * (extent[1] - extent[0]) + extent[0];
+}

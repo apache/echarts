@@ -27,21 +27,19 @@ import {
     getOptionCategoryInterval,
     shouldShowAllLabels
 } from './axisHelper';
+import Axis from './Axis';
+import Model from '../model/Model';
 
 var inner = makeInner();
 
-/**
- * @param {module:echats/coord/Axis} axis
- * @return {Object} {
- *     labels: [{
- *         formattedLabel: string,
- *         rawLabel: string,
- *         tickValue: number
- *     }, ...],
- *     labelCategoryInterval: number
- * }
- */
-export function createAxisLabels(axis) {
+export function createAxisLabels(axis: Axis): {
+    labels: {
+        formattedLabel: string,
+        rawLabel: string,
+        tickValue: number
+    }[],
+    labelCategoryInterval: number
+} {
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryLabels(axis)
@@ -56,7 +54,10 @@ export function createAxisLabels(axis) {
  *     tickCategoryInterval: number
  * }
  */
-export function createAxisTicks(axis, tickModel) {
+export function createAxisTicks(axis: Axis, tickModel: Model): {
+    ticks: number[],
+    tickCategoryInterval?: number
+} {
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryTicks(axis, tickModel)

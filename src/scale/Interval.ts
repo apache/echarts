@@ -27,13 +27,29 @@ var roundNumber = numberUtil.round;
 
 class IntervalScale extends Scale {
 
-    static type = 'interval';
+    type = 'interval';
 
     // Step is calculated in adjustExtent.
     protected _interval: number = 0;
     protected _niceExtent: [number, number];
     private _intervalPrecision: number = 2;
 
+
+    parse(val: number): number {
+        return val;
+    }
+
+    contain(val: number): boolean {
+        return helper.contain(val, this._extent);
+    }
+
+    normalize(val: number): number {
+        return helper.normalize(val, this._extent);
+    }
+
+    scale(val: number): number {
+        return helper.scale(val, this._extent);
+    }
 
     setExtent(start: number | string, end: number | string): void {
         var thisExtent = this._extent;

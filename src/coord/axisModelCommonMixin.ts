@@ -17,18 +17,23 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
-// import * as axisHelper from './axisHelper';
+import Model from '../model/Model';
+import Axis from './Axis';
+import ComponentModel from '../model/Component';
+import { AxisBaseOption } from './axisCommonTypes';
 
-export default {
+
+interface AxisModelCommonMixin<Opt extends AxisBaseOption> extends Pick<Model<Opt>, 'option'> {
+    axis: Axis;
+}
+
+class AxisModelCommonMixin<Opt extends AxisBaseOption> {
 
     /**
-     * @param {boolean} origin
-     * @return {number|string} min value or 'dataMin' or null/undefined (means auto) or NaN
+     * @return min value or 'dataMin' or null/undefined (means auto) or NaN
      */
-    getMin: function (origin) {
+    getMin(origin: boolean): number | 'dataMin' {
         var option = this.option;
         var min = (!origin && option.rangeStart != null)
             ? option.rangeStart : option.min;
@@ -41,14 +46,13 @@ export default {
         ) {
             min = this.axis.scale.parse(min);
         }
-        return min;
-    },
+        return min as any;
+    }
 
     /**
-     * @param {boolean} origin
-     * @return {number|string} max value or 'dataMax' or null/undefined (means auto) or NaN
+     * @return max value or 'dataMax' or null/undefined (means auto) or NaN
      */
-    getMax: function (origin) {
+    getMax(origin: boolean): number | 'dataMax' {
         var option = this.option;
         var max = (!origin && option.rangeEnd != null)
             ? option.rangeEnd : option.max;
@@ -61,38 +65,39 @@ export default {
         ) {
             max = this.axis.scale.parse(max);
         }
-        return max;
-    },
+        return max as any;
+    }
 
-    /**
-     * @return {boolean}
-     */
-    getNeedCrossZero: function () {
+    getNeedCrossZero(): boolean {
         var option = this.option;
         return (option.rangeStart != null || option.rangeEnd != null)
             ? false : !option.scale;
-    },
+    }
 
     /**
      * Should be implemented by each axis model if necessary.
      * @return {module:echarts/model/Component} coordinate system model
      */
-    getCoordSysModel: zrUtil.noop,
+    getCoordSysModel(): ComponentModel {
+        return;
+    }
 
     /**
-     * @param {number} rangeStart Can only be finite number or null/undefined or NaN.
-     * @param {number} rangeEnd Can only be finite number or null/undefined or NaN.
+     * @param rangeStart Can only be finite number or null/undefined or NaN.
+     * @param rangeEnd Can only be finite number or null/undefined or NaN.
      */
-    setRange: function (rangeStart, rangeEnd) {
+    setRange(rangeStart: number, rangeEnd: number): void {
         this.option.rangeStart = rangeStart;
         this.option.rangeEnd = rangeEnd;
-    },
+    }
 
     /**
      * Reset range
      */
-    resetRange: function () {
+    resetRange(): void {
         // rangeStart and rangeEnd is readonly.
         this.option.rangeStart = this.option.rangeEnd = null;
     }
-};
+}
+
+export {AxisModelCommonMixin};

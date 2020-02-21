@@ -210,13 +210,13 @@ function parseRawOption(
     optionPreprocessorFuncs: OptionPreprocessor[],
     isNew: boolean
 ): ParsedRawOption {
-    var timelineOptions = [];
+    var timelineOptions: ECUnitOption[] = [];
     var mediaList: MediaUnit[] = [];
     var mediaDefault: MediaUnit;
-    var baseOption;
+    var baseOption: ECUnitOption;
 
     // Compatible with ec2.
-    var timelineOpt = (rawOption as any).timeline;
+    var timelineOpt = rawOption.timeline;
 
     if (rawOption.baseOption) {
         baseOption = rawOption.baseOption;
@@ -224,13 +224,13 @@ function parseRawOption(
 
     // For timeline
     if (timelineOpt || rawOption.options) {
-        baseOption = baseOption || {};
+        baseOption = baseOption || {} as ECUnitOption;
         timelineOptions = (rawOption.options || []).slice();
     }
 
     // For media query
     if (rawOption.media) {
-        baseOption = baseOption || {};
+        baseOption = baseOption || {} as ECUnitOption;
         var media = rawOption.media;
         each(media, function (singleMedia) {
             if (singleMedia && singleMedia.option) {
@@ -247,7 +247,7 @@ function parseRawOption(
 
     // For normal option
     if (!baseOption) {
-        baseOption = rawOption;
+        baseOption = rawOption as ECUnitOption;
     }
 
     // Set timelineOpt to baseOption in ec3,
@@ -290,7 +290,7 @@ function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): 
 
     var applicatable = true;
 
-    zrUtil.each(query, function (value, attr) {
+    zrUtil.each(query, function (value: number, attr) {
         var matched = attr.match(QUERY_REG);
 
         if (!matched || !matched[1] || !matched[2]) {
@@ -347,7 +347,7 @@ function indicesEquals(indices1: number[], indices2: number[]): boolean {
  * 2. Use a shadow ecModel. (Performace expensive)
  */
 function mergeOption(oldOption: ECUnitOption, newOption: ECUnitOption): void {
-    newOption = newOption || {};
+    newOption = newOption || {} as ECUnitOption;
 
     each(newOption, function (newCptOpt, mainType) {
         if (newCptOpt == null) {

@@ -33,6 +33,9 @@ import {
     TooltipRenderMode
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
+import SeriesModel from '../model/Series';
+import AxisModel from '../coord/cartesian/AxisModel';
+import GridModel from '../coord/cartesian/GridModel';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -494,6 +497,27 @@ export type ModelFinderObject = {
     // ... (can be extended)
     [key: string]: any
 };
+/**
+ * {
+ *     seriesModels: [seriesModel1, seriesModel2],
+ *     seriesModel: seriesModel1, // The first model
+ *     geoModels: [geoModel1, geoModel2],
+ *     geoModel: geoModel1, // The first model
+ *     ...
+ * }
+ */
+export type ParsedModelFinder = {
+    seriesModels?: SeriesModel[],
+    seriesModel?: SeriesModel,
+    xAxisModels?: AxisModel[],
+    xAxisModel?: AxisModel,
+    yAxisModels?: AxisModel[],
+    yAxisModel?: AxisModel,
+    gridModels?: GridModel[],
+    gridModel?: GridModel,
+    // others:
+    [key: string]: ComponentModel | ComponentModel[]
+};
 
 /**
  * @param {module:echarts/model/Global} ecModel
@@ -521,22 +545,12 @@ export type ModelFinderObject = {
  * @param [opt]
  * @param [opt.defaultMainType]
  * @param [opt.includeMainTypes]
- * @return result like:
- *        {
- *            seriesModels: [seriesModel1, seriesModel2],
- *            seriesModel: seriesModel1, // The first model
- *            geoModels: [geoModel1, geoModel2],
- *            geoModel: geoModel1, // The first model
- *            ...
- *        }
  */
 export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
     opt?: {defaultMainType?: string, includeMainTypes?: string[]}
-): {
-    [key: string]: ComponentModel | ComponentModel[]
-} {
+): ParsedModelFinder {
     var finder: ModelFinderObject;
     if (zrUtil.isString(finderInput)) {
         var obj = {};
@@ -556,7 +570,7 @@ export function parseFinder(
         finder[defaultMainType + 'Index'] = 0;
     }
 
-    var result = {} as Dictionary<ComponentModel | ComponentModel[]>;
+    var result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
         var value = finder[key];

@@ -23,6 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from './axisDefault';
 import ComponentModel from '../model/Component';
 import {
+    getLayoutMode,
     getLayoutParams,
     mergeLayoutParam
 } from '../util/layout';
@@ -51,7 +52,7 @@ export default function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraD
             type: axisName + 'Axis.' + axisType,
 
             mergeDefaultAndTheme: function (option, ecModel) {
-                var layoutMode = this.layoutMode;
+                var layoutMode = fetchLayoutMode(this);
                 var inputPositionParams = layoutMode
                     ? getLayoutParams(option) : {};
 

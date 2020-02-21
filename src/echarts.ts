@@ -48,7 +48,7 @@ import lightTheme from './theme/light';
 import darkTheme from './theme/dark';
 import './component/dataset';
 import mapDataStorage, { GeoMapDefinition, GeoMapGeoJSONSource, GeoSpecialAreas } from './coord/geo/mapDataStorage';
-import {CoordinateSystem, CoordinateSystemCreator} from './coord/CoordinateSystem';
+import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from './coord/CoordinateSystem';
 import { parseClassType } from './util/clazz';
 import {ECEventProcessor} from './util/ECEventProcessor';
 import {
@@ -259,7 +259,7 @@ class ECharts {
         this._throttledZrFlush = throttle(zrUtil.bind(zr.flush, zr), 17);
 
         theme = zrUtil.clone(theme);
-        theme && backwardCompat(theme, true);
+        theme && backwardCompat(theme as ECUnitOption, true);
 
         this._theme = theme;
 
@@ -676,8 +676,8 @@ class ECharts {
         var findResult = modelUtil.parseFinder(ecModel, finder);
 
         zrUtil.each(findResult, function (models, key) {
-            key.indexOf('Models') >= 0 && zrUtil.each(models as ComponentModel, function (model) {
-                var coordSys = model.coordinateSystem;
+            key.indexOf('Models') >= 0 && zrUtil.each(models as ComponentModel[], function (model) {
+                var coordSys = (model as CoordinateSystemHostModel).coordinateSystem;
                 if (coordSys && coordSys.containPoint) {
                     result = result || !!coordSys.containPoint(value);
                 }
@@ -1419,12 +1419,12 @@ class ECharts {
             var coordSysList = ecIns._coordSysMgr.getCoordinateSystems();
             var result;
 
-            finder = modelUtil.parseFinder(ecModel, finder);
+            var parsedFinder = modelUtil.parseFinder(ecModel, finder);
 
             for (var i = 0; i < coordSysList.length; i++) {
                 var coordSys = coordSysList[i];
                 if (coordSys[methodName]
-                    && (result = coordSys[methodName](ecModel, finder, value)) != null
+                    && (result = coordSys[methodName](ecModel, parsedFinder, value)) != null
                 ) {
                     return result;
                 }
@@ -1717,7 +1717,7 @@ class ECharts {
 
         createExtensionAPI = function (ecIns: ECharts): ExtensionAPI {
             return new (class extends ExtensionAPI {
-                getCoordinateSystems(): CoordinateSystem[] {
+                getCoordinateSystems(): CoordinateSystemMaster[] {
                     return ecIns._coordSysMgr.getCoordinateSystems();
                 }
                 getComponentByElement(el: Element) {

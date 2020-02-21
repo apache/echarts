@@ -29,7 +29,7 @@ import {
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
-    SeriesOption, ComponentLayoutMode, TooltipRenderMode, AxisValue, ZRColor, BoxLayoutOptionMixin
+    SeriesOption, TooltipRenderMode, AxisValue, ZRColor, BoxLayoutOptionMixin
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -37,7 +37,8 @@ import DataFormatMixin from '../model/mixin/dataFormat';
 import Model from '../model/Model';
 import {
     getLayoutParams,
-    mergeLayoutParam
+    mergeLayoutParam,
+    fetchLayoutMode
 } from '../util/layout';
 import {createTask} from '../stream/task';
 import {
@@ -46,7 +47,7 @@ import {
 } from '../data/helper/sourceHelper';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from './Global';
-import { CoordinateSystem } from '../coord/CoordinateSystem';
+import { CoordinateSystemExecutive } from '../coord/CoordinateSystem';
 import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
@@ -73,7 +74,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     seriesIndex: number;
 
     // coodinateSystem will be injected in the echarts/CoordinateSystem
-    coordinateSystem: CoordinateSystem;
+    coordinateSystem: CoordinateSystemExecutive;
 
     // Injected outside
     dataTask: SeriesTask;
@@ -88,9 +89,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     // Access path of borderColor for visual
     visualBorderColorAccessPath: string;
-
-    // Support merge layout params.
-    readonly layoutMode: ComponentLayoutMode;
 
     readonly preventUsingHoverLayer: boolean;
 
@@ -146,7 +144,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * Util for merge default and theme to option
      */
     mergeDefaultAndTheme(option: SeriesOption, ecModel: GlobalModel): void {
-        var layoutMode = this.layoutMode;
+        var layoutMode = fetchLayoutMode(this);
         var inputPositionParams = layoutMode
             ? getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
@@ -180,7 +178,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
         this.fillDataTextStyle(newSeriesOption.data as ArrayLike<any>);
 
-        var layoutMode = this.layoutMode;
+        var layoutMode = fetchLayoutMode(this);
         if (layoutMode) {
             mergeLayoutParam(
                 this.option as BoxLayoutOptionMixin,

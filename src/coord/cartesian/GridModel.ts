@@ -17,28 +17,37 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-// Grid 是在有直角坐标系的时候必须要存在的
-// 所以这里也要被 Cartesian2D 依赖
 
 import './AxisModel';
 import ComponentModel from '../../model/Component';
+import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin } from '../../util/types';
+import Grid from './Grid';
+import { CoordinateSystemHostModel } from '../CoordinateSystem';
 
-export default ComponentModel.extend({
+interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+    show?: boolean;
 
-    type: 'grid',
+    // Whether grid size contain label.
+    containLabel?: boolean;
 
-    dependencies: ['xAxis', 'yAxis'],
+    backgroundColor?: ZRColor;
+    borderWidth?: number;
+    borderColor?: ZRColor;
 
-    layoutMode: 'box',
+    tooltop?: any; // FIXME:TS add this tooltip type
+}
 
-    /**
-     * @type {module:echarts/coord/cartesian/Grid}
-     */
-    coordinateSystem: null,
+export default class extends ComponentModel<GridOption> implements CoordinateSystemHostModel {
 
-    defaultOption: {
+    static type = 'grid';
+
+    static dependencies = ['xAxis', 'yAxis'];
+
+    static layoutMode = 'box' as const;
+
+    coordinateSystem: Grid;
+
+    static defaultOption: GridOption = {
         show: false,
         zlevel: 0,
         z: 0,
@@ -54,4 +63,5 @@ export default ComponentModel.extend({
         borderWidth: 1,
         borderColor: '#ccc'
     }
-});
+
+}

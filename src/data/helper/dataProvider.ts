@@ -194,7 +194,7 @@ export class DefaultDataProvider implements DataProvider {
                     }
                     return item;
                 },
-                appendData: function (this: DefaultDataProvider, newData: OptionSourceData) {
+                appendData: function (this: DefaultDataProvider, newData: Dictionary<OptionDataPrimitive[]>) {
                     var data = this._data as Dictionary<OptionDataPrimitive[]>;
                     each(newData, function (newCol, key) {
                         var oldCol = data[key] || (data[key] = []);

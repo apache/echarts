@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {each, map} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
@@ -26,165 +24,142 @@ import {
     createAxisLabels,
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
+import Scale from '../scale/Scale';
+import { DimensionName, ScaleDataValue } from '../util/types';
+import OrdinalScale from '../scale/Ordinal';
+import Model from '../model/Model';
+import { AxisBaseOption } from './axisCommonTypes';
 
-var NORMALIZED_EXTENT = [0, 1];
+var NORMALIZED_EXTENT = [0, 1] as [number, number];
+
+interface TickCoord {
+    coord: number;
+    tickValue?: number;
+}
+
 
 /**
  * Base class of Axis.
- * @constructor
  */
-var Axis = function (dim, scale, extent) {
+class Axis {
 
-    /**
-     * Axis dimension. Such as 'x', 'y', 'z', 'angle', 'radius'.
-     * @type {string}
-     */
-    this.dim = dim;
+    // Axis dimension. Such as 'x', 'y', 'z', 'angle', 'radius'.
+    readonly dim: DimensionName;
 
-    /**
-     * Axis scale
-     * @type {module:echarts/coord/scale/*}
-     */
-    this.scale = scale;
+    // Axis scale
+    readonly scale: Scale;
 
-    /**
-     * @type {Array.<number>}
-     * @private
-     */
-    this._extent = extent || [0, 0];
+    private _extent: [number, number];
 
-    /**
-     * @type {boolean}
-     */
-    this.inverse = false;
+    // Injected outside
+    model: Model;
+    onBand: AxisBaseOption['boundaryGap'] = false;
+    inverse: AxisBaseOption['inverse'] = false;
 
-    /**
-     * Usually true when axis has a ordinal scale
-     * @type {boolean}
-     */
-    this.onBand = false;
-};
 
-Axis.prototype = {
-
-    constructor: Axis,
+    constructor(dim: DimensionName, scale: Scale, extent: [number, number]) {
+        this.dim = dim;
+        this.scale = scale;
+        this._extent = extent || [0, 0];
+    }
 
     /**
      * If axis extent contain given coord
-     * @param {number} coord
-     * @return {boolean}
      */
-    contain: function (coord) {
+    contain(coord: number): boolean {
         var extent = this._extent;
         var min = Math.min(extent[0], extent[1]);
         var max = Math.max(extent[0], extent[1]);
         return coord >= min && coord <= max;
-    },
+    }
 
     /**
      * If axis extent contain given data
-     * @param {number} data
-     * @return {boolean}
      */
-    containData: function (data) {
+    containData(data: ScaleDataValue): boolean {
         return this.scale.contain(data);
-    },
+    }
 
     /**
      * Get coord extent.
-     * @return {Array.<number>}
      */
-    getExtent: function () {
-        return this._extent.slice();
-    },
+    getExtent(): [number, number] {
+        return this._extent.slice() as [number, number];
+    }
 
     /**
      * Get precision used for formatting
-     * @param {Array.<number>} [dataExtent]
-     * @return {number}
      */
-    getPixelPrecision: function (dataExtent) {
+    getPixelPrecision(dataExtent?: [number, number]): number {
         return getPixelPrecision(
             dataExtent || this.scale.getExtent(),
             this._extent
         );
-    },
+    }
 
     /**
      * Set coord extent
-     * @param {number} start
-     * @param {number} end
      */
-    setExtent: function (start, end) {
+    setExtent(start: number, end: number): void {
         var extent = this._extent;
         extent[0] = start;
         extent[1] = end;
-    },
+    }
 
     /**
      * Convert data to coord. Data is the rank if it has an ordinal scale
-     * @param {number} data
-     * @param  {boolean} clamp
-     * @return {number}
      */
-    dataToCoord: function (data, clamp) {
+    dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
         var extent = this._extent;
         var scale = this.scale;
         data = scale.normalize(data);
 
         if (this.onBand && scale.type === 'ordinal') {
-            extent = extent.slice();
-            fixExtentWithBands(extent, scale.count());
+            extent = extent.slice() as [number, number];
+            fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
         return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
-    },
+    }
 
     /**
      * Convert coord to data. Data is the rank if it has an ordinal scale
-     * @param {number} coord
-     * @param  {boolean} clamp
-     * @return {number}
      */
-    coordToData: function (coord, clamp) {
+    coordToData(coord: number, clamp?: boolean): number {
         var extent = this._extent;
         var scale = this.scale;
 
         if (this.onBand && scale.type === 'ordinal') {
-            extent = extent.slice();
-            fixExtentWithBands(extent, scale.count());
+            extent = extent.slice() as [number, number];
+            fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
         var t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
 
         return this.scale.scale(t);
-    },
+    }
 
     /**
      * Convert pixel point to data in axis
-     * @param {Array.<number>} point
-     * @param  {boolean} clamp
-     * @return {number} data
      */
-    pointToData: function (point, clamp) {
+    pointToData(point: number[], clamp?: boolean): number {
         // Should be implemented in derived class if necessary.
-    },
+        return;
+    }
 
     /**
      * Different from `zrUtil.map(axis.getTicks(), axis.dataToCoord, axis)`,
      * `axis.getTicksCoords` considers `onBand`, which is used by
      * `boundaryGap:true` of category axis and splitLine and splitArea.
-     * @param {Object} [opt]
-     * @param {Model} [opt.tickModel=axis.model.getModel('axisTick')]
-     * @param {boolean} [opt.clamp] If `true`, the first and the last
+     * @param opt.tickModel default: axis.model.getModel('axisTick')
+     * @param opt.clamp If `true`, the first and the last
      *        tick must be at the axis end points. Otherwise, clip ticks
      *        that outside the axis extent.
-     * @return {Array.<Object>} [{
-     *     coord: ...,
-     *     tickValue: ...
-     * }, ...]
      */
-    getTicksCoords: function (opt) {
+    getTicksCoords(opt?: {
+        tickModel?: Model,
+        clamp?: boolean
+    }): TickCoord[] {
         opt = opt || {};
 
         var tickModel = opt.tickModel || this.getTickModel();
@@ -205,12 +180,9 @@ Axis.prototype = {
         );
 
         return ticksCoords;
-    },
+    }
 
-    /**
-     * @return {Array.<Array.<Object>>} [{ coord: ..., tickValue: ...}]
-     */
-    getMinorTicksCoords: function () {
+    getMinorTicksCoords(): TickCoord[][] {
         if (this.scale.type === 'ordinal') {
             // Category axis doesn't support minor ticks
             return [];
@@ -232,25 +204,15 @@ Axis.prototype = {
             }, this);
         }, this);
         return minorTicksCoords;
-    },
+    }
 
-    /**
-     * @return {Array.<Object>} [{
-     *     formattedLabel: string,
-     *     rawLabel: axis.scale.getLabel(tickValue)
-     *     tickValue: number
-     * }, ...]
-     */
-    getViewLabels: function () {
+    getViewLabels(): ReturnType<typeof createAxisLabels>['labels'] {
         return createAxisLabels(this).labels;
-    },
+    }
 
-    /**
-     * @return {module:echarts/coord/model/Model}
-     */
-    getLabelModel: function () {
+    getLabelModel(): Model {
         return this.model.getModel('axisLabel');
-    },
+    }
 
     /**
      * Notice here we only get the default tick model. For splitLine
@@ -258,17 +220,15 @@ Axis.prototype = {
      * manually when calling `getTicksCoords`.
      * In GL, this method may be overrided to:
      * `axisModel.getModel('axisTick', grid3DModel.getModel('axisTick'));`
-     * @return {module:echarts/coord/model/Model}
      */
-    getTickModel: function () {
+    getTickModel(): Model {
         return this.model.getModel('axisTick');
-    },
+    }
 
     /**
      * Get width of band
-     * @return {number}
      */
-    getBandWidth: function () {
+    getBandWidth(): number {
         var axisExtent = this._extent;
         var dataExtent = this.scale.getExtent();
 
@@ -279,32 +239,25 @@ Axis.prototype = {
         var size = Math.abs(axisExtent[1] - axisExtent[0]);
 
         return Math.abs(size) / len;
-    },
+    }
 
     /**
-     * @abstract
-     * @return {boolean} Is horizontal
+     * Get axis rotate, by degree.
      */
-    isHorizontal: null,
-
-    /**
-     * @abstract
-     * @return {number} Get axis rotate, by degree.
-     */
-    getRotate: null,
+    getRotate: () => number;
 
     /**
      * Only be called in category axis.
      * Can be overrided, consider other axes like in 3D.
-     * @return {number} Auto interval for cateogry axis tick and label
+     * @return Auto interval for cateogry axis tick and label
      */
-    calculateCategoryInterval: function () {
+    calculateCategoryInterval(): ReturnType<typeof calculateCategoryInterval> {
         return calculateCategoryInterval(this);
     }
 
-};
+}
 
-function fixExtentWithBands(extent, nTick) {
+function fixExtentWithBands(extent: [number, number], nTick: number): void {
     var size = extent[1] - extent[0];
     var len = nTick;
     var margin = size / len / 2;
@@ -321,7 +274,9 @@ function fixExtentWithBands(extent, nTick) {
 // splitLine/spliteArea should layout appropriately corresponding
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
-function fixOnBandTicksCoords(axis, ticksCoords, alignWithLabel, clamp) {
+function fixOnBandTicksCoords(
+    axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, clamp: boolean
+) {
     var ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
@@ -367,7 +322,7 @@ function fixOnBandTicksCoords(axis, ticksCoords, alignWithLabel, clamp) {
         ticksCoords.push({coord: axisExtent[1]});
     }
 
-    function littleThan(a, b) {
+    function littleThan(a: number, b: number): boolean {
         // Avoid rounding error cause calculated tick coord different with extent.
         // It may cause an extra unecessary tick added.
         a = round(a);

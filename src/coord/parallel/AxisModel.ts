@@ -24,7 +24,7 @@ import ComponentModel from '../../model/Component';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
 import axisModelCreator from '../axisModelCreator';
 import * as numberUtil from '../../util/number';
-import axisModelCommonMixin from '../axisModelCommonMixin';
+import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 
 var AxisModel = ComponentModel.extend({
 
@@ -140,7 +140,7 @@ var defaultOption = {
     z: 10
 };
 
-zrUtil.merge(AxisModel.prototype, axisModelCommonMixin);
+zrUtil.mixin(AxisModel, AxisModelCommonMixin);
 
 function getAxisType(axisName, option) {
     return option.type || (option.data ? 'category' : 'value');

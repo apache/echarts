@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {EChartsType} from './echarts';
-import {CoordinateSystem} from './coord/CoordinateSystem';
+import {CoordinateSystemMaster} from './coord/CoordinateSystem';
 import Element from 'zrender/src/Element';
 import ComponentModel from './model/Component';
 
@@ -52,7 +52,7 @@ abstract class ExtensionAPI {
     }
 
     // Implemented in echarts.js
-    abstract getCoordinateSystems(): CoordinateSystem[];
+    abstract getCoordinateSystems(): CoordinateSystemMaster[];
 
     // Implemented in echarts.js
     abstract getComponentByElement(el: Element): ComponentModel;

@@ -17,11 +17,11 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import { AxisBaseOption } from './axisCommonTypes';
 
-var defaultOption = {
+
+var defaultOption: AxisBaseOption = {
     show: true,
     zlevel: 0,
     z: 0,
@@ -107,18 +107,11 @@ var defaultOption = {
     }
 };
 
-var axisDefault = {};
 
-axisDefault.categoryAxis = zrUtil.merge({
+var categoryAxis: AxisBaseOption = zrUtil.merge({
     // The gap at both ends of the axis. For categoryAxis, boolean.
     boundaryGap: true,
     // Set false to faster category collection.
-    // Only usefull in the case like: category is
-    // ['2012-01-01', '2012-01-02', ...], where the input
-    // data has been ensured not duplicate and is large data.
-    // null means "auto":
-    // if axis.data provided, do not deduplication,
-    // else do deduplication.
     deduplication: null,
     // splitArea: {
         // show: false
@@ -136,48 +129,13 @@ axisDefault.categoryAxis = zrUtil.merge({
     }
 }, defaultOption);
 
-axisDefault.valueAxis = zrUtil.merge({
-    // The gap at both ends of the axis. For value axis, [GAP, GAP], where
-    // `GAP` can be an absolute pixel number (like `35`), or percent (like `'30%'`)
+var valueAxis: AxisBaseOption = zrUtil.merge({
     boundaryGap: [0, 0],
 
     // TODO
     // min/max: [30, datamin, 60] or [20, datamin] or [datamin, 60]
 
-    // Min value of the axis. can be:
-    // + a number
-    // + 'dataMin': use the min value in data.
-    // + null/undefined: auto decide min value (consider pretty look and boundaryGap).
-    // min: null,
-
-    // Max value of the axis. can be:
-    // + a number
-    // + 'dataMax': use the max value in data.
-    // + null/undefined: auto decide max value (consider pretty look and boundaryGap).
-    // max: null,
-
-    // Readonly prop, specifies start value of the range when using data zoom.
-    // rangeStart: null
-
-    // Readonly prop, specifies end value of the range when using data zoom.
-    // rangeEnd: null
-
-    // Optional value can be:
-    // + `false`: always include value 0.
-    // + `true`: the extent do not consider value 0.
-    // scale: false,
-
-    // AxisTick and axisLabel and splitLine are caculated based on splitNumber.
     splitNumber: 5,
-
-    // Interval specifies the span of the ticks is mandatorily.
-    // interval: null
-
-    // Specify min interval when auto calculate tick interval.
-    // minInterval: null
-
-    // Specify max interval when auto calculate tick interval.
-    // maxInterval: null
 
     minorTick: {
         // Minor tick, not available for cateogry axis.
@@ -186,8 +144,6 @@ axisDefault.valueAxis = zrUtil.merge({
         splitNumber: 5,
         // Lenght of minor tick
         length: 3,
-
-        // Same inside with axisTick
 
         // Line style
         lineStyle: {
@@ -205,15 +161,21 @@ axisDefault.valueAxis = zrUtil.merge({
     }
 }, defaultOption);
 
-axisDefault.timeAxis = zrUtil.defaults({
+var timeAxis: AxisBaseOption = zrUtil.defaults({
     scale: true,
     min: 'dataMin',
     max: 'dataMax'
-}, axisDefault.valueAxis);
+}, valueAxis);
 
-axisDefault.logAxis = zrUtil.defaults({
+var logAxis: AxisBaseOption = zrUtil.defaults({
     scale: true,
     logBase: 10
-}, axisDefault.valueAxis);
+}, valueAxis);
 
-export default axisDefault;
+
+export default {
+    categoryAxis: categoryAxis,
+    valueAxis: valueAxis,
+    timeAxis: timeAxis,
+    logAxis: logAxis
+};

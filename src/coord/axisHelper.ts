@@ -35,6 +35,8 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import '../scale/Time';
 import '../scale/Log';
 import TimeScale from '../scale/Time';
+import { ComponentOption } from '../util/types';
+import Model from '../model/Model';
 
 /**
  * Get axis scale extent before niced.
@@ -243,11 +245,9 @@ export function niceScaleExtent(scale, model) {
 }
 
 /**
- * @param {module:echarts/model/Model} model
- * @param {string} [axisType] Default retrieve from model.type
- * @return {module:echarts/scale/*}
+ * @param axisType Default retrieve from model.type
  */
-export function createScaleByModel(model, axisType) {
+export function createScaleByModel(model: Model<ComponentOption>, axisType?: string): Scale {
     axisType = axisType || model.get('type');
     if (axisType) {
         switch (axisType) {

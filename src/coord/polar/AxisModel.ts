@@ -22,7 +22,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import axisModelCreator from '../axisModelCreator';
-import axisModelCommonMixin from '../axisModelCommonMixin';
+import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 
 var PolarAxisModel = ComponentModel.extend({
 
@@ -46,7 +46,7 @@ var PolarAxisModel = ComponentModel.extend({
 
 });
 
-zrUtil.merge(PolarAxisModel.prototype, axisModelCommonMixin);
+zrUtil.mixin(PolarAxisModel, AxisModelCommonMixin);
 
 var polarAxisDefaultExtendedOption = {
     angle: {

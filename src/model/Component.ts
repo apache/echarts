@@ -31,7 +31,6 @@ import {
 } from '../util/clazz';
 import {makeInner} from '../util/model';
 import * as layout from '../util/layout';
-import { CoordinateSystem } from '../coord/CoordinateSystem';
 import GlobalModel from './Global';
 import {
     ComponentOption,
@@ -101,7 +100,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     /**
      * @readOnly
      */
-    dependencies: string[];
+    static dependencies: string[];
 
     /**
      * key: componentType
@@ -112,16 +111,15 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     readonly uid: string;
 
-    /**
-     * @readonly
-     */
-    coordinateSystem: CoordinateSystem;
+    // // No common coordinateSystem needed. Each sub class implement
+    // // `CoordinateSystemHostModel` itself.
+    // coordinateSystem: CoordinateSystemMaster | CoordinateSystemExecutive;
 
     /**
      * Support merge layout params.
      * Only support 'box' now (left/right/top/bottom/width/height).
      */
-    readonly layoutMode: ComponentLayoutMode;
+    static layoutMode: ComponentLayoutMode | ComponentLayoutMode['type'];
 
     // Injectable properties:
     __viewId: string;
@@ -147,7 +145,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     }
 
     mergeDefaultAndTheme(option: Opt, ecModel: GlobalModel): void {
-        var layoutMode = this.layoutMode;
+        var layoutMode = layout.fetchLayoutMode(this);
         var inputPositionParams = layoutMode
             ? layout.getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
@@ -163,7 +161,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     mergeOption(option: ComponentOption, ecModel: GlobalModel): void {
         zrUtil.merge(this.option, option, true);
 
-        var layoutMode = this.layoutMode;
+        var layoutMode = layout.fetchLayoutMode(this);
         if (layoutMode) {
             layout.mergeLayoutParam(
                 this.option as BoxLayoutOptionMixin,
@@ -319,7 +317,7 @@ componentUtil.enableTopologicalTravel(ComponentModel as ComponentModelConstructo
 function getDependencies(componentType: string): string[] {
     var deps: string[] = [];
     zrUtil.each((ComponentModel as ComponentModelConstructor).getClassesByMainType(componentType), function (clz) {
-        deps = deps.concat((clz as any).prototype.dependencies || []);
+        deps = deps.concat((clz as any).dependencies || (clz as any).prototype.dependencies || []);
     });
 
     // Ensure main type.

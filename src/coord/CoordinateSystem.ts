@@ -17,70 +17,128 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import Model from '../model/Model';
 import GlobalModel from '../model/Global';
-import {ModelFinder} from '../util/model';
+import {ParsedModelFinder} from '../util/model';
 import ExtensionAPI from '../ExtensionAPI';
-import { DimensionDefinitionLoose } from '../util/types';
+import { DimensionDefinitionLoose, ScaleDataValue, DimensionName } from '../util/types';
+import Axis from './Axis';
+import { BoundingRect } from '../util/graphic';
+import { MatrixArray } from 'zrender/src/core/matrix';
+
 
 export interface CoordinateSystemCreator {
 
-    create: (ecModel: GlobalModel, api: ExtensionAPI) => CoordinateSystem;
+    create: (ecModel: GlobalModel, api: ExtensionAPI) => CoordinateSystemMaster[];
 
     // FIXME current dimensions must be string[].
     // check and unify the definition.
-    dimensions: string[];
+    // FIXME:TS check where used (seams only HeatmapSeries used?)
+    dimensions: DimensionName[];
 
     // dimensionsInfo like [{name: ..., type: ...}, 'xxx', ...]
     getDimensionsInfo?: () => DimensionDefinitionLoose[];
-
 }
 
-export interface CoordinateSystem {
+/**
+ * The instance get from `CoordinateSystemManger` is `CoordinateSystemMaster`.
+ */
+export interface CoordinateSystemMaster {
 
     // FIXME current dimensions must be string[].
     // check and unify the definition.
-    dimensions: string[];
+    // Should be the same as its coordinateSystemCreator.
+    dimensions: DimensionName[];
 
-    model: Model;
+    model?: Model;
 
-    update: (ecModel: GlobalModel, api: ExtensionAPI) => void;
+    update(ecModel: GlobalModel, api: ExtensionAPI): void;
 
-    // @return {module:echarts/coord/Axis}
-    getAxis: (dim: string) => any; // FIXME:TS temp any
+    // This methods is also responsible for determine whether this
+    // coodinate system is applicable to the given `finder`.
+    // Each coordinate system will be tried, util one returns none
+    // null/undefined value.
+    convertToPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
+    ): number | number[];
 
-    // @return {Array.<module:echarts/coord/Axis>}
-    getAxes?: () => [] // FIXME:TS temp any
-
-    axisPointerEnabled?: () => boolean;
-
-    // @param {*|Array.<*>} data
-    // @param {*} Defined by the coordinate system itself
-    // @param {Array.<*>} out
-    // @return {Array.<number>} point Point in global pixel coordinate system.
-    dataToPoint: (...args) => number[];
-
-    // @param {Array.<number>} point Point in global pixel coordinate system.
-    // @param {*} Defined by the coordinate system itself
-    // @param {Array.<*>} out
-    // @return {*|Array.<*>} data
-    pointToData: (...args) => any;
+    // This methods is also responsible for determine whether this
+    // coodinate system is applicable to the given `finder`.
+    // Each coordinate system will be tried, util one returns none
+    // null/undefined value.
+    convertFromPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, pixelValue: number | number[]
+    ): ScaleDataValue | ScaleDataValue[];
 
     // @param point Point in global pixel coordinate system.
-    containPoint: (point: number[]) => boolean;
+    // The signature of this method should be the same as `CoordinateSystemExecutive`
+    containPoint(point: number[]): boolean;
 
-    // This methods is also responsible for determine whether this
-    // coodinate system is applicable to the given `finder`.
-    // Each coordinate system will be tried, util one returns none
-    // null/undefined value.
-    convertToPixel: (ecModel: any, finder: ModelFinder, value: any) => number | number[];
+    // Must be implemented when `axisPointerEnabled` is `true`.
+    getAxes?: () => Axis[];
 
-    // This methods is also responsible for determine whether this
-    // coodinate system is applicable to the given `finder`.
-    // Each coordinate system will be tried, util one returns none
-    // null/undefined value.
-    convertFromPixel: (ecModel: any, finder: ModelFinder, pixelValue: number | number[]) => any;
+    axisPointerEnabled?: boolean;
 
+    getTooltipAxes?: (dim: DimensionName | 'auto') => {baseAxes: Axis[], otherAxes: Axis[]};
+}
+
+/**
+ * For example: cartesian is CoordinateSystemExecutive.
+ * series.coordinateSystem is CoordinateSystemExecutive.
+ */
+export interface CoordinateSystemExecutive {
+
+    // Should be the same as its coordinateSystemCreator.
+    dimensions: DimensionName[];
+
+    // @param data
+    // @param reserved Defined by the coordinate system itself
+    // @param out
+    // @return {Array.<number>} point Point in global pixel coordinate system.
+    dataToPoint(
+        data: ScaleDataValue | ScaleDataValue[],
+        reserved?: any,
+        out?: number[]
+    ): number[];
+
+    // @param point point Point in global pixel coordinate system.
+    // @param reserved Defined by the coordinate system itself
+    // @param out
+    // @return data
+    pointToData(
+        point: number[],
+        reserved?: any,
+        out?: number[]
+    ): number | number[];
+
+    // @param point Point in global pixel coordinate system.
+    containPoint(point: number[]): boolean;
+
+    getAxis?: (dim?: DimensionName) => Axis;
+
+    getBaseAxis?: () => Axis;
+
+    getOtherAxis?: (baseAxis: Axis) => Axis;
+
+    clampData?: (data: ScaleDataValue[], out?: number[]) => number[];
+
+    getRoamTransform?: () => MatrixArray;
+
+    getArea?: () => BoundingRect;
+
+    // Only `coord/View.js` implements `getBoundingRect`.
+    // But if other coord sys implement it, should follow this signature.
+    getBoundingRect?: () => BoundingRect;
+
+    // Currently only Cartesian2D implements it.
+    // But if other coordinate systems implement it, should follow this signature.
+    getAxesByScale?: (scaleType: string) => Axis[];
+
+}
+
+/**
+ * Like GridModel, PolarModel, ...
+ */
+export interface CoordinateSystemHostModel {
+    coordinateSystem?: CoordinateSystemMaster
 }

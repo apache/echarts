@@ -73,7 +73,7 @@ var bisect = function (
 
 class TimeScale extends IntervalScale {
 
-    static type = 'time';
+    type = 'time';
 
     private _stepLvl: [string, number];
 
@@ -166,17 +166,21 @@ class TimeScale extends IntervalScale {
         this._niceExtent = niceExtent;
     }
 
-    parse(val: any): number {
+    parse(val: number | string | Date): number {
         // val might be float.
         return +numberUtil.parseDate(val);
     }
 
     contain(val: number): boolean {
-        return super.contain(this.parse(val));
+        return scaleHelper.contain(this.parse(val), this._extent);
     }
 
     normalize(val: number): number {
-        return super.normalize(this.parse(val));
+        return scaleHelper.normalize(this.parse(val), this._extent);
+    }
+
+    scale(val: number): number {
+        return scaleHelper.scale(val, this._extent);
     }
 
 }

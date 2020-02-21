@@ -20,16 +20,16 @@
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from './model/Global';
 import ExtensionAPI from './ExtensionAPI';
-import { CoordinateSystemCreator, CoordinateSystem } from './coord/CoordinateSystem';
+import { CoordinateSystemCreator, CoordinateSystemMaster } from './coord/CoordinateSystem';
 
 var coordinateSystemCreators: {[type: string]: CoordinateSystemCreator} = {};
 
 class CoordinateSystemManager {
 
-    private _coordinateSystems: CoordinateSystem[] = [];
+    private _coordinateSystems: CoordinateSystemMaster[] = [];
 
     create(ecModel: GlobalModel, api: ExtensionAPI): void {
-        var coordinateSystems: CoordinateSystem[] = [];
+        var coordinateSystems: CoordinateSystemMaster[] = [];
         zrUtil.each(coordinateSystemCreators, function (creater, type) {
             var list = creater.create(ecModel, api);
             coordinateSystems = coordinateSystems.concat(list || []);
@@ -44,7 +44,7 @@ class CoordinateSystemManager {
         });
     }
 
-    getCoordinateSystems(): CoordinateSystem[] {
+    getCoordinateSystems(): CoordinateSystemMaster[] {
         return this._coordinateSystems.slice();
     }
 

@@ -23,7 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import createListFromArray from './chart/helper/createListFromArray';
 // import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
 import * as axisHelper from './coord/axisHelper';
-import axisModelCommonMixin from './coord/axisModelCommonMixin';
+import {AxisModelCommonMixin} from './coord/axisModelCommonMixin';
 import Model from './model/Model';
 import {getLayoutRect} from './util/layout';
 import {
@@ -82,7 +82,7 @@ export function createScale(dataExtent, option) {
     var axisModel = option;
     if (!Model.isInstance(option)) {
         axisModel = new Model(option);
-        zrUtil.mixin(axisModel, axisModelCommonMixin);
+        zrUtil.mixin(axisModel, AxisModelCommonMixin);
     }
 
     var scale = axisHelper.createScaleByModel(axisModel);
@@ -105,5 +105,5 @@ export function createScale(dataExtent, option) {
  * `resetRange()`
  */
 export function mixinAxisModelCommonMethods(Model) {
-    zrUtil.mixin(Model, axisModelCommonMixin);
+    zrUtil.mixin(Model, AxisModelCommonMixin);
 }

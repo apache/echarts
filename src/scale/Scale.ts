@@ -21,10 +21,12 @@
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
-import { DimensionName } from '../util/types';
+import { DimensionName, ScaleDataValue, OptionDataPrimitive } from '../util/types';
 
 
 abstract class Scale {
+
+    type: string;
 
     private _setting: Dictionary<any>;
 
@@ -37,44 +39,33 @@ abstract class Scale {
         this._extent = [Infinity, -Infinity];
     }
 
-    /**
-     * Parse input val to valid inner number.
-     */
-    parse(val: any): any {
-        // Notice: This would be a trap here, If the implementation
-        // of this method depends on extent, and this method is used
-        // before extent set (like in dataZoom), it would be wrong.
-        // Nevertheless, parse does not depend on extent generally.
-        return val;
-    }
-
     getSetting(name: string): any {
         return this._setting[name];
     }
 
-    contain(val: number): boolean {
-        var extent = this._extent;
-        return val >= extent[0] && val <= extent[1];
-    }
+    /**
+     * Parse input val to valid inner number.
+     * Notice: This would be a trap here, If the implementation
+     * of this method depends on extent, and this method is used
+     * before extent set (like in dataZoom), it would be wrong.
+     * Nevertheless, parse does not depend on extent generally.
+     */
+    abstract parse(val: OptionDataPrimitive): number;
 
     /**
-     * Normalize value to linear [0, 1], return 0.5 if extent span is 0
+     * Whether contain the given value.
      */
-    normalize(val: number): number {
-        var extent = this._extent;
-        if (extent[1] === extent[0]) {
-            return 0.5;
-        }
-        return (val - extent[0]) / (extent[1] - extent[0]);
-    }
+    abstract contain(val: ScaleDataValue): boolean;
 
     /**
-     * Scale normalized value
+     * Normalize value to linear [0, 1], return 0.5 if extent span is 0.
      */
-    scale(val: number): number {
-        var extent = this._extent;
-        return val * (extent[1] - extent[0]) + extent[0];
-    }
+    abstract normalize(val: ScaleDataValue): number;
+
+    /**
+     * Scale normalized value to extent.
+     */
+    abstract scale(val: number): number;
 
     /**
      * Set extent from data

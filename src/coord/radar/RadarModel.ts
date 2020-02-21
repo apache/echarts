@@ -23,7 +23,7 @@ import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from '../axisDefault';
 import Model from '../../model/Model';
-import axisModelCommonMixin from '../axisModelCommonMixin';
+import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 
 var valueAxisDefault = axisDefault.valueAxis;
 
@@ -94,7 +94,7 @@ var RadarModel = echarts.extendComponentModel({
             }
             var model = zrUtil.extend(
                 new Model(indicatorOpt, null, this.ecModel),
-                axisModelCommonMixin
+                AxisModelCommonMixin.prototype
             );
 
             // For triggerEvent.

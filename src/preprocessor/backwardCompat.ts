@@ -23,7 +23,7 @@ import {each, isArray, isObject} from 'zrender/src/core/util';
 import compatStyle from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
-import { ECUnitOption } from '../util/types';
+import { ECUnitOption, SeriesOption } from '../util/types';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -75,7 +75,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
     // Make sure series array for model initialization.
     option.series = normalizeToArray(option.series);
 
-    each(option.series, function (seriesOpt) {
+    each(option.series, function (seriesOpt: SeriesOption) {
         if (!isObject(seriesOpt)) {
             return;
         }
@@ -83,12 +83,16 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         var seriesType = seriesOpt.type;
 
         if (seriesType === 'line') {
+            // @ts-ignore
             if (seriesOpt.clipOverflow != null) {
+                // @ts-ignore
                 seriesOpt.clip = seriesOpt.clipOverflow;
             }
         }
         else if (seriesType === 'pie' || seriesType === 'gauge') {
+            // @ts-ignore
             if (seriesOpt.clockWise != null) {
+                // @ts-ignore
                 seriesOpt.clockwise = seriesOpt.clockWise;
             }
         }

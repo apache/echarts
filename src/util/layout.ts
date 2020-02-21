@@ -30,7 +30,7 @@ import { Dictionary } from 'zrender/src/core/types';
 
 const each = zrUtil.each;
 
-interface LayoutRect extends BoundingRect {
+export interface LayoutRect extends BoundingRect {
     margin: number[]
 }
 
@@ -395,6 +395,15 @@ export function sizeCalculable(option: BoxLayoutOptionMixin, hvIdx: number): boo
         || (option[HV_NAMES[hvIdx][1]] != null && option[HV_NAMES[hvIdx][2]] != null);
 }
 
+export function fetchLayoutMode(ins: any): ComponentLayoutMode {
+    var layoutMode = ins.layoutMode || ins.constructor.layoutMode;
+    return zrUtil.isObject(layoutMode)
+        ? layoutMode
+        : layoutMode
+        ? {type: layoutMode}
+        : null;
+}
+
 /**
  * Consider Case:
  * When default option has {left: 0, width: 100}, and we set {right: 0}
@@ -421,11 +430,9 @@ export function sizeCalculable(option: BoxLayoutOptionMixin, hvIdx: number): boo
 export function mergeLayoutParam<T extends BoxLayoutOptionMixin>(
     targetOption: T,
     newOption: T,
-    opt?: Partial<ComponentLayoutMode>
+    opt?: ComponentLayoutMode
 ) {
-    !zrUtil.isObject(opt) && (opt = {});
-
-    var ignoreSize = opt.ignoreSize;
+    var ignoreSize = opt && opt.ignoreSize;
     !zrUtil.isArray(ignoreSize) && (ignoreSize = [ignoreSize, ignoreSize]);
 
     var hResult = merge(HV_NAMES[0], 0);

@@ -17,11 +17,10 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import Cartesian2D from './Cartesian2D';
 
-function dataToCoordSize(dataSize, dataItem) {
+function dataToCoordSize(this: Cartesian2D, dataSize: number[], dataItem: number[]): number[] {
     // dataItem is necessary in log axis.
     dataItem = dataItem || [0, 0];
     return zrUtil.map(['x', 'y'], function (dim, dimIdx) {
@@ -34,7 +33,7 @@ function dataToCoordSize(dataSize, dataItem) {
     }, this);
 }
 
-export default function (coordSys) {
+export default function (coordSys: Cartesian2D) {
     var rect = coordSys.grid.getRect();
     return {
         coordSys: {
@@ -46,7 +45,7 @@ export default function (coordSys) {
             height: rect.height
         },
         api: {
-            coord: function (data) {
+            coord: function (data: number[]) {
                 // do not provide "out" param
                 return coordSys.dataToPoint(data);
             },
