@@ -1160,10 +1160,10 @@ export function getFont(opt: LabelOption, ecModel: GlobalModel) {
 
 function animateOrSetProps<Props>(
     isUpdate: boolean,
-    el: Displayable<Props>,
+    el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin> & {
-        getAnimationDelayParams?: (el: Displayable<Props>, dataIndex: number) => AnimationDelayCallbackParam
+        getAnimationDelayParams?: (el: Element<Props>, dataIndex: number) => AnimationDelayCallbackParam
     },
     dataIndex?: number,
     cb?: () => void
@@ -1227,7 +1227,7 @@ function animateOrSetProps<Props>(
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
 export function updateProps<Props>(
-    el: Displayable<Props>,
+    el: Element<Props>,
     props: Props,
     // TODO: TYPE AnimatableModel
     animatableModel?: Model<AnimationOptionMixin>,
@@ -1246,7 +1246,7 @@ export function updateProps<Props>(
  * animation starts, unless you know what you are doing.
  */
 export function initProps<Props>(
-    el: Displayable<Props>,
+    el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
     dataIndex?: number,

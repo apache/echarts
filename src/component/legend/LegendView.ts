@@ -17,76 +17,73 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
+import ComponentView from '../../view/Component';
+import LegendModel, { LegendOption, LegendSelectorButtonOption } from './LegendModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import { ColorString, ZRTextAlign, ZRColor, ItemStyleOption } from '../../util/types';
+import Model from '../../model/Model';
+import ZImage from 'zrender/src/graphic/Image';
 
 var curry = zrUtil.curry;
 var each = zrUtil.each;
 var Group = graphic.Group;
 
-export default echarts.extendComponentView({
+class LegendView extends ComponentView {
+    static type = 'legend.plain'
+    type = LegendView.type
 
-    type: 'legend.plain',
+    newlineDisabled = false
 
-    newlineDisabled: false,
+    private _contentGroup: graphic.Group
+
+    private _backgroundEl: graphic.Rect
+
+    private _selectorGroup: graphic.Group
 
     /**
-     * @override
+     * If first rendering, `contentGroup.position` is [0, 0], which
+     * does not make sense and may cause unexepcted animation if adopted.
      */
-    init: function () {
+    private _isFirstRender: boolean
 
-        /**
-         * @private
-         * @type {module:zrender/container/Group}
-         */
+    init() {
+
         this.group.add(this._contentGroup = new Group());
-
-        /**
-         * @private
-         * @type {module:zrender/Element}
-         */
-        this._backgroundEl;
-
-        /**
-         * @private
-         * @type {module:zrender/container/Group}
-         */
         this.group.add(this._selectorGroup = new Group());
 
-        /**
-         * If first rendering, `contentGroup.position` is [0, 0], which
-         * does not make sense and may cause unexepcted animation if adopted.
-         * @private
-         * @type {boolean}
-         */
         this._isFirstRender = true;
-    },
+    }
 
     /**
      * @protected
      */
-    getContentGroup: function () {
+    getContentGroup() {
         return this._contentGroup;
-    },
+    }
 
     /**
      * @protected
      */
-    getSelectorGroup: function () {
+    getSelectorGroup() {
         return this._selectorGroup;
-    },
+    }
 
     /**
      * @override
      */
-    render: function (legendModel, ecModel, api) {
+    render(
+        legendModel: LegendModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
         var isFirstRender = this._isFirstRender;
         this._isFirstRender = false;
 
@@ -105,7 +102,8 @@ export default echarts.extendComponentView({
             ) ? 'right' : 'left';
         }
 
-        var selector = legendModel.get('selector', true);
+        // selector has been normalized to an array in model
+        var selector = legendModel.get('selector', true) as LegendSelectorButtonOption[];
         var selectorPosition = legendModel.get('selectorPosition', true);
         if (selector && (!selectorPosition || selectorPosition === 'auto')) {
             selectorPosition = orient === 'horizontal' ? 'end' : 'start';
@@ -124,7 +122,10 @@ export default echarts.extendComponentView({
 
         // Place mainGroup, based on the calculated `mainRect`.
         var layoutRect = layoutUtil.getLayoutRect(
-            zrUtil.defaults({width: mainRect.width, height: mainRect.height}, positionInfo),
+            zrUtil.defaults({
+                width: mainRect.width,
+                height: mainRect.height
+            }, positionInfo),
             viewportSize,
             padding
         );
@@ -134,26 +135,28 @@ export default echarts.extendComponentView({
         this.group.add(
             this._backgroundEl = makeBackground(mainRect, legendModel)
         );
-    },
+    }
 
-    /**
-     * @protected
-     */
-    resetInner: function () {
+    protected resetInner() {
         this.getContentGroup().removeAll();
         this._backgroundEl && this.group.remove(this._backgroundEl);
         this.getSelectorGroup().removeAll();
-    },
+    }
 
-    /**
-     * @protected
-     */
-    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition) {
+    protected renderInner(
+        itemAlign: LegendOption['align'],
+        legendModel: LegendModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        selector: LegendSelectorButtonOption[],
+        orient: LegendOption['orient'],
+        selectorPosition: LegendOption['selectorPosition']
+    ) {
         var contentGroup = this.getContentGroup();
         var legendDrawnMap = zrUtil.createHashMap();
         var selectMode = legendModel.get('selectedMode');
 
-        var excludeSeriesId = [];
+        var excludeSeriesId: string[] = [];
         ecModel.eachRawSeries(function (seriesModel) {
             !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
         });
@@ -163,9 +166,10 @@ export default echarts.extendComponentView({
 
             // Use empty string or \n as a newline string
             if (!this.newlineDisabled && (name === '' || name === '\n')) {
-                contentGroup.add(new Group({
-                    newline: true
-                }));
+                const g = new Group();
+                // @ts-ignore
+                g.newline = true;
+                contentGroup.add(g);
                 return;
             }
 
@@ -266,26 +270,28 @@ export default echarts.extendComponentView({
         if (selector) {
             this._createSelector(selector, legendModel, api, orient, selectorPosition);
         }
-    },
+    }
 
-    _createSelector: function (selector, legendModel, api, orient, selectorPosition) {
+    private _createSelector(
+        selector: LegendSelectorButtonOption[],
+        legendModel: LegendModel,
+        api: ExtensionAPI,
+        orient: LegendOption['orient'],
+        selectorPosition: LegendOption['selectorPosition']
+    ) {
         var selectorGroup = this.getSelectorGroup();
 
-        each(selector, function (selectorItem) {
-            createSelectorButton(selectorItem);
-        });
-
-        function createSelectorButton(selectorItem) {
+        each(selector, function createSelectorButton(selectorItem) {
             var type = selectorItem.type;
 
             var labelText = new graphic.Text({
                 style: {
                     x: 0,
                     y: 0,
-                    align: 'center',
-                    verticalAlign: 'middle'
+                    textAlign: 'center',
+                    textVerticalAlign: 'middle'
                 },
-                onclick: function () {
+                onclick() {
                     api.dispatchAction({
                         type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect'
                     });
@@ -295,7 +301,7 @@ export default echarts.extendComponentView({
             selectorGroup.add(labelText);
 
             var labelModel = legendModel.getModel('selectorLabel');
-            var emphasisLabelModel = legendModel.getModel('emphasis.selectorLabel');
+            var emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
             graphic.setLabelStyle(
                 labelText.style, labelText.hoverStyle = {}, labelModel, emphasisLabelModel,
@@ -305,13 +311,20 @@ export default echarts.extendComponentView({
                 }
             );
             graphic.setHoverStyle(labelText);
-        }
-    },
+        });
+    }
 
-    _createItem: function (
-        name, dataIndex, itemModel, legendModel,
-        legendSymbolType, symbolType,
-        itemAlign, color, borderColor, selectMode
+    private _createItem(
+        name: string,
+        dataIndex: number,
+        itemModel: LegendModel['_data'][number],
+        legendModel: LegendModel,
+        legendSymbolType: string,
+        symbolType: string,
+        itemAlign: LegendOption['align'],
+        color: ColorString,
+        borderColor: ColorString,
+        selectMode: LegendOption['selectedMode']
     ) {
         var itemWidth = legendModel.get('itemWidth');
         var itemHeight = legendModel.get('itemHeight');
@@ -379,7 +392,7 @@ export default echarts.extendComponentView({
         }
 
         var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
-        var textAlign = itemAlign;
+        var textAlign = itemAlign as ZRTextAlign;
 
         var formatter = legendModel.get('formatter');
         var content = name;
@@ -405,6 +418,7 @@ export default echarts.extendComponentView({
         var hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
             invisible: true,
+            // @ts-ignore
             tooltip: tooltipModel.get('show') ? zrUtil.extend({
                 content: name,
                 // Defaul formatter
@@ -431,15 +445,20 @@ export default echarts.extendComponentView({
 
         graphic.setHoverStyle(itemGroup);
 
+        // @ts-ignore
         itemGroup.__legendDataIndex = dataIndex;
 
         return itemGroup;
-    },
+    }
 
-    /**
-     * @protected
-     */
-    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
+    protected layoutInner(
+        legendModel: LegendModel,
+        itemAlign: LegendOption['align'],
+        maxSize: { width: number, height: number },
+        isFirstRender: boolean,
+        selector: LegendOption['selector'],
+        selectorPosition: LegendOption['selectorPosition']
+    ): RectLike {
         var contentGroup = this.getContentGroup();
         var selectorGroup = this.getSelectorGroup();
 
@@ -469,9 +488,9 @@ export default echarts.extendComponentView({
             var selectorButtonGap = legendModel.get('selectorButtonGap', true);
 
             var orientIdx = legendModel.getOrient().index;
-            var wh = orientIdx === 0 ? 'width' : 'height';
-            var hw = orientIdx === 0 ? 'height' : 'width';
-            var yx = orientIdx === 0 ? 'y' : 'x';
+            var wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
+            var hw: 'width' | 'height' = orientIdx === 0 ? 'height' : 'width';
+            var yx: 'x' | 'y' = orientIdx === 0 ? 'y' : 'x';
 
             if (selectorPosition === 'end') {
                 selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
@@ -485,7 +504,7 @@ export default echarts.extendComponentView({
             selectorGroup.attr('position', selectorPos);
             contentGroup.attr('position', contentPos);
 
-            var mainRect = {x: 0, y: 0};
+            var mainRect = {x: 0, y: 0} as RectLike;
             mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
             mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
             mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
@@ -495,19 +514,26 @@ export default echarts.extendComponentView({
             contentGroup.attr('position', contentPos);
             return this.group.getBoundingRect();
         }
-    },
+    }
 
     /**
      * @protected
      */
-    remove: function () {
+    remove() {
         this.getContentGroup().removeAll();
         this._isFirstRender = true;
     }
 
-});
+}
 
-function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, inactiveBorderColor, isSelected) {
+function setSymbolStyle(
+    symbol: graphic.Path | ZImage,
+    symbolType: string,
+    legendModelItemStyle: Model<ItemStyleOption>,
+    borderColor: ZRColor,
+    inactiveBorderColor: ZRColor,
+    isSelected: boolean
+) {
     var itemStyle;
     if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
         itemStyle = legendModelItemStyle.getItemStyle();
@@ -522,7 +548,12 @@ function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, i
     return symbol.setStyle(itemStyle);
 }
 
-function dispatchSelectAction(seriesName, dataName, api, excludeSeriesId) {
+function dispatchSelectAction(
+    seriesName: string,
+    dataName: string,
+    api: ExtensionAPI,
+    excludeSeriesId: string[]
+) {
     // downplay before unselect
     dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId);
     api.dispatchAction({
@@ -533,7 +564,12 @@ function dispatchSelectAction(seriesName, dataName, api, excludeSeriesId) {
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 
-function dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId) {
+function dispatchHighlightAction(
+    seriesName: string,
+    dataName: string,
+    api: ExtensionAPI,
+    excludeSeriesId: string[]
+) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
@@ -546,7 +582,12 @@ function dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId) {
     }
 }
 
-function dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId) {
+function dispatchDownplayAction(
+    seriesName: string,
+    dataName: string,
+    api: ExtensionAPI,
+    excludeSeriesId: string[]
+) {
     // If element hover will move to a hoverLayer.
     var el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
@@ -558,3 +599,8 @@ function dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId) {
         });
     }
 }
+
+
+ComponentView.registerClass(LegendView);
+
+export default LegendView;

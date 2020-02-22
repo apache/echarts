@@ -158,7 +158,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     static type = 'visualMap'
     type = VisualMapModel.type
 
-    readonly dependencies = ['series']
+    static readonly dependencies = ['series']
 
     readonly stateList = ['inRange', 'outOfRange'] as const
 

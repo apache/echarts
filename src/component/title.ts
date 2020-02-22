@@ -17,70 +17,90 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
-import * as echarts from '../echarts';
 import * as graphic from '../util/graphic';
 import {getLayoutRect} from '../util/layout';
+import ComponentModel from '../model/Component';
+import { ComponentOption, BoxLayoutOptionMixin, ZRTextAlign, ZRTextVerticalAlign, ZRColor, BorderOptionMixin, LabelOption, ECElement } from '../util/types';
+import ComponentView from '../view/Component';
+import GlobalModel from '../model/Global';
+import ExtensionAPI from '../ExtensionAPI';
 
-// Model
-echarts.extendComponentModel({
+export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+    type?: 'title'
 
-    type: 'title',
+    text?: string
+    /**
+     * Link to url
+     */
+    link?: string
+    target?: 'self' | 'blank'
 
-    layoutMode: {type: 'box', ignoreSize: true},
+    subtext?: string
+    sublink?: string
+    subtarget?: 'self' | 'blank'
 
-    defaultOption: {
-        // 一级层叠
+    textAlign?: ZRTextAlign
+    textVerticalAlign?: ZRTextVerticalAlign
+
+    /**
+     * @deprecated Use textVerticalAlign instead
+     */
+    textBaseline?: ZRTextVerticalAlign
+
+    backgroundColor?: ZRColor
+    /**
+     * Padding between text and border.
+     * Support to be a single number or an array.
+     */
+    padding?: number | number[]
+    /**
+     * Gap between text and subtext
+     */
+    itemGap?: number
+
+    textStyle?: LabelOption
+
+    subtextStyle?: LabelOption
+
+    /**
+     * If trigger mouse or touch event
+     */
+    triggerEvent?: boolean
+
+    /**
+     * Radius of background border.
+     */
+    borderRadius?: number | number[]
+}
+class TitleModel extends ComponentModel<TitleOption> {
+    static type = 'title' as const
+    type = TitleModel.type
+
+    readonly layoutMode = {type: 'box', ignoreSize: true} as const
+
+    static defaultOption: TitleOption = {
         zlevel: 0,
-        // 二级层叠
         z: 6,
         show: true,
 
         text: '',
-        // 超链接跳转
-        // link: null,
-        // 仅支持self | blank
         target: 'blank',
         subtext: '',
 
-        // 超链接跳转
-        // sublink: null,
-        // 仅支持self | blank
         subtarget: 'blank',
 
-        // 'center' ¦ 'left' ¦ 'right'
-        // ¦ {number}（x坐标，单位px）
         left: 0,
-        // 'top' ¦ 'bottom' ¦ 'center'
-        // ¦ {number}（y坐标，单位px）
         top: 0,
-
-        // 水平对齐
-        // 'auto' | 'left' | 'right' | 'center'
-        // 默认根据 left 的位置判断是左对齐还是右对齐
-        // textAlign: null
-        //
-        // 垂直对齐
-        // 'auto' | 'top' | 'bottom' | 'middle'
-        // 默认根据 top 位置判断是上对齐还是下对齐
-        // textVerticalAlign: null
-        // textBaseline: null // The same as textVerticalAlign.
 
         backgroundColor: 'rgba(0,0,0,0)',
 
-        // 标题边框颜色
         borderColor: '#ccc',
 
-        // 标题边框线宽，单位px，默认为0（无边框）
         borderWidth: 0,
 
-        // 标题内边距，单位px，默认各方向内边距为5，
-        // 接受数组分别设定上右下左边距，同css
         padding: 5,
 
-        // 主副标题纵向间隔，单位px，默认为10，
         itemGap: 10,
         textStyle: {
             fontSize: 18,
@@ -91,14 +111,18 @@ echarts.extendComponentModel({
             color: '#aaa'
         }
     }
-});
+}
+ComponentModel.registerClass(TitleModel);
+
 
 // View
-echarts.extendComponentView({
+class TitleView extends ComponentView {
 
-    type: 'title',
+    static type = 'title' as const
+    type = TitleView.type
 
-    render: function (titleModel, ecModel, api) {
+
+    render(titleModel: TitleModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this.group.removeAll();
 
         if (!titleModel.get('show')) {
@@ -154,7 +178,7 @@ echarts.extendComponentView({
             });
         }
 
-        textEl.eventData = subTextEl.eventData = triggerEvent
+        (textEl as ECElement).eventData = (subTextEl as ECElement).eventData = triggerEvent
             ? {
                 componentType: 'title',
                 componentIndex: titleModel.componentIndex
@@ -178,7 +202,7 @@ echarts.extendComponentView({
         // Adjust text align based on position
         if (!textAlign) {
             // Align left if title is on the left. center and right is same
-            textAlign = titleModel.get('left') || titleModel.get('right');
+            textAlign = (titleModel.get('left') || titleModel.get('right')) as ZRTextAlign;
             if (textAlign === 'middle') {
                 textAlign = 'center';
             }
@@ -191,7 +215,7 @@ echarts.extendComponentView({
             }
         }
         if (!textVerticalAlign) {
-            textVerticalAlign = titleModel.get('top') || titleModel.get('bottom');
+            textVerticalAlign = (titleModel.get('top') || titleModel.get('bottom')) as ZRTextVerticalAlign;
             if (textVerticalAlign === 'center') {
                 textVerticalAlign = 'middle';
             }
@@ -234,4 +258,6 @@ echarts.extendComponentView({
 
         group.add(rect);
     }
-});
+}
+
+ComponentView.registerClass(TitleView);

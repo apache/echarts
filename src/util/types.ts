@@ -34,7 +34,7 @@ import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
 import List, {ListDimensionType} from '../data/List';
-import { Dictionary, ImageLike } from 'zrender/src/core/types';
+import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import Source from '../data/Source';
 import { TooltipMarker } from './format';
@@ -50,6 +50,7 @@ import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
 
 export type RendererType = 'canvas' | 'svg';
 
+// Types from zrender
 export type ColorString = string;
 export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject
 export type ZRLineType = 'solid' | 'dotted'
@@ -60,6 +61,9 @@ export type ZRFontStyle = 'normal' | 'italic' | 'oblique'
 export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number
 
 export type ZREasing = easingType
+
+export type ZRTextAlign = TextAlign
+export type ZRTextVerticalAlign = TextVerticalAlign
 
 
 // ComponentFullType can be:

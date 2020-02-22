@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Do not contain scrollable legend, for sake of file size.
 
 import * as echarts from '../echarts';
@@ -28,12 +26,12 @@ import './legend/legendAction';
 import './legend/LegendView';
 
 import legendFilter from './legend/legendFilter';
-import Component from '../model/Component';
+import Component, { ComponentModelConstructor } from '../model/Component';
 
 // Series Filter
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.SERIES_FILTER, legendFilter);
 
-Component.registerSubTypeDefaulter('legend', function () {
+(Component as ComponentModelConstructor).registerSubTypeDefaulter('legend', function () {
     // Default 'plain' when no type specified.
     return 'plain';
 });

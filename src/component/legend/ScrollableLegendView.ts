@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Separate legend and scrollable legend to reduce package size.
  */
@@ -27,77 +25,110 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import * as layoutUtil from '../../util/layout';
 import LegendView from './LegendView';
+import { LegendSelectorButtonOption } from './LegendModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import GlobalModel from '../../model/Global';
+import ScrollableLegendModel, {ScrollableLegendOption} from './ScrollableLegendModel';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import Displayable from 'zrender/src/graphic/Displayable';
+import ComponentView from '../../view/Component';
+import Element from 'zrender/src/Element';
 
 var Group = graphic.Group;
 
-var WH = ['width', 'height'];
-var XY = ['x', 'y'];
+var WH = ['width', 'height'] as const;
+var XY = ['x', 'y'] as const;
 
-var ScrollableLegendView = LegendView.extend({
+interface PageInfo {
+    contentPosition: number[]
+    pageCount: number
+    pageIndex: number
+    pagePrevDataIndex: number
+    pageNextDataIndex: number
+}
 
-    type: 'legend.scroll',
+interface ItemInfo {
+    /**
+     * Start
+     */
+    s: number
+    /**
+     * End
+     */
+    e: number
+    /**
+     * Index
+     */
+    i: number
+}
 
-    newlineDisabled: true,
+type LegendGroup = graphic.Group & {
+    __rectSize: number
+}
 
-    init: function () {
+type LegendItemElement = Element & {
+    __legendDataIndex: number
+}
 
-        ScrollableLegendView.superCall(this, 'init');
+class ScrollableLegendView extends LegendView {
 
-        /**
-         * @private
-         * @type {number} For `scroll`.
-         */
-        this._currentIndex = 0;
+    static type = 'legend.scroll' as const
+    type = ScrollableLegendView.type
 
-        /**
-         * @private
-         * @type {module:zrender/container/Group}
-         */
-        this.group.add(this._containerGroup = new Group());
+    newlineDisabled = true
+
+    private _containerGroup: LegendGroup
+    private _controllerGroup: graphic.Group
+
+    private _currentIndex: number = 0
+
+    private _showController: boolean
+
+    init() {
+
+        super.init();
+
+        this.group.add(this._containerGroup = new Group() as LegendGroup);
         this._containerGroup.add(this.getContentGroup());
 
-        /**
-         * @private
-         * @type {module:zrender/container/Group}
-         */
         this.group.add(this._controllerGroup = new Group());
-
-        /**
-         *
-         * @private
-         */
-        this._showController;
-    },
+    }
 
     /**
      * @override
      */
-    resetInner: function () {
-        ScrollableLegendView.superCall(this, 'resetInner');
+    resetInner() {
+        super.resetInner();
 
         this._controllerGroup.removeAll();
         this._containerGroup.removeClipPath();
         this._containerGroup.__rectSize = null;
-    },
+    }
 
     /**
      * @override
      */
-    renderInner: function (itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition) {
-        var me = this;
+    renderInner(
+        itemAlign: ScrollableLegendOption['align'],
+        legendModel: ScrollableLegendModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        selector: LegendSelectorButtonOption[],
+        orient: ScrollableLegendOption['orient'],
+        selectorPosition: ScrollableLegendOption['selectorPosition']
+    ) {
+        var self = this;
 
         // Render content items.
-        ScrollableLegendView.superCall(this, 'renderInner', itemAlign,
-            legendModel, ecModel, api, selector, orient, selectorPosition);
+        super.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         var controllerGroup = this._controllerGroup;
 
         // FIXME: support be 'auto' adapt to size number text length,
         // e.g., '3/12345' should not overlap with the control arrow button.
-        var pageIconSize = legendModel.get('pageIconSize', true);
-        if (!zrUtil.isArray(pageIconSize)) {
-            pageIconSize = [pageIconSize, pageIconSize];
-        }
+        const pageIconSize = legendModel.get('pageIconSize', true);
+        let pageIconSizeArr: number[] = zrUtil.isArray(pageIconSize)
+            ? pageIconSize : [pageIconSize, pageIconSize];
 
         createPageButton('pagePrev', 0);
 
@@ -115,33 +146,40 @@ var ScrollableLegendView = LegendView.extend({
 
         createPageButton('pageNext', 1);
 
-        function createPageButton(name, iconIdx) {
-            var pageDataIndexName = name + 'DataIndex';
+        function createPageButton(name: string, iconIdx: number) {
+            var pageDataIndexName = (name + 'DataIndex') as 'pagePrevDataIndex' | 'pageNextDataIndex';
             var icon = graphic.createIcon(
                 legendModel.get('pageIcons', true)[legendModel.getOrient().name][iconIdx],
                 {
                     // Buttons will be created in each render, so we do not need
                     // to worry about avoiding using legendModel kept in scope.
                     onclick: zrUtil.bind(
-                        me._pageGo, me, pageDataIndexName, legendModel, api
+                        self._pageGo, self, pageDataIndexName, legendModel, api
                     )
                 },
                 {
-                    x: -pageIconSize[0] / 2,
-                    y: -pageIconSize[1] / 2,
-                    width: pageIconSize[0],
-                    height: pageIconSize[1]
+                    x: -pageIconSizeArr[0] / 2,
+                    y: -pageIconSizeArr[1] / 2,
+                    width: pageIconSizeArr[0],
+                    height: pageIconSizeArr[1]
                 }
             );
             icon.name = name;
             controllerGroup.add(icon);
         }
-    },
+    }
 
     /**
      * @override
      */
-    layoutInner: function (legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition) {
+    layoutInner(
+        legendModel: ScrollableLegendModel,
+        itemAlign: ScrollableLegendOption['align'],
+        maxSize: { width: number, height: number },
+        isFirstRender: boolean,
+        selector: LegendSelectorButtonOption[],
+        selectorPosition: ScrollableLegendOption['selectorPosition']
+    ) {
         var selectorGroup = this.getSelectorGroup();
 
         var orientIdx = legendModel.getOrient().index;
@@ -187,9 +225,17 @@ var ScrollableLegendView = LegendView.extend({
         }
 
         return mainRect;
-    },
+    }
 
-    _layoutContentAndController: function (legendModel, isFirstRender, maxSize, orientIdx, wh, hw, yx) {
+    _layoutContentAndController(
+        legendModel: ScrollableLegendModel,
+        isFirstRender: boolean,
+        maxSize: { width: number, height: number },
+        orientIdx: 0 | 1,
+        wh: 'width' | 'height',
+        hw: 'width' | 'height',
+        yx: 'x' | 'y'
+    ) {
         var contentGroup = this.getContentGroup();
         var containerGroup = this._containerGroup;
         var controllerGroup = this._controllerGroup;
@@ -252,7 +298,7 @@ var ScrollableLegendView = LegendView.extend({
         // Calculate `mainRect` and set `clipPath`.
         // mainRect should not be calculated by `this.group.getBoundingRect()`
         // for sake of the overflow.
-        var mainRect = {x: 0, y: 0};
+        var mainRect = {x: 0, y: 0} as RectLike;
 
         // Consider content may be overflow (should be clipped).
         mainRect[wh] = showController ? maxSize[wh] : contentRect[wh];
@@ -263,7 +309,7 @@ var ScrollableLegendView = LegendView.extend({
 
         containerGroup.__rectSize = maxSize[wh];
         if (showController) {
-            var clipShape = {x: 0, y: 0};
+            var clipShape = {x: 0, y: 0} as graphic.Rect['shape'];
             clipShape[wh] = Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap, 0);
             clipShape[hw] = mainRect[hw];
             containerGroup.setClipPath(new graphic.Rect({shape: clipShape}));
@@ -273,8 +319,11 @@ var ScrollableLegendView = LegendView.extend({
         }
         else {
             // Do not remove or ignore controller. Keep them set as placeholders.
-            controllerGroup.eachChild(function (child) {
-                child.attr({invisible: true, silent: true});
+            controllerGroup.eachChild(function (child: Displayable) {
+                child.attr({
+                    invisible: true,
+                    silent: true
+                });
             });
         }
 
@@ -285,15 +334,19 @@ var ScrollableLegendView = LegendView.extend({
             {position: pageInfo.contentPosition},
             // When switch from "show controller" to "not show controller", view should be
             // updated immediately without animation, otherwise causes weird effect.
-            showController ? legendModel : false
+            showController ? legendModel : null
         );
 
         this._updatePageInfoView(legendModel, pageInfo);
 
         return mainRect;
-    },
+    }
 
-    _pageGo: function (to, legendModel, api) {
+    _pageGo(
+        to: 'pagePrevDataIndex' | 'pageNextDataIndex',
+        legendModel: ScrollableLegendModel,
+        api: ExtensionAPI
+    ) {
         var scrollDataIndex = this._getPageInfo(legendModel)[to];
 
         scrollDataIndex != null && api.dispatchAction({
@@ -301,14 +354,18 @@ var ScrollableLegendView = LegendView.extend({
             scrollDataIndex: scrollDataIndex,
             legendId: legendModel.id
         });
-    },
+    }
 
-    _updatePageInfoView: function (legendModel, pageInfo) {
+    _updatePageInfoView(
+        legendModel: ScrollableLegendModel,
+        pageInfo: PageInfo
+    ) {
         var controllerGroup = this._controllerGroup;
 
         zrUtil.each(['pagePrev', 'pageNext'], function (name) {
-            var canJump = pageInfo[name + 'DataIndex'] != null;
-            var icon = controllerGroup.childOfName(name);
+            const key = (name + 'DataIndex') as'pagePrevDataIndex' | 'pageNextDataIndex';
+            var canJump = pageInfo[key] != null;
+            var icon = controllerGroup.childOfName(name) as graphic.Path;
             if (icon) {
                 icon.setStyle(
                     'fill',
@@ -320,7 +377,7 @@ var ScrollableLegendView = LegendView.extend({
             }
         });
 
-        var pageText = controllerGroup.childOfName('pageText');
+        var pageText = controllerGroup.childOfName('pageText') as graphic.Text;
         var pageFormatter = legendModel.get('pageFormatter');
         var pageIndex = pageInfo.pageIndex;
         var current = pageIndex != null ? pageIndex + 1 : 0;
@@ -329,14 +386,12 @@ var ScrollableLegendView = LegendView.extend({
         pageText && pageFormatter && pageText.setStyle(
             'text',
             zrUtil.isString(pageFormatter)
-                ? pageFormatter.replace('{current}', current).replace('{total}', total)
+                ? pageFormatter.replace('{current}', current + '').replace('{total}', total + '')
                 : pageFormatter({current: current, total: total})
         );
-    },
+    }
 
     /**
-     * @param {module:echarts/model/Model} legendModel
-     * @return {Object} {
      *  contentPosition: Array.<number>, null when data item not found.
      *  pageIndex: number, null when data item not found.
      *  pageCount: number, always be a number, can be 0.
@@ -344,7 +399,7 @@ var ScrollableLegendView = LegendView.extend({
      *  pageNextDataIndex: number, null when no next page.
      * }
      */
-    _getPageInfo: function (legendModel) {
+    _getPageInfo(legendModel: ScrollableLegendModel): PageInfo {
         var scrollDataIndex = legendModel.get('scrollDataIndex', true);
         var contentGroup = this.getContentGroup();
         var containerRectSize = this._containerGroup.__rectSize;
@@ -358,8 +413,8 @@ var ScrollableLegendView = LegendView.extend({
         var itemCount = children.length;
         var pCount = !itemCount ? 0 : 1;
 
-        var result = {
-            contentPosition: contentGroup.position.slice(),
+        var result: PageInfo = {
+            contentPosition: zrUtil.slice(contentGroup.position),
             pageCount: pCount,
             pageIndex: pCount - 1,
             pagePrevDataIndex: null,
@@ -443,34 +498,34 @@ var ScrollableLegendView = LegendView.extend({
 
         return result;
 
-        function getItemInfo(el) {
+        function getItemInfo(el: Element): ItemInfo {
             if (el) {
                 var itemRect = el.getBoundingRect();
                 var start = itemRect[xy] + el.position[orientIdx];
                 return {
                     s: start,
                     e: start + itemRect[wh],
-                    i: el.__legendDataIndex
+                    i: (el as LegendItemElement).__legendDataIndex
                 };
             }
         }
 
-        function intersect(itemInfo, winStart) {
+        function intersect(itemInfo: ItemInfo, winStart: number) {
             return itemInfo.e >= winStart && itemInfo.s <= winStart + containerRectSize;
         }
-    },
+    }
 
-    _findTargetItemIndex: function (targetDataIndex) {
+    _findTargetItemIndex(targetDataIndex: number) {
         if (!this._showController) {
             return 0;
         }
 
         var index;
         var contentGroup = this.getContentGroup();
-        var defaultIndex;
+        var defaultIndex: number;
 
         contentGroup.eachChild(function (child, idx) {
-            var legendDataIdx = child.__legendDataIndex;
+            var legendDataIdx = (child as LegendItemElement).__legendDataIndex;
             // FIXME
             // If the given targetDataIndex (from model) is illegal,
             // we use defualtIndex. But the index on the legend model and
@@ -486,7 +541,8 @@ var ScrollableLegendView = LegendView.extend({
 
         return index != null ? index : defaultIndex;
     }
+}
 
-});
+ComponentView.registerClass(ScrollableLegendView);
 
 export default ScrollableLegendView;

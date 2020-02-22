@@ -17,26 +17,78 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import LegendModel from './LegendModel';
+import LegendModel, {LegendOption} from './LegendModel';
 import {
     mergeLayoutParam,
     getLayoutParams
 } from '../../util/layout';
+import { ZRColor, LabelOption } from '../../util/types';
+import Model from '../../model/Model';
+import ComponentModel from '../../model/Component';
+import GlobalModel from '../../model/Global';
+import * as zrUtil from 'zrender/src/core/util';
 
-var ScrollableLegendModel = LegendModel.extend({
+export interface ScrollableLegendOption extends LegendOption {
+    scrollDataIndex?: number
+    /**
+     * Gap between each page button
+     */
+    pageButtonItemGap?: number
+    /**
+     * Gap between page buttons group and legend items.
+     */
+    pageButtonGap?: number
+    pageButtonPosition?: 'start' | 'end'
 
-    type: 'legend.scroll',
+    pageFormatter?: string | ((param: {current: number, total: number}) => string)
+    pageIcons?: {
+        horizontal?: string[]
+        vertical?: string[]
+    }
+    pageIconColor?: ZRColor
+    pageIconInactiveColor?: ZRColor
+    pageIconSize?: number
+    pageTextStyle?: LabelOption
+
+    animationDurationUpdate?: number
+}
+
+class ScrollableLegendModel extends LegendModel<ScrollableLegendOption> {
+
+    static type = 'legend.scroll' as const
+    type = ScrollableLegendModel.type
 
     /**
      * @param {number} scrollDataIndex
      */
-    setScrollDataIndex: function (scrollDataIndex) {
+    setScrollDataIndex(scrollDataIndex: number) {
         this.option.scrollDataIndex = scrollDataIndex;
-    },
+    }
 
-    defaultOption: {
+    init(
+        option: ScrollableLegendOption,
+        parentModel: Model,
+        ecModel: GlobalModel
+    ) {
+        var inputPositionParams = getLayoutParams(option);
+
+        super.init(option, parentModel, ecModel);
+
+        mergeAndNormalizeLayoutParams(this, option, inputPositionParams);
+    }
+
+    /**
+     * @override
+     */
+    mergeOption(option: ScrollableLegendOption, ecModel: GlobalModel) {
+        super.mergeOption(option, ecModel);
+
+        mergeAndNormalizeLayoutParams(this, this.option, option);
+    }
+
+    static defaultOption: ScrollableLegendOption = zrUtil.merge(
+        zrUtil.clone(LegendModel.defaultOption),
+    {
         scrollDataIndex: 0,
         pageButtonItemGap: 5,
         pageButtonGap: null,
@@ -54,38 +106,23 @@ var ScrollableLegendModel = LegendModel.extend({
         },
 
         animationDurationUpdate: 800
-    },
-
-    /**
-     * @override
-     */
-    init: function (option, parentModel, ecModel, extraOpt) {
-        var inputPositionParams = getLayoutParams(option);
-
-        ScrollableLegendModel.superCall(this, 'init', option, parentModel, ecModel, extraOpt);
-
-        mergeAndNormalizeLayoutParams(this, option, inputPositionParams);
-    },
-
-    /**
-     * @override
-     */
-    mergeOption: function (option, extraOpt) {
-        ScrollableLegendModel.superCall(this, 'mergeOption', option, extraOpt);
-
-        mergeAndNormalizeLayoutParams(this, this.option, option);
-    }
-
-});
+    })
+};
 
 // Do not `ignoreSize` to enable setting {left: 10, right: 10}.
-function mergeAndNormalizeLayoutParams(legendModel, target, raw) {
+function mergeAndNormalizeLayoutParams(
+    legendModel: ScrollableLegendModel,
+    target: ScrollableLegendOption,
+    raw: ScrollableLegendOption
+) {
     var orient = legendModel.getOrient();
     var ignoreSize = [1, 1];
     ignoreSize[orient.index] = 0;
     mergeLayoutParam(target, raw, {
-        type: 'box', ignoreSize: ignoreSize
+        type: 'box', ignoreSize: !!ignoreSize
     });
 }
+
+ComponentModel.registerClass(ScrollableLegendModel);
 
 export default ScrollableLegendModel;

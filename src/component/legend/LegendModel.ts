@@ -17,13 +17,21 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../../model/Model';
 import {isNameSpecified} from '../../util/model';
 import lang from '../../lang';
+import ComponentModel from '../../model/Component';
+import {
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    BorderOptionMixin,
+    ColorString,
+    ItemStyleOption,
+    LabelOption
+} from '../../util/types';
+import { Dictionary } from 'zrender/src/core/types';
+import GlobalModel from '../../model/Global';
 
 var langSelector = lang.legend.selector;
 
@@ -38,13 +46,122 @@ var defaultSelectorOption = {
     }
 };
 
-var LegendModel = echarts.extendComponentModel({
+type SelectorType = 'all' | 'inverse'
+export interface LegendSelectorButtonOption {
+    type?: SelectorType
+    title?: string
+}
 
-    type: 'legend.plain',
+interface DataItem {
+    name?: string
+    icon?: string
+    textStyle?: LabelOption
 
-    dependencies: ['series'],
+    // TODO: TYPE tooltip
+    tooltip?: unknown
+}
+export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+    orient?: 'horizontal' | 'vertical'
 
-    layoutMode: {
+    align?: 'auto' | 'left' | 'right'
+
+    backgroundColor?: ColorString
+    /**
+     * Border radius of background rect
+     * @default 0
+     */
+    borderRadius?: number | number[]
+
+    /**
+     * Padding between legend item and border.
+     * Support to be a single number or an array.
+     * @default 5
+     */
+    padding?: number | number[]
+    /**
+     * Gap between each legend item.
+     * @default 10
+     */
+    itemGap?: number
+    /**
+     * Width of legend symbol
+     */
+    itemWidth?: number
+    /**
+     * Height of legend symbol
+     */
+    itemHeight?: number
+    /**
+     * Color when legend item is not selected
+     */
+    inactiveColor?: ColorString
+    /**
+     * Border color when legend item is not selected
+     */
+    inactiveBorderColor?: ColorString
+
+    itemStyle?: ItemStyleOption
+
+    /**
+     * Legend label formatter
+     */
+    formatter?: string | ((name: string) => string)
+
+    textStyle?: LabelOption
+
+    selectedMode?: boolean | 'single' | 'multiple'
+    /**
+     * selected map of each item. Default to be selected if item is not in the map
+     */
+    selected?: Dictionary<boolean>
+
+    /**
+     * Buttons for all select or inverse select.
+     * @example
+     *  selector: [{type: 'all or inverse', title: xxx}]
+     *  selector: true
+     *  selector: ['all', 'inverse']
+     */
+    selector?: (LegendSelectorButtonOption | SelectorType)[] | boolean
+
+    selectorLabel?: LabelOption
+
+    emphasis?: {
+        selectorLabel?: LabelOption
+    }
+
+    /**
+     * Position of selector buttons.
+     */
+    selectorPosition?: 'auto' | 'start' | 'end'
+    /**
+     * Gap between each selector button
+     */
+    selectorItemGap?: number
+    /**
+     * Gap between selector buttons group and legend main items.
+     */
+    selectorButtonGap?: number
+
+    data?: (string | DataItem)[]
+
+    symbolKeepAspect?: boolean
+
+    /**
+     * Tooltip option
+     */
+    // TODO: TYPE tooltip
+    tooltip?: unknown
+
+}
+
+class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentModel<Ops> {
+    static type = 'legend.plain'
+    type = LegendModel.type
+
+    static readonly dependencies = ['series']
+
+    readonly layoutMode = {
         type: 'box',
         // legend.width/height are maxWidth/maxHeight actually,
         // whereas realy width/height is calculated by its content.
@@ -54,21 +171,25 @@ var LegendModel = echarts.extendComponentModel({
         // then `setOption({legend: {right: 10});`
         // The previous `left` should be cleared by setting `ignoreSize`.
         ignoreSize: true
-    },
+    } as const
 
-    init: function (option, parentModel, ecModel) {
+
+    private _data: Model<DataItem>[]
+    private _availableNames: string[]
+
+    init(option: Ops, parentModel: Model, ecModel: GlobalModel) {
         this.mergeDefaultAndTheme(option, ecModel);
 
         option.selected = option.selected || {};
         this._updateSelector(option);
-    },
+    }
 
-    mergeOption: function (option) {
-        LegendModel.superCall(this, 'mergeOption', option);
+    mergeOption(option: Ops, ecModel: GlobalModel) {
+        super.mergeOption(option, ecModel);
         this._updateSelector(option);
-    },
+    }
 
-    _updateSelector: function (option) {
+    _updateSelector(option: Ops) {
         var selector = option.selector;
         if (selector === true) {
             selector = option.selector = ['all', 'inverse'];
@@ -76,12 +197,14 @@ var LegendModel = echarts.extendComponentModel({
         if (zrUtil.isArray(selector)) {
             zrUtil.each(selector, function (item, index) {
                 zrUtil.isString(item) && (item = {type: item});
-                selector[index] = zrUtil.merge(item, defaultSelectorOption[item.type]);
+                (selector as LegendSelectorButtonOption[])[index] = zrUtil.merge(
+                    item, defaultSelectorOption[item.type]
+                );
             });
         }
-    },
+    }
 
-    optionUpdated: function () {
+    optionUpdated() {
         this._updateData(this.ecModel);
 
         var legendData = this._data;
@@ -102,11 +225,11 @@ var LegendModel = echarts.extendComponentModel({
             // Try select the first if selectedMode is single
             !hasSelected && this.select(legendData[0].get('name'));
         }
-    },
+    }
 
-    _updateData: function (ecModel) {
-        var potentialData = [];
-        var availableNames = [];
+    _updateData(ecModel: GlobalModel) {
+        var potentialData: string[] = [];
+        var availableNames: string[] = [];
 
         ecModel.eachRawSeries(function (seriesModel) {
             var seriesName = seriesModel.name;
@@ -162,19 +285,13 @@ var LegendModel = echarts.extendComponentModel({
          * @private
          */
         this._data = legendData;
-    },
+    }
 
-    /**
-     * @return {Array.<module:echarts/model/Model>}
-     */
-    getData: function () {
+    getData() {
         return this._data;
-    },
+    }
 
-    /**
-     * @param {string} name
-     */
-    select: function (name) {
+    select(name: string) {
         var selected = this.option.selected;
         var selectedMode = this.get('selectedMode');
         if (selectedMode === 'single') {
@@ -184,38 +301,32 @@ var LegendModel = echarts.extendComponentModel({
             });
         }
         selected[name] = true;
-    },
+    }
 
-    /**
-     * @param {string} name
-     */
-    unSelect: function (name) {
+    unSelect(name: string) {
         if (this.get('selectedMode') !== 'single') {
             this.option.selected[name] = false;
         }
-    },
+    }
 
-    /**
-     * @param {string} name
-     */
-    toggleSelected: function (name) {
+    toggleSelected(name: string) {
         var selected = this.option.selected;
         // Default is true
         if (!selected.hasOwnProperty(name)) {
             selected[name] = true;
         }
         this[selected[name] ? 'unSelect' : 'select'](name);
-    },
+    }
 
-    allSelect: function () {
+    allSelect() {
         var data = this._data;
         var selected = this.option.selected;
         zrUtil.each(data, function (dataItem) {
             selected[dataItem.get('name', true)] = true;
         });
-    },
+    }
 
-    inverseSelect: function () {
+    inverseSelect() {
         var data = this._data;
         var selected = this.option.selected;
         zrUtil.each(data, function (dataItem) {
@@ -226,91 +337,58 @@ var LegendModel = echarts.extendComponentModel({
             }
             selected[name] = !selected[name];
         });
-    },
+    }
 
-    /**
-     * @param {string} name
-     */
-    isSelected: function (name) {
+    isSelected(name: string) {
         var selected = this.option.selected;
         return !(selected.hasOwnProperty(name) && !selected[name])
             && zrUtil.indexOf(this._availableNames, name) >= 0;
-    },
+    }
 
-    getOrient: function () {
+    getOrient(): {index: 0, name: 'horizontal'}
+    getOrient(): {index: 1, name: 'vertical'}
+    getOrient() {
         return this.get('orient') === 'vertical'
             ? {index: 1, name: 'vertical'}
             : {index: 0, name: 'horizontal'};
-    },
+    }
 
-    defaultOption: {
-        // 一级层叠
+    static defaultOption: LegendOption = {
         zlevel: 0,
-        // 二级层叠
         z: 4,
         show: true,
 
-        // 布局方式，默认为水平布局，可选为：
-        // 'horizontal' | 'vertical'
         orient: 'horizontal',
 
         left: 'center',
         // right: 'center',
-
         top: 0,
         // bottom: null,
 
-        // 水平对齐
-        // 'auto' | 'left' | 'right'
-        // 默认为 'auto', 根据 x 的位置判断是左对齐还是右对齐
         align: 'auto',
 
         backgroundColor: 'rgba(0,0,0,0)',
-        // 图例边框颜色
         borderColor: '#ccc',
         borderRadius: 0,
-        // 图例边框线宽，单位px，默认为0（无边框）
         borderWidth: 0,
-        // 图例内边距，单位px，默认各方向内边距为5，
-        // 接受数组分别设定上右下左边距，同css
         padding: 5,
-        // 各个item之间的间隔，单位px，默认为10，
-        // 横向布局时为水平间隔，纵向布局时为纵向间隔
         itemGap: 10,
-        // the width of legend symbol
         itemWidth: 25,
-        // the height of legend symbol
         itemHeight: 14,
 
-        // the color of unselected legend symbol
         inactiveColor: '#ccc',
 
-        // the borderColor of unselected legend symbol
         inactiveBorderColor: '#ccc',
 
         itemStyle: {
-            // the default borderWidth of legend symbol
             borderWidth: 0
         },
 
         textStyle: {
-            // 图例文字颜色
             color: '#333'
         },
-        // formatter: '',
-        // 选择模式，默认开启图例开关
         selectedMode: true,
-        // 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入
-        // selected: null,
-        // 图例内容（详见legend.data，数组中每一项代表一个item
-        // data: [],
 
-        // Usage:
-        // selector: [{type: 'all or inverse', title: xxx}]
-        // or
-        // selector: true
-        // or
-        // selector: ['all', 'inverse']
         selector: false,
 
         selectorLabel: {
@@ -332,18 +410,18 @@ var LegendModel = echarts.extendComponentModel({
             }
         },
 
-        // Value can be 'start' or 'end'
         selectorPosition: 'auto',
 
         selectorItemGap: 7,
 
         selectorButtonGap: 10,
 
-        // Tooltip 相关配置
         tooltip: {
             show: false
         }
     }
-});
+}
+
+ComponentModel.registerClass(LegendModel);
 
 export default LegendModel;

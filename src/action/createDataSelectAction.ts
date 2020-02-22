@@ -17,12 +17,21 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
+import { ActionInfo } from '../util/types';
+import SeriesModel from '../model/Series';
+import { Dictionary } from 'zrender/src/core/types';
+import { DataSelectableMixin, DataSelectableOptionMixin } from '../component/helper/selectableMixin';
 
-export default function (seriesType, actionInfos) {
+
+type SelectableSeriesModel = SeriesModel & DataSelectableMixin<DataSelectableOptionMixin>;
+
+interface DataSelectAction extends ActionInfo {
+    method: string
+}
+
+export default function (seriesType: string, actionInfos: DataSelectAction[]) {
     zrUtil.each(actionInfos, function (actionInfo) {
         actionInfo.update = 'updateView';
         /**
@@ -31,12 +40,13 @@ export default function (seriesType, actionInfos) {
          * @property {string} name
          */
         echarts.registerAction(actionInfo, function (payload, ecModel) {
-            var selected = {};
+            var selected: Dictionary<Boolean> = {};
             ecModel.eachComponent(
                 {mainType: 'series', subType: seriesType, query: payload},
-                function (seriesModel) {
-                    if (seriesModel[actionInfo.method]) {
-                        seriesModel[actionInfo.method](
+                function (seriesModel: SelectableSeriesModel) {
+                    // TODO: TYPE method type checking
+                    if ((seriesModel as any)[actionInfo.method]) {
+                        (seriesModel as any)[actionInfo.method](
                             payload.name,
                             payload.dataIndex
                         );

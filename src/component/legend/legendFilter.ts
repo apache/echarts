@@ -1,3 +1,7 @@
+import SeriesModel from '../../model/Series';
+import GlobalModel from '../../model/Global';
+import LegendModel from './LegendModel';
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,15 +21,13 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-export default function (ecModel) {
+export default function (ecModel: GlobalModel) {
 
     var legendModels = ecModel.findComponents({
         mainType: 'legend'
-    });
+    }) as LegendModel[];
     if (legendModels && legendModels.length) {
-        ecModel.filterSeries(function (series) {
+        ecModel.filterSeries(function (series: SeriesModel) {
             // If in any legend component the status is not selected.
             // Because in legend series is assumed selected when it is not in the legend data.
             for (var i = 0; i < legendModels.length; i++) {

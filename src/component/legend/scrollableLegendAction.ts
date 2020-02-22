@@ -17,9 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
+import ScrollableLegendModel from './ScrollableLegendModel';
 
 /**
  * @event legendScroll
@@ -34,7 +33,7 @@ echarts.registerAction(
 
         scrollDataIndex != null && ecModel.eachComponent(
             {mainType: 'legend', subType: 'scroll', query: payload},
-            function (legendModel) {
+            function (legendModel: ScrollableLegendModel) {
                 legendModel.setScrollDataIndex(scrollDataIndex);
             }
         );
