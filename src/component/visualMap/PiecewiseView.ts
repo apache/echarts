@@ -17,24 +17,26 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import VisualMapView from './VisualMapView';
 import * as graphic from '../../util/graphic';
 import {createSymbol} from '../../util/symbol';
 import * as layout from '../../util/layout';
 import * as helper from './helper';
+import PiecewiseModel from './PiecewiseModel';
+import ComponentView from '../../view/Component';
+import { TextAlign } from 'zrender/src/core/types';
+import { VisualMappingOption } from '../../visual/VisualMapping';
 
-var PiecewiseVisualMapView = VisualMapView.extend({
+class PiecewiseVisualMapView extends VisualMapView {
 
-    type: 'visualMap.piecewise',
+    static type = 'visualMap.piecewise' as const
 
-    /**
-     * @protected
-     * @override
-     */
-    doRender: function () {
+    type = PiecewiseVisualMapView.type
+
+    visualMapModel: PiecewiseModel
+
+    protected doRender() {
         var thisGroup = this.group;
 
         thisGroup.removeAll();
@@ -68,7 +70,7 @@ var PiecewiseVisualMapView = VisualMapView.extend({
 
         this.positionGroup(thisGroup);
 
-        function renderItem(item) {
+        function renderItem(this: PiecewiseVisualMapView, item: typeof viewData.viewPieceList[number]) {
             var piece = item.piece;
 
             var itemGroup = new graphic.Group();
@@ -76,7 +78,8 @@ var PiecewiseVisualMapView = VisualMapView.extend({
 
             this._enableHoverLink(itemGroup, item.indexInModelPieceList);
 
-            var representValue = visualMapModel.getRepresentValue(piece);
+            // TODO Category
+            var representValue = visualMapModel.getRepresentValue(piece) as number;
 
             this._createItemSymbol(
                 itemGroup, representValue, [0, 0, itemSize[0], itemSize[1]]
@@ -91,7 +94,7 @@ var PiecewiseVisualMapView = VisualMapView.extend({
                         y: itemSize[1] / 2,
                         text: piece.text,
                         textVerticalAlign: 'middle',
-                        textAlign: itemAlign,
+                        textAlign: itemAlign as TextAlign,
                         textFont: textFont,
                         textFill: textFill,
                         opacity: visualState === 'outOfRange' ? 0.5 : 1
@@ -101,19 +104,17 @@ var PiecewiseVisualMapView = VisualMapView.extend({
 
             thisGroup.add(itemGroup);
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _enableHoverLink: function (itemGroup, pieceIndex) {
+    private _enableHoverLink(itemGroup: graphic.Group, pieceIndex: number) {
         itemGroup
             .on('mouseover', zrUtil.bind(onHoverLink, this, 'highlight'))
             .on('mouseout', zrUtil.bind(onHoverLink, this, 'downplay'));
 
-        function onHoverLink(method) {
+        function onHoverLink(this: PiecewiseVisualMapView, method?: 'highlight' | 'downplay') {
             var visualMapModel = this.visualMapModel;
 
+            // TODO: TYPE More detailed action types
             visualMapModel.option.hoverLink && this.api.dispatchAction({
                 type: method,
                 batch: helper.makeHighDownBatch(
@@ -122,12 +123,9 @@ var PiecewiseVisualMapView = VisualMapView.extend({
                 )
             });
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _getItemAlign: function () {
+    private _getItemAlign(): helper.ItemAlign {
         var visualMapModel = this.visualMapModel;
         var modelOption = visualMapModel.option;
 
@@ -143,12 +141,15 @@ var PiecewiseVisualMapView = VisualMapView.extend({
             }
             return align;
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _renderEndsText: function (group, text, itemSize, showLabel, itemAlign) {
+    private _renderEndsText(
+        group: graphic.Group,
+        text: string,
+        itemSize: number[],
+        showLabel: boolean,
+        itemAlign: helper.ItemAlign
+    ) {
         if (!text) {
             return;
         }
@@ -161,7 +162,7 @@ var PiecewiseVisualMapView = VisualMapView.extend({
                 x: showLabel ? (itemAlign === 'right' ? itemSize[0] : 0) : itemSize[0] / 2,
                 y: itemSize[1] / 2,
                 textVerticalAlign: 'middle',
-                textAlign: showLabel ? itemAlign : 'center',
+                textAlign: showLabel ? (itemAlign as TextAlign) : 'center',
                 text: text,
                 textFont: textStyleModel.getFont(),
                 textFill: textStyleModel.getTextColor()
@@ -169,13 +170,13 @@ var PiecewiseVisualMapView = VisualMapView.extend({
         }));
 
         group.add(itemGroup);
-    },
+    }
 
     /**
      * @private
      * @return {Object} {peiceList, endsText} The order is the same as screen pixel order.
      */
-    _getViewData: function () {
+    private _getViewData() {
         var visualMapModel = this.visualMapModel;
 
         var viewPieceList = zrUtil.map(visualMapModel.getPieceList(), function (piece, index) {
@@ -197,23 +198,25 @@ var PiecewiseVisualMapView = VisualMapView.extend({
         }
 
         return {viewPieceList: viewPieceList, endsText: endsText};
-    },
+    }
 
-    /**
-     * @private
-     */
-    _createItemSymbol: function (group, representValue, shapeParam) {
+    private _createItemSymbol(
+        group: graphic.Group,
+        representValue: number,
+        shapeParam: number[]
+    ) {
         group.add(createSymbol(
-            this.getControllerVisual(representValue, 'symbol'),
+            // symbol will be string
+            this.getControllerVisual(representValue, 'symbol') as string,
             shapeParam[0], shapeParam[1], shapeParam[2], shapeParam[3],
-            this.getControllerVisual(representValue, 'color')
+            // color will be string
+            this.getControllerVisual(representValue, 'color') as string
         ));
-    },
+    }
 
-    /**
-     * @private
-     */
-    _onItemClick: function (piece) {
+    private _onItemClick(
+        piece: VisualMappingOption['pieceList'][number]
+    ) {
         var visualMapModel = this.visualMapModel;
         var option = visualMapModel.option;
         var selected = zrUtil.clone(option.selected);
@@ -236,6 +239,8 @@ var PiecewiseVisualMapView = VisualMapView.extend({
             selected: selected
         });
     }
-});
+}
+
+ComponentView.registerClass(PiecewiseVisualMapView);
 
 export default PiecewiseVisualMapView;

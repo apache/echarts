@@ -179,7 +179,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
 
     targetVisuals = {}
 
-    controllerVisuals = {}
+    controllerVisuals = {} as ReturnType<typeof visualSolution.createVisualMappings>
 
     textStyleModel: Model<LabelOption>
 
@@ -393,7 +393,10 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
 
         var ecModel = this.ecModel;
         var thisOption = this.option;
-        var base = {inRange: thisOption.inRange, outOfRange: thisOption.outOfRange};
+        var base = {
+            inRange: thisOption.inRange,
+            outOfRange: thisOption.outOfRange
+        };
 
         var target = thisOption.target || (thisOption.target = {});
         var controller = thisOption.controller || (thisOption.controller = {});
@@ -409,7 +412,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         // completeInactive.call(this, target, 'outOfRange', 'inRange');
         completeController.call(this, controller);
 
-        function completeSingle(this: VisualMapModel, base?: VisualMapOption['target']) {
+        function completeSingle(this: VisualMapModel, base: VisualMapOption['target']) {
             // Compatible with ec2 dataRange.color.
             // The mapping order of dataRange.color is: [high value, ..., low value]
             // whereas inRange.color and outOfRange.color is [low value, ..., high value]
@@ -570,7 +573,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
 
-    defaultOption: VisualMapOption = {
+    static defaultOption: VisualMapOption = {
         show: true,
 
         zlevel: 0,

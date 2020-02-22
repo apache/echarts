@@ -25,6 +25,7 @@ import visualDefault from '../../visual/visualDefault';
 import {reformIntervals} from '../../util/number';
 import { VisualOptionPiecewise, BuiltinVisualProperty } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
+import ComponentModel from '../../model/Component';
 
 
 interface VisualPiece extends VisualOptionPiecewise {
@@ -212,7 +213,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         super.completeVisualOption.apply(this, arguments as any);
     }
 
-    _resetSelected(newOption: PiecewiseVisualMapOption, isInit?: boolean) {
+    private _resetSelected(newOption: PiecewiseVisualMapOption, isInit?: boolean) {
         var thisOption = this.option;
         var pieceList = this._pieceList;
 
@@ -260,10 +261,9 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     }
 
     /**
-     * @private
      * @return {string}
      */
-    _determineMode() {
+    private _determineMode() {
         var option = this.option;
 
         return option.pieces && option.pieces.length > 0
@@ -274,7 +274,6 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     }
 
     /**
-     * @public
      * @override
      */
     setSelected(selected: this['option']['selected']) {
@@ -282,7 +281,6 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     }
 
     /**
-     * @public
      * @override
      */
     getValueState(value: number): VisualState {
@@ -297,8 +295,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
 
     /**
      * @public
-     * @params {number} pieceIndex piece index in visualMapModel.getPieceList()
-     * @return {Array.<Object>} [{seriesId, dataIndex: <Array.<number>>}, ...]
+     * @param pieceIndex piece index in visualMapModel.getPieceList()
      */
     findTargetDataIndices(pieceIndex: number) {
         type DataIndices = {
@@ -330,7 +327,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
      * @param piece piece.value or piece.interval is required.
      * @return  Can be Infinity or -Infinity
      */
-    getRepresentValue<T extends InnerVisualPiece>(piece: T) {
+    getRepresentValue(piece: InnerVisualPiece) {
         var representValue;
         if (this.isCategory()) {
             representValue = piece.value;
@@ -346,8 +343,8 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
                     : (pieceInterval[0] + pieceInterval[1]) / 2;
             }
         }
-        //
-        return representValue as GetPieceValueType<T>;
+
+        return representValue;
     }
 
     getVisualMeta(
@@ -365,7 +362,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         function setStop(interval: [number, number], valueState?: VisualState) {
             var representValue = visualMapModel.getRepresentValue({
                 interval: interval
-            });// Not category
+            }) as number;// Not category
             if (!valueState) {
                 valueState = visualMapModel.getValueState(representValue);
             }
@@ -411,7 +408,9 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     }
 
 
-    static defaultOption: PiecewiseVisualMapOption = {
+    static defaultOption = zrUtil.merge(
+        zrUtil.clone(VisualMapModel.defaultOption),
+    {
         selected: null,
         minOpen: false,             // Whether include values that smaller than `min`.
         maxOpen: false,             // Whether include values that bigger than `max`.
@@ -428,7 +427,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         selectedMode: 'multiple',   // Can be 'multiple' or 'single'.
         itemGap: 10,                // The gap between two items, in px.
         hoverLink: true             // Enable hover highlight.
-    }
+    }) as PiecewiseVisualMapOption
 
 };
 
@@ -597,5 +596,7 @@ function normalizeReverse(thisOption: PiecewiseVisualMapOption, pieceList: Inner
             pieceList.reverse();
     }
 }
+
+ComponentModel.registerClass(PiecewiseModel);
 
 export default PiecewiseModel;

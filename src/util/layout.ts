@@ -334,9 +334,9 @@ export function getLayoutRect(
 export function positionElement(
     el: Element,
     positionInfo: BoxLayoutOptionMixin,
-    containerRect: RectLike,
-    margin: number[] | number,
-    opt: {
+    containerRect: {width: number, height: number},
+    margin?: number[] | number,
+    opt?: {
         hv: [1 | 0, 1 | 0],
         boundingMode: 'all' | 'raw'
     }

@@ -24,7 +24,8 @@ import axisDefault from './axisDefault';
 import ComponentModel from '../model/Component';
 import {
     getLayoutParams,
-    mergeLayoutParam
+    mergeLayoutParam,
+    fetchLayoutMode
 } from '../util/layout';
 import OrdinalMeta from '../data/OrdinalMeta';
 import { DimensionName, ComponentOption } from '../util/types';

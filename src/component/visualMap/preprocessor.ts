@@ -18,7 +18,6 @@
 */
 
 // @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 
 var each = zrUtil.each;
@@ -57,6 +56,6 @@ export default function (option) {
     });
 }
 
-function has(obj, name) {
+function has(obj: object, name: string) {
     return obj && obj.hasOwnProperty && obj.hasOwnProperty(name);
 }

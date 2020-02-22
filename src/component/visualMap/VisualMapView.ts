@@ -17,49 +17,46 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import * as graphic from '../../util/graphic';
+import {Group, Rect} from '../../util/graphic';
 import * as formatUtil from '../../util/format';
 import * as layout from '../../util/layout';
 import VisualMapping from '../../visual/VisualMapping';
+import ComponentView from '../../view/Component';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import VisualMapModel from './VisualMapModel';
+import { VisualOptionUnit, ColorString } from '../../util/types';
+import PiecewiseModel from './PiecewiseModel';
 
-export default echarts.extendComponentView({
+type VisualState = VisualMapModel['stateList'][number]
 
-    type: 'visualMap',
+class VisualMapView extends ComponentView {
+    static type = 'visualMap'
+    type = VisualMapView.type
 
-    /**
-     * @readOnly
-     * @type {Object}
-     */
-    autoPositionValues: {left: 1, right: 1, top: 1, bottom: 1},
+    autoPositionValues = {left: 1, right: 1, top: 1, bottom: 1} as const
 
-    init: function (ecModel, api) {
-        /**
-         * @readOnly
-         * @type {module:echarts/model/Global}
-         */
+    ecModel: GlobalModel
+
+    api: ExtensionAPI
+
+    visualMapModel: VisualMapModel
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.ecModel = ecModel;
-
-        /**
-         * @readOnly
-         * @type {module:echarts/ExtensionAPI}
-         */
         this.api = api;
-
-        /**
-         * @readOnly
-         * @type {module:echarts/component/visualMap/visualMapModel}
-         */
-        this.visualMapModel;
-    },
+    }
 
     /**
      * @protected
      */
-    render: function (visualMapModel, ecModel, api, payload) {
+    render(
+        visualMapModel: VisualMapModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: unknown    // TODO: TYPE
+    ) {
         this.visualMapModel = visualMapModel;
 
         if (visualMapModel.get('show') === false) {
@@ -67,18 +64,18 @@ export default echarts.extendComponentView({
             return;
         }
 
-        this.doRender.apply(this, arguments);
-    },
+        this.doRender(visualMapModel, ecModel, api, payload);
+    }
 
     /**
      * @protected
      */
-    renderBackground: function (group) {
+    renderBackground(group: Group) {
         var visualMapModel = this.visualMapModel;
         var padding = formatUtil.normalizeCssArray(visualMapModel.get('padding') || 0);
         var rect = group.getBoundingRect();
 
-        group.add(new graphic.Rect({
+        group.add(new Rect({
             z2: -1, // Lay background rect on the lowest layer.
             silent: true,
             shape: {
@@ -93,39 +90,47 @@ export default echarts.extendComponentView({
                 lineWidth: visualMapModel.get('borderWidth')
             }
         }));
-    },
+    }
 
     /**
      * @protected
-     * @param {number} targetValue can be Infinity or -Infinity
-     * @param {string=} visualCluster Only can be 'color' 'opacity' 'symbol' 'symbolSize'
-     * @param {Object} [opts]
-     * @param {string=} [opts.forceState] Specify state, instead of using getValueState method.
-     * @param {string=} [opts.convertOpacityToAlpha=false] For color gradient in controller widget.
+     * @param targetValue can be Infinity or -Infinity
+     * @param visualCluster Only can be 'color' 'opacity' 'symbol' 'symbolSize'
+     * @param opts
+     * @param opts.forceState Specify state, instead of using getValueState method.
+     * @param opts.convertOpacityToAlpha For color gradient in controller widget.
      * @return {*} Visual value.
      */
-    getControllerVisual: function (targetValue, visualCluster, opts) {
+    protected getControllerVisual(
+        targetValue: number,
+        visualCluster: 'color' | 'opacity' | 'symbol' | 'symbolSize',
+        opts?: {
+            forceState?: VisualState
+            convertOpacityToAlpha?: boolean
+        }
+    ) {
+
         opts = opts || {};
 
         var forceState = opts.forceState;
         var visualMapModel = this.visualMapModel;
-        var visualObj = {};
+        var visualObj: {[key in typeof visualCluster]?: VisualOptionUnit[key]} = {};
 
         // Default values.
         if (visualCluster === 'symbol') {
-            visualObj.symbol = visualMapModel.get('itemSymbol');
+            visualObj.symbol = (visualMapModel as PiecewiseModel).get('itemSymbol');
         }
         if (visualCluster === 'color') {
             var defaultColor = visualMapModel.get('contentColor');
-            visualObj.color = defaultColor;
+            visualObj.color = defaultColor as ColorString;
         }
 
-        function getter(key) {
+        function getter(key: typeof visualCluster) {
             return visualObj[key];
         }
 
-        function setter(key, value) {
-            visualObj[key] = value;
+        function setter(key: typeof visualCluster, value: any) {
+            (visualObj as any)[key] = value;
         }
 
         var mappings = visualMapModel.controllerVisuals[
@@ -147,12 +152,9 @@ export default echarts.extendComponentView({
         });
 
         return visualObj[visualCluster];
-    },
+    }
 
-    /**
-     * @protected
-     */
-    positionGroup: function (group) {
+    protected positionGroup(group: Group) {
         var model = this.visualMapModel;
         var api = this.api;
 
@@ -161,12 +163,16 @@ export default echarts.extendComponentView({
             model.getBoxLayoutParams(),
             {width: api.getWidth(), height: api.getHeight()}
         );
-    },
+    }
 
-    /**
-     * @protected
-     * @abstract
-     */
-    doRender: zrUtil.noop
+    protected doRender(
+        visualMapModel: VisualMapModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: unknown
+    ) {}
+}
 
-});
+ComponentView.registerClass(VisualMapView);
+
+export default VisualMapView;

@@ -50,7 +50,7 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { AnimationOptionMixin, LabelOption, AnimationDelayCallbackParam, DisplayState } from './types';
+import { AnimationOptionMixin, LabelOption, AnimationDelayCallbackParam, DisplayState, ECElement } from './types';
 import GlobalModel from '../model/Global';
 
 
@@ -1373,7 +1373,7 @@ export function groupTransition(
             if (oldEl) {
                 var newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
-                updateProps(el, newProp, animatableModel, el.dataIndex);
+                updateProps(el, newProp, animatableModel, (el as ECElement).dataIndex);
             }
         }
     });

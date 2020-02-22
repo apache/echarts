@@ -27,7 +27,9 @@ const paramsSet = [
     ['left', 'right', 'width'],
     ['top', 'bottom', 'height']
 ] as const;
-type LayoutKey = (typeof paramsSet)[number][number];
+export type ItemHorizontalAlign = typeof paramsSet[0][number];
+export type ItemVerticalAlign = typeof paramsSet[1][number];
+export type ItemAlign = ItemVerticalAlign | ItemHorizontalAlign;
 
 /**
  * @param visualMapModel
@@ -39,12 +41,12 @@ export function getItemAlign(
     visualMapModel: VisualMapModel,
     api: ExtensionAPI,
     itemSize: number[]
-) {
+): ItemAlign {
     var modelOption = visualMapModel.option;
     var itemAlign = modelOption.align;
 
     if (itemAlign != null && itemAlign !== 'auto') {
-        return itemAlign;
+        return itemAlign as ItemAlign;
     }
 
     // Auto decision align.
@@ -55,7 +57,7 @@ export function getItemAlign(
     var fakeValue = [0, null, 10];
 
     var layoutInput = {} as {
-        [key in LayoutKey]: number | string
+        [key in ItemAlign]: number | string
     };
     for (var i = 0; i < 3; i++) {
         layoutInput[paramsSet[1 - realIndex][i]] = fakeValue[i];
@@ -75,6 +77,8 @@ export function getItemAlign(
  * Prepare dataIndex for outside usage, where dataIndex means rawIndex, and
  * dataIndexInside means filtered index.
  */
+
+ // TODO: TYPE more specified payload types.
 export function makeHighDownBatch(batch: Payload['batch'], visualMapModel: VisualMapModel): Payload['batch'] {
     zrUtil.each(batch || [], function (batchItem) {
         if (batchItem.dataIndex != null) {

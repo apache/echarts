@@ -26,7 +26,7 @@ import ExtensionAPI from '../ExtensionAPI';
 import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
 import Element from 'zrender/src/Element';
 
-class Component {
+class ComponentView {
 
     // [Caution]: for compat the previous "class extend"
     // publich and protected fields must be initialized on
@@ -86,11 +86,11 @@ class Component {
     static registerClass: clazzUtil.ClassManager['registerClass'];
 };
 
-export type ComponentViewConstructor = typeof Component
+export type ComponentViewConstructor = typeof ComponentView
     & clazzUtil.ExtendableConstructor
     & clazzUtil.ClassManager;
 
-clazzUtil.enableClassExtend(Component as ComponentViewConstructor);
-clazzUtil.enableClassManagement(Component as ComponentViewConstructor, {registerWhenExtend: true});
+clazzUtil.enableClassExtend(ComponentView as ComponentViewConstructor);
+clazzUtil.enableClassManagement(ComponentView as ComponentViewConstructor, {registerWhenExtend: true});
 
-export default Component;
+export default ComponentView;

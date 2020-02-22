@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Calculate slider move result.
  * Usage:
@@ -26,20 +24,27 @@
  * maxSpan and the same as `Math.abs(handleEnd[1] - handleEnds[0])`.
  * (2) If handle0 is forbidden to cross handle1, set minSpan as `0`.
  *
- * @param {number} delta Move length.
- * @param {Array.<number>} handleEnds handleEnds[0] can be bigger then handleEnds[1].
+ * @param delta Move length.
+ * @param handleEnds handleEnds[0] can be bigger then handleEnds[1].
  *              handleEnds will be modified in this method.
- * @param {Array.<number>} extent handleEnds is restricted by extent.
+ * @param extent handleEnds is restricted by extent.
  *              extent[0] should less or equals than extent[1].
- * @param {number|string} handleIndex Can be 'all', means that both move the two handleEnds.
- * @param {number} [minSpan] The range of dataZoom can not be smaller than that.
+ * @param handleIndex Can be 'all', means that both move the two handleEnds.
+ * @param minSpan The range of dataZoom can not be smaller than that.
  *              If not set, handle0 and cross handle1. If set as a non-negative
  *              number (including `0`), handles will push each other when reaching
  *              the minSpan.
- * @param {number} [maxSpan] The range of dataZoom can not be larger than that.
- * @return {Array.<number>} The input handleEnds.
+ * @param maxSpan The range of dataZoom can not be larger than that.
+ * @return The input handleEnds.
  */
-export default function (delta, handleEnds, extent, handleIndex, minSpan, maxSpan) {
+export default function (
+    delta: number,
+    handleEnds: number[],
+    extent: number[],
+    handleIndex: 'all' | 0 | 1,
+    minSpan?: number,
+    maxSpan?: number
+): number[] {
 
     delta = delta || 0;
 
@@ -90,14 +95,14 @@ export default function (delta, handleEnds, extent, handleIndex, minSpan, maxSpa
     return handleEnds;
 }
 
-function getSpanSign(handleEnds, handleIndex) {
+function getSpanSign(handleEnds: number[], handleIndex: 0 | 1) {
     var dist = handleEnds[handleIndex] - handleEnds[1 - handleIndex];
     // If `handleEnds[0] === handleEnds[1]`, always believe that handleEnd[0]
     // is at left of handleEnds[1] for non-cross case.
     return {span: Math.abs(dist), sign: dist > 0 ? -1 : dist < 0 ? 1 : handleIndex ? -1 : 1};
 }
 
-function restrict(value, extend) {
+function restrict(value: number, extend: number[]) {
     return Math.min(
         extend[1] != null ? extend[1] : Infinity,
         Math.max(extend[0] != null ? extend[0] : -Infinity, value)

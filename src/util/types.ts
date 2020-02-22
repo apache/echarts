@@ -35,11 +35,12 @@ import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
 import List, {ListDimensionType} from '../data/List';
 import { Dictionary, ImageLike } from 'zrender/src/core/types';
-import { GradientObject } from 'zrender/src/graphic/Gradient';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import Source from '../data/Source';
 import { TooltipMarker } from './format';
 import { easingType } from 'zrender/src/animation/easing';
+import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
+import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
 
 
 
@@ -50,7 +51,7 @@ import { easingType } from 'zrender/src/animation/easing';
 export type RendererType = 'canvas' | 'svg';
 
 export type ColorString = string;
-export type ZRColor = ColorString | GradientObject | PatternObject
+export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject
 export type ZRLineType = 'solid' | 'dotted'
 export type ZRAlign = 'left' | 'center' | 'right'
 export type ZRVerticalAlign = 'top' | 'middle' | 'bottom'
@@ -655,7 +656,6 @@ export type VisualOptionLinear = Arrayable<VisualOptionUnit>
  */
 export type VisualOptionCategory = Arrayable<VisualOptionUnit> | Dictionaryable<VisualOptionUnit>
 
-export type VisualOption = VisualOptionFixed | VisualOptionLinear | VisualOptionCategory | VisualOptionPiecewise
 /**
  * All visual properties can be encoded.
  */

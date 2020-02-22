@@ -17,7 +17,18 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
+import {
+    each,
+    isObject,
+    isArray,
+    merge,
+    createHashMap,
+    HashMap,
+    map,
+    assert,
+    isString,
+    indexOf
+} from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel, { QueryConditionKindB } from '../model/Global';
 import ComponentModel from '../model/Component';
@@ -36,10 +47,6 @@ import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import AxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-
-var each = zrUtil.each;
-var isObject = zrUtil.isObject;
-var isArray = zrUtil.isArray;
 
 /**
  * Make the name displayable. But we should
@@ -170,7 +177,7 @@ export function mappingToExists<T extends MappingExistItem>(
     // update partial option but not be expected to change order.
     newCptOptions = (newCptOptions || []).slice();
 
-    var result: MappingResultItem<T>[] = zrUtil.map(exists || [], function (obj, index) {
+    var result: MappingResultItem<T>[] = map(exists || [], function (obj, index) {
         return {exist: obj};
     });
 
@@ -263,7 +270,7 @@ export function makeIdAndName(
     // to specify multi components (like series) by one name.
 
     // Ensure that each id is distinct.
-    var idMap = zrUtil.createHashMap();
+    var idMap = createHashMap();
 
     each(mapResult, function (item, index) {
         var existCpt = item.exist;
@@ -273,7 +280,7 @@ export function makeIdAndName(
     each(mapResult, function (item, index) {
         var opt = item.option;
 
-        zrUtil.assert(
+        assert(
             !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
             'id duplicates: ' + (opt && opt.id)
         );
@@ -345,7 +352,7 @@ export function isIdInner(cptOption: ComponentOption): boolean {
 }
 
 type BatchItem = {
-    seriesId: number,
+    seriesId: string,
     dataIndex: number[]
 };
 /**
@@ -420,15 +427,15 @@ export function queryDataIndex(data: List, payload: Payload): number | number[] 
         return payload.dataIndexInside;
     }
     else if (payload.dataIndex != null) {
-        return zrUtil.isArray(payload.dataIndex)
-            ? zrUtil.map(payload.dataIndex, function (value) {
+        return isArray(payload.dataIndex)
+            ? map(payload.dataIndex, function (value) {
                 return data.indexOfRawIndex(value);
             })
             : data.indexOfRawIndex(payload.dataIndex);
     }
     else if (payload.name != null) {
-        return zrUtil.isArray(payload.name)
-            ? zrUtil.map(payload.name, function (value) {
+        return isArray(payload.name)
+            ? map(payload.name, function (value) {
                 return data.indexOfName(value);
             })
             : data.indexOfName(payload.name);
@@ -552,7 +559,7 @@ export function parseFinder(
     opt?: {defaultMainType?: string, includeMainTypes?: string[]}
 ): ParsedModelFinder {
     var finder: ModelFinderObject;
-    if (zrUtil.isString(finderInput)) {
+    if (isString(finderInput)) {
         var obj = {};
         (obj as any)[finderInput + 'Index'] = 0;
         finder = obj;
@@ -589,7 +596,7 @@ export function parseFinder(
             || !queryType
             || value == null
             || (queryType === 'index' && value === 'none')
-            || (opt && opt.includeMainTypes && zrUtil.indexOf(opt.includeMainTypes, mainType) < 0)
+            || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
         ) {
             return;
         }
@@ -641,12 +648,12 @@ export function groupData<T>(
     getKey: (item: T) => string // return key
 ): {
     keys: string[],
-    buckets: zrUtil.HashMap<T[]> // hasmap key: the key returned by `getKey`.
+    buckets: HashMap<T[]> // hasmap key: the key returned by `getKey`.
 } {
-    var buckets = zrUtil.createHashMap<T[]>();
+    var buckets = createHashMap<T[]>();
     var keys = [] as string[];
 
-    zrUtil.each(array, function (item) {
+    each(array, function (item) {
         var key = getKey(item);
         (buckets.get(key)
             || (keys.push(key), buckets.set(key, []))
@@ -658,5 +665,5 @@ export function groupData<T>(
 
 export function mergeOption<T, K>(option1: T, option2: K): T & K {
     // See also `model/Component.ts#getDefaultOption`
-    return zrUtil.merge(zrUtil.merge({}, option1, true), option2, true);
+    return merge(merge({}, option1, true), option2, true);
 }

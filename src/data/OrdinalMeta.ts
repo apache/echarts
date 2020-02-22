@@ -57,6 +57,7 @@ class OrdinalMeta {
     };
 
     getOrdinal(category: OrdinalRawValue): OrdinalNumber {
+        // @ts-ignore
         return this._getOrCreateMap().get(category);
     }
 
@@ -91,12 +92,14 @@ class OrdinalMeta {
         }
 
         var map = this._getOrCreateMap();
+        // @ts-ignore
         index = map.get(category);
 
         if (index == null) {
             if (needCollect) {
                 index = this.categories.length;
                 this.categories[index] = category;
+                // @ts-ignore
                 map.set(category, index);
             }
             else {

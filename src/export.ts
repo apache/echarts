@@ -63,33 +63,35 @@ zrUtil.each(
 );
 export {ecUtil as util};
 
-var graphic = {};
+const GRAPHIC_KEYS = [
+    'extendShape', 'extendPath', 'makePath', 'makeImage',
+    'mergePath', 'resizePath', 'createIcon',
+    'setHoverStyle', 'setLabelStyle', 'setTextStyle', 'setText',
+    'getFont', 'updateProps', 'initProps', 'getTransform',
+    'clipPointsByRect', 'clipRectByRect',
+    'registerShape', 'getShapeClass',
+    'Group',
+    'Image',
+    'Text',
+    'Circle',
+    'Sector',
+    'Ring',
+    'Polygon',
+    'Polyline',
+    'Rect',
+    'Line',
+    'BezierCurve',
+    'Arc',
+    'IncrementalDisplayable',
+    'CompoundPath',
+    'LinearGradient',
+    'RadialGradient',
+    'BoundingRect'
+] as const;
+
+var graphic = {} as {[key in typeof GRAPHIC_KEYS[number]]: any};
 zrUtil.each(
-    [
-        'extendShape', 'extendPath', 'makePath', 'makeImage',
-        'mergePath', 'resizePath', 'createIcon',
-        'setHoverStyle', 'setLabelStyle', 'setTextStyle', 'setText',
-        'getFont', 'updateProps', 'initProps', 'getTransform',
-        'clipPointsByRect', 'clipRectByRect',
-        'registerShape', 'getShapeClass',
-        'Group',
-        'Image',
-        'Text',
-        'Circle',
-        'Sector',
-        'Ring',
-        'Polygon',
-        'Polyline',
-        'Rect',
-        'Line',
-        'BezierCurve',
-        'Arc',
-        'IncrementalDisplayable',
-        'CompoundPath',
-        'LinearGradient',
-        'RadialGradient',
-        'BoundingRect'
-    ],
+    GRAPHIC_KEYS,
     function (name) {
         (graphic as any)[name] = (graphicUtil as any)[name];
     }

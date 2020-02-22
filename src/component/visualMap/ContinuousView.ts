@@ -17,10 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
-import LinearGradient from 'zrender/src/graphic/LinearGradient';
+import LinearGradient, { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 import * as eventTool from 'zrender/src/core/event';
 import VisualMapView from './VisualMapView';
 import * as graphic from '../../util/graphic';
@@ -28,6 +26,14 @@ import * as numberUtil from '../../util/number';
 import sliderMove from '../helper/sliderMove';
 import * as helper from './helper';
 import * as modelUtil from '../../util/model';
+import ComponentView from '../../view/Component';
+import VisualMapModel from './VisualMapModel';
+import ContinuousModel from './ContinuousModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import Element, { ElementEvent } from 'zrender/src/Element';
+import { Dictionary, TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
+import { ColorString, Payload, ECElement } from '../../util/types';
 
 var linearMap = numberUtil.linearMap;
 var each = zrUtil.each;
@@ -38,6 +44,32 @@ var mathMax = Math.max;
 var HOVER_LINK_SIZE = 12;
 var HOVER_LINK_OUT = 6;
 
+type Orient = VisualMapModel['option']['orient']
+
+type ShapeStorage = {
+    handleThumbs: graphic.Polygon[]
+    handleLabelPoints: number[][]
+    handleLabels: graphic.Text[]
+
+    inRange: graphic.Polygon
+    outOfRange: graphic.Polygon
+
+    barGroup: graphic.Group
+
+    indicator: graphic.Polygon
+    indicatorLabel: graphic.Text
+    indicatorLabelPoint: number[]
+}
+
+type TargetDataIndices = ReturnType<ContinuousModel['findTargetDataIndices']>
+
+type BarVisual = {
+    barColor: LinearGradient,
+    barPoints: number[][]
+    handlesColor: ColorString[]
+}
+
+type Direction = 'left' | 'right' | 'top' | 'bottom';
 // Notice:
 // Any "interval" should be by the order of [low, high].
 // "handle0" (handleIndex === 0) maps to
@@ -46,72 +78,41 @@ var HOVER_LINK_OUT = 6;
 // high data value: this._dataInterval[1] and has high coord.
 // The logic of transform is implemented in this._createBarGroup.
 
-var ContinuousView = VisualMapView.extend({
+class ContinuousView extends VisualMapView {
+    static type = 'visualMap.continuous'
+    type = ContinuousView.type
 
-    type: 'visualMap.continuous',
+    visualMapModel: ContinuousModel
 
-    /**
-     * @override
-     */
-    init: function () {
+    private _shapes = {} as ShapeStorage
 
-        ContinuousView.superApply(this, 'init', arguments);
+    private _dataInterval: number[] = []
 
-        /**
-         * @private
-         */
-        this._shapes = {};
+    private _handleEnds: number[] = []
 
-        /**
-         * @private
-         */
-        this._dataInterval = [];
+    private _orient: Orient
 
-        /**
-         * @private
-         */
-        this._handleEnds = [];
+    private _useHandle: boolean
 
-        /**
-         * @private
-         */
-        this._orient;
+    private _hoverLinkDataIndices: TargetDataIndices = []
 
-        /**
-         * @private
-         */
-        this._useHandle;
+    private _dragging: boolean
 
-        /**
-         * @private
-         */
-        this._hoverLinkDataIndices = [];
+    private _hovering: boolean
 
-        /**
-         * @private
-         */
-        this._dragging;
 
-        /**
-         * @private
-         */
-        this._hovering;
-    },
-
-    /**
-     * @protected
-     * @override
-     */
-    doRender: function (visualMapModel, ecModel, api, payload) {
+    doRender(
+        visualMapModel: ContinuousModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: {type: string, from: string}
+    ) {
         if (!payload || payload.type !== 'selectDataRange' || payload.from !== this.uid) {
             this._buildView();
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _buildView: function () {
+    private _buildView() {
         this.group.removeAll();
 
         var visualMapModel = this.visualMapModel;
@@ -142,12 +143,9 @@ var ContinuousView = VisualMapView.extend({
         this._enableHoverLinkFromSeries();
 
         this.positionGroup(thisGroup);
-    },
+    }
 
-    /**
-     * @private
-     */
-    _renderEndsText: function (group, dataRangeText, endsIndex) {
+    private _renderEndsText(group: graphic.Group, dataRangeText: string[], endsIndex?: 0 | 1) {
         if (!dataRangeText) {
             return;
         }
@@ -167,7 +165,7 @@ var ContinuousView = VisualMapView.extend({
                 endsIndex === 0 ? -textGap : itemSize[1] + textGap
             ],
             barGroup
-        );
+        ) as number[];
         var align = this._applyTransform(
             endsIndex === 0 ? 'bottom' : 'top',
             barGroup
@@ -179,19 +177,16 @@ var ContinuousView = VisualMapView.extend({
             style: {
                 x: position[0],
                 y: position[1],
-                textVerticalAlign: orient === 'horizontal' ? 'middle' : align,
-                textAlign: orient === 'horizontal' ? align : 'center',
+                textVerticalAlign: orient === 'horizontal' ? 'middle' : align as TextVerticalAlign,
+                textAlign: orient === 'horizontal' ? align as TextAlign : 'center',
                 text: text,
                 textFont: textStyleModel.getFont(),
                 textFill: textStyleModel.getTextColor()
             }
         }));
-    },
+    }
 
-    /**
-     * @private
-     */
-    _renderBar: function (targetGroup) {
+    private _renderBar(targetGroup: graphic.Group) {
         var visualMapModel = this.visualMapModel;
         var shapes = this._shapes;
         var itemSize = visualMapModel.itemSize;
@@ -218,19 +213,22 @@ var ContinuousView = VisualMapView.extend({
             shapes.handleLabels = [];
             shapes.handleLabelPoints = [];
 
-            this._createHandle(barGroup, 0, itemSize, textSize, orient, itemAlign);
-            this._createHandle(barGroup, 1, itemSize, textSize, orient, itemAlign);
+            this._createHandle(barGroup, 0, itemSize, textSize, orient);
+            this._createHandle(barGroup, 1, itemSize, textSize, orient);
         }
 
         this._createIndicator(barGroup, itemSize, textSize, orient);
 
         targetGroup.add(barGroup);
-    },
+    }
 
-    /**
-     * @private
-     */
-    _createHandle: function (barGroup, handleIndex, itemSize, textSize, orient) {
+    private _createHandle(
+        barGroup: graphic.Group,
+        handleIndex: 0 | 1,
+        itemSize: number[],
+        textSize: number,
+        orient: Orient
+    ) {
         var onDrift = zrUtil.bind(this._dragHandle, this, handleIndex, false);
         var onDragEnd = zrUtil.bind(this._dragHandle, this, handleIndex, true);
         var handleThumb = createPolygon(
@@ -250,7 +248,7 @@ var ContinuousView = VisualMapView.extend({
         var handleLabel = new graphic.Text({
             draggable: true,
             drift: onDrift,
-            onmousemove: function (e) {
+            onmousemove(e) {
                 // Fot mobile devicem, prevent screen slider on the button.
                 eventTool.stop(e.event);
             },
@@ -276,12 +274,14 @@ var ContinuousView = VisualMapView.extend({
         shapes.handleThumbs[handleIndex] = handleThumb;
         shapes.handleLabelPoints[handleIndex] = handleLabelPoint;
         shapes.handleLabels[handleIndex] = handleLabel;
-    },
+    }
 
-    /**
-     * @private
-     */
-    _createIndicator: function (barGroup, itemSize, textSize, orient) {
+    private _createIndicator(
+        barGroup: graphic.Group,
+        itemSize: number[],
+        textSize: number,
+        orient: Orient
+    ) {
         var indicator = createPolygon([[0, 0]], 'move');
         indicator.position[0] = itemSize[0];
         indicator.attr({invisible: true, silent: true});
@@ -308,12 +308,15 @@ var ContinuousView = VisualMapView.extend({
         shapes.indicator = indicator;
         shapes.indicatorLabel = indicatorLabel;
         shapes.indicatorLabelPoint = indicatorLabelPoint;
-    },
+    }
 
-    /**
-     * @private
-     */
-    _dragHandle: function (handleIndex, isEnd, dx, dy) {
+    private _dragHandle(
+        handleIndex: 0 | 1 | 'all',
+        isEnd?: boolean,
+        // dx is event from ondragend if isEnd is true. It's not used
+        dx?: number | ElementEvent,
+        dy?: number
+    ) {
         if (!this._useHandle) {
             return;
         }
@@ -322,7 +325,7 @@ var ContinuousView = VisualMapView.extend({
 
         if (!isEnd) {
             // Transform dx, dy to bar coordination.
-            var vertex = this._applyTransform([dx, dy], this._shapes.barGroup, true);
+            var vertex = this._applyTransform([dx as number, dy], this._shapes.barGroup, true) as number[];
             this._updateInterval(handleIndex, vertex[1]);
 
             // Considering realtime, update view should be executed
@@ -344,14 +347,11 @@ var ContinuousView = VisualMapView.extend({
             !this._hovering && this._clearHoverLinkToSeries();
         }
         else if (useHoverLinkOnHandle(this.visualMapModel)) {
-            this._doHoverLinkToSeries(this._handleEnds[handleIndex], false);
+            this._doHoverLinkToSeries(this._handleEnds[handleIndex as 0 | 1], false);
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _resetInterval: function () {
+    private _resetInterval() {
         var visualMapModel = this.visualMapModel;
 
         var dataInterval = this._dataInterval = visualMapModel.getSelected();
@@ -362,7 +362,7 @@ var ContinuousView = VisualMapView.extend({
             linearMap(dataInterval[0], dataExtent, sizeExtent, true),
             linearMap(dataInterval[1], dataExtent, sizeExtent, true)
         ];
-    },
+    }
 
     /**
      * @private
@@ -370,7 +370,7 @@ var ContinuousView = VisualMapView.extend({
      * @param {number} dx
      * @param {number} dy
      */
-    _updateInterval: function (handleIndex, delta) {
+    private _updateInterval(handleIndex: 0 | 1 | 'all', delta: number) {
         delta = delta || 0;
         var visualMapModel = this.visualMapModel;
         var handleEnds = this._handleEnds;
@@ -391,12 +391,9 @@ var ContinuousView = VisualMapView.extend({
             linearMap(handleEnds[0], sizeExtent, dataExtent, true),
             linearMap(handleEnds[1], sizeExtent, dataExtent, true)
         ];
-    },
+    }
 
-    /**
-     * @private
-     */
-    _updateView: function (forSketch) {
+    private _updateView(forSketch?: boolean) {
         var visualMapModel = this.visualMapModel;
         var dataExtent = visualMapModel.getExtent();
         var shapes = this._shapes;
@@ -413,24 +410,26 @@ var ContinuousView = VisualMapView.extend({
 
         shapes.inRange
             .setStyle({
-                fill: visualInRange.barColor,
-                opacity: visualInRange.opacity
+                fill: visualInRange.barColor
+                // opacity: visualInRange.opacity
             })
             .setShape('points', visualInRange.barPoints);
         shapes.outOfRange
             .setStyle({
-                fill: visualOutOfRange.barColor,
-                opacity: visualOutOfRange.opacity
+                fill: visualOutOfRange.barColor
+                // opacity: visualOutOfRange.opacity
             })
             .setShape('points', visualOutOfRange.barPoints);
 
         this._updateHandle(inRangeHandleEnds, visualInRange);
-    },
+    }
 
-    /**
-     * @private
-     */
-    _createBarVisual: function (dataInterval, dataExtent, handleEnds, forceState) {
+    private _createBarVisual(
+        dataInterval: number[],
+        dataExtent: number[],
+        handleEnds: number[],
+        forceState: ContinuousModel['stateList'][number]
+    ): BarVisual {
         var opts = {
             forceState: forceState,
             convertOpacityToAlpha: true
@@ -438,8 +437,8 @@ var ContinuousView = VisualMapView.extend({
         var colorStops = this._makeColorGradient(dataInterval, opts);
 
         var symbolSizes = [
-            this.getControllerVisual(dataInterval[0], 'symbolSize', opts),
-            this.getControllerVisual(dataInterval[1], 'symbolSize', opts)
+            this.getControllerVisual(dataInterval[0], 'symbolSize', opts) as number,
+            this.getControllerVisual(dataInterval[1], 'symbolSize', opts) as number
         ];
         var barPoints = this._createBarPoints(handleEnds, symbolSizes);
 
@@ -451,21 +450,24 @@ var ContinuousView = VisualMapView.extend({
                 colorStops[colorStops.length - 1].color
             ]
         };
-    },
+    }
 
-    /**
-     * @private
-     */
-    _makeColorGradient: function (dataInterval, opts) {
+    private _makeColorGradient(
+        dataInterval: number[],
+        opts: {
+            forceState?: ContinuousModel['stateList'][number]
+            convertOpacityToAlpha?: boolean
+        }
+    ) {
         // Considering colorHue, which is not linear, so we have to sample
         // to calculate gradient color stops, but not only caculate head
         // and tail.
         var sampleNumber = 100; // Arbitrary value.
-        var colorStops = [];
+        var colorStops: LinearGradientObject['colorStops'] = [];
         var step = (dataInterval[1] - dataInterval[0]) / sampleNumber;
 
         colorStops.push({
-            color: this.getControllerVisual(dataInterval[0], 'color', opts),
+            color: this.getControllerVisual(dataInterval[0], 'color', opts) as ColorString,
             offset: 0
         });
 
@@ -475,23 +477,20 @@ var ContinuousView = VisualMapView.extend({
                 break;
             }
             colorStops.push({
-                color: this.getControllerVisual(currValue, 'color', opts),
+                color: this.getControllerVisual(currValue, 'color', opts) as ColorString,
                 offset: i / sampleNumber
             });
         }
 
         colorStops.push({
-            color: this.getControllerVisual(dataInterval[1], 'color', opts),
+            color: this.getControllerVisual(dataInterval[1], 'color', opts) as ColorString,
             offset: 1
         });
 
         return colorStops;
-    },
+    }
 
-    /**
-     * @private
-     */
-    _createBarPoints: function (handleEnds, symbolSizes) {
+    private _createBarPoints(handleEnds: number[], symbolSizes: number[]) {
         var itemSize = this.visualMapModel.itemSize;
 
         return [
@@ -500,12 +499,9 @@ var ContinuousView = VisualMapView.extend({
             [itemSize[0], handleEnds[1]],
             [itemSize[0] - symbolSizes[1], handleEnds[1]]
         ];
-    },
+    }
 
-    /**
-     * @private
-     */
-    _createBarGroup: function (itemAlign) {
+    private _createBarGroup(itemAlign: helper.ItemAlign) {
         var orient = this._orient;
         var inverse = this.visualMapModel.get('inverse');
 
@@ -518,12 +514,9 @@ var ContinuousView = VisualMapView.extend({
             ? {scale: itemAlign === 'left' ? [1, -1] : [-1, -1]}
             : {scale: itemAlign === 'left' ? [1, 1] : [-1, 1]}
         );
-    },
+    }
 
-    /**
-     * @private
-     */
-    _updateHandle: function (handleEnds, visualInRange) {
+    private _updateHandle(handleEnds: number[], visualInRange: BarVisual) {
         if (!this._useHandle) {
             return;
         }
@@ -553,19 +546,17 @@ var ContinuousView = VisualMapView.extend({
                         ? (handleIndex === 0 ? 'bottom' : 'top')
                         : 'left',
                     shapes.barGroup
-                )
+                ) as TextAlign
             });
         }, this);
-    },
+    }
 
-    /**
-     * @private
-     * @param {number} cursorValue
-     * @param {number} textValue
-     * @param {string} [rangeSymbol]
-     * @param {number} [halfHoverLinkSize]
-     */
-    _showIndicator: function (cursorValue, textValue, rangeSymbol, halfHoverLinkSize) {
+    private _showIndicator(
+        cursorValue: number,
+        textValue: number,
+        rangeSymbol?: string,
+        halfHoverLinkSize?: number
+    ) {
         var visualMapModel = this.visualMapModel;
         var dataExtent = visualMapModel.getExtent();
         var itemSize = visualMapModel.itemSize;
@@ -600,17 +591,14 @@ var ContinuousView = VisualMapView.extend({
         var orient = this._orient;
         indicatorLabel.setStyle({
             text: (rangeSymbol ? rangeSymbol : '') + visualMapModel.formatValueText(textValue),
-            textVerticalAlign: orient === 'horizontal' ? align : 'middle',
-            textAlign: orient === 'horizontal' ? 'center' : align,
+            textVerticalAlign: orient === 'horizontal' ? align as TextVerticalAlign : 'middle',
+            textAlign: orient === 'horizontal' ? 'center' : align as TextAlign,
             x: textPoint[0],
             y: textPoint[1]
         });
-    },
+    }
 
-    /**
-     * @private
-     */
-    _enableHoverLinkToSeries: function () {
+    private _enableHoverLinkToSeries() {
         var self = this;
         this._shapes.barGroup
 
@@ -638,12 +626,9 @@ var ContinuousView = VisualMapView.extend({
                 self._hovering = false;
                 !self._dragging && self._clearHoverLinkToSeries();
             });
-    },
+    }
 
-    /**
-     * @private
-     */
-    _enableHoverLinkFromSeries: function () {
+    private _enableHoverLinkFromSeries() {
         var zr = this.api.getZr();
 
         if (this.visualMapModel.option.hoverLink) {
@@ -653,12 +638,9 @@ var ContinuousView = VisualMapView.extend({
         else {
             this._clearHoverLinkFromSeries();
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _doHoverLinkToSeries: function (cursorPos, hoverOnBar) {
+    private _doHoverLinkToSeries(cursorPos: number, hoverOnBar?: boolean) {
         var visualMapModel = this.visualMapModel;
         var itemSize = visualMapModel.itemSize;
 
@@ -705,7 +687,7 @@ var ContinuousView = VisualMapView.extend({
         // handle, because the label on handle, which displays a exact value
         // but not range, might mislead users.
         var oldBatch = this._hoverLinkDataIndices;
-        var newBatch = [];
+        var newBatch: TargetDataIndices = [];
         if (hoverOnBar || useHoverLinkOnHandle(visualMapModel)) {
             newBatch = this._hoverLinkDataIndices = visualMapModel.findTargetDataIndices(valueRange);
         }
@@ -714,111 +696,105 @@ var ContinuousView = VisualMapView.extend({
 
         this._dispatchHighDown('downplay', helper.makeHighDownBatch(resultBatches[0], visualMapModel));
         this._dispatchHighDown('highlight', helper.makeHighDownBatch(resultBatches[1], visualMapModel));
-    },
+    }
 
-    /**
-     * @private
-     */
-    _hoverLinkFromSeriesMouseOver: function (e) {
+    private _hoverLinkFromSeriesMouseOver(e: ElementEvent) {
         var el = e.target;
         var visualMapModel = this.visualMapModel;
 
-        if (!el || el.dataIndex == null) {
+        if (!el || (el as ECElement).dataIndex == null) {
             return;
         }
 
-        var dataModel = this.ecModel.getSeriesByIndex(el.seriesIndex);
+        var dataModel = this.ecModel.getSeriesByIndex((el as ECElement).seriesIndex);
 
         if (!visualMapModel.isTargetSeries(dataModel)) {
             return;
         }
 
-        var data = dataModel.getData(el.dataType);
-        var value = data.get(visualMapModel.getDataDimension(data), el.dataIndex, true);
+        var data = dataModel.getData((el as ECElement).dataType);
+        var value = data.get(visualMapModel.getDataDimension(data), (el as ECElement).dataIndex) as number;
 
         if (!isNaN(value)) {
             this._showIndicator(value, value);
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _hideIndicator: function () {
+    private _hideIndicator() {
         var shapes = this._shapes;
         shapes.indicator && shapes.indicator.attr('invisible', true);
         shapes.indicatorLabel && shapes.indicatorLabel.attr('invisible', true);
-    },
+    }
 
-    /**
-     * @private
-     */
-    _clearHoverLinkToSeries: function () {
+    private _clearHoverLinkToSeries() {
         this._hideIndicator();
 
         var indices = this._hoverLinkDataIndices;
         this._dispatchHighDown('downplay', helper.makeHighDownBatch(indices, this.visualMapModel));
 
         indices.length = 0;
-    },
+    }
 
-    /**
-     * @private
-     */
-    _clearHoverLinkFromSeries: function () {
+    private _clearHoverLinkFromSeries() {
         this._hideIndicator();
 
         var zr = this.api.getZr();
         zr.off('mouseover', this._hoverLinkFromSeriesMouseOver);
         zr.off('mouseout', this._hideIndicator);
-    },
-
-    /**
-     * @private
-     */
-    _applyTransform: function (vertex, element, inverse, global) {
+    }
+    private _applyTransform(vertex: number[], element: Element, inverse?: boolean, global?: boolean): number[]
+    private _applyTransform(vertex: Direction, element: Element, inverse?: boolean, global?: boolean): Direction
+    private _applyTransform(
+        vertex: number[] | Direction,
+        element: Element,
+        inverse?: boolean,
+        global?: boolean
+    ) {
         var transform = graphic.getTransform(element, global ? null : this.group);
 
-        return graphic[
-            zrUtil.isArray(vertex) ? 'applyTransform' : 'transformDirection'
-        ](vertex, transform, inverse);
-    },
+        return zrUtil.isArray(vertex)
+            ? graphic.applyTransform(vertex, transform, inverse)
+            : graphic.transformDirection(vertex, transform, inverse);
+    }
 
-    /**
-     * @private
-     */
-    _dispatchHighDown: function (type, batch) {
+ // TODO: TYPE more specified payload types.
+    private _dispatchHighDown(type: 'highlight' | 'downplay', batch: Payload['batch']) {
         batch && batch.length && this.api.dispatchAction({
             type: type,
             batch: batch
         });
-    },
+    }
 
     /**
      * @override
      */
-    dispose: function () {
-        this._clearHoverLinkFromSeries();
-        this._clearHoverLinkToSeries();
-    },
-
-    /**
-     * @override
-     */
-    remove: function () {
+    dispose() {
         this._clearHoverLinkFromSeries();
         this._clearHoverLinkToSeries();
     }
 
-});
+    /**
+     * @override
+     */
+    remove() {
+        this._clearHoverLinkFromSeries();
+        this._clearHoverLinkToSeries();
+    }
 
-function createPolygon(points, cursor, onDrift, onDragEnd) {
+}
+
+function createPolygon(
+    points?: number[][],
+    cursor?: string,
+    onDrift?: (x: number, y: number) => void,
+    onDragEnd?: () => void
+) {
     return new graphic.Polygon({
         shape: {points: points},
         draggable: !!onDrift,
         cursor: cursor,
         drift: onDrift,
-        onmousemove: function (e) {
+        onmousemove(e) {
             // Fot mobile devicem, prevent screen slider on the button.
             eventTool.stop(e.event);
         },
@@ -826,13 +802,13 @@ function createPolygon(points, cursor, onDrift, onDragEnd) {
     });
 }
 
-function createHandlePoints(handleIndex, textSize) {
+function createHandlePoints(handleIndex: 0 | 1, textSize: number) {
     return handleIndex === 0
         ? [[0, 0], [textSize, 0], [textSize, -textSize]]
         : [[0, 0], [textSize, 0], [textSize, textSize]];
 }
 
-function createIndicatorPoints(isRange, halfHoverLinkSize, pos, extentMax) {
+function createIndicatorPoints(isRange: boolean, halfHoverLinkSize: number, pos: number, extentMax: number) {
     return isRange
         ? [ // indicate range
             [0, -mathMin(halfHoverLinkSize, mathMax(pos, 0))],
@@ -844,7 +820,7 @@ function createIndicatorPoints(isRange, halfHoverLinkSize, pos, extentMax) {
         ];
 }
 
-function getHalfHoverLinkSize(visualMapModel, dataExtent, sizeExtent) {
+function getHalfHoverLinkSize(visualMapModel: ContinuousModel, dataExtent: number[], sizeExtent: number[]) {
     var halfHoverLinkSize = HOVER_LINK_SIZE / 2;
     var hoverLinkDataSize = visualMapModel.get('hoverLinkDataSize');
     if (hoverLinkDataSize) {
@@ -853,13 +829,15 @@ function getHalfHoverLinkSize(visualMapModel, dataExtent, sizeExtent) {
     return halfHoverLinkSize;
 }
 
-function useHoverLinkOnHandle(visualMapModel) {
+function useHoverLinkOnHandle(visualMapModel: ContinuousModel) {
     var hoverLinkOnHandle = visualMapModel.get('hoverLinkOnHandle');
     return !!(hoverLinkOnHandle == null ? visualMapModel.get('realtime') : hoverLinkOnHandle);
 }
 
-function getCursor(orient) {
+function getCursor(orient: Orient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
+
+ComponentView.registerClass(ContinuousView);
 
 export default ContinuousView;

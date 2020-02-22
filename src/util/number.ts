@@ -43,8 +43,8 @@ function _trim(str: string): string {
  */
 export function linearMap(
     val: number,
-    domain: [number, number],
-    range: [number, number],
+    domain: number[],
+    range: number[],
     clamp?: boolean
 ): number {
     var subDomain = domain[1] - domain[0];

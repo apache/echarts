@@ -259,11 +259,13 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         };
     }
 
-    static defaultOption: ContinousVisualMapOption = {
+    static defaultOption = zrUtil.merge(
+        zrUtil.clone(VisualMapModel.defaultOption),
+    {
         align: 'auto',           // 'auto', 'left', 'right', 'top', 'bottom'
         calculable: false,
         hoverLink: true
-    }
+    }) as ContinousVisualMapOption
 }
 
 
