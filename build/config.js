@@ -30,7 +30,7 @@ const fs = require('fs');
 const progress = require('./progress');
 
 function preparePlugins(
-    {min, lang, sourcemap, removeDev, addBundleVersion, totalFiles},
+    {min, lang, sourcemap, removeDev, addBundleVersion, totalFiles, clean},
     {include, exclude}
 ) {
     assert(include);
@@ -39,6 +39,10 @@ function preparePlugins(
     const zrRealPath = fs.realpathSync(zrNodeModulePath);
     if (zrRealPath !== zrNodeModulePath) {
         include.push(zrRealPath + '/**/*.ts');
+    }
+
+    if (clean) {
+        console.log('Built in clean mode without cache.');
     }
 
     let plugins = [
@@ -57,6 +61,7 @@ function preparePlugins(
                 // include: include,
                 // exclude: exclude || []
             },
+            clean: clean || false,
             include: include,
             exclude: exclude || []
         }),

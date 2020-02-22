@@ -119,6 +119,10 @@ async function run() {
             '-o, --output <output file path>',
             'If output file path is specified, input file path must be specified too.'
         )
+        .option(
+            '--clean',
+            'If cleaning build without cache. Maybe useful if some unexpected happens.'
+        )
         // .option(
         //     '--zrender <zrender>',
         //     'Local zrender path. Used when you want to use develop version of zrender instead of npm version.'
@@ -138,7 +142,10 @@ async function run() {
         format: commander.format,
         sourcemap: commander.sourcemap,
         removeDev: commander.removedev,
-        addBundleVersion: isWatch
+        addBundleVersion: isWatch,
+        // Force to disable cache in release build.
+        // TODO npm run build also disable cache?
+        clean: commander.clean || isRelease
     };
 
     validateIO(opt.input, opt.output);

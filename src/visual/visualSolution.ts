@@ -25,7 +25,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import VisualMapping, { VisualMappingOption } from './VisualMapping';
 import { Dictionary } from 'zrender/src/core/types';
 import {
-    VisualOption,
     BuiltinVisualProperty,
     ParsedDataValue,
     DimensionLoose,
@@ -37,7 +36,13 @@ var each = zrUtil.each;
 
 type WithKey<T extends string, S> = { [key in T]?: S}
 type VisualMappingCollection<VisualState extends string>
-    = WithKey<VisualState, WithKey<BuiltinVisualProperty, VisualMapping>>
+    = {
+        [key in VisualState]?: {
+            [key in BuiltinVisualProperty]?: VisualMapping
+        } & {
+            __alphaForOpacity?: VisualMapping
+        }
+    }
 
 function hasKeys(obj: Dictionary<any>) {
     if (obj) {
@@ -49,8 +54,11 @@ function hasKeys(obj: Dictionary<any>) {
     }
 }
 
+type VisualOption = {[key in BuiltinVisualProperty]?: any};
+
+
 export function createVisualMappings<VisualState extends string>(
-    option: Dictionary<VisualOption>,
+    option: WithKey<VisualState, VisualOption>,
     stateList: readonly VisualState[],
     supplementVisualOption: (mappingOption: VisualMappingOption, state: string) => void
 ) {
@@ -59,7 +67,7 @@ export function createVisualMappings<VisualState extends string>(
     each(stateList, function (state) {
         var mappings = visualMappings[state] = createMappings();
 
-        each(option[state], function (visualData: VisualMappingOption['visual'], visualType: BuiltinVisualProperty) {
+        each(option[state], function (visualData: VisualOption, visualType: BuiltinVisualProperty) {
             if (!VisualMapping.isValidType(visualType)) {
                 return;
             }
