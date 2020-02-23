@@ -20,7 +20,7 @@
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {getTooltipMarker, formatTpl} from '../../util/format';
 import { getTooltipRenderMode } from '../../util/model';
-import { DataHost, DisplayState, TooltipRenderMode, DataParamsUserOutput } from '../../util/types';
+import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams } from '../../util/types';
 import GlobalModel from '../Global';
 import Element from 'zrender/src/Element';
 
@@ -46,7 +46,7 @@ class DataFormatMixin {
         dataIndex: number,
         dataType?: string,
         el?: Element // May be used in override.
-    ): DataParamsUserOutput {
+    ): CallbackDataParams {
 
         var data = this.getData(dataType);
         var rawValue = this.getRawValue(dataIndex, dataType);

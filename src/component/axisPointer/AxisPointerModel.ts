@@ -17,19 +17,131 @@
 * under the License.
 */
 
-import * as echarts from '../../echarts';
+import ComponentModel from '../../model/Component';
+import {
+    ComponentOption,
+    OptionDataValue,
+    LineStyleOption,
+    AreaStyleOption,
+    LabelOption,
+    ZREasing,
+    ColorString,
+    ShadowOptionMixin
+} from '../../util/types';
 
-var AxisPointerModel = echarts.extendComponentModel({
+interface AxisInfo {
+    axisIndex: number
+    axisName: string
+    axisId: string
+}
 
-    type: 'axisPointer',
+interface AxisPointerLink {
+    xAxisIndex?: number[] | 'all'
+    yAxisIndex?: number[] | 'all'
+    xAxisId?: string[]
+    yAxisId?: string[]
+    xAxisName?: string[] | string
+    yAxisName?: string[] | string
 
-    coordSysAxesInfo: null,
+    radiusAxisIndex?: number[] | 'all'
+    angleAxisIndex?: number[] | 'all'
+    radiusAxisId?: string[]
+    angleAxisId?: string[]
+    radiusAxisName?: string[] | string
+    angleAxisName?: string[] | string
 
-    defaultOption: {
+    singleAxisIndex?: number[] | 'all'
+    singleAxisId?: string[]
+    singleAxisName?: string[] | string
+
+    mapper?(
+        sourceVal: OptionDataValue,
+        sourceAxisInfo: AxisInfo,
+        targetAxisInfo: AxisInfo
+    ): OptionDataValue
+}
+
+export interface AxisPointerOption extends ComponentOption {
+
+    show?: boolean | 'auto'
+
+    triggerOn?: 'click' | 'mousemove' | 'none' | 'mousemove|click'
+
+    type?: 'line' | 'shadow'
+
+    snap?: boolean
+
+    triggerTooltip?: boolean
+
+    /**
+     * current value. When using axisPointer.handle, value can be set to define the initail position of axisPointer.
+     */
+    value?: OptionDataValue
+
+    status?: 'show' | 'hide'
+
+    // [group0, group1, ...]
+    // Each group can be: {
+    //      mapper: function () {},
+    //      singleTooltip: 'multiple',  // 'multiple' or 'single'
+    //      xAxisId: ...,
+    //      yAxisName: ...,
+    //      angleAxisIndex: ...
+    // }
+    // mapper: can be ignored.
+    //      input: {axisInfo, value}
+    //      output: {axisInfo, value}
+    link?: AxisPointerLink[]
+
+    label?: LabelOption & {
+        precision?: 'auto' | string
+        margin?: number
+    }
+    animation?: boolean | 'auto'
+    animationDurationUpdate?: number
+    animationEasingUpdate?: ZREasing
+
+    /**
+     * Available when type is 'line'
+     */
+    lineStyle?: LineStyleOption
+    /**
+     * Available when type is 'shadow'
+     */
+    shadowStyle?: AreaStyleOption
+
+    handle?: {
+        show?: boolean
+        icon?: string
+        /**
+         * The size of the handle
+         */
+        size?: number | number[]
+        /**
+         * Distance from handle center to axis.
+         */
+        margin?: number
+
+        color?: ColorString
+
+        /**
+         * Throttle for mobile performance
+         */
+        throttle?: number
+    } & ShadowOptionMixin
+}
+
+
+class AxisPointerModel extends ComponentModel<AxisPointerOption> {
+
+    static type = 'axisPointer' as const
+    type = AxisPointerModel.type
+
+    // coordSysAxesInfo
+
+    static defaultOption: AxisPointerOption = {
         // 'auto' means that show when triggered by tooltip or handle.
         show: 'auto',
-        // 'click' | 'mousemove' | 'none'
-        triggerOn: null, // set default in AxisPonterView.js
 
         zlevel: 0,
         z: 50,
@@ -43,17 +155,6 @@ var AxisPointerModel = echarts.extendComponentModel({
         value: null,
         status: null, // Init value depends on whether handle is used.
 
-        // [group0, group1, ...]
-        // Each group can be: {
-        //      mapper: function () {},
-        //      singleTooltip: 'multiple',  // 'multiple' or 'single'
-        //      xAxisId: ...,
-        //      yAxisName: ...,
-        //      angleAxisIndex: ...
-        // }
-        // mapper: can be ignored.
-        //      input: {axisInfo, value}
-        //      output: {axisInfo, value}
         link: [],
 
         // Do not set 'auto' here, otherwise global animation: false
@@ -109,7 +210,8 @@ var AxisPointerModel = echarts.extendComponentModel({
             throttle: 40
         }
     }
+}
 
-});
+ComponentModel.registerClass(AxisPointerModel);
 
 export default AxisPointerModel;

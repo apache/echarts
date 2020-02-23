@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // FIXME Better way to pack data in graphic element
 
 import * as echarts from '../echarts';

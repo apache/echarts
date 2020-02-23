@@ -35,7 +35,7 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    DimensionIndexLoose, OptionDataItem, OptionDataPrimitive
+    DimensionIndexLoose, OptionDataItem, OptionDataValue
 } from '../../util/types';
 import List from '../List';
 
@@ -144,8 +144,8 @@ export class DefaultDataProvider implements DataProvider {
                 count: function (this: DefaultDataProvider): number {
                     return Math.max(0, (this._data as OptionDataItem[][]).length - this._source.startIndex);
                 },
-                getItem: function (this: DefaultDataProvider, idx: number): OptionDataPrimitive[] {
-                    return (this._data as OptionDataPrimitive[][])[idx + this._source.startIndex];
+                getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
+                    return (this._data as OptionDataValue[][])[idx + this._source.startIndex];
                 },
                 appendData: appendDataSimply
             },
@@ -153,13 +153,13 @@ export class DefaultDataProvider implements DataProvider {
             [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: {
                 pure: true,
                 count: function (this: DefaultDataProvider): number {
-                    var row = (this._data as OptionDataPrimitive[][])[0];
+                    var row = (this._data as OptionDataValue[][])[0];
                     return row ? Math.max(0, row.length - this._source.startIndex) : 0;
                 },
-                getItem: function (this: DefaultDataProvider, idx: number): OptionDataPrimitive[] {
+                getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
                     idx += this._source.startIndex;
                     var item = [];
-                    var data = this._data as OptionDataPrimitive[][];
+                    var data = this._data as OptionDataValue[][];
                     for (var i = 0; i < data.length; i++) {
                         var row = data[i];
                         item.push(row ? row[idx] : null);
@@ -182,20 +182,20 @@ export class DefaultDataProvider implements DataProvider {
                 pure: true,
                 count: function (this: DefaultDataProvider): number {
                     var dimName = this._source.dimensionsDefine[0].name;
-                    var col = (this._data as Dictionary<OptionDataPrimitive[]>)[dimName];
+                    var col = (this._data as Dictionary<OptionDataValue[]>)[dimName];
                     return col ? col.length : 0;
                 },
-                getItem: function (this: DefaultDataProvider, idx: number): OptionDataPrimitive[] {
+                getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
                     var item = [];
                     var dims = this._source.dimensionsDefine;
                     for (var i = 0; i < dims.length; i++) {
-                        var col = (this._data as Dictionary<OptionDataPrimitive[]>)[dims[i].name];
+                        var col = (this._data as Dictionary<OptionDataValue[]>)[dims[i].name];
                         item.push(col ? col[idx] : null);
                     }
                     return item;
                 },
-                appendData: function (this: DefaultDataProvider, newData: Dictionary<OptionDataPrimitive[]>) {
-                    var data = this._data as Dictionary<OptionDataPrimitive[]>;
+                appendData: function (this: DefaultDataProvider, newData: Dictionary<OptionDataValue[]>) {
+                    var data = this._data as Dictionary<OptionDataValue[]>;
                     each(newData, function (newCol, key) {
                         var oldCol = data[key] || (data[key] = []);
                         for (var i = 0; i < (newCol || []).length; i++) {
@@ -272,15 +272,15 @@ type RawValueGetter = (
     dimName: DimensionName
     // If dimIndex not provided, return OptionDataItem.
     // If dimIndex provided, return OptionDataPrimitive.
-) => OptionDataPrimitive | OptionDataItem;
+) => OptionDataValue | OptionDataItem;
 
 var rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
 
     [SOURCE_FORMAT_ARRAY_ROWS]: getRawValueSimply,
 
     [SOURCE_FORMAT_OBJECT_ROWS]: function (
-        dataItem: Dictionary<OptionDataPrimitive>, dataIndex: number, dimIndex: number, dimName: string
-    ): OptionDataPrimitive | Dictionary<OptionDataPrimitive> {
+        dataItem: Dictionary<OptionDataValue>, dataIndex: number, dimIndex: number, dimName: string
+    ): OptionDataValue | Dictionary<OptionDataValue> {
         return dimIndex != null ? dataItem[dimName] : dataItem;
     },
 
@@ -288,7 +288,7 @@ var rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
 
     [SOURCE_FORMAT_ORIGINAL]: function (
         dataItem: OptionDataItem, dataIndex: number, dimIndex: number, dimName: string
-    ): OptionDataPrimitive | OptionDataItem {
+    ): OptionDataValue | OptionDataItem {
         // FIXME: In some case (markpoint in geo (geo-map.html)),
         // dataItem is {coord: [...]}
         var value = getDataItemValue(dataItem);
@@ -301,8 +301,8 @@ var rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
 };
 
 function getRawValueSimply(
-    dataItem: ArrayLike<OptionDataPrimitive>, dataIndex: number, dimIndex: number, dimName: string
-): OptionDataPrimitive | ArrayLike<OptionDataPrimitive> {
+    dataItem: ArrayLike<OptionDataValue>, dataIndex: number, dimIndex: number, dimName: string
+): OptionDataValue | ArrayLike<OptionDataValue> {
     return dimIndex != null ? dataItem[dimIndex] : dataItem;
 }
 
@@ -370,6 +370,6 @@ export function retrieveRawAttr(data: List, dataIndex: number, attr: string): an
         dataItem = null;
     }
     if (dataItem) {
-        return (dataItem as Dictionary<OptionDataPrimitive>)[attr];
+        return (dataItem as Dictionary<OptionDataValue>)[attr];
     }
 }

@@ -36,7 +36,7 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, ECElement, DimensionLoose, OptionDataItem,
-    ParsedDataValue, ParsedDataNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
+    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -82,9 +82,9 @@ type DimValueGetter = (
     dimName: DimensionName,
     dataIndex: number,
     dimIndex: DimensionIndex
-) => ParsedDataValue;
+) => ParsedValue;
 
-type DataValueChunk = ArrayLike<ParsedDataValue>;
+type DataValueChunk = ArrayLike<ParsedValue>;
 type DataStorage = {[dimName: string]: DataValueChunk[]};
 type NameRepeatCount = {[name: string]: number};
 
@@ -93,21 +93,21 @@ type ItrParamDims = DimensionLoose | Array<DimensionLoose>;
 // If Ctx not specified, use List as Ctx
 type CtxOrList<Ctx> = unknown extends Ctx ? List : Ctx;
 type EachCb0<Ctx> = (this: CtxOrList<Ctx>, idx: number) => void;
-type EachCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, idx: number) => void;
-type EachCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, y: ParsedDataValue, idx: number) => void;
+type EachCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, idx: number) => void;
+type EachCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, y: ParsedValue, idx: number) => void;
 type EachCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => void;
 type FilterCb0<Ctx> = (this: CtxOrList<Ctx>, idx: number) => boolean;
-type FilterCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, idx: number) => boolean;
-type FilterCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, y: ParsedDataValue, idx: number) => boolean;
+type FilterCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, idx: number) => boolean;
+type FilterCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, y: ParsedValue, idx: number) => boolean;
 type FilterCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => boolean;
 type MapArrayCb0<Ctx> = (this: CtxOrList<Ctx>, idx: number) => any;
-type MapArrayCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, idx: number) => any;
-type MapArrayCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, y: ParsedDataValue, idx: number) => any;
+type MapArrayCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, idx: number) => any;
+type MapArrayCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, y: ParsedValue, idx: number) => any;
 type MapArrayCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => any;
-type MapCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, idx: number) => ParsedDataValue | ParsedDataValue[];
-type MapCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedDataValue, y: ParsedDataValue, idx: number) =>
-    ParsedDataValue | ParsedDataValue[];
-type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedDataValue | ParsedDataValue[];
+type MapCb1<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, idx: number) => ParsedValue | ParsedValue[];
+type MapCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, y: ParsedValue, idx: number) =>
+    ParsedValue | ParsedValue[];
+type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedValue | ParsedValue[];
 
 
 
@@ -482,7 +482,7 @@ class List <HostModel extends Model = Model> {
                 var dim = dimensions[k];
                 var val = this._dimValueGetterArrayRows(
                     values[sourceIdx] || emptyDataItem, dim, sourceIdx, k
-                ) as ParsedDataNumeric;
+                ) as ParsedValueNumeric;
                 storage[dim][chunkIndex][chunkOffset] = val;
 
                 var dimRawExtent = rawExtent[dim];
@@ -562,7 +562,7 @@ class List <HostModel extends Model = Model> {
                 var dim = dimensions[k];
                 var dimStorage = storage[dim][chunkIndex];
                 // PENDING NULL is empty or zero
-                var val = this._dimValueGetter(dataItem, dim, idx, k) as ParsedDataNumeric;
+                var val = this._dimValueGetter(dataItem, dim, idx, k) as ParsedValueNumeric;
                 dimStorage[chunkOffset] = val;
 
                 var dimRawExtent = rawExtent[dim];
@@ -665,7 +665,7 @@ class List <HostModel extends Model = Model> {
      * Get value. Return NaN if idx is out of range.
      * @param dim Dim must be concrete name.
      */
-    get(dim: DimensionName, idx: number): ParsedDataValue {
+    get(dim: DimensionName, idx: number): ParsedValue {
         if (!(idx >= 0 && idx < this._count)) {
             return NaN;
         }
@@ -707,7 +707,7 @@ class List <HostModel extends Model = Model> {
     /**
      * @param dim concrete dim
      */
-    getByRawIndex(dim: DimensionName, rawIdx: number): ParsedDataValue {
+    getByRawIndex(dim: DimensionName, rawIdx: number): ParsedValue {
         if (!(rawIdx >= 0 && rawIdx < this._rawCount)) {
             return NaN;
         }
@@ -727,7 +727,7 @@ class List <HostModel extends Model = Model> {
      * FIXME Use `get` on chrome maybe slow(in filterSelf and selectRange).
      * Hack a much simpler _getFast
      */
-    private _getFast(dim: DimensionName, rawIdx: number): ParsedDataValue {
+    private _getFast(dim: DimensionName, rawIdx: number): ParsedValue {
         var chunkIndex = Math.floor(rawIdx / this._chunkSize);
         var chunkOffset = rawIdx % this._chunkSize;
         var chunkStore = this._storage[dim][chunkIndex];
@@ -738,9 +738,9 @@ class List <HostModel extends Model = Model> {
      * Get value for multi dimensions.
      * @param dimensions If ignored, using all dimensions.
      */
-    getValues(idx: number): ParsedDataValue[];
-    getValues(dimensions: DimensionName[], idx: number): ParsedDataValue[];
-    getValues(dimensions: DimensionName[] | number, idx?: number): ParsedDataValue[] {
+    getValues(idx: number): ParsedValue[];
+    getValues(dimensions: DimensionName[], idx: number): ParsedValue[];
+    getValues(dimensions: DimensionName[] | number, idx?: number): ParsedValue[] {
         var values = [];
 
         if (!zrUtil.isArray(dimensions)) {
@@ -813,7 +813,7 @@ class List <HostModel extends Model = Model> {
 
         for (var i = 0; i < currEnd; i++) {
             // var value = stack ? this.get(dim, i, true) : this._getFast(dim, this.getRawIndex(i));
-            var value = this._getFast(dim, this.getRawIndex(i)) as ParsedDataNumeric;
+            var value = this._getFast(dim, this.getRawIndex(i)) as ParsedValueNumeric;
             value < min && (min = value);
             value > max && (max = value);
         }
@@ -875,7 +875,7 @@ class List <HostModel extends Model = Model> {
      * Get median of data in one dimension
      */
     getMedian(dim: DimensionLoose): number {
-        var dimDataArray: ParsedDataValue[] = [];
+        var dimDataArray: ParsedValue[] = [];
         // map all data of one dimension
         this.each(dim, function (val) {
             if (!isNaN(val as number)) {
@@ -1496,8 +1496,8 @@ class List <HostModel extends Model = Model> {
     downSample(
         dimension: DimensionName,
         rate: number,
-        sampleValue: (frameValues: ParsedDataValue[]) => ParsedDataNumeric,
-        sampleIndex: (frameValues: ParsedDataValue[], value: ParsedDataNumeric) => number
+        sampleValue: (frameValues: ParsedValue[]) => ParsedValueNumeric,
+        sampleIndex: (frameValues: ParsedValue[], value: ParsedValueNumeric) => number
     ): List {
         var list = cloneListForMapAndSample(this, [dimension]);
         var targetStorage = list._storage;
@@ -1820,7 +1820,7 @@ class List <HostModel extends Model = Model> {
 
             objectRows: function (
                 this: List, dataItem: Dictionary<any>, dimName: string, dataIndex: number, dimIndex: number
-            ): ParsedDataValue {
+            ): ParsedValue {
                 return convertDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
             },
 
@@ -1828,7 +1828,7 @@ class List <HostModel extends Model = Model> {
 
             original: function (
                 this: List, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
-            ): ParsedDataValue {
+            ): ParsedValue {
                 // Performance sensitive, do not use modelUtil.getDataItemValue.
                 // If dataItem is an plain object with no value field, the var `value`
                 // will be assigned with the object, but it will be tread correctly
@@ -1850,7 +1850,7 @@ class List <HostModel extends Model = Model> {
 
             typedArray: function (
                 this: List, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
-            ): ParsedDataValue {
+            ): ParsedValue {
                 return dataItem[dimIndex];
             }
 
@@ -1858,7 +1858,7 @@ class List <HostModel extends Model = Model> {
 
         function getDimValueSimply(
             this: List, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
-        ): ParsedDataValue {
+        ): ParsedValue {
             return convertDataValue(dataItem[dimIndex], this._dimensionInfos[dimName]);
         }
 
@@ -1867,7 +1867,7 @@ class List <HostModel extends Model = Model> {
          * [Caution]: this is the key logic of user value parser.
          * For backward compatibiliy, do not modify it until have to.
          */
-        function convertDataValue(value: any, dimInfo: DataDimensionInfo): ParsedDataValue {
+        function convertDataValue(value: any, dimInfo: DataDimensionInfo): ParsedValue {
             // Performance sensitive.
             var dimType = dimInfo && dimInfo.type;
             if (dimType === 'ordinal') {
@@ -2061,7 +2061,7 @@ class List <HostModel extends Model = Model> {
             var Ctor = originalChunk.constructor;
             // Only shallow clone is enough when Array.
             return Ctor === Array
-                ? (originalChunk as Array<ParsedDataValue>).slice()
+                ? (originalChunk as Array<ParsedValue>).slice()
                 : new (Ctor as DataTypedArrayConstructor)(originalChunk as DataTypedArray);
         }
 

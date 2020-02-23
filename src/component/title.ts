@@ -21,12 +21,23 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 import {getLayoutRect} from '../util/layout';
 import ComponentModel from '../model/Component';
-import { ComponentOption, BoxLayoutOptionMixin, ZRTextAlign, ZRTextVerticalAlign, ZRColor, BorderOptionMixin, LabelOption, ECElement } from '../util/types';
+import {
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    ZRTextAlign,
+    ZRTextVerticalAlign,
+    ZRColor,
+    BorderOptionMixin,
+    LabelOption,
+    ECElement
+} from '../util/types';
 import ComponentView from '../view/Component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 
 export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+    show?: boolean
+
     type?: 'title'
 
     text?: string

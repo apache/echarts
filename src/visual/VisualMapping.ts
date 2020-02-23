@@ -28,7 +28,7 @@ import {
     VisualOptionCategory,
     VisualOptionLinear,
     VisualOptionUnit,
-    ParsedDataValue
+    ParsedValue
 } from '../util/types';
 
 const each = zrUtil.each;
@@ -37,7 +37,7 @@ const isObject = zrUtil.isObject;
 const CATEGORY_DEFAULT_VISUAL_INDEX = -1;
 
 // Type of raw value
-type RawValue = ParsedDataValue
+type RawValue = ParsedValue
 // Type of mapping visual value
 type VisualValue = AllPropTypes<VisualOptionUnit>
 // Type of value after normalized. 0 - 1

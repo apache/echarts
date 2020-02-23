@@ -21,7 +21,7 @@
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
-import { DimensionName, ScaleDataValue, OptionDataPrimitive } from '../util/types';
+import { DimensionName, ScaleDataValue, OptionDataValue } from '../util/types';
 
 
 abstract class Scale {
@@ -50,7 +50,7 @@ abstract class Scale {
      * before extent set (like in dataZoom), it would be wrong.
      * Nevertheless, parse does not depend on extent generally.
      */
-    abstract parse(val: OptionDataPrimitive): number;
+    abstract parse(val: OptionDataValue): number;
 
     /**
      * Whether contain the given value.

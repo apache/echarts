@@ -26,7 +26,7 @@ import Model from '../model/Model';
 import linkList from './helper/linkList';
 import List from './List';
 import createDimensions from './helper/createDimensions';
-import { DimensionLoose, ParsedDataValue } from '../util/types';
+import { DimensionLoose, ParsedValue } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
 type TreeTraverseOrder = 'preorder' | 'postorder';
@@ -187,7 +187,7 @@ class TreeNode {
         return ancestors;
     }
 
-    getValue(dimension: DimensionLoose): ParsedDataValue {
+    getValue(dimension: DimensionLoose): ParsedValue {
         var data = this.hostTree.data;
         return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
     }

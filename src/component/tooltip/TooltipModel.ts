@@ -17,17 +17,148 @@
 * under the License.
 */
 
-// @ts-nocheck
+import ComponentModel from '../../model/Component';
+import {
+    ComponentOption,
+    CallbackDataParams,
+    ZRAlign,
+    ZRVerticalAlign,
+    ColorString,
+    LabelOption,
+    TooltipRenderMode,
+    LineStyleOption
+} from '../../util/types';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 
-import * as echarts from '../../echarts';
+/**
+ * Position relative to the hoverred element. Only available when trigger is item.
+ */
+type BuitlinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom'
+interface PositionCallback {
+    (
+        point: [number, number],
+        params: CallbackDataParams,
+        dom: HTMLElement | null,
+        /**
+         * Rect of hover elements. Will be null if not hovered
+         */
+        rect: RectLike | null,
+        size: {
+            /**
+             * Size of popup content
+             */
+            contentSize: [number, number]
+            /**
+             * Size of the chart view
+             */
+            viewSize: [number, number]
+        }
+    ): number[] | string[] | BuitlinPosition
+}
+interface TooltipOption extends ComponentOption {
+    show?: boolean
 
-export default echarts.extendComponentModel({
+    /**
+     * If show popup content
+     */
+    showContent?: boolean
+    /**
+     * Trigger only works on coordinate system.
+     */
+    trigger?: 'item' | 'axis' | 'none'
+    /**
+     * When to trigger
+     */
+    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousemove|click'
+    /**
+     * Whether to not hide popup content automatically
+     */
+    alwaysShowContent?: boolean
 
-    type: 'tooltip',
+    displayMode?: 'single' | 'multipleByCoordSys';
 
-    dependencies: ['axisPointer'],
+    /**
+     * 'auto': use html by default, and use non-html if `document` is not defined
+     * 'html': use html for tooltip
+     * 'richText': use canvas, svg, and etc. for tooltip
+     */
+    renderMode?: 'auto' | TooltipRenderMode   // TODO richText renamed canvas?
 
-    defaultOption: {
+    /**
+     * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
+     * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
+     * which is relative to the hovered element.
+     *
+     * Support to be a callback
+     */
+    position?: number[] | string[] | BuitlinPosition | PositionCallback
+
+    confine?: boolean
+
+    /**
+     * Consider triggered from axisPointer handle, verticalAlign should be 'middle'
+     */
+    align?: ZRAlign
+
+    verticalAlign?: ZRVerticalAlign
+    /**
+     * Delay of show. milesecond.
+     */
+    showDelay?: number
+
+    /**
+     * Delay of hide. milesecond.
+     */
+    hideDelay?: number
+
+    transitionDuration?: number
+    /**
+     * Whether mouse is allowed to enter the floating layer of tooltip
+     * If you need to interact in the tooltip like with links or buttons, it can be set as true.
+     * @default false
+     */
+    enterable?: boolean
+
+    backgroundColor?: ColorString
+    borderColor?: ColorString
+    /**
+     * @default 4
+     */
+    borderRadius?: number
+    borderWidth?: number
+
+    /**
+     * Padding between tooltip content and tooltip border.
+     */
+    padding?: number | number[]
+
+    /**
+     * Available when renderMode is 'html'
+     */
+    extraCssText?: string
+
+    textStyle?: Pick<LabelOption,
+        'color' | 'fontStyle' | 'fontWeight' | 'fontFamily' | 'fontSize' |
+        'lineHeight' | 'width' | 'height' | 'textBorderColor' | 'textBorderWidth' |
+        'textShadowColor' | 'textShadowBlur' | 'textShadowOffsetX' | 'textShadowOffsetY'>
+
+    axisPointer?: AxisPointerOption & {
+        axis?: 'auto' | 'x' | 'y' | 'angle' | 'radius'
+        crossStyle?: LineStyleOption & {
+            // TODO
+            textStyle?: LabelOption
+        }
+    }
+}
+
+class TooltipModel extends ComponentModel<TooltipOption> {
+    static type = 'tooltip' as const
+    type = TooltipModel.type
+
+    static dependencies = ['axisPointer']
+
+    static defaultOption: TooltipOption = {
         zlevel: 0,
 
         z: 60,
@@ -49,25 +180,12 @@ export default echarts.extendComponentModel({
         displayMode: 'single', // 'single' | 'multipleByCoordSys'
 
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
-        // 'auto': use html by default, and use non-html if `document` is not defined
-        // 'html': use html for tooltip
-        // 'richText': use canvas, svg, and etc. for tooltip
-
-        // 位置 {Array} | {Function}
-        // position: null
-        // Consider triggered from axisPointer handle, verticalAlign should be 'middle'
-        // align: null,
-        // verticalAlign: null,
 
         // 是否约束 content 在 viewRect 中。默认 false 是为了兼容以前版本。
         confine: false,
 
-        // 内容格式器：{string}（Template） ¦ {Function}
-        // formatter: null
-
         showDelay: 0,
 
-        // 隐藏延迟，单位ms
         hideDelay: 100,
 
         // 动画变换时间，单位s
@@ -75,7 +193,6 @@ export default echarts.extendComponentModel({
 
         enterable: false,
 
-        // 提示背景颜色，默认为透明度为0.7的黑色
         backgroundColor: 'rgba(50,50,50,0.7)',
 
         // 提示边框颜色
@@ -127,4 +244,6 @@ export default echarts.extendComponentModel({
             fontSize: 14
         }
     }
-});
+}
+
+ComponentModel.registerClass(TooltipModel);

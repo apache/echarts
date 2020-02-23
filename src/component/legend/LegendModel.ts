@@ -61,6 +61,8 @@ interface DataItem {
     tooltip?: unknown
 }
 export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+    show?: boolean
+
     orient?: 'horizontal' | 'vertical'
 
     align?: 'auto' | 'left' | 'right'

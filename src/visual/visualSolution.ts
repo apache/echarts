@@ -26,7 +26,7 @@ import VisualMapping, { VisualMappingOption } from './VisualMapping';
 import { Dictionary } from 'zrender/src/core/types';
 import {
     BuiltinVisualProperty,
-    ParsedDataValue,
+    ParsedValue,
     DimensionLoose,
     StageHandlerProgressExecutor
 } from '../util/types';
@@ -136,7 +136,7 @@ export function applyVisual<VisualState extends string, Scope>(
     stateList: VisualState[],
     visualMappings: VisualMappingCollection<VisualState>,
     data: List,
-    getValueState: (this: Scope, valueOrIndex: ParsedDataValue | number) => VisualState,
+    getValueState: (this: Scope, valueOrIndex: ParsedValue | number) => VisualState,
     scope?: Scope,
     dimension?: DimensionLoose
 ) {
@@ -163,7 +163,7 @@ export function applyVisual<VisualState extends string, Scope>(
         data.each([dimension], eachItem);
     }
 
-    function eachItem(valueOrIndex: ParsedDataValue | number, index?: number) {
+    function eachItem(valueOrIndex: ParsedValue | number, index?: number) {
         dataIndex = dimension == null
             ? valueOrIndex as number    // First argument is index
             : index;
@@ -198,7 +198,7 @@ export function applyVisual<VisualState extends string, Scope>(
 export function incrementalApplyVisual<VisualState extends string>(
     stateList: VisualState[],
     visualMappings: VisualMappingCollection<VisualState>,
-    getValueState: (valueOrIndex: ParsedDataValue | number) => VisualState,
+    getValueState: (valueOrIndex: ParsedValue | number) => VisualState,
     dim?: DimensionLoose
 ): StageHandlerProgressExecutor {
     var visualTypesMap: WithKey<VisualState, BuiltinVisualProperty[]> = {};

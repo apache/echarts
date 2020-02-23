@@ -31,7 +31,7 @@ import {
     ColorString,
     ZRColor,
     BorderOptionMixin,
-    OptionDataPrimitive,
+    OptionDataValue,
     BuiltinVisualProperty
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
@@ -49,13 +49,14 @@ const linearMap = numberUtil.linearMap;
 
 type VisualOptionBase = {[key in BuiltinVisualProperty]?: any}
 
-type LabelFormatter = (min: OptionDataPrimitive, max?: OptionDataPrimitive) => string
+type LabelFormatter = (min: OptionDataValue, max?: OptionDataValue) => string
 
 type VisualState = VisualMapModel['stateList'][number];
 export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> extends
     ComponentOption,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
+    show?: boolean
 
     align?: string
 

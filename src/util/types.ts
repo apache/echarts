@@ -53,7 +53,7 @@ export type RendererType = 'canvas' | 'svg';
 // Types from zrender
 export type ColorString = string;
 export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject
-export type ZRLineType = 'solid' | 'dotted'
+export type ZRLineType = 'solid' | 'dotted' | 'dashed'
 export type ZRAlign = 'left' | 'center' | 'right'
 export type ZRVerticalAlign = 'top' | 'middle' | 'bottom'
 
@@ -227,16 +227,16 @@ export type TooltipRenderMode = 'html' | 'richText';
 // Check `convertDataValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
-export type ParsedDataNumeric = number | OrdinalNumber;
-export type ParsedDataValue = ParsedDataNumeric | OrdinalRawValue;
+export type ParsedValueNumeric = number | OrdinalNumber;
+export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // FIXME:TS better name?
 // This is not `OptionDataPrimitive` because the "dataProvider parse"
 // will not be performed. But "scale parse" will be performed.
-export type ScaleDataValue = ParsedDataValue | Date;
+export type ScaleDataValue = ParsedValue | Date;
 
-export type AxisValue = ParsedDataNumeric;
+export type AxisValue = ParsedValueNumeric;
 
-// Can only be string or index, because it is used in object key in some code.
+// Can only be string or index, because it is used in object key in s   ome code.
 // Making the type alias here just intending to show the meaning clearly in code.
 export type DimensionIndex = number;
 // If being a number-like string but not being defined a dimension name.
@@ -388,12 +388,12 @@ export type OptionSourceData =
     | Dictionary<ArrayLike<OptionDataItem>>; // Only for `SOURCE_FORMAT_KEYED_COLUMNS`.
 // See also `model.js#getDataItemValue`.
 export type OptionDataItem =
-    OptionDataPrimitive
-    | Dictionary<OptionDataPrimitive>
-    | ArrayLike<OptionDataPrimitive>
+    OptionDataValue
+    | Dictionary<OptionDataValue>
+    | ArrayLike<OptionDataValue>
     // FIXME: In some case (markpoint in geo (geo-map.html)), dataItem is {coord: [...]}
-    | {value: ArrayLike<OptionDataPrimitive>}; // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
-export type OptionDataPrimitive = string | number | Date;
+    | {value: ArrayLike<OptionDataValue>}; // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
+export type OptionDataValue = string | number | Date;
 
 // export type ModelOption = Dictionary<any> | any[] | string | number | boolean | ((...args: any) => any);
 export type ModelOption = any;
@@ -421,7 +421,7 @@ export type OptionEncodeValue = DimensionIndex[] | DimensionIndex | DimensionNam
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
 
 // TODO: TYPE Different callback param for different series
-export interface DataParamsUserOutput {
+export interface CallbackDataParams {
     // component main type
     componentType: string;
     // component sub type
@@ -577,8 +577,8 @@ export interface AnimationOptionMixin {
 }
 
 // TODO: TYPE value type?
-export type SymbolSizeCallback = (rawValue: any, params: DataParamsUserOutput) => number | number[]
-export type SymbolCallback = (rawValue: any, params: DataParamsUserOutput) => string
+export type SymbolSizeCallback = (rawValue: any, params: CallbackDataParams) => number | number[]
+export type SymbolCallback = (rawValue: any, params: CallbackDataParams) => string
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -609,7 +609,7 @@ export interface ItemStyleOption extends ShadowOptionMixin, BorderOptionMixin {
  * Used in the components or series like `line`, `axis`
  * It includes stroke style.
  */
-export interface LineStyleOption<Clr = ZRColor>  extends ShadowOptionMixin {
+export interface LineStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     width?: number
     color?: Clr
     opacity?: number
@@ -711,7 +711,7 @@ export interface LabelOption extends TextCommonOption {
     distance?: number
     rotate?: number | boolean
     offset?: number[]
-    formatter?: string | ((params: DataParamsUserOutput) => string)
+    formatter?: string | ((params: CallbackDataParams) => string)
 
     rich?: Dictionary<TextCommonOption>
 }
@@ -725,7 +725,6 @@ export interface LabelLineOption {
 }
 
 export interface ComponentOption {
-    show?: boolean
     type?: string;
     id?: string;
     name?: string;

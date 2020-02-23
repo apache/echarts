@@ -21,7 +21,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Element, { ElementProps } from 'zrender/src/Element';
-import { easingType } from 'zrender/src/animation/easing';
+import { ZREasing } from './types';
 
 /**
  * @param {number} [time=500] Time in ms
@@ -68,8 +68,8 @@ export function createWrap() {
             el: Element,
             target: ElementProps,
             time?: number,
-            delay?: number | easingType,
-            easing?: easingType
+            delay?: number | ZREasing,
+            easing?: ZREasing
         ) {
             if (zrUtil.isString(delay)) {
                 easing = delay;

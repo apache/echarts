@@ -23,7 +23,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import List from './List';
 import Model from '../model/Model';
 import Element from 'zrender/src/Element';
-import { DimensionLoose, ParsedDataValue } from '../util/types';
+import { DimensionLoose, ParsedValue } from '../util/types';
 
 // id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey(id: string): string {
@@ -420,7 +420,7 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
         /**
          * @param Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
          */
-        getValue: function (this: Host, dimension: DimensionLoose): ParsedDataValue {
+        getValue: function (this: Host, dimension: DimensionLoose): ParsedValue {
             var data = this[hostName][dataName];
             return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
         },

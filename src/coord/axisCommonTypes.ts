@@ -19,7 +19,7 @@
 
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
-    AreaStyleOption, ComponentOption, OptionDataPrimitive
+    AreaStyleOption, ComponentOption, OptionDataValue
 } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
@@ -71,12 +71,12 @@ export interface AxisBaseOption extends ComponentOption {
     // + a number
     // + 'dataMin': use the min value in data.
     // + null/undefined: auto decide min value (consider pretty look and boundaryGap).
-    min?: OptionDataPrimitive | 'dataMin';
+    min?: OptionDataValue | 'dataMin';
     // Max value of the axis. can be:
     // + a number
     // + 'dataMax': use the max value in data.
     // + null/undefined: auto decide max value (consider pretty look and boundaryGap).
-    max?: OptionDataPrimitive | 'dataMax';
+    max?: OptionDataValue | 'dataMax';
     // Readonly prop, specifies start value of the range when using data zoom.
     // Only for internal usage.
     rangeStart?: number;

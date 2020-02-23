@@ -16,9 +16,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
 // @ts-nocheck
-
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as axisPointerModelHelper from './axisPointer/modelHelper';

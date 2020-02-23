@@ -40,7 +40,7 @@ import {
     ComponentSubType,
     DisplayStateHostOption,
     OptionDataItem,
-    OptionDataPrimitive,
+    OptionDataValue,
     TooltipRenderMode
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
@@ -126,9 +126,9 @@ export var TEXT_STYLE_OPTIONS = [
  */
 export function getDataItemValue(
     dataItem: OptionDataItem
-): OptionDataPrimitive | OptionDataPrimitive[] {
+): OptionDataValue | OptionDataValue[] {
     return (isObject(dataItem) && !isArray(dataItem) && !(dataItem instanceof Date))
-        ? (dataItem as Dictionary<OptionDataPrimitive>).value : dataItem;
+        ? (dataItem as Dictionary<OptionDataValue>).value : dataItem;
 }
 
 /**

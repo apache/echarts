@@ -28,7 +28,7 @@ import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
-    DataParamsUserOutput,
+    CallbackDataParams,
     CircleLayoutOptionMixin,
     LabelLineOption,
     ItemStyleOption,
@@ -155,7 +155,7 @@ class PieSeries extends SeriesModel<PieSeriesOption> {
     /**
      * @overwrite
      */
-    getDataParams(dataIndex: number): DataParamsUserOutput {
+    getDataParams(dataIndex: number): CallbackDataParams {
         var data = this.getData();
         var params = super.getDataParams(dataIndex);
         // FIXME toFixed?
