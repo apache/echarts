@@ -40,8 +40,6 @@ export default echarts.extendComponentView({
         }
 
         if (geoModel.get('show')) {
-            this._mapDraw = new MapDraw(api, true);
-            this.group.add(this._mapDraw.group);
             this._mapDraw.draw(geoModel, ecModel, api, this, payload);
         }
         else {

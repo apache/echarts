@@ -185,6 +185,8 @@ MapDraw.prototype = {
         group.transform = transformInfo.roamTransform;
         group.decomposeTransform();
         group.dirty();
+        group.add(this._regionsGroup);
+        group.add(this._backgroundGroup);
 
         var scale = transformInfo.rawScale;
         var position = transformInfo.rawPosition;
