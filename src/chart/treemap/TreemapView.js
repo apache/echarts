@@ -779,9 +779,10 @@ function renderNode(
             // If invisible, do not set visual, otherwise the element will
             // change immediately before animation. We think it is OK to
             // remain its origin color when moving out of the view window.
-            processInvisible(content);
+            processInvisible(bg);
         }
         else {
+            bg.invisible = false;
             var visualBorderColor = thisNode.getVisual('borderColor', true);
             var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
             var normalStyle = getItemStyleNormal(itemStyleNormalModel);
@@ -832,6 +833,7 @@ function renderNode(
             processInvisible(content);
         }
         else {
+            content.invisible = false;
             var visualColor = thisNode.getVisual('color', true);
             var normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
