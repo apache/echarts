@@ -40,7 +40,7 @@ import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
 var mixin = zrUtil.mixin;
-var inner = makeInner();
+var inner = makeInner<{getParent(path: string | string[]): Model}>();
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';
@@ -57,7 +57,7 @@ type Value<Opt, R> = Opt extends Dictionary<any>
  * @param {module:echarts/model/Model} [parentModel]
  * @param {module:echarts/model/Global} [ecModel]
  */
-class Model<Opt extends ModelOption = ModelOption> {
+class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown insteadof any?
 
     // [Caution]: for compat the previous "class extend"
     // publich and protected fields must be initialized on
@@ -210,11 +210,6 @@ class Model<Opt extends ModelOption = ModelOption> {
         return path;
     }
 
-    /**
-     * @param {Function} getParentMethod
-     *        param {Array.<string>|string} path
-     *        return {module:echarts/model/Model}
-     */
     customizeGetParent(
         getParentMethod: (path: string | string[]) => Model
     ): void {

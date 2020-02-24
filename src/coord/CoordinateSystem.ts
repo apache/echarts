@@ -86,10 +86,12 @@ export interface CoordinateSystemMaster {
  * For example: cartesian is CoordinateSystemExecutive.
  * series.coordinateSystem is CoordinateSystemExecutive.
  */
-export interface CoordinateSystemExecutive {
+export interface CoordinateSystem {
 
     // Should be the same as its coordinateSystemCreator.
     dimensions: DimensionName[];
+
+    model?: Model;
 
     // @param data
     // @param reserved Defined by the coordinate system itself

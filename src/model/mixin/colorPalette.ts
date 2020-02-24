@@ -20,8 +20,12 @@
 import {makeInner, normalizeToArray} from '../../util/model';
 import Model from '../Model';
 import { ZRColor, ColorPaletteOptionMixin } from '../../util/types';
+import { Dictionary } from 'zrender/src/core/types';
 
-var inner = makeInner();
+var inner = makeInner<{
+    colorIdx: number
+    colorNameMap: Dictionary<ZRColor>
+}>();
 
 function getNearestColorPalette(
     colors: ZRColor[][], requestColorNum: number

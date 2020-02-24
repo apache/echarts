@@ -364,6 +364,10 @@ class ECharts {
         return this._dom;
     }
 
+    getId(): string {
+        return this.id;
+    }
+
     getZr(): zrender.ZRenderType {
         return this._zr;
     }
@@ -394,7 +398,7 @@ class ECharts {
         }
 
         var silent;
-        if (isObject<SetOptionOpts>(notMerge)) {
+        if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
             notMerge = notMerge.notMerge;
@@ -2272,6 +2276,22 @@ export function getMap(mapName: string) {
         specialAreas: records[0].specialAreas
     };
 }
+
+/**
+ * Globa dispatchAction to a specified chart instance.
+ */
+// export function dispatchAction(payload: { chartId: string } & Payload, opt?: Parameters<ECharts['dispatchAction']>[1]) {
+//     if (!payload || !payload.chartId) {
+//         // Must have chartId to find chart
+//         return;
+//     }
+//     const chart = instances[payload.chartId];
+//     if (chart) {
+//         chart.dispatchAction(payload, opt);
+//     }
+// }
+
+
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
 registerPreprocessor(backwardCompat);

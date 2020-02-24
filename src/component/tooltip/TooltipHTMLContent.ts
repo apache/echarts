@@ -17,14 +17,17 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as zrColor from 'zrender/src/tool/color';
 import * as eventUtil from 'zrender/src/core/event';
 import * as domUtil from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
 import * as formatUtil from '../../util/format';
+import ExtensionAPI from '../../ExtensionAPI';
+import { ZRenderType } from 'zrender/src/zrender';
+import { TooltipOption } from './TooltipModel';
+import Model from '../../model/Model';
+import { ZRRawEvent } from 'zrender/src/core/types';
 
 var each = zrUtil.each;
 var toCamelCase = formatUtil.toCamelCase;
@@ -33,12 +36,7 @@ var vendors = ['', '-webkit-', '-moz-', '-o-'];
 
 var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
-/**
- * @param {number} duration
- * @return {string}
- * @inner
- */
-function assembleTransition(duration) {
+function assembleTransition(duration: number): string {
     var transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
     var transitionText = 'left ' + duration + 's ' + transitionCurve + ','
                         + 'top ' + duration + 's ' + transitionCurve;
@@ -52,7 +50,7 @@ function assembleTransition(duration) {
  * @return {string}
  * @inner
  */
-function assembleFont(textStyleModel) {
+function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string {
     var cssText = [];
 
     var fontSize = textStyleModel.get('fontSize');
@@ -65,7 +63,7 @@ function assembleFont(textStyleModel) {
     fontSize
         && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
 
-    each(['decoration', 'align'], function (name) {
+    each(['decoration', 'align'] as const, function (name) {
         var val = textStyleModel.get(name);
         val && cssText.push('text-' + name + ':' + val);
     });
@@ -73,12 +71,7 @@ function assembleFont(textStyleModel) {
     return cssText.join(';');
 }
 
-/**
- * @param {Object} tooltipModel
- * @return {string}
- * @inner
- */
-function assembleCssText(tooltipModel) {
+function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
     var cssText = [];
 
@@ -105,9 +98,9 @@ function assembleCssText(tooltipModel) {
     }
 
     // Border style
-    each(['width', 'color', 'radius'], function (name) {
+    each(['width', 'color', 'radius'] as const, function (name) {
         var borderName = 'border-' + name;
-        var camelCase = toCamelCase(borderName);
+        var camelCase = toCamelCase(borderName) as 'borderWidth' | 'borderColor' | 'borderRadius';
         var val = tooltipModel.get(camelCase);
         val != null
             && cssText.push(borderName + ':' + val + (name === 'color' ? '' : 'px'));
@@ -125,7 +118,7 @@ function assembleCssText(tooltipModel) {
 }
 
 // If not able to make, do not modify the input `out`.
-function makeStyleCoord(out, zr, appendToBody, zrX, zrY) {
+function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, zrX: number, zrY: number) {
     var zrPainter = zr && zr.painter;
 
     if (appendToBody) {
@@ -149,104 +142,111 @@ function makeStyleCoord(out, zr, appendToBody, zrX, zrY) {
     }
 }
 
-/**
- * @alias module:echarts/component/tooltip/TooltipContent
- * @param {HTMLElement} container
- * @param {ExtensionAPI} api
- * @param {Object} [opt]
- * @param {boolean} [opt.appendToBody]
- *        `false`: the DOM element will be inside the container. Default value.
- *        `true`: the DOM element will be appended to HTML body, which avoid
- *                some overflow clip but intrude outside of the container.
- * @constructor
- */
-function TooltipContent(container, api, opt) {
-    if (env.wxa) {
-        return null;
-    }
-
-    var el = document.createElement('div');
-    el.domBelongToZr = true;
-    this.el = el;
-    var zr = this._zr = api.getZr();
-    var appendToBody = this._appendToBody = opt && opt.appendToBody;
-
-    this._styleCoord = [0, 0];
-
-    makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
-
-    if (appendToBody) {
-        document.body.appendChild(el);
-    }
-    else {
-        container.appendChild(el);
-    }
-
-    this._container = container;
-
-    this._show = false;
-
+interface TooltipContentOption {
     /**
-     * @private
+     * `false`: the DOM element will be inside the container. Default value.
+     * `true`: the DOM element will be appended to HTML body, which avoid
+     *  some overflow clip but intrude outside of the container.
      */
-    this._hideTimeout;
-
-    // FIXME
-    // Is it needed to trigger zr event manually if
-    // the browser do not support `pointer-events: none`.
-
-    var self = this;
-    el.onmouseenter = function () {
-        // clear the timeout in hideLater and keep showing tooltip
-        if (self._enterable) {
-            clearTimeout(self._hideTimeout);
-            self._show = true;
-        }
-        self._inContent = true;
-    };
-    el.onmousemove = function (e) {
-        e = e || window.event;
-        if (!self._enterable) {
-            // `pointer-events: none` is set to tooltip content div
-            // if `enterable` is set as `false`, and `el.onmousemove`
-            // can not be triggered. But in browser that do not
-            // support `pointer-events`, we need to do this:
-            // Try trigger zrender event to avoid mouse
-            // in and out shape too frequently
-            var handler = zr.handler;
-            var zrViewportRoot = zr.painter.getViewportRoot();
-            eventUtil.normalizeEvent(zrViewportRoot, e, true);
-            handler.dispatch('mousemove', e);
-        }
-    };
-    el.onmouseleave = function () {
-        if (self._enterable) {
-            if (self._show) {
-                self.hideLater(self._hideDelay);
-            }
-        }
-        self._inContent = false;
-    };
+    appendToBody: boolean
 }
 
-TooltipContent.prototype = {
+class TooltipHTMLContent {
 
-    constructor: TooltipContent,
+    el: HTMLDivElement
 
+    private _container: HTMLElement
+
+    private _show: boolean = false
+
+    private _styleCoord: [number, number] = [0, 0]
+    private _appendToBody: boolean
+
+    private _enterable = true
+    private _zr: ZRenderType
+
+    private _hideTimeout: number
     /**
-     * @private
-     * @type {boolean}
+     * Hide delay time
      */
-    _enterable: true,
+    private _hideDelay: number
+
+    private _inContent: boolean
+
+
+    constructor(
+        container: HTMLElement,
+        api: ExtensionAPI,
+        opt: TooltipContentOption
+    ) {
+        if (env.wxa) {
+            return null;
+        }
+
+        var el = document.createElement('div');
+        // TODO: TYPE
+        (el as any).domBelongToZr = true;
+        this.el = el;
+        var zr = this._zr = api.getZr();
+        var appendToBody = this._appendToBody = opt && opt.appendToBody;
+
+        makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
+
+        if (appendToBody) {
+            document.body.appendChild(el);
+        }
+        else {
+            container.appendChild(el);
+        }
+
+        this._container = container;
+
+        // FIXME
+        // Is it needed to trigger zr event manually if
+        // the browser do not support `pointer-events: none`.
+
+        var self = this;
+        el.onmouseenter = function () {
+            // clear the timeout in hideLater and keep showing tooltip
+            if (self._enterable) {
+                clearTimeout(self._hideTimeout);
+                self._show = true;
+            }
+            self._inContent = true;
+        };
+        el.onmousemove = function (e) {
+            e = e || (window as any).event;
+            if (!self._enterable) {
+                // `pointer-events: none` is set to tooltip content div
+                // if `enterable` is set as `false`, and `el.onmousemove`
+                // can not be triggered. But in browser that do not
+                // support `pointer-events`, we need to do this:
+                // Try trigger zrender event to avoid mouse
+                // in and out shape too frequently
+                var handler = zr.handler;
+                var zrViewportRoot = zr.painter.getViewportRoot();
+                eventUtil.normalizeEvent(zrViewportRoot, e as ZRRawEvent, true);
+                handler.dispatch('mousemove', e);
+            }
+        };
+        el.onmouseleave = function () {
+            if (self._enterable) {
+                if (self._show) {
+                    self.hideLater(self._hideDelay);
+                }
+            }
+            self._inContent = false;
+        };
+    }
 
     /**
      * Update when tooltip is rendered
      */
-    update: function () {
+    update() {
         // FIXME
         // Move this logic to ec main?
         var container = this._container;
-        var stl = container.currentStyle
+        var stl = (container as any).currentStyle
             || document.defaultView.getComputedStyle(container);
         var domStyle = container.style;
         if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
@@ -255,9 +255,9 @@ TooltipContent.prototype = {
         // Hide the tooltip
         // PENDING
         // this.hide();
-    },
+    }
 
-    show: function (tooltipModel) {
+    show(tooltipModel: Model<TooltipOption>) {
         clearTimeout(this._hideTimeout);
         var el = this.el;
         var styleCoord = this._styleCoord;
@@ -279,58 +279,58 @@ TooltipContent.prototype = {
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
         this._show = true;
-    },
+    }
 
-    setContent: function (content) {
+    setContent(content: string) {
         this.el.innerHTML = content == null ? '' : content;
-    },
+    }
 
-    setEnterable: function (enterable) {
+    setEnterable(enterable: boolean) {
         this._enterable = enterable;
-    },
+    }
 
-    getSize: function () {
+    getSize() {
         var el = this.el;
         return [el.clientWidth, el.clientHeight];
-    },
+    }
 
-    moveTo: function (zrX, zrY) {
+    moveTo(zrX: number, zrY: number) {
         var styleCoord = this._styleCoord;
         makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
 
         var style = this.el.style;
         style.left = styleCoord[0] + 'px';
         style.top = styleCoord[1] + 'px';
-    },
+    }
 
-    hide: function () {
+    hide() {
         this.el.style.display = 'none';
         this._show = false;
-    },
+    }
 
-    hideLater: function (time) {
+    hideLater(time?: number) {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater mutiple times
                 this._show = false;
-                this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
+                this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time) as any;
             }
             else {
                 this.hide();
             }
         }
-    },
+    }
 
-    isShow: function () {
+    isShow() {
         return this._show;
-    },
+    }
 
-    dispose: function () {
+    dispose() {
         this.el.parentNode.removeChild(this.el);
-    },
+    }
 
-    getOuterSize: function () {
+    getOuterSize() {
         var width = this.el.clientWidth;
         var height = this.el.clientHeight;
 
@@ -347,6 +347,6 @@ TooltipContent.prototype = {
         return {width: width, height: height};
     }
 
-};
+}
 
-export default TooltipContent;
+export default TooltipHTMLContent;

@@ -27,10 +27,8 @@ import ComponentView from '../../view/Component';
 import LegendModel, { LegendOption, LegendSelectorButtonOption } from './LegendModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { RectLike } from 'zrender/src/core/BoundingRect';
-import { ColorString, ZRTextAlign, ZRColor, ItemStyleOption } from '../../util/types';
+import { ColorString, ZRTextAlign, ZRColor, ItemStyleOption, ZRRectLike, ECElement, CommonTooltipOption } from '../../util/types';
 import Model from '../../model/Model';
-import ZImage from 'zrender/src/graphic/Image';
 
 var curry = zrUtil.curry;
 var each = zrUtil.each;
@@ -340,7 +338,7 @@ class LegendView extends ComponentView {
 
         var itemIcon = itemModel.get('icon');
 
-        var tooltipModel = itemModel.getModel('tooltip');
+        var tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption>;
         var legendGlobalTooltipModel = tooltipModel.parentModel;
 
         // Use user given icon first
@@ -417,9 +415,10 @@ class LegendView extends ComponentView {
         // Add a invisible rect to increase the area of mouse hover
         var hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
-            invisible: true,
-            // @ts-ignore
-            tooltip: tooltipModel.get('show') ? zrUtil.extend({
+            invisible: true
+        });
+        if (tooltipModel.get('show')) {
+            (hitRect as ECElement).tooltip = zrUtil.extend({
                 content: name,
                 // Defaul formatter
                 formatter: legendGlobalTooltipModel.get('formatter', true) || function () {
@@ -431,8 +430,8 @@ class LegendView extends ComponentView {
                     name: name,
                     $vars: ['name']
                 }
-            }, tooltipModel.option) : null
-        });
+            }, tooltipModel.option);
+        }
         itemGroup.add(hitRect);
 
         itemGroup.eachChild(function (child) {
@@ -458,7 +457,7 @@ class LegendView extends ComponentView {
         isFirstRender: boolean,
         selector: LegendOption['selector'],
         selectorPosition: LegendOption['selectorPosition']
-    ): RectLike {
+    ): ZRRectLike {
         var contentGroup = this.getContentGroup();
         var selectorGroup = this.getSelectorGroup();
 
@@ -504,7 +503,7 @@ class LegendView extends ComponentView {
             selectorGroup.attr('position', selectorPos);
             contentGroup.attr('position', contentPos);
 
-            var mainRect = {x: 0, y: 0} as RectLike;
+            var mainRect = {x: 0, y: 0} as ZRRectLike;
             mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
             mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
             mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
@@ -527,7 +526,7 @@ class LegendView extends ComponentView {
 }
 
 function setSymbolStyle(
-    symbol: graphic.Path | ZImage,
+    symbol: graphic.Path | graphic.Image,
     symbolType: string,
     legendModelItemStyle: Model<ItemStyleOption>,
     borderColor: ZRColor,

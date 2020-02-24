@@ -38,7 +38,8 @@ var availableMethods = {
     getModel: 1,
     getOption: 1,
     getViewOfComponentModel: 1,
-    getViewOfSeriesModel: 1
+    getViewOfSeriesModel: 1,
+    getId: 1
 };
 
 interface ExtensionAPI extends Pick<EChartsType, keyof typeof availableMethods> {}

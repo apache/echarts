@@ -462,10 +462,10 @@ export function queryDataIndex(data: List, payload: Payload): number | number[] 
  *
  * @return {Function}
  */
-export function makeInner() {
+export function makeInner<T>() {
     // Consider different scope by es module import.
     var key = '__\0ec_inner_' + innerUniqueIndex++ + '_' + Math.random().toFixed(5);
-    return function (hostObj: any) {
+    return function (hostObj: any): T {
         return hostObj[key] || (hostObj[key] = {});
     };
 }

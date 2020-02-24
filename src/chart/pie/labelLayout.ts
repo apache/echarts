@@ -23,8 +23,7 @@ import * as textContain from 'zrender/src/contain/text';
 import {parsePercent} from '../../util/number';
 import PieSeries, { PieSeriesOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
-import { ZRAlign, ZRVerticalAlign } from '../../util/types';
-import { RectLike } from 'zrender/src/core/BoundingRect';
+import { ZRAlign, ZRVerticalAlign, ZRRectLike } from '../../util/types';
 
 var RADIAN = Math.PI / 180;
 
@@ -44,7 +43,7 @@ interface LabelLayout {
     labelAlignTo: PieSeriesOption['label']['alignTo'],
     labelMargin: number,
     bleedMargin: PieSeriesOption['label']['bleedMargin'],
-    textRect: RectLike,
+    textRect: ZRRectLike,
     text: string,
     font: string
 }

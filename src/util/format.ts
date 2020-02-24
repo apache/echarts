@@ -37,7 +37,7 @@ export function addCommas(x: string | number): string {
             + (parts.length > 1 ? ('.' + parts[1]) : '');
 }
 
-export function toCamelCase(str: string, upperCaseFirst: boolean): string {
+export function toCamelCase(str: string, upperCaseFirst?: boolean): string {
     str = (str || '').toLowerCase().replace(/-(.)/g, function (match, group1) {
         return group1.toUpperCase();
     });

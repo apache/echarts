@@ -1599,7 +1599,7 @@ class List <HostModel extends Model = Model> {
     setVisual(key: string, val: any): void;
     setVisual(kvObj: Dictionary<any>): void;
     setVisual(key: string | Dictionary<any>, val?: any): void {
-        if (isObject<Dictionary<any>>(key)) {
+        if (isObject(key)) {
             for (var name in key) {
                 if (key.hasOwnProperty(name)) {
                     this.setVisual(name, key[name]);
@@ -1617,7 +1617,7 @@ class List <HostModel extends Model = Model> {
     setLayout(key: string, val: any): void;
     setLayout(kvObj: Dictionary<any>): void;
     setLayout(key: string | Dictionary<any>, val?: any): void {
-        if (isObject<Dictionary<any>>(key)) {
+        if (isObject(key)) {
             for (var name in key) {
                 if (key.hasOwnProperty(name)) {
                     this.setLayout(name, key[name]);
@@ -1695,7 +1695,7 @@ class List <HostModel extends Model = Model> {
         var hasItemVisual = this.hasItemVisual;
         this._itemVisuals[idx] = itemVisual;
 
-        if (isObject<Dictionary<any>>(key)) {
+        if (isObject(key)) {
             for (var name in key) {
                 if (key.hasOwnProperty(name)) {
                     itemVisual[name] = key[name];

@@ -41,6 +41,8 @@ import { TooltipMarker } from './format';
 import { easingType } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import ZRText from 'zrender/src/graphic/Text';
 
 
 
@@ -65,6 +67,9 @@ export type ZREasing = easingType
 export type ZRTextAlign = TextAlign
 export type ZRTextVerticalAlign = TextVerticalAlign
 
+export type ZRElementEvent = ElementEvent
+
+export type ZRRectLike = RectLike
 
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
@@ -91,6 +96,11 @@ export interface ECElement extends Element {
     eventData?: ECEventData;
     seriesIndex?: number;
     dataType?: string;
+    tooltip?: CommonTooltipOption & {
+        content?: string
+        // TODO: TYPE
+        formatterParams?: any
+    }
 }
 
 export interface DataHost {
@@ -723,6 +733,136 @@ export interface LabelLineOption {
     smooth?: boolean
     lineStyle?: LineStyleOption
 }
+
+interface TooltipFormatterCallback {
+    /**
+     * For sync callback
+     * params will be an array on axis trigger.
+     */
+    (params: CallbackDataParams | CallbackDataParams[], asyncTicket: string): string
+    /**
+     * For async callback.
+     * Returned html string will be a placeholder when callback is not invoked.
+     */
+    (params: CallbackDataParams | CallbackDataParams[], asyncTicket: string, callback: (cbTicket: string, html: string) => void): string
+}
+
+type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom'
+type TooltipBoxLayoutOption = Pick<
+    BoxLayoutOptionMixin, 'top' | 'left' | 'right' | 'bottom'
+>
+/**
+ * Position relative to the hoverred element. Only available when trigger is item.
+ */
+interface PositionCallback {
+    (
+        point: [number, number],
+        /**
+         * params will be an array on axis trigger.
+         */
+        params: CallbackDataParams | CallbackDataParams[],
+        /**
+         * Will be HTMLDivElement when renderMode is html
+         * Otherwise it's graphic.Text
+         */
+        el: HTMLDivElement | ZRText | null,
+        /**
+         * Rect of hover elements. Will be null if not hovered
+         */
+        rect: RectLike | null,
+        size: {
+            /**
+             * Size of popup content
+             */
+            contentSize: [number, number]
+            /**
+             * Size of the chart view
+             */
+            viewSize: [number, number]
+        }
+    ): number[] | string[] | TooltipBuiltinPosition | TooltipBoxLayoutOption
+}
+/**
+ * Common tooltip option
+ */
+export interface CommonTooltipOption {
+
+    show?: boolean
+
+    /**
+     * When to trigger
+     */
+    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousemove|click'
+    /**
+     * Whether to not hide popup content automatically
+     */
+    alwaysShowContent?: boolean
+
+    formatter?: string | TooltipFormatterCallback
+    /**
+     * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
+     * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
+     * which is relative to the hovered element.
+     *
+     * Support to be a callback
+     */
+    position?: number[] | string[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+
+    confine?: boolean
+
+    /**
+     * Consider triggered from axisPointer handle, verticalAlign should be 'middle'
+     */
+    align?: ZRAlign
+
+    verticalAlign?: ZRVerticalAlign
+    /**
+     * Delay of show. milesecond.
+     */
+    showDelay?: number
+
+    /**
+     * Delay of hide. milesecond.
+     */
+    hideDelay?: number
+
+    transitionDuration?: number
+    /**
+     * Whether mouse is allowed to enter the floating layer of tooltip
+     * If you need to interact in the tooltip like with links or buttons, it can be set as true.
+     */
+    enterable?: boolean
+
+    backgroundColor?: ColorString
+    borderColor?: ColorString
+    borderRadius?: number
+    borderWidth?: number
+
+    /**
+     * Padding between tooltip content and tooltip border.
+     */
+    padding?: number | number[]
+
+    /**
+     * Available when renderMode is 'html'
+     */
+    extraCssText?: string
+
+    textStyle?: Pick<LabelOption,
+        'color' | 'fontStyle' | 'fontWeight' | 'fontFamily' | 'fontSize' |
+        'lineHeight' | 'width' | 'height' | 'textBorderColor' | 'textBorderWidth' |
+        'textShadowColor' | 'textShadowBlur' | 'textShadowOffsetX' | 'textShadowOffsetY'
+        | 'align'> & {
+
+        // Available when renderMode is html
+        decoration?: string
+    }
+}
+
+/**
+ * Tooltip option configured on each series
+ */
+export type SeriesTooltipOption = CommonTooltipOption
 
 export interface ComponentOption {
     type?: string;

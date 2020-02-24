@@ -29,10 +29,10 @@ import { LegendSelectorButtonOption } from './LegendModel';
 import ExtensionAPI from '../../ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import ScrollableLegendModel, {ScrollableLegendOption} from './ScrollableLegendModel';
-import { RectLike } from 'zrender/src/core/BoundingRect';
 import Displayable from 'zrender/src/graphic/Displayable';
 import ComponentView from '../../view/Component';
 import Element from 'zrender/src/Element';
+import { ZRRectLike } from '../../util/types';
 
 var Group = graphic.Group;
 
@@ -298,7 +298,7 @@ class ScrollableLegendView extends LegendView {
         // Calculate `mainRect` and set `clipPath`.
         // mainRect should not be calculated by `this.group.getBoundingRect()`
         // for sake of the overflow.
-        var mainRect = {x: 0, y: 0} as RectLike;
+        var mainRect = {x: 0, y: 0} as ZRRectLike;
 
         // Consider content may be overflow (should be clipped).
         mainRect[wh] = showController ? maxSize[wh] : contentRect[wh];

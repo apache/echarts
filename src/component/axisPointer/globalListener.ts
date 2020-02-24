@@ -17,14 +17,47 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import {makeInner} from '../../util/model';
+import ExtensionAPI from '../../ExtensionAPI';
+import { ZRenderType } from 'zrender/src/zrender';
+import { ZRElementEvent } from '../../util/types';
+import { Dictionary } from 'zrender/src/core/types';
 
-var inner = makeInner();
-var each = zrUtil.each;
+type DispatchActionMethod = ExtensionAPI['dispatchAction']
+
+type Handler = (
+    currTrigger: 'click' | 'mousemove' | 'leave',
+    event: ZRElementEvent,
+    dispatchAction: DispatchActionMethod
+) => void
+
+interface Record {
+    handler: Handler
+}
+
+interface InnerStore {
+    initialized: boolean
+    records: Dictionary<Record>
+}
+
+interface ShowTipPayload {
+    type: 'showTip'
+    dispatchAction: DispatchActionMethod
+}
+
+interface HideTipPayload {
+    type: 'hideTip'
+    dispatchAction: DispatchActionMethod
+}
+interface Pendings {
+    showTip: ShowTipPayload[]
+    hideTip: HideTipPayload[]
+}
+
+const inner = makeInner<InnerStore>();
+const each = zrUtil.each;
 
 /**
  * @param {string} key
@@ -33,7 +66,7 @@ var each = zrUtil.each;
  *      param: {string} currTrigger
  *      param: {Array.<number>} point
  */
-export function register(key, api, handler) {
+export function register(key: string, api: ExtensionAPI, handler?: Handler) {
     if (env.node) {
         return;
     }
@@ -43,11 +76,11 @@ export function register(key, api, handler) {
 
     initGlobalListeners(zr, api);
 
-    var record = inner(zr).records[key] || (inner(zr).records[key] = {});
+    var record = inner(zr).records[key] || (inner(zr).records[key] = {} as Record);
     record.handler = handler;
 }
 
-function initGlobalListeners(zr, api) {
+function initGlobalListeners(zr: ZRenderType, api?: ExtensionAPI) {
     if (inner(zr).initialized) {
         return;
     }
@@ -59,7 +92,10 @@ function initGlobalListeners(zr, api) {
     // useHandler('mouseout', onLeave);
     useHandler('globalout', onLeave);
 
-    function useHandler(eventType, cb) {
+    function useHandler(
+        eventType: string,
+        cb: (record: Record, e: ZRElementEvent, dispatchAction: DispatchActionMethod) => void
+    ) {
         zr.on(eventType, function (e) {
             var dis = makeDispatchAction(api);
 
@@ -72,7 +108,7 @@ function initGlobalListeners(zr, api) {
     }
 }
 
-function dispatchTooltipFinally(pendings, api) {
+function dispatchTooltipFinally(pendings: Pendings, api: ExtensionAPI) {
     var showLen = pendings.showTip.length;
     var hideLen = pendings.hideTip.length;
 
@@ -89,16 +125,25 @@ function dispatchTooltipFinally(pendings, api) {
     }
 }
 
-function onLeave(record, e, dispatchAction) {
+function onLeave(
+    record: Record,
+    e: ZRElementEvent,
+    dispatchAction: DispatchActionMethod
+) {
     record.handler('leave', null, dispatchAction);
 }
 
-function doEnter(currTrigger, record, e, dispatchAction) {
+function doEnter(
+    currTrigger: 'click' | 'mousemove' | 'leave',
+    record: Record,
+    e: ZRElementEvent,
+    dispatchAction: DispatchActionMethod
+) {
     record.handler(currTrigger, e, dispatchAction);
 }
 
-function makeDispatchAction(api) {
-    var pendings = {
+function makeDispatchAction(api: ExtensionAPI) {
+    var pendings: Pendings = {
         showTip: [],
         hideTip: []
     };
@@ -107,10 +152,10 @@ function makeDispatchAction(api) {
     // 'showTip' and 'hideTip' can be triggered by axisPointer and tooltip,
     // which may be conflict, (axisPointer call showTip but tooltip call hideTip);
     // So we have to add "final stage" to merge those dispatched actions.
-    var dispatchAction = function (payload) {
+    var dispatchAction = function (payload: ShowTipPayload | HideTipPayload) {
         var pendingList = pendings[payload.type];
         if (pendingList) {
-            pendingList.push(payload);
+            (pendingList as ShowTipPayload[]).push(payload as ShowTipPayload);
         }
         else {
             payload.dispatchAction = dispatchAction;
@@ -124,11 +169,7 @@ function makeDispatchAction(api) {
     };
 }
 
-/**
- * @param {string} key
- * @param {module:echarts/ExtensionAPI} api
- */
-export function unregister(key, api) {
+export function unregister(key: string, api: ExtensionAPI) {
     if (env.node) {
         return;
     }

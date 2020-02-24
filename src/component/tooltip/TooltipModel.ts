@@ -20,45 +20,23 @@
 import ComponentModel from '../../model/Component';
 import {
     ComponentOption,
-    CallbackDataParams,
-    ZRAlign,
-    ZRVerticalAlign,
-    ColorString,
     LabelOption,
-    TooltipRenderMode,
-    LineStyleOption
+    LineStyleOption,
+    CommonTooltipOption,
+    TooltipRenderMode
 } from '../../util/types';
-import { RectLike } from 'zrender/src/core/BoundingRect';
 import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 
-/**
- * Position relative to the hoverred element. Only available when trigger is item.
- */
-type BuitlinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom'
-interface PositionCallback {
-    (
-        point: [number, number],
-        params: CallbackDataParams,
-        dom: HTMLElement | null,
-        /**
-         * Rect of hover elements. Will be null if not hovered
-         */
-        rect: RectLike | null,
-        size: {
-            /**
-             * Size of popup content
-             */
-            contentSize: [number, number]
-            /**
-             * Size of the chart view
-             */
-            viewSize: [number, number]
-        }
-    ): number[] | string[] | BuitlinPosition
-}
-interface TooltipOption extends ComponentOption {
-    show?: boolean
 
+export interface TooltipOption extends CommonTooltipOption, ComponentOption {
+
+    axisPointer?: AxisPointerOption & {
+        axis?: 'auto' | 'x' | 'y' | 'angle' | 'radius'
+        crossStyle?: LineStyleOption & {
+            // TODO
+            textStyle?: LabelOption
+        }
+    }
     /**
      * If show popup content
      */
@@ -67,14 +45,6 @@ interface TooltipOption extends ComponentOption {
      * Trigger only works on coordinate system.
      */
     trigger?: 'item' | 'axis' | 'none'
-    /**
-     * When to trigger
-     */
-    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousemove|click'
-    /**
-     * Whether to not hide popup content automatically
-     */
-    alwaysShowContent?: boolean
 
     displayMode?: 'single' | 'multipleByCoordSys';
 
@@ -86,70 +56,10 @@ interface TooltipOption extends ComponentOption {
     renderMode?: 'auto' | TooltipRenderMode   // TODO richText renamed canvas?
 
     /**
-     * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
-     * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
-     * which is relative to the hovered element.
-     *
-     * Support to be a callback
+     * If append popup dom to document.body
+     * Only available when renderMode is html
      */
-    position?: number[] | string[] | BuitlinPosition | PositionCallback
-
-    confine?: boolean
-
-    /**
-     * Consider triggered from axisPointer handle, verticalAlign should be 'middle'
-     */
-    align?: ZRAlign
-
-    verticalAlign?: ZRVerticalAlign
-    /**
-     * Delay of show. milesecond.
-     */
-    showDelay?: number
-
-    /**
-     * Delay of hide. milesecond.
-     */
-    hideDelay?: number
-
-    transitionDuration?: number
-    /**
-     * Whether mouse is allowed to enter the floating layer of tooltip
-     * If you need to interact in the tooltip like with links or buttons, it can be set as true.
-     * @default false
-     */
-    enterable?: boolean
-
-    backgroundColor?: ColorString
-    borderColor?: ColorString
-    /**
-     * @default 4
-     */
-    borderRadius?: number
-    borderWidth?: number
-
-    /**
-     * Padding between tooltip content and tooltip border.
-     */
-    padding?: number | number[]
-
-    /**
-     * Available when renderMode is 'html'
-     */
-    extraCssText?: string
-
-    textStyle?: Pick<LabelOption,
-        'color' | 'fontStyle' | 'fontWeight' | 'fontFamily' | 'fontSize' |
-        'lineHeight' | 'width' | 'height' | 'textBorderColor' | 'textBorderWidth' |
-        'textShadowColor' | 'textShadowBlur' | 'textShadowOffsetX' | 'textShadowOffsetY'>
-
-    axisPointer?: AxisPointerOption & {
-        axis?: 'auto' | 'x' | 'y' | 'angle' | 'radius'
-        crossStyle?: LineStyleOption & {
-            // TODO
-            textStyle?: LabelOption
-        }
-    }
+    appendToBody?: boolean
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
@@ -247,3 +157,5 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 }
 
 ComponentModel.registerClass(TooltipModel);
+
+export default TooltipModel;

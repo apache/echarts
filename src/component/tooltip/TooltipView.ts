@@ -16,13 +16,9 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import TooltipContent from './TooltipContent';
+import TooltipHTMLContent from './TooltipHTMLContent';
 import TooltipRichContent from './TooltipRichContent';
 import * as formatUtil from '../../util/format';
 import * as numberUtil from '../../util/number';
@@ -34,31 +30,154 @@ import * as globalListener from '../axisPointer/globalListener';
 import * as axisHelper from '../../coord/axisHelper';
 import * as axisPointerViewHelper from '../axisPointer/viewHelper';
 import { getTooltipRenderMode } from '../../util/model';
+import ComponentView from '../../view/Component';
+import {
+    ZRAlign,
+    ZRVerticalAlign,
+    ZRRectLike,
+    BoxLayoutOptionMixin,
+    CallbackDataParams,
+    TooltipRenderMode,
+    ECElement,
+    ColorString,
+    CommonTooltipOption
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import TooltipModel, {TooltipOption} from './TooltipModel';
+import Element from 'zrender/src/Element';
+import { Dictionary } from 'zrender/src/core/types';
+import Axis from '../../coord/Axis';
+import ComponentModel from '../../model/Component';
 
-var bind = zrUtil.bind;
-var each = zrUtil.each;
-var parsePercent = numberUtil.parsePercent;
+const bind = zrUtil.bind;
+const each = zrUtil.each;
+const parsePercent = numberUtil.parsePercent;
 
-var proxyRect = new graphic.Rect({
+const proxyRect = new graphic.Rect({
     shape: {x: -1, y: -1, width: 2, height: 2}
 });
 
-export default echarts.extendComponentView({
+type AxisModel = ComponentModel & {
+    axis: Axis
+}
 
-    type: 'tooltip',
+interface DataIndex {
+    seriesIndex: number
+    dataIndex: number
 
-    init: function (ecModel, api) {
+    dataIndexInside: number
+}
+interface DataByAxis {
+    // TODO: TYPE Value type
+    value: string | number
+    axisIndex: number
+    axisDim: string
+    axisType: string
+    axisId: string
+
+    seriesDataIndices: DataIndex[]
+}
+interface DataByCoordSys {
+    dataByAxis: DataByAxis[]
+}
+
+interface ShowTipPayload {
+    type?: 'showTip'
+    from?: string
+
+    // Type 1
+    tooltip?: ECElement['tooltip']
+
+    // Type 2
+    dataByCoordSys?: DataByCoordSys[]
+    tooltipOption?: CommonTooltipOption
+
+    // Type 3
+    seriesIndex?: number
+    dataIndex?: number
+
+
+    x?: number
+    y?: number
+    position?: TooltipOption['position']
+
+    dispatchAction?: ExtensionAPI['dispatchAction']
+}
+
+interface HideTipPayload {
+    type?: 'hideTip'
+    from?: string
+
+    dispatchAction?: ExtensionAPI['dispatchAction']
+}
+
+interface TryShowParams {
+    target?: ECElement,
+
+    offsetX?: number
+    offsetY?: number
+
+    /**
+     * Used for axis trigger.
+     */
+    dataByCoordSys?: DataByCoordSys[]
+
+    tooltipOption?: CommonTooltipOption
+
+    position?: TooltipOption['position']
+}
+
+type TooltipDataParams = CallbackDataParams & {
+    axisDim?: string
+    axisIndex?: number
+    axisType?: string
+    axisId?: string
+    // TODO: TYPE Value type
+    axisValue?: string | number
+    axisValueLabel?: string
+}
+class TooltipView extends ComponentView {
+    static type = 'tooltip' as const
+    type = TooltipView.type
+
+    private _renderMode: TooltipRenderMode
+
+    private _newLine: '<br/>' | '\n'
+
+    private _tooltipModel: TooltipModel
+
+    private _ecModel: GlobalModel
+
+    private _api: ExtensionAPI
+
+    private _alwaysShowContent: boolean
+
+    private _tooltipContent: TooltipHTMLContent | TooltipRichContent
+
+    private _refreshUpdateTimeout: number
+
+    private _lastX: number
+    private _lastY: number
+
+    private _ticket: string
+
+    private _showTimout: number
+
+    private _lastDataByCoordSys: DataByCoordSys[]
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
         if (env.node) {
             return;
         }
 
-        var tooltipModel = ecModel.getComponent('tooltip');
+        var tooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
         var renderMode = tooltipModel.get('renderMode');
         this._renderMode = getTooltipRenderMode(renderMode);
 
         var tooltipContent;
         if (this._renderMode === 'html') {
-            tooltipContent = new TooltipContent(api.getDom(), api, {
+            tooltipContent = new TooltipHTMLContent(api.getDom(), api, {
                 appendToBody: tooltipModel.get('appendToBody', true)
             });
             this._newLine = '<br/>';
@@ -69,9 +188,13 @@ export default echarts.extendComponentView({
         }
 
         this._tooltipContent = tooltipContent;
-    },
+    }
 
-    render: function (tooltipModel, ecModel, api) {
+    render(
+        tooltipModel: TooltipModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
         if (env.node) {
             return;
         }
@@ -79,29 +202,13 @@ export default echarts.extendComponentView({
         // Reset
         this.group.removeAll();
 
-        /**
-         * @private
-         * @type {module:echarts/component/tooltip/TooltipModel}
-         */
         this._tooltipModel = tooltipModel;
 
-        /**
-         * @private
-         * @type {module:echarts/model/Global}
-         */
         this._ecModel = ecModel;
 
-        /**
-         * @private
-         * @type {module:echarts/ExtensionAPI}
-         */
         this._api = api;
 
-        /**
-         * Should be cleaned when render.
-         * @private
-         * @type {Array.<Array.<Object>>}
-         */
+        // Should be cleaned when render.
         this._lastDataByCoordSys = null;
 
         /**
@@ -117,9 +224,9 @@ export default echarts.extendComponentView({
         this._initGlobalListener();
 
         this._keepShow();
-    },
+    }
 
-    _initGlobalListener: function () {
+    _initGlobalListener() {
         var tooltipModel = this._tooltipModel;
         var triggerOn = tooltipModel.get('triggerOn');
 
@@ -138,9 +245,9 @@ export default echarts.extendComponentView({
                 }
             }, this)
         );
-    },
+    }
 
-    _keepShow: function () {
+    _keepShow() {
         var tooltipModel = this._tooltipModel;
         var ecModel = this._ecModel;
         var api = this._api;
@@ -165,7 +272,7 @@ export default echarts.extendComponentView({
                 });
             });
         }
-    },
+    }
 
     /**
      * Show tip manually by
@@ -183,7 +290,12 @@ export default echarts.extendComponentView({
      *
      *  TODO Batch
      */
-    manuallyShowTip: function (tooltipModel, ecModel, api, payload) {
+    manuallyShowTip(
+        tooltipModel: TooltipModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: ShowTipPayload
+    ) {
         if (payload.from === this.uid || env.node) {
             return;
         }
@@ -197,7 +309,7 @@ export default echarts.extendComponentView({
         var dataByCoordSys = payload.dataByCoordSys;
 
         if (payload.tooltip && payload.x != null && payload.y != null) {
-            var el = proxyRect;
+            var el = proxyRect as ECElement;
             el.position = [payload.x, payload.y];
             el.update();
             el.tooltip = payload.tooltip;
@@ -213,7 +325,7 @@ export default echarts.extendComponentView({
                 offsetX: payload.x,
                 offsetY: payload.y,
                 position: payload.position,
-                dataByCoordSys: payload.dataByCoordSys,
+                dataByCoordSys: dataByCoordSys,
                 tooltipOption: payload.tooltipOption
             }, dispatchAction);
         }
@@ -251,9 +363,14 @@ export default echarts.extendComponentView({
                 target: api.getZr().findHover(payload.x, payload.y).target
             }, dispatchAction);
         }
-    },
+    }
 
-    manuallyHideTip: function (tooltipModel, ecModel, api, payload) {
+    manuallyHideTip(
+        tooltipModel: TooltipModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: HideTipPayload
+    ) {
         var tooltipContent = this._tooltipContent;
 
         if (!this._alwaysShowContent && this._tooltipModel) {
@@ -265,14 +382,20 @@ export default echarts.extendComponentView({
         if (payload.from !== this.uid) {
             this._hide(makeDispatchAction(payload, api));
         }
-    },
+    }
 
     // Be compatible with previous design, that is, when tooltip.type is 'axis' and
     // dispatchAction 'showTip' with seriesIndex and dataIndex will trigger axis pointer
     // and tooltip.
-    _manuallyAxisShowTip: function (tooltipModel, ecModel, api, payload) {
+    _manuallyAxisShowTip(
+        tooltipModel: TooltipModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: ShowTipPayload
+    ) {
         var seriesIndex = payload.seriesIndex;
         var dataIndex = payload.dataIndex;
+        // @ts-ignore
         var coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
 
         if (seriesIndex == null || dataIndex == null || coordSysAxesInfo == null) {
@@ -285,14 +408,14 @@ export default echarts.extendComponentView({
         }
 
         var data = seriesModel.getData();
-        var tooltipModel = buildTooltipModel([
+        var tooltipCascadedModel = buildTooltipModel([
             data.getItemModel(dataIndex),
             seriesModel,
             (seriesModel.coordinateSystem || {}).model,
             tooltipModel
         ]);
 
-        if (tooltipModel.get('trigger') !== 'axis') {
+        if (tooltipCascadedModel.get('trigger') !== 'axis') {
             return;
         }
 
@@ -304,9 +427,12 @@ export default echarts.extendComponentView({
         });
 
         return true;
-    },
+    }
 
-    _tryShow: function (e, dispatchAction) {
+    _tryShow(
+        e: TryShowParams,
+        dispatchAction: ExtensionAPI['dispatchAction']
+    ) {
         var el = e.target;
         var tooltipModel = this._tooltipModel;
 
@@ -336,9 +462,12 @@ export default echarts.extendComponentView({
             this._lastDataByCoordSys = null;
             this._hide(dispatchAction);
         }
-    },
+    }
 
-    _showOrMove: function (tooltipModel, cb) {
+    _showOrMove(
+        tooltipModel: Model<TooltipOption>,
+        cb: () => void
+    ) {
         // showDelay is used in this case: tooltip.enterable is set
         // as true. User intent to move mouse into tooltip and click
         // something. `showDelay` makes it easyer to enter the content
@@ -347,18 +476,21 @@ export default echarts.extendComponentView({
         cb = zrUtil.bind(cb, this);
         clearTimeout(this._showTimout);
         delay > 0
-            ? (this._showTimout = setTimeout(cb, delay))
+            ? (this._showTimout = setTimeout(cb, delay) as any)
             : cb();
-    },
+    }
 
-    _showAxisTooltip: function (dataByCoordSys, e) {
+    _showAxisTooltip(
+        dataByCoordSys: DataByCoordSys[],
+        e: TryShowParams
+    ) {
         var ecModel = this._ecModel;
         var globalTooltipModel = this._tooltipModel;
 
         var point = [e.offsetX, e.offsetY];
 
-        var singleDefaultHTML = [];
-        var singleParamsList = [];
+        var singleDefaultHTML: string[] = [];
+        var singleParamsList: TooltipDataParams[] = [];
         var singleTooltipModel = buildTooltipModel([
             e.tooltipOption,
             globalTooltipModel
@@ -384,32 +516,35 @@ export default echarts.extendComponentView({
             each(itemCoordSys.dataByAxis, function (item) {
                 var axisModel = ecModel.getComponent(item.axisDim + 'Axis', item.axisIndex);
                 var axisValue = item.value;
-                var seriesDefaultHTML = [];
+                var seriesDefaultHTML: string[] = [];
 
                 if (!axisModel || axisValue == null) {
                     return;
                 }
 
                 var valueLabel = axisPointerViewHelper.getValueLabel(
-                    axisValue, axisModel.axis, ecModel,
+                    axisValue, (axisModel as AxisModel).axis, ecModel,
                     item.seriesDataIndices,
+                    // @ts-ignore
                     item.valueLabelOpt
                 );
 
                 zrUtil.each(item.seriesDataIndices, function (idxItem) {
                     var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                     var dataIndex = idxItem.dataIndexInside;
-                    var dataParams = series && series.getDataParams(dataIndex);
+                    var dataParams = series && series.getDataParams(dataIndex) as TooltipDataParams;
                     dataParams.axisDim = item.axisDim;
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
                     dataParams.axisId = item.axisId;
-                    dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
+                    dataParams.axisValue = axisHelper.getAxisRawValue((axisModel as AxisModel).axis, axisValue);
                     dataParams.axisValueLabel = valueLabel;
 
                     if (dataParams) {
                         singleParamsList.push(dataParams);
-                        var seriesTooltip = series.formatTooltip(dataIndex, true, null, renderMode);
+                        var seriesTooltip = series.formatTooltip(
+                            dataIndex, true, null, renderMode as TooltipRenderMode
+                        );
 
                         var html;
                         if (zrUtil.isObject(seriesTooltip)) {
@@ -443,10 +578,10 @@ export default echarts.extendComponentView({
 
         // In most case, the second axis is shown upper than the first one.
         singleDefaultHTML.reverse();
-        singleDefaultHTML = singleDefaultHTML.join(this._newLine + this._newLine);
+        const singleDefaultHTMLStr = singleDefaultHTML.join(this._newLine + this._newLine);
 
         var positionExpr = e.position;
-        this._showOrMove(singleTooltipModel, function () {
+        this._showOrMove(singleTooltipModel, function (this: TooltipView) {
             if (this._updateContentNotChangedOnAxis(dataByCoordSys)) {
                 this._updatePosition(
                     singleTooltipModel,
@@ -458,7 +593,7 @@ export default echarts.extendComponentView({
             }
             else {
                 this._showTooltipContent(
-                    singleTooltipModel, singleDefaultHTML, singleParamsList, Math.random(),
+                    singleTooltipModel, singleDefaultHTMLStr, singleParamsList, Math.random() + '',
                     point[0], point[1], positionExpr, undefined, markers
                 );
             }
@@ -466,9 +601,13 @@ export default echarts.extendComponentView({
 
         // Do not trigger events here, because this branch only be entered
         // from dispatchAction.
-    },
+    }
 
-    _showSeriesItemTooltip: function (e, el, dispatchAction) {
+    _showSeriesItemTooltip(
+        e: TryShowParams,
+        el: ECElement,
+        dispatchAction: ExtensionAPI['dispatchAction']
+    ) {
         var ecModel = this._ecModel;
         // Use dataModel in element if possible
         // Used when mouseover on a element like markPoint or edge
@@ -496,8 +635,8 @@ export default echarts.extendComponentView({
 
         var params = dataModel.getDataParams(dataIndex, dataType);
         var seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
-        var defaultHtml;
-        var markers;
+        var defaultHtml: string;
+        var markers: Dictionary<ColorString>;
         if (zrUtil.isObject(seriesTooltip)) {
             defaultHtml = seriesTooltip.html;
             markers = seriesTooltip.markers;
@@ -509,7 +648,7 @@ export default echarts.extendComponentView({
 
         var asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 
-        this._showOrMove(tooltipModel, function () {
+        this._showOrMove(tooltipModel, function (this: TooltipView) {
             this._showTooltipContent(
                 tooltipModel, defaultHtml, params, asyncTicket,
                 e.offsetX, e.offsetY, e.position, e.target, markers
@@ -525,9 +664,13 @@ export default echarts.extendComponentView({
             seriesIndex: seriesIndex,
             from: this.uid
         });
-    },
+    }
 
-    _showComponentItemTooltip: function (e, el, dispatchAction) {
+    _showComponentItemTooltip(
+        e: TryShowParams,
+        el: ECElement,
+        dispatchAction: ExtensionAPI['dispatchAction']
+    ) {
         var tooltipOpt = el.tooltip;
         if (typeof tooltipOpt === 'string') {
             var content = tooltipOpt;
@@ -539,13 +682,13 @@ export default echarts.extendComponentView({
         }
         var subTooltipModel = new Model(tooltipOpt, this._tooltipModel, this._ecModel);
         var defaultHtml = subTooltipModel.get('content');
-        var asyncTicket = Math.random();
+        var asyncTicket = Math.random() + '';
 
         // Do not check whether `trigger` is 'none' here, because `trigger`
         // only works on cooridinate system. In fact, we have not found case
         // that requires setting `trigger` nothing on component yet.
 
-        this._showOrMove(subTooltipModel, function () {
+        this._showOrMove(subTooltipModel, function (this: TooltipView) {
             this._showTooltipContent(
                 subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
                 asyncTicket, e.offsetX, e.offsetY, e.position, el
@@ -557,10 +700,20 @@ export default echarts.extendComponentView({
             type: 'showTip',
             from: this.uid
         });
-    },
+    }
 
-    _showTooltipContent: function (
-        tooltipModel, defaultHtml, params, asyncTicket, x, y, positionExpr, el, markers
+    _showTooltipContent(
+        // Use Model<TooltipOption> insteadof TooltipModel because this model may be from series or other options.
+        // Instead of top level tooltip.
+        tooltipModel: Model<TooltipOption>,
+        defaultHtml: string,
+        params: TooltipDataParams | TooltipDataParams[],
+        asyncTicket: string,
+        x: number,
+        y: number,
+        positionExpr: TooltipOption['position'],
+        el: ECElement,
+        markers?: Dictionary<ColorString>
     ) {
         // Reset ticket
         this._ticket = '';
@@ -579,7 +732,7 @@ export default echarts.extendComponentView({
             html = formatUtil.formatTpl(formatter, params, true);
         }
         else if (typeof formatter === 'function') {
-            var callback = bind(function (cbTicket, html) {
+            var callback = bind(function (cbTicket: string, html: string) {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markers, tooltipModel);
                     this._updatePosition(
@@ -597,19 +750,17 @@ export default echarts.extendComponentView({
         this._updatePosition(
             tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
-    },
+    }
 
-    /**
-     * @param  {string|Function|Array.<number>|Object} positionExpr
-     * @param  {number} x Mouse x
-     * @param  {number} y Mouse y
-     * @param  {boolean} confine Whether confine tooltip content in view rect.
-     * @param  {Object|<Array.<Object>} params
-     * @param  {module:zrender/Element} el target element
-     * @param  {module:echarts/ExtensionAPI} api
-     * @return {Array.<number>}
-     */
-    _updatePosition: function (tooltipModel, positionExpr, x, y, content, params, el) {
+    _updatePosition(
+        tooltipModel: Model<TooltipOption>,
+        positionExpr: TooltipOption['position'],
+        x: number,  // Mouse x
+        y: number,  // Mouse y
+        content: TooltipHTMLContent | TooltipRichContent,
+        params:  TooltipDataParams | TooltipDataParams[],
+        el?: Element
+    ) {
         var viewWidth = this._api.getWidth();
         var viewHeight = this._api.getHeight();
 
@@ -625,7 +776,7 @@ export default echarts.extendComponentView({
             // Callback of position can be an array or a string specify the position
             positionExpr = positionExpr([x, y], params, content.el, rect, {
                 viewSize: [viewWidth, viewHeight],
-                contentSize: contentSize.slice()
+                contentSize: contentSize.slice() as [number, number]
             });
         }
 
@@ -634,10 +785,11 @@ export default echarts.extendComponentView({
             y = parsePercent(positionExpr[1], viewHeight);
         }
         else if (zrUtil.isObject(positionExpr)) {
-            positionExpr.width = contentSize[0];
-            positionExpr.height = contentSize[1];
+            const boxLayoutPosition = positionExpr as BoxLayoutOptionMixin;
+            boxLayoutPosition.width = contentSize[0];
+            boxLayoutPosition.height = contentSize[1];
             var layoutRect = layoutUtil.getLayoutRect(
-                positionExpr, {width: viewWidth, height: viewHeight}
+                boxLayoutPosition, {width: viewWidth, height: viewHeight}
             );
             x = layoutRect.x;
             y = layoutRect.y;
@@ -648,14 +800,14 @@ export default echarts.extendComponentView({
         }
         // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
         else if (typeof positionExpr === 'string' && el) {
-            var pos = calcTooltipPosition(
+            const pos = calcTooltipPosition(
                 positionExpr, rect, contentSize
             );
             x = pos[0];
             y = pos[1];
         }
         else {
-            var pos = refixTooltipPosition(
+            const pos = refixTooltipPosition(
                 x, y, content, viewWidth, viewHeight, align ? null : 20, vAlign ? null : 20
             );
             x = pos[0];
@@ -666,7 +818,7 @@ export default echarts.extendComponentView({
         vAlign && (y -= isCenterAlign(vAlign) ? contentSize[1] / 2 : vAlign === 'bottom' ? contentSize[1] : 0);
 
         if (tooltipModel.get('confine')) {
-            var pos = confineTooltipPosition(
+            const pos = confineTooltipPosition(
                 x, y, content, viewWidth, viewHeight
             );
             x = pos[0];
@@ -674,36 +826,36 @@ export default echarts.extendComponentView({
         }
 
         content.moveTo(x, y);
-    },
+    }
 
     // FIXME
     // Should we remove this but leave this to user?
-    _updateContentNotChangedOnAxis: function (dataByCoordSys) {
+    _updateContentNotChangedOnAxis(dataByCoordSys: DataByCoordSys[]) {
         var lastCoordSys = this._lastDataByCoordSys;
         var contentNotChanged = !!lastCoordSys
             && lastCoordSys.length === dataByCoordSys.length;
 
         contentNotChanged && each(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
-            var lastDataByAxis = lastItemCoordSys.dataByAxis || {};
-            var thisItemCoordSys = dataByCoordSys[indexCoordSys] || {};
-            var thisDataByAxis = thisItemCoordSys.dataByAxis || [];
-            contentNotChanged &= lastDataByAxis.length === thisDataByAxis.length;
+            var lastDataByAxis = lastItemCoordSys.dataByAxis || [] as DataByAxis[];
+            var thisItemCoordSys = dataByCoordSys[indexCoordSys] || {} as DataByCoordSys;
+            var thisDataByAxis = thisItemCoordSys.dataByAxis || [] as DataByAxis[];
+            contentNotChanged = contentNotChanged && lastDataByAxis.length === thisDataByAxis.length;
 
             contentNotChanged && each(lastDataByAxis, function (lastItem, indexAxis) {
-                var thisItem = thisDataByAxis[indexAxis] || {};
-                var lastIndices = lastItem.seriesDataIndices || [];
-                var newIndices = thisItem.seriesDataIndices || [];
+                var thisItem = thisDataByAxis[indexAxis] || {} as DataByAxis;
+                var lastIndices = lastItem.seriesDataIndices || [] as DataIndex[];
+                var newIndices = thisItem.seriesDataIndices || [] as DataIndex[];
 
-                contentNotChanged
-                    &= lastItem.value === thisItem.value
+                contentNotChanged = contentNotChanged
+                    && lastItem.value === thisItem.value
                     && lastItem.axisType === thisItem.axisType
                     && lastItem.axisId === thisItem.axisId
                     && lastIndices.length === newIndices.length;
 
                 contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
                     var newIdxItem = newIndices[j];
-                    contentNotChanged
-                        &= lastIdxItem.seriesIndex === newIdxItem.seriesIndex
+                    contentNotChanged = contentNotChanged
+                        && lastIdxItem.seriesIndex === newIdxItem.seriesIndex
                         && lastIdxItem.dataIndex === newIdxItem.dataIndex;
                 });
             });
@@ -712,9 +864,9 @@ export default echarts.extendComponentView({
         this._lastDataByCoordSys = dataByCoordSys;
 
         return !!contentNotChanged;
-    },
+    }
 
-    _hide: function (dispatchAction) {
+    _hide(dispatchAction: ExtensionAPI['dispatchAction']) {
         // Do not directly hideLater here, because this behavior may be prevented
         // in dispatchAction when showTip is dispatched.
 
@@ -725,29 +877,31 @@ export default echarts.extendComponentView({
             type: 'hideTip',
             from: this.uid
         });
-    },
+    }
 
-    dispose: function (ecModel, api) {
+    dispose(ecModel: GlobalModel, api: ExtensionAPI) {
         if (env.node) {
             return;
         }
         this._tooltipContent.dispose();
         globalListener.unregister('itemTooltip', api);
     }
-});
+}
 
-
+type TooltipableOption = {
+    tooltip?: TooltipOption | string
+}
 /**
- * @param {Array.<Object|module:echarts/model/Model>} modelCascade
  * From top to bottom. (the last one should be globalTooltipModel);
  */
-function buildTooltipModel(modelCascade) {
-    var resultModel = modelCascade.pop();
+function buildTooltipModel(modelCascade: (TooltipModel | Model<TooltipableOption> | TooltipOption | string)[]) {
+    // Last is always tooltip model.
+    var resultModel = modelCascade.pop() as Model<TooltipOption>;
     while (modelCascade.length) {
         var tooltipOpt = modelCascade.pop();
         if (tooltipOpt) {
-            if (Model.isInstance(tooltipOpt)) {
-                tooltipOpt = tooltipOpt.get('tooltip', true);
+            if (tooltipOpt instanceof Model) {
+                tooltipOpt = (tooltipOpt as Model<TooltipableOption>).get('tooltip', true);
             }
             // In each data item tooltip can be simply write:
             // {
@@ -755,19 +909,26 @@ function buildTooltipModel(modelCascade) {
             //  tooltip: 'Something you need to know'
             // }
             if (typeof tooltipOpt === 'string') {
-                tooltipOpt = {formatter: tooltipOpt};
+                tooltipOpt = {
+                    formatter: tooltipOpt
+                };
             }
-            resultModel = new Model(tooltipOpt, resultModel, resultModel.ecModel);
+            resultModel = new Model(tooltipOpt, resultModel, resultModel.ecModel) as Model<TooltipOption>;
         }
     }
     return resultModel;
 }
 
-function makeDispatchAction(payload, api) {
+function makeDispatchAction(payload: ShowTipPayload | HideTipPayload, api: ExtensionAPI) {
     return payload.dispatchAction || zrUtil.bind(api.dispatchAction, api);
 }
 
-function refixTooltipPosition(x, y, content, viewWidth, viewHeight, gapH, gapV) {
+function refixTooltipPosition(
+    x: number, y: number,
+    content: TooltipHTMLContent | TooltipRichContent,
+    viewWidth: number, viewHeight: number,
+    gapH: number, gapV: number
+) {
     var size = content.getOuterSize();
     var width = size.width;
     var height = size.height;
@@ -791,7 +952,12 @@ function refixTooltipPosition(x, y, content, viewWidth, viewHeight, gapH, gapV) 
     return [x, y];
 }
 
-function confineTooltipPosition(x, y, content, viewWidth, viewHeight) {
+function confineTooltipPosition(
+    x: number, y: number,
+    content: TooltipHTMLContent | TooltipRichContent,
+    viewWidth: number,
+    viewHeight: number
+): [number, number] {
     var size = content.getOuterSize();
     var width = size.width;
     var height = size.height;
@@ -804,7 +970,11 @@ function confineTooltipPosition(x, y, content, viewWidth, viewHeight) {
     return [x, y];
 }
 
-function calcTooltipPosition(position, rect, contentSize) {
+function calcTooltipPosition(
+    position: TooltipOption['position'],
+    rect: ZRRectLike,
+    contentSize: number[]
+): [number, number] {
     var domWidth = contentSize[0];
     var domHeight = contentSize[1];
     var gap = 5;
@@ -836,6 +1006,8 @@ function calcTooltipPosition(position, rect, contentSize) {
     return [x, y];
 }
 
-function isCenterAlign(align) {
+function isCenterAlign(align: ZRAlign | ZRVerticalAlign) {
     return align === 'center' || align === 'middle';
 }
+
+ComponentView.registerClass(TooltipView);

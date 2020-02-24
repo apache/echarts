@@ -36,7 +36,9 @@ import {
 import { SeriesTaskContext, SeriesTask } from '../stream/Scheduler';
 import List from '../data/List';
 
-var inner = modelUtil.makeInner();
+var inner = modelUtil.makeInner<{
+    updateMethod: keyof Chart
+}>();
 var renderPlanner = createRenderPlanner();
 
 
@@ -176,7 +178,7 @@ class Chart {
         this.render(seriesModel, ecModel, api, payload);
     }
 
-    static markUpdateMethod(payload: Payload, methodName: string): void {
+    static markUpdateMethod(payload: Payload, methodName: keyof Chart): void {
         inner(payload).updateMethod = methodName;
     }
 
@@ -241,7 +243,7 @@ function renderTaskReset(context: SeriesTaskContext): TaskResetCallbackReturn<Se
     var progressiveRender = seriesModel.pipelineContext.progressiveRender;
     var view = context.view;
 
-    var updateMethod: keyof Chart = payload && inner(payload).updateMethod;
+    var updateMethod = payload && inner(payload).updateMethod;
     var methodName: keyof Chart = progressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])

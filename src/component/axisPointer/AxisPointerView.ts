@@ -17,17 +17,19 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as globalListener from './globalListener';
+import ComponentView from '../../view/Component';
+import AxisPointerModel from './AxisPointerModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import TooltipModel from '../tooltip/TooltipModel';
 
-var AxisPointerView = echarts.extendComponentView({
+class AxisPointerView extends ComponentView {
+    static type = 'axisPointer' as const
+    type = AxisPointerView.type
 
-    type: 'axisPointer',
-
-    render: function (globalAxisPointerModel, ecModel, api) {
-        var globalTooltipModel = ecModel.getComponent('tooltip');
+    render(globalAxisPointerModel: AxisPointerModel, ecModel: GlobalModel, api: ExtensionAPI) {
+        var globalTooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
         var triggerOn = globalAxisPointerModel.get('triggerOn')
             || (globalTooltipModel && globalTooltipModel.get('triggerOn') || 'mousemove|click');
 
@@ -50,24 +52,17 @@ var AxisPointerView = echarts.extendComponentView({
                 }
             }
         );
-    },
-
-    /**
-     * @override
-     */
-    remove: function (ecModel, api) {
-        globalListener.unregister(api.getZr(), 'axisPointer');
-        AxisPointerView.superApply(this._model, 'remove', arguments);
-    },
-
-    /**
-     * @override
-     */
-    dispose: function (ecModel, api) {
-        globalListener.unregister('axisPointer', api);
-        AxisPointerView.superApply(this._model, 'dispose', arguments);
     }
 
-});
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
+        globalListener.unregister('axisPointer', api);
+    }
+
+    dispose(ecModel: GlobalModel, api: ExtensionAPI) {
+        globalListener.unregister('axisPointer', api);
+    }
+}
+
+ComponentView.registerClass(AxisPointerView);
 
 export default AxisPointerView;

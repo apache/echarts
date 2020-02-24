@@ -41,7 +41,9 @@ import {
     BoxLayoutOptionMixin
 } from '../util/types';
 
-var inner = makeInner();
+var inner = makeInner<{
+    defaultOption: ComponentOption
+}>();
 
 class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Model<Opt> {
 

@@ -22,11 +22,11 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import Cartesian from './Cartesian';
 import { ScaleDataValue } from '../../util/types';
 import Axis2D from './Axis2D';
-import { CoordinateSystemExecutive } from '../CoordinateSystem';
+import { CoordinateSystem } from '../CoordinateSystem';
 import Grid, {cartesian2DDimensions} from './Grid';
 import GridModel from './GridModel';
 
-class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystemExecutive {
+class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
     readonly type: string = 'cartesian2d';
 

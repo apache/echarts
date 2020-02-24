@@ -39,7 +39,7 @@ import Arc from 'zrender/src/graphic/shape/Arc';
 import CompoundPath from 'zrender/src/graphic/CompoundPath';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import RadialGradient from 'zrender/src/graphic/RadialGradient';
-import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Dictionary, ImageLike } from 'zrender/src/core/types';
@@ -50,7 +50,14 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { AnimationOptionMixin, LabelOption, AnimationDelayCallbackParam, DisplayState, ECElement } from './types';
+import {
+    AnimationOptionMixin,
+    LabelOption,
+    AnimationDelayCallbackParam,
+    DisplayState,
+    ECElement,
+    ZRRectLike
+} from './types';
 import GlobalModel from '../model/Global';
 
 
@@ -207,7 +214,7 @@ export function getShapeClass(name: string): {new(): Path} {
 export function makePath(
     pathData: string,
     opts: SVGPathOption,
-    rect: RectLike,
+    rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ): SVGPath {
     var path = pathTool.createFromString(pathData, opts);
@@ -229,7 +236,7 @@ export function makePath(
  */
 export function makeImage(
     imageUrl: string,
-    rect: RectLike,
+    rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ) {
     var path = new ZImage({
@@ -260,10 +267,10 @@ export function makeImage(
  * @param  boundingRect constraint bounding box
  * @return element position containing x, y, width, and height
  */
-function centerGraphic(rect: RectLike, boundingRect: {
+function centerGraphic(rect: ZRRectLike, boundingRect: {
     width: number
     height: number
-}): RectLike {
+}): ZRRectLike {
     // Set rect to center, keep width / height ratio.
     var aspect = boundingRect.width / boundingRect.height;
     var width = rect.height * aspect;
@@ -293,7 +300,7 @@ export var mergePath = pathTool.mergePath;
  * @param path
  * @param rect
  */
-export function resizePath(path: SVGPath, rect: RectLike): void {
+export function resizePath(path: SVGPath, rect: ZRRectLike): void {
     if (!path.applyTransform) {
         return;
     }
@@ -1379,7 +1386,7 @@ export function groupTransition(
     });
 }
 
-export function clipPointsByRect(points: vector.VectorArray[], rect: RectLike): vector.VectorArray[] {
+export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike): vector.VectorArray[] {
     // FIXME: this way migth be incorrect when grpahic clipped by a corner.
     // and when element have border.
     return zrUtil.map(points, function (point) {
@@ -1396,7 +1403,7 @@ export function clipPointsByRect(points: vector.VectorArray[], rect: RectLike): 
 /**
  * Return a new clipped rect. If rect size are negative, return undefined.
  */
-export function clipRectByRect(targetRect: RectLike, rect: RectLike): RectLike {
+export function clipRectByRect(targetRect: ZRRectLike, rect: ZRRectLike): ZRRectLike {
     var x = mathMax(targetRect.x, rect.x);
     var x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
     var y = mathMax(targetRect.y, rect.y);
@@ -1417,7 +1424,7 @@ export function clipRectByRect(targetRect: RectLike, rect: RectLike): RectLike {
 export function createIcon(
     iconStr: string,    // Support 'image://' or 'path://' or direct svg path.
     opt?: Omit<DisplayableProps, 'style'>,
-    rect?: RectLike
+    rect?: ZRRectLike
 ): SVGPath | ZImage {
     const innerOpts: DisplayableProps = zrUtil.extend({rectHover: true}, opt);
     const style: StyleProps = innerOpts.style = {strokeNoScale: true};

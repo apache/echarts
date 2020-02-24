@@ -47,14 +47,17 @@ import {
 } from '../data/helper/sourceHelper';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from './Global';
-import { CoordinateSystemExecutive } from '../coord/CoordinateSystem';
+import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
 import Source from '../data/Source';
 
-var inner = modelUtil.makeInner();
+var inner = modelUtil.makeInner<{
+    data: List
+    dataBeforeProcessed: List
+}>();
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
 
@@ -74,7 +77,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     seriesIndex: number;
 
     // coodinateSystem will be injected in the echarts/CoordinateSystem
-    coordinateSystem: CoordinateSystemExecutive;
+    coordinateSystem: CoordinateSystem;
 
     // Injected outside
     dataTask: SeriesTask;
@@ -249,7 +252,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             // restore or setOption with not merge mode), series data may
             // be still need to judge animation or something when graphic
             // elements want to know whether fade out.
-            return inner(this).data;
+            return inner(this).data as List<SeriesModel<Opt>>;
         }
     }
 

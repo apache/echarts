@@ -20,10 +20,10 @@
 // Layout helpers for each component positioning
 
 import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
-import { BoxLayoutOptionMixin, ComponentLayoutMode } from './types';
+import { BoxLayoutOptionMixin, ComponentLayoutMode, ZRRectLike } from './types';
 import { Group } from 'zrender/src/export';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
@@ -165,7 +165,7 @@ export function getAvailableSize(
         x2: number | string
         y2: number | string
     },
-    containerRect: RectLike,
+    containerRect: ZRRectLike,
     margin: number[] | number
 ) {
     var containerWidth = containerRect.width;
