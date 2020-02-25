@@ -17,12 +17,17 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
+import FunnelSeriesModel, { FunnelSeriesOption } from './FunnelSeries';
+import ExtensionAPI from '../../ExtensionAPI';
+import List from '../../data/List';
+import Model from '../../model/Model';
+import GlobalModel from '../../model/Global';
 
-function getViewRect(seriesModel, api) {
+type FunnelDataItem = FunnelSeriesOption['data'][number] & object;
+
+function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
@@ -31,7 +36,7 @@ function getViewRect(seriesModel, api) {
     );
 }
 
-function getSortedIndices(data, sort) {
+function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
     var valueDim = data.mapDimension('value');
     var valueArr = data.mapArray(valueDim, function (val) {
         return val;
@@ -54,9 +59,9 @@ function getSortedIndices(data, sort) {
     return indices;
 }
 
-function labelLayout(data) {
+function labelLayout(data: List) {
     data.each(function (idx) {
-        var itemModel = data.getItemModel(idx);
+        var itemModel = data.getItemModel(idx) as Model<FunnelDataItem>;
         var labelModel = itemModel.getModel('label');
         var labelPosition = labelModel.get('position');
 
@@ -172,8 +177,8 @@ function labelLayout(data) {
     });
 }
 
-export default function (ecModel, api, payload) {
-    ecModel.eachSeriesByType('funnel', function (seriesModel) {
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+    ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
         var data = seriesModel.getData();
         var valueDim = data.mapDimension('value');
         var sort = seriesModel.get('sort');
@@ -200,9 +205,9 @@ export default function (ecModel, api, payload) {
 
         var y = viewRect.y;
 
-        var getLinePoints = function (idx, offY) {
+        var getLinePoints = function (idx: number, offY: number) {
             // End point index is data.count() and we assign it 0
-            var val = data.get(valueDim, idx) || 0;
+            var val = data.get(valueDim, idx) as number || 0;
             var itemWidth = linearMap(val, [min, max], sizeExtent, true);
             var x0;
             switch (funnelAlign) {

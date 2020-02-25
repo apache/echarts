@@ -1555,6 +1555,7 @@ class List <HostModel extends Model = Model> {
     /**
      * Get model of one data item.
      */
+    // TODO: Type of data item
     getItemModel(idx: number): Model {
         var hostModel = this.hostModel;
         var dataItem = this.getRawDataItem(idx) as ModelOption;

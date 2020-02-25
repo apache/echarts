@@ -21,7 +21,7 @@ import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
 import { StyleProps } from 'zrender/src/graphic/Style';
 
-const STYLE_LIST = [
+var getItemStyle = makeStyleMapper([
     ['fill', 'color'],
     ['stroke', 'borderColor'],
     ['lineWidth', 'borderWidth'],
@@ -32,25 +32,31 @@ const STYLE_LIST = [
     ['shadowColor'],
     ['textPosition'],
     ['textAlign']
-] as const;
-var getItemStyle = makeStyleMapper(STYLE_LIST);
+]);
 
-interface ItemStyleMixin extends Pick<Model, 'get'> {}
-
-type ItemStyleProps = Pick<
-    StyleProps, typeof STYLE_LIST[number][0]
+type ItemStyleProps = Pick<StyleProps,
+    'fill'
+    | 'stroke'
+    | 'lineWidth'
+    | 'opacity'
+    | 'shadowBlur'
+    | 'shadowOffsetX'
+    | 'shadowOffsetY'
+    | 'shadowColor'
+    | 'textPosition'
+    | 'textAlign'
 >
 
 class ItemStyleMixin {
 
-    getItemStyle(excludes?: string[], includes?: string[]): ItemStyleProps {
+    getItemStyle(this: Model, excludes?: string[], includes?: string[]): ItemStyleProps {
         var style = getItemStyle(this, excludes, includes);
         var lineDash = this.getBorderLineDash();
         lineDash && ((style as any).lineDash = lineDash);
         return style;
     }
 
-    getBorderLineDash(): number[] {
+    getBorderLineDash(this: Model): number[] {
         var lineType = this.get('borderType');
         return (lineType === 'solid' || lineType == null) ? null
             : (lineType === 'dashed' ? [5, 5] : [1, 1]);

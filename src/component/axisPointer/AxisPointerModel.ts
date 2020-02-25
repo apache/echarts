@@ -26,7 +26,8 @@ import {
     LabelOption,
     ZREasing,
     ColorString,
-    ShadowOptionMixin
+    ShadowOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 
 interface AxisInfo {
@@ -60,6 +61,23 @@ interface AxisPointerLink {
         targetAxisInfo: AxisInfo
     ): OptionDataValue
 }
+
+type LabelFormatterParmas = Pick<CallbackDataParams,
+    'componentType'
+    | 'componentSubType'
+    | 'componentIndex'
+    | 'seriesType'
+    | 'seriesIndex'
+    | 'seriesId'
+    | 'seriesName'
+    | 'name'
+    | 'dataIndex'
+    | 'data'
+    | 'dataType'
+    | 'value'
+    | 'dimensionNames'
+    | 'dimensionIndex'
+>
 
 export interface AxisPointerOption extends ComponentOption {
 
@@ -96,6 +114,10 @@ export interface AxisPointerOption extends ComponentOption {
     label?: LabelOption & {
         precision?: 'auto' | string
         margin?: number
+        /**
+         * String template include variable {value} or callback function
+         */
+        formatter?: string | ((params: LabelFormatterParmas) => string)
     }
     animation?: boolean | 'auto'
     animationDurationUpdate?: number

@@ -17,27 +17,31 @@
 * under the License.
 */
 
-// @ts-nocheck
+import Path, { PathProps } from 'zrender/src/graphic/Path';
 
-import Path from 'zrender/src/graphic/Path';
+class PointerShape {
+    angle = 0
+    width = 10
+    r = 10
+    x = 0
+    y = 0
+}
 
-export default Path.extend({
+interface PointerPathProps extends PathProps {
+    shape?: Partial<PointerShape>
+}
 
-    type: 'echartsGaugePointer',
+export default class PointerPath extends Path<PointerPathProps> {
 
-    shape: {
-        angle: 0,
+    type = 'pointer'
 
-        width: 10,
+    shape: PointerShape
 
-        r: 10,
+    constructor(opts?: PointerPathProps) {
+        super(opts, null, new PointerShape());
+    }
 
-        x: 0,
-
-        y: 0
-    },
-
-    buildPath: function (ctx, shape) {
+    buildPath(ctx: CanvasRenderingContext2D, shape: PointerShape) {
         var mathCos = Math.cos;
         var mathSin = Math.sin;
 
@@ -62,6 +66,5 @@ export default Path.extend({
             shape.y - mathSin(angle) * width
         );
         ctx.lineTo(x, y);
-        return;
     }
-});
+}

@@ -17,21 +17,21 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // TODO Parse shadow style
 // TODO Only shallow path support
 import * as zrUtil from 'zrender/src/core/util';
+import Model from '../Model';
+import { Dictionary } from 'zrender/src/core/types';
 
-export default function (properties) {
+export default function (properties: readonly string[][]) {
     // Normalize
     for (var i = 0; i < properties.length; i++) {
         if (!properties[i][1]) {
             properties[i][1] = properties[i][0];
         }
     }
-    return function (model, excludes, includes?) {
-        var style = {};
+    return function (model: Model, excludes: string[], includes?: string[]) {
+        var style: Dictionary<any> = {};
         for (var i = 0; i < properties.length; i++) {
             var propName = properties[i][1];
             if ((excludes && zrUtil.indexOf(excludes, propName) >= 0)

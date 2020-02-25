@@ -23,12 +23,12 @@ import labelLayout from './labelLayout';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import PieSeries from './PieSeries';
+import PieSeriesModel from './PieSeries';
 
 var PI2 = Math.PI * 2;
 var RADIAN = Math.PI / 180;
 
-function getViewRect(seriesModel: PieSeries, api: ExtensionAPI) {
+function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
@@ -42,7 +42,7 @@ export default function (
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
-    ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeries) {
+    ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeriesModel) {
         var data = seriesModel.getData();
         var valueDim = data.mapDimension('value');
         var viewRect = getViewRect(seriesModel, api);

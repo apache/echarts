@@ -17,14 +17,23 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
+import GaugeSeriesModel from './GaugeSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { ColorString } from '../../util/types';
+import List from '../../data/List';
 
-function parsePosition(seriesModel, api) {
+interface PosInfo {
+    cx: number
+    cy: number
+    r: number
+}
+
+function parsePosition(seriesModel: GaugeSeriesModel, api: ExtensionAPI): PosInfo {
     var center = seriesModel.get('center');
     var width = api.getWidth();
     var height = api.getHeight();
@@ -40,13 +49,14 @@ function parsePosition(seriesModel, api) {
     };
 }
 
-function formatLabel(label, labelFormatter) {
+function formatLabel(value: number, labelFormatter: string | ((value: number) => string)): string {
+    let label = value + '';
     if (labelFormatter) {
         if (typeof labelFormatter === 'string') {
-            label = labelFormatter.replace('{value}', label != null ? label : '');
+            label = labelFormatter.replace('{value}', value != null ? value + '' : '');
         }
         else if (typeof labelFormatter === 'function') {
-            label = labelFormatter(label);
+            label = labelFormatter(value);
         }
     }
 
@@ -55,25 +65,33 @@ function formatLabel(label, labelFormatter) {
 
 var PI2 = Math.PI * 2;
 
-var GaugeView = ChartView.extend({
+class GaugeView extends ChartView {
+    static type = 'gauge' as const
+    type = GaugeView.type
 
-    type: 'gauge',
+    private _data: List
 
-    render: function (seriesModel, ecModel, api) {
+    render(seriesModel: GaugeSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
         this.group.removeAll();
 
-        var colorList = seriesModel.get('axisLine.lineStyle.color');
+        var colorList = seriesModel.get(['axisLine', 'lineStyle', 'color']);
         var posInfo = parsePosition(seriesModel, api);
 
         this._renderMain(
             seriesModel, ecModel, api, colorList, posInfo
         );
-    },
+    }
 
-    dispose: function () {},
+    dispose() {}
 
-    _renderMain: function (seriesModel, ecModel, api, colorList, posInfo) {
+    _renderMain(
+        seriesModel: GaugeSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        colorList: [number, ColorString][],
+        posInfo: PosInfo
+    ) {
         var group = this.group;
 
         var axisLineModel = seriesModel.getModel('axisLine');
@@ -121,7 +139,7 @@ var GaugeView = ChartView.extend({
             prevEndAngle = endAngle;
         }
 
-        var getColor = function (percent) {
+        var getColor = function (percent: number) {
             // Less than 0
             if (percent <= 0) {
                 return colorList[0][1];
@@ -159,11 +177,17 @@ var GaugeView = ChartView.extend({
         this._renderDetail(
             seriesModel, ecModel, api, getColor, posInfo
         );
-    },
+    }
 
-    _renderTicks: function (
-        seriesModel, ecModel, api, getColor, posInfo,
-        startAngle, endAngle, clockwise
+    _renderTicks(
+        seriesModel: GaugeSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        getColor: (percent: number) => ColorString,
+        posInfo: PosInfo,
+        startAngle: number,
+        endAngle: number,
+        clockwise: boolean
     ) {
         var group = this.group;
         var cx = posInfo.cx;
@@ -270,17 +294,23 @@ var GaugeView = ChartView.extend({
                 angle += step;
             }
         }
-    },
+    }
 
-    _renderPointer: function (
-        seriesModel, ecModel, api, getColor, posInfo,
-        startAngle, endAngle, clockwise
+    _renderPointer(
+        seriesModel: GaugeSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        getColor: (percent: number) => ColorString,
+        posInfo: PosInfo,
+        startAngle: number,
+        endAngle: number,
+        clockwise: boolean
     ) {
 
         var group = this.group;
         var oldData = this._data;
 
-        if (!seriesModel.get('pointer.show')) {
+        if (!seriesModel.get(['pointer', 'show'])) {
             // Remove old element
             oldData && oldData.eachItemGraphicEl(function (el) {
                 group.remove(el);
@@ -304,7 +334,7 @@ var GaugeView = ChartView.extend({
 
                 graphic.initProps(pointer, {
                     shape: {
-                        angle: linearMap(data.get(valueDim, idx), valueExtent, angleExtent, true)
+                        angle: linearMap(data.get(valueDim, idx) as number, valueExtent, angleExtent, true)
                     }
                 }, seriesModel);
 
@@ -312,11 +342,11 @@ var GaugeView = ChartView.extend({
                 data.setItemGraphicEl(idx, pointer);
             })
             .update(function (newIdx, oldIdx) {
-                var pointer = oldData.getItemGraphicEl(oldIdx);
+                var pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
 
                 graphic.updateProps(pointer, {
                     shape: {
-                        angle: linearMap(data.get(valueDim, newIdx), valueExtent, angleExtent, true)
+                        angle: linearMap(data.get(valueDim, newIdx) as number, valueExtent, angleExtent, true)
                     }
                 }, seriesModel);
 
@@ -329,7 +359,7 @@ var GaugeView = ChartView.extend({
             })
             .execute();
 
-        data.eachItemGraphicEl(function (pointer, idx) {
+        data.eachItemGraphicEl(function (pointer: PointerPath, idx) {
             var itemModel = data.getItemModel(idx);
             var pointerModel = itemModel.getModel('pointer');
 
@@ -346,7 +376,7 @@ var GaugeView = ChartView.extend({
 
             if (pointer.style.fill === 'auto') {
                 pointer.setStyle('fill', getColor(
-                    linearMap(data.get(valueDim, idx), valueExtent, [0, 1], true)
+                    linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)
                 ));
             }
 
@@ -356,10 +386,14 @@ var GaugeView = ChartView.extend({
         });
 
         this._data = data;
-    },
+    }
 
-    _renderTitle: function (
-        seriesModel, ecModel, api, getColor, posInfo
+    _renderTitle(
+        seriesModel: GaugeSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        getColor: (percent: number) => ColorString,
+        posInfo: PosInfo
     ) {
         var data = seriesModel.getData();
         var valueDim = data.mapDimension('value');
@@ -371,7 +405,7 @@ var GaugeView = ChartView.extend({
 
             var minVal = +seriesModel.get('min');
             var maxVal = +seriesModel.get('max');
-            var value = seriesModel.getData().get(valueDim, 0);
+            var value = seriesModel.getData().get(valueDim, 0) as number;
             var autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );
@@ -388,10 +422,14 @@ var GaugeView = ChartView.extend({
                 }, {autoColor: autoColor, forceRich: true})
             }));
         }
-    },
+    }
 
-    _renderDetail: function (
-        seriesModel, ecModel, api, getColor, posInfo
+    _renderDetail(
+        seriesModel: GaugeSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        getColor: (percent: number) => ColorString,
+        posInfo: PosInfo
     ) {
         var detailModel = seriesModel.getModel('detail');
         var minVal = +seriesModel.get('min');
@@ -403,7 +441,7 @@ var GaugeView = ChartView.extend({
             var width = parsePercent(detailModel.get('width'), posInfo.r);
             var height = parsePercent(detailModel.get('height'), posInfo.r);
             var data = seriesModel.getData();
-            var value = data.get(data.mapDimension('value'), 0);
+            var value = data.get(data.mapDimension('value'), 0) as number;
             var autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );
@@ -425,6 +463,6 @@ var GaugeView = ChartView.extend({
             }));
         }
     }
-});
+}
 
 export default GaugeView;

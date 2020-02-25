@@ -17,173 +17,184 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as graphic from '../../util/graphic';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
+import ComponentView from '../../view/Component';
+import FunnelSeriesModel from './FunnelSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import List from '../../data/List';
+import { DisplayState } from '../../util/types';
+import Displayable from 'zrender/src/graphic/Displayable';
 
+const opacityAccessPath = ['itemStyle', 'opacity'] as const;
+
+type ExtendedDisplayable = Displayable & {
+    hoverIgnore?: boolean
+    normalIgnore?: boolean
+}
 /**
  * Piece of pie including Sector, Label, LabelLine
- * @constructor
- * @extends {module:zrender/graphic/Group}
  */
-function FunnelPiece(data, idx) {
+class FunnelPiece extends graphic.Group {
 
-    graphic.Group.call(this);
+    constructor(data: List, idx: number) {
+        super();
 
-    var polygon = new graphic.Polygon();
-    var labelLine = new graphic.Polyline();
-    var text = new graphic.Text();
-    this.add(polygon);
-    this.add(labelLine);
-    this.add(text);
+        var polygon = new graphic.Polygon();
+        var labelLine = new graphic.Polyline();
+        var text = new graphic.Text();
+        this.add(polygon);
+        this.add(labelLine);
+        this.add(text);
 
-    this.highDownOnUpdate = function (fromState, toState) {
+        this.updateData(data, idx, true);
+    }
+
+    highDownOnUpdate(fromState: DisplayState, toState: DisplayState) {
+
+        var labelLine = this.childAt(1) as graphic.Polyline;
+        var text = this.childAt(2) as graphic.Text;
+
         if (toState === 'emphasis') {
-            labelLine.ignore = labelLine.hoverIgnore;
-            text.ignore = text.hoverIgnore;
+            labelLine.ignore = (labelLine as ExtendedDisplayable).hoverIgnore;
+            text.ignore = (text as ExtendedDisplayable).hoverIgnore;
         }
         else {
-            labelLine.ignore = labelLine.normalIgnore;
-            text.ignore = text.normalIgnore;
+            labelLine.ignore = (labelLine as ExtendedDisplayable).normalIgnore;
+            text.ignore = (text as ExtendedDisplayable).normalIgnore;
         }
-    };
+    }
 
-    this.updateData(data, idx, true);
+    updateData(data: List, idx: number, firstCreate?: boolean) {
+
+        var polygon = this.childAt(0) as graphic.Polygon;
+
+        var seriesModel = data.hostModel;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var opacity = data.getItemModel(idx).get(opacityAccessPath);
+        opacity = opacity == null ? 1 : opacity;
+
+        // Reset style
+        polygon.useStyle({});
+
+        if (firstCreate) {
+            polygon.setShape({
+                points: layout.points
+            });
+            polygon.setStyle({opacity: 0});
+            graphic.initProps(polygon, {
+                style: {
+                    opacity: opacity
+                }
+            }, seriesModel, idx);
+        }
+        else {
+            graphic.updateProps(polygon, {
+                style: {
+                    opacity: opacity
+                },
+                shape: {
+                    points: layout.points
+                }
+            }, seriesModel, idx);
+        }
+
+        // Update common style
+        var itemStyleModel = itemModel.getModel('itemStyle');
+        var visualColor = data.getItemVisual(idx, 'color');
+
+        polygon.setStyle(
+            zrUtil.defaults(
+                {
+                    lineJoin: 'round',
+                    fill: visualColor
+                },
+                itemStyleModel.getItemStyle(['opacity'])
+            )
+        );
+        polygon.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+
+        this._updateLabel(data, idx);
+
+        graphic.setHoverStyle(this);
+    }
+
+    _updateLabel(data: List, idx: number) {
+
+        var labelLine = this.childAt(1) as graphic.Polyline;
+        var labelText = this.childAt(2) as graphic.Text;
+
+        var seriesModel = data.hostModel;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var labelLayout = layout.label;
+        var visualColor = data.getItemVisual(idx, 'color');
+
+        graphic.updateProps(labelLine, {
+            shape: {
+                points: labelLayout.linePoints || labelLayout.linePoints
+            }
+        }, seriesModel, idx);
+
+        graphic.updateProps(labelText, {
+            style: {
+                x: labelLayout.x,
+                y: labelLayout.y
+            }
+        }, seriesModel, idx);
+        labelText.attr({
+            rotation: labelLayout.rotation,
+            origin: [labelLayout.x, labelLayout.y],
+            z2: 10
+        });
+
+        var labelModel = itemModel.getModel('label');
+        var labelHoverModel = itemModel.getModel('emphasis.label');
+        var labelLineModel = itemModel.getModel('labelLine');
+        var labelLineHoverModel = itemModel.getModel('emphasis.labelLine');
+        var visualColor = data.getItemVisual(idx, 'color');
+
+        graphic.setLabelStyle(
+            labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
+            {
+                labelFetcher: data.hostModel as FunnelSeriesModel,
+                labelDataIndex: idx,
+                defaultText: data.getName(idx),
+                autoColor: visualColor,
+                useInsideStyle: !!labelLayout.inside
+            },
+            {
+                textAlign: labelLayout.textAlign,
+                textVerticalAlign: labelLayout.verticalAlign
+            }
+        );
+
+        labelText.ignore = (labelText as ExtendedDisplayable).normalIgnore = !labelModel.get('show');
+        (labelText as ExtendedDisplayable).hoverIgnore = !labelHoverModel.get('show');
+
+        labelLine.ignore = (labelLine as ExtendedDisplayable).normalIgnore = !labelLineModel.get('show');
+        (labelLine as ExtendedDisplayable).hoverIgnore = !labelLineHoverModel.get('show');
+
+        // Default use item visual color
+        labelLine.setStyle({
+            stroke: visualColor
+        });
+        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
+
+        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
+    }
 }
 
-var funnelPieceProto = FunnelPiece.prototype;
+class FunnelView extends ChartView {
+    static type = 'funnel' as const
+    type = FunnelView.type
 
-var opacityAccessPath = ['itemStyle', 'opacity'];
-funnelPieceProto.updateData = function (data, idx, firstCreate) {
+    private _data: List
 
-    var polygon = this.childAt(0);
-
-    var seriesModel = data.hostModel;
-    var itemModel = data.getItemModel(idx);
-    var layout = data.getItemLayout(idx);
-    var opacity = data.getItemModel(idx).get(opacityAccessPath);
-    opacity = opacity == null ? 1 : opacity;
-
-    // Reset style
-    polygon.useStyle({});
-
-    if (firstCreate) {
-        polygon.setShape({
-            points: layout.points
-        });
-        polygon.setStyle({opacity: 0});
-        graphic.initProps(polygon, {
-            style: {
-                opacity: opacity
-            }
-        }, seriesModel, idx);
-    }
-    else {
-        graphic.updateProps(polygon, {
-            style: {
-                opacity: opacity
-            },
-            shape: {
-                points: layout.points
-            }
-        }, seriesModel, idx);
-    }
-
-    // Update common style
-    var itemStyleModel = itemModel.getModel('itemStyle');
-    var visualColor = data.getItemVisual(idx, 'color');
-
-    polygon.setStyle(
-        zrUtil.defaults(
-            {
-                lineJoin: 'round',
-                fill: visualColor
-            },
-            itemStyleModel.getItemStyle(['opacity'])
-        )
-    );
-    polygon.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
-
-    this._updateLabel(data, idx);
-
-    graphic.setHoverStyle(this);
-};
-
-funnelPieceProto._updateLabel = function (data, idx) {
-
-    var labelLine = this.childAt(1);
-    var labelText = this.childAt(2);
-
-    var seriesModel = data.hostModel;
-    var itemModel = data.getItemModel(idx);
-    var layout = data.getItemLayout(idx);
-    var labelLayout = layout.label;
-    var visualColor = data.getItemVisual(idx, 'color');
-
-    graphic.updateProps(labelLine, {
-        shape: {
-            points: labelLayout.linePoints || labelLayout.linePoints
-        }
-    }, seriesModel, idx);
-
-    graphic.updateProps(labelText, {
-        style: {
-            x: labelLayout.x,
-            y: labelLayout.y
-        }
-    }, seriesModel, idx);
-    labelText.attr({
-        rotation: labelLayout.rotation,
-        origin: [labelLayout.x, labelLayout.y],
-        z2: 10
-    });
-
-    var labelModel = itemModel.getModel('label');
-    var labelHoverModel = itemModel.getModel('emphasis.label');
-    var labelLineModel = itemModel.getModel('labelLine');
-    var labelLineHoverModel = itemModel.getModel('emphasis.labelLine');
-    var visualColor = data.getItemVisual(idx, 'color');
-
-    graphic.setLabelStyle(
-        labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
-        {
-            labelFetcher: data.hostModel,
-            labelDataIndex: idx,
-            defaultText: data.getName(idx),
-            autoColor: visualColor,
-            useInsideStyle: !!labelLayout.inside
-        },
-        {
-            textAlign: labelLayout.textAlign,
-            textVerticalAlign: labelLayout.verticalAlign
-        }
-    );
-
-    labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
-    labelText.hoverIgnore = !labelHoverModel.get('show');
-
-    labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
-    labelLine.hoverIgnore = !labelLineHoverModel.get('show');
-
-    // Default use item visual color
-    labelLine.setStyle({
-        stroke: visualColor
-    });
-    labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
-
-    labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
-};
-
-zrUtil.inherits(FunnelPiece, graphic.Group);
-
-
-var FunnelView = ChartView.extend({
-
-    type: 'funnel',
-
-    render: function (seriesModel, ecModel, api) {
+    render(seriesModel: FunnelSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
         var oldData = this._data;
 
@@ -198,28 +209,31 @@ var FunnelView = ChartView.extend({
                 group.add(funnelPiece);
             })
             .update(function (newIdx, oldIdx) {
-                var piePiece = oldData.getItemGraphicEl(oldIdx);
+                var piece = oldData.getItemGraphicEl(oldIdx) as FunnelPiece;
 
-                piePiece.updateData(data, newIdx);
+                piece.updateData(data, newIdx);
 
-                group.add(piePiece);
-                data.setItemGraphicEl(newIdx, piePiece);
+                group.add(piece);
+                data.setItemGraphicEl(newIdx, piece);
             })
             .remove(function (idx) {
-                var piePiece = oldData.getItemGraphicEl(idx);
-                group.remove(piePiece);
+                var piece = oldData.getItemGraphicEl(idx);
+                group.remove(piece);
             })
             .execute();
 
         this._data = data;
-    },
+    }
 
-    remove: function () {
+    remove() {
         this.group.removeAll();
         this._data = null;
-    },
+    }
 
-    dispose: function () {}
-});
+    dispose() {}
+}
+
+ChartView.registerClass(FunnelView);
+
 
 export default FunnelView;

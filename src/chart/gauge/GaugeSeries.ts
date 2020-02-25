@@ -17,20 +17,111 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
+import {
+    SeriesOption,
+    CircleLayoutOptionMixin,
+    LineStyleOption,
+    ColorString,
+    LabelOption,
+    ItemStyleOption,
+    OptionDataValueNumeric
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
 
-var GaugeSeries = SeriesModel.extend({
+// [percent, color]
+type GaugeColorStop = [number, ColorString];
 
-    type: 'series.gauge',
+interface LabelFormatter {
+    (value: number): string
+}
+export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin {
 
-    getInitialData: function (option, ecModel) {
-        return createListSimply(this, ['value']);
+    // override radius
+    radius?: number | string
+
+    startAngle?: number
+    endAngle?: number
+    clockwise?: boolean
+
+    min?: number
+    max?: number
+
+    splitNumber?: number
+
+    axisLine?: {
+        show?: boolean
+        lineStyle: Omit<LineStyleOption, 'color'> & {
+            color: GaugeColorStop[]
+        }
     },
 
-    defaultOption: {
+    splitLine?: {
+        show?: boolean
+        /**
+         * Can be percent
+         */
+        length?: number
+        lineStyle?: LineStyleOption
+    }
+
+    axisTick?: {
+        show?: boolean
+        splitNumber?: number
+        /**
+         * Can be percent
+         */
+        length?: number | string
+        lineStyle?: LineStyleOption
+    }
+
+    axisLabel?: LabelOption & {
+        formatter?: LabelFormatter | string
+    }
+
+    pointer?: {
+        show?: boolean
+        /**
+         * Can be percent
+         */
+        length?: number | string
+        width?: number
+    }
+    itemStyle?: ItemStyleOption
+
+    title?: LabelOption & {
+        /**
+         * [x, y] offset
+         */
+        offsetCenter?: (number | string)[]
+        formatter?: LabelFormatter | string
+    }
+    detail?: LabelOption & {
+        /**
+         * [x, y] offset
+         */
+        offsetCenter?: (number | string)[]
+        formatter?: LabelFormatter | string
+    }
+
+    data?: OptionDataValueNumeric | {
+        name?: string
+        value?: OptionDataValueNumeric
+    }
+}
+
+class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
+
+    static type = 'series.gauge' as const
+    type = GaugeSeriesModel.type
+
+    getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
+        return createListSimply(this, ['value']);
+    }
+
+    static defaultOption: GaugeSeriesOption = {
         zlevel: 0,
         z: 2,
         // 默认全局居中
@@ -121,6 +212,9 @@ var GaugeSeries = SeriesModel.extend({
             fontSize: 30
         }
     }
-});
+}
 
-export default GaugeSeries;
+SeriesModel.registerClass(GaugeSeriesModel);
+
+
+export default GaugeSeriesModel;

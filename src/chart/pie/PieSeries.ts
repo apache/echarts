@@ -33,7 +33,8 @@ import {
     LabelLineOption,
     ItemStyleOption,
     LabelOption,
-    BoxLayoutOptionMixin
+    BoxLayoutOptionMixin,
+    OptionDataValueNumeric
 } from '../../util/types';
 import List from '../../data/List';
 
@@ -46,6 +47,10 @@ interface PieLabelOption extends LabelOption {
 }
 
 interface PieDataItem {
+    name?: string
+
+    value?: OptionDataValueNumeric
+
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
     labelLine?: LabelLineOption
@@ -95,10 +100,10 @@ export interface PieSeriesOption extends
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
 
-    data?: number[] | PieDataItem[]
+    data?: OptionDataValueNumeric[] | PieDataItem[]
 }
 
-class PieSeries extends SeriesModel<PieSeriesOption> {
+class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
     static type = 'series.pie' as const;
 
@@ -281,9 +286,9 @@ class PieSeries extends SeriesModel<PieSeriesOption> {
 
 }
 
-interface PieSeries extends DataSelectableMixin<PieSeriesOption> {}
-zrUtil.mixin(PieSeries, DataSelectableMixin);
+interface PieSeriesModel extends DataSelectableMixin<PieSeriesOption> {}
+zrUtil.mixin(PieSeriesModel, DataSelectableMixin);
 
-SeriesModel.registerClass(PieSeries);
+SeriesModel.registerClass(PieSeriesModel);
 
-export default PieSeries;
+export default PieSeriesModel;

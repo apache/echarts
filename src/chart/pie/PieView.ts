@@ -26,14 +26,14 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, DisplayState } from '../../util/types';
 import List from '../../data/List';
-import PieSeries from './PieSeries';
+import PieSeriesModel from './PieSeries';
 import { Dictionary } from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 
 function updateDataSelected(
     this: PiePiece,
     uid: string,
-    seriesModel: PieSeries,
+    seriesModel: PieSeriesModel,
     hasAnimation: boolean,
     api: ExtensionAPI
 ): void {
@@ -120,7 +120,7 @@ class PiePiece extends graphic.Group {
         var labelLine = this.childAt(1) as PieceElementExtension;
         var labelText = this.childAt(2) as PieceElementExtension;
 
-        var seriesModel = data.hostModel as PieSeries;
+        var seriesModel = data.hostModel as PieSeriesModel;
         var itemModel = data.getItemModel(idx);
         var layout = data.getItemLayout(idx) as graphic.Sector['shape'];
         var sectorShape = zrUtil.extend({
@@ -293,7 +293,7 @@ class PiePiece extends graphic.Group {
             labelModel,
             labelHoverModel,
             {
-                labelFetcher: data.hostModel as PieSeries,
+                labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
                 defaultText: labelLayout.text,
                 autoColor: visualColor,
@@ -345,7 +345,7 @@ class PieView extends ChartView {
         this._sectorGroup = sectorGroup;
     }
 
-    render(seriesModel: PieSeries, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+    render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         if (payload && (payload.from === this.uid)) {
             return;
         }
@@ -433,7 +433,7 @@ class PieView extends ChartView {
         startAngle: number, clockwise: boolean,
         // @ts-ignore FIXME:TS make type in util.grpahic
         cb,
-        seriesModel: PieSeries, isFirstRender: boolean
+        seriesModel: PieSeriesModel, isFirstRender: boolean
     ): graphic.Sector {
         var clipPath = new graphic.Sector({
             shape: {
@@ -460,7 +460,7 @@ class PieView extends ChartView {
     /**
      * @implements
      */
-    containPoint = function (point: number[], seriesModel: PieSeries): boolean {
+    containPoint = function (point: number[], seriesModel: PieSeriesModel): boolean {
         var data = seriesModel.getData();
         var itemLayout = data.getItemLayout(0);
         if (itemLayout) {

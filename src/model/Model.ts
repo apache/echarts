@@ -31,8 +31,8 @@ import {
     CheckableConstructor
 } from '../util/clazz';
 
-import areaStyleMixin from './mixin/areaStyle';
-import textStyleMixin from './mixin/textStyle';
+import {AreaStyleMixin} from './mixin/areaStyle';
+import TextStyleMixin from './mixin/textStyle';
 import {LineStyleMixin} from './mixin/lineStyle';
 import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
@@ -263,10 +263,10 @@ type ModelConstructor = typeof Model
 enableClassExtend(Model as ModelConstructor);
 enableClassCheck(Model as ModelConstructor);
 
-interface Model extends LineStyleMixin, ItemStyleMixin, textStyleMixin {}
+interface Model extends LineStyleMixin, ItemStyleMixin, TextStyleMixin {}
 mixin(Model, LineStyleMixin);
 mixin(Model, ItemStyleMixin);
-mixin(Model, areaStyleMixin);
-mixin(Model, textStyleMixin);
+mixin(Model, AreaStyleMixin);
+mixin(Model, TextStyleMixin);
 
 export default Model;

@@ -20,17 +20,15 @@
 import * as textContain from 'zrender/src/contain/text';
 import * as graphicUtil from '../../util/graphic';
 import Model from '../Model';
-import { LabelOption } from '../../util/types';
+import { LabelOption, ColorString } from '../../util/types';
 
 var PATH_COLOR = ['textStyle', 'color'] as const;
 
 class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color
-     * @param {boolean} [isEmphasis]
-     * @return {string}
      */
-    getTextColor(this: Model, isEmphasis?: boolean) {
+    getTextColor(this: Model, isEmphasis?: boolean): ColorString {
         var ecModel = this.ecModel;
         return this.getShallow('color')
             || (

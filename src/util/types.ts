@@ -405,6 +405,10 @@ export type OptionDataItem =
     | {value: ArrayLike<OptionDataValue>}; // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataValue = string | number | Date;
 
+export type OptionDataValueNumeric = number | '-';
+export type OptionDataValueCategory = string;
+export type OptionDataValueDate = Date;
+
 // export type ModelOption = Dictionary<any> | any[] | string | number | boolean | ((...args: any) => any);
 export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
@@ -721,7 +725,9 @@ export interface LabelOption extends TextCommonOption {
     distance?: number
     rotate?: number | boolean
     offset?: number[]
-    formatter?: string | ((params: CallbackDataParams) => string)
+
+    // TODO: TYPE not all label support formatter
+    // formatter?: string | ((params: CallbackDataParams) => string)
 
     rich?: Dictionary<TextCommonOption>
 }

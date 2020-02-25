@@ -17,23 +17,32 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import makeStyleMapper from './makeStyleMapper';
+import { StyleProps } from 'zrender/src/graphic/Style';
+import Model from '../Model';
 
-var getAreaStyle = makeStyleMapper(
-    [
-        ['fill', 'color'],
-        ['shadowBlur'],
-        ['shadowOffsetX'],
-        ['shadowOffsetY'],
-        ['opacity'],
-        ['shadowColor']
-    ]
-);
+var getAreaStyle = makeStyleMapper([
+    ['fill', 'color'],
+    ['shadowBlur'],
+    ['shadowOffsetX'],
+    ['shadowOffsetY'],
+    ['opacity'],
+    ['shadowColor']
+]);
 
-export default {
-    getAreaStyle: function (excludes, includes) {
+type AreaStyleProps = Pick<StyleProps,
+    'fill'
+    | 'shadowBlur'
+    | 'shadowOffsetX'
+    | 'shadowOffsetY'
+    | 'opacity'
+    | 'shadowColor'
+>
+
+class AreaStyleMixin {
+    getAreaStyle(this: Model, excludes?: string[], includes?: string[]): AreaStyleProps {
         return getAreaStyle(this, excludes, includes);
     }
 };
+
+export {AreaStyleMixin};

@@ -17,21 +17,83 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import {defaultEmphasis} from '../../util/model';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import SeriesModel from '../../model/Series';
+import {
+    SeriesOption,
+    BoxLayoutOptionMixin,
+    ZRAlign,
+    LabelOption,
+    LabelLineOption,
+    ItemStyleOption,
+    OptionDataValueNumeric
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
+import ComponentModel from '../../model/Component';
 
-var FunnelSeries = echarts.extendSeriesModel({
 
-    type: 'series.funnel',
+type FunnelLabelOption = Omit<LabelOption, 'position'> & {
+    position?: LabelOption['position'] | 'outer'
+}
 
-    init: function (option) {
-        FunnelSeries.superApply(this, 'init', arguments);
+interface FunnelDataItem {
+    name?: string
+
+    value?: OptionDataValueNumeric
+
+    itemStyle?: ItemStyleOption
+    label?: FunnelLabelOption
+    labelLine?: LabelLineOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: FunnelLabelOption
+        labelLine?: LabelLineOption
+    }
+}
+
+export interface FunnelSeriesOption
+    extends SeriesOption, BoxLayoutOptionMixin {
+
+    min?: number
+    max?: number
+
+    /**
+     * Absolute number or percent string
+     */
+    minSize?: number | string
+    maxSize?: number | string
+
+    sort?: 'ascending' | 'descending' | 'none'
+
+    gap?: number
+
+    funnelAlign?: ZRAlign
+
+    label?: FunnelLabelOption
+    labelLine?: LabelLineOption
+    itemStyle?: ItemStyleOption
+
+    emphasis?: {
+        label?: FunnelLabelOption
+        labelLine?: LabelLineOption
+        itemStyle?: ItemStyleOption
+    }
+
+    data?: OptionDataValueNumeric[] | FunnelDataItem[]
+}
+
+class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
+    static type = 'series.funnel' as const
+    type = FunnelSeriesModel.type
+
+    init(option: FunnelSeriesOption) {
+        super.init.apply(this, arguments as any);
 
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
@@ -40,16 +102,16 @@ var FunnelSeries = echarts.extendSeriesModel({
         );
         // Extend labelLine emphasis
         this._defaultLabelLine(option);
-    },
+    }
 
-    getInitialData: function (option, ecModel) {
+    getInitialData(option: FunnelSeriesOption, ecModel: GlobalModel): List {
         return createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-    },
+    }
 
-    _defaultLabelLine: function (option) {
+    _defaultLabelLine(option: FunnelSeriesOption) {
         // Extend labelLine emphasis
         defaultEmphasis(option, 'labelLine', ['show']);
 
@@ -60,22 +122,22 @@ var FunnelSeries = echarts.extendSeriesModel({
             && option.label.show;
         labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
             && option.emphasis.label.show;
-    },
+    }
 
     // Overwrite
-    getDataParams: function (dataIndex) {
+    getDataParams(dataIndex: number) {
         var data = this.getData();
-        var params = FunnelSeries.superCall(this, 'getDataParams', dataIndex);
+        var params = super.getDataParams(dataIndex);
         var valueDim = data.mapDimension('value');
         var sum = data.getSum(valueDim);
         // Percent is 0 if sum is 0
-        params.percent = !sum ? 0 : +(data.get(valueDim, dataIndex) / sum * 100).toFixed(2);
+        params.percent = !sum ? 0 : +(data.get(valueDim, dataIndex) as number / sum * 100).toFixed(2);
 
         params.$vars.push('percent');
         return params;
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: FunnelSeriesOption = {
         zlevel: 0,                  // 一级层叠
         z: 2,                       // 二级层叠
         legendHoverLink: true,
@@ -119,6 +181,9 @@ var FunnelSeries = echarts.extendSeriesModel({
             }
         }
     }
-});
 
-export default FunnelSeries;
+}
+
+ComponentModel.registerClass(FunnelSeriesModel);
+
+export default FunnelSeriesModel;
