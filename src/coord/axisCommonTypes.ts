@@ -24,7 +24,9 @@ import {
 import { Dictionary } from 'zrender/src/core/types';
 
 
-export type OptionAxisType = 'category' | 'value' | 'time' | 'log';
+export var AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
+export type OptionAxisType = keyof typeof AXIS_TYPES;
+
 
 export interface AxisBaseOption extends ComponentOption {
     type?: OptionAxisType;

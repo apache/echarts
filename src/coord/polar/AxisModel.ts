@@ -71,10 +71,5 @@ var polarAxisDefaultExtendedOption = {
     }
 };
 
-function getAxisType(axisDim, option) {
-    // Default axis with data is category axis
-    return option.type || (option.data ? 'category' : 'value');
-}
-
-axisModelCreator('angle', PolarAxisModel, getAxisType, polarAxisDefaultExtendedOption.angle);
-axisModelCreator('radius', PolarAxisModel, getAxisType, polarAxisDefaultExtendedOption.radius);
+axisModelCreator('angle', PolarAxisModel, polarAxisDefaultExtendedOption.angle);
+axisModelCreator('radius', PolarAxisModel, polarAxisDefaultExtendedOption.radius);

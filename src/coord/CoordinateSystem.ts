@@ -52,7 +52,7 @@ export interface CoordinateSystemMaster {
 
     model?: Model;
 
-    update(ecModel: GlobalModel, api: ExtensionAPI): void;
+    update?: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 
     // This methods is also responsible for determine whether this
     // coodinate system is applicable to the given `finder`.

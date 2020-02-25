@@ -37,7 +37,7 @@ interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOption
     tooltop?: any; // FIXME:TS add this tooltip type
 }
 
-export default class extends ComponentModel<GridOption> implements CoordinateSystemHostModel {
+class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHostModel {
 
     static type = 'grid';
 
@@ -63,5 +63,8 @@ export default class extends ComponentModel<GridOption> implements CoordinateSys
         borderWidth: 1,
         borderColor: '#ccc'
     }
-
 }
+
+ComponentModel.registerClass(GridModel);
+
+export default GridModel;

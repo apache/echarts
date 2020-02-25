@@ -17,12 +17,12 @@
 * under the License.
 */
 
-import Component, { ComponentModelConstructor } from '../../model/Component';
+import Component from '../../model/Component';
 import {VisualMapOption} from './VisualMapModel';
 import {PiecewiseVisualMapOption} from './PiecewiseModel';
 import {ContinousVisualMapOption} from './ContinuousModel';
 
-(Component as ComponentModelConstructor).registerSubTypeDefaulter(
+Component.registerSubTypeDefaulter(
     'visualMap', function (option: VisualMapOption) {
     // Compatible with ec2, when splitNumber === 0, continuous visualMap will be used.
     return (

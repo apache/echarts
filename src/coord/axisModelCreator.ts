@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from './axisDefault';
 import ComponentModel from '../model/Component';
@@ -28,95 +26,100 @@ import {
     fetchLayoutMode
 } from '../util/layout';
 import OrdinalMeta from '../data/OrdinalMeta';
-import { DimensionName, ComponentOption } from '../util/types';
-import { OptionAxisType } from './axisCommonTypes';
+import { DimensionName, BoxLayoutOptionMixin, OrdinalRawValue } from '../util/types';
+import { AxisBaseOption, AXIS_TYPES } from './axisCommonTypes';
+import GlobalModel from '../model/Global';
 
 
-// FIXME axisType is fixed ?
-var AXIS_TYPES = ['value', 'category', 'time', 'log'];
+type Constructor<T> = new (...args: any[]) => T;
 
 /**
  * Generate sub axis model class
- * @param axisName 'x' 'y' 'radius' 'angle' 'parallel'
- * @param {module:echarts/model/Component} BaseAxisModelClass
- * @param {Function} axisTypeDefaulter
- * @param {Object} [extraDefaultOption]
+ * @param axisName 'x' 'y' 'radius' 'angle' 'parallel' ...
  */
-export default function (
+export default function <
+    AxisOptionT extends AxisBaseOption,
+    AxisModelCtor extends Constructor<ComponentModel<AxisOptionT>>
+>(
     axisName: DimensionName,
-    BaseAxisModelClass,
-    axisTypeDefaulter: (axisDim: DimensionName, option: ComponentOption) => OptionAxisType,
-    extraDefaultOption?: ComponentOption
+    BaseAxisModelClass: AxisModelCtor,
+    extraDefaultOption?: AxisOptionT
 ) {
 
-    zrUtil.each(AXIS_TYPES, function (axisType) {
+    zrUtil.each(AXIS_TYPES, function (v, axisType) {
 
-        BaseAxisModelClass.extend({
+        var defaultOption = zrUtil.merge(
+            zrUtil.merge({}, axisDefault[axisType], true),
+            extraDefaultOption, true
+        );
 
-            /**
-             * @readOnly
-             */
-            type: axisName + 'Axis.' + axisType,
+        class AxisModel extends BaseAxisModelClass {
 
-            mergeDefaultAndTheme: function (option, ecModel) {
+            static type = axisName + 'Axis.' + axisType;
+            type = axisName + 'Axis.' + axisType;
+
+            static defaultOption = defaultOption;
+
+            private __ordinalMeta: OrdinalMeta;
+
+            constructor(...args: any[]) {
+                super(...args);
+            }
+
+            mergeDefaultAndTheme(option: AxisOptionT, ecModel: GlobalModel): void {
                 var layoutMode = fetchLayoutMode(this);
                 var inputPositionParams = layoutMode
-                    ? getLayoutParams(option) : {};
+                    ? getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
                 var themeModel = ecModel.getTheme();
                 zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
                 zrUtil.merge(option, this.getDefaultOption());
 
-                option.type = axisTypeDefaulter(axisName, option);
+                option.type = getAxisType(option);
 
                 if (layoutMode) {
-                    mergeLayoutParam(option, inputPositionParams, layoutMode);
+                    mergeLayoutParam(option as BoxLayoutOptionMixin, inputPositionParams, layoutMode);
                 }
-            },
+            }
 
-            /**
-             * @override
-             */
-            optionUpdated: function () {
+            optionUpdated(): void {
                 var thisOption = this.option;
                 if (thisOption.type === 'category') {
                     this.__ordinalMeta = OrdinalMeta.createByAxisModel(this);
                 }
-            },
+            }
 
             /**
              * Should not be called before all of 'getInitailData' finished.
              * Because categories are collected during initializing data.
              */
-            getCategories: function (rawData) {
+            getCategories(rawData: boolean): OrdinalRawValue[] | AxisBaseOption['data'] {
                 var option = this.option;
                 // FIXME
                 // warning if called before all of 'getInitailData' finished.
                 if (option.type === 'category') {
                     if (rawData) {
-                        return option.data;
+                        return option.data as AxisBaseOption['data'];
                     }
                     return this.__ordinalMeta.categories;
                 }
-            },
+            }
 
-            getOrdinalMeta: function () {
+            getOrdinalMeta(): OrdinalMeta {
                 return this.__ordinalMeta;
-            },
+            }
+        }
 
-            defaultOption: zrUtil.mergeAll(
-                [
-                    {},
-                    axisDefault[axisType + 'Axis'],
-                    extraDefaultOption
-                ],
-                true
-            )
-        });
+        ComponentModel.registerClass(AxisModel);
     });
 
     ComponentModel.registerSubTypeDefaulter(
         axisName + 'Axis',
-        zrUtil.curry(axisTypeDefaulter, axisName)
+        getAxisType
     );
+}
+
+function getAxisType(option: AxisBaseOption) {
+    // Default axis with data is category axis
+    return option.type || (option.data ? 'category' : 'value');
 }

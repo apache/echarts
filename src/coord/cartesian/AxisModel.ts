@@ -22,7 +22,6 @@ import ComponentModel from '../../model/Component';
 import axisModelCreator from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import Axis2D from './Axis2D';
-import { DimensionName } from '../../util/types';
 import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
 
@@ -69,11 +68,6 @@ class AxisModel extends ComponentModel<CartesianAxisOption> {
 
 ComponentModel.registerClass(AxisModel);
 
-function getAxisType(axisDim: DimensionName, option: CartesianAxisOption) {
-    // Default axis with data is category axis
-    return option.type || (option.data ? 'category' : 'value');
-}
-
 interface AxisModel extends AxisModelCommonMixin<CartesianAxisOption> {}
 zrUtil.mixin(AxisModel, AxisModelCommonMixin);
 
@@ -83,7 +77,7 @@ var extraOption: CartesianAxisOption = {
     offset: 0
 };
 
-axisModelCreator('x', AxisModel, getAxisType, extraOption);
-axisModelCreator('y', AxisModel, getAxisType, extraOption);
+axisModelCreator<CartesianAxisOption, typeof AxisModel>('x', AxisModel, extraOption);
+axisModelCreator<CartesianAxisOption, typeof AxisModel>('y', AxisModel, extraOption);
 
 export default AxisModel;

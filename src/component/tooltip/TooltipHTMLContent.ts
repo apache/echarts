@@ -28,6 +28,8 @@ import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
 import { ZRRawEvent } from 'zrender/src/core/types';
+import CanvasPainter from 'zrender/src/canvas/Painter';
+import SVGPainter from 'zrender/src/svg/Painter';
 
 var each = zrUtil.each;
 var toCamelCase = formatUtil.toCamelCase;
@@ -134,7 +136,7 @@ function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, z
         // xy should be based on canvas root. But tooltipContent is
         // the sibling of canvas root. So padding of ec container
         // should be considered here.
-        var viewportRootOffset = zrPainter && zrPainter.getViewportRootOffset();
+        var viewportRootOffset = zrPainter && (zrPainter as CanvasPainter | SVGPainter).getViewportRootOffset();
         if (viewportRootOffset) {
             out[0] += viewportRootOffset.offsetLeft;
             out[1] += viewportRootOffset.offsetTop;

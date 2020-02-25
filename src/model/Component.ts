@@ -286,6 +286,8 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     }
 
     static registerClass: ClassManager['registerClass'];
+
+    static registerSubTypeDefaulter: componentUtil.SubTypeDefaulterManager['registerSubTypeDefaulter'];
 }
 
 // Reset ComponentModel.extend, add preConstruct.

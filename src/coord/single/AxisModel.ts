@@ -99,12 +99,8 @@ var defaultOption = {
     }
 };
 
-function getAxisType(axisName, option) {
-    return option.type || (option.data ? 'category' : 'value');
-}
-
 zrUtil.mixin(AxisModel, {AxisModelCommonMixin});
 
-axisModelCreator('single', AxisModel, getAxisType, defaultOption);
+axisModelCreator('single', AxisModel, defaultOption);
 
 export default AxisModel;

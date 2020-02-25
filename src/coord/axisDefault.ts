@@ -174,8 +174,8 @@ var logAxis: AxisBaseOption = zrUtil.defaults({
 
 
 export default {
-    categoryAxis: categoryAxis,
-    valueAxis: valueAxis,
-    timeAxis: timeAxis,
-    logAxis: logAxis
+    category: categoryAxis,
+    value: valueAxis,
+    time: timeAxis,
+    log: logAxis
 };

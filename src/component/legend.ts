@@ -26,12 +26,12 @@ import './legend/legendAction';
 import './legend/LegendView';
 
 import legendFilter from './legend/legendFilter';
-import Component, { ComponentModelConstructor } from '../model/Component';
+import Component from '../model/Component';
 
 // Series Filter
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.SERIES_FILTER, legendFilter);
 
-(Component as ComponentModelConstructor).registerSubTypeDefaulter('legend', function () {
+Component.registerSubTypeDefaulter('legend', function () {
     // Default 'plain' when no type specified.
     return 'plain';
 });

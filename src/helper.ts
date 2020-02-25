@@ -76,13 +76,21 @@ export {createSymbol} from './util/symbol';
 /**
  * Create scale
  * @param {Array.<number>} dataExtent
- * @param {Object|module:echarts/Model} option
+ * @param {Object|module:echarts/Model} option If `optoin.type`
+ *        is secified, it can only be `'value'` currently.
  */
 export function createScale(dataExtent, option) {
     var axisModel = option;
     if (!Model.isInstance(option)) {
         axisModel = new Model(option);
-        zrUtil.mixin(axisModel, AxisModelCommonMixin);
+        // FIXME
+        // Currently AxisModelCommonMixin has nothing to do with the
+        // the requirements of `axisHelper.createScaleByModel`. For
+        // example the method `getCategories` and `getOrdinalMeta`
+        // are required for `'category'` axis, and ecModel are required
+        // for `'time'` axis. But occationally echarts-gl happened
+        // to only use `'value'` axis.
+        // zrUtil.mixin(axisModel, AxisModelCommonMixin);
     }
 
     var scale = axisHelper.createScaleByModel(axisModel);

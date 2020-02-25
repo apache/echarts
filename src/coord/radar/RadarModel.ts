@@ -25,7 +25,7 @@ import axisDefault from '../axisDefault';
 import Model from '../../model/Model';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 
-var valueAxisDefault = axisDefault.valueAxis;
+var valueAxisDefault = axisDefault.value;
 
 function defaultsShow(opt, show) {
     return zrUtil.defaults({

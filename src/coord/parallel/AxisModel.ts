@@ -142,10 +142,6 @@ var defaultOption = {
 
 zrUtil.mixin(AxisModel, AxisModelCommonMixin);
 
-function getAxisType(axisName, option) {
-    return option.type || (option.data ? 'category' : 'value');
-}
-
-axisModelCreator('parallel', AxisModel, getAxisType, defaultOption);
+axisModelCreator('parallel', AxisModel, defaultOption);
 
 export default AxisModel;
