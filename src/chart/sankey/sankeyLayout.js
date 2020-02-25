@@ -458,6 +458,7 @@ function relaxLeftToRight(nodesByBreadth, alpha, orient) {
             if (node.inEdges.length) {
                 var y = sum(node.inEdges, weightedSource, orient)
                         / sum(node.inEdges, getEdgeValue, orient);
+                isNaN(y) && (y = 0);
                 if (orient === 'vertical') {
                     var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
