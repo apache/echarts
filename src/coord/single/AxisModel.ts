@@ -17,90 +17,92 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import axisModelCreator from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
+import Single from './Single';
+import SingleAxis from './SingleAxis';
+import { AxisBaseOption } from '../axisCommonTypes';
+import { BoxLayoutOptionMixin, LayoutOrient } from '../../util/types';
 
-var AxisModel = ComponentModel.extend({
+export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right'
 
-    type: 'singleAxis',
+export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
+    position?: SingleAxisPosition
+    orient: LayoutOrient
+}
 
-    layoutMode: 'box',
+class SingleAxisModel extends ComponentModel<SingleAxisOption> {
+    static type = 'singleAxis'
+    type = SingleAxisModel.type
 
-    /**
-     * @type {module:echarts/coord/single/SingleAxis}
-     */
-    axis: null,
+    static readonly layoutMode = 'box'
 
-    /**
-     * @type {module:echarts/coord/single/Single}
-     */
-    coordinateSystem: null,
+    axis: SingleAxis
 
-    /**
-     * @override
-     */
-    getCoordSysModel: function () {
+    coordinateSystem: Single
+
+    getCoordSysModel() {
         return this;
     }
 
-});
+    static defaultOption: SingleAxisOption = {
 
-var defaultOption = {
+        left: '5%',
+        top: '5%',
+        right: '5%',
+        bottom: '5%',
 
-    left: '5%',
-    top: '5%',
-    right: '5%',
-    bottom: '5%',
+        type: 'value',
 
-    type: 'value',
+        position: 'bottom',
 
-    position: 'bottom',
+        orient: 'horizontal',
 
-    orient: 'horizontal',
+        axisLine: {
+            show: true,
+            lineStyle: {
+                width: 1,
+                type: 'solid'
+            }
+        },
 
-    axisLine: {
-        show: true,
-        lineStyle: {
-            width: 1,
-            type: 'solid'
-        }
-    },
+        // Single coordinate system and single axis is the,
+        // which is used as the parent tooltip model.
+        // same model, so we set default tooltip show as true.
+        tooltip: {
+            show: true
+        },
 
-    // Single coordinate system and single axis is the,
-    // which is used as the parent tooltip model.
-    // same model, so we set default tooltip show as true.
-    tooltip: {
-        show: true
-    },
+        axisTick: {
+            show: true,
+            length: 6,
+            lineStyle: {
+                width: 1
+            }
+        },
 
-    axisTick: {
-        show: true,
-        length: 6,
-        lineStyle: {
-            width: 1
-        }
-    },
+        axisLabel: {
+            show: true,
+            interval: 'auto'
+        },
 
-    axisLabel: {
-        show: true,
-        interval: 'auto'
-    },
-
-    splitLine: {
-        show: true,
-        lineStyle: {
-            type: 'dashed',
-            opacity: 0.2
+        splitLine: {
+            show: true,
+            lineStyle: {
+                type: 'dashed',
+                opacity: 0.2
+            }
         }
     }
-};
+}
 
-zrUtil.mixin(AxisModel, {AxisModelCommonMixin});
+ComponentModel.registerClass(SingleAxisModel);
 
-axisModelCreator('single', AxisModel, defaultOption);
+interface SingleAxisModel extends AxisModelCommonMixin<SingleAxisOption> {}
+zrUtil.mixin(SingleAxisModel, {AxisModelCommonMixin});
 
-export default AxisModel;
+axisModelCreator('single', SingleAxisModel, SingleAxisModel.defaultOption);
+
+export default SingleAxisModel;

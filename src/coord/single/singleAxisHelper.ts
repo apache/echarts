@@ -17,22 +17,27 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import SingleAxisModel from './AxisModel';
 
-/**
- * @param {Object} opt {labelInside}
- * @return {Object} {
- *  position, rotation, labelDirection, labelOffset,
- *  tickDirection, labelRotate, z2
- * }
- */
-export function layout(axisModel, opt) {
+interface LayoutResult {
+    position: [number, number],
+    rotation: number
+    labelRotation: number
+    labelDirection: 1 | -1
+    tickDirection: 1 | -1
+    nameDirection: 1 | -1
+    z2: number
+}
+
+export function layout(axisModel: SingleAxisModel, opt?: {
+    labelInside?: boolean
+    rotate?: number
+}) {
     opt = opt || {};
     var single = axisModel.coordinateSystem;
     var axis = axisModel.axis;
-    var layout = {};
+    var layout = {} as LayoutResult;
 
     var axisPosition = axis.position;
     var orient = axis.orient;
@@ -43,35 +48,35 @@ export function layout(axisModel, opt) {
     var positionMap = {
         horizontal: {top: rectBound[2], bottom: rectBound[3]},
         vertical: {left: rectBound[0], right: rectBound[1]}
-    };
+    } as const;
 
     layout.position = [
         orient === 'vertical'
-            ? positionMap.vertical[axisPosition]
+            ? positionMap.vertical[axisPosition as 'left' | 'right']
             : rectBound[0],
         orient === 'horizontal'
-            ? positionMap.horizontal[axisPosition]
+            ? positionMap.horizontal[axisPosition as 'top' | 'bottom']
             : rectBound[3]
-    ];
+    ] as [number, number];
 
     var r = {horizontal: 0, vertical: 1};
     layout.rotation = Math.PI / 2 * r[orient];
 
-    var directionMap = {top: -1, bottom: 1, right: 1, left: -1};
+    const directionMap = {top: -1, bottom: 1, right: 1, left: -1} as const;
 
     layout.labelDirection = layout.tickDirection =
         layout.nameDirection = directionMap[axisPosition];
 
-    if (axisModel.get('axisTick.inside')) {
-        layout.tickDirection = -layout.tickDirection;
+    if (axisModel.get(['axisTick', 'inside'])) {
+        layout.tickDirection = -layout.tickDirection as -1 | 1;
     }
 
-    if (zrUtil.retrieve(opt.labelInside, axisModel.get('axisLabel.inside'))) {
-        layout.labelDirection = -layout.labelDirection;
+    if (zrUtil.retrieve(opt.labelInside, axisModel.get(['axisLabel', 'inside']))) {
+        layout.labelDirection = -layout.labelDirection as -1 | 1;
     }
 
     var labelRotation = opt.rotate;
-    labelRotation == null && (labelRotation = axisModel.get('axisLabel.rotate'));
+    labelRotation == null && (labelRotation = axisModel.get(['axisLabel', 'rotate']));
     layout.labelRotation = axisPosition === 'top' ? -labelRotation : labelRotation;
 
     layout.z2 = 1;

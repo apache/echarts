@@ -25,6 +25,19 @@ import Grid from './Grid';
 import { OptionAxisType } from '../axisCommonTypes';
 
 
+interface Axis2D {
+    /**
+     * Transform global coord to local coord,
+     * i.e. var localCoord = axis.toLocalCoord(80);
+     */
+    toLocalCoord(coord: number): number;
+
+    /**
+     * Transform global coord to local coord,
+     * i.e. var globalCoord = axis.toLocalCoord(40);
+     */
+    toGlobalCoord(coord: number): number;
+}
 class Axis2D extends Axis {
 
     /**
@@ -106,19 +119,6 @@ class Axis2D extends Axis {
         return this.coordToData(this.toLocalCoord(point[this.dim === 'x' ? 0 : 1]), clamp);
     }
 
-    /**
-     * Transform global coord to local coord,
-     * i.e. var localCoord = axis.toLocalCoord(80);
-     * designate by module:echarts/coord/cartesian/Grid.
-     */
-    toLocalCoord: (coord: number) => number;
-
-    /**
-     * Transform global coord to local coord,
-     * i.e. var globalCoord = axis.toLocalCoord(40);
-     * designate by module:echarts/coord/cartesian/Grid.
-     */
-    toGlobalCoord: (coord: number) => number;
 
 }
 

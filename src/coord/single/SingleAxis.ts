@@ -17,98 +17,63 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import Axis from '../Axis';
+import Scale from '../../scale/Scale';
+import { OptionAxisType } from '../axisCommonTypes';
+import SingleAxisModel, { SingleAxisPosition } from './AxisModel';
+import { LayoutOrient } from '../../util/types';
+import Single from './Single';
 
-/**
- * @constructor  module:echarts/coord/single/SingleAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
- */
-var SingleAxis = function (dim, scale, coordExtent, axisType, position) {
-
-    Axis.call(this, dim, scale, coordExtent);
+interface SingleAxis {
+    /**
+     * Transform global coord to local coord,
+     * i.e. var localCoord = axis.toLocalCoord(80);
+     */
+    toLocalCoord(coord: number): number;
 
     /**
-     * Axis type
-     * - 'category'
-     * - 'value'
-     * - 'time'
-     * - 'log'
-     * @type {string}
+     * Transform global coord to local coord,
+     * i.e. var globalCoord = axis.toLocalCoord(40);
      */
-    this.type = axisType || 'value';
+    toGlobalCoord(coord: number): number;
+}
+class SingleAxis extends Axis {
 
-    /**
-     * Axis position
-     *  - 'top'
-     *  - 'bottom'
-     *  - 'left'
-     *  - 'right'
-     *  @type {string}
-     */
-    this.position = position || 'bottom';
+    type: OptionAxisType
 
-    /**
-     * Axis orient
-     *  - 'horizontal'
-     *  - 'vertical'
-     * @type {[type]}
-     */
-    this.orient = null;
+    position: SingleAxisPosition
 
-};
+    orient: LayoutOrient
 
-SingleAxis.prototype = {
+    reverse: boolean
 
-    constructor: SingleAxis,
+    coordinateSystem: Single
 
-    /**
-     * Axis model
-     * @type {module:echarts/coord/single/AxisModel}
-     */
-    model: null,
+    model: SingleAxisModel
+
+    constructor(
+        dim: string,
+        scale: Scale,
+        coordExtent: [number, number],
+        axisType?: OptionAxisType,
+        position?: SingleAxisPosition
+    ) {
+        super(dim, scale, coordExtent);
+
+        this.type = axisType || 'value';
+        this.position = position || 'bottom';
+    }
 
     /**
      * Judge the orient of the axis.
-     * @return {boolean}
      */
-    isHorizontal: function () {
+    isHorizontal() {
         var position = this.position;
         return position === 'top' || position === 'bottom';
+    }
 
-    },
-
-    /**
-     * @override
-     */
-    pointToData: function (point, clamp) {
-        return this.coordinateSystem.pointToData(point, clamp)[0];
-    },
-
-    /**
-     * Convert the local coord(processed by dataToCoord())
-     * to global coord(concrete pixel coord).
-     * designated by module:echarts/coord/single/Single.
-     * @type {Function}
-     */
-    toGlobalCoord: null,
-
-    /**
-     * Convert the global coord to local coord.
-     * designated by module:echarts/coord/single/Single.
-     * @type {Function}
-     */
-    toLocalCoord: null
-
-};
-
-zrUtil.inherits(SingleAxis, Axis);
-
+    pointToData(point: number[], clamp?: boolean) { // TODO: clamp is not used.
+        return this.coordinateSystem.pointToData(point)[0];
+    }
+}
 export default SingleAxis;

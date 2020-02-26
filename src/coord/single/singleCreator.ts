@@ -17,26 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Single coordinate system creator.
  */
 
 import Single from './Single';
 import CoordinateSystem from '../../CoordinateSystem';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import SingleAxisModel from './AxisModel';
+import SeriesModel from '../../model/Series';
+import { SeriesOption } from '../../util/types';
 
 /**
  * Create single coordinate system and inject it into seriesModel.
- *
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- * @return {Array.<module:echarts/coord/single/Single>}
  */
-function create(ecModel, api) {
-    var singles = [];
+function create(ecModel: GlobalModel, api: ExtensionAPI) {
+    var singles: Single[] = [];
 
-    ecModel.eachComponent('singleAxis', function (axisModel, idx) {
+    ecModel.eachComponent('singleAxis', function (axisModel: SingleAxisModel, idx: number) {
 
         var single = new Single(axisModel, ecModel, api);
         single.name = 'single_' + idx;
@@ -46,13 +45,16 @@ function create(ecModel, api) {
 
     });
 
-    ecModel.eachSeries(function (seriesModel) {
+    ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & {
+        singleAxisIndex?: number
+        singleAxisId?: string
+    }>) {
         if (seriesModel.get('coordinateSystem') === 'singleAxis') {
             var singleAxisModel = ecModel.queryComponents({
                 mainType: 'singleAxis',
                 index: seriesModel.get('singleAxisIndex'),
                 id: seriesModel.get('singleAxisId')
-            })[0];
+            })[0] as SingleAxisModel;
             seriesModel.coordinateSystem = singleAxisModel && singleAxisModel.coordinateSystem;
         }
     });

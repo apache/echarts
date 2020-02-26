@@ -17,11 +17,10 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import Single from './Single';
 
-function dataToCoordSize(dataSize, dataItem) {
+function dataToCoordSize(this: Single, dataSize: number | number[], dataItem: number | number[]) {
     // dataItem is necessary in log axis.
     var axis = this.getAxis();
     var val = dataItem instanceof Array ? dataItem[0] : dataItem;
@@ -31,7 +30,7 @@ function dataToCoordSize(dataSize, dataItem) {
         : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 }
 
-export default function (coordSys) {
+export default function (coordSys: Single) {
     var rect = coordSys.getRect();
 
     return {
@@ -43,7 +42,7 @@ export default function (coordSys) {
             height: rect.height
         },
         api: {
-            coord: function (val) {
+            coord: function (val: number) {
                 // do not provide "out" param
                 return coordSys.dataToPoint(val);
             },

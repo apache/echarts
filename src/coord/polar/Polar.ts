@@ -17,10 +17,6 @@
 * under the License.
 */
 
-/**
- * @module echarts/coord/polar/Polar
- */
-
 import RadiusAxis from './RadiusAxis';
 import AngleAxis from './AngleAxis';
 import PolarModel from './PolarModel';
@@ -241,13 +237,13 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]) {
         const seriesModel = finder.seriesModel;
-        const coordSys = seriesModel ? seriesModel.coordinateSystem : null;
+        const coordSys = seriesModel && seriesModel.coordinateSystem;
         return coordSys === this ? this.dataToPoint(value) : null;
     }
 
     convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
         const seriesModel = finder.seriesModel;
-        const coordSys = seriesModel ? seriesModel.coordinateSystem : null;
+        const coordSys = seriesModel && seriesModel.coordinateSystem;
         return coordSys === this ? this.pointToData(pixel) : null;
     }
 }

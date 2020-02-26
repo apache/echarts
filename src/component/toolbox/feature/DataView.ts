@@ -27,6 +27,7 @@ import { ColorString, ECUnitOption, SeriesOption, Payload, Dictionary } from '..
 import ExtensionAPI from '../../../ExtensionAPI';
 import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
+import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 
 var dataViewLang = lang.toolbox.dataView;
 
@@ -70,10 +71,9 @@ function groupSeries(ecModel: GlobalModel) {
         var coordSys = seriesModel.coordinateSystem;
 
         if (coordSys && (coordSys.type === 'cartesian2d' || coordSys.type === 'polar')) {
-            var baseAxis = coordSys.getBaseAxis();
-            // @ts-ignore TODO Polar
+            // TODO: TYPE Consider polar? Include polar may increase unecessary bundle size.
+            var baseAxis = (coordSys as Cartesian2D).getBaseAxis();
             if (baseAxis.type === 'category') {
-                // @ts-ignore TODO Polar
                 var key = baseAxis.dim + '_' + baseAxis.index;
                 if (!seriesGroupByCategoryAxis[key]) {
                     seriesGroupByCategoryAxis[key] = {
@@ -83,7 +83,6 @@ function groupSeries(ecModel: GlobalModel) {
                     };
                     meta.push({
                         axisDim: baseAxis.dim,
-                        // @ts-ignore TODO Polar
                         axisIndex: baseAxis.index
                     });
                 }

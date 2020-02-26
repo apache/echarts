@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Single coordinates system.
  */
@@ -27,67 +25,48 @@ import SingleAxis from './SingleAxis';
 import * as axisHelper from '../axisHelper';
 import {getLayoutRect} from '../../util/layout';
 import {each} from 'zrender/src/core/util';
+import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import BoundingRect from 'zrender/src/core/BoundingRect';
+import SingleAxisModel from './AxisModel';
+import { ParsedModelFinder } from '../../util/model';
+import { ScaleDataValue } from '../../util/types';
 
 /**
  * Create a single coordinates system.
- *
- * @param {module:echarts/coord/single/AxisModel} axisModel
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
  */
-function Single(axisModel, ecModel, api) {
+class Single implements CoordinateSystem, CoordinateSystemMaster {
 
-    /**
-     * @type {string}
-     * @readOnly
-     */
-    this.dimension = 'single';
+    readonly type = 'single';
 
+    readonly dimension = 'single';
     /**
      * Add it just for draw tooltip.
-     *
-     * @type {Array.<string>}
-     * @readOnly
      */
-    this.dimensions = ['single'];
+    readonly dimensions = ['single'];
 
-    /**
-     * @private
-     * @type {module:echarts/coord/single/SingleAxis}.
-     */
-    this._axis = null;
+    name: string
 
-    /**
-     * @private
-     * @type {module:zrender/core/BoundingRect}
-     */
-    this._rect;
+    axisPointerEnabled: boolean = true
 
-    this._init(axisModel, ecModel, api);
+    model: SingleAxisModel
 
-    /**
-     * @type {module:echarts/coord/single/AxisModel}
-     */
-    this.model = axisModel;
-}
+    private _axis: SingleAxis
 
-Single.prototype = {
+    private _rect: BoundingRect
 
-    type: 'singleAxis',
+    constructor(axisModel: SingleAxisModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
-    axisPointerEnabled: true,
+        this.model = axisModel;
 
-    constructor: Single,
+        this._init(axisModel, ecModel, api);
+    }
 
     /**
      * Initialize single coordinate system.
-     *
-     * @param  {module:echarts/coord/single/AxisModel} axisModel
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
-     * @private
      */
-    _init: function (axisModel, ecModel, api) {
+    _init(axisModel: SingleAxisModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
         var dim = this.dimension;
 
@@ -108,14 +87,12 @@ Single.prototype = {
         axis.model = axisModel;
         axis.coordinateSystem = this;
         this._axis = axis;
-    },
+    }
 
     /**
      * Update axis scale after data processed
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
      */
-    update: function (ecModel, api) {
+    update(ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.coordinateSystem === this) {
                 var data = seriesModel.getData();
@@ -125,15 +102,12 @@ Single.prototype = {
                 axisHelper.niceScaleExtent(this._axis.scale, this._axis.model);
             }
         }, this);
-    },
+    }
 
     /**
      * Resize the single coordinate system.
-     *
-     * @param  {module:echarts/coord/single/AxisModel} axisModel
-     * @param  {module:echarts/ExtensionAPI} api
      */
-    resize: function (axisModel, api) {
+    resize(axisModel: SingleAxisModel, api: ExtensionAPI) {
         this._rect = getLayoutRect(
             {
                 left: axisModel.get('left'),
@@ -150,19 +124,13 @@ Single.prototype = {
         );
 
         this._adjustAxis();
-    },
+    }
 
-    /**
-     * @return {module:zrender/core/BoundingRect}
-     */
-    getRect: function () {
+    getRect() {
         return this._rect;
-    },
+    }
 
-    /**
-     * @private
-     */
-    _adjustAxis: function () {
+    private _adjustAxis() {
 
         var rect = this._rect;
         var axis = this._axis;
@@ -175,13 +143,10 @@ Single.prototype = {
 
         this._updateAxisTransform(axis, isHorizontal ? rect.x : rect.y);
 
-    },
+    }
 
-    /**
-     * @param  {module:echarts/coord/single/SingleAxis} axis
-     * @param  {number} coordBase
-     */
-    _updateAxisTransform: function (axis, coordBase) {
+
+    private _updateAxisTransform(axis: SingleAxis, coordBase: number) {
 
         var axisExtent = axis.getExtent();
         var extentSum = axisExtent[0] + axisExtent[1];
@@ -202,47 +167,38 @@ Single.prototype = {
             : function (coord) {
                 return extentSum - coord + coordBase;
             };
-    },
+    }
 
     /**
      * Get axis.
-     *
-     * @return {module:echarts/coord/single/SingleAxis}
      */
-    getAxis: function () {
+    getAxis() {
         return this._axis;
-    },
+    }
 
     /**
      * Get axis, add it just for draw tooltip.
-     *
-     * @return {[type]} [description]
      */
-    getBaseAxis: function () {
+    getBaseAxis() {
         return this._axis;
-    },
+    }
 
-    /**
-     * @return {Array.<module:echarts/coord/Axis>}
-     */
-    getAxes: function () {
+    getAxes() {
         return [this._axis];
-    },
+    }
 
-    /**
-     * @return {Object} {baseAxes: [], otherAxes: []}
-     */
-    getTooltipAxes: function () {
-        return {baseAxes: [this.getAxis()]};
-    },
+    getTooltipAxes() {
+        return {
+            baseAxes: [this.getAxis()],
+            // Empty otherAxes
+            otherAxes: [] as SingleAxis[]
+        };
+    }
 
     /**
      * If contain point.
-     *
-     * @param  {Array.<number>} point
-     * @return {boolean}
      */
-    containPoint: function (point) {
+    containPoint(point: number[]) {
         var rect = this.getRect();
         var axis = this.getAxis();
         var orient = axis.orient;
@@ -254,26 +210,20 @@ Single.prototype = {
             return axis.contain(axis.toLocalCoord(point[1]))
             && (point[0] >= rect.y && point[0] <= (rect.y + rect.height));
         }
-    },
+    }
 
-    /**
-     * @param {Array.<number>} point
-     * @return {Array.<number>}
-     */
-    pointToData: function (point) {
+    pointToData(point: number[]) {
         var axis = this.getAxis();
         return [axis.coordToData(axis.toLocalCoord(
             point[axis.orient === 'horizontal' ? 0 : 1]
         ))];
-    },
+    }
 
     /**
      * Convert the series data to concrete point.
-     *
-     * @param  {number|Array.<number>} val
-     * @return {Array.<number>}
+     * Can be [val] | val
      */
-    dataToPoint: function (val) {
+    dataToPoint(val: ScaleDataValue | ScaleDataValue[]) {
         var axis = this.getAxis();
         var rect = this.getRect();
         var pt = [];
@@ -288,6 +238,17 @@ Single.prototype = {
         return pt;
     }
 
-};
+    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]) {
+        const seriesModel = finder.seriesModel;
+        const coordSys = seriesModel && seriesModel.coordinateSystem;
+        return coordSys === this ? this.dataToPoint(value) : null;
+    }
+
+    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
+        const seriesModel = finder.seriesModel;
+        const coordSys = seriesModel && seriesModel.coordinateSystem;
+        return coordSys === this ? this.pointToData(pixel) : null;
+    }
+}
 
 export default Single;
