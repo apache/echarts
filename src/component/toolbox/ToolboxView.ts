@@ -17,22 +17,47 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
-import * as featureManager from './featureManager';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';
 import DataDiffer from '../../data/DataDiffer';
 import * as listComponentHelper from '../helper/listComponent';
+import ComponentView from '../../view/Component';
+import ToolboxModel from './ToolboxModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { DisplayState, Dictionary, ECElement, Payload } from '../../util/types';
+import {
+    ToolboxFeature,
+    getFeature,
+    ToolboxFeatureModel,
+    ToolboxFeatureOption,
+    UserDefinedToolboxFeature
+} from './featureManager';
+import { getUID } from '../../util/component';
 
-export default echarts.extendComponentView({
+type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
-    type: 'toolbox',
+type ExtendedPath = IconPath & {
+    __title: string
+}
 
-    render: function (toolboxModel, ecModel, api, payload) {
+class ToolboxView extends ComponentView {
+    static type = 'toolbox' as const
+
+    _features: Dictionary<ToolboxFeature | UserDefinedToolboxFeature>
+
+    _featureNames: string[]
+
+    render(
+        toolboxModel: ToolboxModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload & {
+            newTitle?: ToolboxFeatureOption['title']
+        }
+    ) {
         var group = this.group;
         group.removeAll();
 
@@ -44,7 +69,7 @@ export default echarts.extendComponentView({
         var featureOpts = toolboxModel.get('feature') || {};
         var features = this._features || (this._features = {});
 
-        var featureNames = [];
+        var featureNames: string[] = [];
         zrUtil.each(featureOpts, function (opt, name) {
             featureNames.push(name);
         });
@@ -58,12 +83,12 @@ export default echarts.extendComponentView({
         // Keep for diff.
         this._featureNames = featureNames;
 
-        function processFeature(newIndex, oldIndex) {
+        function processFeature(newIndex: number, oldIndex?: number) {
             var featureName = featureNames[newIndex];
             var oldName = featureNames[oldIndex];
             var featureOpt = featureOpts[featureName];
-            var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
-            var feature;
+            var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel) as ToolboxFeatureModel;
+            var feature: ToolboxFeature | UserDefinedToolboxFeature;
 
             // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
             if (payload && payload.newTitle != null) {
@@ -73,17 +98,16 @@ export default echarts.extendComponentView({
             if (featureName && !oldName) { // Create
                 if (isUserFeatureName(featureName)) {
                     feature = {
-                        model: featureModel,
                         onclick: featureModel.option.onclick,
                         featureName: featureName
-                    };
+                    } as UserDefinedToolboxFeature;
                 }
                 else {
-                    var Feature = featureManager.get(featureName);
+                    var Feature = getFeature(featureName);
                     if (!Feature) {
                         return;
                     }
-                    feature = new Feature(featureModel, ecModel, api);
+                    feature = new Feature();
                 }
                 features[featureName] = feature;
             }
@@ -93,24 +117,26 @@ export default echarts.extendComponentView({
                 if (!feature) {
                     return;
                 }
-                feature.model = featureModel;
-                feature.ecModel = ecModel;
-                feature.api = api;
             }
+            feature.uid = getUID('toolbox-feature');
+            feature.model = featureModel;
+            feature.ecModel = ecModel;
+            feature.api = api;
 
-            if (!featureName && oldName) {
-                feature.dispose && feature.dispose(ecModel, api);
-                return;
+            if (feature instanceof ToolboxFeature) {
+                if (!featureName && oldName) {
+                    feature.dispose && feature.dispose(ecModel, api);
+                    return;
+                }
+
+                if (!featureModel.get('show') || feature.unusable) {
+                    feature.remove && feature.remove(ecModel, api);
+                    return;
+                }
             }
-
-            if (!featureModel.get('show') || feature.unusable) {
-                feature.remove && feature.remove(ecModel, api);
-                return;
-            }
-
             createIconPaths(featureModel, feature, featureName);
 
-            featureModel.setIconStatus = function (iconName, status) {
+            featureModel.setIconStatus = function (this: ToolboxFeatureModel, iconName: string, status: DisplayState) {
                 var option = this.option;
                 var iconPaths = this.iconPaths;
                 option.iconStatus = option.iconStatus || {};
@@ -119,14 +145,20 @@ export default echarts.extendComponentView({
                 iconPaths[iconName] && iconPaths[iconName].trigger(status);
             };
 
-            if (feature.render) {
-                feature.render(featureModel, ecModel, api, payload);
+            if (feature instanceof ToolboxFeature) {
+                if (feature.render) {
+                    feature.render(featureModel, ecModel, api, payload);
+                }
             }
         }
 
-        function createIconPaths(featureModel, feature, featureName) {
+        function createIconPaths(
+            featureModel: ToolboxFeatureModel,
+            feature: ToolboxFeature | UserDefinedToolboxFeature,
+            featureName: string
+        ) {
             var iconStyleModel = featureModel.getModel('iconStyle');
-            var iconStyleEmphasisModel = featureModel.getModel('emphasis.iconStyle');
+            var iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']);
 
             // If one feature has mutiple icon. they are orginaized as
             // {
@@ -139,18 +171,27 @@ export default echarts.extendComponentView({
             //         bar: ''
             //     }
             // }
-            var icons = feature.getIcons ? feature.getIcons() : featureModel.get('icon');
+            var icons = (feature instanceof ToolboxFeature && feature.getIcons)
+                ? feature.getIcons() : featureModel.get('icon');
             var titles = featureModel.get('title') || {};
+            var iconsMap: Dictionary<string>;
+            var titlesMap: Dictionary<string>;
             if (typeof icons === 'string') {
-                var icon = icons;
-                var title = titles;
-                icons = {};
-                titles = {};
-                icons[featureName] = icon;
-                titles[featureName] = title;
+                iconsMap = {};
+                iconsMap[featureName] = icons;
             }
-            var iconPaths = featureModel.iconPaths = {};
-            zrUtil.each(icons, function (iconStr, iconName) {
+            else {
+                iconsMap = icons;
+            }
+            if (typeof titles === 'string') {
+                titlesMap = {};
+                titlesMap[featureName] = titles as string;
+            }
+            else {
+                titlesMap = titles;
+            }
+            var iconPaths: ToolboxFeatureModel['iconPaths'] = featureModel.iconPaths = {};
+            zrUtil.each(iconsMap, function (iconStr, iconName) {
                 var path = graphic.createIcon(
                     iconStr,
                     {},
@@ -166,7 +207,7 @@ export default echarts.extendComponentView({
 
                 // Text position calculation
                 path.setStyle({
-                    text: titles[iconName],
+                    text: titlesMap[iconName],
                     textAlign: iconStyleEmphasisModel.get('textAlign'),
                     textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
                     textPadding: iconStyleEmphasisModel.get('textPadding'),
@@ -175,33 +216,33 @@ export default echarts.extendComponentView({
 
                 var tooltipModel = toolboxModel.getModel('tooltip');
                 if (tooltipModel && tooltipModel.get('show')) {
-                    path.attr('tooltip', zrUtil.extend({
-                        content: titles[iconName],
+                    (path as ECElement).tooltip = zrUtil.extend({
+                        content: titlesMap[iconName],
                         formatter: tooltipModel.get('formatter', true)
                             || function () {
-                                return titles[iconName];
+                                return titlesMap[iconName];
                             },
                         formatterParams: {
                             componentType: 'toolbox',
                             name: iconName,
-                            title: titles[iconName],
+                            title: titlesMap[iconName],
                             $vars: ['name', 'title']
                         },
                         position: tooltipModel.get('position', true) || 'bottom'
-                    }, tooltipModel.option));
+                    }, tooltipModel.option);
                 }
 
                 graphic.setHoverStyle(path);
 
                 if (toolboxModel.get('showTitle')) {
-                    path.__title = titles[iconName];
-                    path.on('mouseover', function () {
+                    (path as ExtendedPath).__title = titlesMap[iconName];
+                    (path as graphic.Path).on('mouseover', function () {
                             // Should not reuse above hoverStyle, which might be modified.
                             var hoverStyle = iconStyleEmphasisModel.getItemStyle();
                             var defaultTextPosition = toolboxModel.get('orient') === 'vertical'
                                 ? (toolboxModel.get('right') == null ? 'right' : 'left')
                                 : (toolboxModel.get('bottom') == null ? 'bottom' : 'top');
-                            path.setStyle({
+                            (path as graphic.Path).setStyle({
                                 textFill: iconStyleEmphasisModel.get('textFill')
                                     || hoverStyle.fill || hoverStyle.stroke || '#000',
                                 textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
@@ -215,10 +256,10 @@ export default echarts.extendComponentView({
                             });
                         });
                 }
-                path.trigger(featureModel.get('iconStatus.' + iconName) || 'normal');
+                path.trigger(featureModel.get(['iconStatus', iconName]) || 'normal');
 
                 group.add(path);
-                path.on('click', zrUtil.bind(
+                (path as graphic.Path).on('click', zrUtil.bind(
                     feature.onclick, feature, ecModel, api, iconName
                 ));
 
@@ -232,8 +273,8 @@ export default echarts.extendComponentView({
         group.add(listComponentHelper.makeBackground(group.getBoundingRect(), toolboxModel));
 
         // Adjust icon title positions to avoid them out of screen
-        group.eachChild(function (icon) {
-            var titleText = icon.__title;
+        group.eachChild(function (icon: IconPath) {
+            var titleText = (icon as ExtendedPath).__title;
             var hoverStyle = icon.hoverStyle;
             // May be background element
             if (hoverStyle && titleText) {
@@ -259,34 +300,45 @@ export default echarts.extendComponentView({
                 }
             }
         });
-    },
+    }
 
-    updateView: function (toolboxModel, ecModel, api, payload) {
+    updateView(
+        toolboxModel: ToolboxModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: unknown
+    ) {
         zrUtil.each(this._features, function (feature) {
-            feature.updateView && feature.updateView(feature.model, ecModel, api, payload);
+            feature instanceof ToolboxFeature
+                && feature.updateView && feature.updateView(feature.model, ecModel, api, payload);
         });
-    },
+    }
 
-    // updateLayout: function (toolboxModel, ecModel, api, payload) {
+    // updateLayout(toolboxModel, ecModel, api, payload) {
     //     zrUtil.each(this._features, function (feature) {
     //         feature.updateLayout && feature.updateLayout(feature.model, ecModel, api, payload);
     //     });
     // },
 
-    remove: function (ecModel, api) {
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
         zrUtil.each(this._features, function (feature) {
-            feature.remove && feature.remove(ecModel, api);
+            feature instanceof ToolboxFeature
+                && feature.remove && feature.remove(ecModel, api);
         });
         this.group.removeAll();
-    },
+    }
 
-    dispose: function (ecModel, api) {
+    dispose(ecModel: GlobalModel, api: ExtensionAPI) {
         zrUtil.each(this._features, function (feature) {
-            feature.dispose && feature.dispose(ecModel, api);
+            feature instanceof ToolboxFeature
+                && feature.dispose && feature.dispose(ecModel, api);
         });
     }
-});
+}
 
-function isUserFeatureName(featureName) {
+ComponentView.registerClass(ToolboxView);
+
+
+function isUserFeatureName(featureName: string): boolean {
     return featureName.indexOf('my') === 0;
 }

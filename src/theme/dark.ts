@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 var contrastColor = '#eee';
 var axisCommon = function () {
     return {
@@ -153,6 +151,6 @@ var theme = {
         }
     }
 };
-theme.categoryAxis.splitLine.show = false;
+(theme.categoryAxis.splitLine as any).show = false;
 
 export default theme;

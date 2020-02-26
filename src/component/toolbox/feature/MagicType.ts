@@ -17,52 +17,175 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import lang from '../../../lang';
-import * as featureManager from '../featureManager';
+import {ToolboxFeature, ToolboxFeatureOption, ToolboxFeatureModel, registerFeature} from '../featureManager';
+import { SeriesOption, ECUnitOption } from '../../../util/types';
+import GlobalModel from '../../../model/Global';
+import ExtensionAPI from '../../../ExtensionAPI';
+import SeriesModel from '../../../model/Series';
 
-var magicTypeLang = lang.toolbox.magicType;
-var INNER_STACK_KEYWORD = '__ec_magicType_stack__';
+const magicTypeLang = lang.toolbox.magicType;
+const INNER_STACK_KEYWORD = '__ec_magicType_stack__' as const;
 
-function MagicType(model) {
-    this.model = model;
+const ICON_TYPES =  ['line', 'bar', 'stack'] as const;
+
+const radioTypes = [
+    ['line', 'bar'],
+    ['stack']
+] as const;
+
+type IconType = typeof ICON_TYPES[number];
+
+export interface ToolboxMagicTypeFeatureOption extends ToolboxFeatureOption {
+    type?: IconType[]
+    /**
+     * Icon group
+     */
+    icon?: {[key in IconType]?: string}
+    title?: {[key in IconType]?: string}
+
+    // TODO LineSeriesOption, BarSeriesOption
+    option?: {[key in IconType]?: SeriesOption}
+
+    /**
+     * Map of seriesType: seriesIndex
+     */
+    seriesIndex?: {
+        line?: number
+        bar?: number
+    }
 }
 
-MagicType.defaultOption = {
-    show: true,
-    type: [],
-    // Icon group
-    icon: {
-        /* eslint-disable */
-        line: 'M4.1,28.9h7.1l9.3-22l7.4,38l9.7-19.7l3,12.8h14.9M4.1,58h51.4',
-        bar: 'M6.7,22.9h10V48h-10V22.9zM24.9,13h10v35h-10V13zM43.2,2h10v46h-10V2zM3.1,58h53.7',
-        stack: 'M8.2,38.4l-8.4,4.1l30.6,15.3L60,42.5l-8.1-4.1l-21.5,11L8.2,38.4z M51.9,30l-8.1,4.2l-13.4,6.9l-13.9-6.9L8.2,30l-8.4,4.2l8.4,4.2l22.2,11l21.5-11l8.1-4.2L51.9,30z M51.9,21.7l-8.1,4.2L35.7,30l-5.3,2.8L24.9,30l-8.4-4.1l-8.3-4.2l-8.4,4.2L8.2,30l8.3,4.2l13.9,6.9l13.4-6.9l8.1-4.2l8.1-4.1L51.9,21.7zM30.4,2.2L-0.2,17.5l8.4,4.1l8.3,4.2l8.4,4.2l5.5,2.7l5.3-2.7l8.1-4.2l8.1-4.2l8.1-4.1L30.4,2.2z' // jshint ignore:line
-        /* eslint-enable */
-    },
-    // `line`, `bar`, `stack`, `tiled`
-    title: zrUtil.clone(magicTypeLang.title),
-    option: {},
-    seriesIndex: {}
-};
 
-var proto = MagicType.prototype;
+class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
 
-proto.getIcons = function () {
-    var model = this.model;
-    var availableIcons = model.get('icon');
-    var icons = {};
-    zrUtil.each(model.get('type'), function (type) {
-        if (availableIcons[type]) {
-            icons[type] = availableIcons[type];
+    getIcons() {
+        var model = this.model;
+        var availableIcons = model.get('icon');
+        var icons: ToolboxMagicTypeFeatureOption['icon'] = {};
+        zrUtil.each(model.get('type'), function (type) {
+            if (availableIcons[type]) {
+                icons[type] = availableIcons[type];
+            }
+        });
+        return icons;
+    }
+
+    static defaultOption: ToolboxMagicTypeFeatureOption = {
+        show: true,
+        type: [],
+        // Icon group
+        icon: {
+            /* eslint-disable */
+            line: 'M4.1,28.9h7.1l9.3-22l7.4,38l9.7-19.7l3,12.8h14.9M4.1,58h51.4',
+            bar: 'M6.7,22.9h10V48h-10V22.9zM24.9,13h10v35h-10V13zM43.2,2h10v46h-10V2zM3.1,58h53.7',
+            stack: 'M8.2,38.4l-8.4,4.1l30.6,15.3L60,42.5l-8.1-4.1l-21.5,11L8.2,38.4z M51.9,30l-8.1,4.2l-13.4,6.9l-13.9-6.9L8.2,30l-8.4,4.2l8.4,4.2l22.2,11l21.5-11l8.1-4.2L51.9,30z M51.9,21.7l-8.1,4.2L35.7,30l-5.3,2.8L24.9,30l-8.4-4.1l-8.3-4.2l-8.4,4.2L8.2,30l8.3,4.2l13.9,6.9l13.4-6.9l8.1-4.2l8.1-4.1L51.9,21.7zM30.4,2.2L-0.2,17.5l8.4,4.1l8.3,4.2l8.4,4.2l5.5,2.7l5.3-2.7l8.1-4.2l8.1-4.2l8.1-4.1L30.4,2.2z' // jshint ignore:line
+            /* eslint-enable */
+        },
+        // `line`, `bar`, `stack`, `tiled`
+        title: zrUtil.clone(magicTypeLang.title),
+        option: {},
+        seriesIndex: {}
+    }
+
+
+    onclick(ecModel: GlobalModel, api: ExtensionAPI, type: IconType) {
+        var model = this.model;
+        var seriesIndex = model.get(['seriesIndex', type as 'line' | 'bar']);
+        // Not supported magicType
+        if (!seriesOptGenreator[type]) {
+            return;
         }
-    });
-    return icons;
-};
+        var newOption: ECUnitOption = {
+            series: []
+        };
+        var generateNewSeriesTypes = function (seriesModel: SeriesModel) {
+            var seriesType = seriesModel.subType;
+            var seriesId = seriesModel.id;
+            var newSeriesOpt = seriesOptGenreator[type](
+                seriesType, seriesId, seriesModel, model
+            );
+            if (newSeriesOpt) {
+                // PENDING If merge original option?
+                zrUtil.defaults(newSeriesOpt, seriesModel.option);
+                newOption.series.push(newSeriesOpt);
+            }
+            // Modify boundaryGap
+            var coordSys = seriesModel.coordinateSystem;
+            if (coordSys && coordSys.type === 'cartesian2d' && (type === 'line' || type === 'bar')) {
+                var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
+                if (categoryAxis) {
+                    var axisDim = categoryAxis.dim;
+                    var axisType = axisDim + 'Axis';
+                    var axisModel = ecModel.queryComponents({
+                        mainType: axisType,
+                        index: seriesModel.get(name + 'Index' as any),
+                        id: seriesModel.get(name + 'Id' as any)
+                    })[0];
+                    var axisIndex = axisModel.componentIndex;
 
-var seriesOptGenreator = {
+                    newOption[axisType] = newOption[axisType] || [];
+                    for (var i = 0; i <= axisIndex; i++) {
+                        newOption[axisType][axisIndex] = newOption[axisType][axisIndex] || {};
+                    }
+                    newOption[axisType][axisIndex].boundaryGap = type === 'bar';
+                }
+            }
+        };
+
+        zrUtil.each(radioTypes, function (radio) {
+            if (zrUtil.indexOf(radio, type) >= 0) {
+                zrUtil.each(radio, function (item) {
+                    model.setIconStatus(item, 'normal');
+                });
+            }
+        });
+
+        model.setIconStatus(type, 'emphasis');
+
+        ecModel.eachComponent(
+            {
+                mainType: 'series',
+                query: seriesIndex == null ? null : {
+                    seriesIndex: seriesIndex
+                }
+            }, generateNewSeriesTypes
+        );
+
+        var newTitle;
+        // Change title of stack
+        if (type === 'stack') {
+            var isStack = newOption.series && newOption.series[0] && newOption.series[0].stack === INNER_STACK_KEYWORD;
+            newTitle = isStack
+                ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
+                : zrUtil.clone(magicTypeLang.title);
+        }
+
+        api.dispatchAction({
+            type: 'changeMagicType',
+            currentType: type,
+            newOption: newOption,
+            newTitle: newTitle
+        });
+    }
+}
+
+
+type SeriesOptGenreator = (
+    seriesType: string,
+    seriesId: string,
+    seriesModel: SeriesModel<SeriesOption & {
+        // TODO: TYPE More specified series option
+        stack?: boolean | string
+        data?: any[]
+        markPoint?: any
+        markLine?: any
+    }>,
+    model: ToolboxFeatureModel<ToolboxMagicTypeFeatureOption>
+) => SeriesOption
+const seriesOptGenreator: {[key in IconType]: SeriesOptGenreator} = {
     'line': function (seriesType, seriesId, seriesModel, model) {
         if (seriesType === 'bar') {
             return zrUtil.merge({
@@ -73,7 +196,7 @@ var seriesOptGenreator = {
                 stack: seriesModel.get('stack'),
                 markPoint: seriesModel.get('markPoint'),
                 markLine: seriesModel.get('markLine')
-            }, model.get('option.line') || {}, true);
+            }, model.get(['option', 'line']) || {}, true);
         }
     },
     'bar': function (seriesType, seriesId, seriesModel, model) {
@@ -86,7 +209,7 @@ var seriesOptGenreator = {
                 stack: seriesModel.get('stack'),
                 markPoint: seriesModel.get('markPoint'),
                 markLine: seriesModel.get('markLine')
-            }, model.get('option.bar') || {}, true);
+            }, model.get(['option', 'bar']) || {}, true);
         }
     },
     'stack': function (seriesType, seriesId, seriesModel, model) {
@@ -96,95 +219,11 @@ var seriesOptGenreator = {
             return zrUtil.merge({
                 id: seriesId,
                 stack: isStack ? '' : INNER_STACK_KEYWORD
-            }, model.get('option.stack') || {}, true);
+            }, model.get(['option', 'stack']) || {}, true);
         }
     }
 };
 
-var radioTypes = [
-    ['line', 'bar'],
-    ['stack']
-];
-
-proto.onclick = function (ecModel, api, type) {
-    var model = this.model;
-    var seriesIndex = model.get('seriesIndex.' + type);
-    // Not supported magicType
-    if (!seriesOptGenreator[type]) {
-        return;
-    }
-    var newOption = {
-        series: []
-    };
-    var generateNewSeriesTypes = function (seriesModel) {
-        var seriesType = seriesModel.subType;
-        var seriesId = seriesModel.id;
-        var newSeriesOpt = seriesOptGenreator[type](
-            seriesType, seriesId, seriesModel, model
-        );
-        if (newSeriesOpt) {
-            // PENDING If merge original option?
-            zrUtil.defaults(newSeriesOpt, seriesModel.option);
-            newOption.series.push(newSeriesOpt);
-        }
-        // Modify boundaryGap
-        var coordSys = seriesModel.coordinateSystem;
-        if (coordSys && coordSys.type === 'cartesian2d' && (type === 'line' || type === 'bar')) {
-            var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
-            if (categoryAxis) {
-                var axisDim = categoryAxis.dim;
-                var axisType = axisDim + 'Axis';
-                var axisModel = ecModel.queryComponents({
-                    mainType: axisType,
-                    index: seriesModel.get(name + 'Index'),
-                    id: seriesModel.get(name + 'Id')
-                })[0];
-                var axisIndex = axisModel.componentIndex;
-
-                newOption[axisType] = newOption[axisType] || [];
-                for (var i = 0; i <= axisIndex; i++) {
-                    newOption[axisType][axisIndex] = newOption[axisType][axisIndex] || {};
-                }
-                newOption[axisType][axisIndex].boundaryGap = type === 'bar';
-            }
-        }
-    };
-
-    zrUtil.each(radioTypes, function (radio) {
-        if (zrUtil.indexOf(radio, type) >= 0) {
-            zrUtil.each(radio, function (item) {
-                model.setIconStatus(item, 'normal');
-            });
-        }
-    });
-
-    model.setIconStatus(type, 'emphasis');
-
-    ecModel.eachComponent(
-        {
-            mainType: 'series',
-            query: seriesIndex == null ? null : {
-                seriesIndex: seriesIndex
-            }
-        }, generateNewSeriesTypes
-    );
-
-    var newTitle;
-    // Change title of stack
-    if (type === 'stack') {
-        var isStack = newOption.series && newOption.series[0] && newOption.series[0].stack === INNER_STACK_KEYWORD;
-        newTitle = isStack
-            ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
-            : zrUtil.clone(magicTypeLang.title);
-    }
-
-    api.dispatchAction({
-        type: 'changeMagicType',
-        currentType: type,
-        newOption: newOption,
-        newTitle: newTitle
-    });
-};
 
 echarts.registerAction({
     type: 'changeMagicType',
@@ -194,6 +233,6 @@ echarts.registerAction({
     ecModel.mergeOption(payload.newOption);
 });
 
-featureManager.register('magicType', MagicType);
+registerFeature('magicType', MagicType);
 
 export default MagicType;

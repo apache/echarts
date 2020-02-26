@@ -88,6 +88,8 @@ export interface CoordinateSystemMaster {
  */
 export interface CoordinateSystem {
 
+    type: string
+
     // Should be the same as its coordinateSystemCreator.
     dimensions: DimensionName[];
 

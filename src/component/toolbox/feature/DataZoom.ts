@@ -19,6 +19,7 @@
 
 // @ts-nocheck
 
+// TODO depends on DataZoom and Brush
 import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BrushController from '../../helper/BrushController';
@@ -26,10 +27,16 @@ import BrushTargetManager from '../../helper/BrushTargetManager';
 import * as history from '../../dataZoom/history';
 import sliderMove from '../../helper/sliderMove';
 import lang from '../../../lang';
-import * as featureManager from '../featureManager';
-
 // Use dataZoomSelect
 import '../../dataZoomSelect';
+import {
+    ToolboxFeature,
+    ToolboxFeatureModel,
+    ToolboxFeatureOption,
+    registerFeature
+} from '../featureManager';
+import GlobalModel from '../../../model/Global';
+import ExtensionAPI from '../../../ExtensionAPI';
 
 var dataZoomLang = lang.toolbox.dataZoom;
 var each = zrUtil.each;
@@ -37,65 +44,157 @@ var each = zrUtil.each;
 // Spectial component id start with \0ec\0, see echarts/model/Global.js~hasInnerId
 var DATA_ZOOM_ID_BASE = '\0_ec_\0toolbox-dataZoom_';
 
-function DataZoom(model, ecModel, api) {
+const ICON_TYPES = ['zoom', 'back'] as const;
+type IconType = typeof ICON_TYPES[number];
 
-    /**
-     * @private
-     * @type {module:echarts/component/helper/BrushController}
-     */
-    (this._brushController = new BrushController(api.getZr()))
-        .on('brush', zrUtil.bind(this._onBrush, this))
-        .mount();
-
-    /**
-     * @private
-     * @type {boolean}
-     */
-    this._isZoomActive;
+interface ToolboxDataZoomFeatureOption extends ToolboxFeatureOption {
+    type?: IconType[]
+    icon?: {[key in IconType]?: string}
+    title?: {[key in IconType]?: string}
+    // TODO: TYPE Use type in dataZoom
+    filterMode?: 'filter' | 'weakFilter' | 'empty' | 'none'
 }
 
-DataZoom.defaultOption = {
-    show: true,
-    filterMode: 'filter',
-    // Icon group
-    icon: {
-        zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
-        back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
-    },
-    // `zoom`, `back`
-    title: zrUtil.clone(dataZoomLang.title)
-};
+type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOption>
 
-var proto = DataZoom.prototype;
+class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
-proto.render = function (featureModel, ecModel, api, payload) {
-    this.model = featureModel;
-    this.ecModel = ecModel;
-    this.api = api;
+    brushController: BrushController
 
-    updateZoomBtnStatus(featureModel, ecModel, this, payload, api);
-    updateBackBtnStatus(featureModel, ecModel);
-};
+    isZoomActive: boolean
 
-proto.onclick = function (ecModel, api, type) {
-    handlers[type].call(this);
-};
+    render(
+        featureModel: ToolboxDataZoomFeatureModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload
+    ) {
+        if (!this.brushController) {
+            this.brushController = new BrushController(api.getZr());
+            this.brushController.on('brush', zrUtil.bind(this._onBrush, this))
+                .mount();
+        }
+        updateZoomBtnStatus(featureModel, ecModel, this, payload, api);
+        updateBackBtnStatus(featureModel, ecModel);
+    }
 
-proto.remove = function (ecModel, api) {
-    this._brushController.unmount();
-};
+    onclick(
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        type: IconType
+    ) {
+        handlers[type].call(this);
+    }
 
-proto.dispose = function (ecModel, api) {
-    this._brushController.dispose();
-};
+    remove(
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
+        this.brushController.unmount();
+    }
 
-/**
- * @private
- */
-var handlers = {
+    dispose(
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
+        this.brushController.dispose();
+    }
 
+    private _onBrush(areas, opt) {
+        if (!opt.isEnd || !areas.length) {
+            return;
+        }
+        var snapshot = {};
+        var ecModel = this.ecModel;
+
+        this.brushController.updateCovers([]); // remove cover
+
+        var brushTargetManager = new BrushTargetManager(
+            retrieveAxisSetting(this.model.option), ecModel, {include: ['grid']}
+        );
+        brushTargetManager.matchOutputRanges(areas, ecModel, function (area, coordRange, coordSys) {
+            if (coordSys.type !== 'cartesian2d') {
+                return;
+            }
+
+            var brushType = area.brushType;
+            if (brushType === 'rect') {
+                setBatch('x', coordSys, coordRange[0]);
+                setBatch('y', coordSys, coordRange[1]);
+            }
+            else {
+                setBatch(({
+                    lineX: 'x', lineY: 'y'
+                })[brushType], coordSys, coordRange);
+            }
+        });
+
+        history.push(ecModel, snapshot);
+
+        this._dispatchZoomAction(snapshot);
+
+        function setBatch(dimName: string, coordSys, minMax: number[]) {
+            var axis = coordSys.getAxis(dimName);
+            var axisModel = axis.model;
+            var dataZoomModel = findDataZoom(dimName, axisModel, ecModel);
+
+            // Restrict range.
+            var minMaxSpan = dataZoomModel.findRepresentativeAxisProxy(axisModel).getMinMaxSpan();
+            if (minMaxSpan.minValueSpan != null || minMaxSpan.maxValueSpan != null) {
+                minMax = sliderMove(
+                    0, minMax.slice(), axis.scale.getExtent(), 0,
+                    minMaxSpan.minValueSpan, minMaxSpan.maxValueSpan
+                );
+            }
+
+            dataZoomModel && (snapshot[dataZoomModel.id] = {
+                dataZoomId: dataZoomModel.id,
+                startValue: minMax[0],
+                endValue: minMax[1]
+            });
+        }
+
+        function findDataZoom(dimName: string, axisModel, ecModel: GlobalModel) {
+            var found;
+            ecModel.eachComponent({mainType: 'dataZoom', subType: 'select'}, function (dzModel) {
+                var has = dzModel.getAxisModel(dimName, axisModel.componentIndex);
+                has && (found = dzModel);
+            });
+            return found;
+        }
+    };
+
+    dispatchZoomAction(snapshot) {
+        var batch = [];
+
+        // Convert from hash map to array.
+        each(snapshot, function (batchItem, dataZoomId) {
+            batch.push(zrUtil.clone(batchItem));
+        });
+
+        batch.length && this.api.dispatchAction({
+            type: 'dataZoom',
+            from: this.uid,
+            batch: batch
+        });
+    }
+
+    static defaultOption: ToolboxDataZoomFeatureOption = {
+        show: true,
+        filterMode: 'filter',
+        // Icon group
+        icon: {
+            zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
+            back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
+        },
+        // `zoom`, `back`
+        title: zrUtil.clone(dataZoomLang.title)
+    }
+}
+
+const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {
     zoom: function () {
-        var nextActive = !this._isZoomActive;
+        var nextActive = !this.isZoomActive;
 
         this.api.dispatchAction({
             type: 'takeGlobalCursor',
@@ -105,92 +204,10 @@ var handlers = {
     },
 
     back: function () {
-        this._dispatchZoomAction(history.pop(this.ecModel));
+        this.dispatchZoomAction(history.pop(this.ecModel));
     }
 };
 
-/**
- * @private
- */
-proto._onBrush = function (areas, opt) {
-    if (!opt.isEnd || !areas.length) {
-        return;
-    }
-    var snapshot = {};
-    var ecModel = this.ecModel;
-
-    this._brushController.updateCovers([]); // remove cover
-
-    var brushTargetManager = new BrushTargetManager(
-        retrieveAxisSetting(this.model.option), ecModel, {include: ['grid']}
-    );
-    brushTargetManager.matchOutputRanges(areas, ecModel, function (area, coordRange, coordSys) {
-        if (coordSys.type !== 'cartesian2d') {
-            return;
-        }
-
-        var brushType = area.brushType;
-        if (brushType === 'rect') {
-            setBatch('x', coordSys, coordRange[0]);
-            setBatch('y', coordSys, coordRange[1]);
-        }
-        else {
-            setBatch(({lineX: 'x', lineY: 'y'})[brushType], coordSys, coordRange);
-        }
-    });
-
-    history.push(ecModel, snapshot);
-
-    this._dispatchZoomAction(snapshot);
-
-    function setBatch(dimName, coordSys, minMax) {
-        var axis = coordSys.getAxis(dimName);
-        var axisModel = axis.model;
-        var dataZoomModel = findDataZoom(dimName, axisModel, ecModel);
-
-        // Restrict range.
-        var minMaxSpan = dataZoomModel.findRepresentativeAxisProxy(axisModel).getMinMaxSpan();
-        if (minMaxSpan.minValueSpan != null || minMaxSpan.maxValueSpan != null) {
-            minMax = sliderMove(
-                0, minMax.slice(), axis.scale.getExtent(), 0,
-                minMaxSpan.minValueSpan, minMaxSpan.maxValueSpan
-            );
-        }
-
-        dataZoomModel && (snapshot[dataZoomModel.id] = {
-            dataZoomId: dataZoomModel.id,
-            startValue: minMax[0],
-            endValue: minMax[1]
-        });
-    }
-
-    function findDataZoom(dimName, axisModel, ecModel) {
-        var found;
-        ecModel.eachComponent({mainType: 'dataZoom', subType: 'select'}, function (dzModel) {
-            var has = dzModel.getAxisModel(dimName, axisModel.componentIndex);
-            has && (found = dzModel);
-        });
-        return found;
-    }
-};
-
-/**
- * @private
- */
-proto._dispatchZoomAction = function (snapshot) {
-    var batch = [];
-
-    // Convert from hash map to array.
-    each(snapshot, function (batchItem, dataZoomId) {
-        batch.push(zrUtil.clone(batchItem));
-    });
-
-    batch.length && this.api.dispatchAction({
-        type: 'dataZoom',
-        from: this.uid,
-        batch: batch
-    });
-};
 
 function retrieveAxisSetting(option) {
     var setting = {};
@@ -203,22 +220,31 @@ function retrieveAxisSetting(option) {
     return setting;
 }
 
-function updateBackBtnStatus(featureModel, ecModel) {
+function updateBackBtnStatus(
+    featureModel: ToolboxDataZoomFeatureModel,
+    ecModel: GlobalModel
+) {
     featureModel.setIconStatus(
         'back',
         history.count(ecModel) > 1 ? 'emphasis' : 'normal'
     );
 }
 
-function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
-    var zoomActive = view._isZoomActive;
+function updateZoomBtnStatus(
+    featureModel: ToolboxDataZoomFeatureModel,
+    ecModel: GlobalModel,
+    view: DataZoomFeature,
+    payload,
+    api: ExtensionAPI
+) {
+    var zoomActive = view.isZoomActive;
 
     if (payload && payload.type === 'takeGlobalCursor') {
         zoomActive = payload.key === 'dataZoomSelect'
             ? payload.dataZoomSelectActive : false;
     }
 
-    view._isZoomActive = zoomActive;
+    view.isZoomActive = zoomActive;
 
     featureModel.setIconStatus('zoom', zoomActive ? 'emphasis' : 'normal');
 
@@ -226,7 +252,7 @@ function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
         retrieveAxisSetting(featureModel.option), ecModel, {include: ['grid']}
     );
 
-    view._brushController
+    view.brushController
         .setPanels(brushTargetManager.makePanelOpts(api, function (targetInfo) {
             return (targetInfo.xAxisDeclared && !targetInfo.yAxisDeclared)
                 ? 'lineX'
@@ -249,7 +275,7 @@ function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
 }
 
 
-featureManager.register('dataZoom', DataZoom);
+registerFeature('dataZoom', DataZoomFeature);
 
 
 // Create special dataZoom option for select
@@ -280,7 +306,7 @@ echarts.registerPreprocessor(function (option) {
         }
     }
 
-    function addForAxis(axisName, dataZoomOpt) {
+    function addForAxis(axisName: string, dataZoomOpt) {
         if (!dataZoomOpt) {
             return;
         }
@@ -317,7 +343,7 @@ echarts.registerPreprocessor(function (option) {
         });
     }
 
-    function forEachComponent(mainType, cb) {
+    function forEachComponent(mainType: string, cb) {
         var opts = option[mainType];
         if (!zrUtil.isArray(opts)) {
             opts = opts ? [opts] : [];
@@ -326,4 +352,4 @@ echarts.registerPreprocessor(function (option) {
     }
 });
 
-export default DataZoom;
+export default DataZoomFeature;

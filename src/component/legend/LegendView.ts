@@ -24,7 +24,7 @@ import * as graphic from '../../util/graphic';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
-import LegendModel, { LegendOption, LegendSelectorButtonOption } from './LegendModel';
+import LegendModel, { LegendOption, LegendSelectorButtonOption, LegendTooltipFormatterParams } from './LegendModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ColorString, ZRTextAlign, ZRColor, ItemStyleOption, ZRRectLike, ECElement, CommonTooltipOption } from '../../util/types';
@@ -338,7 +338,7 @@ class LegendView extends ComponentView {
 
         var itemIcon = itemModel.get('icon');
 
-        var tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption>;
+        var tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
         var legendGlobalTooltipModel = tooltipModel.parentModel;
 
         // Use user given icon first
@@ -418,18 +418,20 @@ class LegendView extends ComponentView {
             invisible: true
         });
         if (tooltipModel.get('show')) {
+            const formatterParams: LegendTooltipFormatterParams = {
+                componentType: 'legend',
+                legendIndex: legendModel.componentIndex,
+                name: name,
+                $vars: ['name']
+            };
             (hitRect as ECElement).tooltip = zrUtil.extend({
                 content: name,
                 // Defaul formatter
-                formatter: legendGlobalTooltipModel.get('formatter', true) || function () {
-                    return name;
-                },
-                formatterParams: {
-                    componentType: 'legend',
-                    legendIndex: legendModel.componentIndex,
-                    name: name,
-                    $vars: ['name']
-                }
+                formatter: legendGlobalTooltipModel.get('formatter', true)
+                    || function (params: LegendTooltipFormatterParams) {
+                        return params.name;
+                    },
+                formatterParams: formatterParams
             }, tooltipModel.option);
         }
         itemGroup.add(hitRect);

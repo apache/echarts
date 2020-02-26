@@ -50,14 +50,18 @@ import ZRText from 'zrender/src/graphic/Text';
 // Common types and constants
 // ---------------------------
 
+export {Dictionary};
+
 export type RendererType = 'canvas' | 'svg';
+
+export type LayoutOrient = 'vertical' | 'horizontal'
+export type HorizontalAlign = 'left' | 'center' | 'right'
+export type VerticalAlign = 'top' | 'middle' | 'bottom'
 
 // Types from zrender
 export type ColorString = string;
 export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject
 export type ZRLineType = 'solid' | 'dotted' | 'dashed'
-export type ZRAlign = 'left' | 'center' | 'right'
-export type ZRVerticalAlign = 'top' | 'middle' | 'bottom'
 
 export type ZRFontStyle = 'normal' | 'italic' | 'oblique'
 export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number
@@ -96,10 +100,9 @@ export interface ECElement extends Element {
     eventData?: ECEventData;
     seriesIndex?: number;
     dataType?: string;
-    tooltip?: CommonTooltipOption & {
+    tooltip?: CommonTooltipOption<unknown> & {
         content?: string
-        // TODO: TYPE
-        formatterParams?: any
+        formatterParams?: unknown
     }
 }
 
@@ -295,8 +298,6 @@ export var SERIES_LAYOUT_BY_COLUMN = 'column' as const;
 export var SERIES_LAYOUT_BY_ROW = 'row' as const;
 
 export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYOUT_BY_ROW;
-
-
 
 
 
@@ -685,10 +686,10 @@ export interface TextCommonOption extends ShadowOptionMixin {
     fontWeight?: ZRFontWeight
     fontFamily?: string
     fontSize?: number
-    align?: ZRAlign
-    verticalAlign?: ZRVerticalAlign
+    align?: HorizontalAlign
+    verticalAlign?: VerticalAlign
     // @deprecated
-    baseline?: ZRVerticalAlign
+    baseline?: VerticalAlign
 
     lineHeight?: number
     backgroundColor?: ColorString | {
@@ -721,7 +722,8 @@ export interface LabelOption extends TextCommonOption {
      */
     show?: boolean
     // TODO: TYPE More specified 'inside', 'insideTop'....
-    position?: string | number[] | string[]
+    // x, y can be both percent string or number px.
+    position?: string | (number | string)[]
     distance?: number
     rotate?: number | boolean
     offset?: number[]
@@ -740,17 +742,17 @@ export interface LabelLineOption {
     lineStyle?: LineStyleOption
 }
 
-interface TooltipFormatterCallback {
+interface TooltipFormatterCallback<T> {
     /**
      * For sync callback
      * params will be an array on axis trigger.
      */
-    (params: CallbackDataParams | CallbackDataParams[], asyncTicket: string): string
+    (params: T, asyncTicket: string): string
     /**
      * For async callback.
      * Returned html string will be a placeholder when callback is not invoked.
      */
-    (params: CallbackDataParams | CallbackDataParams[], asyncTicket: string, callback: (cbTicket: string, html: string) => void): string
+    (params: T, asyncTicket: string, callback: (cbTicket: string, html: string) => void): string
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom'
@@ -791,7 +793,7 @@ interface PositionCallback {
 /**
  * Common tooltip option
  */
-export interface CommonTooltipOption {
+export interface CommonTooltipOption<FormatterParams> {
 
     show?: boolean
 
@@ -804,7 +806,7 @@ export interface CommonTooltipOption {
      */
     alwaysShowContent?: boolean
 
-    formatter?: string | TooltipFormatterCallback
+    formatter?: string | TooltipFormatterCallback<FormatterParams>
     /**
      * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
      * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
@@ -819,9 +821,9 @@ export interface CommonTooltipOption {
     /**
      * Consider triggered from axisPointer handle, verticalAlign should be 'middle'
      */
-    align?: ZRAlign
+    align?: HorizontalAlign
 
-    verticalAlign?: ZRVerticalAlign
+    verticalAlign?: VerticalAlign
     /**
      * Delay of show. milesecond.
      */
@@ -868,7 +870,7 @@ export interface CommonTooltipOption {
 /**
  * Tooltip option configured on each series
  */
-export type SeriesTooltipOption = CommonTooltipOption
+export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams>
 
 export interface ComponentOption {
     type?: string;
@@ -885,12 +887,14 @@ export interface SeriesOption extends
     AnimationOptionMixin,
     ColorPaletteOptionMixin
 {
+    name?: string
+
     silent?: boolean
 
     blendMode?: string
 
     // Needs to be override
-    data?: unknown;
+    data?: any;
 
     legendHoverLink?: boolean
 

@@ -23,12 +23,15 @@ import {
     LabelOption,
     LineStyleOption,
     CommonTooltipOption,
-    TooltipRenderMode
+    TooltipRenderMode,
+    CallbackDataParams
 } from '../../util/types';
 import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 
 
-export interface TooltipOption extends CommonTooltipOption, ComponentOption {
+type TopLevelFormatterParams = CallbackDataParams | CallbackDataParams[];
+
+export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterParams>, ComponentOption {
 
     axisPointer?: AxisPointerOption & {
         axis?: 'auto' | 'x' | 'y' | 'angle' | 'radius'

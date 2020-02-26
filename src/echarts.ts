@@ -507,8 +507,8 @@ class ECharts {
     }
 
     getDataURL(opts?: {
-        // file type 'png' by defualt
-        type?: string,
+        // file type 'png' by default
+        type?: 'png' | 'jpg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         // component type array
@@ -550,19 +550,13 @@ class ECharts {
         return url;
     }
 
-    /**
-     * @return {string}
-     * @param {Object} opts
-     * @param {string} [opts.type='png']
-     * @param {string} [opts.pixelRatio=1]
-     * @param {string} [opts.backgroundColor]
-     */
     getConnectedDataURL(opts?: {
-        // file type 'png' by defualt
-        type?: string,
+        // file type 'png' by default
+        type?: 'png' | 'jpg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
-        connectedBackgroundColor?: string
+        connectedBackgroundColor?: ZRColor
+        excludeComponents?: string[]
     }): string {
         if (this._disposed) {
             disposedWarning(this.id);
@@ -1082,7 +1076,7 @@ class ECharts {
 
     // A work around for no `internal` modifier in ts yet but
     // need to strictly hide private methods to JS users.
-    static internalField = (function () {
+    private static internalField = (function () {
 
         prepare = function (ecIns: ECharts): void {
             var scheduler = ecIns._scheduler;

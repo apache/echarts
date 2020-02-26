@@ -23,7 +23,7 @@ import * as textContain from 'zrender/src/contain/text';
 import {parsePercent} from '../../util/number';
 import PieSeriesModel, { PieSeriesOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
-import { ZRAlign, ZRVerticalAlign, ZRRectLike } from '../../util/types';
+import { HorizontalAlign, VerticalAlign, ZRRectLike } from '../../util/types';
 
 var RADIAN = Math.PI / 180;
 
@@ -35,8 +35,8 @@ interface LabelLayout {
     len: number
     len2: number
     linePoints: VectorArray[]
-    textAlign: ZRAlign
-    verticalAlign: ZRVerticalAlign,
+    textAlign: HorizontalAlign
+    verticalAlign: VerticalAlign,
     rotation: number,
     inside: boolean,
     labelDistance: number,

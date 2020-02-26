@@ -17,31 +17,83 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as featureManager from './featureManager';
+import ComponentModel from '../../model/Component';
+import {
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    LayoutOrient,
+    ZRColor,
+    BorderOptionMixin,
+    ItemStyleOption,
+    LabelOption,
+    CommonTooltipOption,
+    Dictionary
+} from '../../util/types';
 
-var ToolboxModel = echarts.extendComponentModel({
 
-    type: 'toolbox',
+export interface ToolboxTooltipFormatterParams {
+    componentType: 'toolbox'
+    name: string
+    title: string
+    $vars: ['name', 'title']
+}
+export interface ToolboxOption extends ComponentOption,
+    BoxLayoutOptionMixin,
+    BorderOptionMixin {
+    show?: boolean
 
-    layoutMode: {
+    orient?: LayoutOrient
+
+    backgroundColor?: ZRColor
+
+    borderRadius?: number | number[]
+
+    padding?: number | number[]
+
+    itemSize?: number
+
+    itemGap?: number
+
+    showTitle?: boolean
+
+    iconStyle?: ItemStyleOption
+
+    emphasis?: {
+        iconStyle?: ItemStyleOption
+    }
+
+    textStyle?: LabelOption
+
+    tooltip?: CommonTooltipOption<ToolboxTooltipFormatterParams>
+
+    /**
+     * Write all supported features in the final export option.
+     */
+    feature?: Dictionary<featureManager.ToolboxFeatureOption>
+}
+
+class ToolboxModel extends ComponentModel<ToolboxOption> {
+
+    static type = 'toolbox' as const
+    type = ToolboxModel.type
+
+    static layoutMode = {
         type: 'box',
         ignoreSize: true
-    },
+    } as const
 
-    optionUpdated: function () {
-        ToolboxModel.superApply(this, 'optionUpdated', arguments);
+    optionUpdated() {
+        super.optionUpdated.apply(this, arguments as any);
 
         zrUtil.each(this.option.feature, function (featureOpt, featureName) {
-            var Feature = featureManager.get(featureName);
+            var Feature = featureManager.getFeature(featureName);
             Feature && zrUtil.merge(featureOpt, Feature.defaultOption);
         });
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: ToolboxOption = {
 
         show: true,
 
@@ -91,6 +143,8 @@ var ToolboxModel = echarts.extendComponentModel({
             show: false
         }
     }
-});
+}
+
+ComponentModel.registerClass(ToolboxModel);
 
 export default ToolboxModel;

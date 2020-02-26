@@ -135,7 +135,7 @@ export class DefaultDataProvider implements DataProvider {
     clean(): void {
     }
 
-    static internalField = (function () {
+    private static internalField = (function () {
 
         providerMethods = {
 

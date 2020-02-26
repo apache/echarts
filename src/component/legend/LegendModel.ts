@@ -28,7 +28,9 @@ import {
     BorderOptionMixin,
     ColorString,
     ItemStyleOption,
-    LabelOption
+    LabelOption,
+    LayoutOrient,
+    CommonTooltipOption
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
@@ -60,10 +62,17 @@ interface DataItem {
     // TODO: TYPE tooltip
     tooltip?: unknown
 }
+
+export interface LegendTooltipFormatterParams {
+    componentType: 'legend'
+    legendIndex: number
+    name: string
+    $vars: ['name']
+}
 export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
     show?: boolean
 
-    orient?: 'horizontal' | 'vertical'
+    orient?: LayoutOrient
 
     align?: 'auto' | 'left' | 'right'
 
@@ -152,8 +161,7 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
     /**
      * Tooltip option
      */
-    // TODO: TYPE tooltip
-    tooltip?: unknown
+    tooltip?: CommonTooltipOption<LegendTooltipFormatterParams>
 
 }
 

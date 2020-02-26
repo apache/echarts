@@ -32,7 +32,6 @@ import {
 } from '../layout/barGrid';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 
-import '../scale/Time';
 import '../scale/Log';
 import TimeScale from '../scale/Time';
 import { ComponentOption } from '../util/types';

@@ -1813,7 +1813,7 @@ class List <HostModel extends Model = Model> {
     // ----------------------------------------------------------
     // A work around for internal method visiting private member.
     // ----------------------------------------------------------
-    static internalField = (function () {
+    private static internalField = (function () {
 
         defaultDimValueGetters = {
 

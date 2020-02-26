@@ -614,7 +614,7 @@ class GlobalModel extends Model {
         );
     }
 
-    static internalField = (function () {
+    private static internalField = (function () {
 
         createSeriesIndices = function (ecModel: GlobalModel, seriesModels: ComponentModel[]): void {
             ecModel._seriesIndicesMap = createHashMap(

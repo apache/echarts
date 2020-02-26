@@ -32,8 +32,8 @@ import * as axisPointerViewHelper from '../axisPointer/viewHelper';
 import { getTooltipRenderMode } from '../../util/model';
 import ComponentView from '../../view/Component';
 import {
-    ZRAlign,
-    ZRVerticalAlign,
+    HorizontalAlign,
+    VerticalAlign,
     ZRRectLike,
     BoxLayoutOptionMixin,
     CallbackDataParams,
@@ -91,7 +91,7 @@ interface ShowTipPayload {
 
     // Type 2
     dataByCoordSys?: DataByCoordSys[]
-    tooltipOption?: CommonTooltipOption
+    tooltipOption?: CommonTooltipOption<TooltipDataParams | TooltipDataParams[]>
 
     // Type 3
     seriesIndex?: number
@@ -123,7 +123,7 @@ interface TryShowParams {
      */
     dataByCoordSys?: DataByCoordSys[]
 
-    tooltipOption?: CommonTooltipOption
+    tooltipOption?: CommonTooltipOption<TooltipDataParams | TooltipDataParams[]>
 
     position?: TooltipOption['position']
 }
@@ -690,7 +690,8 @@ class TooltipView extends ComponentView {
 
         this._showOrMove(subTooltipModel, function (this: TooltipView) {
             this._showTooltipContent(
-                subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
+                // Use formatterParams from element defined in component
+                subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') as any || {},
                 asyncTicket, e.offsetX, e.offsetY, e.position, el
             );
         });
@@ -758,7 +759,7 @@ class TooltipView extends ComponentView {
         x: number,  // Mouse x
         y: number,  // Mouse y
         content: TooltipHTMLContent | TooltipRichContent,
-        params:  TooltipDataParams | TooltipDataParams[],
+        params: TooltipDataParams | TooltipDataParams[],
         el?: Element
     ) {
         var viewWidth = this._api.getWidth();
@@ -1006,7 +1007,7 @@ function calcTooltipPosition(
     return [x, y];
 }
 
-function isCenterAlign(align: ZRAlign | ZRVerticalAlign) {
+function isCenterAlign(align: HorizontalAlign | VerticalAlign) {
     return align === 'center' || align === 'middle';
 }
 

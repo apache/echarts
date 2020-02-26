@@ -24,11 +24,6 @@ import Element, { ElementProps } from 'zrender/src/Element';
 import { ZREasing } from './types';
 
 /**
- * @param {number} [time=500] Time in ms
- * @param {string} [easing='linear']
- * @param {number} [delay=0]
- * @param {Function} [callback]
- *
  * @example
  *  // Animate position
  *  animation
@@ -51,12 +46,7 @@ export function createWrap() {
          * might not be called. This method checks this (by el.id),
          * suppresses adding and returns false when existing el found.
          *
-         * @param {modele:zrender/Element} el
-         * @param {Object} target
-         * @param {number} [time=500]
-         * @param {number} [delay=0]
-         * @param {string} [easing='linear']
-         * @return {boolean} Whether adding succeeded.
+         * @return Whether adding succeeded.
          *
          * @example
          *     add(el, target, time, delay, easing);

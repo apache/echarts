@@ -26,7 +26,7 @@ import SeriesModel from '../../model/Series';
 import {
     SeriesOption,
     BoxLayoutOptionMixin,
-    ZRAlign,
+    HorizontalAlign,
     LabelOption,
     LabelLineOption,
     ItemStyleOption,
@@ -73,7 +73,7 @@ export interface FunnelSeriesOption
 
     gap?: number
 
-    funnelAlign?: ZRAlign
+    funnelAlign?: HorizontalAlign
 
     label?: FunnelLabelOption
     labelLine?: LabelLineOption

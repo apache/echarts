@@ -49,8 +49,8 @@ class DataDiffer {
     constructor(
         oldArr: ArrayLike<any>,
         newArr: ArrayLike<any>,
-        oldKeyGetter: DiffKeyGetter,
-        newKeyGetter: DiffKeyGetter,
+        oldKeyGetter?: DiffKeyGetter,
+        newKeyGetter?: DiffKeyGetter,
         context?: any
     ) {
         this._old = oldArr;
