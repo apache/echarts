@@ -40,7 +40,7 @@ type Constructor<T> = new (...args: any[]) => T;
 export default function <
     AxisOptionT extends AxisBaseOption,
     AxisModelCtor extends Constructor<ComponentModel<AxisOptionT>>
->(
+> (
     axisName: DimensionName,
     BaseAxisModelClass: AxisModelCtor,
     extraDefaultOption?: AxisOptionT

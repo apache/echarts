@@ -17,42 +17,35 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import Axis from '../Axis';
+import { OptionAxisType } from '../axisCommonTypes';
+import Scale from '../../scale/Scale';
+import Polar from './Polar';
+import { RadiusAxisModel } from './AxisModel';
 
-function RadiusAxis(scale, radiusExtent) {
-
-    Axis.call(this, 'radius', scale, radiusExtent);
-
-    /**
-     * Axis type
-     *  - 'category'
-     *  - 'value'
-     *  - 'time'
-     *  - 'log'
-     * @type {string}
-     */
-    this.type = 'category';
+interface RadiusAxis {
+    dataToRadius: Axis['dataToCoord']
+    radiusToData: Axis['coordToData']
 }
 
-RadiusAxis.prototype = {
+class RadiusAxis extends Axis {
+    type: OptionAxisType
 
-    constructor: RadiusAxis,
+    polar: Polar
 
-    /**
-     * @override
-     */
-    pointToData: function (point, clamp) {
+    model: RadiusAxisModel
+
+    constructor(scale?: Scale, radiusExtent?: [number, number]) {
+        super('radius', scale, radiusExtent);
+    }
+
+    pointToData(point: number[], clamp?: boolean) {
         return this.polar.pointToData(point, clamp)[this.dim === 'radius' ? 0 : 1];
-    },
+    }
+}
 
-    dataToRadius: Axis.prototype.dataToCoord,
+RadiusAxis.prototype.dataToRadius = Axis.prototype.dataToCoord;
 
-    radiusToData: Axis.prototype.coordToData
-};
-
-zrUtil.inherits(RadiusAxis, Axis);
+RadiusAxis.prototype.radiusToData = Axis.prototype.coordToData;
 
 export default RadiusAxis;

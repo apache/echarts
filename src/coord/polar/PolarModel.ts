@@ -17,39 +17,37 @@
 * under the License.
 */
 
-// @ts-nocheck
+import { ComponentOption, CircleLayoutOptionMixin } from '../../util/types';
+import ComponentModel from '../../model/Component';
+import Polar from './Polar';
+import { AngleAxisModel, RadiusAxisModel } from './AxisModel';
 
-import * as echarts from '../../echarts';
-import './AxisModel';
+export interface PolarOption extends ComponentOption, CircleLayoutOptionMixin {
+}
 
-export default echarts.extendComponentModel({
+class PolarModel extends ComponentModel<PolarOption> {
+    static type = 'polar' as const
+    type = PolarModel.type
 
-    type: 'polar',
+    static dependencies = ['radiusAxis', 'angleAxis']
 
-    dependencies: ['polarAxis', 'angleAxis'],
+    coordinateSystem: Polar
 
-    /**
-     * @type {module:echarts/coord/polar/Polar}
-     */
-    coordinateSystem: null,
-
-    /**
-     * @param {string} axisType
-     * @return {module:echarts/coord/polar/AxisModel}
-     */
-    findAxisModel: function (axisType) {
+    findAxisModel(axisType: 'angleAxis'): AngleAxisModel
+    findAxisModel(axisType: 'radiusAxis'): RadiusAxisModel
+    findAxisModel(axisType: 'angleAxis' | 'radiusAxis'): AngleAxisModel | RadiusAxisModel {
         var foundAxisModel;
         var ecModel = this.ecModel;
 
-        ecModel.eachComponent(axisType, function (axisModel) {
+        ecModel.eachComponent(axisType, function (this: PolarModel, axisModel: AngleAxisModel | RadiusAxisModel) {
             if (axisModel.getCoordSysModel() === this) {
                 foundAxisModel = axisModel;
             }
         }, this);
         return foundAxisModel;
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: PolarOption = {
 
         zlevel: 0,
 
@@ -59,4 +57,8 @@ export default echarts.extendComponentModel({
 
         radius: '80%'
     }
-});
+}
+
+ComponentModel.registerClass(PolarModel);
+
+export default PolarModel;

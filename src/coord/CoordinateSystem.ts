@@ -83,8 +83,8 @@ export interface CoordinateSystemMaster {
 }
 
 /**
- * For example: cartesian is CoordinateSystemExecutive.
- * series.coordinateSystem is CoordinateSystemExecutive.
+ * For example: cartesian is CoordinateSystem.
+ * series.coordinateSystem is CoordinateSystem.
  */
 export interface CoordinateSystem {
 
@@ -128,7 +128,9 @@ export interface CoordinateSystem {
 
     getRoamTransform?: () => MatrixArray;
 
-    getArea?: () => BoundingRect;
+    getArea?: () => {
+        contain(x: number, y: number): boolean
+    };
 
     // Only `coord/View.js` implements `getBoundingRect`.
     // But if other coord sys implement it, should follow this signature.

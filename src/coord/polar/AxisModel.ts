@@ -17,59 +17,89 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import axisModelCreator from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
+import { AxisBaseOption } from '../axisCommonTypes';
+import AngleAxis from './AngleAxis';
+import RadiusAxis from './RadiusAxis';
 
-var PolarAxisModel = ComponentModel.extend({
-
-    type: 'polarAxis',
-
+export interface AngleAxisOption extends AxisBaseOption {
     /**
-     * @type {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
+     * Index of host polar component
      */
-    axis: null,
-
+    polarIndex?: number
     /**
-     * @override
+     * Id of host polar component
      */
-    getCoordSysModel: function () {
+    polarId?: string
+
+    startAngle?: number
+    clockwise?: boolean
+
+    splitNumber?: number
+
+    axisLabel?: Omit<AxisBaseOption['axisLabel'], 'rotate'> & {
+        rotate?: AxisBaseOption['axisLabel']['rotate'] | false
+    }
+}
+
+export interface RadiusAxisOption extends AxisBaseOption {
+    /**
+     * Index of host polar component
+     */
+    polarIndex?: number
+    /**
+     * Id of host polar component
+     */
+    polarId?: string
+}
+
+type PolarAxisOption = AngleAxisOption | RadiusAxisOption;
+
+class PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends ComponentModel<T> {
+    static type = 'polarAxis'
+
+    getCoordSysModel(): ComponentModel {
         return this.ecModel.queryComponents({
             mainType: 'polar',
             index: this.option.polarIndex,
             id: this.option.polarId
         })[0];
     }
+}
 
-});
-
+interface PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends AxisModelCommonMixin<T> {}
 zrUtil.mixin(PolarAxisModel, AxisModelCommonMixin);
 
-var polarAxisDefaultExtendedOption = {
-    angle: {
-        // polarIndex: 0,
-        // polarId: '',
+export {PolarAxisModel};
 
-        startAngle: 90,
+export class AngleAxisModel extends PolarAxisModel<AngleAxisOption> {
+    axis: AngleAxis
+}
+export class RadiusAxisModel extends PolarAxisModel<RadiusAxisOption> {
+    axis: RadiusAxis
+}
 
-        clockwise: true,
+ComponentModel.registerClass(PolarAxisModel);
 
-        splitNumber: 12,
+const angleAxisExtraOption: AngleAxisOption = {
+    startAngle: 90,
 
-        axisLabel: {
-            rotate: false
-        }
-    },
-    radius: {
-        // polarIndex: 0,
-        // polarId: '',
+    clockwise: true,
 
-        splitNumber: 5
+    splitNumber: 12,
+
+    axisLabel: {
+        rotate: false
     }
 };
 
-axisModelCreator('angle', PolarAxisModel, polarAxisDefaultExtendedOption.angle);
-axisModelCreator('radius', PolarAxisModel, polarAxisDefaultExtendedOption.radius);
+const radiusAxisExtraOption: RadiusAxisOption = {
+    splitNumber: 5
+};
+
+
+axisModelCreator('angle', AngleAxisModel, angleAxisExtraOption);
+axisModelCreator('radius', RadiusAxisModel, radiusAxisExtraOption);

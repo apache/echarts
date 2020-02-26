@@ -17,46 +17,38 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import Axis from '../Axis';
 import {makeInner} from '../../util/model';
+import { OptionAxisType } from '../axisCommonTypes';
+import Scale from '../../scale/Scale';
+import OrdinalScale from '../../scale/Ordinal';
+import Polar from './Polar';
+import { AngleAxisModel } from './AxisModel';
 
-var inner = makeInner();
+var inner = makeInner<{
+    lastAutoInterval: number
+    lastTickCount: number
+}>();
 
-function AngleAxis(scale, angleExtent) {
-
-    angleExtent = angleExtent || [0, 360];
-
-    Axis.call(this, 'angle', scale, angleExtent);
-
-    /**
-     * Axis type
-     *  - 'category'
-     *  - 'value'
-     *  - 'time'
-     *  - 'log'
-     * @type {string}
-     */
-    this.type = 'category';
+interface AngleAxis {
+    dataToAngle: Axis['dataToCoord']
+    angleToData: Axis['coordToData']
 }
+class AngleAxis extends Axis {
+    type: OptionAxisType
 
-AngleAxis.prototype = {
+    polar: Polar
 
-    constructor: AngleAxis,
+    model: AngleAxisModel
 
-    /**
-     * @override
-     */
-    pointToData: function (point, clamp) {
+    constructor(scale?: Scale, angleExtent?: [number, number]) {
+        super('angle', scale, angleExtent || [0, 360]);
+    }
+
+    pointToData(point: number[], clamp?: boolean) {
         return this.polar.pointToData(point, clamp)[this.dim === 'radius' ? 0 : 1];
-    },
-
-    dataToAngle: Axis.prototype.dataToCoord,
-
-    angleToData: Axis.prototype.coordToData,
+    }
 
     /**
      * Only be called in category axis.
@@ -65,11 +57,11 @@ AngleAxis.prototype = {
      * @override
      * @return {number} Auto interval for cateogry axis tick and label
      */
-    calculateCategoryInterval: function () {
+    calculateCategoryInterval() {
         var axis = this;
         var labelModel = axis.getLabelModel();
 
-        var ordinalScale = axis.scale;
+        var ordinalScale = axis.scale as OrdinalScale;
         var ordinalExtent = ordinalScale.getExtent();
         // Providing this method is for optimization:
         // avoid generating a long array by `getTicks`
@@ -87,7 +79,7 @@ AngleAxis.prototype = {
         // Not precise, just use height as text width
         // and each distance from axis line yet.
         var rect = textContain.getBoundingRect(
-            tickValue, labelModel.getFont(), 'center', 'top'
+            tickValue + '', labelModel.getFont(), 'center', 'top'
         );
         var maxH = Math.max(rect.height, 7);
 
@@ -122,8 +114,11 @@ AngleAxis.prototype = {
 
         return interval;
     }
-};
+}
 
-zrUtil.inherits(AngleAxis, Axis);
+AngleAxis.prototype.dataToAngle = Axis.prototype.dataToCoord;
+
+AngleAxis.prototype.angleToData = Axis.prototype.coordToData;
+
 
 export default AngleAxis;

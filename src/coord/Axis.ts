@@ -47,7 +47,7 @@ class Axis {
     readonly dim: DimensionName;
 
     // Axis scale
-    readonly scale: Scale;
+    scale: Scale;
 
     private _extent: [number, number];
 

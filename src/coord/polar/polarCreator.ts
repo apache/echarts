@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // TODO Axis scale
 
 import {__DEV__} from '../../config';
@@ -32,14 +30,20 @@ import {
 import CoordinateSystem from '../../CoordinateSystem';
 import {getStackedDimension} from '../../data/helper/dataStackHelper';
 
-import './PolarModel';
+import PolarModel from './PolarModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import GlobalModel from '../../model/Global';
+import OrdinalScale from '../../scale/Ordinal';
+import RadiusAxis from './RadiusAxis';
+import AngleAxis from './AngleAxis';
+import { PolarAxisModel, AngleAxisModel, RadiusAxisModel } from './AxisModel';
+import SeriesModel from '../../model/Series';
+import { SeriesOption } from '../../util/types';
 
 /**
  * Resize method bound to the polar
- * @param {module:echarts/coord/polar/PolarModel} polarModel
- * @param {module:echarts/ExtensionAPI} api
  */
-function resizePolar(polar, polarModel, api) {
+function resizePolar(polar: Polar, polarModel: PolarModel, api: ExtensionAPI) {
     var center = polarModel.get('center');
     var width = api.getWidth();
     var height = api.getHeight();
@@ -58,20 +62,20 @@ function resizePolar(polar, polarModel, api) {
         // r0 = 0
         radius = [0, radius];
     }
-    radius = [
+    const parsedRadius = [
         parsePercent(radius[0], size),
         parsePercent(radius[1], size)
     ];
 
     radiusAxis.inverse
-        ? radiusAxis.setExtent(radius[1], radius[0])
-        : radiusAxis.setExtent(radius[0], radius[1]);
+        ? radiusAxis.setExtent(parsedRadius[1], parsedRadius[0])
+        : radiusAxis.setExtent(parsedRadius[0], parsedRadius[1]);
 }
 
 /**
  * Update polar
  */
-function updatePolarScale(ecModel, api) {
+function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) {
     var polar = this;
     var angleAxis = polar.getAngleAxis();
     var radiusAxis = polar.getRadiusAxis();
@@ -101,33 +105,33 @@ function updatePolarScale(ecModel, api) {
     // Fix extent of category angle axis
     if (angleAxis.type === 'category' && !angleAxis.onBand) {
         var extent = angleAxis.getExtent();
-        var diff = 360 / angleAxis.scale.count();
+        var diff = 360 / (angleAxis.scale as OrdinalScale).count();
         angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
         angleAxis.setExtent(extent[0], extent[1]);
     }
 }
 
+function isAngleAxisModel(axisModel: AngleAxisModel | PolarAxisModel): axisModel is AngleAxisModel {
+    return axisModel.mainType === 'angleAxis';
+}
 /**
  * Set common axis properties
- * @param {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
- * @param {module:echarts/coord/polar/AxisModel}
- * @inner
  */
-function setAxis(axis, axisModel) {
+function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
     axis.type = axisModel.get('type');
     axis.scale = createScaleByModel(axisModel);
     axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
     axis.inverse = axisModel.get('inverse');
 
-    if (axisModel.mainType === 'angleAxis') {
-        axis.inverse ^= axisModel.get('clockwise');
+    if (isAngleAxisModel(axisModel)) {
+        axis.inverse = axis.inverse !== axisModel.get('clockwise');
         var startAngle = axisModel.get('startAngle');
         axis.setExtent(startAngle, startAngle + (axis.inverse ? -360 : 360));
     }
 
     // Inject axis instance
     axisModel.axis = axis;
-    axis.model = axisModel;
+    axis.model = axisModel as AngleAxisModel | RadiusAxisModel;
 }
 
 
@@ -135,10 +139,10 @@ var polarCreator = {
 
     dimensions: Polar.prototype.dimensions,
 
-    create: function (ecModel, api) {
-        var polarList = [];
-        ecModel.eachComponent('polar', function (polarModel, idx) {
-            var polar = new Polar(idx);
+    create: function (ecModel: GlobalModel, api: ExtensionAPI) {
+        var polarList: Polar[] = [];
+        ecModel.eachComponent('polar', function (polarModel: PolarModel, idx: number) {
+            var polar = new Polar(idx + '');
             // Inject resize and update method
             polar.update = updatePolarScale;
 
@@ -159,18 +163,21 @@ var polarCreator = {
             polar.model = polarModel;
         });
         // Inject coordinateSystem to series
-        ecModel.eachSeries(function (seriesModel) {
+        ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & {
+            polarIndex?: number
+            polarId?: string
+        }>) {
             if (seriesModel.get('coordinateSystem') === 'polar') {
                 var polarModel = ecModel.queryComponents({
                     mainType: 'polar',
                     index: seriesModel.get('polarIndex'),
                     id: seriesModel.get('polarId')
-                })[0];
+                })[0] as PolarModel;
 
                 if (__DEV__) {
                     if (!polarModel) {
                         throw new Error(
-                            'Polar "' + zrUtil.retrieve(
+                            'Polar "' + zrUtil.retrieve<number | string>(
                                 seriesModel.get('polarIndex'),
                                 seriesModel.get('polarId'),
                                 0

@@ -17,115 +17,84 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * @module echarts/coord/polar/Polar
  */
 
 import RadiusAxis from './RadiusAxis';
 import AngleAxis from './AngleAxis';
+import PolarModel from './PolarModel';
+import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
+import GlobalModel from '../../model/Global';
+import { ParsedModelFinder } from '../../util/model';
+import { ScaleDataValue } from '../../util/types';
+import ExtensionAPI from '../../ExtensionAPI';
 
-/**
- * @alias {module:echarts/coord/polar/Polar}
- * @constructor
- * @param {string} name
- */
-var Polar = function (name) {
+interface Polar {
+    update(ecModel: GlobalModel, api: ExtensionAPI): void
+}
+class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
-    /**
-     * @type {string}
-     */
-    this.name = name || '';
+    readonly name: string;
+
+    readonly dimensions = ['radius', 'angle']
+
+    readonly type = 'polar'
 
     /**
      * x of polar center
-     * @type {number}
      */
-    this.cx = 0;
+    cx = 0;
 
     /**
      * y of polar center
-     * @type {number}
      */
-    this.cy = 0;
+    cy = 0;
 
-    /**
-     * @type {module:echarts/coord/polar/RadiusAxis}
-     * @private
-     */
-    this._radiusAxis = new RadiusAxis();
+    private _radiusAxis = new RadiusAxis();
 
-    /**
-     * @type {module:echarts/coord/polar/AngleAxis}
-     * @private
-     */
-    this._angleAxis = new AngleAxis();
+    private _angleAxis = new AngleAxis();
 
-    this._radiusAxis.polar = this._angleAxis.polar = this;
-};
+    axisPointerEnabled = true
 
-Polar.prototype = {
+    model: PolarModel
 
-    type: 'polar',
+    constructor(name: string) {
+        this.name = name || '';
 
-    axisPointerEnabled: true,
-
-    constructor: Polar,
-
-    /**
-     * @param {Array.<string>}
-     * @readOnly
-     */
-    dimensions: ['radius', 'angle'],
-
-    /**
-     * @type {module:echarts/coord/PolarModel}
-     */
-    model: null,
+        this._radiusAxis.polar = this._angleAxis.polar = this;
+    }
 
     /**
      * If contain coord
-     * @param {Array.<number>} point
-     * @return {boolean}
      */
-    containPoint: function (point) {
+    containPoint(point: number[]) {
         var coord = this.pointToCoord(point);
         return this._radiusAxis.contain(coord[0])
             && this._angleAxis.contain(coord[1]);
-    },
+    }
 
     /**
      * If contain data
-     * @param {Array.<number>} data
-     * @return {boolean}
      */
-    containData: function (data) {
+    containData(data: number[]) {
         return this._radiusAxis.containData(data[0])
             && this._angleAxis.containData(data[1]);
-    },
+    }
 
-    /**
-     * @param {string} dim
-     * @return {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
-     */
-    getAxis: function (dim) {
-        return this['_' + dim + 'Axis'];
-    },
+    getAxis(dim: 'radius' | 'angle') {
+        const key = ('_' + dim + 'Axis') as '_radiusAxis' | '_angleAxis';
+        return this[key];
+    }
 
-    /**
-     * @return {Array.<module:echarts/coord/Axis>}
-     */
-    getAxes: function () {
+    getAxes() {
         return [this._radiusAxis, this._angleAxis];
-    },
+    }
 
     /**
      * Get axes by type of scale
-     * @param {string} scaleType
-     * @return {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
      */
-    getAxesByScale: function (scaleType) {
+    getAxesByScale(scaleType: 'ordinal' | 'interval' | 'time' | 'log') {
         var axes = [];
         var angleAxis = this._angleAxis;
         var radiusAxis = this._radiusAxis;
@@ -133,89 +102,66 @@ Polar.prototype = {
         radiusAxis.scale.type === scaleType && axes.push(radiusAxis);
 
         return axes;
-    },
+    }
 
-    /**
-     * @return {module:echarts/coord/polar/AngleAxis}
-     */
-    getAngleAxis: function () {
+    getAngleAxis() {
         return this._angleAxis;
-    },
+    }
 
-    /**
-     * @return {module:echarts/coord/polar/RadiusAxis}
-     */
-    getRadiusAxis: function () {
+    getRadiusAxis() {
         return this._radiusAxis;
-    },
+    }
 
-    /**
-     * @param {module:echarts/coord/polar/Axis}
-     * @return {module:echarts/coord/polar/Axis}
-     */
-    getOtherAxis: function (axis) {
+    getOtherAxis(axis: AngleAxis | RadiusAxis): AngleAxis | RadiusAxis {
         var angleAxis = this._angleAxis;
         return axis === angleAxis ? this._radiusAxis : angleAxis;
-    },
+    }
 
     /**
      * Base axis will be used on stacking.
      *
-     * @return {module:echarts/coord/polar/Axis}
      */
-    getBaseAxis: function () {
+    getBaseAxis() {
         return this.getAxesByScale('ordinal')[0]
             || this.getAxesByScale('time')[0]
             || this.getAngleAxis();
-    },
+    }
 
-    /**
-     * @param {string} [dim] 'radius' or 'angle' or 'auto' or null/undefined
-     * @return {Object} {baseAxes: [], otherAxes: []}
-     */
-    getTooltipAxes: function (dim) {
+    getTooltipAxes(dim: 'radius' | 'angle' | 'auto') {
         var baseAxis = (dim != null && dim !== 'auto')
             ? this.getAxis(dim) : this.getBaseAxis();
         return {
             baseAxes: [baseAxis],
             otherAxes: [this.getOtherAxis(baseAxis)]
         };
-    },
+    }
 
     /**
      * Convert a single data item to (x, y) point.
      * Parameter data is an array which the first element is radius and the second is angle
-     * @param {Array.<number>} data
-     * @param {boolean} [clamp=false]
-     * @return {Array.<number>}
      */
-    dataToPoint: function (data, clamp) {
+    dataToPoint(data: ScaleDataValue[], clamp?: boolean) {
         return this.coordToPoint([
             this._radiusAxis.dataToRadius(data[0], clamp),
             this._angleAxis.dataToAngle(data[1], clamp)
         ]);
-    },
+    }
 
     /**
      * Convert a (x, y) point to data
-     * @param {Array.<number>} point
-     * @param {boolean} [clamp=false]
-     * @return {Array.<number>}
      */
-    pointToData: function (point, clamp) {
+    pointToData(point: number[], clamp?: boolean) {
         var coord = this.pointToCoord(point);
         return [
             this._radiusAxis.radiusToData(coord[0], clamp),
             this._angleAxis.angleToData(coord[1], clamp)
         ];
-    },
+    }
 
     /**
      * Convert a (x, y) point to (radius, angle) coord
-     * @param {Array.<number>} point
-     * @return {Array.<number>}
      */
-    pointToCoord: function (point) {
+    pointToCoord(point: number[]) {
         var dx = point[0] - this.cx;
         var dy = point[1] - this.cy;
         var angleAxis = this.getAngleAxis();
@@ -241,14 +187,12 @@ Polar.prototype = {
         }
 
         return [radius, radian];
-    },
+    }
 
     /**
      * Convert a (radius, angle) coord to (x, y) point
-     * @param {Array.<number>} coord
-     * @return {Array.<number>}
      */
-    coordToPoint: function (coord) {
+    coordToPoint(coord: number[]) {
         var radius = coord[0];
         var radian = coord[1] / 180 * Math.PI;
         var x = Math.cos(radian) * radius + this.cx;
@@ -256,14 +200,13 @@ Polar.prototype = {
         var y = -Math.sin(radian) * radius + this.cy;
 
         return [x, y];
-    },
+    }
 
     /**
      * Get ring area of cartesian.
      * Area will have a contain function to determine if a point is in the coordinate system.
-     * @return {Ring}
      */
-    getArea: function () {
+    getArea() {
 
         var angleAxis = this.getAngleAxis();
         var radiusAxis = this.getRadiusAxis();
@@ -282,7 +225,7 @@ Polar.prototype = {
             startAngle: -angleExtent[0] * RADIAN,
             endAngle: -angleExtent[1] * RADIAN,
             clockwise: angleAxis.inverse,
-            contain: function (x, y) {
+            contain(x: number, y: number) {
                 // It's a ring shape.
                 // Start angle and end angle don't matter
                 var dx = x - this.cx;
@@ -296,6 +239,17 @@ Polar.prototype = {
         };
     }
 
-};
+    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]) {
+        const seriesModel = finder.seriesModel;
+        const coordSys = seriesModel ? seriesModel.coordinateSystem : null;
+        return coordSys === this ? this.dataToPoint(value) : null;
+    }
+
+    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
+        const seriesModel = finder.seriesModel;
+        const coordSys = seriesModel ? seriesModel.coordinateSystem : null;
+        return coordSys === this ? this.pointToData(pixel) : null;
+    }
+}
 
 export default Polar;

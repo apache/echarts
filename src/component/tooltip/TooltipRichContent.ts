@@ -22,7 +22,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import Text from 'zrender/src/graphic/Text';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
-import TooltipModel, { TooltipOption } from './TooltipModel';
+import { TooltipOption } from './TooltipModel';
 import * as graphic from '../../util/graphic';
 import { Dictionary } from 'zrender/src/core/types';
 import { ColorString } from '../../util/types';

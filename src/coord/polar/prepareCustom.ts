@@ -17,21 +17,24 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import Polar from './Polar';
+import RadiusAxis from './RadiusAxis';
+import AngleAxis from './AngleAxis';
 
-function dataToCoordSize(dataSize, dataItem) {
+function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
     // dataItem is necessary in log axis.
     return zrUtil.map(['Radius', 'Angle'], function (dim, dimIdx) {
-        var axis = this['get' + dim + 'Axis']();
-        var val = dataItem[dimIdx];
-        var halfSize = dataSize[dimIdx] / 2;
-        var method = 'dataTo' + dim;
+        const getterName = 'get' + dim + 'Axis' as 'getAngleAxis'| 'getRadiusAxis';
+        // TODO: TYPE Check Angle Axis
+        const axis = this[getterName]() as RadiusAxis;
+        const val = dataItem[dimIdx];
+        const halfSize = dataSize[dimIdx] / 2;
+        const converterName = 'dataTo' + dim as 'dataToRadius';
 
         var result = axis.type === 'category'
             ? axis.getBandWidth()
-            : Math.abs(axis[method](val - halfSize) - axis[method](val + halfSize));
+            : Math.abs(axis[converterName](val - halfSize) - axis[converterName](val + halfSize));
 
         if (dim === 'Angle') {
             result = result * Math.PI / 180;
@@ -42,7 +45,7 @@ function dataToCoordSize(dataSize, dataItem) {
     }, this);
 }
 
-export default function (coordSys) {
+export default function (coordSys: Polar) {
     var radiusAxis = coordSys.getRadiusAxis();
     var angleAxis = coordSys.getAngleAxis();
     var radius = radiusAxis.getExtent();
@@ -57,13 +60,13 @@ export default function (coordSys) {
             r0: radius[0]
         },
         api: {
-            coord: zrUtil.bind(function (data) {
+            coord: function (data: number[]) {
                 var radius = radiusAxis.dataToRadius(data[0]);
                 var angle = angleAxis.dataToAngle(data[1]);
                 var coord = coordSys.coordToPoint([radius, angle]);
                 coord.push(radius, angle * Math.PI / 180);
                 return coord;
-            }),
+            },
             size: zrUtil.bind(dataToCoordSize, coordSys)
         }
     };
