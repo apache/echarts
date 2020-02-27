@@ -17,23 +17,50 @@
 * under the License.
 */
 
-// @ts-nocheck
+import DataZoomModel, {DataZoomOption} from './DataZoomModel';
+import ComponentModel from '../../model/Component';
 
-import DataZoomModel from './DataZoomModel';
-
-export default DataZoomModel.extend({
-
-    type: 'dataZoom.inside',
+interface InsideDataZoomOption extends DataZoomOption {
 
     /**
-     * @protected
+     * Whether disable this inside zoom.
      */
-    defaultOption: {
-        disabled: false,   // Whether disable this inside zoom.
-        zoomLock: false,   // Whether disable zoom but only pan.
-        zoomOnMouseWheel: true, // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
-        moveOnMouseMove: true,   // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
-        moveOnMouseWheel: false, // Can be: true / false / 'shift' / 'ctrl' / 'alt'.
+    disabled?: boolean
+
+    /**
+     * Whether disable zoom but only pan.
+     */
+    zoomLock?: boolean
+
+    zoomOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
+
+    moveOnMouseMove?: boolean | 'shift' | 'ctrl' | 'alt'
+
+    moveOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
+
+    preventDefaultMouseMove?: boolean
+
+    /**
+     * Inside dataZoom don't support textStyle
+     */
+    textStyle?: never
+}
+
+
+class InsideZoomModel extends DataZoomModel<InsideDataZoomOption> {
+    static readonly type = 'dataZoom.inside'
+    type = InsideZoomModel.type
+
+    static defaultOption: InsideDataZoomOption = {
+        disabled: false,
+        zoomLock: false,
+        zoomOnMouseWheel: true,
+        moveOnMouseMove: true,
+        moveOnMouseWheel: false,
         preventDefaultMouseMove: true
     }
-});
+}
+
+ComponentModel.registerClass(InsideZoomModel);
+
+export default InsideZoomModel;

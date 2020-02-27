@@ -29,7 +29,7 @@ import SeriesModel from '../../../model/Series';
 const magicTypeLang = lang.toolbox.magicType;
 const INNER_STACK_KEYWORD = '__ec_magicType_stack__' as const;
 
-const ICON_TYPES =  ['line', 'bar', 'stack'] as const;
+const ICON_TYPES = ['line', 'bar', 'stack'] as const;
 
 const radioTypes = [
     ['line', 'bar'],

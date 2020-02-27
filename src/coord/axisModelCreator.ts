@@ -33,6 +33,11 @@ import GlobalModel from '../model/Global';
 
 type Constructor<T> = new (...args: any[]) => T;
 
+export interface AxisModelExtendedInCreator<Opt extends AxisBaseOption> {
+    getCategories(rawData?: boolean): OrdinalRawValue[] | Opt['data']
+    getOrdinalMeta(): OrdinalMeta
+}
+
 /**
  * Generate sub axis model class
  * @param axisName 'x' 'y' 'radius' 'angle' 'parallel' ...
@@ -53,7 +58,7 @@ export default function <
             extraDefaultOption, true
         );
 
-        class AxisModel extends BaseAxisModelClass {
+        class AxisModel extends BaseAxisModelClass implements AxisModelExtendedInCreator<AxisOptionT> {
 
             static type = axisName + 'Axis.' + axisType;
             type = axisName + 'Axis.' + axisType;
@@ -93,7 +98,7 @@ export default function <
              * Should not be called before all of 'getInitailData' finished.
              * Because categories are collected during initializing data.
              */
-            getCategories(rawData: boolean): OrdinalRawValue[] | AxisBaseOption['data'] {
+            getCategories(rawData?: boolean): OrdinalRawValue[] | AxisBaseOption['data'] {
                 var option = this.option;
                 // FIXME
                 // warning if called before all of 'getInitailData' finished.

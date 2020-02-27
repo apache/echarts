@@ -22,6 +22,7 @@ import {
     AreaStyleOption, ComponentOption, OptionDataValue
 } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
+import { AxisModelCommonMixin } from './axisModelCommonMixin';
 
 
 export var AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;

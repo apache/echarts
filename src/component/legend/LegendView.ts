@@ -27,7 +27,15 @@ import ComponentView from '../../view/Component';
 import LegendModel, { LegendOption, LegendSelectorButtonOption, LegendTooltipFormatterParams } from './LegendModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { ColorString, ZRTextAlign, ZRColor, ItemStyleOption, ZRRectLike, ECElement, CommonTooltipOption } from '../../util/types';
+import {
+    ColorString,
+    ZRTextAlign,
+    ZRColor,
+    ItemStyleOption,
+    ZRRectLike,
+    ECElement,
+    CommonTooltipOption
+} from '../../util/types';
 import Model from '../../model/Model';
 
 var curry = zrUtil.curry;

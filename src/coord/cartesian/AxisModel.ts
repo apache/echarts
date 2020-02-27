@@ -19,11 +19,12 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
-import axisModelCreator from '../axisModelCreator';
+import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import Axis2D from './Axis2D';
 import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
+import { AxisBaseModel } from '../AxisBaseModel';
 
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -36,7 +37,8 @@ interface CartesianAxisOption extends AxisBaseOption {
     offset?: number;
 }
 
-class AxisModel extends ComponentModel<CartesianAxisOption> {
+class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
+    implements AxisBaseModel<CartesianAxisOption> {
 
     static type = 'cartesian2dAxis';
 
@@ -66,10 +68,12 @@ class AxisModel extends ComponentModel<CartesianAxisOption> {
     }
 }
 
-ComponentModel.registerClass(AxisModel);
+ComponentModel.registerClass(CartesianAxisModel);
 
-interface AxisModel extends AxisModelCommonMixin<CartesianAxisOption> {}
-zrUtil.mixin(AxisModel, AxisModelCommonMixin);
+interface CartesianAxisModel extends AxisModelCommonMixin<CartesianAxisOption>,
+    AxisModelExtendedInCreator<CartesianAxisOption> {}
+
+zrUtil.mixin(CartesianAxisModel, AxisModelCommonMixin);
 
 var extraOption: CartesianAxisOption = {
     // gridIndex: 0,
@@ -77,7 +81,7 @@ var extraOption: CartesianAxisOption = {
     offset: 0
 };
 
-axisModelCreator<CartesianAxisOption, typeof AxisModel>('x', AxisModel, extraOption);
-axisModelCreator<CartesianAxisOption, typeof AxisModel>('y', AxisModel, extraOption);
+axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('x', CartesianAxisModel, extraOption);
+axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('y', CartesianAxisModel, extraOption);
 
-export default AxisModel;
+export default CartesianAxisModel;

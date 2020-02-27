@@ -20,7 +20,6 @@
 import * as graphic from '../../util/graphic';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
-import ComponentView from '../../view/Component';
 import FunnelSeriesModel from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';

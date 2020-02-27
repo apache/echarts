@@ -20,7 +20,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import GridModel from './GridModel';
-import AxisModel from './AxisModel';
+import CartesianAxisModel from './AxisModel';
 
 interface CartesianAxisLayout {
     position: [number, number];
@@ -38,7 +38,7 @@ interface CartesianAxisLayout {
  * (Can be called before coordinate system update stage).
  */
 export function layout(
-    gridModel: GridModel, axisModel: AxisModel, opt?: {labelInside?: boolean}
+    gridModel: GridModel, axisModel: CartesianAxisModel, opt?: {labelInside?: boolean}
 ): CartesianAxisLayout {
     opt = opt || {};
     var grid = gridModel.coordinateSystem;

@@ -17,44 +17,52 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as formatUtil from '../../util/format';
+import { Dictionary } from '../../util/types';
 
 
-var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle', 'single'];
+const AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle', 'single'] as const;
 // Supported coords.
-var COORDS = ['cartesian2d', 'polar', 'singleAxis'];
+const COORDS = ['cartesian2d', 'polar', 'singleAxis'] as const;
 
-/**
- * @param {string} coordType
- * @return {boolean}
- */
-export function isCoordSupported(coordType) {
+export function isCoordSupported(coordType: string) {
     return zrUtil.indexOf(COORDS, coordType) >= 0;
 }
 
+type AxisAttrMap = {
+    // TODO zAxis ?
+    'axisIndex': 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex' | 'angleAxisIndex' | 'singleAxisIndex'
+    'axis': 'xAxis' | 'yAxis' | 'radiusAxis' | 'angleAxis' | 'singleAxis'
+    'axisId': 'xAxisId' | 'yAxisId' | 'radiusAxisId' | 'angleAxisId' | 'singleAxisId'
+}
 /**
  * Create "each" method to iterate names.
- *
- * @pubilc
- * @param  {Array.<string>} names
- * @param  {Array.<string>=} attrs
- * @return {Function}
  */
-export function createNameEach(names, attrs) {
-    names = names.slice();
-    var capitalNames = zrUtil.map(names, formatUtil.capitalFirst);
-    attrs = (attrs || []).slice();
-    var capitalAttrs = zrUtil.map(attrs, formatUtil.capitalFirst);
+function createNameEach<T extends string>(names: readonly T[]) {
+    const attrs = ['axisIndex', 'axis', 'axisId'] as const;
+    const capitalNames = zrUtil.map(names.slice(), formatUtil.capitalFirst);
+    const capitalAttrs = zrUtil.map((attrs || []).slice(), formatUtil.capitalFirst);
 
-    return function (callback, context) {
+    type NameObj = {
+        name: T,
+        capital: string,
+        axisIndex: AxisAttrMap['axisIndex']
+        axis: AxisAttrMap['axis']
+        axisId: AxisAttrMap['axisId']
+    };
+    return function<Ctx> (
+        callback: (this: Ctx, nameObj: NameObj) => void,
+        context?: Ctx
+    ) {
         zrUtil.each(names, function (name, index) {
-            var nameObj = {name: name, capital: capitalNames[index]};
+            var nameObj = {
+                name: name,
+                capital: capitalNames[index]
+            } as NameObj;
 
             for (var j = 0; j < attrs.length; j++) {
-                nameObj[attrs[j]] = name + capitalAttrs[j];
+                nameObj[attrs[j]] = (name + capitalAttrs[j]) as never;
             }
 
             callback.call(context, nameObj);
@@ -66,17 +74,17 @@ export function createNameEach(names, attrs) {
  * Iterate each dimension name.
  *
  * @public
- * @param {Function} callback The parameter is like:
+ * @param callback The parameter is like:
  *                            {
  *                                name: 'angle',
  *                                capital: 'Angle',
  *                                axis: 'angleAxis',
- *                                axisIndex: 'angleAixs',
+ *                                axisIndex: 'angleAxisIndex',
  *                                index: 'angleIndex'
  *                            }
- * @param {Object} context
+ * @param context
  */
-export var eachAxisDim = createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index', 'id']);
+export var eachAxisDim = createNameEach(AXIS_DIMS);
 
 /**
  * If tow dataZoomModels has the same axis controlled, we say that they are 'linked'.
@@ -84,17 +92,26 @@ export var eachAxisDim = createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index'
  * This function finds the graphic where the source dataZoomModel is in.
  *
  * @public
- * @param {Function} forEachNode Node iterator.
- * @param {Function} forEachEdgeType edgeType iterator
- * @param {Function} edgeIdGetter Giving node and edgeType, return an array of edge id.
- * @return {Function} Input: sourceNode, Output: Like {nodes: [], dims: {}}
+ * @param forEachNode Node iterator.
+ * @param forEachEdgeType edgeType iterator
+ * @param edgeIdGetter Giving node and edgeType, return an array of edge id.
+ * @return Input: sourceNode, Output: Like {nodes: [], dims: {}}
  */
-export function createLinkedNodesFinder(forEachNode, forEachEdgeType, edgeIdGetter) {
+export function createLinkedNodesFinder<N, E extends {name: string}>(
+    forEachNode: (cb: (node: N) => void) => void,
+    forEachEdgeType: (cb: (edge: E) => void) => void,
+    edgeIdGetter: (node: N, edge: E) => number[]
+) {
 
-    return function (sourceNode) {
-        var result = {
+    type Result = {
+        nodes: N[]
+        // key: edgeType.name, value: Object (key: edge id, value: boolean).
+        records: Dictionary<Dictionary<boolean>>
+    }
+    return function (sourceNode: N) {
+        var result: Result = {
             nodes: [],
-            records: {} // key: edgeType.name, value: Object (key: edge id, value: boolean).
+            records: {}
         };
 
         forEachEdgeType(function (edgeType) {
@@ -114,7 +131,7 @@ export function createLinkedNodesFinder(forEachNode, forEachEdgeType, edgeIdGett
         }
         while (existsLink);
 
-        function processSingleNode(node) {
+        function processSingleNode(node: N) {
             if (!isNodeAbsorded(node, result) && isLinked(node, result)) {
                 absorb(node, result);
                 existsLink = true;
@@ -124,13 +141,13 @@ export function createLinkedNodesFinder(forEachNode, forEachEdgeType, edgeIdGett
         return result;
     };
 
-    function isNodeAbsorded(node, result) {
+    function isNodeAbsorded(node: N, result: Result) {
         return zrUtil.indexOf(result.nodes, node) >= 0;
     }
 
-    function isLinked(node, result) {
+    function isLinked(node: N, result: Result) {
         var hasLink = false;
-        forEachEdgeType(function (edgeType) {
+        forEachEdgeType(function (edgeType: E) {
             zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
                 result.records[edgeType.name][edgeId] && (hasLink = true);
             });
@@ -138,9 +155,9 @@ export function createLinkedNodesFinder(forEachNode, forEachEdgeType, edgeIdGett
         return hasLink;
     }
 
-    function absorb(node, result) {
+    function absorb(node: N, result: Result) {
         result.nodes.push(node);
-        forEachEdgeType(function (edgeType) {
+        forEachEdgeType(function (edgeType: E) {
             zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
                 result.records[edgeType.name][edgeId] = true;
             });

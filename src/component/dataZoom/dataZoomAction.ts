@@ -17,28 +17,29 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import * as helper from './helper';
+import GlobalModel from '../../model/Global';
+import { createLinkedNodesFinder, eachAxisDim } from './helper';
+import DataZoomModel from './DataZoomModel';
 
 
-echarts.registerAction('dataZoom', function (payload, ecModel) {
+echarts.registerAction('dataZoom', function (payload, ecModel: GlobalModel) {
 
-    var linkedNodesFinder = helper.createLinkedNodesFinder(
-        zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom'),
-        helper.eachAxisDim,
-        function (model, dimNames) {
-            return model.get(dimNames.axisIndex);
+    var linkedNodesFinder = createLinkedNodesFinder(
+        zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom' as any),
+        eachAxisDim,
+        function (model: DataZoomModel, dimNames) {
+            // Has been normalized to array
+            return model.get(dimNames.axisIndex) as number[];
         }
     );
 
-    var effectedModels = [];
+    var effectedModels: DataZoomModel[] = [];
 
     ecModel.eachComponent(
         {mainType: 'dataZoom', query: payload},
-        function (model, index) {
+        function (model: DataZoomModel, index: number) {
             effectedModels.push.apply(
                 effectedModels, linkedNodesFinder(model).nodes
             );

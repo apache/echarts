@@ -239,16 +239,21 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]) {
-        const seriesModel = finder.seriesModel;
-        const coordSys = seriesModel && seriesModel.coordinateSystem;
+        const coordSys = getCoordSys(finder);
         return coordSys === this ? this.dataToPoint(value) : null;
     }
 
     convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
-        const seriesModel = finder.seriesModel;
-        const coordSys = seriesModel && seriesModel.coordinateSystem;
+        const coordSys = getCoordSys(finder);
         return coordSys === this ? this.pointToData(pixel) : null;
     }
+}
+
+function getCoordSys(finder: ParsedModelFinder) {
+    const seriesModel = finder.seriesModel;
+    const polarModel = finder.singleAxisModel as SingleAxisModel;
+    return polarModel && polarModel.coordinateSystem
+        || seriesModel && seriesModel.coordinateSystem as Single;
 }
 
 export default Single;

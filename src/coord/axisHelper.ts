@@ -261,7 +261,7 @@ export function createScaleByModel(model: Model<ComponentOption>, axisType?: str
             case 'time':
                 return new TimeScale({
                     useUTC: model.ecModel.get('useUTC')
-                })
+                });
             default:
                 // case 'value'/'interval', 'log', or others.
                 return new (Scale.getClass(axisType) || IntervalScale)();

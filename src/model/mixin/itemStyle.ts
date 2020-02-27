@@ -20,6 +20,7 @@
 import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
 import { StyleProps } from 'zrender/src/graphic/Style';
+import { ItemStyleOption } from '../../util/types';
 
 var getItemStyle = makeStyleMapper([
     ['fill', 'color'],
@@ -30,12 +31,12 @@ var getItemStyle = makeStyleMapper([
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['shadowColor'],
+    // TODO?
     ['textPosition'],
     ['textAlign']
 ]);
 
-type ItemStyleProps = Pick<StyleProps,
-    'fill'
+type ItemStyleKeys = 'fill'
     | 'stroke'
     | 'lineWidth'
     | 'opacity'
@@ -45,11 +46,12 @@ type ItemStyleProps = Pick<StyleProps,
     | 'shadowColor'
     | 'textPosition'
     | 'textAlign'
->
+
+type ItemStyleProps = Pick<StyleProps, ItemStyleKeys>
 
 class ItemStyleMixin {
 
-    getItemStyle(this: Model, excludes?: string[], includes?: string[]): ItemStyleProps {
+    getItemStyle(this: Model, excludes?: (keyof ItemStyleOption)[], includes?: (keyof ItemStyleOption)[]): ItemStyleProps {
         var style = getItemStyle(this, excludes, includes);
         var lineDash = this.getBorderLineDash();
         lineDash && ((style as any).lineDash = lineDash);

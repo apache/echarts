@@ -637,6 +637,7 @@ export interface LineStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
  */
 export interface AreaStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     color?: Clr
+    opacity?: number
 }
 
 type Arrayable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | T[key][] }
@@ -905,4 +906,25 @@ export interface SeriesOption extends
     coordinateSystem?: string
 
     // FIXME:TS more
+}
+
+export interface SeriesOnCartesianOptionMixin {
+    xAxisIndex?: number
+    yAxisIndex?: number
+
+    xAxisId?: string
+    yAxisId?: string
+}
+
+export interface SeriesOnPolarOptionMixin {
+    radiusAxisIndex?: number
+    angleAxisIndex?: number
+
+    radiusAxisId?: string
+    angleAxisId?: string
+}
+
+export interface SeriesOnSingleOptionMixin {
+    singleAxisIndex?: number
+    singleAxisId?: string
 }

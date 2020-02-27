@@ -45,7 +45,7 @@ import {
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
-import AxisModel from '../coord/cartesian/AxisModel';
+import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 
 /**
@@ -516,10 +516,10 @@ export type ModelFinderObject = {
 export type ParsedModelFinder = {
     seriesModels?: SeriesModel[],
     seriesModel?: SeriesModel,
-    xAxisModels?: AxisModel[],
-    xAxisModel?: AxisModel,
-    yAxisModels?: AxisModel[],
-    yAxisModel?: AxisModel,
+    xAxisModels?: CartesianAxisModel[],
+    xAxisModel?: CartesianAxisModel,
+    yAxisModels?: CartesianAxisModel[],
+    yAxisModel?: CartesianAxisModel,
     gridModels?: GridModel[],
     gridModel?: GridModel,
     // others:

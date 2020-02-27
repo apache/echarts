@@ -1157,11 +1157,11 @@ class List <HostModel extends Model = Model> {
     /**
      * Data filter
      */
-    filterSelf<Ctx>(cb: FilterCb0<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
-    filterSelf<Ctx>(dims: DimensionLoose, cb: FilterCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
-    filterSelf<Ctx>(dims: [DimensionLoose], cb: FilterCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
-    filterSelf<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: FilterCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
-    filterSelf<Ctx>(dims: ItrParamDims, cb: FilterCb<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
+    filterSelf<Ctx>(cb: FilterCb0<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): this;
+    filterSelf<Ctx>(dims: DimensionLoose, cb: FilterCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): this;
+    filterSelf<Ctx>(dims: [DimensionLoose], cb: FilterCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): this;
+    filterSelf<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: FilterCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): this;
+    filterSelf<Ctx>(dims: ItrParamDims, cb: FilterCb<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): this;
     filterSelf<Ctx>(
         dims: ItrParamDims | FilterCb<Ctx>,
         cb: FilterCb<Ctx> | Ctx,
@@ -1242,7 +1242,7 @@ class List <HostModel extends Model = Model> {
      * Select data in range. (For optimization of filter)
      * (Manually inline code, support 5 million data filtering in data zoom.)
      */
-    selectRange(range: {[dimName: string]: string}): List {
+    selectRange(range: {[dimName: string]: [number, number]}): List {
         'use strict';
 
         if (!this._count) {
@@ -1410,9 +1410,9 @@ class List <HostModel extends Model = Model> {
     /**
      * Data mapping to a new List with given dimensions
      */
-    map<Ctx>(dims: DimensionLoose, cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
-    map<Ctx>(dims: [DimensionLoose], cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
-    map<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: MapCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List;
+    map<Ctx>(dims: DimensionLoose, cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List<HostModel>;
+    map<Ctx>(dims: [DimensionLoose], cb: MapCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List<HostModel>;
+    map<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: MapCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): List<HostModel>;
     map<Ctx>(
         dims: ItrParamDims,
         cb: MapCb<Ctx>,
@@ -1498,7 +1498,7 @@ class List <HostModel extends Model = Model> {
         rate: number,
         sampleValue: (frameValues: ParsedValue[]) => ParsedValueNumeric,
         sampleIndex: (frameValues: ParsedValue[], value: ParsedValueNumeric) => number
-    ): List {
+    ): List<HostModel> {
         var list = cloneListForMapAndSample(this, [dimension]);
         var targetStorage = list._storage;
 
@@ -1549,7 +1549,7 @@ class List <HostModel extends Model = Model> {
 
         list.getRawIndex = getRawIndexWithIndices;
 
-        return list;
+        return list as List<HostModel>;
     }
 
     /**

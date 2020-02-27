@@ -40,7 +40,7 @@ import {ParsedModelFinder} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import GridModel from './GridModel';
-import AxisModel from './AxisModel';
+import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
@@ -349,7 +349,7 @@ class Grid implements CoordinateSystemMaster {
         }, this);
 
         function createAxisCreator(dimName: Cartesian2DDimensionName) {
-            return function (axisModel: AxisModel, idx: number): void {
+            return function (axisModel: CartesianAxisModel, idx: number): void {
                 if (!isAxisUsedInTheGrid(axisModel, gridModel)) {
                     return;
                 }
@@ -526,7 +526,7 @@ class Grid implements CoordinateSystemMaster {
 /**
  * Check if the axis is used in the specified grid.
  */
-function isAxisUsedInTheGrid(axisModel: AxisModel, gridModel: GridModel): boolean {
+function isAxisUsedInTheGrid(axisModel: CartesianAxisModel, gridModel: GridModel): boolean {
     return axisModel.getCoordSysModel() === gridModel;
 }
 
@@ -613,9 +613,9 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
 }
 
 var axesTypes = ['xAxis', 'yAxis'];
-function findAxesModels(seriesModel: SeriesModel): AxisModel[] {
+function findAxesModels(seriesModel: SeriesModel): CartesianAxisModel[] {
     return map(axesTypes, function (axisType) {
-        var axisModel = seriesModel.getReferringComponents(axisType)[0] as AxisModel;
+        var axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
 
         if (__DEV__) {
             if (!axisModel) {

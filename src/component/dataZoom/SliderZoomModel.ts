@@ -17,35 +17,98 @@
 * under the License.
 */
 
-// @ts-nocheck
+import DataZoomModel, {DataZoomOption} from './DataZoomModel';
+import ComponentModel from '../../model/Component';
+import {
+    BoxLayoutOptionMixin,
+    ZRColor,
+    LineStyleOption,
+    AreaStyleOption,
+    ItemStyleOption,
+    LabelOption
+} from '../../util/types';
 
-import DataZoomModel from './DataZoomModel';
+interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
 
-var SliderZoomModel = DataZoomModel.extend({
-
-    type: 'dataZoom.slider',
-
-    layoutMode: 'box',
+    show?: boolean
+    /**
+     * Slider dataZoom don't support textStyle
+     */
 
     /**
-     * @protected
+     * Background of slider zoom component
      */
-    defaultOption: {
+    backgroundColor?: ZRColor
+
+    /**
+     * @deprecated Use borderColor instead
+     */
+    // dataBackgroundColor?: ZRColor
+
+    /**
+     * border color of the box. For compatibility,
+     * if dataBackgroundColor is set, borderColor
+     * is ignored.
+     */
+    borderColor?: ZRColor
+
+    dataBackground?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+    }
+
+    /**
+     * Color of selected area.
+     */
+    fillerColor?: ZRColor
+
+    /**
+     * @deprecated Use handleStyle instead
+     */
+    // handleColor?: ZRColor
+
+    handleIcon?: string
+
+    /**
+     * Percent of the slider height
+     */
+    handleSize?: string | number
+
+    handleStyle?: ItemStyleOption
+
+    labelPrecision?: number
+
+    labelFormatter?: string | ((value: number, valueStr: string) => string)
+
+    showDetail?: boolean
+
+    showDataShadow?: 'auto' | boolean
+
+    zoomLock?: boolean
+
+    textStyle?: LabelOption
+}
+
+
+class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
+    static readonly type = 'dataZoom.slider'
+    type = SliderZoomModel.type
+
+    static readonly layoutMode = 'box'
+
+    static defaultOption: SliderDataZoomOption = {
         show: true,
 
-        // ph => placeholder. Using placehoder here because
         // deault value can only be drived in view stage.
-        right: 'ph',  // Default align to grid rect.
-        top: 'ph',    // Default align to grid rect.
-        width: 'ph',  // Default align to grid rect.
-        height: 'ph', // Default align to grid rect.
+        right: 'auto',  // Default align to grid rect.
+        top: 'auto',    // Default align to grid rect.
+        width: 'auto',  // Default align to grid rect.
+        height: 'auto', // Default align to grid rect.
         left: null,   // Default align to grid rect.
         bottom: null, // Default align to grid rect.
 
         backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
-        // dataBackgroundColor: '#ddd',         // Background coor of data shadow and border of box,
-                                                // highest priority, remain for compatibility of
-                                                // previous version, but not recommended any more.
+        // dataBackgroundColor: '#ddd',
         dataBackground: {
             lineStyle: {
                 color: '#2f4554',
@@ -57,13 +120,10 @@ var SliderZoomModel = DataZoomModel.extend({
                 opacity: 0.3
             }
         },
-        borderColor: '#ddd',                    // border color of the box. For compatibility,
-                                                // if dataBackgroundColor is set, borderColor
-                                                // is ignored.
+        borderColor: '#ddd',
 
         fillerColor: 'rgba(167,183,204,0.4)',     // Color of selected area.
         // handleColor: 'rgba(89,170,216,0.95)',     // Color of handle.
-        // handleIcon: 'path://M4.9,17.8c0-1.4,4.5-10.5,5.5-12.4c0-0.1,0.6-1.1,0.9-1.1c0.4,0,0.9,1,0.9,1.1c1.1,2.2,5.4,11,5.4,12.4v17.8c0,1.5-0.6,2.1-1.3,2.1H6.1c-0.7,0-1.3-0.6-1.3-2.1V17.8z',
         /* eslint-disable */
         handleIcon: 'M8.2,13.6V3.9H6.3v9.7H3.1v14.9h3.3v9.7h1.8v-9.7h3.3V13.6H8.2z M9.7,24.4H4.8v-1.4h4.9V24.4z M9.7,19.1H4.8v-1.4h4.9V19.1z',
         /* eslint-enable */
@@ -74,8 +134,6 @@ var SliderZoomModel = DataZoomModel.extend({
             color: '#a7b7cc'
         },
 
-        labelPrecision: null,
-        labelFormatter: null,
         showDetail: true,
         showDataShadow: 'auto',                 // Default auto decision.
         realtime: true,
@@ -84,7 +142,8 @@ var SliderZoomModel = DataZoomModel.extend({
             color: '#333'
         }
     }
+}
 
-});
+ComponentModel.registerClass(SliderZoomModel);
 
 export default SliderZoomModel;

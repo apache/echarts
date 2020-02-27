@@ -20,6 +20,7 @@
 import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
 import { StyleProps } from 'zrender/src/graphic/Style';
+import { LineStyleOption } from '../../util/types';
 
 var getLineStyle = makeStyleMapper([
     ['lineWidth', 'width'],
@@ -31,19 +32,19 @@ var getLineStyle = makeStyleMapper([
     ['shadowColor']
 ]);
 
-type LineStyleProps = Pick<StyleProps,
-    'lineWidth'
+type LineStyleKeys = 'lineWidth'
     | 'stroke'
     | 'opacity'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
     | 'shadowColor'
->
+
+type LineStyleProps = Pick<StyleProps, LineStyleKeys>
 
 class LineStyleMixin {
 
-    getLineStyle(this: Model, excludes?: string[]): LineStyleProps {
+    getLineStyle(this: Model, excludes?: (keyof LineStyleOption)[]): LineStyleProps {
         var style = getLineStyle(this, excludes);
         // Always set lineDash whether dashed, otherwise we can not
         // erase the previous style when assigning to el.style.

@@ -17,15 +17,30 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
 import * as helper from './helper';
 import sliderMove from '../helper/sliderMove';
+import GlobalModel from '../../model/Global';
+import SeriesModel from '../../model/Series';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Dictionary } from '../../util/types';
+// TODO Polar?
+import CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import DataZoomModel from './DataZoomModel';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
 
 var each = zrUtil.each;
 var asc = numberUtil.asc;
+
+interface MinMaxSpan {
+    minSpan: number
+    maxSpan: number
+    minValueSpan: number
+    maxValueSpan: number
+}
+
+type SupportedAxis = 'xAxis' | 'yAxis' | 'angleAxis' | 'radiusAxis' | 'singleAxis'
 
 /**
  * Operate single axis.
@@ -33,102 +48,63 @@ var asc = numberUtil.asc;
  * Different dataZoomModels may be defined to operate the same axis.
  * (i.e. 'inside' data zoom and 'slider' data zoom components)
  * So dataZoomModels share one axisProxy in that case.
- *
- * @class
  */
-var AxisProxy = function (dimName, axisIndex, dataZoomModel, ecModel) {
+class AxisProxy {
 
-    /**
-     * @private
-     * @type {string}
-     */
-    this._dimName = dimName;
+    ecModel: GlobalModel
 
-    /**
-     * @private
-     */
-    this._axisIndex = axisIndex;
 
-    /**
-     * @private
-     * @type {Array.<number>}
-     */
-    this._valueWindow;
+    private _dimName: string
+    private _axisIndex: number
 
-    /**
-     * @private
-     * @type {Array.<number>}
-     */
-    this._percentWindow;
+    private _valueWindow: [number, number]
+    private _percentWindow: [number, number]
 
-    /**
-     * @private
-     * @type {Array.<number>}
-     */
-    this._dataExtent;
+    private _dataExtent: [number, number]
 
-    /**
-     * {minSpan, maxSpan, minValueSpan, maxValueSpan}
-     * @private
-     * @type {Object}
-     */
-    this._minMaxSpan;
+    private _minMaxSpan: MinMaxSpan
 
-    /**
-     * @readOnly
-     * @type {module: echarts/model/Global}
-     */
-    this.ecModel = ecModel;
+    private _dataZoomModel: DataZoomModel
 
-    /**
-     * @private
-     * @type {module: echarts/component/dataZoom/DataZoomModel}
-     */
-    this._dataZoomModel = dataZoomModel;
+    constructor(dimName: string, axisIndex: number, dataZoomModel: DataZoomModel, ecModel: GlobalModel) {
+        this._dimName = dimName;
 
-    // /**
-    //  * @readOnly
-    //  * @private
-    //  */
-    // this.hasSeriesStacked;
-};
+        this._axisIndex = axisIndex;
 
-AxisProxy.prototype = {
+        this.ecModel = ecModel;
 
-    constructor: AxisProxy,
+        this._dataZoomModel = dataZoomModel;
+
+        // /**
+        //  * @readOnly
+        //  * @private
+        //  */
+        // this.hasSeriesStacked;
+    }
 
     /**
      * Whether the axisProxy is hosted by dataZoomModel.
-     *
-     * @public
-     * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
-     * @return {boolean}
      */
-    hostedBy: function (dataZoomModel) {
+    hostedBy(dataZoomModel: DataZoomModel): boolean {
         return this._dataZoomModel === dataZoomModel;
-    },
+    }
 
     /**
-     * @return {Array.<number>} Value can only be NaN or finite value.
+     * @return Value can only be NaN or finite value.
      */
-    getDataValueWindow: function () {
-        return this._valueWindow.slice();
-    },
+    getDataValueWindow() {
+        return this._valueWindow.slice() as [number, number];
+    }
 
     /**
      * @return {Array.<number>}
      */
-    getDataPercentWindow: function () {
-        return this._percentWindow.slice();
-    },
+    getDataPercentWindow() {
+        return this._percentWindow.slice() as [number, number];
+    }
 
-    /**
-     * @public
-     * @param {number} axisIndex
-     * @return {Array} seriesModels
-     */
-    getTargetSeriesModels: function () {
-        var seriesModels = [];
+    getTargetSeriesModels() {
+        var seriesModels: SeriesModel[] = [];
         var ecModel = this.ecModel;
 
         ecModel.eachSeries(function (seriesModel) {
@@ -136,8 +112,8 @@ AxisProxy.prototype = {
                 var dimName = this._dimName;
                 var axisModel = ecModel.queryComponents({
                     mainType: dimName + 'Axis',
-                    index: seriesModel.get(dimName + 'AxisIndex'),
-                    id: seriesModel.get(dimName + 'AxisId')
+                    index: seriesModel.get(dimName + 'AxisIndex' as any),
+                    id: seriesModel.get(dimName + 'AxisId' as any)
                 })[0];
                 if (this._axisIndex === (axisModel && axisModel.componentIndex)) {
                     seriesModels.push(seriesModel);
@@ -146,19 +122,19 @@ AxisProxy.prototype = {
         }, this);
 
         return seriesModels;
-    },
+    }
 
-    getAxisModel: function () {
-        return this.ecModel.getComponent(this._dimName + 'Axis', this._axisIndex);
-    },
+    getAxisModel(): AxisBaseModel {
+        return this.ecModel.getComponent(this._dimName + 'Axis', this._axisIndex) as AxisBaseModel;
+    }
 
-    getOtherAxisModel: function () {
+    getOtherAxisModel() {
         var axisDim = this._dimName;
         var ecModel = this.ecModel;
         var axisModel = this.getAxisModel();
         var isCartesian = axisDim === 'x' || axisDim === 'y';
-        var otherAxisDim;
-        var coordSysIndexName;
+        var otherAxisDim: 'x' | 'y' | 'radius' | 'angle';
+        var coordSysIndexName: 'gridIndex' | 'polarIndex';
         if (isCartesian) {
             coordSysIndexName = 'gridIndex';
             otherAxisDim = axisDim === 'x' ? 'y' : 'x';
@@ -169,41 +145,40 @@ AxisProxy.prototype = {
         }
         var foundOtherAxisModel;
         ecModel.eachComponent(otherAxisDim + 'Axis', function (otherAxisModel) {
-            if ((otherAxisModel.get(coordSysIndexName) || 0)
-                === (axisModel.get(coordSysIndexName) || 0)
+            if (((otherAxisModel as CartesianAxisModel).get(coordSysIndexName as 'gridIndex') || 0)
+                === ((axisModel as CartesianAxisModel).get(coordSysIndexName as 'gridIndex') || 0)
             ) {
                 foundOtherAxisModel = otherAxisModel;
             }
         });
         return foundOtherAxisModel;
-    },
+    }
 
-    getMinMaxSpan: function () {
+    getMinMaxSpan() {
         return zrUtil.clone(this._minMaxSpan);
-    },
+    }
 
     /**
      * Only calculate by given range and this._dataExtent, do not change anything.
-     *
-     * @param {Object} opt
-     * @param {number} [opt.start]
-     * @param {number} [opt.end]
-     * @param {number} [opt.startValue]
-     * @param {number} [opt.endValue]
      */
-    calculateDataWindow: function (opt) {
+    calculateDataWindow(opt?: {
+        start?: number
+        end?: number
+        startValue?: number
+        endValue?: number
+    }) {
         var dataExtent = this._dataExtent;
         var axisModel = this.getAxisModel();
         var scale = axisModel.axis.scale;
         var rangePropMode = this._dataZoomModel.getRangePropMode();
         var percentExtent = [0, 100];
-        var percentWindow = [];
-        var valueWindow = [];
+        var percentWindow = [] as unknown as [number, number];
+        var valueWindow = [] as unknown as [number, number];
         var hasPropModeValue;
 
-        each(['start', 'end'], function (prop, idx) {
+        each(['start', 'end'] as const, function (prop, idx) {
             var boundPercent = opt[prop];
-            var boundValue = opt[prop + 'Value'];
+            var boundValue = opt[prop + 'Value' as 'startValue' | 'endValue'];
 
             // Notice: dataZoom is based either on `percentProp` ('start', 'end') or
             // on `valueProp` ('startValue', 'endValue'). (They are based on the data extent
@@ -256,9 +231,19 @@ AxisProxy.prototype = {
             ? restrictSet(valueWindow, percentWindow, dataExtent, percentExtent, false)
             : restrictSet(percentWindow, valueWindow, percentExtent, dataExtent, true);
 
-        function restrictSet(fromWindow, toWindow, fromExtent, toExtent, toValue) {
+        function restrictSet(
+            fromWindow: number[],
+            toWindow: number[],
+            fromExtent: number[],
+            toExtent: number[],
+            toValue: boolean
+        ) {
             var suffix = toValue ? 'Span' : 'ValueSpan';
-            sliderMove(0, fromWindow, fromExtent, 'all', spans['min' + suffix], spans['max' + suffix]);
+            sliderMove(
+                0, fromWindow, fromExtent, 'all',
+                spans['min' + suffix as 'minSpan' | 'minValueSpan'],
+                spans['max' + suffix as 'maxSpan' | 'maxValueSpan']
+            );
             for (var i = 0; i < 2; i++) {
                 toWindow[i] = numberUtil.linearMap(fromWindow[i], fromExtent, toExtent, true);
                 toValue && (toWindow[i] = scale.parse(toWindow[i]));
@@ -269,16 +254,14 @@ AxisProxy.prototype = {
             valueWindow: valueWindow,
             percentWindow: percentWindow
         };
-    },
+    }
 
     /**
      * Notice: reset should not be called before series.restoreData() called,
      * so it is recommanded to be called in "process stage" but not "model init
      * stage".
-     *
-     * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
      */
-    reset: function (dataZoomModel) {
+    reset(dataZoomModel: DataZoomModel) {
         if (dataZoomModel !== this._dataZoomModel) {
             return;
         }
@@ -298,7 +281,7 @@ AxisProxy.prototype = {
         // }, this);
 
         // `calculateDataWindow` uses min/maxSpan.
-        setMinMaxSpan(this);
+        this._updateMinMaxSpan();
 
         var dataWindow = this.calculateDataWindow(dataZoomModel.settledOption);
 
@@ -306,25 +289,19 @@ AxisProxy.prototype = {
         this._percentWindow = dataWindow.percentWindow;
 
         // Update axis setting then.
-        setAxisModel(this);
-    },
+        this._setAxisModel();
+    }
 
-    /**
-     * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
-     */
-    restore: function (dataZoomModel) {
+    restore(dataZoomModel: DataZoomModel) {
         if (dataZoomModel !== this._dataZoomModel) {
             return;
         }
 
         this._valueWindow = this._percentWindow = null;
-        setAxisModel(this, true);
-    },
+        this._setAxisModel(true);
+    }
 
-    /**
-     * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
-     */
-    filterData: function (dataZoomModel, api) {
+    filterData(dataZoomModel: DataZoomModel, api: ExtensionAPI) {
         if (dataZoomModel !== this._dataZoomModel) {
             return;
         }
@@ -373,7 +350,7 @@ AxisProxy.prototype = {
                     var rightOut;
                     var hasValue;
                     for (var i = 0; i < dataDims.length; i++) {
-                        var value = seriesData.get(dataDims[i], dataIndex);
+                        var value = seriesData.get(dataDims[i], dataIndex) as number;
                         var thisHasValue = !isNaN(value);
                         var thisLeftOut = value < valueWindow[0];
                         var thisRightOut = value > valueWindow[1];
@@ -392,13 +369,13 @@ AxisProxy.prototype = {
                 each(dataDims, function (dim) {
                     if (filterMode === 'empty') {
                         seriesModel.setData(
-                            seriesData = seriesData.map(dim, function (value) {
+                            seriesData = seriesData.map(dim, function (value: number) {
                                 return !isInWindow(value) ? NaN : value;
                             })
                         );
                     }
                     else {
-                        var range = {};
+                        var range: Dictionary<[number, number]> = {};
                         range[dim] = valueWindow;
 
                         // console.time('select');
@@ -413,13 +390,63 @@ AxisProxy.prototype = {
             });
         });
 
-        function isInWindow(value) {
+        function isInWindow(value: number) {
             return value >= valueWindow[0] && value <= valueWindow[1];
         }
     }
-};
 
-function calculateDataExtent(axisProxy, axisDim, seriesModels) {
+    private _updateMinMaxSpan() {
+        var minMaxSpan = this._minMaxSpan = {} as MinMaxSpan;
+        var dataZoomModel = this._dataZoomModel;
+        var dataExtent = this._dataExtent;
+
+        each(['min', 'max'], function (minMax) {
+            var percentSpan = dataZoomModel.get(minMax + 'Span' as 'minSpan' | 'maxSpan');
+            var valueSpan = dataZoomModel.get(minMax + 'ValueSpan' as 'minValueSpan' | 'maxValueSpan');
+            valueSpan != null && (valueSpan = this.getAxisModel().axis.scale.parse(valueSpan));
+
+            // minValueSpan and maxValueSpan has higher priority than minSpan and maxSpan
+            if (valueSpan != null) {
+                percentSpan = numberUtil.linearMap(
+                    dataExtent[0] + valueSpan, dataExtent, [0, 100], true
+                );
+            }
+            else if (percentSpan != null) {
+                valueSpan = numberUtil.linearMap(
+                    percentSpan, [0, 100], dataExtent, true
+                ) - dataExtent[0];
+            }
+
+            minMaxSpan[minMax + 'Span' as 'minSpan' | 'maxSpan'] = percentSpan;
+            minMaxSpan[minMax + 'ValueSpan' as 'minValueSpan' | 'maxValueSpan'] = valueSpan;
+        }, this);
+    }
+
+    private _setAxisModel(isRestore?: boolean) {
+
+        var axisModel = this.getAxisModel();
+
+        var percentWindow = this._percentWindow;
+        var valueWindow = this._valueWindow;
+
+        if (!percentWindow) {
+            return;
+        }
+
+        // [0, 500]: arbitrary value, guess axis extent.
+        var precision = numberUtil.getPixelPrecision(valueWindow, [0, 500]);
+        precision = Math.min(precision, 20);
+        // isRestore or isFull
+        var useOrigin = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
+
+        axisModel.setRange(
+            useOrigin ? null : +valueWindow[0].toFixed(precision),
+            useOrigin ? null : +valueWindow[1].toFixed(precision)
+        );
+    }
+}
+
+function calculateDataExtent(axisProxy: AxisProxy, axisDim: string, seriesModels: SeriesModel[]) {
     var dataExtent = [Infinity, -Infinity];
 
     each(seriesModels, function (seriesModel) {
@@ -448,11 +475,11 @@ function calculateDataExtent(axisProxy, axisDim, seriesModels) {
     // consistent.
     fixExtentByAxis(axisProxy, dataExtent);
 
-    return dataExtent;
+    return dataExtent as [number, number];
 }
 
-function fixExtentByAxis(axisProxy, dataExtent) {
-    var axisModel = axisProxy.getAxisModel();
+function fixExtentByAxis(axisProxy: AxisProxy, dataExtent: number[]) {
+    var axisModel = axisProxy.getAxisModel() as CartesianAxisModel;
     var min = axisModel.getMin(true);
 
     // For category axis, if min/max/scale are not set, extent is determined
@@ -486,55 +513,6 @@ function fixExtentByAxis(axisProxy, dataExtent) {
     // little when zooming. So it will not be fixed until some users require it strongly.
 
     return dataExtent;
-}
-
-function setAxisModel(axisProxy, isRestore) {
-    var axisModel = axisProxy.getAxisModel();
-
-    var percentWindow = axisProxy._percentWindow;
-    var valueWindow = axisProxy._valueWindow;
-
-    if (!percentWindow) {
-        return;
-    }
-
-    // [0, 500]: arbitrary value, guess axis extent.
-    var precision = numberUtil.getPixelPrecision(valueWindow, [0, 500]);
-    precision = Math.min(precision, 20);
-    // isRestore or isFull
-    var useOrigin = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
-
-    axisModel.setRange(
-        useOrigin ? null : +valueWindow[0].toFixed(precision),
-        useOrigin ? null : +valueWindow[1].toFixed(precision)
-    );
-}
-
-function setMinMaxSpan(axisProxy) {
-    var minMaxSpan = axisProxy._minMaxSpan = {};
-    var dataZoomModel = axisProxy._dataZoomModel;
-    var dataExtent = axisProxy._dataExtent;
-
-    each(['min', 'max'], function (minMax) {
-        var percentSpan = dataZoomModel.get(minMax + 'Span');
-        var valueSpan = dataZoomModel.get(minMax + 'ValueSpan');
-        valueSpan != null && (valueSpan = axisProxy.getAxisModel().axis.scale.parse(valueSpan));
-
-        // minValueSpan and maxValueSpan has higher priority than minSpan and maxSpan
-        if (valueSpan != null) {
-            percentSpan = numberUtil.linearMap(
-                dataExtent[0] + valueSpan, dataExtent, [0, 100], true
-            );
-        }
-        else if (percentSpan != null) {
-            valueSpan = numberUtil.linearMap(
-                percentSpan, [0, 100], dataExtent, true
-            ) - dataExtent[0];
-        }
-
-        minMaxSpan[minMax + 'Span'] = percentSpan;
-        minMaxSpan[minMax + 'ValueSpan'] = valueSpan;
-    });
 }
 
 export default AxisProxy;

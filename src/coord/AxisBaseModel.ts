@@ -17,37 +17,19 @@
 * under the License.
 */
 
-import makeStyleMapper from './makeStyleMapper';
-import { StyleProps } from 'zrender/src/graphic/Style';
-import Model from '../Model';
-import { AreaStyleOption } from '../../util/types';
+/**
+ * Base Axis Model for xAxis, yAxis, angleAxis, radiusAxis. singleAxis
+ */
+import { AxisBaseOption } from './axisCommonTypes';
+import ComponentModel from '../model/Component';
+import { AxisModelCommonMixin } from './axisModelCommonMixin';
+import { AxisModelExtendedInCreator } from './axisModelCreator';
+import Axis from './Axis';
 
-var getAreaStyle = makeStyleMapper([
-    ['fill', 'color'],
-    ['shadowBlur'],
-    ['shadowOffsetX'],
-    ['shadowOffsetY'],
-    ['opacity'],
-    ['shadowColor']
-]);
+export interface AxisBaseModel<T extends AxisBaseOption = AxisBaseOption>
+    extends ComponentModel<T>,
+    AxisModelCommonMixin<T>,
+    AxisModelExtendedInCreator<T> {
 
-type AreaStyleProps = Pick<StyleProps,
-    'fill'
-    | 'shadowBlur'
-    | 'shadowOffsetX'
-    | 'shadowOffsetY'
-    | 'opacity'
-    | 'shadowColor'
->
-
-class AreaStyleMixin {
-    getAreaStyle(
-        this: Model,
-        excludes?: (keyof AreaStyleOption)[],
-        includes?: (keyof AreaStyleOption)[]
-    ): AreaStyleProps {
-        return getAreaStyle(this, excludes, includes);
-    }
-};
-
-export {AreaStyleMixin};
+    axis: Axis
+}

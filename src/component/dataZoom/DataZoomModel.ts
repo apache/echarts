@@ -17,119 +17,183 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import * as modelUtil from '../../util/model';
 import * as helper from './helper';
 import AxisProxy from './AxisProxy';
+import ComponentModel from '../../model/Component';
+import {
+    LayoutOrient,
+    ComponentOption,
+    Dictionary,
+    LabelOption,
+    SeriesOption,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnPolarOptionMixin,
+    SeriesOnSingleOptionMixin
+} from '../../util/types';
+import Model from '../../model/Model';
+import GlobalModel from '../../model/Global';
+import SeriesModel from '../../model/Series';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { OptionAxisType, AxisBaseOption } from '../../coord/axisCommonTypes';
 
 var each = zrUtil.each;
 var eachAxisDim = helper.eachAxisDim;
 
-var DataZoomModel = echarts.extendComponentModel({
-
-    type: 'dataZoom',
-
-    dependencies: [
-        'xAxis', 'yAxis', 'zAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'series'
-    ],
+export interface DataZoomOption extends ComponentOption {
 
     /**
-     * @protected
+     * Default auto by axisIndex
      */
-    defaultOption: {
+    orient?: LayoutOrient
+
+    /**
+     * Default the first horizontal category axis.
+     */
+    xAxisIndex?: number | number[]
+
+    /**
+     * Default the first vertical category axis.
+     */
+    yAxisIndex?: number | number[]
+
+    radiusAxisIndex?: number | number[]
+    angleAxisIndex?: number | number[]
+
+    singleAxisIndex?: number | number[]
+
+    /**
+     * Possible values: 'filter' or 'empty' or 'weakFilter'.
+     * 'filter': data items which are out of window will be removed. This option is
+     *         applicable when filtering outliers. For each data item, it will be
+     *         filtered if one of the relevant dimensions is out of the window.
+     * 'weakFilter': data items which are out of window will be removed. This option
+     *         is applicable when filtering outliers. For each data item, it will be
+     *         filtered only if all  of the relevant dimensions are out of the same
+     *         side of the window.
+     * 'empty': data items which are out of window will be set to empty.
+     *         This option is applicable when user should not neglect
+     *         that there are some data items out of window.
+     * 'none': Do not filter.
+     * Taking line chart as an example, line will be broken in
+     * the filtered points when filterModel is set to 'empty', but
+     * be connected when set to 'filter'.
+     */
+    filterMode?: 'filter' | 'weakFilter' | 'empty' | 'none'
+
+    /**
+     * Dispatch action by the fixed rate, avoid frequency.
+     * default 100. Do not throttle when use null/undefined.
+     * If animation === true and animationDurationUpdate > 0,
+     * default value is 100, otherwise 20.
+     */
+    throttle?: number | null | undefined
+    /**
+     * Start percent. 0 ~ 100
+     */
+    start?: number
+    /**
+     * End percent. 0 ~ 100
+     */
+    end?: number
+    /**
+     * Start value. If startValue specified, start is ignored
+     */
+    startValue?: number
+    /**
+     * End value. If endValue specified, end is ignored.
+     */
+    endValue?: number
+    /**
+     * Min span percent, 0 - 100
+     * The range of dataZoom can not be smaller than that.
+     */
+    minSpan?: number
+    /**
+     * Max span percent, 0 - 100
+     * The range of dataZoom can not be larger than that.
+     */
+    maxSpan?: number
+
+    minValueSpan?: number
+
+    maxValueSpan?: number
+
+    rangeMode?: ['value' | 'percent', 'value' | 'percent']
+
+    realtime?: boolean
+
+    // Available when type is slider
+    textStyle?: LabelOption
+}
+
+type RangeOption = Pick<DataZoomOption, 'start' | 'end' | 'startValue' | 'endValue'>
+
+type ExtendedAxisBaseModel = AxisBaseModel & {
+    __dzAxisProxy: AxisProxy
+}
+
+interface SeriesModelOnAxis extends SeriesModel<
+    SeriesOption & SeriesOnCartesianOptionMixin & SeriesOnPolarOptionMixin & SeriesOnSingleOptionMixin
+> {}
+
+class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends ComponentModel<Opts> {
+    static type = 'dataZoom'
+    type = DataZoomModel.type
+
+    static dependencies = [
+        'xAxis', 'yAxis', 'zAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'series'
+    ]
+
+
+    static defaultOption: DataZoomOption = {
         zlevel: 0,
         z: 4,                   // Higher than normal component (z: 2).
-        orient: null,           // Default auto by axisIndex. Possible value: 'horizontal', 'vertical'.
-        xAxisIndex: null,       // Default the first horizontal category axis.
-        yAxisIndex: null,       // Default the first vertical category axis.
 
-        filterMode: 'filter',   // Possible values: 'filter' or 'empty' or 'weakFilter'.
-                                // 'filter': data items which are out of window will be removed. This option is
-                                //          applicable when filtering outliers. For each data item, it will be
-                                //          filtered if one of the relevant dimensions is out of the window.
-                                // 'weakFilter': data items which are out of window will be removed. This option
-                                //          is applicable when filtering outliers. For each data item, it will be
-                                //          filtered only if all  of the relevant dimensions are out of the same
-                                //          side of the window.
-                                // 'empty': data items which are out of window will be set to empty.
-                                //          This option is applicable when user should not neglect
-                                //          that there are some data items out of window.
-                                // 'none': Do not filter.
-                                // Taking line chart as an example, line will be broken in
-                                // the filtered points when filterModel is set to 'empty', but
-                                // be connected when set to 'filter'.
+        filterMode: 'filter',
 
-        throttle: null,         // Dispatch action by the fixed rate, avoid frequency.
-                                // default 100. Do not throttle when use null/undefined.
-                                // If animation === true and animationDurationUpdate > 0,
-                                // default value is 100, otherwise 20.
-        start: 0,               // Start percent. 0 ~ 100
-        end: 100,               // End percent. 0 ~ 100
-        startValue: null,       // Start value. If startValue specified, start is ignored.
-        endValue: null,         // End value. If endValue specified, end is ignored.
-        minSpan: null,          // 0 ~ 100
-        maxSpan: null,          // 0 ~ 100
-        minValueSpan: null,     // The range of dataZoom can not be smaller than that.
-        maxValueSpan: null,     // The range of dataZoom can not be larger than that.
-        rangeMode: null         // Array, can be 'value' or 'percent'.
-    },
+        start: 0,
+        end: 100
+    }
 
     /**
-     * @override
+     * key like x_0, y_1
      */
-    init: function (option, parentModel, ecModel) {
+    private _dataIntervalByAxis: Dictionary<[number, number]> = {}
 
-        /**
-         * key like x_0, y_1
-         * @private
-         * @type {Object}
-         */
-        this._dataIntervalByAxis = {};
+    private _dataInfo = {}
 
-        /**
-         * @private
-         */
-        this._dataInfo = {};
+    private _axisProxies: Dictionary<AxisProxy> = {}
 
-        /**
-         * key like x_0, y_1
-         * @private
-         */
-        this._axisProxies = {};
+    private _autoThrottle = true
 
-        /**
-         * @readOnly
-         */
-        this.textStyleModel;
+    /**
+     * It is `[rangeModeForMin, rangeModeForMax]`.
+     * The optional values for `rangeMode`:
+     * + `'value'` mode: the axis extent will always be determined by
+     *     `dataZoom.startValue` and `dataZoom.endValue`, despite
+     *     how data like and how `axis.min` and `axis.max` are.
+     * + `'percent'` mode: `100` represents 100% of the `[dMin, dMax]`,
+     *     where `dMin` is `axis.min` if `axis.min` specified, otherwise `data.extent[0]`,
+     *     and `dMax` is `axis.max` if `axis.max` specified, otherwise `data.extent[1]`.
+     *     Axis extent will be determined by the result of the percent of `[dMin, dMax]`.
+     *
+     * For example, when users are using dynamic data (update data periodically via `setOption`),
+     * if in `'value`' mode, the window will be kept in a fixed value range despite how
+     * data are appended, while if in `'percent'` mode, whe window range will be changed alone with
+     * the appended data (suppose `axis.min` and `axis.max` are not specified).
+     */
+    private _rangePropMode: DataZoomOption['rangeMode'] = ['percent', 'percent']
 
-        /**
-         * @private
-         */
-        this._autoThrottle = true;
+    textStyleModel: Model<DataZoomOption['textStyle']>
 
-        /**
-         * It is `[rangeModeForMin, rangeModeForMax]`.
-         * The optional values for `rangeMode`:
-         * + `'value'` mode: the axis extent will always be determined by
-         *     `dataZoom.startValue` and `dataZoom.endValue`, despite
-         *     how data like and how `axis.min` and `axis.max` are.
-         * + `'percent'` mode: `100` represents 100% of the `[dMin, dMax]`,
-         *     where `dMin` is `axis.min` if `axis.min` specified, otherwise `data.extent[0]`,
-         *     and `dMax` is `axis.max` if `axis.max` specified, otherwise `data.extent[1]`.
-         *     Axis extent will be determined by the result of the percent of `[dMin, dMax]`.
-         *
-         * For example, when users are using dynamic data (update data periodically via `setOption`),
-         * if in `'value`' mode, the window will be kept in a fixed value range despite how
-         * data are appended, while if in `'percent'` mode, whe window range will be changed alone with
-         * the appended data (suppose `axis.min` and `axis.max` are not specified).
-         *
-         * @private
-         */
+    settledOption: Opts
+
+    init(option: Opts, parentModel: Model, ecModel: GlobalModel) {
+
         this._rangePropMode = ['percent', 'percent'];
 
         var inputRawOption = retrieveRawOption(option);
@@ -162,12 +226,12 @@ var DataZoomModel = echarts.extendComponentModel({
         this.mergeDefaultAndTheme(option, ecModel);
 
         this.doInit(inputRawOption);
-    },
+    }
 
     /**
      * @override
      */
-    mergeOption: function (newOption) {
+    mergeOption(newOption: Opts) {
         var inputRawOption = retrieveRawOption(newOption);
 
         //FIX #2591
@@ -175,12 +239,12 @@ var DataZoomModel = echarts.extendComponentModel({
         zrUtil.merge(this.settledOption, inputRawOption, true);
 
         this.doInit(inputRawOption);
-    },
+    }
 
     /**
      * @protected
      */
-    doInit: function (inputRawOption) {
+    doInit(inputRawOption: Opts) {
         var thisOption = this.option;
 
         // Disable realtime view update if canvas is not supported.
@@ -190,10 +254,10 @@ var DataZoomModel = echarts.extendComponentModel({
 
         this._setDefaultThrottle(inputRawOption);
 
-        updateRangeUse(this, inputRawOption);
+        this._updateRangeUse(inputRawOption);
 
         var settledOption = this.settledOption;
-        each([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
+        each([['start', 'startValue'], ['end', 'endValue']] as const, function (names, index) {
             // start/end has higher priority over startValue/endValue if they
             // both set, but we should make chart.setOption({endValue: 1000})
             // effective, rather than chart.setOption({endValue: 1000, end: null}).
@@ -208,21 +272,18 @@ var DataZoomModel = echarts.extendComponentModel({
         this._resetTarget();
 
         this._giveAxisProxies();
-    },
+    }
 
-    /**
-     * @private
-     */
-    _giveAxisProxies: function () {
+    private _giveAxisProxies() {
         var axisProxies = this._axisProxies;
 
         this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
             var axisModel = this.dependentModels[dimNames.axis][axisIndex];
 
             // If exists, share axisProxy with other dataZoomModels.
-            var axisProxy = axisModel.__dzAxisProxy || (
+            var axisProxy = (axisModel as ExtendedAxisBaseModel).__dzAxisProxy || (
                 // Use the first dataZoomModel as the main model of axisProxy.
-                axisModel.__dzAxisProxy = new AxisProxy(
+                (axisModel as ExtendedAxisBaseModel).__dzAxisProxy = new AxisProxy(
                     dimNames.name, axisIndex, this, ecModel
                 )
             );
@@ -231,12 +292,9 @@ var DataZoomModel = echarts.extendComponentModel({
 
             axisProxies[dimNames.name + '_' + axisIndex] = axisProxy;
         }, this);
-    },
+    }
 
-    /**
-     * @private
-     */
-    _resetTarget: function () {
+    private _resetTarget() {
         var thisOption = this.option;
 
         var autoMode = this._judgeAutoMode();
@@ -254,12 +312,9 @@ var DataZoomModel = echarts.extendComponentModel({
         else if (autoMode === 'orient') {
             this._autoSetOrient();
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _judgeAutoMode: function () {
+    private _judgeAutoMode() {
         // Auto set only works for setOption at the first time.
         // The following is user's reponsibility. So using merged
         // option is OK.
@@ -286,12 +341,9 @@ var DataZoomModel = echarts.extendComponentModel({
             }
             return 'axisIndex';
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _autoSetAxisIndex: function () {
+    private _autoSetAxisIndex() {
         var autoAxisIndex = true;
         var orient = this.get('orient', true);
         var thisOption = this.option;
@@ -302,11 +354,13 @@ var DataZoomModel = echarts.extendComponentModel({
             var dimName = orient === 'vertical' ? 'y' : 'x';
 
             if (dependentModels[dimName + 'Axis'].length) {
-                thisOption[dimName + 'AxisIndex'] = [0];
+                thisOption[dimName + 'AxisIndex' as 'xAxisIndex' | 'yAxisIndex'] = [0];
                 autoAxisIndex = false;
             }
             else {
-                each(dependentModels.singleAxis, function (singleAxisModel) {
+                each(dependentModels.singleAxis, function (
+                    singleAxisModel: AxisBaseModel<{'orient': LayoutOrient} & AxisBaseOption>
+                ) {
                     if (autoAxisIndex && singleAxisModel.get('orient', true) === orient) {
                         thisOption.singleAxisIndex = [singleAxisModel.componentIndex];
                         autoAxisIndex = false;
@@ -345,10 +399,10 @@ var DataZoomModel = echarts.extendComponentModel({
             // If both dataZoom.xAxisIndex and dataZoom.yAxisIndex is not specified,
             // dataZoom component auto adopts series that reference to
             // both xAxis and yAxis which type is 'value'.
-            this.ecModel.eachSeries(function (seriesModel) {
+            this.ecModel.eachSeries(function (seriesModel: SeriesModelOnAxis) {
                 if (this._isSeriesHasAllAxesTypeOf(seriesModel, 'value')) {
                     eachAxisDim(function (dimNames) {
-                        var axisIndices = thisOption[dimNames.axisIndex];
+                        var axisIndices = thisOption[dimNames.axisIndex] as number[]; // Has been normalized to array
 
                         var axisIndex = seriesModel.get(dimNames.axisIndex);
                         var axisId = seriesModel.get(dimNames.axisId);
@@ -362,7 +416,7 @@ var DataZoomModel = echarts.extendComponentModel({
                         if (__DEV__) {
                             if (!axisModel) {
                                 throw new Error(
-                                    dimNames.axis + ' "' + zrUtil.retrieve(
+                                    dimNames.axis + ' "' + zrUtil.retrieve<number | string>(
                                         axisIndex,
                                         axisId,
                                         0
@@ -379,13 +433,10 @@ var DataZoomModel = echarts.extendComponentModel({
                 }
             }, this);
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _autoSetOrient: function () {
-        var dim;
+    private _autoSetOrient() {
+        var dim: string;
 
         // Find the first axis
         this.eachTargetAxis(function (dimNames) {
@@ -393,12 +444,9 @@ var DataZoomModel = echarts.extendComponentModel({
         }, this);
 
         this.option.orient = dim === 'y' ? 'vertical' : 'horizontal';
-    },
+    }
 
-    /**
-     * @private
-     */
-    _isSeriesHasAllAxesTypeOf: function (seriesModel, axisType) {
+    private _isSeriesHasAllAxesTypeOf(seriesModel: SeriesModelOnAxis, axisType: OptionAxisType) {
         // FIXME
         // 需要series的xAxisIndex和yAxisIndex都首先自动设置上。
         // 例如series.type === scatter时。
@@ -413,12 +461,9 @@ var DataZoomModel = echarts.extendComponentModel({
             }
         }, this);
         return is;
-    },
+    }
 
-    /**
-     * @private
-     */
-    _setDefaultThrottle: function (inputRawOption) {
+    private _setDefaultThrottle(inputRawOption: DataZoomOption) {
         // When first time user set throttle, auto throttle ends.
         if (inputRawOption.hasOwnProperty('throttle')) {
             this._autoThrottle = false;
@@ -429,75 +474,96 @@ var DataZoomModel = echarts.extendComponentModel({
                 globalOption.animation && globalOption.animationDurationUpdate > 0
             ) ? 100 : 20;
         }
-    },
+    }
+
+    private _updateRangeUse(inputRawOption: RangeOption) {
+        var rangePropMode = this._rangePropMode;
+        var rangeModeInOption = this.get('rangeMode');
+
+        each([['start', 'startValue'], ['end', 'endValue']] as const, function (names, index) {
+            var percentSpecified = inputRawOption[names[0]] != null;
+            var valueSpecified = inputRawOption[names[1]] != null;
+            if (percentSpecified && !valueSpecified) {
+                rangePropMode[index] = 'percent';
+            }
+            else if (!percentSpecified && valueSpecified) {
+                rangePropMode[index] = 'value';
+            }
+            else if (rangeModeInOption) {
+                rangePropMode[index] = rangeModeInOption[index];
+            }
+            else if (percentSpecified) { // percentSpecified && valueSpecified
+                rangePropMode[index] = 'percent';
+            }
+            // else remain its original setting.
+        });
+    }
 
     /**
      * @public
      */
-    getFirstTargetAxisModel: function () {
-        var firstAxisModel;
+    getFirstTargetAxisModel() {
+        var firstAxisModel: AxisBaseModel;
         eachAxisDim(function (dimNames) {
             if (firstAxisModel == null) {
-                var indices = this.get(dimNames.axisIndex);
+                var indices = this.get(dimNames.axisIndex) as number[]; // Has been normalized to array
                 if (indices.length) {
-                    firstAxisModel = this.dependentModels[dimNames.axis][indices[0]];
+                    firstAxisModel = this.dependentModels[dimNames.axis][indices[0]] as AxisBaseModel;
                 }
             }
         }, this);
 
         return firstAxisModel;
-    },
+    }
 
     /**
      * @public
      * @param {Function} callback param: axisModel, dimNames, axisIndex, dataZoomModel, ecModel
      */
-    eachTargetAxis: function (callback, context) {
+    eachTargetAxis<Ctx>(
+        callback: (
+            this: Ctx,
+            dimNames: Parameters<Parameters<typeof eachAxisDim>[0]>[0],
+            axisIndex: number,
+            dataZoomModel: this,
+            ecModel: GlobalModel
+        ) => void,
+        context?: Ctx
+    ) {
         var ecModel = this.ecModel;
         eachAxisDim(function (dimNames) {
             each(
-                this.get(dimNames.axisIndex),
+                this.get(dimNames.axisIndex) as number[],   // Has been normalized to array
                 function (axisIndex) {
                     callback.call(context, dimNames, axisIndex, this, ecModel);
                 },
                 this
             );
         }, this);
-    },
+    }
 
     /**
-     * @param {string} dimName
-     * @param {number} axisIndex
-     * @return {module:echarts/component/dataZoom/AxisProxy} If not found, return null/undefined.
+     * @return If not found, return null/undefined.
      */
-    getAxisProxy: function (dimName, axisIndex) {
+    getAxisProxy(dimName: string, axisIndex: number): AxisProxy {
         return this._axisProxies[dimName + '_' + axisIndex];
-    },
+    }
 
     /**
-     * @param {string} dimName
-     * @param {number} axisIndex
-     * @return {module:echarts/model/Model} If not found, return null/undefined.
+     * @return If not found, return null/undefined.
      */
-    getAxisModel: function (dimName, axisIndex) {
+    getAxisModel(dimName: string, axisIndex: number): AxisBaseModel {
         var axisProxy = this.getAxisProxy(dimName, axisIndex);
         return axisProxy && axisProxy.getAxisModel();
-    },
+    }
 
     /**
      * If not specified, set to undefined.
-     *
-     * @public
-     * @param {Object} opt
-     * @param {number} [opt.start]
-     * @param {number} [opt.end]
-     * @param {number} [opt.startValue]
-     * @param {number} [opt.endValue]
      */
-    setRawRange: function (opt) {
+    setRawRange(opt: RangeOption) {
         var thisOption = this.option;
         var settledOption = this.settledOption;
-        each([['start', 'startValue'], ['end', 'endValue']], function (names) {
+        each([['start', 'startValue'], ['end', 'endValue']] as const, function (names) {
             // Consider the pair <start, startValue>:
             // If one has value and the other one is `null/undefined`, we both set them
             // to `settledOption`. This strategy enables the feature to clear the original
@@ -513,44 +579,34 @@ var DataZoomModel = echarts.extendComponentModel({
             }
         }, this);
 
-        updateRangeUse(this, opt);
-    },
+        this._updateRangeUse(opt);
+    }
 
-    /**
-     * @public
-     * @param {Object} opt
-     * @param {number} [opt.start]
-     * @param {number} [opt.end]
-     * @param {number} [opt.startValue]
-     * @param {number} [opt.endValue]
-     */
-    setCalculatedRange: function (opt) {
+    setCalculatedRange(opt: RangeOption) {
         var option = this.option;
-        each(['start', 'startValue', 'end', 'endValue'], function (name) {
+        each(['start', 'startValue', 'end', 'endValue'] as const, function (name) {
             option[name] = opt[name];
         });
-    },
+    }
 
     /**
      * @public
      * @return {Array.<number>} [startPercent, endPercent]
      */
-    getPercentRange: function () {
+    getPercentRange() {
         var axisProxy = this.findRepresentativeAxisProxy();
         if (axisProxy) {
             return axisProxy.getDataPercentWindow();
         }
-    },
+    }
 
     /**
      * @public
      * For example, chart.getModel().getComponent('dataZoom').getValueRange('y', 0);
      *
-     * @param {string} [axisDimName]
-     * @param {number} [axisIndex]
-     * @return {Array.<number>} [startValue, endValue] value can only be '-' or finite number.
+     * @return [startValue, endValue] value can only be '-' or finite number.
      */
-    getValueRange: function (axisDimName, axisIndex) {
+    getValueRange(axisDimName: string, axisIndex: number): [number, number] {
         if (axisDimName == null && axisIndex == null) {
             var axisProxy = this.findRepresentativeAxisProxy();
             if (axisProxy) {
@@ -560,17 +616,16 @@ var DataZoomModel = echarts.extendComponentModel({
         else {
             return this.getAxisProxy(axisDimName, axisIndex).getDataValueWindow();
         }
-    },
+    }
 
     /**
      * @public
-     * @param {module:echarts/model/Model} [axisModel] If axisModel given, find axisProxy
+     * @param axisModel If axisModel given, find axisProxy
      *      corresponding to the axisModel
-     * @return {module:echarts/component/dataZoom/AxisProxy}
      */
-    findRepresentativeAxisProxy: function (axisModel) {
+    findRepresentativeAxisProxy(axisModel?: AxisBaseModel): AxisProxy {
         if (axisModel) {
-            return axisModel.__dzAxisProxy;
+            return (axisModel as ExtendedAxisBaseModel).__dzAxisProxy;
         }
 
         // Find the first hosted axisProxy
@@ -591,26 +646,25 @@ var DataZoomModel = echarts.extendComponentModel({
                 return axisProxies[key];
             }
         }
-    },
+    }
 
     /**
      * @return {Array.<string>}
      */
-    getRangePropMode: function () {
+    getRangePropMode() {
         return this._rangePropMode.slice();
     }
 
-});
-
+}
 /**
  * Retrieve the those raw params from option, which will be cached separately.
  * becasue they will be overwritten by normalized/calculated values in the main
  * process.
  */
-function retrieveRawOption(option) {
-    var ret = {};
+function retrieveRawOption<T extends DataZoomOption>(option: T) {
+    var ret = {} as T;
     each(
-        ['start', 'end', 'startValue', 'endValue', 'throttle'],
+        ['start', 'end', 'startValue', 'endValue', 'throttle'] as const,
         function (name) {
             option.hasOwnProperty(name) && (ret[name] = option[name]);
         }
@@ -618,27 +672,6 @@ function retrieveRawOption(option) {
     return ret;
 }
 
-function updateRangeUse(dataZoomModel, inputRawOption) {
-    var rangePropMode = dataZoomModel._rangePropMode;
-    var rangeModeInOption = dataZoomModel.get('rangeMode');
-
-    each([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
-        var percentSpecified = inputRawOption[names[0]] != null;
-        var valueSpecified = inputRawOption[names[1]] != null;
-        if (percentSpecified && !valueSpecified) {
-            rangePropMode[index] = 'percent';
-        }
-        else if (!percentSpecified && valueSpecified) {
-            rangePropMode[index] = 'value';
-        }
-        else if (rangeModeInOption) {
-            rangePropMode[index] = rangeModeInOption[index];
-        }
-        else if (percentSpecified) { // percentSpecified && valueSpecified
-            rangePropMode[index] = 'percent';
-        }
-        // else remain its original setting.
-    });
-}
+ComponentModel.registerClass(DataZoomModel);
 
 export default DataZoomModel;

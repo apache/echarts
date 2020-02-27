@@ -17,10 +17,10 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
 import {createHashMap, each} from 'zrender/src/core/util';
+import SeriesModel from '../../model/Series';
+import DataZoomModel from './DataZoomModel';
 
 echarts.registerProcessor({
 
@@ -28,9 +28,9 @@ echarts.registerProcessor({
     // there is a line series and a pie series, it is better not to update the
     // line series if only pie series is needed to be updated.
     getTargetSeries: function (ecModel) {
-        var seriesModelMap = createHashMap();
+        var seriesModelMap = createHashMap<SeriesModel>();
 
-        ecModel.eachComponent('dataZoom', function (dataZoomModel) {
+        ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
                 var axisProxy = dataZoomModel.getAxisProxy(dimNames.name, axisIndex);
                 each(axisProxy.getTargetSeriesModels(), function (seriesModel) {
@@ -50,12 +50,12 @@ echarts.registerProcessor({
     // execute every frame.
     overallReset: function (ecModel, api) {
 
-        ecModel.eachComponent('dataZoom', function (dataZoomModel) {
+        ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
             // We calculate window and reset axis here but not in model
             // init stage and not after action dispatch handler, because
             // reset should be called after seriesData.restoreData.
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
-                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel, api);
+                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel);
             });
 
             // Caution: data zoom filtering is order sensitive when using
@@ -77,7 +77,7 @@ echarts.registerProcessor({
             });
         });
 
-        ecModel.eachComponent('dataZoom', function (dataZoomModel) {
+        ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
             // Fullfill all of the range props so that user
             // is able to get them from chart.getOption().
             var axisProxy = dataZoomModel.findRepresentativeAxisProxy();

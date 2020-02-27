@@ -211,7 +211,7 @@ var SliderZoomView = DataZoomView.extend({
 
         // Replace the placeholder value.
         zrUtil.each(['right', 'top', 'width', 'height'], function (name) {
-            if (layoutParams[name] === 'ph') {
+            if (layoutParams[name] === 'auto') {
                 layoutParams[name] = positionInfo[name];
             }
         });

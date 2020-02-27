@@ -20,7 +20,7 @@
 import Axis from '../Axis';
 import { DimensionName } from '../../util/types';
 import Scale from '../../scale/Scale';
-import AxisModel, { CartesianAxisPosition } from './AxisModel';
+import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
 import { OptionAxisType } from '../axisCommonTypes';
 
@@ -67,7 +67,7 @@ class Axis2D extends Axis {
     /**
      * Axis model. Injected outside
      */
-    model: AxisModel;
+    model: CartesianAxisModel;
 
     /**
      * Injected outside.

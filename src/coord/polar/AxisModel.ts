@@ -19,11 +19,12 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
-import axisModelCreator from '../axisModelCreator';
+import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import { AxisBaseOption } from '../axisCommonTypes';
 import AngleAxis from './AngleAxis';
 import RadiusAxis from './RadiusAxis';
+import { AxisBaseModel } from '../AxisBaseModel';
 
 export interface AngleAxisOption extends AxisBaseOption {
     /**
@@ -58,7 +59,8 @@ export interface RadiusAxisOption extends AxisBaseOption {
 
 type PolarAxisOption = AngleAxisOption | RadiusAxisOption;
 
-class PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends ComponentModel<T> {
+class PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends ComponentModel<T>
+    implements AxisBaseModel<T> {
     static type = 'polarAxis'
 
     getCoordSysModel(): ComponentModel {
@@ -70,7 +72,9 @@ class PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends Compon
     }
 }
 
-interface PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends AxisModelCommonMixin<T> {}
+interface PolarAxisModel<T extends PolarAxisOption = PolarAxisOption>
+    extends AxisModelCommonMixin<T>, AxisModelExtendedInCreator<T> {}
+
 zrUtil.mixin(PolarAxisModel, AxisModelCommonMixin);
 
 export {PolarAxisModel};

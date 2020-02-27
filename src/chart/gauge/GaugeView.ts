@@ -131,7 +131,7 @@ class GaugeView extends ChartView {
             sector.setStyle(lineStyleModel.getLineStyle(
                 // Because we use sector to simulate arc
                 // so the properties for stroking are useless
-                ['color', 'borderWidth', 'borderColor']
+                ['color', 'width']
             ));
 
             group.add(sector);

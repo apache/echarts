@@ -30,7 +30,7 @@ import ExtensionAPI from '../../../ExtensionAPI';
 
 var brushLang = lang.toolbox.brush;
 
-const ICON_TYPES =  ['rect', 'polygon', 'lineX', 'lineY', 'keep', 'clear'] as const;
+const ICON_TYPES = ['rect', 'polygon', 'lineX', 'lineY', 'keep', 'clear'] as const;
 
 type IconType = typeof ICON_TYPES[number];
 

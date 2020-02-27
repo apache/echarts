@@ -19,12 +19,13 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
-import axisModelCreator from '../axisModelCreator';
+import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreator';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import Single from './Single';
 import SingleAxis from './SingleAxis';
 import { AxisBaseOption } from '../axisCommonTypes';
 import { BoxLayoutOptionMixin, LayoutOrient } from '../../util/types';
+import { AxisBaseModel } from '../AxisBaseModel';
 
 export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right'
 
@@ -33,7 +34,8 @@ export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
     orient: LayoutOrient
 }
 
-class SingleAxisModel extends ComponentModel<SingleAxisOption> {
+class SingleAxisModel extends ComponentModel<SingleAxisOption>
+    implements AxisBaseModel<SingleAxisOption>  {
     static type = 'singleAxis'
     type = SingleAxisModel.type
 
@@ -100,7 +102,9 @@ class SingleAxisModel extends ComponentModel<SingleAxisOption> {
 
 ComponentModel.registerClass(SingleAxisModel);
 
-interface SingleAxisModel extends AxisModelCommonMixin<SingleAxisOption> {}
+interface SingleAxisModel extends AxisModelCommonMixin<SingleAxisOption>,
+    AxisModelExtendedInCreator<SingleAxisOption> {}
+
 zrUtil.mixin(SingleAxisModel, {AxisModelCommonMixin});
 
 axisModelCreator('single', SingleAxisModel, SingleAxisModel.defaultOption);
