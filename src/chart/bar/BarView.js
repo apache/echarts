@@ -145,6 +145,7 @@ export default echarts.extendChartView({
                     bgEls[dataIndex] = bgEl;
                 }
 
+                // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
                 if (!data.hasValue(dataIndex)) {
                     return;
                 }
