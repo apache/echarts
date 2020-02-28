@@ -17,22 +17,37 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import BaseAxisPointer from './BaseAxisPointer';
+import BaseAxisPointer, { AxisPointerElementOptions } from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
 import * as singleAxisHelper from '../../coord/single/singleAxisHelper';
 import AxisView from '../axis/AxisView';
+import SingleAxis from '../../coord/single/SingleAxis';
+import Single from '../../coord/single/Single';
+import { PathProps } from 'zrender/src/graphic/Path';
+import { ScaleDataValue, VerticalAlign, CommonAxisPointerOption } from '../../util/types';
+import ExtensionAPI from '../../ExtensionAPI';
+import SingleAxisModel from '../../coord/single/AxisModel';
+import { VectorArray } from 'zrender/src/core/vector';
+import Model from '../../model/Model';
 
-var XY = ['x', 'y'];
-var WH = ['width', 'height'];
+const XY = ['x', 'y'] as const;
+const WH = ['width', 'height'] as const;
 
-var SingleAxisPointer = BaseAxisPointer.extend({
+// Not use top level axisPointer model
+type AxisPointerModel = Model<CommonAxisPointerOption>
+
+class SingleAxisPointer extends BaseAxisPointer {
 
     /**
      * @override
      */
-    makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
+    makeElOption(
+        elOption: AxisPointerElementOptions,
+        value: ScaleDataValue,
+        axisModel: SingleAxisModel,
+        axisPointerModel: AxisPointerModel,
+        api: ExtensionAPI
+    ) {
         var axis = axisModel.axis;
         var coordSys = axis.coordinateSystem;
         var otherExtent = getGlobalExtent(coordSys, 1 - getPointDimIndex(axis));
@@ -52,26 +67,40 @@ var SingleAxisPointer = BaseAxisPointer.extend({
 
         var layoutInfo = singleAxisHelper.layout(axisModel);
         viewHelper.buildCartesianSingleLabelElOption(
+            // @ts-ignore
             value, elOption, layoutInfo, axisModel, axisPointerModel, api
         );
-    },
+    }
 
     /**
      * @override
      */
-    getHandleTransform: function (value, axisModel, axisPointerModel) {
+    getHandleTransform(
+        value: ScaleDataValue,
+        axisModel: SingleAxisModel,
+        axisPointerModel: AxisPointerModel
+    ) {
         var layoutInfo = singleAxisHelper.layout(axisModel, {labelInside: false});
-        layoutInfo.labelMargin = axisPointerModel.get('handle.margin');
+        // @ts-ignore
+        layoutInfo.labelMargin = axisPointerModel.get(['handle', 'margin']);
         return {
             position: viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo),
             rotation: layoutInfo.rotation + (layoutInfo.labelDirection < 0 ? Math.PI : 0)
         };
-    },
+    }
 
     /**
      * @override
      */
-    updateHandleTransform: function (transform, delta, axisModel, axisPointerModel) {
+    updateHandleTransform(
+        transform: {
+            position: VectorArray,
+            rotation: number
+        },
+        delta: number[],
+        axisModel: SingleAxisModel,
+        axisPointerModel: AxisPointerModel
+    ) {
         var axis = axisModel.axis;
         var coordSys = axis.coordinateSystem;
         var dimIndex = getPointDimIndex(axis);
@@ -90,15 +119,17 @@ var SingleAxisPointer = BaseAxisPointer.extend({
             rotation: transform.rotation,
             cursorPoint: cursorPoint,
             tooltipOption: {
-                verticalAlign: 'middle'
+                verticalAlign: 'middle' as VerticalAlign
             }
         };
     }
-});
+}
 
 var pointerShapeBuilder = {
 
-    line: function (axis, pixelValue, otherExtent) {
+    line: function (axis: SingleAxis, pixelValue: number, otherExtent: number[]): PathProps & {
+        type: 'Line'
+    } {
         var targetShape = viewHelper.makeLineShape(
             [pixelValue, otherExtent[0]],
             [pixelValue, otherExtent[1]],
@@ -111,7 +142,9 @@ var pointerShapeBuilder = {
         };
     },
 
-    shadow: function (axis, pixelValue, otherExtent) {
+    shadow: function (axis: SingleAxis, pixelValue: number, otherExtent: number[]): PathProps & {
+        type: 'Rect'
+    } {
         var bandWidth = axis.getBandWidth();
         var span = otherExtent[1] - otherExtent[0];
         return {
@@ -125,15 +158,16 @@ var pointerShapeBuilder = {
     }
 };
 
-function getPointDimIndex(axis) {
+function getPointDimIndex(axis: SingleAxis): number {
     return axis.isHorizontal() ? 0 : 1;
 }
 
-function getGlobalExtent(coordSys, dimIndex) {
+function getGlobalExtent(coordSys: Single, dimIndex: number) {
     var rect = coordSys.getRect();
     return [rect[XY[dimIndex]], rect[XY[dimIndex]] + rect[WH[dimIndex]]];
 }
 
+// @ts-ignore
 AxisView.registerAxisPointerClass('SingleAxisPointer', SingleAxisPointer);
 
 export default SingleAxisPointer;

@@ -793,6 +793,7 @@ interface PositionCallback {
 }
 /**
  * Common tooltip option
+ * Can be configured on series, graphic elements
  */
 export interface CommonTooltipOption<FormatterParams> {
 
@@ -871,10 +872,106 @@ export interface CommonTooltipOption<FormatterParams> {
 /**
  * Tooltip option configured on each series
  */
-export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams>
+export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
+    trigger?: 'item' | 'axis' | boolean | 'none'
+}
+
+type LabelFormatterParams = {
+    value: ScaleDataValue
+    axisDimension: string
+    axisIndex: number
+    seriesData: CallbackDataParams[]
+}
+/**
+ * Common axis option. can be configured on each axis
+ */
+export interface CommonAxisPointerOption {
+    show?: boolean | 'auto'
+
+    z?: number;
+    zlevel?: number;
+
+    triggerOn?: 'click' | 'mousemove' | 'none' | 'mousemove|click'
+
+    type?: 'line' | 'shadow' | 'none'
+
+    snap?: boolean
+
+    triggerTooltip?: boolean
+
+    /**
+     * current value. When using axisPointer.handle, value can be set to define the initail position of axisPointer.
+     */
+    // TODO: TYPE Only support numeric value?
+    value?: ParsedValueNumeric
+
+    status?: 'show' | 'hide'
+
+    // [group0, group1, ...]
+    // Each group can be: {
+    //      mapper: function () {},
+    //      singleTooltip: 'multiple',  // 'multiple' or 'single'
+    //      xAxisId: ...,
+    //      yAxisName: ...,
+    //      angleAxisIndex: ...
+    // }
+    // mapper: can be ignored.
+    //      input: {axisInfo, value}
+    //      output: {axisInfo, value}
+
+    label?: LabelOption & {
+        precision?: 'auto' | number
+        margin?: number
+        /**
+         * String template include variable {value} or callback function
+         */
+        formatter?: string | ((params: LabelFormatterParams) => string)
+    }
+    animation?: boolean | 'auto'
+    animationDurationUpdate?: number
+    animationEasingUpdate?: ZREasing
+
+    /**
+     * Available when type is 'line'
+     */
+    lineStyle?: LineStyleOption
+    /**
+     * Available when type is 'shadow'
+     */
+    shadowStyle?: AreaStyleOption
+
+    handle?: {
+        show?: boolean
+        icon?: string
+        /**
+         * The size of the handle
+         */
+        size?: number | number[]
+        /**
+         * Distance from handle center to axis.
+         */
+        margin?: number
+
+        color?: ColorString
+
+        /**
+         * Throttle for mobile performance
+         */
+        throttle?: number
+    } & ShadowOptionMixin
+
+
+    seriesDataIndices?: {
+        seriesIndex: number
+        dataIndex: number
+        dataIndexInside: number
+    }[]
+
+}
 
 export interface ComponentOption {
     type?: string;
+
     id?: string;
     name?: string;
 

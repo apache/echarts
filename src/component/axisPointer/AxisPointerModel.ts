@@ -20,20 +20,15 @@
 import ComponentModel from '../../model/Component';
 import {
     ComponentOption,
-    OptionDataValue,
-    LineStyleOption,
-    AreaStyleOption,
-    LabelOption,
-    ZREasing,
-    ColorString,
-    ShadowOptionMixin,
-    CallbackDataParams
+    ScaleDataValue,
+    CommonAxisPointerOption
 } from '../../util/types';
 
-interface AxisInfo {
+interface MapperParamAxisInfo {
     axisIndex: number
     axisName: string
     axisId: string
+    axisDim: string
 }
 
 interface AxisPointerLink {
@@ -56,101 +51,17 @@ interface AxisPointerLink {
     singleAxisName?: string[] | string
 
     mapper?(
-        sourceVal: OptionDataValue,
-        sourceAxisInfo: AxisInfo,
-        targetAxisInfo: AxisInfo
-    ): OptionDataValue
+        sourceVal: ScaleDataValue,
+        sourceAxisInfo: MapperParamAxisInfo,
+        targetAxisInfo: MapperParamAxisInfo
+    ): CommonAxisPointerOption['value']   // TODO: TYPE Should return numeric value or category value?
 }
 
-type LabelFormatterParmas = Pick<CallbackDataParams,
-    'componentType'
-    | 'componentSubType'
-    | 'componentIndex'
-    | 'seriesType'
-    | 'seriesIndex'
-    | 'seriesId'
-    | 'seriesName'
-    | 'name'
-    | 'dataIndex'
-    | 'data'
-    | 'dataType'
-    | 'value'
-    | 'dimensionNames'
-    | 'dimensionIndex'
->
+// TODO: TYPE AxisPointerOption for each axis
+export interface AxisPointerOption extends ComponentOption, Omit<CommonAxisPointerOption, 'type'> {
+    type?: 'line' | 'shadow' | 'cross' | 'none'
 
-export interface AxisPointerOption extends ComponentOption {
-
-    show?: boolean | 'auto'
-
-    triggerOn?: 'click' | 'mousemove' | 'none' | 'mousemove|click'
-
-    type?: 'line' | 'shadow'
-
-    snap?: boolean
-
-    triggerTooltip?: boolean
-
-    /**
-     * current value. When using axisPointer.handle, value can be set to define the initail position of axisPointer.
-     */
-    value?: OptionDataValue
-
-    status?: 'show' | 'hide'
-
-    // [group0, group1, ...]
-    // Each group can be: {
-    //      mapper: function () {},
-    //      singleTooltip: 'multiple',  // 'multiple' or 'single'
-    //      xAxisId: ...,
-    //      yAxisName: ...,
-    //      angleAxisIndex: ...
-    // }
-    // mapper: can be ignored.
-    //      input: {axisInfo, value}
-    //      output: {axisInfo, value}
     link?: AxisPointerLink[]
-
-    label?: LabelOption & {
-        precision?: 'auto' | string
-        margin?: number
-        /**
-         * String template include variable {value} or callback function
-         */
-        formatter?: string | ((params: LabelFormatterParmas) => string)
-    }
-    animation?: boolean | 'auto'
-    animationDurationUpdate?: number
-    animationEasingUpdate?: ZREasing
-
-    /**
-     * Available when type is 'line'
-     */
-    lineStyle?: LineStyleOption
-    /**
-     * Available when type is 'shadow'
-     */
-    shadowStyle?: AreaStyleOption
-
-    handle?: {
-        show?: boolean
-        icon?: string
-        /**
-         * The size of the handle
-         */
-        size?: number | number[]
-        /**
-         * Distance from handle center to axis.
-         */
-        margin?: number
-
-        color?: ColorString
-
-        /**
-         * Throttle for mobile performance
-         */
-        throttle?: number
-    } & ShadowOptionMixin
 }
 
 
@@ -159,7 +70,9 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
     static type = 'axisPointer' as const
     type = AxisPointerModel.type
 
-    // coordSysAxesInfo
+    // Will be injected and read in modelHelper and axisTrigger
+    // No need to care about it.
+    coordSysAxesInfo: unknown
 
     static defaultOption: AxisPointerOption = {
         // 'auto' means that show when triggered by tooltip or handle.

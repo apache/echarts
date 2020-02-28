@@ -16,19 +16,19 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-// @ts-nocheck
+
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as axisPointerModelHelper from './axisPointer/modelHelper';
 import axisTrigger from './axisPointer/axisTrigger';
 
-import './axisPointer/AxisPointerModel';
 import './axisPointer/AxisPointerView';
 
 // CartesianAxisPointer is not supposed to be required here. But consider
 // echarts.simple.js and online build tooltip, which only require gridSimple,
 // CartesianAxisPointer should be able to required somewhere.
 import './axisPointer/CartesianAxisPointer';
+import AxisPointerModel from './axisPointer/AxisPointerModel';
 
 echarts.registerPreprocessor(function (option) {
     // Always has a global axisPointerModel for default setting.
@@ -51,7 +51,7 @@ echarts.registerPreprocessor(function (option) {
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, function (ecModel, api) {
     // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
     // allAxesInfo should be updated when setOption performed.
-    ecModel.getComponent('axisPointer').coordSysAxesInfo =
+    (ecModel.getComponent('axisPointer') as AxisPointerModel).coordSysAxesInfo =
         axisPointerModelHelper.collect(ecModel, api);
 });
 

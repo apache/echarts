@@ -34,14 +34,14 @@ import GlobalModel, { QueryConditionKindB } from '../model/Global';
 import ComponentModel from '../model/Component';
 import List from '../data/List';
 import {
-    Payload,
     ComponentOption,
     ComponentMainType,
     ComponentSubType,
     DisplayStateHostOption,
     OptionDataItem,
     OptionDataValue,
-    TooltipRenderMode
+    TooltipRenderMode,
+    Payload
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
@@ -422,7 +422,11 @@ export function compressBatches(
  *                         each of which can be Array or primary type.
  * @return dataIndex If not found, return undefined/null.
  */
-export function queryDataIndex(data: List, payload: Payload): number | number[] {
+export function queryDataIndex(data: List, payload: Payload & {
+    dataIndexInside?: number | number[]
+    dataIndex?: number | number[]
+    name?: string | string[]
+}): number | number[] {
     if (payload.dataIndexInside != null) {
         return payload.dataIndexInside;
     }

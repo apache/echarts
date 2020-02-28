@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import Model from '../model/Model';
 import GlobalModel from '../model/Global';
 import {ParsedModelFinder} from '../util/model';
 import ExtensionAPI from '../ExtensionAPI';
@@ -52,7 +51,7 @@ export interface CoordinateSystemMaster {
     // Should be the same as its coordinateSystemCreator.
     dimensions: DimensionName[];
 
-    model?: Model;
+    model?: ComponentModel;
 
     update?: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 
@@ -101,7 +100,7 @@ export interface CoordinateSystem {
     // Should be the same as its coordinateSystemCreator.
     dimensions: DimensionName[];
 
-    model?: Model;
+    model?: ComponentModel;
 
     // @param data
     // @param reserved Defined by the coordinate system itself

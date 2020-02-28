@@ -47,8 +47,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
-import Axis from '../../coord/Axis';
-import ComponentModel from '../../model/Component';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -57,10 +56,6 @@ const parsePercent = numberUtil.parsePercent;
 const proxyRect = new graphic.Rect({
     shape: {x: -1, y: -1, width: 2, height: 2}
 });
-
-type AxisModel = ComponentModel & {
-    axis: Axis
-}
 
 interface DataIndex {
     seriesIndex: number
@@ -514,7 +509,7 @@ class TooltipView extends ComponentView {
             // var paramsList = displayMode === 'single' ? singleParamsList : [];
 
             each(itemCoordSys.dataByAxis, function (item) {
-                var axisModel = ecModel.getComponent(item.axisDim + 'Axis', item.axisIndex);
+                var axisModel = ecModel.getComponent(item.axisDim + 'Axis', item.axisIndex) as AxisBaseModel;
                 var axisValue = item.value;
                 var seriesDefaultHTML: string[] = [];
 
@@ -523,7 +518,7 @@ class TooltipView extends ComponentView {
                 }
 
                 var valueLabel = axisPointerViewHelper.getValueLabel(
-                    axisValue, (axisModel as AxisModel).axis, ecModel,
+                    axisValue, axisModel.axis, ecModel,
                     item.seriesDataIndices,
                     // @ts-ignore
                     item.valueLabelOpt
@@ -537,7 +532,7 @@ class TooltipView extends ComponentView {
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
                     dataParams.axisId = item.axisId;
-                    dataParams.axisValue = axisHelper.getAxisRawValue((axisModel as AxisModel).axis, axisValue);
+                    dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
                     dataParams.axisValueLabel = valueLabel;
 
                     if (dataParams) {

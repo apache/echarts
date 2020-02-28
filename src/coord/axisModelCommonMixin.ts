@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import Axis from './Axis';
-import ComponentModel from '../model/Component';
 import { AxisBaseOption } from './axisCommonTypes';
 import { CoordinateSystemHostModel } from './CoordinateSystem';
 

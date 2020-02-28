@@ -43,8 +43,8 @@ type AreaStyleProps = Pick<StyleProps,
 class AreaStyleMixin {
     getAreaStyle(
         this: Model,
-        excludes?: (keyof AreaStyleOption)[],
-        includes?: (keyof AreaStyleOption)[]
+        excludes?: readonly (keyof AreaStyleOption)[],
+        includes?: readonly (keyof AreaStyleOption)[]
     ): AreaStyleProps {
         return getAreaStyle(this, excludes, includes);
     }

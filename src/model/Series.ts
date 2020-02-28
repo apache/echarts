@@ -53,19 +53,13 @@ import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTas
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
 import Source from '../data/Source';
+import Axis from '../coord/Axis';
 
 var inner = modelUtil.makeInner<{
     data: List
     dataBeforeProcessed: List
 }>();
 
-// methods that can be implemented optionally to provide to components
-interface SeriesModel {
-    /**
-     * Get dimension to render shadow in dataZoom component
-     */
-    getShadowDim?(): string
-}
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
 
     // [Caution]: for compat the previous "class extend"
@@ -529,8 +523,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     getAxisTooltipData: (
         dim: DimensionName[],
         value: AxisValue,
-        // @ts-ignore
-        baseAxis // FIXME:TS baseAxis type should be coord Axis
+        baseAxis: Axis
     ) => {
         dataIndices: number[],
         nestestValue: any
@@ -560,7 +553,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 }
 
 interface SeriesModel<Opt extends SeriesOption = SeriesOption>
-    extends DataFormatMixin, ColorPaletteMixin<Opt>, DataHost {}
+    extends DataFormatMixin, ColorPaletteMixin<Opt>, DataHost {
+
+    // methods that can be implemented optionally to provide to components
+    /**
+     * Get dimension to render shadow in dataZoom component
+     */
+    getShadowDim?(): string
+}
 zrUtil.mixin(SeriesModel, DataFormatMixin);
 zrUtil.mixin(SeriesModel, ColorPaletteMixin);
 

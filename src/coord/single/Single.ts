@@ -249,7 +249,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     }
 }
 
-function getCoordSys(finder: ParsedModelFinder) {
+function getCoordSys(finder: ParsedModelFinder): Single {
     const seriesModel = finder.seriesModel;
     const polarModel = finder.singleAxisModel as SingleAxisModel;
     return polarModel && polarModel.coordinateSystem

@@ -17,28 +17,39 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
+import GlobalModel from '../../model/Global';
+import Element from 'zrender/src/Element';
+import { Payload } from '../../util/types';
 
 /**
- * @param {Object} finder contains {seriesIndex, dataIndex, dataIndexInside}
- * @param {module:echarts/model/Global} ecModel
- * @return {Object} {point: [x, y], el: ...} point Will not be null.
+ * @param finder contains {seriesIndex, dataIndex, dataIndexInside}
+ * @param ecModel
+ * @return  {point: [x, y], el: ...} point Will not be null.
  */
-export default function (finder, ecModel) {
-    var point = [];
+export default function (finder: {
+    seriesIndex?: number
+    dataIndex?: number | number[]
+    dataIndexInside?: number | number[]
+    name?: string | string[]
+}, ecModel: GlobalModel): {
+    point: number[]
+    el?: Element
+} {
+    var point: number[] = [];
     var seriesIndex = finder.seriesIndex;
     var seriesModel;
     if (seriesIndex == null || !(
         seriesModel = ecModel.getSeriesByIndex(seriesIndex)
     )) {
-        return {point: []};
+        return {
+            point: []
+        };
     }
 
     var data = seriesModel.getData();
-    var dataIndex = modelUtil.queryDataIndex(data, finder);
+    var dataIndex = modelUtil.queryDataIndex(data, finder as Payload);
     if (dataIndex == null || dataIndex < 0 || zrUtil.isArray(dataIndex)) {
         return {point: []};
     }
@@ -54,7 +65,7 @@ export default function (finder, ecModel) {
             data.getValues(
                 zrUtil.map(coordSys.dimensions, function (dim) {
                     return data.mapDimension(dim);
-                }), dataIndex, true
+                }), dataIndex
             )
         ) || [];
     }

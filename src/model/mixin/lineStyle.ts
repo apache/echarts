@@ -44,7 +44,7 @@ type LineStyleProps = Pick<StyleProps, LineStyleKeys>
 
 class LineStyleMixin {
 
-    getLineStyle(this: Model, excludes?: (keyof LineStyleOption)[]): LineStyleProps {
+    getLineStyle(this: Model, excludes?: readonly (keyof LineStyleOption)[]): LineStyleProps {
         var style = getLineStyle(this, excludes);
         // Always set lineDash whether dashed, otherwise we can not
         // erase the previous style when assigning to el.style.

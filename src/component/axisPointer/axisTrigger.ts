@@ -17,50 +17,107 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
-import {makeInner} from '../../util/model';
+import {makeInner, ModelFinderObject} from '../../util/model';
 import * as modelHelper from './modelHelper';
 import findPointFromSeries from './findPointFromSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Dictionary, Payload, CommonAxisPointerOption } from '../../util/types';
+import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
+import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';
 
-var each = zrUtil.each;
-var curry = zrUtil.curry;
-var inner = makeInner();
+var inner = makeInner<{
+    axisPointerLastHighlights: Dictionary<BatchItem>
+}>();
+
+type AxisValue = CommonAxisPointerOption['value'];
+
+interface DataIndex {
+    seriesIndex: number
+    dataIndex: number
+    dataIndexInside: number
+}
+
+type BatchItem = DataIndex;
+
+interface DataByAxis {
+    // TODO: TYPE Value type
+    value: string | number
+    axisIndex: number
+    axisDim: string
+    axisType: string
+    axisId: string
+
+    seriesDataIndices: DataIndex[]
+
+    valueLabelOpt: {
+        precision: AxisPointerOption['label']['precision']
+        formatter: AxisPointerOption['label']['formatter']
+    }
+}
+interface DataByCoordSys {
+    coordSysId: string
+    coordSysIndex: number
+    coordSysType: string
+    coordSysMainType: string
+    dataByAxis: DataByAxis[]
+}
+interface DataByCoordSysCollection {
+    list: DataByCoordSys[]
+    map: Dictionary<DataByCoordSys>
+}
+
+type CollectedCoordInfo = ReturnType<typeof modelHelper['collect']>
+type CollectedAxisInfo = CollectedCoordInfo['axesInfo'][string]
+
+interface AxisTriggerPayload extends Payload {
+    currTrigger?: 'click' | 'mousemove' | 'leave'
+    /**
+     * x and y, which are mandatory, specify a point to trigger axisPointer and tooltip.
+     */
+    x?: number
+    /**
+     * x and y, which are mandatory, specify a point to trigger axisPointer and tooltip.
+     */
+    y?: number
+    /**
+     * finder, optional, restrict target axes.
+     */
+    seriesIndex?: number
+    dataIndex: number
+
+    axesInfo?: {
+        // 'x'|'y'|'angle'
+        axisDim?: string
+        axisIndex?: number
+        value?: AxisValue
+    }[]
+
+    dispatchAction: ExtensionAPI['dispatchAction']
+}
+
+type ShowValueMap = Dictionary<{
+    value: AxisValue
+    payloadBatch: BatchItem[]
+}>
 
 /**
  * Basic logic: check all axis, if they do not demand show/highlight,
  * then hide/downplay them.
  *
- * @param {Object} coordSysAxesInfo
- * @param {Object} payload
- * @param {string} [payload.currTrigger] 'click' | 'mousemove' | 'leave'
- * @param {Array.<number>} [payload.x] x and y, which are mandatory, specify a point to
- *              trigger axisPointer and tooltip.
- * @param {Array.<number>} [payload.y] x and y, which are mandatory, specify a point to
- *              trigger axisPointer and tooltip.
- * @param {Object} [payload.seriesIndex] finder, optional, restrict target axes.
- * @param {Object} [payload.dataIndex] finder, restrict target axes.
- * @param {Object} [payload.axesInfo] finder, restrict target axes.
- *        [{
- *          axisDim: 'x'|'y'|'angle'|...,
- *          axisIndex: ...,
- *          value: ...
- *        }, ...]
- * @param {Function} [payload.dispatchAction]
- * @param {Object} [payload.tooltipOption]
- * @param {Object|Array.<number>|Function} [payload.position] Tooltip position,
- *        which can be specified in dispatchAction
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- * @return {Object} content of event obj for echarts.connect.
+ * @return content of event obj for echarts.connect.
  */
-export default function (payload, ecModel, api) {
+export default function (
+    payload: AxisTriggerPayload,
+    ecModel: GlobalModel,
+    api: ExtensionAPI
+) {
     var currTrigger = payload.currTrigger;
     var point = [payload.x, payload.y];
     var finder = payload;
-    var dispatchAction = payload.dispatchAction || zrUtil.bind(api.dispatchAction, api);
-    var coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
+    var dispatchAction = payload.dispatchAction || bind(api.dispatchAction, api);
+    var coordSysAxesInfo = (ecModel.getComponent('axisPointer') as AxisPointerModel)
+        .coordSysAxesInfo as CollectedCoordInfo;
 
     // Pending
     // See #6121. But we are not able to reproduce it yet.
@@ -88,10 +145,13 @@ export default function (payload, ecModel, api) {
 
     var axesInfo = coordSysAxesInfo.axesInfo;
     var shouldHide = currTrigger === 'leave' || illegalPoint(point);
-    var outputFinder = {};
+    var outputPayload = {} as AxisTriggerPayload;
 
-    var showValueMap = {};
-    var dataByCoordSys = {list: [], map: {}};
+    var showValueMap: ShowValueMap = {};
+    var dataByCoordSys: DataByCoordSysCollection = {
+        list: [],
+        map: {}
+    };
     var updaters = {
         showPointer: curry(showPointer, showValueMap),
         showTooltip: curry(showTooltip, dataByCoordSys)
@@ -111,13 +171,13 @@ export default function (payload, ecModel, api) {
                 if (val == null && !isIllegalPoint) {
                     val = axis.pointToData(point);
                 }
-                val != null && processOnAxis(axisInfo, val, updaters, false, outputFinder);
+                val != null && processOnAxis(axisInfo, val, updaters, false, outputPayload);
             }
         });
     });
 
     // Process for linked axes.
-    var linkTriggers = {};
+    var linkTriggers: Dictionary<AxisValue> = {};
     each(axesInfo, function (tarAxisInfo, tarKey) {
         var linkGroup = tarAxisInfo.linkGroup;
 
@@ -137,17 +197,26 @@ export default function (payload, ecModel, api) {
         }
     });
     each(linkTriggers, function (val, tarKey) {
-        processOnAxis(axesInfo[tarKey], val, updaters, true, outputFinder);
+        processOnAxis(axesInfo[tarKey], val, updaters, true, outputPayload);
     });
 
-    updateModelActually(showValueMap, axesInfo, outputFinder);
+    updateModelActually(showValueMap, axesInfo, outputPayload);
     dispatchTooltipActually(dataByCoordSys, point, payload, dispatchAction);
     dispatchHighDownActually(axesInfo, dispatchAction, api);
 
-    return outputFinder;
+    return outputPayload;
 }
 
-function processOnAxis(axisInfo, newValue, updaters, dontSnap, outputFinder) {
+function processOnAxis(
+    axisInfo: CollectedCoordInfo['axesInfo'][string],
+    newValue: AxisValue,
+    updaters: {
+        showPointer: Curry1<typeof showPointer, ShowValueMap>
+        showTooltip: Curry1<typeof showTooltip, DataByCoordSysCollection>
+    },
+    noSnap: boolean,
+    outputFinder: ModelFinderObject
+) {
     var axis = axisInfo.axis;
 
     if (axis.scale.isBlank() || !axis.containData(newValue)) {
@@ -167,28 +236,28 @@ function processOnAxis(axisInfo, newValue, updaters, dontSnap, outputFinder) {
     // Fill content of event obj for echarts.connect.
     // By defualt use the first involved series data as a sample to connect.
     if (payloadBatch[0] && outputFinder.seriesIndex == null) {
-        zrUtil.extend(outputFinder, payloadBatch[0]);
+        extend(outputFinder, payloadBatch[0]);
     }
 
     // If no linkSource input, this process is for collecting link
     // target, where snap should not be accepted.
-    if (!dontSnap && axisInfo.snap) {
+    if (!noSnap && axisInfo.snap) {
         if (axis.containData(snapToValue) && snapToValue != null) {
             newValue = snapToValue;
         }
     }
 
-    updaters.showPointer(axisInfo, newValue, payloadBatch, outputFinder);
+    updaters.showPointer(axisInfo, newValue, payloadBatch);
     // Tooltip should always be snapToValue, otherwise there will be
     // incorrect "axis value ~ series value" mapping displayed in tooltip.
     updaters.showTooltip(axisInfo, payloadInfo, snapToValue);
 }
 
-function buildPayloadsBySeries(value, axisInfo) {
+function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
     var axis = axisInfo.axis;
     var dim = axis.dim;
     var snapToValue = value;
-    var payloadBatch = [];
+    var payloadBatch: BatchItem[] = [];
     var minDist = Number.MAX_VALUE;
     var minDiff = -1;
 
@@ -247,11 +316,24 @@ function buildPayloadsBySeries(value, axisInfo) {
     };
 }
 
-function showPointer(showValueMap, axisInfo, value, payloadBatch) {
-    showValueMap[axisInfo.key] = {value: value, payloadBatch: payloadBatch};
+function showPointer(
+    showValueMap: ShowValueMap,
+    axisInfo: CollectedAxisInfo,
+    value: AxisValue,
+    payloadBatch?: BatchItem[]
+) {
+    showValueMap[axisInfo.key] = {
+        value: value,
+        payloadBatch: payloadBatch
+    };
 }
 
-function showTooltip(dataByCoordSys, axisInfo, payloadInfo, value) {
+function showTooltip(
+    dataByCoordSys: DataByCoordSysCollection,
+    axisInfo: CollectedCoordInfo['axesInfo'][string],
+    payloadInfo: { payloadBatch: BatchItem[] },
+    value: AxisValue
+) {
     var payloadBatch = payloadInfo.payloadBatch;
     var axis = axisInfo.axis;
     var axisModel = axis.model;
@@ -288,15 +370,19 @@ function showTooltip(dataByCoordSys, axisInfo, payloadInfo, value) {
         // here. Considering axisPointerModel used here is volatile, which is hard
         // to be retrieve in TooltipView, we prepare parameters here.
         valueLabelOpt: {
-            precision: axisPointerModel.get('label.precision'),
-            formatter: axisPointerModel.get('label.formatter')
+            precision: axisPointerModel.get(['label', 'precision']),
+            formatter: axisPointerModel.get(['label', 'formatter'])
         },
         seriesDataIndices: payloadBatch.slice()
     });
 }
 
-function updateModelActually(showValueMap, axesInfo, outputFinder) {
-    var outputAxesInfo = outputFinder.axesInfo = [];
+function updateModelActually(
+    showValueMap: ShowValueMap,
+    axesInfo: Dictionary<CollectedAxisInfo>,
+    outputPayload: AxisTriggerPayload
+) {
+    var outputAxesInfo: AxisTriggerPayload['axesInfo'] = outputPayload.axesInfo = [];
     // Basic logic: If no 'show' required, 'hide' this axisPointer.
     each(axesInfo, function (axisInfo, key) {
         var option = axisInfo.axisPointerModel.option;
@@ -325,7 +411,12 @@ function updateModelActually(showValueMap, axesInfo, outputFinder) {
     });
 }
 
-function dispatchTooltipActually(dataByCoordSys, point, payload, dispatchAction) {
+function dispatchTooltipActually(
+    dataByCoordSys: DataByCoordSysCollection,
+    point: number[],
+    payload: AxisTriggerPayload,
+    dispatchAction: ExtensionAPI['dispatchAction']
+) {
     // Basic logic: If no showTip required, hideTip will be dispatched.
     if (illegalPoint(point) || !dataByCoordSys.list.length) {
         dispatchAction({type: 'hideTip'});
@@ -336,7 +427,7 @@ function dispatchTooltipActually(dataByCoordSys, point, payload, dispatchAction)
     // convinient to fetch payload.seriesIndex and payload.dataIndex
     // dirtectly. So put the first seriesIndex and dataIndex of the first
     // axis on the payload.
-    var sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {};
+    var sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {} as DataIndex;
 
     dispatchAction({
         type: 'showTip',
@@ -352,15 +443,19 @@ function dispatchTooltipActually(dataByCoordSys, point, payload, dispatchAction)
     });
 }
 
-function dispatchHighDownActually(axesInfo, dispatchAction, api) {
+function dispatchHighDownActually(
+    axesInfo: Dictionary<CollectedAxisInfo>,
+    dispatchAction: ExtensionAPI['dispatchAction'],
+    api: ExtensionAPI
+) {
     // FIXME
     // highlight status modification shoule be a stage of main process?
     // (Consider confilct (e.g., legend and axisPointer) and setOption)
 
     var zr = api.getZr();
-    var highDownKey = 'axisPointerLastHighlights';
+    var highDownKey = 'axisPointerLastHighlights' as const;
     var lastHighlights = inner(zr)[highDownKey] || {};
-    var newHighlights = inner(zr)[highDownKey] = {};
+    var newHighlights: Dictionary<BatchItem> = inner(zr)[highDownKey] = {};
 
     // Update highlight/downplay status according to axisPointer model.
     // Build hash map and remove duplicate incidentally.
@@ -373,12 +468,12 @@ function dispatchHighDownActually(axesInfo, dispatchAction, api) {
     });
 
     // Diff.
-    var toHighlight = [];
-    var toDownplay = [];
-    zrUtil.each(lastHighlights, function (batchItem, key) {
+    var toHighlight: BatchItem[] = [];
+    var toDownplay: BatchItem[] = [];
+    each(lastHighlights, function (batchItem, key) {
         !newHighlights[key] && toDownplay.push(batchItem);
     });
-    zrUtil.each(newHighlights, function (batchItem, key) {
+    each(newHighlights, function (batchItem, key) {
         !lastHighlights[key] && toHighlight.push(batchItem);
     });
 
@@ -390,7 +485,10 @@ function dispatchHighDownActually(axesInfo, dispatchAction, api) {
     });
 }
 
-function findInputAxisInfo(inputAxesInfo, axisInfo) {
+function findInputAxisInfo(
+    inputAxesInfo: AxisTriggerPayload['axesInfo'],
+    axisInfo: CollectedAxisInfo
+) {
     for (var i = 0; i < (inputAxesInfo || []).length; i++) {
         var inputAxisInfo = inputAxesInfo[i];
         if (axisInfo.axis.dim === inputAxisInfo.axisDim
@@ -401,16 +499,22 @@ function findInputAxisInfo(inputAxesInfo, axisInfo) {
     }
 }
 
-function makeMapperParam(axisInfo) {
+function makeMapperParam(axisInfo: CollectedAxisInfo) {
     var axisModel = axisInfo.axis.model;
-    var item = {};
+    var item = {} as {
+        axisDim: string
+        axisIndex: number
+        axisId: string
+        axisName: string
+        // TODO `dim`AxisIndex, `dim`AxisName, `dim`AxisId?
+    };
     var dim = item.axisDim = axisInfo.axis.dim;
-    item.axisIndex = item[dim + 'AxisIndex'] = axisModel.componentIndex;
-    item.axisName = item[dim + 'AxisName'] = axisModel.name;
-    item.axisId = item[dim + 'AxisId'] = axisModel.id;
+    item.axisIndex = (item as any)[dim + 'AxisIndex'] = axisModel.componentIndex;
+    item.axisName = (item as any)[dim + 'AxisName'] = axisModel.name;
+    item.axisId = (item as any)[dim + 'AxisId'] = axisModel.id;
     return item;
 }
 
-function illegalPoint(point) {
+function illegalPoint(point?: number[]) {
     return !point || point[0] == null || isNaN(point[0]) || point[1] == null || isNaN(point[1]);
 }

@@ -1293,7 +1293,7 @@ export function applyTransform(
     target: vector.VectorArray,
     transform: Transformable | matrix.MatrixArray,
     invert?: boolean
-): vector.VectorArray {
+): number[] {
     if (transform && !zrUtil.isArrayLike(transform)) {
         transform = Transformable.getLocalTransform(transform);
     }

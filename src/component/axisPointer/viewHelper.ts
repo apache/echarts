@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import * as textContain from 'zrender/src/contain/text';
@@ -26,14 +24,36 @@ import * as formatUtil from '../../util/format';
 import * as matrix from 'zrender/src/core/matrix';
 import * as axisHelper from '../../coord/axisHelper';
 import AxisBuilder from '../axis/AxisBuilder';
+import { StyleProps } from 'zrender/src/graphic/Style';
+import Axis from '../../coord/Axis';
+import {
+    ScaleDataValue, CallbackDataParams, ZRTextAlign, ZRTextVerticalAlign, ZRColor, CommonAxisPointerOption
+} from '../../util/types';
+import { VectorArray } from 'zrender/src/core/vector';
+import GlobalModel from '../../model/Global';
+import IntervalScale from '../../scale/Interval';
+import Axis2D from '../../coord/cartesian/Axis2D';
+import { AxisPointerElementOptions } from './BaseAxisPointer';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import Model from '../../model/Model';
 
-/**
- * @param {module:echarts/model/Model} axisPointerModel
- */
-export function buildElStyle(axisPointerModel) {
+interface LayoutInfo {
+    position: VectorArray
+    rotation: number
+    labelOffset?: number
+    labelDirection?: -1 | 1
+    labelMargin?: number
+}
+
+// Not use top level axisPointer model
+type AxisPointerModel = Model<CommonAxisPointerOption>
+
+export function buildElStyle(axisPointerModel: AxisPointerModel) {
     var axisPointerType = axisPointerModel.get('type');
-    var styleModel = axisPointerModel.getModel(axisPointerType + 'Style');
-    var style;
+    var styleModel = axisPointerModel.getModel(axisPointerType + 'Style' as 'lineStyle' | 'shadowStyle');
+    var style: StyleProps;
     if (axisPointerType === 'line') {
         style = styleModel.getLineStyle();
         style.fill = null;
@@ -49,15 +69,23 @@ export function buildElStyle(axisPointerModel) {
  * @param {Function} labelPos {align, verticalAlign, position}
  */
 export function buildLabelElOption(
-    elOption, axisModel, axisPointerModel, api, labelPos
+    elOption: AxisPointerElementOptions,
+    axisModel: AxisBaseModel,
+    axisPointerModel: AxisPointerModel,
+    api: ExtensionAPI,
+    labelPos: {
+        align?: ZRTextAlign
+        verticalAlign?: ZRTextVerticalAlign
+        position: number[]
+    }
 ) {
     var value = axisPointerModel.get('value');
     var text = getValueLabel(
         value, axisModel.axis, axisModel.ecModel,
         axisPointerModel.get('seriesDataIndices'),
         {
-            precision: axisPointerModel.get('label.precision'),
-            formatter: axisPointerModel.get('label.formatter')
+            precision: axisPointerModel.get(['label', 'precision']),
+            formatter: axisPointerModel.get(['label', 'formatter'])
         }
     );
     var labelModel = axisPointerModel.getModel('label');
@@ -81,9 +109,9 @@ export function buildLabelElOption(
     // Not overflow ec container
     confineInContainer(position, width, height, api);
 
-    var bgColor = labelModel.get('backgroundColor');
+    var bgColor = labelModel.get('backgroundColor') as ZRColor;
     if (!bgColor || bgColor === 'auto') {
-        bgColor = axisModel.get('axisLine.lineStyle.color');
+        bgColor = axisModel.get(['axisLine', 'lineStyle', 'color']);
     }
 
     elOption.label = {
@@ -110,7 +138,7 @@ export function buildLabelElOption(
 }
 
 // Do not overflow ec container
-function confineInContainer(position, width, height, api) {
+function confineInContainer(position: number[], width: number, height: number, api: ExtensionAPI) {
     var viewWidth = api.getWidth();
     var viewHeight = api.getHeight();
     position[0] = Math.min(position[0] + width, viewWidth) - width;
@@ -119,21 +147,23 @@ function confineInContainer(position, width, height, api) {
     position[1] = Math.max(position[1], 0);
 }
 
-/**
- * @param {number} value
- * @param {module:echarts/coord/Axis} axis
- * @param {module:echarts/model/Global} ecModel
- * @param {Object} opt
- * @param {Array.<Object>} seriesDataIndices
- * @param {number|string} opt.precision 'auto' or a number
- * @param {string|Function} opt.formatter label formatter
- */
-export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
+export function getValueLabel(
+    value: ScaleDataValue,
+    axis: Axis,
+    ecModel: GlobalModel,
+    seriesDataIndices: CommonAxisPointerOption['seriesDataIndices'],
+    opt?: {
+        precision?: number | 'auto'
+        formatter?: CommonAxisPointerOption['label']['formatter']
+    }
+): string {
     value = axis.scale.parse(value);
-    var text = axis.scale.getLabel(
+    var text = (axis.scale as IntervalScale).getLabel(
         // If `precision` is set, width can be fixed (like '12.00500'), which
         // helps to debounce when when moving label.
-        value, {precision: opt.precision}
+        value, {
+            precision: opt.precision
+        }
     );
     var formatter = opt.formatter;
 
@@ -141,8 +171,8 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
         var params = {
             value: axisHelper.getAxisRawValue(axis, value),
             axisDimension: axis.dim,
-            axisIndex: axis.index,
-            seriesData: []
+            axisIndex: (axis as Axis2D).index,  // Only Carteian Axis has index
+            seriesData: [] as CallbackDataParams[]
         };
         zrUtil.each(seriesDataIndices, function (idxItem) {
             var series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
@@ -162,14 +192,11 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
     return text;
 }
 
-/**
- * @param {module:echarts/coord/Axis} axis
- * @param {number} value
- * @param {Object} layoutInfo {
- *  rotation, position, labelOffset, labelDirection, labelMargin
- * }
- */
-export function getTransformedPosition(axis, value, layoutInfo) {
+export function getTransformedPosition(
+    axis: Axis,
+    value: ScaleDataValue,
+    layoutInfo: LayoutInfo
+): number[] {
     var transform = matrix.create();
     matrix.rotate(transform, transform, layoutInfo.rotation);
     matrix.translate(transform, transform, layoutInfo.position);
@@ -182,12 +209,18 @@ export function getTransformedPosition(axis, value, layoutInfo) {
 }
 
 export function buildCartesianSingleLabelElOption(
-    value, elOption, layoutInfo, axisModel, axisPointerModel, api
+    value: ScaleDataValue,
+    elOption: AxisPointerElementOptions,
+    layoutInfo: LayoutInfo,
+    axisModel: CartesianAxisModel,
+    axisPointerModel: AxisPointerModel,
+    api: ExtensionAPI
 ) {
+    // @ts-ignore
     var textLayout = AxisBuilder.innerTextLayout(
         layoutInfo.rotation, 0, layoutInfo.labelDirection
     );
-    layoutInfo.labelMargin = axisPointerModel.get('label.margin');
+    layoutInfo.labelMargin = axisPointerModel.get(['label', 'margin']);
     buildLabelElOption(elOption, axisModel, axisPointerModel, api, {
         position: getTransformedPosition(axisModel.axis, value, layoutInfo),
         align: textLayout.textAlign,
@@ -195,12 +228,7 @@ export function buildCartesianSingleLabelElOption(
     });
 }
 
-/**
- * @param {Array.<number>} p1
- * @param {Array.<number>} p2
- * @param {number} [xDimIndex=0] or 1
- */
-export function makeLineShape(p1, p2, xDimIndex) {
+export function makeLineShape(p1: number[], p2: number[], xDimIndex?: number) {
     xDimIndex = xDimIndex || 0;
     return {
         x1: p1[xDimIndex],
@@ -210,12 +238,7 @@ export function makeLineShape(p1, p2, xDimIndex) {
     };
 }
 
-/**
- * @param {Array.<number>} xy
- * @param {Array.<number>} wh
- * @param {number} [xDimIndex=0] or 1
- */
-export function makeRectShape(xy, wh, xDimIndex) {
+export function makeRectShape(xy: number[], wh: number[], xDimIndex?: number) {
     xDimIndex = xDimIndex || 0;
     return {
         x: xy[xDimIndex],
@@ -225,7 +248,14 @@ export function makeRectShape(xy, wh, xDimIndex) {
     };
 }
 
-export function makeSectorShape(cx, cy, r0, r, startAngle, endAngle) {
+export function makeSectorShape(
+    cx: number,
+    cy: number,
+    r0: number,
+    r: number,
+    startAngle: number,
+    endAngle: number
+) {
     return {
         cx: cx,
         cy: cy,

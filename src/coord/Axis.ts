@@ -29,6 +29,7 @@ import { DimensionName, ScaleDataValue } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, OptionAxisType } from './axisCommonTypes';
+import { AxisBaseModel } from './AxisBaseModel';
 
 var NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -36,7 +37,6 @@ interface TickCoord {
     coord: number;
     tickValue?: number;
 }
-
 
 /**
  * Base class of Axis.
@@ -61,7 +61,7 @@ class Axis {
     private _extent: [number, number];
 
     // Injected outside
-    model: Model;
+    model: AxisBaseModel;
     onBand: AxisBaseOption['boundaryGap'] = false;
     inverse: AxisBaseOption['inverse'] = false;
 

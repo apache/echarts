@@ -23,7 +23,7 @@ import List from '../data/List';
 import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
 
-export default function (seriesType: string, defaultSymbolType: string, legendSymbol: string): StageHandler {
+export default function (seriesType: string, defaultSymbolType: string, legendSymbol?: string): StageHandler {
     // Encoding visual for all series include which is filtered for legend drawing
     return {
         seriesType: seriesType,

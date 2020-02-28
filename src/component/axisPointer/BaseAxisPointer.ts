@@ -17,75 +17,114 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
-import * as clazzUtil from '../../util/clazz';
 import * as graphic from '../../util/graphic';
 import * as axisPointerModelHelper from './modelHelper';
 import * as eventTool from 'zrender/src/core/event';
 import * as throttleUtil from '../../util/throttle';
 import {makeInner} from '../../util/model';
+import { AxisPointer } from './AxisPointer';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { VectorArray } from 'zrender/src/core/vector';
+import ExtensionAPI from '../../ExtensionAPI';
+import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
+import Element from 'zrender/src/Element';
+import { VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../util/types';
+import { PathProps } from 'zrender/src/graphic/Path';
+import Model from '../../model/Model';
 
-var inner = makeInner();
+var inner = makeInner<{
+    lastProp?: DisplayableProps
+    labelEl?: graphic.Rect
+    pointerEl?: Displayable
+}>();
 var clone = zrUtil.clone;
 var bind = zrUtil.bind;
 
-/**
- * Base axis pointer class in 2D.
- * Implemenents {module:echarts/component/axis/IAxisPointer}.
- */
-function BaseAxisPointer() {
+type Icon = ReturnType<typeof graphic.createIcon>
+interface Transform {
+    position: VectorArray,
+    rotation: number
 }
 
-BaseAxisPointer.prototype = {
+type AxisValue = CommonAxisPointerOption['value']
+
+// Not use top level axisPointer model
+type AxisPointerModel = Model<CommonAxisPointerOption>
+
+interface BaseAxisPointer {
 
     /**
-     * @private
+     * Should be implemenented by sub-class if support `handle`.
      */
-    _group: null,
+    getHandleTransform(value: AxisValue, axisModel: AxisBaseModel, axisPointerModel: AxisPointerModel): Transform
 
     /**
-     * @private
+     * * Should be implemenented by sub-class if support `handle`.
      */
-    _lastGraphicKey: null,
+    updateHandleTransform(
+        transform: Transform,
+        delta: number[],
+        axisModel: AxisBaseModel,
+        axisPointerModel: AxisPointerModel
+    ): Transform & {
+        cursorPoint: number[]
+        tooltipOption?: {
+            verticalAlign?: VerticalAlign
+            align?: HorizontalAlign
+        }
+    }
+
+}
+
+export interface AxisPointerElementOptions {
+    graphicKey: string
+
+    pointer: PathProps & {
+        type: 'Line' | 'Rect' | 'Circle' | 'Sector'
+    }
+
+    label: PathProps
+}
+/**
+ * Base axis pointer class in 2D.
+ */
+class BaseAxisPointer implements AxisPointer {
+
+    private _group: graphic.Group
+
+    private _lastGraphicKey: string
+
+    private _handle: Icon
+
+    private _dragging = false
+
+    private _lastValue: AxisValue
+
+    private _lastStatus: CommonAxisPointerOption['status']
+
+    private _payloadInfo: ReturnType<BaseAxisPointer['updateHandleTransform']>
 
     /**
-     * @private
+     * If have transition animation
      */
-    _handle: null,
+    private _moveAnimation: boolean
 
-    /**
-     * @private
-     */
-    _dragging: false,
-
-    /**
-     * @private
-     */
-    _lastValue: null,
-
-    /**
-     * @private
-     */
-    _lastStatus: null,
-
-    /**
-     * @private
-     */
-    _payloadInfo: null,
+    private _axisModel: AxisBaseModel
+    private _axisPointerModel: AxisPointerModel
+    private _api: ExtensionAPI
 
     /**
      * In px, arbitrary value. Do not set too small,
      * no animation is ok for most cases.
-     * @protected
      */
-    animationThreshold: 15,
+    protected animationThreshold = 15
 
     /**
      * @implement
      */
-    render: function (axisModel, axisPointerModel, api, forceRender) {
+    render(axisModel: AxisBaseModel, axisPointerModel: AxisPointerModel, api: ExtensionAPI, forceRender?: boolean) {
         var value = axisPointerModel.get('value');
         var status = axisPointerModel.get('status');
 
@@ -120,7 +159,7 @@ BaseAxisPointer.prototype = {
         handle && handle.show();
 
         // Otherwise status is 'show'
-        var elOption = {};
+        var elOption = {} as AxisPointerElementOptions;
         this.makeElOption(elOption, value, axisModel, axisPointerModel, api);
 
         // Enable change axis pointer type.
@@ -141,33 +180,33 @@ BaseAxisPointer.prototype = {
         }
         else {
             var doUpdateProps = zrUtil.curry(updateProps, axisPointerModel, moveAnimation);
-            this.updatePointerEl(group, elOption, doUpdateProps, axisPointerModel);
+            this.updatePointerEl(group, elOption, doUpdateProps);
             this.updateLabelEl(group, elOption, doUpdateProps, axisPointerModel);
         }
 
         updateMandatoryProps(group, axisPointerModel, true);
 
         this._renderHandle(value);
-    },
+    }
 
     /**
      * @implement
      */
-    remove: function (api) {
+    remove(api: ExtensionAPI) {
         this.clear(api);
-    },
+    }
 
     /**
      * @implement
      */
-    dispose: function (api) {
+    dispose(api: ExtensionAPI) {
         this.clear(api);
-    },
+    }
 
     /**
      * @protected
      */
-    determineAnimation: function (axisModel, axisPointerModel) {
+    determineAnimation(axisModel: AxisBaseModel, axisPointerModel: AxisPointerModel): boolean {
         var animation = axisPointerModel.get('animation');
         var axis = axisModel.axis;
         var isCategoryAxis = axis.type === 'category';
@@ -198,20 +237,31 @@ BaseAxisPointer.prototype = {
         }
 
         return animation === true;
-    },
+    }
 
     /**
      * add {pointer, label, graphicKey} to elOption
      * @protected
      */
-    makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
+    makeElOption(
+        elOption: AxisPointerElementOptions,
+        value: AxisValue,
+        axisModel: AxisBaseModel,
+        axisPointerModel: AxisPointerModel,
+        api: ExtensionAPI
+    ) {
         // Shoule be implemenented by sub-class.
-    },
+    }
 
     /**
      * @protected
      */
-    createPointerEl: function (group, elOption, axisModel, axisPointerModel) {
+    createPointerEl(
+        group: graphic.Group,
+        elOption: AxisPointerElementOptions,
+        axisModel: AxisBaseModel,
+        axisPointerModel: AxisPointerModel
+    ) {
         var pointerOption = elOption.pointer;
         if (pointerOption) {
             var pointerEl = inner(group).pointerEl = new graphic[pointerOption.type](
@@ -219,12 +269,17 @@ BaseAxisPointer.prototype = {
             );
             group.add(pointerEl);
         }
-    },
+    }
 
     /**
      * @protected
      */
-    createLabelEl: function (group, elOption, axisModel, axisPointerModel) {
+    createLabelEl(
+        group: graphic.Group,
+        elOption: AxisPointerElementOptions,
+        axisModel: AxisBaseModel,
+        axisPointerModel: AxisPointerModel
+    ) {
         if (elOption.label) {
             var labelEl = inner(group).labelEl = new graphic.Rect(
                 clone(elOption.label)
@@ -233,23 +288,32 @@ BaseAxisPointer.prototype = {
             group.add(labelEl);
             updateLabelShowHide(labelEl, axisPointerModel);
         }
-    },
+    }
 
     /**
      * @protected
      */
-    updatePointerEl: function (group, elOption, updateProps) {
+    updatePointerEl(
+        group: graphic.Group,
+        elOption: AxisPointerElementOptions,
+        updateProps: (el: Element, props: PathProps) => void
+    ) {
         var pointerEl = inner(group).pointerEl;
         if (pointerEl && elOption.pointer) {
             pointerEl.setStyle(elOption.pointer.style);
             updateProps(pointerEl, {shape: elOption.pointer.shape});
         }
-    },
+    }
 
     /**
      * @protected
      */
-    updateLabelEl: function (group, elOption, updateProps, axisPointerModel) {
+    updateLabelEl(
+        group: graphic.Group,
+        elOption: AxisPointerElementOptions,
+        updateProps: (el: Element, props: PathProps) => void,
+        axisPointerModel: AxisPointerModel
+    ) {
         var labelEl = inner(group).labelEl;
         if (labelEl) {
             labelEl.setStyle(elOption.label.style);
@@ -262,12 +326,12 @@ BaseAxisPointer.prototype = {
 
             updateLabelShowHide(labelEl, axisPointerModel);
         }
-    },
+    }
 
     /**
      * @private
      */
-    _renderHandle: function (value) {
+    _renderHandle(value: AxisValue) {
         if (this._dragging || !this.updateHandleTransform) {
             return;
         }
@@ -292,7 +356,7 @@ BaseAxisPointer.prototype = {
                 {
                     cursor: 'move',
                     draggable: true,
-                    onmousemove: function (e) {
+                    onmousemove(e) {
                         // Fot mobile devicem, prevent screen slider on the button.
                         eventTool.stop(e.event);
                     },
@@ -307,18 +371,17 @@ BaseAxisPointer.prototype = {
         updateMandatoryProps(handle, axisPointerModel, false);
 
         // update style
-        var includeStyles = [
+        handle.setStyle(handleModel.getItemStyle(null, [
             'color', 'borderColor', 'borderWidth', 'opacity',
             'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
-        ];
-        handle.setStyle(handleModel.getItemStyle(null, includeStyles));
+        ]));
 
         // update position
         var handleSize = handleModel.get('size');
         if (!zrUtil.isArray(handleSize)) {
             handleSize = [handleSize, handleSize];
         }
-        handle.attr('scale', [handleSize[0] / 2, handleSize[1] / 2]);
+        (handle as graphic.Path).attr('scale', [handleSize[0] / 2, handleSize[1] / 2]);
 
         throttleUtil.createOrUpdate(
             this,
@@ -328,12 +391,12 @@ BaseAxisPointer.prototype = {
         );
 
         this._moveHandleToValue(value, isInit);
-    },
+    }
 
     /**
      * @private
      */
-    _moveHandleToValue: function (value, isInit) {
+    _moveHandleToValue(value: AxisValue, isInit?: boolean) {
         updateProps(
             this._axisPointerModel,
             !isInit && this._moveAnimation,
@@ -342,12 +405,12 @@ BaseAxisPointer.prototype = {
                 value, this._axisModel, this._axisPointerModel
             ))
         );
-    },
+    }
 
     /**
      * @private
      */
-    _onHandleDragMove: function (dx, dy) {
+    _onHandleDragMove(dx: number, dy: number) {
         var handle = this._handle;
         if (!handle) {
             return;
@@ -365,17 +428,17 @@ BaseAxisPointer.prototype = {
         this._payloadInfo = trans;
 
         handle.stopAnimation();
-        handle.attr(getHandleTransProps(trans));
+        (handle as graphic.Path).attr(getHandleTransProps(trans));
         inner(handle).lastProp = null;
 
         this._doDispatchAxisPointer();
-    },
+    }
 
     /**
      * Throttled method.
      * @private
      */
-    _doDispatchAxisPointer: function () {
+    _doDispatchAxisPointer() {
         var handle = this._handle;
         if (!handle) {
             return;
@@ -393,12 +456,12 @@ BaseAxisPointer.prototype = {
                 axisIndex: axisModel.componentIndex
             }]
         });
-    },
+    }
 
     /**
      * @private
      */
-    _onHandleDragEnd: function (moveAnimation) {
+    _onHandleDragEnd() {
         this._dragging = false;
         var handle = this._handle;
         if (!handle) {
@@ -416,33 +479,12 @@ BaseAxisPointer.prototype = {
         this._api.dispatchAction({
             type: 'hideTip'
         });
-    },
-
-    /**
-     * Should be implemenented by sub-class if support `handle`.
-     * @protected
-     * @param {number} value
-     * @param {module:echarts/model/Model} axisModel
-     * @param {module:echarts/model/Model} axisPointerModel
-     * @return {Object} {position: [x, y], rotation: 0}
-     */
-    getHandleTransform: null,
-
-    /**
-     * * Should be implemenented by sub-class if support `handle`.
-     * @protected
-     * @param {Object} transform {position, rotation}
-     * @param {Array.<number>} delta [dx, dy]
-     * @param {module:echarts/model/Model} axisModel
-     * @param {module:echarts/model/Model} axisPointerModel
-     * @return {Object} {position: [x, y], rotation: 0, cursorPoint: [x, y]}
-     */
-    updateHandleTransform: null,
+    }
 
     /**
      * @private
      */
-    clear: function (api) {
+    clear(api: ExtensionAPI) {
         this._lastValue = null;
         this._lastStatus = null;
 
@@ -457,22 +499,16 @@ BaseAxisPointer.prototype = {
             this._handle = null;
             this._payloadInfo = null;
         }
-    },
+    }
 
     /**
      * @protected
      */
-    doClear: function () {
+    doClear() {
         // Implemented by sub-class if necessary.
-    },
+    }
 
-    /**
-     * @protected
-     * @param {Array.<number>} xy
-     * @param {Array.<number>} wh
-     * @param {number} [xDimIndex=0] or 1
-     */
-    buildLabel: function (xy, wh, xDimIndex) {
+    buildLabel(xy: number[], wh: number[], xDimIndex: 0 | 1) {
         xDimIndex = xDimIndex || 0;
         return {
             x: xy[xDimIndex],
@@ -481,22 +517,28 @@ BaseAxisPointer.prototype = {
             height: wh[1 - xDimIndex]
         };
     }
-};
-
-BaseAxisPointer.prototype.constructor = BaseAxisPointer;
+}
 
 
-function updateProps(animationModel, moveAnimation, el, props) {
+function updateProps(
+    animationModel: AxisPointerModel,
+    moveAnimation: boolean,
+    el: Element,
+    props: DisplayableProps
+) {
     // Animation optimize.
     if (!propsEqual(inner(el).lastProp, props)) {
         inner(el).lastProp = props;
         moveAnimation
-            ? graphic.updateProps(el, props, animationModel)
+            ? graphic.updateProps(el, props, animationModel as Model<
+                // Ignore animation property
+                Pick<CommonAxisPointerOption, 'animationDurationUpdate' | 'animationEasingUpdate'>
+            >)
             : (el.stopAnimation(), el.attr(props));
     }
 }
 
-function propsEqual(lastProps, newProps) {
+function propsEqual(lastProps: any, newProps: any) {
     if (zrUtil.isObject(lastProps) && zrUtil.isObject(newProps)) {
         var equals = true;
         zrUtil.each(newProps, function (item, key) {
@@ -509,22 +551,26 @@ function propsEqual(lastProps, newProps) {
     }
 }
 
-function updateLabelShowHide(labelEl, axisPointerModel) {
-    labelEl[axisPointerModel.get('label.show') ? 'show' : 'hide']();
+function updateLabelShowHide(labelEl: Element, axisPointerModel: AxisPointerModel) {
+    labelEl[axisPointerModel.get(['label', 'show']) ? 'show' : 'hide']();
 }
 
-function getHandleTransProps(trans) {
+function getHandleTransProps(trans: Transform): Transform {
     return {
         position: trans.position.slice(),
         rotation: trans.rotation || 0
     };
 }
 
-function updateMandatoryProps(group, axisPointerModel, silent) {
+function updateMandatoryProps(
+    group: Element,
+    axisPointerModel: AxisPointerModel,
+    silent?: boolean
+) {
     var z = axisPointerModel.get('z');
     var zlevel = axisPointerModel.get('zlevel');
 
-    group && group.traverse(function (el) {
+    group && group.traverse(function (el: Displayable) {
         if (el.type !== 'group') {
             z != null && (el.z = z);
             zlevel != null && (el.zlevel = zlevel);
@@ -532,7 +578,5 @@ function updateMandatoryProps(group, axisPointerModel, silent) {
         }
     });
 }
-
-clazzUtil.enableClassExtend(BaseAxisPointer);
 
 export default BaseAxisPointer;

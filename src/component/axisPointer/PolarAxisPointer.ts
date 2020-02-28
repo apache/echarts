@@ -17,23 +17,36 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as formatUtil from '../../util/format';
-import BaseAxisPointer from './BaseAxisPointer';
+import BaseAxisPointer, { AxisPointerElementOptions } from './BaseAxisPointer';
 import * as graphic from '../../util/graphic';
 import * as viewHelper from './viewHelper';
 import * as matrix from 'zrender/src/core/matrix';
 import AxisBuilder from '../axis/AxisBuilder';
 import AxisView from '../axis/AxisView';
+import { OptionDataValue, ScaleDataValue, CommonAxisPointerOption } from '../../util/types';
+import { PolarAxisModel } from '../../coord/polar/AxisModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import Polar from '../../coord/polar/Polar';
+import AngleAxis from '../../coord/polar/AngleAxis';
+import RadiusAxis from '../../coord/polar/RadiusAxis';
+import { PathProps } from 'zrender/src/graphic/Path';
+import Model from '../../model/Model';
 
+// Not use top level axisPointer model
+type AxisPointerModel = Model<CommonAxisPointerOption>
 
-var PolarAxisPointer = BaseAxisPointer.extend({
+class PolarAxisPointer extends BaseAxisPointer {
 
     /**
      * @override
      */
-    makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
+    makeElOption(
+        elOption: AxisPointerElementOptions,
+        value: OptionDataValue,
+        axisModel: PolarAxisModel,
+        axisPointerModel: Model<CommonAxisPointerOption>,
+        api: ExtensionAPI
+    ) {
         var axis = axisModel.axis;
 
         if (axis.dim === 'angle') {
@@ -45,29 +58,35 @@ var PolarAxisPointer = BaseAxisPointer.extend({
         var otherExtent = otherAxis.getExtent();
 
         var coordValue;
-        coordValue = axis['dataTo' + formatUtil.capitalFirst(axis.dim)](value);
+        coordValue = axis.dataToCoord(value);
 
         var axisPointerType = axisPointerModel.get('type');
         if (axisPointerType && axisPointerType !== 'none') {
             var elStyle = viewHelper.buildElStyle(axisPointerModel);
             var pointerOption = pointerShapeBuilder[axisPointerType](
-                axis, polar, coordValue, otherExtent, elStyle
+                axis, polar, coordValue, otherExtent
             );
             pointerOption.style = elStyle;
             elOption.graphicKey = pointerOption.type;
             elOption.pointer = pointerOption;
         }
 
-        var labelMargin = axisPointerModel.get('label.margin');
+        var labelMargin = axisPointerModel.get(['label', 'margin']);
         var labelPos = getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin);
         viewHelper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, labelPos);
     }
 
     // Do not support handle, utill any user requires it.
 
-});
+};
 
-function getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin) {
+function getLabelPosition(
+    value: ScaleDataValue,
+    axisModel: PolarAxisModel,
+    axisPointerModel: AxisPointerModel,
+    polar: Polar,
+    labelMargin: number
+) {
     var axis = axisModel.axis;
     var coord = axis.dataToCoord(value);
     var axisAngle = polar.getAngleAxis().getExtent()[0];
@@ -84,6 +103,7 @@ function getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin
         position = graphic.applyTransform([coord, -labelMargin], transform);
 
         var labelRotation = axisModel.getModel('axisLabel').get('rotate') || 0;
+        // @ts-ignore
         var labelLayout = AxisBuilder.innerTextLayout(
             axisAngle, labelRotation * Math.PI / 180, -1
         );
@@ -111,7 +131,12 @@ function getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin
 
 var pointerShapeBuilder = {
 
-    line: function (axis, polar, coordValue, otherExtent, elStyle) {
+    line: function (
+        axis: AngleAxis | RadiusAxis,
+        polar: Polar,
+        coordValue: number,
+        otherExtent: number[]
+    ): PathProps & { type: 'Line' | 'Circle' } {
         return axis.dim === 'angle'
             ? {
                 type: 'Line',
@@ -130,7 +155,12 @@ var pointerShapeBuilder = {
             };
     },
 
-    shadow: function (axis, polar, coordValue, otherExtent, elStyle) {
+    shadow: function (
+        axis: AngleAxis | RadiusAxis,
+        polar: Polar,
+        coordValue: number,
+        otherExtent: number[]
+    ): PathProps & { type: 'Sector' } {
         var bandWidth = Math.max(1, axis.getBandWidth());
         var radian = Math.PI / 180;
 
@@ -157,6 +187,7 @@ var pointerShapeBuilder = {
     }
 };
 
+// @ts-ignore
 AxisView.registerAxisPointerClass('PolarAxisPointer', PolarAxisPointer);
 
 export default PolarAxisPointer;

@@ -17,19 +17,34 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import BaseAxisPointer from './BaseAxisPointer';
+import BaseAxisPointer, {AxisPointerElementOptions} from './BaseAxisPointer';
 import * as viewHelper from './viewHelper';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import AxisView from '../axis/AxisView';
+import CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import { ScaleDataValue, VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../util/types';
+import Grid from '../../coord/cartesian/Grid';
+import Axis2D from '../../coord/cartesian/Axis2D';
+import { PathProps } from 'zrender/src/graphic/Path';
+import { VectorArray } from 'zrender/src/core/vector';
+import Model from '../../model/Model';
 
-var CartesianAxisPointer = BaseAxisPointer.extend({
+// Not use top level axisPointer model
+type AxisPointerModel = Model<CommonAxisPointerOption>
+
+class CartesianAxisPointer extends BaseAxisPointer {
 
     /**
      * @override
      */
-    makeElOption: function (elOption, value, axisModel, axisPointerModel, api) {
+    makeElOption(
+        elOption: AxisPointerElementOptions,
+        value: ScaleDataValue,
+        axisModel: CartesianAxisModel,
+        axisPointerModel: AxisPointerModel,
+        api: ExtensionAPI
+    ) {
         var axis = axisModel.axis;
         var grid = axis.grid;
         var axisPointerType = axisPointerModel.get('type');
@@ -48,28 +63,43 @@ var CartesianAxisPointer = BaseAxisPointer.extend({
 
         var layoutInfo = cartesianAxisHelper.layout(grid.model, axisModel);
         viewHelper.buildCartesianSingleLabelElOption(
+            // @ts-ignore
             value, elOption, layoutInfo, axisModel, axisPointerModel, api
         );
-    },
+    }
 
     /**
      * @override
      */
-    getHandleTransform: function (value, axisModel, axisPointerModel) {
+    getHandleTransform(
+        value: ScaleDataValue,
+        axisModel: CartesianAxisModel,
+        axisPointerModel: AxisPointerModel
+    ) {
         var layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.model, axisModel, {
             labelInside: false
         });
-        layoutInfo.labelMargin = axisPointerModel.get('handle.margin');
+        // @ts-ignore
+        layoutInfo.labelMargin = axisPointerModel.get(['handle', 'margin']);
         return {
+            // @ts-ignore
             position: viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo),
             rotation: layoutInfo.rotation + (layoutInfo.labelDirection < 0 ? Math.PI : 0)
         };
-    },
+    }
 
     /**
      * @override
      */
-    updateHandleTransform: function (transform, delta, axisModel, axisPointerModel) {
+    updateHandleTransform(
+        transform: {
+            position: VectorArray,
+            rotation: number
+        },
+        delta: number[],
+        axisModel: CartesianAxisModel,
+        axisPointerModel: AxisPointerModel
+    ) {
         var axis = axisModel.axis;
         var grid = axis.grid;
         var axisExtent = axis.getGlobalExtent(true);
@@ -86,7 +116,13 @@ var CartesianAxisPointer = BaseAxisPointer.extend({
         cursorPoint[dimIndex] = currPosition[dimIndex];
 
         // Make tooltip do not overlap axisPointer and in the middle of the grid.
-        var tooltipOptions = [{verticalAlign: 'middle'}, {align: 'center'}];
+        var tooltipOptions: {
+            verticalAlign?: VerticalAlign
+            align?: HorizontalAlign
+        }[] = [
+            {verticalAlign: 'middle'},
+            {align: 'center'}
+        ];
 
         return {
             position: currPosition,
@@ -95,18 +131,20 @@ var CartesianAxisPointer = BaseAxisPointer.extend({
             tooltipOption: tooltipOptions[dimIndex]
         };
     }
+}
 
-});
-
-function getCartesian(grid, axis) {
-    var opt = {};
-    opt[axis.dim + 'AxisIndex'] = axis.index;
+function getCartesian(grid: Grid, axis: Axis2D) {
+    var opt = {} as {
+        xAxisIndex?: number
+        yAxisIndex?: number
+    };
+    opt[axis.dim + 'AxisIndex' as 'xAxisIndex' | 'yAxisIndex'] = axis.index;
     return grid.getCartesian(opt);
 }
 
 var pointerShapeBuilder = {
 
-    line: function (axis, pixelValue, otherExtent) {
+    line: function (axis: Axis2D, pixelValue: number, otherExtent: number[]): PathProps & { type: 'Line'} {
         var targetShape = viewHelper.makeLineShape(
             [pixelValue, otherExtent[0]],
             [pixelValue, otherExtent[1]],
@@ -119,7 +157,7 @@ var pointerShapeBuilder = {
         };
     },
 
-    shadow: function (axis, pixelValue, otherExtent) {
+    shadow: function (axis: Axis2D, pixelValue: number, otherExtent: number[]): PathProps & { type: 'Rect'} {
         var bandWidth = Math.max(1, axis.getBandWidth());
         var span = otherExtent[1] - otherExtent[0];
         return {
@@ -133,10 +171,11 @@ var pointerShapeBuilder = {
     }
 };
 
-function getAxisDimIndex(axis) {
+function getAxisDimIndex(axis: Axis2D) {
     return axis.dim === 'x' ? 0 : 1;
 }
 
+// @ts-ignore
 AxisView.registerAxisPointerClass('CartesianAxisPointer', CartesianAxisPointer);
 
 export default CartesianAxisPointer;

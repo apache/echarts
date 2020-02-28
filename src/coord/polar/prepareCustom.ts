@@ -30,11 +30,10 @@ function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
         const axis = this[getterName]() as RadiusAxis;
         const val = dataItem[dimIdx];
         const halfSize = dataSize[dimIdx] / 2;
-        const converterName = 'dataTo' + dim as 'dataToRadius';
 
         var result = axis.type === 'category'
             ? axis.getBandWidth()
-            : Math.abs(axis[converterName](val - halfSize) - axis[converterName](val + halfSize));
+            : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 
         if (dim === 'Angle') {
             result = result * Math.PI / 180;

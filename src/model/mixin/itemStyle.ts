@@ -51,7 +51,11 @@ type ItemStyleProps = Pick<StyleProps, ItemStyleKeys>
 
 class ItemStyleMixin {
 
-    getItemStyle(this: Model, excludes?: (keyof ItemStyleOption)[], includes?: (keyof ItemStyleOption)[]): ItemStyleProps {
+    getItemStyle(
+        this: Model,
+        excludes?: readonly (keyof ItemStyleOption)[],
+        includes?: readonly (keyof ItemStyleOption)[]
+    ): ItemStyleProps {
         var style = getItemStyle(this, excludes, includes);
         var lineDash = this.getBorderLineDash();
         lineDash && ((style as any).lineDash = lineDash);

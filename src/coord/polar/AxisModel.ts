@@ -63,6 +63,8 @@ class PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends Compon
     implements AxisBaseModel<T> {
     static type = 'polarAxis'
 
+    axis: AngleAxis | RadiusAxis
+
     getCoordSysModel(): ComponentModel {
         return this.ecModel.queryComponents({
             mainType: 'polar',
