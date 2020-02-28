@@ -17,104 +17,100 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
+import {bind, each, defaults, isFunction, isString, indexOf} from 'zrender/src/core/util';
 import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
 import DataZoomView from './DataZoomView';
-import * as numberUtil from '../../util/number';
+import {linearMap, asc} from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue } from '../../util/types';
+import SliderZoomModel from './SliderZoomModel';
+import ComponentView from '../../view/Component';
+import { parsePercent } from 'zrender/src/graphic/helper/text';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import Axis from '../../coord/Axis';
+import SeriesModel from '../../model/Series';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
 
-var Rect = graphic.Rect;
-var linearMap = numberUtil.linearMap;
-var asc = numberUtil.asc;
-var bind = zrUtil.bind;
-var each = zrUtil.each;
+const Rect = graphic.Rect;
 
 // Constants
-var DEFAULT_LOCATION_EDGE_GAP = 7;
-var DEFAULT_FRAME_BORDER_WIDTH = 1;
-var DEFAULT_FILLER_SIZE = 30;
-var HORIZONTAL = 'horizontal';
-var VERTICAL = 'vertical';
-var LABEL_GAP = 5;
-var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
+const DEFAULT_LOCATION_EDGE_GAP = 7;
+const DEFAULT_FRAME_BORDER_WIDTH = 1;
+const DEFAULT_FILLER_SIZE = 30;
+const HORIZONTAL = 'horizontal';
+const VERTICAL = 'vertical';
+const LABEL_GAP = 5;
+const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
-var SliderZoomView = DataZoomView.extend({
 
-    type: 'dataZoom.slider',
+type Icon = ReturnType<typeof graphic.createIcon>
+interface Displayables {
+    barGroup: graphic.Group
+    handles: [Icon, Icon]
+    handleLabels: [graphic.Text, graphic.Text]
+    filler: graphic.Rect
+}
+class SliderZoomView extends DataZoomView {
+    static type = 'dataZoom.slider'
+    type = SliderZoomView.type
 
-    init: function (ecModel, api) {
+    dataZoomModel: SliderZoomModel
 
-        /**
-         * @private
-         * @type {Object}
-         */
-        this._displayables = {};
+    private _displayables = {} as Displayables
 
-        /**
-         * @private
-         * @type {string}
-         */
-        this._orient;
+    private _orient: LayoutOrient
 
-        /**
-         * [0, 100]
-         * @private
-         */
-        this._range;
+    private _range: [number, number]
 
-        /**
-         * [coord of the first handle, coord of the second handle]
-         * @private
-         */
-        this._handleEnds;
+    /**
+     * [coord of the first handle, coord of the second handle]
+     */
+    private _handleEnds: [number, number]
 
-        /**
-         * [length, thick]
-         * @private
-         * @type {Array.<number>}
-         */
-        this._size;
+    /**
+     * [length, thick]
+     */
+    private _size: [number, number]
 
-        /**
-         * @private
-         * @type {number}
-         */
-        this._handleWidth;
+    private _handleWidth: number
 
-        /**
-         * @private
-         * @type {number}
-         */
-        this._handleHeight;
+    private _handleHeight: number
 
-        /**
-         * @private
-         */
-        this._location;
+    private _location: {x: number, y: number}
 
-        /**
-         * @private
-         */
-        this._dragging;
+    private _dragging: boolean
 
-        /**
-         * @private
-         */
-        this._dataShadowInfo;
+    private _dataShadowInfo: {
+        thisAxis: Axis
+        series: SeriesModel
+        thisDim: string
+        otherDim: string
+        otherAxisInverse: boolean
+    }
 
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
-    },
+    }
+
 
     /**
      * @override
      */
-    render: function (dataZoomModel, ecModel, api, payload) {
-        SliderZoomView.superApply(this, 'render', arguments);
+    render(
+        dataZoomModel: SliderZoomModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload & {
+            from: string
+            type: string
+        }
+    ) {
+        super.render.apply(this, arguments as any);
 
         throttle.createOrUpdate(
             this,
@@ -138,25 +134,24 @@ var SliderZoomView = DataZoomView.extend({
         }
 
         this._updateView();
-    },
+    }
 
     /**
      * @override
      */
-    remove: function () {
-        SliderZoomView.superApply(this, 'remove', arguments);
+    remove() {
         throttle.clear(this, '_dispatchZoomAction');
-    },
+    }
 
     /**
      * @override
      */
-    dispose: function () {
-        SliderZoomView.superApply(this, 'dispose', arguments);
+    dispose() {
+        super.dispose.apply(this, arguments as any);
         throttle.clear(this, '_dispatchZoomAction');
-    },
+    }
 
-    _buildView: function () {
+    _buildView() {
         var thisGroup = this.group;
 
         thisGroup.removeAll();
@@ -175,12 +170,12 @@ var SliderZoomView = DataZoomView.extend({
         thisGroup.add(barGroup);
 
         this._positionGroup();
-    },
+    }
 
     /**
      * @private
      */
-    _resetLocation: function () {
+    _resetLocation() {
         var dataZoomModel = this.dataZoomModel;
         var api = this.api;
 
@@ -210,7 +205,7 @@ var SliderZoomView = DataZoomView.extend({
         var layoutParams = layout.getLayoutParams(dataZoomModel.option);
 
         // Replace the placeholder value.
-        zrUtil.each(['right', 'top', 'width', 'height'], function (name) {
+        each(['right', 'top', 'width', 'height'] as const, function (name) {
             if (layoutParams[name] === 'auto') {
                 layoutParams[name] = positionInfo[name];
             }
@@ -218,19 +213,18 @@ var SliderZoomView = DataZoomView.extend({
 
         var layoutRect = layout.getLayoutRect(
             layoutParams,
-            ecSize,
-            dataZoomModel.padding
+            ecSize
         );
 
         this._location = {x: layoutRect.x, y: layoutRect.y};
         this._size = [layoutRect.width, layoutRect.height];
         this._orient === VERTICAL && this._size.reverse();
-    },
+    }
 
     /**
      * @private
      */
-    _positionGroup: function () {
+    _positionGroup() {
         var thisGroup = this.group;
         var location = this._location;
         var orient = this._orient;
@@ -257,16 +251,16 @@ var SliderZoomView = DataZoomView.extend({
         // Position barGroup
         var rect = thisGroup.getBoundingRect([barGroup]);
         thisGroup.attr('position', [location.x - rect.x, location.y - rect.y]);
-    },
+    }
 
     /**
      * @private
      */
-    _getViewExtent: function () {
+    _getViewExtent() {
         return [0, this._size[0]];
-    },
+    }
 
-    _renderBackground: function () {
+    _renderBackground() {
         var dataZoomModel = this.dataZoomModel;
         var size = this._size;
         var barGroup = this._displayables.barGroup;
@@ -291,11 +285,11 @@ var SliderZoomView = DataZoomView.extend({
                 fill: 'transparent'
             },
             z2: 0,
-            onclick: zrUtil.bind(this._onClickPanelClick, this)
+            onclick: bind(this._onClickPanelClick, this)
         }));
-    },
+    }
 
-    _renderDataShadow: function () {
+    _renderDataShadow() {
         var info = this._dataShadowInfo = this._prepareDataShadowInfo();
 
         if (!info) {
@@ -306,7 +300,7 @@ var SliderZoomView = DataZoomView.extend({
         var seriesModel = info.series;
         var data = seriesModel.getRawData();
 
-        var otherDim = seriesModel.getShadowDim
+        var otherDim: string = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
 
@@ -326,14 +320,14 @@ var SliderZoomView = DataZoomView.extend({
         var thisShadowExtent = [0, size[0]];
 
         var areaPoints = [[size[0], 0], [0, 0]];
-        var linePoints = [];
+        var linePoints: number[][] = [];
         var step = thisShadowExtent[1] / (data.count() - 1);
         var thisCoord = 0;
 
         // Optimize for large data shadow
         var stride = Math.round(data.count() / size[0]);
-        var lastIsEmpty;
-        data.each([otherDim], function (value, index) {
+        var lastIsEmpty: boolean;
+        data.each([otherDim], function (value: ParsedValue, index) {
             if (stride > 0 && (index % stride)) {
                 thisCoord += step;
                 return;
@@ -344,10 +338,10 @@ var SliderZoomView = DataZoomView.extend({
 
             // FIXME
             // 应该使用统一的空判断？还是在list里进行空判断？
-            var isEmpty = value == null || isNaN(value) || value === '';
+            var isEmpty = value == null || isNaN(value as number) || value === '';
             // See #4235.
             var otherCoord = isEmpty
-                ? 0 : linearMap(value, otherDataExtent, otherShadowExtent, true);
+                ? 0 : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
 
             // Attempt to draw data shadow precisely when there are empty value.
             if (isEmpty && !lastIsEmpty && index) {
@@ -370,22 +364,22 @@ var SliderZoomView = DataZoomView.extend({
         // var dataBackgroundModel = dataZoomModel.getModel('dataBackground');
         this._displayables.barGroup.add(new graphic.Polygon({
             shape: {points: areaPoints},
-            style: zrUtil.defaults(
-                {fill: dataZoomModel.get('dataBackgroundColor')},
-                dataZoomModel.getModel('dataBackground.areaStyle').getAreaStyle()
+            style: defaults(
+                {fill: dataZoomModel.get('dataBackgroundColor' as any)},
+                dataZoomModel.getModel(['dataBackground', 'areaStyle']).getAreaStyle()
             ),
             silent: true,
             z2: -20
         }));
         this._displayables.barGroup.add(new graphic.Polyline({
             shape: {points: linePoints},
-            style: dataZoomModel.getModel('dataBackground.lineStyle').getLineStyle(),
+            style: dataZoomModel.getModel(['dataBackground', 'lineStyle']).getLineStyle(),
             silent: true,
             z2: -19
         }));
-    },
+    }
 
-    _prepareDataShadowInfo: function () {
+    _prepareDataShadowInfo() {
         var dataZoomModel = this.dataZoomModel;
         var showDataShadow = dataZoomModel.get('showDataShadow');
 
@@ -394,7 +388,7 @@ var SliderZoomView = DataZoomView.extend({
         }
 
         // Find a representative series.
-        var result;
+        var result: SliderZoomView['_dataShadowInfo'];
         var ecModel = this.ecModel;
 
         dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
@@ -402,19 +396,19 @@ var SliderZoomView = DataZoomView.extend({
                 .getAxisProxy(dimNames.name, axisIndex)
                 .getTargetSeriesModels();
 
-            zrUtil.each(seriesModels, function (seriesModel) {
+            each(seriesModels, function (seriesModel) {
                 if (result) {
                     return;
                 }
 
-                if (showDataShadow !== true && zrUtil.indexOf(
+                if (showDataShadow !== true && indexOf(
                         SHOW_DATA_SHADOW_SERIES_TYPE, seriesModel.get('type')
                     ) < 0
                 ) {
                     return;
                 }
 
-                var thisAxis = ecModel.getComponent(dimNames.axis, axisIndex).axis;
+                var thisAxis = (ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel).axis;
                 var otherDim = getOtherDim(dimNames.name);
                 var otherAxisInverse;
                 var coordSys = seriesModel.coordinateSystem;
@@ -438,12 +432,12 @@ var SliderZoomView = DataZoomView.extend({
         }, this);
 
         return result;
-    },
+    }
 
-    _renderHandle: function () {
+    _renderHandle() {
         var displaybles = this._displayables;
-        var handles = displaybles.handles = [];
-        var handleLabels = displaybles.handleLabels = [];
+        var handles: [Icon, Icon] = displaybles.handles = [null, null];
+        var handleLabels: [graphic.Text, graphic.Text] = displaybles.handleLabels = [null, null];
         var barGroup = this._displayables.barGroup;
         var size = this._size;
         var dataZoomModel = this.dataZoomModel;
@@ -473,14 +467,14 @@ var SliderZoomView = DataZoomView.extend({
                 height: size[1]
             },
             style: {
-                stroke: dataZoomModel.get('dataBackgroundColor')
+                stroke: dataZoomModel.get('dataBackgroundColor' as any) // deprecated option
                     || dataZoomModel.get('borderColor'),
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                 fill: 'rgba(0,0,0,0)'
             }
         }));
 
-        each([0, 1], function (handleIndex) {
+        each([0, 1] as const, function (handleIndex) {
             var path = graphic.createIcon(
                 dataZoomModel.get('handleIcon'),
                 {
@@ -495,11 +489,11 @@ var SliderZoomView = DataZoomView.extend({
             );
 
             var bRect = path.getBoundingRect();
-            this._handleHeight = numberUtil.parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
+            this._handleHeight = parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
             this._handleWidth = bRect.width / bRect.height * this._handleHeight;
 
             path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
-            var handleColor = dataZoomModel.get('handleColor');
+            var handleColor = dataZoomModel.get('handleColor' as any); // deprecated option
             // Compatitable with previous version
             if (handleColor != null) {
                 path.style.fill = handleColor;
@@ -524,12 +518,9 @@ var SliderZoomView = DataZoomView.extend({
             }));
 
         }, this);
-    },
+    }
 
-    /**
-     * @private
-     */
-    _resetInterval: function () {
+    private _resetInterval() {
         var range = this._range = this.dataZoomModel.getPercentRange();
         var viewExtent = this._getViewExtent();
 
@@ -537,15 +528,9 @@ var SliderZoomView = DataZoomView.extend({
             linearMap(range[0], [0, 100], viewExtent, true),
             linearMap(range[1], [0, 100], viewExtent, true)
         ];
-    },
+    }
 
-    /**
-     * @private
-     * @param {(number|string)} handleIndex 0 or 1 or 'all'
-     * @param {number} delta
-     * @return {boolean} changed
-     */
-    _updateInterval: function (handleIndex, delta) {
+    private _updateInterval(handleIndex: 0 | 1 | 'all', delta: number): boolean {
         var dataZoomModel = this.dataZoomModel;
         var handleEnds = this._handleEnds;
         var viewExtend = this._getViewExtent();
@@ -570,22 +555,19 @@ var SliderZoomView = DataZoomView.extend({
         ]);
 
         return !lastRange || lastRange[0] !== range[0] || lastRange[1] !== range[1];
-    },
+    }
 
-    /**
-     * @private
-     */
-    _updateView: function (nonRealtime) {
+    private _updateView(nonRealtime?: boolean) {
         var displaybles = this._displayables;
         var handleEnds = this._handleEnds;
         var handleInterval = asc(handleEnds.slice());
         var size = this._size;
 
-        each([0, 1], function (handleIndex) {
+        each([0, 1] as const, function (handleIndex) {
             // Handles
             var handle = displaybles.handles[handleIndex];
             var handleHeight = this._handleHeight;
-            handle.attr({
+            (handle as graphic.Path).attr({
                 scale: [handleHeight / 2, handleHeight / 2],
                 position: [handleEnds[handleIndex], size[1] / 2 - handleHeight / 2]
             });
@@ -600,12 +582,12 @@ var SliderZoomView = DataZoomView.extend({
         });
 
         this._updateDataInfo(nonRealtime);
-    },
+    }
 
     /**
      * @private
      */
-    _updateDataInfo: function (nonRealtime) {
+    _updateDataInfo(nonRealtime?: boolean) {
         var dataZoomModel = this.dataZoomModel;
         var displaybles = this._displayables;
         var handleLabels = displaybles.handleLabels;
@@ -640,7 +622,7 @@ var SliderZoomView = DataZoomView.extend({
         setLabel.call(this, 0);
         setLabel.call(this, 1);
 
-        function setLabel(handleIndex) {
+        function setLabel(this: SliderZoomView, handleIndex: 0 | 1) {
             // Label
             // Text should not transform by barGroup.
             // Ignore handlers transform
@@ -661,17 +643,14 @@ var SliderZoomView = DataZoomView.extend({
             handleLabels[handleIndex].setStyle({
                 x: textPoint[0],
                 y: textPoint[1],
-                textVerticalAlign: orient === HORIZONTAL ? 'middle' : direction,
-                textAlign: orient === HORIZONTAL ? direction : 'center',
+                textVerticalAlign: orient === HORIZONTAL ? 'middle' : direction as ZRTextVerticalAlign,
+                textAlign: orient === HORIZONTAL ? direction as ZRTextAlign : 'center',
                 text: labelTexts[handleIndex]
             });
         }
-    },
+    }
 
-    /**
-     * @private
-     */
-    _formatLabel: function (value, axis) {
+    _formatLabel(value: ParsedValue, axis: Axis) {
         var dataZoomModel = this.dataZoomModel;
         var labelFormatter = dataZoomModel.get('labelFormatter');
 
@@ -680,35 +659,35 @@ var SliderZoomView = DataZoomView.extend({
             labelPrecision = axis.getPixelPrecision();
         }
 
-        var valueStr = (value == null || isNaN(value))
+        var valueStr = (value == null || isNaN(value as number))
             ? ''
             // FIXME Glue code
             : (axis.type === 'category' || axis.type === 'time')
-                ? axis.scale.getLabel(Math.round(value))
+                ? axis.scale.getLabel(Math.round(value as number))
                 // param of toFixed should less then 20.
-                : value.toFixed(Math.min(labelPrecision, 20));
+                : (value as number).toFixed(Math.min(labelPrecision as number, 20));
 
-        return zrUtil.isFunction(labelFormatter)
-            ? labelFormatter(value, valueStr)
-            : zrUtil.isString(labelFormatter)
+        return isFunction(labelFormatter)
+            ? labelFormatter(value as number, valueStr)
+            : isString(labelFormatter)
             ? labelFormatter.replace('{value}', valueStr)
             : valueStr;
-    },
+    }
 
     /**
      * @private
-     * @param {boolean} showOrHide true: show, false: hide
+     * @param showOrHide true: show, false: hide
      */
-    _showDataInfo: function (showOrHide) {
+    _showDataInfo(showOrHide?: boolean) {
         // Always show when drgging.
         showOrHide = this._dragging || showOrHide;
 
         var handleLabels = this._displayables.handleLabels;
         handleLabels[0].attr('invisible', !showOrHide);
         handleLabels[1].attr('invisible', !showOrHide);
-    },
+    }
 
-    _onDragMove: function (handleIndex, dx, dy, event) {
+    _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
         this._dragging = true;
 
         // For mobile device, prevent screen slider on the button.
@@ -727,9 +706,9 @@ var SliderZoomView = DataZoomView.extend({
         // Avoid dispatch dataZoom repeatly but range not changed,
         // which cause bad visual effect when progressive enabled.
         changed && realtime && this._dispatchZoomAction();
-    },
+    }
 
-    _onDragEnd: function () {
+    _onDragEnd() {
         this._dragging = false;
         this._showDataInfo(false);
 
@@ -737,9 +716,9 @@ var SliderZoomView = DataZoomView.extend({
         // drag end will cause the whole view rerender, which is unnecessary.
         var realtime = this.dataZoomModel.get('realtime');
         !realtime && this._dispatchZoomAction();
-    },
+    }
 
-    _onClickPanelClick: function (e) {
+    _onClickPanelClick(e: ZRElementEvent) {
         var size = this._size;
         var localPoint = this._displayables.barGroup.transformCoordToLocal(e.offsetX, e.offsetY);
 
@@ -755,13 +734,13 @@ var SliderZoomView = DataZoomView.extend({
         var changed = this._updateInterval('all', localPoint[0] - center);
         this._updateView();
         changed && this._dispatchZoomAction();
-    },
+    }
 
     /**
      * This action will be throttled.
      * @private
      */
-    _dispatchZoomAction: function () {
+    _dispatchZoomAction() {
         var range = this._range;
 
         this.api.dispatchAction({
@@ -771,14 +750,14 @@ var SliderZoomView = DataZoomView.extend({
             start: range[0],
             end: range[1]
         });
-    },
+    }
 
     /**
      * @private
      */
-    _findCoordRect: function () {
+    _findCoordRect() {
         // Find the grid coresponding to the first axis referred by dataZoom.
-        var rect;
+        var rect: RectLike;
         each(this.getTargetCoordInfo(), function (coordInfoList) {
             if (!rect && coordInfoList.length) {
                 var coordSys = coordInfoList[0].model.coordinateSystem;
@@ -799,17 +778,19 @@ var SliderZoomView = DataZoomView.extend({
         return rect;
     }
 
-});
+}
 
-function getOtherDim(thisDim) {
+function getOtherDim(thisDim: 'x' | 'y' | 'radius' | 'angle' | 'single' | 'z') {
     // FIXME
     // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
     var map = {x: 'y', y: 'x', radius: 'angle', angle: 'radius'};
-    return map[thisDim];
+    return map[thisDim as 'x' | 'y' | 'radius' | 'angle'];
 }
 
-function getCursor(orient) {
+function getCursor(orient: LayoutOrient) {
     return orient === 'vertical' ? 'ns-resize' : 'ew-resize';
 }
+
+ComponentView.registerClass(SliderZoomView);
 
 export default SliderZoomView;

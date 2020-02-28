@@ -28,7 +28,7 @@ import Scale from '../scale/Scale';
 import { DimensionName, ScaleDataValue } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
-import { AxisBaseOption } from './axisCommonTypes';
+import { AxisBaseOption, OptionAxisType } from './axisCommonTypes';
 
 var NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -42,6 +42,15 @@ interface TickCoord {
  * Base class of Axis.
  */
 class Axis {
+
+    /**
+     * Axis type
+     *  - 'category'
+     *  - 'value'
+     *  - 'time'
+     *  - 'log'
+     */
+    type: OptionAxisType;
 
     // Axis dimension. Such as 'x', 'y', 'z', 'angle', 'radius'.
     readonly dim: DimensionName;

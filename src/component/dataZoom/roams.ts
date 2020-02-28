@@ -17,47 +17,63 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Only create one roam controller for each coordinate system.
 // one roam controller might be refered by two inside data zoom
 // components (for example, one for x and one for y). When user
 // pan or zoom, only dispatch one action for those data zoom
 // components.
 
-import * as zrUtil from 'zrender/src/core/util';
-import RoamController from '../../component/helper/RoamController';
+import RoamController, { RoamType, RoamEventParams } from '../../component/helper/RoamController';
 import * as throttleUtil from '../../util/throttle';
+import { makeInner } from '../../util/model';
+import { Dictionary, ZRElementEvent } from '../../util/types';
+import DataZoomModel from './DataZoomModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import InsideZoomModel from './InsideZoomModel';
+import { each, indexOf, curry, Curry1 } from 'zrender/src/core/util';
+import ComponentModel from '../../model/Component';
+import { DataZoomPayloadBatchItem } from './helper';
 
+interface DataZoomInfo {
+    coordId: string
+    containsPoint: (e: ZRElementEvent, x: number, y: number) => boolean
+    allCoordIds: string[]
+    dataZoomId: string
+    getRange: {
+        pan: (controller: RoamController, e: RoamEventParams['pan']) => [number, number]
+        zoom: (controller: RoamController, e: RoamEventParams['zoom']) => [number, number]
+        scrollMove: (controller: RoamController, e: RoamEventParams['scrollMove']) => [number, number]
+    }
+    dataZoomModel: DataZoomModel
+}
+interface Record {
+    // key is dataZoomId
+    dataZoomInfos: Dictionary<DataZoomInfo>
+    count: number
+    coordId: string
+    controller: RoamController
+    dispatchAction: Curry1<typeof dispatchAction, ExtensionAPI>
+}
 
-var ATTR = '\0_ec_dataZoom_roams';
+interface PayloadBatch {
+    dataZoomId: string
+}
 
+type Store = Dictionary<Record>
 
-/**
- * @public
- * @param {module:echarts/ExtensionAPI} api
- * @param {Object} dataZoomInfo
- * @param {string} dataZoomInfo.coordId
- * @param {Function} dataZoomInfo.containsPoint
- * @param {Array.<string>} dataZoomInfo.allCoordIds
- * @param {string} dataZoomInfo.dataZoomId
- * @param {Object} dataZoomInfo.getRange
- * @param {Function} dataZoomInfo.getRange.pan
- * @param {Function} dataZoomInfo.getRange.zoom
- * @param {Function} dataZoomInfo.getRange.scrollMove
- * @param {boolean} dataZoomInfo.dataZoomModel
- */
-export function register(api, dataZoomInfo) {
-    var store = giveStore(api);
+const inner = makeInner<Store>();
+
+export function register(api: ExtensionAPI, dataZoomInfo: DataZoomInfo) {
+    var store = inner(api);
     var theDataZoomId = dataZoomInfo.dataZoomId;
     var theCoordId = dataZoomInfo.coordId;
 
     // Do clean when a dataZoom changes its target coordnate system.
     // Avoid memory leak, dispose all not-used-registered.
-    zrUtil.each(store, function (record, coordId) {
+    each(store, function (record, coordId) {
         var dataZoomInfos = record.dataZoomInfos;
         if (dataZoomInfos[theDataZoomId]
-            && zrUtil.indexOf(dataZoomInfo.allCoordIds, theCoordId) < 0
+            && indexOf(dataZoomInfo.allCoordIds, theCoordId) < 0
         ) {
             delete dataZoomInfos[theDataZoomId];
             record.count--;
@@ -72,10 +88,11 @@ export function register(api, dataZoomInfo) {
         record = store[theCoordId] = {
             coordId: theCoordId,
             dataZoomInfos: {},
-            count: 0
+            count: 0,
+            controller: null,
+            dispatchAction: curry(dispatchAction, api)
         };
         record.controller = createController(api, record);
-        record.dispatchAction = zrUtil.curry(dispatchAction, api);
     }
 
     // Update reference of dataZoom.
@@ -97,15 +114,10 @@ export function register(api, dataZoomInfo) {
     );
 }
 
-/**
- * @public
- * @param {module:echarts/ExtensionAPI} api
- * @param {string} dataZoomId
- */
-export function unregister(api, dataZoomId) {
-    var store = giveStore(api);
+export function unregister(api: ExtensionAPI, dataZoomId: string) {
+    var store = inner(api);
 
-    zrUtil.each(store, function (record) {
+    each(store, function (record) {
         record.controller.dispose();
         var dataZoomInfos = record.dataZoomInfos;
         if (dataZoomInfos[dataZoomId]) {
@@ -120,29 +132,18 @@ export function unregister(api, dataZoomId) {
 /**
  * @public
  */
-export function generateCoordId(coordModel) {
+export function generateCoordId(coordModel: ComponentModel) {
     return coordModel.type + '\0_' + coordModel.id;
 }
 
-/**
- * Key: coordId, value: {dataZoomInfos: [], count, controller}
- * @type {Array.<Object>}
- */
-function giveStore(api) {
-    // Mount store on zrender instance, so that we do not
-    // need to worry about dispose.
-    var zr = api.getZr();
-    return zr[ATTR] || (zr[ATTR] = {});
-}
-
-function createController(api, newRecord) {
+function createController(api: ExtensionAPI, newRecord: Record) {
     var controller = new RoamController(api.getZr());
 
-    zrUtil.each(['pan', 'zoom', 'scrollMove'], function (eventName) {
+    each(['pan', 'zoom', 'scrollMove'] as const, function (eventName) {
         controller.on(eventName, function (event) {
-            var batch = [];
+            var batch: DataZoomPayloadBatchItem[] = [];
 
-            zrUtil.each(newRecord.dataZoomInfos, function (info) {
+            each(newRecord.dataZoomInfos, function (info) {
                 // Check whether the behaviors (zoomOnMouseWheel, moveOnMouseMove,
                 // moveOnMouseWheel, ...) enabled.
                 if (!event.isAvailableBehavior(info.dataZoomModel.option)) {
@@ -152,7 +153,7 @@ function createController(api, newRecord) {
                 var method = (info.getRange || {})[eventName];
                 var range = method && method(newRecord.controller, event);
 
-                !info.dataZoomModel.get('disabled', true) && range && batch.push({
+                !(info.dataZoomModel as InsideZoomModel).get('disabled', true) && range && batch.push({
                     dataZoomId: info.dataZoomId,
                     start: range[0],
                     end: range[1]
@@ -166,8 +167,8 @@ function createController(api, newRecord) {
     return controller;
 }
 
-function cleanStore(store) {
-    zrUtil.each(store, function (record, coordId) {
+function cleanStore(store: Store) {
+    each(store, function (record, coordId) {
         if (!record.count) {
             record.controller.dispose();
             delete store[coordId];
@@ -178,7 +179,7 @@ function cleanStore(store) {
 /**
  * This action will be throttled.
  */
-function dispatchAction(api, batch) {
+function dispatchAction(api: ExtensionAPI, batch: DataZoomPayloadBatchItem[]) {
     api.dispatchAction({
         type: 'dataZoom',
         batch: batch
@@ -188,12 +189,12 @@ function dispatchAction(api, batch) {
 /**
  * Merge roamController settings when multiple dataZooms share one roamController.
  */
-function mergeControllerParams(dataZoomInfos) {
-    var controlType;
+function mergeControllerParams(dataZoomInfos: Dictionary<DataZoomInfo>) {
+    var controlType: RoamType;
     // DO NOT use reserved word (true, false, undefined) as key literally. Even if encapsulated
     // as string, it is probably revert to reserved word by compress tool. See #7411.
     var prefix = 'type_';
-    var typePriority = {
+    var typePriority: Dictionary<number> = {
         'type_true': 2,
         'type_move': 1,
         'type_false': 0,
@@ -201,12 +202,12 @@ function mergeControllerParams(dataZoomInfos) {
     };
     var preventDefaultMouseMove = true;
 
-    zrUtil.each(dataZoomInfos, function (dataZoomInfo) {
-        var dataZoomModel = dataZoomInfo.dataZoomModel;
+    each(dataZoomInfos, function (dataZoomInfo) {
+        var dataZoomModel = dataZoomInfo.dataZoomModel as InsideZoomModel;
         var oneType = dataZoomModel.get('disabled', true)
             ? false
             : dataZoomModel.get('zoomLock', true)
-            ? 'move'
+            ? 'move' as const
             : true;
         if (typePriority[prefix + oneType] > typePriority[prefix + controlType]) {
             controlType = oneType;
@@ -214,7 +215,8 @@ function mergeControllerParams(dataZoomInfos) {
 
         // Prevent default move event by default. If one false, do not prevent. Otherwise
         // users may be confused why it does not work when multiple insideZooms exist.
-        preventDefaultMouseMove &= dataZoomModel.get('preventDefaultMouseMove', true);
+        preventDefaultMouseMove = preventDefaultMouseMove
+            && dataZoomModel.get('preventDefaultMouseMove', true);
     });
 
     return {

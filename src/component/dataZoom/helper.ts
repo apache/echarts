@@ -22,6 +22,14 @@ import * as formatUtil from '../../util/format';
 import { Dictionary } from '../../util/types';
 
 
+export interface DataZoomPayloadBatchItem {
+    dataZoomId: string
+    start?: number
+    end?: number
+    startValue?: number
+    endValue?: number
+}
+
 const AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle', 'single'] as const;
 // Supported coords.
 const COORDS = ['cartesian2d', 'polar', 'singleAxis'] as const;

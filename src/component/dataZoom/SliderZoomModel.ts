@@ -76,7 +76,7 @@ interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
 
     handleStyle?: ItemStyleOption
 
-    labelPrecision?: number
+    labelPrecision?: number | 'auto'
 
     labelFormatter?: string | ((value: number, valueStr: string) => string)
 

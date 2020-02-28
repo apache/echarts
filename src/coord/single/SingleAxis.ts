@@ -39,8 +39,6 @@ interface SingleAxis {
 }
 class SingleAxis extends Axis {
 
-    type: OptionAxisType
-
     position: SingleAxisPosition
 
     orient: LayoutOrient

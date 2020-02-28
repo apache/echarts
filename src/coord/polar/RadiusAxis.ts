@@ -18,7 +18,6 @@
 */
 
 import Axis from '../Axis';
-import { OptionAxisType } from '../axisCommonTypes';
 import Scale from '../../scale/Scale';
 import Polar from './Polar';
 import { RadiusAxisModel } from './AxisModel';
@@ -29,7 +28,6 @@ interface RadiusAxis {
 }
 
 class RadiusAxis extends Axis {
-    type: OptionAxisType
 
     polar: Polar
 

@@ -41,15 +41,6 @@ interface Axis2D {
 class Axis2D extends Axis {
 
     /**
-     * Axis type
-     *  - 'category'
-     *  - 'value'
-     *  - 'time'
-     *  - 'log'
-     */
-    readonly type: OptionAxisType;
-
-    /**
      * Axis position
      *  - 'top'
      *  - 'bottom'

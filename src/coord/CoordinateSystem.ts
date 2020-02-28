@@ -25,6 +25,8 @@ import { DimensionDefinitionLoose, ScaleDataValue, DimensionName } from '../util
 import Axis from './Axis';
 import { BoundingRect } from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
+import ComponentModel from '../model/Component';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 
 
 export interface CoordinateSystemCreator {
@@ -80,6 +82,12 @@ export interface CoordinateSystemMaster {
     axisPointerEnabled?: boolean;
 
     getTooltipAxes?: (dim: DimensionName | 'auto') => {baseAxes: Axis[], otherAxes: Axis[]};
+
+    /**
+     * Get layout rect or coordinate system
+     */
+    getRect?: () => RectLike
+
 }
 
 /**
@@ -145,6 +153,6 @@ export interface CoordinateSystem {
 /**
  * Like GridModel, PolarModel, ...
  */
-export interface CoordinateSystemHostModel {
+export interface CoordinateSystemHostModel extends ComponentModel {
     coordinateSystem?: CoordinateSystemMaster
 }

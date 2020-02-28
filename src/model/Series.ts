@@ -1,4 +1,4 @@
-/*
+    /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
 * distributed with this work for additional information
@@ -59,6 +59,13 @@ var inner = modelUtil.makeInner<{
     dataBeforeProcessed: List
 }>();
 
+// methods that can be implemented optionally to provide to components
+interface SeriesModel {
+    /**
+     * Get dimension to render shadow in dataZoom component
+     */
+    getShadowDim?(): string
+}
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
 
     // [Caution]: for compat the previous "class extend"

@@ -263,7 +263,7 @@ type ModelConstructor = typeof Model
 enableClassExtend(Model as ModelConstructor);
 enableClassCheck(Model as ModelConstructor);
 
-interface Model extends LineStyleMixin, ItemStyleMixin, TextStyleMixin {}
+interface Model extends LineStyleMixin, ItemStyleMixin, TextStyleMixin, AreaStyleMixin {}
 mixin(Model, LineStyleMixin);
 mixin(Model, ItemStyleMixin);
 mixin(Model, AreaStyleMixin);

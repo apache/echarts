@@ -17,19 +17,33 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import ComponentView from '../../view/Component';
+import DataZoomModel from './DataZoomModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { Dictionary } from '../../util/types';
+import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 
-export default ComponentView.extend({
+export interface CoordInfo {
+    model: CoordinateSystemHostModel
+    axisModels: AxisBaseModel[]
+    coordIndex: number
+}
 
-    type: 'dataZoom',
+class DataZoomView extends ComponentView {
+    static type = 'dataZoom'
+    type = DataZoomView.type
 
-    render: function (dataZoomModel, ecModel, api, payload) {
+    dataZoomModel: DataZoomModel
+    ecModel: GlobalModel
+    api: ExtensionAPI
+
+    render(dataZoomModel: DataZoomModel, ecModel: GlobalModel, api: ExtensionAPI, payload: any) {
         this.dataZoomModel = dataZoomModel;
         this.ecModel = ecModel;
         this.api = api;
-    },
+    }
 
     /**
      * Find the first target coordinate system.
@@ -49,13 +63,13 @@ export default ComponentView.extend({
      *                       {model: coord0, axisModels: [], coordIndex: 0}
      *                   ]
      */
-    getTargetCoordInfo: function () {
+    getTargetCoordInfo() {
         var dataZoomModel = this.dataZoomModel;
         var ecModel = this.ecModel;
-        var coordSysLists = {};
+        var coordSysLists: Dictionary<CoordInfo[]> = {};
 
         dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-            var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
+            var axisModel = ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel;
             if (axisModel) {
                 var coordModel = axisModel.getCoordSysModel();
                 coordModel && save(
@@ -67,7 +81,12 @@ export default ComponentView.extend({
             }
         }, this);
 
-        function save(coordModel, axisModel, store, coordIndex) {
+        function save(
+            coordModel: CoordinateSystemHostModel,
+            axisModel: AxisBaseModel,
+            store: CoordInfo[],
+            coordIndex: number
+        ) {
             var item;
             for (var i = 0; i < store.length; i++) {
                 if (store[i].model === coordModel) {
@@ -77,7 +96,9 @@ export default ComponentView.extend({
             }
             if (!item) {
                 store.push(item = {
-                    model: coordModel, axisModels: [], coordIndex: coordIndex
+                    model: coordModel,
+                    axisModels: [],
+                    coordIndex: coordIndex
                 });
             }
             item.axisModels.push(axisModel);
@@ -85,5 +106,8 @@ export default ComponentView.extend({
 
         return coordSysLists;
     }
+}
 
-});
+ComponentView.registerClass(DataZoomView);
+
+export default DataZoomView;

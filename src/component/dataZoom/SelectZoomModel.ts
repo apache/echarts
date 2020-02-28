@@ -17,10 +17,12 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import DataZoomModel from './DataZoomModel';
+import ComponentModel from '../../model/Component';
 
-export default DataZoomModel.extend({
-    type: 'dataZoom.select'
-});
+class SelectDataZoomModel extends DataZoomModel {
+    static type = 'dataZoom.select'
+    type = SelectDataZoomModel.type
+}
+
+ComponentModel.registerClass(SelectDataZoomModel);

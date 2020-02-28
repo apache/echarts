@@ -20,7 +20,6 @@
 import * as textContain from 'zrender/src/contain/text';
 import Axis from '../Axis';
 import {makeInner} from '../../util/model';
-import { OptionAxisType } from '../axisCommonTypes';
 import Scale from '../../scale/Scale';
 import OrdinalScale from '../../scale/Ordinal';
 import Polar from './Polar';
@@ -36,7 +35,6 @@ interface AngleAxis {
     angleToData: Axis['coordToData']
 }
 class AngleAxis extends Axis {
-    type: OptionAxisType
 
     polar: Polar
 

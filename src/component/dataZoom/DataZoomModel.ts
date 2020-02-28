@@ -21,7 +21,6 @@ import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import * as modelUtil from '../../util/model';
-import * as helper from './helper';
 import AxisProxy from './AxisProxy';
 import ComponentModel from '../../model/Component';
 import {
@@ -39,9 +38,9 @@ import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { OptionAxisType, AxisBaseOption } from '../../coord/axisCommonTypes';
+import { eachAxisDim } from './helper';
 
 var each = zrUtil.each;
-var eachAxisDim = helper.eachAxisDim;
 
 export interface DataZoomOption extends ComponentOption {
 

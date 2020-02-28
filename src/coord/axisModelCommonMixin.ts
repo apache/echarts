@@ -22,6 +22,7 @@ import Model from '../model/Model';
 import Axis from './Axis';
 import ComponentModel from '../model/Component';
 import { AxisBaseOption } from './axisCommonTypes';
+import { CoordinateSystemHostModel } from './CoordinateSystem';
 
 
 interface AxisModelCommonMixin<Opt extends AxisBaseOption> extends Pick<Model<Opt>, 'option'> {
@@ -76,9 +77,9 @@ class AxisModelCommonMixin<Opt extends AxisBaseOption> {
 
     /**
      * Should be implemented by each axis model if necessary.
-     * @return {module:echarts/model/Component} coordinate system model
+     * @return coordinate system model
      */
-    getCoordSysModel(): ComponentModel {
+    getCoordSysModel(): CoordinateSystemHostModel {
         return;
     }
 

@@ -32,7 +32,7 @@ import ContinuousModel from './ContinuousModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
-import { Dictionary, TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
+import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
 import { ColorString, Payload, ECElement } from '../../util/types';
 
 var linearMap = numberUtil.linearMap;
