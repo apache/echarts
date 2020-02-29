@@ -251,8 +251,8 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
 function getCoordSys(finder: ParsedModelFinder): Single {
     const seriesModel = finder.seriesModel;
-    const polarModel = finder.singleAxisModel as SingleAxisModel;
-    return polarModel && polarModel.coordinateSystem
+    const singleModel = finder.singleAxisModel as SingleAxisModel;
+    return singleModel && singleModel.coordinateSystem
         || seriesModel && seriesModel.coordinateSystem as Single;
 }
 

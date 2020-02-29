@@ -193,8 +193,6 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     init(option: Opts, parentModel: Model, ecModel: GlobalModel) {
 
-        this._rangePropMode = ['percent', 'percent'];
-
         var inputRawOption = retrieveRawOption(option);
 
         /**

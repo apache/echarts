@@ -101,9 +101,11 @@ export interface ECElement extends Element {
     seriesIndex?: number;
     dataType?: string;
     tooltip?: CommonTooltipOption<unknown> & {
-        content?: string
-        formatterParams?: unknown
-    }
+        content?: string;
+        formatterParams?: unknown;
+    };
+    highDownSilentOnTouch?: boolean;
+    highDownOnUpdate?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
 }
 
 export interface DataHost {

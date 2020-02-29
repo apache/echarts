@@ -681,8 +681,8 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     const extendedEl = el as ExtendedDisplayable;
     // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
     // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
-    extendedEl.__highDownSilentOnTouch = extendedEl.highDownSilentOnTouch;
-    extendedEl.__highDownOnUpdate = extendedEl.highDownOnUpdate;
+    extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
+    extendedEl.__highDownOnUpdate = (el as ECElement).highDownOnUpdate;
 
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.
