@@ -60,7 +60,7 @@ import { Dictionary } from 'zrender/src/core/types';
 var OPTION_INNER_KEY = '\0_ec_inner';
 
 
-class GlobalModel extends Model {
+class GlobalModel extends Model<ECUnitOption> {
 
     // @readonly
     option: ECUnitOption;

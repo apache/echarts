@@ -24,7 +24,7 @@ var ORIGIN_METHOD = '\0__throttleOriginMethod';
 var RATE = '\0__throttleRate';
 var THROTTLE_TYPE = '\0__throttleType';
 
-type ThrottleFunction = () => void;
+type ThrottleFunction = (...args: any[]) => void;
 /**
  * @public
  * @param {(Function)} fn

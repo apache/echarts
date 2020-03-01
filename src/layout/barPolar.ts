@@ -17,33 +17,53 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import {parsePercent} from '../util/number';
 import {isDimensionStacked} from '../data/helper/dataStackHelper';
+import type BarSeriesModel from '../chart/bar/BarSeries';
+import type Polar from '../coord/polar/Polar';
+import AngleAxis from '../coord/polar/AngleAxis';
+import RadiusAxis from '../coord/polar/RadiusAxis';
+import GlobalModel from '../model/Global';
+import ExtensionAPI from '../ExtensionAPI';
+import { Dictionary } from '../util/types';
 
-function getSeriesStackId(seriesModel) {
+type PolarAxis = AngleAxis | RadiusAxis
+
+interface StackInfo {
+    width: number
+    maxWidth: number
+}
+interface LayoutColumnInfo {
+    autoWidthCount: number
+    bandWidth: number
+    remainedWidth: number
+    categoryGap: string | number
+    gap: string | number
+    stacks: Dictionary<StackInfo>
+}
+
+interface BarWidthAndOffset {
+    width: number
+    offset: number
+}
+
+function getSeriesStackId(seriesModel: BarSeriesModel) {
     return seriesModel.get('stack')
         || '__ec_stack_' + seriesModel.seriesIndex;
 }
 
-function getAxisKey(polar, axis) {
+function getAxisKey(polar: Polar, axis: PolarAxis) {
     return axis.dim + polar.model.componentIndex;
 }
 
-/**
- * @param {string} seriesType
- * @param {module:echarts/model/Global} ecModel
- * @param {module:echarts/ExtensionAPI} api
- */
-function barLayoutPolar(seriesType, ecModel, api) {
+function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: ExtensionAPI) {
 
-    var lastStackCoords = {};
+    var lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
 
     var barWidthAndOffset = calRadialBar(
         zrUtil.filter(
-            ecModel.getSeriesByType(seriesType),
+            ecModel.getSeriesByType(seriesType) as BarSeriesModel[],
             function (seriesModel) {
                 return !ecModel.isSeriesFiltered(seriesModel)
                     && seriesModel.coordinateSystem
@@ -52,7 +72,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
         )
     );
 
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+    ecModel.eachSeriesByType(seriesType, function (seriesModel: BarSeriesModel) {
 
         // Check series coordinate, do layout for polar only
         if (seriesModel.coordinateSystem.type !== 'polar') {
@@ -60,7 +80,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
         }
 
         var data = seriesModel.getData();
-        var polar = seriesModel.coordinateSystem;
+        var polar = seriesModel.coordinateSystem as Polar;
         var baseAxis = polar.getBaseAxis();
         var axisKey = getAxisKey(polar, baseAxis);
 
@@ -88,9 +108,9 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
-            var baseValue = data.get(baseDim, idx);
+            var baseValue = data.get(baseDim, idx) as number;
 
-            var sign = value >= 0 ? 'p' : 'n';
+            var sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
             var baseCoord = valueAxisStart;
 
             // Because of the barMinHeight, we can not use the value in
@@ -114,8 +134,8 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
             // radial sector
             if (valueAxis.dim === 'radius') {
-                var radiusSpan = valueAxis.dataToRadius(value) - valueAxisStart;
-                var angle = baseAxis.dataToAngle(baseValue);
+                var radiusSpan = valueAxis.dataToCoord(value) - valueAxisStart;
+                var angle = baseAxis.dataToCoord(baseValue);
 
                 if (Math.abs(radiusSpan) < barMinHeight) {
                     radiusSpan = (radiusSpan < 0 ? -1 : 1) * barMinHeight;
@@ -130,8 +150,8 @@ function barLayoutPolar(seriesType, ecModel, api) {
             }
             // tangential sector
             else {
-                var angleSpan = valueAxis.dataToAngle(value, clampLayout) - valueAxisStart;
-                var radius = baseAxis.dataToRadius(baseValue);
+                var angleSpan = valueAxis.dataToCoord(value, clampLayout) - valueAxisStart;
+                var radius = baseAxis.dataToCoord(baseValue);
 
                 if (Math.abs(angleSpan) < barMinAngle) {
                     angleSpan = (angleSpan < 0 ? -1 : 1) * barMinAngle;
@@ -168,20 +188,20 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
         }
 
-    }, this);
+    });
 
 }
 
 /**
  * Calculate bar width and offset for radial bar charts
  */
-function calRadialBar(barSeries, api) {
+function calRadialBar(barSeries: BarSeriesModel[]) {
     // Columns info on each category axis. Key is polar name
-    var columnsMap = {};
+    var columnsMap: Dictionary<LayoutColumnInfo> = {};
 
     zrUtil.each(barSeries, function (seriesModel, idx) {
         var data = seriesModel.getData();
-        var polar = seriesModel.coordinateSystem;
+        var polar = seriesModel.coordinateSystem as Polar;
 
         var baseAxis = polar.getBaseAxis();
         var axisKey = getAxisKey(polar, baseAxis);
@@ -235,7 +255,7 @@ function calRadialBar(barSeries, api) {
     });
 
 
-    var result = {};
+    var result: Dictionary<Dictionary<BarWidthAndOffset>> = {};
 
     zrUtil.each(columnsMap, function (columnsOnAxis, coordSysName) {
 
@@ -272,7 +292,7 @@ function calRadialBar(barSeries, api) {
         autoWidth = Math.max(autoWidth, 0);
 
         var widthSum = 0;
-        var lastColumn;
+        var lastColumn: StackInfo;
         zrUtil.each(stacks, function (column, idx) {
             if (!column.width) {
                 column.width = autoWidth;
@@ -289,7 +309,7 @@ function calRadialBar(barSeries, api) {
             result[coordSysName][stackId] = result[coordSysName][stackId] || {
                 offset: offset,
                 width: column.width
-            };
+            } as BarWidthAndOffset;
 
             offset += column.width * (1 + barGapPercent);
         });

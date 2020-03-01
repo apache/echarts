@@ -21,7 +21,6 @@
 
 /**
  * List for data storage
- * @module echarts/data/List
  */
 
 import {__DEV__} from '../config';

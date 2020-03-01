@@ -29,7 +29,7 @@ import {
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
-    SeriesOption, TooltipRenderMode, AxisValue, ZRColor, BoxLayoutOptionMixin
+    SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin, ScaleDataValue
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -327,14 +327,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         multipleSeries?: boolean,
         dataType?: string,
         renderMode?: TooltipRenderMode
-    ):
-        {
-            html: string,
-            markers: {[markName: string]: string}
-        }
-        // The override method can only return string
-        | string
-    {
+    ): {
+        html: string,
+        markers: {[markName: string]: string}
+    } | string { // The override method can only return string
 
         var series = this;
         renderMode = renderMode || 'html';
@@ -526,7 +522,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      */
     getAxisTooltipData: (
         dim: DimensionName[],
-        value: AxisValue,
+        value: ScaleDataValue,
         baseAxis: Axis
     ) => {
         dataIndices: number[],

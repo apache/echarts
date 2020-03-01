@@ -56,21 +56,7 @@ class PiecewiseVisualMapView extends VisualMapView {
             thisGroup, endsText[0], itemSize, showLabel, itemAlign
         );
 
-        zrUtil.each(viewData.viewPieceList, renderItem, this);
-
-        endsText && this._renderEndsText(
-            thisGroup, endsText[1], itemSize, showLabel, itemAlign
-        );
-
-        layout.box(
-            visualMapModel.get('orient'), thisGroup, visualMapModel.get('itemGap')
-        );
-
-        this.renderBackground(thisGroup);
-
-        this.positionGroup(thisGroup);
-
-        function renderItem(this: PiecewiseVisualMapView, item: typeof viewData.viewPieceList[number]) {
+        zrUtil.each(viewData.viewPieceList, function (item: typeof viewData.viewPieceList[number]) {
             var piece = item.piece;
 
             var itemGroup = new graphic.Group();
@@ -103,15 +89,29 @@ class PiecewiseVisualMapView extends VisualMapView {
             }
 
             thisGroup.add(itemGroup);
-        }
+        }, this);
+
+        endsText && this._renderEndsText(
+            thisGroup, endsText[1], itemSize, showLabel, itemAlign
+        );
+
+        layout.box(
+            visualMapModel.get('orient'), thisGroup, visualMapModel.get('itemGap')
+        );
+
+        this.renderBackground(thisGroup);
+
+        this.positionGroup(thisGroup);
+
+
     }
 
     private _enableHoverLink(itemGroup: graphic.Group, pieceIndex: number) {
         itemGroup
-            .on('mouseover', zrUtil.bind(onHoverLink, this, 'highlight'))
-            .on('mouseout', zrUtil.bind(onHoverLink, this, 'downplay'));
+            .on('mouseover', () => onHoverLink('highlight'))
+            .on('mouseout', () => onHoverLink('downplay'));
 
-        function onHoverLink(this: PiecewiseVisualMapView, method?: 'highlight' | 'downplay') {
+        const onHoverLink = (method?: 'highlight' | 'downplay') => {
             var visualMapModel = this.visualMapModel;
 
             // TODO: TYPE More detailed action types
@@ -122,7 +122,7 @@ class PiecewiseVisualMapView extends VisualMapView {
                     visualMapModel
                 )
             });
-        }
+        };
     }
 
     private _getItemAlign(): helper.ItemAlign {

@@ -28,7 +28,7 @@ import GridModel from './GridModel';
 
 class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
-    readonly type: string = 'cartesian2d';
+    readonly type = 'cartesian2d';
 
     readonly dimensions = cartesian2DDimensions;
 

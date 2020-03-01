@@ -274,7 +274,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
         else {
             dataIndices = series.getData().indicesOfNearest(
                 dataDim[0],
-                value,
+                value as number,
                 // Add a threshold to avoid find the wrong dataIndex
                 // when data length is not same.
                 // false,
@@ -290,7 +290,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
             return;
         }
 
-        var diff = value - seriesNestestValue;
+        var diff = value as number - seriesNestestValue;
         var dist = Math.abs(diff);
         // Consider category case
         if (dist <= minDist) {
@@ -364,7 +364,7 @@ function showTooltip(
         axisIndex: axisModel.componentIndex,
         axisType: axisModel.type,
         axisId: axisModel.id,
-        value: value,
+        value: value as number,
         // Caustion: viewHelper.getValueLabel is actually on "view stage", which
         // depends that all models have been updated. So it should not be performed
         // here. Considering axisPointerModel used here is volatile, which is hard

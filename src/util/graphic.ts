@@ -56,7 +56,8 @@ import {
     AnimationDelayCallbackParam,
     DisplayState,
     ECElement,
-    ZRRectLike
+    ZRRectLike,
+    ColorString
 } from './types';
 import GlobalModel from '../model/Global';
 
@@ -121,7 +122,7 @@ type TextCommonParams = {
      * Specify a color when color is 'auto',
      * for textFill, textStroke, textBackgroundColor, and textBorderColor. If autoColor specified, it is used as default textFill.
      */
-    autoColor?: string
+    autoColor?: ColorString
     /**
      * `true`: Use inside style (textFill, textStroke, textStrokeWidth)
      *     if `textFill` is not specified.
@@ -1067,9 +1068,9 @@ function setTokenTextStyle(
         || globalTextStyle.textShadowOffsetY;
 }
 
-function getAutoColor(color: string, opt?: {
-    autoColor?: string
-}): string {
+function getAutoColor(color: ColorString, opt?: {
+    autoColor?: ColorString
+}): ColorString {
     return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
 }
 

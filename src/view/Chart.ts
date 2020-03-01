@@ -41,7 +41,58 @@ var inner = modelUtil.makeInner<{
 }>();
 var renderPlanner = createRenderPlanner();
 
+interface ChartView {
+    /**
+     * Rendering preparation in progressive mode.
+     * Implement it if needed.
+     */
+    incrementalPrepareRender(
+        seriesModel: SeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ): void;
 
+    /**
+     * Render in progressive mode.
+     * Implement it if needed.
+     * @param params See taskParams in `stream/task.js`
+     */
+    incrementalRender(
+        params: StageHandlerProgressParams,
+        seriesModel: SeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ): void;
+
+    /**
+     * Update transform directly.
+     * Implement it if needed.
+     */
+    updateTransform(
+        seriesModel: SeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ): void | {update: true};
+
+    /**
+     * The view contains the given point.
+     * Implement it if needed.
+     */
+    containPoint(
+        point: number[], seriesModel: SeriesModel
+    ): boolean;
+
+    /**
+     * Pass only when return `true`.
+     * Implement it if needed.
+     */
+    filterForExposedEvent(
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+    ): boolean;
+}
 class ChartView {
 
     // [Caution]: for compat the previous "class extend"
@@ -113,56 +164,6 @@ class ChartView {
      */
     dispose(ecModel: GlobalModel, api: ExtensionAPI): void {}
 
-    /**
-     * Rendering preparation in progressive mode.
-     * Implement it if needed.
-     */
-    incrementalPrepareRender: (
-        seriesModel: SeriesModel,
-        ecModel: GlobalModel,
-        api: ExtensionAPI,
-        payload: Payload
-    ) => void;
-
-    /**
-     * Render in progressive mode.
-     * Implement it if needed.
-     * @param params See taskParams in `stream/task.js`
-     */
-    incrementalRender: (
-        params: StageHandlerProgressParams,
-        seriesModel: SeriesModel,
-        ecModel: GlobalModel,
-        api: ExtensionAPI,
-        payload: Payload
-    ) => void;
-
-    /**
-     * Update transform directly.
-     * Implement it if needed.
-     */
-    updateTransform: (
-        seriesModel: SeriesModel,
-        ecModel: GlobalModel,
-        api: ExtensionAPI,
-        payload: Payload
-    ) => void | {update: true};
-
-    /**
-     * The view contains the given point.
-     * Implement it if needed.
-     */
-    containPoint: (
-        point: number[], seriesModel: SeriesModel
-    ) => boolean;
-
-    /**
-     * Pass only when return `true`.
-     * Implement it if needed.
-     */
-    filterForExposedEvent: (
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
-    ) => boolean;
 
     updateView(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         this.render(seriesModel, ecModel, api, payload);

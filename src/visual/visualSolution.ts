@@ -34,7 +34,6 @@ import List from '../data/List';
 
 var each = zrUtil.each;
 
-type WithKey<T extends string, S> = { [key in T]?: S}
 type VisualMappingCollection<VisualState extends string>
     = {
         [key in VisualState]?: {
@@ -58,7 +57,7 @@ type VisualOption = {[key in BuiltinVisualProperty]?: any};
 
 
 export function createVisualMappings<VisualState extends string>(
-    option: WithKey<VisualState, VisualOption>,
+    option: Partial<Record<VisualState, VisualOption>>,
     stateList: readonly VisualState[],
     supplementVisualOption: (mappingOption: VisualMappingOption, state: string) => void
 ) {
@@ -101,7 +100,7 @@ export function createVisualMappings<VisualState extends string>(
 }
 
 export function replaceVisualOption<T extends string>(
-    thisOption: WithKey<T, any>, newOption: WithKey<T, any>, keys: readonly T[]
+    thisOption: Partial<Record<T, any>>, newOption: Partial<Record<T, any>>, keys: readonly T[]
 ) {
     // Visual attributes merge is not supported, otherwise it
     // brings overcomplicated merge logic. See #2853. So if
@@ -140,7 +139,7 @@ export function applyVisual<VisualState extends string, Scope>(
     scope?: Scope,
     dimension?: DimensionLoose
 ) {
-    var visualTypesMap: WithKey<VisualState, BuiltinVisualProperty[]> = {};
+    var visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
     zrUtil.each(stateList, function (state) {
         var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
@@ -201,7 +200,7 @@ export function incrementalApplyVisual<VisualState extends string>(
     getValueState: (valueOrIndex: ParsedValue | number) => VisualState,
     dim?: DimensionLoose
 ): StageHandlerProgressExecutor {
-    var visualTypesMap: WithKey<VisualState, BuiltinVisualProperty[]> = {};
+    var visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
     zrUtil.each(stateList, function (state) {
         var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;

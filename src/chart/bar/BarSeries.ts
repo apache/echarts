@@ -17,32 +17,92 @@
 * under the License.
 */
 
-// @ts-nocheck
+import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
+import SeriesModel from '../../model/Series';
+import { ItemStyleOption, OptionDataValue, LabelOption } from '../../util/types';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Polar from '../../coord/polar/Polar';
 
-import BaseBarSeries from './BaseBarSeries';
+type BarDataValue = OptionDataValue | OptionDataValue[]
 
-export default BaseBarSeries.extend({
+export interface BarItemStyleOption extends ItemStyleOption {
+    /**
+     * Border radius is not supported for bar on polar
+     */
+    barBorderRadius?: number | number[]
+}
+export interface BarDataItemOption {
+    name?: string
 
-    type: 'series.bar',
+    value?: BarDataValue
 
-    dependencies: ['grid', 'polar'],
+    itemStyle?: BarItemStyleOption
+    label?: LabelOption
 
-    brushSelector: 'rect',
+    cursor?: string
+
+    emphasis?: {
+        itemStyle?: BarItemStyleOption
+        label?: LabelOption
+    }
+}
+
+export interface BarSeriesOption extends BaseBarSeriesOption {
+    coordinateSystem?: 'cartesian2d' | 'polar'
+
+    clip?: boolean
+
+    stack?: string
+
+    /**
+     * If use caps on two sides of bars
+     * Only available on tangential polar bar
+     */
+    roundCap?: boolean
+
+    showBackground?: boolean
+
+    backgroundStyle?: ItemStyleOption & {
+        borderRadius?: number | number[]
+    }
+
+    data?: (BarDataItemOption | BarDataValue)[]
+
+    label?: LabelOption
+
+    itemStyle?: BarItemStyleOption
+
+    emphasis?: {
+        label?: LabelOption
+        itemStyle?: BarItemStyleOption
+    }
+
+}
+
+class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
+    static type = 'series.bar'
+    type = BarSeriesModel.type
+
+    static dependencies = ['grid', 'polar']
+
+    readonly brushSelector = 'rect'
+
+    coordinateSystem: Cartesian2D | Polar
 
     /**
      * @override
      */
-    getProgressive: function () {
+    getProgressive() {
         // Do not support progressive in normal mode.
         return this.get('large')
             ? this.get('progressive')
             : false;
-    },
+    }
 
     /**
      * @override
      */
-    getProgressiveThreshold: function () {
+    getProgressiveThreshold() {
         // Do not support progressive in normal mode.
         var progressiveThreshold = this.get('progressiveThreshold');
         var largeThreshold = this.get('largeThreshold');
@@ -50,15 +110,13 @@ export default BaseBarSeries.extend({
             progressiveThreshold = largeThreshold;
         }
         return progressiveThreshold;
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: BarSeriesOption = {
         // If clipped
         // Only available on cartesian2d
         clip: true,
 
-        // If use caps on two sides of bars
-        // Only available on tangential polar bar
         roundCap: false,
 
         showBackground: false,
@@ -75,4 +133,9 @@ export default BaseBarSeries.extend({
             opacity: 1
         }
     }
-});
+
+}
+
+SeriesModel.registerClass(BarSeriesModel);
+
+export default BarSeriesModel;

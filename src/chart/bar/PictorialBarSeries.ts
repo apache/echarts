@@ -17,29 +17,114 @@
 * under the License.
 */
 
-// @ts-nocheck
+import BaseBarSeriesModel, { BaseBarSeriesOption } from './BaseBarSeries';
+import SeriesModel from '../../model/Series';
+import { OptionDataValue, ItemStyleOption, LabelOption, AnimationOptionMixin } from '../../util/types';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
-import BaseBarSeries from './BaseBarSeries';
+interface PictorialBarSeriesSymbolOption {
+    /**
+     * Customized bar shape
+     */
+    symbol?: string
+    /**
+     * Can be ['100%', '100%'], null means auto.
+     * The percent will be relative to category width. If no repeat.
+     * Will be relative to symbolBoundingData.
+     */
+    symbolSize?: (number | string)[] | number | string
 
-var PictorialBarSeries = BaseBarSeries.extend({
+    symbolRotate?: number
 
-    type: 'series.pictorialBar',
+    /**
+     * Default to be auto
+     */
+    symbolPosition?: 'start' | 'end' | 'center'
 
-    dependencies: ['grid'],
+    /**
+     * Can be percent offset relative to the symbolSize
+     */
+    symbolOffset?: (number | string)[] | number | string
+    /**
+     * start margin and end margin. Can be a number or a percent string relative to symbolSize.
+     * Auto margin by default.
+     */
+    symbolMargin?: (number | string)[] | number | string
 
-    defaultOption: {
+    /**
+     * true: means auto calculate repeat times and cut by data.
+     * a number: specifies repeat times, and do not cut by data.
+     * 'fixed': means auto calculate repeat times but do not cut by data.
+     *
+     * Otherwise means no repeat
+     */
+    symbolRepeat?: boolean | number | 'fixed'
+
+    /**
+     * From start to end or end to start.
+     */
+    symbolRepeatDirection?: 'start' | 'end'
+
+    symbolClip?: boolean
+
+    /**
+     * It will define the size of graphic elements.
+     */
+    symbolBoundingData?: number | number[]
+
+    symbolPatternSize?: number
+}
+
+type PictorialBarValue = OptionDataValue
+
+export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOption,
+    // Pictorial bar support configure animation in each data item.
+    AnimationOptionMixin {
+    name?: string
+
+    value?: PictorialBarValue
+
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+
+    hoverAnimation?: boolean
+
+    z?: number
+
+    cursor?: string
+}
+
+export interface PictorialBarSeriesOption extends BaseBarSeriesOption, PictorialBarSeriesSymbolOption {
+    coordinateSystem?: 'cartesian2d'
+
+    data?: (PictorialBarDataItemOption | PictorialBarValue)[]
+
+    hoverAnimation?: boolean
+}
+
+class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOption> {
+    static type = 'series.pictorialBar'
+    type = PictorialBarSeriesModel.type
+
+    static dependencies = ['grid']
+
+    coordinateSystem: Cartesian2D
+
+    static defaultOption: PictorialBarSeriesOption = {
+
         symbol: 'circle',     // Customized bar shape
-        symbolSize: null,     // Can be ['100%', '100%'], null means auto.
+        symbolSize: null,     //
         symbolRotate: null,
 
         symbolPosition: null, // 'start' or 'end' or 'center', null means auto.
         symbolOffset: null,
-        symbolMargin: null,   // start margin and end margin. Can be a number or a percent string.
-                                // Auto margin by defualt.
-        symbolRepeat: false,  // false/null/undefined, means no repeat.
-                                // Can be true, means auto calculate repeat times and cut by data.
-                                // Can be a number, specifies repeat times, and do not cut by data.
-                                // Can be 'fixed', means auto calculate repeat times but do not cut by data.
+        symbolMargin: null,
+        symbolRepeat: false,
         symbolRepeatDirection: 'end', // 'end' means from 'start' to 'end'.
 
         symbolClip: false,
@@ -53,13 +138,15 @@ var PictorialBarSeries = BaseBarSeries.extend({
         // Disable progressive
         progressive: 0,
         hoverAnimation: false // Open only when needed.
-    },
-
-    getInitialData: function (option) {
-        // Disable stack.
-        option.stack = null;
-        return PictorialBarSeries.superApply(this, 'getInitialData', arguments);
     }
-});
 
-export default PictorialBarSeries;
+    getInitialData(option: PictorialBarSeriesOption) {
+        // Disable stack.
+        (option as any).stack = null;
+        return super.getInitialData.apply(this, arguments as any);
+    }
+}
+
+SeriesModel.registerClass(PictorialBarSeriesModel);
+
+export default PictorialBarSeriesModel;

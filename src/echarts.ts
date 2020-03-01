@@ -161,7 +161,7 @@ function toLowercaseNameAndCallEventful<T>(host: T, method: EventMethodName, arg
 }
 
 
-class MessageCenter extends Eventful<MessageCenter> {}
+class MessageCenter extends Eventful {}
 var messageCenterProto = MessageCenter.prototype;
 messageCenterProto.on = createRegisterEventWithLowercaseMessageCenter('on');
 messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
@@ -761,7 +761,7 @@ class ECharts {
 
     private _initEvents(): void {
         each(MOUSE_EVENT_NAMES, function (eveName) {
-            var handler = function (this: ECharts, e: ElementEvent) {
+            const handler = (e: ElementEvent) => {
                 var ecModel = this.getModel();
                 var targetEl = e.target;
                 var el = targetEl as ECElement;

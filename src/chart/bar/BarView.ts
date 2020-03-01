@@ -17,31 +17,47 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {setLabel} from './helper';
-import Model from '../../model/Model';
-import barItemStyle from './barItemStyle';
-import Path from 'zrender/src/graphic/Path';
+import {getBarItemStyle} from './barItemStyle';
+import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/container/Group';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
+import ChartView from '../../view/Chart';
+import List from '../../data/List';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { StageHandlerProgressParams, ECElement, ZRElementEvent } from '../../util/types';
+import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
+import type Axis2D from '../../coord/cartesian/Axis2D';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type { RectLike } from 'zrender/src/core/BoundingRect';
+import type Model from '../../model/Model';
 
-var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'barBorderWidth'];
-var _eventPos = [0, 0];
+const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
+const _eventPos = [0, 0];
 
-// FIXME
-// Just for compatible with ec2.
-zrUtil.extend(Model.prototype, barItemStyle);
+const mathMax = Math.max;
+const mathMin = Math.min;
 
-function getClipArea(coord, data) {
-    var coordSysClipArea = coord.getArea && coord.getArea();
-    if (coord.type === 'cartesian2d') {
+type CoordSysOfBar = BarSeriesModel['coordinateSystem'];
+type RectShape = graphic.Rect['shape']
+type SectorShape = graphic.Sector['shape']
+
+type SectorLayout = SectorShape;
+type RectLayout = RectShape;
+
+function isCartesian2D(coord: CoordSysOfBar): coord is Cartesian2D {
+    return coord.type === 'cartesian2d';
+}
+
+function getClipArea(coord: CoordSysOfBar, data: List) {
+    if (isCartesian2D(coord)) {
+        var coordSysClipArea = coord.getArea && coord.getArea();
         var baseAxis = coord.getBaseAxis();
         // When boundaryGap is false or using time axis. bar may exceed the grid.
         // We should not clip this part.
@@ -62,11 +78,20 @@ function getClipArea(coord, data) {
     return coordSysClipArea;
 }
 
-export default echarts.extendChartView({
 
-    type: 'bar',
+class BarView extends ChartView {
+    static type = 'bar' as const
+    type = BarView.type
 
-    render: function (seriesModel, ecModel, api) {
+    _data: List
+
+    _isLargeDraw: boolean
+
+    _backgroundGroup: graphic.Group
+
+    _backgroundEls: (graphic.Rect | graphic.Sector)[]
+
+    render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._updateDrawMode(seriesModel);
 
         var coordinateSystemType = seriesModel.get('coordinateSystem');
@@ -83,37 +108,38 @@ export default echarts.extendChartView({
         }
 
         return this.group;
-    },
+    }
 
-    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+    incrementalPrepareRender(seriesModel: BarSeriesModel) {
         this._clear();
         this._updateDrawMode(seriesModel);
-    },
+    }
 
-    incrementalRender: function (params, seriesModel, ecModel, api) {
+    incrementalRender(
+        params: StageHandlerProgressParams, seriesModel: BarSeriesModel) {
         // Do not support progressive in normal mode.
         this._incrementalRenderLarge(params, seriesModel);
-    },
+    }
 
-    _updateDrawMode: function (seriesModel) {
+    _updateDrawMode(seriesModel: BarSeriesModel) {
         var isLargeDraw = seriesModel.pipelineContext.large;
-        if (this._isLargeDraw == null || isLargeDraw ^ this._isLargeDraw) {
+        if (this._isLargeDraw == null || isLargeDraw !== this._isLargeDraw) {
             this._isLargeDraw = isLargeDraw;
             this._clear();
         }
-    },
+    }
 
-    _renderNormal: function (seriesModel, ecModel, api) {
+    _renderNormal(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var group = this.group;
         var data = seriesModel.getData();
         var oldData = this._data;
 
         var coord = seriesModel.coordinateSystem;
         var baseAxis = coord.getBaseAxis();
-        var isHorizontalOrRadial;
+        var isHorizontalOrRadial: boolean;
 
         if (coord.type === 'cartesian2d') {
-            isHorizontalOrRadial = baseAxis.isHorizontal();
+            isHorizontalOrRadial = (baseAxis as Axis2D).isHorizontal();
         }
         else if (coord.type === 'polar') {
             isHorizontalOrRadial = baseAxis.dim === 'angle';
@@ -133,8 +159,8 @@ export default echarts.extendChartView({
         var drawBackground = seriesModel.get('showBackground', true);
         var backgroundModel = seriesModel.getModel('backgroundStyle');
 
-        var bgEls = [];
-        var oldBgEls = this._backgroundEls || [];
+        var bgEls: BarView['_backgroundEls'] = [];
+        var oldBgEls = this._backgroundEls;
 
         data.diff(oldData)
             .add(function (dataIndex) {
@@ -142,8 +168,10 @@ export default echarts.extendChartView({
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, layout);
-                    bgEl.useStyle(backgroundModel.getBarItemStyle());
+                    var bgEl = createBackgroundEl(
+                        coord, isHorizontalOrRadial, layout
+                    );
+                    bgEl.useStyle(getBarItemStyle(backgroundModel));
                     bgEls[dataIndex] = bgEl;
                 }
 
@@ -178,14 +206,16 @@ export default echarts.extendChartView({
 
                 if (drawBackground) {
                     var bgEl = oldBgEls[oldIndex];
-                    bgEl.useStyle(backgroundModel.getBarItemStyle());
+                    bgEl.useStyle(getBarItemStyle(backgroundModel));
                     bgEls[newIndex] = bgEl;
 
                     var shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
-                    graphic.updateProps(bgEl, { shape: shape }, animationModel, newIndex);
+                    graphic.updateProps(
+                        bgEl as graphic.Path, { shape: shape }, animationModel, newIndex
+                    );
                 }
 
-                var el = oldData.getItemGraphicEl(oldIndex);
+                var el = oldData.getItemGraphicEl(oldIndex) as graphic.Rect | graphic.Sector;
                 if (!data.hasValue(newIndex)) {
                     group.remove(el);
                     return;
@@ -200,7 +230,9 @@ export default echarts.extendChartView({
                 }
 
                 if (el) {
-                    graphic.updateProps(el, {shape: layout}, animationModel, newIndex);
+                    graphic.updateProps(el as graphic.Path, {
+                        shape: layout
+                    }, animationModel, newIndex);
                 }
                 else {
                     el = elementCreator[coord.type](
@@ -220,10 +252,10 @@ export default echarts.extendChartView({
             .remove(function (dataIndex) {
                 var el = oldData.getItemGraphicEl(dataIndex);
                 if (coord.type === 'cartesian2d') {
-                    el && removeRect(dataIndex, animationModel, el);
+                    el && removeRect(dataIndex, animationModel, el as graphic.Rect);
                 }
                 else {
-                    el && removeSector(dataIndex, animationModel, el);
+                    el && removeSector(dataIndex, animationModel, el as graphic.Sector);
                 }
             })
             .execute();
@@ -238,9 +270,9 @@ export default echarts.extendChartView({
         this._backgroundEls = bgEls;
 
         this._data = data;
-    },
+    }
 
-    _renderLarge: function (seriesModel, ecModel, api) {
+    _renderLarge(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._clear();
         createLarge(seriesModel, this.group);
 
@@ -254,32 +286,30 @@ export default echarts.extendChartView({
         else {
             this.group.removeClipPath();
         }
-    },
+    }
 
-    _incrementalRenderLarge: function (params, seriesModel) {
+    _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel) {
         this._removeBackground();
         createLarge(seriesModel, this.group, true);
-    },
+    }
 
-    dispose: zrUtil.noop,
-
-    remove: function (ecModel) {
+    remove(ecModel?: GlobalModel) {
         this._clear(ecModel);
-    },
+    }
 
-    _clear: function (ecModel) {
+    _clear(ecModel?: GlobalModel) {
         var group = this.group;
         var data = this._data;
         if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
             this._removeBackground();
             this._backgroundEls = [];
 
-            data.eachItemGraphicEl(function (el) {
+            data.eachItemGraphicEl(function (el: ECElement & (graphic.Sector | graphic.Rect)) {
                 if (el.type === 'sector') {
-                    removeSector(el.dataIndex, ecModel, el);
+                    removeSector(el.dataIndex, ecModel, el as (graphic.Sector));
                 }
                 else {
-                    removeRect(el.dataIndex, ecModel, el);
+                    removeRect(el.dataIndex, ecModel, el as (graphic.Rect));
                 }
             });
         }
@@ -287,20 +317,21 @@ export default echarts.extendChartView({
             group.removeAll();
         }
         this._data = null;
-    },
+    }
 
-    _removeBackground: function () {
+    _removeBackground() {
         this.group.remove(this._backgroundGroup);
         this._backgroundGroup = null;
     }
+}
 
-});
-
-var mathMax = Math.max;
-var mathMin = Math.min;
-
-var clip = {
-    cartesian2d: function (coordSysBoundingRect, layout) {
+interface Clipper {
+    (coordSysBoundingRect: RectLike, layout: RectLayout | SectorLayout): boolean
+}
+var clip: {
+    [key in 'cartesian2d' | 'polar']: Clipper
+} = {
+    cartesian2d(coordSysBoundingRect: RectLike, layout: graphic.Rect['shape']) {
         var signWidth = layout.width < 0 ? -1 : 1;
         var signHeight = layout.height < 0 ? -1 : 1;
         // Needs positive width and height
@@ -338,15 +369,24 @@ var clip = {
         return clipped;
     },
 
-    polar: function (coordSysClipArea) {
+    polar() {
         return false;
     }
 };
 
-var elementCreator = {
+interface ElementCreator {
+    (
+        dataIndex: number, layout: RectLayout | SectorLayout, isHorizontalOrRadial: boolean,
+        animationModel: BarSeriesModel, isUpdate: boolean, roundCap?: boolean
+    ): graphic.Sector | graphic.Rect
+}
 
-    cartesian2d: function (
-        dataIndex, layout, isHorizontal,
+var elementCreator: {
+    [key in 'polar' | 'cartesian2d']: ElementCreator
+} = {
+
+    cartesian2d(
+        dataIndex, layout: RectLayout, isHorizontal,
         animationModel, isUpdate
     ) {
         var rect = new graphic.Rect({
@@ -359,8 +399,8 @@ var elementCreator = {
         // Animation
         if (animationModel) {
             var rectShape = rect.shape;
-            var animateProperty = isHorizontal ? 'height' : 'width';
-            var animateTarget = {};
+            var animateProperty = isHorizontal ? 'height' : 'width' as 'width' | 'height';
+            var animateTarget = {} as RectShape;
             rectShape[animateProperty] = 0;
             animateTarget[animateProperty] = layout[animateProperty];
             graphic[isUpdate ? 'updateProps' : 'initProps'](rect, {
@@ -371,8 +411,8 @@ var elementCreator = {
         return rect;
     },
 
-    polar: function (
-        dataIndex, layout, isRadial,
+    polar(
+        dataIndex: number, layout: SectorLayout, isRadial: boolean,
         animationModel, isUpdate, roundCap
     ) {
         // Keep the same logic with bar in catesion: use end value to control
@@ -393,8 +433,8 @@ var elementCreator = {
         // Animation
         if (animationModel) {
             var sectorShape = sector.shape;
-            var animateProperty = isRadial ? 'r' : 'endAngle';
-            var animateTarget = {};
+            var animateProperty = isRadial ? 'r' : 'endAngle' as 'r' | 'endAngle';
+            var animateTarget = {} as SectorShape;
             sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             graphic[isUpdate ? 'updateProps' : 'initProps'](sector, {
@@ -406,7 +446,11 @@ var elementCreator = {
     }
 };
 
-function removeRect(dataIndex, animationModel, el) {
+function removeRect(
+    dataIndex: number,
+    animationModel: BarSeriesModel | GlobalModel,
+    el: graphic.Rect
+) {
     // Not show text when animating
     el.style.text = null;
     graphic.updateProps(el, {
@@ -418,7 +462,11 @@ function removeRect(dataIndex, animationModel, el) {
     });
 }
 
-function removeSector(dataIndex, animationModel, el) {
+function removeSector(
+    dataIndex: number,
+    animationModel: BarSeriesModel | GlobalModel,
+    el: graphic.Sector
+) {
     // Not show text when animating
     el.style.text = null;
     graphic.updateProps(el, {
@@ -430,9 +478,14 @@ function removeSector(dataIndex, animationModel, el) {
     });
 }
 
-var getLayout = {
-    cartesian2d: function (data, dataIndex, itemModel) {
-        var layout = data.getItemLayout(dataIndex);
+interface GetLayout {
+    (data: List, dataIndex: number, itemModel: Model<BarDataItemOption>): RectLayout | SectorLayout
+}
+var getLayout: {
+    [key in 'cartesian2d' | 'polar']: GetLayout
+} = {
+    cartesian2d(data, dataIndex, itemModel): RectLayout {
+        var layout = data.getItemLayout(dataIndex) as RectLayout;
         var fixedLineWidth = getLineWidth(itemModel, layout);
 
         // fix layout with lineWidth
@@ -446,7 +499,7 @@ var getLayout = {
         };
     },
 
-    polar: function (data, dataIndex, itemModel) {
+    polar(data, dataIndex, itemModel): SectorLayout {
         var layout = data.getItemLayout(dataIndex);
         return {
             cx: layout.cx,
@@ -455,24 +508,30 @@ var getLayout = {
             r: layout.r,
             startAngle: layout.startAngle,
             endAngle: layout.endAngle
-        };
+        } as SectorLayout;
     }
 };
 
-function isZeroOnPolar(layout) {
+function isZeroOnPolar(layout: SectorLayout) {
     return layout.startAngle != null
         && layout.endAngle != null
         && layout.startAngle === layout.endAngle;
 }
 
 function updateStyle(
-    el, data, dataIndex, itemModel, layout, seriesModel, isHorizontal, isPolar
+    el: graphic.Sector | graphic.Rect,
+    data: List, dataIndex: number,
+    itemModel: Model<BarDataItemOption>,
+    layout: RectLayout | SectorLayout,
+    seriesModel: BarSeriesModel,
+    isHorizontal: boolean,
+    isPolar: boolean
 ) {
     var color = data.getItemVisual(dataIndex, 'color');
     var opacity = data.getItemVisual(dataIndex, 'opacity');
     var stroke = data.getVisual('borderColor');
     var itemStyleModel = itemModel.getModel('itemStyle');
-    var hoverStyle = itemModel.getModel('emphasis.itemStyle').getBarItemStyle();
+    var hoverStyle = getBarItemStyle(itemModel.getModel(['emphasis', 'itemStyle']));
 
     if (!isPolar) {
         el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
@@ -480,34 +539,37 @@ function updateStyle(
 
     el.useStyle(zrUtil.defaults(
         {
-            stroke: isZeroOnPolar(layout) ? 'none' : stroke,
-            fill: isZeroOnPolar(layout) ? 'none' : color,
+            stroke: isZeroOnPolar(layout as SectorLayout) ? 'none' : stroke,
+            fill: isZeroOnPolar(layout as SectorLayout) ? 'none' : color,
             opacity: opacity
         },
-        itemStyleModel.getBarItemStyle()
+        getBarItemStyle(itemStyleModel)
     ));
 
     var cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && el.attr('cursor', cursorStyle);
 
-    var labelPositionOutside = isHorizontal
-        ? (layout.height > 0 ? 'bottom' : 'top')
-        : (layout.width > 0 ? 'left' : 'right');
-
     if (!isPolar) {
+        var labelPositionOutside = isHorizontal
+            ? ((layout as RectLayout).height > 0 ? 'bottom' : 'top')
+            : ((layout as RectLayout).width > 0 ? 'left' : 'right');
+
         setLabel(
             el.style, hoverStyle, itemModel, color,
             seriesModel, dataIndex, labelPositionOutside
         );
     }
-    if (isZeroOnPolar(layout)) {
+    if (isZeroOnPolar(layout as SectorLayout)) {
         hoverStyle.fill = hoverStyle.stroke = 'none';
     }
     graphic.setHoverStyle(el, hoverStyle);
 }
 
 // In case width or height are too small.
-function getLineWidth(itemModel, rawLayout) {
+function getLineWidth(
+    itemModel: Model<BarSeriesOption>,
+    rawLayout: RectLayout
+) {
     var lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
     // width or height may be NaN for empty data
     var width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
@@ -515,19 +577,32 @@ function getLineWidth(itemModel, rawLayout) {
     return Math.min(lineWidth, width, height);
 }
 
+class LagePathShape {
+    points: ArrayLike<number>
+}
+interface LargePathProps extends PathProps {
+    shape?: LagePathShape
+}
+class LargePath extends Path {
+    type = 'largeBar'
 
-var LargePath = Path.extend({
+    shape: LagePathShape
 
-    type: 'largeBar',
+    __startPoint: number[]
+    __baseDimIdx: number
+    __largeDataIndices: ArrayLike<number>
+    __barWidth: number
 
-    shape: {points: []},
+    constructor(opts?: LargePathProps) {
+        super(opts, null, new LagePathShape());
+    }
 
-    buildPath: function (ctx, shape) {
+    buildPath(ctx: CanvasRenderingContext2D, shape: LagePathShape) {
         // Drawing lines is more efficient than drawing
         // a whole line or drawing rects.
-        var points = shape.points;
-        var startPoint = this.__startPoint;
-        var baseDimIdx = this.__baseDimIdx;
+        const points = shape.points;
+        const startPoint = this.__startPoint;
+        const baseDimIdx = this.__baseDimIdx;
 
         for (var i = 0; i < points.length; i += 2) {
             startPoint[baseDimIdx] = points[i + baseDimIdx];
@@ -535,9 +610,13 @@ var LargePath = Path.extend({
             ctx.lineTo(points[i], points[i + 1]);
         }
     }
-});
+}
 
-function createLarge(seriesModel, group, incremental) {
+function createLarge(
+    seriesModel: BarSeriesModel,
+    group: Group,
+    incremental?: boolean
+) {
     // TODO support polar
     var data = seriesModel.getData();
     var startPoint = [];
@@ -551,37 +630,37 @@ function createLarge(seriesModel, group, incremental) {
     var drawBackground = seriesModel.get('showBackground', true);
 
     if (drawBackground) {
-        var points = data.getLayout('largeBackgroundPoints');
-        var backgroundStartPoint = [];
+        const points = data.getLayout('largeBackgroundPoints');
+        const backgroundStartPoint: number[] = [];
         backgroundStartPoint[1 - baseDimIdx] = data.getLayout('backgroundStart');
 
-        var bgEl = new LargePath({
+        const bgEl = new LargePath({
             shape: {points: points},
             incremental: !!incremental,
-            __startPoint: backgroundStartPoint,
-            __baseDimIdx: baseDimIdx,
-            __largeDataIndices: largeDataIndices,
-            __barWidth: barWidth,
             silent: true,
             z2: 0
         });
+        bgEl.__startPoint = backgroundStartPoint;
+        bgEl.__baseDimIdx = baseDimIdx;
+        bgEl.__largeDataIndices = largeDataIndices;
+        bgEl.__barWidth = barWidth;
         setLargeBackgroundStyle(bgEl, backgroundModel, data);
         group.add(bgEl);
     }
 
     var el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
-        incremental: !!incremental,
-        __startPoint: startPoint,
-        __baseDimIdx: baseDimIdx,
-        __largeDataIndices: largeDataIndices,
-        __barWidth: barWidth
+        incremental: !!incremental
     });
+    el.__startPoint = startPoint;
+    el.__baseDimIdx = baseDimIdx;
+    el.__largeDataIndices = largeDataIndices;
+    el.__barWidth = barWidth;
     group.add(el);
     setLargeStyle(el, seriesModel, data);
 
     // Enable tooltip and user mouse/touch event handlers.
-    el.seriesIndex = seriesModel.seriesIndex;
+    (el as ECElement).seriesIndex = seriesModel.seriesIndex;
 
     if (!seriesModel.get('silent')) {
         el.on('mousedown', largePathUpdateDataIndex);
@@ -590,13 +669,13 @@ function createLarge(seriesModel, group, incremental) {
 }
 
 // Use throttle to avoid frequently traverse to find dataIndex.
-var largePathUpdateDataIndex = throttle(function (event) {
+var largePathUpdateDataIndex = throttle(function (this: LargePath, event: ZRElementEvent) {
     var largePath = this;
     var dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
-    largePath.dataIndex = dataIndex >= 0 ? dataIndex : null;
+    (largePath as ECElement).dataIndex = dataIndex >= 0 ? dataIndex : null;
 }, 30, false);
 
-function largePathFindDataIndex(largePath, x, y) {
+function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
     var baseDimIdx = largePath.__baseDimIdx;
     var valueDimIdx = 1 - baseDimIdx;
     var points = largePath.shape.points;
@@ -630,7 +709,11 @@ function largePathFindDataIndex(largePath, x, y) {
     return -1;
 }
 
-function setLargeStyle(el, seriesModel, data) {
+function setLargeStyle(
+    el: LargePath,
+    seriesModel: BarSeriesModel,
+    data: List
+) {
     var borderColor = data.getVisual('borderColor') || data.getVisual('color');
     var itemStyle = seriesModel.getModel('itemStyle').getItemStyle(['color', 'borderColor']);
 
@@ -640,51 +723,62 @@ function setLargeStyle(el, seriesModel, data) {
     el.style.lineWidth = data.getLayout('barWidth');
 }
 
-function setLargeBackgroundStyle(el, backgroundModel, data) {
+function setLargeBackgroundStyle(
+    el: LargePath,
+    backgroundModel: Model<BarSeriesOption['backgroundStyle']>,
+    data: List
+) {
     var borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
     var itemStyle = backgroundModel.getItemStyle(['color', 'borderColor']);
 
     el.useStyle(itemStyle);
     el.style.fill = null;
     el.style.stroke = borderColor;
-    el.style.lineWidth = data.getLayout('barWidth');
+    el.style.lineWidth = data.getLayout('barWidth') as number;
 }
 
-function createBackgroundShape(isHorizontalOrRadial, layout, coord) {
-    var coordLayout;
-    var isPolar = coord.type === 'polar';
-    if (isPolar) {
-        coordLayout = coord.getArea();
+function createBackgroundShape(
+    isHorizontalOrRadial: boolean,
+    layout: SectorLayout | RectLayout,
+    coord: CoordSysOfBar
+): SectorShape | RectShape {
+    if (isCartesian2D(coord)) {
+        const rectShape = layout as RectShape;
+        const coordLayout = coord.getArea();
+        return {
+            x: isHorizontalOrRadial ? rectShape.x : coordLayout.x,
+            y: isHorizontalOrRadial ? coordLayout.y : rectShape.y,
+            width: isHorizontalOrRadial ? rectShape.width : coordLayout.width,
+            height: isHorizontalOrRadial ? coordLayout.height : rectShape.height
+        } as RectShape;
     }
     else {
-        coordLayout = coord.grid.getRect();
-    }
-
-    if (isPolar) {
+        const coordLayout = coord.getArea();
+        const sectorShape = layout as SectorShape;
         return {
             cx: coordLayout.cx,
             cy: coordLayout.cy,
-            r0: isHorizontalOrRadial ? coordLayout.r0 : layout.r0,
-            r: isHorizontalOrRadial ? coordLayout.r : layout.r,
-            startAngle: isHorizontalOrRadial ? layout.startAngle : 0,
-            endAngle: isHorizontalOrRadial ? layout.endAngle : Math.PI * 2
-        };
-    }
-    else {
-        return {
-            x: isHorizontalOrRadial ? layout.x : coordLayout.x,
-            y: isHorizontalOrRadial ? coordLayout.y : layout.y,
-            width: isHorizontalOrRadial ? layout.width : coordLayout.width,
-            height: isHorizontalOrRadial ? coordLayout.height : layout.height
-        };
+            r0: isHorizontalOrRadial ? coordLayout.r0 : sectorShape.r0,
+            r: isHorizontalOrRadial ? coordLayout.r : sectorShape.r,
+            startAngle: isHorizontalOrRadial ? sectorShape.startAngle : 0,
+            endAngle: isHorizontalOrRadial ? sectorShape.endAngle : Math.PI * 2
+        } as SectorShape;
     }
 }
 
-function createBackgroundEl(coord, isHorizontalOrRadial, layout) {
+function createBackgroundEl(
+    coord: CoordSysOfBar,
+    isHorizontalOrRadial: boolean,
+    layout: SectorLayout | RectLayout
+): graphic.Rect | graphic.Sector {
     var ElementClz = coord.type === 'polar' ? graphic.Sector : graphic.Rect;
     return new ElementClz({
-        shape: createBackgroundShape(isHorizontalOrRadial, layout, coord),
+        shape: createBackgroundShape(isHorizontalOrRadial, layout, coord) as any,
         silent: true,
         z2: 0
     });
 }
+
+ChartView.registerClass(BarView);
+
+export default BarView;

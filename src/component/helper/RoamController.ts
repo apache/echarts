@@ -102,7 +102,6 @@ class RoamController extends Eventful {
         const mousewheelHandler = bind(this._mousewheelHandler, this);
         const pinchHandler = bind(this._pinchHandler, this);
 
-
         /**
          * Notice: only enable needed types. For example, if 'zoom'
          * is not needed, 'zoom' should not be enabled, otherwise

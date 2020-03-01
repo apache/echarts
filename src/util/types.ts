@@ -249,8 +249,6 @@ export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // will not be performed. But "scale parse" will be performed.
 export type ScaleDataValue = ParsedValue | Date;
 
-export type AxisValue = ParsedValueNumeric;
-
 // Can only be string or index, because it is used in object key in s   ome code.
 // Making the type alias here just intending to show the meaning clearly in code.
 export type DimensionIndex = number;
@@ -347,7 +345,7 @@ export type ECUnitOption = {
     media?: never
     timeline?: ComponentOption | ComponentOption[]
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<any> | any
-}
+} & AnimationOptionMixin
 
 /**
  * [ECOption]:
@@ -909,8 +907,7 @@ export interface CommonAxisPointerOption {
     /**
      * current value. When using axisPointer.handle, value can be set to define the initail position of axisPointer.
      */
-    // TODO: TYPE Only support numeric value?
-    value?: ParsedValueNumeric
+    value?: ScaleDataValue
 
     status?: 'show' | 'hide'
 
@@ -998,15 +995,25 @@ export interface SeriesOption extends
 
     blendMode?: string
 
+    /**
+     * Cursor when mouse on the elements
+     */
+    cursor?: string
+
     // Needs to be override
-    data?: any;
+    data?: any
 
     legendHoverLink?: boolean
 
+    /**
+     * Configurations about progressive rendering
+     */
     progressive?: number | false
     progressiveThreshold?: number
     progressiveChunkMode?: 'mod'
-
+    /**
+     * Not available on every series
+     */
     coordinateSystem?: string
 
     // FIXME:TS more

@@ -17,16 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as graphic from '../../util/graphic';
 import {getDefaultLabel} from '../helper/labelHelper';
+import { StyleProps } from 'zrender/src/graphic/Style';
+import { LabelOption, ColorString } from '../../util/types';
+import BaseBarSeriesModel from './BaseBarSeries';
+import { BarDataItemOption } from './BarSeries';
+import Model from '../../model/Model';
 
 export function setLabel(
-    normalStyle, hoverStyle, itemModel, color, seriesModel, dataIndex, labelPositionOutside
+    normalStyle: StyleProps,
+    hoverStyle: StyleProps,
+    itemModel: Model<BarDataItemOption>,
+    color: ColorString,
+    seriesModel: BaseBarSeriesModel,
+    dataIndex: number,
+    labelPositionOutside: LabelOption['position']
 ) {
     var labelModel = itemModel.getModel('label');
-    var hoverLabelModel = itemModel.getModel('emphasis.label');
+    var hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
     graphic.setLabelStyle(
         normalStyle, hoverStyle, labelModel, hoverLabelModel,
@@ -39,11 +48,11 @@ export function setLabel(
         }
     );
 
-    fixPosition(normalStyle);
-    fixPosition(hoverStyle);
+    fixPosition(normalStyle, labelPositionOutside);
+    fixPosition(hoverStyle, labelPositionOutside);
 }
 
-function fixPosition(style, labelPositionOutside) {
+function fixPosition(style: StyleProps, labelPositionOutside: LabelOption['position']) {
     if (style.textPosition === 'outside') {
         style.textPosition = labelPositionOutside;
     }

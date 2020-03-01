@@ -345,7 +345,7 @@ export function createSymbol(
     h: number,
     color?: string,
     keepAspect?: boolean
-): graphic.Path | graphic.Image {
+) {
     // TODO Support image object, DynamicImage.
 
     var isEmpty = symbolType.indexOf('empty') === 0;
@@ -387,5 +387,5 @@ export function createSymbol(
 
     (symbolPath as ECSymbol).setColor(color);
 
-    return symbolPath;
+    return symbolPath as ECSymbol;
 }
