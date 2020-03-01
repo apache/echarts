@@ -114,7 +114,8 @@ class MapDraw {
         mapOrGeoModel: GeoModel | MapSeries,
         ecModel: GlobalModel,
         api: ExtensionAPI,
-        fromView: MapView | GeoView
+        fromView: MapView | GeoView,
+        payload: Payload
     ): void {
 
         var isGeo = mapOrGeoModel.mainType === 'geo';
