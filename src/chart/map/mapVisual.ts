@@ -1,3 +1,7 @@
+import GlobalModel from '../../model/Global';
+import MapSeries from './MapSeries';
+import { ZRColor } from '../../util/types';
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,11 +21,10 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-export default function (ecModel) {
-    ecModel.eachSeriesByType('map', function (seriesModel) {
-        var colorList = seriesModel.get('color');
+export default function (ecModel: GlobalModel) {
+    ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
+        var colorList = seriesModel.get('color') as ZRColor[];
         var itemStyleModel = seriesModel.getModel('itemStyle');
 
         var areaColor = itemStyleModel.get('areaColor');

@@ -17,23 +17,31 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import MapDraw from '../helper/MapDraw';
-import * as echarts from '../../echarts';
+import ComponentView from '../../view/Component';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import GeoModel from '../../coord/geo/GeoModel';
+import { Payload } from '../../util/types';
 
-export default echarts.extendComponentView({
+class GeoView extends ComponentView {
 
-    type: 'geo',
+    static type = 'geo' as const;
+    readonly type = GeoView.type;
 
-    init: function (ecModel, api) {
+    private _mapDraw: MapDraw;
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
         var mapDraw = new MapDraw(api, true);
         this._mapDraw = mapDraw;
 
         this.group.add(mapDraw.group);
-    },
+    }
 
-    render: function (geoModel, ecModel, api, payload) {
+    render(
+        geoModel: GeoModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
+    ): void {
         // Not render if it is an toggleSelect action from self
         if (payload && payload.type === 'geoToggleSelect'
             && payload.from === this.uid
@@ -50,10 +58,12 @@ export default echarts.extendComponentView({
         }
 
         this.group.silent = geoModel.get('silent');
-    },
+    }
 
-    dispose: function () {
+    dispose(): void {
         this._mapDraw && this._mapDraw.remove();
     }
 
-});
+}
+
+export default GeoView;

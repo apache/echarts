@@ -17,21 +17,18 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
+import List from '../../data/List';
+import MapSeries, { MapValueCalculationType } from './MapSeries';
+import GlobalModel from '../../model/Global';
 
 // FIXME 公用？
-/**
- * @param {Array.<module:echarts/data/List>} datas
- * @param {string} statisticType 'average' 'sum'
- * @inner
- */
-function dataStatistics(datas, statisticType) {
-    var dataNameMap = {};
+function dataStatistics(datas: List[], statisticType: MapValueCalculationType): List {
+    var dataNameMap = {} as {[mapKey: string]: number[]};
 
     zrUtil.each(datas, function (data) {
-        data.each(data.mapDimension('value'), function (value, idx) {
+        data.each(data.mapDimension('value'), function (value: number, idx) {
             // Add prefix to avoid conflict with Object.prototype.
             var mapKey = 'ec-' + data.getName(idx);
             dataNameMap[mapKey] = dataNameMap[mapKey] || [];
@@ -69,9 +66,9 @@ function dataStatistics(datas, statisticType) {
     });
 }
 
-export default function (ecModel) {
-    var seriesGroups = {};
-    ecModel.eachSeriesByType('map', function (seriesModel) {
+export default function (ecModel: GlobalModel): void {
+    var seriesGroups = {} as {[key: string]: MapSeries[]};
+    ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
         var hostGeoModel = seriesModel.getHostGeoModel();
         var key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
         (seriesGroups[key] = seriesGroups[key] || []).push(seriesModel);

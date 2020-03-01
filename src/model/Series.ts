@@ -327,10 +327,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         multipleSeries?: boolean,
         dataType?: string,
         renderMode?: TooltipRenderMode
-    ): {
-        html: string,
-        markers: {[markName: string]: string}
-    } {
+    ):
+        {
+            html: string,
+            markers: {[markName: string]: string}
+        }
+        // The override method can only return string
+        | string
+    {
 
         var series = this;
         renderMode = renderMode || 'html';

@@ -17,19 +17,18 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import { ECUnitOption, SeriesOption } from '../../util/types';
 
-export default function (option) {
+export default function (option: ECUnitOption) {
     // Save geoCoord
     var mapSeries = [];
-    zrUtil.each(option.series, function (seriesOpt) {
+    zrUtil.each(option.series, function (seriesOpt: SeriesOption) {
         if (seriesOpt && seriesOpt.type === 'map') {
             mapSeries.push(seriesOpt);
-            seriesOpt.map = seriesOpt.map || seriesOpt.mapType;
+            (seriesOpt as any).map = (seriesOpt as any).map || (seriesOpt as any).mapType;
             // Put x, y, width, height, x2, y2 in the top level
-            zrUtil.defaults(seriesOpt, seriesOpt.mapLocation);
+            zrUtil.defaults(seriesOpt, (seriesOpt as any).mapLocation);
         }
     });
 }

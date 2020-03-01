@@ -17,25 +17,27 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {parseSVG, makeViewBoxTransform} from 'zrender/src/tool/parseSVG';
 import Group from 'zrender/src/container/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';
-import {assert, createHashMap} from 'zrender/src/core/util';
+import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {makeInner} from '../../util/model';
+import { SVGMapRecord } from './mapDataStorage';
 
-var inner = makeInner();
+type MapRecordInner = {
+    originRoot: Group;
+    boundingRect: BoundingRect;
+    // key: hostKey, value: root
+    rootMap: HashMap<Group>;
+    originRootHostKey: string;
+};
+
+var inner = makeInner<MapRecordInner>();
 
 export default {
 
-    /**
-     * @param {string} mapName
-     * @param {Object} mapRecord {specialAreas, geoJSON}
-     * @return {Object} {root, boundingRect}
-     */
-    load: function (mapName, mapRecord) {
+    load(mapName: string, mapRecord: SVGMapRecord): ReturnType<typeof buildGraphic> {
         var originRoot = inner(mapRecord).originRoot;
         if (originRoot) {
             return {
@@ -52,7 +54,7 @@ export default {
         return graphic;
     },
 
-    makeGraphic: function (mapName, mapRecord, hostKey) {
+    makeGraphic(mapName: string, mapRecord: SVGMapRecord, hostKey: string): Group {
         // For performance consideration (in large SVG), graphic only maked
         // when necessary and reuse them according to hostKey.
         var field = inner(mapRecord);
@@ -79,7 +81,7 @@ export default {
         return rootMap.set(hostKey, root);
     },
 
-    removeGraphic: function (mapName, mapRecord, hostKey) {
+    removeGraphic(mapName: string, mapRecord: SVGMapRecord, hostKey: string): void {
         var field = inner(mapRecord);
         var rootMap = field.rootMap;
         rootMap && rootMap.removeKey(hostKey);
@@ -89,7 +91,12 @@ export default {
     }
 };
 
-function buildGraphic(mapRecord, boundingRect) {
+function buildGraphic(
+    mapRecord: SVGMapRecord, boundingRect?: BoundingRect
+): {
+    root: Group;
+    boundingRect: BoundingRect;
+} {
     var svgXML = mapRecord.svgXML;
     var result;
     var root;

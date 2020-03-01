@@ -17,38 +17,100 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
 import {encodeHTML, addCommas} from '../../util/format';
-import {DataSelectableMixin} from '../../component/helper/selectableMixin';
+import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
+import { SeriesOption, BoxLayoutOptionMixin, SeriesEncodeOptionMixin, LabelOption, SeriesTooltipOption, OptionDataItemObject, OptionDataValueNumeric, ParsedValue, SeriesOnGeoOptionMixin } from '../../util/types';
+import { Dictionary } from 'zrender/src/core/types';
+import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
+import List from '../../data/List';
+import Model from '../../model/Model';
+import Geo from '../../coord/geo/Geo';
 
-var MapSeries = SeriesModel.extend({
+interface MapDataItemOption extends
+    OptionDataItemObject<OptionDataValueNumeric>,
+    SelectableTarget {
 
-    type: 'series.map',
+    itemStyle?: GeoItemStyleOption
+    label?: LabelOption
 
-    dependencies: ['geo'],
+    emphasis?: {
+        itemStyle?: GeoItemStyleOption
+        label?: LabelOption
+    }
+}
 
-    layoutMode: 'box',
+export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
-    /**
-     * Only first map series of same mapType will drawMap
-     * @type {boolean}
-     */
-    needsDrawMap: false,
+export interface MapSeriesOption extends
+    SeriesOption,
+    GeoCommonOptionMixin,
+    // If `geoIndex` is not specified, a exclusive geo will be
+    // created. Otherwise use the specified geo component, and
+    // `map` and `mapType` are ignored.
+    SeriesOnGeoOptionMixin,
+    BoxLayoutOptionMixin,
+    DataSelectableOptionMixin,
+    SeriesEncodeOptionMixin {
 
-    /**
-     * Group of all map series with same mapType
-     * @type {boolean}
-     */
-    seriesGroup: [],
+    coordinateSystem?: string;
+    silent?: boolean;
 
-    getInitialData: function (option) {
+    // FIXME:TS formatter?
+    label?: LabelOption;
+    itemStyle?: GeoItemStyleOption;
+
+    tooltip?: SeriesTooltipOption;
+
+    // FIXME:TS add marker types
+    markLine?: any;
+    markPoint?: any;
+    markArea?: any;
+
+    mapValueCalculation?: MapValueCalculationType;
+
+    showLegendSymbol?: boolean;
+
+    // @deprecated. Only for echarts2 backward compat.
+    geoCoord?: Dictionary<number[]>;
+
+    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
+
+    emphasis?: {
+        // FIXME:TS formatter?
+        label?: LabelOption;
+        itemStyle?: GeoItemStyleOption;
+    };
+}
+
+class MapSeries extends SeriesModel<MapSeriesOption> {
+
+    static type = 'series.map' as const;
+    type = MapSeries.type;
+
+    static dependencies = ['geo'];
+
+    static layoutMode = 'box' as const;
+
+    coordinateSystem: Geo;
+
+    // -----------------
+    // Injected outside
+    originalData: List;
+    mainSeries: MapSeries;
+    // Only first map series of same mapType will drawMap.
+    needsDrawMap: boolean = false;
+    // Group of all map series with same mapType
+    seriesGroup: MapSeries[] = [];
+
+
+    getInitialData(option: MapSeriesOption): List {
         var data = createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
@@ -56,7 +118,7 @@ var MapSeries = SeriesModel.extend({
         var valueDim = data.mapDimension('value');
         var dataNameMap = zrUtil.createHashMap();
         var selectTargetList = [];
-        var toAppendNames = [];
+        var toAppendNames = [] as string[];
 
         for (var i = 0, len = data.count(); i < len; i++) {
             var name = data.getName(i);
@@ -85,55 +147,51 @@ var MapSeries = SeriesModel.extend({
         data.appendValues([], toAppendNames);
 
         return data;
-    },
+    }
 
     /**
      * If no host geo model, return null, which means using a
      * inner exclusive geo model.
      */
-    getHostGeoModel: function () {
+    getHostGeoModel(): GeoModel {
         var geoIndex = this.option.geoIndex;
         return geoIndex != null
-            ? this.dependentModels.geo[geoIndex]
+            ? this.dependentModels.geo[geoIndex] as GeoModel
             : null;
-    },
+    }
 
-    getMapType: function () {
+    getMapType(): string {
         return (this.getHostGeoModel() || this).option.map;
-    },
+    }
 
-    // _fillOption: function (option, mapName) {
+    // _fillOption(option, mapName) {
         // Shallow clone
         // option = zrUtil.extend({}, option);
 
         // option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
 
         // return option;
-    // },
+    // }
 
-    getRawValue: function (dataIndex) {
+    getRawValue(dataIndex: number): ParsedValue {
         // Use value stored in data instead because it is calculated from multiple series
         // FIXME Provide all value of multiple series ?
         var data = this.getData();
         return data.get(data.mapDimension('value'), dataIndex);
-    },
+    }
 
     /**
      * Get model of region
-     * @param  {string} name
-     * @return {module:echarts/model/Model}
      */
-    getRegionModel: function (regionName) {
+    getRegionModel(regionName: string): Model<MapDataItemOption> {
         var data = this.getData();
         return data.getItemModel(data.indexOfName(regionName));
-    },
+    }
 
     /**
      * Map tooltip formatter
-     *
-     * @param {number} dataIndex
      */
-    formatTooltip: function (dataIndex) {
+    formatTooltip(dataIndex: number): string {
         // FIXME orignalData and data is a bit confusing
         var data = this.getData();
         var formattedValue = addCommas(this.getRawValue(dataIndex));
@@ -144,7 +202,7 @@ var MapSeries = SeriesModel.extend({
         for (var i = 0; i < seriesGroup.length; i++) {
             var otherIndex = seriesGroup[i].originalData.indexOfName(name);
             var valueDim = data.mapDimension('value');
-            if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex))) {
+            if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex) as number)) {
                 seriesNames.push(
                     encodeHTML(seriesGroup[i].name)
                 );
@@ -153,12 +211,9 @@ var MapSeries = SeriesModel.extend({
 
         return seriesNames.join(', ') + '<br />'
             + encodeHTML(name + ' : ' + formattedValue);
-    },
+    }
 
-    /**
-     * @implement
-     */
-    getTooltipPosition: function (dataIndex) {
+    getTooltipPosition = function (this: MapSeries, dataIndex: number): number[] {
         if (dataIndex != null) {
             var name = this.getData().getName(dataIndex);
             var geo = this.coordinateSystem;
@@ -166,17 +221,17 @@ var MapSeries = SeriesModel.extend({
 
             return region && geo.dataToPoint(region.center);
         }
-    },
+    };
 
-    setZoom: function (zoom) {
+    setZoom(zoom: number): void {
         this.option.zoom = zoom;
-    },
+    }
 
-    setCenter: function (center) {
+    setCenter(center: number[]): void {
         this.option.center = center;
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: MapSeriesOption = {
         // 一级层叠
         zlevel: 0,
         // 二级层叠
@@ -211,21 +266,7 @@ var MapSeries = SeriesModel.extend({
         // layoutCenter: [50%, 50%]
         // layoutSize: 100
 
-
-        // 数值合并方式，默认加和，可选为：
-        // 'sum' | 'average' | 'max' | 'min'
-        // mapValueCalculation: 'sum',
-        // 地图数值计算结果小数精度
-        // mapValuePrecision: 0,
-
-
-        // 显示图例颜色标识（系列标识的小圆点），图例开启时有效
         showLegendSymbol: true,
-        // 选择模式，默认关闭，可选single，multiple
-        // selectedMode: false,
-        dataRangeHoverLink: true,
-        // 是否开启缩放及漫游模式
-        // roam: false,
 
         // Define left-top, right-bottom coords to control view
         // For example, [ [180, 90], [-180, -90] ],
@@ -261,8 +302,9 @@ var MapSeries = SeriesModel.extend({
         }
     }
 
-});
+}
 
-zrUtil.mixin(MapSeries, DataSelectableMixin.prototype);
+interface MapSeries extends DataSelectableMixin<MapSeriesOption> {}
+zrUtil.mixin(MapSeries, DataSelectableMixin);
 
 export default MapSeries;

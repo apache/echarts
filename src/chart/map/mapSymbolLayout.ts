@@ -17,21 +17,23 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import MapSeries from './MapSeries';
+import { Dictionary } from '../../util/types';
 
-export default function (ecModel) {
+export default function (ecModel: GlobalModel) {
 
-    var processedMapType = {};
+    var processedMapType = {} as {[mapType: string]: boolean};
 
-    ecModel.eachSeriesByType('map', function (mapSeries) {
+    ecModel.eachSeriesByType('map', function (mapSeries: MapSeries) {
         var mapType = mapSeries.getMapType();
         if (mapSeries.getHostGeoModel() || processedMapType[mapType]) {
             return;
         }
 
-        var mapSymbolOffsets = {};
+        var mapSymbolOffsets = {} as Dictionary<number>;
 
         zrUtil.each(mapSeries.seriesGroup, function (subMapSeries) {
             var geo = subMapSeries.coordinateSystem;
@@ -44,7 +46,7 @@ export default function (ecModel) {
                     // If input series.data is [11, 22, '-'/null/undefined, 44],
                     // it will be filled with NaN: [11, 22, NaN, 44] and NaN will
                     // not be drawn. So here must validate if value is NaN.
-                    if (!region || isNaN(value)) {
+                    if (!region || isNaN(value as number)) {
                         return;
                     }
 

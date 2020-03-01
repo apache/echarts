@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
@@ -26,8 +24,25 @@ import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
+import ExtensionAPI from '../../ExtensionAPI';
+import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
+import MapSeries from '../../chart/map/MapSeries';
+import GlobalModel from '../../model/Global';
+import { Payload, ECElement } from '../../util/types';
+import GeoView from '../geo/GeoView';
+import MapView from '../../chart/map/MapView';
+import ComponentModel from '../../model/Component';
+import Region from '../../coord/geo/Region';
+import Element from 'zrender/src/Element';
+import Geo from '../../coord/geo/Geo';
+import Model from '../../model/Model';
 
-function getFixedItemStyle(model) {
+
+interface RegionsGroup extends graphic.Group {
+    __regions: Region[];
+}
+
+function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
     var itemStyle = model.getItemStyle();
     var areaColor = model.get('areaColor');
 
@@ -40,137 +55,74 @@ function getFixedItemStyle(model) {
     return itemStyle;
 }
 
-function updateMapSelectHandler(mapDraw, mapOrGeoModel, regionsGroup, api, fromView) {
-    regionsGroup.off('click');
-    regionsGroup.off('mousedown');
-
-    if (mapOrGeoModel.get('selectedMode')) {
-
-        regionsGroup.on('mousedown', function () {
-            mapDraw._mouseDownFlag = true;
-        });
-
-        regionsGroup.on('click', function (e) {
-            if (!mapDraw._mouseDownFlag) {
-                return;
-            }
-            mapDraw._mouseDownFlag = false;
-
-            var el = e.target;
-            while (!el.__regions) {
-                el = el.parent;
-            }
-            if (!el) {
-                return;
-            }
-
-            var action = {
-                type: (mapOrGeoModel.mainType === 'geo' ? 'geo' : 'map') + 'ToggleSelect',
-                batch: zrUtil.map(el.__regions, function (region) {
-                    return {
-                        name: region.name,
-                        from: fromView.uid
-                    };
-                })
-            };
-            action[mapOrGeoModel.mainType + 'Id'] = mapOrGeoModel.id;
-
-            api.dispatchAction(action);
-
-            updateMapSelected(mapOrGeoModel, regionsGroup);
-        });
-    }
-}
-
-function updateMapSelected(mapOrGeoModel, regionsGroup) {
+function updateMapSelected(mapOrGeoModel: GeoModel | MapSeries, regionsGroup: RegionsGroup) {
     // FIXME
     regionsGroup.eachChild(function (otherRegionEl) {
-        zrUtil.each(otherRegionEl.__regions, function (region) {
+        zrUtil.each((otherRegionEl as RegionsGroup).__regions, function (region) {
             otherRegionEl.trigger(mapOrGeoModel.isSelected(region.name) ? 'emphasis' : 'normal');
         });
     });
 }
 
-/**
- * @alias module:echarts/component/helper/MapDraw
- * @param {module:echarts/ExtensionAPI} api
- * @param {boolean} updateGroup
- */
-function MapDraw(api, updateGroup) {
+class MapDraw {
 
-    var group = new graphic.Group();
+    private uid: string;
 
-    /**
-     * @type {string}
-     * @private
-     */
-    this.uid = getUID('ec_map_draw');
+    // @ts-ignore FIXME:TS
+    private _controller: RoamController;
 
-    /**
-     * @type {module:echarts/component/helper/RoamController}
-     * @private
-     */
-    this._controller = new RoamController(api.getZr());
+    private _controllerHost: {
+        target?: graphic.Group;
+        zoom?: number;
+        zoomLimit?: GeoCommonOptionMixin['scaleLimit'];
+    };
 
-    /**
-     * @type {Object} {target, zoom, zoomLimit}
-     * @private
-     */
-    this._controllerHost = {target: updateGroup ? group : null};
+    readonly group: graphic.Group;
 
-    /**
-     * @type {module:zrender/container/Group}
-     * @readOnly
-     */
-    this.group = group;
-
-    /**
-     * @type {boolean}
-     * @private
-     */
-    this._updateGroup = updateGroup;
+    private _updateGroup: boolean;
 
     /**
      * This flag is used to make sure that only one among
      * `pan`, `zoom`, `click` can occurs, otherwise 'selected'
      * action may be triggered when `pan`, which is unexpected.
-     * @type {booelan}
      */
-    this._mouseDownFlag;
+    private _mouseDownFlag: boolean;
 
-    /**
-     * @type {string}
-     */
-    this._mapName;
+    private _mapName: string;
 
-    /**
-     * @type {boolean}
-     */
-    this._initialized;
+    private _initialized: string;
 
-    /**
-     * @type {module:zrender/container/Group}
-     */
-    group.add(this._regionsGroup = new graphic.Group());
+    private _regionsGroup: RegionsGroup;
 
-    /**
-     * @type {module:zrender/container/Group}
-     */
-    group.add(this._backgroundGroup = new graphic.Group());
-}
+    private _backgroundGroup: graphic.Group;
 
-MapDraw.prototype = {
 
-    constructor: MapDraw,
+    constructor(api: ExtensionAPI, updateGroup: boolean) {
+        var group = new graphic.Group();
+        this.uid = getUID('ec_map_draw');
+        // @ts-ignore FIXME:TS
+        this._controller = new RoamController(api.getZr());
+        this._controllerHost = {target: updateGroup ? group : null};
+        this.group = group;
+        this._updateGroup = updateGroup;
 
-    draw: function (mapOrGeoModel, ecModel, api, fromView, payload) {
+        group.add(this._regionsGroup = new graphic.Group() as RegionsGroup);
+        group.add(this._backgroundGroup = new graphic.Group());
+    }
+
+    draw(
+        mapOrGeoModel: GeoModel | MapSeries,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        fromView: MapView | GeoView
+    ): void {
 
         var isGeo = mapOrGeoModel.mainType === 'geo';
 
         // Map series has data. GEO model that controlled by map series
         // will be assigned with map data. Other GEO model has no data.
-        var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
-        isGeo && ecModel.eachComponent({mainType: 'series', subType: 'map'}, function (mapSeries) {
+        var data = (mapOrGeoModel as MapSeries).getData && (mapOrGeoModel as MapSeries).getData();
+        isGeo && ecModel.eachComponent({mainType: 'series', subType: 'map'}, function (mapSeries: MapSeries) {
             if (!data && mapSeries.getHostGeoModel() === mapOrGeoModel) {
                 data = mapSeries.getData();
             }
@@ -193,11 +145,11 @@ MapDraw.prototype = {
 
         regionsGroup.removeAll();
 
-        var itemStyleAccessPath = ['itemStyle'];
-        var hoverItemStyleAccessPath = ['emphasis', 'itemStyle'];
-        var labelAccessPath = ['label'];
-        var hoverLabelAccessPath = ['emphasis', 'label'];
-        var nameMap = zrUtil.createHashMap();
+        var itemStyleAccessPath = ['itemStyle'] as const;
+        var hoverItemStyleAccessPath = ['emphasis', 'itemStyle'] as const;
+        var labelAccessPath = ['label'] as const;
+        var hoverLabelAccessPath = ['emphasis', 'label'] as const;
+        var nameMap = zrUtil.createHashMap<RegionsGroup>();
 
         zrUtil.each(geo.regions, function (region) {
             // Consider in GeoJson properties.name may be duplicated, for example,
@@ -206,7 +158,7 @@ MapDraw.prototype = {
             // will make them share the same label and bring trouble in label
             // location calculation.
             var regionGroup = nameMap.get(region.name)
-                || nameMap.set(region.name, new graphic.Group());
+                || nameMap.set(region.name, new graphic.Group() as RegionsGroup);
 
             var compoundPath = new graphic.CompoundPath({
                 segmentIgnoreThreshold: 1,
@@ -216,14 +168,18 @@ MapDraw.prototype = {
             });
             regionGroup.add(compoundPath);
 
-            var regionModel = mapOrGeoModel.getRegionModel(region.name) || mapOrGeoModel;
+            const regionModel = mapOrGeoModel.getRegionModel(region.name) || mapOrGeoModel;
 
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
             var itemStyleModel = regionModel.getModel(itemStyleAccessPath);
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
             var hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
             var itemStyle = getFixedItemStyle(itemStyleModel);
             var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
 
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
             var labelModel = regionModel.getModel(labelAccessPath);
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
             var hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
 
             var dataIdx;
@@ -240,7 +196,7 @@ MapDraw.prototype = {
                 }
             }
 
-            var transformPoint = function (point) {
+            var transformPoint = function (point: number[]): number[] {
                 return [
                     point[0] * scale[0] + position[0],
                     point[1] * scale[1] + position[1]
@@ -285,7 +241,7 @@ MapDraw.prototype = {
             var showLabel = labelModel.get('show');
             var hoverShowLabel = hoverLabelModel.get('show');
 
-            var isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx));
+            var isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
             var itemLayout = data && data.getItemLayout(dataIdx);
             // In the following cases label will be drawn
             // 1. In map series and data value is NaN
@@ -314,7 +270,7 @@ MapDraw.prototype = {
                     silent: true
                 });
 
-                graphic.setLabelStyle(
+                graphic.setLabelStyle<typeof query>(
                     textEl.style, textEl.hoverStyle = {}, labelModel, hoverLabelModel,
                     {
                         labelFetcher: labelFetcher,
@@ -337,9 +293,9 @@ MapDraw.prototype = {
                 data.setItemGraphicEl(dataIdx, regionGroup);
             }
             else {
-                var regionModel = mapOrGeoModel.getRegionModel(region.name);
+                const regionModel = mapOrGeoModel.getRegionModel(region.name);
                 // Package custom mouse event for geo component
-                compoundPath.eventData = {
+                (compoundPath as Element as ECElement).eventData = {
                     componentType: 'geo',
                     componentIndex: mapOrGeoModel.componentIndex,
                     geoIndex: mapOrGeoModel.componentIndex,
@@ -351,6 +307,7 @@ MapDraw.prototype = {
             var groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
             groupRegions.push(region);
 
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
             regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
             graphic.setHoverStyle(regionGroup, hoverItemStyle);
 
@@ -359,21 +316,21 @@ MapDraw.prototype = {
 
         this._updateController(mapOrGeoModel, ecModel, api);
 
-        updateMapSelectHandler(this, mapOrGeoModel, regionsGroup, api, fromView);
+        this._updateMapSelectHandler(mapOrGeoModel, regionsGroup, api, fromView);
 
         updateMapSelected(mapOrGeoModel, regionsGroup);
-    },
+    }
 
-    remove: function () {
+    remove(): void {
         this._regionsGroup.removeAll();
         this._backgroundGroup.removeAll();
         this._controller.dispose();
         this._mapName && geoSourceManager.removeGraphic(this._mapName, this.uid);
         this._mapName = null;
         this._controllerHost = {};
-    },
+    }
 
-    _updateBackground: function (geo) {
+    private _updateBackground(geo: Geo): void {
         var mapName = geo.map;
 
         if (this._mapName !== mapName) {
@@ -383,30 +340,35 @@ MapDraw.prototype = {
         }
 
         this._mapName = mapName;
-    },
+    }
 
-    _updateController: function (mapOrGeoModel, ecModel, api) {
+    private _updateController(
+        mapOrGeoModel: GeoModel | MapSeries, ecModel: GlobalModel, api: ExtensionAPI
+    ): void {
         var geo = mapOrGeoModel.coordinateSystem;
         var controller = this._controller;
         var controllerHost = this._controllerHost;
 
+        // @ts-ignore FIXME:TS
         controllerHost.zoomLimit = mapOrGeoModel.get('scaleLimit');
         controllerHost.zoom = geo.getZoom();
 
         // roamType is will be set default true if it is null
+        // @ts-ignore FIXME:TS
         controller.enable(mapOrGeoModel.get('roam') || false);
         var mainType = mapOrGeoModel.mainType;
 
-        function makeActionBase() {
+        function makeActionBase(): Payload {
             var action = {
                 type: 'geoRoam',
                 componentType: mainType
-            };
+            } as Payload;
             action[mainType + 'Id'] = mapOrGeoModel.id;
             return action;
         }
 
-        controller.off('pan').on('pan', function (e) {
+        // @ts-ignore FIXME:TS
+        controller.off('pan').on('pan', function (this: MapDraw, e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
@@ -417,7 +379,8 @@ MapDraw.prototype = {
             }));
         }, this);
 
-        controller.off('zoom').on('zoom', function (e) {
+        // @ts-ignore FIXME:TS
+        controller.off('zoom').on('zoom', function (this: MapDraw, e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -438,11 +401,63 @@ MapDraw.prototype = {
             }
         }, this);
 
+        // @ts-ignore FIXME:TS
         controller.setPointerChecker(function (e, x, y) {
             return geo.getViewRectAfterRoam().contain(x, y)
                 && !onIrrelevantElement(e, api, mapOrGeoModel);
         });
     }
+
+    private _updateMapSelectHandler(
+        mapOrGeoModel: GeoModel | MapSeries,
+        regionsGroup: RegionsGroup,
+        api: ExtensionAPI,
+        fromView: MapView | GeoView
+    ): void {
+        var mapDraw = this;
+
+        regionsGroup.off('click');
+        regionsGroup.off('mousedown');
+
+        // @ts-ignore FIXME:TS resolve type conflict
+        if (mapOrGeoModel.get('selectedMode')) {
+
+            regionsGroup.on('mousedown', function () {
+                mapDraw._mouseDownFlag = true;
+            });
+
+            regionsGroup.on('click', function (e) {
+                if (!mapDraw._mouseDownFlag) {
+                    return;
+                }
+                mapDraw._mouseDownFlag = false;
+
+                var el = e.target;
+                while (!(el as RegionsGroup).__regions) {
+                    el = el.parent;
+                }
+                if (!el) {
+                    return;
+                }
+
+                var action = {
+                    type: (mapOrGeoModel.mainType === 'geo' ? 'geo' : 'map') + 'ToggleSelect',
+                    batch: zrUtil.map((el as RegionsGroup).__regions, function (region) {
+                        return {
+                            name: region.name,
+                            from: fromView.uid
+                        };
+                    })
+                } as Payload;
+                action[mapOrGeoModel.mainType + 'Id'] = mapOrGeoModel.id;
+
+                api.dispatchAction(action);
+
+                updateMapSelected(mapOrGeoModel, regionsGroup);
+            });
+        }
+    }
+
 };
 
 export default MapDraw;

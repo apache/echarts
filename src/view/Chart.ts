@@ -37,12 +37,12 @@ import { SeriesTaskContext, SeriesTask } from '../stream/Scheduler';
 import List from '../data/List';
 
 var inner = modelUtil.makeInner<{
-    updateMethod: keyof Chart
+    updateMethod: keyof ChartView
 }>();
 var renderPlanner = createRenderPlanner();
 
 
-class Chart {
+class ChartView {
 
     // [Caution]: for compat the previous "class extend"
     // publich and protected fields must be initialized on
@@ -67,7 +67,7 @@ class Chart {
     __id: string;
 
     static protoInitialize = (function () {
-        var proto = Chart.prototype;
+        var proto = ChartView.prototype;
         proto.type = 'chart';
     })();
 
@@ -178,7 +178,7 @@ class Chart {
         this.render(seriesModel, ecModel, api, payload);
     }
 
-    static markUpdateMethod(payload: Payload, methodName: keyof Chart): void {
+    static markUpdateMethod(payload: Payload, methodName: keyof ChartView): void {
         inner(payload).updateMethod = methodName;
     }
 
@@ -222,12 +222,12 @@ function toggleHighlight(data: List, payload: Payload, state: DisplayState) {
     }
 }
 
-export type ChartViewConstructor = typeof Chart
+export type ChartViewConstructor = typeof ChartView
     & clazzUtil.ExtendableConstructor
     & clazzUtil.ClassManager;
 
-clazzUtil.enableClassExtend(Chart as ChartViewConstructor, ['dispose']);
-clazzUtil.enableClassManagement(Chart as ChartViewConstructor, {registerWhenExtend: true});
+clazzUtil.enableClassExtend(ChartView as ChartViewConstructor, ['dispose']);
+clazzUtil.enableClassManagement(ChartView as ChartViewConstructor, {registerWhenExtend: true});
 
 
 function renderTaskPlan(context: SeriesTaskContext): StageHandlerPlanReturn {
@@ -244,7 +244,7 @@ function renderTaskReset(context: SeriesTaskContext): TaskResetCallbackReturn<Se
     var view = context.view;
 
     var updateMethod = payload && inner(payload).updateMethod;
-    var methodName: keyof Chart = progressiveRender
+    var methodName: keyof ChartView = progressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
         ? updateMethod
@@ -281,4 +281,4 @@ var progressMethodMap: {[method: string]: TaskResetCallbackReturn<SeriesTaskCont
     }
 };
 
-export default Chart;
+export default ChartView;

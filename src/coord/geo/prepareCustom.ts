@@ -17,11 +17,10 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import Geo from './Geo';
 
-function dataToCoordSize(dataSize, dataItem) {
+function dataToCoordSize(this: Geo, dataSize: number[], dataItem: number[]): number[] {
     dataItem = dataItem || [0, 0];
     return zrUtil.map([0, 1], function (dimIdx) {
         var val = dataItem[dimIdx];
@@ -35,7 +34,7 @@ function dataToCoordSize(dataSize, dataItem) {
     }, this);
 }
 
-export default function (coordSys) {
+export default function (coordSys: Geo) {
     var rect = coordSys.getBoundingRect();
     return {
         coordSys: {
@@ -47,7 +46,7 @@ export default function (coordSys) {
             zoom: coordSys.getZoom()
         },
         api: {
-            coord: function (data) {
+            coord: function (data: number[]): number[] {
                 // do not provide "out" and noRoam param,
                 // Compatible with this usage:
                 // echarts.util.map(item.points, api.coord)

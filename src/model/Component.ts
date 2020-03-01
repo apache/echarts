@@ -271,7 +271,6 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         });
     }
 
-
     getBoxLayoutParams() {
         // Consider itself having box layout configs.
         const boxLayoutModel = this as Model<ComponentOption & BoxLayoutOptionMixin>;

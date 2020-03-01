@@ -17,61 +17,66 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Parse and decode geo json
- * @module echarts/coord/geo/parseGeoJson
  */
 
 import * as zrUtil from 'zrender/src/core/util';
 import Region from './Region';
+import { GeoJSONCompressed, GeoJSON } from './geoTypes';
 
-function decode(json) {
-    if (!json.UTF8Encoding) {
-        return json;
+
+function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
+    if (!(json as GeoJSONCompressed).UTF8Encoding) {
+        return json as GeoJSON;
     }
-    var encodeScale = json.UTF8Scale;
+    var jsonCompressed = json as GeoJSONCompressed;
+    var encodeScale = jsonCompressed.UTF8Scale;
     if (encodeScale == null) {
         encodeScale = 1024;
     }
 
-    var features = json.features;
+    var features = jsonCompressed.features;
 
     for (var f = 0; f < features.length; f++) {
         var feature = features[f];
         var geometry = feature.geometry;
-        var coordinates = geometry.coordinates;
-        var encodeOffsets = geometry.encodeOffsets;
 
-        for (var c = 0; c < coordinates.length; c++) {
-            var coordinate = coordinates[c];
-
-            if (geometry.type === 'Polygon') {
+        if (geometry.type === 'Polygon') {
+            let coordinates = geometry.coordinates;
+            for (let c = 0; c < coordinates.length; c++) {
                 coordinates[c] = decodePolygon(
-                    coordinate,
-                    encodeOffsets[c],
+                    coordinates[c],
+                    geometry.encodeOffsets[c],
                     encodeScale
-                );
+                ) as any;
             }
-            else if (geometry.type === 'MultiPolygon') {
+        }
+        else if (geometry.type === 'MultiPolygon') {
+            let coordinates = geometry.coordinates;
+            for (let c = 0; c < coordinates.length; c++) {
+                let coordinate = coordinates[c];
                 for (var c2 = 0; c2 < coordinate.length; c2++) {
-                    var polygon = coordinate[c2];
                     coordinate[c2] = decodePolygon(
-                        polygon,
-                        encodeOffsets[c][c2],
+                        coordinate[c2],
+                        geometry.encodeOffsets[c][c2],
                         encodeScale
-                    );
+                    ) as any;
                 }
             }
         }
     }
     // Has been decoded
-    json.UTF8Encoding = false;
-    return json;
+    jsonCompressed.UTF8Encoding = false;
+
+    return jsonCompressed as GeoJSON;
 }
 
-function decodePolygon(coordinate, encodeOffsets, encodeScale) {
+function decodePolygon(
+    coordinate: string,
+    encodeOffsets: number[],
+    encodeScale: number
+): number[][] {
     var result = [];
     var prevX = encodeOffsets[0];
     var prevY = encodeOffsets[1];
@@ -95,14 +100,9 @@ function decodePolygon(coordinate, encodeOffsets, encodeScale) {
     return result;
 }
 
-/**
- * @alias module:echarts/coord/geo/parseGeoJson
- * @param {Object} geoJson
- * @return {module:zrender/container/Group}
- */
-export default function (geoJson) {
+export default function (geoJson: GeoJSON | GeoJSONCompressed): Region[] {
 
-    decode(geoJson);
+    geoJson = decode(geoJson);
 
     return zrUtil.map(zrUtil.filter(geoJson.features, function (featureObj) {
         // Output of mapshaper may have geometry null
@@ -110,13 +110,12 @@ export default function (geoJson) {
             && featureObj.properties
             && featureObj.geometry.coordinates.length > 0;
     }), function (featureObj) {
-        var properties = featureObj.properties;
-        var geo = featureObj.geometry;
+        let properties = featureObj.properties;
+        let geo = featureObj.geometry;
 
-        var coordinates = geo.coordinates;
-
-        var geometries = [];
+        let geometries = [] as Region['geometries'];
         if (geo.type === 'Polygon') {
+            let coordinates = geo.coordinates;
             geometries.push({
                 type: 'polygon',
                 // According to the GeoJSON specification.
@@ -126,6 +125,7 @@ export default function (geoJson) {
             });
         }
         if (geo.type === 'MultiPolygon') {
+            let coordinates = geo.coordinates;
             zrUtil.each(coordinates, function (item) {
                 if (item[0]) {
                     geometries.push({
@@ -137,10 +137,10 @@ export default function (geoJson) {
             });
         }
 
-        var region = new Region(
+        let region = new Region(
             properties.name,
             geometries,
-            properties.cp
+            properties.cp,
         );
         region.properties = properties;
         return region;

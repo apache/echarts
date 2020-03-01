@@ -34,7 +34,9 @@ import {
     ItemStyleOption,
     LabelOption,
     BoxLayoutOptionMixin,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    SeriesEncodeOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import List from '../../data/List';
 
@@ -46,10 +48,9 @@ interface PieLabelOption extends LabelOption {
     distanceToLabelLine?: number
 }
 
-interface PieDataItem {
-    name?: string
-
-    value?: OptionDataValueNumeric
+interface PieDataItem extends
+    OptionDataItemObject<OptionDataValueNumeric>,
+    SelectableTarget {
 
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
@@ -65,7 +66,8 @@ export interface PieSeriesOption extends
     SeriesOption,
     DataSelectableOptionMixin,
     CircleLayoutOptionMixin,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    SeriesEncodeOptionMixin {
 
     type: 'pie'
 
@@ -100,7 +102,7 @@ export interface PieSeriesOption extends
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
 
-    data?: OptionDataValueNumeric[] | PieDataItem[]
+    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | PieDataItem[]
 }
 
 class PieSeriesModel extends SeriesModel<PieSeriesOption> {

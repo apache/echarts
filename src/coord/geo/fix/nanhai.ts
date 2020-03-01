@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Fix for 南海诸岛
 
 import * as zrUtil from 'zrender/src/core/util';
@@ -53,7 +51,7 @@ for (var i = 0; i < points.length; i++) {
     }
 }
 
-export default function (mapType, regions) {
+export default function (mapType: string, regions: Region[]) {
     if (mapType === 'china') {
         regions.push(new Region(
             '南海诸岛',

@@ -1,3 +1,5 @@
+import Region from '../Region';
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +19,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Fix for 钓鱼岛
 
 // var Region = require('../Region');
@@ -36,7 +36,7 @@ var points = [
     ]
 ];
 
-export default function (mapType, region) {
+export default function (mapType: string, region: Region) {
     if (mapType === 'china' && region.name === '台湾') {
         region.geometries.push({
             type: 'polygon',

@@ -17,40 +17,40 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
 import {createHashMap, isString, isArray, each, assert} from 'zrender/src/core/util';
 import {parseXML} from 'zrender/src/tool/parseSVG';
+import { GeoSpecialAreas, GeoJSON, GeoJSONCompressed } from './geoTypes';
+import { Dictionary } from 'zrender/src/core/types';
 
 // For minimize the code size of common echarts package,
 // do not put too much logic in this module.
 
-export type GeoMapSVGSource = 'string' | Document;
-export type GeoMapGeoJSONSource = 'string' | object;
-export type GeoSpecialAreas = object;
-
-interface GeoMapGeoJSONDefinition {
-    geoJSON?: GeoMapGeoJSONSource;
-    geoJson?: GeoMapGeoJSONSource;
+type SVGMapSource = 'string' | Document | SVGElement;
+type GeoJSONMapSource = 'string' | GeoJSON | GeoJSONCompressed;
+type MapInputObject = {
+    geoJSON?: GeoJSONMapSource;
+    geoJson?: GeoJSONMapSource;
+    svg?: SVGMapSource;
     specialAreas?: GeoSpecialAreas;
 }
-interface GeoMapSVGDefinition {
-    svg?: GeoMapSVGSource;
-    specialAreas?: GeoSpecialAreas;
-}
-export type GeoMapDefinition = GeoMapGeoJSONDefinition | GeoMapSVGDefinition;
 
-interface GeoMapRecord {
-    type: 'geoJSON' | 'svg';
-    source: GeoMapGeoJSONSource | GeoMapSVGSource;
+export type MapRecord = GeoJSONMapRecord | SVGMapRecord;
+export interface GeoJSONMapRecord {
+    type: 'geoJSON';
+    source: GeoJSONMapSource;
     specialAreas: GeoSpecialAreas;
-    geoJSON: object;
-    svgXML: Node
+    geoJSON: GeoJSON | GeoJSONCompressed;
+}
+export interface SVGMapRecord {
+    type: 'svg';
+    source: SVGMapSource;
+    specialAreas: GeoSpecialAreas;
+    svgXML: ReturnType<typeof parseXML>;
 }
 
 
-var storage = createHashMap<GeoMapRecord[]>();
+var storage = createHashMap<MapRecord[]>();
 
 
 export default {
@@ -82,40 +82,40 @@ export default {
      */
     registerMap: function (
         mapName: string,
-        rawGeoJson: GeoMapDefinition | GeoMapDefinition[] | GeoMapGeoJSONSource,
+        rawDef: MapInputObject | MapRecord[] | GeoJSONMapSource,
         rawSpecialAreas?: GeoSpecialAreas
-    ): GeoMapRecord[] {
+    ): MapRecord[] {
 
-        var records;
+        var records: MapRecord[];
 
-        if (isArray(rawGeoJson)) {
-            records = rawGeoJson;
+        if (isArray(rawDef)) {
+            records = rawDef as MapRecord[];
         }
-        else if ((rawGeoJson as GeoMapSVGDefinition).svg) {
+        else if ((rawDef as MapInputObject).svg) {
             records = [{
                 type: 'svg',
-                source: (rawGeoJson as GeoMapSVGDefinition).svg,
-                specialAreas: (rawGeoJson as GeoMapSVGDefinition).specialAreas
-            }];
+                source: (rawDef as MapInputObject).svg,
+                specialAreas: (rawDef as MapInputObject).specialAreas
+            } as SVGMapRecord];
         }
         else {
             // Backward compatibility.
-            var geoSource = (rawGeoJson as GeoMapGeoJSONDefinition).geoJson
-                || (rawGeoJson as GeoMapGeoJSONDefinition).geoJSON;
-            if (geoSource && !(rawGeoJson as any).features) {
-                rawSpecialAreas = (rawGeoJson as GeoMapGeoJSONDefinition).specialAreas;
-                rawGeoJson = geoSource;
+            var geoSource = (rawDef as MapInputObject).geoJson
+                || (rawDef as MapInputObject).geoJSON;
+            if (geoSource && !(rawDef as GeoJSON).features) {
+                rawSpecialAreas = (rawDef as MapInputObject).specialAreas;
+                rawDef = geoSource;
             }
             records = [{
                 type: 'geoJSON',
-                source: rawGeoJson,
+                source: rawDef as GeoJSONMapSource,
                 specialAreas: rawSpecialAreas
-            }];
+            } as GeoJSONMapRecord];
         }
 
         each(records, function (record) {
             var type = record.type;
-            type === 'geoJson' && (type = record.type = 'geoJSON');
+            (type as any) === 'geoJson' && (type = record.type = 'geoJSON');
 
             var parse = parsers[type];
 
@@ -129,15 +129,15 @@ export default {
         return storage.set(mapName, records);
     },
 
-    retrieveMap: function (mapName: string): GeoMapRecord[] {
+    retrieveMap: function (mapName: string): MapRecord[] {
         return storage.get(mapName);
     }
 
 };
 
-var parsers = {
+var parsers: Dictionary<(record: MapRecord) => void> = {
 
-    geoJSON: function (record: GeoMapRecord): void {
+    geoJSON: function (record: GeoJSONMapRecord): void {
         var source = record.source;
         record.geoJSON = !isString(source)
             ? source
@@ -152,8 +152,8 @@ var parsers = {
     // if we do it here, the clone of zrender elements has to be
     // required. So we do it once for each geo instance, util real
     // performance issues call for optimizing it.
-    svg: function (record: GeoMapRecord): void {
-        record.svgXML = parseXML(record.source as GeoMapSVGSource);
+    svg: function (record: SVGMapRecord): void {
+        record.svgXML = parseXML(record.source as SVGMapSource);
     }
 
 };

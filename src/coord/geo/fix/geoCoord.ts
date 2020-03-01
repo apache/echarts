@@ -1,3 +1,6 @@
+import Region from '../Region';
+import { Dictionary } from 'zrender/src/core/types';
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,15 +20,13 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 var geoCoordMap = {
     'Russia': [100, 60],
     'United States': [-99, 38],
     'United States of America': [-99, 38]
-};
+} as Dictionary<number[]>;
 
-export default function (mapType, region) {
+export default function (mapType: string, region: Region) {
     if (mapType === 'world') {
         var geoCoord = geoCoordMap[region.name];
         if (geoCoord) {

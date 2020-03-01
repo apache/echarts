@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Simple view coordinate system
  * Mapping given x, y to transformd view x, y
@@ -29,89 +27,64 @@ import * as vector from 'zrender/src/core/vector';
 import * as matrix from 'zrender/src/core/matrix';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import Transformable from 'zrender/src/core/Transformable';
+import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
+import GlobalModel from '../model/Global';
+import { ParsedModelFinder } from '../util/model';
 
 var v2ApplyTransform = vector.applyTransform;
 
-// Dummy transform node
-function TransformDummy() {
-    Transformable.call(this);
-}
-zrUtil.mixin(TransformDummy, Transformable);
+class View extends Transformable implements CoordinateSystemMaster, CoordinateSystem {
 
-function View(name) {
-    /**
-     * @type {string}
-     */
-    this.name = name;
+    readonly type: string = 'view';
 
-    /**
-     * @type {Object}
-     */
-    this.zoomLimit;
+    static dimensions = ['x', 'y'];
+    readonly dimensions = ['x', 'y'];
 
-    Transformable.call(this);
+    readonly name: string;
 
-    this._roamTransformable = new TransformDummy();
+    zoomLimit: {
+        max?: number;
+        min?: number;
+    };
 
-    this._rawTransformable = new TransformDummy();
+    private _roamTransformable = new Transformable();
+    protected _rawTransformable = new Transformable();
 
-    this._center;
-    this._zoom;
-}
+    private _center: number[];
+    private _zoom: number;
+    protected _rect: BoundingRect;
+    private _viewRect: BoundingRect;
+    private _rawTransform: matrix.MatrixArray;
 
-View.prototype = {
 
-    constructor: View,
-
-    type: 'view',
-
-    /**
-     * @param {Array.<string>}
-     * @readOnly
-     */
-    dimensions: ['x', 'y'],
-
-    /**
-     * Set bounding rect
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
+    constructor(name: string) {
+        super();
+        this.name = name;
+    }
 
     // PENDING to getRect
-    setBoundingRect: function (x, y, width, height) {
+    setBoundingRect(x: number, y: number, width: number, height: number): BoundingRect {
         this._rect = new BoundingRect(x, y, width, height);
         return this._rect;
-    },
+    }
 
     /**
      * @return {module:zrender/core/BoundingRect}
      */
     // PENDING to getRect
-    getBoundingRect: function () {
+    getBoundingRect(): BoundingRect {
         return this._rect;
-    },
+    }
 
-    /**
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
-    setViewRect: function (x, y, width, height) {
+    setViewRect(x: number, y: number, width: number, height: number): void {
         this.transformTo(x, y, width, height);
         this._viewRect = new BoundingRect(x, y, width, height);
-    },
+    }
 
     /**
      * Transformed to particular position and size
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
      */
-    transformTo: function (x, y, width, height) {
+    transformTo(x: number, y: number, width: number, height: number): void {
         var rect = this.getBoundingRect();
         var rawTransform = this._rawTransformable;
 
@@ -122,25 +95,21 @@ View.prototype = {
         rawTransform.decomposeTransform();
 
         this._updateTransform();
-    },
+    }
 
     /**
      * Set center of view
-     * @param {Array.<number>} [centerCoord]
      */
-    setCenter: function (centerCoord) {
+    setCenter(centerCoord?: number[]): void {
         if (!centerCoord) {
             return;
         }
         this._center = centerCoord;
 
         this._updateCenterAndZoom();
-    },
+    }
 
-    /**
-     * @param {number} zoom
-     */
-    setZoom: function (zoom) {
+    setZoom(zoom: number): void {
         zoom = zoom || 1;
 
         var zoomLimit = this.zoomLimit;
@@ -155,39 +124,36 @@ View.prototype = {
         this._zoom = zoom;
 
         this._updateCenterAndZoom();
-    },
+    }
 
     /**
      * Get default center without roam
      */
-    getDefaultCenter: function () {
+    getDefaultCenter(): number[] {
         // Rect before any transform
         var rawRect = this.getBoundingRect();
         var cx = rawRect.x + rawRect.width / 2;
         var cy = rawRect.y + rawRect.height / 2;
 
         return [cx, cy];
-    },
+    }
 
-    getCenter: function () {
+    getCenter(): number[] {
         return this._center || this.getDefaultCenter();
-    },
+    }
 
-    getZoom: function () {
+    getZoom(): number {
         return this._zoom || 1;
-    },
+    }
 
-    /**
-     * @return {Array.<number}
-     */
-    getRoamTransform: function () {
+    getRoamTransform(): matrix.MatrixArray {
         return this._roamTransformable.getLocalTransform();
-    },
+    }
 
     /**
      * Remove roam
      */
-    _updateCenterAndZoom: function () {
+    private _updateCenterAndZoom(): void {
         // Must update after view transform updated
         var rawTransformMatrix = this._rawTransformable.getLocalTransform();
         var roamTransform = this._roamTransformable;
@@ -206,13 +172,12 @@ View.prototype = {
         roamTransform.scale = [zoom, zoom];
 
         this._updateTransform();
-    },
+    }
 
     /**
      * Update transform from roam and mapLocation
-     * @private
      */
-    _updateTransform: function () {
+    protected _updateTransform(): void {
         var roamTransformable = this._roamTransformable;
         var rawTransformable = this._rawTransformable;
 
@@ -228,9 +193,13 @@ View.prototype = {
         matrix.invert(this.invTransform, this.transform);
 
         this.decomposeTransform();
-    },
+    }
 
-    getTransformInfo: function () {
+    getTransformInfo(): {
+        roamTransform: matrix.MatrixArray,
+        rawScale: number[],
+        rawPosition: number[]
+    } {
         var roamTransform = this._roamTransformable.transform;
         var rawTransformable = this._rawTransformable;
         return {
@@ -238,89 +207,73 @@ View.prototype = {
             rawScale: zrUtil.slice(rawTransformable.scale),
             rawPosition: zrUtil.slice(rawTransformable.position)
         };
-    },
+    }
 
-    /**
-     * @return {module:zrender/core/BoundingRect}
-     */
-    getViewRect: function () {
+    getViewRect(): BoundingRect {
         return this._viewRect;
-    },
+    }
 
     /**
      * Get view rect after roam transform
-     * @return {module:zrender/core/BoundingRect}
      */
-    getViewRectAfterRoam: function () {
+    getViewRectAfterRoam(): BoundingRect {
         var rect = this.getBoundingRect().clone();
         rect.applyTransform(this.transform);
         return rect;
-    },
+    }
 
     /**
      * Convert a single (lon, lat) data item to (x, y) point.
-     * @param {Array.<number>} data
-     * @param {boolean} noRoam
-     * @param {Array.<number>} [out]
-     * @return {Array.<number>}
      */
-    dataToPoint: function (data, noRoam, out) {
+    dataToPoint(data: number[], noRoam?: boolean, out?: number[]): number[] {
         var transform = noRoam ? this._rawTransform : this.transform;
         out = out || [];
         return transform
             ? v2ApplyTransform(out, data, transform)
             : vector.copy(out, data);
-    },
+    }
 
     /**
      * Convert a (x, y) point to (lon, lat) data
-     * @param {Array.<number>} point
-     * @return {Array.<number>}
      */
-    pointToData: function (point) {
+    pointToData(point: number[]): number[] {
         var invTransform = this.invTransform;
         return invTransform
             ? v2ApplyTransform([], point, invTransform)
             : [point[0], point[1]];
-    },
+    }
+
+    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
+        var coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.dataToPoint(value) : null;
+    }
+
+    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
+        var coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.pointToData(pixel) : null;
+    }
 
     /**
      * @implements
-     * see {module:echarts/CoodinateSystem}
      */
-    convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
-
-    /**
-     * @implements
-     * see {module:echarts/CoodinateSystem}
-     */
-    convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
-
-    /**
-     * @implements
-     * see {module:echarts/CoodinateSystem}
-     */
-    containPoint: function (point) {
+    containPoint(point: number[]): boolean {
         return this.getViewRectAfterRoam().contain(point[0], point[1]);
     }
 
     /**
      * @return {number}
      */
-    // getScalarScale: function () {
+    // getScalarScale() {
     //     // Use determinant square root of transform to mutiply scalar
     //     var m = this.transform;
     //     var det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
     //     return det;
     // }
-};
+}
 
-zrUtil.mixin(View, Transformable);
-
-function doConvert(methodName, ecModel, finder, value) {
+function getCoordSys(finder: ParsedModelFinder): View {
     var seriesModel = finder.seriesModel;
-    var coordSys = seriesModel ? seriesModel.coordinateSystem : null; // e.g., graph.
-    return coordSys === this ? coordSys[methodName](value) : null;
+    return seriesModel ? seriesModel.coordinateSystem as View : null; // e.g., graph.
 }
 
 export default View;

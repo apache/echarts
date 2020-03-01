@@ -17,7 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
@@ -26,15 +25,20 @@ import '../coord/geo/GeoModel';
 import '../coord/geo/geoCreator';
 import './geo/GeoView';
 import '../action/geoRoam';
+import { ActionInfo } from '../util/types';
+import GeoModel from '../coord/geo/GeoModel';
 
-function makeAction(method, actionInfo) {
+function makeAction(
+    method: 'toggleSelected' | 'select' | 'unSelect',
+    actionInfo: ActionInfo
+): void {
     actionInfo.update = 'updateView';
     echarts.registerAction(actionInfo, function (payload, ecModel) {
-        var selected = {};
+        var selected = {} as {[regionName: string]: boolean};
 
         ecModel.eachComponent(
             { mainType: 'geo', query: payload},
-            function (geoModel) {
+            function (geoModel: GeoModel) {
                 geoModel[method](payload.name);
                 var geo = geoModel.coordinateSystem;
                 zrUtil.each(geo.regions, function (region) {

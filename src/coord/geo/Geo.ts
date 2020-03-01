@@ -17,71 +17,62 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import View from '../View';
 import geoSourceManager from './geoSourceManager';
+import Region from './Region';
+import { NameMap } from './geoTypes';
+import GlobalModel from '../../model/Global';
+import { ParsedModelFinder } from '../../util/model';
+import GeoModel from './GeoModel';
+import { resizeGeoType } from './geoCreator';
 
 
-/**
- * [Geo description]
- * For backward compatibility, the orginal interface:
- * `name, map, geoJson, specialAreas, nameMap` is kept.
- *
- * @param {string|Object} name
- * @param {string} map Map type
- *        Specify the positioned areas by left, top, width, height
- * @param {Object.<string, string>} [nameMap]
- *        Specify name alias
- * @param {boolean} [invertLongitute=true]
- */
-function Geo(name, map, nameMap, invertLongitute) {
+class Geo extends View {
 
-    View.call(this, name);
+    dimensions = ['lng', 'lat'];
 
-    /**
-     * Map type
-     * @type {string}
-     */
-    this.map = map;
+    type = 'geo';
 
-    var source = geoSourceManager.load(map, nameMap);
+    // map type
+    readonly map: string;
 
-    this._nameCoordMap = source.nameCoordMap;
-    this._regionsMap = source.regionsMap;
-    this._invertLongitute = invertLongitute == null ? true : invertLongitute;
+    private _nameCoordMap: zrUtil.HashMap<number[]>;
+    private _regionsMap: zrUtil.HashMap<Region>;
+    private _invertLongitute: boolean;
+    readonly regions: Region[];
+
+    // Injected outside
+    aspectScale: number;
+    model: GeoModel;
+    resize: resizeGeoType;
 
     /**
-     * @readOnly
+     * For backward compatibility, the orginal interface:
+     * `name, map, geoJson, specialAreas, nameMap` is kept.
+     *
+     * @param map Map type Specify the positioned areas by left, top, width, height.
+     * @param [nameMap] Specify name alias
      */
-    this.regions = source.regions;
+    constructor(name: string, map: string, nameMap?: NameMap, invertLongitute?: boolean) {
+        super(name);
+
+        this.map = map;
+
+        var source = geoSourceManager.load(map, nameMap);
+
+        this._nameCoordMap = source.nameCoordMap;
+        this._regionsMap = source.regionsMap;
+        this._invertLongitute = invertLongitute == null ? true : invertLongitute;
+        this.regions = source.regions;
+        this._rect = source.boundingRect;
+    }
 
     /**
-     * @type {module:zrender/src/core/BoundingRect}
+     * Whether contain the given [lng, lat] coord.
      */
-    this._rect = source.boundingRect;
-}
-
-Geo.prototype = {
-
-    constructor: Geo,
-
-    type: 'geo',
-
-    /**
-     * @param {Array.<string>}
-     * @readOnly
-     */
-    dimensions: ['lng', 'lat'],
-
-    /**
-     * If contain given lng,lat coord
-     * @param {Array.<number>}
-     * @readOnly
-     */
-    containCoord: function (coord) {
+    containCoord(coord: number[]) {
         var regions = this.regions;
         for (var i = 0; i < regions.length; i++) {
             if (regions[i].contain(coord)) {
@@ -89,12 +80,9 @@ Geo.prototype = {
             }
         }
         return false;
-    },
+    }
 
-    /**
-     * @override
-     */
-    transformTo: function (x, y, width, height) {
+    transformTo(x: number, y: number, width: number, height: number): void {
         var rect = this.getBoundingRect();
         var invertLongitute = this._invertLongitute;
 
@@ -121,57 +109,40 @@ Geo.prototype = {
         rawTransformable.updateTransform();
 
         this._updateTransform();
-    },
+    }
 
-    /**
-     * @param {string} name
-     * @return {module:echarts/coord/geo/Region}
-     */
-    getRegion: function (name) {
+    getRegion(name: string): Region {
         return this._regionsMap.get(name);
-    },
+    }
 
-    getRegionByCoord: function (coord) {
+    getRegionByCoord(coord: number[]): Region {
         var regions = this.regions;
         for (var i = 0; i < regions.length; i++) {
             if (regions[i].contain(coord)) {
                 return regions[i];
             }
         }
-    },
+    }
 
     /**
      * Add geoCoord for indexing by name
-     * @param {string} name
-     * @param {Array.<number>} geoCoord
      */
-    addGeoCoord: function (name, geoCoord) {
+    addGeoCoord(name: string, geoCoord: number[]): void {
         this._nameCoordMap.set(name, geoCoord);
-    },
+    }
 
     /**
      * Get geoCoord by name
-     * @param {string} name
-     * @return {Array.<number>}
      */
-    getGeoCoord: function (name) {
+    getGeoCoord(name: string): number[] {
         return this._nameCoordMap.get(name);
-    },
+    }
 
-    /**
-     * @override
-     */
-    getBoundingRect: function () {
+    getBoundingRect(): BoundingRect {
         return this._rect;
-    },
+    }
 
-    /**
-     * @param {string|Array.<number>} data
-     * @param {boolean} noRoam
-     * @param {Array.<number>} [out]
-     * @return {Array.<number>}
-     */
-    dataToPoint: function (data, noRoam, out) {
+    dataToPoint(data: number[], noRoam?: boolean, out?: number[]): number[] {
         if (typeof data === 'string') {
             // Map area name to geoCoord
             data = this.getGeoCoord(data);
@@ -179,36 +150,33 @@ Geo.prototype = {
         if (data) {
             return View.prototype.dataToPoint.call(this, data, noRoam, out);
         }
-    },
+    }
 
-    /**
-     * @override
-     */
-    convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
+    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
+        var coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.dataToPoint(value) : null;
+    }
 
-    /**
-     * @override
-     */
-    convertFromPixel: zrUtil.curry(doConvert, 'pointToData')
+    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
+        var coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.pointToData(pixel) : null;
+    }
 
 };
 
 zrUtil.mixin(Geo, View);
 
-function doConvert(methodName, ecModel, finder, value) {
-    var geoModel = finder.geoModel;
+function getCoordSys(finder: ParsedModelFinder): Geo {
+    var geoModel = finder.geoModel as GeoModel;
     var seriesModel = finder.seriesModel;
-
-    var coordSys = geoModel
+    return geoModel
         ? geoModel.coordinateSystem
         : seriesModel
         ? (
-            seriesModel.coordinateSystem // For map.
-            || (seriesModel.getReferringComponents('geo')[0] || {}).coordinateSystem
+            seriesModel.coordinateSystem as Geo // For map series.
+            || ((seriesModel.getReferringComponents('geo')[0] || {}) as GeoModel).coordinateSystem
         )
         : null;
-
-    return coordSys === this ? coordSys[methodName](value) : null;
 }
 
 export default Geo;

@@ -17,21 +17,51 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import MapDraw from '../../component/helper/MapDraw';
+import ChartView from '../../view/Chart';
+import MapSeries from './MapSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Payload } from '../../util/types';
+import Model from '../../model/Model';
 
-var HIGH_DOWN_PROP = '__seriesMapHighDown';
-var RECORD_VERSION_PROP = '__seriesMapCallKey';
 
-export default echarts.extendChartView({
+var HIGH_DOWN_PROP = '__seriesMapHighDown' as const;
+var RECORD_VERSION_PROP = '__seriesMapCallKey' as const;
+var ORIGINAL_Z2 = '__mapOriginalZ2' as const;
 
-    type: 'map',
+interface CircleExtend extends graphic.Circle {
+    [ORIGINAL_Z2]: number;
+}
+interface HighDownRecord {
+    recordVersion: number;
+    circle: CircleExtend;
+    labelModel: Model;
+    hoverLabelModel: Model;
+    emphasisText: string;
+    normalText: string;
+};
+interface RegionGroupExtend extends graphic.Group {
+    [HIGH_DOWN_PROP]: HighDownRecord;
+    [RECORD_VERSION_PROP]: number;
+}
 
-    render: function (mapModel, ecModel, api, payload) {
+class MapView extends ChartView {
+
+    static type = 'map' as const;
+    readonly type = MapView.type;
+
+    private _mapDraw: MapDraw;
+
+    render(
+        mapModel: MapSeries,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ): void {
         // Not render if it is an toggleSelect action from self
         if (payload && payload.type === 'mapToggleSelect'
             && payload.from === this.uid
@@ -73,25 +103,25 @@ export default echarts.extendChartView({
 
         mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
             && this._renderSymbols(mapModel, ecModel, api);
-    },
+    }
 
-    remove: function () {
+    remove(): void {
         this._mapDraw && this._mapDraw.remove();
         this._mapDraw = null;
         this.group.removeAll();
-    },
+    }
 
-    dispose: function () {
+    dispose(): void {
         this._mapDraw && this._mapDraw.remove();
         this._mapDraw = null;
-    },
+    }
 
-    _renderSymbols: function (mapModel, ecModel, api) {
+    private _renderSymbols(mapModel: MapSeries, ecModel: GlobalModel, api: ExtensionAPI): void {
         var originalData = mapModel.originalData;
         var group = this.group;
 
         originalData.each(originalData.mapDimension('value'), function (value, originalDataIndex) {
-            if (isNaN(value)) {
+            if (isNaN(value as number)) {
                 return;
             }
 
@@ -144,7 +174,7 @@ export default echarts.extendChartView({
                 var labelModel = itemModel.getModel('label');
                 var hoverLabelModel = itemModel.getModel('emphasis.label');
 
-                var regionGroup = fullData.getItemGraphicEl(fullIndex);
+                var regionGroup = fullData.getItemGraphicEl(fullIndex) as RegionGroupExtend;
 
                 // `getFormattedLabel` needs to use `getData` inside. Here
                 // `mapModel.getData()` is shallow cloned from `mainSeries.getData()`.
@@ -167,7 +197,7 @@ export default echarts.extendChartView({
 
                 // Prevent from register listeners duplicatedly when roaming.
                 if (!highDownRecord) {
-                    highDownRecord = regionGroup[HIGH_DOWN_PROP] = {};
+                    highDownRecord = regionGroup[HIGH_DOWN_PROP] = {} as HighDownRecord;
                     var onEmphasis = zrUtil.curry(onRegionHighDown, true);
                     var onNormal = zrUtil.curry(onRegionHighDown, false);
                     regionGroup.on('mouseover', onEmphasis)
@@ -195,16 +225,16 @@ export default echarts.extendChartView({
             group.add(circle);
         });
     }
-});
+}
 
-function onRegionHighDown(toHighOrDown) {
+function onRegionHighDown(this: RegionGroupExtend, toHighOrDown: boolean): void {
     var highDownRecord = this[HIGH_DOWN_PROP];
     if (highDownRecord && highDownRecord.recordVersion === this[RECORD_VERSION_PROP]) {
         enterRegionHighDown(highDownRecord, toHighOrDown);
     }
 }
 
-function enterRegionHighDown(highDownRecord, toHighOrDown) {
+function enterRegionHighDown(highDownRecord: HighDownRecord, toHighOrDown: boolean): void {
     var circle = highDownRecord.circle;
     var labelModel = highDownRecord.labelModel;
     var hoverLabelModel = highDownRecord.hoverLabelModel;
@@ -218,7 +248,7 @@ function enterRegionHighDown(highDownRecord, toHighOrDown) {
             }, {isRectText: true, useInsideStyle: false}, true)
         );
         // Make label upper than others if overlaps.
-        circle.__mapOriginalZ2 = circle.z2;
+        circle[ORIGINAL_Z2] = circle.z2;
         circle.z2 += graphic.Z2_EMPHASIS_LIFT;
     }
     else {
@@ -229,9 +259,11 @@ function enterRegionHighDown(highDownRecord, toHighOrDown) {
         // Trigger normalize style like padding.
         circle.dirty(false);
 
-        if (circle.__mapOriginalZ2 != null) {
-            circle.z2 = circle.__mapOriginalZ2;
-            circle.__mapOriginalZ2 = null;
+        if (circle[ORIGINAL_Z2] != null) {
+            circle.z2 = circle[ORIGINAL_Z2];
+            circle[ORIGINAL_Z2] = null;
         }
     }
 }
+
+export default MapView;

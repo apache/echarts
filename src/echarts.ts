@@ -47,7 +47,7 @@ import Scheduler from './stream/Scheduler';
 import lightTheme from './theme/light';
 import darkTheme from './theme/dark';
 import './component/dataset';
-import mapDataStorage, { GeoMapDefinition, GeoMapGeoJSONSource, GeoSpecialAreas } from './coord/geo/mapDataStorage';
+import mapDataStorage from './coord/geo/mapDataStorage';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from './coord/CoordinateSystem';
 import { parseClassType } from './util/clazz';
 import {ECEventProcessor} from './util/ECEventProcessor';
@@ -2254,9 +2254,9 @@ export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
  * Compatible with previous `echarts.registerMap`.
  */
 export function registerMap(
-    mapName: string,
-    geoJson: GeoMapDefinition | GeoMapDefinition[] | GeoMapGeoJSONSource,
-    specialAreas?: GeoSpecialAreas
+    mapName: Parameters<typeof mapDataStorage.registerMap>[0],
+    geoJson: Parameters<typeof mapDataStorage.registerMap>[1],
+    specialAreas?: Parameters<typeof mapDataStorage.registerMap>[2]
 ): void {
     mapDataStorage.registerMap(mapName, geoJson, specialAreas);
 }
@@ -2264,8 +2264,9 @@ export function registerMap(
 export function getMap(mapName: string) {
     // For backward compatibility, only return the first one.
     var records = mapDataStorage.retrieveMap(mapName);
-    // FIXME support SVG
+    // FIXME support SVG, where return not only records[0].
     return records && records[0] && {
+        // @ts-ignore
         geoJson: records[0].geoJSON,
         specialAreas: records[0].specialAreas
     };

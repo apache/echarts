@@ -1,3 +1,6 @@
+import Region from '../Region';
+import { Dictionary } from 'zrender/src/core/types';
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,7 +20,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 var coordsOffsetMap = {
     '南海诸岛': [32, 80],
@@ -27,9 +29,9 @@ var coordsOffsetMap = {
     '澳门': [-10, 10],
     //'北京': [-10, 0],
     '天津': [5, 5]
-};
+} as Dictionary<number[]>;
 
-export default function (mapType, region) {
+export default function (mapType: string, region: Region) {
     if (mapType === 'china') {
         var coordFix = coordsOffsetMap[region.name];
         if (coordFix) {

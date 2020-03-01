@@ -17,50 +17,106 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
-import {DataSelectableMixin} from '../../component/helper/selectableMixin';
+import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '../../component/helper/selectableMixin';
 import geoCreator from './geoCreator';
+import Geo from './Geo';
+import { ComponentOption, BoxLayoutOptionMixin, ItemStyleOption, ZRColor, LabelOption, DisplayState } from '../../util/types';
+import { RoamType } from '../../component/helper/RoamController';
+import { NameMap } from './geoTypes';
+import GlobalModel from '../../model/Global';
 
-var GeoModel = ComponentModel.extend({
 
-    type: 'geo',
+export interface GeoItemStyleOption extends ItemStyleOption {
+    areaColor?: ZRColor;
+};
+interface GeoLabelOption extends LabelOption {
+    formatter?: string | ((params: GeoLabelFormatterDataParams) => string);
+}
+interface GeoLabelFormatterDataParams {
+    name: string;
+    status: DisplayState;
+}
 
-    /**
-     * @type {module:echarts/coord/geo/Geo}
-     */
-    coordinateSystem: null,
+export interface RegoinOption extends SelectableTarget {
+    itemStyle?: GeoItemStyleOption;
+    label?: GeoLabelOption;
+    emphasis?: {
+        itemStyle?: GeoItemStyleOption;
+        label?: GeoLabelOption;
+    }
+};
 
-    layoutMode: 'box',
+export interface GeoCommonOptionMixin {
+    // Map name
+    map: string;
 
-    init: function (option) {
-        ComponentModel.prototype.init.apply(this, arguments);
+    // Aspect is width / height. Inited to be geoJson bbox aspect
+    // This parameter is used for scale this aspect
+    aspectScale?: number;
 
-        // Default label emphasis `show`
-        modelUtil.defaultEmphasis(option, 'label', ['show']);
-    },
+    ///// Layout with center and size
+    // If you wan't to put map in a fixed size box with right aspect ratio
+    // This two properties may more conveninet
+    layoutCenter?: number[];
+    layoutSize?: number;
 
-    optionUpdated: function () {
-        var option = this.option;
-        var self = this;
+    // Define left-top, right-bottom coords to control view
+    // For example, [ [180, 90], [-180, -90] ]
+    // higher priority than center and zoom
+    boundingCoords?: number[][];
+    // Default on center of map
+    center?: number[];
+    roam?: RoamType;
+    zoom?: number;
 
-        option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
+    scaleLimit?: {
+        min?: number;
+        max?: number;
+    };
 
-        this._optionModelMap = zrUtil.reduce(option.regions || [], function (optionModelMap, regionOpt) {
-            if (regionOpt.name) {
-                optionModelMap.set(regionOpt.name, new Model(regionOpt, self));
-            }
-            return optionModelMap;
-        }, zrUtil.createHashMap());
+    nameMap?: NameMap;
+}
 
-        this.updateSelectedMap(option.regions);
-    },
+export interface GeoOption extends
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    DataSelectableOptionMixin,
+    GeoCommonOptionMixin {
 
-    defaultOption: {
+    show?: boolean;
+    silent?: boolean;
+
+    itemStyle?: GeoItemStyleOption;
+    label?: GeoLabelOption;
+
+    emphasis?: {
+        itemStyle?: GeoItemStyleOption;
+        label?: GeoLabelOption;
+    };
+
+    regions: RegoinOption[];
+}
+
+var LABEL_FORMATTER_NORMAL = ['label', 'formatter'] as const;
+var LABEL_FORMATTER_EMPHASIS = ['emphasis', 'label', 'formatter'] as const;
+
+class GeoModel extends ComponentModel<GeoOption> {
+
+    static type = 'geo';
+    readonly type = GeoModel.type;
+
+    coordinateSystem: Geo;
+
+    static layoutMode = 'box' as const;
+
+    private _optionModelMap: zrUtil.HashMap<Model<RegoinOption>>;
+
+    static defaultOption: GeoOption = {
 
         zlevel: 0,
 
@@ -72,14 +128,6 @@ var GeoModel = ComponentModel.extend({
 
         top: 'center',
 
-
-        // width:,
-        // height:,
-        // right
-        // bottom
-
-        // Aspect is width / height. Inited to be geoJson bbox aspect
-        // This parameter is used for scale this aspect
         // If svg used, aspectScale is 1 by default.
         // aspectScale: 0.75,
         aspectScale: null,
@@ -131,33 +179,49 @@ var GeoModel = ComponentModel.extend({
         },
 
         regions: []
-    },
+    }
+
+    init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {
+        super.init(option, parentModel, ecModel);
+        // Default label emphasis `show`
+        modelUtil.defaultEmphasis(option, 'label', ['show']);
+    }
+
+    optionUpdated(): void {
+        var option = this.option;
+        var self = this;
+
+        option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
+
+        this._optionModelMap = zrUtil.reduce(option.regions || [], function (optionModelMap, regionOpt) {
+            if (regionOpt.name) {
+                optionModelMap.set(regionOpt.name, new Model(regionOpt, self));
+            }
+            return optionModelMap;
+        }, zrUtil.createHashMap());
+
+        this.updateSelectedMap(option.regions);
+    }
 
     /**
-     * Get model of region
-     * @param  {string} name
-     * @return {module:echarts/model/Model}
+     * Get model of region.
      */
-    getRegionModel: function (name) {
+    getRegionModel(name: string): Model<RegoinOption> {
         return this._optionModelMap.get(name) || new Model(null, this, this.ecModel);
-    },
+    }
 
     /**
      * Format label
-     * @param {string} name Region name
-     * @param {string} [status='normal'] 'normal' or 'emphasis'
-     * @return {string}
+     * @param name Region name
      */
-    getFormattedLabel: function (name, status) {
+    getFormattedLabel(name: string, status?: DisplayState) {
         var regionModel = this.getRegionModel(name);
-        var formatter = regionModel.get(
-            'label'
-            + (status === 'normal' ? '.' : status + '.')
-            + 'formatter'
-        );
+        var formatter = status === 'normal'
+            ? regionModel.get(LABEL_FORMATTER_NORMAL)
+            : regionModel.get(LABEL_FORMATTER_EMPHASIS);
         var params = {
             name: name
-        };
+        } as GeoLabelFormatterDataParams;
         if (typeof formatter === 'function') {
             params.status = status;
             return formatter(params);
@@ -165,17 +229,19 @@ var GeoModel = ComponentModel.extend({
         else if (typeof formatter === 'string') {
             return formatter.replace('{a}', name != null ? name : '');
         }
-    },
+    }
 
-    setZoom: function (zoom) {
+    setZoom(zoom: number): void {
         this.option.zoom = zoom;
-    },
+    }
 
-    setCenter: function (center) {
+    setCenter(center: number[]): void {
         this.option.center = center;
     }
-});
 
-zrUtil.mixin(GeoModel, DataSelectableMixin.prototype);
+}
+
+interface GeoModel extends DataSelectableMixin<GeoOption> {};
+zrUtil.mixin(GeoModel, DataSelectableMixin);
 
 export default GeoModel;

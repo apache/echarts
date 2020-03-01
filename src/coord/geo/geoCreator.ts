@@ -17,7 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
@@ -27,13 +26,23 @@ import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
 import mapDataStorage from './mapDataStorage';
+import GeoModel, { GeoOption, RegoinOption } from './GeoModel';
+import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
+import ExtensionAPI from '../../ExtensionAPI';
+import { CoordinateSystemCreator } from '../CoordinateSystem';
+import { NameMap } from './geoTypes';
+import SeriesModel from '../../model/Series';
+import { SeriesOption, SeriesOnGeoOptionMixin } from '../../util/types';
+import { Dictionary } from 'zrender/src/core/types';
+import GlobalModel from '../../model/Global';
+import ComponentModel from '../../model/Component';
 
+
+export type resizeGeoType = typeof resizeGeo;
 /**
  * Resize method bound to the geo
- * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} geoModel
- * @param {module:echarts/ExtensionAPI} api
  */
-function resizeGeo(geoModel, api) {
+function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOption>, api: ExtensionAPI): void {
 
     var boundingCoords = geoModel.get('boundingCoords');
     if (boundingCoords != null) {
@@ -50,8 +59,6 @@ function resizeGeo(geoModel, api) {
     }
 
     var rect = this.getBoundingRect();
-
-    var boxLayoutOption;
 
     var center = geoModel.get('layoutCenter');
     var size = geoModel.get('layoutSize');
@@ -80,9 +87,9 @@ function resizeGeo(geoModel, api) {
         }
     }
 
-    var viewRect;
+    var viewRect: layout.LayoutRect;
     if (useCenterAndSize) {
-        var viewRect = {};
+        var viewRect = {} as layout.LayoutRect;
         if (aspect > 1) {
             // Width is same with size
             viewRect.width = size;
@@ -97,7 +104,7 @@ function resizeGeo(geoModel, api) {
     }
     else {
         // Use left/top/width/height
-        boxLayoutOption = geoModel.getBoxLayoutParams();
+        var boxLayoutOption = geoModel.getBoxLayoutParams() as Parameters<typeof layout.getLayoutRect>[0];
 
         // 0.75 rate
         boxLayoutOption.aspect = aspect;
@@ -114,27 +121,24 @@ function resizeGeo(geoModel, api) {
     this.setZoom(geoModel.get('zoom'));
 }
 
-/**
- * @param {module:echarts/coord/Geo} geo
- * @param {module:echarts/model/Model} model
- * @inner
- */
-function setGeoCoords(geo, model) {
+// Back compat for ECharts2, where the coord map is set on map series:
+// {type: 'map', geoCoord: {'cityA': [116.46,39.92], 'cityA': [119.12,24.61]}},
+function setGeoCoords(geo: Geo, model: MapSeries) {
     zrUtil.each(model.get('geoCoord'), function (geoCoord, name) {
         geo.addGeoCoord(name, geoCoord);
     });
 }
 
-var geoCreator = {
+class GeoCreator implements CoordinateSystemCreator {
 
     // For deciding which dimensions to use when creating list data
-    dimensions: Geo.prototype.dimensions,
+    dimensions = Geo.prototype.dimensions;
 
-    create: function (ecModel, api) {
-        var geoList = [];
+    create(ecModel: GlobalModel, api: ExtensionAPI): Geo[] {
+        var geoList = [] as Geo[];
 
         // FIXME Create each time may be slow
-        ecModel.eachComponent('geo', function (geoModel, idx) {
+        ecModel.eachComponent('geo', function (geoModel: GeoModel, idx) {
             var name = geoModel.get('map');
 
             var aspectScale = geoModel.get('aspectScale');
@@ -154,7 +158,7 @@ var geoCreator = {
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
 
-            setGeoCoords(geo, geoModel);
+            // setGeoCoords(geo, geoModel);
 
             geoModel.coordinateSystem = geo;
             geo.model = geoModel;
@@ -168,15 +172,17 @@ var geoCreator = {
         ecModel.eachSeries(function (seriesModel) {
             var coordSys = seriesModel.get('coordinateSystem');
             if (coordSys === 'geo') {
-                var geoIndex = seriesModel.get('geoIndex') || 0;
+                var geoIndex = (
+                    seriesModel as SeriesModel<SeriesOption & SeriesOnGeoOptionMixin>
+                ).get('geoIndex') || 0;
                 seriesModel.coordinateSystem = geoList[geoIndex];
             }
         });
 
         // If has map series
-        var mapModelGroupBySeries = {};
+        var mapModelGroupBySeries = {} as Dictionary<MapSeries[]>;
 
-        ecModel.eachSeriesByType('map', function (seriesModel) {
+        ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
             if (!seriesModel.getHostGeoModel()) {
                 var mapType = seriesModel.getMapType();
                 mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
@@ -209,16 +215,14 @@ var geoCreator = {
         });
 
         return geoList;
-    },
+    }
 
     /**
      * Fill given regions array
-     * @param  {Array.<Object>} originRegionArr
-     * @param  {string} mapName
-     * @param  {Object} [nameMap]
-     * @return {Array}
      */
-    getFilledRegions: function (originRegionArr, mapName, nameMap) {
+    getFilledRegions(
+        originRegionArr: RegoinOption[], mapName: string, nameMap?: NameMap
+    ): RegoinOption[] {
         // Not use the original
         var regionsArr = (originRegionArr || []).slice();
 
@@ -235,7 +239,9 @@ var geoCreator = {
 
         return regionsArr;
     }
-};
+}
+
+const geoCreator = new GeoCreator();
 
 echarts.registerCoordinateSystem('geo', geoCreator);
 

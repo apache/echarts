@@ -17,32 +17,45 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import {each, createHashMap} from 'zrender/src/core/util';
-import mapDataStorage from './mapDataStorage';
+import {each, createHashMap, HashMap} from 'zrender/src/core/util';
+import mapDataStorage, { MapRecord } from './mapDataStorage';
 import geoJSONLoader from './geoJSONLoader';
 import geoSVGLoader from './geoSVGLoader';
 import BoundingRect from 'zrender/src/core/BoundingRect';
+import { NameMap } from './geoTypes';
+import Region from './Region';
+import { Dictionary } from 'zrender/src/core/types';
+import Group from 'zrender/src/container/Group';
 
+
+interface Loader {
+    load: (mapName: string, mapRecord: MapRecord) => {
+        regions?: Region[];
+        boundingRect?: BoundingRect;
+    };
+    makeGraphic?: (mapName: string, mapRecord: MapRecord, hostKey: string) => Group;
+    removeGraphic?: (mapName: string, mapRecord: MapRecord, hostKey: string) => void;
+}
 var loaders = {
     geoJSON: geoJSONLoader,
     svg: geoSVGLoader
-};
+} as Dictionary<Loader>;
 
 export default {
 
-    /**
-     * @param {string} mapName
-     * @param {Object} nameMap
-     * @return {Object} source {regions, regionsMap, nameCoordMap, boundingRect}
-     */
-    load: function (mapName, nameMap) {
-        var regions = [];
-        var regionsMap = createHashMap();
-        var nameCoordMap = createHashMap();
-        var boundingRect;
+    load: function (mapName: string, nameMap: NameMap): {
+        regions: Region[];
+        // Key: mapName
+        regionsMap: HashMap<Region>;
+        // Key: mapName
+        nameCoordMap: HashMap<number[]>;
+        boundingRect: BoundingRect
+    } {
+        var regions = [] as Region[];
+        var regionsMap = createHashMap<Region>();
+        var nameCoordMap = createHashMap<Region['center']>();
+        var boundingRect: BoundingRect;
         var mapRecords = retrieveMap(mapName);
 
         each(mapRecords, function (record) {
@@ -79,34 +92,32 @@ export default {
     },
 
     /**
-     * @param {string} mapName
-     * @param {string} hostKey For cache.
-     * @return {Array.<module:zrender/Element>} Roots.
+     * @param hostKey For cache.
+     * @return Roots.
      */
-    makeGraphic: makeInvoker('makeGraphic'),
-
-    /**
-     * @param {string} mapName
-     * @param {string} hostKey For cache.
-     */
-    removeGraphic: makeInvoker('removeGraphic')
-};
-
-function makeInvoker(methodName) {
-    return function (mapName, hostKey) {
+    makeGraphic: function (mapName: string, hostKey: string): Group[] {
         var mapRecords = retrieveMap(mapName);
-        var results = [];
-
+        var results = [] as Group[];
         each(mapRecords, function (record) {
-            var method = loaders[record.type][methodName];
+            var method = loaders[record.type].makeGraphic;
             method && results.push(method(mapName, record, hostKey));
         });
-
         return results;
-    };
-}
+    },
 
-function mapNotExistsError(mapName) {
+    /**
+     * @param hostKey For cache.
+     */
+    removeGraphic: function (mapName: string, hostKey: string): void {
+        var mapRecords = retrieveMap(mapName);
+        each(mapRecords, function (record) {
+            var method = loaders[record.type].makeGraphic;
+            method && method(mapName, record, hostKey);
+        });
+    }
+};
+
+function mapNotExistsError(mapName: string): void {
     if (__DEV__) {
         console.error(
             'Map ' + mapName + ' not exists. The GeoJSON of the map must be provided.'
@@ -114,7 +125,7 @@ function mapNotExistsError(mapName) {
     }
 }
 
-function retrieveMap(mapName) {
+function retrieveMap(mapName: string): MapRecord[] {
     var mapRecords = mapDataStorage.retrieveMap(mapName) || [];
 
     if (__DEV__) {

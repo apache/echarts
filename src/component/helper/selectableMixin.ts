@@ -28,9 +28,9 @@ import Model from '../../model/Model';
 import { Dictionary } from 'zrender/src/core/types';
 
 export interface SelectableTarget {
-    name: string,
-    value: any,
-    selected: boolean
+    name?: string;
+    selected?: boolean;
+    [key: string]: any;
 };
 
 export interface DataSelectableOptionMixin {

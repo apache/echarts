@@ -17,62 +17,54 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-/**
- * @module echarts/coord/geo/Region
- */
 
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as bbox from 'zrender/src/core/bbox';
 import * as vec2 from 'zrender/src/core/vector';
 import * as polygonContain from 'zrender/src/contain/polygon';
+import { GeoJSON } from './geoTypes';
 
-/**
- * @param {string|Region} name
- * @param {Array} geometries
- * @param {Array.<number>} cp
- */
-function Region(name, geometries, cp) {
 
-    /**
-     * @type {string}
-     * @readOnly
-     */
-    this.name = name;
+class Region {
 
-    /**
-     * @type {Array.<Array>}
-     * @readOnly
-     */
-    this.geometries = geometries;
+    readonly geometries: {
+        type: 'polygon'; // FIXME:TS Is there other types?
+        exterior: number[][];
+        interiors?: number[][][];
+    }[];
 
-    if (!cp) {
-        var rect = this.getBoundingRect();
-        cp = [
-            rect.x + rect.width / 2,
-            rect.y + rect.height / 2
-        ];
+    readonly name: string;
+
+    center: number[];
+
+    // Injected outside.
+    properties: GeoJSON['features'][0]['properties'];
+
+    private _rect: BoundingRect;
+
+
+    constructor(
+        name: string,
+        geometries: Region['geometries'],
+        cp: GeoJSON['features'][0]['properties']['cp']
+    ) {
+        this.name = name;
+        this.geometries = geometries;
+
+        if (!cp) {
+            var rect = this.getBoundingRect();
+            cp = [
+                rect.x + rect.width / 2,
+                rect.y + rect.height / 2
+            ];
+        }
+        else {
+            cp = [cp[0], cp[1]];
+        }
+        this.center = cp;
     }
-    else {
-        cp = [cp[0], cp[1]];
-    }
-    /**
-     * @type {Array.<number>}
-     */
-    this.center = cp;
-}
 
-Region.prototype = {
-
-    constructor: Region,
-
-    properties: null,
-
-    /**
-     * @return {module:zrender/core/BoundingRect}
-     */
-    getBoundingRect: function () {
+    getBoundingRect(): BoundingRect {
         var rect = this._rect;
         if (rect) {
             return rect;
@@ -81,8 +73,8 @@ Region.prototype = {
         var MAX_NUMBER = Number.MAX_VALUE;
         var min = [MAX_NUMBER, MAX_NUMBER];
         var max = [-MAX_NUMBER, -MAX_NUMBER];
-        var min2 = [];
-        var max2 = [];
+        var min2 = [] as number[];
+        var max2 = [] as number[];
         var geometries = this.geometries;
         for (var i = 0; i < geometries.length; i++) {
             // Only support polygon
@@ -103,13 +95,9 @@ Region.prototype = {
         return (this._rect = new BoundingRect(
             min[0], min[1], max[0] - min[0], max[1] - min[1]
         ));
-    },
+    }
 
-    /**
-     * @param {<Array.<number>} coord
-     * @return {boolean}
-     */
-    contain: function (coord) {
+    contain(coord: number[]): boolean {
         var rect = this.getBoundingRect();
         var geometries = this.geometries;
         if (!rect.contain(coord[0], coord[1])) {
@@ -125,7 +113,7 @@ Region.prototype = {
             if (polygonContain.contain(exterior, coord[0], coord[1])) {
                 // Not in the region if point is in the hole.
                 for (var k = 0; k < (interiors ? interiors.length : 0); k++) {
-                    if (polygonContain.contain(interiors[k])) {
+                    if (polygonContain.contain(interiors[k], coord[0], coord[1])) {
                         continue loopGeo;
                     }
                 }
@@ -133,9 +121,9 @@ Region.prototype = {
             }
         }
         return false;
-    },
+    }
 
-    transformTo: function (x, y, width, height) {
+    transformTo(x: number, y: number, width: number, height: number): void {
         var rect = this.getBoundingRect();
         var aspect = rect.width / rect.height;
         if (!width) {
@@ -170,15 +158,16 @@ Region.prototype = {
             rect.x + rect.width / 2,
             rect.y + rect.height / 2
         ];
-    },
+    }
 
-    cloneShallow: function (name) {
+    cloneShallow(name: string): Region {
         name == null && (name = this.name);
         var newRegion = new Region(name, this.geometries, this.center);
         newRegion._rect = this._rect;
         newRegion.transformTo = null; // Simply avoid to be called.
         return newRegion;
     }
-};
+
+}
 
 export default Region;

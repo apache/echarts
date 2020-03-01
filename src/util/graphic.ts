@@ -678,7 +678,7 @@ export function setHoverStyle(el: Element, hoverStyle?: StyleProps) {
  */
 export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     const disable = asDispatcher === false;
-    const extendedEl = el as ExtendedDisplayable;
+    const extendedEl = el as ExtendedElement;
     // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
     // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
     extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
@@ -720,29 +720,32 @@ export function getHighlightDigit(highlightKey: number) {
     return highlightDigit;
 }
 
+interface SetLabelStyleOpt<LDI> extends TextCommonParams {
+    defaultText?: string | (
+        (labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>) => string
+    ),
+    // Fetch text by `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
+    labelFetcher?: {
+        getFormattedLabel?: (
+            // In MapDraw case it can be string (region name)
+            labelDataIndex: LDI,
+            state: DisplayState,
+            dataType: string,
+            labelDimIndex: number
+        ) => string
+    },
+    labelDataIndex?: LDI,
+    labelDimIndex?: number
+}
 /**
  * See more info in `setTextStyleCommon`.
  */
-export function setLabelStyle(
+export function setLabelStyle<LDI>(
     normalStyle: StyleProps,
     emphasisStyle: StyleProps,
     normalModel: Model,
     emphasisModel: Model,
-    opt?: {
-        defaultText?: string,
-        // Fetch text by `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
-        labelFetcher?: {
-            getFormattedLabel?: (
-                labelDataIndex: number,
-                state:
-                DisplayState,
-                dataType: string,
-                labelDimIndex: number
-            ) => string
-        },
-        labelDataIndex?: number,
-        labelDimIndex?: number
-    } & TextCommonParams,
+    opt?: SetLabelStyleOpt<LDI>,
     normalSpecified?: StyleProps,
     emphasisSpecified?: StyleProps
 ) {

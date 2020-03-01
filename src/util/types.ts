@@ -405,7 +405,12 @@ export type OptionDataItem =
     | Dictionary<OptionDataValue>
     | ArrayLike<OptionDataValue>
     // FIXME: In some case (markpoint in geo (geo-map.html)), dataItem is {coord: [...]}
-    | {value: ArrayLike<OptionDataValue>}; // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
+    | OptionDataItemObject<OptionDataValue>;
+// Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
+export type OptionDataItemObject<T> = {
+    name?: string
+    value?: T[] | T
+};
 export type OptionDataValue = string | number | Date;
 
 export type OptionDataValueNumeric = number | '-';
@@ -1026,4 +1031,15 @@ export interface SeriesOnPolarOptionMixin {
 export interface SeriesOnSingleOptionMixin {
     singleAxisIndex?: number
     singleAxisId?: string
+}
+
+export interface SeriesOnGeoOptionMixin {
+    geoIndex?: number;
+}
+
+export interface SeriesEncodeOptionMixin {
+    datasetIndex?: number;
+    seriesLayoutBy?: SeriesLayoutBy;
+    dimentions?: DimensionName[];
+    encode?: OptionEncode
 }

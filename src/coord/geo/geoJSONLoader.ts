@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {each} from 'zrender/src/core/util';
 import parseGeoJson from './parseGeoJson';
 import {makeInner} from '../../util/model';
@@ -28,17 +26,22 @@ import fixNanhai from './fix/nanhai';
 import fixTextCoord from './fix/textCoord';
 import fixGeoCoord from './fix/geoCoord';
 import fixDiaoyuIsland from './fix/diaoyuIsland';
+import { GeoJSONMapRecord } from './mapDataStorage';
+import { BoundingRect } from 'zrender/src/export';
+import Region from './Region';
 
-var inner = makeInner();
+type MapRecordInner = {
+    parsed: {
+        regions: Region[];
+        boundingRect: BoundingRect;
+    };
+};
+
+var inner = makeInner<MapRecordInner>();
 
 export default {
 
-    /**
-     * @param {string} mapName
-     * @param {Object} mapRecord {specialAreas, geoJSON}
-     * @return {Object} {regions, boundingRect}
-     */
-    load: function (mapName, mapRecord) {
+    load(mapName: string, mapRecord: GeoJSONMapRecord): MapRecordInner['parsed'] {
 
         var parsed = inner(mapRecord).parsed;
 
@@ -84,7 +87,7 @@ export default {
     }
 };
 
-function getBoundingRect(regions) {
+function getBoundingRect(regions: Region[]): BoundingRect {
     var rect;
     for (var i = 0; i < regions.length; i++) {
         var regionRect = regions[i].getBoundingRect();
