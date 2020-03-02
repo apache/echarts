@@ -42,8 +42,6 @@ export function getScaleExtent(scale, model) {
 
     var min = model.getMin();
     var max = model.getMax();
-    var fixMin = min != null;
-    var fixMax = max != null;
     var originalExtent = scale.getExtent();
 
     var axisDataLen;
@@ -87,17 +85,6 @@ export function getScaleExtent(scale, model) {
     // (2) When `needCrossZero` and all data is positive/negative, should it be ensured
     // that the results processed by boundaryGap are positive/negative?
 
-    if (min == null) {
-        min = scaleType === 'ordinal'
-            ? (axisDataLen ? 0 : NaN)
-            : originalExtent[0] - boundaryGap[0] * span;
-    }
-    if (max == null) {
-        max = scaleType === 'ordinal'
-            ? (axisDataLen ? axisDataLen - 1 : NaN)
-            : originalExtent[1] + boundaryGap[1] * span;
-    }
-
     if (min === 'dataMin') {
         min = originalExtent[0];
     }
@@ -118,6 +105,17 @@ export function getScaleExtent(scale, model) {
         });
     }
 
+    if (min == null) {
+        min = scaleType === 'ordinal'
+            ? (axisDataLen ? 0 : NaN)
+            : originalExtent[0] - boundaryGap[0] * span;
+    }
+    if (max == null) {
+        max = scaleType === 'ordinal'
+            ? (axisDataLen ? axisDataLen - 1 : NaN)
+            : originalExtent[1] + boundaryGap[1] * span;
+    }
+
     (min == null || !isFinite(min)) && (min = NaN);
     (max == null || !isFinite(max)) && (max = NaN);
 
@@ -130,11 +128,11 @@ export function getScaleExtent(scale, model) {
     // Evaluate if axis needs cross zero
     if (model.getNeedCrossZero()) {
         // Axis is over zero and min is not set
-        if (min > 0 && max > 0 && !fixMin) {
+        if (min > 0 && max > 0 && !(min != null)) {
             min = 0;
         }
         // Axis is under zero and max is not set
-        if (min < 0 && max < 0 && !fixMax) {
+        if (min < 0 && max < 0 && !(max != null)) {
             max = 0;
         }
     }
@@ -208,8 +206,24 @@ function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
 
 export function niceScaleExtent(scale, model) {
     var extent = getScaleExtent(scale, model);
-    var fixMin = model.getMin() != null;
-    var fixMax = model.getMax() != null;
+    var min = model.getMin();
+    var max = model.getMax();
+    var originalExtent = scale.getExtent();
+
+    if (typeof min === 'function') {
+        min = min({
+            min: originalExtent[0],
+            max: originalExtent[1]
+        });
+    }
+
+    if (typeof max === 'function') {
+        max = max({
+            min: originalExtent[0],
+            max: originalExtent[1]
+        });
+    }
+
     var splitNumber = model.get('splitNumber');
 
     if (scale.type === 'log') {
@@ -220,8 +234,8 @@ export function niceScaleExtent(scale, model) {
     scale.setExtent(extent[0], extent[1]);
     scale.niceExtent({
         splitNumber: splitNumber,
-        fixMin: fixMin,
-        fixMax: fixMax,
+        fixMin: min != null,
+        fixMax: max != null,
         minInterval: (scaleType === 'interval' || scaleType === 'time')
             ? model.get('minInterval') : null,
         maxInterval: (scaleType === 'interval' || scaleType === 'time')
