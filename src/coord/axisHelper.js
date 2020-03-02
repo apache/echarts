@@ -42,6 +42,8 @@ export function getScaleExtent(scale, model) {
 
     var min = model.getMin();
     var max = model.getMax();
+    var fixMin = min != null;
+    var fixMax = max != null;
     var originalExtent = scale.getExtent();
 
     var axisDataLen;
@@ -128,11 +130,11 @@ export function getScaleExtent(scale, model) {
     // Evaluate if axis needs cross zero
     if (model.getNeedCrossZero()) {
         // Axis is over zero and min is not set
-        if (min > 0 && max > 0 && !(min != null)) {
+        if (min > 0 && max > 0 && !fixMin) {
             min = 0;
         }
         // Axis is under zero and max is not set
-        if (min < 0 && max < 0 && !(max != null)) {
+        if (min < 0 && max < 0 && !fixMax) {
             max = 0;
         }
     }
