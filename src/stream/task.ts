@@ -44,7 +44,7 @@ export type TaskProgressCallback<Ctx extends TaskContext> = (
     this: Task<Ctx>, params: TaskProgressParams, context: Ctx
 ) => void;
 export type TaskProgressParams = {
-    start: number, end: number, count: number, next: TaskDataIteratorNext
+    start: number, end: number, count: number, next?: TaskDataIteratorNext
 };
 export type TaskPlanCallback<Ctx extends TaskContext> = (
     this: Task<Ctx>, context: Ctx

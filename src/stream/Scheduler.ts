@@ -28,7 +28,7 @@ import ExtensionAPI from '../ExtensionAPI';
 import {normalizeToArray} from '../util/model';
 import {
     StageHandlerInternal, StageHandlerOverallReset, StageHandler,
-    Payload, StageHandlerReset, StageHandlerPlan, StageHandlerProgressExecutor, LarginOptionMixin, SeriesOption
+    Payload, StageHandlerReset, StageHandlerPlan, StageHandlerProgressExecutor, SeriesLargeOptionMixin, SeriesOption
 } from '../util/types';
 import { EChartsType } from '../echarts';
 import SeriesModel from '../model/Series';
@@ -204,7 +204,7 @@ class Scheduler {
      * Caution:
      * `updateStreamModes` use `seriesModel.getData()`.
      */
-    updateStreamModes(seriesModel: SeriesModel<SeriesOption & LarginOptionMixin>, view: ChartView): void {
+    updateStreamModes(seriesModel: SeriesModel<SeriesOption & SeriesLargeOptionMixin>, view: ChartView): void {
         var pipeline = this._pipelineMap.get(seriesModel.uid);
         var data = seriesModel.getData();
         var dataLen = data.count();

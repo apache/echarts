@@ -20,7 +20,7 @@
 import {createHashMap, each} from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
 import SeriesModel from '../model/Series';
-import { SeriesOption, StackOptionMixin, DimensionName } from '../util/types';
+import { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../util/types';
 import List from '../data/List';
 
 interface StackInfo {
@@ -30,7 +30,7 @@ interface StackInfo {
     stackResultDimension: DimensionName
     stackedOverDimension: DimensionName
     data: List
-    seriesModel: SeriesModel<SeriesOption & StackOptionMixin>
+    seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>
 }
 // (1) [Caution]: the logic is correct based on the premises:
 //     data processing stage is blocked in stream.
@@ -39,7 +39,7 @@ interface StackInfo {
 //     Should be executed after series filtered and before stack calculation.
 export default function (ecModel: GlobalModel) {
     var stackInfoMap = createHashMap<StackInfo[]>();
-    ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & StackOptionMixin>) {
+    ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>) {
         var stack = seriesModel.get('stack');
         // Compatibal: when `stack` is set as '', do not stack.
         if (stack) {

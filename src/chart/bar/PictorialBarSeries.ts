@@ -24,7 +24,7 @@ import {
     ItemStyleOption,
     LabelOption,
     AnimationOptionMixin,
-    StackOptionMixin
+    SeriesStackOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
@@ -107,7 +107,7 @@ export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOpti
 
 export interface PictorialBarSeriesOption extends BaseBarSeriesOption,
     PictorialBarSeriesSymbolOption,
-    StackOptionMixin {
+    SeriesStackOptionMixin {
     coordinateSystem?: 'cartesian2d'
 
     data?: (PictorialBarDataItemOption | PictorialBarValue)[]

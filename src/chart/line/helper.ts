@@ -58,10 +58,12 @@ export function prepareDataCoordInfo(
 
     var stacked = false;
     var stackResultDim = data.getCalculationInfo('stackResultDimension');
-    if (stacked = stacked || isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
+    if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
+        stacked = true;
         dims[0] = stackResultDim;
     }
-    if (stacked = stacked || isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
+    if (isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
+        stacked = true;
         dims[1] = stackResultDim;
     }
 

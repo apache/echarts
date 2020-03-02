@@ -17,59 +17,98 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import createListFromArray from '../helper/createListFromArray';
 import SeriesModel from '../../model/Series';
+import {
+    SeriesOption,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnPolarOptionMixin,
+    SeriesOnCalendarOptionMixin,
+    SeriesOnGeoOptionMixin,
+    SeriesOnSingleOptionMixin,
+    OptionDataValue,
+    ItemStyleOption,
+    LabelOption,
+    SeriesLargeOptionMixin,
+    SeriesStackOptionMixin,
+    SeriesSymbolOptionMixin
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
 
-export default SeriesModel.extend({
+type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
-    type: 'series.scatter',
+export interface ScatterDataItemOption {
+    name?: string
 
-    dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
+    value?: ScatterDataValue
 
-    getInitialData: function (option, ecModel) {
-        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
-    },
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
 
-    brushSelector: 'point',
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+}
 
-    getProgressive: function () {
+export interface ScatterSeriesOption extends SeriesOption,
+    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
+    SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
+    SeriesLargeOptionMixin, SeriesStackOptionMixin,
+    SeriesSymbolOptionMixin {
+
+    cursor?: string
+    clip?: boolean
+
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+}
+
+
+class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
+    static readonly type = 'series.scatter'
+    type = ScatterSeriesModel.type
+
+    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar']
+    readonly brushSelector = 'point'
+
+    getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): List {
+        return createListFromArray(this.getSource(), this, {
+            useEncodeDefaulter: true
+        });
+    }
+
+
+    getProgressive() {
         var progressive = this.option.progressive;
         if (progressive == null) {
             // PENDING
             return this.option.large ? 5e3 : this.get('progressive');
         }
         return progressive;
-    },
+    }
 
-    getProgressiveThreshold: function () {
+    getProgressiveThreshold() {
         var progressiveThreshold = this.option.progressiveThreshold;
         if (progressiveThreshold == null) {
             // PENDING
             return this.option.large ? 1e4 : this.get('progressiveThreshold');
         }
         return progressiveThreshold;
-    },
+    }
 
-    defaultOption: {
+    defaultOption = {
         coordinateSystem: 'cartesian2d',
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
 
-        hoverAnimation: true,
-        // Cartesian coordinate system
-        // xAxisIndex: 0,
-        // yAxisIndex: 0,
-
-        // Polar coordinate system
-        // polarIndex: 0,
-
-        // Geo coordinate system
-        // geoIndex: 0,
-
-        // symbol: null,        // 图形类型
         symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
         // symbolRotate: null,  // 图形旋转控制
 
@@ -78,14 +117,6 @@ export default SeriesModel.extend({
         largeThreshold: 2000,
         // cursor: null,
 
-        // label: {
-            // show: false
-            // distance: 5,
-            // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-            // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-            //           'inside'|'left'|'right'|'top'|'bottom'
-            // 默认使用全局文本样式，详见TEXTSTYLE
-        // },
         itemStyle: {
             opacity: 0.8
             // color: 各异
@@ -98,4 +129,8 @@ export default SeriesModel.extend({
         // progressive: null
     }
 
-});
+}
+
+SeriesModel.registerClass(ScatterSeriesModel);
+
+export default ScatterSeriesModel;

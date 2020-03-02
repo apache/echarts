@@ -17,19 +17,29 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import SymbolDraw from '../helper/SymbolDraw';
 import LargeSymbolDraw from '../helper/LargeSymbolDraw';
 
 import pointsLayout from '../../layout/points';
+import ChartView from '../../view/Chart';
+import ScatterSeriesModel from './ScatterSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import List from '../../data/List';
+import { TaskProgressParams } from '../../stream/task';
+import type { StageHandlerProgressExecutor } from '../../util/types';
 
-echarts.extendChartView({
+class ScatterView extends ChartView {
+    static readonly type = 'scatter'
+    type = ScatterView.type
 
-    type: 'scatter',
+    _finished: boolean
 
-    render: function (seriesModel, ecModel, api) {
+    _isLargeDraw: boolean
+
+    _symbolDraw: SymbolDraw | LargeSymbolDraw
+
+    render(seriesModel: ScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
 
         var symbolDraw = this._updateSymbolDraw(data, seriesModel);
@@ -43,26 +53,26 @@ echarts.extendChartView({
         });
 
         this._finished = true;
-    },
+    }
 
-    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+    incrementalPrepareRender(seriesModel: ScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
         var symbolDraw = this._updateSymbolDraw(data, seriesModel);
 
         symbolDraw.incrementalPrepareUpdate(data);
 
         this._finished = false;
-    },
+    }
 
-    incrementalRender: function (taskParams, seriesModel, ecModel) {
+    incrementalRender(taskParams: TaskProgressParams, seriesModel: ScatterSeriesModel, ecModel: GlobalModel) {
         this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData(), {
             clipShape: this._getClipShape(seriesModel)
         });
 
         this._finished = taskParams.end === seriesModel.getData().count();
-    },
+    }
 
-    updateTransform: function (seriesModel, ecModel, api) {
+    updateTransform(seriesModel: ScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void | { update: true } {
         var data = seriesModel.getData();
         // Must mark group dirty and make sure the incremental layer will be cleared
         // PENDING
@@ -74,22 +84,22 @@ echarts.extendChartView({
             };
         }
         else {
-            var res = pointsLayout().reset(seriesModel);
+            var res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
             if (res.progress) {
-                res.progress({ start: 0, end: data.count() }, data);
+                res.progress({ start: 0, end: data.count(), count: data.count() }, data);
             }
 
             this._symbolDraw.updateLayout(data);
         }
-    },
+    }
 
-    _getClipShape: function (seriesModel) {
+    _getClipShape(seriesModel: ScatterSeriesModel) {
         var coordSys = seriesModel.coordinateSystem;
         var clipArea = coordSys && coordSys.getArea && coordSys.getArea();
         return seriesModel.get('clip', true) ? clipArea : null;
-    },
+    }
 
-    _updateSymbolDraw: function (data, seriesModel) {
+    _updateSymbolDraw(data: List, seriesModel: ScatterSeriesModel) {
         var symbolDraw = this._symbolDraw;
         var pipelineContext = seriesModel.pipelineContext;
         var isLargeDraw = pipelineContext.large;
@@ -106,12 +116,16 @@ echarts.extendChartView({
         this.group.add(symbolDraw.group);
 
         return symbolDraw;
-    },
+    }
 
-    remove: function (ecModel, api) {
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._symbolDraw && this._symbolDraw.remove(true);
         this._symbolDraw = null;
-    },
+    }
 
-    dispose: function () {}
-});
+    dispose() {}
+}
+
+ChartView.registerClass(ScatterView);
+
+export default ScatterView;

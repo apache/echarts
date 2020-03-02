@@ -21,8 +21,8 @@ import * as graphic from '../../util/graphic';
 import SymbolClz, {SeriesScope} from './Symbol';
 import { isObject } from 'zrender/src/core/util';
 import List from '../../data/List';
-import { TaskProgressParams } from '../../stream/task';
 import type Displayable from 'zrender/src/graphic/Displayable';
+import { StageHandlerProgressParams } from '../../util/types';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -172,7 +172,7 @@ class SymbolDraw {
     /**
      * Update symbols draw by new data
      */
-    incrementalUpdate(taskParams: TaskProgressParams, data: List, opt?: UpdateOpt) {
+    incrementalUpdate(taskParams: StageHandlerProgressParams, data: List, opt?: UpdateOpt) {
         opt = normalizeUpdateOpt(opt);
 
         function updateIncrementalAndHover(el: Displayable) {

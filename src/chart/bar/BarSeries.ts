@@ -19,7 +19,7 @@
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
 import SeriesModel from '../../model/Series';
-import { ItemStyleOption, OptionDataValue, LabelOption, StackOptionMixin } from '../../util/types';
+import { ItemStyleOption, OptionDataValue, LabelOption, SeriesStackOptionMixin } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 
@@ -47,7 +47,7 @@ export interface BarDataItemOption {
     }
 }
 
-export interface BarSeriesOption extends BaseBarSeriesOption, StackOptionMixin {
+export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionMixin {
     coordinateSystem?: 'cartesian2d' | 'polar'
 
     clip?: boolean

@@ -507,14 +507,6 @@ export interface ColorPaletteOptionMixin {
     colorLayer?: ZRColor[][]
 }
 
-export interface LarginOptionMixin {
-    large?: boolean
-    largeThreshold?: number
-}
-export interface StackOptionMixin {
-    stack?: string
-}
-
 /**
  * Mixin of option set to control the box layout of each component.
  */
@@ -1045,6 +1037,25 @@ export interface SeriesOnSingleOptionMixin {
 
 export interface SeriesOnGeoOptionMixin {
     geoIndex?: number;
+    geoId?: string
+}
+
+export interface SeriesOnCalendarOptionMixin {
+    calendarIndex?: number
+    calendarId?: string
+}
+
+export interface SeriesLargeOptionMixin {
+    large?: boolean
+    largeThreshold?: number
+}
+export interface SeriesStackOptionMixin {
+    stack?: string
+}
+export interface SeriesSymbolOptionMixin {
+    symbol?: string
+    symbolSize?: number | number[]
+    symbolRotate?: number
 }
 
 export interface SeriesEncodeOptionMixin {

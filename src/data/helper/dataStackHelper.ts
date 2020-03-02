@@ -21,7 +21,7 @@ import {each, isString} from 'zrender/src/core/util';
 import DataDimensionInfo from '../DataDimensionInfo';
 import SeriesModel from '../../model/Series';
 import List from '../List';
-import type { SeriesOption, StackOptionMixin } from '../../util/types';
+import type { SeriesOption, SeriesStackOptionMixin } from '../../util/types';
 
 interface DataStackResult {
     stackedDimension: string
@@ -52,7 +52,7 @@ interface DataStackResult {
  * }
  */
 export function enableDataStack(
-    seriesModel: SeriesModel<SeriesOption & StackOptionMixin>,
+    seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>,
     dimensionInfoList: DataDimensionInfo[],
     opt?: {
         stackedCoordDimension?: string

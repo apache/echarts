@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import createListFromArray from './chart/helper/createListFromArray';
 // import createGraphFromNodeEdge from './chart/helper/createGraphFromNodeEdge';
@@ -31,13 +29,12 @@ import {
     isDimensionStacked,
     getStackedDimension
 } from './data/helper/dataStackHelper';
+import SeriesModel from './model/Series';
 
 /**
  * Create a muti dimension List structure from seriesModel.
- * @param  {module:echarts/model/Model} seriesModel
- * @return {module:echarts/data/List} list
  */
-export function createList(seriesModel) {
+export function createList(seriesModel: SeriesModel) {
     return createListFromArray(seriesModel.getSource(), seriesModel);
 }
 
@@ -74,9 +71,9 @@ export {createSymbol} from './util/symbol';
  * @param {Object|module:echarts/Model} option If `optoin.type`
  *        is secified, it can only be `'value'` currently.
  */
-export function createScale(dataExtent, option) {
+export function createScale(dataExtent: number[], option: object | Model) {
     var axisModel = option;
-    if (!Model.isInstance(option)) {
+    if (!(option instanceof Model)) {
         axisModel = new Model(option);
         // FIXME
         // Currently AxisModelCommonMixin has nothing to do with the
@@ -88,7 +85,7 @@ export function createScale(dataExtent, option) {
         // zrUtil.mixin(axisModel, AxisModelCommonMixin);
     }
 
-    var scale = axisHelper.createScaleByModel(axisModel);
+    var scale = axisHelper.createScaleByModel(axisModel as Model);
     scale.setExtent(dataExtent[0], dataExtent[1]);
 
     axisHelper.niceScaleExtent(scale, axisModel);
@@ -107,6 +104,6 @@ export function createScale(dataExtent, option) {
  * `setRange(start: number, end: number)`
  * `resetRange()`
  */
-export function mixinAxisModelCommonMethods(Model) {
+export function mixinAxisModelCommonMethods(Model: Model) {
     zrUtil.mixin(Model, AxisModelCommonMixin);
 }

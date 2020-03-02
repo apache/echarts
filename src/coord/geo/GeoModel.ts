@@ -25,7 +25,14 @@ import Model from '../../model/Model';
 import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '../../component/helper/selectableMixin';
 import geoCreator from './geoCreator';
 import Geo from './Geo';
-import { ComponentOption, BoxLayoutOptionMixin, ItemStyleOption, ZRColor, LabelOption, DisplayState } from '../../util/types';
+import {
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    ItemStyleOption,
+    ZRColor,
+    LabelOption,
+    DisplayState
+} from '../../util/types';
 import { RoamType } from '../../component/helper/RoamController';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
