@@ -82,10 +82,17 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        var valueAxisStart = valueAxis.getExtent()[0];
+        if(valueAxis.model.option.min){
+            valueAxisStart = valueAxis.model.option.min;
+        }else{
+            valueAxisStart = valueAxis.getExtent()[0];
+        }
 
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
+            if(seriesModel.seriesIndex !== 0){
+                value += valueAxisStart;
+            }
             var baseValue = data.get(baseDim, idx);
 
             var sign = value >= 0 ? 'p' : 'n';
