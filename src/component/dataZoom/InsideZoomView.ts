@@ -26,11 +26,9 @@ import ExtensionAPI from '../../ExtensionAPI';
 import ComponentView from '../../view/Component';
 import { each, map, bind } from 'zrender/src/core/util';
 import RoamController, {RoamEventParams} from '../helper/RoamController';
-import { ZRElementEvent } from '../../util/types';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import Polar from '../../coord/polar/Polar';
 import SingleAxis from '../../coord/single/SingleAxis';
-import { CoordinateSystem } from '../../coord/CoordinateSystem';
 
 
 type SupportedCoordSysName = 'polar' | 'grid' | 'singleAxis';
@@ -224,9 +222,7 @@ interface GetDirectionInfo {
     ): DirectionInfo
 }
 
-var getDirectionInfo: {
-    [key in 'grid' | 'polar' | 'singleAxis']: GetDirectionInfo
-} = {
+var getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo> = {
 
     grid(oldPoint, newPoint, axisModel, controller, coordInfo) {
         var axis = axisModel.axis;

@@ -151,7 +151,9 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
 
 export interface VisualMeta {
     stops: { value: number, color: ColorString}[]
-    outerColors: [ColorString, ColorString]
+    outerColors: ColorString[]
+
+    dimension?: number
 }
 
 class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends ComponentModel<Opts> {
@@ -178,7 +180,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
 
     protected _dataExtent: [number, number]
 
-    targetVisuals = {}
+    targetVisuals = {} as ReturnType<typeof visualSolution.createVisualMappings>
 
     controllerVisuals = {} as ReturnType<typeof visualSolution.createVisualMappings>
 

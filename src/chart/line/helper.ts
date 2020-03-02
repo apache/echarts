@@ -17,19 +17,33 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
 import {map} from 'zrender/src/core/util';
+import type Polar from '../../coord/polar/Polar';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import List from '../../data/List';
+import Axis from '../../coord/Axis';
+import type { LineSeriesOption } from './LineSeries';
 
-/**
- * @param {Object} coordSys
- * @param {module:echarts/data/List} data
- * @param {string} valueOrigin lineSeries.option.areaStyle.origin
- */
-export function prepareDataCoordInfo(coordSys, data, valueOrigin) {
+interface CoordInfo {
+    dataDimsForPoint: string[]
+    valueStart: number
+    valueAxisDim: string
+    baseAxisDim: string
+    stacked: boolean
+    valueDim: string
+    baseDim: string
+    baseDataOffset: number
+    stackedOverDimension: string
+}
+
+export function prepareDataCoordInfo(
+    coordSys: Cartesian2D | Polar,
+    data: List,
+    valueOrigin?: LineSeriesOption['areaStyle']['origin']
+): CoordInfo {
     var baseAxis = coordSys.getBaseAxis();
-    var valueAxis = coordSys.getOtherAxis(baseAxis);
+    var valueAxis = coordSys.getOtherAxis(baseAxis as any);
     var valueStart = getValueStart(valueAxis, valueOrigin);
 
     var baseAxisDim = baseAxis.dim;
@@ -42,12 +56,12 @@ export function prepareDataCoordInfo(coordSys, data, valueOrigin) {
         return data.mapDimension(coordDim);
     });
 
-    var stacked;
+    var stacked = false;
     var stackResultDim = data.getCalculationInfo('stackResultDimension');
-    if (stacked |= isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
+    if (stacked = stacked || isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
         dims[0] = stackResultDim;
     }
-    if (stacked |= isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
+    if (stacked = stacked || isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
         dims[1] = stackResultDim;
     }
 
@@ -64,7 +78,7 @@ export function prepareDataCoordInfo(coordSys, data, valueOrigin) {
     };
 }
 
-function getValueStart(valueAxis, valueOrigin) {
+function getValueStart(valueAxis: Axis, valueOrigin: LineSeriesOption['areaStyle']['origin']) {
     var valueStart = 0;
     var extent = valueAxis.scale.getExtent();
 
@@ -90,10 +104,15 @@ function getValueStart(valueAxis, valueOrigin) {
     return valueStart;
 }
 
-export function getStackedOnPoint(dataCoordInfo, coordSys, data, idx) {
+export function getStackedOnPoint(
+    dataCoordInfo: CoordInfo,
+    coordSys: Cartesian2D | Polar,
+    data: List,
+    idx: number
+    ) {
     var value = NaN;
     if (dataCoordInfo.stacked) {
-        value = data.get(data.getCalculationInfo('stackedOverDimension'), idx);
+        value = data.get(data.getCalculationInfo('stackedOverDimension'), idx) as number;
     }
     if (isNaN(value)) {
         value = dataCoordInfo.valueStart;

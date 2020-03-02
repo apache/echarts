@@ -249,7 +249,7 @@ export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // will not be performed. But "scale parse" will be performed.
 export type ScaleDataValue = ParsedValue | Date;
 
-// Can only be string or index, because it is used in object key in s   ome code.
+// Can only be string or index, because it is used in object key in some code.
 // Making the type alias here just intending to show the meaning clearly in code.
 export type DimensionIndex = number;
 // If being a number-like string but not being defined a dimension name.
@@ -275,7 +275,9 @@ export interface DataVisualDimensions {
 }
 
 export type DimensionDefinition = {
-    type: string, name: string, displayName?: string
+    type?: string,
+    name: string,
+    displayName?: string
 };
 export type DimensionDefinitionLoose = DimensionDefinition['type'] | DimensionDefinition;
 
@@ -1016,6 +1018,7 @@ export interface SeriesOption extends
      */
     coordinateSystem?: string
 
+    hoverLayerThreshold?: number
     // FIXME:TS more
 }
 

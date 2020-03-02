@@ -103,7 +103,7 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
      * Get rect area of cartesian.
      * Area will have a contain function to determine if a point is in the coordinate system.
      */
-    getArea(): BoundingRect {
+    getArea(): Cartesian2DArea {
         var xExtent = this.getAxis('x').getGlobalExtent();
         var yExtent = this.getAxis('y').getGlobalExtent();
         var x = Math.min(xExtent[0], xExtent[1]);
@@ -115,5 +115,7 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     }
 
 };
+
+interface Cartesian2DArea extends BoundingRect {}
 
 export default Cartesian2D;

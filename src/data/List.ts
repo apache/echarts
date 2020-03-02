@@ -27,7 +27,7 @@ import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
-import Source, { SourceConstructor } from './Source';
+import Source from './Source';
 import {DefaultDataProvider, DataProvider} from './helper/dataProvider';
 import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
 import DataDimensionInfo from './DataDimensionInfo';
@@ -361,8 +361,7 @@ class List <HostModel extends Model = Model> {
         dimValueGetter?: DimValueGetter
     ): void {
 
-        var notProvider = (Source as SourceConstructor).isInstance(data)
-            || zrUtil.isArrayLike(data);
+        var notProvider = data instanceof Source || zrUtil.isArrayLike(data);
         if (notProvider) {
             data = new DefaultDataProvider(data, this.dimensions.length);
         }

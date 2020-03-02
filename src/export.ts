@@ -89,7 +89,7 @@ const GRAPHIC_KEYS = [
     'BoundingRect'
 ] as const;
 
-var graphic = {} as {[key in typeof GRAPHIC_KEYS[number]]: any};
+var graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
 zrUtil.each(
     GRAPHIC_KEYS,
     function (name) {

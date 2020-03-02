@@ -17,11 +17,9 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // Poly path support NaN point
 
-import Path from 'zrender/src/graphic/Path';
+import Path, { PathProps } from 'zrender/src/graphic/Path';
 import * as vec2 from 'zrender/src/core/vector';
 import fixClipWithShadow from 'zrender/src/graphic/helper/fixClipWithShadow';
 
@@ -32,42 +30,32 @@ var scaleAndAdd = vec2.scaleAndAdd;
 var v2Copy = vec2.copy;
 
 // Temporary variable
-var v = [];
-var cp0 = [];
-var cp1 = [];
+var v: number[] = [];
+var cp0: number[] = [];
+var cp1: number[] = [];
 
-function isPointNull(p) {
+function isPointNull(p: number[]) {
     return isNaN(p[0]) || isNaN(p[1]);
 }
 
 function drawSegment(
-    ctx, points, start, segLen, allLen,
-    dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
+    ctx: CanvasRenderingContext2D,
+    points: number[][],
+    start: number,
+    segLen: number,
+    allLen: number,
+    dir: number,
+    smoothMin: number[],
+    smoothMax: number[],
+    smooth: number,
+    smoothMonotone: 'x' | 'y' | 'none',
+    connectNulls: boolean
 ) {
-    // if (smoothMonotone == null) {
-    //     if (isMono(points, 'x')) {
-    //         return drawMono(ctx, points, start, segLen, allLen,
-    //             dir, smoothMin, smoothMax, smooth, 'x', connectNulls);
-    //     }
-    //     else if (isMono(points, 'y')) {
-    //         return drawMono(ctx, points, start, segLen, allLen,
-    //             dir, smoothMin, smoothMax, smooth, 'y', connectNulls);
-    //     }
-    //     else {
-    //         return drawNonMono.apply(this, arguments);
-    //     }
-    // }
-    // else if (smoothMonotone !== 'none' && isMono(points, smoothMonotone)) {
-    //     return drawMono.apply(this, arguments);
-    // }
-    // else {
-    //     return drawNonMono.apply(this, arguments);
-    // }
     if (smoothMonotone === 'none' || !smoothMonotone) {
-        return drawNonMono.apply(this, arguments);
+        return drawNonMono.apply(null, arguments as any);
     }
     else {
-        return drawMono.apply(this, arguments);
+        return drawMono.apply(null, arguments as any);
     }
 }
 
@@ -112,8 +100,17 @@ function drawSegment(
  * either in x or y dimension.
  */
 function drawMono(
-    ctx, points, start, segLen, allLen,
-    dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
+    ctx: CanvasRenderingContext2D,
+    points: number[][],
+    start: number,
+    segLen: number,
+    allLen: number,
+    dir: number,
+    smoothMin: number[],
+    smoothMax: number[],
+    smooth: number,
+    smoothMonotone: 'x' | 'y' | 'none',
+    connectNulls: boolean
 ) {
     var prevIdx = 0;
     var idx = start;
@@ -171,8 +168,17 @@ function drawMono(
  * y dimension.
  */
 function drawNonMono(
-    ctx, points, start, segLen, allLen,
-    dir, smoothMin, smoothMax, smooth, smoothMonotone, connectNulls
+    ctx: CanvasRenderingContext2D,
+    points: number[][],
+    start: number,
+    segLen: number,
+    allLen: number,
+    dir: number,
+    smoothMin: number[],
+    smoothMax: number[],
+    smooth: number,
+    smoothMonotone: 'x' | 'y' | 'none',
+    connectNulls: boolean
 ) {
     var prevIdx = 0;
     var idx = start;
@@ -263,7 +269,7 @@ function drawNonMono(
     return k;
 }
 
-function getBoundingBox(points, smoothConstraint) {
+function getBoundingBox(points: number[][], smoothConstraint?: boolean) {
     var ptMin = [Infinity, Infinity];
     var ptMax = [-Infinity, -Infinity];
     if (smoothConstraint) {
@@ -289,31 +295,34 @@ function getBoundingBox(points, smoothConstraint) {
     };
 }
 
-export var Polyline = Path.extend({
+class ECPolylineShape {
+    points: number[][]
+    smooth = 0
+    smoothConstraint = true
+    smoothMonotone: 'x' | 'y' | 'none'
+    connectNulls = false
+}
 
-    type: 'ec-polyline',
+interface ECPolylineProps extends PathProps {
+    shape?: Partial<ECPolylineShape>
+}
 
-    shape: {
-        points: [],
+export class ECPolyline extends Path<ECPolylineProps> {
 
-        smooth: 0,
+    readonly type = 'ec-polyline'
 
-        smoothConstraint: true,
+    shape: ECPolylineShape
 
-        smoothMonotone: null,
+    brush = fixClipWithShadow(Path.prototype.brush)
 
-        connectNulls: false
-    },
+    constructor(opts?: ECPolylineProps) {
+        super(opts, {
+            stroke: '#000',
+            fill: null
+        }, new ECPolylineShape());
+    }
 
-    style: {
-        fill: null,
-
-        stroke: '#000'
-    },
-
-    brush: fixClipWithShadow(Path.prototype.brush),
-
-    buildPath: function (ctx, shape) {
+    buildPath(ctx: CanvasRenderingContext2D, shape: ECPolylineShape) {
         var points = shape.points;
 
         var i = 0;
@@ -342,32 +351,29 @@ export var Polyline = Path.extend({
             ) + 1;
         }
     }
-});
+}
+class ECPolygonShape extends ECPolylineShape {
+    // Offset between stacked base points and points
+    stackedOnPoints: number[][]
+    stackedOnSmooth: number
+}
 
-export var Polygon = Path.extend({
+interface ECPolygonProps extends PathProps {
+    shape?: Partial<ECPolygonShape>
+}
+export class ECPolygon extends Path {
 
-    type: 'ec-polygon',
+    readonly type = 'ec-polygon'
 
-    shape: {
-        points: [],
+    shape: ECPolygonShape
 
-        // Offset between stacked base points and points
-        stackedOnPoints: [],
+    // @ts-ignore
+    brush = fixClipWithShadow(Path.prototype.brush)
 
-        smooth: 0,
-
-        stackedOnSmooth: 0,
-
-        smoothConstraint: true,
-
-        smoothMonotone: null,
-
-        connectNulls: false
-    },
-
-    brush: fixClipWithShadow(Path.prototype.brush),
-
-    buildPath: function (ctx, shape) {
+    constructor(opts?: ECPolygonProps) {
+        super(opts, null, new ECPolygonShape());
+    }
+    buildPath(ctx: CanvasRenderingContext2D, shape: ECPolygonShape) {
         var points = shape.points;
         var stackedOnPoints = shape.stackedOnPoints;
 
@@ -406,4 +412,4 @@ export var Polygon = Path.extend({
             ctx.closePath();
         }
     }
-});
+}

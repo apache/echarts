@@ -17,50 +17,99 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
 import createListFromArray from '../helper/createListFromArray';
 import SeriesModel from '../../model/Series';
+import {
+    SeriesOnCartesianOptionMixin,
+    SeriesOption,
+    SeriesOnPolarOptionMixin,
+    StackOptionMixin,
+    LabelOption,
+    LineStyleOption,
+    ItemStyleOption,
+    AreaStyleOption
+} from '../../util/types';
+import List from '../../data/List';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Polar from '../../coord/polar/Polar';
 
-export default SeriesModel.extend({
+type SamplingFunc = (frame: number[]) => number
 
-    type: 'series.line',
+export interface LineSeriesOption extends SeriesOption,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnPolarOptionMixin,
+    StackOptionMixin {
+    coordinateSystem?: 'cartesian2d' | 'polar'
 
-    dependencies: ['grid', 'polar'],
+    hoverAnimation?: boolean
 
-    getInitialData: function (option, ecModel) {
+    // If clip the overflow value
+    clip?: boolean
+
+    label?: LabelOption
+
+    lineStyle?: LineStyleOption
+
+    itemStyle?: ItemStyleOption
+
+    areaStyle?: AreaStyleOption & {
+        origin?: 'auto' | 'start' | 'end'
+    }
+
+    step?: false | 'start' | 'end' | 'middle'
+
+    smooth?: boolean
+
+    smoothMonotone?: 'x' | 'y' | 'none'
+
+    connectNulls?: boolean
+
+    symbol?: string
+    symbolSize?: number | number[]
+    symbolRotate?: number
+
+    showSymbol?: boolean
+    // false | 'auto': follow the label interval strategy.
+    // true: show all symbols.
+    showAllSymbol?: 'auto'
+
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
+}
+
+class LineSeriesModel extends SeriesModel<LineSeriesOption> {
+    static readonly type = 'series.line'
+    type = LineSeriesModel.type
+
+    static readonly dependencies = ['grid', 'polar']
+
+    coordinateSystem: Cartesian2D | Polar
+
+    getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
             var coordSys = option.coordinateSystem;
             if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
-    },
+        return createListFromArray(this.getSource(), this, {
+            useEncodeDefaulter: true
+        });
+    }
 
-    defaultOption: {
+    static defaultOption: LineSeriesOption = {
         zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
         hoverAnimation: true,
-        // stack: null
-        // xAxisIndex: 0,
-        // yAxisIndex: 0,
 
-        // polarIndex: 0,
-
-        // If clip the overflow value
         clip: true,
-        // cursor: null,
 
         label: {
             position: 'top'
         },
-        // itemStyle: {
-        // },
 
         lineStyle: {
             width: 2,
@@ -102,4 +151,8 @@ export default SeriesModel.extend({
         progressive: 0,
         hoverLayerThreshold: Infinity
     }
-});
+}
+
+SeriesModel.registerClass(LineSeriesModel);
+
+export default LineSeriesModel;

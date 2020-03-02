@@ -56,9 +56,7 @@ export function getItemAlign(
     var reals = paramsSet[realIndex];
     var fakeValue = [0, null, 10];
 
-    var layoutInput = {} as {
-        [key in ItemAlign]: number | string
-    };
+    var layoutInput = {} as Record<ItemAlign, number | string>;
     for (var i = 0; i < 3; i++) {
         layoutInput[paramsSet[1 - realIndex][i]] = fakeValue[i];
         layoutInput[reals[i]] = i === 2 ? itemSize[0] : modelOption[reals[i]];

@@ -24,7 +24,7 @@
 import {__DEV__} from '../../config';
 import {isTypedArray, extend, assert, each, isObject} from 'zrender/src/core/util';
 import {getDataItemValue} from '../../util/model';
-import Source, { SourceConstructor } from '../Source';
+import Source from '../Source';
 import {ArrayLike, Dictionary} from 'zrender/src/core/types';
 import {
     SOURCE_FORMAT_ORIGINAL,
@@ -82,7 +82,7 @@ export class DefaultDataProvider implements DataProvider {
 
     constructor(sourceParam: Source | OptionSourceData, dimSize?: number) {
         // var source: Source;
-        var source: Source = !(Source as SourceConstructor).isInstance(sourceParam)
+        var source: Source = !(source instanceof Source)
             ? Source.seriesDataToSource(sourceParam as OptionSourceData)
             : sourceParam as Source;
 

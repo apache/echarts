@@ -49,11 +49,6 @@ export function createList(seriesModel) {
 
 export {getLayoutRect};
 
-/**
- * // TODO: @deprecated
- */
-export {default as completeDimensions} from './data/helper/completeDimensions';
-
 export {default as createDimensions} from './data/helper/createDimensions';
 
 export var dataStack = {

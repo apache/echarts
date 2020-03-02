@@ -18,7 +18,6 @@
 */
 
 // @ts-nocheck
-
 /**
  * @deprecated
  * Use `echarts/data/helper/createDimensions` instead.
@@ -71,7 +70,7 @@ import DataDimensionInfo from '../DataDimensionInfo';
  * @return {Array.<module:data/DataDimensionInfo>}
  */
 function completeDimensions(sysDims, source, opt) {
-    if (!Source.isInstance(source)) {
+    if (!(source instanceof Source)) {
         source = Source.seriesDataToSource(source);
     }
 

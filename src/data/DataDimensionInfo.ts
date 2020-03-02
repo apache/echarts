@@ -40,7 +40,7 @@ class DataDimensionInfo {
      * If displayName given, the tooltip will displayed vertically.
      * Optional.
      */
-    displayName: string;
+    displayName?: string;
 
     // FIXME: check whether it is still used.
     // See Series.ts#formatArrayValue
@@ -54,19 +54,19 @@ class DataDimensionInfo {
      * (That is determined by whether `isExtraCoord` is `true`).
      * Mandatory.
      */
-    coordDim: string;
+    coordDim?: string;
 
     /**
      * The index of this dimension in `series.encode[coordDim]`.
      * Mandatory.
      */
-    coordDimIndex: number;
+    coordDimIndex?: number;
 
     /**
      * This index of this dimension info in `data/List#_dimensionInfos`.
      * Mandatory after added to `data/List`.
      */
-    index: number;
+    index?: number;
 
     /**
      * The format of `otherDims` is:
@@ -101,27 +101,27 @@ class DataDimensionInfo {
      *
      * This prop should never be `null`/`undefined` after initialized.
      */
-    otherDims: DataVisualDimensions = {};
+    otherDims?: DataVisualDimensions = {};
 
     /**
      * Be `true` if this dimension is not mapped to any "coordSysDim" that the
      * "coordSys" required.
      * Mandatory.
      */
-    isExtraCoord: boolean;
+    isExtraCoord?: boolean;
     /**
      * If this dimension if for calculated value like stacking
      */
-    isCalculationCoord: boolean
+    isCalculationCoord?: boolean
 
-    defaultTooltip: boolean;
+    defaultTooltip?: boolean;
 
-    ordinalMeta: OrdinalMeta;
+    ordinalMeta?: OrdinalMeta;
 
     /**
      * Whether to create inverted indices.
      */
-    createInvertedIndices: boolean;
+    createInvertedIndices?: boolean;
 
     /**
      * @param opt All of the fields will be shallow copied.

@@ -20,7 +20,7 @@
 // @ts-nocheck
 
 import * as echarts from '../../echarts';
-import {Polygon} from '../line/poly';
+import {ECPolygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
 import {bind, extend} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
@@ -92,7 +92,7 @@ export default echarts.extendChartView({
             var margin = labelModel.get('margin');
             if (status === 'add') {
                 var layerGroup = newLayersGroups[idx] = new graphic.Group();
-                polygon = new Polygon({
+                polygon = new ECPolygon({
                     shape: {
                         points: points0,
                         stackedOnPoints: points1,

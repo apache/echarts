@@ -202,7 +202,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      * Get ring area of cartesian.
      * Area will have a contain function to determine if a point is in the coordinate system.
      */
-    getArea() {
+    getArea(): PolarArea {
 
         var angleAxis = this.getAngleAxis();
         var radiusAxis = this.getRadiusAxis();
@@ -251,6 +251,17 @@ function getCoordSys(finder: ParsedModelFinder) {
     const polarModel = finder.polarModel as PolarModel;
     return polarModel && polarModel.coordinateSystem
         || seriesModel && seriesModel.coordinateSystem as Polar;
+}
+
+interface PolarArea {
+    cx: number
+    cy: number
+    r0: number
+    r: number
+    startAngle: number
+    endAngle: number
+    clockwise: boolean
+    contain(x: number, y: number): boolean
 }
 
 export default Polar;

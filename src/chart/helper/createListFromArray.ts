@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import createDimensions from '../../data/helper/createDimensions';
@@ -29,19 +27,16 @@ import {getCoordSysInfoBySeries} from '../../model/referHelper';
 import Source from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
-import { SOURCE_FORMAT_ORIGINAL } from '../../util/types';
+import { SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition } from '../../util/types';
+import SeriesModel from '../../model/Series';
 
-/**
- * @param {module:echarts/data/Source|Array} source Or raw data.
- * @param {module:echarts/model/Series} seriesModel
- * @param {Object} [opt]
- * @param {string} [opt.generateCoord]
- * @param {boolean} [opt.useEncodeDefaulter]
- */
-function createListFromArray(source, seriesModel, opt) {
+function createListFromArray(source: Source | any[], seriesModel: SeriesModel, opt?: {
+    generateCoord?: boolean
+    useEncodeDefaulter?: boolean
+}): List {
     opt = opt || {};
 
-    if (!Source.isInstance(source)) {
+    if (!(source instanceof Source)) {
         source = Source.seriesDataToSource(source);
     }
 
@@ -50,11 +45,13 @@ function createListFromArray(source, seriesModel, opt) {
 
     var coordSysInfo = getCoordSysInfoBySeries(seriesModel);
 
-    var coordSysDimDefs;
+    var coordSysDimDefs: DimensionDefinitionLoose[];
 
     if (coordSysInfo) {
         coordSysDimDefs = zrUtil.map(coordSysInfo.coordSysDims, function (dim) {
-            var dimInfo = {name: dim};
+            var dimInfo = {
+                name: dim
+            } as DimensionDefinition;
             var axisModel = coordSysInfo.axisMap.get(dim);
             if (axisModel) {
                 var axisType = axisModel.get('type');
@@ -82,8 +79,8 @@ function createListFromArray(source, seriesModel, opt) {
             : null
     });
 
-    var firstCategoryDimIndex;
-    var hasNameEncode;
+    var firstCategoryDimIndex: number;
+    var hasNameEncode: boolean;
     coordSysInfo && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
         var coordDim = dimInfo.coordDim;
         var categoryAxisModel = coordSysInfo.categoryAxisMap.get(coordDim);
@@ -108,7 +105,7 @@ function createListFromArray(source, seriesModel, opt) {
     list.setCalculationInfo(stackCalculationInfo);
 
     var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
-        ? function (itemOpt, dimName, dataIndex, dimIndex) {
+        ? function (this: List, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
             // Use dataIndex as ordinal value in categoryAxis
             return dimIndex === firstCategoryDimIndex
                 ? dataIndex
@@ -124,13 +121,13 @@ function createListFromArray(source, seriesModel, opt) {
 
 function isNeedCompleteOrdinalData(source: Source) {
     if (source.sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        var sampleItem = firstDataNotNull(source.data || []);
+        var sampleItem = firstDataNotNull(source.data as ArrayLike<any> || []);
         return sampleItem != null
             && !zrUtil.isArray(getDataItemValue(sampleItem));
     }
 }
 
-function firstDataNotNull(data) {
+function firstDataNotNull(data: ArrayLike<any>) {
     var i = 0;
     while (i < data.length && data[i] == null) {
         i++;

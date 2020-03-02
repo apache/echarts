@@ -19,7 +19,13 @@
 
 import BaseBarSeriesModel, { BaseBarSeriesOption } from './BaseBarSeries';
 import SeriesModel from '../../model/Series';
-import { OptionDataValue, ItemStyleOption, LabelOption, AnimationOptionMixin } from '../../util/types';
+import {
+    OptionDataValue,
+    ItemStyleOption,
+    LabelOption,
+    AnimationOptionMixin,
+    StackOptionMixin
+} from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
 interface PictorialBarSeriesSymbolOption {
@@ -99,7 +105,9 @@ export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOpti
     cursor?: string
 }
 
-export interface PictorialBarSeriesOption extends BaseBarSeriesOption, PictorialBarSeriesSymbolOption {
+export interface PictorialBarSeriesOption extends BaseBarSeriesOption,
+    PictorialBarSeriesSymbolOption,
+    StackOptionMixin {
     coordinateSystem?: 'cartesian2d'
 
     data?: (PictorialBarDataItemOption | PictorialBarValue)[]

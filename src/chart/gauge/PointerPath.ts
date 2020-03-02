@@ -33,7 +33,7 @@ interface PointerPathProps extends PathProps {
 
 export default class PointerPath extends Path<PointerPathProps> {
 
-    type = 'pointer'
+    readonly type = 'pointer'
 
     shape: PointerShape
 

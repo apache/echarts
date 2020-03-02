@@ -18,7 +18,6 @@
 */
 
 import {createHashMap, isTypedArray, HashMap} from 'zrender/src/core/util';
-import {enableClassCheck, CheckableConstructor} from '../util/clazz';
 import {
     SourceFormat, SeriesLayoutBy, DimensionDefinition,
     OptionEncodeValue, OptionSourceData, OptionEncode,
@@ -146,8 +145,5 @@ class Source {
         });
     };
 }
-
-export type SourceConstructor = typeof Source & CheckableConstructor;
-enableClassCheck(Source as SourceConstructor);
 
 export default Source;

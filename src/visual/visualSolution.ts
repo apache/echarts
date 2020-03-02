@@ -132,7 +132,7 @@ export function replaceVisualOption<T extends string>(
  */
 // ???! handle brush?
 export function applyVisual<VisualState extends string, Scope>(
-    stateList: VisualState[],
+    stateList: readonly VisualState[],
     visualMappings: VisualMappingCollection<VisualState>,
     data: List,
     getValueState: (this: Scope, valueOrIndex: ParsedValue | number) => VisualState,
@@ -195,7 +195,7 @@ export function applyVisual<VisualState extends string, Scope>(
  * @param dim dimension or dimension index.
  */
 export function incrementalApplyVisual<VisualState extends string>(
-    stateList: VisualState[],
+    stateList: readonly VisualState[],
     visualMappings: VisualMappingCollection<VisualState>,
     getValueState: (valueOrIndex: ParsedValue | number) => VisualState,
     dim?: DimensionLoose

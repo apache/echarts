@@ -29,6 +29,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import List from '../../data/List';
 
 
 export interface BaseBarSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin {
@@ -81,8 +82,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption = BaseBarSeriesOption>
     static type = 'series.__base_bar__'
     type = BaseBarSeriesModel.type
 
-
-    getInitialData(option: Opts, ecModel: GlobalModel) {
+    getInitialData(option: Opts, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     }
 

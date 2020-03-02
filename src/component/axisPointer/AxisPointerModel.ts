@@ -147,6 +147,4 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
     }
 }
 
-ComponentModel.registerClass(AxisPointerModel);
-
 export default AxisPointerModel;

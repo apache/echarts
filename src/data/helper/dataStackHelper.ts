@@ -17,22 +17,32 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {each, isString} from 'zrender/src/core/util';
+import DataDimensionInfo from '../DataDimensionInfo';
+import SeriesModel from '../../model/Series';
+import List from '../List';
+import type { SeriesOption, StackOptionMixin } from '../../util/types';
+
+interface DataStackResult {
+    stackedDimension: string
+    stackedByDimension: string
+    isStackedByIndex: boolean
+    stackedOverDimension: string
+    stackResultDimension: string
+}
 
 /**
  * Note that it is too complicated to support 3d stack by value
  * (have to create two-dimension inverted index), so in 3d case
  * we just support that stacked by index.
  *
- * @param {module:echarts/model/Series} seriesModel
- * @param {Array.<string|Object>} dimensionInfoList The same as the input of <module:echarts/data/List>.
+ * @param seriesModel
+ * @param dimensionInfoList The same as the input of <module:echarts/data/List>.
  *        The input dimensionInfoList will be modified.
- * @param {Object} [opt]
- * @param {boolean} [opt.stackedCoordDimension=''] Specify a coord dimension if needed.
- * @param {boolean} [opt.byIndex=false]
- * @return {Object} calculationInfo
+ * @param opt
+ * @param opt.stackedCoordDimension Specify a coord dimension if needed.
+ * @param opt.byIndex=false
+ * @return calculationInfo
  * {
  *     stackedDimension: string
  *     stackedByDimension: string
@@ -41,21 +51,30 @@ import {each, isString} from 'zrender/src/core/util';
  *     stackResultDimension: string
  * }
  */
-export function enableDataStack(seriesModel, dimensionInfoList, opt) {
+export function enableDataStack(
+    seriesModel: SeriesModel<SeriesOption & StackOptionMixin>,
+    dimensionInfoList: DataDimensionInfo[],
+    opt?: {
+        stackedCoordDimension?: string
+        byIndex?: boolean
+    }
+): DataStackResult {
     opt = opt || {};
     var byIndex = opt.byIndex;
     var stackedCoordDimension = opt.stackedCoordDimension;
 
     // Compatibal: when `stack` is set as '', do not stack.
     var mayStack = !!(seriesModel && seriesModel.get('stack'));
-    var stackedByDimInfo;
-    var stackedDimInfo;
-    var stackResultDimension;
-    var stackedOverDimension;
+    var stackedByDimInfo: DataDimensionInfo;
+    var stackedDimInfo: DataDimensionInfo;
+    var stackResultDimension: string;
+    var stackedOverDimension: string;
 
     each(dimensionInfoList, function (dimensionInfo, index) {
         if (isString(dimensionInfo)) {
-            dimensionInfoList[index] = dimensionInfo = {name: dimensionInfo};
+            dimensionInfoList[index] = dimensionInfo = {
+                name: dimensionInfo as string
+            } as DataDimensionInfo;
         }
 
         if (mayStack && !dimensionInfo.isExtraCoord) {
@@ -135,11 +154,7 @@ export function enableDataStack(seriesModel, dimensionInfoList, opt) {
     };
 }
 
-/**
- * @param {module:echarts/data/List} data
- * @param {string} stackedDim
- */
-export function isDimensionStacked(data, stackedDim /*, stackedByDim*/) {
+export function isDimensionStacked(data: List, stackedDim: string /*, stackedByDim*/) {
     // Each single series only maps to one pair of axis. So we do not need to
     // check stackByDim, whatever stacked by a dimension or stacked by index.
     return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
@@ -150,14 +165,7 @@ export function isDimensionStacked(data, stackedDim /*, stackedByDim*/) {
         // );
 }
 
-/**
- * @param {module:echarts/data/List} data
- * @param {string} targetDim
- * @param {string} [stackedByDim] If not input this parameter, check whether
- *                                stacked by index.
- * @return {string} dimension
- */
-export function getStackedDimension(data, targetDim) {
+export function getStackedDimension(data: List, targetDim: string) {
     return isDimensionStacked(data, targetDim)
         ? data.getCalculationInfo('stackResultDimension')
         : targetDim;

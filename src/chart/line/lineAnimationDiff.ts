@@ -17,39 +17,20 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
+import List from '../../data/List';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Polar from '../../coord/polar/Polar';
+import { LineSeriesOption } from './LineSeries';
 
-// var arrayDiff = require('zrender/src/core/arrayDiff');
-// 'zrender/src/core/arrayDiff' has been used before, but it did
-// not do well in performance when roam with fixed dataZoom window.
+interface DiffItem {
+    cmd: '+' | '=' | '-'
+    idx: number
+    idx1?: number
+}
 
-// function convertToIntId(newIdList, oldIdList) {
-//     // Generate int id instead of string id.
-//     // Compare string maybe slow in score function of arrDiff
-
-//     // Assume id in idList are all unique
-//     var idIndicesMap = {};
-//     var idx = 0;
-//     for (var i = 0; i < newIdList.length; i++) {
-//         idIndicesMap[newIdList[i]] = idx;
-//         newIdList[i] = idx++;
-//     }
-//     for (var i = 0; i < oldIdList.length; i++) {
-//         var oldId = oldIdList[i];
-//         // Same with newIdList
-//         if (idIndicesMap[oldId]) {
-//             oldIdList[i] = idIndicesMap[oldId];
-//         }
-//         else {
-//             oldIdList[i] = idx++;
-//         }
-//     }
-// }
-
-function diffData(oldData, newData) {
-    var diffResult = [];
+function diffData(oldData: List, newData: List) {
+    var diffResult: DiffItem[] = [];
 
     newData.diff(oldData)
         .add(function (idx) {
@@ -67,10 +48,11 @@ function diffData(oldData, newData) {
 }
 
 export default function (
-    oldData, newData,
-    oldStackedOnPoints, newStackedOnPoints,
-    oldCoordSys, newCoordSys,
-    oldValueOrigin, newValueOrigin
+    oldData: List, newData: List,
+    oldStackedOnPoints: number[][], newStackedOnPoints: number[][],
+    oldCoordSys: Cartesian2D | Polar, newCoordSys: Cartesian2D | Polar,
+    oldValueOrigin: LineSeriesOption['areaStyle']['origin'],
+    newValueOrigin: LineSeriesOption['areaStyle']['origin']
 ) {
     var diff = diffData(oldData, newData);
 
@@ -82,15 +64,15 @@ export default function (
     // // FIXME One data ?
     // diff = arrayDiff(oldIdList, newIdList);
 
-    var currPoints = [];
-    var nextPoints = [];
+    var currPoints: number[][] = [];
+    var nextPoints: number[][] = [];
     // Points for stacking base line
-    var currStackedPoints = [];
-    var nextStackedPoints = [];
+    var currStackedPoints: number[][] = [];
+    var nextStackedPoints: number[][] = [];
 
     var status = [];
-    var sortedIndices = [];
-    var rawIndices = [];
+    var sortedIndices: number[] = [];
+    var rawIndices: number[] = [];
 
     var newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
     var oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
@@ -103,8 +85,8 @@ export default function (
         // Which is in case remvoing or add more than one data in the tail or head
         switch (diffItem.cmd) {
             case '=':
-                var currentPt = oldData.getItemLayout(diffItem.idx);
-                var nextPt = newData.getItemLayout(diffItem.idx1);
+                var currentPt = oldData.getItemLayout(diffItem.idx) as number[];
+                var nextPt = newData.getItemLayout(diffItem.idx1) as number[];
                 // If previous data is NaN, use next point directly
                 if (isNaN(currentPt[0]) || isNaN(currentPt[1])) {
                     currentPt = nextPt.slice();
@@ -126,7 +108,7 @@ export default function (
                     ])
                 );
 
-                nextPoints.push(newData.getItemLayout(idx).slice());
+                nextPoints.push((newData.getItemLayout(idx) as number[]).slice());
 
                 currStackedPoints.push(
                     getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, idx)
@@ -141,7 +123,7 @@ export default function (
                 // Data is replaced. In the case of dynamic data queue
                 // FIXME FIXME FIXME
                 if (rawIndex !== idx) {
-                    currPoints.push(oldData.getItemLayout(idx));
+                    currPoints.push(oldData.getItemLayout(idx) as number[]);
                     nextPoints.push(newCoordSys.dataToPoint([
                         oldData.get(oldDataNewCoordInfo.dataDimsForPoint[0], idx),
                         oldData.get(oldDataNewCoordInfo.dataDimsForPoint[1], idx)

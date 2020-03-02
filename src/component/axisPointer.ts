@@ -29,6 +29,9 @@ import './axisPointer/AxisPointerView';
 // CartesianAxisPointer should be able to required somewhere.
 import './axisPointer/CartesianAxisPointer';
 import AxisPointerModel from './axisPointer/AxisPointerModel';
+import ComponentModel from '../model/Component';
+
+ComponentModel.registerClass(AxisPointerModel);
 
 echarts.registerPreprocessor(function (option) {
     // Always has a global axisPointerModel for default setting.
@@ -61,3 +64,4 @@ echarts.registerAction({
     event: 'updateAxisPointer',
     update: ':updateAxisPointer'
 }, axisTrigger);
+

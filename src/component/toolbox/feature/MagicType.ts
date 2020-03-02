@@ -185,7 +185,7 @@ type SeriesOptGenreator = (
     }>,
     model: ToolboxFeatureModel<ToolboxMagicTypeFeatureOption>
 ) => SeriesOption
-const seriesOptGenreator: {[key in IconType]: SeriesOptGenreator} = {
+const seriesOptGenreator: Record<IconType, SeriesOptGenreator> = {
     'line': function (seriesType, seriesId, seriesModel, model) {
         if (seriesType === 'bar') {
             return zrUtil.merge({

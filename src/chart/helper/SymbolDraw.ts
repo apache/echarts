@@ -17,30 +17,30 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-/**
- * @module echarts/chart/helper/SymbolDraw
- */
-
 import * as graphic from '../../util/graphic';
-import SymbolClz from './Symbol';
+import SymbolClz, {SeriesScope} from './Symbol';
 import { isObject } from 'zrender/src/core/util';
+import List from '../../data/List';
+import { TaskProgressParams } from '../../stream/task';
+import type Displayable from 'zrender/src/graphic/Displayable';
 
-/**
- * @constructor
- * @alias module:echarts/chart/helper/SymbolDraw
- * @param {module:zrender/graphic/Group} [symbolCtor]
- */
-function SymbolDraw(symbolCtor) {
-    this.group = new graphic.Group();
-
-    this._symbolCtor = symbolCtor || SymbolClz;
+interface UpdateOpt {
+    isIgnore?(idx: number): boolean
+    clipShape?: {
+        contain(x: number, y: number): boolean
+    }
 }
 
-var symbolDrawProto = SymbolDraw.prototype;
+interface SymbolLike extends graphic.Group {
+    updateData(data: List, idx: number, scope?: SeriesScope): void
+    fadeOut?(cb: () => void): void
+}
 
-function symbolNeedsDraw(data, point, idx, opt) {
+interface SymbolLikeCtor {
+    new(data: List, idx: number, scope?: SeriesScope): SymbolLike
+}
+
+function symbolNeedsDraw(data: List, point: number[], idx: number, opt: UpdateOpt) {
     return point && !isNaN(point[0]) && !isNaN(point[1])
         && !(opt.isIgnore && opt.isIgnore(idx))
         // We do not set clipShape on group, because it will cut part of
@@ -50,156 +50,164 @@ function symbolNeedsDraw(data, point, idx, opt) {
         && data.getItemVisual(idx, 'symbol') !== 'none';
 }
 
-/**
- * Update symbols draw by new data
- * @param {module:echarts/data/List} data
- * @param {Object} [opt] Or isIgnore
- * @param {Function} [opt.isIgnore]
- * @param {Object} [opt.clipShape]
- */
-symbolDrawProto.updateData = function (data, opt) {
-    opt = normalizeUpdateOpt(opt);
-
-    var group = this.group;
-    var seriesModel = data.hostModel;
-    var oldData = this._data;
-    var SymbolCtor = this._symbolCtor;
-
-    var seriesScope = makeSeriesScope(data);
-
-    // There is no oldLineData only when first rendering or switching from
-    // stream mode to normal mode, where previous elements should be removed.
-    if (!oldData) {
-        group.removeAll();
-    }
-
-    data.diff(oldData)
-        .add(function (newIdx) {
-            var point = data.getItemLayout(newIdx);
-            if (symbolNeedsDraw(data, point, newIdx, opt)) {
-                var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
-                symbolEl.attr('position', point);
-                data.setItemGraphicEl(newIdx, symbolEl);
-                group.add(symbolEl);
-            }
-        })
-        .update(function (newIdx, oldIdx) {
-            var symbolEl = oldData.getItemGraphicEl(oldIdx);
-            var point = data.getItemLayout(newIdx);
-            if (!symbolNeedsDraw(data, point, newIdx, opt)) {
-                group.remove(symbolEl);
-                return;
-            }
-            if (!symbolEl) {
-                symbolEl = new SymbolCtor(data, newIdx);
-                symbolEl.attr('position', point);
-            }
-            else {
-                symbolEl.updateData(data, newIdx, seriesScope);
-                graphic.updateProps(symbolEl, {
-                    position: point
-                }, seriesModel);
-            }
-
-            // Add back
-            group.add(symbolEl);
-
-            data.setItemGraphicEl(newIdx, symbolEl);
-        })
-        .remove(function (oldIdx) {
-            var el = oldData.getItemGraphicEl(oldIdx);
-            el && el.fadeOut(function () {
-                group.remove(el);
-            });
-        })
-        .execute();
-
-    this._data = data;
-};
-
-symbolDrawProto.isPersistent = function () {
-    return true;
-};
-
-symbolDrawProto.updateLayout = function () {
-    var data = this._data;
-    if (data) {
-        // Not use animation
-        data.eachItemGraphicEl(function (el, idx) {
-            var point = data.getItemLayout(idx);
-            el.attr('position', point);
-        });
-    }
-};
-
-symbolDrawProto.incrementalPrepareUpdate = function (data) {
-    this._seriesScope = makeSeriesScope(data);
-    this._data = null;
-    this.group.removeAll();
-};
-
-/**
- * Update symbols draw by new data
- * @param {module:echarts/data/List} data
- * @param {Object} [opt] Or isIgnore
- * @param {Function} [opt.isIgnore]
- * @param {Object} [opt.clipShape]
- */
-symbolDrawProto.incrementalUpdate = function (taskParams, data, opt) {
-    opt = normalizeUpdateOpt(opt);
-
-    function updateIncrementalAndHover(el) {
-        if (!el.isGroup) {
-            el.incremental = el.useHoverLayer = true;
-        }
-    }
-    for (var idx = taskParams.start; idx < taskParams.end; idx++) {
-        var point = data.getItemLayout(idx);
-        if (symbolNeedsDraw(data, point, idx, opt)) {
-            var el = new this._symbolCtor(data, idx, this._seriesScope);
-            el.traverse(updateIncrementalAndHover);
-            el.attr('position', point);
-            this.group.add(el);
-            data.setItemGraphicEl(idx, el);
-        }
-    }
-};
-
-function normalizeUpdateOpt(opt) {
+function normalizeUpdateOpt(opt: UpdateOpt) {
     if (opt != null && !isObject(opt)) {
         opt = {isIgnore: opt};
     }
     return opt || {};
 }
 
-symbolDrawProto.remove = function (enableAnimation) {
-    var group = this.group;
-    var data = this._data;
-    // Incremental model do not have this._data.
-    if (data && enableAnimation) {
-        data.eachItemGraphicEl(function (el) {
-            el.fadeOut(function () {
-                group.remove(el);
-            });
-        });
-    }
-    else {
-        group.removeAll();
-    }
-};
 
-function makeSeriesScope(data) {
+function makeSeriesScope(data: List): SeriesScope {
     var seriesModel = data.hostModel;
     return {
         itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
-        hoverItemStyle: seriesModel.getModel('emphasis.itemStyle').getItemStyle(),
+        hoverItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
         symbolRotate: seriesModel.get('symbolRotate'),
         symbolOffset: seriesModel.get('symbolOffset'),
         hoverAnimation: seriesModel.get('hoverAnimation'),
         labelModel: seriesModel.getModel('label'),
-        hoverLabelModel: seriesModel.getModel('emphasis.label'),
+        hoverLabelModel: seriesModel.getModel(['emphasis', 'label']),
         cursorStyle: seriesModel.get('cursor')
     };
+}
+
+class SymbolDraw {
+    group = new graphic.Group();
+
+    private _data: List
+
+    private _SymbolCtor: SymbolLikeCtor
+
+    private _seriesScope: SeriesScope
+
+    constructor(SymbolCtor?: SymbolLikeCtor) {
+        this._SymbolCtor = SymbolCtor || SymbolClz;
+    }
+
+    /**
+     * Update symbols draw by new data
+     */
+    updateData(data: List, opt?: UpdateOpt) {
+        opt = normalizeUpdateOpt(opt);
+
+        var group = this.group;
+        var seriesModel = data.hostModel;
+        var oldData = this._data;
+        var SymbolCtor = this._SymbolCtor;
+
+        var seriesScope = makeSeriesScope(data);
+
+        // There is no oldLineData only when first rendering or switching from
+        // stream mode to normal mode, where previous elements should be removed.
+        if (!oldData) {
+            group.removeAll();
+        }
+
+        data.diff(oldData)
+            .add(function (newIdx) {
+                var point = data.getItemLayout(newIdx) as number[];
+                if (symbolNeedsDraw(data, point, newIdx, opt)) {
+                    var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+                    symbolEl.attr('position', point);
+                    data.setItemGraphicEl(newIdx, symbolEl);
+                    group.add(symbolEl);
+                }
+            })
+            .update(function (newIdx, oldIdx) {
+                var symbolEl = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
+                var point = data.getItemLayout(newIdx) as number[];
+                if (!symbolNeedsDraw(data, point, newIdx, opt)) {
+                    group.remove(symbolEl);
+                    return;
+                }
+                if (!symbolEl) {
+                    symbolEl = new SymbolCtor(data, newIdx);
+                    symbolEl.attr('position', point);
+                }
+                else {
+                    symbolEl.updateData(data, newIdx, seriesScope);
+                    graphic.updateProps(symbolEl, {
+                        position: point
+                    }, seriesModel);
+                }
+
+                // Add back
+                group.add(symbolEl);
+
+                data.setItemGraphicEl(newIdx, symbolEl);
+            })
+            .remove(function (oldIdx) {
+                var el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
+                el && el.fadeOut(function () {
+                    group.remove(el);
+                });
+            })
+            .execute();
+
+        this._data = data;
+    };
+
+    isPersistent() {
+        return true;
+    };
+
+    updateLayout() {
+        var data = this._data;
+        if (data) {
+            // Not use animation
+            data.eachItemGraphicEl(function (el, idx) {
+                var point = data.getItemLayout(idx);
+                el.attr('position', point);
+            });
+        }
+    };
+
+    incrementalPrepareUpdate(data: List) {
+        this._seriesScope = makeSeriesScope(data);
+        this._data = null;
+        this.group.removeAll();
+    };
+
+    /**
+     * Update symbols draw by new data
+     */
+    incrementalUpdate(taskParams: TaskProgressParams, data: List, opt?: UpdateOpt) {
+        opt = normalizeUpdateOpt(opt);
+
+        function updateIncrementalAndHover(el: Displayable) {
+            if (!el.isGroup) {
+                el.incremental = el.useHoverLayer = true;
+            }
+        }
+        for (var idx = taskParams.start; idx < taskParams.end; idx++) {
+            var point = data.getItemLayout(idx) as number[];
+            if (symbolNeedsDraw(data, point, idx, opt)) {
+                var el = new this._SymbolCtor(data, idx, this._seriesScope);
+                el.traverse(updateIncrementalAndHover);
+                el.attr('position', point);
+                this.group.add(el);
+                data.setItemGraphicEl(idx, el);
+            }
+        }
+    };
+
+    remove(enableAnimation?: boolean) {
+        var group = this.group;
+        var data = this._data;
+        // Incremental model do not have this._data.
+        if (data && enableAnimation) {
+            data.eachItemGraphicEl(function (el: SymbolLike) {
+                el.fadeOut(function () {
+                    group.remove(el);
+                });
+            });
+        }
+        else {
+            group.removeAll();
+        }
+    };
+
 }
 
 export default SymbolDraw;

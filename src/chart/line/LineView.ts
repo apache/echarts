@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // FIXME step not support polar
 
 import {__DEV__} from '../../config';
@@ -28,12 +26,31 @@ import SymbolClz from '../helper/Symbol';
 import lineAnimationDiff from './lineAnimationDiff';
 import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
-import {Polyline, Polygon} from './poly';
+import {ECPolyline, ECPolygon} from './poly';
 import ChartView from '../../view/Chart';
 import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
 import {createGridClipPath, createPolarClipPath} from '../helper/createClipPathFromCoordSys';
+import LineSeriesModel, { LineSeriesOption } from './LineSeries';
+import type GlobalModel from '../../model/Global';
+import type ExtensionAPI from '../../ExtensionAPI';
+// TODO
+import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import Polar from '../../coord/polar/Polar';
+import type List from '../../data/List';
+import type { VisualMeta } from '../../component/visualMap/VisualMapModel';
+import type { Payload, Dictionary, ColorString } from '../../util/types';
+import type OrdinalScale from '../../scale/Ordinal';
+import type Axis2D from '../../coord/cartesian/Axis2D';
 
-function isPointsSame(points1, points2) {
+
+type PolarArea = ReturnType<Polar['getArea']>
+type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>
+
+interface SymbolExtended extends SymbolClz {
+    __temp: boolean
+}
+
+function isPointsSame(points1: number[][], points2: number[][]) {
     if (points1.length !== points2.length) {
         return;
     }
@@ -47,17 +64,15 @@ function isPointsSame(points1, points2) {
     return true;
 }
 
-function getSmooth(smooth) {
-    return typeof (smooth) === 'number' ? smooth : (smooth ? 0.5 : 0);
+function getSmooth(smooth: number | boolean) {
+    return typeof smooth === 'number' ? smooth : (smooth ? 0.5 : 0);
 }
 
-/**
- * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
- * @param {module:echarts/data/List} data
- * @param {Object} dataCoordInfo
- * @param {Array.<Array.<number>>} points
- */
-function getStackedOnPoints(coordSys, data, dataCoordInfo) {
+function getStackedOnPoints(
+    coordSys: Cartesian2D | Polar,
+    data: List,
+    dataCoordInfo: ReturnType<typeof prepareDataCoordInfo>
+) {
     if (!dataCoordInfo.valueDim) {
         return [];
     }
@@ -70,7 +85,11 @@ function getStackedOnPoints(coordSys, data, dataCoordInfo) {
     return points;
 }
 
-function turnPointsIntoStep(points, coordSys, stepTurnAt) {
+function turnPointsIntoStep(
+    points: number[][],
+    coordSys: Cartesian2D | Polar,
+    stepTurnAt: 'start' | 'end' | 'middle'
+) {
     var baseAxis = coordSys.getBaseAxis();
     var baseIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
 
@@ -110,8 +129,11 @@ function turnPointsIntoStep(points, coordSys, stepTurnAt) {
     return stepPoints;
 }
 
-function getVisualGradient(data, coordSys) {
-    var visualMetaList = data.getVisual('visualMeta');
+function getVisualGradient(
+    data: List,
+    coordSys: Cartesian2D | Polar
+) {
+    var visualMetaList = data.getVisual('visualMeta') as VisualMeta[];
     if (!visualMetaList || !visualMetaList.length || !data.count()) {
         // When data.count() is 0, gradient range can not be calculated.
         return;
@@ -124,14 +146,14 @@ function getVisualGradient(data, coordSys) {
         return;
     }
 
-    var coordDim;
+    var coordDim: 'x' | 'y';
     var visualMeta;
 
     for (var i = visualMetaList.length - 1; i >= 0; i--) {
         var dimIndex = visualMetaList[i].dimension;
         var dimName = data.dimensions[dimIndex];
         var dimInfo = data.getDimensionInfo(dimName);
-        coordDim = dimInfo && dimInfo.coordDim;
+        coordDim = (dimInfo && dimInfo.coordDim) as 'x' | 'y';
         // Can only be x or y
         if (coordDim === 'x' || coordDim === 'y') {
             visualMeta = visualMetaList[i];
@@ -155,9 +177,15 @@ function getVisualGradient(data, coordSys) {
 
     var axis = coordSys.getAxis(coordDim);
 
+    interface ColorStop {
+        offset: number
+        coord?: number
+        color: ColorString
+    }
     // dataToCoor mapping may not be linear, but must be monotonic.
-    var colorStops = zrUtil.map(visualMeta.stops, function (stop) {
+    var colorStops: ColorStop[] = zrUtil.map(visualMeta.stops, function (stop) {
         return {
+            offset: 0,
             coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
             color: stop.color
         };
@@ -198,12 +226,16 @@ function getVisualGradient(data, coordSys) {
 
     var gradient = new graphic.LinearGradient(0, 0, 0, 0, colorStops, true);
     gradient[coordDim] = minCoord;
-    gradient[coordDim + '2'] = maxCoord;
+    gradient[coordDim + '2' as 'x2' | 'y2'] = maxCoord;
 
     return gradient;
 }
 
-function getIsIgnoreFunc(seriesModel, data, coordSys) {
+function getIsIgnoreFunc(
+    seriesModel: LineSeriesModel,
+    data: List,
+    coordSys: Cartesian2D
+) {
     var showAllSymbol = seriesModel.get('showAllSymbol');
     var isAuto = showAllSymbol === 'auto';
 
@@ -228,24 +260,27 @@ function getIsIgnoreFunc(seriesModel, data, coordSys) {
 
     // Otherwise follow the label interval strategy on category axis.
     var categoryDataDim = data.mapDimension(categoryAxis.dim);
-    var labelMap = {};
+    var labelMap: Dictionary<1> = {};
 
     zrUtil.each(categoryAxis.getViewLabels(), function (labelItem) {
         labelMap[labelItem.tickValue] = 1;
     });
 
-    return function (dataIndex) {
+    return function (dataIndex: number) {
         return !labelMap.hasOwnProperty(data.get(categoryDataDim, dataIndex));
     };
 }
 
-function canShowAllSymbolForCategory(categoryAxis, data) {
+function canShowAllSymbolForCategory(
+    categoryAxis: Axis2D,
+    data: List
+) {
     // In mose cases, line is monotonous on category axis, and the label size
     // is close with each other. So we check the symbol size and some of the
     // label size alone with the category axis to estimate whether all symbol
     // can be shown without overlap.
     var axisExtent = categoryAxis.getExtent();
-    var availSize = Math.abs(axisExtent[1] - axisExtent[0]) / categoryAxis.scale.count();
+    var availSize = Math.abs(axisExtent[1] - axisExtent[0]) / (categoryAxis.scale as OrdinalScale).count();
     isNaN(availSize) && (availSize = 0); // 0/0 is NaN.
 
     // Sampling some points, max 5.
@@ -266,7 +301,11 @@ function canShowAllSymbolForCategory(categoryAxis, data) {
     return true;
 }
 
-function createLineClipPath(coordSys, hasAnimation, seriesModel) {
+function createLineClipPath(
+    coordSys: Cartesian2D | Polar,
+    hasAnimation: boolean,
+    seriesModel: LineSeriesModel
+) {
     if (coordSys.type === 'cartesian2d') {
         var isHorizontal = coordSys.getBaseAxis().isHorizontal();
         var clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel);
@@ -291,11 +330,31 @@ function createLineClipPath(coordSys, hasAnimation, seriesModel) {
 
 }
 
-export default ChartView.extend({
+class LineView extends ChartView {
 
-    type: 'line',
+    static readonly type = 'line'
 
-    init: function () {
+    _symbolDraw: SymbolDraw
+
+    _lineGroup: graphic.Group
+    _coordSys: Cartesian2D | Polar
+
+    _polyline: ECPolyline
+    _polygon: ECPolygon
+
+    _stackedOnPoints: number[][]
+    _points: number[][]
+
+    _step: LineSeriesOption['step']
+    _valueOrigin: LineSeriesOption['areaStyle']['origin']
+
+    _clipShapeForSymbol: {
+        contain(x: number, y: number): boolean
+    }
+
+    _data: List
+
+    init() {
         var lineGroup = new graphic.Group();
 
         var symbolDraw = new SymbolDraw();
@@ -303,9 +362,9 @@ export default ChartView.extend({
 
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
-    },
+    }
 
-    render: function (seriesModel, ecModel, api) {
+    render(seriesModel: LineSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var coordSys = seriesModel.coordinateSystem;
         var group = this.group;
         var data = seriesModel.getData();
@@ -335,11 +394,11 @@ export default ChartView.extend({
         var showSymbol = seriesModel.get('showSymbol');
 
         var isIgnoreFunc = showSymbol && !isCoordSysPolar
-            && getIsIgnoreFunc(seriesModel, data, coordSys);
+            && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D);
 
         // Remove temporary symbols
         var oldData = this._data;
-        oldData && oldData.eachItemGraphicEl(function (el, idx) {
+        oldData && oldData.eachItemGraphicEl(function (el: SymbolExtended, idx) {
             if (el.__temp) {
                 group.remove(el);
                 oldData.setItemGraphicEl(idx, null);
@@ -354,21 +413,21 @@ export default ChartView.extend({
         group.add(lineGroup);
 
         // FIXME step not support polar
-        var step = !isCoordSysPolar && seriesModel.get('step');
-        var clipShapeForSymbol;
+        var step = !isCoordSysPolar ? seriesModel.get('step') : false;
+        var clipShapeForSymbol: PolarArea | Cartesian2DArea;
         if (coordSys && coordSys.getArea && seriesModel.get('clip', true)) {
             clipShapeForSymbol = coordSys.getArea();
             // Avoid float number rounding error for symbol on the edge of axis extent.
             // See #7913 and `test/dataZoom-clip.html`.
-            if (clipShapeForSymbol.width != null) {
-                clipShapeForSymbol.x -= 0.1;
-                clipShapeForSymbol.y -= 0.1;
-                clipShapeForSymbol.width += 0.2;
-                clipShapeForSymbol.height += 0.2;
+            if ((clipShapeForSymbol as Cartesian2DArea).width != null) {
+                (clipShapeForSymbol as Cartesian2DArea).x -= 0.1;
+                (clipShapeForSymbol as Cartesian2DArea).y -= 0.1;
+                (clipShapeForSymbol as Cartesian2DArea).width += 0.2;
+                (clipShapeForSymbol as Cartesian2DArea).height += 0.2;
             }
-            else if (clipShapeForSymbol.r0) {
-                clipShapeForSymbol.r0 -= 0.5;
-                clipShapeForSymbol.r1 += 0.5;
+            else if ((clipShapeForSymbol as PolarArea).r0) {
+                (clipShapeForSymbol as PolarArea).r0 -= 0.5;
+                (clipShapeForSymbol as PolarArea).r += 0.5;
             }
         }
         this._clipShapeForSymbol = clipShapeForSymbol;
@@ -387,11 +446,10 @@ export default ChartView.extend({
                 stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
             }
 
-            polyline = this._newPolyline(points, coordSys, hasAnimation);
+            polyline = this._newPolyline(points);
             if (isAreaChart) {
                 polygon = this._newPolygon(
-                    points, stackedOnPoints,
-                    coordSys, hasAnimation
+                    points, stackedOnPoints
                 );
             }
             lineGroup.setClipPath(createLineClipPath(coordSys, true, seriesModel));
@@ -400,8 +458,7 @@ export default ChartView.extend({
             if (isAreaChart && !polygon) {
                 // If areaStyle is added
                 polygon = this._newPolygon(
-                    points, stackedOnPoints,
-                    coordSys, hasAnimation
+                    points, stackedOnPoints
                 );
             }
             else if (polygon && !isAreaChart) {
@@ -467,8 +524,7 @@ export default ChartView.extend({
             }
         ));
 
-        var smooth = seriesModel.get('smooth');
-        smooth = getSmooth(seriesModel.get('smooth'));
+        var smooth = getSmooth(seriesModel.get('smooth'));
         polyline.setShape({
             smooth: smooth,
             smoothMonotone: seriesModel.get('smoothMonotone'),
@@ -507,19 +563,24 @@ export default ChartView.extend({
         this._points = points;
         this._step = step;
         this._valueOrigin = valueOrigin;
-    },
+    }
 
-    dispose: function () {},
+    dispose() {}
 
-    highlight: function (seriesModel, ecModel, api, payload) {
+    highlight(
+        seriesModel: LineSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ) {
         var data = seriesModel.getData();
         var dataIndex = modelUtil.queryDataIndex(data, payload);
 
         if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
-            var symbol = data.getItemGraphicEl(dataIndex);
+            var symbol = data.getItemGraphicEl(dataIndex) as SymbolClz;
             if (!symbol) {
                 // Create a temporary symbol if it is not exists
-                var pt = data.getItemLayout(dataIndex);
+                var pt = data.getItemLayout(dataIndex) as number[];
                 if (!pt) {
                     // Null data
                     return;
@@ -535,7 +596,7 @@ export default ChartView.extend({
                     seriesModel.get('z')
                 );
                 symbol.ignore = isNaN(pt[0]) || isNaN(pt[1]);
-                symbol.__temp = true;
+                (symbol as SymbolExtended).__temp = true;
                 data.setItemGraphicEl(dataIndex, symbol);
 
                 // Stop scale animation
@@ -551,13 +612,18 @@ export default ChartView.extend({
                 this, seriesModel, ecModel, api, payload
             );
         }
-    },
+    }
 
-    downplay: function (seriesModel, ecModel, api, payload) {
+    downplay(
+        seriesModel: LineSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ) {
         var data = seriesModel.getData();
-        var dataIndex = modelUtil.queryDataIndex(data, payload);
+        var dataIndex = modelUtil.queryDataIndex(data, payload) as number;
         if (dataIndex != null && dataIndex >= 0) {
-            var symbol = data.getItemGraphicEl(dataIndex);
+            var symbol = data.getItemGraphicEl(dataIndex) as SymbolExtended;
             if (symbol) {
                 if (symbol.__temp) {
                     data.setItemGraphicEl(dataIndex, null);
@@ -576,21 +642,16 @@ export default ChartView.extend({
                 this, seriesModel, ecModel, api, payload
             );
         }
-    },
+    }
 
-    /**
-     * @param {module:zrender/container/Group} group
-     * @param {Array.<Array.<number>>} points
-     * @private
-     */
-    _newPolyline: function (points) {
+    _newPolyline(points: number[][]) {
         var polyline = this._polyline;
         // Remove previous created polyline
         if (polyline) {
             this._lineGroup.remove(polyline);
         }
 
-        polyline = new Polyline({
+        polyline = new ECPolyline({
             shape: {
                 points: points
             },
@@ -603,22 +664,16 @@ export default ChartView.extend({
         this._polyline = polyline;
 
         return polyline;
-    },
+    }
 
-    /**
-     * @param {module:zrender/container/Group} group
-     * @param {Array.<Array.<number>>} stackedOnPoints
-     * @param {Array.<Array.<number>>} points
-     * @private
-     */
-    _newPolygon: function (points, stackedOnPoints) {
+    _newPolygon(points: number[][], stackedOnPoints: number[][]) {
         var polygon = this._polygon;
         // Remove previous created polygon
         if (polygon) {
             this._lineGroup.remove(polygon);
         }
 
-        polygon = new Polygon({
+        polygon = new ECPolygon({
             shape: {
                 points: points,
                 stackedOnPoints: stackedOnPoints
@@ -630,13 +685,20 @@ export default ChartView.extend({
 
         this._polygon = polygon;
         return polygon;
-    },
+    }
 
     /**
      * @private
      */
     // FIXME Two value axis
-    _updateAnimation: function (data, stackedOnPoints, coordSys, api, step, valueOrigin) {
+    _updateAnimation(
+        data: List,
+        stackedOnPoints: number[][],
+        coordSys: Cartesian2D | Polar,
+        api: ExtensionAPI,
+        step: LineSeriesOption['step'],
+        valueOrigin: LineSeriesOption['areaStyle']['origin']
+    ) {
         var polyline = this._polyline;
         var polygon = this._polygon;
         var seriesModel = data.hostModel;
@@ -662,7 +724,7 @@ export default ChartView.extend({
         // `diff.current` is subset of `current` (which should be ensured by
         // turnPointsIntoStep), so points in `__points` can be updated when
         // points in `current` are update during animation.
-        polyline.shape.__points = diff.current;
+        (polyline.shape as any).__points = diff.current;
         polyline.shape.points = current;
 
         graphic.updateProps(polyline, {
@@ -684,13 +746,16 @@ export default ChartView.extend({
             }, seriesModel);
         }
 
-        var updatedDataInfo = [];
+        var updatedDataInfo: {
+            el: SymbolExtended,
+            ptIdx: number
+        }[] = [];
         var diffStatus = diff.status;
 
         for (var i = 0; i < diffStatus.length; i++) {
             var cmd = diffStatus[i].cmd;
             if (cmd === '=') {
-                var el = data.getItemGraphicEl(diffStatus[i].idx1);
+                var el = data.getItemGraphicEl(diffStatus[i].idx1) as SymbolExtended;
                 if (el) {
                     updatedDataInfo.push({
                         el: el,
@@ -704,19 +769,19 @@ export default ChartView.extend({
             polyline.animators[0].during(function () {
                 for (var i = 0; i < updatedDataInfo.length; i++) {
                     var el = updatedDataInfo[i].el;
-                    el.attr('position', polyline.shape.__points[updatedDataInfo[i].ptIdx]);
+                    el.attr('position', (polyline.shape as any).__points[updatedDataInfo[i].ptIdx]);
                 }
             });
         }
-    },
+    }
 
-    remove: function (ecModel) {
+    remove(ecModel: GlobalModel) {
         var group = this.group;
         var oldData = this._data;
         this._lineGroup.removeAll();
         this._symbolDraw.remove(true);
         // Remove temporary created elements when highlighting
-        oldData && oldData.eachItemGraphicEl(function (el, idx) {
+        oldData && oldData.eachItemGraphicEl(function (el: SymbolExtended, idx) {
             if (el.__temp) {
                 group.remove(el);
                 oldData.setItemGraphicEl(idx, null);
@@ -730,4 +795,8 @@ export default ChartView.extend({
             this._stackedOnPoints =
             this._data = null;
     }
-});
+}
+
+ChartView.registerClass(LineView);
+
+export default ChartView;

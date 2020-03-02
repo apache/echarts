@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Helper for model references.
  * There are many manners to refer axis/coordSys.
@@ -29,7 +27,11 @@
 // check: "modelHelper" of tooltip and "BrushTargetManager".
 
 import {__DEV__} from '../config';
-import {createHashMap, retrieve, each} from 'zrender/src/core/util';
+import {createHashMap, retrieve, each, HashMap} from 'zrender/src/core/util';
+import SeriesModel from './Series';
+import type PolarModel from '../coord/polar/PolarModel';
+import type { SeriesOption, SeriesOnCartesianOptionMixin } from '../util/types';
+import type { AxisBaseModel } from '../coord/AxisBaseModel';
 
 /**
  * @class
@@ -51,34 +53,34 @@ import {createHashMap, retrieve, each} from 'zrender/src/core/util';
  *     // To replace user specified encode.
  * }
  */
-function CoordSysInfo(coordSysName) {
-    /**
-     * @type {string}
-     */
-    this.coordSysName = coordSysName;
-    /**
-     * @type {Array.<string>}
-     */
-    this.coordSysDims = [];
-    /**
-     * @type {module:zrender/core/util#HashMap}
-     */
-    this.axisMap = createHashMap();
-    /**
-     * @type {module:zrender/core/util#HashMap}
-     */
-    this.categoryAxisMap = createHashMap();
-    /**
-     * @type {number}
-     */
-    this.firstCategoryDimIndex = null;
+
+class CoordSysInfo {
+
+    coordSysName: string
+
+    coordSysDims: string[] = []
+
+    axisMap = createHashMap<AxisBaseModel>()
+
+    categoryAxisMap = createHashMap<AxisBaseModel>()
+
+    firstCategoryDimIndex: number
+
+    constructor(coordSysName: string) {
+        this.coordSysName = coordSysName;
+    }
 }
 
-/**
- * @return {module:model/referHelper#CoordSysInfo}
- */
-export function getCoordSysInfoBySeries(seriesModel) {
-    var coordSysName = seriesModel.get('coordinateSystem');
+type SupportedCoordSys = 'cartesian2d' | 'polar' | 'singleAxis' | 'geo' | 'parallel'
+type Fetcher = (
+    seriesModel: SeriesModel,
+    result: CoordSysInfo,
+    axisMap: HashMap<AxisBaseModel>,
+    categoryAxisMap: HashMap<AxisBaseModel>
+) => void;
+
+export function getCoordSysInfoBySeries(seriesModel: SeriesModel) {
+    var coordSysName = seriesModel.get('coordinateSystem') as SupportedCoordSys;
     var result = new CoordSysInfo(coordSysName);
     var fetch = fetchers[coordSysName];
     if (fetch) {
@@ -87,22 +89,24 @@ export function getCoordSysInfoBySeries(seriesModel) {
     }
 }
 
-var fetchers = {
+var fetchers: Record<SupportedCoordSys, Fetcher> = {
 
-    cartesian2d: function (seriesModel, result, axisMap, categoryAxisMap) {
-        var xAxisModel = seriesModel.getReferringComponents('xAxis')[0];
-        var yAxisModel = seriesModel.getReferringComponents('yAxis')[0];
+    cartesian2d: function (
+        seriesModel: SeriesModel<SeriesOption & SeriesOnCartesianOptionMixin>, result, axisMap, categoryAxisMap
+    ) {
+        var xAxisModel = seriesModel.getReferringComponents('xAxis')[0] as AxisBaseModel;
+        var yAxisModel = seriesModel.getReferringComponents('yAxis')[0] as AxisBaseModel;
 
         if (__DEV__) {
             if (!xAxisModel) {
-                throw new Error('xAxis "' + retrieve(
+                throw new Error('xAxis "' + retrieve<number | string>(
                     seriesModel.get('xAxisIndex'),
                     seriesModel.get('xAxisId'),
                     0
                 ) + '" not found');
             }
             if (!yAxisModel) {
-                throw new Error('yAxis "' + retrieve(
+                throw new Error('yAxis "' + retrieve<number | string>(
                     seriesModel.get('xAxisIndex'),
                     seriesModel.get('yAxisId'),
                     0
@@ -120,12 +124,12 @@ var fetchers = {
         }
         if (isCategory(yAxisModel)) {
             categoryAxisMap.set('y', yAxisModel);
-            result.firstCategoryDimIndex == null & (result.firstCategoryDimIndex = 1);
+            result.firstCategoryDimIndex == null && (result.firstCategoryDimIndex = 1);
         }
     },
 
     singleAxis: function (seriesModel, result, axisMap, categoryAxisMap) {
-        var singleAxisModel = seriesModel.getReferringComponents('singleAxis')[0];
+        var singleAxisModel = seriesModel.getReferringComponents('singleAxis')[0] as AxisBaseModel;
 
         if (__DEV__) {
             if (!singleAxisModel) {
@@ -143,7 +147,7 @@ var fetchers = {
     },
 
     polar: function (seriesModel, result, axisMap, categoryAxisMap) {
-        var polarModel = seriesModel.getReferringComponents('polar')[0];
+        var polarModel = seriesModel.getReferringComponents('polar')[0] as PolarModel;
         var radiusAxisModel = polarModel.findAxisModel('radiusAxis');
         var angleAxisModel = polarModel.findAxisModel('angleAxis');
 
@@ -177,24 +181,32 @@ var fetchers = {
     parallel: function (seriesModel, result, axisMap, categoryAxisMap) {
         var ecModel = seriesModel.ecModel;
         var parallelModel = ecModel.getComponent(
+            // @ts-ignore
             'parallel', seriesModel.get('parallelIndex')
         );
+        // @ts-ignore
         var coordSysDims = result.coordSysDims = parallelModel.dimensions.slice();
 
+            // @ts-ignore
         each(parallelModel.parallelAxisIndex, function (axisIndex, index) {
+            // @ts-ignore
             var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
             var axisDim = coordSysDims[index];
+            // @ts-ignore
             axisMap.set(axisDim, axisModel);
 
+            // @ts-ignore
             if (isCategory(axisModel) && result.firstCategoryDimIndex == null) {
+                // @ts-ignore
                 categoryAxisMap.set(axisDim, axisModel);
+                // @ts-ignore
                 result.firstCategoryDimIndex = index;
             }
         });
     }
 };
 
-function isCategory(axisModel) {
+function isCategory(axisModel: AxisBaseModel) {
     return axisModel.get('type') === 'category';
 }
 
