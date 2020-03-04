@@ -330,7 +330,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     ): {
         html: string,
         markers: {[markName: string]: string}
-    } | string { // The override method can only return string
+    } | string { // The override method can also return string
 
         var series = this;
         renderMode = renderMode || 'html';

@@ -53,7 +53,7 @@ interface DataStackResult {
  */
 export function enableDataStack(
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>,
-    dimensionInfoList: DataDimensionInfo[],
+    dimensionInfoList: (DataDimensionInfo | string)[],
     opt?: {
         stackedCoordDimension?: string
         byIndex?: boolean
@@ -116,7 +116,7 @@ export function enableDataStack(
         var stackedDimType = stackedDimInfo.type;
         var stackedDimCoordIndex = 0;
 
-        each(dimensionInfoList, function (dimensionInfo) {
+        each(dimensionInfoList, function (dimensionInfo: DataDimensionInfo) {
             if (dimensionInfo.coordDim === stackedDimCoordDim) {
                 stackedDimCoordIndex++;
             }

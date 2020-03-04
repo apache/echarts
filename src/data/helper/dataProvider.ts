@@ -82,7 +82,7 @@ export class DefaultDataProvider implements DataProvider {
 
     constructor(sourceParam: Source | OptionSourceData, dimSize?: number) {
         // var source: Source;
-        var source: Source = !(source instanceof Source)
+        var source: Source = !(sourceParam instanceof Source)
             ? Source.seriesDataToSource(sourceParam as OptionSourceData)
             : sourceParam as Source;
 
