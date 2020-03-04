@@ -103,7 +103,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         return progressiveThreshold;
     }
 
-    defaultOption = {
+    static defaultOption: ScatterSeriesOption = {
         coordinateSystem: 'cartesian2d',
         zlevel: 0,
         z: 2,
