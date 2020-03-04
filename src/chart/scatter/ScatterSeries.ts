@@ -58,6 +58,8 @@ export interface ScatterSeriesOption extends SeriesOption,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
     SeriesSymbolOptionMixin {
 
+    hoverAnimation: boolean
+
     cursor?: string
     clip?: boolean
 
@@ -109,6 +111,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
+        hoverAnimation: true,
         symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
         // symbolRotate: null,  // 图形旋转控制
 
