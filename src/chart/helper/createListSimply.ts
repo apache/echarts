@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import createDimensions, {CreateDimensionsParams} from '../../data/helper/createDimensions';
 import List from '../../data/List';
 import {extend, isArray} from 'zrender/src/core/util';
@@ -43,7 +41,7 @@ export default function (
 
     var source = seriesModel.getSource();
 
-    var dimensionsInfo = createDimensions(source, opt);
+    var dimensionsInfo = createDimensions(source, opt as CreateDimensionsParams);
 
     var list = new List(dimensionsInfo, seriesModel);
     list.initData(source, nameList);

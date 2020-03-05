@@ -17,24 +17,38 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /* global Float32Array */
 
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
 import {parsePercent} from '../../util/number';
 import {retrieve2} from 'zrender/src/core/util';
+import { StageHandler, StageHandlerProgressParams } from '../../util/types';
+import CandlestickSeriesModel from './CandlestickSeries';
+import List from '../../data/List';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 
 var LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
-export default {
+export interface CandlestickItemLayout {
+    sign: number
+    initBaseline: number
+    ends: number[][]
+    brushRect: RectLike
+}
+
+export interface CandlestickLayoutMeta {
+    candleWidth: number
+    isSimpleBox: boolean
+}
+
+const candlestickLayout: StageHandler = {
 
     seriesType: 'candlestick',
 
     plan: createRenderPlanner(),
 
-    reset: function (seriesModel) {
+    reset: function (seriesModel: CandlestickSeriesModel) {
 
         var coordSys = seriesModel.coordinateSystem;
         var data = seriesModel.getData();
@@ -53,7 +67,7 @@ export default {
             candleWidth: candleWidth,
             // The value is experimented visually.
             isSimpleBox: candleWidth <= 1.3
-        });
+        } as CandlestickLayoutMeta);
 
         if (cDim == null || vDims.length < 4) {
             return;
@@ -64,15 +78,15 @@ export default {
                 ? largeProgress : normalProgress
         };
 
-        function normalProgress(params, data) {
+        function normalProgress(params: StageHandlerProgressParams, data: List) {
             var dataIndex;
             while ((dataIndex = params.next()) != null) {
 
-                var axisDimVal = data.get(cDim, dataIndex);
-                var openVal = data.get(openDim, dataIndex);
-                var closeVal = data.get(closeDim, dataIndex);
-                var lowestVal = data.get(lowestDim, dataIndex);
-                var highestVal = data.get(highestDim, dataIndex);
+                var axisDimVal = data.get(cDim, dataIndex) as number;
+                var openVal = data.get(openDim, dataIndex) as number;
+                var closeVal = data.get(closeDim, dataIndex) as number;
+                var lowestVal = data.get(lowestDim, dataIndex) as number;
+                var highestVal = data.get(highestDim, dataIndex) as number;
 
                 var ocLow = Math.min(openVal, closeVal);
                 var ocHigh = Math.max(openVal, closeVal);
@@ -82,7 +96,7 @@ export default {
                 var lowestPoint = getPoint(lowestVal, axisDimVal);
                 var highestPoint = getPoint(highestVal, axisDimVal);
 
-                var ends = [];
+                var ends: number[][] = [];
                 addBodyEnd(ends, ocHighPoint, 0);
                 addBodyEnd(ends, ocLowPoint, 1);
 
@@ -99,10 +113,10 @@ export default {
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
                     ends: ends,
                     brushRect: makeBrushRect(lowestVal, highestVal, axisDimVal)
-                });
+                } as CandlestickItemLayout);
             }
 
-            function getPoint(val, axisDimVal) {
+            function getPoint(val: number, axisDimVal: number) {
                 var p = [];
                 p[cDimIdx] = axisDimVal;
                 p[vDimIdx] = val;
@@ -111,7 +125,7 @@ export default {
                     : coordSys.dataToPoint(p);
             }
 
-            function addBodyEnd(ends, point, start) {
+            function addBodyEnd(ends: number[][], point: number[], start: number) {
                 var point1 = point.slice();
                 var point2 = point.slice();
 
@@ -127,7 +141,7 @@ export default {
                     : ends.push(point2, point1);
             }
 
-            function makeBrushRect(lowestVal, highestVal, axisDimVal) {
+            function makeBrushRect(lowestVal: number, highestVal: number, axisDimVal: number) {
                 var pmin = getPoint(lowestVal, axisDimVal);
                 var pmax = getPoint(highestVal, axisDimVal);
 
@@ -142,27 +156,27 @@ export default {
                 };
             }
 
-            function subPixelOptimizePoint(point) {
+            function subPixelOptimizePoint(point: number[]) {
                 point[cDimIdx] = subPixelOptimize(point[cDimIdx], 1);
                 return point;
             }
         }
 
-        function largeProgress(params, data) {
+        function largeProgress(params: StageHandlerProgressParams, data: List) {
             // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
             var points = new LargeArr(params.count * 4);
             var offset = 0;
             var point;
-            var tmpIn = [];
-            var tmpOut = [];
+            var tmpIn: number[] = [];
+            var tmpOut: number[] = [];
             var dataIndex;
 
             while ((dataIndex = params.next()) != null) {
-                var axisDimVal = data.get(cDim, dataIndex);
-                var openVal = data.get(openDim, dataIndex);
-                var closeVal = data.get(closeDim, dataIndex);
-                var lowestVal = data.get(lowestDim, dataIndex);
-                var highestVal = data.get(highestDim, dataIndex);
+                var axisDimVal = data.get(cDim, dataIndex) as number;
+                var openVal = data.get(openDim, dataIndex) as number;
+                var closeVal = data.get(closeDim, dataIndex) as number;
+                var lowestVal = data.get(lowestDim, dataIndex) as number;
+                var highestVal = data.get(highestDim, dataIndex) as number;
 
                 if (isNaN(axisDimVal) || isNaN(lowestVal) || isNaN(highestVal)) {
                     points[offset++] = NaN;
@@ -188,7 +202,7 @@ export default {
     }
 };
 
-function getSign(data, dataIndex, openVal, closeVal, closeDim) {
+function getSign(data: List, dataIndex: number, openVal: number, closeVal: number, closeDim: string) {
     var sign;
     if (openVal > closeVal) {
         sign = -1;
@@ -207,7 +221,7 @@ function getSign(data, dataIndex, openVal, closeVal, closeDim) {
     return sign;
 }
 
-function calculateCandleWidth(seriesModel, data) {
+function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: List) {
     var baseAxis = seriesModel.getBaseAxis();
     var extent;
 
@@ -233,3 +247,5 @@ function calculateCandleWidth(seriesModel, data) {
         // Put max outer to ensure bar visible in spite of overlap.
         : Math.max(Math.min(bandWidth / 2, barMaxWidth), barMinWidth);
 }
+
+export default candlestickLayout;

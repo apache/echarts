@@ -20,7 +20,7 @@
 import RadiusAxis from './RadiusAxis';
 import AngleAxis from './AngleAxis';
 import PolarModel from './PolarModel';
-import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
+import { CoordinateSystem, CoordinateSystemMaster, CoordinateSystemClipArea } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
@@ -253,7 +253,7 @@ function getCoordSys(finder: ParsedModelFinder) {
         || seriesModel && seriesModel.coordinateSystem as Polar;
 }
 
-interface PolarArea {
+interface PolarArea extends CoordinateSystemClipArea {
     cx: number
     cy: number
     r0: number
@@ -261,7 +261,6 @@ interface PolarArea {
     startAngle: number
     endAngle: number
     clockwise: boolean
-    contain(x: number, y: number): boolean
 }
 
 export default Polar;

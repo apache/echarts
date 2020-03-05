@@ -17,33 +17,53 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
+import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '../../util/types';
+import type GlobalModel from '../../model/Global';
+import type SeriesModel from '../../model/Series';
+import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import type DataDimensionInfo from '../../data/DataDimensionInfo';
+import type List from '../../data/List';
+import type Axis2D from '../../coord/cartesian/Axis2D';
 
-export var seriesModelMixin = {
+interface CommonOption extends SeriesOption, SeriesOnCartesianOptionMixin {
+    layout?: LayoutOrient
+
+    // data?: (DataItemOption | number[])[]
+}
+
+type WhiskerBoxCommonData = (DataItemOption | number[])[]
+
+interface DataItemOption {
+    value?: number[]
+}
+
+interface WhiskerBoxCommonMixin<Opts extends CommonOption> extends SeriesModel<Opts>{}
+class WhiskerBoxCommonMixin<Opts extends CommonOption> {
 
     /**
      * @private
      * @type {string}
      */
-    _baseAxisDim: null,
+    _baseAxisDim: string
+
+    defaultValueDimensions: Partial<DataDimensionInfo>[]
 
     /**
      * @override
      */
-    getInitialData: function (option, ecModel) {
+    getInitialData(option: Opts, ecModel: GlobalModel): List {
         // When both types of xAxis and yAxis are 'value', layout is
         // needed to be specified by user. Otherwise, layout can be
         // judged by which axis is category.
 
         var ordinalMeta;
 
-        var xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex'));
-        var yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex'));
+        var xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex')) as CartesianAxisModel;
+        var yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex')) as CartesianAxisModel;
         var xAxisType = xAxisModel.get('type');
         var yAxisType = yAxisModel.get('type');
         var addOrdinal;
@@ -72,21 +92,21 @@ export var seriesModelMixin = {
         var axisModels = [xAxisModel, yAxisModel];
         var baseAxisType = axisModels[baseAxisDimIndex].get('type');
         var otherAxisType = axisModels[1 - baseAxisDimIndex].get('type');
-        var data = option.data;
+        var data = option.data as WhiskerBoxCommonData;
 
         // ??? FIXME make a stage to perform data transfrom.
         // MUST create a new data, consider setOption({}) again.
         if (data && addOrdinal) {
-            var newOptionData = [];
+            var newOptionData: WhiskerBoxCommonData = [];
             zrUtil.each(data, function (item, index) {
                 var newItem;
-                if (item.value && zrUtil.isArray(item.value)) {
-                    newItem = item.value.slice();
-                    item.value.unshift(index);
-                }
-                else if (zrUtil.isArray(item)) {
+                if (zrUtil.isArray(item)) {
                     newItem = item.slice();
                     item.unshift(index);
+                }
+                else if (zrUtil.isArray(item.value)) {
+                    newItem = item.value.slice();
+                    item.value.unshift(index);
                 }
                 else {
                     newItem = item;
@@ -122,15 +142,20 @@ export var seriesModelMixin = {
                 )
             }
         );
-    },
+    }
 
     /**
      * If horizontal, base axis is x, otherwise y.
      * @override
      */
-    getBaseAxis: function () {
+    getBaseAxis(): Axis2D {
         var dim = this._baseAxisDim;
-        return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
+        return (this.ecModel.getComponent(
+            dim + 'Axis', this.get(dim + 'AxisIndex' as 'xAxisIndex' | 'yAxisIndex')
+        ) as CartesianAxisModel).axis;
     }
 
 };
+
+
+export {WhiskerBoxCommonMixin};

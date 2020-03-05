@@ -23,12 +23,11 @@ import { isObject } from 'zrender/src/core/util';
 import List from '../../data/List';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import { StageHandlerProgressParams } from '../../util/types';
+import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
-    clipShape?: {
-        contain(x: number, y: number): boolean
-    }
+    clipShape?: CoordinateSystemClipArea
 }
 
 interface SymbolLike extends graphic.Group {

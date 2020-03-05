@@ -17,15 +17,17 @@
 * under the License.
 */
 
-// @ts-nocheck
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import BoxplotSeriesModel from './BoxplotSeries';
 
-var borderColorQuery = ['itemStyle', 'borderColor'];
+var borderColorQuery = ['itemStyle', 'borderColor'] as const;
 
-export default function (ecModel, api) {
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
     var globalColors = ecModel.get('color');
 
-    ecModel.eachRawSeriesByType('boxplot', function (seriesModel) {
+    ecModel.eachRawSeriesByType('boxplot', function (seriesModel: BoxplotSeriesModel) {
 
         var defaulColor = globalColors[seriesModel.seriesIndex % globalColors.length];
         var data = seriesModel.getData();

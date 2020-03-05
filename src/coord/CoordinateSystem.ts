@@ -135,9 +135,7 @@ export interface CoordinateSystem {
 
     getRoamTransform?: () => MatrixArray;
 
-    getArea?: () => {
-        contain(x: number, y: number): boolean
-    };
+    getArea?: () => CoordinateSystemClipArea
 
     // Only `coord/View.js` implements `getBoundingRect`.
     // But if other coord sys implement it, should follow this signature.
@@ -154,4 +152,12 @@ export interface CoordinateSystem {
  */
 export interface CoordinateSystemHostModel extends ComponentModel {
     coordinateSystem?: CoordinateSystemMaster
+}
+
+/**
+ * Clip area will be returned by getArea of CoordinateSystem.
+ * It is used to clip the graphic elements with the contain methods.
+ */
+export interface CoordinateSystemClipArea {
+    contain(x: number, y: number): boolean
 }

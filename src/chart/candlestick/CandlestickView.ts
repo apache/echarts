@@ -17,23 +17,33 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
-import Path from 'zrender/src/graphic/Path';
+import Path, { PathProps } from 'zrender/src/graphic/Path';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
+import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { StageHandlerProgressParams } from '../../util/types';
+import List from '../../data/List';
+import {CandlestickItemLayout} from './candlestickLayout';
+import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import Model from '../../model/Model';
 
-var NORMAL_ITEM_STYLE_PATH = ['itemStyle'];
-var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'];
-var SKIP_PROPS = ['color', 'color0', 'borderColor', 'borderColor0'];
+var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
+var SKIP_PROPS = ['color', 'borderColor'] as const;
 
-var CandlestickView = ChartView.extend({
+class CandlestickView extends ChartView {
 
-    type: 'candlestick',
+    static readonly type = 'candlestick'
+    readonly type = CandlestickView.type
 
-    render: function (seriesModel, ecModel, api) {
+    private _isLargeDraw: boolean
+
+    private _data: List
+
+    render(seriesModel: CandlestickSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         // If there is clipPath created in large mode. Remove it.
         this.group.removeClipPath();
 
@@ -42,28 +52,33 @@ var CandlestickView = ChartView.extend({
         this._isLargeDraw
             ? this._renderLarge(seriesModel)
             : this._renderNormal(seriesModel);
-    },
+    }
 
-    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+    incrementalPrepareRender(seriesModel: CandlestickSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._clear();
         this._updateDrawMode(seriesModel);
-    },
+    }
 
-    incrementalRender: function (params, seriesModel, ecModel, api) {
+    incrementalRender(
+        params: StageHandlerProgressParams,
+        seriesModel: CandlestickSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
         this._isLargeDraw
              ? this._incrementalRenderLarge(params, seriesModel)
              : this._incrementalRenderNormal(params, seriesModel);
-    },
+    }
 
-    _updateDrawMode: function (seriesModel) {
+    _updateDrawMode(seriesModel: CandlestickSeriesModel) {
         var isLargeDraw = seriesModel.pipelineContext.large;
-        if (this._isLargeDraw == null || isLargeDraw ^ this._isLargeDraw) {
+        if (this._isLargeDraw == null || isLargeDraw !== this._isLargeDraw) {
             this._isLargeDraw = isLargeDraw;
             this._clear();
         }
-    },
+    }
 
-    _renderNormal: function (seriesModel) {
+    _renderNormal(seriesModel: CandlestickSeriesModel) {
         var data = seriesModel.getData();
         var oldData = this._data;
         var group = this.group;
@@ -84,7 +99,7 @@ var CandlestickView = ChartView.extend({
                 if (data.hasValue(newIdx)) {
                     var el;
 
-                    var itemLayout = data.getItemLayout(newIdx);
+                    var itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
 
                     if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
                         return;
@@ -101,7 +116,7 @@ var CandlestickView = ChartView.extend({
                 }
             })
             .update(function (newIdx, oldIdx) {
-                var el = oldData.getItemGraphicEl(oldIdx);
+                var el = oldData.getItemGraphicEl(oldIdx) as NormalBoxPath;
 
                 // Empty data
                 if (!data.hasValue(newIdx)) {
@@ -109,7 +124,7 @@ var CandlestickView = ChartView.extend({
                     return;
                 }
 
-                var itemLayout = data.getItemLayout(newIdx);
+                var itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
                 if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
                     group.remove(el);
                     return;
@@ -119,7 +134,11 @@ var CandlestickView = ChartView.extend({
                     el = createNormalBox(itemLayout, newIdx);
                 }
                 else {
-                    graphic.updateProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
+                    graphic.updateProps(el, {
+                        shape: {
+                            points: itemLayout.ends
+                        }
+                    }, seriesModel, newIdx);
                 }
 
                 setBoxCommon(el, data, newIdx, isSimpleBox);
@@ -134,9 +153,9 @@ var CandlestickView = ChartView.extend({
             .execute();
 
         this._data = data;
-    },
+    }
 
-    _renderLarge: function (seriesModel) {
+    _renderLarge(seriesModel: CandlestickSeriesModel) {
         this._clear();
 
         createLarge(seriesModel, this.group);
@@ -151,9 +170,9 @@ var CandlestickView = ChartView.extend({
             this.group.removeClipPath();
         }
 
-    },
+    }
 
-    _incrementalRenderNormal: function (params, seriesModel) {
+    _incrementalRenderNormal(params: StageHandlerProgressParams, seriesModel: CandlestickSeriesModel) {
         var data = seriesModel.getData();
         var isSimpleBox = data.getLayout('isSimpleBox');
 
@@ -161,40 +180,50 @@ var CandlestickView = ChartView.extend({
         while ((dataIndex = params.next()) != null) {
             var el;
 
-            var itemLayout = data.getItemLayout(dataIndex);
+            var itemLayout = data.getItemLayout(dataIndex) as CandlestickItemLayout;
             el = createNormalBox(itemLayout, dataIndex);
             setBoxCommon(el, data, dataIndex, isSimpleBox);
 
             el.incremental = true;
             this.group.add(el);
         }
-    },
+    }
 
-    _incrementalRenderLarge: function (params, seriesModel) {
+    _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: CandlestickSeriesModel) {
         createLarge(seriesModel, this.group, true);
-    },
+    }
 
-    remove: function (ecModel) {
+    remove(ecModel: GlobalModel) {
         this._clear();
-    },
+    }
 
-    _clear: function () {
+    _clear() {
         this.group.removeAll();
         this._data = null;
-    },
+    }
+}
 
-    dispose: zrUtil.noop
+class NormalBoxPathShape {
+    points: number[][]
+}
 
-});
+interface NormalBoxPathProps extends PathProps {
+    shape?: Partial<NormalBoxPathShape>
+}
 
+class NormalBoxPath extends Path<NormalBoxPathProps> {
 
-var NormalBoxPath = Path.extend({
+    readonly type = 'normalCandlestickBox'
 
-    type: 'normalCandlestickBox',
+    shape: NormalBoxPathShape
 
-    shape: {},
+    __simpleBox: boolean
 
-    buildPath: function (ctx, shape) {
+    constructor(opts?: NormalBoxPathProps) {
+        super(opts, null, new NormalBoxPathShape());
+    }
+
+    buildPath(ctx: CanvasRenderingContext2D, shape: NormalBoxPathShape) {
         var ends = shape.points;
 
         if (this.__simpleBox) {
@@ -214,10 +243,10 @@ var NormalBoxPath = Path.extend({
             ctx.lineTo(ends[7][0], ends[7][1]);
         }
     }
-});
+}
 
 
-function createNormalBox(itemLayout, dataIndex, isInit) {
+function createNormalBox(itemLayout: CandlestickItemLayout, dataIndex: number, isInit?: boolean) {
     var ends = itemLayout.ends;
     return new NormalBoxPath({
         shape: {
@@ -229,7 +258,7 @@ function createNormalBox(itemLayout, dataIndex, isInit) {
     });
 }
 
-function isNormalBoxClipped(clipArea, itemLayout) {
+function isNormalBoxClipped(clipArea: CoordinateSystemClipArea, itemLayout: CandlestickItemLayout) {
     var clipped = true;
     for (var i = 0; i < itemLayout.ends.length; i++) {
         // If any point are in the region.
@@ -241,9 +270,9 @@ function isNormalBoxClipped(clipArea, itemLayout) {
     return clipped;
 }
 
-function setBoxCommon(el, data, dataIndex, isSimpleBox) {
-    var itemModel = data.getItemModel(dataIndex);
-    var normalItemStyleModel = itemModel.getModel(NORMAL_ITEM_STYLE_PATH);
+function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimpleBox?: boolean) {
+    var itemModel = data.getItemModel(dataIndex) as Model<CandlestickDataItemOption>;
+    var normalItemStyleModel = itemModel.getModel('itemStyle');
     var color = data.getItemVisual(dataIndex, 'color');
     var borderColor = data.getItemVisual(dataIndex, 'borderColor') || color;
 
@@ -262,7 +291,7 @@ function setBoxCommon(el, data, dataIndex, isSimpleBox) {
     graphic.setHoverStyle(el, hoverStyle);
 }
 
-function transInit(points, itemLayout) {
+function transInit(points: number[][], itemLayout: CandlestickItemLayout) {
     return zrUtil.map(points, function (point) {
         point = point.slice();
         point[1] = itemLayout.initBaseline;
@@ -272,13 +301,27 @@ function transInit(points, itemLayout) {
 
 
 
-var LargeBoxPath = Path.extend({
+class LargeBoxPathShape {
+    points: ArrayLike<number>
+}
 
-    type: 'largeCandlestickBox',
+interface LargeBoxPathProps extends PathProps {
+    shape?: Partial<LargeBoxPathShape>
+    __sign?: number
+}
 
-    shape: {},
+class LargeBoxPath extends Path {
+    readonly type = 'largeCandlestickBox'
 
-    buildPath: function (ctx, shape) {
+    shape: LargeBoxPathShape
+
+    __sign: number
+
+    constructor(opts?: LargeBoxPathProps) {
+        super(opts, null, new LargeBoxPathShape());
+    }
+
+    buildPath(ctx: CanvasRenderingContext2D, shape: LargeBoxPathShape) {
         // Drawing lines is more efficient than drawing
         // a whole line or drawing rects.
         var points = shape.points;
@@ -293,9 +336,9 @@ var LargeBoxPath = Path.extend({
             }
         }
     }
-});
+}
 
-function createLarge(seriesModel, group, incremental) {
+function createLarge(seriesModel: CandlestickSeriesModel, group: graphic.Group, incremental?: boolean) {
     var data = seriesModel.getData();
     var largePoints = data.getLayout('largePoints');
 
@@ -319,14 +362,14 @@ function createLarge(seriesModel, group, incremental) {
     }
 }
 
-function setLargeStyle(sign, el, seriesModel, data) {
+function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickSeriesModel, data: List) {
     var suffix = sign > 0 ? 'P' : 'N';
     var borderColor = data.getVisual('borderColor' + suffix)
         || data.getVisual('color' + suffix);
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    var itemStyle = seriesModel.getModel(NORMAL_ITEM_STYLE_PATH).getItemStyle(SKIP_PROPS);
+    var itemStyle = seriesModel.getModel('itemStyle').getItemStyle(SKIP_PROPS);
 
     el.useStyle(itemStyle);
     el.style.fill = null;

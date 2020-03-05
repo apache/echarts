@@ -17,16 +17,17 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import createRenderPlanner from '../helper/createRenderPlanner';
+import { StageHandler } from '../../util/types';
+import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
+import Model from '../../model/Model';
 
-var positiveBorderColorQuery = ['itemStyle', 'borderColor'];
-var negativeBorderColorQuery = ['itemStyle', 'borderColor0'];
-var positiveColorQuery = ['itemStyle', 'color'];
-var negativeColorQuery = ['itemStyle', 'color0'];
+var positiveBorderColorQuery = ['itemStyle', 'borderColor'] as const;
+var negativeBorderColorQuery = ['itemStyle', 'borderColor0'] as const;
+var positiveColorQuery = ['itemStyle', 'color'] as const;
+var negativeColorQuery = ['itemStyle', 'color0'] as const;
 
-export default {
+const candlestickVisual: StageHandler = {
 
     seriesType: 'candlestick',
 
@@ -35,7 +36,19 @@ export default {
     // For legend.
     performRawSeries: true,
 
-    reset: function (seriesModel, ecModel) {
+    reset: function (seriesModel: CandlestickSeriesModel, ecModel) {
+
+        function getColor(sign: number, model: Model<Pick<CandlestickDataItemOption, 'itemStyle'>>) {
+            return model.get(
+                sign > 0 ? positiveColorQuery : negativeColorQuery
+            );
+        }
+
+        function getBorderColor(sign: number, model: Model<Pick<CandlestickDataItemOption, 'itemStyle'>>) {
+            return model.get(
+                sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
+            );
+        }
 
         var data = seriesModel.getData();
 
@@ -53,37 +66,27 @@ export default {
         }
 
         var isLargeRender = seriesModel.pipelineContext.large;
-        return !isLargeRender && {progress: progress};
+        return !isLargeRender && {
+            progress(params, data) {
+                var dataIndex;
+                while ((dataIndex = params.next()) != null) {
+                    var itemModel = data.getItemModel(dataIndex);
+                    var sign = data.getItemLayout(dataIndex).sign;
 
-
-        function progress(params, data) {
-            var dataIndex;
-            while ((dataIndex = params.next()) != null) {
-                var itemModel = data.getItemModel(dataIndex);
-                var sign = data.getItemLayout(dataIndex).sign;
-
-                data.setItemVisual(
-                    dataIndex,
-                    {
-                        color: getColor(sign, itemModel),
-                        borderColor: getBorderColor(sign, itemModel)
-                    }
-                );
+                    data.setItemVisual(
+                        dataIndex,
+                        {
+                            color: getColor(sign, itemModel),
+                            borderColor: getBorderColor(sign, itemModel)
+                        }
+                    );
+                }
             }
-        }
+        };
 
-        function getColor(sign, model) {
-            return model.get(
-                sign > 0 ? positiveColorQuery : negativeColorQuery
-            );
-        }
-
-        function getBorderColor(sign, model) {
-            return model.get(
-                sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
-            );
-        }
 
     }
 
 };
+
+export default candlestickVisual;

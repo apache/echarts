@@ -17,38 +17,80 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import {seriesModelMixin} from '../helper/whiskerBoxCommon';
+import {WhiskerBoxCommonMixin} from '../helper/whiskerBoxCommon';
+import {
+    SeriesOption,
+    SeriesOnCartesianOptionMixin,
+    LayoutOrient,
+    ItemStyleOption,
+    ZRColor,
+    ColorString,
+    LabelOption,
+    SeriesLargeOptionMixin,
+    OptionDataValueNumeric
+} from '../../util/types';
+import List from '../../data/List';
+import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
-var CandlestickSeries = SeriesModel.extend({
+type CandlestickDataValue = OptionDataValueNumeric[];
+export interface CandlestickDataItemOption {
+    value: CandlestickDataValue
 
-    type: 'series.candlestick',
+    itemStyle?: CandlestickItemStyleOption
+    label?: LabelOption
 
-    dependencies: ['xAxis', 'yAxis', 'grid'],
+    emphasis?: {
+        itemStyle: CandlestickItemStyleOption
+        label?: LabelOption
+    }
 
-    /**
-     * @readOnly
-     */
-    defaultValueDimensions: [
+}
+
+interface CandlestickItemStyleOption extends ItemStyleOption {
+    color0?: ZRColor
+    borderColor0?: ColorString
+}
+
+export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin, SeriesLargeOptionMixin {
+    hoverAnimation?: boolean
+    layout?: LayoutOrient
+    clip?: boolean
+
+    barMaxWidth: number | string
+    barMinWidth: number | string
+    barWidth: number | string
+
+    itemStyle?: CandlestickItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: CandlestickItemStyleOption
+        label?: LabelOption
+    }
+
+    data?: (CandlestickDataValue | CandlestickDataItemOption)[]
+}
+
+class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
+
+    static readonly type = 'series.candlestick'
+
+    static readonly dependencies = ['xAxis', 'yAxis', 'grid']
+
+    coordinateSystem: Cartesian2D
+
+    dimensions: string[]
+
+    defaultValueDimensions = [
         {name: 'open', defaultTooltip: true},
         {name: 'close', defaultTooltip: true},
         {name: 'lowest', defaultTooltip: true},
         {name: 'highest', defaultTooltip: true}
-    ],
+    ]
 
-    /**
-     * @type {Array.<string>}
-     * @readOnly
-     */
-    dimensions: null,
-
-    /**
-     * @override
-     */
-    defaultOption: {
+    static defaultOption: CandlestickSeriesOption = {
         zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
@@ -90,26 +132,27 @@ var CandlestickSeries = SeriesModel.extend({
         progressiveThreshold: 1e4,
         progressiveChunkMode: 'mod',
 
-        animationUpdate: false,
         animationEasing: 'linear',
         animationDuration: 300
-    },
+    }
 
     /**
      * Get dimension for shadow in dataZoom
-     * @return {string} dimension name
+     * @return dimension name
      */
-    getShadowDim: function () {
+    getShadowDim() {
         return 'open';
-    },
+    }
 
-    brushSelector: function (dataIndex, data, selectors) {
+    // @ts-ignore
+    brushSelector(dataIndex: number, data: List, selectors) {
         var itemLayout = data.getItemLayout(dataIndex);
         return itemLayout && selectors.rect(itemLayout.brushRect);
     }
+}
 
-});
+zrUtil.mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
 
-zrUtil.mixin(CandlestickSeries, seriesModelMixin, true);
+SeriesModel.registerClass(CandlestickSeriesModel);
 
-export default CandlestickSeries;
+export default CandlestickSeriesModel;

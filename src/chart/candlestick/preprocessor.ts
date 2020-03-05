@@ -17,11 +17,10 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import { ECUnitOption } from '../../util/types';
 
-export default function (option) {
+export default function (option: ECUnitOption) {
     if (!option || !zrUtil.isArray(option.series)) {
         return;
     }

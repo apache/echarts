@@ -29,12 +29,10 @@ import { PathProps } from 'zrender/src/graphic/Path';
 import PathProxy from 'zrender/src/core/PathProxy';
 import SeriesModel from '../../model/Series';
 import { StageHandlerProgressParams } from '../../util/types';
+import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 
 var BOOST_SIZE_THRESHOLD = 4;
 
-interface ClipShape {
-    contain(x: number, y: number): boolean
-}
 class LargeSymbolPathShape {
     points: ArrayLike<number>
     size: number[]
@@ -54,7 +52,7 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 
     symbolProxy: ECSymbol
 
-    softClipShape: ClipShape
+    softClipShape: CoordinateSystemClipArea
 
     startIndex: number
     endIndex: number
@@ -162,7 +160,7 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 }
 
 interface UpdateOpt {
-    clipShape?: ClipShape
+    clipShape?: CoordinateSystemClipArea
 }
 
 class LargeSymbolDraw {

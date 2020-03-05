@@ -17,22 +17,27 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
-import Path from 'zrender/src/graphic/Path';
+import Path, { PathProps } from 'zrender/src/graphic/Path';
+import BoxplotSeriesModel from './BoxplotSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import List from '../../data/List';
+import { BoxplotItemLayout } from './boxplotLayout';
+import { StyleProps } from 'zrender/src/graphic/Style';
 
 // Update common properties
-var NORMAL_ITEM_STYLE_PATH = ['itemStyle'];
-var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'];
+var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
 
-var BoxplotView = ChartView.extend({
+class BoxplotView extends ChartView {
+    static type = 'boxplot'
+    type = BoxplotView.type
 
-    type: 'boxplot',
+    private _data: List
 
-    render: function (seriesModel, ecModel, api) {
+    render(seriesModel: BoxplotSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
         var group = this.group;
         var oldData = this._data;
@@ -48,14 +53,14 @@ var BoxplotView = ChartView.extend({
         data.diff(oldData)
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
-                    var itemLayout = data.getItemLayout(newIdx);
+                    var itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
                     var symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
             })
             .update(function (newIdx, oldIdx) {
-                var symbolEl = oldData.getItemGraphicEl(oldIdx);
+                var symbolEl = oldData.getItemGraphicEl(oldIdx) as BoxPath;
 
                 // Empty data
                 if (!data.hasValue(newIdx)) {
@@ -63,7 +68,7 @@ var BoxplotView = ChartView.extend({
                     return;
                 }
 
-                var itemLayout = data.getItemLayout(newIdx);
+                var itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
                 if (!symbolEl) {
                     symbolEl = createNormalBox(itemLayout, data, newIdx, constDim);
                 }
@@ -82,29 +87,36 @@ var BoxplotView = ChartView.extend({
             .execute();
 
         this._data = data;
-    },
+    }
 
-    remove: function (ecModel) {
+    remove(ecModel: GlobalModel) {
         var group = this.group;
         var data = this._data;
         this._data = null;
         data && data.eachItemGraphicEl(function (el) {
             el && group.remove(el);
         });
-    },
+    }
+}
 
-    dispose: zrUtil.noop
+class BoxPathShape {
+    points: number[][]
+}
 
-});
+interface BoxPathProps extends PathProps {
+    shape?: Partial<BoxPathShape>
+}
 
+class BoxPath extends Path<BoxPathProps> {
 
-var BoxPath = Path.extend({
+    readonly type = 'boxplotBoxPath'
+    shape: BoxPathShape
 
-    type: 'boxplotBoxPath',
+    constructor(opts?: BoxPathProps) {
+        super(opts, null, new BoxPathShape());
+    }
 
-    shape: {},
-
-    buildPath: function (ctx, shape) {
+    buildPath(ctx: CanvasRenderingContext2D, shape: BoxPathShape) {
         var ends = shape.points;
 
         var i = 0;
@@ -121,10 +133,16 @@ var BoxPath = Path.extend({
             ctx.lineTo(ends[i][0], ends[i][1]);
         }
     }
-});
 
+}
 
-function createNormalBox(itemLayout, data, dataIndex, constDim, isInit) {
+function createNormalBox(
+    itemLayout: BoxplotItemLayout,
+    data: List,
+    dataIndex: number,
+    constDim: number,
+    isInit?: boolean
+) {
     var ends = itemLayout.ends;
 
     var el = new BoxPath({
@@ -140,7 +158,13 @@ function createNormalBox(itemLayout, data, dataIndex, constDim, isInit) {
     return el;
 }
 
-function updateNormalBoxData(itemLayout, el, data, dataIndex, isInit) {
+function updateNormalBoxData(
+    itemLayout: BoxplotItemLayout,
+    el: BoxPath,
+    data: List,
+    dataIndex: number,
+    isInit?: boolean
+) {
     var seriesModel = data.hostModel;
     var updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
 
@@ -152,11 +176,11 @@ function updateNormalBoxData(itemLayout, el, data, dataIndex, isInit) {
     );
 
     var itemModel = data.getItemModel(dataIndex);
-    var normalItemStyleModel = itemModel.getModel(NORMAL_ITEM_STYLE_PATH);
+    var normalItemStyleModel = itemModel.getModel('itemStyle');
     var borderColor = data.getItemVisual(dataIndex, 'color');
 
     // Exclude borderColor.
-    var itemStyle = normalItemStyleModel.getItemStyle(['borderColor']);
+    var itemStyle = normalItemStyleModel.getItemStyle(['borderColor']) as StyleProps;
     itemStyle.stroke = borderColor;
     itemStyle.strokeNoScale = true;
     el.useStyle(itemStyle);
@@ -167,7 +191,7 @@ function updateNormalBoxData(itemLayout, el, data, dataIndex, isInit) {
     graphic.setHoverStyle(el, hoverStyle);
 }
 
-function transInit(points, dim, itemLayout) {
+function transInit(points: number[][], dim: number, itemLayout: BoxplotItemLayout) {
     return zrUtil.map(points, function (point) {
         point = point.slice();
         point[dim] = itemLayout.initBaseline;

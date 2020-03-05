@@ -17,18 +17,63 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import {seriesModelMixin} from '../helper/whiskerBoxCommon';
+import {WhiskerBoxCommonMixin} from '../helper/whiskerBoxCommon';
+import {
+    SeriesOption,
+    SeriesOnCartesianOptionMixin,
+    LayoutOrient,
+    ItemStyleOption,
+    LabelOption,
+    OptionDataValueNumeric
+} from '../../util/types';
+import ComponentModel from '../../model/Component';
+import type Axis2D from '../../coord/cartesian/Axis2D';
+import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
-var BoxplotSeries = SeriesModel.extend({
+// [min,  Q1,  median (or Q2),  Q3,  max]
+type BoxplotDataValue = OptionDataValueNumeric[];
+export interface BoxplotDataItemOption {
+    value: BoxplotDataValue
 
-    type: 'series.boxplot',
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
 
-    dependencies: ['xAxis', 'yAxis', 'grid'],
+    emphasis?: {
+        itemStyle: ItemStyleOption
+        label?: LabelOption
+    }
 
+}
+
+export interface BoxplotSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin {
+    hoverAnimation?: boolean
+    layout?: LayoutOrient
+    /**
+     * [min, max] can be percent of band width.
+     */
+    boxWidth?: (string | number)[]
+
+    itemStyle?: ItemStyleOption
+
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle: ItemStyleOption
+        label?: LabelOption
+    }
+
+    data?: (BoxplotDataValue | BoxplotDataItemOption)[]
+}
+
+class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
+
+    static readonly type = 'series.boxplot'
+
+    static readonly dependencies = ['xAxis', 'yAxis', 'grid']
+
+    coordinateSystem: Cartesian2D
     // TODO
     // box width represents group size, so dimension should have 'size'.
 
@@ -38,36 +83,26 @@ var BoxplotSeries = SeriesModel.extend({
      * and echarts do not need to know it.
      * @readOnly
      */
-    defaultValueDimensions: [
+    defaultValueDimensions = [
         {name: 'min', defaultTooltip: true},
         {name: 'Q1', defaultTooltip: true},
         {name: 'median', defaultTooltip: true},
         {name: 'Q3', defaultTooltip: true},
         {name: 'max', defaultTooltip: true}
-    ],
+    ]
 
-    /**
-     * @type {Array.<string>}
-     * @readOnly
-     */
-    dimensions: null,
+    dimensions: string[]
 
-    /**
-     * @override
-     */
-    defaultOption: {
-        zlevel: 0,                  // 一级层叠
-        z: 2,                       // 二级层叠
+    static defaultOption: BoxplotSeriesOption = {
+        zlevel: 0,
+        z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
         hoverAnimation: true,
 
-        // xAxisIndex: 0,
-        // yAxisIndex: 0,
-
-        layout: null,               // 'horizontal' or 'vertical'
-        boxWidth: [7, 50],       // [min, max] can be percent of band width.
+        layout: null,
+        boxWidth: [7, 50],
 
         itemStyle: {
             color: '#fff',
@@ -87,8 +122,13 @@ var BoxplotSeries = SeriesModel.extend({
         animationEasing: 'elasticOut',
         animationDuration: 800
     }
-});
+}
 
-zrUtil.mixin(BoxplotSeries, seriesModelMixin, true);
+interface BoxplotSeriesModel extends WhiskerBoxCommonMixin<BoxplotSeriesOption> {
+    getBaseAxis(): Axis2D
+}
+zrUtil.mixin(BoxplotSeriesModel, WhiskerBoxCommonMixin, true);
 
-export default BoxplotSeries;
+ComponentModel.registerClass(BoxplotSeriesModel);
+
+export default BoxplotSeriesModel;

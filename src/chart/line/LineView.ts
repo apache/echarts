@@ -41,6 +41,7 @@ import type { VisualMeta } from '../../component/visualMap/VisualMapModel';
 import type { Payload, Dictionary, ColorString } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
+import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 
 
 type PolarArea = ReturnType<Polar['getArea']>
@@ -348,9 +349,7 @@ class LineView extends ChartView {
     _step: LineSeriesOption['step']
     _valueOrigin: LineSeriesOption['areaStyle']['origin']
 
-    _clipShapeForSymbol: {
-        contain(x: number, y: number): boolean
-    }
+    _clipShapeForSymbol: CoordinateSystemClipArea
 
     _data: List
 

@@ -105,7 +105,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     })();
 
 
-    init(option: SeriesOption, parentModel: Model, ecModel: GlobalModel) {
+    init(option: Opt, parentModel: Model, ecModel: GlobalModel) {
 
         this.seriesIndex = this.componentIndex;
 
@@ -147,7 +147,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     /**
      * Util for merge default and theme to option
      */
-    mergeDefaultAndTheme(option: SeriesOption, ecModel: GlobalModel): void {
+    mergeDefaultAndTheme(option: Opt, ecModel: GlobalModel): void {
         var layoutMode = fetchLayoutMode(this);
         var inputPositionParams = layoutMode
             ? getLayoutParams(option as BoxLayoutOptionMixin) : {};
@@ -176,7 +176,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
     }
 
-    mergeOption(newSeriesOption: SeriesOption, ecModel: GlobalModel) {
+    mergeOption(newSeriesOption: Opt, ecModel: GlobalModel) {
         // this.settingTask.dirty();
 
         newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
@@ -221,7 +221,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * Init a data structure from data related option in series
      * Must be overriden.
      */
-    getInitialData(option: SeriesOption, ecModel: GlobalModel): List {
+    getInitialData(option: Opt, ecModel: GlobalModel): List {
         return;
     }
 
@@ -282,9 +282,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         inner(this).data = data;
     }
 
-    /**
-     * @return {module:echarts/data/Source} source
-     */
     getSource(): Source {
         return getSource(this);
     }
@@ -302,7 +299,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * Can be overrided for some chart.
      * @return {type} description
      */
-    getBaseAxis() { // FIXME:TS type ?
+    getBaseAxis(): Axis {
         var coordSys = this.coordinateSystem;
         // @ts-ignore
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
