@@ -17,54 +17,66 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import SymbolDraw from '../helper/SymbolDraw';
 import EffectSymbol from '../helper/EffectSymbol';
 import * as matrix from 'zrender/src/core/matrix';
 
 import pointsLayout from '../../layout/points';
+import ChartView from '../../view/Chart';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import EffectScatterSeriesModel from './EffectScatterSeries';
+import { StageHandlerProgressExecutor } from '../../util/types';
 
-export default echarts.extendChartView({
+class EffectScatterView extends ChartView {
+    static readonly type = 'effectScatter'
+    readonly type = EffectScatterView.type
 
-    type: 'effectScatter',
+    private _symbolDraw: SymbolDraw
 
-    init: function () {
+    init() {
         this._symbolDraw = new SymbolDraw(EffectSymbol);
-    },
+    }
 
-    render: function (seriesModel, ecModel, api) {
+    render(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
         var effectSymbolDraw = this._symbolDraw;
         effectSymbolDraw.updateData(data);
         this.group.add(effectSymbolDraw.group);
-    },
+    }
 
-    updateTransform: function (seriesModel, ecModel, api) {
+    updateTransform(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
 
         this.group.dirty();
 
-        var res = pointsLayout().reset(seriesModel);
+        var res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
         if (res.progress) {
-            res.progress({ start: 0, end: data.count() }, data);
+            res.progress({
+                start: 0,
+                end: data.count(),
+                count: data.count()
+            }, data);
         }
 
-        this._symbolDraw.updateLayout(data);
-    },
+        this._symbolDraw.updateLayout();
+    }
 
-    _updateGroupTransform: function (seriesModel) {
+    _updateGroupTransform(seriesModel: EffectScatterSeriesModel) {
         var coordSys = seriesModel.coordinateSystem;
         if (coordSys && coordSys.getRoamTransform) {
             this.group.transform = matrix.clone(coordSys.getRoamTransform());
             this.group.decomposeTransform();
         }
-    },
+    }
 
-    remove: function (ecModel, api) {
-        this._symbolDraw && this._symbolDraw.remove(api);
-    },
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
+        this._symbolDraw && this._symbolDraw.remove(true);
+    }
 
-    dispose: function () {}
-});
+}
+
+ChartView.registerClass(EffectScatterView);
+
+
+export default EffectScatterView;

@@ -17,31 +17,83 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';
 import CoordinateSystem from '../../CoordinateSystem';
+import {
+    SeriesOption,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnGeoOptionMixin,
+    ItemStyleOption,
+    LabelOption,
+    OptionDataValue
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
+import type Geo from '../../coord/geo/Geo';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Calendar from '../../coord/calendar/Calendar';
 
-export default SeriesModel.extend({
-    type: 'series.heatmap',
+type HeatmapDataValue = OptionDataValue[];
+export interface HeatmapDataItemOption {
+    value: HeatmapDataValue
 
-    getInitialData: function (option, ecModel) {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle: ItemStyleOption
+        label?: LabelOption
+    }
+
+}
+
+export interface HeatmapSeriesOption extends SeriesOption,
+    SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin {
+
+    coordinateSystem?: 'cartesian2d' | 'geo' | 'calendar'
+
+    // Available on cartesian2d coordinate system
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+
+    // Available on geo coordinate system
+    blurSize?: number
+    pointSize?: number
+    maxOpacity?: number
+    minOpacity?: number
+
+
+    data?: (HeatmapDataItemOption | HeatmapDataValue)[]
+}
+
+class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
+    static readonly type = 'series.heatmap'
+    readonly type = HeatmapSeriesModel.type
+
+    // @ts-ignore
+    coordinateSystem: Cartesian2D | Geo | Calendar
+
+    getInitialData(option: HeatmapSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {
             generateCoord: 'value'
         });
-    },
+    }
 
-    preventIncremental: function () {
+    preventIncremental() {
         var coordSysCreator = CoordinateSystem.get(this.get('coordinateSystem'));
         if (coordSysCreator && coordSysCreator.dimensions) {
             return coordSysCreator.dimensions[0] === 'lng' && coordSysCreator.dimensions[1] === 'lat';
         }
-    },
+    }
 
-    defaultOption: {
+    defaultOption: HeatmapSeriesOption = {
 
-        // Cartesian2D or geo
         coordinateSystem: 'cartesian2d',
 
         zlevel: 0,
@@ -63,4 +115,8 @@ export default SeriesModel.extend({
 
         minOpacity: 0
     }
-});
+}
+
+SeriesModel.registerClass(HeatmapSeriesModel);
+
+export default HeatmapSeriesModel;

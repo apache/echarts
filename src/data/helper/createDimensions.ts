@@ -34,7 +34,7 @@ export type CreateDimensionsParams = {
     encodeDefine?: HashMap<OptionEncodeValue> | OptionEncode,
     dimensionsCount?: number,
     encodeDefaulter?: EncodeDefaulter,
-    generateCoord?: boolean,
+    generateCoord?: string,
     generateCoordCount?: number
 };
 

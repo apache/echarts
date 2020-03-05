@@ -31,7 +31,7 @@ import { SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition }
 import SeriesModel from '../../model/Series';
 
 function createListFromArray(source: Source | any[], seriesModel: SeriesModel, opt?: {
-    generateCoord?: boolean
+    generateCoord?: string
     useEncodeDefaulter?: boolean
 }): List {
     opt = opt || {};

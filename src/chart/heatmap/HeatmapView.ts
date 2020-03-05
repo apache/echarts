@@ -17,15 +17,36 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import * as graphic from '../../util/graphic';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
+import ChartView from '../../view/Chart';
+import HeatmapSeriesModel from './HeatmapSeries';
+import type GlobalModel from '../../model/Global';
+import type ExtensionAPI from '../../ExtensionAPI';
+import type VisualMapModel from '../../component/visualMap/VisualMapModel';
+import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
+import type ContinuousModel from '../../component/visualMap/ContinuousModel';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import { StageHandlerProgressParams, Dictionary } from '../../util/types';
 
-function getIsInPiecewiseRange(dataExtent, pieceList, selected) {
+// Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
+interface GeoLikeCoordSys extends CoordinateSystem {
+    dimensions: ['lng', 'lat']
+    getViewRect(): graphic.BoundingRect
+}
+
+function isCartesian2D(coord: CoordinateSystem): coord is Cartesian2D {
+    return coord.type === 'cartesian2d';
+}
+
+function getIsInPiecewiseRange(
+    dataExtent: number[],
+    pieceList: ReturnType<PiecewiseModel['getPieceList']>,
+    selected: Dictionary<boolean>
+) {
     var dataSpan = dataExtent[1] - dataExtent[0];
     pieceList = zrUtil.map(pieceList, function (piece) {
         return {
@@ -38,7 +59,7 @@ function getIsInPiecewiseRange(dataExtent, pieceList, selected) {
     var len = pieceList.length;
     var lastIndex = 0;
 
-    return function (val) {
+    return function (val: number) {
         // Try to find in the location of the last found
         for (var i = lastIndex; i < len; i++) {
             var interval = pieceList[i].interval;
@@ -60,30 +81,35 @@ function getIsInPiecewiseRange(dataExtent, pieceList, selected) {
     };
 }
 
-function getIsInContinuousRange(dataExtent, range) {
+function getIsInContinuousRange(dataExtent: number[], range: number[]) {
     var dataSpan = dataExtent[1] - dataExtent[0];
     range = [
         (range[0] - dataExtent[0]) / dataSpan,
         (range[1] - dataExtent[0]) / dataSpan
     ];
-    return function (val) {
+    return function (val: number) {
         return val >= range[0] && val <= range[1];
     };
 }
 
-function isGeoCoordSys(coordSys) {
+function isGeoCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys {
     var dimensions = coordSys.dimensions;
     // Not use coorSys.type === 'geo' because coordSys maybe extended
     return dimensions[0] === 'lng' && dimensions[1] === 'lat';
 }
 
-export default echarts.extendChartView({
+class HeatmapView extends ChartView {
 
-    type: 'heatmap',
+    static readonly type = 'heatmap'
+    readonly type = HeatmapView.type
 
-    render: function (seriesModel, ecModel, api) {
+    private _incrementalDisplayable: boolean
+
+    private _hmLayer: HeatmapLayer
+
+    render(seriesModel: HeatmapSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var visualMapOfThisSeries;
-        ecModel.eachComponent('visualMap', function (visualMap) {
+        ecModel.eachComponent('visualMap', function (visualMap: VisualMapModel) {
             visualMap.eachTargetSeries(function (targetSeries) {
                 if (targetSeries === seriesModel) {
                     visualMapOfThisSeries = visualMap;
@@ -110,26 +136,37 @@ export default echarts.extendChartView({
                 coordSys, seriesModel, visualMapOfThisSeries, api
             );
         }
-    },
+    }
 
-    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+    incrementalPrepareRender(seriesModel: HeatmapSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this.group.removeAll();
-    },
+    }
 
-    incrementalRender: function (params, seriesModel, ecModel, api) {
+    incrementalRender(
+        params: StageHandlerProgressParams,
+        seriesModel: HeatmapSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
         var coordSys = seriesModel.coordinateSystem;
         if (coordSys) {
             this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
         }
-    },
+    }
 
-    _renderOnCartesianAndCalendar: function (seriesModel, api, start, end, incremental) {
+    _renderOnCartesianAndCalendar(
+        seriesModel: HeatmapSeriesModel,
+        api: ExtensionAPI,
+        start: number,
+        end: number,
+        incremental?: boolean
+    ) {
 
         var coordSys = seriesModel.coordinateSystem;
         var width;
         var height;
 
-        if (coordSys.type === 'cartesian2d') {
+        if (isCartesian2D(coordSys)) {
             var xAxis = coordSys.getAxis('x');
             var yAxis = coordSys.getAxis('y');
 
@@ -149,18 +186,12 @@ export default echarts.extendChartView({
         var group = this.group;
         var data = seriesModel.getData();
 
-        var itemStyleQuery = 'itemStyle';
-        var hoverItemStyleQuery = 'emphasis.itemStyle';
-        var labelQuery = 'label';
-        var hoverLabelQuery = 'emphasis.label';
-        var style = seriesModel.getModel(itemStyleQuery).getItemStyle(['color']);
-        var hoverStl = seriesModel.getModel(hoverItemStyleQuery).getItemStyle();
-        var labelModel = seriesModel.getModel(labelQuery);
-        var hoverLabelModel = seriesModel.getModel(hoverLabelQuery);
-        var coordSysType = coordSys.type;
+        var style = seriesModel.getModel('itemStyle').getItemStyle(['color']);
+        var hoverStl = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        var labelModel = seriesModel.getModel('label');
+        var hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
 
-
-        var dataDims = coordSysType === 'cartesian2d'
+        var dataDims = isCartesian2D(coordSys)
             ? [
                 data.mapDimension('x'),
                 data.mapDimension('y'),
@@ -174,9 +205,9 @@ export default echarts.extendChartView({
         for (var idx = start; idx < end; idx++) {
             var rect;
 
-            if (coordSysType === 'cartesian2d') {
+            if (isCartesian2D(coordSys)) {
                 // Ignore empty data
-                if (isNaN(data.get(dataDims[2], idx))) {
+                if (isNaN(data.get(dataDims[2], idx) as number)) {
                     continue;
                 }
 
@@ -200,7 +231,7 @@ export default echarts.extendChartView({
             }
             else {
                 // Ignore empty data
-                if (isNaN(data.get(dataDims[1], idx))) {
+                if (isNaN(data.get(dataDims[1], idx) as number)) {
                     continue;
                 }
 
@@ -218,10 +249,10 @@ export default echarts.extendChartView({
 
             // Optimization for large datset
             if (data.hasItemOption) {
-                style = itemModel.getModel(itemStyleQuery).getItemStyle(['color']);
-                hoverStl = itemModel.getModel(hoverItemStyleQuery).getItemStyle();
-                labelModel = itemModel.getModel(labelQuery);
-                hoverLabelModel = itemModel.getModel(hoverLabelQuery);
+                style = itemModel.getModel('itemStyle').getItemStyle(['color']);
+                hoverStl = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+                labelModel = itemModel.getModel('label');
+                hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
             }
 
             var rawValue = seriesModel.getRawValue(idx);
@@ -253,9 +284,14 @@ export default echarts.extendChartView({
             group.add(rect);
             data.setItemGraphicEl(idx, rect);
         }
-    },
+    }
 
-    _renderOnGeo: function (geo, seriesModel, visualMapModel, api) {
+    _renderOnGeo(
+        geo: GeoLikeCoordSys,
+        seriesModel: HeatmapSeriesModel,
+        visualMapModel: VisualMapModel,
+        api: ExtensionAPI
+    ) {
         var inRangeVisuals = visualMapModel.targetVisuals.inRange;
         var outOfRangeVisuals = visualMapModel.targetVisuals.outOfRange;
         // if (!visualMapping) {
@@ -287,7 +323,7 @@ export default echarts.extendChartView({
             data.mapDimension('value')
         ];
 
-        var points = data.mapArray(dims, function (lng, lat, value) {
+        var points = data.mapArray(dims, function (lng: number, lat: number, value: number) {
             var pt = geo.dataToPoint([lng, lat]);
             pt[0] -= x;
             pt[1] -= y;
@@ -297,9 +333,11 @@ export default echarts.extendChartView({
 
         var dataExtent = visualMapModel.getExtent();
         var isInRange = visualMapModel.type === 'visualMap.continuous'
-            ? getIsInContinuousRange(dataExtent, visualMapModel.option.range)
+            ? getIsInContinuousRange(dataExtent, (visualMapModel as ContinuousModel).option.range)
             : getIsInPiecewiseRange(
-                dataExtent, visualMapModel.getPieceList(), visualMapModel.option.selected
+                dataExtent,
+                (visualMapModel as PiecewiseModel).getPieceList(),
+                (visualMapModel as PiecewiseModel).option.selected
             );
 
         hmLayer.update(
@@ -322,7 +360,9 @@ export default echarts.extendChartView({
             silent: true
         });
         this.group.add(img);
-    },
+    }
+}
 
-    dispose: function () {}
-});
+ChartView.registerClass(HeatmapView);
+
+export default HeatmapView;

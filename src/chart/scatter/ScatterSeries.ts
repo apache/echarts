@@ -58,7 +58,9 @@ export interface ScatterSeriesOption extends SeriesOption,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
     SeriesSymbolOptionMixin {
 
-    hoverAnimation: boolean
+    coordinateSystem?: string
+
+    hoverAnimation?: boolean
 
     cursor?: string
     clip?: boolean
@@ -70,6 +72,8 @@ export interface ScatterSeriesOption extends SeriesOption,
         itemStyle?: ItemStyleOption
         label?: LabelOption
     }
+
+    data?: (ScatterDataItemOption | OptionDataValue)[]
 }
 
 

@@ -17,43 +17,50 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /* global Uint8ClampedArray */
 
 import * as zrUtil from 'zrender/src/core/util';
 
 var GRADIENT_LEVELS = 256;
 
-/**
- * Heatmap Chart
- *
- * @class
- */
-function Heatmap() {
-    var canvas = zrUtil.createCanvas();
-    this.canvas = canvas;
+type ColorFunc = (grad: number, fastMode: boolean, output: number[]) => void
 
-    this.blurSize = 30;
-    this.pointSize = 20;
+type ColorState = 'inRange' | 'outOfRange'
 
-    this.maxOpacity = 1;
-    this.minOpacity = 0;
+class HeatmapLayer {
+    canvas: HTMLCanvasElement
+    blurSize = 30
+    pointSize = 20
 
-    this._gradientPixels = {};
-}
+    maxOpacity = 1
+    minOpacity = 0
 
-Heatmap.prototype = {
+    private _brushCanvas: HTMLCanvasElement
+
+    private _gradientPixels: Record<ColorState, Uint8ClampedArray>
+
+    constructor() {
+        var canvas = zrUtil.createCanvas();
+        this.canvas = canvas;
+    }
+
     /**
      * Renders Heatmap and returns the rendered canvas
-     * @param {Array} data array of data, each has x, y, value
-     * @param {number} width canvas width
-     * @param {number} height canvas height
+     * @param data array of data, each has x, y, value
+     * @param width canvas width
+     * @param height canvas height
      */
-    update: function (data, width, height, normalize, colorFunc, isInRange) {
+    update(
+        data: number[][],
+        width: number,
+        height: number,
+        normalize: (value: number) => number,
+        colorFunc: Record<ColorState, ColorFunc>,
+        isInRange?: (grad?: number) => boolean
+    ) {
         var brush = this._getBrush();
-        var gradientInRange = this._getGradient(data, colorFunc, 'inRange');
-        var gradientOutOfRange = this._getGradient(data, colorFunc, 'outOfRange');
+        var gradientInRange = this._getGradient(colorFunc, 'inRange');
+        var gradientOutOfRange = this._getGradient(colorFunc, 'outOfRange');
         var r = this.pointSize + this.blurSize;
 
         var canvas = this.canvas;
@@ -111,14 +118,12 @@ Heatmap.prototype = {
         ctx.putImageData(imageData, 0, 0);
 
         return canvas;
-    },
+    }
 
     /**
      * get canvas of a black circle brush used for canvas to draw later
-     * @private
-     * @returns {Object} circle brush canvas
      */
-    _getBrush: function () {
+    _getBrush() {
         var brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
         // set brush size
         var r = this.pointSize + this.blurSize;
@@ -144,13 +149,13 @@ Heatmap.prototype = {
         ctx.closePath();
         ctx.fill();
         return brushCanvas;
-    },
+    }
 
     /**
      * get gradient color map
      * @private
      */
-    _getGradient: function (data, colorFunc, state) {
+    _getGradient(colorFunc: Record<ColorState, ColorFunc>, state: ColorState) {
         var gradientPixels = this._gradientPixels;
         var pixelsSingleState = gradientPixels[state] || (gradientPixels[state] = new Uint8ClampedArray(256 * 4));
         var color = [0, 0, 0, 0];
@@ -164,6 +169,6 @@ Heatmap.prototype = {
         }
         return pixelsSingleState;
     }
-};
+}
 
-export default Heatmap;
+export default HeatmapLayer;

@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Symbol with ripple effect
  * @module echarts/chart/helper/EffectSymbol
@@ -26,22 +24,38 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
-import {Group} from '../../util/graphic';
+import {Group, Path} from '../../util/graphic';
 import {parsePercent} from '../../util/number';
 import SymbolClz from './Symbol';
+import List from '../../data/List';
+import type { ZRColor } from '../../util/types';
+import type Displayable from 'zrender/src/graphic/Displayable';
 
 var EFFECT_RIPPLE_NUMBER = 3;
 
-function normalizeSymbolSize(symbolSize) {
+interface RippleEffectCfg {
+    showEffectOn?: 'emphasis' | 'render'
+    rippleScale?: number
+    brushType?: 'fill' | 'stroke'
+    period?: number
+    effectOffset?: number
+    z?: number
+    zlevel?: number
+    symbolType?: string
+    color?: ZRColor
+    rippleEffectColor?: ZRColor
+}
+
+function normalizeSymbolSize(symbolSize: number | number[]): number[] {
     if (!zrUtil.isArray(symbolSize)) {
         symbolSize = [+symbolSize, +symbolSize];
     }
     return symbolSize;
 }
 
-function updateRipplePath(rippleGroup, effectCfg) {
+function updateRipplePath(rippleGroup: Group, effectCfg: RippleEffectCfg) {
     var color = effectCfg.rippleEffectColor || effectCfg.color;
-    rippleGroup.eachChild(function (ripplePath) {
+    rippleGroup.eachChild(function (ripplePath: Displayable) {
         ripplePath.attr({
             z: effectCfg.z,
             zlevel: effectCfg.zlevel,
@@ -52,195 +66,189 @@ function updateRipplePath(rippleGroup, effectCfg) {
         });
     });
 }
-/**
- * @constructor
- * @param {module:echarts/data/List} data
- * @param {number} idx
- * @extends {module:zrender/graphic/Group}
- */
-function EffectSymbol(data, idx) {
-    Group.call(this);
 
-    var symbol = new SymbolClz(data, idx);
-    var rippleGroup = new Group();
-    this.add(symbol);
-    this.add(rippleGroup);
+class EffectSymbol extends Group {
 
-    rippleGroup.beforeUpdate = function () {
-        this.attr(symbol.getScale());
-    };
-    this.updateData(data, idx);
-}
+    private _effectCfg: RippleEffectCfg
 
-var effectSymbolProto = EffectSymbol.prototype;
+    constructor(data: List, idx: number) {
+        super();
 
-effectSymbolProto.stopEffectAnimation = function () {
-    this.childAt(1).removeAll();
-};
+        var symbol = new SymbolClz(data, idx);
+        var rippleGroup = new Group();
+        this.add(symbol);
+        this.add(rippleGroup);
 
-effectSymbolProto.startEffectAnimation = function (effectCfg) {
-    var symbolType = effectCfg.symbolType;
-    var color = effectCfg.color;
-    var rippleGroup = this.childAt(1);
-
-    for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
-        // If width/height are set too small (e.g., set to 1) on ios10
-        // and macOS Sierra, a circle stroke become a rect, no matter what
-        // the scale is set. So we set width/height as 2. See #4136.
-        var ripplePath = createSymbol(
-            symbolType, -1, -1, 2, 2, color
-        );
-        ripplePath.attr({
-            style: {
-                strokeNoScale: true
-            },
-            z2: 99,
-            silent: true,
-            scale: [0.5, 0.5]
-        });
-
-        var delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
-        // TODO Configurable effectCfg.period
-        ripplePath.animate('', true)
-            .when(effectCfg.period, {
-                scale: [effectCfg.rippleScale / 2, effectCfg.rippleScale / 2]
-            })
-            .delay(delay)
-            .start();
-        ripplePath.animateStyle(true)
-            .when(effectCfg.period, {
-                opacity: 0
-            })
-            .delay(delay)
-            .start();
-
-        rippleGroup.add(ripplePath);
+        this.updateData(data, idx);
     }
 
-    updateRipplePath(rippleGroup, effectCfg);
-};
 
-/**
- * Update effect symbol
- */
-effectSymbolProto.updateEffectAnimation = function (effectCfg) {
-    var oldEffectCfg = this._effectCfg;
-    var rippleGroup = this.childAt(1);
+    stopEffectAnimation() {
+        (this.childAt(1) as Group).removeAll();
+    }
 
-    // Must reinitialize effect if following configuration changed
-    var DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'];
-    for (var i = 0; i < DIFFICULT_PROPS.length; i++) {
-        var propName = DIFFICULT_PROPS[i];
-        if (oldEffectCfg[propName] !== effectCfg[propName]) {
-            this.stopEffectAnimation();
-            this.startEffectAnimation(effectCfg);
-            return;
+    startEffectAnimation(effectCfg: RippleEffectCfg) {
+        var symbolType = effectCfg.symbolType;
+        var color = effectCfg.color;
+        var rippleGroup = this.childAt(1) as Group;
+
+        for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
+            // If width/height are set too small (e.g., set to 1) on ios10
+            // and macOS Sierra, a circle stroke become a rect, no matter what
+            // the scale is set. So we set width/height as 2. See #4136.
+            var ripplePath = createSymbol(
+                symbolType, -1, -1, 2, 2, color
+            );
+            ripplePath.attr({
+                style: {
+                    strokeNoScale: true
+                },
+                z2: 99,
+                silent: true,
+                scale: [0.5, 0.5]
+            });
+
+            var delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
+            // TODO Configurable effectCfg.period
+            ripplePath.animate('', true)
+                .when(effectCfg.period, {
+                    scale: [effectCfg.rippleScale / 2, effectCfg.rippleScale / 2]
+                })
+                .delay(delay)
+                .start();
+            ripplePath.animateStyle(true)
+                .when(effectCfg.period, {
+                    opacity: 0
+                })
+                .delay(delay)
+                .start();
+
+            rippleGroup.add(ripplePath);
         }
+
+        updateRipplePath(rippleGroup, effectCfg);
     }
 
-    updateRipplePath(rippleGroup, effectCfg);
-};
+    /**
+     * Update effect symbol
+     */
+    updateEffectAnimation(effectCfg: RippleEffectCfg) {
+        var oldEffectCfg = this._effectCfg;
+        var rippleGroup = this.childAt(1) as Group;
 
-/**
- * Highlight symbol
- */
-effectSymbolProto.highlight = function () {
-    this.trigger('emphasis');
-};
+        // Must reinitialize effect if following configuration changed
+        var DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'] as const;
+        for (var i = 0; i < DIFFICULT_PROPS.length; i++) {
+            var propName = DIFFICULT_PROPS[i];
+            if (oldEffectCfg[propName] !== effectCfg[propName]) {
+                this.stopEffectAnimation();
+                this.startEffectAnimation(effectCfg);
+                return;
+            }
+        }
 
-/**
- * Downplay symbol
- */
-effectSymbolProto.downplay = function () {
-    this.trigger('normal');
-};
+        updateRipplePath(rippleGroup, effectCfg);
+    }
 
-/**
- * Update symbol properties
- * @param  {module:echarts/data/List} data
- * @param  {number} idx
- */
-effectSymbolProto.updateData = function (data, idx) {
-    var seriesModel = data.hostModel;
+    /**
+     * Highlight symbol
+     */
+    highlight() {
+        this.trigger('emphasis');
+    }
 
-    this.childAt(0).updateData(data, idx);
+    /**
+     * Downplay symbol
+     */
+    downplay() {
+        this.trigger('normal');
+    }
 
-    var rippleGroup = this.childAt(1);
-    var itemModel = data.getItemModel(idx);
-    var symbolType = data.getItemVisual(idx, 'symbol');
-    var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-    var color = data.getItemVisual(idx, 'color');
+    /**
+     * Update symbol properties
+     * @param  {module:echarts/data/List} data
+     * @param  {number} idx
+     */
+    updateData(data: List, idx: number) {
+        var seriesModel = data.hostModel;
 
-    rippleGroup.attr('scale', symbolSize);
+        (this.childAt(0) as SymbolClz).updateData(data, idx);
 
-    rippleGroup.traverse(function (ripplePath) {
-        ripplePath.attr({
-            fill: color
+        var rippleGroup = this.childAt(1);
+        var itemModel = data.getItemModel(idx);
+        var symbolType = data.getItemVisual(idx, 'symbol');
+        var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+        var color = data.getItemVisual(idx, 'color');
+
+        rippleGroup.attr('scale', symbolSize);
+
+        rippleGroup.traverse(function (ripplePath: Path) {
+            ripplePath.setStyle('fill', color);
         });
-    });
 
-    var symbolOffset = itemModel.getShallow('symbolOffset');
-    if (symbolOffset) {
-        var pos = rippleGroup.position;
-        pos[0] = parsePercent(symbolOffset[0], symbolSize[0]);
-        pos[1] = parsePercent(symbolOffset[1], symbolSize[1]);
-    }
-    rippleGroup.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
+        var symbolOffset = itemModel.getShallow('symbolOffset');
+        if (symbolOffset) {
+            var pos = rippleGroup.position;
+            pos[0] = parsePercent(symbolOffset[0], symbolSize[0]);
+            pos[1] = parsePercent(symbolOffset[1], symbolSize[1]);
+        }
+        rippleGroup.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
 
-    var effectCfg = {};
+        var effectCfg: RippleEffectCfg = {};
 
-    effectCfg.showEffectOn = seriesModel.get('showEffectOn');
-    effectCfg.rippleScale = itemModel.get('rippleEffect.scale');
-    effectCfg.brushType = itemModel.get('rippleEffect.brushType');
-    effectCfg.period = itemModel.get('rippleEffect.period') * 1000;
-    effectCfg.effectOffset = idx / data.count();
-    effectCfg.z = itemModel.getShallow('z') || 0;
-    effectCfg.zlevel = itemModel.getShallow('zlevel') || 0;
-    effectCfg.symbolType = symbolType;
-    effectCfg.color = color;
-    effectCfg.rippleEffectColor = itemModel.get('rippleEffect.color');
+        effectCfg.showEffectOn = seriesModel.get('showEffectOn');
+        effectCfg.rippleScale = itemModel.get('rippleEffect.scale');
+        effectCfg.brushType = itemModel.get('rippleEffect.brushType');
+        effectCfg.period = itemModel.get('rippleEffect.period') * 1000;
+        effectCfg.effectOffset = idx / data.count();
+        effectCfg.z = itemModel.getShallow('z') || 0;
+        effectCfg.zlevel = itemModel.getShallow('zlevel') || 0;
+        effectCfg.symbolType = symbolType;
+        effectCfg.color = color;
+        effectCfg.rippleEffectColor = itemModel.get('rippleEffect.color');
 
-    this.off('mouseover').off('mouseout').off('emphasis').off('normal');
+        this.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
-    if (effectCfg.showEffectOn === 'render') {
-        this._effectCfg
-            ? this.updateEffectAnimation(effectCfg)
-            : this.startEffectAnimation(effectCfg);
+        if (effectCfg.showEffectOn === 'render') {
+            this._effectCfg
+                ? this.updateEffectAnimation(effectCfg)
+                : this.startEffectAnimation(effectCfg);
+
+            this._effectCfg = effectCfg;
+        }
+        else {
+            // Not keep old effect config
+            this._effectCfg = null;
+
+            this.stopEffectAnimation();
+            var symbol = this.childAt(0) as SymbolClz;
+            var onEmphasis = function (this: EffectSymbol) {
+                symbol.highlight();
+                if (effectCfg.showEffectOn !== 'render') {
+                    this.startEffectAnimation(effectCfg);
+                }
+            };
+            var onNormal = function (this: EffectSymbol) {
+                symbol.downplay();
+                if (effectCfg.showEffectOn !== 'render') {
+                    this.stopEffectAnimation();
+                }
+            };
+            this.on('mouseover', onEmphasis, this)
+                .on('mouseout', onNormal, this)
+                .on('emphasis', onEmphasis, this)
+                .on('normal', onNormal, this);
+        }
 
         this._effectCfg = effectCfg;
-    }
-    else {
-        // Not keep old effect config
-        this._effectCfg = null;
+    };
 
-        this.stopEffectAnimation();
-        var symbol = this.childAt(0);
-        var onEmphasis = function () {
-            symbol.highlight();
-            if (effectCfg.showEffectOn !== 'render') {
-                this.startEffectAnimation(effectCfg);
-            }
-        };
-        var onNormal = function () {
-            symbol.downplay();
-            if (effectCfg.showEffectOn !== 'render') {
-                this.stopEffectAnimation();
-            }
-        };
-        this.on('mouseover', onEmphasis, this)
-            .on('mouseout', onNormal, this)
-            .on('emphasis', onEmphasis, this)
-            .on('normal', onNormal, this);
-    }
+    fadeOut(cb: () => void) {
+        this.off('mouseover').off('mouseout').off('emphasis').off('normal');
+        cb && cb();
+    };
 
-    this._effectCfg = effectCfg;
-};
-
-effectSymbolProto.fadeOut = function (cb) {
-    this.off('mouseover').off('mouseout').off('emphasis').off('normal');
-    cb && cb();
-};
-
+}
 zrUtil.inherits(EffectSymbol, Group);
 
 export default EffectSymbol;

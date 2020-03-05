@@ -17,24 +17,83 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import createListFromArray from '../helper/createListFromArray';
 import SeriesModel from '../../model/Series';
+import {
+    SeriesOption,
+    SeriesOnPolarOptionMixin,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnCalendarOptionMixin,
+    SeriesOnGeoOptionMixin,
+    SeriesOnSingleOptionMixin,
+    SeriesSymbolOptionMixin,
+    OptionDataValue,
+    ItemStyleOption,
+    LabelOption,
+    ZRColor
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
 
-export default SeriesModel.extend({
+type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
-    type: 'series.effectScatter',
+export interface EffectScatterDataItemOption {
+    name?: string
 
-    dependencies: ['grid', 'polar'],
+    value?: ScatterDataValue
 
-    getInitialData: function (option, ecModel) {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+}
+
+export interface EffectScatterSeriesOption extends SeriesOption,
+    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
+    SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SeriesSymbolOptionMixin {
+
+    coordinateSystem?: string
+
+    effectType?: 'ripple'
+
+    /**
+     * When to show the effect
+     */
+    showEffectOn?: 'render' | 'emphasis'
+
+    /**
+     * Ripple effect config
+     */
+    rippleEffect?: {
+        period?: number
+        /**
+         * Scale of ripple
+         */
+        scale?: number
+
+        brushType?: 'fill' | 'stroke'
+
+        color?: ZRColor
+    }
+
+    data?: (EffectScatterDataItemOption | OptionDataValue)[]
+}
+class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
+    static readonly type = 'series.effectScatter'
+    type = EffectScatterSeriesModel.type
+
+    static readonly dependencies = ['grid', 'polar']
+
+    brushSelector = 'point'
+
+    getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
-    },
+    }
 
-    brushSelector: 'point',
-
-    defaultOption: {
+    defaultOption: EffectScatterSeriesOption = {
         coordinateSystem: 'cartesian2d',
         zlevel: 0,
         z: 2,
@@ -70,13 +129,12 @@ export default SeriesModel.extend({
         symbolSize: 10          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
         // symbolRotate: null,  // 图形旋转控制
 
-        // large: false,
-        // Available when large is true
-        // largeThreshold: 2000,
-
         // itemStyle: {
         //     opacity: 1
         // }
     }
+}
 
-});
+SeriesModel.registerClass(EffectScatterSeriesModel);
+
+export default EffectScatterSeriesModel;

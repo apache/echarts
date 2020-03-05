@@ -60,6 +60,20 @@ var inner = modelUtil.makeInner<{
     dataBeforeProcessed: List
 }>();
 
+interface SeriesModel {
+    /**
+     * Convinient for override in extended class.
+     * Implement it if needed.
+     */
+    preventIncremental(): boolean;
+    /**
+     * See tooltip.
+     * Implement it if needed.
+     * @return Point of tooltip. null/undefined can be returned.
+     */
+    getTooltipPosition(dataIndex: number): number[];
+}
+
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
 
     // [Caution]: for compat the previous "class extend"
@@ -526,23 +540,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         nestestValue: any
     };
 
-    /**
-     * See tooltip.
-     * Implement it if needed.
-     * @return Point of tooltip. null/undefined can be returned.
-     */
-    getTooltipPosition: (dataIndex: number) => number[];
-
     // /**
     //  * @see {module:echarts/stream/Scheduler}
     //  */
     // abstract pipeTask: null
-
-    /**
-     * Convinient for override in extended class.
-     * Implement it if needed.
-     */
-    preventIncremental: () => boolean;
 
     static registerClass(clz: Constructor): Constructor {
         return ComponentModel.registerClass(clz);

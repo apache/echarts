@@ -24,10 +24,11 @@ import * as graphic from './graphic';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {calculateTextPosition} from 'zrender/src/contain/text';
 import { Dictionary } from 'zrender/src/core/types';
+import { ZRColor } from './types';
 
 type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
-    setColor: (color: string, innerColor?: string) => void
+    setColor: (color: ZRColor, innerColor?: string) => void
 }
 type SymbolCtor = { new(): ECSymbol }
 type SymbolShapeMaker = (x: number, y: number, w: number, h: number, shape: Dictionary<any>) => void
@@ -306,7 +307,7 @@ var SymbolClz = graphic.Path.extend({
 });
 
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
-function symbolPathSetColor(this: ECSymbol, color: string, innerColor?: string) {
+function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string) {
     if (this.type !== 'image') {
         var symbolStyle = this.style;
         var symbolShape = this.shape;
@@ -328,14 +329,6 @@ function symbolPathSetColor(this: ECSymbol, color: string, innerColor?: string) 
 
 /**
  * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
- * @param {string} symbolType
- * @param {number} x
- * @param {number} y
- * @param {number} w
- * @param {number} h
- * @param {string} color
- * @param {boolean} [keepAspect=false] whether to keep the ratio of w/h,
- *                            for path and image only.
  */
 export function createSymbol(
     symbolType: string,
@@ -343,7 +336,8 @@ export function createSymbol(
     y: number,
     w: number,
     h: number,
-    color?: string,
+    color?: ZRColor,
+    // whether to keep the ratio of w/h,
     keepAspect?: boolean
 ) {
     // TODO Support image object, DynamicImage.
