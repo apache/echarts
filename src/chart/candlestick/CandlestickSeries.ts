@@ -61,9 +61,9 @@ export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesian
     layout?: LayoutOrient
     clip?: boolean
 
-    barMaxWidth: number | string
-    barMinWidth: number | string
-    barWidth: number | string
+    barMaxWidth?: number | string
+    barMinWidth?: number | string
+    barWidth?: number | string
 
     itemStyle?: CandlestickItemStyleOption
     label?: LabelOption
