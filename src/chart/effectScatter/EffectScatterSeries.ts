@@ -26,7 +26,7 @@ import {
     SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnSingleOptionMixin,
-    SeriesSymbolOptionMixin,
+    SymbolOptionMixin,
     OptionDataValue,
     ItemStyleOption,
     LabelOption,
@@ -37,7 +37,7 @@ import List from '../../data/List';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
-export interface EffectScatterDataItemOption {
+export interface EffectScatterDataItemOption extends SymbolOptionMixin {
     name?: string
 
     value?: ScatterDataValue
@@ -53,7 +53,7 @@ export interface EffectScatterDataItemOption {
 
 export interface EffectScatterSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
-    SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SeriesSymbolOptionMixin {
+    SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin {
 
     coordinateSystem?: string
 
@@ -93,7 +93,7 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
         return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     }
 
-    defaultOption: EffectScatterSeriesOption = {
+    static defaultOption: EffectScatterSeriesOption = {
         coordinateSystem: 'cartesian2d',
         zlevel: 0,
         z: 2,

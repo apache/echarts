@@ -31,14 +31,14 @@ import {
     LabelOption,
     SeriesLargeOptionMixin,
     SeriesStackOptionMixin,
-    SeriesSymbolOptionMixin
+    SymbolOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
-export interface ScatterDataItemOption {
+export interface ScatterDataItemOption extends SymbolOptionMixin {
     name?: string
 
     value?: ScatterDataValue
@@ -56,7 +56,7 @@ export interface ScatterSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
-    SeriesSymbolOptionMixin {
+    SymbolOptionMixin {
 
     coordinateSystem?: string
 

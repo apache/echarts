@@ -26,7 +26,17 @@ import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
-import { SeriesOption, BoxLayoutOptionMixin, SeriesEncodeOptionMixin, LabelOption, SeriesTooltipOption, OptionDataItemObject, OptionDataValueNumeric, ParsedValue, SeriesOnGeoOptionMixin } from '../../util/types';
+import {
+    SeriesOption,
+    BoxLayoutOptionMixin,
+    SeriesEncodeOptionMixin,
+    LabelOption,
+    SeriesTooltipOption,
+    OptionDataItemObject,
+    OptionDataValueNumeric,
+    ParsedValue,
+    SeriesOnGeoOptionMixin
+} from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import List from '../../data/List';

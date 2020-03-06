@@ -30,7 +30,7 @@ import {
     SeriesOption,
     CallbackDataParams,
     CircleLayoutOptionMixin,
-    LabelLineOption,
+    LabelGuideLineOption,
     ItemStyleOption,
     LabelOption,
     BoxLayoutOptionMixin,
@@ -54,12 +54,12 @@ interface PieDataItem extends
 
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
-    labelLine?: LabelLineOption
+    labelLine?: LabelGuideLineOption
 
     emphasis?: {
         itemStyle?: ItemStyleOption
         label?: PieLabelOption
-        labelLine?: LabelLineOption
+        labelLine?: LabelGuideLineOption
     }
 }
 export interface PieSeriesOption extends
@@ -78,7 +78,7 @@ export interface PieSeriesOption extends
     // TODO: TYPE Color Callback
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
-    labelLine?: LabelLineOption
+    labelLine?: LabelGuideLineOption
 
     clockwise?: boolean
     startAngle?: number
@@ -96,7 +96,7 @@ export interface PieSeriesOption extends
     emphasis?: {
         itemStyle?: ItemStyleOption
         label?: PieLabelOption
-        labelLine?: LabelLineOption
+        labelLine?: LabelGuideLineOption
     }
 
     animationType?: 'expansion' | 'scale'

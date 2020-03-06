@@ -17,11 +17,12 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
-import {updateCenterAndZoom} from '../../action/roamHelper';
+import {updateCenterAndZoom, RoamPaylod} from '../../action/roamHelper';
 import '../helper/focusNodeAdjacencyAction';
+import GlobalModel from '../../model/Global';
+import GraphSeriesModel from './GraphSeries';
+import View from '../../coord/View';
 
 var actionInfo = {
     type: 'graphRoam',
@@ -38,9 +39,11 @@ var actionInfo = {
  * @property {number} [originX]
  * @property {number} [originY]
  */
-echarts.registerAction(actionInfo, function (payload, ecModel) {
-    ecModel.eachComponent({mainType: 'series', query: payload}, function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
+echarts.registerAction(actionInfo, function (payload: RoamPaylod, ecModel: GlobalModel) {
+    ecModel.eachComponent({
+        mainType: 'series', query: payload
+    }, function (seriesModel: GraphSeriesModel) {
+        var coordSys = seriesModel.coordinateSystem as View;
 
         var res = updateCenterAndZoom(coordSys, payload);
 

@@ -17,14 +17,16 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as vec2 from 'zrender/src/core/vector';
 import {getSymbolSize, getNodeGlobalScale} from './graphHelper';
+import GraphSeriesModel from './GraphSeries';
+import Graph from '../../data/Graph';
+import List from '../../data/List';
 
 var PI = Math.PI;
 
-var _symbolRadiansHalf = [];
+var _symbolRadiansHalf: number[] = [];
 
 /**
  * `basedOn` can be:
@@ -44,11 +46,11 @@ var _symbolRadiansHalf = [];
  *     FIXME
  *     If progressive rendering is applied to graph some day,
  *     probably we have to use `basedOn: 'value'`.
- *
- * @param {module:echarts/src/model/Series} seriesModel
- * @param {string} basedOn 'value' or 'symbolSize'
  */
-export function circularLayout(seriesModel, basedOn) {
+export function circularLayout(
+    seriesModel: GraphSeriesModel,
+    basedOn: 'value' | 'symbolSize'
+) {
     var coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
         return;
@@ -73,7 +75,7 @@ export function circularLayout(seriesModel, basedOn) {
         return;
     }
 
-    _layoutNodesBasedOn[basedOn](seriesModel, coordSys, graph, nodeData, r, cx, cy, count);
+    _layoutNodesBasedOn[basedOn](seriesModel, graph, nodeData, r, cx, cy, count);
 
     graph.eachEdge(function (edge) {
         var curveness = edge.getModel().get('lineStyle.curveness') || 0;
@@ -93,15 +95,27 @@ export function circularLayout(seriesModel, basedOn) {
     });
 }
 
-var _layoutNodesBasedOn = {
+interface LayoutNode {
+    (
+        seriesModel: GraphSeriesModel,
+        graph: Graph,
+        nodeData: List,
+        r: number,
+        cx: number,
+        cy: number,
+        count: number
+    ): void
+}
 
-    value: function (seriesModel, coordSys, graph, nodeData, r, cx, cy, count) {
+var _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
+
+    value(seriesModel, graph, nodeData, r, cx, cy, count) {
         var angle = 0;
         var sum = nodeData.getSum('value');
         var unitAngle = Math.PI * 2 / (sum || count);
 
         graph.eachNode(function (node) {
-            var value = node.getValue('value');
+            var value = node.getValue('value') as number;
             var radianHalf = unitAngle * (sum ? value : 1) / 2;
 
             angle += radianHalf;
@@ -113,7 +127,7 @@ var _layoutNodesBasedOn = {
         });
     },
 
-    symbolSize: function (seriesModel, coordSys, graph, nodeData, r, cx, cy, count) {
+    symbolSize(seriesModel, graph, nodeData, r, cx, cy, count) {
         var sumRadian = 0;
         _symbolRadiansHalf.length = count;
 

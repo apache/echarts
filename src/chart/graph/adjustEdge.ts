@@ -17,19 +17,22 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as curveTool from 'zrender/src/core/curve';
 import * as vec2 from 'zrender/src/core/vector';
 import {getSymbolSize} from './graphHelper';
+import Graph from '../../data/Graph';
 
-var v1 = [];
-var v2 = [];
-var v3 = [];
+var v1: number[] = [];
+var v2: number[] = [];
+var v3: number[] = [];
 var quadraticAt = curveTool.quadraticAt;
 var v2DistSquare = vec2.distSquare;
 var mathAbs = Math.abs;
-function intersectCurveCircle(curvePoints, center, radius) {
+function intersectCurveCircle(
+    curvePoints: number[][],
+    center: number[],
+    radius: number
+) {
     var p0 = curvePoints[0];
     var p1 = curvePoints[1];
     var p2 = curvePoints[2];
@@ -92,12 +95,12 @@ function intersectCurveCircle(curvePoints, center, radius) {
 }
 
 // Adjust edge to avoid
-export default function (graph, scale) {
-    var tmp0 = [];
+export default function (graph: Graph, scale: number) {
+    var tmp0: number[] = [];
     var quadraticSubdivide = curveTool.quadraticSubdivide;
-    var pts = [[], [], []];
-    var pts2 = [[], []];
-    var v = [];
+    var pts: number[][] = [[], [], []];
+    var pts2: number[][] = [[], []];
+    var v: number[] = [];
     scale /= 2;
 
     graph.eachEdge(function (edge, idx) {

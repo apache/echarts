@@ -17,16 +17,18 @@
 * under the License.
 */
 
-// @ts-nocheck
+import GlobalModel from '../../model/Global';
+import GraphSeriesModel from './GraphSeries';
+import { Dictionary, ColorString } from '../../util/types';
 
-export default function (ecModel) {
+export default function (ecModel: GlobalModel) {
 
-    var paletteScope = {};
-    ecModel.eachSeriesByType('graph', function (seriesModel) {
+    var paletteScope: Dictionary<ColorString> = {};
+    ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         var categoriesData = seriesModel.getCategoriesData();
         var data = seriesModel.getData();
 
-        var categoryNameIdxMap = {};
+        var categoryNameIdxMap: Dictionary<number> = {};
 
         categoriesData.each(function (idx) {
             var name = categoriesData.getName(idx);

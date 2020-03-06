@@ -57,7 +57,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     private _rawTransform: matrix.MatrixArray;
 
 
-    constructor(name: string) {
+    constructor(name?: string) {
         super();
         this.name = name;
     }

@@ -30,7 +30,7 @@ import {
     ItemStyleOption,
     AreaStyleOption,
     OptionDataValue,
-    SeriesSymbolOptionMixin
+    SymbolOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -40,7 +40,7 @@ type SamplingFunc = (frame: number[]) => number
 
 type LineDataValue = OptionDataValue | OptionDataValue[]
 
-export interface LineDataItemOption {
+export interface LineDataItemOption extends SymbolOptionMixin {
     name?: string
 
     value?: LineDataValue
@@ -58,7 +58,7 @@ export interface LineSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
-    SeriesSymbolOptionMixin {
+    SymbolOptionMixin {
     coordinateSystem?: 'cartesian2d' | 'polar'
 
     hoverAnimation?: boolean

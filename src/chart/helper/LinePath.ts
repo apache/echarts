@@ -17,60 +17,79 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * Line path for bezier and straight line draw
  */
 
 import * as graphic from '../../util/graphic';
 import * as vec2 from 'zrender/src/core/vector';
+import { PathProps } from 'zrender/src/graphic/Path';
 
 var straightLineProto = graphic.Line.prototype;
 var bezierCurveProto = graphic.BezierCurve.prototype;
 
-function isLine(shape) {
-    return isNaN(+shape.cpx1) || isNaN(+shape.cpy1);
+class StraightLineShape {
+    // Start point
+    x1 = 0
+    y1 = 0
+    // End point
+    x2 = 0
+    y2 = 0
+
+    percent = 1
 }
 
-export default graphic.extendShape({
+class CurveShape extends StraightLineShape {
+    cpx1: number
+    cpy1: number
+}
 
-    type: 'ec-line',
+interface ECLineProps extends PathProps {
+    shape?: Partial<StraightLineShape | CurveShape>
+}
+function isStraightLine(shape: StraightLineShape | CurveShape): shape is StraightLineShape {
+    return isNaN(+(shape as CurveShape).cpx1) || isNaN(+(shape as CurveShape).cpy1);
+}
 
-    style: {
-        stroke: '#000',
-        fill: null
-    },
+class ECLinePath extends graphic.Path<ECLineProps> {
 
-    shape: {
-        x1: 0,
-        y1: 0,
-        x2: 0,
-        y2: 0,
-        percent: 1,
-        cpx1: null,
-        cpy1: null
-    },
+    type = 'ec-line'
 
-    buildPath: function (ctx, shape) {
-        this[isLine(shape) ? '_buildPathLine' : '_buildPathCurve'](ctx, shape);
-    },
-    _buildPathLine: straightLineProto.buildPath,
-    _buildPathCurve: bezierCurveProto.buildPath,
+    shape: StraightLineShape | CurveShape
 
-    pointAt: function (t) {
-        return this[isLine(this.shape) ? '_pointAtLine' : '_pointAtCurve'](t);
-    },
-    _pointAtLine: straightLineProto.pointAt,
-    _pointAtCurve: bezierCurveProto.pointAt,
+    constructor(opts?: ECLineProps) {
+        super(opts, {
+            stroke: '#000',
+            fill: null
+        }, new StraightLineShape());// Default to be line
+    }
 
-    tangentAt: function (t) {
+    buildPath(ctx: CanvasRenderingContext2D, shape: StraightLineShape | CurveShape) {
+        if (isStraightLine(shape)) {
+            straightLineProto.buildPath(ctx, shape);
+        }
+        else {
+            bezierCurveProto.buildPath(ctx, shape);
+        }
+    }
+
+    pointAt(t: number) {
+        if (isStraightLine(this.shape)) {
+            return straightLineProto.pointAt(t);
+        }
+        else {
+            return bezierCurveProto.pointAt(t);
+        }
+    }
+
+    tangentAt(t: number) {
         var shape = this.shape;
-        var p = isLine(shape)
+        var p = isStraightLine(shape)
             ? [shape.x2 - shape.x1, shape.y2 - shape.y1]
-            : this._tangentAtCurve(t);
+            : bezierCurveProto.tangentAt(t);
         return vec2.normalize(p, p);
-    },
-    _tangentAtCurve: bezierCurveProto.tangentAt
+    }
 
-});
+}
+
+export default ECLinePath;

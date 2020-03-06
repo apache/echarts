@@ -92,7 +92,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
         }
     }
 
-    defaultOption: HeatmapSeriesOption = {
+    static defaultOption: HeatmapSeriesOption = {
 
         coordinateSystem: 'cartesian2d',
 

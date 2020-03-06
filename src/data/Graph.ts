@@ -317,8 +317,6 @@ class Graph {
         return graph;
     };
 
-    static Node: typeof GraphNode
-    static Edge: typeof GraphEdge
 
 }
 
@@ -367,7 +365,7 @@ class GraphNode {
     }
 
     // TODO: TYPE Same type with Model#getModel
-    getModel(path: string | string[]): Model {
+    getModel(path?: string | string[]): Model {
         if (this.dataIndex < 0) {
             return;
         }
@@ -399,7 +397,7 @@ class GraphEdge {
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
     }
 
-    getModel(path: string | string[]): Model {
+    getModel(path?: string | string[]): Model {
         if (this.dataIndex < 0) {
             return;
         }
@@ -460,8 +458,6 @@ interface GraphNode extends ReturnType<typeof createGraphDataProxyMixin> {};
 zrUtil.mixin(GraphEdge, createGraphDataProxyMixin('hostGraph', 'data'));
 zrUtil.mixin(GraphNode, createGraphDataProxyMixin('hostGraph', 'edgeData'));
 
-Graph.Node = GraphNode;
-Graph.Edge = GraphEdge;
-
-
 export default Graph;
+
+export {GraphNode, GraphEdge};

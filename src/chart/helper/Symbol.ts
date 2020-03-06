@@ -121,7 +121,7 @@ class Symbol extends graphic.Group {
      * Get symbol path element.
      */
     getSymbolPath() {
-        return this.childAt(0);
+        return this.childAt(0) as ECSymbol;
     }
 
     /**

@@ -17,9 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
@@ -29,20 +26,48 @@ import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
 import {getNodeGlobalScale} from './graphHelper';
+import ChartView from '../../view/Chart';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
+import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import View from '../../coord/View';
+import { GraphNode, GraphEdge } from '../../data/Graph';
+import Displayable from 'zrender/src/graphic/Displayable';
+import Symbol from '../helper/Symbol';
+import Model from '../../model/Model';
+import { Payload } from '../../util/types';
+import { LineLabel } from '../helper/Line';
 
-var FOCUS_ADJACENCY = '__focusNodeAdjacency';
-var UNFOCUS_ADJACENCY = '__unfocusNodeAdjacency';
+const FOCUS_ADJACENCY = '__focusNodeAdjacency';
+const UNFOCUS_ADJACENCY = '__unfocusNodeAdjacency';
 
-var nodeOpacityPath = ['itemStyle', 'opacity'];
-var lineOpacityPath = ['lineStyle', 'opacity'];
+const nodeOpacityPath = ['itemStyle', 'opacity'] as const;
+const lineOpacityPath = ['lineStyle', 'opacity'] as const;
 
-function getItemOpacity(item, opacityPath) {
+interface FocusNodePayload extends Payload {
+    dataIndex: number
+    edgeDataIndex: number
+}
+
+function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
+    return coordSys.type === 'view';
+}
+
+function getItemOpacity(
+    item: GraphNode | GraphEdge,
+    opacityPath: typeof nodeOpacityPath | typeof lineOpacityPath
+): number {
     var opacity = item.getVisual('opacity');
     return opacity != null ? opacity : item.getModel().get(opacityPath);
 }
 
-function fadeOutItem(item, opacityPath, opacityRatio) {
-    var el = item.getGraphicEl();
+function fadeOutItem(
+    item: GraphNode | GraphEdge,
+    opacityPath: typeof nodeOpacityPath | typeof lineOpacityPath,
+    opacityRatio?: number
+) {
+    var el = item.getGraphicEl() as Symbol;   // TODO Symbol?
     var opacity = getItemOpacity(item, opacityPath);
 
     if (opacityRatio != null) {
@@ -51,7 +76,7 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
     }
 
     el.downplay && el.downplay();
-    el.traverse(function (child) {
+    el.traverse(function (child: LineLabel) {
         if (!child.isGroup) {
             var opct = child.lineLabelOriginalOpacity;
             if (opct == null || opacityRatio != null) {
@@ -62,29 +87,54 @@ function fadeOutItem(item, opacityPath, opacityRatio) {
     });
 }
 
-function fadeInItem(item, opacityPath) {
+function fadeInItem(
+    item: GraphNode | GraphEdge,
+    opacityPath: typeof nodeOpacityPath | typeof lineOpacityPath
+) {
     var opacity = getItemOpacity(item, opacityPath);
-    var el = item.getGraphicEl();
+    var el = item.getGraphicEl() as Symbol;
     // Should go back to normal opacity first, consider hoverLayer,
     // where current state is copied to elMirror, and support
     // emphasis opacity here.
-    el.traverse(function (child) {
+    el.traverse(function (child: Displayable) {
         !child.isGroup && child.setStyle('opacity', opacity);
     });
     el.highlight && el.highlight();
 }
 
-export default echarts.extendChartView({
+class GraphView extends ChartView {
 
-    type: 'graph',
+    static readonly type = 'graph'
+    readonly type = GraphView.type
 
-    init: function (ecModel, api) {
+    private _symbolDraw: SymbolDraw
+    private _lineDraw: LineDraw
+
+    private _controller: RoamController
+    private _controllerHost: {
+        target: graphic.Group
+        zoom?: number
+        zoomLimit?: {min?: number, max?: number}
+    }
+
+    private _firstRender: boolean
+
+    private _model: GraphSeriesModel
+
+    private _layoutTimeout: number
+    private _unfocusDelayTimer: number
+
+    private _layouting: boolean
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
         var symbolDraw = new SymbolDraw();
         var lineDraw = new LineDraw();
         var group = this.group;
 
         this._controller = new RoamController(api.getZr());
-        this._controllerHost = {target: group};
+        this._controllerHost = {
+            target: group
+        };
 
         group.add(symbolDraw.group);
         group.add(lineDraw.group);
@@ -93,9 +143,9 @@ export default echarts.extendChartView({
         this._lineDraw = lineDraw;
 
         this._firstRender = true;
-    },
+    }
 
-    render: function (seriesModel, ecModel, api) {
+    render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var graphView = this;
         var coordSys = seriesModel.coordinateSystem;
 
@@ -106,7 +156,7 @@ export default echarts.extendChartView({
 
         var group = this.group;
 
-        if (coordSys.type === 'view') {
+        if (isViewCoordSys(coordSys)) {
             var groupNewProp = {
                 position: coordSys.position,
                 scale: coordSys.scale
@@ -133,18 +183,18 @@ export default echarts.extendChartView({
 
         clearTimeout(this._layoutTimeout);
         var forceLayout = seriesModel.forceLayout;
-        var layoutAnimation = seriesModel.get('force.layoutAnimation');
+        var layoutAnimation = seriesModel.get(['force', 'layoutAnimation']);
         if (forceLayout) {
             this._startForceLayoutIteration(forceLayout, layoutAnimation);
         }
 
-        data.eachItemGraphicEl(function (el, idx) {
-            var itemModel = data.getItemModel(idx);
+        data.eachItemGraphicEl((el: Symbol, idx) => {
+            var itemModel = data.getItemModel(idx) as Model<GraphNodeItemOption>;
             // Update draggable
             el.off('drag').off('dragend');
             var draggable = itemModel.get('draggable');
             if (draggable) {
-                el.on('drag', function () {
+                el.on('drag', () => {
                     if (forceLayout) {
                         forceLayout.warmUp();
                         !this._layouting
@@ -153,19 +203,19 @@ export default echarts.extendChartView({
                         // Write position back to layout
                         data.setItemLayout(idx, el.position);
                     }
-                }, this).on('dragend', function () {
+                }).on('dragend', () => {
                     if (forceLayout) {
                         forceLayout.setUnfixed(idx);
                     }
-                }, this);
+                });
             }
-            el.setDraggable(draggable && forceLayout);
+            el.setDraggable(draggable && !!forceLayout);
 
-            el[FOCUS_ADJACENCY] && el.off('mouseover', el[FOCUS_ADJACENCY]);
-            el[UNFOCUS_ADJACENCY] && el.off('mouseout', el[UNFOCUS_ADJACENCY]);
+            (el as any)[FOCUS_ADJACENCY] && el.off('mouseover', (el as any)[FOCUS_ADJACENCY]);
+            (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
 
             if (itemModel.get('focusNodeAdjacency')) {
-                el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
                     graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
@@ -173,21 +223,21 @@ export default echarts.extendChartView({
                         dataIndex: el.dataIndex
                     });
                 });
-                el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
+                el.on('mouseout', (el as any)[UNFOCUS_ADJACENCY] = function () {
                     graphView._dispatchUnfocus(api);
                 });
             }
 
-        }, this);
+        });
 
         data.graph.eachEdge(function (edge) {
             var el = edge.getGraphicEl();
 
-            el[FOCUS_ADJACENCY] && el.off('mouseover', el[FOCUS_ADJACENCY]);
-            el[UNFOCUS_ADJACENCY] && el.off('mouseout', el[UNFOCUS_ADJACENCY]);
+            (el as any)[FOCUS_ADJACENCY] && el.off('mouseover', (el as any)[FOCUS_ADJACENCY]);
+            (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
 
             if (edge.getModel().get('focusNodeAdjacency')) {
-                el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
                     graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
@@ -195,17 +245,17 @@ export default echarts.extendChartView({
                         edgeDataIndex: edge.dataIndex
                     });
                 });
-                el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
+                el.on('mouseout', (el as any)[UNFOCUS_ADJACENCY] = function () {
                     graphView._dispatchUnfocus(api);
                 });
             }
         });
 
         var circularRotateLabel = seriesModel.get('layout') === 'circular'
-            && seriesModel.get('circular.rotateLabel');
+            && seriesModel.get(['circular', 'rotateLabel']);
         var cx = data.getLayout('cx');
         var cy = data.getLayout('cy');
-        data.eachItemGraphicEl(function (el, idx) {
+        data.eachItemGraphicEl(function (el: Symbol, idx) {
             var itemModel = data.getItemModel(idx);
             var labelRotate = itemModel.get('label.rotate') || 0;
             var symbolPath = el.getSymbolPath();
@@ -243,15 +293,15 @@ export default echarts.extendChartView({
         });
 
         this._firstRender = false;
-    },
+    }
 
-    dispose: function () {
+    dispose() {
         this._controller && this._controller.dispose();
-        this._controllerHost = {};
+        this._controllerHost = null;
         this._clearTimer();
-    },
+    }
 
-    _dispatchUnfocus: function (api, opt) {
+    _dispatchUnfocus(api: ExtensionAPI) {
         var self = this;
         this._clearTimer();
         this._unfocusDelayTimer = setTimeout(function () {
@@ -260,18 +310,23 @@ export default echarts.extendChartView({
                 type: 'unfocusNodeAdjacency',
                 seriesId: self._model.id
             });
-        }, 500);
+        }, 500) as any;
 
-    },
+    }
 
-    _clearTimer: function () {
+    _clearTimer() {
         if (this._unfocusDelayTimer) {
             clearTimeout(this._unfocusDelayTimer);
             this._unfocusDelayTimer = null;
         }
-    },
+    }
 
-    focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
+    focusNodeAdjacency(
+        seriesModel: GraphSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: FocusNodePayload
+    ) {
         var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
@@ -307,9 +362,11 @@ export default echarts.extendChartView({
             fadeInItem(edge.node1, nodeOpacityPath);
             fadeInItem(edge.node2, nodeOpacityPath);
         }
-    },
+    }
 
-    unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
+    unfocusNodeAdjacency(
+        seriesModel: GraphSeriesModel
+    ) {
         var graph = seriesModel.getData().graph;
 
         graph.eachNode(function (node) {
@@ -318,23 +375,30 @@ export default echarts.extendChartView({
         graph.eachEdge(function (edge) {
             fadeOutItem(edge, lineOpacityPath);
         });
-    },
+    }
 
-    _startForceLayoutIteration: function (forceLayout, layoutAnimation) {
+    _startForceLayoutIteration(
+        forceLayout: GraphSeriesModel['forceLayout'],
+        layoutAnimation?: boolean
+    ) {
         var self = this;
         (function step() {
             forceLayout.step(function (stopped) {
                 self.updateLayout(self._model);
                 (self._layouting = !stopped) && (
                     layoutAnimation
-                        ? (self._layoutTimeout = setTimeout(step, 16))
+                        ? (self._layoutTimeout = setTimeout(step, 16) as any)
                         : step()
                 );
             });
         })();
-    },
+    }
 
-    _updateController: function (seriesModel, ecModel, api) {
+    _updateController(
+        seriesModel: GraphSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
         var controller = this._controller;
         var controllerHost = this._controllerHost;
         var group = this.group;
@@ -346,7 +410,7 @@ export default echarts.extendChartView({
                 && !onIrrelevantElement(e, api, seriesModel);
         });
 
-        if (seriesModel.coordinateSystem.type !== 'view') {
+        if (!isViewCoordSys(seriesModel.coordinateSystem)) {
             controller.disable();
             return;
         }
@@ -357,7 +421,7 @@ export default echarts.extendChartView({
         controller
             .off('pan')
             .off('zoom')
-            .on('pan', function (e) {
+            .on('pan', (e) => {
                 roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
                 api.dispatchAction({
                     seriesId: seriesModel.id,
@@ -366,7 +430,7 @@ export default echarts.extendChartView({
                     dy: e.dy
                 });
             })
-            .on('zoom', function (e) {
+            .on('zoom', (e) => {
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
                 api.dispatchAction({
                     seriesId: seriesModel.id,
@@ -378,10 +442,10 @@ export default echarts.extendChartView({
                 this._updateNodeAndLinkScale();
                 adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
                 this._lineDraw.updateLayout();
-            }, this);
-    },
+            });
+    }
 
-    _updateNodeAndLinkScale: function () {
+    _updateNodeAndLinkScale() {
         var seriesModel = this._model;
         var data = seriesModel.getData();
 
@@ -391,17 +455,21 @@ export default echarts.extendChartView({
         data.eachItemGraphicEl(function (el, idx) {
             el.attr('scale', invScale);
         });
-    },
+    }
 
-    updateLayout: function (seriesModel) {
+    updateLayout(seriesModel: GraphSeriesModel) {
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         this._symbolDraw.updateLayout();
         this._lineDraw.updateLayout();
-    },
+    }
 
-    remove: function (ecModel, api) {
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
     }
-});
+}
+
+ChartView.registerClass(GraphView);
+
+export default GraphView;

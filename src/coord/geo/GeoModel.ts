@@ -31,7 +31,8 @@ import {
     ItemStyleOption,
     ZRColor,
     LabelOption,
-    DisplayState
+    DisplayState,
+    RoamOptionMixin
 } from '../../util/types';
 import { RoamType } from '../../component/helper/RoamController';
 import { NameMap } from './geoTypes';
@@ -58,7 +59,7 @@ export interface RegoinOption extends SelectableTarget {
     }
 };
 
-export interface GeoCommonOptionMixin {
+export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Map name
     map: string;
 
@@ -76,10 +77,6 @@ export interface GeoCommonOptionMixin {
     // For example, [ [180, 90], [-180, -90] ]
     // higher priority than center and zoom
     boundingCoords?: number[][];
-    // Default on center of map
-    center?: number[];
-    roam?: RoamType;
-    zoom?: number;
 
     scaleLimit?: {
         min?: number;

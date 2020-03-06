@@ -38,10 +38,10 @@ function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
 
 function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
     var valueDim = data.mapDimension('value');
-    var valueArr = data.mapArray(valueDim, function (val) {
+    var valueArr = data.mapArray(valueDim, function (val: number) {
         return val;
     });
-    var indices = [];
+    var indices: number[] = [];
     var isAscending = sort === 'ascending';
     for (var i = 0, len = data.count(); i < len; i++) {
         indices[i] = i;
@@ -53,7 +53,9 @@ function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
     }
     else if (sort !== 'none') {
         indices.sort(function (a, b) {
-            return isAscending ? valueArr[a] - valueArr[b] : valueArr[b] - valueArr[a];
+            return isAscending
+                ? valueArr[a] - valueArr[b]
+                : valueArr[b] - valueArr[a];
         });
     }
     return indices;

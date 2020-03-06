@@ -17,163 +17,179 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-/**
- * @module echarts/chart/helper/LineDraw
- */
-
 import * as graphic from '../../util/graphic';
-import LineGroup from './Line';
-// import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
+import LineGroup, {SeriesScope} from './Line';
+import List from '../../data/List';
+import { StageHandlerProgressParams, LineStyleOption, LineLabelOption } from '../../util/types';
+import Displayable from 'zrender/src/graphic/Displayable';
+import Model from '../../model/Model';
 
-/**
- * @alias module:echarts/component/marker/LineDraw
- * @constructor
- */
-function LineDraw(ctor) {
-    this._ctor = ctor || LineGroup;
-
-    this.group = new graphic.Group();
+interface LineLike extends graphic.Group {
+    updateData(data: List, idx: number, scope?: SeriesScope): void
+    updateLayout(data: List, idx: number): void
+    fadeOut?(cb: () => void): void
 }
 
-var lineDrawProto = LineDraw.prototype;
-
-lineDrawProto.isPersistent = function () {
-    return true;
-};
-
-/**
- * @param {module:echarts/data/List} lineData
- */
-lineDrawProto.updateData = function (lineData) {
-    var lineDraw = this;
-    var group = lineDraw.group;
-
-    var oldLineData = lineDraw._lineData;
-    lineDraw._lineData = lineData;
-
-    // There is no oldLineData only when first rendering or switching from
-    // stream mode to normal mode, where previous elements should be removed.
-    if (!oldLineData) {
-        group.removeAll();
-    }
-
-    var seriesScope = makeSeriesScope(lineData);
-
-    lineData.diff(oldLineData)
-        .add(function (idx) {
-            doAdd(lineDraw, lineData, idx, seriesScope);
-        })
-        .update(function (newIdx, oldIdx) {
-            doUpdate(lineDraw, oldLineData, lineData, oldIdx, newIdx, seriesScope);
-        })
-        .remove(function (idx) {
-            group.remove(oldLineData.getItemGraphicEl(idx));
-        })
-        .execute();
-};
-
-function doAdd(lineDraw, lineData, idx, seriesScope) {
-    var itemLayout = lineData.getItemLayout(idx);
-
-    if (!lineNeedsDraw(itemLayout)) {
-        return;
-    }
-
-    var el = new lineDraw._ctor(lineData, idx, seriesScope);
-    lineData.setItemGraphicEl(idx, el);
-    lineDraw.group.add(el);
+interface LineLikeCtor {
+    new(data: List, idx: number, scope?: SeriesScope): LineLike
 }
 
-function doUpdate(lineDraw, oldLineData, newLineData, oldIdx, newIdx, seriesScope) {
-    var itemEl = oldLineData.getItemGraphicEl(oldIdx);
-
-    if (!lineNeedsDraw(newLineData.getItemLayout(newIdx))) {
-        lineDraw.group.remove(itemEl);
-        return;
+interface LineOption {
+    lineStyle?: LineStyleOption
+    label?: LineLabelOption
+    emphasis: {
+        lineStyle?: LineStyleOption
+        label?: LineLabelOption
     }
-
-    if (!itemEl) {
-        itemEl = new lineDraw._ctor(newLineData, newIdx, seriesScope);
-    }
-    else {
-        itemEl.updateData(newLineData, newIdx, seriesScope);
-    }
-
-    newLineData.setItemGraphicEl(newIdx, itemEl);
-
-    lineDraw.group.add(itemEl);
 }
 
-lineDrawProto.updateLayout = function () {
-    var lineData = this._lineData;
+class LineDraw {
+    group = new graphic.Group()
 
-    // Do not support update layout in incremental mode.
-    if (!lineData) {
-        return;
+    private _LineCtor: LineLikeCtor
+
+    private _lineData: List
+
+    private _seriesScope: SeriesScope
+
+    constructor(LineCtor?: LineLikeCtor) {
+        this._LineCtor = LineCtor || LineGroup;
     }
 
-    lineData.eachItemGraphicEl(function (el, idx) {
-        el.updateLayout(lineData, idx);
-    }, this);
-};
+    isPersistent() {
+        return true;
+    };
 
-lineDrawProto.incrementalPrepareUpdate = function (lineData) {
-    this._seriesScope = makeSeriesScope(lineData);
-    this._lineData = null;
-    this.group.removeAll();
-};
+    updateData(lineData: List<Model<LineOption>>) {
+        var lineDraw = this;
+        var group = lineDraw.group;
 
-lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
-    function updateIncrementalAndHover(el) {
-        if (!el.isGroup) {
-            el.incremental = el.useHoverLayer = true;
+        var oldLineData = lineDraw._lineData;
+        lineDraw._lineData = lineData;
+
+        // There is no oldLineData only when first rendering or switching from
+        // stream mode to normal mode, where previous elements should be removed.
+        if (!oldLineData) {
+            group.removeAll();
         }
-    }
 
-    for (var idx = taskParams.start; idx < taskParams.end; idx++) {
+        var seriesScope = makeSeriesScope(lineData);
+
+        lineData.diff(oldLineData)
+            .add((idx) => {
+                this._doAdd(lineData, idx, seriesScope);
+            })
+            .update((newIdx, oldIdx) => {
+                this._doUpdate(oldLineData, lineData, oldIdx, newIdx, seriesScope);
+            })
+            .remove((idx) => {
+                group.remove(oldLineData.getItemGraphicEl(idx));
+            })
+            .execute();
+    };
+
+    updateLayout() {
+        var lineData = this._lineData;
+
+        // Do not support update layout in incremental mode.
+        if (!lineData) {
+            return;
+        }
+
+        lineData.eachItemGraphicEl(function (el: LineLike, idx) {
+            el.updateLayout(lineData, idx);
+        }, this);
+    };
+
+    incrementalPrepareUpdate(lineData: List) {
+        this._seriesScope = makeSeriesScope(lineData);
+        this._lineData = null;
+        this.group.removeAll();
+    };
+
+    incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: List) {
+        function updateIncrementalAndHover(el: Displayable) {
+            if (!el.isGroup) {
+                el.incremental = el.useHoverLayer = true;
+            }
+        }
+
+        for (var idx = taskParams.start; idx < taskParams.end; idx++) {
+            var itemLayout = lineData.getItemLayout(idx);
+
+            if (lineNeedsDraw(itemLayout)) {
+                var el = new this._LineCtor(lineData, idx, this._seriesScope);
+                el.traverse(updateIncrementalAndHover);
+
+                this.group.add(el);
+                lineData.setItemGraphicEl(idx, el);
+            }
+        }
+    };
+
+    remove() {
+        this.group.removeAll();
+    };
+
+    private _doAdd(
+        lineData: List,
+        idx: number,
+        seriesScope: SeriesScope
+    ) {
         var itemLayout = lineData.getItemLayout(idx);
 
-        if (lineNeedsDraw(itemLayout)) {
-            var el = new this._ctor(lineData, idx, this._seriesScope);
-            el.traverse(updateIncrementalAndHover);
-
-            this.group.add(el);
-            lineData.setItemGraphicEl(idx, el);
+        if (!lineNeedsDraw(itemLayout)) {
+            return;
         }
-    }
-};
 
-function makeSeriesScope(lineData) {
+        var el = new this._LineCtor(lineData, idx, seriesScope);
+        lineData.setItemGraphicEl(idx, el);
+        this.group.add(el);
+    }
+    private _doUpdate(
+        oldLineData: List,
+        newLineData: List,
+        oldIdx: number,
+        newIdx: number,
+        seriesScope: SeriesScope
+    ) {
+        var itemEl = oldLineData.getItemGraphicEl(oldIdx) as LineLike;
+
+        if (!lineNeedsDraw(newLineData.getItemLayout(newIdx))) {
+            this.group.remove(itemEl);
+            return;
+        }
+
+        if (!itemEl) {
+            itemEl = new this._LineCtor(newLineData, newIdx, seriesScope);
+        }
+        else {
+            itemEl.updateData(newLineData, newIdx, seriesScope);
+        }
+
+        newLineData.setItemGraphicEl(newIdx, itemEl);
+
+        this.group.add(itemEl);
+    }
+}
+
+function makeSeriesScope(lineData: List<Model<LineOption>>) {
     var hostModel = lineData.hostModel;
     return {
         lineStyle: hostModel.getModel('lineStyle').getLineStyle(),
-        hoverLineStyle: hostModel.getModel('emphasis.lineStyle').getLineStyle(),
+        hoverLineStyle: hostModel.getModel(['emphasis', 'lineStyle']).getLineStyle(),
         labelModel: hostModel.getModel('label'),
-        hoverLabelModel: hostModel.getModel('emphasis.label')
+        hoverLabelModel: hostModel.getModel(['emphasis', 'label'])
     };
 }
 
-lineDrawProto.remove = function () {
-    this._clearIncremental();
-    this._incremental = null;
-    this.group.removeAll();
-};
-
-lineDrawProto._clearIncremental = function () {
-    var incremental = this._incremental;
-    if (incremental) {
-        incremental.clearDisplaybles();
-    }
-};
-
-function isPointNaN(pt) {
+function isPointNaN(pt: number[]) {
     return isNaN(pt[0]) || isNaN(pt[1]);
 }
 
-function lineNeedsDraw(pts) {
+function lineNeedsDraw(pts: number[][]) {
     return !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
 }
+
 
 export default LineDraw;

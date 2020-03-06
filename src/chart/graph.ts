@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../echarts';
 
 import './graph/GraphSeries';
@@ -33,6 +31,7 @@ import simpleLayout from './graph/simpleLayout';
 import circularLayout from './graph/circularLayout';
 import forceLayout from './graph/forceLayout';
 import createView from './graph/createView';
+import View from '../coord/View';
 
 echarts.registerProcessor(categoryFilter);
 
@@ -46,5 +45,6 @@ echarts.registerLayout(forceLayout);
 
 // Graph view coordinate system
 echarts.registerCoordinateSystem('graphView', {
+    dimensions: View.dimensions,
     create: createView
 });

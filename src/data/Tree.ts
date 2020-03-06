@@ -287,7 +287,7 @@ class TreeNode {
     }
 };
 
-class Tree<HostModel extends Model, LevelOption, LeavesOption> {
+class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = any> {
 
     type: 'tree' = 'tree'
 

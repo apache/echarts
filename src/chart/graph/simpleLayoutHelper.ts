@@ -17,11 +17,11 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as vec2 from 'zrender/src/core/vector';
+import GraphSeriesModel from './GraphSeries';
+import Graph from '../../data/Graph';
 
-export function simpleLayout(seriesModel) {
+export function simpleLayout(seriesModel: GraphSeriesModel) {
     var coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
         return;
@@ -36,7 +36,7 @@ export function simpleLayout(seriesModel) {
     simpleLayoutEdge(graph);
 }
 
-export function simpleLayoutEdge(graph) {
+export function simpleLayoutEdge(graph: Graph) {
     graph.eachEdge(function (edge) {
         var curveness = edge.getModel().get('lineStyle.curveness') || 0;
         var p1 = vec2.clone(edge.node1.getLayout());

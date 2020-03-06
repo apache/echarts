@@ -17,25 +17,28 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 // FIXME Where to create the simple view coordinate system
 import View from '../../coord/View';
 import {getLayoutRect} from '../../util/layout';
 import * as bbox from 'zrender/src/core/bbox';
+import GraphSeriesModel from './GraphSeries';
+import ExtensionAPI from '../../ExtensionAPI';
+import GlobalModel from '../../model/Global';
+import { extend } from 'zrender/src/core/util';
 
-function getViewRect(seriesModel, api, aspect) {
-    var option = seriesModel.getBoxLayoutParams();
-    option.aspect = aspect;
+function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: number) {
+    var option = extend(seriesModel.getBoxLayoutParams(), {
+        aspect: aspect
+    });
     return getLayoutRect(option, {
         width: api.getWidth(),
         height: api.getHeight()
     });
 }
 
-export default function (ecModel, api) {
-    var viewList = [];
-    ecModel.eachSeriesByType('graph', function (seriesModel) {
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+    var viewList: View[] = [];
+    ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         var coordSysType = seriesModel.get('coordinateSystem');
         if (!coordSysType || coordSysType === 'view') {
 
@@ -45,8 +48,8 @@ export default function (ecModel, api) {
                 return [+itemModel.get('x'), +itemModel.get('y')];
             });
 
-            var min = [];
-            var max = [];
+            var min: number[] = [];
+            var max: number[] = [];
 
             bbox.fromPoints(positions, min, max);
 

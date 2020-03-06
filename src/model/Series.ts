@@ -29,7 +29,7 @@ import {
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
-    SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin, ScaleDataValue
+    SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin, ScaleDataValue, Dictionary, ColorString
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -54,6 +54,7 @@ import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
 import Source from '../data/Source';
 import Axis from '../coord/Axis';
+import { GradientObject } from 'zrender/src/graphic/Gradient';
 
 var inner = modelUtil.makeInner<{
     data: List
@@ -340,14 +341,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         renderMode?: TooltipRenderMode
     ): {
         html: string,
-        markers: {[markName: string]: string}
+        markers: Dictionary<ColorString>
     } | string { // The override method can also return string
 
         var series = this;
         renderMode = renderMode || 'html';
         var newLine = renderMode === 'html' ? '<br/>' : '\n';
         var isRichText = renderMode === 'richText';
-        var markers: {[markName: string]: string} = {};
+        var markers: Dictionary<ColorString> = {};
         var markerId = 0;
 
         function formatArrayValue(value: any[]) {
@@ -376,7 +377,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 var dimType = dimInfo.type;
                 var markName = 'sub' + series.seriesIndex + 'at' + markerId;
                 var dimHead = getTooltipMarker({
-                    color: color,
+                    color: colorStr,
                     type: 'subItem',
                     renderMode: renderMode,
                     markerId: markName
@@ -397,7 +398,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 valStr && result.push(valStr);
 
                 if (isRichText) {
-                    markers[markName] = color;
+                    markers[markName] = colorStr;
                     ++markerId;
                 }
             }
@@ -426,11 +427,15 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         var value = this.getRawValue(dataIndex);
         var isValueArr = zrUtil.isArray(value);
 
-        var color = data.getItemVisual(dataIndex, 'color');
-        if (zrUtil.isObject(color) && color.colorStops) {
-            color = (color.colorStops[0] || {}).color;
+        var color = data.getItemVisual(dataIndex, 'color') as ZRColor;
+        var colorStr: ColorString;
+        if (zrUtil.isString(color)) {
+            colorStr = color;
         }
-        color = color || 'transparent';
+        else if (color && (color as GradientObject).colorStops) {
+            colorStr = ((color as GradientObject).colorStops[0] || {}).color;
+        }
+        colorStr = colorStr || 'transparent';
 
         // Complicated rule for pretty tooltip.
         var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
@@ -442,12 +447,12 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         var markName = series.seriesIndex + 'at' + markerId;
         var colorEl = getTooltipMarker({
-            color: color,
+            color: colorStr,
             type: 'item',
             renderMode: renderMode,
             markerId: markName
         });
-        markers[markName] = color;
+        markers[markName] = colorStr;
         ++markerId;
 
         var name = data.getName(dataIndex);
@@ -495,7 +500,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         this.dataTask.dirty();
     }
 
-    getColorFromPalette(name: string, scope: any, requestColorNum: number): ZRColor {
+    getColorFromPalette(name: string, scope: any, requestColorNum?: number): ZRColor {
         var ecModel = this.ecModel;
         // PENDING
         var color = ColorPaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);

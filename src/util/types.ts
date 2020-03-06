@@ -590,22 +590,44 @@ export interface AnimationOptionMixin {
     animationDelayUpdate?: number | AnimationDelayCallback
 }
 
+export interface RoamOptionMixin {
+    /**
+     * If enable roam. can be specified 'scale' or 'move'
+     */
+    roam?: boolean | 'pan' | 'move' | 'zoom' | 'scale'
+    /**
+     * Current center position.
+     */
+    center?: number[]
+    /**
+     * Current zoom level. Default is 1
+     */
+    zoom?: number
+
+    scaleLimit?: {
+        min?: number
+        max?: number
+    }
+}
+
 // TODO: TYPE value type?
-export type SymbolSizeCallback = (rawValue: any, params: CallbackDataParams) => number | number[]
-export type SymbolCallback = (rawValue: any, params: CallbackDataParams) => string
+export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[]
+export type SymbolCallback<T> = (rawValue: any, params: T) => string
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
  */
-export interface SymbolOptionMixin {
+export interface SymbolOptionMixin<T = unknown> {
     /**
      * type of symbol, like `cirlce`, `rect`, or custom path and image.
      */
-    symbol?: string | SymbolCallback
+    symbol?: string | (unknown extends T ? never : SymbolCallback<T>)
     /**
      * Size of symbol.
      */
-    symbolSize?: number | number[] | SymbolSizeCallback
+    symbolSize?: number | number[] | (unknown extends T ? never : SymbolSizeCallback<T>)
+
+    symbolRotate?: number
     symbolKeepAspect?: boolean
 }
 
@@ -712,6 +734,10 @@ export interface TextCommonOption extends ShadowOptionMixin {
 
     tag?: string
 }
+
+export interface LabelFormatterCallback<T = CallbackDataParams> {
+    (params: T): string
+}
 /**
  * LabelOption is an option set to control the style of labels.
  * Include color, background, shadow, truncate, rotation, distance, etc..
@@ -734,7 +760,18 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
-export interface LabelLineOption {
+/**
+ * Option for labels on line, like markLine, lines
+ */
+export interface LineLabelOption extends Omit<LabelOption, 'distance'> {
+    /**
+     * Distance can be an array.
+     * Which will specify horizontal and vertical distance respectively
+     */
+    distance?: number | number[]
+}
+
+export interface LabelGuideLineOption {
     show?: boolean
     length?: number
     length2?: number
@@ -1051,11 +1088,6 @@ export interface SeriesLargeOptionMixin {
 }
 export interface SeriesStackOptionMixin {
     stack?: string
-}
-export interface SeriesSymbolOptionMixin {
-    symbol?: string
-    symbolSize?: number | number[]
-    symbolRotate?: number
 }
 
 export interface SeriesEncodeOptionMixin {

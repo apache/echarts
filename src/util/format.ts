@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
-import {TooltipRenderMode} from './types';
+import {TooltipRenderMode, ColorString} from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import { StyleProps } from 'zrender/src/graphic/Style';
 // import Text from 'zrender/src/graphic/Text';
@@ -131,13 +131,13 @@ interface RichTextTooltipMarker {
     renderMode: TooltipRenderMode;
     content: string;
     style: {
-        color: string
+        color: ColorString
         [key: string]: any
     };
 }
 export type TooltipMarker = string | RichTextTooltipMarker;
 interface GetTooltipMarkerOpt {
-    color?: string;
+    color?: ColorString;
     extraCssText?: string;
     // By default: 'item'
     type?: 'item' | 'subItem';
@@ -146,10 +146,14 @@ interface GetTooltipMarkerOpt {
     // By default: 'X'
     markerId?: string;
 }
-export function getTooltipMarker(color: string, extraCssText?: string): TooltipMarker;
+// Only support color string
+export function getTooltipMarker(color: ColorString, extraCssText?: string): TooltipMarker;
 export function getTooltipMarker(opt: GetTooltipMarkerOpt): TooltipMarker;
-export function getTooltipMarker(opt: string | GetTooltipMarkerOpt, extraCssText?: string): TooltipMarker {
-    opt = zrUtil.isString(opt) ? {color: opt, extraCssText: extraCssText} : (opt || {});
+export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extraCssText?: string): TooltipMarker {
+    var opt = zrUtil.isString(inOpt) ? {
+        color: inOpt,
+        extraCssText: extraCssText
+    } : (inOpt || {}) as GetTooltipMarkerOpt;
     var color = opt.color;
     var type = opt.type;
     var extraCssText = opt.extraCssText;
@@ -164,6 +168,7 @@ export function getTooltipMarker(opt: string | GetTooltipMarkerOpt, extraCssText
         return type === 'subItem'
         ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;'
             + 'border-radius:4px;width:4px;height:4px;background-color:'
+            // Only support string
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
         : '<span style="display:inline-block;margin-right:5px;'
             + 'border-radius:10px;width:10px;height:10px;background-color:'

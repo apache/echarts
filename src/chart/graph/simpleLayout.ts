@@ -17,19 +17,20 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {each} from 'zrender/src/core/util';
 import {simpleLayout, simpleLayoutEdge} from './simpleLayoutHelper';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import GraphSeriesModel from './GraphSeries';
 
-export default function (ecModel, api) {
-    ecModel.eachSeriesByType('graph', function (seriesModel) {
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+    ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         var layout = seriesModel.get('layout');
         var coordSys = seriesModel.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {
             var data = seriesModel.getData();
 
-            var dimensions = [];
+            var dimensions: string[] = [];
             each(coordSys.dimensions, function (coordDim) {
                 dimensions = dimensions.concat(data.mapDimension(coordDim, true));
             });
@@ -38,7 +39,7 @@ export default function (ecModel, api) {
                 var value = [];
                 var hasValue = false;
                 for (var i = 0; i < dimensions.length; i++) {
-                    var val = data.get(dimensions[i], dataIndex);
+                    var val = data.get(dimensions[i], dataIndex) as number;
                     if (!isNaN(val)) {
                         hasValue = true;
                     }

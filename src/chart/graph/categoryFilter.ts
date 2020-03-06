@@ -17,16 +17,18 @@
 * under the License.
 */
 
-// @ts-nocheck
+import GlobalModel from '../../model/Global';
+import GraphSeriesModel from './GraphSeries';
+import type LegendModel from '../../component/legend/LegendModel';
 
-export default function (ecModel) {
+export default function (ecModel: GlobalModel) {
     var legendModels = ecModel.findComponents({
         mainType: 'legend'
-    });
+    }) as LegendModel[];
     if (!legendModels || !legendModels.length) {
         return;
     }
-    ecModel.eachSeriesByType('graph', function (graphSeries) {
+    ecModel.eachSeriesByType('graph', function (graphSeries: GraphSeriesModel) {
         var categoriesData = graphSeries.getCategoriesData();
         var graph = graphSeries.getGraph();
         var data = graph.data;
@@ -49,5 +51,5 @@ export default function (ecModel) {
             }
             return true;
         });
-    }, this);
+    });
 }

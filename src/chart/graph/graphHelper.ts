@@ -17,10 +17,12 @@
 * under the License.
 */
 
-// @ts-nocheck
+import GraphSeriesModel from './GraphSeries';
+import View from '../../coord/View';
+import { GraphNode } from '../../data/Graph';
 
-export function getNodeGlobalScale(seriesModel) {
-    var coordSys = seriesModel.coordinateSystem;
+export function getNodeGlobalScale(seriesModel: GraphSeriesModel) {
+    var coordSys = seriesModel.coordinateSystem as View;
     if (coordSys.type !== 'view') {
         return 1;
     }
@@ -36,7 +38,7 @@ export function getNodeGlobalScale(seriesModel) {
     return nodeScale / groupZoom;
 }
 
-export function getSymbolSize(node) {
+export function getSymbolSize(node: GraphNode) {
     var symbolSize = node.getVisual('symbolSize');
     if (symbolSize instanceof Array) {
         symbolSize = (symbolSize[0] + symbolSize[1]) / 2;

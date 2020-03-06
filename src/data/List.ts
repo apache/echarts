@@ -39,6 +39,8 @@ import {
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
+import type Graph from './Graph';
+import type Tree from './Tree';
 
 
 var isObject = zrUtil.isObject;
@@ -120,8 +122,7 @@ var CLONE_PROPERTIES = [
 ];
 
 
-
-class List <HostModel extends Model = Model> {
+class List<HostModel extends Model = Model> {
 
     readonly type = 'list';
 
@@ -133,6 +134,15 @@ class List <HostModel extends Model = Model> {
     readonly hostModel: HostModel;
 
     readonly dataType: string;
+
+    /**
+     * Host graph if List is used to store graph nodes / edges.
+     */
+    readonly graph: Graph
+    /**
+     * Host tree if List is used to store tree ndoes.
+     */
+    readonly tree: Tree
 
     // Indices stores the indices of data subset after filtered.
     // This data subset will be used in chart.
@@ -1375,11 +1385,11 @@ class List <HostModel extends Model = Model> {
     /**
      * Data mapping to a plain array
      */
-    mapArray<Ctx>(cb: MapArrayCb0<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): any[];
-    mapArray<Ctx>(dims: DimensionLoose, cb: MapArrayCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): any[];
-    mapArray<Ctx>(dims: [DimensionLoose], cb: MapArrayCb1<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): any[];
-    mapArray<Ctx>(dims: [DimensionLoose, DimensionLoose], cb: MapArrayCb2<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): any[];
-    mapArray<Ctx>(dims: ItrParamDims, cb: MapArrayCb<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): any[];
+    mapArray<Ctx, Cb extends MapArrayCb0<Ctx>>(cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
+    mapArray<Ctx, Cb extends MapArrayCb1<Ctx>>(dims: DimensionLoose, cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
+    mapArray<Ctx, Cb extends MapArrayCb1<Ctx>>(dims: [DimensionLoose], cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
+    mapArray<Ctx, Cb extends MapArrayCb2<Ctx>>(dims: [DimensionLoose, DimensionLoose], cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
+    mapArray<Ctx, Cb extends MapArrayCb<Ctx>>(dims: ItrParamDims, cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
     mapArray<Ctx>(
         dims: ItrParamDims | MapArrayCb<Ctx>,
         cb: MapArrayCb<Ctx> | Ctx,
@@ -1637,7 +1647,7 @@ class List <HostModel extends Model = Model> {
     /**
      * Get layout of single data item
      */
-    getItemLayout(idx: number): Dictionary<any> {
+    getItemLayout(idx: number): any {
         return this._itemLayouts[idx];
     }
 

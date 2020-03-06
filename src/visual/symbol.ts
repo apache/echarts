@@ -18,7 +18,14 @@
 */
 
 import {isFunction} from 'zrender/src/core/util';
-import { StageHandler, SeriesOption, SymbolOptionMixin, SymbolSizeCallback, SymbolCallback } from '../util/types';
+import {
+    StageHandler,
+    SeriesOption,
+    SymbolOptionMixin,
+    SymbolSizeCallback,
+    SymbolCallback,
+    CallbackDataParams
+} from '../util/types';
 import List from '../data/List';
 import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
@@ -32,7 +39,7 @@ export default function (seriesType: string, defaultSymbolType: string, legendSy
         performRawSeries: true,
 
         reset: function (
-            seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin>,
+            seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin<CallbackDataParams>>,
             ecModel: GlobalModel
         ) {
             var data = seriesModel.getData();
@@ -68,10 +75,10 @@ export default function (seriesType: string, defaultSymbolType: string, legendSy
                     var rawValue = seriesModel.getRawValue(idx);
                     var params = seriesModel.getDataParams(idx);
                     hasSymbolTypeCallback && data.setItemVisual(
-                        idx, 'symbol', (symbolType as SymbolCallback)(rawValue, params)
+                        idx, 'symbol', (symbolType as SymbolCallback<CallbackDataParams>)(rawValue, params)
                     );
                     hasSymbolSizeCallback && data.setItemVisual(
-                        idx, 'symbolSize', (symbolSize as SymbolSizeCallback)(rawValue, params)
+                        idx, 'symbolSize', (symbolSize as SymbolSizeCallback<CallbackDataParams>)(rawValue, params)
                     );
                 }
 

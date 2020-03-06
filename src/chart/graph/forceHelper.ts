@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /*
 * A third-party license is embeded for some of the code in this file:
 * Some formulas were originally copied from "d3.js" with some
@@ -30,14 +28,56 @@
 */
 
 import * as vec2 from 'zrender/src/core/vector';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 
 var scaleAndAdd = vec2.scaleAndAdd;
 
+interface InputNode {
+    p?: vec2.VectorArray
+    fixed?: boolean
+    /**
+     * Weight
+     */
+    w: number
+    /**
+     * Repulsion
+     */
+    rep: number
+}
+interface LayoutNode extends InputNode {
+    pp?: vec2.VectorArray
+    edges?: LayoutEdge[]
+}
+interface InputEdge {
+    ignoreForceLayout?: boolean
+    n1: InputNode
+    n2: InputNode
+
+    /**
+     * Distance
+     */
+    d: number
+}
+interface LayoutEdge extends InputEdge {
+    n1: LayoutNode
+    n2: LayoutNode
+}
+interface LayoutCfg {
+    gravity?: number
+    friction?: number
+    rect?: RectLike
+}
 // function adjacentNode(n, e) {
 //     return e.n1 === n ? e.n2 : e.n1;
 // }
 
-export function forceLayout(nodes, edges, opts) {
+export function forceLayout<N extends InputNode, E extends InputEdge>(
+    inNodes: N[],
+    inEdges: E[],
+    opts: LayoutCfg
+) {
+    var nodes = inNodes as LayoutNode[];
+    var edges = inEdges as LayoutEdge[];
     var rect = opts.rect;
     var width = rect.width;
     var height = rect.height;
@@ -56,7 +96,7 @@ export function forceLayout(nodes, edges, opts) {
     // }
     // Init position
     for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i];
+        var n = nodes[i] as LayoutNode;
         if (!n.p) {
             n.p = vec2.create(
                 width * (Math.random() - 0.5) + center[0],
@@ -74,17 +114,33 @@ export function forceLayout(nodes, edges, opts) {
     var initialFriction = opts.friction == null ? 0.6 : opts.friction;
     var friction = initialFriction;
 
+    var beforeStepCallback: (nodes: N[], edges: E[]) => void;
+    var afterStepCallback: (nodes: N[], edges: E[], finished: boolean) => void;
+
     return {
         warmUp: function () {
             friction = initialFriction * 0.8;
         },
 
-        setFixed: function (idx) {
+        setFixed: function (idx: number) {
             nodes[idx].fixed = true;
         },
 
-        setUnfixed: function (idx) {
+        setUnfixed: function (idx: number) {
             nodes[idx].fixed = false;
+        },
+
+        /**
+         * Before step hook
+         */
+        beforeStep: function (cb: typeof beforeStepCallback) {
+            beforeStepCallback = cb;
+        },
+        /**
+         * After step hook
+         */
+        afterStep: function (cb: typeof afterStepCallback) {
+            afterStepCallback = cb;
         },
 
         /**
@@ -93,8 +149,10 @@ export function forceLayout(nodes, edges, opts) {
          * with some modifications made for this project.
          * See the license statement at the head of this file.
          */
-        step: function (cb) {
-            var v12 = [];
+        step: function (cb?: (finished: boolean) => void) {
+            beforeStepCallback && beforeStepCallback(nodes as N[], edges as E[]);
+
+            var v12: number[] = [];
             var nLen = nodes.length;
             for (var i = 0; i < edges.length; i++) {
                 var e = edges[i];
@@ -147,7 +205,7 @@ export function forceLayout(nodes, edges, opts) {
                     !n2.fixed && scaleAndAdd(n2.pp, n2.pp, v12, -repFact);
                 }
             }
-            var v = [];
+            var v: number[] = [];
             for (var i = 0; i < nLen; i++) {
                 var n = nodes[i];
                 if (!n.fixed) {
@@ -159,7 +217,11 @@ export function forceLayout(nodes, edges, opts) {
 
             friction = friction * 0.992;
 
-            cb && cb(nodes, edges, friction < 0.01);
+            const finished = friction < 0.01;
+
+            afterStepCallback && afterStepCallback(nodes as N[], edges as E[], finished);
+
+            cb && cb(finished);
         }
     };
 }

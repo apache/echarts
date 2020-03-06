@@ -21,12 +21,12 @@ import Eventful from 'zrender/src/core/Eventful';
 import * as eventTool from 'zrender/src/core/event';
 import * as interactionMutex from './interactionMutex';
 import { ZRenderType } from 'zrender/src/zrender';
-import { ZRElementEvent } from '../../util/types';
+import { ZRElementEvent, RoamOptionMixin } from '../../util/types';
 import { Bind3, isString, bind, defaults, clone } from 'zrender/src/core/util';
 
 // Can be null/undefined or true/false
 // or 'pan/move' or 'zoom'/'scale'
-export type RoamType = boolean | 'pan' | 'move' | 'zoom' | 'scale';
+export type RoamType = RoamOptionMixin['roam']
 
 interface RoamOption {
     zoomOnMouseWheel?: boolean | 'ctrl' | 'shift' | 'alt'

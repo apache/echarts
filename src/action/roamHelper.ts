@@ -17,15 +17,24 @@
 * under the License.
 */
 
-// @ts-nocheck
+import View from '../coord/View';
+import { Payload } from '../util/types';
 
-/**
- * @param {module:echarts/coord/View} view
- * @param {Object} payload
- * @param {Object} [zoomLimit]
- */
+export interface RoamPaylod extends Payload {
+    dx: number
+    dy: number
+    zoom: number
+    originX: number
+    originY: number
+}
+
 export function updateCenterAndZoom(
-    view, payload, zoomLimit
+    view: View,
+    payload: RoamPaylod,
+    zoomLimit?: {
+        min?: number,
+        max?: number
+    }
 ) {
     var previousZoom = view.getZoom();
     var center = view.getCenter();

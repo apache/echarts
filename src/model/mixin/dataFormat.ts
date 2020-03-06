@@ -42,7 +42,6 @@ class DataFormatMixin {
      * Get params for formatter
      */
     getDataParams(
-        this: DataFormatMixin,
         dataIndex: number,
         dataType?: string,
         el?: Element // May be used in override.
@@ -101,7 +100,6 @@ class DataFormatMixin {
      * @return If not formatter, return null/undefined
      */
     getFormattedLabel(
-        this: DataFormatMixin,
         dataIndex: number,
         status?: DisplayState,
         dataType?: string,
@@ -145,12 +143,8 @@ class DataFormatMixin {
 
     /**
      * Get raw value in option
-     * @param {number} idx
-     * @param {string} [dataType]
-     * @return {Array|number|string}
      */
     getRawValue(
-        this: DataFormatMixin,
         idx: number,
         dataType?: string
     ) {
@@ -169,7 +163,6 @@ class DataFormatMixin {
      *                                     DOM operation is not supported.
      */
     formatTooltip(
-        this: DataFormatMixin,
         dataIndex: number,
         multipleSeries?: boolean,
         dataType?: string,

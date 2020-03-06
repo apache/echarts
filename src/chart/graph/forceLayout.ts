@@ -17,17 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {forceLayout} from './forceHelper';
 import {simpleLayout} from './simpleLayoutHelper';
 import {circularLayout} from './circularLayoutHelper';
 import {linearMap} from '../../util/number';
 import * as vec2 from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import GraphSeriesModel from './GraphSeries';
 
-export default function (ecModel) {
-    ecModel.eachSeriesByType('graph', function (graphSeries) {
+export interface ForceLayoutInstance {
+    step(cb: (stopped: boolean) => void): void
+    warmUp(): void
+    setFixed(idx: number): void
+    setUnfixed(idx: number): void
+}
+
+
+export default function (ecModel: GlobalModel) {
+    ecModel.eachSeriesByType('graph', function (graphSeries: GraphSeriesModel) {
         var coordSys = graphSeries.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {
             return;
@@ -57,20 +65,19 @@ export default function (ecModel) {
             // var edgeDataExtent = edgeData.getDataExtent('value');
             var repulsion = forceModel.get('repulsion');
             var edgeLength = forceModel.get('edgeLength');
-            if (!zrUtil.isArray(repulsion)) {
-                repulsion = [repulsion, repulsion];
-            }
-            if (!zrUtil.isArray(edgeLength)) {
-                edgeLength = [edgeLength, edgeLength];
-            }
-            // Larger value has smaller length
-            edgeLength = [edgeLength[1], edgeLength[0]];
+            var repulsionArr = zrUtil.isArray(repulsion)
+                ? repulsion : [repulsion, repulsion];
+            var edgeLengthArr = zrUtil.isArray(edgeLength)
+                ? edgeLength : [edgeLength, edgeLength];
 
-            var nodes = nodeData.mapArray('value', function (value, idx) {
-                var point = nodeData.getItemLayout(idx);
-                var rep = linearMap(value, nodeDataExtent, repulsion);
+            // Larger value has smaller length
+            edgeLengthArr = [edgeLengthArr[1], edgeLengthArr[0]];
+
+            var nodes = nodeData.mapArray('value', function (value: number, idx) {
+                var point = nodeData.getItemLayout(idx) as number[];
+                var rep = linearMap(value, nodeDataExtent, repulsionArr);
                 if (isNaN(rep)) {
-                    rep = (repulsion[0] + repulsion[1]) / 2;
+                    rep = (repulsionArr[0] + repulsionArr[1]) / 2;
                 }
                 return {
                     w: rep,
@@ -79,11 +86,11 @@ export default function (ecModel) {
                     p: (!point || isNaN(point[0]) || isNaN(point[1])) ? null : point
                 };
             });
-            var edges = edgeData.mapArray('value', function (value, idx) {
+            var edges = edgeData.mapArray('value', function (value: number, idx) {
                 var edge = graph.getEdgeByIndex(idx);
-                var d = linearMap(value, edgeDataExtent, edgeLength);
+                var d = linearMap(value, edgeDataExtent, edgeLengthArr);
                 if (isNaN(d)) {
-                    d = (edgeLength[0] + edgeLength[1]) / 2;
+                    d = (edgeLengthArr[0] + edgeLengthArr[1]) / 2;
                 }
                 var edgeModel = edge.getModel();
                 return {
@@ -102,45 +109,44 @@ export default function (ecModel) {
                 gravity: forceModel.get('gravity'),
                 friction: forceModel.get('friction')
             });
-            var oldStep = forceInstance.step;
-            forceInstance.step = function (cb) {
+            forceInstance.beforeStep(function (nodes, edges) {
                 for (var i = 0, l = nodes.length; i < l; i++) {
                     if (nodes[i].fixed) {
                         // Write back to layout instance
-                        vec2.copy(nodes[i].p, graph.getNodeByIndex(i).getLayout());
+                        vec2.copy(
+                            nodes[i].p,
+                            graph.getNodeByIndex(i).getLayout() as number[]
+                        );
                     }
                 }
-                oldStep(function (nodes, edges, stopped) {
-                    for (var i = 0, l = nodes.length; i < l; i++) {
-                        if (!nodes[i].fixed) {
-                            graph.getNodeByIndex(i).setLayout(nodes[i].p);
-                        }
-                        preservedPoints[nodeData.getId(i)] = nodes[i].p;
+            });
+            forceInstance.afterStep(function (nodes, edges, stopped) {
+                for (var i = 0, l = nodes.length; i < l; i++) {
+                    if (!nodes[i].fixed) {
+                        graph.getNodeByIndex(i).setLayout(nodes[i].p);
                     }
-                    for (var i = 0, l = edges.length; i < l; i++) {
-                        var e = edges[i];
-                        var edge = graph.getEdgeByIndex(i);
-                        var p1 = e.n1.p;
-                        var p2 = e.n2.p;
-                        var points = edge.getLayout();
-                        points = points ? points.slice() : [];
-                        points[0] = points[0] || [];
-                        points[1] = points[1] || [];
-                        vec2.copy(points[0], p1);
-                        vec2.copy(points[1], p2);
-                        if (+e.curveness) {
-                            points[2] = [
-                                (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * e.curveness,
-                                (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * e.curveness
-                            ];
-                        }
-                        edge.setLayout(points);
+                    preservedPoints[nodeData.getId(i)] = nodes[i].p;
+                }
+                for (var i = 0, l = edges.length; i < l; i++) {
+                    var e = edges[i];
+                    var edge = graph.getEdgeByIndex(i);
+                    var p1 = e.n1.p;
+                    var p2 = e.n2.p;
+                    var points = edge.getLayout() as number[][];
+                    points = points ? points.slice() : [];
+                    points[0] = points[0] || [];
+                    points[1] = points[1] || [];
+                    vec2.copy(points[0], p1);
+                    vec2.copy(points[1], p2);
+                    if (+e.curveness) {
+                        points[2] = [
+                            (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * e.curveness,
+                            (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * e.curveness
+                        ];
                     }
-                    // Update layout
-
-                    cb && cb(stopped);
-                });
-            };
+                    edge.setLayout(points);
+                }
+            });
             graphSeries.forceLayout = forceInstance;
             graphSeries.preservedPoints = preservedPoints;
 

@@ -722,7 +722,9 @@ class ECharts {
     getVisual(finder: ModelFinder, visualType: string) {
         var ecModel = this._model;
 
-        finder = modelUtil.parseFinder(ecModel, finder, {defaultMainType: 'series'});
+        finder = modelUtil.parseFinder(ecModel, finder, {
+            defaultMainType: 'series'
+        });
 
         var seriesModel = finder.seriesModel;
 

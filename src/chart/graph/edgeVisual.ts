@@ -17,24 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
+import GlobalModel from '../../model/Global';
+import GraphSeriesModel from './GraphSeries';
 
-function normalize(a) {
+function normalize(a: string | number | (string | number)[]): (string | number)[] {
     if (!(a instanceof Array)) {
         a = [a, a];
     }
     return a;
 }
 
-export default function (ecModel) {
-    ecModel.eachSeriesByType('graph', function (seriesModel) {
+export default function (ecModel: GlobalModel) {
+    ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         var graph = seriesModel.getGraph();
         var edgeData = seriesModel.getEdgeData();
         var symbolType = normalize(seriesModel.get('edgeSymbol'));
         var symbolSize = normalize(seriesModel.get('edgeSymbolSize'));
 
-        var colorQuery = 'lineStyle.color'.split('.');
-        var opacityQuery = 'lineStyle.opacity'.split('.');
+        var colorQuery = ['lineStyle', 'color'] as const;
+        var opacityQuery = ['lineStyle', 'opacity'] as const;
 
         edgeData.setVisual('fromSymbol', symbolType && symbolType[0]);
         edgeData.setVisual('toSymbol', symbolType && symbolType[1]);
