@@ -17,21 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
+import { StageHandler } from '../../util/types';
+import List from '../../data/List';
+import LinesSeriesModel, { LinesDataItemOption } from './LinesSeries';
+import Model from '../../model/Model';
 
-
-function normalize(a) {
+function normalize(a: string | string[]): string[]
+function normalize(a: number | number[]): number[]
+function normalize(a: string | number | (string | number)[]): (string | number)[] {
     if (!(a instanceof Array)) {
         a = [a, a];
     }
     return a;
 }
 
-var opacityQuery = 'lineStyle.opacity'.split('.');
+var opacityQuery = ['lineStyle', 'opacity'] as const;
 
-export default {
+const linesVisual: StageHandler = {
     seriesType: 'lines',
-    reset: function (seriesModel, ecModel, api) {
+    reset(seriesModel: LinesSeriesModel) {
         var symbolType = normalize(seriesModel.get('symbol'));
         var symbolSize = normalize(seriesModel.get('symbolSize'));
         var data = seriesModel.getData();
@@ -42,8 +46,8 @@ export default {
         data.setVisual('toSymbolSize', symbolSize && symbolSize[1]);
         data.setVisual('opacity', seriesModel.get(opacityQuery));
 
-        function dataEach(data, idx) {
-            var itemModel = data.getItemModel(idx);
+        function dataEach(data: List<LinesSeriesModel>, idx: number): void {
+            var itemModel = data.getItemModel(idx) as Model<LinesDataItemOption>;
             var symbolType = normalize(itemModel.getShallow('symbol', true));
             var symbolSize = normalize(itemModel.getShallow('symbolSize', true));
             var opacity = itemModel.get(opacityQuery);
@@ -56,6 +60,10 @@ export default {
             data.setItemVisual(idx, 'opacity', opacity);
         }
 
-        return {dataEach: data.hasItemOption ? dataEach : null};
+        return {
+            dataEach: data.hasItemOption ? dataEach : null
+        };
     }
 };
+
+export default linesVisual;

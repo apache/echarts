@@ -18,7 +18,7 @@
 */
 
 import * as vec2 from 'zrender/src/core/vector';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import Graph from '../../data/Graph';
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
@@ -29,7 +29,7 @@ export function simpleLayout(seriesModel: GraphSeriesModel) {
     var graph = seriesModel.getGraph();
 
     graph.eachNode(function (node) {
-        var model = node.getModel();
+        var model = node.getModel<GraphNodeItemOption>();
         node.setLayout([+model.get('x'), +model.get('y')]);
     });
 
@@ -38,7 +38,7 @@ export function simpleLayout(seriesModel: GraphSeriesModel) {
 
 export function simpleLayoutEdge(graph: Graph) {
     graph.eachEdge(function (edge) {
-        var curveness = edge.getModel().get('lineStyle.curveness') || 0;
+        var curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
         var p1 = vec2.clone(edge.node1.getLayout());
         var p2 = vec2.clone(edge.node2.getLayout());
         var points = [p1, p2];

@@ -104,10 +104,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     legendVisualProvider: LegendVisualProvider;
 
     // Access path of color for visual
-    visualColorAccessPath: string;
+    visualColorAccessPath: string[];
 
     // Access path of borderColor for visual
-    visualBorderColorAccessPath: string;
+    visualBorderColorAccessPath: string[];
 
     readonly preventUsingHoverLayer: boolean;
 
@@ -115,8 +115,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         var proto = SeriesModel.prototype;
         proto.type = 'series.__base__';
         proto.seriesIndex = 0;
-        proto.visualColorAccessPath = 'itemStyle.color';
-        proto.visualBorderColorAccessPath = 'itemStyle.borderColor';
+        proto.visualColorAccessPath = ['itemStyle', 'color'];
+        proto.visualBorderColorAccessPath = ['itemStyle', 'borderColor'];
     })();
 
 

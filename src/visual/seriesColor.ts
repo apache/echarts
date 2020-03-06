@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import Gradient from 'zrender/src/graphic/Gradient';
 import {isFunction} from 'zrender/src/core/util';
 import { StageHandler } from '../util/types';
@@ -28,9 +26,10 @@ const seriesColorTask: StageHandler = {
     performRawSeries: true,
     reset: function (seriesModel, ecModel) {
         var data = seriesModel.getData();
-        var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.color').split('.');
+        var colorAccessPath = seriesModel.visualColorAccessPath
+            || ['itemStyle', 'color'];
         // Set in itemStyle
-        var color = seriesModel.get(colorAccessPath);
+        var color = seriesModel.get(colorAccessPath as any);
         var colorCallback = (isFunction(color) && !(color instanceof Gradient))
             ? color : null;
         // Default color
@@ -43,8 +42,8 @@ const seriesColorTask: StageHandler = {
 
         data.setVisual('color', color);
 
-        var borderColorAccessPath = (seriesModel.visualBorderColorAccessPath || 'itemStyle.borderColor').split('.');
-        var borderColor = seriesModel.get(borderColorAccessPath);
+        var borderColorAccessPath = seriesModel.visualBorderColorAccessPath || ['itemStyle', 'borderColor'];
+        var borderColor = seriesModel.get(borderColorAccessPath as any);
         data.setVisual('borderColor', borderColor);
 
         // Only visible series has each data be visual encoded
@@ -57,20 +56,19 @@ const seriesColorTask: StageHandler = {
                 });
             }
 
-            // itemStyle in each data item
-            var dataEach = function (data, idx) {
-                var itemModel = data.getItemModel(idx);
-                var color = itemModel.get(colorAccessPath, true);
-                var borderColor = itemModel.get(borderColorAccessPath, true);
-                if (color != null) {
-                    data.setItemVisual(idx, 'color', color);
-                }
-                if (borderColor != null) {
-                    data.setItemVisual(idx, 'borderColor', borderColor);
-                }
+            return {
+                dataEach: data.hasItemOption ? function (data, idx) {
+                    var itemModel = data.getItemModel(idx);
+                    var color = itemModel.get(colorAccessPath as any, true);
+                    var borderColor = itemModel.get(borderColorAccessPath as any, true);
+                    if (color != null) {
+                        data.setItemVisual(idx, 'color', color);
+                    }
+                    if (borderColor != null) {
+                        data.setItemVisual(idx, 'borderColor', borderColor);
+                    }
+                } : null
             };
-
-            return { dataEach: data.hasItemOption ? dataEach : null };
         }
     }
 };

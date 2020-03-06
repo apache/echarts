@@ -365,14 +365,16 @@ class GraphNode {
     }
 
     // TODO: TYPE Same type with Model#getModel
-    getModel(path?: string | string[]): Model {
+    getModel<T = unknown>(): Model<T>
+    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
         }
         var graph = this.hostGraph;
-        var itemModel = graph.data.getItemModel(this.dataIndex);
+        var itemModel = graph.data.getItemModel<T>(this.dataIndex);
 
-        return itemModel.getModel(path as [string]);
+        return itemModel.getModel(path as any);
     }
 }
 
@@ -397,14 +399,16 @@ class GraphEdge {
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
     }
 
-    getModel(path?: string | string[]): Model {
+    getModel<T = unknown>(): Model<T>
+    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
         }
         var graph = this.hostGraph;
         var itemModel = graph.edgeData.getItemModel(this.dataIndex);
 
-        return itemModel.getModel(path as [string]);
+        return itemModel.getModel(path as any);
     }
 }
 

@@ -629,6 +629,8 @@ export interface SymbolOptionMixin<T = unknown> {
 
     symbolRotate?: number
     symbolKeepAspect?: boolean
+
+    symbolOffset?: number[]
 }
 
 /**
@@ -751,7 +753,7 @@ export interface LabelOption extends TextCommonOption {
     // x, y can be both percent string or number px.
     position?: string | (number | string)[]
     distance?: number
-    rotate?: number | boolean
+    rotate?: number
     offset?: number[]
 
     // TODO: TYPE not all label support formatter

@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /* global Uint32Array, Float64Array, Float32Array */
 
 import {__DEV__} from '../../config';
@@ -27,22 +25,35 @@ import List from '../../data/List';
 import { concatArray, mergeAll, map } from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import CoordinateSystem from '../../CoordinateSystem';
+import {
+    SeriesOption,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnGeoOptionMixin,
+    SeriesOnPolarOptionMixin,
+    SeriesOnCalendarOptionMixin,
+    ColorString,
+    SeriesLargeOptionMixin,
+    LabelOption,
+    LineStyleOption,
+    OptionDataValue
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
 
 var Uint32Arr = typeof Uint32Array === 'undefined' ? Array : Uint32Array;
 var Float64Arr = typeof Float64Array === 'undefined' ? Array : Float64Array;
 
-function compatEc2(seriesOpt) {
+function compatEc2(seriesOpt: LinesSeriesOption) {
     var data = seriesOpt.data;
-    if (data && data[0] && data[0][0] && data[0][0].coord) {
+    if (data && data[0] && (data as LegacyDataItemOption[][])[0][0] && (data as LegacyDataItemOption[][])[0][0].coord) {
         if (__DEV__) {
             console.warn('Lines data configuration has been changed to'
                 + ' { coords:[[1,2],[2,3]] }');
         }
-        seriesOpt.data = map(data, function (itemOpt) {
+        seriesOpt.data = map(data as LegacyDataItemOption[][], function (itemOpt) {
             var coords = [
                 itemOpt[0].coord, itemOpt[1].coord
             ];
-            var target = {
+            var target: LinesDataItemOption = {
                 coords: coords
             };
             if (itemOpt[0].name) {
@@ -56,15 +67,113 @@ function compatEc2(seriesOpt) {
     }
 }
 
-var LinesSeries = SeriesModel.extend({
+type LinesCoords = number[][]
 
-    type: 'series.lines',
+type LinesValue = OptionDataValue | OptionDataValue[]
 
-    dependencies: ['grid', 'polar'],
+interface LinesLineStyleOption extends LineStyleOption {
+    curveness?: number
+}
 
-    visualColorAccessPath: 'lineStyle.color',
+// @deprecated
+interface LegacyDataItemOption {
+    coord: number[]
+    name: string
+}
 
-    init: function (option) {
+export interface LinesDataItemOption {
+    name?: string
+
+    fromName?: string
+    toName?: string
+
+    symbol?: string[] | string
+    symbolSize?: number[] | number
+
+    coords?: LinesCoords
+
+    value?: LinesValue
+
+    lineStyle?: LinesLineStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        lineStyle?: LineStyleOption
+        label?: LabelOption
+    }
+}
+
+export interface LinesSeriesOption extends SeriesOption,
+    SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
+    SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
+
+    coordinateSystem?: string
+    hoverAnimation?: boolean
+
+    symbol?: string[] | string
+    symbolSize?: number[] | number
+
+    effect?: {
+        show?: boolean
+        period?: number
+        delay?: number | ((idx: number) => number)
+        /**
+         * If move with constant speed px/sec
+         * period will be ignored if this property is > 0,
+         */
+        constantSpeed?: number
+
+        symbol?: string
+        symbolSize?: number | number[]
+        loop?: boolean
+        /**
+         * Length of trail, 0 - 1
+         */
+        trailLength?: number
+        /**
+         * Default to be same with lineStyle.color
+         */
+        color?: ColorString
+    }
+
+    /**
+     * If lines are polyline
+     * polyline not support curveness, label, animation
+     */
+    polyline?: boolean
+    /**
+     * If clip the overflow.
+     * Available when coordinateSystem is cartesian or polar.
+     */
+    clip?: boolean
+
+    label?: LabelOption
+    lineStyle?: LinesLineStyleOption
+
+    emphasis?: {
+        label?: LabelOption
+        lineStyle?: LineStyleOption
+    }
+
+    data?: LinesDataItemOption[]
+        // Stored as a flat array. In format
+        // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
+        | ArrayLike<number>
+}
+
+class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
+
+    static readonly type = 'series.lines'
+    readonly type = LinesSeriesModel.type
+
+    static readonly dependencies = ['grid', 'polar', 'geo', 'calendar']
+
+    visualColorAccessPath: ['lineStyle', 'color']
+
+    private _flatCoords: ArrayLike<number>
+    private _flatCoordsOffset: ArrayLike<number>
+
+    init(option: LinesSeriesOption) {
         // The input data may be null/undefined.
         option.data = option.data || [];
 
@@ -78,10 +187,10 @@ var LinesSeries = SeriesModel.extend({
             option.data = new Float32Array(result.count);
         }
 
-        LinesSeries.superApply(this, 'init', arguments);
-    },
+        super.init.apply(this, arguments as any);
+    }
 
-    mergeOption: function (option) {
+    mergeOption(option: LinesSeriesOption) {
         // The input data may be null/undefined.
         option.data = option.data || [];
 
@@ -97,10 +206,10 @@ var LinesSeries = SeriesModel.extend({
             }
         }
 
-        LinesSeries.superApply(this, 'mergeOption', arguments);
-    },
+        super.mergeOption.apply(this, arguments as any);
+    }
 
-    appendData: function (params) {
+    appendData(params: Pick<LinesSeriesOption, 'data'>) {
         var result = this._processFlatCoordsArray(params.data);
         if (result.flatCoords) {
             if (!this._flatCoords) {
@@ -115,10 +224,10 @@ var LinesSeries = SeriesModel.extend({
         }
 
         this.getRawData().appendData(params.data);
-    },
+    }
 
-    _getCoordsFromItemModel: function (idx) {
-        var itemModel = this.getData().getItemModel(idx);
+    _getCoordsFromItemModel(idx: number) {
+        var itemModel = this.getData().getItemModel<LinesDataItemOption>(idx);
         var coords = (itemModel.option instanceof Array)
             ? itemModel.option : itemModel.getShallow('coords');
 
@@ -130,18 +239,18 @@ var LinesSeries = SeriesModel.extend({
             }
         }
         return coords;
-    },
+    }
 
-    getLineCoordsCount: function (idx) {
+    getLineCoordsCount(idx: number) {
         if (this._flatCoordsOffset) {
             return this._flatCoordsOffset[idx * 2 + 1];
         }
         else {
             return this._getCoordsFromItemModel(idx).length;
         }
-    },
+    }
 
-    getLineCoords: function (idx, out) {
+    getLineCoords(idx: number, out: number[][]) {
         if (this._flatCoordsOffset) {
             var offset = this._flatCoordsOffset[idx * 2];
             var len = this._flatCoordsOffset[idx * 2 + 1];
@@ -161,9 +270,9 @@ var LinesSeries = SeriesModel.extend({
             }
             return coords.length;
         }
-    },
+    }
 
-    _processFlatCoordsArray: function (data) {
+    _processFlatCoordsArray(data: LinesSeriesOption['data']) {
         var startOffset = 0;
         if (this._flatCoords) {
             startOffset = this._flatCoords.length;
@@ -173,21 +282,21 @@ var LinesSeries = SeriesModel.extend({
         if (typeof data[0] === 'number') {
             var len = data.length;
             // Store offset and len of each segment
-            var coordsOffsetAndLenStorage = new Uint32Arr(len);
-            var coordsStorage = new Float64Arr(len);
+            var coordsOffsetAndLenStorage = new Uint32Arr(len) as Uint32Array;
+            var coordsStorage = new Float64Arr(len) as Float64Array;
             var coordsCursor = 0;
             var offsetCursor = 0;
             var dataCount = 0;
             for (var i = 0; i < len;) {
                 dataCount++;
-                var count = data[i++];
+                var count = data[i++] as number;
                 // Offset
                 coordsOffsetAndLenStorage[offsetCursor++] = coordsCursor + startOffset;
                 // Len
                 coordsOffsetAndLenStorage[offsetCursor++] = count;
                 for (var k = 0; k < count; k++) {
-                    var x = data[i++];
-                    var y = data[i++];
+                    var x = data[i++] as number;
+                    var y = data[i++] as number;
                     coordsStorage[coordsCursor++] = x;
                     coordsStorage[coordsCursor++] = y;
 
@@ -211,9 +320,9 @@ var LinesSeries = SeriesModel.extend({
             flatCoords: null,
             count: data.length
         };
-    },
+    }
 
-    getInitialData: function (option, ecModel) {
+    getInitialData(option: LinesSeriesOption, ecModel: GlobalModel) {
         if (__DEV__) {
             var CoordSys = CoordinateSystem.get(option.coordinateSystem);
             if (!CoordSys) {
@@ -239,11 +348,11 @@ var LinesSeries = SeriesModel.extend({
         });
 
         return lineData;
-    },
+    }
 
-    formatTooltip: function (dataIndex) {
+    formatTooltip(dataIndex: number) {
         var data = this.getData();
-        var itemModel = data.getItemModel(dataIndex);
+        var itemModel = data.getItemModel<LinesDataItemOption>(dataIndex);
         var name = itemModel.get('name');
         if (name) {
             return name;
@@ -255,29 +364,29 @@ var LinesSeries = SeriesModel.extend({
         toName != null && html.push(toName);
 
         return encodeHTML(html.join(' > '));
-    },
+    }
 
-    preventIncremental: function () {
-        return !!this.get('effect.show');
-    },
+    preventIncremental() {
+        return !!this.get(['effect', 'show']);
+    }
 
-    getProgressive: function () {
+    getProgressive() {
         var progressive = this.option.progressive;
         if (progressive == null) {
             return this.option.large ? 1e4 : this.get('progressive');
         }
         return progressive;
-    },
+    }
 
-    getProgressiveThreshold: function () {
+    getProgressiveThreshold() {
         var progressiveThreshold = this.option.progressiveThreshold;
         if (progressiveThreshold == null) {
             return this.option.large ? 2e4 : this.get('progressiveThreshold');
         }
         return progressiveThreshold;
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: LinesSeriesOption = {
         coordinateSystem: 'geo',
         zlevel: 0,
         z: 2,
@@ -296,30 +405,19 @@ var LinesSeries = SeriesModel.extend({
         effect: {
             show: false,
             period: 4,
-            // Animation delay. support callback
-            // delay: 0,
-            // If move with constant speed px/sec
-            // period will be ignored if this property is > 0,
             constantSpeed: 0,
             symbol: 'circle',
             symbolSize: 3,
             loop: true,
-            // Length of trail, 0 - 1
             trailLength: 0.2
-            // Same with lineStyle.color
-            // color
         },
 
         large: false,
         // Available when large is true
         largeThreshold: 2000,
 
-        // If lines are polyline
-        // polyline not support curveness, label, animation
         polyline: false,
 
-        // If clip the overflow.
-        // Available when coordinateSystem is cartesian or polar.
         clip: true,
 
         label: {
@@ -333,6 +431,8 @@ var LinesSeries = SeriesModel.extend({
             opacity: 0.5
         }
     }
-});
+}
 
-export default LinesSeries;
+SeriesModel.registerClass(LinesSeriesModel);
+
+export default LinesSeriesModel;

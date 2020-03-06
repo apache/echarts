@@ -74,6 +74,7 @@ export interface ScatterSeriesOption extends SeriesOption,
     }
 
     data?: (ScatterDataItemOption | OptionDataValue)[]
+        | ArrayLike<number> // Can be a flattern array
 }
 
 

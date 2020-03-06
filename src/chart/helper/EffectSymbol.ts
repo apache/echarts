@@ -30,6 +30,7 @@ import SymbolClz from './Symbol';
 import List from '../../data/List';
 import type { ZRColor } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
+import { EffectScatterDataItemOption } from '../effectScatter/EffectScatterSeries';
 
 var EFFECT_RIPPLE_NUMBER = 3;
 
@@ -175,7 +176,7 @@ class EffectSymbol extends Group {
         (this.childAt(0) as SymbolClz).updateData(data, idx);
 
         var rippleGroup = this.childAt(1);
-        var itemModel = data.getItemModel(idx);
+        var itemModel = data.getItemModel<EffectScatterDataItemOption>(idx);
         var symbolType = data.getItemVisual(idx, 'symbol');
         var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
         var color = data.getItemVisual(idx, 'color');
@@ -197,15 +198,15 @@ class EffectSymbol extends Group {
         var effectCfg: RippleEffectCfg = {};
 
         effectCfg.showEffectOn = seriesModel.get('showEffectOn');
-        effectCfg.rippleScale = itemModel.get('rippleEffect.scale');
-        effectCfg.brushType = itemModel.get('rippleEffect.brushType');
-        effectCfg.period = itemModel.get('rippleEffect.period') * 1000;
+        effectCfg.rippleScale = itemModel.get(['rippleEffect', 'scale']);
+        effectCfg.brushType = itemModel.get(['rippleEffect', 'brushType']);
+        effectCfg.period = itemModel.get(['rippleEffect', 'period']) * 1000;
         effectCfg.effectOffset = idx / data.count();
-        effectCfg.z = itemModel.getShallow('z') || 0;
-        effectCfg.zlevel = itemModel.getShallow('zlevel') || 0;
+        effectCfg.z = seriesModel.getShallow('z') || 0;
+        effectCfg.zlevel = seriesModel.getShallow('zlevel') || 0;
         effectCfg.symbolType = symbolType;
         effectCfg.color = color;
-        effectCfg.rippleEffectColor = itemModel.get('rippleEffect.color');
+        effectCfg.rippleEffectColor = itemModel.get(['rippleEffect', 'color']);
 
         this.off('mouseover').off('mouseout').off('emphasis').off('normal');
 

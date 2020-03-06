@@ -21,7 +21,7 @@
 import View from '../../coord/View';
 import {getLayoutRect} from '../../util/layout';
 import * as bbox from 'zrender/src/core/bbox';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import { extend } from 'zrender/src/core/util';
@@ -44,7 +44,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
             var data = seriesModel.getData();
             var positions = data.mapArray(function (idx) {
-                var itemModel = data.getItemModel(idx);
+                var itemModel = data.getItemModel<GraphNodeItemOption>(idx);
                 return [+itemModel.get('x'), +itemModel.get('y')];
             });
 

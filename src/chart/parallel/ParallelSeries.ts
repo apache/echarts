@@ -29,7 +29,7 @@ export default SeriesModel.extend({
 
     dependencies: ['parallel'],
 
-    visualColorAccessPath: 'lineStyle.color',
+    visualColorAccessPath: ['lineStyle', 'color'],
 
     getInitialData: function (option, ecModel) {
         var source = this.getSource();

@@ -205,7 +205,9 @@ class TreeNode {
     }
 
     // TODO: TYPE Same type with Model#getModel
-    getModel(path: readonly string[] | string) {
+    getModel<T = unknown>(): Model<T>
+    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
         }
@@ -217,8 +219,8 @@ class TreeNode {
             leavesModel = this.getLeavesModel();
         }
         return itemModel.getModel(
-            path as [string],
-            (levelModel || leavesModel || hostTree.hostModel).getModel(path as [string])
+            path as any,
+            (levelModel || leavesModel || hostTree.hostModel).getModel(path as any)
         );
     }
     // TODO: TYPE More specific model

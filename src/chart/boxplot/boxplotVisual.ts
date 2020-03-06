@@ -19,7 +19,7 @@
 
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import BoxplotSeriesModel from './BoxplotSeries';
+import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
 
 var borderColorQuery = ['itemStyle', 'borderColor'] as const;
 
@@ -42,7 +42,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel)) {
             data.each(function (idx) {
-                var itemModel = data.getItemModel(idx);
+                var itemModel = data.getItemModel<BoxplotDataItemOption>(idx);
                 data.setItemVisual(
                     idx,
                     {color: itemModel.get(borderColorQuery, true)}

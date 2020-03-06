@@ -29,7 +29,7 @@ import {getNodeGlobalScale} from './graphHelper';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import View from '../../coord/View';
 import { GraphNode, GraphEdge } from '../../data/Graph';
@@ -59,7 +59,8 @@ function getItemOpacity(
     opacityPath: typeof nodeOpacityPath | typeof lineOpacityPath
 ): number {
     var opacity = item.getVisual('opacity');
-    return opacity != null ? opacity : item.getModel().get(opacityPath);
+    return opacity != null
+        ? opacity : item.getModel<any>().get(opacityPath);
 }
 
 function fadeOutItem(
@@ -236,7 +237,7 @@ class GraphView extends ChartView {
             (el as any)[FOCUS_ADJACENCY] && el.off('mouseover', (el as any)[FOCUS_ADJACENCY]);
             (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
 
-            if (edge.getModel().get('focusNodeAdjacency')) {
+            if (edge.getModel<GraphEdgeItemOption>().get('focusNodeAdjacency')) {
                 el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
                     graphView._clearTimer();
                     api.dispatchAction({
@@ -256,8 +257,8 @@ class GraphView extends ChartView {
         var cx = data.getLayout('cx');
         var cy = data.getLayout('cy');
         data.eachItemGraphicEl(function (el: Symbol, idx) {
-            var itemModel = data.getItemModel(idx);
-            var labelRotate = itemModel.get('label.rotate') || 0;
+            var itemModel = data.getItemModel<GraphNodeItemOption>(idx);
+            var labelRotate = itemModel.get(['label', 'rotate']) || 0;
             var symbolPath = el.getSymbolPath();
             if (circularRotateLabel) {
                 var pos = data.getItemLayout(idx);

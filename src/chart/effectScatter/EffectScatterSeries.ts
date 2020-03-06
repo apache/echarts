@@ -37,6 +37,17 @@ import List from '../../data/List';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
+interface RippleEffect {
+    period?: number
+    /**
+     * Scale of ripple
+     */
+    scale?: number
+
+    brushType?: 'fill' | 'stroke'
+
+    color?: ZRColor
+}
 export interface EffectScatterDataItemOption extends SymbolOptionMixin {
     name?: string
 
@@ -49,6 +60,8 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin {
         itemStyle?: ItemStyleOption
         label?: LabelOption
     }
+
+    rippleEffect?: RippleEffect
 }
 
 export interface EffectScatterSeriesOption extends SeriesOption,
@@ -67,17 +80,7 @@ export interface EffectScatterSeriesOption extends SeriesOption,
     /**
      * Ripple effect config
      */
-    rippleEffect?: {
-        period?: number
-        /**
-         * Scale of ripple
-         */
-        scale?: number
-
-        brushType?: 'fill' | 'stroke'
-
-        color?: ZRColor
-    }
+    rippleEffect?: RippleEffect
 
     data?: (EffectScatterDataItemOption | OptionDataValue)[]
 }

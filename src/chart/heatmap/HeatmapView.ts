@@ -22,7 +22,7 @@ import * as graphic from '../../util/graphic';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
-import HeatmapSeriesModel from './HeatmapSeries';
+import HeatmapSeriesModel, { HeatmapDataItemOption } from './HeatmapSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../ExtensionAPI';
 import type VisualMapModel from '../../component/visualMap/VisualMapModel';
@@ -245,7 +245,7 @@ class HeatmapView extends ChartView {
                 });
             }
 
-            var itemModel = data.getItemModel(idx);
+            var itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
 
             // Optimization for large datset
             if (data.hasItemOption) {

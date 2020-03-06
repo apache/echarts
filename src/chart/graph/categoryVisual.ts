@@ -18,7 +18,7 @@
 */
 
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import { Dictionary, ColorString } from '../../util/types';
 
 export default function (ecModel: GlobalModel) {
@@ -34,17 +34,23 @@ export default function (ecModel: GlobalModel) {
             var name = categoriesData.getName(idx);
             // Add prefix to avoid conflict with Object.prototype.
             categoryNameIdxMap['ec-' + name] = idx;
-            var itemModel = categoriesData.getItemModel(idx);
+            var itemModel = categoriesData.getItemModel<GraphNodeItemOption>(idx);
 
-            var color = itemModel.get('itemStyle.color')
+            var color = itemModel.get(['itemStyle', 'color'])
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
 
-            var itemStyleList = ['opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'];
-            for (var i = 0; i < itemStyleList.length; i++) {
-                var itemStyle = itemModel.getShallow(itemStyleList[i], true);
-                if (itemStyle != null) {
-                    categoriesData.setItemVisual(idx, itemStyleList[i], itemStyle);
+            var opacity = itemModel.get(['itemStyle', 'opacity']);
+            if (opacity != null) {
+                categoriesData.setItemVisual(idx, 'opacity', opacity);
+            }
+
+            var symbolVisualList = ['symbol', 'symbolSize', 'symbolKeepAspect'] as const;
+
+            for (var i = 0; i < symbolVisualList.length; i++) {
+                var symbolVisual = itemModel.getShallow(symbolVisualList[i], true);
+                if (symbolVisual != null) {
+                    categoriesData.setItemVisual(idx, symbolVisualList[i], symbolVisual);
                 }
             }
         });
@@ -52,20 +58,20 @@ export default function (ecModel: GlobalModel) {
         // Assign category color to visual
         if (categoriesData.count()) {
             data.each(function (idx) {
-                var model = data.getItemModel(idx);
+                var model = data.getItemModel<GraphNodeItemOption>(idx);
                 var category = model.getShallow('category');
                 if (category != null) {
                     if (typeof category === 'string') {
                         category = categoryNameIdxMap['ec-' + category];
                     }
 
-                    var itemStyleList = ['color', 'opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'];
+                    var visualList = ['color', 'opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'] as const;
 
-                    for (var i = 0; i < itemStyleList.length; i++) {
-                        if (data.getItemVisual(idx, itemStyleList[i], true) == null) {
+                    for (var i = 0; i < visualList.length; i++) {
+                        if (data.getItemVisual(idx, visualList[i], true) == null) {
                             data.setItemVisual(
-                                idx, itemStyleList[i],
-                                categoriesData.getItemVisual(category, itemStyleList[i])
+                                idx, visualList[i],
+                                categoriesData.getItemVisual(category, visualList[i])
                             );
                         }
                     }

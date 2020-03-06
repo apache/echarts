@@ -79,7 +79,10 @@ export interface GraphNodeItemOption extends SymbolOptionMixin {
      */
     fixed?: boolean
 
-    category?: number
+    /**
+     * Index or name of category
+     */
+    category?: number | string
 
     draggable?: boolean
 
@@ -112,6 +115,10 @@ export interface GraphEdgeItemOption {
     symbol?: string | string[]
 
     symbolSize?: number | number[]
+
+    ignoreForceLayout?: boolean
+
+    focusNodeAdjacency?: boolean
 }
 
 export interface GraphCategoryItemOption extends SymbolOptionMixin {

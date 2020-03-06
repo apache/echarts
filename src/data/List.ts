@@ -35,7 +35,7 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, ECElement, DimensionLoose, OptionDataItem,
-    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
+    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption, OptionDataValue
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -1564,7 +1564,10 @@ class List<HostModel extends Model = Model> {
      * Get model of one data item.
      */
     // TODO: Type of data item
-    getItemModel(idx: number): Model {
+    getItemModel<ItemOpts extends unknown = unknown>(idx: number): Model<ItemOpts
+        // Extract item option with value key. FIXME will cause incompatitable issue
+        // Extract<HostModel['option']['data'][number], { value?: any }>
+    > {
         var hostModel = this.hostModel;
         var dataItem = this.getRawDataItem(idx) as ModelOption;
         return new Model(dataItem, hostModel, hostModel && hostModel.ecModel);

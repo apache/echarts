@@ -18,7 +18,7 @@
 */
 
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import type LegendModel from '../../component/legend/LegendModel';
 
 export default function (ecModel: GlobalModel) {
@@ -36,7 +36,7 @@ export default function (ecModel: GlobalModel) {
         var categoryNames = categoriesData.mapArray(categoriesData.getName);
 
         data.filterSelf(function (idx) {
-            var model = data.getItemModel(idx);
+            var model = data.getItemModel<GraphNodeItemOption>(idx);
             var category = model.getShallow('category');
             if (category != null) {
                 if (typeof category === 'number') {

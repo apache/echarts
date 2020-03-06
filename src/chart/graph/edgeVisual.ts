@@ -18,7 +18,7 @@
 */
 
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
 
 function normalize(a: string | number | (string | number)[]): (string | number)[] {
     if (!(a instanceof Array)) {
@@ -45,7 +45,7 @@ export default function (ecModel: GlobalModel) {
         edgeData.setVisual('opacity', seriesModel.get(opacityQuery));
 
         edgeData.each(function (idx) {
-            var itemModel = edgeData.getItemModel(idx);
+            var itemModel = edgeData.getItemModel<GraphEdgeItemOption>(idx);
             var edge = graph.getEdgeByIndex(idx);
             var symbolType = normalize(itemModel.getShallow('symbol', true));
             var symbolSize = normalize(itemModel.getShallow('symbolSize', true));

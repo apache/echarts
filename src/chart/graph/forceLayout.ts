@@ -24,7 +24,7 @@ import {linearMap} from '../../util/number';
 import * as vec2 from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 
 export interface ForceLayoutInstance {
     step(cb: (stopped: boolean) => void): void
@@ -82,7 +82,7 @@ export default function (ecModel: GlobalModel) {
                 return {
                     w: rep,
                     rep: rep,
-                    fixed: nodeData.getItemModel(idx).get('fixed'),
+                    fixed: nodeData.getItemModel<GraphNodeItemOption>(idx).get('fixed'),
                     p: (!point || isNaN(point[0]) || isNaN(point[1])) ? null : point
                 };
             });
@@ -92,12 +92,12 @@ export default function (ecModel: GlobalModel) {
                 if (isNaN(d)) {
                     d = (edgeLengthArr[0] + edgeLengthArr[1]) / 2;
                 }
-                var edgeModel = edge.getModel();
+                var edgeModel = edge.getModel<GraphEdgeItemOption>();
                 return {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
                     d: d,
-                    curveness: edgeModel.get('lineStyle.curveness') || 0,
+                    curveness: edgeModel.get(['lineStyle', 'curveness']) || 0,
                     ignoreForceLayout: edgeModel.get('ignoreForceLayout')
                 };
             });
