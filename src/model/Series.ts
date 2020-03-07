@@ -257,7 +257,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * data in the stream procedure. So we fetch data from upstream
      * each time `task.perform` called.
      */
-    getData(dataType?: string): List<SeriesModel<Opt>> {
+    getData(dataType?: string): List<this> {
         var task = getCurrentTask(this);
         if (task) {
             var data = task.context.data;
@@ -268,7 +268,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             // restore or setOption with not merge mode), series data may
             // be still need to judge animation or something when graphic
             // elements want to know whether fade out.
-            return inner(this).data as List<SeriesModel<Opt>>;
+            return inner(this).data as List<this>;
         }
     }
 

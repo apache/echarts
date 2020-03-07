@@ -18,29 +18,70 @@
 */
 
 import * as graphic from '../../util/graphic';
-import LineGroup, {SeriesScope} from './Line';
+import LineGroup from './Line';
 import List from '../../data/List';
-import { StageHandlerProgressParams, LineStyleOption, LineLabelOption } from '../../util/types';
+import {
+    StageHandlerProgressParams,
+    LineStyleOption,
+    LineLabelOption,
+    ColorString,
+    AnimationOptionMixin
+} from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
+import { StyleProps } from 'zrender/src/graphic/Style';
 
 interface LineLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: SeriesScope): void
+    updateData(data: List, idx: number, scope?: LineDrawSeriesScope): void
     updateLayout(data: List, idx: number): void
     fadeOut?(cb: () => void): void
 }
 
 interface LineLikeCtor {
-    new(data: List, idx: number, scope?: SeriesScope): LineLike
+    new(data: List, idx: number, scope?: LineDrawSeriesScope): LineLike
 }
 
-interface LineOption {
+export interface LineDrawModelOption {
     lineStyle?: LineStyleOption
     label?: LineLabelOption
-    emphasis: {
+    emphasis?: {
         lineStyle?: LineStyleOption
         label?: LineLabelOption
     }
+
+    // If has effect
+    effect?: {
+        show?: boolean
+        period?: number
+        delay?: number | ((idx: number) => number)
+        /**
+         * If move with constant speed px/sec
+         * period will be ignored if this property is > 0,
+         */
+        constantSpeed?: number
+
+        symbol?: string
+        symbolSize?: number | number[]
+        loop?: boolean
+        /**
+         * Length of trail, 0 - 1
+         */
+        trailLength?: number
+        /**
+         * Default to be same with lineStyle.color
+         */
+        color?: ColorString
+    }
+}
+
+type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>
+
+export interface LineDrawSeriesScope {
+    lineStyle?: StyleProps
+    hoverLineStyle?: StyleProps
+
+    labelModel?: Model<LineLabelOption>
+    hoverLabelModel?: Model<LineLabelOption>
 }
 
 class LineDraw {
@@ -48,9 +89,9 @@ class LineDraw {
 
     private _LineCtor: LineLikeCtor
 
-    private _lineData: List
+    private _lineData: ListForLineDraw
 
-    private _seriesScope: SeriesScope
+    private _seriesScope: LineDrawSeriesScope
 
     constructor(LineCtor?: LineLikeCtor) {
         this._LineCtor = LineCtor || LineGroup;
@@ -60,7 +101,7 @@ class LineDraw {
         return true;
     };
 
-    updateData(lineData: List<Model<LineOption>>) {
+    updateData(lineData: ListForLineDraw) {
         var lineDraw = this;
         var group = lineDraw.group;
 
@@ -101,13 +142,13 @@ class LineDraw {
         }, this);
     };
 
-    incrementalPrepareUpdate(lineData: List) {
+    incrementalPrepareUpdate(lineData: ListForLineDraw) {
         this._seriesScope = makeSeriesScope(lineData);
         this._lineData = null;
         this.group.removeAll();
     };
 
-    incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: List) {
+    incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw) {
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = el.useHoverLayer = true;
@@ -132,9 +173,9 @@ class LineDraw {
     };
 
     private _doAdd(
-        lineData: List,
+        lineData: ListForLineDraw,
         idx: number,
-        seriesScope: SeriesScope
+        seriesScope: LineDrawSeriesScope
     ) {
         var itemLayout = lineData.getItemLayout(idx);
 
@@ -147,11 +188,11 @@ class LineDraw {
         this.group.add(el);
     }
     private _doUpdate(
-        oldLineData: List,
-        newLineData: List,
+        oldLineData: ListForLineDraw,
+        newLineData: ListForLineDraw,
         oldIdx: number,
         newIdx: number,
-        seriesScope: SeriesScope
+        seriesScope: LineDrawSeriesScope
     ) {
         var itemEl = oldLineData.getItemGraphicEl(oldIdx) as LineLike;
 
@@ -173,7 +214,7 @@ class LineDraw {
     }
 }
 
-function makeSeriesScope(lineData: List<Model<LineOption>>) {
+function makeSeriesScope(lineData: ListForLineDraw) {
     var hostModel = lineData.hostModel;
     return {
         lineStyle: hostModel.getModel('lineStyle').getLineStyle(),

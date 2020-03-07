@@ -17,11 +17,6 @@
 * under the License.
 */
 
-/**
- * Symbol with ripple effect
- * @module echarts/chart/helper/EffectSymbol
- */
-
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import {Group, Path} from '../../util/graphic';
@@ -30,7 +25,7 @@ import SymbolClz from './Symbol';
 import List from '../../data/List';
 import type { ZRColor } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
-import { EffectScatterDataItemOption } from '../effectScatter/EffectScatterSeries';
+import { SymbolDrawItemModelOption } from './SymbolDraw';
 
 var EFFECT_RIPPLE_NUMBER = 3;
 
@@ -167,8 +162,6 @@ class EffectSymbol extends Group {
 
     /**
      * Update symbol properties
-     * @param  {module:echarts/data/List} data
-     * @param  {number} idx
      */
     updateData(data: List, idx: number) {
         var seriesModel = data.hostModel;
@@ -176,7 +169,7 @@ class EffectSymbol extends Group {
         (this.childAt(0) as SymbolClz).updateData(data, idx);
 
         var rippleGroup = this.childAt(1);
-        var itemModel = data.getItemModel<EffectScatterDataItemOption>(idx);
+        var itemModel = data.getItemModel<SymbolDrawItemModelOption>(idx);
         var symbolType = data.getItemVisual(idx, 'symbol');
         var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
         var color = data.getItemVisual(idx, 'color');

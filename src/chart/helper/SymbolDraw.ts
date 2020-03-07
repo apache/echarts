@@ -18,12 +18,22 @@
 */
 
 import * as graphic from '../../util/graphic';
-import SymbolClz, {SeriesScope} from './Symbol';
+import SymbolClz from './Symbol';
 import { isObject } from 'zrender/src/core/util';
 import List from '../../data/List';
 import type Displayable from 'zrender/src/graphic/Displayable';
-import { StageHandlerProgressParams } from '../../util/types';
+import {
+    StageHandlerProgressParams,
+    LabelOption,
+    ColorString,
+    SymbolOptionMixin,
+    ItemStyleOption,
+    ZRColor,
+    AnimationOptionMixin
+} from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import { StyleProps } from 'zrender/src/graphic/Style';
+import Model from '../../model/Model';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -31,12 +41,12 @@ interface UpdateOpt {
 }
 
 interface SymbolLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: SeriesScope): void
+    updateData(data: List, idx: number, scope?: SymbolDrawSeriesScope): void
     fadeOut?(cb: () => void): void
 }
 
 interface SymbolLikeCtor {
-    new(data: List, idx: number, scope?: SeriesScope): SymbolLike
+    new(data: List, idx: number, scope?: SymbolDrawSeriesScope): SymbolLike
 }
 
 function symbolNeedsDraw(data: List, point: number[], idx: number, opt: UpdateOpt) {
@@ -56,8 +66,49 @@ function normalizeUpdateOpt(opt: UpdateOpt) {
     return opt || {};
 }
 
+interface RippleEffectOption {
+    period?: number
+    /**
+     * Scale of ripple
+     */
+    scale?: number
 
-function makeSeriesScope(data: List): SeriesScope {
+    brushType?: 'fill' | 'stroke'
+
+    color?: ZRColor
+}
+
+// TODO Separate series and item?
+export interface SymbolDrawItemModelOption extends SymbolOptionMixin {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+    hoverAnimation?: boolean
+    cursor?: string
+
+    // If has ripple effect
+    rippleEffect?: RippleEffectOption
+}
+
+export interface SymbolDrawSeriesScope {
+    itemStyle?: StyleProps
+    hoverItemStyle?: StyleProps
+    symbolRotate?: number
+    symbolOffset?: number[]
+    labelModel?: Model<LabelOption>
+    hoverLabelModel?: Model<LabelOption>
+    hoverAnimation?: boolean
+    itemModel?: Model<SymbolDrawItemModelOption>
+    symbolInnerColor?: ColorString
+    cursorStyle?: string
+    fadeIn?: boolean
+    useNameLabel?: boolean
+}
+
+function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     var seriesModel = data.hostModel;
     return {
         itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
@@ -71,14 +122,16 @@ function makeSeriesScope(data: List): SeriesScope {
     };
 }
 
+type ListForSymbolDraw = List<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>
+
 class SymbolDraw {
     group = new graphic.Group();
 
-    private _data: List
+    private _data: ListForSymbolDraw
 
     private _SymbolCtor: SymbolLikeCtor
 
-    private _seriesScope: SeriesScope
+    private _seriesScope: SymbolDrawSeriesScope
 
     constructor(SymbolCtor?: SymbolLikeCtor) {
         this._SymbolCtor = SymbolCtor || SymbolClz;
@@ -87,7 +140,7 @@ class SymbolDraw {
     /**
      * Update symbols draw by new data
      */
-    updateData(data: List, opt?: UpdateOpt) {
+    updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
         opt = normalizeUpdateOpt(opt);
 
         var group = this.group;
@@ -162,7 +215,7 @@ class SymbolDraw {
         }
     };
 
-    incrementalPrepareUpdate(data: List) {
+    incrementalPrepareUpdate(data: ListForSymbolDraw) {
         this._seriesScope = makeSeriesScope(data);
         this._data = null;
         this.group.removeAll();
@@ -171,7 +224,7 @@ class SymbolDraw {
     /**
      * Update symbols draw by new data
      */
-    incrementalUpdate(taskParams: StageHandlerProgressParams, data: List, opt?: UpdateOpt) {
+    incrementalUpdate(taskParams: StageHandlerProgressParams, data: ListForSymbolDraw, opt?: UpdateOpt) {
         opt = normalizeUpdateOpt(opt);
 
         function updateIncrementalAndHover(el: Displayable) {

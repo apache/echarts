@@ -23,11 +23,10 @@ import * as graphic from '../../util/graphic';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { StyleProps } from 'zrender/src/graphic/Style';
-import { LabelOption, ItemStyleOption, ColorString, DisplayState } from '../../util/types';
-import Model from '../../model/Model';
+import { DisplayState } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
+import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 
 // Update common properties
 const normalStyleAccessPath = ['itemStyle'] as const;
@@ -41,20 +40,6 @@ type ECSymbol = ReturnType<typeof createSymbol> & {
     highDownOnUpdate(fromState: DisplayState, toState: DisplayState): void
 }
 
-export interface SeriesScope {
-    itemStyle?: StyleProps
-    hoverItemStyle?: StyleProps
-    symbolRotate?: number
-    symbolOffset?: [number, number]
-    labelModel?: Model<LabelOption>
-    hoverLabelModel?: Model<LabelOption>
-    hoverAnimation?: boolean
-    itemModel?: Model<ItemStyleOption>
-    symbolInnerColor?: ColorString
-    cursorStyle?: string
-    fadeIn?: boolean
-    useNameLabel?: boolean
-}
 class Symbol extends graphic.Group {
 
     dataIndex: number
@@ -63,7 +48,7 @@ class Symbol extends graphic.Group {
 
     private _symbolType: string
 
-    constructor(data: List, idx: number, seriesScope?: SeriesScope) {
+    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
         super();
         this.updateData(data, idx, seriesScope);
     }
@@ -165,7 +150,7 @@ class Symbol extends graphic.Group {
     /**
      * Update symbol properties
      */
-    updateData(data: List, idx: number, seriesScope?: SeriesScope) {
+    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
         this.silent = false;
 
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
@@ -211,7 +196,7 @@ class Symbol extends graphic.Group {
         data: List,
         idx: number,
         symbolSize: number[],
-        seriesScope?: SeriesScope
+        seriesScope?: SymbolDrawSeriesScope
     ) {
         var symbolPath = this.childAt(0) as ECSymbol;
         var seriesModel = data.hostModel as SeriesModel;
@@ -244,7 +229,7 @@ class Symbol extends graphic.Group {
 
         if (!seriesScope || data.hasItemOption) {
             var itemModel = (seriesScope && seriesScope.itemModel)
-                ? seriesScope.itemModel : data.getItemModel(idx);
+                ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
 
             // Color must be excluded.
             // Because symbol provide setColor individually to set fill and stroke

@@ -25,9 +25,9 @@ import * as graphic from '../../util/graphic';
 import {round} from '../../util/number';
 import List from '../../data/List';
 import { StyleProps } from 'zrender/src/graphic/Style';
-import { LineLabelOption, ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
-import Model from '../../model/Model';
+import { ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
 import SeriesModel from '../../model/Series';
+import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 
 var SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
@@ -48,13 +48,6 @@ function makeSymbolTypeKey(symbolCategory: string) {
     return '_' + symbolCategory + 'Type' as '_fromSymbolType' | '_toSymbolType';
 }
 
-export interface SeriesScope {
-    lineStyle?: StyleProps
-    hoverLineStyle?: StyleProps
-
-    labelModel?: Model<LineLabelOption>
-    hoverLabelModel?: Model<LineLabelOption>
-}
 /**
  * @inner
  */
@@ -112,17 +105,18 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     }
 }
 
+
 class Line extends graphic.Group {
 
     private _fromSymbolType: string
     private _toSymbolType: string
 
-    constructor(lineData: List, idx: number, seriesScope?: SeriesScope) {
+    constructor(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
         super();
         this._createLine(lineData, idx, seriesScope);
     }
 
-    _createLine(lineData: List, idx: number, seriesScope?: SeriesScope) {
+    _createLine(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
         var seriesModel = lineData.hostModel;
         var linePoints = lineData.getItemLayout(idx);
         var line = createLine(linePoints);
@@ -156,7 +150,7 @@ class Line extends graphic.Group {
         this._updateCommonStl(lineData, idx, seriesScope);
     }
 
-    updateData(lineData: List, idx: number, seriesScope: SeriesScope) {
+    updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
         var seriesModel = lineData.hostModel;
 
         var line = this.childOfName('line') as ECLinePath;
@@ -183,7 +177,7 @@ class Line extends graphic.Group {
         this._updateCommonStl(lineData, idx, seriesScope);
     };
 
-    _updateCommonStl(lineData: List, idx: number, seriesScope?: SeriesScope) {
+    _updateCommonStl(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
         var seriesModel = lineData.hostModel as SeriesModel;
 
         var line = this.childOfName('line') as ECLinePath;
@@ -195,7 +189,7 @@ class Line extends graphic.Group {
 
         // Optimization for large dataset
         if (!seriesScope || lineData.hasItemOption) {
-            var itemModel = lineData.getItemModel(idx);
+            var itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
             lineStyle = itemModel.getModel('lineStyle').getLineStyle();
             hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();

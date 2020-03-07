@@ -17,10 +17,7 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import LineDraw from '../helper/LineDraw';
 import EffectLine from '../helper/EffectLine';
 import Line from '../helper/Line';
@@ -29,20 +26,35 @@ import EffectPolyline from '../helper/EffectPolyline';
 import LargeLineDraw from '../helper/LargeLineDraw';
 import linesLayout from './linesLayout';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
+import ChartView from '../../view/Chart';
+import LinesSeriesModel from './LinesSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import CanvasPainter from 'zrender/src/canvas/Painter';
+import { StageHandlerProgressParams, StageHandlerProgressExecutor } from '../../util/types';
+import List from '../../data/List';
 
-export default echarts.extendChartView({
+class LinesView extends ChartView {
 
-    type: 'lines',
+    static readonly type = 'lines'
+    readonly type = LinesView.type
 
-    init: function () {},
+    private _lastZlevel: number
+    private _finished: boolean
 
-    render: function (seriesModel, ecModel, api) {
+    private _lineDraw: LineDraw | LargeLineDraw
+
+    private _hasEffet: boolean
+    private _isPolyline: boolean
+    private _isLargeDraw: boolean
+
+    render(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
 
         var lineDraw = this._updateLineDraw(data, seriesModel);
 
         var zlevel = seriesModel.get('zlevel');
-        var trailLength = seriesModel.get('effect.trailLength');
+        var trailLength = seriesModel.get(['effect', 'trailLength']);
 
         var zr = api.getZr();
         // Avoid the drag cause ghost shadow
@@ -50,7 +62,7 @@ export default echarts.extendChartView({
         // SVG doesn't support
         var isSvg = zr.painter.getType() === 'svg';
         if (!isSvg) {
-            zr.painter.getLayer(zlevel).clear(true);
+            (zr.painter as CanvasPainter).getLayer(zlevel).clear(true);
         }
         // Config layer with motion blur
         if (this._lastZlevel != null && !isSvg) {
@@ -77,7 +89,7 @@ export default echarts.extendChartView({
             }
         }
 
-        lineDraw.updateData(data);
+        lineDraw.updateData(data as List);
 
         var clipPath = seriesModel.get('clip', true) && createClipPath(
             seriesModel.coordinateSystem, false, seriesModel
@@ -92,9 +104,9 @@ export default echarts.extendChartView({
         this._lastZlevel = zlevel;
 
         this._finished = true;
-    },
+    }
 
-    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+    incrementalPrepareRender(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
 
         var lineDraw = this._updateLineDraw(data, seriesModel);
@@ -104,15 +116,19 @@ export default echarts.extendChartView({
         this._clearLayer(api);
 
         this._finished = false;
-    },
+    }
 
-    incrementalRender: function (taskParams, seriesModel, ecModel) {
+    incrementalRender(
+        taskParams: StageHandlerProgressParams,
+        seriesModel: LinesSeriesModel,
+        ecModel: GlobalModel
+    ) {
         this._lineDraw.incrementalUpdate(taskParams, seriesModel.getData());
 
         this._finished = taskParams.end === seriesModel.getData().count();
-    },
+    }
 
-    updateTransform: function (seriesModel, ecModel, api) {
+    updateTransform(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
         var pipelineContext = seriesModel.pipelineContext;
 
@@ -120,21 +136,26 @@ export default echarts.extendChartView({
             // TODO Don't have to do update in large mode. Only do it when there are millions of data.
             return {
                 update: true
-            };
+            } as const;
         }
         else {
             // TODO Use same logic with ScatterView.
             // Manually update layout
-            var res = linesLayout.reset(seriesModel);
+            var res = linesLayout.reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
             if (res.progress) {
-                res.progress({ start: 0, end: data.count() }, data);
+                res.progress({
+                    start: 0,
+                    end: data.count(),
+                    count: data.count()
+                }, data);
             }
-            this._lineDraw.updateLayout();
+            // Not in large mode
+            (this._lineDraw as LineDraw).updateLayout();
             this._clearLayer(api);
         }
-    },
+    }
 
-    _updateLineDraw: function (data, seriesModel) {
+    _updateLineDraw(data: List, seriesModel: LinesSeriesModel) {
         var lineDraw = this._lineDraw;
         var hasEffect = this._showEffect(seriesModel);
         var isPolyline = !!seriesModel.get('polyline');
@@ -170,27 +191,30 @@ export default echarts.extendChartView({
         this.group.add(lineDraw.group);
 
         return lineDraw;
-    },
+    }
 
-    _showEffect: function (seriesModel) {
-        return !!seriesModel.get('effect.show');
-    },
+    private _showEffect(seriesModel: LinesSeriesModel) {
+        return !!seriesModel.get(['effect', 'show']);
+    }
 
-    _clearLayer: function (api) {
+    _clearLayer(api: ExtensionAPI) {
         // Not use motion when dragging or zooming
         var zr = api.getZr();
         var isSvg = zr.painter.getType() === 'svg';
         if (!isSvg && this._lastZlevel != null) {
-            zr.painter.getLayer(this._lastZlevel).clear(true);
+            (zr.painter as CanvasPainter).getLayer(this._lastZlevel).clear(true);
         }
-    },
+    }
 
-    remove: function (ecModel, api) {
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._lineDraw && this._lineDraw.remove();
         this._lineDraw = null;
         // Clear motion when lineDraw is removed
         this._clearLayer(api);
-    },
+    }
 
-    dispose: function () {}
-});
+}
+
+ChartView.registerClass(LinesView);
+
+export default LinesView;

@@ -17,88 +17,77 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-/**
- * @module echarts/chart/helper/Line
- */
-
 import * as graphic from '../../util/graphic';
 import * as zrUtil from 'zrender/src/core/util';
+import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
+import type List from '../../data/List';
 
-/**
- * @constructor
- * @extends {module:zrender/graphic/Group}
- * @alias {module:echarts/chart/helper/Polyline}
- */
-function Polyline(lineData, idx, seriesScope) {
-    graphic.Group.call(this);
-
-    this._createPolyline(lineData, idx, seriesScope);
-}
-
-var polylineProto = Polyline.prototype;
-
-polylineProto._createPolyline = function (lineData, idx, seriesScope) {
-    // var seriesModel = lineData.hostModel;
-    var points = lineData.getItemLayout(idx);
-
-    var line = new graphic.Polyline({
-        shape: {
-            points: points
-        }
-    });
-
-    this.add(line);
-
-    this._updateCommonStl(lineData, idx, seriesScope);
-};
-
-polylineProto.updateData = function (lineData, idx, seriesScope) {
-    var seriesModel = lineData.hostModel;
-
-    var line = this.childAt(0);
-    var target = {
-        shape: {
-            points: lineData.getItemLayout(idx)
-        }
-    };
-    graphic.updateProps(line, target, seriesModel, idx);
-
-    this._updateCommonStl(lineData, idx, seriesScope);
-};
-
-polylineProto._updateCommonStl = function (lineData, idx, seriesScope) {
-    var line = this.childAt(0);
-    var itemModel = lineData.getItemModel(idx);
-
-    var visualColor = lineData.getItemVisual(idx, 'color');
-
-    var lineStyle = seriesScope && seriesScope.lineStyle;
-    var hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
-
-    if (!seriesScope || lineData.hasItemOption) {
-        lineStyle = itemModel.getModel('lineStyle').getLineStyle();
-        hoverLineStyle = itemModel.getModel('emphasis.lineStyle').getLineStyle();
+class Polyline extends graphic.Group {
+    constructor(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+        super();
+        this._createPolyline(lineData, idx, seriesScope);
     }
-    line.useStyle(zrUtil.defaults(
-        {
-            strokeNoScale: true,
-            fill: 'none',
-            stroke: visualColor
-        },
-        lineStyle
-    ));
-    line.hoverStyle = hoverLineStyle;
 
-    graphic.setHoverStyle(this);
-};
+    private _createPolyline(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+        // var seriesModel = lineData.hostModel;
+        var points = lineData.getItemLayout(idx);
 
-polylineProto.updateLayout = function (lineData, idx) {
-    var polyline = this.childAt(0);
-    polyline.setShape('points', lineData.getItemLayout(idx));
-};
+        var line = new graphic.Polyline({
+            shape: {
+                points: points
+            }
+        });
 
-zrUtil.inherits(Polyline, graphic.Group);
+        this.add(line);
+
+        this._updateCommonStl(lineData, idx, seriesScope);
+    };
+
+    updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+        var seriesModel = lineData.hostModel;
+
+        var line = this.childAt(0) as graphic.Polyline;
+        var target = {
+            shape: {
+                points: lineData.getItemLayout(idx) as number[][]
+            }
+        };
+        graphic.updateProps(line, target, seriesModel, idx);
+
+        this._updateCommonStl(lineData, idx, seriesScope);
+    };
+
+    _updateCommonStl(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
+        var line = this.childAt(0) as graphic.Polyline;
+        var itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
+
+        var visualColor = lineData.getItemVisual(idx, 'color');
+
+        var lineStyle = seriesScope && seriesScope.lineStyle;
+        var hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
+
+        if (!seriesScope || lineData.hasItemOption) {
+            lineStyle = itemModel.getModel('lineStyle').getLineStyle();
+            hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
+        }
+        line.useStyle(zrUtil.defaults(
+            {
+                strokeNoScale: true,
+                fill: 'none',
+                stroke: visualColor
+            },
+            lineStyle
+        ));
+        line.hoverStyle = hoverLineStyle;
+
+        graphic.setHoverStyle(this);
+    };
+
+    updateLayout(lineData: List, idx: number) {
+        var polyline = this.childAt(0) as graphic.Polyline;
+        polyline.setShape('points', lineData.getItemLayout(idx));
+    };
+
+}
 
 export default Polyline;

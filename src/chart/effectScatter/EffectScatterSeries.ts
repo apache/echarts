@@ -29,25 +29,14 @@ import {
     SymbolOptionMixin,
     OptionDataValue,
     ItemStyleOption,
-    LabelOption,
-    ZRColor
+    LabelOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
+import type { SymbolDrawItemModelOption } from '../helper/SymbolDraw';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
-interface RippleEffect {
-    period?: number
-    /**
-     * Scale of ripple
-     */
-    scale?: number
-
-    brushType?: 'fill' | 'stroke'
-
-    color?: ZRColor
-}
 export interface EffectScatterDataItemOption extends SymbolOptionMixin {
     name?: string
 
@@ -61,7 +50,7 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin {
         label?: LabelOption
     }
 
-    rippleEffect?: RippleEffect
+    rippleEffect?: SymbolDrawItemModelOption['rippleEffect']
 }
 
 export interface EffectScatterSeriesOption extends SeriesOption,
@@ -80,7 +69,7 @@ export interface EffectScatterSeriesOption extends SeriesOption,
     /**
      * Ripple effect config
      */
-    rippleEffect?: RippleEffect
+    rippleEffect?: SymbolDrawItemModelOption['rippleEffect']
 
     data?: (EffectScatterDataItemOption | OptionDataValue)[]
 }

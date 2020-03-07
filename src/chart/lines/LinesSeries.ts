@@ -31,13 +31,13 @@ import {
     SeriesOnGeoOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin,
-    ColorString,
     SeriesLargeOptionMixin,
     LabelOption,
     LineStyleOption,
     OptionDataValue
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import type { LineDrawModelOption } from '../helper/LineDraw';
 
 var Uint32Arr = typeof Uint32Array === 'undefined' ? Array : Uint32Array;
 var Float64Arr = typeof Float64Array === 'undefined' ? Array : Float64Array;
@@ -113,28 +113,7 @@ export interface LinesSeriesOption extends SeriesOption,
     symbol?: string[] | string
     symbolSize?: number[] | number
 
-    effect?: {
-        show?: boolean
-        period?: number
-        delay?: number | ((idx: number) => number)
-        /**
-         * If move with constant speed px/sec
-         * period will be ignored if this property is > 0,
-         */
-        constantSpeed?: number
-
-        symbol?: string
-        symbolSize?: number | number[]
-        loop?: boolean
-        /**
-         * Length of trail, 0 - 1
-         */
-        trailLength?: number
-        /**
-         * Default to be same with lineStyle.color
-         */
-        color?: ColorString
-    }
+    effect?: LineDrawModelOption['effect']
 
     /**
      * If lines are polyline
