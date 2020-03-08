@@ -23,6 +23,7 @@ import * as interactionMutex from './interactionMutex';
 import { ZRenderType } from 'zrender/src/zrender';
 import { ZRElementEvent, RoamOptionMixin } from '../../util/types';
 import { Bind3, isString, bind, defaults, clone } from 'zrender/src/core/util';
+import Group from 'zrender/src/container/Group';
 
 // Can be null/undefined or true/false
 // or 'pan/move' or 'zoom'/'scale'
@@ -66,6 +67,15 @@ export type RoamEventParams = {
         newY: number
 
         isAvailableBehavior: Bind3<typeof isAvailableBehavior, null, RoamBehavior, ZRElementEvent>
+    }
+}
+
+export interface RoamControllerHost {
+    target: Group
+    zoom: number
+    zoomLimit: {
+        min?: number
+        max?: number
     }
 }
 

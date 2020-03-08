@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel from './FunnelSeries';
+import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
@@ -71,9 +71,9 @@ class FunnelPiece extends graphic.Group {
         var polygon = this.childAt(0) as graphic.Polygon;
 
         var seriesModel = data.hostModel;
-        var itemModel = data.getItemModel(idx);
+        var itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         var layout = data.getItemLayout(idx);
-        var opacity = data.getItemModel(idx).get(opacityAccessPath);
+        var opacity = itemModel.get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
 
         // Reset style
@@ -114,7 +114,7 @@ class FunnelPiece extends graphic.Group {
                 itemStyleModel.getItemStyle(['opacity'])
             )
         );
-        polygon.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+        polygon.hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
         this._updateLabel(data, idx);
 
@@ -127,7 +127,7 @@ class FunnelPiece extends graphic.Group {
         var labelText = this.childAt(2) as graphic.Text;
 
         var seriesModel = data.hostModel;
-        var itemModel = data.getItemModel(idx);
+        var itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         var layout = data.getItemLayout(idx);
         var labelLayout = layout.label;
         var visualColor = data.getItemVisual(idx, 'color');
@@ -151,9 +151,9 @@ class FunnelPiece extends graphic.Group {
         });
 
         var labelModel = itemModel.getModel('label');
-        var labelHoverModel = itemModel.getModel('emphasis.label');
+        var labelHoverModel = itemModel.getModel(['emphasis', 'label']);
         var labelLineModel = itemModel.getModel('labelLine');
-        var labelLineHoverModel = itemModel.getModel('emphasis.labelLine');
+        var labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
         var visualColor = data.getItemVisual(idx, 'color');
 
         graphic.setLabelStyle(

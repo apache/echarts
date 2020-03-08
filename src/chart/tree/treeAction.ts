@@ -17,17 +17,24 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
-import {updateCenterAndZoom} from '../../action/roamHelper';
+import {updateCenterAndZoom, RoamPaylod} from '../../action/roamHelper';
+import { Payload } from '../../util/types';
+import TreeSeriesModel from './TreeSeries';
+import GlobalModel from '../../model/Global';
+
+export interface TreeExpandAndCollapsePayload extends Payload {
+    dataIndex: number
+}
 
 echarts.registerAction({
     type: 'treeExpandAndCollapse',
     event: 'treeExpandAndCollapse',
     update: 'update'
-}, function (payload, ecModel) {
-    ecModel.eachComponent({mainType: 'series', subType: 'tree', query: payload}, function (seriesModel) {
+}, function (payload: TreeExpandAndCollapsePayload, ecModel) {
+    ecModel.eachComponent({
+        mainType: 'series', subType: 'tree', query: payload
+    }, function (seriesModel: TreeSeriesModel) {
         var dataIndex = payload.dataIndex;
         var tree = seriesModel.getData().tree;
         var node = tree.getNodeByDataIndex(dataIndex);
@@ -43,8 +50,10 @@ echarts.registerAction({
     // the layout. So don't need to go through the whole update process, such
     // as 'dataPrcocess', 'coordSystemUpdate', 'layout' and so on.
     update: 'none'
-}, function (payload, ecModel) {
-    ecModel.eachComponent({mainType: 'series', subType: 'tree', query: payload}, function (seriesModel) {
+}, function (payload: RoamPaylod, ecModel: GlobalModel) {
+    ecModel.eachComponent({
+        mainType: 'series', subType: 'tree', query: payload
+    }, function (seriesModel: TreeSeriesModel) {
         var coordSys = seriesModel.coordinateSystem;
         var res = updateCenterAndZoom(coordSys, payload);
 

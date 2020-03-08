@@ -17,12 +17,21 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as graphic from '../../util/graphic';
 import {round} from '../../util/number';
+import SeriesModel from '../../model/Series';
+import { SeriesOption } from '../../util/types';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Polar from '../../coord/polar/Polar';
 
-function createGridClipPath(cartesian, hasAnimation, seriesModel) {
+type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
+    lineStyle?: { width?: number }
+}>
+function createGridClipPath(
+    cartesian: Cartesian2D,
+    hasAnimation: boolean,
+    seriesModel: SeriesModelWithLineWidth
+) {
     var rect = cartesian.getArea();
     var isHorizontal = cartesian.getBaseAxis().isHorizontal();
 
@@ -31,7 +40,7 @@ function createGridClipPath(cartesian, hasAnimation, seriesModel) {
     var width = rect.width;
     var height = rect.height;
 
-    var lineWidth = seriesModel.get('lineStyle.width') || 2;
+    var lineWidth = seriesModel.get(['lineStyle', 'width']) || 2;
     // Expand the clip path a bit to avoid the border is clipped and looks thinner
     x -= lineWidth / 2;
     y -= lineWidth / 2;
@@ -60,7 +69,11 @@ function createGridClipPath(cartesian, hasAnimation, seriesModel) {
     return clipPath;
 }
 
-function createPolarClipPath(polar, hasAnimation, seriesModel) {
+function createPolarClipPath(
+    polar: Polar,
+    hasAnimation: boolean,
+    seriesModel: SeriesModelWithLineWidth
+) {
     var sectorArea = polar.getArea();
     // Avoid float number rounding error for symbol on the edge of axis extent.
 
@@ -87,7 +100,11 @@ function createPolarClipPath(polar, hasAnimation, seriesModel) {
     return clipPath;
 }
 
-function createClipPath(coordSys, hasAnimation, seriesModel) {
+function createClipPath(
+    coordSys: Polar | Cartesian2D,
+    hasAnimation: boolean,
+    seriesModel: SeriesModelWithLineWidth
+) {
     if (!coordSys) {
         return null;
     }

@@ -35,7 +35,7 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, ECElement, DimensionLoose, OptionDataItem,
-    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption, OptionDataValue
+    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -138,11 +138,11 @@ class List<HostModel extends Model = Model> {
     /**
      * Host graph if List is used to store graph nodes / edges.
      */
-    readonly graph: Graph
+    readonly graph?: Graph
     /**
      * Host tree if List is used to store tree ndoes.
      */
-    readonly tree: Tree
+    readonly tree?: Tree
 
     // Indices stores the indices of data subset after filtered.
     // This data subset will be used in chart.
@@ -1386,10 +1386,12 @@ class List<HostModel extends Model = Model> {
      * Data mapping to a plain array
      */
     mapArray<Ctx, Cb extends MapArrayCb0<Ctx>>(cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
+    /* eslint-disable */
     mapArray<Ctx, Cb extends MapArrayCb1<Ctx>>(dims: DimensionLoose, cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
     mapArray<Ctx, Cb extends MapArrayCb1<Ctx>>(dims: [DimensionLoose], cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
     mapArray<Ctx, Cb extends MapArrayCb2<Ctx>>(dims: [DimensionLoose, DimensionLoose], cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
     mapArray<Ctx, Cb extends MapArrayCb<Ctx>>(dims: ItrParamDims, cb: Cb, ctx?: Ctx, ctxCompat?: Ctx): ReturnType<Cb>[];
+    /* eslint-enable */
     mapArray<Ctx>(
         dims: ItrParamDims | MapArrayCb<Ctx>,
         cb: MapArrayCb<Ctx> | Ctx,
@@ -1504,8 +1506,8 @@ class List<HostModel extends Model = Model> {
     downSample(
         dimension: DimensionName,
         rate: number,
-        sampleValue: (frameValues: ParsedValue[]) => ParsedValueNumeric,
-        sampleIndex: (frameValues: ParsedValue[], value: ParsedValueNumeric) => number
+        sampleValue: (frameValues: ArrayLike<ParsedValue>) => ParsedValueNumeric,
+        sampleIndex: (frameValues: ArrayLike<ParsedValue>, value: ParsedValueNumeric) => number
     ): List<HostModel> {
         var list = cloneListForMapAndSample(this, [dimension]);
         var targetStorage = list._storage;

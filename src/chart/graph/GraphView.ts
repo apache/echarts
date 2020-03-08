@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
-import RoamController from '../../component/helper/RoamController';
+import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
@@ -112,11 +112,7 @@ class GraphView extends ChartView {
     private _lineDraw: LineDraw
 
     private _controller: RoamController
-    private _controllerHost: {
-        target: graphic.Group
-        zoom?: number
-        zoomLimit?: {min?: number, max?: number}
-    }
+    private _controllerHost: RoamControllerHost
 
     private _firstRender: boolean
 
@@ -135,7 +131,7 @@ class GraphView extends ChartView {
         this._controller = new RoamController(api.getZr());
         this._controllerHost = {
             target: group
-        };
+        } as RoamControllerHost;
 
         group.add(symbolDraw.group);
         group.add(lineDraw.group);

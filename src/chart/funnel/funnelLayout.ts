@@ -241,8 +241,8 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
             var idx = indices[i];
             var nextIdx = indices[i + 1];
 
-            var itemModel = data.getItemModel(idx);
-            var height = itemModel.get('itemStyle.height');
+            var itemModel = data.getItemModel<FunnelDataItem>(idx);
+            var height = itemModel.get(['itemStyle', 'height']);
             if (height == null) {
                 height = itemHeight;
             }

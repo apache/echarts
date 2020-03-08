@@ -404,7 +404,7 @@ class TooltipView extends ComponentView {
 
         var data = seriesModel.getData();
         var tooltipCascadedModel = buildTooltipModel([
-            data.getItemModel(dataIndex),
+            data.getItemModel<TooltipableOption>(dataIndex),
             seriesModel,
             (seriesModel.coordinateSystem || {}).model,
             tooltipModel
@@ -617,7 +617,7 @@ class TooltipView extends ComponentView {
         var data = dataModel.getData();
 
         var tooltipModel = buildTooltipModel([
-            data.getItemModel(dataIndex),
+            data.getItemModel<TooltipableOption>(dataIndex),
             dataModel,
             seriesModel && (seriesModel.coordinateSystem || {}).model,
             this._tooltipModel

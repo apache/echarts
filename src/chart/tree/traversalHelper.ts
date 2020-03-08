@@ -17,14 +17,16 @@
 * under the License.
 */
 
-// @ts-nocheck
+import { TreeNode } from '../../data/Tree';
 
 /**
  * Traverse the tree from bottom to top and do something
- * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
- * @param  {Function} callback
  */
-function eachAfter(root, callback, separation) {
+function eachAfter<T>(
+    root: TreeNode,
+    callback: (node: TreeNode, separation: T) => void,
+    separation: T
+) {
     var nodes = [root];
     var next = [];
     var node;
@@ -48,10 +50,8 @@ function eachAfter(root, callback, separation) {
 
 /**
  * Traverse the tree from top to bottom and do something
- * @param  {module:echarts/data/Tree~TreeNode} root  The real root of the tree
- * @param  {Function} callback
  */
-function eachBefore(root, callback) {
+function eachBefore(root: TreeNode, callback: (node: TreeNode) => void) {
     var nodes = [root];
     var node;
     while (node = nodes.pop()) { // jshint ignore:line

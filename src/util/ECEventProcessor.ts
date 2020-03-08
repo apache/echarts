@@ -17,7 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import { EventProcessor, EventQuery } from 'zrender/src/core/Eventful';
 import { ECEvent, NormalizedEventQuery, EventQueryItem } from './types';
@@ -139,7 +138,7 @@ export class ECEventProcessor implements EventProcessor {
             ));
 
         function check(
-            query: EventQueryItem, host: object, prop: string, propOnHost?: string
+            query: EventQueryItem, host: any, prop: string, propOnHost?: string
         ): boolean {
             return query[prop] == null || host[propOnHost || prop] === query[prop];
         }

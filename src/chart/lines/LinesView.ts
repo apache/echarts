@@ -33,6 +33,8 @@ import ExtensionAPI from '../../ExtensionAPI';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import { StageHandlerProgressParams, StageHandlerProgressExecutor } from '../../util/types';
 import List from '../../data/List';
+import type Polar from '../../coord/polar/Polar';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
 class LinesView extends ChartView {
 
@@ -92,7 +94,7 @@ class LinesView extends ChartView {
         lineDraw.updateData(data as List);
 
         var clipPath = seriesModel.get('clip', true) && createClipPath(
-            seriesModel.coordinateSystem, false, seriesModel
+            (seriesModel.coordinateSystem as Polar | Cartesian2D), false, seriesModel
         );
         if (clipPath) {
             this.group.setClipPath(clipPath);

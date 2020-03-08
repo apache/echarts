@@ -17,29 +17,14 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
 
-/**
- * @payload
- * @property {number} [seriesIndex]
- * @property {string} [seriesId]
- * @property {string} [seriesName]
- * @property {number} [dataIndex]
- */
 echarts.registerAction({
     type: 'focusNodeAdjacency',
     event: 'focusNodeAdjacency',
     update: 'series:focusNodeAdjacency'
 }, function () {});
 
-/**
- * @payload
- * @property {number} [seriesIndex]
- * @property {string} [seriesId]
- * @property {string} [seriesName]
- */
 echarts.registerAction({
     type: 'unfocusNodeAdjacency',
     event: 'unfocusNodeAdjacency',

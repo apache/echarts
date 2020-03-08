@@ -37,6 +37,25 @@ type GaugeColorStop = [number, ColorString];
 interface LabelFormatter {
     (value: number): string
 }
+
+interface PointerOption {
+    show?: boolean
+    /**
+     * Can be percent
+     */
+    length?: number | string
+    width?: number
+}
+
+export interface GaugeDataItemOption {
+    name?: string
+    value?: OptionDataValueNumeric
+    itemStyle?: ItemStyleOption
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+    }
+    pointer?: PointerOption
+}
 export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin {
 
     // override radius
@@ -81,14 +100,7 @@ export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin
         formatter?: LabelFormatter | string
     }
 
-    pointer?: {
-        show?: boolean
-        /**
-         * Can be percent
-         */
-        length?: number | string
-        width?: number
-    }
+    pointer?: PointerOption
     itemStyle?: ItemStyleOption
 
     title?: LabelOption & {
@@ -106,10 +118,7 @@ export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin
         formatter?: LabelFormatter | string
     }
 
-    data?: OptionDataValueNumeric | {
-        name?: string
-        value?: OptionDataValueNumeric
-    }
+    data?: OptionDataValueNumeric | GaugeDataItemOption
 }
 
 class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {

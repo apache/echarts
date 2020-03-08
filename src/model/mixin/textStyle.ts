@@ -24,6 +24,8 @@ import { LabelOption, ColorString } from '../../util/types';
 
 var PATH_COLOR = ['textStyle', 'color'] as const;
 
+type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+
 class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color
@@ -40,7 +42,7 @@ class TextStyleMixin {
      * Create font string from fontStyle, fontWeight, fontSize, fontFamily
      * @return {string}
      */
-    getFont(this: Model<LabelOption>) {
+    getFont(this: Model<LabelFontOption>) {
         return graphicUtil.getFont({
             fontStyle: this.getShallow('fontStyle'),
             fontWeight: this.getShallow('fontWeight'),
@@ -49,7 +51,7 @@ class TextStyleMixin {
         }, this.ecModel);
     }
 
-    getTextRect(this: Model<LabelOption> & TextStyleMixin, text: string) {
+    getTextRect(this: Model<LabelOption> & TextStyleMixin, text: string): graphicUtil.BoundingRect {
         return textContain.getBoundingRect(
             text,
             this.getFont(),

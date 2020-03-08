@@ -41,14 +41,15 @@ import {
 import List from '../../data/List';
 
 
-interface PieLabelOption extends LabelOption {
+interface PieLabelOption extends Omit<LabelOption, 'rotate'> {
+    rotate?: number | boolean
     alignTo?: 'none' | 'labelLine' | 'edge'
     margin?: string | number
     bleedMargin?: number
     distanceToLabelLine?: number
 }
 
-interface PieDataItem extends
+export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
     SelectableTarget {
 
@@ -102,7 +103,7 @@ export interface PieSeriesOption extends
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
 
-    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | PieDataItem[]
+    data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | PieDataItemOption[]
 }
 
 class PieSeriesModel extends SeriesModel<PieSeriesOption> {

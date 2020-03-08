@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /*
 * A third-party license is embeded for some of the code in this file:
 * The tree layoutHelper implementation was originally copied from
@@ -36,13 +34,31 @@
  */
 
 import * as layout from '../../util/layout';
+import { TreeNode } from '../../data/Tree';
+import TreeSeriesModel from './TreeSeries';
+import ExtensionAPI from '../../ExtensionAPI';
 
+interface HierNode {
+    defaultAncestor: LayoutTreeNode,
+    ancestor: LayoutTreeNode,
+    prelim: number,
+    modifier: number,
+    change: number,
+    shift: number,
+    i: number,
+    thread: LayoutTreeNode
+}
+
+export interface LayoutTreeNode extends TreeNode {
+    parentNode: LayoutTreeNode
+    hierNode: HierNode
+    children: LayoutTreeNode[]
+}
 /**
  * Initialize all computational message for following algorithm.
- *
- * @param  {module:echarts/data/Tree~TreeNode} root   The virtual root of the tree.
  */
-export function init(root) {
+export function init(inRoot: TreeNode) {
+    const root = inRoot as LayoutTreeNode;
     root.hierNode = {
         defaultAncestor: null,
         ancestor: root,
@@ -90,11 +106,8 @@ export function init(root) {
  * applied recursively to the children of node, as well as the function
  * apportion(). After spacing out the children by calling executeShifts(), the
  * node is placed to the midpoint of its outermost children.
- *
- * @param  {module:echarts/data/Tree~TreeNode} node
- * @param {Function} separation
  */
-export function firstWalk(node, separation) {
+export function firstWalk(node: LayoutTreeNode, separation: SeparationFunc) {
     var children = node.isExpand ? node.children : [];
     var siblings = node.parentNode.children;
     var subtreeW = node.hierNode.i ? siblings[node.hierNode.i - 1] : null;
@@ -128,43 +141,33 @@ export function firstWalk(node, separation) {
  * See the license statement at the head of this file.
  *
  * Computes all real x-coordinates by summing up the modifiers recursively.
- *
- * @param  {module:echarts/data/Tree~TreeNode} node
  */
-export function secondWalk(node) {
+export function secondWalk(node: LayoutTreeNode) {
     var nodeX = node.hierNode.prelim + node.parentNode.hierNode.modifier;
     node.setLayout({x: nodeX}, true);
     node.hierNode.modifier += node.parentNode.hierNode.modifier;
 }
 
 
-export function separation(cb) {
+export function separation(cb?: SeparationFunc) {
     return arguments.length ? cb : defaultSeparation;
 }
 
 /**
  * Transform the common coordinate to radial coordinate.
- *
- * @param  {number} x
- * @param  {number} y
- * @return {Object}
  */
-export function radialCoordinate(x, y) {
-    var radialCoor = {};
-    x -= Math.PI / 2;
-    radialCoor.x = y * Math.cos(x);
-    radialCoor.y = y * Math.sin(x);
-    return radialCoor;
+export function radialCoordinate(rad: number, r: number) {
+    rad -= Math.PI / 2;
+    return {
+        x: r * Math.cos(rad),
+        y: r * Math.sin(rad)
+    };
 }
 
 /**
  * Get the layout position of the whole view.
- *
- * @param {module:echarts/model/Series} seriesModel  the model object of sankey series
- * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
- * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
  */
-export function getViewRect(seriesModel, api) {
+export function getViewRect(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
@@ -181,10 +184,8 @@ export function getViewRect(seriesModel, api) {
  * <https://github.com/d3/d3-hierarchy/blob/4c1f038f2725d6eae2e49b61d01456400694bac4/src/tree.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
- *
- * @param  {module:echarts/data/Tree~TreeNode} node
  */
-function executeShifts(node) {
+function executeShifts(node: LayoutTreeNode) {
     var children = node.children;
     var n = children.length;
     var shift = 0;
@@ -211,14 +212,13 @@ function executeShifts(node) {
  * one of the greatest uncommon ancestors using the function nextAncestor()
  * and call moveSubtree() to shift the subtree and prepare the shifts of
  * smaller subtrees. Finally, we add a new thread (if necessary).
- *
- * @param  {module:echarts/data/Tree~TreeNode} subtreeV
- * @param  {module:echarts/data/Tree~TreeNode} subtreeW
- * @param  {module:echarts/data/Tree~TreeNode} ancestor
- * @param  {Function} separation
- * @return {module:echarts/data/Tree~TreeNode}
  */
-function apportion(subtreeV, subtreeW, ancestor, separation) {
+function apportion(
+    subtreeV: LayoutTreeNode,
+    subtreeW: LayoutTreeNode,
+    ancestor: LayoutTreeNode,
+    separation: SeparationFunc
+): LayoutTreeNode {
 
     if (subtreeW) {
         var nodeOutRight = subtreeV;
@@ -265,11 +265,8 @@ function apportion(subtreeV, subtreeW, ancestor, separation) {
  * This function is used to traverse the right contour of a subtree.
  * It returns the rightmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
- *
- * @param  {module:echarts/data/Tree~TreeNode} node
- * @return {module:echarts/data/Tree~TreeNode}
  */
-function nextRight(node) {
+function nextRight(node: LayoutTreeNode): LayoutTreeNode {
     var children = node.children;
     return children.length && node.isExpand ? children[children.length - 1] : node.hierNode.thread;
 }
@@ -278,11 +275,8 @@ function nextRight(node) {
  * This function is used to traverse the left contour of a subtree (or a subforest).
  * It returns the leftmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
- *
- * @param  {module:echarts/data/Tree~TreeNode} node
- * @return {module:echarts/data/Tree~TreeNode}
  */
-function nextLeft(node) {
+function nextLeft(node: LayoutTreeNode) {
     var children = node.children;
     return children.length && node.isExpand ? children[0] : node.hierNode.thread;
 }
@@ -290,13 +284,12 @@ function nextLeft(node) {
 /**
  * If nodeInLeft’s ancestor is a sibling of node, returns nodeInLeft’s ancestor.
  * Otherwise, returns the specified ancestor.
- *
- * @param  {module:echarts/data/Tree~TreeNode} nodeInLeft
- * @param  {module:echarts/data/Tree~TreeNode} node
- * @param  {module:echarts/data/Tree~TreeNode} ancestor
- * @return {module:echarts/data/Tree~TreeNode}
  */
-function nextAncestor(nodeInLeft, node, ancestor) {
+function nextAncestor(
+    nodeInLeft: LayoutTreeNode,
+    node: LayoutTreeNode,
+    ancestor: LayoutTreeNode
+): LayoutTreeNode {
     return nodeInLeft.hierNode.ancestor.parentNode === node.parentNode
         ? nodeInLeft.hierNode.ancestor : ancestor;
 }
@@ -309,12 +302,12 @@ function nextAncestor(nodeInLeft, node, ancestor) {
  *
  * Shifts the current subtree rooted at wr.
  * This is done by increasing prelim(w+) and modifier(w+) by shift.
- *
- * @param  {module:echarts/data/Tree~TreeNode} wl
- * @param  {module:echarts/data/Tree~TreeNode} wr
- * @param  {number} shift [description]
  */
-function moveSubtree(wl, wr, shift) {
+function moveSubtree(
+    wl: LayoutTreeNode,
+    wr: LayoutTreeNode,
+    shift: number
+) {
     var change = shift / (wr.hierNode.i - wl.hierNode.i);
     wr.hierNode.change -= change;
     wr.hierNode.shift += shift;
@@ -329,6 +322,10 @@ function moveSubtree(wl, wr, shift) {
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
-function defaultSeparation(node1, node2) {
+function defaultSeparation(node1: LayoutTreeNode, node2: LayoutTreeNode): number {
     return node1.parentNode === node2.parentNode ? 1 : 2;
+}
+
+interface SeparationFunc {
+    (node1: LayoutTreeNode, node2: LayoutTreeNode): number
 }

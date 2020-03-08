@@ -41,12 +41,14 @@ type FunnelLabelOption = Omit<LabelOption, 'position'> & {
     position?: LabelOption['position'] | 'outer'
 }
 
-interface FunnelDataItem {
+export interface FunnelDataItemOption {
     name?: string
 
     value?: OptionDataValueNumeric
 
-    itemStyle?: ItemStyleOption
+    itemStyle?: ItemStyleOption & {
+        height?: number | string
+    }
     label?: FunnelLabelOption
     labelLine?: LabelGuideLineOption
 
@@ -85,7 +87,7 @@ export interface FunnelSeriesOption
         itemStyle?: ItemStyleOption
     }
 
-    data?: OptionDataValueNumeric[] | FunnelDataItem[]
+    data?: OptionDataValueNumeric[] | FunnelDataItemOption[]
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {

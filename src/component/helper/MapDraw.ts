@@ -31,7 +31,6 @@ import GlobalModel from '../../model/Global';
 import { Payload, ECElement } from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
-import ComponentModel from '../../model/Component';
 import Region from '../../coord/geo/Region';
 import Element from 'zrender/src/Element';
 import Geo from '../../coord/geo/Geo';

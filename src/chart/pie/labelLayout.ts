@@ -21,7 +21,7 @@
 
 import * as textContain from 'zrender/src/contain/text';
 import {parsePercent} from '../../util/number';
-import PieSeriesModel, { PieSeriesOption } from './PieSeries';
+import PieSeriesModel, { PieSeriesOption, PieDataItemOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
 import { HorizontalAlign, VerticalAlign, ZRRectLike } from '../../util/types';
 
@@ -287,10 +287,10 @@ export default function (
     data.each(function (idx) {
         var layout = data.getItemLayout(idx);
 
-        var itemModel = data.getItemModel(idx);
+        var itemModel = data.getItemModel<PieDataItemOption>(idx);
         var labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis
-        var labelPosition = labelModel.get('position') || itemModel.get('emphasis.label.position');
+        var labelPosition = labelModel.get('position') || itemModel.get(['emphasis', 'label', 'position']);
         var labelDistance = labelModel.get('distanceToLabelLine');
         var labelAlignTo = labelModel.get('alignTo');
         var labelMargin = parsePercent(labelModel.get('margin'), viewWidth);

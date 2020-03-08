@@ -17,16 +17,14 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
+import List from '../../data/List';
 
 /**
- * @param {module:echarts/data/List} data
- * @param {number} dataIndex
- * @return {string} label string. Not null/undefined
+ * @return label string. Not null/undefined
  */
-export function getDefaultLabel(data, dataIndex) {
+export function getDefaultLabel(data: List, dataIndex: number): string {
     var labelDims = data.mapDimension('defaultedLabel', true);
     var len = labelDims.length;
 

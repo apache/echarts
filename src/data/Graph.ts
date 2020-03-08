@@ -221,7 +221,7 @@ class Graph {
      * Return true to stop traversing
      */
     breadthFirstTraverse<Ctx>(
-        cb: (this: Ctx, node: GraphNode, fromNode: GraphNode) => boolean,
+        cb: (this: Ctx, node: GraphNode, fromNode: GraphNode) => boolean | void,
         startNode: GraphNode | string,
         direction: 'none' | 'in' | 'out',
         context?: Ctx

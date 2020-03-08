@@ -17,41 +17,145 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
 import {encodeHTML} from '../../util/format';
+import {
+    SeriesOption,
+    SymbolOptionMixin,
+    BoxLayoutOptionMixin,
+    RoamOptionMixin,
+    LineStyleOption,
+    ItemStyleOption,
+    LabelOption,
+    OptionDataValue
+} from '../../util/types';
+import List from '../../data/List';
+import View from '../../coord/View';
+import { LayoutRect } from '../../util/layout';
 
-export default SeriesModel.extend({
+interface CurveLineStyleOption extends LineStyleOption{
+    curveness?: number
+}
 
-    type: 'series.tree',
+export interface TreeSeriesNodeOption extends SymbolOptionMixin {
+    name?: string
 
-    layoutInfo: null,
+    /**
+     * Item style of leave nodes
+     */
+    itemStyle?: ItemStyleOption
+    /**
+     * Line style of the edge between node and it's parent.
+     */
+    lineStyle?: LineStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+        label?: LabelOption
+    }
+
+    value?: OptionDataValue | OptionDataValue[]
+
+    children?: TreeSeriesNodeOption[]
+
+    collapsed?: boolean
+}
+
+export interface TreeSeriesOption extends
+    SeriesOption, SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
+
+    hoverAnimation?: boolean
+
+    layout?: 'orthogonal' | 'radial'
+
+    edgeShape?: 'polyline' | 'curve'
+
+    /**
+     * Available when edgeShape is polyline
+     */
+    edgeForkPosition?: string | number
+
+    nodeScaleRatio?: number
+
+    /**
+     * The orient of orthoginal layout, can be setted to 'LR', 'TB', 'RL', 'BT'.
+     * and the backward compatibility configuration 'horizontal = LR', 'vertical = TB'.
+     */
+    orient?: 'LR' | 'TB' | 'RL' | 'BT' | 'horizontal' | 'vertical'
+
+    expandAndCollapse?: boolean
+
+    /**
+     * The initial expanded depth of tree
+     */
+    initialTreeDepth?: number
+
+    /**
+     * Line style of links
+     */
+    lineStyle?: CurveLineStyleOption
+    /**
+     * Item style of nodes
+     */
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        lineStyle?: CurveLineStyleOption
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+
+    leaves?: {
+        /**
+         * Item style of leave nodes
+         */
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+
+        emphasis?: {
+            itemStyle?: ItemStyleOption
+            label?: LabelOption
+        }
+    }
+
+    data?: TreeSeriesNodeOption[]
+}
+
+class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
+    static readonly type = 'series.tree'
 
     // can support the position parameters 'left', 'top','right','bottom', 'width',
     // 'height' in the setOption() with 'merge' mode normal.
-    layoutMode: 'box',
+    static readonly layoutMode = 'box'
+
+    coordinateSystem: View
+
+    layoutInfo: LayoutRect
 
     /**
      * Init a tree data structure from data in option series
-     * @param  {Object} option  the object used to config echarts view
-     * @return {module:echarts/data/List} storage initial data
+     * @param  option  the object used to config echarts view
+     * @return storage initial data
      */
-    getInitialData: function (option) {
+    getInitialData(option: TreeSeriesOption): List {
 
         //create an virtual root
-        var root = {name: option.name, children: option.data};
+        var root: TreeSeriesNodeOption = {
+            name: option.name,
+            children: option.data
+        };
 
         var leaves = option.leaves || {};
 
-        var treeOption = {};
+        var tree = Tree.createTree(root, this, {
+            leaves: leaves
+        }, beforeLink);
 
-        treeOption.leaves = leaves;
-
-        var tree = Tree.createTree(root, this, treeOption, beforeLink);
-
-        function beforeLink(nodeData) {
+        function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 var node = tree.getNodeByDataIndex(idx);
                 var leavesModel = node.getLeavesModel();
@@ -75,7 +179,7 @@ export default SeriesModel.extend({
             ? option.initialTreeDepth : treeDepth;
 
         tree.root.eachNode('preorder', function (node) {
-            var item = node.hostTree.data.getRawDataItem(node.dataIndex);
+            var item = node.hostTree.data.getRawDataItem(node.dataIndex) as TreeSeriesNodeOption;
             // Add item.collapsed != null, because users can collapse node original in the series.data.
             node.isExpand = (item && item.collapsed != null)
                 ? !item.collapsed
@@ -83,13 +187,13 @@ export default SeriesModel.extend({
         });
 
         return tree.data;
-    },
+    }
 
     /**
      * Make the configuration 'orient' backward compatibly, with 'horizontal = LR', 'vertical = TB'.
      * @returns {string} orient
      */
-    getOrient: function () {
+    getOrient() {
         var orient = this.get('orient');
         if (orient === 'horizontal') {
             orient = 'LR';
@@ -98,21 +202,20 @@ export default SeriesModel.extend({
             orient = 'TB';
         }
         return orient;
-    },
+    }
 
-    setZoom: function (zoom) {
+    setZoom(zoom: number) {
         this.option.zoom = zoom;
-    },
+    }
 
-    setCenter: function (center) {
+    setCenter(center: number[]) {
         this.option.center = center;
-    },
+    }
 
     /**
      * @override
-     * @param {number} dataIndex
      */
-    formatTooltip: function (dataIndex) {
+    formatTooltip(dataIndex: number): string {
         var tree = this.getData().tree;
         var realRoot = tree.root.children[0];
         var node = tree.getNodeByDataIndex(dataIndex);
@@ -123,11 +226,11 @@ export default SeriesModel.extend({
             node = node.parentNode;
         }
         return encodeHTML(name + (
-            (isNaN(value) || value == null) ? '' : ' : ' + value
+            (isNaN(value as number) || value == null) ? '' : ' : ' + value
         ));
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: TreeSeriesOption = {
         zlevel: 0,
         z: 2,
         coordinateSystem: 'view',
@@ -157,8 +260,6 @@ export default SeriesModel.extend({
 
         zoom: 1,
 
-        // The orient of orthoginal layout, can be setted to 'LR', 'TB', 'RL', 'BT'.
-        // and the backward compatibility configuration 'horizontal = LR', 'vertical = TB'.
         orient: 'LR',
 
         symbol: 'emptyCircle',
@@ -198,4 +299,8 @@ export default SeriesModel.extend({
 
         animationDurationUpdate: 1000
     }
-});
+}
+
+SeriesModel.registerClass(TreeSeriesModel);
+
+export default TreeSeriesModel;

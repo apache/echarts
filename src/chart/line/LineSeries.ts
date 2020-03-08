@@ -30,13 +30,12 @@ import {
     ItemStyleOption,
     AreaStyleOption,
     OptionDataValue,
-    SymbolOptionMixin
+    SymbolOptionMixin,
+    SeriesSamplingOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
-
-type SamplingFunc = (frame: number[]) => number
 
 type LineDataValue = OptionDataValue | OptionDataValue[]
 
@@ -58,6 +57,7 @@ export interface LineSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
+    SeriesSamplingOptionMixin,
     SymbolOptionMixin {
     coordinateSystem?: 'cartesian2d' | 'polar'
 
@@ -89,8 +89,6 @@ export interface LineSeriesOption extends SeriesOption,
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
     showAllSymbol?: 'auto'
-
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
 
     data?: (LineDataValue | LineDataItemOption)[]
 }

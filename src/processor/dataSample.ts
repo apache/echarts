@@ -17,10 +17,9 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import { StageHandler } from '../util/types';
+import { StageHandler, SeriesOption, SeriesSamplingOptionMixin } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
+import SeriesModel from '../model/Series';
 
 
 type Sampler = (frame: ArrayLike<number>) => number;
@@ -80,7 +79,7 @@ export default function (seriesType: string): StageHandler {
         // FIXME:TS never used, so comment it
         // modifyOutputEnd: true,
 
-        reset: function (seriesModel, ecModel, api) {
+        reset: function (seriesModel: SeriesModel<SeriesOption & SeriesSamplingOptionMixin>, ecModel, api) {
             var data = seriesModel.getData();
             var sampling = seriesModel.get('sampling');
             var coordSys = seriesModel.coordinateSystem;

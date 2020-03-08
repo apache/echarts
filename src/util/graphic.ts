@@ -1176,7 +1176,7 @@ function animateOrSetProps<Props>(
     animatableModel?: Model<AnimationOptionMixin> & {
         getAnimationDelayParams?: (el: Element<Props>, dataIndex: number) => AnimationDelayCallbackParam
     },
-    dataIndex?: number,
+    dataIndex?: number | (() => void),
     cb?: () => void
 ) {
     if (typeof dataIndex === 'function') {
@@ -1200,14 +1200,14 @@ function animateOrSetProps<Props>(
         );
         if (typeof animationDelay === 'function') {
             animationDelay = animationDelay(
-                dataIndex,
+                dataIndex as number,
                 animatableModel.getAnimationDelayParams
-                    ? animatableModel.getAnimationDelayParams(el, dataIndex)
+                    ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
                     : null
             );
         }
         if (typeof duration === 'function') {
-            duration = duration(dataIndex);
+            duration = duration(dataIndex as number);
         }
 
         duration > 0
@@ -1237,16 +1237,18 @@ function animateOrSetProps<Props>(
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
-export function updateProps<Props>(
+function updateProps<Props>(
     el: Element<Props>,
     props: Props,
     // TODO: TYPE AnimatableModel
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number,
+    dataIndex?: number | (() => void),
     cb?: () => void
 ) {
     animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
 }
+
+export {updateProps};
 
 /**
  * Init graphic element properties with or without animation according to the
@@ -1260,7 +1262,7 @@ export function initProps<Props>(
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number,
+    dataIndex?: number | (() => void),
     cb?: () => void
 ) {
     animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);

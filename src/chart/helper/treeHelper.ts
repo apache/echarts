@@ -17,11 +17,16 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import { Payload } from '../../util/types';
+import SeriesModel from '../../model/Series';
+import {TreeNode} from '../../data/Tree';
 
-export function retrieveTargetInfo(payload, validPayloadTypes, seriesModel) {
+export function retrieveTargetInfo(
+    payload: Payload,
+    validPayloadTypes: string[],
+    seriesModel: SeriesModel
+) {
     if (payload && zrUtil.indexOf(validPayloadTypes, payload.type) >= 0) {
         var root = seriesModel.getData().tree.root;
         var targetNode = payload.targetNode;
@@ -42,7 +47,7 @@ export function retrieveTargetInfo(payload, validPayloadTypes, seriesModel) {
 }
 
 // Not includes the given node at the last item.
-export function getPathToRoot(node) {
+export function getPathToRoot(node: TreeNode): TreeNode[] {
     var path = [];
     while (node) {
         node = node.parentNode;
@@ -51,13 +56,13 @@ export function getPathToRoot(node) {
     return path.reverse();
 }
 
-export function aboveViewRoot(viewRoot, node) {
+export function aboveViewRoot(viewRoot: TreeNode, node: TreeNode) {
     var viewPath = getPathToRoot(viewRoot);
     return zrUtil.indexOf(viewPath, node) >= 0;
 }
 
 // From root to the input node (the input node will be included).
-export function wrapTreePathInfo(node, seriesModel) {
+export function wrapTreePathInfo(node: TreeNode, seriesModel: SeriesModel) {
     var treePathInfo = [];
 
     while (node) {

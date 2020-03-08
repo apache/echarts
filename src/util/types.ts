@@ -777,7 +777,7 @@ export interface LabelGuideLineOption {
     show?: boolean
     length?: number
     length2?: number
-    smooth?: boolean
+    smooth?: boolean | number
     lineStyle?: LineStyleOption
 }
 
@@ -1090,6 +1090,12 @@ export interface SeriesLargeOptionMixin {
 }
 export interface SeriesStackOptionMixin {
     stack?: string
+}
+
+type SamplingFunc = (frame: ArrayLike<number>) => number
+
+export interface SeriesSamplingOptionMixin {
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

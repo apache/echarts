@@ -30,7 +30,7 @@ import { DimensionLoose, ParsedValue } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
 type TreeTraverseOrder = 'preorder' | 'postorder';
-type TreeTraverseCallback<Ctx> = (this: Ctx, node: TreeNode) => boolean;
+type TreeTraverseCallback<Ctx> = (this: Ctx, node: TreeNode) => boolean | void;
 type TreeTraverseOption = {
     order?: TreeTraverseOrder
     attr?: 'children' | 'viewChildren'
@@ -42,7 +42,7 @@ interface TreeNodeData {
     children?: TreeNodeData[]
 }
 
-class TreeNode {
+export class TreeNode {
     name: string
 
     depth: number = 0
@@ -187,7 +187,7 @@ class TreeNode {
         return ancestors;
     }
 
-    getValue(dimension: DimensionLoose): ParsedValue {
+    getValue(dimension?: DimensionLoose): ParsedValue {
         var data = this.hostTree.data;
         return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
     }
@@ -399,7 +399,10 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
     static createTree<T extends TreeNodeData, HostModel extends Model, LevelOption, LeavesOption>(
         dataRoot: T,
         hostModel: HostModel,
-        treeOptions?: {levels: LevelOption[], leaves: LeavesOption},
+        treeOptions?: {
+            levels?: LevelOption[],
+            leaves?: LeavesOption
+        },
         beforeLink?: (data: List) => void
     ) {
 

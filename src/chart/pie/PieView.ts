@@ -26,7 +26,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, DisplayState } from '../../util/types';
 import List from '../../data/List';
-import PieSeriesModel from './PieSeries';
+import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import { Dictionary } from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 
@@ -121,7 +121,7 @@ class PiePiece extends graphic.Group {
         var labelText = this.childAt(2) as PieceElementExtension;
 
         var seriesModel = data.hostModel as PieSeriesModel;
-        var itemModel = data.getItemModel(idx);
+        var itemModel = data.getItemModel<PieDataItemOption>(idx);
         var layout = data.getItemLayout(idx) as graphic.Sector['shape'];
         var sectorShape = zrUtil.extend({
             label: ''
@@ -235,7 +235,7 @@ class PiePiece extends graphic.Group {
         var labelText = this.childAt(2) as (PieceElementExtension & graphic.Text);
 
         var seriesModel = data.hostModel;
-        var itemModel = data.getItemModel(idx);
+        var itemModel = data.getItemModel<PieDataItemOption>(idx);
         var layout = data.getItemLayout(idx);
         var labelLayout = layout.label;
         var visualColor = data.getItemVisual(idx, 'color');
@@ -282,9 +282,9 @@ class PiePiece extends graphic.Group {
         });
 
         var labelModel = itemModel.getModel('label');
-        var labelHoverModel = itemModel.getModel('emphasis.label');
+        var labelHoverModel = itemModel.getModel(['emphasis', 'label']);
         var labelLineModel = itemModel.getModel('labelLine');
-        var labelLineHoverModel = itemModel.getModel('emphasis.labelLine');
+        var labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
         var visualColor = data.getItemVisual(idx, 'color');
 
         graphic.setLabelStyle(

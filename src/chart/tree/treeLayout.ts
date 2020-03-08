@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {
     eachAfter,
     eachBefore
@@ -29,16 +27,20 @@ import {
     secondWalk,
     separation as sep,
     radialCoordinate,
-    getViewRect
+    getViewRect,
+    LayoutTreeNode
 } from './layoutHelper';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import TreeSeriesModel from './TreeSeries';
 
-export default function (ecModel, api) {
-    ecModel.eachSeriesByType('tree', function (seriesModel) {
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+    ecModel.eachSeriesByType('tree', function (seriesModel: TreeSeriesModel) {
         commonLayout(seriesModel, api);
     });
 }
 
-function commonLayout(seriesModel, api) {
+function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
     var layoutInfo = getViewRect(seriesModel, api);
     seriesModel.layoutInfo = layoutInfo;
     var layout = seriesModel.get('layout');
@@ -59,7 +61,7 @@ function commonLayout(seriesModel, api) {
         separation = sep();
     }
 
-    var virtualRoot = seriesModel.getData().tree.root;
+    var virtualRoot = seriesModel.getData().tree.root as LayoutTreeNode;
     var realRoot = virtualRoot.children[0];
 
     if (realRoot) {
@@ -71,7 +73,7 @@ function commonLayout(seriesModel, api) {
         var left = realRoot;
         var right = realRoot;
         var bottom = realRoot;
-        eachBefore(realRoot, function (node) {
+        eachBefore(realRoot, function (node: LayoutTreeNode) {
             var x = node.getLayout().x;
             if (x < left.getLayout().x) {
                 left = node;

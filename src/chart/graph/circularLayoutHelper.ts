@@ -20,7 +20,7 @@
 
 import * as vec2 from 'zrender/src/core/vector';
 import {getSymbolSize, getNodeGlobalScale} from './graphHelper';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
 import Graph from '../../data/Graph';
 import List from '../../data/List';
 
@@ -78,7 +78,7 @@ export function circularLayout(
     _layoutNodesBasedOn[basedOn](seriesModel, graph, nodeData, r, cx, cy, count);
 
     graph.eachEdge(function (edge) {
-        var curveness = edge.getModel().get('lineStyle.curveness') || 0;
+        var curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
         var p1 = vec2.clone(edge.node1.getLayout());
         var p2 = vec2.clone(edge.node2.getLayout());
         var cp1;

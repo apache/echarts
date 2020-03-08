@@ -22,7 +22,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import MapDraw from '../../component/helper/MapDraw';
 import ChartView from '../../view/Chart';
-import MapSeries from './MapSeries';
+import MapSeries, { MapDataItemOption } from './MapSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload } from '../../util/types';
@@ -170,9 +170,9 @@ class MapView extends ChartView {
 
                 var fullIndex = fullData.indexOfName(name);
 
-                var itemModel = originalData.getItemModel(originalDataIndex);
+                var itemModel = originalData.getItemModel<MapDataItemOption>(originalDataIndex);
                 var labelModel = itemModel.getModel('label');
-                var hoverLabelModel = itemModel.getModel('emphasis.label');
+                var hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
                 var regionGroup = fullData.getItemGraphicEl(fullIndex) as RegionGroupExtend;
 

@@ -21,7 +21,7 @@ import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
-import GaugeSeriesModel from './GaugeSeries';
+import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ColorString } from '../../util/types';
@@ -360,7 +360,7 @@ class GaugeView extends ChartView {
             .execute();
 
         data.eachItemGraphicEl(function (pointer: PointerPath, idx) {
-            var itemModel = data.getItemModel(idx);
+            var itemModel = data.getItemModel<GaugeDataItemOption>(idx);
             var pointerModel = itemModel.getModel('pointer');
 
             pointer.setShape({
@@ -381,7 +381,7 @@ class GaugeView extends ChartView {
             }
 
             graphic.setHoverStyle(
-                pointer, itemModel.getModel('emphasis.itemStyle').getItemStyle()
+                pointer, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle()
             );
         });
 

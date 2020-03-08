@@ -21,7 +21,7 @@
 // Applicable for charts that require applying color palette
 // in data level (like pie, funnel, chord).
 import {createHashMap} from 'zrender/src/core/util';
-import { StageHandler } from '../util/types';
+import { StageHandler, ItemStyleOption } from '../util/types';
 import SeriesModel from '../model/Series';
 
 interface SeriesModelWithPaletteScope extends SeriesModel {
@@ -65,11 +65,11 @@ export default function (seriesType: string): StageHandler {
                 var itemModel;
                 if (!singleDataColor || !singleDataBorderColor) {
                     // FIXME Performance
-                    itemModel = dataAll.getItemModel(rawIdx);
+                    itemModel = dataAll.getItemModel<{itemStyle: ItemStyleOption}>(rawIdx);
                 }
 
                 if (!singleDataColor) {
-                    var color = itemModel.get('itemStyle.color')
+                    var color = itemModel.get(['itemStyle', 'color'])
                         || seriesModel.getColorFromPalette(
                             dataAll.getName(rawIdx) || (rawIdx + ''),
                             (seriesModel as SeriesModelWithPaletteScope).__paletteScope,
@@ -82,7 +82,7 @@ export default function (seriesType: string): StageHandler {
                 }
 
                 if (!singleDataBorderColor) {
-                    var borderColor = itemModel.get('itemStyle.borderColor');
+                    var borderColor = itemModel.get(['itemStyle', 'borderColor']);
 
                     // Data is not filtered
                     if (filteredIdx != null) {

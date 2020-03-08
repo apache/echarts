@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
-import BoxplotSeriesModel from './BoxplotSeries';
+import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
@@ -175,7 +175,7 @@ function updateNormalBoxData(
         dataIndex
     );
 
-    var itemModel = data.getItemModel(dataIndex);
+    var itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
     var normalItemStyleModel = itemModel.getModel('itemStyle');
     var borderColor = data.getItemVisual(dataIndex, 'color');
 

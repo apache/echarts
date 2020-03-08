@@ -43,7 +43,7 @@ import List from '../../data/List';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
 
-interface MapDataItemOption extends
+export interface MapDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
     SelectableTarget {
 

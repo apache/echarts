@@ -83,7 +83,7 @@ export default function (seriesType: string, defaultSymbolType: string, legendSy
                 }
 
                 if (data.hasItemOption) {
-                    var itemModel = data.getItemModel(idx);
+                    var itemModel = data.getItemModel<SymbolOptionMixin>(idx);
                     var itemSymbolType = itemModel.getShallow('symbol', true);
                     var itemSymbolSize = itemModel.getShallow('symbolSize', true);
                     var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
