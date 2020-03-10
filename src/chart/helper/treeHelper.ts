@@ -36,12 +36,16 @@ export function retrieveTargetInfo(
         }
 
         if (targetNode && root.contains(targetNode)) {
-            return {node: targetNode};
+            return {
+                node: targetNode
+            };
         }
 
         var targetNodeId = payload.targetNodeId;
         if (targetNodeId != null && (targetNode = root.getNodeById(targetNodeId))) {
-            return {node: targetNode};
+            return {
+                node: targetNode
+            };
         }
     }
 }
@@ -62,7 +66,7 @@ export function aboveViewRoot(viewRoot: TreeNode, node: TreeNode) {
 }
 
 // From root to the input node (the input node will be included).
-export function wrapTreePathInfo(node: TreeNode, seriesModel: SeriesModel) {
+export function wrapTreePathInfo<T = unknown>(node: TreeNode, seriesModel: SeriesModel) {
     var treePathInfo = [];
 
     while (node) {
@@ -70,7 +74,7 @@ export function wrapTreePathInfo(node: TreeNode, seriesModel: SeriesModel) {
         treePathInfo.push({
             name: node.name,
             dataIndex: nodeDataIndex,
-            value: seriesModel.getRawValue(nodeDataIndex)
+            value: seriesModel.getRawValue(nodeDataIndex) as T
         });
         node = node.parentNode;
     }

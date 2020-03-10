@@ -424,7 +424,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         var data = this.getData();
         var tooltipDims = data.mapDimension('defaultedTooltip', true);
         var tooltipDimLen = tooltipDims.length;
-        var value = this.getRawValue(dataIndex);
+        var value = this.getRawValue(dataIndex) as any;
         var isValueArr = zrUtil.isArray(value);
 
         var color = data.getItemVisual(dataIndex, 'color') as ZRColor;

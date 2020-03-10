@@ -29,6 +29,7 @@ import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import { Dictionary } from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 function updateDataSelected(
     this: PiePiece,
@@ -85,10 +86,9 @@ function toggleItemSelected(
         : el.attr('position', position);
 }
 
-type PieceElementExtension = {
-    hoverIgnore?: boolean,
-    normalIgnore?: boolean,
-    ignore?: boolean
+interface PieceElementExtension extends Displayable {
+    hoverIgnore?: boolean
+    normalIgnore?: boolean
 };
 
 /**
@@ -179,7 +179,7 @@ class PiePiece extends graphic.Group {
                 itemModel.getModel('itemStyle').getItemStyle()
             )
         );
-        sector.hoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
+        sector.hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
         var cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);

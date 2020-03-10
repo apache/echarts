@@ -30,7 +30,7 @@ import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
 import type ContinuousModel from '../../component/visualMap/ContinuousModel';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
-import { StageHandlerProgressParams, Dictionary } from '../../util/types';
+import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -255,10 +255,10 @@ class HeatmapView extends ChartView {
                 hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
             }
 
-            var rawValue = seriesModel.getRawValue(idx);
+            var rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
             var defaultText = '-';
             if (rawValue && rawValue[2] != null) {
-                defaultText = rawValue[2];
+                defaultText = rawValue[2] + '';
             }
 
             graphic.setLabelStyle(

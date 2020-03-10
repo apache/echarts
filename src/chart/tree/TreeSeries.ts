@@ -41,9 +41,6 @@ interface CurveLineStyleOption extends LineStyleOption{
 export interface TreeSeriesNodeOption extends SymbolOptionMixin {
     name?: string
 
-    /**
-     * Item style of leave nodes
-     */
     itemStyle?: ItemStyleOption
     /**
      * Line style of the edge between node and it's parent.

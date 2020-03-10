@@ -17,27 +17,30 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * @file Sunburst action
  */
 
 import * as echarts from '../../echarts';
 import * as helper from '../helper/treeHelper';
+import SunburstSeriesModel from './SunburstSeries';
+import { Payload } from '../../util/types';
+import GlobalModel from '../../model/Global';
 
 var ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
+interface SunburstRootToNodePayload extends Payload {}
+
 echarts.registerAction(
     {type: ROOT_TO_NODE_ACTION, update: 'updateView'},
-    function (payload, ecModel) {
+    function (payload: SunburstRootToNodePayload, ecModel: GlobalModel) {
 
         ecModel.eachComponent(
             {mainType: 'series', subType: 'sunburst', query: payload},
             handleRootToNode
         );
 
-        function handleRootToNode(model, index) {
+        function handleRootToNode(model: SunburstSeriesModel, index: number) {
             var targetInfo = helper
                 .retrieveTargetInfo(payload, [ROOT_TO_NODE_ACTION], model);
 
@@ -53,19 +56,20 @@ echarts.registerAction(
     }
 );
 
-
 var HIGHLIGHT_ACTION = 'sunburstHighlight';
+
+interface SunburstHighlightPayload extends Payload {}
 
 echarts.registerAction(
     {type: HIGHLIGHT_ACTION, update: 'updateView'},
-    function (payload, ecModel) {
+    function (payload: SunburstHighlightPayload, ecModel: GlobalModel) {
 
         ecModel.eachComponent(
             {mainType: 'series', subType: 'sunburst', query: payload},
             handleHighlight
         );
 
-        function handleHighlight(model, index) {
+        function handleHighlight(model: SunburstSeriesModel, index: number) {
             var targetInfo = helper
                 .retrieveTargetInfo(payload, [HIGHLIGHT_ACTION], model);
 
@@ -79,16 +83,18 @@ echarts.registerAction(
 
 var UNHIGHLIGHT_ACTION = 'sunburstUnhighlight';
 
+interface SunburstUnhighlightPayload extends Payload {}
+
 echarts.registerAction(
     {type: UNHIGHLIGHT_ACTION, update: 'updateView'},
-    function (payload, ecModel) {
+    function (payload: SunburstUnhighlightPayload, ecModel: GlobalModel) {
 
         ecModel.eachComponent(
             {mainType: 'series', subType: 'sunburst', query: payload},
             handleUnhighlight
         );
 
-        function handleUnhighlight(model, index) {
+        function handleUnhighlight(model: SunburstSeriesModel, index: number) {
             payload.unhighlight = true;
         }
     }

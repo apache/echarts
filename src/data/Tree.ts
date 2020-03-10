@@ -204,9 +204,9 @@ export class TreeNode {
         return this.hostTree.data.getItemLayout(this.dataIndex);
     }
 
-    // TODO: TYPE Same type with Model#getModel
     getModel<T = unknown>(): Model<T>
-    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    // @depcrecated
+    // getModel<T = unknown, S extends keyof T = keyof T>(path: S): Model<T[S]>
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;

@@ -17,346 +17,361 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import { ECElement, ZRColor, ColorString } from '../../util/types';
+import { TreeNode } from '../../data/Tree';
+import SunburstSeriesModel, { SunburstSeriesNodeOption, SunburstSeriesOption } from './SunburstSeries';
+import GlobalModel from '../../model/Global';
+import { AllPropTypes } from 'zrender/src/core/types';
 
 var NodeHighlightPolicy = {
     NONE: 'none', // not downplay others
     DESCENDANT: 'descendant',
     ANCESTOR: 'ancestor',
     SELF: 'self'
-};
+} as const;
 
 var DEFAULT_SECTOR_Z = 2;
 var DEFAULT_TEXT_Z = 4;
 
+interface DrawTreeNode extends TreeNode {
+    piece: SunburstPiece
+}
 /**
  * Sunburstce of Sunburst including Sector, Label, LabelLine
- * @constructor
- * @extends {module:zrender/graphic/Group}
  */
-function SunburstPiece(node, seriesModel, ecModel) {
+class SunburstPiece extends graphic.Group {
 
-    graphic.Group.call(this);
+    node: TreeNode
 
-    var sector = new graphic.Sector({
-        z2: DEFAULT_SECTOR_Z
-    });
-    sector.seriesIndex = seriesModel.seriesIndex;
+    private _seriesModel: SunburstSeriesModel
+    private _ecModel: GlobalModel
 
-    var text = new graphic.Text({
-        z2: DEFAULT_TEXT_Z,
-        silent: node.getModel('label').get('silent')
-    });
-    this.add(sector);
-    this.add(text);
+    constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel) {
+        super();
 
-    this.updateData(true, node, 'normal', seriesModel, ecModel);
+        var sector = new graphic.Sector({
+            z2: DEFAULT_SECTOR_Z
+        });
+        (sector as ECElement).seriesIndex = seriesModel.seriesIndex;
 
-    // Hover to change label and labelLine
-    function onEmphasis() {
-        text.ignore = text.hoverIgnore;
+        var text = new graphic.Text({
+            z2: DEFAULT_TEXT_Z,
+            silent: node.getModel<SunburstSeriesNodeOption>().get(['label', 'silent'])
+        });
+        this.add(sector);
+        this.add(text);
+
+        this.updateData(true, node, 'normal', seriesModel, ecModel);
+
+        // Hover to change label and labelLine
+        // FIXME
+        // function onEmphasis() {
+        //     text.ignore = text.hoverIgnore;
+        // }
+        // function onNormal() {
+        //     text.ignore = text.normalIgnore;
+        // }
+        // this.on('emphasis', onEmphasis)
+        //     .on('normal', onNormal)
+        //     .on('mouseover', onEmphasis)
+        //     .on('mouseout', onNormal);
     }
-    function onNormal() {
-        text.ignore = text.normalIgnore;
-    }
-    this.on('emphasis', onEmphasis)
-        .on('normal', onNormal)
-        .on('mouseover', onEmphasis)
-        .on('mouseout', onNormal);
-}
 
-var SunburstPieceProto = SunburstPiece.prototype;
-
-SunburstPieceProto.updateData = function (
-    firstCreate,
-    node,
-    state,
-    seriesModel,
-    ecModel
-) {
-    this.node = node;
-    node.piece = this;
-
-    seriesModel = seriesModel || this._seriesModel;
-    ecModel = ecModel || this._ecModel;
-
-    var sector = this.childAt(0);
-    sector.dataIndex = node.dataIndex;
-
-    var itemModel = node.getModel();
-    var layout = node.getLayout();
-    // if (!layout) {
-    //     console.log(node.getLayout());
-    // }
-    var sectorShape = zrUtil.extend({}, layout);
-    sectorShape.label = null;
-
-    var visualColor = getNodeColor(node, seriesModel, ecModel);
-
-    fillDefaultColor(node, seriesModel, visualColor);
-
-    var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
-    var style;
-    if (state === 'normal') {
-        style = normalStyle;
-    }
-    else {
-        var stateStyle = itemModel.getModel(state + '.itemStyle')
-            .getItemStyle();
-        style = zrUtil.merge(stateStyle, normalStyle);
-    }
-    style = zrUtil.defaults(
-        {
-            lineJoin: 'bevel',
-            fill: style.fill || visualColor
-        },
-        style
-    );
-
-    if (firstCreate) {
-        sector.setShape(sectorShape);
-        sector.shape.r = layout.r0;
-        graphic.updateProps(
-            sector,
-            {
-                shape: {
-                    r: layout.r
-                }
-            },
-            seriesModel,
-            node.dataIndex
-        );
-        sector.useStyle(style);
-    }
-    else if (typeof style.fill === 'object' && style.fill.type
-        || typeof sector.style.fill === 'object' && sector.style.fill.type
+    updateData(
+        firstCreate: boolean,
+        node: TreeNode,
+        state: 'emphasis' | 'normal' | 'highlight' | 'downplay',
+        seriesModel?: SunburstSeriesModel,
+        ecModel?: GlobalModel
     ) {
-        // Disable animation for gradient since no interpolation method
-        // is supported for gradient
-        graphic.updateProps(sector, {
-            shape: sectorShape
-        }, seriesModel);
-        sector.useStyle(style);
-    }
-    else {
-        graphic.updateProps(sector, {
-            shape: sectorShape,
-            style: style
-        }, seriesModel);
-    }
+        this.node = node;
+        (node as DrawTreeNode).piece = this;
 
-    this._updateLabel(seriesModel, visualColor, state);
+        seriesModel = seriesModel || this._seriesModel;
+        ecModel = ecModel || this._ecModel;
 
-    var cursorStyle = itemModel.getShallow('cursor');
-    cursorStyle && sector.attr('cursor', cursorStyle);
+        var sector = this.childAt(0) as graphic.Sector;
+        (sector as ECElement).dataIndex = node.dataIndex;
 
-    if (firstCreate) {
-        var highlightPolicy = seriesModel.getShallow('highlightPolicy');
-        this._initEvents(sector, node, seriesModel, highlightPolicy);
-    }
+        var itemModel = node.getModel<SunburstSeriesNodeOption>();
+        var layout = node.getLayout();
+        // if (!layout) {
+        //     console.log(node.getLayout());
+        // }
+        var sectorShape = zrUtil.extend({}, layout);
+        sectorShape.label = null;
 
-    this._seriesModel = seriesModel || this._seriesModel;
-    this._ecModel = ecModel || this._ecModel;
-};
+        var visualColor = getNodeColor(node, seriesModel, ecModel);
 
-SunburstPieceProto.onEmphasis = function (highlightPolicy) {
-    var that = this;
-    this.node.hostTree.root.eachNode(function (n) {
-        if (n.piece) {
-            if (that.node === n) {
-                n.piece.updateData(false, n, 'emphasis');
-            }
-            else if (isNodeHighlighted(n, that.node, highlightPolicy)) {
-                n.piece.childAt(0).trigger('highlight');
-            }
-            else if (highlightPolicy !== NodeHighlightPolicy.NONE) {
-                n.piece.childAt(0).trigger('downplay');
-            }
-        }
-    });
-};
+        fillDefaultColor(node, seriesModel, visualColor);
 
-SunburstPieceProto.onNormal = function () {
-    this.node.hostTree.root.eachNode(function (n) {
-        if (n.piece) {
-            n.piece.updateData(false, n, 'normal');
-        }
-    });
-};
-
-SunburstPieceProto.onHighlight = function () {
-    this.updateData(false, this.node, 'highlight');
-};
-
-SunburstPieceProto.onDownplay = function () {
-    this.updateData(false, this.node, 'downplay');
-};
-
-SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
-    var itemModel = this.node.getModel();
-    var normalModel = itemModel.getModel('label');
-    var labelModel = state === 'normal' || state === 'emphasis'
-        ? normalModel
-        : itemModel.getModel(state + '.label');
-    var labelHoverModel = itemModel.getModel('emphasis.label');
-
-    var text = zrUtil.retrieve(
-        seriesModel.getFormattedLabel(
-            this.node.dataIndex, state, null, null, 'label'
-        ),
-        this.node.name
-    );
-    if (getLabelAttr('show') === false) {
-        text = '';
-    }
-
-    var layout = this.node.getLayout();
-    var labelMinAngle = labelModel.get('minAngle');
-    if (labelMinAngle == null) {
-        labelMinAngle = normalModel.get('minAngle');
-    }
-    labelMinAngle = labelMinAngle / 180 * Math.PI;
-    var angle = layout.endAngle - layout.startAngle;
-    if (labelMinAngle != null && Math.abs(angle) < labelMinAngle) {
-        // Not displaying text when angle is too small
-        text = '';
-    }
-
-    var label = this.childAt(1);
-
-    graphic.setLabelStyle(
-        label.style, label.hoverStyle || {}, normalModel, labelHoverModel,
-        {
-            defaultText: labelModel.getShallow('show') ? text : null,
-            autoColor: visualColor,
-            useInsideStyle: true
-        }
-    );
-
-    var midAngle = (layout.startAngle + layout.endAngle) / 2;
-    var dx = Math.cos(midAngle);
-    var dy = Math.sin(midAngle);
-
-    var r;
-    var labelPosition = getLabelAttr('position');
-    var labelPadding = getLabelAttr('distance') || 0;
-    var textAlign = getLabelAttr('align');
-    if (labelPosition === 'outside') {
-        r = layout.r + labelPadding;
-        textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
-    }
-    else {
-        if (!textAlign || textAlign === 'center') {
-            r = (layout.r + layout.r0) / 2;
-            textAlign = 'center';
-        }
-        else if (textAlign === 'left') {
-            r = layout.r0 + labelPadding;
-            if (midAngle > Math.PI / 2) {
-                textAlign = 'right';
-            }
-        }
-        else if (textAlign === 'right') {
-            r = layout.r - labelPadding;
-            if (midAngle > Math.PI / 2) {
-                textAlign = 'left';
-            }
-        }
-    }
-
-    label.attr('style', {
-        text: text,
-        textAlign: textAlign,
-        textVerticalAlign: getLabelAttr('verticalAlign') || 'middle',
-        opacity: getLabelAttr('opacity')
-    });
-
-    var textX = r * dx + layout.cx;
-    var textY = r * dy + layout.cy;
-    label.attr('position', [textX, textY]);
-
-    var rotateType = getLabelAttr('rotate');
-    var rotate = 0;
-    if (rotateType === 'radial') {
-        rotate = -midAngle;
-        if (rotate < -Math.PI / 2) {
-            rotate += Math.PI;
-        }
-    }
-    else if (rotateType === 'tangential') {
-        rotate = Math.PI / 2 - midAngle;
-        if (rotate > Math.PI / 2) {
-            rotate -= Math.PI;
-        }
-        else if (rotate < -Math.PI / 2) {
-            rotate += Math.PI;
-        }
-    }
-    else if (typeof rotateType === 'number') {
-        rotate = rotateType * Math.PI / 180;
-    }
-    label.attr('rotation', rotate);
-
-    function getLabelAttr(name) {
-        var stateAttr = labelModel.get(name);
-        if (stateAttr == null) {
-            return normalModel.get(name);
+        var normalStyle = itemModel.getModel('itemStyle').getItemStyle();
+        var style;
+        if (state === 'normal') {
+            style = normalStyle;
         }
         else {
-            return stateAttr;
+            var stateStyle = itemModel.getModel([state, 'itemStyle'])
+                .getItemStyle();
+            style = zrUtil.merge(stateStyle, normalStyle);
+        }
+        style = zrUtil.defaults(
+            {
+                lineJoin: 'bevel',
+                fill: style.fill || visualColor
+            },
+            style
+        );
+
+        if (firstCreate) {
+            sector.setShape(sectorShape);
+            sector.shape.r = layout.r0;
+            graphic.updateProps(
+                sector,
+                {
+                    shape: {
+                        r: layout.r
+                    }
+                },
+                seriesModel,
+                node.dataIndex
+            );
+            sector.useStyle(style);
+        }
+        else if (typeof style.fill === 'object' && style.fill.type
+            || typeof sector.style.fill === 'object' && sector.style.fill.type
+        ) {
+            // Disable animation for gradient since no interpolation method
+            // is supported for gradient
+            graphic.updateProps(sector, {
+                shape: sectorShape
+            }, seriesModel);
+            sector.useStyle(style);
+        }
+        else {
+            graphic.updateProps(sector, {
+                shape: sectorShape,
+                style: style
+            }, seriesModel);
+        }
+
+        this._updateLabel(seriesModel, visualColor, state);
+
+        var cursorStyle = itemModel.getShallow('cursor');
+        cursorStyle && sector.attr('cursor', cursorStyle);
+
+        if (firstCreate) {
+            var highlightPolicy = seriesModel.getShallow('highlightPolicy');
+            this._initEvents(sector, node, seriesModel, highlightPolicy);
+        }
+
+        this._seriesModel = seriesModel || this._seriesModel;
+        this._ecModel = ecModel || this._ecModel;
+    }
+
+    onEmphasis(highlightPolicy: AllPropTypes<typeof NodeHighlightPolicy>) {
+        var that = this;
+        this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
+            if (n.piece) {
+                if (that.node === n) {
+                    n.piece.updateData(false, n, 'emphasis');
+                }
+                else if (isNodeHighlighted(n, that.node, highlightPolicy)) {
+                    n.piece.childAt(0).trigger('highlight');
+                }
+                else if (highlightPolicy !== NodeHighlightPolicy.NONE) {
+                    n.piece.childAt(0).trigger('downplay');
+                }
+            }
+        });
+    }
+
+    onNormal() {
+        this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
+            if (n.piece) {
+                n.piece.updateData(false, n, 'normal');
+            }
+        });
+    }
+
+    onHighlight() {
+        this.updateData(false, this.node, 'highlight');
+    }
+
+    onDownplay() {
+        this.updateData(false, this.node, 'downplay');
+    }
+
+    _updateLabel(
+        seriesModel: SunburstSeriesModel,
+        visualColor: ColorString,
+        state: 'emphasis' | 'normal' | 'highlight' | 'downplay'
+    ) {
+        var itemModel = this.node.getModel<SunburstSeriesNodeOption>();
+        var normalModel = itemModel.getModel('label');
+        var labelModel = state === 'normal' || state === 'emphasis'
+            ? normalModel
+            : itemModel.getModel([state, 'label']);
+        var labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+
+        var text = zrUtil.retrieve(
+            seriesModel.getFormattedLabel(
+                this.node.dataIndex, state, null, null, 'label'
+            ),
+            this.node.name
+        );
+        if (getLabelAttr('show') === false) {
+            text = '';
+        }
+
+        var layout = this.node.getLayout();
+        var labelMinAngle = labelModel.get('minAngle');
+        if (labelMinAngle == null) {
+            labelMinAngle = normalModel.get('minAngle');
+        }
+        labelMinAngle = labelMinAngle / 180 * Math.PI;
+        var angle = layout.endAngle - layout.startAngle;
+        if (labelMinAngle != null && Math.abs(angle) < labelMinAngle) {
+            // Not displaying text when angle is too small
+            text = '';
+        }
+
+        var label = this.childAt(1) as graphic.Text;
+
+        graphic.setLabelStyle(
+            label.style, label.hoverStyle || {}, normalModel, labelHoverModel,
+            {
+                defaultText: labelModel.getShallow('show') ? text : null,
+                autoColor: visualColor,
+                useInsideStyle: true
+            }
+        );
+
+        var midAngle = (layout.startAngle + layout.endAngle) / 2;
+        var dx = Math.cos(midAngle);
+        var dy = Math.sin(midAngle);
+
+        var r;
+        var labelPosition = getLabelAttr('position');
+        var labelPadding = getLabelAttr('distance') || 0;
+        var textAlign = getLabelAttr('align');
+        if (labelPosition === 'outside') {
+            r = layout.r + labelPadding;
+            textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
+        }
+        else {
+            if (!textAlign || textAlign === 'center') {
+                r = (layout.r + layout.r0) / 2;
+                textAlign = 'center';
+            }
+            else if (textAlign === 'left') {
+                r = layout.r0 + labelPadding;
+                if (midAngle > Math.PI / 2) {
+                    textAlign = 'right';
+                }
+            }
+            else if (textAlign === 'right') {
+                r = layout.r - labelPadding;
+                if (midAngle > Math.PI / 2) {
+                    textAlign = 'left';
+                }
+            }
+        }
+
+        label.attr('style', {
+            text: text,
+            textAlign: textAlign,
+            textVerticalAlign: getLabelAttr('verticalAlign') || 'middle',
+            opacity: getLabelAttr('opacity')
+        });
+
+        var textX = r * dx + layout.cx;
+        var textY = r * dy + layout.cy;
+        label.attr('position', [textX, textY]);
+
+        var rotateType = getLabelAttr('rotate');
+        var rotate = 0;
+        if (rotateType === 'radial') {
+            rotate = -midAngle;
+            if (rotate < -Math.PI / 2) {
+                rotate += Math.PI;
+            }
+        }
+        else if (rotateType === 'tangential') {
+            rotate = Math.PI / 2 - midAngle;
+            if (rotate > Math.PI / 2) {
+                rotate -= Math.PI;
+            }
+            else if (rotate < -Math.PI / 2) {
+                rotate += Math.PI;
+            }
+        }
+        else if (typeof rotateType === 'number') {
+            rotate = rotateType * Math.PI / 180;
+        }
+        label.attr('rotation', rotate);
+
+        type LabelOption = SunburstSeriesNodeOption['label']
+        function getLabelAttr<T extends keyof LabelOption>(name: T): LabelOption[T] {
+            var stateAttr = labelModel.get(name);
+            if (stateAttr == null) {
+                return normalModel.get(name);
+            }
+            else {
+                return stateAttr;
+            }
         }
     }
-};
 
-SunburstPieceProto._initEvents = function (
-    sector,
-    node,
-    seriesModel,
-    highlightPolicy
-) {
-    sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
+    _initEvents(
+        sector: graphic.Sector,
+        node: TreeNode,
+        seriesModel: SunburstSeriesModel,
+        highlightPolicy: SunburstSeriesOption['highlightPolicy']
+    ) {
+        sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
-    var that = this;
-    var onEmphasis = function () {
-        that.onEmphasis(highlightPolicy);
-    };
-    var onNormal = function () {
-        that.onNormal();
-    };
-    var onDownplay = function () {
-        that.onDownplay();
-    };
-    var onHighlight = function () {
-        that.onHighlight();
-    };
+        var that = this;
+        var onEmphasis = function () {
+            that.onEmphasis(highlightPolicy);
+        };
+        var onNormal = function () {
+            that.onNormal();
+        };
+        var onDownplay = function () {
+            that.onDownplay();
+        };
+        var onHighlight = function () {
+            that.onHighlight();
+        };
 
-    if (seriesModel.isAnimationEnabled()) {
-        sector
-            .on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal)
-            .on('downplay', onDownplay)
-            .on('highlight', onHighlight);
+        if (seriesModel.isAnimationEnabled()) {
+            sector
+                .on('mouseover', onEmphasis)
+                .on('mouseout', onNormal)
+                .on('emphasis', onEmphasis)
+                .on('normal', onNormal)
+                .on('downplay', onDownplay)
+                .on('highlight', onHighlight);
+        }
     }
-};
 
-zrUtil.inherits(SunburstPiece, graphic.Group);
+}
+
 
 export default SunburstPiece;
 
 
 /**
  * Get node color
- *
- * @param {TreeNode} node the node to get color
- * @param {module:echarts/model/Series} seriesModel series
- * @param {module:echarts/model/Global} ecModel echarts defaults
  */
-function getNodeColor(node, seriesModel, ecModel) {
+function getNodeColor(
+    node: TreeNode,
+    seriesModel: SunburstSeriesModel,
+    ecModel: GlobalModel
+) {
     // Color from visualMap
     var visualColor = node.getVisual('color');
     var visualMetaList = node.getVisual('visualMeta');
@@ -366,7 +381,7 @@ function getNodeColor(node, seriesModel, ecModel) {
     }
 
     // Self color or level color
-    var color = node.getModel('itemStyle').get('color');
+    var color = node.getModel<SunburstSeriesNodeOption>().get(['itemStyle', 'color']);
     if (color) {
         return color;
     }
@@ -392,7 +407,7 @@ function getNodeColor(node, seriesModel, ecModel) {
  * @param {TreeNode} node current node
  * @return {number} index in root
  */
-function getRootId(node) {
+function getRootId(node: TreeNode) {
     var ancestor = node;
     while (ancestor.depth > 1) {
         ancestor = ancestor.parentNode;
@@ -402,7 +417,11 @@ function getRootId(node) {
     return zrUtil.indexOf(virtualRoot.children, ancestor);
 }
 
-function isNodeHighlighted(node, activeNode, policy) {
+function isNodeHighlighted(
+    node: TreeNode,
+    activeNode: TreeNode,
+    policy: AllPropTypes<typeof NodeHighlightPolicy>
+) {
     if (policy === NodeHighlightPolicy.NONE) {
         return false;
     }
@@ -418,7 +437,7 @@ function isNodeHighlighted(node, activeNode, policy) {
 }
 
 // Fix tooltip callback function params.color incorrect when pick a default color
-function fillDefaultColor(node, seriesModel, color) {
+function fillDefaultColor(node: TreeNode, seriesModel: SunburstSeriesModel, color: ZRColor) {
     var data = seriesModel.getData();
     data.setItemVisual(node.dataIndex, 'color', color);
 }

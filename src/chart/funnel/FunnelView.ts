@@ -29,7 +29,7 @@ import Displayable from 'zrender/src/graphic/Displayable';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
-type ExtendedDisplayable = Displayable & {
+type FunnelLabelEl = Displayable & {
     hoverIgnore?: boolean
     normalIgnore?: boolean
 }
@@ -57,12 +57,12 @@ class FunnelPiece extends graphic.Group {
         var text = this.childAt(2) as graphic.Text;
 
         if (toState === 'emphasis') {
-            labelLine.ignore = (labelLine as ExtendedDisplayable).hoverIgnore;
-            text.ignore = (text as ExtendedDisplayable).hoverIgnore;
+            labelLine.ignore = (labelLine as FunnelLabelEl).hoverIgnore;
+            text.ignore = (text as FunnelLabelEl).hoverIgnore;
         }
         else {
-            labelLine.ignore = (labelLine as ExtendedDisplayable).normalIgnore;
-            text.ignore = (text as ExtendedDisplayable).normalIgnore;
+            labelLine.ignore = (labelLine as FunnelLabelEl).normalIgnore;
+            text.ignore = (text as FunnelLabelEl).normalIgnore;
         }
     }
 
@@ -171,11 +171,11 @@ class FunnelPiece extends graphic.Group {
             }
         );
 
-        labelText.ignore = (labelText as ExtendedDisplayable).normalIgnore = !labelModel.get('show');
-        (labelText as ExtendedDisplayable).hoverIgnore = !labelHoverModel.get('show');
+        labelText.ignore = (labelText as FunnelLabelEl).normalIgnore = !labelModel.get('show');
+        (labelText as FunnelLabelEl).hoverIgnore = !labelHoverModel.get('show');
 
-        labelLine.ignore = (labelLine as ExtendedDisplayable).normalIgnore = !labelLineModel.get('show');
-        (labelLine as ExtendedDisplayable).hoverIgnore = !labelLineHoverModel.get('show');
+        labelLine.ignore = (labelLine as FunnelLabelEl).normalIgnore = !labelLineModel.get('show');
+        (labelLine as FunnelLabelEl).hoverIgnore = !labelLineHoverModel.get('show');
 
         // Default use item visual color
         labelLine.setStyle({

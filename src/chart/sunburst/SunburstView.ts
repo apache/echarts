@@ -17,40 +17,59 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import SunburstPiece from './SunburstPiece';
 import DataDiffer from '../../data/DataDiffer';
+import SunburstSeriesModel, { SunburstSeriesNodeOption } from './SunburstSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { TreeNode } from '../../data/Tree';
 
-var ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
+const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
-var SunburstView = ChartView.extend({
+interface DrawTreeNode extends TreeNode {
+    parentNode: DrawTreeNode
+    piece: SunburstPiece
+    children: DrawTreeNode[]
+}
+class SunburstView extends ChartView {
 
-    type: 'sunburst',
+    static readonly type = 'sunburst'
+    readonly type = SunburstView.type
 
-    init: function () {
-    },
+    seriesModel: SunburstSeriesModel
+    api: ExtensionAPI
+    ecModel: GlobalModel
 
-    render: function (seriesModel, ecModel, api, payload) {
-        var that = this;
+    virtualPiece: SunburstPiece
+
+    private _oldChildren: DrawTreeNode[]
+
+    render(
+        seriesModel: SunburstSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        // @ts-ignore
+        payload
+    ) {
+        var self = this;
 
         this.seriesModel = seriesModel;
         this.api = api;
         this.ecModel = ecModel;
 
         var data = seriesModel.getData();
-        var virtualRoot = data.tree.root;
+        var virtualRoot = data.tree.root as DrawTreeNode;
 
-        var newRoot = seriesModel.getViewRoot();
+        var newRoot = seriesModel.getViewRoot() as DrawTreeNode;
 
         var group = this.group;
 
         var renderLabelForZeroData = seriesModel.get('renderLabelForZeroData');
 
-        var newChildren = [];
-        newRoot.eachNode(function (node) {
+        var newChildren: DrawTreeNode[] = [];
+        newRoot.eachNode(function (node: DrawTreeNode) {
             newChildren.push(node);
         });
         var oldChildren = this._oldChildren || [];
@@ -77,7 +96,7 @@ var SunburstView = ChartView.extend({
 
         this._oldChildren = newChildren;
 
-        function dualTravel(newChildren, oldChildren) {
+        function dualTravel(newChildren: DrawTreeNode[], oldChildren: DrawTreeNode[]) {
             if (newChildren.length === 0 && oldChildren.length === 0) {
                 return;
             }
@@ -88,19 +107,19 @@ var SunburstView = ChartView.extend({
                 .remove(zrUtil.curry(processNode, null))
                 .execute();
 
-            function getKey(node) {
+            function getKey(node: DrawTreeNode) {
                 return node.getId();
             }
 
-            function processNode(newId, oldId) {
-                var newNode = newId == null ? null : newChildren[newId];
-                var oldNode = oldId == null ? null : oldChildren[oldId];
+            function processNode(newIdx: number, oldIdx?: number) {
+                var newNode = newIdx == null ? null : newChildren[newIdx];
+                var oldNode = oldIdx == null ? null : oldChildren[oldIdx];
 
                 doRenderNode(newNode, oldNode);
             }
         }
 
-        function doRenderNode(newNode, oldNode) {
+        function doRenderNode(newNode: DrawTreeNode, oldNode: DrawTreeNode) {
             if (!renderLabelForZeroData && newNode && !newNode.getValue()) {
                 // Not render data with value 0
                 newNode = null;
@@ -136,7 +155,7 @@ var SunburstView = ChartView.extend({
             }
         }
 
-        function removeNode(node) {
+        function removeNode(node: DrawTreeNode) {
             if (!node) {
                 return;
             }
@@ -147,63 +166,55 @@ var SunburstView = ChartView.extend({
             }
         }
 
-        function renderRollUp(virtualRoot, viewRoot) {
+        function renderRollUp(virtualRoot: DrawTreeNode, viewRoot: DrawTreeNode) {
             if (viewRoot.depth > 0) {
                 // Render
-                if (that.virtualPiece) {
+                if (self.virtualPiece) {
                     // Update
-                    that.virtualPiece.updateData(
+                    self.virtualPiece.updateData(
                         false, virtualRoot, 'normal', seriesModel, ecModel);
                 }
                 else {
                     // Add
-                    that.virtualPiece = new SunburstPiece(
+                    self.virtualPiece = new SunburstPiece(
                         virtualRoot,
                         seriesModel,
                         ecModel
                     );
-                    group.add(that.virtualPiece);
+                    group.add(self.virtualPiece);
                 }
 
-                if (viewRoot.piece._onclickEvent) {
-                    viewRoot.piece.off('click', viewRoot.piece._onclickEvent);
-                }
-                var event = function (e) {
-                    that._rootToNode(viewRoot.parentNode);
-                };
-                viewRoot.piece._onclickEvent = event;
-                that.virtualPiece.on('click', event);
+                viewRoot.piece.off('click');
+                self.virtualPiece.on('click', function (e) {
+                    self._rootToNode(viewRoot.parentNode);
+                });
             }
-            else if (that.virtualPiece) {
+            else if (self.virtualPiece) {
                 // Remove
-                group.remove(that.virtualPiece);
-                that.virtualPiece = null;
+                group.remove(self.virtualPiece);
+                self.virtualPiece = null;
             }
         }
-    },
-
-    dispose: function () {
-    },
+    }
 
     /**
      * @private
      */
-    _initEvents: function () {
-        var that = this;
-
-        var event = function (e) {
+    _initEvents() {
+        this.group.off('click');
+        this.group.on('click', (e) => {
             var targetFound = false;
-            var viewRoot = that.seriesModel.getViewRoot();
-            viewRoot.eachNode(function (node) {
+            var viewRoot = this.seriesModel.getViewRoot();
+            viewRoot.eachNode((node: DrawTreeNode) => {
                 if (!targetFound
                     && node.piece && node.piece.childAt(0) === e.target
                 ) {
-                    var nodeClick = node.getModel().get('nodeClick');
+                    var nodeClick = node.getModel<SunburstSeriesNodeOption>().get('nodeClick');
                     if (nodeClick === 'rootToNode') {
-                        that._rootToNode(node);
+                        this._rootToNode(node);
                     }
                     else if (nodeClick === 'link') {
-                        var itemModel = node.getModel();
+                        var itemModel = node.getModel<SunburstSeriesNodeOption>();
                         var link = itemModel.get('link');
                         if (link) {
                             var linkTarget = itemModel.get('target', true)
@@ -214,19 +225,13 @@ var SunburstView = ChartView.extend({
                     targetFound = true;
                 }
             });
-        };
-
-        if (this.group._onclickEvent) {
-            this.group.off('click', this.group._onclickEvent);
-        }
-        this.group.on('click', event);
-        this.group._onclickEvent = event;
-    },
+        });
+    }
 
     /**
      * @private
      */
-    _rootToNode: function (node) {
+    _rootToNode(node: DrawTreeNode) {
         if (node !== this.seriesModel.getViewRoot()) {
             this.api.dispatchAction({
                 type: ROOT_TO_NODE_ACTION,
@@ -235,12 +240,12 @@ var SunburstView = ChartView.extend({
                 targetNode: node
             });
         }
-    },
+    }
 
     /**
      * @implement
      */
-    containPoint: function (point, seriesModel) {
+    containPoint(point: number[], seriesModel: SunburstSeriesModel) {
         var treeRoot = seriesModel.getData();
         var itemLayout = treeRoot.getItemLayout(0);
         if (itemLayout) {
@@ -251,6 +256,9 @@ var SunburstView = ChartView.extend({
         }
     }
 
-});
+}
+
+
+ChartView.registerClass(SunburstView);
 
 export default SunburstView;

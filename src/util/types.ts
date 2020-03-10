@@ -715,6 +715,8 @@ export interface TextCommonOption extends ShadowOptionMixin {
     // @deprecated
     baseline?: VerticalAlign
 
+    opacity?: number
+
     lineHeight?: number
     backgroundColor?: ColorString | {
         image: ImageLike

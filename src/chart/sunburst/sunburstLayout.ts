@@ -17,16 +17,22 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import SunburstSeriesModel, { SunburstSeriesNodeOption, SunburstSeriesOption } from './SunburstSeries';
+import { TreeNode } from '../../data/Tree';
 
 // var PI2 = Math.PI * 2;
 var RADIAN = Math.PI / 180;
 
-export default function (seriesType, ecModel, api, payload) {
-    ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+export default function (
+    seriesType: 'sunburst',
+    ecModel: GlobalModel,
+    api: ExtensionAPI
+) {
+    ecModel.eachSeriesByType(seriesType, function (seriesModel: SunburstSeriesModel) {
         var center = seriesModel.get('center');
         var radius = seriesModel.get('radius');
 
@@ -59,10 +65,10 @@ export default function (seriesType, ecModel, api, payload) {
 
         var validDataCount = 0;
         zrUtil.each(treeRoot.children, function (child) {
-            !isNaN(child.getValue()) && validDataCount++;
+            !isNaN(child.getValue() as number) && validDataCount++;
         });
 
-        var sum = treeRoot.getValue();
+        var sum = treeRoot.getValue() as number;
         // Sum may be 0
         var unitRadian = Math.PI / (sum || validDataCount) * 2;
 
@@ -84,7 +90,7 @@ export default function (seriesType, ecModel, api, payload) {
          * Render a tree
          * @return increased angle
          */
-        var renderNode = function (node, startAngle) {
+        var renderNode = function (node: TreeNode, startAngle: number) {
             if (!node) {
                 return;
             }
@@ -94,7 +100,7 @@ export default function (seriesType, ecModel, api, payload) {
             // Render self
             if (node !== virtualRoot) {
                 // Tree node is virtual, so it doesn't need to be drawn
-                var value = node.getValue();
+                var value = node.getValue() as number;
 
                 var angle = (sum === 0 && stillShowZeroSum)
                     ? unitRadian : (value * unitRadian);
@@ -113,11 +119,15 @@ export default function (seriesType, ecModel, api, payload) {
                 var rStart = r0 + rPerLevel * depth;
                 var rEnd = r0 + rPerLevel * (depth + 1);
 
-                var itemModel = node.getModel();
+                var itemModel = node.getModel<SunburstSeriesNodeOption>();
+                // @ts-ignore. TODO this is not provided to developer yet. Rename it.
                 if (itemModel.get('r0') != null) {
+                    // @ts-ignore
                     rStart = parsePercent(itemModel.get('r0'), size / 2);
                 }
+                // @ts-ignore
                 if (itemModel.get('r') != null) {
+                    // @ts-ignore
                     rEnd = parsePercent(itemModel.get('r'), size / 2);
                 }
 
@@ -169,19 +179,16 @@ export default function (seriesType, ecModel, api, payload) {
 
 /**
  * Init node children by order and update visual
- *
- * @param {TreeNode} node  root node
- * @param {boolean}  isAsc if is in ascendant order
  */
-function initChildren(node, isAsc) {
+function initChildren(node: TreeNode, sortOrder?: SunburstSeriesOption['sort']) {
     var children = node.children || [];
 
-    node.children = sort(children, isAsc);
+    node.children = sort(children, sortOrder);
 
     // Init children recursively
     if (children.length) {
         zrUtil.each(node.children, function (child) {
-            initChildren(child, isAsc);
+            initChildren(child, sortOrder);
         });
     }
 }
@@ -193,14 +200,14 @@ function initChildren(node, isAsc) {
  * @param {string | function | null} sort sort method
  *                                   See SunburstSeries.js for details.
  */
-function sort(children, sortOrder) {
+function sort(children: TreeNode[], sortOrder: SunburstSeriesOption['sort']) {
     if (typeof sortOrder === 'function') {
         return children.sort(sortOrder);
     }
     else {
         var isAsc = sortOrder === 'asc';
         return children.sort(function (a, b) {
-            var diff = (a.getValue() - b.getValue()) * (isAsc ? 1 : -1);
+            var diff = ((a.getValue() as number) - (b.getValue() as number)) * (isAsc ? 1 : -1);
             return diff === 0
                 ? (a.dataIndex - b.dataIndex) * (isAsc ? -1 : 1)
                 : diff;

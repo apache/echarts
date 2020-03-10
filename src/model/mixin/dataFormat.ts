@@ -147,7 +147,7 @@ class DataFormatMixin {
     getRawValue(
         idx: number,
         dataType?: string
-    ) {
+    ): unknown {
         return retrieveRawValue(this.getData(dataType), idx);
     }
 
