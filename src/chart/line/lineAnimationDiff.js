@@ -166,6 +166,7 @@ export default function (
 
     // Diff result may be crossed if all items are changed
     // Sort by data index
+    rawIndices =  Array.from(new Set(rawIndices));
     sortedIndices.sort(function (a, b) {
         return rawIndices[a] - rawIndices[b];
     });
