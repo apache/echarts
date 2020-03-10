@@ -34,7 +34,7 @@ export default SeriesModel.extend({
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createListFromArray(this.getSource(), this);
+        return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
     },
 
     defaultOption: {
@@ -51,7 +51,7 @@ export default SeriesModel.extend({
         // polarIndex: 0,
 
         // If clip the overflow value
-        clipOverflow: true,
+        clip: true,
         // cursor: null,
 
         label: {

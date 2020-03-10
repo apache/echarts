@@ -32,8 +32,11 @@ export default function () {
         var originalLarge = fields.large;
         var originalProgressive = fields.progressiveRender;
 
-        var large = fields.large = pipelineContext.large;
-        var progressive = fields.progressiveRender = pipelineContext.progressiveRender;
+        // FIXME: if the planner works on a filtered series, `pipelineContext` does not
+        // exists. See #11611 . Probably we need to modify this structure, see the comment
+        // on `performRawSeries` in `Schedular.js`.
+        var large = fields.large = pipelineContext && pipelineContext.large;
+        var progressive = fields.progressiveRender = pipelineContext && pipelineContext.progressiveRender;
 
         return !!((originalLarge ^ large) || (originalProgressive ^ progressive)) && 'reset';
     };

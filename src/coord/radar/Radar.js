@@ -28,6 +28,7 @@ import {
     niceScaleExtent
 } from '../axisHelper';
 import CoordinateSystem from '../../CoordinateSystem';
+import LogScale from '../../scale/Log';
 
 function Radar(radarModel, ecModel, api) {
 
@@ -40,7 +41,8 @@ function Radar(radarModel, ecModel, api) {
 
     this._indicatorAxes = zrUtil.map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
         var dim = 'indicator_' + idx;
-        var indicatorAxis = new IndicatorAxis(dim, new IntervalScale());
+        var indicatorAxis = new IndicatorAxis(dim,
+            (indicatorModel.get('axisType') === 'log') ? new LogScale() : new IntervalScale());
         indicatorAxis.name = indicatorModel.get('name');
         // Inject model and axis
         indicatorAxis.model = indicatorModel;
@@ -229,7 +231,7 @@ Radar.prototype.update = function (ecModel, api) {
                 interval = increaseInterval(interval);
             }
             // PENDING
-            var center = Math.round((rawExtent[0] + rawExtent[1]) / 2 / interval) * interval;
+            var center = Math.ceil((rawExtent[0] + rawExtent[1]) / 2 / interval) * interval;
             var halfSplitNumber = Math.round(splitNumber / 2);
             scale.setExtent(
                 numberUtil.round(center - halfSplitNumber * interval),

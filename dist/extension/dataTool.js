@@ -397,7 +397,7 @@ function parseNodes(parent, attributesMap) {
             // z
         }
         if (vizColorDom) {
-            node.itemStyle.normal.color = 'rgb(' +[
+            node.itemStyle.normal.color = 'rgb(' + [
                 getAttr(vizColorDom, 'r') | 0,
                 getAttr(vizColorDom, 'g') | 0,
                 getAttr(vizColorDom, 'b') | 0
@@ -428,7 +428,7 @@ function parseNodes(parent, attributesMap) {
                             attValue = parseFloat(attValue);
                             break;
                         case 'boolean':
-                            attValue = attValue.toLowerCase() == 'true';
+                            attValue = attValue.toLowerCase() === 'true';
                             break;
                         default:
                     }
@@ -487,16 +487,17 @@ function getAttr(el, attrName) {
     return el.getAttribute(attrName);
 }
 
-function getChildByTagName (parent, tagName) {
+function getChildByTagName(parent, tagName) {
     var node = parent.firstChild;
 
     while (node) {
         if (
-            node.nodeType != 1 ||
-            node.nodeName.toLowerCase() != tagName.toLowerCase()
+            node.nodeType !== 1
+            || node.nodeName.toLowerCase() !== tagName.toLowerCase()
         ) {
             node = node.nextSibling;
-        } else {
+        }
+        else {
             return node;
         }
     }
@@ -504,11 +505,11 @@ function getChildByTagName (parent, tagName) {
     return null;
 }
 
-function getChildrenByTagName (parent, tagName) {
+function getChildrenByTagName(parent, tagName) {
     var node = parent.firstChild;
     var children = [];
     while (node) {
-        if (node.nodeName.toLowerCase() == tagName.toLowerCase()) {
+        if (node.nodeName.toLowerCase() === tagName.toLowerCase()) {
             children.push(node);
         }
         node = node.nextSibling;
@@ -669,6 +670,15 @@ function asc(arr) {
  * Quantity of a number. e.g. 0.1, 1, 10, 100
  *
  * @param  {number} val
+ * @return {number}
+ */
+
+
+/**
+ * Exponent of the quantity of a number
+ * e.g., 1234 equals to 1.234*10^3, so quantityExponent(1234) is 3
+ *
+ * @param  {number} val non-negative value
  * @return {number}
  */
 

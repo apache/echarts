@@ -1,6 +1,6 @@
 # ECharts
 
-<a href="http://echarts.baidu.com">
+<a href="https://echarts.apache.org/">
     <img style="vertical-align: top;" src="./asset/logo.png?raw=true" alt="logo" height="50px">
 </a>
 
@@ -9,7 +9,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 Now ECharts is an incubator project of Apache Software Foundation.
 Please check its incubator status [here](http://incubator.apache.org/projects/echarts.html)
 
-**[中文官网](https://echarts.apache.org/zh/index.html)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/index.html)**
+**[中文官网](https://echarts.apache.org/zh/index.html)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/en/index.html)**
 
 [![Build Status](https://travis-ci.org/apache/incubator-echarts.svg?branch=master)](https://travis-ci.org/apache/incubator-echarts) [![](https://img.shields.io/npm/dw/echarts.svg?label=npm%20downloads&style=flat)](https://www.npmjs.com/package/echarts) [![Last npm release](https://img.shields.io/npm/v/echarts)](https://www.npmjs.com/package/echarts)
 
@@ -21,14 +21,6 @@ You may choose one of the following methods:
 + Download from Official Website in [English](https://echarts.apache.org/en/download.html)
 + `npm install echarts --save`
 + CDN: [jsDelivr CDN](https://www.jsdelivr.com/package/npm/echarts?path=dist)
-
-## Get ECharts GL
-
-ECharts-GL is an extension pack of ECharts, which provides 3D plots, globe visualization and WebGL acceleration.
-
-+ Get from [https://github.com/ecomfe/echarts-gl](https://github.com/ecomfe/echarts-gl)
-
-+ `npm install echarts-gl --save`
 
 ## Docs
 
@@ -80,13 +72,13 @@ npm run help
 # The same as `node build/build.js --help`
 ```
 
-Then the "production" files are generated in `dist` directory.
+Then the "production" files are generated in the `dist` directory.
 
 More custom build approaches can be checked in this tutorial: [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts) please.
 
 ## Contribution
 
-If you wish to debug locally, or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/.github/CONTRIBUTING.md) document.
+If you wish to debug locally or make pull requests, please refer to [contributing](https://github.com/apache/incubator-echarts/blob/master/CONTRIBUTING.md) document.
 
 ## Resources
 
@@ -96,11 +88,13 @@ If you wish to debug locally, or make pull requests, please refer to [contributi
 
 ### Extensions
 
++ [ECharts GL](https://github.com/ecomfe/echarts-gl) An extension pack of ECharts, which provides 3D plots, globe visualization, and WebGL acceleration.
+
 + [Liquidfill 水球图](https://github.com/ecomfe/echarts-liquidfill)
 
 + [Wordcloud 字符云](https://github.com/ecomfe/echarts-wordcloud)
 
-+ [Baidu Map 百度地图扩展](https://github.com/apache/incubator-echarts/tree/master/extension/bmap)
++ [Extension for Baidu Map 百度地图扩展](https://github.com/apache/incubator-echarts/tree/master/extension/bmap) An extension provides a wrapper of Baidu Map Service SDK. 
 
 + [vue-echarts](https://github.com/ecomfe/vue-echarts) ECharts component for Vue.js
 
@@ -114,7 +108,7 @@ ECharts is available under the Apache License V2.
 
 Please refer to [Apache Code of Conduct](https://www.apache.org/foundation/policies/conduct.html).
 
-## Publication
+## Paper
 
 Deqing Li, Honghui Mei, Yi Shen, Shuang Su, Wenli Zhang, Junting Wang, Ming Zu, Wei Chen.
 [ECharts: A Declarative Framework for Rapid Construction of Web-based Visualization](https://www.sciencedirect.com/science/article/pii/S2468502X18300068).

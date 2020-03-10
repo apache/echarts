@@ -39,21 +39,9 @@ under the License.
 
             require([
                 'echarts'
-
-                // 'extension/dataTool/gexf',
-
-                // 'echarts/chart/graph',
-
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/geo',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/visualMap'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 function createNodes(count) {
                     var nodes = [];

@@ -238,18 +238,21 @@ under the License.
                     grid: {
                         left: '10%',
                         right: 2,
-                        bottom: 80
+                        bottom: 100
                     },
                     yAxis: {
                         splitArea: {
                             show: true
                         }
                     },
-                    dataZoom: {
+                    dataZoom: [{
                         type: 'inside',
                         start: 10,
                         end: 30
-                    },
+                    }, {
+                        type: 'slider',
+                        bottom: 40
+                    }],
                     series: [{
                         name: 'line',
                         type: 'line',

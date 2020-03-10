@@ -175,15 +175,22 @@ export default echarts.extendComponentView({
                 return;
             }
 
-            // Series legend
+            // Legend to control series.
             if (seriesModel) {
                 var data = seriesModel.getData();
                 var color = data.getVisual('color');
+                var borderColor = data.getVisual('borderColor');
 
                 // If color is a callback function
                 if (typeof color === 'function') {
                     // Use the first data
                     color = color(seriesModel.getDataParams(0));
+                }
+
+                 // If borderColor is a callback function
+                if (typeof borderColor === 'function') {
+                    // Use the first data
+                    borderColor = borderColor(seriesModel.getDataParams(0));
                 }
 
                 // Using rect symbol defaultly
@@ -193,44 +200,47 @@ export default echarts.extendComponentView({
                 var itemGroup = this._createItem(
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType,
-                    itemAlign, color,
+                    itemAlign, color, borderColor,
                     selectMode
                 );
 
-                itemGroup.on('click', curry(dispatchSelectAction, name, api))
+                itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
                 legendDrawnMap.set(name, true);
             }
             else {
-                // Data legend of pie, funnel
+                // Legend to control data. In pie and funnel.
                 ecModel.eachRawSeries(function (seriesModel) {
+
                     // In case multiple series has same data name
                     if (legendDrawnMap.get(name)) {
                         return;
                     }
 
-                    if (seriesModel.legendDataProvider) {
-                        var data = seriesModel.legendDataProvider();
-                        var idx = data.indexOfName(name);
-                        if (idx < 0) {
+                    if (seriesModel.legendVisualProvider) {
+                        var provider = seriesModel.legendVisualProvider;
+                        if (!provider.containName(name)) {
                             return;
                         }
 
-                        var color = data.getItemVisual(idx, 'color');
+                        var idx = provider.indexOfName(name);
+
+                        var color = provider.getItemVisual(idx, 'color');
+                        var borderColor = provider.getItemVisual(idx, 'borderColor');
 
                         var legendSymbolType = 'roundRect';
 
                         var itemGroup = this._createItem(
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null,
-                            itemAlign, color,
+                            itemAlign, color, borderColor,
                             selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
-                        itemGroup.on('click', curry(dispatchSelectAction, name, api))
+                        itemGroup.on('click', curry(dispatchSelectAction, null, name, api, excludeSeriesId))
                             // Should not specify the series name, consider legend controls
                             // more than one pie series.
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
@@ -299,12 +309,14 @@ export default echarts.extendComponentView({
     _createItem: function (
         name, dataIndex, itemModel, legendModel,
         legendSymbolType, symbolType,
-        itemAlign, color, selectMode
+        itemAlign, color, borderColor, selectMode
     ) {
         var itemWidth = legendModel.get('itemWidth');
         var itemHeight = legendModel.get('itemHeight');
         var inactiveColor = legendModel.get('inactiveColor');
+        var inactiveBorderColor = legendModel.get('inactiveBorderColor');
         var symbolKeepAspect = legendModel.get('symbolKeepAspect');
+        var legendModelItemStyle = legendModel.getModel('itemStyle');
 
         var isSelected = legendModel.isSelected(name);
         var itemGroup = new Group();
@@ -318,7 +330,7 @@ export default echarts.extendComponentView({
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
-        itemGroup.add(createSymbol(
+        var legendSymbol = createSymbol(
             legendSymbolType,
             0,
             0,
@@ -327,7 +339,13 @@ export default echarts.extendComponentView({
             isSelected ? color : inactiveColor,
             // symbolKeepAspect default true for legend
             symbolKeepAspect == null ? true : symbolKeepAspect
-        ));
+        );
+        itemGroup.add(
+            setSymbolStyle(
+                legendSymbol, legendSymbolType, legendModelItemStyle,
+                borderColor, inactiveBorderColor, isSelected
+            )
+        );
 
         // Compose symbols
         // PENDING
@@ -339,8 +357,7 @@ export default echarts.extendComponentView({
             if (symbolType === 'none') {
                 symbolType = 'circle';
             }
-            // Put symbol in the center
-            itemGroup.add(createSymbol(
+            var legendSymbolCenter = createSymbol(
                 symbolType,
                 (itemWidth - size) / 2,
                 (itemHeight - size) / 2,
@@ -349,7 +366,14 @@ export default echarts.extendComponentView({
                 isSelected ? color : inactiveColor,
                 // symbolKeepAspect default true for legend
                 symbolKeepAspect == null ? true : symbolKeepAspect
-            ));
+            );
+            // Put symbol in the center
+            itemGroup.add(
+                setSymbolStyle(
+                    legendSymbolCenter, symbolType, legendModelItemStyle,
+                    borderColor, inactiveBorderColor, isSelected
+                )
+            );
         }
 
         var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
@@ -481,11 +505,30 @@ export default echarts.extendComponentView({
 
 });
 
-function dispatchSelectAction(name, api) {
+function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, inactiveBorderColor, isSelected) {
+    var itemStyle;
+    if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
+        itemStyle = legendModelItemStyle.getItemStyle();
+        symbol.style.stroke = borderColor;
+        if (!isSelected) {
+            itemStyle.stroke = inactiveBorderColor;
+        }
+    }
+    else {
+        itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
+    }
+    return symbol.setStyle(itemStyle);
+}
+
+function dispatchSelectAction(seriesName, dataName, api, excludeSeriesId) {
+    // downplay before unselect
+    dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId);
     api.dispatchAction({
         type: 'legendToggleSelect',
-        name: name
+        name: seriesName != null ? seriesName : dataName
     });
+    // highlight after select
+    dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 
 function dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId) {

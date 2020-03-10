@@ -185,10 +185,10 @@ export default echarts.extendChartView({
 
                 rect = new graphic.Rect({
                     shape: {
-                        x: point[0] - width / 2,
-                        y: point[1] - height / 2,
-                        width: width,
-                        height: height
+                        x: Math.floor(point[0] - width / 2),
+                        y: Math.floor(point[1] - height / 2),
+                        width: Math.ceil(width),
+                        height: Math.ceil(height)
                     },
                     style: {
                         fill: data.getItemVisual(idx, 'color'),

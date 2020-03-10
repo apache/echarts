@@ -34,9 +34,10 @@ export default {
     /**
      * @param {string} mapName
      * @param {Object} mapRecord {specialAreas, geoJSON}
+     * @param {string} nameProperty
      * @return {Object} {regions, boundingRect}
      */
-    load: function (mapName, mapRecord) {
+    load: function (mapName, mapRecord, nameProperty) {
 
         var parsed = inner(mapRecord).parsed;
 
@@ -50,11 +51,13 @@ export default {
 
         // https://jsperf.com/try-catch-performance-overhead
         try {
-            regions = geoJSON ? parseGeoJson(geoJSON) : [];
+            regions = geoJSON ? parseGeoJson(geoJSON, nameProperty) : [];
         }
         catch (e) {
             throw new Error('Invalid geoJson format\n' + e.message);
         }
+
+        fixNanhai(mapName, regions);
 
         each(regions, function (region) {
             var regionName = region.name;
@@ -72,8 +75,6 @@ export default {
                 );
             }
         });
-
-        fixNanhai(mapName, regions);
 
         return (inner(mapRecord).parsed = {
             regions: regions,

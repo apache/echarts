@@ -23,6 +23,7 @@ under the License.
         <meta charset="utf-8">
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -59,7 +60,17 @@ under the License.
                 font-size: 16px;
                 margin-bottom: 5px;
             }
+            #btn-area {
+                position: fixed;
+                left: 10px;
+                top: 10px;
+                z-index: 999999;
+                background-color: #fff;
+            }
         </style>
+
+        <div id="btn-area">
+        </div>
 
         <div id="main"></div>
 
@@ -145,6 +156,7 @@ under the License.
                                         '#675bba', '#fec42c', '#dd4444',
                                         '#d4df5a', '#cd4870'
                                     ],
+                                    highDownTarget: 'subtree',
                                     colorMappingBy: 'value',
                                     itemStyle: {
                                         normal: {
@@ -176,6 +188,45 @@ under the License.
                 chart.on('click', function (params) {
                     console.log(params);
                 });
+
+                initBtns('Only single bg highlighted for non-leaf', [
+                    'Disk Usage',
+                    'PrivateFrameworks'
+                ]);
+                initBtns('Both of the bg and content is highlighted for leaf', [
+                    'Alex.SpeechVoice'
+                ]);
+
+                function initBtns(desc, names) {
+                    var btnArea = document.getElementById('btn-area');
+
+                    var descEl = document.createElement('span');
+                    descEl.innerHTML = testHelper.encodeHTML(desc) + '&nbsp;:&nbsp;&nbsp;';
+                    btnArea.appendChild(descEl);
+
+                    var highDown = ['highlight', 'downplay'];
+
+                    for (var i = 0; i < names.length; i++) {
+                        for (var j = 0; j < highDown.length; j++) {
+                            var highDownName = highDown[j];
+                            var name = names[i];
+                            var btnEl = document.createElement('button');
+                            btnEl.innerHTML = testHelper.encodeHTML(highDownName + ': ' + name);
+                            btnEl.onclick = echarts.util.curry(clickHandler, highDownName, name);
+                            btnArea.appendChild(btnEl);
+                        }
+                    }
+
+                    function clickHandler(highDownName, name) {
+                        chart.dispatchAction({
+                            type: highDownName,
+                            seriesIndex: 0,
+                            name: name
+                        });
+                    }
+
+                    btnArea.appendChild(document.createElement('br'));
+                }
             }
 
         </script>
