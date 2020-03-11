@@ -17,16 +17,16 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {createHashMap} from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import ThemeRiverSeriesModel from './ThemeRiverSeries';
 
-export default function (ecModel) {
-    ecModel.eachSeriesByType('themeRiver', function (seriesModel) {
+export default function (ecModel: GlobalModel) {
+    ecModel.eachSeriesByType('themeRiver', function (seriesModel: ThemeRiverSeriesModel) {
         var data = seriesModel.getData();
         var rawData = seriesModel.getRawData();
         var colorList = seriesModel.get('color');
-        var idxMap = createHashMap();
+        var idxMap = createHashMap<number>();
 
         data.each(function (idx) {
             idxMap.set(data.getRawIndex(idx), idx);

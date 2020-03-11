@@ -17,37 +17,36 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {Path} from '../graphic';
+import { PathProps } from 'zrender/src/graphic/Path';
 
 /**
  * Sausage: similar to sector, but have half circle on both sides
- * @public
  */
 
-export default Path.extend({
+class SausageShape {
+    cx = 0
+    cy = 0
+    r0 = 0
+    r = 0
+    startAngle = 0
+    endAngle = Math.PI * 2
+    clockwise = true
+}
 
-    type: 'sausage',
+interface SausagePathProps extends PathProps {
+    shape?: SausageShape
+}
 
-    shape: {
+class SausagePath extends Path {
 
-        cx: 0,
+    type = 'sausage'
 
-        cy: 0,
+    constructor(opts?: SausagePathProps) {
+        super(opts, null, new SausageShape());
+    }
 
-        r0: 0,
-
-        r: 0,
-
-        startAngle: 0,
-
-        endAngle: Math.PI * 2,
-
-        clockwise: true
-    },
-
-    buildPath: function (ctx, shape) {
+    buildPath(ctx: CanvasRenderingContext2D, shape: SausageShape) {
         var x = shape.cx;
         var y = shape.cy;
         var r0 = Math.max(shape.r0 || 0, 0);
@@ -93,4 +92,6 @@ export default Path.extend({
 
         ctx.closePath();
     }
-});
+}
+
+export default SausagePath;

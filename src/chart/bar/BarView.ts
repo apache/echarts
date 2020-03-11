@@ -51,6 +51,8 @@ type SectorShape = graphic.Sector['shape']
 type SectorLayout = SectorShape;
 type RectLayout = RectShape;
 
+type BarPossiblePath = graphic.Sector | graphic.Rect | Sausage
+
 function isCartesian2D(coord: CoordSysOfBar): coord is Cartesian2D {
     return coord.type === 'cartesian2d';
 }
@@ -215,7 +217,7 @@ class BarView extends ChartView {
                     );
                 }
 
-                var el = oldData.getItemGraphicEl(oldIndex) as graphic.Rect | graphic.Sector;
+                var el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
                 if (!data.hasValue(newIndex)) {
                     group.remove(el);
                     return;
@@ -378,7 +380,7 @@ interface ElementCreator {
     (
         dataIndex: number, layout: RectLayout | SectorLayout, isHorizontalOrRadial: boolean,
         animationModel: BarSeriesModel, isUpdate: boolean, roundCap?: boolean
-    ): graphic.Sector | graphic.Rect
+    ): BarPossiblePath
 }
 
 var elementCreator: {
@@ -519,7 +521,7 @@ function isZeroOnPolar(layout: SectorLayout) {
 }
 
 function updateStyle(
-    el: graphic.Sector | graphic.Rect,
+    el: BarPossiblePath,
     data: List, dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,

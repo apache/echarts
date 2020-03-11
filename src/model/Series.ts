@@ -73,6 +73,19 @@ interface SeriesModel {
      * @return Point of tooltip. null/undefined can be returned.
      */
     getTooltipPosition(dataIndex: number): number[];
+
+    /**
+     * Get data indices for show tooltip content. See tooltip.
+     * Implement it if needed.
+     */
+    getAxisTooltipData(
+        dim: DimensionName[],
+        value: ScaleDataValue,
+        baseAxis: Axis
+    ): {
+        dataIndices: number[],
+        nestestValue: any
+    };
 }
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
@@ -532,18 +545,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return this.get('progressiveThreshold');
     }
 
-    /**
-     * Get data indices for show tooltip content. See tooltip.
-     * Implement it if needed.
-     */
-    getAxisTooltipData: (
-        dim: DimensionName[],
-        value: ScaleDataValue,
-        baseAxis: Axis
-    ) => {
-        dataIndices: number[],
-        nestestValue: any
-    };
 
     // /**
     //  * @see {module:echarts/stream/Scheduler}

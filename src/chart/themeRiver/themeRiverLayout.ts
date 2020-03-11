@@ -17,20 +17,28 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import ThemeRiverSeriesModel, { ThemeRiverSeriesOption } from './ThemeRiverSeries';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import List from '../../data/List';
 
-export default function (ecModel, api) {
+export interface ThemeRiverLayoutInfo {
+    rect: RectLike
+    boundaryGap: ThemeRiverSeriesOption['boundaryGap']
+}
 
-    ecModel.eachSeriesByType('themeRiver', function (seriesModel) {
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
+
+    ecModel.eachSeriesByType('themeRiver', function (seriesModel: ThemeRiverSeriesModel) {
 
         var data = seriesModel.getData();
 
         var single = seriesModel.coordinateSystem;
 
-        var layoutInfo = {};
+        var layoutInfo = {} as ThemeRiverLayoutInfo;
 
         // use the axis boundingRect for view
         var rect = single.getRect();
@@ -63,11 +71,11 @@ export default function (ecModel, api) {
 /**
  * The layout information about themeriver
  *
- * @param {module:echarts/data/List} data  data in the series
- * @param {module:echarts/model/Series} seriesModel  the model object of themeRiver series
- * @param {number} height  value used to compute every series height
+ * @param data  data in the series
+ * @param seriesModel  the model object of themeRiver series
+ * @param height  value used to compute every series height
  */
-function themeRiverLayout(data, seriesModel, height) {
+function themeRiverLayout(data: List<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
     if (!data.count()) {
         return;
     }
@@ -81,7 +89,7 @@ function themeRiverLayout(data, seriesModel, height) {
     var layerPoints = zrUtil.map(layerSeries, function (singleLayer) {
         return zrUtil.map(singleLayer.indices, function (idx) {
             var pt = coordSys.dataToPoint(data.get(timeDim, idx));
-            pt[1] = data.get(valueDim, idx);
+            pt[1] = data.get(valueDim, idx) as number;
             return pt;
         });
     });
@@ -118,17 +126,15 @@ function themeRiverLayout(data, seriesModel, height) {
  * Compute the baseLine of the rawdata
  * Inspired by Lee Byron's paper Stacked Graphs - Geometry & Aesthetics
  *
- * @param  {Array.<Array>} data  the points in each layer
- * @return {Object}
+ * @param  data  the points in each layer
  */
-function computeBaseline(data) {
+function computeBaseline(data: number[][][]) {
     var layerNum = data.length;
     var pointNum = data[0].length;
     var sums = [];
     var y0 = [];
     var max = 0;
-    var temp;
-    var base = {};
+    var temp = 0;
 
     for (var i = 0; i < pointNum; ++i) {
         for (var j = 0, temp = 0; j < layerNum; ++j) {
@@ -151,8 +157,9 @@ function computeBaseline(data) {
             max = sum;
         }
     }
-    base.y0 = y0;
-    base.max = max;
 
-    return base;
+    return {
+        y0,
+        max
+    };
 }

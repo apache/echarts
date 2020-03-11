@@ -17,28 +17,33 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import {ECPolygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
 import {bind, extend} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
+import ChartView from '../../view/Chart';
+import ThemeRiverSeriesModel from './ThemeRiverSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 
-export default echarts.extendChartView({
+type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>
 
-    type: 'themeRiver',
+class ThemeRiverView extends ChartView {
 
-    init: function () {
-        this._layers = [];
-    },
+    static readonly type = 'themeRiver'
+    readonly type = ThemeRiverView.type
 
-    render: function (seriesModel, ecModel, api) {
+    private _layersSeries: LayerSeries
+    private _layers: graphic.Group[] = []
+
+    render(seriesModel: ThemeRiverSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
+        var self = this;
 
         var group = this.group;
 
-        var layerSeries = seriesModel.getLayerSeries();
+        var layersSeries = seriesModel.getLayerSeries();
 
         var layoutInfo = data.getLayout('layoutInfo');
         var rect = layoutInfo.rect;
@@ -46,15 +51,15 @@ export default echarts.extendChartView({
 
         group.attr('position', [0, rect.y + boundaryGap[0]]);
 
-        function keyGetter(item) {
+        function keyGetter(item: LayerSeries[number]) {
             return item.name;
         }
         var dataDiffer = new DataDiffer(
-            this._layersSeries || [], layerSeries,
+            this._layersSeries || [], layersSeries,
             keyGetter, keyGetter
         );
 
-        var newLayersGroups = {};
+        var newLayersGroups: graphic.Group[] = [];
 
         dataDiffer
             .add(bind(process, this, 'add'))
@@ -62,8 +67,8 @@ export default echarts.extendChartView({
             .remove(bind(process, this, 'remove'))
             .execute();
 
-        function process(status, idx, oldIdx) {
-            var oldLayersGroups = this._layers;
+        function process(status: 'add' | 'update' | 'remove', idx: number, oldIdx?: number) {
+            var oldLayersGroups = self._layers;
             if (status === 'remove') {
                 group.remove(oldLayersGroups[idx]);
                 return;
@@ -71,7 +76,7 @@ export default echarts.extendChartView({
             var points0 = [];
             var points1 = [];
             var color;
-            var indices = layerSeries[idx].indices;
+            var indices = layersSeries[idx].indices;
             for (var j = 0; j < indices.length; j++) {
                 var layout = data.getItemLayout(indices[j]);
                 var x = layout.x;
@@ -84,14 +89,13 @@ export default echarts.extendChartView({
                 color = data.getItemVisual(indices[j], 'color');
             }
 
-            var polygon;
-            var text;
+            var polygon: ECPolygon;
+            var text: graphic.Text;
             var textLayout = data.getItemLayout(indices[0]);
-            var itemModel = data.getItemModel(indices[j - 1]);
-            var labelModel = itemModel.getModel('label');
+            var labelModel = seriesModel.getModel('label');
             var margin = labelModel.get('margin');
             if (status === 'add') {
-                var layerGroup = newLayersGroups[idx] = new graphic.Group();
+                const layerGroup = newLayersGroups[idx] = new graphic.Group();
                 polygon = new ECPolygon({
                     shape: {
                         points: points0,
@@ -117,9 +121,9 @@ export default echarts.extendChartView({
                 }));
             }
             else {
-                var layerGroup = oldLayersGroups[oldIdx];
-                polygon = layerGroup.childAt(0);
-                text = layerGroup.childAt(1);
+                const layerGroup = oldLayersGroups[oldIdx];
+                polygon = layerGroup.childAt(0) as ECPolygon;
+                text = layerGroup.childAt(1) as graphic.Text;
                 group.add(layerGroup);
 
                 newLayersGroups[idx] = layerGroup;
@@ -139,8 +143,8 @@ export default echarts.extendChartView({
                 }, seriesModel);
             }
 
-            var hoverItemStyleModel = itemModel.getModel('emphasis.itemStyle');
-            var itemStyleModel = itemModel.getModel('itemStyle');
+            var hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
+            var itemStyleModel = seriesModel.getModel('itemStyle');
 
             graphic.setTextStyle(text.style, labelModel, {
                 text: labelModel.get('show')
@@ -157,15 +161,13 @@ export default echarts.extendChartView({
             graphic.setHoverStyle(polygon, hoverItemStyleModel.getItemStyle());
         }
 
-        this._layersSeries = layerSeries;
+        this._layersSeries = layersSeries;
         this._layers = newLayersGroups;
-    },
-
-    dispose: function () {}
-});
+    }
+};
 
 // add animation to the view
-function createGridClipShape(rect, seriesModel, cb) {
+function createGridClipShape(rect: RectLike, seriesModel: ThemeRiverSeriesModel, cb: () => void) {
     var rectEl = new graphic.Rect({
         shape: {
             x: rect.x - 10,
@@ -183,3 +185,6 @@ function createGridClipShape(rect, seriesModel, cb) {
 
     return rectEl;
 }
+
+
+ChartView.registerClass(ThemeRiverView);

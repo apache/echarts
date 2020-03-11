@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import SeriesModel from '../../model/Series';
 import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
@@ -27,27 +25,72 @@ import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
 import {encodeHTML} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import {
+    SeriesOption,
+    SeriesOnSingleOptionMixin,
+    LabelOption,
+    OptionDataValueDate,
+    OptionDataValueNumeric,
+    ItemStyleOption,
+    BoxLayoutOptionMixin,
+    ZRColor
+} from '../../util/types';
+import SingleAxis from '../../coord/single/SingleAxis';
+import GlobalModel from '../../model/Global';
+import Single from '../../coord/single/Single';
 
 var DATA_NAME_INDEX = 2;
 
-var ThemeRiverSeries = SeriesModel.extend({
+// export interface ThemeRiverSeriesDataItemOption {
+//     date: OptionDataValueDate
+//     value: OptionDataValueNumeric
+//     name: string
+// }
 
-    type: 'series.themeRiver',
+interface ThemeRiverSeriesLabelOption extends LabelOption {
+    margin?: number
+}
 
-    dependencies: ['singleAxis'],
+export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
+    color?: ZRColor[]
+
+    coordinateSystem: 'singleAxis'
 
     /**
-     * @readOnly
-     * @type {module:zrender/core/util#HashMap}
+     * gap in axis's orthogonal orientation
      */
-    nameMap: null,
+    boundaryGap: (string | number)[]
+
+    label?: ThemeRiverSeriesLabelOption
+    itemStyle?: ItemStyleOption
+
+    emphasis?: {
+        label?: ThemeRiverSeriesLabelOption
+        itemStyle?: ItemStyleOption
+    }
+
+    /**
+     * [date, value, name]
+     */
+    data?: [OptionDataValueDate, OptionDataValueNumeric, string][]
+}
+
+class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
+    static readonly type = 'series.themeRiver'
+    readonly type = ThemeRiverSeriesModel.type
+
+    static readonly dependencies = ['singleAxis']
+
+    nameMap: zrUtil.HashMap<number>
+
+    coordinateSystem: Single
 
     /**
      * @override
      */
-    init: function (option) {
+    init(option: ThemeRiverSeriesOption) {
         // eslint-disable-next-line
-        ThemeRiverSeries.superApply(this, 'init', arguments);
+        super.init.apply(this, arguments as any);
 
         // Put this function here is for the sake of consistency of code style.
         // Enable legend selection for each data item
@@ -55,7 +98,7 @@ var ThemeRiverSeries = SeriesModel.extend({
         this.legendVisualProvider = new LegendVisualProvider(
             zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
         );
-    },
+    }
 
     /**
      * If there is no value of a certain point in the time for some event,set it value to 0.
@@ -63,16 +106,22 @@ var ThemeRiverSeries = SeriesModel.extend({
      * @param {Array} data  initial data in the option
      * @return {Array}
      */
-    fixData: function (data) {
+    fixData(data: ThemeRiverSeriesOption['data']) {
         var rawDataLength = data.length;
 
         // grouped data by name
         var groupResult = groupData(data, function (item) {
             return item[2];
         });
-        var layData = [];
+        var layData: {
+            name: string,
+            dataList: ThemeRiverSeriesOption['data']
+        }[] = [];
         groupResult.buckets.each(function (items, key) {
-            layData.push({name: key, dataList: items});
+            layData.push({
+                name: key,
+                dataList: items
+            });
         });
 
         var layerNum = layData.length;
@@ -103,25 +152,21 @@ var ThemeRiverSeries = SeriesModel.extend({
                     }
                 }
                 if (keyIndex === -1) {
-                    data[rawDataLength] = [];
-                    data[rawDataLength][0] = timeValue;
-                    data[rawDataLength][1] = 0;
-                    data[rawDataLength][2] = name;
+                    data[rawDataLength] = [timeValue, 0, name];
                     rawDataLength++;
 
                 }
             }
         }
         return data;
-    },
+    }
 
     /**
      * @override
-     * @param  {Object} option  the initial option that user gived
-     * @param  {module:echarts/model/Model} ecModel  the model object for themeRiver option
-     * @return {module:echarts/data/List}
+     * @param  option  the initial option that user gived
+     * @param  ecModel  the model object for themeRiver option
      */
-    getInitialData: function (option, ecModel) {
+    getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): List {
 
         var singleAxisModel = ecModel.queryComponents({
             mainType: 'singleAxis',
@@ -144,8 +189,8 @@ var ThemeRiverSeries = SeriesModel.extend({
 
         for (var i = 0; i < data.length; ++i) {
             nameList.push(data[i][DATA_NAME_INDEX]);
-            if (!nameMap.get(data[i][DATA_NAME_INDEX])) {
-                nameMap.set(data[i][DATA_NAME_INDEX], count);
+            if (!nameMap.get(data[i][DATA_NAME_INDEX] as string)) {
+                nameMap.set(data[i][DATA_NAME_INDEX] as string, count);
                 count++;
             }
         }
@@ -177,15 +222,13 @@ var ThemeRiverSeries = SeriesModel.extend({
         list.initData(data);
 
         return list;
-    },
+    }
 
     /**
      * The raw data is divided into multiple layers and each layer
      *     has same name.
-     *
-     * @return {Array.<Array.<number>>}
      */
-    getLayerSeries: function () {
+    getLayerSeries() {
         var data = this.getData();
         var lenCount = data.count();
         var indexArr = [];
@@ -198,29 +241,29 @@ var ThemeRiverSeries = SeriesModel.extend({
 
         // data group by name
         var groupResult = groupData(indexArr, function (index) {
-            return data.get('name', index);
+            return data.get('name', index) as string;
         });
-        var layerSeries = [];
-        groupResult.buckets.each(function (items, key) {
-            items.sort(function (index1, index2) {
-                return data.get(timeDim, index1) - data.get(timeDim, index2);
+        var layerSeries: {
+            name: string
+            indices: number[]
+        }[] = [];
+        groupResult.buckets.each(function (items: number[], key: string) {
+            items.sort(function (index1: number, index2: number) {
+                return data.get(timeDim, index1) as number - (data.get(timeDim, index2) as number);
             });
-            layerSeries.push({name: key, indices: items});
+            layerSeries.push({
+                name: key,
+                indices: items
+            });
         });
 
         return layerSeries;
-    },
+    }
 
     /**
      * Get data indices for show tooltip content
-
-     * @param {Array.<string>|string} dim  single coordinate dimension
-     * @param {number} value axis value
-     * @param {module:echarts/coord/single/SingleAxis} baseAxis  single Axis used
-     *     the themeRiver.
-     * @return {Object} {dataIndices, nestestValue}
      */
-    getAxisTooltipData: function (dim, value, baseAxis) {
+    getAxisTooltipData(dim: string | string[], value: number, baseAxis: SingleAxis) {
         if (!zrUtil.isArray(dim)) {
             dim = dim ? [dim] : [];
         }
@@ -236,7 +279,7 @@ var ThemeRiverSeries = SeriesModel.extend({
             var nearestIdx = -1;
             var pointNum = layerSeries[i].indices.length;
             for (var j = 0; j < pointNum; ++j) {
-                var theValue = data.get(dim[0], layerSeries[i].indices[j]);
+                var theValue = data.get(dim[0], layerSeries[i].indices[j]) as number;
                 var dist = Math.abs(theValue - value);
                 if (dist <= minDist) {
                     nestestValue = theValue;
@@ -248,23 +291,23 @@ var ThemeRiverSeries = SeriesModel.extend({
         }
 
         return {dataIndices: indices, nestestValue: nestestValue};
-    },
+    }
 
     /**
      * @override
      * @param {number} dataIndex  index of data
      */
-    formatTooltip: function (dataIndex) {
+    formatTooltip(dataIndex: number): string {
         var data = this.getData();
         var htmlName = data.getName(dataIndex);
         var htmlValue = data.get(data.mapDimension('value'), dataIndex);
-        if (isNaN(htmlValue) || htmlValue == null) {
+        if (isNaN(htmlValue as number) || htmlValue == null) {
             htmlValue = '-';
         }
         return encodeHTML(htmlName + ' : ' + htmlValue);
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: ThemeRiverSeriesOption = {
         zlevel: 0,
         z: 2,
 
@@ -293,6 +336,6 @@ var ThemeRiverSeries = SeriesModel.extend({
             }
         }
     }
-});
+}
 
-export default ThemeRiverSeries;
+export default ThemeRiverSeriesModel;

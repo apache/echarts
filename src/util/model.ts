@@ -110,7 +110,7 @@ export var TEXT_STYLE_OPTIONS = [
     'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY',
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY',
     'backgroundColor', 'borderColor', 'borderWidth', 'borderRadius', 'padding'
-];
+] as const;
 
 // modelUtil.LABEL_OPTIONS = modelUtil.TEXT_STYLE_OPTIONS.concat([
 //     'position', 'offset', 'rotate', 'origin', 'show', 'distance', 'formatter',

@@ -415,7 +415,7 @@ export type OptionDataValue = string | number | Date;
 
 export type OptionDataValueNumeric = number | '-';
 export type OptionDataValueCategory = string;
-export type OptionDataValueDate = Date;
+export type OptionDataValueDate = Date | string | number;
 
 // export type ModelOption = Dictionary<any> | any[] | string | number | boolean | ((...args: any) => any);
 export type ModelOption = any;
