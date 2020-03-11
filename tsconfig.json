@@ -16,7 +16,9 @@
 
         "importHelpers": true,
 
-        "pretty": true
+        "pretty": true,
+
+        "outDir": "lib"
     },
     "include": [
         "src/**/*.ts",

@@ -28,11 +28,10 @@ import ExtensionAPI from '../../ExtensionAPI';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import MapSeries from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
-import { Payload, ECElement } from '../../util/types';
+import { Payload } from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Region from '../../coord/geo/Region';
-import Element from 'zrender/src/Element';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
 
@@ -295,7 +294,7 @@ class MapDraw {
             else {
                 const regionModel = mapOrGeoModel.getRegionModel(region.name);
                 // Package custom mouse event for geo component
-                (compoundPath as Element as ECElement).eventData = {
+                graphic.getECData(compoundPath).eventData = {
                     componentType: 'geo',
                     componentIndex: mapOrGeoModel.componentIndex,
                     geoIndex: mapOrGeoModel.componentIndex,

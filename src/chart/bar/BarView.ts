@@ -19,7 +19,7 @@
 
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
-import * as graphic from '../../util/graphic';
+import {Rect, Sector, getECData, updateProps, initProps, setHoverStyle} from '../../util/graphic';
 import {setLabel} from './helper';
 import {getBarItemStyle} from './barItemStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
@@ -31,7 +31,7 @@ import ChartView from '../../view/Chart';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { StageHandlerProgressParams, ECElement, ZRElementEvent } from '../../util/types';
+import { StageHandlerProgressParams, ZRElementEvent } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -45,13 +45,13 @@ const mathMax = Math.max;
 const mathMin = Math.min;
 
 type CoordSysOfBar = BarSeriesModel['coordinateSystem'];
-type RectShape = graphic.Rect['shape']
-type SectorShape = graphic.Sector['shape']
+type RectShape = Rect['shape']
+type SectorShape = Sector['shape']
 
 type SectorLayout = SectorShape;
 type RectLayout = RectShape;
 
-type BarPossiblePath = graphic.Sector | graphic.Rect | Sausage
+type BarPossiblePath = Sector | Rect | Sausage
 
 function isCartesian2D(coord: CoordSysOfBar): coord is Cartesian2D {
     return coord.type === 'cartesian2d';
@@ -89,9 +89,9 @@ class BarView extends ChartView {
 
     _isLargeDraw: boolean
 
-    _backgroundGroup: graphic.Group
+    _backgroundGroup: Group
 
-    _backgroundEls: (graphic.Rect | graphic.Sector)[]
+    _backgroundEls: (Rect | Sector)[]
 
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._updateDrawMode(seriesModel);
@@ -212,8 +212,8 @@ class BarView extends ChartView {
                     bgEls[newIndex] = bgEl;
 
                     var shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
-                    graphic.updateProps(
-                        bgEl as graphic.Path, { shape: shape }, animationModel, newIndex
+                    updateProps(
+                        bgEl as Path, { shape: shape }, animationModel, newIndex
                     );
                 }
 
@@ -232,7 +232,7 @@ class BarView extends ChartView {
                 }
 
                 if (el) {
-                    graphic.updateProps(el as graphic.Path, {
+                    updateProps(el as Path, {
                         shape: layout
                     }, animationModel, newIndex);
                 }
@@ -254,10 +254,10 @@ class BarView extends ChartView {
             .remove(function (dataIndex) {
                 var el = oldData.getItemGraphicEl(dataIndex);
                 if (coord.type === 'cartesian2d') {
-                    el && removeRect(dataIndex, animationModel, el as graphic.Rect);
+                    el && removeRect(dataIndex, animationModel, el as Rect);
                 }
                 else {
-                    el && removeSector(dataIndex, animationModel, el as graphic.Sector);
+                    el && removeSector(dataIndex, animationModel, el as Sector);
                 }
             })
             .execute();
@@ -306,12 +306,12 @@ class BarView extends ChartView {
             this._removeBackground();
             this._backgroundEls = [];
 
-            data.eachItemGraphicEl(function (el: ECElement & (graphic.Sector | graphic.Rect)) {
+            data.eachItemGraphicEl(function (el: Sector | Rect) {
                 if (el.type === 'sector') {
-                    removeSector(el.dataIndex, ecModel, el as (graphic.Sector));
+                    removeSector(getECData(el).dataIndex, ecModel, el as (Sector));
                 }
                 else {
-                    removeRect(el.dataIndex, ecModel, el as (graphic.Rect));
+                    removeRect(getECData(el).dataIndex, ecModel, el as (Rect));
                 }
             });
         }
@@ -333,7 +333,7 @@ interface Clipper {
 var clip: {
     [key in 'cartesian2d' | 'polar']: Clipper
 } = {
-    cartesian2d(coordSysBoundingRect: RectLike, layout: graphic.Rect['shape']) {
+    cartesian2d(coordSysBoundingRect: RectLike, layout: Rect['shape']) {
         var signWidth = layout.width < 0 ? -1 : 1;
         var signHeight = layout.height < 0 ? -1 : 1;
         // Needs positive width and height
@@ -391,7 +391,7 @@ var elementCreator: {
         dataIndex, layout: RectLayout, isHorizontal,
         animationModel, isUpdate
     ) {
-        var rect = new graphic.Rect({
+        var rect = new Rect({
             shape: zrUtil.extend({}, layout),
             z2: 1
         });
@@ -405,7 +405,7 @@ var elementCreator: {
             var animateTarget = {} as RectShape;
             rectShape[animateProperty] = 0;
             animateTarget[animateProperty] = layout[animateProperty];
-            graphic[isUpdate ? 'updateProps' : 'initProps'](rect, {
+            (isUpdate ? updateProps : initProps)(rect, {
                 shape: animateTarget
             }, animationModel, dataIndex);
         }
@@ -423,7 +423,7 @@ var elementCreator: {
         // or less than startAngle.
         var clockwise = layout.startAngle < layout.endAngle;
 
-        var ShapeClass = (!isRadial && roundCap) ? Sausage : graphic.Sector;
+        var ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
 
         var sector = new ShapeClass({
             shape: zrUtil.defaults({clockwise: clockwise}, layout),
@@ -439,7 +439,7 @@ var elementCreator: {
             var animateTarget = {} as SectorShape;
             sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
-            graphic[isUpdate ? 'updateProps' : 'initProps'](sector, {
+            (isUpdate ? updateProps : initProps)(sector, {
                 shape: animateTarget
             }, animationModel, dataIndex);
         }
@@ -451,11 +451,11 @@ var elementCreator: {
 function removeRect(
     dataIndex: number,
     animationModel: BarSeriesModel | GlobalModel,
-    el: graphic.Rect
+    el: Rect
 ) {
     // Not show text when animating
     el.style.text = null;
-    graphic.updateProps(el, {
+    updateProps(el, {
         shape: {
             width: 0
         }
@@ -467,11 +467,11 @@ function removeRect(
 function removeSector(
     dataIndex: number,
     animationModel: BarSeriesModel | GlobalModel,
-    el: graphic.Sector
+    el: Sector
 ) {
     // Not show text when animating
     el.style.text = null;
-    graphic.updateProps(el, {
+    updateProps(el, {
         shape: {
             r: el.shape.r0
         }
@@ -564,7 +564,7 @@ function updateStyle(
     if (isZeroOnPolar(layout as SectorLayout)) {
         hoverStyle.fill = hoverStyle.stroke = 'none';
     }
-    graphic.setHoverStyle(el, hoverStyle);
+    setHoverStyle(el, hoverStyle);
 }
 
 // In case width or height are too small.
@@ -662,7 +662,7 @@ function createLarge(
     setLargeStyle(el, seriesModel, data);
 
     // Enable tooltip and user mouse/touch event handlers.
-    (el as ECElement).seriesIndex = seriesModel.seriesIndex;
+    getECData(el).seriesIndex = seriesModel.seriesIndex;
 
     if (!seriesModel.get('silent')) {
         el.on('mousedown', largePathUpdateDataIndex);
@@ -674,7 +674,7 @@ function createLarge(
 var largePathUpdateDataIndex = throttle(function (this: LargePath, event: ZRElementEvent) {
     var largePath = this;
     var dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
-    (largePath as ECElement).dataIndex = dataIndex >= 0 ? dataIndex : null;
+    getECData(largePath).dataIndex = dataIndex >= 0 ? dataIndex : null;
 }, 30, false);
 
 function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
@@ -772,8 +772,8 @@ function createBackgroundEl(
     coord: CoordSysOfBar,
     isHorizontalOrRadial: boolean,
     layout: SectorLayout | RectLayout
-): graphic.Rect | graphic.Sector {
-    var ElementClz = coord.type === 'polar' ? graphic.Sector : graphic.Rect;
+): Rect | Sector {
+    var ElementClz = coord.type === 'polar' ? Sector : Rect;
     return new ElementClz({
         shape: createBackgroundShape(isHorizontalOrRadial, layout, coord) as any,
         silent: true,

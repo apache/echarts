@@ -33,12 +33,13 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
-import { ColorString, Payload, ECElement } from '../../util/types';
+import { ColorString, Payload } from '../../util/types';
 
 var linearMap = numberUtil.linearMap;
 var each = zrUtil.each;
 var mathMin = Math.min;
 var mathMax = Math.max;
+var getECData = graphic.getECData;
 
 // Arbitrary value
 var HOVER_LINK_SIZE = 12;
@@ -702,18 +703,19 @@ class ContinuousView extends VisualMapView {
         var el = e.target;
         var visualMapModel = this.visualMapModel;
 
-        if (!el || (el as ECElement).dataIndex == null) {
+        if (!el || getECData(el).dataIndex == null) {
             return;
         }
+        var ecData = getECData(el);
 
-        var dataModel = this.ecModel.getSeriesByIndex((el as ECElement).seriesIndex);
+        var dataModel = this.ecModel.getSeriesByIndex(ecData.seriesIndex);
 
         if (!visualMapModel.isTargetSeries(dataModel)) {
             return;
         }
 
-        var data = dataModel.getData((el as ECElement).dataType);
-        var value = data.get(visualMapModel.getDataDimension(data), (el as ECElement).dataIndex) as number;
+        var data = dataModel.getData(ecData.dataType);
+        var value = data.get(visualMapModel.getDataDimension(data), ecData.dataIndex) as number;
 
         if (!isNaN(value)) {
             this._showIndicator(value, value);

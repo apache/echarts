@@ -57,9 +57,12 @@ import {
     DisplayState,
     ECElement,
     ZRRectLike,
-    ColorString
+    ColorString,
+    DataModel,
+    ECEventData
 } from './types';
 import GlobalModel from '../model/Global';
+import { makeInner } from './model';
 
 
 const mathMax = Math.max;
@@ -1386,7 +1389,7 @@ export function groupTransition(
             if (oldEl) {
                 var newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
-                updateProps(el, newProp, animatableModel, (el as ECElement).dataIndex);
+                updateProps(el, newProp, animatableModel, getECData(el).dataIndex);
             }
         }
     });
@@ -1524,6 +1527,20 @@ function crossProduct2d(x1: number, y1: number, x2: number, y2: number) {
 function nearZero(val: number) {
     return val <= (1e-6) && val >= -(1e-6);
 }
+
+
+/**
+ * ECData stored on graphic element
+ */
+export interface ECData {
+    dataIndex?: number;
+    dataModel?: DataModel;
+    eventData?: ECEventData;
+    seriesIndex?: number;
+    dataType?: string;
+}
+
+export const getECData = makeInner<ECData>();
 
 // Register built-in shapes. These shapes might be overwirtten
 // by users, although we do not recommend that.

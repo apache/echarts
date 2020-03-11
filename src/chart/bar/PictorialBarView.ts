@@ -29,7 +29,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
-import { ColorString, ECElement, AnimationOptionMixin } from '../../util/types';
+import { ColorString, AnimationOptionMixin } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -221,8 +221,8 @@ class PictorialBarView extends ChartView {
         var data = this._data;
         if (ecModel.get('animation')) {
             if (data) {
-                data.eachItemGraphicEl(function (bar: PictorialBarElement & ECElement) {
-                    removeBar(data, bar.dataIndex, ecModel, bar);
+                data.eachItemGraphicEl(function (bar: PictorialBarElement) {
+                    removeBar(data, graphic.getECData(bar).dataIndex, ecModel, bar);
                 });
             }
         }

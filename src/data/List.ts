@@ -34,13 +34,14 @@ import DataDimensionInfo from './DataDimensionInfo';
 import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 import {
-    DimensionIndex, DimensionName, ECElement, DimensionLoose, OptionDataItem,
+    DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
 import type Graph from './Graph';
 import type Tree from './Tree';
+import { getECData } from '../util/graphic';
 
 
 var isObject = zrUtil.isObject;
@@ -1738,11 +1739,12 @@ class List<HostModel extends Model = Model> {
         var hostModel = this.hostModel;
 
         if (el) {
+            var ecData = getECData(el);
             // Add data index and series index for indexing the data by element
             // Useful in tooltip
-            (el as ECElement).dataIndex = idx;
-            (el as ECElement).dataType = this.dataType;
-            (el as ECElement).seriesIndex = hostModel && (hostModel as any).seriesIndex;
+            ecData.dataIndex = idx;
+            ecData.dataType = this.dataType;
+            ecData.seriesIndex = hostModel && (hostModel as any).seriesIndex;
             if (el.type === 'group') {
                 el.traverse(setItemDataAndSeriesIndex, el);
             }
@@ -2084,9 +2086,11 @@ class List<HostModel extends Model = Model> {
         };
 
         setItemDataAndSeriesIndex = function (this: Element, child: Element): void {
-            (child as ECElement).seriesIndex = (this as ECElement).seriesIndex;
-            (child as ECElement).dataIndex = (this as ECElement).dataIndex;
-            (child as ECElement).dataType = (this as ECElement).dataType;
+            var childECData = getECData(child);
+            var thisECData = getECData(this);
+            childECData.seriesIndex = thisECData.seriesIndex;
+            childECData.dataIndex = thisECData.dataIndex;
+            childECData.dataType = thisECData.dataType;
         };
 
         transferProperties = function (target: List, source: List): void {

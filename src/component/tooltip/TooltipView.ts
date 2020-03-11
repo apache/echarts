@@ -444,7 +444,7 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && el.dataIndex != null) {
+        else if (el && graphic.getECData(el).dataIndex != null) {
             this._lastDataByCoordSys = null;
             this._showSeriesItemTooltip(e, el, dispatchAction);
         }
@@ -604,16 +604,17 @@ class TooltipView extends ComponentView {
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
         var ecModel = this._ecModel;
+        var ecData = graphic.getECData(el);
         // Use dataModel in element if possible
         // Used when mouseover on a element like markPoint or edge
         // In which case, the data is not main data in series.
-        var seriesIndex = el.seriesIndex;
+        var seriesIndex = ecData.seriesIndex;
         var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
 
         // For example, graph link.
-        var dataModel = el.dataModel || seriesModel;
-        var dataIndex = el.dataIndex;
-        var dataType = el.dataType;
+        var dataModel = ecData.dataModel || seriesModel;
+        var dataIndex = ecData.dataIndex;
+        var dataType = ecData.dataType;
         var data = dataModel.getData();
 
         var tooltipModel = buildTooltipModel([

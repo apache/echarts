@@ -95,11 +95,6 @@ export interface ComponentTypeInfo {
 
 export interface ECElement extends Element {
     useHoverLayer?: boolean;
-    dataIndex?: number;
-    dataModel?: DataModel;
-    eventData?: ECEventData;
-    seriesIndex?: number;
-    dataType?: string;
     tooltip?: CommonTooltipOption<unknown> & {
         content?: string;
         formatterParams?: unknown;

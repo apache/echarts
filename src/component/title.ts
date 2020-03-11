@@ -28,8 +28,7 @@ import {
     ZRTextVerticalAlign,
     ZRColor,
     BorderOptionMixin,
-    LabelOption,
-    ECElement
+    LabelOption
 } from '../util/types';
 import ComponentView from '../view/Component';
 import GlobalModel from '../model/Global';
@@ -189,7 +188,7 @@ class TitleView extends ComponentView {
             });
         }
 
-        (textEl as ECElement).eventData = (subTextEl as ECElement).eventData = triggerEvent
+        graphic.getECData(textEl).eventData = graphic.getECData(subTextEl).eventData = triggerEvent
             ? {
                 componentType: 'title',
                 componentIndex: titleModel.componentIndex

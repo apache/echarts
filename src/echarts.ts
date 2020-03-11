@@ -765,24 +765,23 @@ class ECharts {
         each(MOUSE_EVENT_NAMES, function (eveName) {
             const handler = (e: ElementEvent) => {
                 var ecModel = this.getModel();
-                var targetEl = e.target;
-                var el = targetEl as ECElement;
+                var el = e.target;
                 var params: ECEvent;
                 var isGlobalOut = eveName === 'globalout';
-
+                var ecData = el && graphic.getECData(el);
                 // no e.target when 'globalout'.
                 if (isGlobalOut) {
                     params = {} as ECEvent;
                 }
-                else if (el && el.dataIndex != null) {
-                    var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
+                else if (ecData && ecData.dataIndex != null) {
+                    var dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                     params = (
-                        dataModel && dataModel.getDataParams(el.dataIndex, el.dataType, targetEl) || {}
+                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, targetEl) || {}
                     ) as ECEvent;
                 }
                 // If element has custom eventData of components
-                else if (el && el.eventData) {
-                    params = zrUtil.extend({}, el.eventData) as ECEvent;
+                else if (el && ecData.eventData) {
+                    params = zrUtil.extend({}, ecData.eventData) as ECEvent;
                 }
 
                 // Contract: if params prepared in mouse event,

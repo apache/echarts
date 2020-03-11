@@ -46,13 +46,6 @@ type Value<Opt, R> = Opt extends Dictionary<any>
     ? (R extends keyof Opt ? Opt[R] : ModelOption)
     : ModelOption;
 
-/**
- * @alias module:echarts/model/Model
- * @constructor
- * @param {Object} [option]
- * @param {module:echarts/model/Model} [parentModel]
- * @param {module:echarts/model/Global} [ecModel]
- */
 class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown insteadof any?
 
     // [Caution]: for compat the previous "class extend"

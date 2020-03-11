@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { ECElement, ZRColor, ColorString } from '../../util/types';
+import { ZRColor, ColorString } from '../../util/types';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeOption, SunburstSeriesOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
@@ -54,7 +54,7 @@ class SunburstPiece extends graphic.Group {
         var sector = new graphic.Sector({
             z2: DEFAULT_SECTOR_Z
         });
-        (sector as ECElement).seriesIndex = seriesModel.seriesIndex;
+        graphic.getECData(sector).seriesIndex = seriesModel.seriesIndex;
 
         var text = new graphic.Text({
             z2: DEFAULT_TEXT_Z,
@@ -93,7 +93,7 @@ class SunburstPiece extends graphic.Group {
         ecModel = ecModel || this._ecModel;
 
         var sector = this.childAt(0) as graphic.Sector;
-        (sector as ECElement).dataIndex = node.dataIndex;
+        graphic.getECData(sector).dataIndex = node.dataIndex;
 
         var itemModel = node.getModel<SunburstSeriesNodeOption>();
         var layout = node.getLayout();
