@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import { Dictionary } from 'zrender/src/core/types';
+import { __DEV__ } from '../../config';
 
 var each = zrUtil.each;
 var isObject = zrUtil.isObject;
@@ -28,6 +29,17 @@ var POSSIBLE_STYLES = [
     'areaStyle', 'lineStyle', 'nodeStyle', 'linkStyle',
     'chordStyle', 'label', 'labelLine'
 ];
+
+let storedLogs: Dictionary<boolean> = {};
+function deprecateLog(str: string) {
+    if (storedLogs[str]) {  // Not display duplicate message.
+        return;
+    }
+    if (typeof console !== 'undefined' && console.warn) {
+        storedLogs[str] = true;
+        console.warn('DEPRECATED: ' + str);
+    }
+}
 
 function compatEC2ItemStyle(opt: Dictionary<any>) {
     var itemStyleOpt = opt && opt.itemStyle;
@@ -39,6 +51,9 @@ function compatEC2ItemStyle(opt: Dictionary<any>) {
         var normalItemStyleOpt = itemStyleOpt.normal;
         var emphasisItemStyleOpt = itemStyleOpt.emphasis;
         if (normalItemStyleOpt && normalItemStyleOpt[styleName]) {
+            if (__DEV__) {
+                deprecateLog(`itemStyle.normal.${styleName} has been changed to ${styleName}`);
+            }
             opt[styleName] = opt[styleName] || {};
             if (!opt[styleName].normal) {
                 opt[styleName].normal = normalItemStyleOpt[styleName];
@@ -49,6 +64,9 @@ function compatEC2ItemStyle(opt: Dictionary<any>) {
             normalItemStyleOpt[styleName] = null;
         }
         if (emphasisItemStyleOpt && emphasisItemStyleOpt[styleName]) {
+            if (__DEV__) {
+                deprecateLog(`itemStyle.emphasis.${styleName} has been changed to emphasis.${styleName}`);
+            }
             opt[styleName] = opt[styleName] || {};
             if (!opt[styleName].emphasis) {
                 opt[styleName].emphasis = emphasisItemStyleOpt[styleName];
@@ -67,6 +85,10 @@ function convertNormalEmphasis(opt: Dictionary<any>, optType: string, useExtend?
         var emphasisOpt = opt[optType].emphasis;
 
         if (normalOpt) {
+            if (__DEV__) {
+                // eslint-disable-next-line max-len
+                deprecateLog(`'normal' hierarchy in ${optType} has been removed since 4.0. All style properties are configured in ${optType} directly now.`);
+            }
             // Timeline controlStyle has other properties besides normal and emphasis
             if (useExtend) {
                 opt[optType].normal = opt[optType].emphasis = null;
@@ -77,6 +99,7 @@ function convertNormalEmphasis(opt: Dictionary<any>, optType: string, useExtend?
             }
         }
         if (emphasisOpt) {
+            deprecateLog(`${optType}.emphasis has been changed to emphasis.${optType} since 4.0`);
             opt.emphasis = opt.emphasis || {};
             opt.emphasis[optType] = emphasisOpt;
         }
@@ -100,6 +123,10 @@ function compatTextStyle(opt: any, propName: string) {
     var labelOptSingle = isObject(opt) && opt[propName];
     var textStyle = isObject(labelOptSingle) && labelOptSingle.textStyle;
     if (textStyle) {
+        if (__DEV__) {
+            // eslint-disable-next-line max-len
+            deprecateLog(`textStyle hierarchy in ${propName} has been removed since 4.0. All textStyle properties are configured in ${propName} directly now.`);
+        }
         for (var i = 0, len = modelUtil.TEXT_STYLE_OPTIONS.length; i < len; i++) {
             var textPropName = modelUtil.TEXT_STYLE_OPTIONS[i];
             if (textStyle.hasOwnProperty(textPropName)) {
@@ -264,6 +291,21 @@ export default function (option: any, isTheme?: boolean) {
     // radar.name.textStyle
     each(toArr(option.radar), function (radarOpt) {
         compatTextStyle(radarOpt, 'name');
+        // Use axisName instead of name because component has name property
+        if (radarOpt.name && !radarOpt.axisName) {
+            radarOpt.axisName = radarOpt.name;
+            delete radarOpt.name;
+            if (__DEV__) {
+                deprecateLog('name property in radar component has been changed to axisName');
+            }
+        }
+        if (radarOpt.nameGap != null && radarOpt.axisNameGap == null) {
+            radarOpt.axisNameGap = radarOpt.nameGap;
+            delete radarOpt.nameGap;
+            if (__DEV__) {
+                deprecateLog('nameGap property in radar component has been changed to axisNameGap');
+            }
+        }
     });
 
     each(toArr(option.geo), function (geoOpt) {
@@ -299,4 +341,7 @@ export default function (option: any, isTheme?: boolean) {
 
     compatTextStyle(toObj(option.axisPointer), 'label');
     compatTextStyle(toObj(option.tooltip).axisPointer, 'label');
+
+    // Clean logs
+    storedLogs = {};
 }

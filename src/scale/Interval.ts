@@ -87,7 +87,7 @@ class IntervalScale extends Scale {
     /**
      * @param expandToNicedExtent Whether expand the ticks to niced extent.
      */
-    getTicks(expandToNicedExtent: boolean): number[] {
+    getTicks(expandToNicedExtent?: boolean): number[] {
         var interval = this._interval;
         var extent = this._extent;
         var niceTickExtent = this._niceExtent;

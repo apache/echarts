@@ -17,37 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import Axis from '../Axis';
+import Scale from '../../scale/Scale';
+import { OptionAxisType } from '../axisCommonTypes';
+import { AxisBaseModel } from '../AxisBaseModel';
+import { InnerIndicatorAxisOption } from './RadarModel';
 
-function IndicatorAxis(dim, scale, radiusExtent) {
-    Axis.call(this, dim, scale, radiusExtent);
+class IndicatorAxis extends Axis {
 
-    /**
-     * Axis type
-     *  - 'category'
-     *  - 'value'
-     *  - 'time'
-     *  - 'log'
-     * @type {string}
-     */
-    this.type = 'value';
+    type: OptionAxisType = 'value'
 
-    this.angle = 0;
+    angle = 0
 
-    /**
-     * Indicator name
-     * @type {string}
-     */
-    this.name = '';
-    /**
-     * @type {module:echarts/model/Model}
-     */
-    this.model;
+    name = ''
+
+    model: AxisBaseModel<InnerIndicatorAxisOption>
+
+    constructor(dim: string, scale: Scale, radiusExtent?: [number, number]) {
+        super(dim, scale, radiusExtent);
+    }
 }
-
-zrUtil.inherits(IndicatorAxis, Axis);
 
 export default IndicatorAxis;

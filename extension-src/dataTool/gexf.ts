@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 /**
  * This is a parse of GEXF.
  *

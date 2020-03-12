@@ -17,38 +17,95 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from '../axisDefault';
 import Model from '../../model/Model';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
+import ComponentModel from '../../model/Component';
+import {
+    ComponentOption,
+    CircleLayoutOptionMixin,
+    LabelOption,
+    ColorString
+} from '../../util/types';
+import { AxisBaseOption } from '../axisCommonTypes';
+import { AxisBaseModel } from '../AxisBaseModel';
+import Radar from './Radar';
+import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
 
 var valueAxisDefault = axisDefault.value;
 
-function defaultsShow(opt, show) {
+function defaultsShow(opt: object, show: boolean) {
     return zrUtil.defaults({
         show: show
     }, opt);
 }
 
-var RadarModel = echarts.extendComponentModel({
+export interface RadarIndicatorOption {
+    text?: string
+    min?: number
+    max?: number
+    color?: ColorString
 
-    type: 'radar',
+    axisType?: 'value' | 'log'
+}
 
-    optionUpdated: function () {
+export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
+    startAngle?: number
+
+    shape?: 'polygon' | 'circle'
+
+    // TODO. axisType seems to have issue.
+    // axisType?: 'value' | 'log'
+
+    axisLine?: AxisBaseOption['axisLine']
+    axisTick?: AxisBaseOption['axisTick']
+    axisLabel?: AxisBaseOption['axisLabel']
+    splitLine?: AxisBaseOption['splitLine']
+    splitArea?: AxisBaseOption['splitArea']
+
+    // TODO Use axisName?
+    axisName?: {
+        show?: boolean
+        formatter?: string | ((name?: string, indicatorOpt?: InnerIndicatorAxisOption) => string)
+    } & LabelOption
+    axisNameGap?: number
+
+    triggerEvent?: boolean
+
+    scale?: boolean
+    splitNumber?: number
+
+    boundaryGap?: AxisBaseOption['boundaryGap']
+
+    indicator?: RadarIndicatorOption[]
+}
+
+export interface InnerIndicatorAxisOption extends AxisBaseOption {
+    // TODO Use type?
+    // axisType?: 'value' | 'log'
+}
+
+class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystemHostModel {
+    static readonly type = 'radar'
+    readonly type = RadarModel.type
+
+    coordinateSystem: Radar
+
+    private _indicatorModels: AxisBaseModel<InnerIndicatorAxisOption>[]
+
+    optionUpdated() {
         var boundaryGap = this.get('boundaryGap');
         var splitNumber = this.get('splitNumber');
         var scale = this.get('scale');
         var axisLine = this.get('axisLine');
         var axisTick = this.get('axisTick');
-        var axisType = this.get('axisType');
+        // var axisType = this.get('axisType');
         var axisLabel = this.get('axisLabel');
-        var nameTextStyle = this.get('name');
-        var showName = this.get('name.show');
-        var nameFormatter = this.get('name.formatter');
-        var nameGap = this.get('nameGap');
+        var nameTextStyle = this.get('axisName');
+        var showName = this.get(['axisName', 'show']);
+        var nameFormatter = this.get(['axisName', 'formatter']);
+        var nameGap = this.get('axisNameGap');
         var triggerEvent = this.get('triggerEvent');
 
         var indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
@@ -61,16 +118,18 @@ var RadarModel = echarts.extendComponentModel({
             }
             var iNameTextStyle = nameTextStyle;
             if (indicatorOpt.color != null) {
-                iNameTextStyle = zrUtil.defaults({color: indicatorOpt.color}, nameTextStyle);
+                iNameTextStyle = zrUtil.defaults({
+                    color: indicatorOpt.color
+                }, nameTextStyle);
             }
             // Use same configuration
-            indicatorOpt = zrUtil.merge(zrUtil.clone(indicatorOpt), {
+            const innerIndicatorOpt: InnerIndicatorAxisOption = zrUtil.merge(zrUtil.clone(indicatorOpt), {
                 boundaryGap: boundaryGap,
                 splitNumber: splitNumber,
                 scale: scale,
                 axisLine: axisLine,
                 axisTick: axisTick,
-                axisType: axisType,
+                // axisType: axisType,
                 axisLabel: axisLabel,
                 // Compatible with 2 and use text
                 name: indicatorOpt.text,
@@ -81,21 +140,21 @@ var RadarModel = echarts.extendComponentModel({
                 triggerEvent: triggerEvent
             }, false);
             if (!showName) {
-                indicatorOpt.name = '';
+                innerIndicatorOpt.name = '';
             }
             if (typeof nameFormatter === 'string') {
-                var indName = indicatorOpt.name;
-                indicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
+                var indName = innerIndicatorOpt.name;
+                innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
             }
             else if (typeof nameFormatter === 'function') {
-                indicatorOpt.name = nameFormatter(
-                    indicatorOpt.name, indicatorOpt
+                innerIndicatorOpt.name = nameFormatter(
+                    innerIndicatorOpt.name, innerIndicatorOpt
                 );
             }
             var model = zrUtil.extend(
-                new Model(indicatorOpt, null, this.ecModel),
+                new Model(innerIndicatorOpt, null, this.ecModel),
                 AxisModelCommonMixin.prototype
-            );
+            ) as AxisBaseModel<InnerIndicatorAxisOption>;
 
             // For triggerEvent.
             model.mainType = 'radar';
@@ -104,12 +163,14 @@ var RadarModel = echarts.extendComponentModel({
             return model;
         }, this);
 
-        this.getIndicatorModels = function () {
-            return indicatorModels;
-        };
-    },
+        this._indicatorModels = indicatorModels;
+    }
 
-    defaultOption: {
+    getIndicatorModels() {
+        return this._indicatorModels;
+    }
+
+    static defaultOption: RadarOption = {
 
         zlevel: 0,
 
@@ -121,7 +182,7 @@ var RadarModel = echarts.extendComponentModel({
 
         startAngle: 90,
 
-        name: {
+        axisName: {
             show: true
             // formatter: null
             // textStyle: {}
@@ -131,7 +192,7 @@ var RadarModel = echarts.extendComponentModel({
 
         splitNumber: 5,
 
-        nameGap: 15,
+        axisNameGap: 15,
 
         scale: false,
 
@@ -148,13 +209,14 @@ var RadarModel = echarts.extendComponentModel({
         ),
         axisLabel: defaultsShow(valueAxisDefault.axisLabel, false),
         axisTick: defaultsShow(valueAxisDefault.axisTick, false),
-        axisType: 'interval',
+        // axisType: 'value',
         splitLine: defaultsShow(valueAxisDefault.splitLine, true),
         splitArea: defaultsShow(valueAxisDefault.splitArea, true),
 
         // {text, min, max}
         indicator: []
     }
-});
+}
+
 
 export default RadarModel;

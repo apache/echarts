@@ -33,7 +33,7 @@ class AxisModelCommonMixin<Opt extends AxisBaseOption> {
     /**
      * @return min value or 'dataMin' or null/undefined (means auto) or NaN
      */
-    getMin(origin: boolean): number | 'dataMin' {
+    getMin(origin?: boolean): number | 'dataMin' {
         var option = this.option;
         var min = (!origin && option.rangeStart != null)
             ? option.rangeStart : option.min;
@@ -52,7 +52,7 @@ class AxisModelCommonMixin<Opt extends AxisBaseOption> {
     /**
      * @return max value or 'dataMax' or null/undefined (means auto) or NaN
      */
-    getMax(origin: boolean): number | 'dataMax' {
+    getMax(origin?: boolean): number | 'dataMax' {
         var option = this.option;
         var max = (!origin && option.rangeEnd != null)
             ? option.rangeEnd : option.max;

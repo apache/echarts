@@ -17,6 +17,7 @@
 * under the License.
 */
 
+// @ts-nocheck
 import * as echarts from 'echarts';
 import * as gexf from './gexf';
 import prepareBoxplotData from './prepareBoxplotData';
