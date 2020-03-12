@@ -57,6 +57,7 @@ export interface ScatterSeriesOption extends SeriesOption,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
     SymbolOptionMixin {
+    type?: 'scatter'
 
     coordinateSystem?: string
 

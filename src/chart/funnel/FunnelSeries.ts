@@ -61,6 +61,7 @@ export interface FunnelDataItemOption {
 
 export interface FunnelSeriesOption
     extends SeriesOption, BoxLayoutOptionMixin {
+    type?: 'funnel'
 
     min?: number
     max?: number

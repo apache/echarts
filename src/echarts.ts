@@ -776,7 +776,7 @@ class ECharts {
                 else if (ecData && ecData.dataIndex != null) {
                     var dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                     params = (
-                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, targetEl) || {}
+                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
                     ) as ECEvent;
                 }
                 // If element has custom eventData of components

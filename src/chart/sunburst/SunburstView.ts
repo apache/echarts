@@ -184,6 +184,7 @@ class SunburstView extends ChartView {
                     group.add(self.virtualPiece);
                 }
 
+                // TODO event scope
                 viewRoot.piece.off('click');
                 self.virtualPiece.on('click', function (e) {
                     self._rootToNode(viewRoot.parentNode);

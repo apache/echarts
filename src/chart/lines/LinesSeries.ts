@@ -107,6 +107,8 @@ export interface LinesSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 
+    type?: 'lines'
+
     coordinateSystem?: string
     hoverAnimation?: boolean
 

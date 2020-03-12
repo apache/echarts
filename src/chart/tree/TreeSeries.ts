@@ -63,6 +63,7 @@ export interface TreeSeriesNodeOption extends SymbolOptionMixin {
 
 export interface TreeSeriesOption extends
     SeriesOption, SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
+    type?: 'tree'
 
     hoverAnimation?: boolean
 

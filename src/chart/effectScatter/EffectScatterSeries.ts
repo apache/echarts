@@ -56,6 +56,7 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin {
 export interface EffectScatterSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin {
+    type?: 'effectScatter'
 
     coordinateSystem?: string
 

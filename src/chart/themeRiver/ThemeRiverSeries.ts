@@ -52,6 +52,8 @@ interface ThemeRiverSeriesLabelOption extends LabelOption {
 }
 
 export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
+    type?: 'themeRiver'
+
     color?: ZRColor[]
 
     coordinateSystem: 'singleAxis'

@@ -68,6 +68,7 @@ export interface MapSeriesOption extends
     BoxLayoutOptionMixin,
     DataSelectableOptionMixin,
     SeriesEncodeOptionMixin {
+    type?: 'map'
 
     coordinateSystem?: string;
     silent?: boolean;

@@ -57,6 +57,7 @@ export interface GaugeDataItemOption {
     pointer?: PointerOption
 }
 export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin {
+    type?: 'gauge'
 
     // override radius
     radius?: number | string

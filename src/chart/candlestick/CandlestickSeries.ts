@@ -55,6 +55,8 @@ interface CandlestickItemStyleOption extends ItemStyleOption {
 
 export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin, SeriesLargeOptionMixin {
 
+    type?: 'candlestick'
+
     coordinateSystem?: 'cartesian2d'
 
     hoverAnimation?: boolean

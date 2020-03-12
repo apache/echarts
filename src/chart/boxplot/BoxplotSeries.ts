@@ -48,6 +48,7 @@ export interface BoxplotDataItemOption {
 }
 
 export interface BoxplotSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin {
+    type?: 'boxplot'
 
     coordinateSystem?: 'cartesian2d'
 

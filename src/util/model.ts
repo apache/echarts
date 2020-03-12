@@ -647,15 +647,15 @@ export function getTooltipRenderMode(renderModeOption: TooltipRenderMode | 'auto
 /**
  * Group a list by key.
  */
-export function groupData<T>(
+export function groupData<T, R extends string | number>(
     array: T[],
-    getKey: (item: T) => string // return key
+    getKey: (item: T) => R // return key
 ): {
-    keys: string[],
+    keys: R[],
     buckets: HashMap<T[]> // hasmap key: the key returned by `getKey`.
 } {
     var buckets = createHashMap<T[]>();
-    var keys = [] as string[];
+    var keys: R[] = [];
 
     each(array, function (item) {
         var key = getKey(item);
@@ -664,7 +664,10 @@ export function groupData<T>(
         ).push(item);
     });
 
-    return {keys: keys, buckets: buckets};
+    return {
+        keys: keys,
+        buckets: buckets
+    };
 }
 
 export function mergeOption<T, K>(option1: T, option2: K): T & K {

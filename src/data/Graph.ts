@@ -422,7 +422,7 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
         /**
          * @param Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
          */
-        getValue: function (this: Host, dimension: DimensionLoose): ParsedValue {
+        getValue: function (this: Host, dimension?: DimensionLoose): ParsedValue {
             var data = this[hostName][dataName];
             return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
         },

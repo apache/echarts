@@ -17,18 +17,28 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
 import '../helper/focusNodeAdjacencyAction';
+import { Payload } from '../../util/types';
+import GlobalModel from '../../model/Global';
+import SankeySeriesModel from './SankeySeries';
+
+interface SankeyDragNodePayload extends Payload {
+    localX: number
+    localY: number
+}
 
 echarts.registerAction({
     type: 'dragNode',
     event: 'dragnode',
     // here can only use 'update' now, other value is not support in echarts.
     update: 'update'
-}, function (payload, ecModel) {
-    ecModel.eachComponent({mainType: 'series', subType: 'sankey', query: payload}, function (seriesModel) {
+}, function (payload: SankeyDragNodePayload, ecModel: GlobalModel) {
+    ecModel.eachComponent({
+        mainType: 'series',
+        subType: 'sankey',
+        query: payload
+    }, function (seriesModel: SankeySeriesModel) {
         seriesModel.setNodePosition(payload.dataIndex, [payload.localX, payload.localY]);
     });
 });

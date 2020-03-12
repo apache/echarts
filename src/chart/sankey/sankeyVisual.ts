@@ -17,13 +17,13 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import VisualMapping from '../../visual/VisualMapping';
 import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import SankeySeriesModel, { SankeyNodeItemOption } from './SankeySeries';
 
-export default function (ecModel, payload) {
-    ecModel.eachSeriesByType('sankey', function (seriesModel) {
+export default function (ecModel: GlobalModel) {
+    ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
         var graph = seriesModel.getGraph();
         var nodes = graph.nodes;
         if (nodes.length) {
@@ -48,7 +48,7 @@ export default function (ecModel, payload) {
                 });
 
                 var mapValueToColor = mapping.mapValueToVisual(node.getLayout().value);
-                var customColor = node.getModel().get('itemStyle.color');
+                var customColor = node.getModel<SankeyNodeItemOption>().get(['itemStyle', 'color']);
                 customColor != null
                     ? node.setVisual('color', customColor)
                     : node.setVisual('color', mapValueToColor);

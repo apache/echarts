@@ -48,6 +48,8 @@ export interface BarDataItemOption {
 }
 
 export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionMixin {
+    type?: 'bar'
+
     coordinateSystem?: 'cartesian2d' | 'polar'
 
     clip?: boolean

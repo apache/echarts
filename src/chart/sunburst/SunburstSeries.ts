@@ -93,6 +93,7 @@ export interface SunburstSeriesLevelOption {
     }
 }
 export interface SunburstSeriesOption extends SeriesOption, CircleLayoutOptionMixin {
+    type?: 'sunburst'
 
     clockwise?: boolean
     startAngle?: number

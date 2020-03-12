@@ -50,6 +50,7 @@ export interface HeatmapDataItemOption {
 
 export interface HeatmapSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin {
+    type?: 'heatmap'
 
     coordinateSystem?: 'cartesian2d' | 'geo' | 'calendar'
 

@@ -59,6 +59,8 @@ export interface LineSeriesOption extends SeriesOption,
     SeriesStackOptionMixin,
     SeriesSamplingOptionMixin,
     SymbolOptionMixin {
+    type?: 'line'
+
     coordinateSystem?: 'cartesian2d' | 'polar'
 
     hoverAnimation?: boolean

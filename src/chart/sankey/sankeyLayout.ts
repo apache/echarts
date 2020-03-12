@@ -17,15 +17,18 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
+import ExtensionAPI from '../../ExtensionAPI';
+import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption } from './SankeySeries';
+import { GraphNode, GraphEdge } from '../../data/Graph';
+import { LayoutOrient } from '../../util/types';
+import GlobalModel from '../../model/Global';
 
-export default function (ecModel, api, payload) {
+export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
-    ecModel.eachSeriesByType('sankey', function (seriesModel) {
+    ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
 
         var nodeWidth = seriesModel.get('nodeWidth');
         var nodeGap = seriesModel.get('nodeGap');
@@ -60,12 +63,8 @@ export default function (ecModel, api, payload) {
 
 /**
  * Get the layout position of the whole view
- *
- * @param {module:echarts/model/Series} seriesModel  the model object of sankey series
- * @param {module:echarts/ExtensionAPI} api  provide the API list that the developer can call
- * @return {module:zrender/core/BoundingRect}  size of rect to draw the sankey view
  */
-function getViewRect(seriesModel, api) {
+function getViewRect(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
             width: api.getWidth(),
@@ -74,7 +73,17 @@ function getViewRect(seriesModel, api) {
     );
 }
 
-function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign) {
+function layoutSankey(
+    nodes: GraphNode[],
+    edges: GraphEdge[],
+    nodeWidth: number,
+    nodeGap: number,
+    width: number,
+    height: number,
+    iterations: number,
+    orient: LayoutOrient,
+    nodeAlign: SankeySeriesOption['nodeAlign']
+) {
     computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign);
     computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient);
     computeEdgeDepths(nodes, orient);
@@ -82,14 +91,12 @@ function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iteration
 
 /**
  * Compute the value of each node by summing the associated edge's value
- *
- * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
  */
-function computeNodeValues(nodes) {
+function computeNodeValues(nodes: GraphNode[]) {
     zrUtil.each(nodes, function (node) {
         var value1 = sum(node.outEdges, getEdgeValue);
         var value2 = sum(node.inEdges, getEdgeValue);
-        var nodeRawValue = node.getValue() || 0;
+        var nodeRawValue = node.getValue() as number || 0;
         var value = Math.max(value1, value2, nodeRawValue);
         node.setLayout({value: value}, true);
     });
@@ -100,20 +107,24 @@ function computeNodeValues(nodes) {
  *
  * Here we use Kahn algorithm to detect cycle when we traverse
  * the node to computer the initial x position.
- *
- * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
- * @param  {number} nodeWidth  the dx of the node
- * @param  {number} width  the whole width of the area to draw the view
  */
-function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nodeAlign) {
+function computeNodeBreadths(
+    nodes: GraphNode[],
+    edges: GraphEdge[],
+    nodeWidth: number,
+    width: number,
+    height: number,
+    orient: LayoutOrient,
+    nodeAlign: SankeySeriesOption['nodeAlign']
+) {
     // Used to mark whether the edge is deleted. if it is deleted,
     // the value is 0, otherwise it is 1.
     var remainEdges = [];
     // Storage each node's indegree.
     var indegreeArr = [];
     //Used to storage the node with indegree is equal to 0.
-    var zeroIndegrees = [];
-    var nextTargetNode = [];
+    var zeroIndegrees: GraphNode[] = [];
+    var nextTargetNode: GraphNode[] = [];
     var x = 0;
     var kx = 0;
 
@@ -133,7 +144,7 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
     while (zeroIndegrees.length) {
         for (var idx = 0; idx < zeroIndegrees.length; idx++) {
             var node = zeroIndegrees[idx];
-            var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
+            var item = node.hostGraph.data.getRawDataItem(node.dataIndex) as SankeyNodeItemOption;
             var isItemDepth = item.depth != null && item.depth >= 0;
             if (isItemDepth && item.depth > maxNodeDepth) {
                 maxNodeDepth = item.depth;
@@ -176,14 +187,19 @@ function computeNodeBreadths(nodes, edges, nodeWidth, width, height, orient, nod
     scaleNodeBreadths(nodes, kx, orient);
 }
 
-function isNodeDepth(node) {
-    var item = node.hostGraph.data.getRawDataItem(node.dataIndex);
+function isNodeDepth(node: GraphNode) {
+    var item = node.hostGraph.data.getRawDataItem(node.dataIndex) as SankeyNodeItemOption;
     return item.depth != null && item.depth >= 0;
 }
 
-function adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth) {
+function adjustNodeWithNodeAlign(
+    nodes: GraphNode[],
+    nodeAlign: SankeySeriesOption['nodeAlign'],
+    orient: LayoutOrient,
+    maxDepth: number
+) {
     if (nodeAlign === 'right') {
-        var nextSourceNode = [];
+        var nextSourceNode: GraphNode[] = [];
         var remainNodes = nodes;
         var nodeHeight = 0;
         while (remainNodes.length) {
@@ -217,10 +233,10 @@ function adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth) {
  * All the node without outEgdes are assigned maximum x-position and
  *     be aligned in the last column.
  *
- * @param {module:echarts/data/Graph~Node} nodes.  node of sankey view.
- * @param {number} maxDepth.  use to assign to node without outEdges as x-position.
+ * @param nodes.  node of sankey view.
+ * @param maxDepth.  use to assign to node without outEdges as x-position.
  */
-function moveSinksRight(nodes, maxDepth) {
+function moveSinksRight(nodes: GraphNode[], maxDepth: number) {
     zrUtil.each(nodes, function (node) {
         if (!isNodeDepth(node) && !node.outEdges.length) {
             node.setLayout({depth: maxDepth}, true);
@@ -231,10 +247,10 @@ function moveSinksRight(nodes, maxDepth) {
 /**
  * Scale node x-position to the width
  *
- * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
- * @param {number} kx   multiple used to scale nodes
+ * @param nodes  node of sankey view
+ * @param kx   multiple used to scale nodes
  */
-function scaleNodeBreadths(nodes, kx, orient) {
+function scaleNodeBreadths(nodes: GraphNode[], kx: number, orient: LayoutOrient) {
     zrUtil.each(nodes, function (node) {
         var nodeDepth = node.getLayout().depth * kx;
         orient === 'vertical'
@@ -246,14 +262,22 @@ function scaleNodeBreadths(nodes, kx, orient) {
 /**
  * Using Gauss-Seidel iterations method to compute the node depth(y-position)
  *
- * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
- * @param {module:echarts/data/Graph~Edge} edges  edge of sankey view
- * @param {number} height  the whole height of the area to draw the view
- * @param {number} nodeGap  the vertical distance between two nodes
+ * @param nodes  node of sankey view
+ * @param edges  edge of sankey view
+ * @param height  the whole height of the area to draw the view
+ * @param nodeGap  the vertical distance between two nodes
  *     in the same column.
- * @param {number} iterations  the number of iterations for the algorithm
+ * @param iterations  the number of iterations for the algorithm
  */
-function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, orient) {
+function computeNodeDepths(
+    nodes: GraphNode[],
+    edges: GraphEdge[],
+    height: number,
+    width: number,
+    nodeGap: number,
+    iterations: number,
+    orient: LayoutOrient
+) {
     var nodesByBreadth = prepareNodesByBreadth(nodes, orient);
 
     initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orient);
@@ -270,12 +294,12 @@ function computeNodeDepths(nodes, edges, height, width, nodeGap, iterations, ori
     }
 }
 
-function prepareNodesByBreadth(nodes, orient) {
-    var nodesByBreadth = [];
+function prepareNodesByBreadth(nodes: GraphNode[], orient: LayoutOrient) {
+    var nodesByBreadth: GraphNode[][] = [];
     var keyAttr = orient === 'vertical' ? 'y' : 'x';
 
     var groupResult = groupData(nodes, function (node) {
-        return node.getLayout()[keyAttr];
+        return node.getLayout()[keyAttr] as number;
     });
     groupResult.keys.sort(function (a, b) {
         return a - b;
@@ -289,15 +313,15 @@ function prepareNodesByBreadth(nodes, orient) {
 
 /**
  * Compute the original y-position for each node
- *
- * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
- * @param {Array.<Array.<module:echarts/data/Graph~Node>>} nodesByBreadth
- *     group by the array of all sankey nodes based on the nodes x-position.
- * @param {module:echarts/data/Graph~Edge} edges  edge of sankey view
- * @param {number} height  the whole height of the area to draw the view
- * @param {number} nodeGap  the vertical distance between two nodes
  */
-function initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orient) {
+function initializeNodeDepth(
+    nodesByBreadth: GraphNode[][],
+    edges: GraphEdge[],
+    height: number,
+    width: number,
+    nodeGap: number,
+    orient: LayoutOrient
+) {
     var minKy = Infinity;
     zrUtil.each(nodesByBreadth, function (nodes) {
         var n = nodes.length;
@@ -336,13 +360,14 @@ function initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orie
 
 /**
  * Resolve the collision of initialized depth (y-position)
- *
- * @param {Array.<Array.<module:echarts/data/Graph~Node>>} nodesByBreadth
- *     group by the array of all sankey nodes based on the nodes x-position.
- * @param {number} nodeGap  the vertical distance between two nodes
- * @param {number} height  the whole height of the area to draw the view
  */
-function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
+function resolveCollisions(
+    nodesByBreadth: GraphNode[][],
+    nodeGap: number,
+    height: number,
+    width: number,
+    orient: LayoutOrient
+) {
     var keyAttr = orient === 'vertical' ? 'x' : 'y';
     zrUtil.each(nodesByBreadth, function (nodes) {
         nodes.sort(function (a, b) {
@@ -392,17 +417,19 @@ function resolveCollisions(nodesByBreadth, nodeGap, height, width, orient) {
 
 /**
  * Change the y-position of the nodes, except most the right side nodes
- *
- * @param {Array.<Array.<module:echarts/data/Graph~Node>>} nodesByBreadth
- *     group by the array of all sankey nodes based on the node x-position.
- * @param {number} alpha  parameter used to adjust the nodes y-position
+ * @param nodesByBreadth
+ * @param alpha  parameter used to adjust the nodes y-position
  */
-function relaxRightToLeft(nodesByBreadth, alpha, orient) {
+function relaxRightToLeft(
+    nodesByBreadth: GraphNode[][],
+    alpha: number,
+    orient: LayoutOrient
+) {
     zrUtil.each(nodesByBreadth.slice().reverse(), function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.outEdges.length) {
                 var y = sum(node.outEdges, weightedTarget, orient)
-                        / sum(node.outEdges, getEdgeValue, orient);
+                        / sum(node.outEdges, getEdgeValue);
                 if (orient === 'vertical') {
                     var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
@@ -416,30 +443,30 @@ function relaxRightToLeft(nodesByBreadth, alpha, orient) {
     });
 }
 
-function weightedTarget(edge, orient) {
-    return center(edge.node2, orient) * edge.getValue();
+function weightedTarget(edge: GraphEdge, orient: LayoutOrient) {
+    return center(edge.node2, orient) * (edge.getValue() as number);
 }
 
-function weightedSource(edge, orient) {
-    return center(edge.node1, orient) * edge.getValue();
+function weightedSource(edge: GraphEdge, orient: LayoutOrient) {
+    return center(edge.node1, orient) * (edge.getValue() as number);
 }
 
-function center(node, orient) {
+function center(node: GraphNode, orient: LayoutOrient) {
     return orient === 'vertical'
             ? node.getLayout().x + node.getLayout().dx / 2
             : node.getLayout().y + node.getLayout().dy / 2;
 }
 
-function getEdgeValue(edge) {
-    return edge.getValue();
+function getEdgeValue(edge: GraphEdge) {
+    return edge.getValue() as number;
 }
 
-function sum(array, cb, orient) {
+function sum<T>(array: T[], cb: (item: T, orient?: LayoutOrient) => number, orient?: LayoutOrient) {
     var sum = 0;
     var len = array.length;
     var i = -1;
     while (++i < len) {
-        var value = +cb.call(array, array[i], orient);
+        var value = +cb(array[i], orient);
         if (!isNaN(value)) {
             sum += value;
         }
@@ -449,17 +476,13 @@ function sum(array, cb, orient) {
 
 /**
  * Change the y-position of the nodes, except most the left side nodes
- *
- * @param {Array.<Array.<module:echarts/data/Graph~Node>>} nodesByBreadth
- *     group by the array of all sankey nodes based on the node x-position.
- * @param {number} alpha  parameter used to adjust the nodes y-position
  */
-function relaxLeftToRight(nodesByBreadth, alpha, orient) {
+function relaxLeftToRight(nodesByBreadth: GraphNode[][], alpha: number, orient: LayoutOrient) {
     zrUtil.each(nodesByBreadth, function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.inEdges.length) {
                 var y = sum(node.inEdges, weightedSource, orient)
-                        / sum(node.inEdges, getEdgeValue, orient);
+                        / sum(node.inEdges, getEdgeValue);
                 if (orient === 'vertical') {
                     var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
@@ -475,10 +498,8 @@ function relaxLeftToRight(nodesByBreadth, alpha, orient) {
 
 /**
  * Compute the depth(y-position) of each edge
- *
- * @param {module:echarts/data/Graph~Node} nodes  node of sankey view
  */
-function computeEdgeDepths(nodes, orient) {
+function computeEdgeDepths(nodes: GraphNode[], orient: LayoutOrient) {
     var keyAttr = orient === 'vertical' ? 'x' : 'y';
     zrUtil.each(nodes, function (node) {
         node.outEdges.sort(function (a, b) {

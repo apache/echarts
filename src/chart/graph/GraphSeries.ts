@@ -142,6 +142,8 @@ interface GraphSeriesOption extends SeriesOption,
     RoamOptionMixin,
     BoxLayoutOptionMixin {
 
+    type?: 'graph'
+
     coordinateSystem?: string
 
     hoverAnimation?: boolean
