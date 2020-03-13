@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import OrdinalScale from '../scale/Ordinal';
@@ -30,18 +28,23 @@ import {
     makeColumnLayout,
     retrieveColumnLayout
 } from '../layout/barGrid';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 
-import '../scale/Log';
 import TimeScale from '../scale/Time';
-import { ComponentOption } from '../util/types';
 import Model from '../model/Model';
+import { AxisBaseModel } from './AxisBaseModel';
+import LogScale from '../scale/Log';
+import Axis from './Axis';
+import { AxisBaseOption } from './axisCommonTypes';
+import type CartesianAxisModel from './cartesian/AxisModel';
+
+type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>
 
 /**
  * Get axis scale extent before niced.
  * Item of returned array can only be number (including Infinity and NaN).
  */
-export function getScaleExtent(scale, model) {
+export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
     var scaleType = scale.type;
 
     var min = model.getMin();
@@ -51,27 +54,29 @@ export function getScaleExtent(scale, model) {
     var originalExtent = scale.getExtent();
 
     var axisDataLen;
-    var boundaryGap;
+    var boundaryGapInner: number[];
     var span;
     if (scaleType === 'ordinal') {
         axisDataLen = model.getCategories().length;
     }
     else {
-        boundaryGap = model.get('boundaryGap');
-        if (!zrUtil.isArray(boundaryGap)) {
-            boundaryGap = [boundaryGap || 0, boundaryGap || 0];
-        }
-        if (typeof boundaryGap[0] === 'boolean') {
+        var boundaryGap = model.get('boundaryGap');
+        var boundaryGapArr = zrUtil.isArray(boundaryGap)
+            ? boundaryGap : [boundaryGap || 0, boundaryGap || 0];
+
+        if (typeof boundaryGapArr[0] === 'boolean' || typeof boundaryGapArr[1] === 'boolean') {
             if (__DEV__) {
                 console.warn('Boolean type for boundaryGap is only '
                     + 'allowed for ordinal axis. Please use string in '
                     + 'percentage instead, e.g., "20%". Currently, '
                     + 'boundaryGap is set to be 0.');
             }
-            boundaryGap = [0, 0];
+            boundaryGapInner = [0, 0];
         }
-        boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
-        boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
+        else {
+            boundaryGapInner[0] = numberUtil.parsePercent(boundaryGapArr[0], 1);
+            boundaryGapInner[1] = numberUtil.parsePercent(boundaryGapArr[1], 1);
+        }
         span = (originalExtent[1] - originalExtent[0])
             || Math.abs(originalExtent[0]);
     }
@@ -94,12 +99,12 @@ export function getScaleExtent(scale, model) {
     if (min == null) {
         min = scaleType === 'ordinal'
             ? (axisDataLen ? 0 : NaN)
-            : originalExtent[0] - boundaryGap[0] * span;
+            : originalExtent[0] - boundaryGapInner[0] * span;
     }
     if (max == null) {
         max = scaleType === 'ordinal'
             ? (axisDataLen ? axisDataLen - 1 : NaN)
-            : originalExtent[1] + boundaryGap[1] * span;
+            : originalExtent[1] + boundaryGapInner[1] * span;
     }
 
     if (min === 'dataMin') {
@@ -128,7 +133,7 @@ export function getScaleExtent(scale, model) {
     scale.setBlank(
         zrUtil.eqNaN(min)
         || zrUtil.eqNaN(max)
-        || (scaleType === 'ordinal' && !scale.getOrdinalMeta().categories.length)
+        || ((scale instanceof OrdinalScale) && !scale.getOrdinalMeta().categories.length)
     );
 
     // Evaluate if axis needs cross zero
@@ -155,18 +160,19 @@ export function getScaleExtent(scale, model) {
     var ecModel = model.ecModel;
     if (ecModel && (scaleType === 'time' /*|| scaleType === 'interval' */)) {
         var barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
-        var isBaseAxisAndHasBarSeries;
+        var isBaseAxisAndHasBarSeries = false;
 
         zrUtil.each(barSeriesModels, function (seriesModel) {
-            isBaseAxisAndHasBarSeries |= seriesModel.getBaseAxis() === model.axis;
+            isBaseAxisAndHasBarSeries = isBaseAxisAndHasBarSeries || seriesModel.getBaseAxis() === model.axis;
         });
 
         if (isBaseAxisAndHasBarSeries) {
-            // Calculate placement of bars on axis
+            // Calculate placement of bars on axis. TODO should be decoupled
+            // with barLayout
             var barWidthAndOffset = makeColumnLayout(barSeriesModels);
 
             // Adjust axis min and max to account for overflow
-            var adjustedScale = adjustScaleForOverflow(min, max, model, barWidthAndOffset);
+            var adjustedScale = adjustScaleForOverflow(min, max, model as CartesianAxisModel, barWidthAndOffset);
             min = adjustedScale.min;
             max = adjustedScale.max;
         }
@@ -175,7 +181,12 @@ export function getScaleExtent(scale, model) {
     return [min, max];
 }
 
-function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
+function adjustScaleForOverflow(
+    min: number,
+    max: number,
+    model: CartesianAxisModel,  // Onlhy support cartesian coord yet.
+    barWidthAndOffset: BarWidthAndOffset
+) {
 
     // Get Axis Length
     var axisExtent = model.axis.getExtent();
@@ -210,13 +221,13 @@ function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
     return {min: min, max: max};
 }
 
-export function niceScaleExtent(scale, model) {
+export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
     var extent = getScaleExtent(scale, model);
     var fixMin = model.getMin() != null;
     var fixMax = model.getMax() != null;
     var splitNumber = model.get('splitNumber');
 
-    if (scale.type === 'log') {
+    if (scale instanceof LogScale) {
         scale.base = model.get('logBase');
     }
 
@@ -239,14 +250,14 @@ export function niceScaleExtent(scale, model) {
     // FIXME
     var interval = model.get('interval');
     if (interval != null) {
-        scale.setInterval && scale.setInterval(interval);
+        (scale as IntervalScale).setInterval && (scale as IntervalScale).setInterval(interval);
     }
 }
 
 /**
  * @param axisType Default retrieve from model.type
  */
-export function createScaleByModel(model: Model<ComponentOption>, axisType?: string): Scale {
+export function createScaleByModel(model: AxisBaseModel, axisType?: string): Scale {
     axisType = axisType || model.get('type');
     if (axisType) {
         switch (axisType) {
@@ -272,7 +283,7 @@ export function createScaleByModel(model: Model<ComponentOption>, axisType?: str
 /**
  * Check if the axis corss 0
  */
-export function ifAxisCrossZero(axis) {
+export function ifAxisCrossZero(axis: Axis) {
     var dataExtent = axis.scale.getExtent();
     var min = dataExtent[0];
     var max = dataExtent[1];
@@ -280,51 +291,51 @@ export function ifAxisCrossZero(axis) {
 }
 
 /**
- * @param {module:echarts/coord/Axis} axis
- * @return {Function} Label formatter function.
+ * @param axis
+ * @return Label formatter function.
  *         param: {number} tickValue,
  *         param: {number} idx, the index in all ticks.
  *                         If category axis, this param is not requied.
  *         return: {string} label string.
  */
-export function makeLabelFormatter(axis) {
+export function makeLabelFormatter(axis: Axis) {
     var labelFormatter = axis.getLabelModel().get('formatter');
     var categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
     if (typeof labelFormatter === 'string') {
-        labelFormatter = (function (tpl) {
-            return function (val) {
+        return (function (tpl) {
+            return function (val: number | string) {
                 // For category axis, get raw value; for numeric axis,
                 // get foramtted label like '1,333,444'.
                 val = axis.scale.getLabel(val);
                 return tpl.replace('{value}', val != null ? val : '');
             };
         })(labelFormatter);
-        // Consider empty array
-        return labelFormatter;
     }
     else if (typeof labelFormatter === 'function') {
-        return function (tickValue, idx) {
-            // The original intention of `idx` is "the index of the tick in all ticks".
-            // But the previous implementation of category axis do not consider the
-            // `axisLabel.interval`, which cause that, for example, the `interval` is
-            // `1`, then the ticks "name5", "name7", "name9" are displayed, where the
-            // corresponding `idx` are `0`, `2`, `4`, but not `0`, `1`, `2`. So we keep
-            // the definition here for back compatibility.
-            if (categoryTickStart != null) {
-                idx = tickValue - categoryTickStart;
-            }
-            return labelFormatter(getAxisRawValue(axis, tickValue), idx);
-        };
+        return (function (cb) {
+            return function (tickValue: number, idx: number) {
+                // The original intention of `idx` is "the index of the tick in all ticks".
+                // But the previous implementation of category axis do not consider the
+                // `axisLabel.interval`, which cause that, for example, the `interval` is
+                // `1`, then the ticks "name5", "name7", "name9" are displayed, where the
+                // corresponding `idx` are `0`, `2`, `4`, but not `0`, `1`, `2`. So we keep
+                // the definition here for back compatibility.
+                if (categoryTickStart != null) {
+                    idx = tickValue - categoryTickStart;
+                }
+                return cb(getAxisRawValue(axis, tickValue), idx);
+            };
+        })(labelFormatter);
     }
     else {
-        return function (tick) {
+        return function (tick: number) {
             return axis.scale.getLabel(tick);
         };
     }
 }
 
-export function getAxisRawValue(axis, value) {
+export function getAxisRawValue(axis: Axis, value: number | string): number | string {
     // In category axis with data zoom, tick is not the original
     // index of axis.data. So tick should not be exposed to user
     // in category axis.
@@ -332,25 +343,23 @@ export function getAxisRawValue(axis, value) {
 }
 
 /**
- * @param {module:echarts/coord/Axis} axis
- * @return {module:zrender/core/BoundingRect} Be null/undefined if no labels.
+ * @param axis
+ * @return Be null/undefined if no labels.
  */
-export function estimateLabelUnionRect(axis) {
+export function estimateLabelUnionRect(axis: Axis) {
     var axisModel = axis.model;
     var scale = axis.scale;
 
-    if (!axisModel.get('axisLabel.show') || scale.isBlank()) {
+    if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
         return;
     }
-
-    var isCategory = axis.type === 'category';
 
     var realNumberScaleTicks;
     var tickCount;
     var categoryScaleExtent = scale.getExtent();
 
     // Optimize for large category data, avoid call `getTicks()`.
-    if (isCategory) {
+    if (scale instanceof OrdinalScale) {
         tickCount = scale.count();
     }
     else {
@@ -369,7 +378,7 @@ export function estimateLabelUnionRect(axis) {
     }
     for (var i = 0; i < tickCount; i += step) {
         var tickValue = realNumberScaleTicks ? realNumberScaleTicks[i] : categoryScaleExtent[0] + i;
-        var label = labelFormatter(tickValue);
+        var label = labelFormatter(tickValue, i);
         var unrotatedSingleRect = axisLabelModel.getTextRect(label);
         var singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
 
@@ -379,23 +388,22 @@ export function estimateLabelUnionRect(axis) {
     return rect;
 }
 
-function rotateTextRect(textRect, rotate) {
+function rotateTextRect(textRect: RectLike, rotate: number) {
     var rotateRadians = rotate * Math.PI / 180;
-    var boundingBox = textRect.plain();
-    var beforeWidth = boundingBox.width;
-    var beforeHeight = boundingBox.height;
+    var beforeWidth = textRect.width;
+    var beforeHeight = textRect.height;
     var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
     var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
-    var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
+    var rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
 
     return rotatedRect;
 }
 
 /**
- * @param {module:echarts/src/model/Model} model axisLabelModel or axisTickModel
+ * @param model axisLabelModel or axisTickModel
  * @return {number|String} Can be null|'auto'|number|function
  */
-export function getOptionCategoryInterval(model) {
+export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel']>) {
     var interval = model.get('interval');
     return interval == null ? 'auto' : interval;
 }
@@ -406,7 +414,7 @@ export function getOptionCategoryInterval(model) {
  * @param {Object} axis axisModel.axis
  * @return {boolean}
  */
-export function shouldShowAllLabels(axis) {
+export function shouldShowAllLabels(axis: Axis) {
     return axis.type === 'category'
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }

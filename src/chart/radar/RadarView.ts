@@ -17,34 +17,43 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as graphic from '../../util/graphic';
 import * as zrUtil from 'zrender/src/core/util';
 import * as symbolUtil from '../../util/symbol';
+import ChartView from '../../view/Chart';
+import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
+import ExtensionAPI from '../../ExtensionAPI';
+import List from '../../data/List';
+import { ZRColor, DisplayState, ECElement } from '../../util/types';
+import GlobalModel from '../../model/Global';
 
-function normalizeSymbolSize(symbolSize) {
+function normalizeSymbolSize(symbolSize: number | number[]) {
     if (!zrUtil.isArray(symbolSize)) {
         symbolSize = [+symbolSize, +symbolSize];
     }
     return symbolSize;
 }
 
-export default echarts.extendChartView({
+type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
+    __dimIdx: number
+}
 
-    type: 'radar',
+class RadarView extends ChartView {
+    static type = 'radar'
+    type = RadarView.type
 
-    render: function (seriesModel, ecModel, api) {
+    private _data: List<RadarSeriesModel>
+
+    render(seriesModel: RadarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var polar = seriesModel.coordinateSystem;
         var group = this.group;
 
         var data = seriesModel.getData();
         var oldData = this._data;
 
-        function createSymbol(data, idx) {
-            var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
-            var color = data.getItemVisual(idx, 'color');
+        function createSymbol(data: List<RadarSeriesModel>, idx: number) {
+            var symbolType = data.getItemVisual(idx, 'symbol') as string || 'circle';
+            var color = data.getItemVisual(idx, 'color') as ZRColor;
             if (symbolType === 'none') {
                 return;
             }
@@ -61,10 +70,17 @@ export default echarts.extendChartView({
                 z2: 100,
                 scale: [symbolSize[0] / 2, symbolSize[1] / 2]
             });
-            return symbolPath;
+            return symbolPath as RadarSymbol;
         }
 
-        function updateSymbols(oldPoints, newPoints, symbolGroup, data, idx, isInit) {
+        function updateSymbols(
+            oldPoints: number[][],
+            newPoints: number[][],
+            symbolGroup: graphic.Group,
+            data: List<RadarSeriesModel>,
+            idx: number,
+            isInit?: boolean
+        ) {
             // Simply rerender all
             symbolGroup.removeAll();
             for (var i = 0; i < newPoints.length - 1; i++) {
@@ -87,7 +103,7 @@ export default echarts.extendChartView({
             }
         }
 
-        function getInitialPoints(points) {
+        function getInitialPoints(points: number[][]) {
             return zrUtil.map(points, function (pt) {
                 return [polar.cx, polar.cy];
             });
@@ -124,10 +140,10 @@ export default echarts.extendChartView({
                 data.setItemGraphicEl(idx, itemGroup);
             })
             .update(function (newIdx, oldIdx) {
-                var itemGroup = oldData.getItemGraphicEl(oldIdx);
-                var polyline = itemGroup.childAt(0);
-                var polygon = itemGroup.childAt(1);
-                var symbolGroup = itemGroup.childAt(2);
+                var itemGroup = oldData.getItemGraphicEl(oldIdx) as graphic.Group;
+                var polyline = itemGroup.childAt(0) as graphic.Polyline;
+                var polygon = itemGroup.childAt(1) as graphic.Polygon;
+                var symbolGroup = itemGroup.childAt(2) as graphic.Group;
                 var target = {
                     shape: {
                         points: data.getItemLayout(newIdx)
@@ -138,7 +154,12 @@ export default echarts.extendChartView({
                     return;
                 }
                 updateSymbols(
-                    polyline.shape.points, target.shape.points, symbolGroup, data, newIdx, false
+                    polyline.shape.points,
+                    target.shape.points,
+                    symbolGroup,
+                    data,
+                    newIdx,
+                    false
                 );
 
                 graphic.updateProps(polyline, target, seriesModel);
@@ -151,11 +172,11 @@ export default echarts.extendChartView({
             })
             .execute();
 
-        data.eachItemGraphicEl(function (itemGroup, idx) {
-            var itemModel = data.getItemModel(idx);
-            var polyline = itemGroup.childAt(0);
-            var polygon = itemGroup.childAt(1);
-            var symbolGroup = itemGroup.childAt(2);
+        data.eachItemGraphicEl(function (itemGroup: graphic.Group, idx) {
+            var itemModel = data.getItemModel<RadarSeriesDataItemOption>(idx);
+            var polyline = itemGroup.childAt(0) as graphic.Polyline;
+            var polygon = itemGroup.childAt(1) as graphic.Polygon;
+            var symbolGroup = itemGroup.childAt(2) as graphic.Group;
             var color = data.getItemVisual(idx, 'color');
 
             group.add(itemGroup);
@@ -169,10 +190,10 @@ export default echarts.extendChartView({
                     }
                 )
             );
-            polyline.hoverStyle = itemModel.getModel('emphasis.lineStyle').getLineStyle();
+            polyline.hoverStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
 
             var areaStyleModel = itemModel.getModel('areaStyle');
-            var hoverAreaStyleModel = itemModel.getModel('emphasis.areaStyle');
+            var hoverAreaStyleModel = itemModel.getModel(['emphasis', 'areaStyle']);
             var polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
             var hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
 
@@ -191,14 +212,14 @@ export default echarts.extendChartView({
             polygon.hoverStyle = hoverAreaStyleModel.getAreaStyle();
 
             var itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
-            var itemHoverStyle = itemModel.getModel('emphasis.itemStyle').getItemStyle();
+            var itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
             var labelModel = itemModel.getModel('label');
-            var labelHoverModel = itemModel.getModel('emphasis.label');
-            symbolGroup.eachChild(function (symbolPath) {
+            var labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+            symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
                 symbolPath.setStyle(itemStyle);
                 symbolPath.hoverStyle = zrUtil.clone(itemHoverStyle);
                 var defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
-                (defaultText == null || isNaN(defaultText)) && (defaultText = '');
+                (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
                 graphic.setLabelStyle(
                     symbolPath.style, symbolPath.hoverStyle, labelModel, labelHoverModel,
@@ -206,26 +227,26 @@ export default echarts.extendChartView({
                         labelFetcher: data.hostModel,
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
-                        defaultText: defaultText,
+                        defaultText: defaultText + '',
                         autoColor: color,
                         isRectText: true
                     }
                 );
             });
 
-            itemGroup.highDownOnUpdate = function (fromState, toState) {
+            (itemGroup as ECElement).highDownOnUpdate = function (fromState: DisplayState, toState: DisplayState) {
                 polygon.attr('ignore', toState === 'emphasis' ? hoverPolygonIgnore : polygonIgnore);
             };
             graphic.setHoverStyle(itemGroup);
         });
 
         this._data = data;
-    },
+    }
 
-    remove: function () {
+    remove() {
         this.group.removeAll();
         this._data = null;
-    },
+    }
+}
 
-    dispose: function () {}
-});
+ChartView.registerClass(RadarView);

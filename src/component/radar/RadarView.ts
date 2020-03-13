@@ -17,31 +17,34 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import AxisBuilder from '../axis/AxisBuilder';
 import * as graphic from '../../util/graphic';
+import ComponentView from '../../view/Component';
+import RadarModel from '../../coord/radar/RadarModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { ZRColor } from '../../util/types';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
-];
+] as const;
 
-export default echarts.extendComponentView({
+class RadarView extends ComponentView {
 
-    type: 'radar',
+    static type = 'radar'
+    type = RadarView.type
 
-    render: function (radarModel, ecModel, api) {
+    render(radarModel: RadarModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var group = this.group;
         group.removeAll();
 
         this._buildAxes(radarModel);
         this._buildSplitLineAndArea(radarModel);
-    },
+    }
 
-    _buildAxes: function (radarModel) {
+    _buildAxes(radarModel: RadarModel) {
         var radar = radarModel.coordinateSystem;
         var indicatorAxes = radar.getIndicatorAxes();
         var axisBuilders = zrUtil.map(indicatorAxes, function (indicatorAxis) {
@@ -59,9 +62,9 @@ export default echarts.extendComponentView({
             zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
             this.group.add(axisBuilder.getGroup());
         }, this);
-    },
+    }
 
-    _buildSplitLineAndArea: function (radarModel) {
+    _buildSplitLineAndArea(radarModel: RadarModel) {
         var radar = radarModel.coordinateSystem;
         var indicatorAxes = radar.getIndicatorAxes();
         if (!indicatorAxes.length) {
@@ -78,13 +81,17 @@ export default echarts.extendComponentView({
         var splitLineColors = lineStyleModel.get('color');
         var splitAreaColors = areaStyleModel.get('color');
 
-        splitLineColors = zrUtil.isArray(splitLineColors) ? splitLineColors : [splitLineColors];
-        splitAreaColors = zrUtil.isArray(splitAreaColors) ? splitAreaColors : [splitAreaColors];
+        var splitLineColorsArr = zrUtil.isArray(splitLineColors) ? splitLineColors : [splitLineColors];
+        var splitAreaColorsArr = zrUtil.isArray(splitAreaColors) ? splitAreaColors : [splitAreaColors];
 
-        var splitLines = [];
-        var splitAreas = [];
+        var splitLines: (graphic.Circle | graphic.Polyline)[][] = [];
+        var splitAreas: (graphic.Ring | graphic.Polygon)[][] = [];
 
-        function getColorIndex(areaOrLine, areaOrLineColorList, idx) {
+        function getColorIndex(
+            areaOrLine: any[][],
+            areaOrLineColorList: ZRColor[],
+            idx: number
+        ) {
             var colorIndex = idx % areaOrLineColorList.length;
             areaOrLine[colorIndex] = areaOrLine[colorIndex] || [];
             return colorIndex;
@@ -96,7 +103,7 @@ export default echarts.extendComponentView({
             var cy = radar.cy;
             for (var i = 0; i < ticksRadius.length; i++) {
                 if (showSplitLine) {
-                    var colorIndex = getColorIndex(splitLines, splitLineColors, i);
+                    var colorIndex = getColorIndex(splitLines, splitLineColorsArr, i);
                     splitLines[colorIndex].push(new graphic.Circle({
                         shape: {
                             cx: cx,
@@ -106,7 +113,7 @@ export default echarts.extendComponentView({
                     }));
                 }
                 if (showSplitArea && i < ticksRadius.length - 1) {
-                    var colorIndex = getColorIndex(splitAreas, splitAreaColors, i);
+                    var colorIndex = getColorIndex(splitAreas, splitAreaColorsArr, i);
                     splitAreas[colorIndex].push(new graphic.Ring({
                         shape: {
                             cx: cx,
@@ -120,7 +127,7 @@ export default echarts.extendComponentView({
         }
         // Polyyon
         else {
-            var realSplitNumber;
+            var realSplitNumber: number;
             var axesTicksPoints = zrUtil.map(indicatorAxes, function (indicatorAxis, idx) {
                 var ticksCoords = indicatorAxis.getTicksCoords();
                 realSplitNumber = realSplitNumber == null
@@ -131,9 +138,9 @@ export default echarts.extendComponentView({
                 });
             });
 
-            var prevPoints = [];
+            var prevPoints: number[][] = [];
             for (var i = 0; i <= realSplitNumber; i++) {
-                var points = [];
+                var points: number[][] = [];
                 for (var j = 0; j < indicatorAxes.length; j++) {
                     points.push(axesTicksPoints[j][i]);
                 }
@@ -148,7 +155,7 @@ export default echarts.extendComponentView({
                 }
 
                 if (showSplitLine) {
-                    var colorIndex = getColorIndex(splitLines, splitLineColors, i);
+                    var colorIndex = getColorIndex(splitLines, splitLineColorsArr, i);
                     splitLines[colorIndex].push(new graphic.Polyline({
                         shape: {
                             points: points
@@ -156,7 +163,7 @@ export default echarts.extendComponentView({
                     }));
                 }
                 if (showSplitArea && prevPoints) {
-                    var colorIndex = getColorIndex(splitAreas, splitAreaColors, i - 1);
+                    var colorIndex = getColorIndex(splitAreas, splitAreaColorsArr, i - 1);
                     splitAreas[colorIndex].push(new graphic.Polygon({
                         shape: {
                             points: points.concat(prevPoints)
@@ -175,7 +182,7 @@ export default echarts.extendComponentView({
                 splitAreas, {
                     style: zrUtil.defaults({
                         stroke: 'none',
-                        fill: splitAreaColors[idx % splitAreaColors.length]
+                        fill: splitAreaColorsArr[idx % splitAreaColorsArr.length]
                     }, areaStyle),
                     silent: true
                 }
@@ -187,7 +194,7 @@ export default echarts.extendComponentView({
                 splitLines, {
                     style: zrUtil.defaults({
                         fill: 'none',
-                        stroke: splitLineColors[idx % splitLineColors.length]
+                        stroke: splitLineColorsArr[idx % splitLineColorsArr.length]
                     }, lineStyle),
                     silent: true
                 }
@@ -195,4 +202,6 @@ export default echarts.extendComponentView({
         }, this);
 
     }
-});
+}
+
+ComponentView.registerClass(RadarView);

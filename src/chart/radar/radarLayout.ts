@@ -17,14 +17,16 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import RadarSeriesModel from './RadarSeries';
+import Radar from '../../coord/radar/Radar';
 
-export default function (ecModel) {
-    ecModel.eachSeriesByType('radar', function (seriesModel) {
+type Point = number[];
+export default function (ecModel: GlobalModel) {
+    ecModel.eachSeriesByType('radar', function (seriesModel: RadarSeriesModel) {
         var data = seriesModel.getData();
-        var points = [];
+        var points: Point[][] = [];
         var coordSys = seriesModel.coordinateSystem;
         if (!coordSys) {
             return;
@@ -57,11 +59,11 @@ export default function (ecModel) {
     });
 }
 
-function isValidPoint(point) {
+function isValidPoint(point: Point) {
     return !isNaN(point[0]) && !isNaN(point[1]);
 }
 
-function getValueMissingPoint(coordSys) {
+function getValueMissingPoint(coordSys: Radar): Point {
     // It is error-prone to input [NaN, NaN] into polygon, polygon.
     // (probably cause problem when refreshing or animating)
     return [coordSys.cx, coordSys.cy];

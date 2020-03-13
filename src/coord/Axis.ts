@@ -219,7 +219,7 @@ class Axis {
         return createAxisLabels(this).labels;
     }
 
-    getLabelModel(): Model {
+    getLabelModel(): Model<AxisBaseOption['axisLabel']> {
         return this.model.getModel('axisLabel');
     }
 

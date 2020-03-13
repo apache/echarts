@@ -42,9 +42,9 @@ var mathLog = Math.log;
 
 class LogScale extends Scale {
 
-    type = 'log';
+    readonly type = 'log';
 
-    private base = 10;
+    base = 10;
 
     private _originalScale: IntervalScale = new IntervalScale();
 

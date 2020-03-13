@@ -30,6 +30,7 @@ import {
     getStackedDimension
 } from './data/helper/dataStackHelper';
 import SeriesModel from './model/Series';
+import { AxisBaseModel } from './coord/AxisBaseModel';
 
 /**
  * Create a muti dimension List structure from seriesModel.
@@ -71,7 +72,7 @@ export {createSymbol} from './util/symbol';
  * @param {Object|module:echarts/Model} option If `optoin.type`
  *        is secified, it can only be `'value'` currently.
  */
-export function createScale(dataExtent: number[], option: object | Model) {
+export function createScale(dataExtent: number[], option: object | AxisBaseModel) {
     var axisModel = option;
     if (!(option instanceof Model)) {
         axisModel = new Model(option);
@@ -85,10 +86,10 @@ export function createScale(dataExtent: number[], option: object | Model) {
         // zrUtil.mixin(axisModel, AxisModelCommonMixin);
     }
 
-    var scale = axisHelper.createScaleByModel(axisModel as Model);
+    var scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
     scale.setExtent(dataExtent[0], dataExtent[1]);
 
-    axisHelper.niceScaleExtent(scale, axisModel);
+    axisHelper.niceScaleExtent(scale, axisModel as AxisBaseModel);
     return scale;
 }
 

@@ -30,6 +30,7 @@ import OrdinalMeta from '../data/OrdinalMeta';
 import List from '../data/List';
 import * as scaleHelper from './helper';
 import { OrdinalRawValue, OrdinalNumber, DimensionLoose } from '../util/types';
+import { AxisBaseOption } from '../coord/axisCommonTypes';
 
 
 class OrdinalScale extends Scale {
@@ -40,7 +41,7 @@ class OrdinalScale extends Scale {
 
 
     constructor(setting?: {
-        ordinalMeta?: OrdinalMeta | OrdinalRawValue[],
+        ordinalMeta?: OrdinalMeta | AxisBaseOption['data'],
         extent?: [number, number]
     }) {
         super(setting);

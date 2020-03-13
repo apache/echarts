@@ -23,7 +23,6 @@ import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
 import { DimensionName, ScaleDataValue, OptionDataValue } from '../util/types';
 
-
 abstract class Scale {
 
     type: string;
@@ -152,12 +151,13 @@ abstract class Scale {
      */
     abstract getLabel(tick: any): string;
 
-    abstract getTicks(expandToNicedExtent: boolean): number[];
+    abstract getTicks(expandToNicedExtent?: boolean): number[];
 
     abstract getMinorTicks(splitNumber: number): number[][];
 
     static registerClass: clazzUtil.ClassManager['registerClass'];
 
+    static getClass: clazzUtil.ClassManager['getClass'];
 }
 
 type ScaleConstructor = typeof Scale & clazzUtil.ClassManager;

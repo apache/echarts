@@ -411,10 +411,13 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
  * @param seriesModel If not provided, return all.
  * @return {stackId: {offset, width}} or {offset, width} if seriesModel provided.
  */
-export function retrieveColumnLayout(
+function retrieveColumnLayout(barWidthAndOffset: BarWidthAndOffset, axis: Axis2D): typeof barWidthAndOffset[string]
+// eslint-disable-next-line max-len
+function retrieveColumnLayout(barWidthAndOffset: BarWidthAndOffset, axis: Axis2D, seriesModel: BarSeriesModel): typeof barWidthAndOffset[string][string]
+function retrieveColumnLayout(
     barWidthAndOffset: BarWidthAndOffset,
     axis: Axis2D,
-    seriesModel: BarSeriesModel
+    seriesModel?: BarSeriesModel
 ) {
     if (barWidthAndOffset && axis) {
         var result = barWidthAndOffset[getAxisKey(axis)];
@@ -424,6 +427,7 @@ export function retrieveColumnLayout(
         return result;
     }
 }
+export {retrieveColumnLayout};
 
 export function layout(seriesType: string, ecModel: GlobalModel) {
 

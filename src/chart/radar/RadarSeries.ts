@@ -17,24 +17,74 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import SeriesModel from '../../model/Series';
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {encodeHTML} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import {
+    SeriesOption,
+    LineStyleOption,
+    LabelOption,
+    SymbolOptionMixin,
+    ItemStyleOption,
+    AreaStyleOption,
+    OptionDataValue
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
+import Radar from '../../coord/radar/Radar';
 
-var RadarSeries = SeriesModel.extend({
+type RadarSeriesDataValue = OptionDataValue[];
 
-    type: 'series.radar',
+export interface RadarSeriesDataItemOption extends SymbolOptionMixin {
+    lineStyle?: LineStyleOption
+    areaStyle?: AreaStyleOption
+    label?: LabelOption
+    itemStyle?: ItemStyleOption
 
-    dependencies: ['radar'],
+    emphasis?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+        label?: LabelOption
+        itemStyle?: ItemStyleOption
+    }
 
+    value?: RadarSeriesDataValue
+}
+
+export interface RadarSeriesOption extends SeriesOption, SymbolOptionMixin {
+    type?: 'radar'
+    coordinateSystem: 'radar'
+
+    radarIndex?: number
+    radarId?: string
+
+    lineStyle?: LineStyleOption
+    areaStyle?: AreaStyleOption
+    label?: LabelOption
+    itemStyle?: ItemStyleOption
+
+    emphasis?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+        label?: LabelOption
+        itemStyle?: ItemStyleOption
+    }
+}
+
+class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
+
+    static readonly type = 'series.radar'
+    readonly type = RadarSeriesModel.type
+
+    dependencies = ['radar']
+
+    coordinateSystem: Radar
 
     // Overwrite
-    init: function (option) {
-        RadarSeries.superApply(this, 'init', arguments);
+    init(option: RadarSeriesOption) {
+        super.init.apply(this, arguments as any);
 
         // Enable legend selection for each data item
         // Use a function instead of direct access because data reference may changed
@@ -42,16 +92,16 @@ var RadarSeries = SeriesModel.extend({
             zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
         );
 
-    },
+    }
 
-    getInitialData: function (option, ecModel) {
+    getInitialData(option: RadarSeriesOption, ecModel: GlobalModel): List {
         return createListSimply(this, {
             generateCoord: 'indicator_',
             generateCoordCount: Infinity
         });
-    },
+    }
 
-    formatTooltip: function (dataIndex) {
+    formatTooltip(dataIndex: number) {
         var data = this.getData();
         var coordSys = this.coordinateSystem;
         var indicatorAxes = coordSys.getIndicatorAxes();
@@ -61,31 +111,31 @@ var RadarSeries = SeriesModel.extend({
                 var val = data.get(data.mapDimension(axis.dim), dataIndex);
                 return encodeHTML(axis.name + ' : ' + val);
             }).join('<br />');
-    },
+    }
 
     /**
      * @implement
      */
-    getTooltipPosition: function (dataIndex) {
+    getTooltipPosition(dataIndex: number) {
         if (dataIndex != null) {
             var data = this.getData();
             var coordSys = this.coordinateSystem;
             var values = data.getValues(
                 zrUtil.map(coordSys.dimensions, function (dim) {
                     return data.mapDimension(dim);
-                }), dataIndex, true
+                }), dataIndex
             );
 
             for (var i = 0, len = values.length; i < len; i++) {
-                if (!isNaN(values[i])) {
+                if (!isNaN(values[i] as number)) {
                     var indicatorAxes = coordSys.getIndicatorAxes();
                     return coordSys.coordToPoint(indicatorAxes[i].dataToCoord(values[i]), i);
                 }
             }
         }
-    },
+    }
 
-    defaultOption: {
+    static defaultOption: RadarSeriesOption = {
         zlevel: 0,
         z: 2,
         coordinateSystem: 'radar',
@@ -105,6 +155,8 @@ var RadarSeries = SeriesModel.extend({
         symbolSize: 4
         // symbolRotate: null
     }
-});
+}
 
-export default RadarSeries;
+SeriesModel.registerClass(RadarSeriesModel);
+
+export default RadarSeriesModel;
