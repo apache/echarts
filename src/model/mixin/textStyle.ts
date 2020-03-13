@@ -30,6 +30,7 @@ class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color
      */
+    // TODO Callback
     getTextColor(this: Model, isEmphasis?: boolean): ColorString {
         var ecModel = this.ecModel;
         return this.getShallow('color')

@@ -160,7 +160,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         }
     }
 
-    mergeOption(option: ComponentOption, ecModel: GlobalModel): void {
+    mergeOption(option: Opt, ecModel: GlobalModel): void {
         zrUtil.merge(this.option, option, true);
 
         var layoutMode = layout.fetchLayoutMode(this);
@@ -174,7 +174,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     }
 
     // Hooker after init or mergeOption
-    optionUpdated(newCptOption: ComponentOption, isInit: boolean): void {}
+    optionUpdated(newCptOption: Opt, isInit: boolean): void {}
 
     /**
      * [How to declare defaultOption]:
@@ -230,7 +230,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      * })
      * ```
      */
-    getDefaultOption(): ComponentOption {
+    getDefaultOption(): Opt {
         var ctor = this.constructor;
 
         // If using class declaration, it is different to travel super class
@@ -258,7 +258,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
             }
             fields.defaultOption = defaultOption;
         }
-        return fields.defaultOption;
+        return fields.defaultOption as Opt;
     }
 
     getReferringComponents(mainType: ComponentMainType): ComponentModel[] {

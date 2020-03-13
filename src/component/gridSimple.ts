@@ -17,22 +17,22 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 
-import '../coord/cartesian/Grid';
-import '../coord/cartesian/GridModel';
 import './axis';
+import ComponentView from '../view/Component';
+import GlobalModel from '../model/Global';
+import GridModel from '../coord/cartesian/GridModel';
+import ComponentModel from '../model/Component';
 
 // Grid view
-echarts.extendComponentView({
+class GridView extends ComponentView {
+    static readonly type = 'grid'
+    readonly type = 'grid'
 
-    type: 'grid',
-
-    render: function (gridModel, ecModel) {
+    render(gridModel: GridModel, ecModel: GlobalModel) {
         this.group.removeAll();
         if (gridModel.get('show')) {
             this.group.add(new graphic.Rect({
@@ -46,7 +46,10 @@ echarts.extendComponentView({
         }
     }
 
-});
+}
+
+ComponentView.registerClass(GridView);
+ComponentModel.registerClass(GridModel);
 
 echarts.registerPreprocessor(function (option) {
     // Only create grid when need

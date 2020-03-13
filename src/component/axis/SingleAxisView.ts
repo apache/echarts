@@ -17,28 +17,33 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import AxisBuilder from './AxisBuilder';
 import * as graphic from '../../util/graphic';
 import * as singleAxisHelper from '../../coord/single/singleAxisHelper';
 import AxisView from './AxisView';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
+import SingleAxisModel from '../../coord/single/AxisModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Payload } from '../../util/types';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
-];
+] as const;
 
-var selfBuilderAttrs = ['splitArea', 'splitLine'];
+var selfBuilderAttrs = ['splitArea', 'splitLine'] as const;
 
-var SingleAxisView = AxisView.extend({
+class SingleAxisView extends AxisView {
 
-    type: 'singleAxis',
+    static readonly type = 'singleAxis'
+    readonly type = SingleAxisView.type
 
-    axisPointerClass: 'SingleAxisPointer',
+    private _axisGroup: graphic.Group
 
-    render: function (axisModel, ecModel, api, payload) {
+    axisPointerClass = 'SingleAxisPointer'
+
+    render(axisModel: SingleAxisModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
 
         var group = this.group;
 
@@ -57,21 +62,28 @@ var SingleAxisView = AxisView.extend({
         group.add(axisBuilder.getGroup());
 
         zrUtil.each(selfBuilderAttrs, function (name) {
-            if (axisModel.get(name + '.show')) {
-                this['_' + name](axisModel);
+            if (axisModel.get([name, 'show'])) {
+                axisElementBuilders[name](this, this.group, this._axisGroup, axisModel);
             }
         }, this);
 
         graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
 
-        SingleAxisView.superCall(this, 'render', axisModel, ecModel, api, payload);
-    },
+        super.render(axisModel, ecModel, api, payload);
+    }
 
-    remove: function () {
+    remove() {
         rectCoordAxisHandleRemove(this);
-    },
+    }
+}
 
-    _splitLine: function (axisModel) {
+interface AxisElementBuilder {
+    (axisView: SingleAxisView, group: graphic.Group, axisGroup: graphic.Group, axisModel: SingleAxisModel): void
+}
+
+const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
+
+    splitLine(axisView, group, axisGroup, axisModel) {
         var axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -88,7 +100,7 @@ var SingleAxisView = AxisView.extend({
         var gridRect = axisModel.coordinateSystem.getRect();
         var isHorizontal = axis.isHorizontal();
 
-        var splitLines = [];
+        var splitLines: graphic.Line[][] = [];
         var lineCount = 0;
 
         var ticksCoords = axis.getTicksCoords({
@@ -130,7 +142,7 @@ var SingleAxisView = AxisView.extend({
         }
 
         for (var i = 0; i < splitLines.length; ++i) {
-            this.group.add(graphic.mergePath(splitLines[i], {
+            group.add(graphic.mergePath(splitLines[i], {
                 style: {
                     stroke: lineColors[i % lineColors.length],
                     lineDash: lineStyleModel.getLineDash(lineWidth),
@@ -141,9 +153,9 @@ var SingleAxisView = AxisView.extend({
         }
     },
 
-    _splitArea: function (axisModel) {
-        rectCoordAxisBuildSplitArea(this, this._axisGroup, axisModel, axisModel);
+    splitArea(axisView, group, axisGroup, axisModel) {
+        rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, axisModel);
     }
-});
+};
 
 export default SingleAxisView;

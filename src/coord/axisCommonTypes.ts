@@ -19,16 +19,17 @@
 
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
-    AreaStyleOption, ComponentOption, OptionDataValue
+    AreaStyleOption, ComponentOption, OptionDataValue, ColorString,
+    AnimationOptionMixin, Dictionary
 } from '../util/types';
-import { Dictionary } from 'zrender/src/core/types';
 
 
 export var AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
 export type OptionAxisType = keyof typeof AXIS_TYPES;
 
 
-export interface AxisBaseOption extends ComponentOption {
+export interface AxisBaseOption extends ComponentOption,
+    AnimationOptionMixin {  // Support transition animation
     type?: OptionAxisType;
     show?: boolean;
     // Inverse the axis.
@@ -158,7 +159,7 @@ interface AxisTickOption {
     interval?: 'auto' | number | ((index: number, value: string) => boolean)
 }
 
-interface AxisLabelOption extends TextCommonOption {
+interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,
@@ -175,6 +176,9 @@ interface AxisLabelOption extends TextCommonOption {
     // [Properties below only for 'category' axis]:
 
     interval?: 'auto' | number | ((index: number, value: string) => boolean)
+
+    // Color can be callback
+    color?: ColorString | ((value?: string | number, index?: number) => ColorString)
 }
 
 interface MinorTickOption {
@@ -200,5 +204,5 @@ interface SplitAreaOption {
     show?: boolean,
     interval?: 'auto' | number | ((index:number, value: string) => boolean)
     // colors will display in turn
-    areaStyle?: AreaStyleOption<ZRColor | ZRColor[]>
+    areaStyle?: AreaStyleOption<ZRColor[]>
 }

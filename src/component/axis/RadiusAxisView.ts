@@ -17,27 +17,32 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import AxisBuilder from './AxisBuilder';
 import AxisView from './AxisView';
+import { RadiusAxisModel } from '../../coord/polar/AxisModel';
+import Polar from '../../coord/polar/Polar';
+import RadiusAxis from '../../coord/polar/RadiusAxis';
+import GlobalModel from '../../model/Global';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
-];
+] as const;
 var selfBuilderAttrs = [
     'splitLine', 'splitArea', 'minorSplitLine'
-];
+] as const;
 
-export default AxisView.extend({
+type TickCoord = ReturnType<RadiusAxis['getTicksCoords']>[number];
 
-    type: 'radiusAxis',
+class RadiusAxisView extends AxisView {
 
-    axisPointerClass: 'PolarAxisPointer',
+    static readonly type = 'radiusAxis'
+    readonly type = RadiusAxisView.type
 
-    render: function (radiusAxisModel, ecModel) {
+    axisPointerClass = 'PolarAxisPointer'
+
+    render(radiusAxisModel: RadiusAxisModel, ecModel: GlobalModel) {
         this.group.removeAll();
         if (!radiusAxisModel.get('show')) {
             return;
@@ -56,16 +61,36 @@ export default AxisView.extend({
         this.group.add(axisBuilder.getGroup());
 
         zrUtil.each(selfBuilderAttrs, function (name) {
-            if (radiusAxisModel.get(name + '.show') && !radiusAxis.scale.isBlank()) {
-                this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, minorTicksCoords);
+            if (radiusAxisModel.get([name, 'show']) && !radiusAxis.scale.isBlank()) {
+                axisElementBuilders[name](
+                    this.group,
+                    radiusAxisModel,
+                    polar,
+                    axisAngle,
+                    radiusExtent,
+                    ticksCoords,
+                    minorTicksCoords
+                );
             }
         }, this);
-    },
+    }
+}
 
-    /**
-     * @private
-     */
-    _splitLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
+interface AxisElementBuilder {
+    (
+        group: graphic.Group,
+        axisModel: RadiusAxisModel,
+        polar: Polar,
+        axisAngle: number,
+        radiusExtent: number[],
+        ticksCoords: TickCoord[],
+        minorTicksCoords?: TickCoord[][]
+    ): void
+}
+
+const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
+
+    splitLine(group, radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
         var splitLineModel = radiusAxisModel.getModel('splitLine');
         var lineStyleModel = splitLineModel.getModel('lineStyle');
         var lineColors = lineStyleModel.get('color');
@@ -73,7 +98,7 @@ export default AxisView.extend({
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
-        var splitLines = [];
+        var splitLines: graphic.Circle[][] = [];
 
         for (var i = 0; i < ticksCoords.length; i++) {
             var colorIndex = (lineCount++) % lineColors.length;
@@ -90,7 +115,7 @@ export default AxisView.extend({
         // Simple optimization
         // Batching the lines if color are the same
         for (var i = 0; i < splitLines.length; i++) {
-            this.group.add(graphic.mergePath(splitLines[i], {
+            group.add(graphic.mergePath(splitLines[i], {
                 style: zrUtil.defaults({
                     stroke: lineColors[i % lineColors.length],
                     fill: null
@@ -100,10 +125,7 @@ export default AxisView.extend({
         }
     },
 
-    /**
-     * @private
-     */
-    _minorSplitLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, minorTicksCoords) {
+    minorSplitLine(group, radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, minorTicksCoords) {
         if (!minorTicksCoords.length) {
             return;
         }
@@ -111,7 +133,7 @@ export default AxisView.extend({
         var minorSplitLineModel = radiusAxisModel.getModel('minorSplitLine');
         var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
 
-        var lines = [];
+        var lines: graphic.Circle[] = [];
 
         for (var i = 0; i < minorTicksCoords.length; i++) {
             for (var k = 0; k < minorTicksCoords[i].length; k++) {
@@ -125,7 +147,7 @@ export default AxisView.extend({
             }
         }
 
-        this.group.add(graphic.mergePath(lines, {
+        group.add(graphic.mergePath(lines, {
             style: zrUtil.defaults({
                 fill: null
             }, lineStyleModel.getLineStyle()),
@@ -133,10 +155,7 @@ export default AxisView.extend({
         }));
     },
 
-    /**
-     * @private
-     */
-    _splitArea: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
+    splitArea(group, radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
         if (!ticksCoords.length) {
             return;
         }
@@ -148,7 +167,7 @@ export default AxisView.extend({
 
         areaColors = areaColors instanceof Array ? areaColors : [areaColors];
 
-        var splitAreas = [];
+        var splitAreas: graphic.Sector[][] = [];
 
         var prevRadius = ticksCoords[0].coord;
         for (var i = 1; i < ticksCoords.length; i++) {
@@ -171,7 +190,7 @@ export default AxisView.extend({
         // Simple optimization
         // Batching the lines if color are the same
         for (var i = 0; i < splitAreas.length; i++) {
-            this.group.add(graphic.mergePath(splitAreas[i], {
+            group.add(graphic.mergePath(splitAreas[i], {
                 style: zrUtil.defaults({
                     fill: areaColors[i % areaColors.length]
                 }, areaStyleModel.getAreaStyle()),
@@ -179,20 +198,22 @@ export default AxisView.extend({
             }));
         }
     }
-});
+};
 
 /**
  * @inner
  */
-function layoutAxis(polar, radiusAxisModel, axisAngle) {
+function layoutAxis(polar: Polar, radiusAxisModel: RadiusAxisModel, axisAngle: number) {
     return {
         position: [polar.cx, polar.cy],
         rotation: axisAngle / 180 * Math.PI,
-        labelDirection: -1,
-        tickDirection: -1,
-        nameDirection: 1,
+        labelDirection: -1 as const,
+        tickDirection: -1 as const,
+        nameDirection: 1 as const,
         labelRotate: radiusAxisModel.getModel('axisLabel').get('rotate'),
         // Over splitLine and splitArea
         z2: 1
     };
 }
+
+AxisView.registerClass(RadiusAxisView);

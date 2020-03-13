@@ -23,7 +23,12 @@ import * as viewHelper from './viewHelper';
 import * as matrix from 'zrender/src/core/matrix';
 import AxisBuilder from '../axis/AxisBuilder';
 import AxisView from '../axis/AxisView';
-import { OptionDataValue, ScaleDataValue, CommonAxisPointerOption } from '../../util/types';
+import {OptionDataValue,
+    ScaleDataValue,
+    CommonAxisPointerOption,
+    ZRTextAlign,
+    ZRTextVerticalAlign
+} from '../../util/types';
 import { PolarAxisModel } from '../../coord/polar/AxisModel';
 import ExtensionAPI from '../../ExtensionAPI';
 import Polar from '../../coord/polar/Polar';
@@ -93,8 +98,8 @@ function getLabelPosition(
     axisAngle = axisAngle / 180 * Math.PI;
     var radiusExtent = polar.getRadiusAxis().getExtent();
     var position;
-    var align;
-    var verticalAlign;
+    var align: ZRTextAlign;
+    var verticalAlign: ZRTextVerticalAlign;
 
     if (axis.dim === 'radius') {
         var transform = matrix.create();

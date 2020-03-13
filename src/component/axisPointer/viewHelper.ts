@@ -43,7 +43,10 @@ interface LayoutInfo {
     position: VectorArray
     rotation: number
     labelOffset?: number
-    labelDirection?: -1 | 1
+    /**
+     * 1 | -1
+     */
+    labelDirection?: number
     labelMargin?: number
 }
 

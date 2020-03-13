@@ -17,9 +17,7 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import {retrieve, defaults, extend, each} from 'zrender/src/core/util';
+import {retrieve, defaults, extend, each, isObject} from 'zrender/src/core/util';
 import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';
@@ -28,9 +26,81 @@ import {createSymbol} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {shouldShowAllLabels} from '../../coord/axisHelper';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { ZRTextVerticalAlign, ZRTextAlign, ECElement } from '../../util/types';
+import { AxisBaseOption } from '../../coord/axisCommonTypes';
+import { StyleProps } from 'zrender/src/graphic/Style';
+import Element from 'zrender/src/Element';
 
 
 var PI = Math.PI;
+
+type AxisIndexKey = 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex'
+    | 'angleAxisIndex' | 'singleAxisIndex'
+
+type AxisEventData = {
+    componentType: string
+    componentIndex: number
+    targetType: 'axisName' | 'axisLabel'
+    name?: string
+    value?: string | number
+} & {
+    [key in AxisIndexKey]?: number
+}
+
+type LabelFormatterParams = {
+    componentType: string
+    name: string
+    $vars: ['name']
+} & {
+    [key in AxisIndexKey]?: number
+}
+
+type AxisLabelText = graphic.Text & {
+    __fullText: string
+    __truncatedText: string
+} & ECElement
+
+interface AxisBuilderCfg {
+    position?: number[]
+    rotation?: number
+    /**
+     * Used when nameLocation is 'middle' or 'center'.
+     * 1 | -1
+     */
+    nameDirection?: number
+    tickDirection?: number
+    labelDirection?: number
+    /**
+     * Usefull when onZero.
+     */
+    labelOffset?: number
+    /**
+     * default get from axisModel.
+     */
+    axisLabelShow?: boolean
+    /**
+     * default get from axisModel.
+     */
+    axisName?: string
+
+    axisNameAvailableWidth?: number
+    /**
+     * by degree, default get from axisModel.
+     */
+    labelRotate?: number
+
+    strokeContainThreshold?: number
+
+    nameTruncateMaxWidth?: number
+
+    silent?: boolean
+}
+
+interface TickCoord {
+    coord: number
+    tickValue?: number
+}
 
 /**
  * A final axis is translated and rotated from a "standard axis".
@@ -53,101 +123,132 @@ var PI = Math.PI;
  *
  * Do not need to consider axis 'inverse', which is auto processed by
  * axis extent.
- *
- * @param {module:zrender/container/Group} group
- * @param {Object} axisModel
- * @param {Object} opt Standard axis parameters.
- * @param {Array.<number>} opt.position [x, y]
- * @param {number} opt.rotation by radian
- * @param {number} [opt.nameDirection=1] 1 or -1 Used when nameLocation is 'middle' or 'center'.
- * @param {number} [opt.tickDirection=1] 1 or -1
- * @param {number} [opt.labelDirection=1] 1 or -1
- * @param {number} [opt.labelOffset=0] Usefull when onZero.
- * @param {string} [opt.axisLabelShow] default get from axisModel.
- * @param {string} [opt.axisName] default get from axisModel.
- * @param {number} [opt.axisNameAvailableWidth]
- * @param {number} [opt.labelRotate] by degree, default get from axisModel.
- * @param {number} [opt.strokeContainThreshold] Default label interval when label
- * @param {number} [opt.nameTruncateMaxWidth]
  */
-var AxisBuilder = function (axisModel, opt) {
+class AxisBuilder {
 
-    /**
-     * @readOnly
-     */
-    this.opt = opt;
+    axisModel: AxisBaseModel
 
-    /**
-     * @readOnly
-     */
-    this.axisModel = axisModel;
+    opt: AxisBuilderCfg
 
-    // Default value
-    defaults(
-        opt,
-        {
-            labelOffset: 0,
-            nameDirection: 1,
-            tickDirection: 1,
-            labelDirection: 1,
-            silent: true
-        }
-    );
+    readonly group = new graphic.Group()
 
-    /**
-     * @readOnly
-     */
-    this.group = new graphic.Group();
+    private _transformGroup: graphic.Group
 
-    // FIXME Not use a seperate text group?
-    var dumbGroup = new graphic.Group({
-        position: opt.position.slice(),
-        rotation: opt.rotation
-    });
+    constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg) {
 
-    // this.group.add(dumbGroup);
-    // this._dumbGroup = dumbGroup;
+        this.opt = opt;
 
-    dumbGroup.updateTransform();
-    this._transform = dumbGroup.transform;
+        this.axisModel = axisModel;
 
-    this._dumbGroup = dumbGroup;
-};
+        // Default value
+        defaults(
+            opt,
+            {
+                labelOffset: 0,
+                nameDirection: 1,
+                tickDirection: 1,
+                labelDirection: 1,
+                silent: true
+            } as AxisBuilderCfg
+        );
 
-AxisBuilder.prototype = {
 
-    constructor: AxisBuilder,
+        // FIXME Not use a seperate text group?
+        var transformGroup = new graphic.Group({
+            position: opt.position.slice(),
+            rotation: opt.rotation
+        });
 
-    hasBuilder: function (name) {
+        // this.group.add(transformGroup);
+        // this._transformGroup = transformGroup;
+
+        transformGroup.updateTransform();
+
+        this._transformGroup = transformGroup;
+    }
+
+    hasBuilder(name: keyof typeof builders) {
         return !!builders[name];
-    },
+    }
 
-    add: function (name) {
-        builders[name].call(this);
-    },
+    add(name: keyof typeof builders) {
+        builders[name](this.opt, this.axisModel, this.group, this._transformGroup);
+    }
 
-    getGroup: function () {
+    getGroup() {
         return this.group;
     }
 
+    static innerTextLayout(axisRotation: number, textRotation: number, direction: number) {
+        var rotationDiff = remRadian(textRotation - axisRotation);
+        var textAlign;
+        var textVerticalAlign;
+
+        if (isRadianAroundZero(rotationDiff)) { // Label is parallel with axis line.
+            textVerticalAlign = direction > 0 ? 'top' : 'bottom';
+            textAlign = 'center';
+        }
+        else if (isRadianAroundZero(rotationDiff - PI)) { // Label is inverse parallel with axis line.
+            textVerticalAlign = direction > 0 ? 'bottom' : 'top';
+            textAlign = 'center';
+        }
+        else {
+            textVerticalAlign = 'middle';
+
+            if (rotationDiff > 0 && rotationDiff < PI) {
+                textAlign = direction > 0 ? 'right' : 'left';
+            }
+            else {
+                textAlign = direction > 0 ? 'left' : 'right';
+            }
+        }
+
+        return {
+            rotation: rotationDiff,
+            textAlign: textAlign as ZRTextAlign,
+            textVerticalAlign: textVerticalAlign as ZRTextVerticalAlign
+        };
+    }
+
+    static makeAxisEventDataBase(axisModel: AxisBaseModel) {
+        var eventData = {
+            componentType: axisModel.mainType,
+            componentIndex: axisModel.componentIndex
+        } as AxisEventData;
+        eventData[axisModel.mainType + 'Index' as AxisIndexKey] = axisModel.componentIndex;
+        return eventData;
+    }
+
+    static isLabelSilent(axisModel: AxisBaseModel): boolean {
+        var tooltipOpt = axisModel.get('tooltip');
+        return axisModel.get('silent')
+            // Consider mouse cursor, add these restrictions.
+            || !(
+                axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
+            );
+    }
 };
 
-var builders = {
+interface AxisElementsBuilder {
+    (
+        opt: AxisBuilderCfg,
+        axisModel: AxisBaseModel,
+        group: graphic.Group,
+        transformGroup: graphic.Group
+    ):void
+}
 
-    /**
-     * @private
-     */
-    axisLine: function () {
-        var opt = this.opt;
-        var axisModel = this.axisModel;
+var builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBuilder> = {
 
-        if (!axisModel.get('axisLine.show')) {
+    axisLine(opt, axisModel, group, transformGroup) {
+
+        if (!axisModel.get(['axisLine', 'show'])) {
             return;
         }
 
-        var extent = this.axisModel.axis.getExtent();
+        var extent = axisModel.axis.getExtent();
 
-        var matrix = this._transform;
+        var matrix = transformGroup.transform;
         var pt1 = [extent[0], 0];
         var pt2 = [extent[1], 0];
         if (matrix) {
@@ -159,12 +260,11 @@ var builders = {
             {
                 lineCap: 'round'
             },
-            axisModel.getModel('axisLine.lineStyle').getLineStyle()
+            axisModel.getModel(['axisLine', 'lineStyle']).getLineStyle()
         );
 
-        this.group.add(new graphic.Line({
+        const line = new graphic.Line({
             // Id for animation
-            anid: 'line',
             subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
@@ -176,12 +276,14 @@ var builders = {
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
             z2: 1
-        }));
+        });
+        line.anid = 'line';
+        group.add(line);
 
-        var arrows = axisModel.get('axisLine.symbol');
-        var arrowSize = axisModel.get('axisLine.symbolSize');
+        var arrows = axisModel.get(['axisLine', 'symbol']);
+        var arrowSize = axisModel.get(['axisLine', 'symbolSize']);
 
-        var arrowOffset = axisModel.get('axisLine.symbolOffset') || 0;
+        var arrowOffset = axisModel.get(['axisLine', 'symbolOffset']) || 0;
         if (typeof arrowOffset === 'number') {
             arrowOffset = [arrowOffset, arrowOffset];
         }
@@ -235,33 +337,23 @@ var builders = {
                         silent: true,
                         z2: 11
                     });
-                    this.group.add(symbol);
+                    group.add(symbol);
                 }
-            }, this);
+            });
         }
     },
 
-    /**
-     * @private
-     */
-    axisTickLabel: function () {
-        var axisModel = this.axisModel;
-        var opt = this.opt;
+    axisTickLabel(opt, axisModel, group, transformGroup) {
 
-        var ticksEls = buildAxisMajorTicks(this, axisModel, opt);
-        var labelEls = buildAxisLabel(this, axisModel, opt);
+        var ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt.tickDirection);
+        var labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
 
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
 
-        buildAxisMinorTicks(this, axisModel, opt);
+        buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
     },
 
-    /**
-     * @private
-     */
-    axisName: function () {
-        var opt = this.opt;
-        var axisModel = this.axisModel;
+    axisName(opt, axisModel, group, transformGroup) {
         var name = retrieve(opt.axisName, axisModel.get('name'));
 
         if (!name) {
@@ -273,7 +365,7 @@ var builders = {
         var textStyleModel = axisModel.getModel('nameTextStyle');
         var gap = axisModel.get('nameGap') || 0;
 
-        var extent = this.axisModel.axis.getExtent();
+        var extent = axisModel.axis.getExtent();
         var gapSignal = extent[0] > extent[1] ? -1 : 1;
         var pos = [
             nameLocation === 'start'
@@ -295,7 +387,7 @@ var builders = {
         var axisNameAvailableWidth;
 
         if (isNameLocationCenter(nameLocation)) {
-            labelLayout = innerTextLayout(
+            labelLayout = AxisBuilder.innerTextLayout(
                 opt.rotation,
                 nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
                 nameDirection
@@ -303,7 +395,7 @@ var builders = {
         }
         else {
             labelLayout = endTextLayout(
-                opt, nameLocation, nameRotation || 0, extent
+                opt.rotation, nameLocation, nameRotation || 0, extent
             );
 
             axisNameAvailableWidth = opt.axisNameAvailableWidth;
@@ -334,40 +426,38 @@ var builders = {
         var tooltipOpt = axisModel.get('tooltip', true);
 
         var mainType = axisModel.mainType;
-        var formatterParams = {
+        var formatterParams: LabelFormatterParams = {
             componentType: mainType,
             name: name,
             $vars: ['name']
         };
-        formatterParams[mainType + 'Index'] = axisModel.componentIndex;
+        formatterParams[mainType + 'Index' as AxisIndexKey] = axisModel.componentIndex;
 
         var textEl = new graphic.Text({
-            // Id for animation
-            anid: 'name',
-
-            __fullText: name,
-            __truncatedText: truncatedText,
-
             position: pos,
             rotation: labelLayout.rotation,
-            silent: isLabelSilent(axisModel),
-            z2: 1,
-            tooltip: (tooltipOpt && tooltipOpt.show)
-                ? extend({
-                    content: name,
-                    formatter: function () {
-                        return name;
-                    },
-                    formatterParams: formatterParams
-                }, tooltipOpt)
-                : null
-        });
+            silent: AxisBuilder.isLabelSilent(axisModel),
+            z2: 1
+        }) as AxisLabelText;
+        textEl.tooltip = (tooltipOpt && tooltipOpt.show)
+            ? extend({
+                content: name,
+                formatter() {
+                    return name;
+                },
+                formatterParams: formatterParams
+            }, tooltipOpt)
+            : null;
+        textEl.__fullText = name;
+        textEl.__truncatedText = truncatedText;
+        // Id for animation
+        textEl.anid = 'name';
 
         graphic.setTextStyle(textEl.style, textStyleModel, {
             text: truncatedText,
             textFont: textFont,
             textFill: textStyleModel.getTextColor()
-                || axisModel.get('axisLine.lineStyle.color'),
+                || axisModel.get(['axisLine', 'lineStyle', 'color']),
             textAlign: textStyleModel.get('align')
                 || labelLayout.textAlign,
             textVerticalAlign: textStyleModel.get('verticalAlign')
@@ -375,79 +465,29 @@ var builders = {
         });
 
         if (axisModel.get('triggerEvent')) {
-            textEl.eventData = makeAxisEventDataBase(axisModel);
-            textEl.eventData.targetType = 'axisName';
-            textEl.eventData.name = name;
+            var eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
+            eventData.targetType = 'axisName';
+            eventData.name = name;
+            graphic.getECData(textEl).eventData = eventData;
         }
 
         // FIXME
-        this._dumbGroup.add(textEl);
+        transformGroup.add(textEl);
         textEl.updateTransform();
 
-        this.group.add(textEl);
+        group.add(textEl);
 
         textEl.decomposeTransform();
     }
 
 };
 
-var makeAxisEventDataBase = AxisBuilder.makeAxisEventDataBase = function (axisModel) {
-    var eventData = {
-        componentType: axisModel.mainType,
-        componentIndex: axisModel.componentIndex
-    };
-    eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
-    return eventData;
-};
-
-/**
- * @public
- * @static
- * @param {Object} opt
- * @param {number} axisRotation in radian
- * @param {number} textRotation in radian
- * @param {number} direction
- * @return {Object} {
- *  rotation, // according to axis
- *  textAlign,
- *  textVerticalAlign
- * }
- */
-var innerTextLayout = AxisBuilder.innerTextLayout = function (axisRotation, textRotation, direction) {
-    var rotationDiff = remRadian(textRotation - axisRotation);
-    var textAlign;
-    var textVerticalAlign;
-
-    if (isRadianAroundZero(rotationDiff)) { // Label is parallel with axis line.
-        textVerticalAlign = direction > 0 ? 'top' : 'bottom';
-        textAlign = 'center';
-    }
-    else if (isRadianAroundZero(rotationDiff - PI)) { // Label is inverse parallel with axis line.
-        textVerticalAlign = direction > 0 ? 'bottom' : 'top';
-        textAlign = 'center';
-    }
-    else {
-        textVerticalAlign = 'middle';
-
-        if (rotationDiff > 0 && rotationDiff < PI) {
-            textAlign = direction > 0 ? 'right' : 'left';
-        }
-        else {
-            textAlign = direction > 0 ? 'left' : 'right';
-        }
-    }
-
-    return {
-        rotation: rotationDiff,
-        textAlign: textAlign,
-        textVerticalAlign: textVerticalAlign
-    };
-};
-
-function endTextLayout(opt, textPosition, textRotate, extent) {
-    var rotationDiff = remRadian(textRotate - opt.rotation);
-    var textAlign;
-    var textVerticalAlign;
+function endTextLayout(
+    rotation: number, textPosition: 'start' | 'middle' | 'end', textRotate: number, extent: number[]
+) {
+    var rotationDiff = remRadian(textRotate - rotation);
+    var textAlign: ZRTextAlign;
+    var textVerticalAlign: ZRTextVerticalAlign;
     var inverse = extent[0] > extent[1];
     var onLeft = (textPosition === 'start' && !inverse)
         || (textPosition !== 'start' && inverse);
@@ -477,16 +517,11 @@ function endTextLayout(opt, textPosition, textRotate, extent) {
     };
 }
 
-var isLabelSilent = AxisBuilder.isLabelSilent = function (axisModel) {
-    var tooltipOpt = axisModel.get('tooltip');
-    return axisModel.get('silent')
-        // Consider mouse cursor, add these restrictions.
-        || !(
-            axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
-        );
-};
-
-function fixMinMaxLabelShow(axisModel, labelEls, tickEls) {
+function fixMinMaxLabelShow(
+    axisModel: AxisBaseModel,
+    labelEls: graphic.Text[],
+    tickEls: graphic.Line[]
+) {
     if (shouldShowAllLabels(axisModel.axis)) {
         return;
     }
@@ -494,8 +529,8 @@ function fixMinMaxLabelShow(axisModel, labelEls, tickEls) {
     // If min or max are user set, we need to check
     // If the tick on min(max) are overlap on their neighbour tick
     // If they are overlapped, we need to hide the min(max) tick label
-    var showMinLabel = axisModel.get('axisLabel.showMinLabel');
-    var showMaxLabel = axisModel.get('axisLabel.showMaxLabel');
+    var showMinLabel = axisModel.get(['axisLabel', 'showMinLabel']);
+    var showMaxLabel = axisModel.get(['axisLabel', 'showMaxLabel']);
 
     // FIXME
     // Have not consider onBand yet, where tick els is more than label els.
@@ -544,11 +579,14 @@ function fixMinMaxLabelShow(axisModel, labelEls, tickEls) {
     }
 }
 
-function ignoreEl(el) {
+function ignoreEl(el: Element) {
     el && (el.ignore = true);
 }
 
-function isTwoLabelOverlapped(current, next, labelLayout) {
+function isTwoLabelOverlapped(
+    current: graphic.Text,
+    next: graphic.Text
+) {
     // current and next has the same rotation.
     var firstRect = current && current.getBoundingRect().clone();
     var nextRect = next && next.getBoundingRect().clone();
@@ -568,15 +606,21 @@ function isTwoLabelOverlapped(current, next, labelLayout) {
     return firstRect.intersect(nextRect);
 }
 
-function isNameLocationCenter(nameLocation) {
+function isNameLocationCenter(nameLocation: string) {
     return nameLocation === 'middle' || nameLocation === 'center';
 }
 
 
-function createTicks(ticksCoords, tickTransform, tickEndCoord, tickLineStyle, aniid) {
+function createTicks(
+    ticksCoords: TickCoord[],
+    tickTransform: matrixUtil.MatrixArray,
+    tickEndCoord: number,
+    tickLineStyle: StyleProps,
+    anidPrefix: string
+) {
     var tickEls = [];
-    var pt1 = [];
-    var pt2 = [];
+    var pt1: number[] = [];
+    var pt2: number[] = [];
     for (var i = 0; i < ticksCoords.length; i++) {
         var tickCoord = ticksCoords[i].coord;
 
@@ -591,8 +635,6 @@ function createTicks(ticksCoords, tickTransform, tickEndCoord, tickLineStyle, an
         }
         // Tick line, Not use group transform to have better line draw
         var tickEl = new graphic.Line({
-            // Id for animation
-            anid: aniid + '_' + ticksCoords[i].tickValue,
             subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
@@ -604,12 +646,18 @@ function createTicks(ticksCoords, tickTransform, tickEndCoord, tickLineStyle, an
             z2: 2,
             silent: true
         });
+        tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
     }
     return tickEls;
 }
 
-function buildAxisMajorTicks(axisBuilder, axisModel, opt) {
+function buildAxisMajorTicks(
+    group: graphic.Group,
+    transformGroup: graphic.Group,
+    axisModel: AxisBaseModel,
+    tickDirection: number
+) {
     var axis = axisModel.axis;
 
     var tickModel = axisModel.getModel('axisTick');
@@ -619,25 +667,30 @@ function buildAxisMajorTicks(axisBuilder, axisModel, opt) {
     }
 
     var lineStyleModel = tickModel.getModel('lineStyle');
-    var tickEndCoord = opt.tickDirection * tickModel.get('length');
+    var tickEndCoord = tickDirection * tickModel.get('length');
 
     var ticksCoords = axis.getTicksCoords();
 
-    var ticksEls = createTicks(ticksCoords, axisBuilder._transform, tickEndCoord, defaults(
+    var ticksEls = createTicks(ticksCoords, transformGroup.transform, tickEndCoord, defaults(
         lineStyleModel.getLineStyle(),
         {
-            stroke: axisModel.get('axisLine.lineStyle.color')
+            stroke: axisModel.get(['axisLine', 'lineStyle', 'color'])
         }
     ), 'ticks');
 
     for (var i = 0; i < ticksEls.length; i++) {
-        axisBuilder.group.add(ticksEls[i]);
+        group.add(ticksEls[i]);
     }
 
     return ticksEls;
 }
 
-function buildAxisMinorTicks(axisBuilder, axisModel, opt) {
+function buildAxisMinorTicks(
+    group: graphic.Group,
+    transformGroup: graphic.Group,
+    axisModel: AxisBaseModel,
+    tickDirection: number
+) {
     var axis = axisModel.axis;
 
     var minorTickModel = axisModel.getModel('minorTick');
@@ -652,31 +705,36 @@ function buildAxisMinorTicks(axisBuilder, axisModel, opt) {
     }
 
     var lineStyleModel = minorTickModel.getModel('lineStyle');
-    var tickEndCoord = opt.tickDirection * minorTickModel.get('length');
+    var tickEndCoord = tickDirection * minorTickModel.get('length');
 
     var minorTickLineStyle = defaults(
         lineStyleModel.getLineStyle(),
         defaults(
             axisModel.getModel('axisTick').getLineStyle(),
             {
-                stroke: axisModel.get('axisLine.lineStyle.color')
+                stroke: axisModel.get(['axisLine', 'lineStyle', 'color'])
             }
         )
     );
 
     for (var i = 0; i < minorTicksCoords.length; i++) {
         var minorTicksEls = createTicks(
-            minorTicksCoords[i], axisBuilder._transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i
+            minorTicksCoords[i], transformGroup.transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i
         );
         for (var k = 0; k < minorTicksEls.length; k++) {
-            axisBuilder.group.add(minorTicksEls[k]);
+            group.add(minorTicksEls[k]);
         }
     }
 }
 
-function buildAxisLabel(axisBuilder, axisModel, opt) {
+function buildAxisLabel(
+    group: graphic.Group,
+    transformGroup: graphic.Group,
+    axisModel: AxisBaseModel,
+    opt: AxisBuilderCfg
+) {
     var axis = axisModel.axis;
-    var show = retrieve(opt.axisLabelShow, axisModel.get('axisLabel.show'));
+    var show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
 
     if (!show || axis.scale.isBlank()) {
         return;
@@ -691,11 +749,11 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
         retrieve(opt.labelRotate, labelModel.get('rotate')) || 0
     ) * PI / 180;
 
-    var labelLayout = innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
+    var labelLayout = AxisBuilder.innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
     var rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
 
-    var labelEls = [];
-    var silent = isLabelSilent(axisModel);
+    var labelEls: graphic.Text[] = [];
+    var silent = AxisBuilder.isLabelSilent(axisModel);
     var triggerEvent = axisModel.get('triggerEvent');
 
     each(labels, function (labelItem, index) {
@@ -704,14 +762,17 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
         var rawLabel = labelItem.rawLabel;
 
         var itemLabelModel = labelModel;
-        if (rawCategoryData && rawCategoryData[tickValue] && rawCategoryData[tickValue].textStyle) {
-            itemLabelModel = new Model(
-                rawCategoryData[tickValue].textStyle, labelModel, axisModel.ecModel
-            );
+        if (rawCategoryData && rawCategoryData[tickValue]) {
+            const rawCategoryItem = rawCategoryData[tickValue];
+            if (isObject(rawCategoryItem) && rawCategoryItem.textStyle) {
+                itemLabelModel = new Model(
+                    rawCategoryItem.textStyle, labelModel, axisModel.ecModel
+                );
+            }
         }
 
-        var textColor = itemLabelModel.getTextColor()
-            || axisModel.get('axisLine.lineStyle.color');
+        var textColor = itemLabelModel.getTextColor() as AxisBaseOption['axisLabel']['color']
+            || axisModel.get(['axisLine', 'lineStyle', 'color']);
 
         var tickCoord = axis.dataToCoord(tickValue);
         var pos = [
@@ -720,13 +781,12 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
         ];
 
         var textEl = new graphic.Text({
-            // Id for animation
-            anid: 'label_' + tickValue,
             position: pos,
             rotation: labelLayout.rotation,
             silent: silent,
             z2: 10
         });
+        textEl.anid = 'label_' + tickValue;
 
         graphic.setTextStyle(textEl.style, itemLabelModel, {
             text: formattedLabel,
@@ -756,17 +816,19 @@ function buildAxisLabel(axisBuilder, axisModel, opt) {
 
         // Pack data for mouse event
         if (triggerEvent) {
-            textEl.eventData = makeAxisEventDataBase(axisModel);
-            textEl.eventData.targetType = 'axisLabel';
-            textEl.eventData.value = rawLabel;
+            const eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
+            eventData.targetType = 'axisLabel';
+            eventData.value = rawLabel;
+
+            graphic.getECData(textEl).eventData = eventData;
         }
 
         // FIXME
-        axisBuilder._dumbGroup.add(textEl);
+        transformGroup.add(textEl);
         textEl.updateTransform();
 
         labelEls.push(textEl);
-        axisBuilder.group.add(textEl);
+        group.add(textEl);
 
         textEl.decomposeTransform();
 

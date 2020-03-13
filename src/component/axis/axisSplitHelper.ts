@@ -17,20 +17,34 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import { makeInner } from '../../util/model';
+import GridModel from '../../coord/cartesian/GridModel';
+import type SingleAxisView from './SingleAxisView';
+import type CartesianAxisView from './CartesianAxisView';
+import type SingleAxisModel from '../../coord/single/AxisModel';
+import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
 
+const inner = makeInner<{
+    // Hash map of color index
+    splitAreaColors: zrUtil.HashMap<number>
+}>();
 
-export function rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, gridModel) {
+export function rectCoordAxisBuildSplitArea(
+    axisView: SingleAxisView | CartesianAxisView,
+    axisGroup: graphic.Group,
+    axisModel: SingleAxisModel | CartesianAxisModel,
+    gridModel: GridModel | SingleAxisModel
+) {
     var axis = axisModel.axis;
 
     if (axis.scale.isBlank()) {
         return;
     }
 
-    var splitAreaModel = axisModel.getModel('splitArea');
+    // TODO: TYPE
+    var splitAreaModel = (axisModel as CartesianAxisModel).getModel('splitArea');
     var areaStyleModel = splitAreaModel.getModel('areaStyle');
     var areaColors = areaStyleModel.get('color');
 
@@ -48,8 +62,8 @@ export function rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, grid
     // For Making appropriate splitArea animation, the color and anid
     // should be corresponding to previous one if possible.
     var areaColorsLen = areaColors.length;
-    var lastSplitAreaColors = axisView.__splitAreaColors;
-    var newSplitAreaColors = zrUtil.createHashMap();
+    var lastSplitAreaColors = inner(axisView).splitAreaColors;
+    var newSplitAreaColors = zrUtil.createHashMap<number>();
     var colorIndex = 0;
     if (lastSplitAreaColors) {
         for (var i = 0; i < ticksCoords.length; i++) {
@@ -108,9 +122,9 @@ export function rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, grid
         colorIndex = (colorIndex + 1) % areaColorsLen;
     }
 
-    axisView.__splitAreaColors = newSplitAreaColors;
+    inner(axisView).splitAreaColors = newSplitAreaColors;
 }
 
-export function rectCoordAxisHandleRemove(axisView) {
-    axisView.__splitAreaColors = null;
+export function rectCoordAxisHandleRemove(axisView: SingleAxisView | CartesianAxisView) {
+    inner(axisView).splitAreaColors = null;
 }

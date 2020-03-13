@@ -17,34 +17,42 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import * as axisPointerModelHelper from '../axisPointer/modelHelper';
+import ComponentView from '../../view/Component';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Payload, Dictionary } from '../../util/types';
+import type BaseAxisPointer from '../axisPointer/BaseAxisPointer';
 
+var axisPointerClazz: Dictionary<AxisPointerConstructor> = {};
+
+interface AxisPointerConstructor {
+    new(): BaseAxisPointer
+}
 /**
  * Base class of AxisView.
  */
-var AxisView = echarts.extendComponentView({
+class AxisView extends ComponentView {
 
-    type: 'axis',
+    static type =  'axis'
+    type = AxisView.type
 
     /**
      * @private
      */
-    _axisPointer: null,
+    private _axisPointer: BaseAxisPointer
 
     /**
      * @protected
-     * @type {string}
      */
-    axisPointerClass: null,
+    axisPointerClass: string
 
     /**
      * @override
      */
-    render: function (axisModel, ecModel, api, payload) {
+    render(axisModel: AxisBaseModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
         // FIXME
         // This process should proformed after coordinate systems updated
         // (axis scale updated), and should be performed each time update.
@@ -52,73 +60,69 @@ var AxisView = echarts.extendComponentView({
         // put a model-writing procedure in `view`.
         this.axisPointerClass && axisPointerModelHelper.fixValue(axisModel);
 
-        AxisView.superApply(this, 'render', arguments);
+        super.render.apply(this, arguments as any);
 
-        updateAxisPointer(this, axisModel, ecModel, api, payload, true);
-    },
+        this._doUpdateAxisPointerClass(axisModel, api, true);
+    }
 
     /**
      * Action handler.
-     * @public
-     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-     * @param {module:echarts/model/Global} ecModel
-     * @param {module:echarts/ExtensionAPI} api
-     * @param {Object} payload
      */
-    updateAxisPointer: function (axisModel, ecModel, api, payload, force) {
-        updateAxisPointer(this, axisModel, ecModel, api, payload, false);
-    },
+    updateAxisPointer(
+        axisModel: AxisBaseModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ) {
+        this._doUpdateAxisPointerClass(axisModel, api, false);
+    }
 
     /**
      * @override
      */
-    remove: function (ecModel, api) {
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
         var axisPointer = this._axisPointer;
         axisPointer && axisPointer.remove(api);
-        AxisView.superApply(this, 'remove', arguments);
-    },
+    }
 
     /**
      * @override
      */
-    dispose: function (ecModel, api) {
-        disposeAxisPointer(this, api);
-        AxisView.superApply(this, 'dispose', arguments);
+    dispose(ecModel: GlobalModel, api: ExtensionAPI) {
+        this._disposeAxisPointer(api);
+        super.dispose.apply(this, arguments as any);
     }
 
-});
-
-function updateAxisPointer(axisView, axisModel, ecModel, api, payload, forceRender) {
-    var Clazz = AxisView.getAxisPointerClass(axisView.axisPointerClass);
-    if (!Clazz) {
-        return;
-    }
-    var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
-    axisPointerModel
-        ? (axisView._axisPointer || (axisView._axisPointer = new Clazz()))
-            .render(axisModel, axisPointerModel, api, forceRender)
-        : disposeAxisPointer(axisView, api);
-}
-
-function disposeAxisPointer(axisView, ecModel, api) {
-    var axisPointer = axisView._axisPointer;
-    axisPointer && axisPointer.dispose(ecModel, api);
-    axisView._axisPointer = null;
-}
-
-var axisPointerClazz = [];
-
-AxisView.registerAxisPointerClass = function (type, clazz) {
-    if (__DEV__) {
-        if (axisPointerClazz[type]) {
-            throw new Error('axisPointer ' + type + ' exists');
+    private _doUpdateAxisPointerClass(axisModel: AxisBaseModel, api: ExtensionAPI, forceRender?: boolean) {
+        var Clazz = AxisView.getAxisPointerClass(this.axisPointerClass);
+        if (!Clazz) {
+            return;
         }
+        var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
+        axisPointerModel
+            ? (this._axisPointer || (this._axisPointer = new Clazz()))
+                .render(axisModel, axisPointerModel, api, forceRender)
+            : this._disposeAxisPointer(api);
     }
-    axisPointerClazz[type] = clazz;
-};
 
-AxisView.getAxisPointerClass = function (type) {
-    return type && axisPointerClazz[type];
-};
+    private _disposeAxisPointer(api: ExtensionAPI) {
+        this._axisPointer && this._axisPointer.dispose(api);
+        this._axisPointer = null;
+    }
+
+    static registerAxisPointerClass(type: string, clazz: AxisPointerConstructor) {
+        if (__DEV__) {
+            if (axisPointerClazz[type]) {
+                throw new Error('axisPointer ' + type + ' exists');
+            }
+        }
+        axisPointerClazz[type] = clazz;
+    };
+
+    static getAxisPointerClass(type: string) {
+        return type && axisPointerClazz[type];
+    };
+
+}
 
 export default AxisView;

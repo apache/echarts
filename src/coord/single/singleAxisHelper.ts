@@ -24,9 +24,9 @@ interface LayoutResult {
     position: [number, number],
     rotation: number
     labelRotation: number
-    labelDirection: 1 | -1
-    tickDirection: 1 | -1
-    nameDirection: 1 | -1
+    labelDirection: number  // 1 | -1
+    tickDirection: number
+    nameDirection: number
     z2: number
 }
 
@@ -68,11 +68,11 @@ export function layout(axisModel: SingleAxisModel, opt?: {
         layout.nameDirection = directionMap[axisPosition];
 
     if (axisModel.get(['axisTick', 'inside'])) {
-        layout.tickDirection = -layout.tickDirection as -1 | 1;
+        layout.tickDirection = -layout.tickDirection;
     }
 
     if (zrUtil.retrieve(opt.labelInside, axisModel.get(['axisLabel', 'inside']))) {
-        layout.labelDirection = -layout.labelDirection as -1 | 1;
+        layout.labelDirection = -layout.labelDirection;
     }
 
     var labelRotation = opt.rotate;

@@ -17,32 +17,39 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import AxisBuilder from './AxisBuilder';
 import AxisView from './AxisView';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import GridModel from '../../coord/cartesian/GridModel';
+import ComponentView from '../../view/Component';
+import { Payload } from '../../util/types';
 
-var axisBuilderAttrs = [
+const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
-];
-var selfBuilderAttrs = [
+] as const;
+const selfBuilderAttrs = [
     'splitArea', 'splitLine', 'minorSplitLine'
-];
+] as const;
 
-var CartesianAxisView = AxisView.extend({
+class CartesianAxisView extends AxisView {
 
-    type: 'cartesianAxis',
+    static type = 'cartesianAxis'
+    type = CartesianAxisView.type
 
-    axisPointerClass: 'CartesianAxisPointer',
+    axisPointerClass = 'CartesianAxisPointer'
+
+    private _axisGroup: graphic.Group
 
     /**
      * @override
      */
-    render: function (axisModel, ecModel, api, payload) {
+    render(axisModel: CartesianAxisModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
 
         this.group.removeAll();
 
@@ -66,26 +73,28 @@ var CartesianAxisView = AxisView.extend({
         this._axisGroup.add(axisBuilder.getGroup());
 
         zrUtil.each(selfBuilderAttrs, function (name) {
-            if (axisModel.get(name + '.show')) {
-                this['_' + name](axisModel, gridModel);
+            if (axisModel.get([name, 'show'])) {
+                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel);
             }
         }, this);
 
         graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
 
-        CartesianAxisView.superCall(this, 'render', axisModel, ecModel, api, payload);
-    },
+        super.render(axisModel, ecModel, api, payload);
+    }
 
-    remove: function () {
+    remove() {
         rectCoordAxisHandleRemove(this);
-    },
+    }
+}
 
-    /**
-     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-     * @param {module:echarts/coord/cartesian/GridModel} gridModel
-     * @private
-     */
-    _splitLine: function (axisModel, gridModel) {
+interface AxisElementBuilder {
+    (axisView: CartesianAxisView, axisGroup: graphic.Group, axisModel: CartesianAxisModel, gridModel: GridModel): void
+}
+
+const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
+
+    splitLine(axisView, axisGroup, axisModel, gridModel) {
         var axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -129,7 +138,7 @@ var CartesianAxisView = AxisView.extend({
 
             var colorIndex = (lineCount++) % lineColors.length;
             var tickValue = ticksCoords[i].tickValue;
-            this._axisGroup.add(new graphic.Line({
+            axisGroup.add(new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 subPixelOptimize: true,
                 shape: {
@@ -146,12 +155,7 @@ var CartesianAxisView = AxisView.extend({
         }
     },
 
-    /**
-     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-     * @param {module:echarts/coord/cartesian/GridModel} gridModel
-     * @private
-     */
-    _minorSplitLine: function (axisModel, gridModel) {
+    minorSplitLine(axisView, axisGroup, axisModel, gridModel) {
         var axis = axisModel.axis;
 
         var minorSplitLineModel = axisModel.getModel('minorSplitLine');
@@ -187,7 +191,7 @@ var CartesianAxisView = AxisView.extend({
                     p2[1] = tickCoord;
                 }
 
-                this._axisGroup.add(new graphic.Line({
+                axisGroup.add(new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
                     subPixelOptimize: true,
                     shape: {
@@ -203,19 +207,21 @@ var CartesianAxisView = AxisView.extend({
         }
     },
 
-    /**
-     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-     * @param {module:echarts/coord/cartesian/GridModel} gridModel
-     * @private
-     */
-    _splitArea: function (axisModel, gridModel) {
-        rectCoordAxisBuildSplitArea(this, this._axisGroup, axisModel, gridModel);
+    splitArea(axisView, axisGroup, axisModel, gridModel) {
+        rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, gridModel);
     }
-});
+};
 
-CartesianAxisView.extend({
-    type: 'xAxis'
-});
-CartesianAxisView.extend({
-    type: 'yAxis'
-});
+class CartesianXAxisView extends CartesianAxisView {
+    static type = 'xAxis'
+    type = CartesianXAxisView.type
+}
+class CartesianYAxisView extends CartesianAxisView {
+    static type = 'yAxis'
+    type = CartesianXAxisView.type
+}
+
+ComponentView.registerClass(CartesianXAxisView);
+ComponentView.registerClass(CartesianYAxisView);
+
+export default CartesianAxisView;
