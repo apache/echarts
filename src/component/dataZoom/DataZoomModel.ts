@@ -669,6 +669,4 @@ function retrieveRawOption<T extends DataZoomOption>(option: T) {
     return ret;
 }
 
-ComponentModel.registerClass(DataZoomModel);
-
 export default DataZoomModel;

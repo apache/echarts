@@ -38,7 +38,7 @@ var inner = makeInner<{
     lastProp?: DisplayableProps
     labelEl?: graphic.Rect
     pointerEl?: Displayable
-}>();
+}, Element>();
 var clone = zrUtil.clone;
 var bind = zrUtil.bind;
 

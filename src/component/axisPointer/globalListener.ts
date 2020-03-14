@@ -56,7 +56,7 @@ interface Pendings {
     hideTip: HideTipPayload[]
 }
 
-const inner = makeInner<InnerStore>();
+const inner = makeInner<InnerStore, ZRenderType>();
 const each = zrUtil.each;
 
 /**

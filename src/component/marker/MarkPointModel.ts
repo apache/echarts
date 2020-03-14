@@ -17,15 +17,63 @@
 * under the License.
 */
 
-// @ts-nocheck
+import MarkerModel, { MarkerOption, MarkerPositionOption } from './MarkerModel';
+import ComponentModel from '../../model/Component';
+import GlobalModel from '../../model/Global';
+import { SymbolOptionMixin, ItemStyleOption, LabelOption, CallbackDataParams } from '../../util/types';
+import List from '../../data/List';
 
-import MarkerModel from './MarkerModel';
+// interface MarkPointCallbackDataParams extends CallbackDataParams {
+//     componentType: 'markPoint'
+//     componentSubType: never
+// }
 
-export default MarkerModel.extend({
+export interface MarkPointDataItemOption extends
+    // TODO should not support callback in data
+    SymbolOptionMixin<CallbackDataParams>,
+    MarkerPositionOption {
+    name: string
 
-    type: 'markPoint',
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
 
-    defaultOption: {
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+
+}
+
+export interface MarkPointOption extends MarkerOption,
+    SymbolOptionMixin<CallbackDataParams> {
+
+    precision?: number
+
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+
+    data?: MarkPointDataItemOption[]
+}
+
+class MarkPointModel extends MarkerModel<MarkPointOption> {
+
+    static type = 'markPoint'
+    type = MarkPointModel.type
+
+    createMarkerModelFromSeries(
+        markerOpt: MarkPointOption,
+        masterMarkerModel: MarkPointModel,
+        ecModel: GlobalModel
+    ) {
+        return new MarkPointModel(markerOpt, masterMarkerModel, ecModel);
+    }
+
+    static defaultOption: MarkPointOption = {
         zlevel: 0,
         z: 5,
         symbol: 'pin',
@@ -48,4 +96,8 @@ export default MarkerModel.extend({
             }
         }
     }
-});
+}
+
+ComponentModel.registerClass(MarkPointModel);
+
+export default MarkPointModel;

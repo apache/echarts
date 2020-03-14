@@ -17,32 +17,108 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import {__DEV__} from '../../config';
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import * as modelUtil from '../../util/model';
 import * as formatUtil from '../../util/format';
 import DataFormatMixin from '../../model/mixin/dataFormat';
+import ComponentModel from '../../model/Component';
+import SeriesModel from '../../model/Series';
+import {
+    DisplayStateHostOption,
+    ComponentOption,
+    AnimationOptionMixin,
+    Dictionary,
+    CommonTooltipOption,
+    ScaleDataValue
+} from '../../util/types';
+import Model from '../../model/Model';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
+import { makeInner, defaultEmphasis } from '../../util/model';
 
 var addCommas = formatUtil.addCommas;
 var encodeHTML = formatUtil.encodeHTML;
 
-function fillLabel(opt) {
-    modelUtil.defaultEmphasis(opt, 'label', ['show']);
+function fillLabel(opt: DisplayStateHostOption) {
+    defaultEmphasis(opt, 'label', ['show']);
 }
-var MarkerModel = echarts.extendComponentModel({
 
-    type: 'marker',
+export type MarkerStatisticType = 'average' | 'min' | 'max' | 'median';
 
-    dependencies: ['series', 'grid', 'polar', 'geo'],
+/**
+ * Option to specify where to put the marker.
+ */
+export interface MarkerPositionOption {
+    // Priority: x/y > coord(xAxis, yAxis) > type
+
+    // Absolute position, px or percent string
+    x?: number | string
+    y?: number | string
+
+    /**
+     * Coord on any coordinate system
+     */
+    coord?: (ScaleDataValue | MarkerStatisticType)[]
+
+    // On cartesian coordinate system
+    xAxis?: ScaleDataValue
+    yAxis?: ScaleDataValue
+
+    // On polar coordinate system
+    radiusAxis?: ScaleDataValue
+    angleAxis?: ScaleDataValue
+
+    // Use statistic method
+    type?: MarkerStatisticType
+    /**
+     * When using statistic method with type.
+     * valueIndex and valueDim can be specify which dim the statistic is used on.
+     */
+    valueIndex?: number
+    valueDim?: string
+
+
+    /**
+     * Value to be displayed as label. Totally optional
+     */
+    value?: string | number
+}
+
+export interface MarkerOption extends ComponentOption, AnimationOptionMixin {
+
+    silent?: boolean
+
+    data?: unknown[]
+
+    tooltip?: CommonTooltipOption<unknown> & {
+        trigger?: 'item' | 'axis' | boolean | 'none'
+    }
+}
+
+// { [componentType]: MarkerModel }
+const inner = makeInner<Dictionary<MarkerModel>, SeriesModel>();
+
+abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends ComponentModel<Opts> {
+
+    static type = 'marker'
+    type = MarkerModel.type
+
+    /**
+     * If marker model is created by self from series
+     */
+    createdBySelf = false
+
+    static readonly dependencies = ['series', 'grid', 'polar', 'geo']
+
+    __hostSeries: SeriesModel
+
+    private _data: List
 
     /**
      * @overrite
      */
-    init: function (option, parentModel, ecModel) {
+    init(option: Opts, parentModel: Model, ecModel: GlobalModel) {
 
         if (__DEV__) {
             if (this.type === 'marker') {
@@ -51,38 +127,37 @@ var MarkerModel = echarts.extendComponentModel({
         }
         this.mergeDefaultAndTheme(option, ecModel);
         this._mergeOption(option, ecModel, false, true);
-    },
+    }
 
-    /**
-     * @return {boolean}
-     */
-    isAnimationEnabled: function () {
+    isAnimationEnabled(): boolean {
         if (env.node) {
             return false;
         }
 
         var hostSeries = this.__hostSeries;
         return this.getShallow('animation') && hostSeries && hostSeries.isAnimationEnabled();
-    },
+    }
 
     /**
      * @overrite
      */
-    mergeOption: function (newOpt, ecModel) {
+    mergeOption(newOpt: Opts, ecModel: GlobalModel) {
         this._mergeOption(newOpt, ecModel, false, false);
-    },
+    }
 
-    _mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {
-        var MarkerModel = this.constructor;
-        var modelPropName = this.mainType + 'Model';
+    _mergeOption(newOpt: Opts, ecModel: GlobalModel, createdBySelf?: boolean, isInit?: boolean) {
+        var componentType = this.mainType;
         if (!createdBySelf) {
             ecModel.eachSeries(function (seriesModel) {
 
-                var markerOpt = seriesModel.get(this.mainType, true);
+                // mainType can be markPoint, markLine, markArea
+                var markerOpt = seriesModel.get(
+                    this.mainType as any, true
+                ) as Opts;
 
-                var markerModel = seriesModel[modelPropName];
+                var markerModel = inner(seriesModel)[componentType];
                 if (!markerOpt || !markerOpt.data) {
-                    seriesModel[modelPropName] = null;
+                    inner(seriesModel)[componentType] = null;
                     return;
                 }
                 if (!markerModel) {
@@ -101,9 +176,12 @@ var MarkerModel = echarts.extendComponentModel({
                         }
                     });
 
-                    markerModel = new MarkerModel(
+                    markerModel = this.createMarkerModelFromSeries(
                         markerOpt, this, ecModel
                     );
+                    // markerModel = new ImplementedMarkerModel(
+                    //     markerOpt, this, ecModel
+                    // );
 
                     zrUtil.extend(markerModel, {
                         mainType: this.mainType,
@@ -118,16 +196,16 @@ var MarkerModel = echarts.extendComponentModel({
                 else {
                     markerModel._mergeOption(markerOpt, ecModel, true);
                 }
-                seriesModel[modelPropName] = markerModel;
+                inner(seriesModel)[componentType] = markerModel;
             }, this);
         }
-    },
+    }
 
-    formatTooltip: function (dataIndex) {
+    formatTooltip(dataIndex: number) {
         var data = this.getData();
         var value = this.getRawValue(dataIndex);
         var formattedValue = zrUtil.isArray(value)
-            ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
+            ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
         var name = data.getName(dataIndex);
         var html = encodeHTML(this.name);
         if (value != null || name) {
@@ -143,17 +221,35 @@ var MarkerModel = echarts.extendComponentModel({
             html += encodeHTML(formattedValue);
         }
         return html;
-    },
+    }
 
-    getData: function () {
-        return this._data;
-    },
+    getData(): List<this> {
+        return this._data as List<this>;
+    }
 
-    setData: function (data) {
+    setData(data: List) {
         this._data = data;
     }
-});
 
+    /**
+     * Create slave marker model from series.
+     */
+    abstract createMarkerModelFromSeries(
+        markerOpt: Opts,
+        masterMarkerModel: MarkerModel,
+        ecModel: GlobalModel
+    ): MarkerModel
+
+    static getMarkerModelFromSeries(
+        seriesModel: SeriesModel,
+        // Support three types of markers. Strict check.
+        componentType: 'markLine' | 'markPoint' | 'markArea'
+    ) {
+        return inner(seriesModel)[componentType];
+    }
+}
+
+interface MarkerModel<Opts extends MarkerOption = MarkerOption> extends DataFormatMixin {}
 zrUtil.mixin(MarkerModel, DataFormatMixin.prototype);
 
 export default MarkerModel;

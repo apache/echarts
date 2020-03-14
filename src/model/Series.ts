@@ -59,7 +59,7 @@ import { GradientObject } from 'zrender/src/graphic/Gradient';
 var inner = modelUtil.makeInner<{
     data: List
     dataBeforeProcessed: List
-}>();
+}, SeriesModel>();
 
 interface SeriesModel {
     /**
@@ -86,6 +86,11 @@ interface SeriesModel {
         dataIndices: number[],
         nestestValue: any
     };
+
+    /**
+     * Get position for marker
+     */
+    getMarkerPosition(value: ScaleDataValue[]): number[]
 }
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {

@@ -37,6 +37,7 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type { RectLike } from 'zrender/src/core/BoundingRect';
 import type Model from '../../model/Model';
+import { isCoordinateSystemType } from '../../coord/CoordinateSystem';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 const _eventPos = [0, 0];
@@ -53,12 +54,9 @@ type RectLayout = RectShape;
 
 type BarPossiblePath = Sector | Rect | Sausage
 
-function isCartesian2D(coord: CoordSysOfBar): coord is Cartesian2D {
-    return coord.type === 'cartesian2d';
-}
 
 function getClipArea(coord: CoordSysOfBar, data: List) {
-    if (isCartesian2D(coord)) {
+    if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         var coordSysClipArea = coord.getArea && coord.getArea();
         var baseAxis = coord.getBaseAxis();
         // When boundaryGap is false or using time axis. bar may exceed the grid.
@@ -744,7 +742,7 @@ function createBackgroundShape(
     layout: SectorLayout | RectLayout,
     coord: CoordSysOfBar
 ): SectorShape | RectShape {
-    if (isCartesian2D(coord)) {
+    if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const rectShape = layout as RectShape;
         const coordLayout = coord.getArea();
         return {

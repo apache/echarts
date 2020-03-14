@@ -28,7 +28,7 @@ import { AngleAxisModel } from './AxisModel';
 var inner = makeInner<{
     lastAutoInterval: number
     lastTickCount: number
-}>();
+}, AngleAxisModel>();
 
 interface AngleAxis {
     dataToAngle: Axis['dataToCoord']

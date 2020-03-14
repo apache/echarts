@@ -17,19 +17,30 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw from '../../chart/helper/SymbolDraw';
 import * as numberUtil from '../../util/number';
 import List from '../../data/List';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
+import ComponentView from '../../view/Component';
+import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import SeriesModel from '../../model/Series';
+import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';
+import GlobalModel from '../../model/Global';
+import MarkerModel from './MarkerModel';
+import ExtensionAPI from '../../ExtensionAPI';
+import { HashMap, isFunction, map, defaults, filter, curry } from 'zrender/src/core/util';
+import { getECData } from '../../util/graphic';
 
-function updateMarkerLayout(mpData, seriesModel, api) {
+function updateMarkerLayout(
+    mpData: List<MarkPointModel>,
+    seriesModel: SeriesModel,
+    api: ExtensionAPI
+) {
     var coordSys = seriesModel.coordinateSystem;
-    mpData.each(function (idx) {
-        var itemModel = mpData.getItemModel(idx);
+    mpData.each(function (idx: number) {
+        var itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
         var point;
         var xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
         var yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
@@ -62,31 +73,31 @@ function updateMarkerLayout(mpData, seriesModel, api) {
     });
 }
 
-export default MarkerView.extend({
+class MarkPointView extends MarkerView {
 
-    type: 'markPoint',
+    static type = 'markPoint'
 
-    // updateLayout: function (markPointModel, ecModel, api) {
-    //     ecModel.eachSeries(function (seriesModel) {
-    //         var mpModel = seriesModel.markPointModel;
-    //         if (mpModel) {
-    //             updateMarkerLayout(mpModel.getData(), seriesModel, api);
-    //             this.markerGroupMap.get(seriesModel.id).updateLayout(mpModel);
-    //         }
-    //     }, this);
-    // },
+    markerGroupMap: HashMap<SymbolDraw>
 
-    updateTransform: function (markPointModel, ecModel, api) {
+    updateTransform(markPointModel: MarkPointModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
-            var mpModel = seriesModel.markPointModel;
+            var mpModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markPoint') as MarkPointModel;
             if (mpModel) {
-                updateMarkerLayout(mpModel.getData(), seriesModel, api);
-                this.markerGroupMap.get(seriesModel.id).updateLayout(mpModel);
+                updateMarkerLayout(
+                    mpModel.getData(),
+                    seriesModel, api
+                );
+                this.markerGroupMap.get(seriesModel.id).updateLayout();
             }
         }, this);
-    },
+    }
 
-    renderSeries: function (seriesModel, mpModel, ecModel, api) {
+    renderSeries(
+        seriesModel: SeriesModel,
+        mpModel: MarkPointModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
         var coordSys = seriesModel.coordinateSystem;
         var seriesId = seriesModel.id;
         var seriesData = seriesModel.getData();
@@ -103,19 +114,17 @@ export default MarkerView.extend({
         updateMarkerLayout(mpModel.getData(), seriesModel, api);
 
         mpData.each(function (idx) {
-            var itemModel = mpData.getItemModel(idx);
+            var itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
             var symbol = itemModel.getShallow('symbol');
             var symbolSize = itemModel.getShallow('symbolSize');
-            var isFnSymbol = zrUtil.isFunction(symbol);
-            var isFnSymbolSize = zrUtil.isFunction(symbolSize);
 
-            if (isFnSymbol || isFnSymbolSize) {
+            if (isFunction(symbol) || isFunction(symbolSize)) {
                 var rawIdx = mpModel.getRawValue(idx);
                 var dataParams = mpModel.getDataParams(idx);
-                if (isFnSymbol) {
+                if (isFunction(symbol)) {
                     symbol = symbol(rawIdx, dataParams);
                 }
-                if (isFnSymbolSize) {
+                if (isFunction(symbolSize)) {
                     // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
                     symbolSize = symbolSize(rawIdx, dataParams);
                 }
@@ -124,7 +133,7 @@ export default MarkerView.extend({
             mpData.setItemVisual(idx, {
                 symbol: symbol,
                 symbolSize: symbolSize,
-                color: itemModel.get('itemStyle.color')
+                color: itemModel.get(['itemStyle', 'color'])
                     || seriesData.getVisual('color')
             });
         });
@@ -137,31 +146,29 @@ export default MarkerView.extend({
         // FIXME
         mpData.eachItemGraphicEl(function (el) {
             el.traverse(function (child) {
-                child.dataModel = mpModel;
+                getECData(child).dataModel = mpModel;
             });
         });
 
-        symbolDraw.__keep = true;
+        this.markKeep(symbolDraw);
 
         symbolDraw.group.silent = mpModel.get('silent') || seriesModel.get('silent');
     }
-});
+}
 
-/**
- * @inner
- * @param {module:echarts/coord/*} [coordSys]
- * @param {module:echarts/model/Series} seriesModel
- * @param {module:echarts/model/Model} mpModel
- */
-function createList(coordSys, seriesModel, mpModel) {
+function createList(
+    coordSys: CoordinateSystem,
+    seriesModel: SeriesModel,
+    mpModel: MarkPointModel
+) {
     var coordDimsInfos;
     if (coordSys) {
-        coordDimsInfos = zrUtil.map(coordSys && coordSys.dimensions, function (coordDim) {
+        coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
             var info = seriesModel.getData().getDimensionInfo(
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return zrUtil.defaults({name: coordDim}, info);
+            return defaults({name: coordDim}, info);
         });
     }
     else {
@@ -172,20 +179,22 @@ function createList(coordSys, seriesModel, mpModel) {
     }
 
     var mpData = new List(coordDimsInfos, mpModel);
-    var dataOpt = zrUtil.map(mpModel.get('data'), zrUtil.curry(
+    var dataOpt = map(mpModel.get('data'), curry(
             markerHelper.dataTransform, seriesModel
         ));
     if (coordSys) {
-        dataOpt = zrUtil.filter(
-            dataOpt, zrUtil.curry(markerHelper.dataFilter, coordSys)
+        dataOpt = filter(
+            dataOpt, curry(markerHelper.dataFilter, coordSys)
         );
     }
 
     mpData.initData(dataOpt, null,
-        coordSys ? markerHelper.dimValueGetter : function (item) {
+        coordSys ? markerHelper.dimValueGetter : function (item: MarkPointDataItemOption) {
             return item.value;
         }
     );
 
     return mpData;
 }
+
+ComponentView.registerClass(MarkPointView);

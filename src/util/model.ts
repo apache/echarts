@@ -466,14 +466,14 @@ export function queryDataIndex(data: List, payload: Payload & {
  *
  * @return {Function}
  */
-export function makeInner<T>() {
-    // Consider different scope by es module import.
-    var key = '__\0ec_inner_' + innerUniqueIndex++ + '_' + Math.random().toFixed(5);
-    return function (hostObj: any): T {
-        return hostObj[key] || (hostObj[key] = {});
+export function makeInner<T, Host extends object>() {
+    var key = '__ec_inner_' + innerUniqueIndex++;
+    return function (hostObj: Host): T {
+        return (hostObj as any)[key] || ((hostObj as any)[key] = {});
     };
 }
-var innerUniqueIndex = 0;
+// A random start point.
+var innerUniqueIndex = Math.round(Math.random() * 5);
 
 /**
  * If string, e.g., 'geo', means {geoIndex: 0}.

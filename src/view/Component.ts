@@ -26,6 +26,24 @@ import ExtensionAPI from '../ExtensionAPI';
 import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
 import Element from 'zrender/src/Element';
 
+interface ComponentView {
+    /**
+     * Implement it if needed.
+     */
+    updateTransform(
+        seriesModel: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
+    ): void | {update: true};
+
+    /**
+     * Pass only when return `true`.
+     * Implement it if needed.
+     */
+    filterForExposedEvent(
+        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
+    ): boolean;
+}
+
+
 class ComponentView {
 
     // [Caution]: for compat the previous "class extend"
@@ -56,14 +74,6 @@ class ComponentView {
 
     dispose(ecModel: GlobalModel, api: ExtensionAPI): void {}
 
-    /**
-     * Pass only when return `true`.
-     * Implement it if needed.
-     */
-    filterForExposedEvent: (
-        eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
-    ) => boolean;
-
     updateView(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         // Do nothing;
     }
@@ -75,13 +85,6 @@ class ComponentView {
     updateVisual(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         // Do nothing;
     }
-
-    /**
-     * Implement it if needed.
-     */
-    updateTransform: (
-        seriesModel: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
-    ) => void | {update: true};
 
     static registerClass: clazzUtil.ClassManager['registerClass'];
 };

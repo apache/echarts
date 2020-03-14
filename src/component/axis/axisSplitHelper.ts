@@ -25,11 +25,12 @@ import type SingleAxisView from './SingleAxisView';
 import type CartesianAxisView from './CartesianAxisView';
 import type SingleAxisModel from '../../coord/single/AxisModel';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import AxisView from './AxisView';
 
 const inner = makeInner<{
     // Hash map of color index
     splitAreaColors: zrUtil.HashMap<number>
-}>();
+}, AxisView>();
 
 export function rectCoordAxisBuildSplitArea(
     axisView: SingleAxisView | CartesianAxisView,

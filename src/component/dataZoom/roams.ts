@@ -61,7 +61,7 @@ interface PayloadBatch {
 
 type Store = Dictionary<Record>
 
-const inner = makeInner<Store>();
+const inner = makeInner<Store, ExtensionAPI>();
 
 export function register(api: ExtensionAPI, dataZoomInfo: DataZoomInfo) {
     var store = inner(api);

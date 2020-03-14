@@ -38,7 +38,7 @@ import List from '../data/List';
 
 var inner = modelUtil.makeInner<{
     updateMethod: keyof ChartView
-}>();
+}, Payload>();
 var renderPlanner = createRenderPlanner();
 
 interface ChartView {

@@ -32,7 +32,7 @@ type Store = {
     snapshots: StoreSnapshot[]
 }
 
-const inner = makeInner<Store>();
+const inner = makeInner<Store, GlobalModel>();
 
 /**
  * @param ecModel

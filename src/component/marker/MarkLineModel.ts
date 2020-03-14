@@ -17,15 +17,105 @@
 * under the License.
 */
 
-// @ts-nocheck
+import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
+import ComponentModel from '../../model/Component';
+import GlobalModel from '../../model/Global';
+import { LineStyleOption, LineLabelOption, SymbolOptionMixin, ItemStyleOption } from '../../util/types';
 
-import MarkerModel from './MarkerModel';
+interface MarkLineDataItemOptionBase {
+    name?: string
 
-export default MarkerModel.extend({
+    lineStyle?: LineStyleOption
+    /**
+     * itemStyle for symbol
+     */
+    itemStyle?: ItemStyleOption
+    label?: LineLabelOption
 
-    type: 'markLine',
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+        label?: LineLabelOption
+    }
+}
 
-    defaultOption: {
+// 1D markLine for horizontal or vertical
+export interface MarkLine1DDataItemOption extends MarkLineDataItemOptionBase {
+
+    // On cartesian coordinate system
+    xAxis?: number
+    yAxis?: number
+
+    // Use statistic method
+    type?: MarkerStatisticType
+    /**
+     * When using statistic method with type.
+     * valueIndex and valueDim can be specify which dim the statistic is used on.
+     */
+    valueIndex?: number
+    valueDim?: string
+
+    /**
+     * Symbol for both two ends
+     */
+    symbol?: string[] | string
+    symbolSize?: number[] | number
+}
+
+// 2D markLine on any direction
+interface MarkLine2DDataItemDimOption extends
+    MarkLineDataItemOptionBase,
+    SymbolOptionMixin,
+    MarkerPositionOption {
+}
+
+export type MarkLine2DDataItemOption = [
+    // Start point
+    MarkLine2DDataItemDimOption,
+    // End point
+    MarkLine2DDataItemDimOption
+]
+
+export interface MarkLineOption extends MarkerOption {
+
+    symbol?: string[] | string
+    symbolSize?: number[] | number
+
+    /**
+     * Precision used on statistic method
+     */
+    precision?: number
+
+    /**
+     * itemStyle for symbol.
+     */
+    itemStyle?: ItemStyleOption
+    lineStyle?: LineStyleOption
+    label?: LineLabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+        label?: LineLabelOption
+    }
+
+    data?: (MarkLine1DDataItemOption | MarkLine2DDataItemOption)[]
+}
+
+class MarkLineModel extends MarkerModel<MarkLineOption> {
+
+    static type = 'markLine'
+    type = MarkLineModel.type
+
+    createMarkerModelFromSeries(
+        markerOpt: MarkLineOption,
+        masterMarkerModel: MarkLineModel,
+        ecModel: GlobalModel
+    ) {
+        return new MarkLineModel(markerOpt, masterMarkerModel, ecModel);
+    }
+
+    static defaultOption: MarkLineOption = {
         zlevel: 0,
         z: 5,
 
@@ -56,4 +146,8 @@ export default MarkerModel.extend({
         },
         animationEasing: 'linear'
     }
-});
+}
+
+ComponentModel.registerClass(MarkLineModel);
+
+export default MarkLineModel;

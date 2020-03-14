@@ -763,6 +763,16 @@ export interface LabelOption extends TextCommonOption {
  * Option for labels on line, like markLine, lines
  */
 export interface LineLabelOption extends Omit<LabelOption, 'distance'> {
+    position?: 'start'
+        | 'middle'
+        | 'end'
+        | 'insideStartTop'
+        | 'insideStartBottom'
+        | 'insideMiddleTop'
+        | 'insideMiddleBottom'
+        | 'insideEndTop'
+        | 'insideEndBottom'
+        | 'insideMiddleBottom'
     /**
      * Distance can be an array.
      * Which will specify horizontal and vertical distance respectively

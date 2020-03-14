@@ -28,7 +28,7 @@ class DataDimensionInfo {
      * `dataCtors` of `data/List`.
      * Optional.
      */
-    type: DimensionType;
+    type?: DimensionType;
 
     /**
      * Dimension name.

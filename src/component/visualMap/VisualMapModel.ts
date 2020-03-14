@@ -613,6 +613,4 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 }
 
-ComponentModel.registerClass(VisualMapModel);
-
 export default VisualMapModel;

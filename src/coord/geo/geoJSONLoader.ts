@@ -37,7 +37,7 @@ type MapRecordInner = {
     };
 };
 
-var inner = makeInner<MapRecordInner>();
+var inner = makeInner<MapRecordInner, GeoJSONMapRecord>();
 
 export default {
 

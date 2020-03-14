@@ -33,7 +33,7 @@ type MapRecordInner = {
     originRootHostKey: string;
 };
 
-var inner = makeInner<MapRecordInner>();
+var inner = makeInner<MapRecordInner, SVGMapRecord>();
 
 export default {
 

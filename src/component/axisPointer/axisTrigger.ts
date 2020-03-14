@@ -25,10 +25,11 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Dictionary, Payload, CommonAxisPointerOption } from '../../util/types';
 import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
 import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';
+import { ZRenderType } from 'zrender/src/zrender';
 
 var inner = makeInner<{
     axisPointerLastHighlights: Dictionary<BatchItem>
-}>();
+}, ZRenderType>();
 
 type AxisValue = CommonAxisPointerOption['value'];
 

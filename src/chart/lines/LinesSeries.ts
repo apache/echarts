@@ -32,9 +32,9 @@ import {
     SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin,
     SeriesLargeOptionMixin,
-    LabelOption,
     LineStyleOption,
-    OptionDataValue
+    OptionDataValue,
+    LineLabelOption
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -95,11 +95,11 @@ export interface LinesDataItemOption {
     value?: LinesValue
 
     lineStyle?: LinesLineStyleOption
-    label?: LabelOption
+    label?: LineLabelOption
 
     emphasis?: {
         lineStyle?: LineStyleOption
-        label?: LabelOption
+        label?: LineLabelOption
     }
 }
 
@@ -128,11 +128,11 @@ export interface LinesSeriesOption extends SeriesOption,
      */
     clip?: boolean
 
-    label?: LabelOption
+    label?: LineLabelOption
     lineStyle?: LinesLineStyleOption
 
     emphasis?: {
-        label?: LabelOption
+        label?: LineLabelOption
         lineStyle?: LineStyleOption
     }
 

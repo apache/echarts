@@ -25,7 +25,7 @@ import { Dictionary } from 'zrender/src/core/types';
 var inner = makeInner<{
     colorIdx: number
     colorNameMap: Dictionary<ZRColor>
-}>();
+}, ColorPaletteMixin>();
 
 function getNearestColorPalette(
     colors: ZRColor[][], requestColorNum: number

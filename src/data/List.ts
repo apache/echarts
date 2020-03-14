@@ -748,13 +748,13 @@ class List<HostModel extends Model = Model> {
      * @param dimensions If ignored, using all dimensions.
      */
     getValues(idx: number): ParsedValue[];
-    getValues(dimensions: DimensionName[], idx: number): ParsedValue[];
-    getValues(dimensions: DimensionName[] | number, idx?: number): ParsedValue[] {
+    getValues(dimensions: readonly DimensionName[], idx: number): ParsedValue[];
+    getValues(dimensions: readonly DimensionName[] | number, idx?: number): ParsedValue[] {
         var values = [];
 
         if (!zrUtil.isArray(dimensions)) {
             // stack = idx;
-            idx = dimensions;
+            idx = dimensions as number;
             dimensions = this.dimensions;
         }
 
@@ -894,11 +894,9 @@ class List<HostModel extends Model = Model> {
 
         // TODO
         // Use quick select?
-
-        // immutability & sort
-        var sortedDimDataArray = [].concat(dimDataArray).sort(function (a, b) {
+        var sortedDimDataArray = dimDataArray.sort(function (a: number, b: number) {
             return a - b;
-        });
+        }) as number[];
         var len = this.count();
         // calculate median
         return len === 0

@@ -1540,7 +1540,7 @@ export interface ECData {
     dataType?: string;
 }
 
-export const getECData = makeInner<ECData>();
+export const getECData = makeInner<ECData, Element>();
 
 // Register built-in shapes. These shapes might be overwirtten
 // by users, although we do not recommend that.

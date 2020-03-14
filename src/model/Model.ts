@@ -36,7 +36,9 @@ import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
 var mixin = zrUtil.mixin;
-var inner = makeInner<{getParent(path: string | string[]): Model}>();
+var inner = makeInner<{
+    getParent(path: string | string[]): Model
+}, Model>();
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';

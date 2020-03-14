@@ -28,18 +28,14 @@ import type ExtensionAPI from '../../ExtensionAPI';
 import type VisualMapModel from '../../component/visualMap/VisualMapModel';
 import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
 import type ContinuousModel from '../../component/visualMap/ContinuousModel';
-import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
+import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
     dimensions: ['lng', 'lat']
     getViewRect(): graphic.BoundingRect
-}
-
-function isCartesian2D(coord: CoordinateSystem): coord is Cartesian2D {
-    return coord.type === 'cartesian2d';
 }
 
 function getIsInPiecewiseRange(
@@ -166,7 +162,7 @@ class HeatmapView extends ChartView {
         var width;
         var height;
 
-        if (isCartesian2D(coordSys)) {
+        if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
             var xAxis = coordSys.getAxis('x');
             var yAxis = coordSys.getAxis('y');
 
@@ -191,7 +187,7 @@ class HeatmapView extends ChartView {
         var labelModel = seriesModel.getModel('label');
         var hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
 
-        var dataDims = isCartesian2D(coordSys)
+        var dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
             ? [
                 data.mapDimension('x'),
                 data.mapDimension('y'),
@@ -205,7 +201,7 @@ class HeatmapView extends ChartView {
         for (var idx = start; idx < end; idx++) {
             var rect;
 
-            if (isCartesian2D(coordSys)) {
+            if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
                 // Ignore empty data
                 if (isNaN(data.get(dataDims[2], idx) as number)) {
                     continue;

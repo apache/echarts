@@ -17,15 +17,76 @@
 * under the License.
 */
 
-// @ts-nocheck
+import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
+import { LabelOption, ItemStyleOption } from '../../util/types';
+import ComponentModel from '../../model/Component';
+import GlobalModel from '../../model/Global';
 
-import MarkerModel from './MarkerModel';
+interface MarkAreaDataItemOptionBase {
+    name?: string
 
-export default MarkerModel.extend({
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
 
-    type: 'markArea',
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+}
 
-    defaultOption: {
+// 1D markArea for horizontal or vertical. Similar to markLine
+export interface MarkArea1DDataItemOption extends MarkAreaDataItemOptionBase {
+
+    xAxis?: number
+    yAxis?: number
+
+    type?: MarkerStatisticType
+
+    valueIndex?: number
+    valueDim?: string
+}
+
+// 2D markArea on any direction. Similar to markLine
+interface MarkArea2DDataItemDimOption extends MarkAreaDataItemOptionBase, MarkerPositionOption {
+}
+
+
+export type MarkArea2DDataItemOption = [
+    // Start point
+    MarkArea2DDataItemDimOption,
+    // End point
+    MarkArea2DDataItemDimOption
+]
+
+export interface MarkAreaOption extends MarkerOption {
+
+    precision?: number
+
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        itemStyle?: ItemStyleOption
+        label?: LabelOption
+    }
+
+    data?: (MarkArea1DDataItemOption | MarkArea2DDataItemOption)[]
+}
+
+class MarkAreaModel extends MarkerModel<MarkAreaOption> {
+
+    static type = 'markArea'
+    type = MarkAreaModel.type
+
+    createMarkerModelFromSeries(
+        markerOpt: MarkAreaOption,
+        masterMarkerModel: MarkAreaModel,
+        ecModel: GlobalModel
+    ) {
+        return new MarkAreaModel(markerOpt, masterMarkerModel, ecModel);
+    }
+
+    static defaultOption: MarkAreaOption = {
         zlevel: 0,
         // PENDING
         z: 1,
@@ -52,4 +113,8 @@ export default MarkerModel.extend({
             }
         }
     }
-});
+}
+
+ComponentModel.registerClass(MarkAreaModel);
+
+export default MarkAreaModel;

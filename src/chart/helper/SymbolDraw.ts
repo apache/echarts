@@ -79,7 +79,7 @@ interface RippleEffectOption {
 }
 
 // TODO Separate series and item?
-export interface SymbolDrawItemModelOption extends SymbolOptionMixin {
+export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object> {
     itemStyle?: ItemStyleOption
     label?: LabelOption
     emphasis?: {

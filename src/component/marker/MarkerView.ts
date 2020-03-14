@@ -17,40 +17,65 @@
 * under the License.
 */
 
-// @ts-nocheck
+import ComponentView from '../../view/Component';
+import { HashMap, createHashMap } from 'zrender/src/core/util';
+import MarkerModel from './MarkerModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { makeInner } from '../../util/model';
+import SeriesModel from '../../model/Series';
+import { Group } from 'zrender/src/export';
 
-import * as echarts from '../../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+const inner = makeInner<{
+    keep: boolean
+}, MarkerDraw>();
 
-export default echarts.extendComponentView({
+interface MarkerDraw {
+    group: Group
+}
+abstract class MarkerView extends ComponentView {
 
-    type: 'marker',
+    static type = 'marker'
+    type = MarkerView.type
 
-    init: function () {
-        /**
-         * Markline grouped by series
-         * @private
-         * @type {module:zrender/core/util.HashMap}
-         */
-        this.markerGroupMap = zrUtil.createHashMap();
-    },
+    /**
+     * Markline grouped by series
+     */
+    markerGroupMap: HashMap<MarkerDraw>
 
-    render: function (markerModel, ecModel, api) {
+    init() {
+        this.markerGroupMap = createHashMap();
+    }
+
+    render(markerModel: MarkerModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var markerGroupMap = this.markerGroupMap;
         markerGroupMap.each(function (item) {
-            item.__keep = false;
+            inner(item).keep = false;
         });
 
-        var markerModelKey = this.type + 'Model';
         ecModel.eachSeries(function (seriesModel) {
-            var markerModel = seriesModel[markerModelKey];
+            var markerModel = MarkerModel.getMarkerModelFromSeries(
+                seriesModel,
+                this.type as 'markPoint' | 'markLine' | 'markArea'
+            );
             markerModel && this.renderSeries(seriesModel, markerModel, ecModel, api);
         }, this);
 
         markerGroupMap.each(function (item) {
-            !item.__keep && this.group.remove(item.group);
+            !inner(item).keep && this.group.remove(item.group);
         }, this);
-    },
+    }
 
-    renderSeries: function () {}
-});
+    markKeep(drawGroup: MarkerDraw) {
+        inner(drawGroup).keep = true;
+    }
+
+    abstract renderSeries(
+        seriesModel: SeriesModel,
+        markerModel: MarkerModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ): void
+}
+
+export default MarkerView;

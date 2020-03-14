@@ -17,20 +17,29 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
+import SeriesModel from '../../model/Series';
+import List from '../../data/List';
+import { MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
+import { indexOf, curry, clone, isArray } from 'zrender/src/core/util';
+import Axis from '../../coord/Axis';
+import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import { ScaleDataValue, ParsedValue } from '../../util/types';
 
-var indexOf = zrUtil.indexOf;
-
-function hasXOrY(item) {
-    return !(isNaN(parseFloat(item.x)) && isNaN(parseFloat(item.y)));
+interface MarkerAxisInfo {
+    valueDataDim: string
+    valueAxis: Axis
+    baseAxis: Axis
+    baseDataDim: string
 }
 
-function hasXAndY(item) {
-    return !isNaN(parseFloat(item.x)) && !isNaN(parseFloat(item.y));
+function hasXOrY(item: MarkerPositionOption) {
+    return !(isNaN(parseFloat(item.x as string)) && isNaN(parseFloat(item.y as string)));
+}
+
+function hasXAndY(item: MarkerPositionOption) {
+    return !isNaN(parseFloat(item.x as string)) && !isNaN(parseFloat(item.y as string));
 }
 
 // Make it simple, do not visit all stacked value to count precision.
@@ -58,16 +67,21 @@ function hasXAndY(item) {
 // }
 
 function markerTypeCalculatorWithExtent(
-    mlType, data, otherDataDim, targetDataDim, otherCoordIndex, targetCoordIndex
-) {
-    var coordArr = [];
+    markerType: MarkerStatisticType,
+    data: List,
+    otherDataDim: string,
+    targetDataDim: string,
+    otherCoordIndex: number,
+    targetCoordIndex: number
+): [ParsedValue[], ParsedValue] {
+    var coordArr: ParsedValue[] = [];
 
     var stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
     var calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
 
-    var value = numCalculate(data, calcDataDim, mlType);
+    var value = numCalculate(data, calcDataDim, markerType);
 
     var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
@@ -77,37 +91,18 @@ function markerTypeCalculatorWithExtent(
     var precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
     precision = Math.min(precision, 20);
     if (precision >= 0) {
-        coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
+        coordArr[targetCoordIndex] = +(coordArr[targetCoordIndex] as number).toFixed(precision);
     }
 
     return [coordArr, coordArrValue];
 }
 
-var curry = zrUtil.curry;
 // TODO Specified percent
 var markerTypeCalculator = {
-    /**
-     * @method
-     * @param {module:echarts/data/List} data
-     * @param {string} baseAxisDim
-     * @param {string} valueAxisDim
-     */
     min: curry(markerTypeCalculatorWithExtent, 'min'),
-    /**
-     * @method
-     * @param {module:echarts/data/List} data
-     * @param {string} baseAxisDim
-     * @param {string} valueAxisDim
-     */
     max: curry(markerTypeCalculatorWithExtent, 'max'),
-
-    /**
-     * @method
-     * @param {module:echarts/data/List} data
-     * @param {string} baseAxisDim
-     * @param {string} valueAxisDim
-     */
-    average: curry(markerTypeCalculatorWithExtent, 'average')
+    average: curry(markerTypeCalculatorWithExtent, 'average'),
+    median: curry(markerTypeCalculatorWithExtent, 'median')
 };
 
 /**
@@ -119,7 +114,10 @@ var markerTypeCalculator = {
  * @param  {Object} item
  * @return {Object}
  */
-export function dataTransform(seriesModel, item) {
+export function dataTransform(
+    seriesModel: SeriesModel,
+    item: MarkerPositionOption
+) {
     var data = seriesModel.getData();
     var coordSys = seriesModel.coordinateSystem;
 
@@ -128,13 +126,13 @@ export function dataTransform(seriesModel, item) {
     // `yAxis` to specify the coord on each dimension
 
     // parseFloat first because item.x and item.y can be percent string like '20%'
-    if (item && !hasXAndY(item) && !zrUtil.isArray(item.coord) && coordSys) {
+    if (item && !hasXAndY(item) && !isArray(item.coord) && coordSys) {
         var dims = coordSys.dimensions;
         var axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
 
         // Clone the option
         // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
-        item = zrUtil.clone(item);
+        item = clone(item);
 
         if (item.type
             && markerTypeCalculator[item.type]
@@ -161,8 +159,8 @@ export function dataTransform(seriesModel, item) {
             ];
             // Each coord support max, min, average
             for (var i = 0; i < 2; i++) {
-                if (markerTypeCalculator[coord[i]]) {
-                    coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i]);
+                if (markerTypeCalculator[coord[i] as MarkerStatisticType]) {
+                    coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i] as MarkerStatisticType);
                 }
             }
             item.coord = coord;
@@ -171,8 +169,13 @@ export function dataTransform(seriesModel, item) {
     return item;
 }
 
-export function getAxisInfo(item, data, coordSys, seriesModel) {
-    var ret = {};
+export function getAxisInfo(
+    item: MarkerPositionOption,
+    data: List,
+    coordSys: CoordinateSystem,
+    seriesModel: SeriesModel
+) {
+    var ret = {} as MarkerAxisInfo;
 
     if (item.valueIndex != null || item.valueDim != null) {
         ret.valueDataDim = item.valueIndex != null
@@ -191,7 +194,7 @@ export function getAxisInfo(item, data, coordSys, seriesModel) {
     return ret;
 }
 
-function dataDimToCoordDim(seriesModel, dataDim) {
+function dataDimToCoordDim(seriesModel: SeriesModel, dataDim: string) {
     var data = seriesModel.getData();
     var dimensions = data.dimensions;
     dataDim = data.getDimension(dataDim);
@@ -206,29 +209,41 @@ function dataDimToCoordDim(seriesModel, dataDim) {
 /**
  * Filter data which is out of coordinateSystem range
  * [dataFilter description]
- * @param  {module:echarts/coord/*} [coordSys]
- * @param  {Object} item
- * @return {boolean}
  */
-export function dataFilter(coordSys, item) {
+export function dataFilter(
+    // Currently only polar and cartesian has containData.
+    coordSys: CoordinateSystem & {
+        containData?(data: ScaleDataValue[]): boolean
+    },
+    item: MarkerPositionOption
+) {
     // Alwalys return true if there is no coordSys
     return (coordSys && coordSys.containData && item.coord && !hasXOrY(item))
         ? coordSys.containData(item.coord) : true;
 }
 
-export function dimValueGetter(item, dimName, dataIndex, dimIndex) {
+export function dimValueGetter(
+    item: MarkerPositionOption,
+    dimName: string,
+    dataIndex: number,
+    dimIndex: number
+) {
     // x, y, radius, angle
     if (dimIndex < 2) {
-        return item.coord && item.coord[dimIndex];
+        return item.coord && item.coord[dimIndex] as ParsedValue;
     }
     return item.value;
 }
 
-export function numCalculate(data, valueDataDim, type) {
+export function numCalculate(
+    data: List,
+    valueDataDim: string,
+    type: MarkerStatisticType
+) {
     if (type === 'average') {
         var sum = 0;
         var count = 0;
-        data.each(valueDataDim, function (val, idx) {
+        data.each(valueDataDim, function (val: number, idx) {
             if (!isNaN(val)) {
                 sum += val;
                 count++;
@@ -241,6 +256,6 @@ export function numCalculate(data, valueDataDim, type) {
     }
     else {
         // max & min
-        return data.getDataExtent(valueDataDim, true)[type === 'max' ? 1 : 0];
+        return data.getDataExtent(valueDataDim)[type === 'max' ? 1 : 0];
     }
 }

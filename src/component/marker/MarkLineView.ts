@@ -17,101 +17,161 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
 import * as numberUtil from '../../util/number';
 import * as markerHelper from './markerHelper';
 import LineDraw from '../../chart/helper/LineDraw';
 import MarkerView from './MarkerView';
 import {getStackedDimension} from '../../data/helper/dataStackHelper';
+import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
+import MarkLineModel, { MarkLine2DDataItemOption, MarkLineOption } from './MarkLineModel';
+import { ScaleDataValue } from '../../util/types';
+import SeriesModel from '../../model/Series';
+import { __DEV__ } from '../../config';
+import { getECData } from '../../util/graphic';
+import ExtensionAPI from '../../ExtensionAPI';
+import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import GlobalModel from '../../model/Global';
+import MarkerModel from './MarkerModel';
+import {
+    isArray,
+    retrieve,
+    clone,
+    extend,
+    logError,
+    merge,
+    map,
+    defaults,
+    curry,
+    filter,
+    HashMap
+} from 'zrender/src/core/util';
+import ComponentView from '../../view/Component';
+import { makeInner } from '../../util/model';
 
-var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
+// Item option for configuring line and each end of symbol.
+// Line option. be merged from configuration of two ends.
+type MarkLineMergedItemOption = MarkLine2DDataItemOption[number]
+
+const inner = makeInner<{
+    // from data
+    from: List<MarkLineModel>
+    // to data
+    to: List<MarkLineModel>
+}, MarkLineModel>();
+
+var markLineTransform = function (
+    seriesModel: SeriesModel,
+    coordSys: CoordinateSystem,
+    mlModel: MarkLineModel,
+    item: MarkLineOption['data'][number]
+) {
     var data = seriesModel.getData();
-    // Special type markLine like 'min', 'max', 'average', 'median'
-    var mlType = item.type;
 
-    if (!zrUtil.isArray(item)
-        && (
+    let itemArray: MarkLineMergedItemOption[];
+    if (!isArray(item)) {
+        // Special type markLine like 'min', 'max', 'average', 'median'
+        var mlType = item.type;
+        if (
             mlType === 'min' || mlType === 'max' || mlType === 'average' || mlType === 'median'
             // In case
             // data: [{
             //   yAxis: 10
             // }]
             || (item.xAxis != null || item.yAxis != null)
-        )
-    ) {
-        var valueAxis;
-        var value;
+        ) {
 
-        if (item.yAxis != null || item.xAxis != null) {
-            valueAxis = coordSys.getAxis(item.yAxis != null ? 'y' : 'x');
-            value = zrUtil.retrieve(item.yAxis, item.xAxis);
+            var valueAxis;
+            var value;
+
+            if (item.yAxis != null || item.xAxis != null) {
+                valueAxis = coordSys.getAxis(item.yAxis != null ? 'y' : 'x');
+                value = retrieve(item.yAxis, item.xAxis);
+            }
+            else {
+                var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
+                valueAxis = axisInfo.valueAxis;
+                var valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
+                value = markerHelper.numCalculate(data, valueDataDim, mlType);
+            }
+            var valueIndex = valueAxis.dim === 'x' ? 0 : 1;
+            var baseIndex = 1 - valueIndex;
+
+            // Normized to 2d data with start and end point
+            var mlFrom = clone(item) as MarkLine2DDataItemOption[number];
+            var mlTo = {
+                coord: []
+            } as MarkLine2DDataItemOption[number];
+
+            mlFrom.type = null;
+
+            mlFrom.coord = [];
+            mlFrom.coord[baseIndex] = -Infinity;
+            mlTo.coord[baseIndex] = Infinity;
+
+            var precision = mlModel.get('precision');
+            if (precision >= 0 && typeof value === 'number') {
+                value = +value.toFixed(Math.min(precision, 20));
+            }
+
+            mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
+
+            itemArray = [mlFrom, mlTo, { // Extra option for tooltip and label
+                type: mlType,
+                valueIndex: item.valueIndex,
+                // Force to use the value of calculated value.
+                value: value
+            }];
         }
         else {
-            var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
-            valueAxis = axisInfo.valueAxis;
-            var valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
-            value = markerHelper.numCalculate(data, valueDataDim, mlType);
+            // Invalid data
+            if (__DEV__) {
+                logError('Invalid markLine data.');
+            }
+            itemArray = [];
         }
-        var valueIndex = valueAxis.dim === 'x' ? 0 : 1;
-        var baseIndex = 1 - valueIndex;
-
-        var mlFrom = zrUtil.clone(item);
-        var mlTo = {};
-
-        mlFrom.type = null;
-
-        mlFrom.coord = [];
-        mlTo.coord = [];
-        mlFrom.coord[baseIndex] = -Infinity;
-        mlTo.coord[baseIndex] = Infinity;
-
-        var precision = mlModel.get('precision');
-        if (precision >= 0 && typeof value === 'number') {
-            value = +value.toFixed(Math.min(precision, 20));
-        }
-
-        mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
-
-        item = [mlFrom, mlTo, { // Extra option for tooltip and label
-            type: mlType,
-            valueIndex: item.valueIndex,
-            // Force to use the value of calculated value.
-            value: value
-        }];
+    }
+    else {
+        itemArray = item;
     }
 
-    item = [
-        markerHelper.dataTransform(seriesModel, item[0]),
-        markerHelper.dataTransform(seriesModel, item[1]),
-        zrUtil.extend({}, item[2])
+    const normalizedItem = [
+        markerHelper.dataTransform(seriesModel, itemArray[0]),
+        markerHelper.dataTransform(seriesModel, itemArray[1]),
+        extend({}, itemArray[2])
     ];
 
     // Avoid line data type is extended by from(to) data type
-    item[2].type = item[2].type || '';
+    normalizedItem[2].type = normalizedItem[2].type || null;
 
     // Merge from option and to option into line option
-    zrUtil.merge(item[2], item[0]);
-    zrUtil.merge(item[2], item[1]);
+    merge(normalizedItem[2], normalizedItem[0]);
+    merge(normalizedItem[2], normalizedItem[1]);
 
-    return item;
+    return normalizedItem;
 };
 
-function isInifinity(val) {
-    return !isNaN(val) && !isFinite(val);
+function isInifinity(val: ScaleDataValue) {
+    return !isNaN(val as number) && !isFinite(val as number);
 }
 
 // If a markLine has one dim
-function ifMarkLineHasOnlyDim(dimIndex, fromCoord, toCoord, coordSys) {
+function ifMarkLineHasOnlyDim(
+    dimIndex: number,
+    fromCoord: ScaleDataValue[],
+    toCoord: ScaleDataValue[],
+    coordSys: CoordinateSystem
+) {
     var otherDimIndex = 1 - dimIndex;
     var dimName = coordSys.dimensions[dimIndex];
     return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex])
         && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
 }
 
-function markLineFilter(coordSys, item) {
+function markLineFilter(
+    coordSys: CoordinateSystem,
+    item: MarkLine2DDataItemOption
+) {
     if (coordSys.type === 'cartesian2d') {
         var fromCoord = item[0].coord;
         var toCoord = item[1].coord;
@@ -134,10 +194,14 @@ function markLineFilter(coordSys, item) {
 }
 
 function updateSingleMarkerEndLayout(
-    data, idx, isFrom, seriesModel, api
+    data: List<MarkLineModel>,
+    idx: number,
+    isFrom: boolean,
+    seriesModel: SeriesModel,
+    api: ExtensionAPI
 ) {
     var coordSys = seriesModel.coordinateSystem;
-    var itemModel = data.getItemModel(idx);
+    var itemModel = data.getItemModel<MarkLine2DDataItemOption[number]>(idx);
 
     var point;
     var xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
@@ -168,7 +232,7 @@ function updateSingleMarkerEndLayout(
         //      type: 'average'
         //    }]
         //  }
-        if (coordSys.type === 'cartesian2d') {
+        if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
             var xAxis = coordSys.getAxis('x');
             var yAxis = coordSys.getAxis('y');
             var dims = coordSys.dimensions;
@@ -192,43 +256,20 @@ function updateSingleMarkerEndLayout(
     data.setItemLayout(idx, point);
 }
 
-export default MarkerView.extend({
+class MarkLineView extends MarkerView {
 
-    type: 'markLine',
+    static type = 'markLine'
+    type = MarkLineView.type
 
-    // updateLayout: function (markLineModel, ecModel, api) {
-    //     ecModel.eachSeries(function (seriesModel) {
-    //         var mlModel = seriesModel.markLineModel;
-    //         if (mlModel) {
-    //             var mlData = mlModel.getData();
-    //             var fromData = mlModel.__from;
-    //             var toData = mlModel.__to;
-    //             // Update visual and layout of from symbol and to symbol
-    //             fromData.each(function (idx) {
-    //                 updateSingleMarkerEndLayout(fromData, idx, true, seriesModel, api);
-    //                 updateSingleMarkerEndLayout(toData, idx, false, seriesModel, api);
-    //             });
-    //             // Update layout of line
-    //             mlData.each(function (idx) {
-    //                 mlData.setItemLayout(idx, [
-    //                     fromData.getItemLayout(idx),
-    //                     toData.getItemLayout(idx)
-    //                 ]);
-    //             });
+    markerGroupMap: HashMap<LineDraw>
 
-    //             this.markerGroupMap.get(seriesModel.id).updateLayout();
-
-    //         }
-    //     }, this);
-    // },
-
-    updateTransform: function (markLineModel, ecModel, api) {
+    updateTransform(markLineModel: MarkLineModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
-            var mlModel = seriesModel.markLineModel;
+            var mlModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markLine') as MarkLineModel;
             if (mlModel) {
                 var mlData = mlModel.getData();
-                var fromData = mlModel.__from;
-                var toData = mlModel.__to;
+                var fromData = inner(mlModel).from;
+                var toData = inner(mlModel).to;
                 // Update visual and layout of from symbol and to symbol
                 fromData.each(function (idx) {
                     updateSingleMarkerEndLayout(fromData, idx, true, seriesModel, api);
@@ -246,9 +287,14 @@ export default MarkerView.extend({
 
             }
         }, this);
-    },
+    }
 
-    renderSeries: function (seriesModel, mlModel, ecModel, api) {
+    renderSeries(
+        seriesModel: SeriesModel,
+        mlModel: MarkLineModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
         var coordSys = seriesModel.coordinateSystem;
         var seriesId = seriesModel.id;
         var seriesData = seriesModel.getData();
@@ -264,17 +310,17 @@ export default MarkerView.extend({
         var toData = mlData.to;
         var lineData = mlData.line;
 
-        mlModel.__from = fromData;
-        mlModel.__to = toData;
+        inner(mlModel).from = fromData;
+        inner(mlModel).to = toData;
         // Line data for tooltip and formatter
         mlModel.setData(lineData);
 
         var symbolType = mlModel.get('symbol');
         var symbolSize = mlModel.get('symbolSize');
-        if (!zrUtil.isArray(symbolType)) {
+        if (!isArray(symbolType)) {
             symbolType = [symbolType, symbolType];
         }
-        if (typeof symbolSize === 'number') {
+        if (!isArray(symbolSize)) {
             symbolSize = [symbolSize, symbolSize];
         }
 
@@ -286,7 +332,7 @@ export default MarkerView.extend({
 
         // Update visual and layout of line
         lineData.each(function (idx) {
-            var lineColor = lineData.getItemModel(idx).get('lineStyle.color');
+            var lineColor = lineData.getItemModel<MarkLineMergedItemOption>(idx).get(['lineStyle', 'color']);
             lineData.setItemVisual(idx, {
                 color: lineColor || fromData.getItemVisual(idx, 'color')
             });
@@ -309,46 +355,44 @@ export default MarkerView.extend({
         // FIXME
         mlData.line.eachItemGraphicEl(function (el, idx) {
             el.traverse(function (child) {
-                child.dataModel = mlModel;
+                getECData(child).dataModel = mlModel;
             });
         });
 
-        function updateDataVisualAndLayout(data, idx, isFrom) {
-            var itemModel = data.getItemModel(idx);
+        function updateDataVisualAndLayout(
+            data: List<MarkLineModel>,
+            idx: number,
+            isFrom: boolean
+        ) {
+            var itemModel = data.getItemModel<MarkLineMergedItemOption>(idx);
 
             updateSingleMarkerEndLayout(
                 data, idx, isFrom, seriesModel, api
             );
 
             data.setItemVisual(idx, {
-                symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
-                symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
-                color: itemModel.get('itemStyle.color') || seriesData.getVisual('color')
+                symbolSize: itemModel.get('symbolSize') || (symbolSize as number[])[isFrom ? 0 : 1],
+                symbol: itemModel.get('symbol', true) || (symbolType as string[])[isFrom ? 0 : 1],
+                color: itemModel.get(['itemStyle', 'color']) || seriesData.getVisual('color')
             });
         }
 
-        lineDraw.__keep = true;
+        this.markKeep(lineDraw);
 
         lineDraw.group.silent = mlModel.get('silent') || seriesModel.get('silent');
     }
-});
+}
 
-/**
- * @inner
- * @param {module:echarts/coord/*} coordSys
- * @param {module:echarts/model/Series} seriesModel
- * @param {module:echarts/model/Model} mpModel
- */
-function createList(coordSys, seriesModel, mlModel) {
+function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlModel: MarkLineModel) {
 
     var coordDimsInfos;
     if (coordSys) {
-        coordDimsInfos = zrUtil.map(coordSys && coordSys.dimensions, function (coordDim) {
+        coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
             var info = seriesModel.getData().getDimensionInfo(
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return zrUtil.defaults({name: coordDim}, info);
+            return defaults({name: coordDim}, info);
         });
     }
     else {
@@ -363,33 +407,33 @@ function createList(coordSys, seriesModel, mlModel) {
     // No dimensions
     var lineData = new List([], mlModel);
 
-    var optData = zrUtil.map(mlModel.get('data'), zrUtil.curry(
+    var optData = map(mlModel.get('data'), curry(
         markLineTransform, seriesModel, coordSys, mlModel
     ));
     if (coordSys) {
-        optData = zrUtil.filter(
-            optData, zrUtil.curry(markLineFilter, coordSys)
+        optData = filter(
+            optData, curry(markLineFilter, coordSys)
         );
     }
-    var dimValueGetter = coordSys ? markerHelper.dimValueGetter : function (item) {
+    var dimValueGetter = coordSys ? markerHelper.dimValueGetter : function (item: MarkLineMergedItemOption) {
         return item.value;
     };
     fromData.initData(
-        zrUtil.map(optData, function (item) {
+        map(optData, function (item) {
             return item[0];
         }),
         null,
         dimValueGetter
     );
     toData.initData(
-        zrUtil.map(optData, function (item) {
+        map(optData, function (item) {
             return item[1];
         }),
         null,
         dimValueGetter
     );
     lineData.initData(
-        zrUtil.map(optData, function (item) {
+        map(optData, function (item) {
             return item[2];
         })
     );
@@ -401,3 +445,5 @@ function createList(coordSys, seriesModel, mlModel) {
         line: lineData
     };
 }
+
+ComponentView.registerClass(MarkLineView);

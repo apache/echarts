@@ -43,7 +43,7 @@ import {
 
 var inner = makeInner<{
     defaultOption: ComponentOption
-}>();
+}, ComponentModel>();
 
 class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Model<Opt> {
 

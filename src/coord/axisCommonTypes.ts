@@ -19,7 +19,7 @@
 
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
-    AreaStyleOption, ComponentOption, OptionDataValue, ColorString,
+    AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary
 } from '../util/types';
 

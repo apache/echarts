@@ -161,3 +161,9 @@ export interface CoordinateSystemHostModel extends ComponentModel {
 export interface CoordinateSystemClipArea {
     contain(x: number, y: number): boolean
 }
+
+export function isCoordinateSystemType<T extends CoordinateSystem, S = T['type']>(
+    coordSys: CoordinateSystem, type: S
+): coordSys is T {
+    return (coordSys.type as unknown as S) === type;
+}
