@@ -1023,10 +1023,10 @@ class ECharts {
             return;
         }
 
-        var silent = (opt as any).silent;
+        var silent = opt.silent;
         doDispatchAction.call(this, payload, silent);
 
-        var flush = (opt as any).flush;
+        var flush = opt.flush;
         if (flush) {
             this._zr.flush();
         }

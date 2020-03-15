@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import {
@@ -26,17 +24,158 @@ import {
     sizeCalculable,
     mergeLayoutParam
 } from '../../util/layout';
+import Calendar from './Calendar';
+import {
+    ComponentOption,
+    BoxLayoutOptionMixin,
+    LayoutOrient,
+    LineStyleOption,
+    ItemStyleOption,
+    LabelOption,
+    OptionDataValueDate
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import Model from '../../model/Model';
 
-var CalendarModel = ComponentModel.extend({
+export interface CalendarMonthLabelFormatterCallbackParams {
+    nameMap: string
+    yyyy: string
+    yy: string
+    /**
+     * Month string. With 0 prefix.
+     */
+    MM: string
+    /**
+     * Month number
+     */
+    M: number
+}
 
-    type: 'calendar',
+export interface CalendarYearLabelFormatterCallbackParams {
+    nameMap: string
+    /**
+     * Start year
+     */
+    start: string
+    /**
+     * End year
+     */
+    end: string
+}
+
+export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
+    cellSize?: number | 'auto' | (number | 'auto')[]
+    orient?: LayoutOrient
+
+    splitLine?: {
+        show?: boolean
+        lineStyle?: LineStyleOption
+    }
+
+    itemStyle?: ItemStyleOption
+    /**
+     * // one year
+     * range: 2017
+     * // one month
+     * range: '2017-02'
+     * //  a range
+     * range: ['2017-01-02', '2017-02-23']
+     * // note: they will be identified as ['2017-01-01', '2017-02-01']
+     * range: ['2017-01', '2017-02']
+     */
+    range?: OptionDataValueDate | (OptionDataValueDate)[]
+
+    dayLabel?: Omit<LabelOption, 'position'> & {
+        /**
+         * First day of week.
+         */
+        firstDay?: number
+
+        /**
+         * Margin between day label and axis line.
+         * Can be percent string of cell size.
+         */
+        margin?: number | string
+
+        /**
+         * Position of week, at the beginning or end of the range.
+         */
+        position?: 'start' | 'end'
+
+        /**
+         * Week text content, defaults to 'en'; It supports Chinese, English, and custom; index 0 always means Sunday
+         * en: shortcut to English  ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+         * cn: shortcut to Chinese ['日', '一', '二', '三', '四', '五', '六']
+         */
+        nameMap?: 'en' | 'cn' | string[]
+    }
+
+    monthLabel?: Omit<LabelOption, 'position'> & {
+        /**
+         * Margin between month label and axis line.
+         */
+        margin?: number
+
+        /**
+         * Position of month label, at the beginning or end of the range.
+         */
+        position?: 'start' | 'end'
+
+        /**
+         * Month text content, defaults to 'en'; It supports Chinese, English, and custom; Index 0 always means Jan;
+         */
+        nameMap?: 'en' | 'cn' | string[]
+
+        formatter?: string | ((params: CalendarMonthLabelFormatterCallbackParams) => string)
+    }
+
+    yearLabel?: Omit<LabelOption, 'position'> & {
+        /**
+         * Margin between year label and axis line.
+         */
+        margin?: number
+
+        /**
+         * Position of year label, at the beginning or end of the range.
+         */
+        position?: 'top' | 'bottom' | 'left' | 'right'
+
+        formatter?: string | ((params: CalendarYearLabelFormatterCallbackParams) => string)
+    }
+}
+
+class CalendarModel extends ComponentModel<CalendarOption> {
+    static type = 'calendar'
+    type = CalendarModel.type
+
+    coordinateSystem: Calendar
 
     /**
-     * @type {module:echarts/coord/calendar/Calendar}
+     * @override
      */
-    coordinateSystem: null,
+    init(option: CalendarOption, parentModel: Model, ecModel: GlobalModel) {
+        var inputPositionParams = getLayoutParams(option);
 
-    defaultOption: {
+        super.init.apply(this, arguments as any);
+
+        mergeAndNormalizeLayoutParams(option, inputPositionParams);
+    }
+
+    /**
+     * @override
+     */
+    mergeOption(option: CalendarOption) {
+        super.mergeOption.apply(this, arguments as any);
+
+        mergeAndNormalizeLayoutParams(this.option, option);
+    }
+
+    getCellSize() {
+        // Has been normalized
+        return this.option.cellSize as (number | 'auto')[];
+    }
+
+    static defaultOption: CalendarOption = {
         zlevel: 0,
         z: 2,
         left: 80,
@@ -68,7 +207,6 @@ var CalendarModel = ComponentModel.extend({
         dayLabel: {
             show: true,
 
-            // a week first day
             firstDay: 0,
 
             // start end
@@ -108,53 +246,41 @@ var CalendarModel = ComponentModel.extend({
             fontWeight: 'bolder',
             fontSize: 20
         }
-    },
-
-    /**
-     * @override
-     */
-    init: function (option, parentModel, ecModel, extraOpt) {
-        var inputPositionParams = getLayoutParams(option);
-
-        CalendarModel.superApply(this, 'init', arguments);
-
-        mergeAndNormalizeLayoutParams(option, inputPositionParams);
-    },
-
-    /**
-     * @override
-     */
-    mergeOption: function (option, extraOpt) {
-        CalendarModel.superApply(this, 'mergeOption', arguments);
-
-        mergeAndNormalizeLayoutParams(this.option, option);
     }
-});
+}
 
-function mergeAndNormalizeLayoutParams(target, raw) {
+
+function mergeAndNormalizeLayoutParams(target: CalendarOption, raw: BoxLayoutOptionMixin) {
     // Normalize cellSize
     var cellSize = target.cellSize;
+    var cellSizeArr: (number | 'auto')[];
 
     if (!zrUtil.isArray(cellSize)) {
-        cellSize = target.cellSize = [cellSize, cellSize];
+        cellSizeArr = target.cellSize = [cellSize, cellSize];
     }
-    else if (cellSize.length === 1) {
-        cellSize[1] = cellSize[0];
+    else {
+        cellSizeArr = cellSize;
+    }
+
+    if (cellSizeArr.length === 1) {
+        cellSizeArr[1] = cellSizeArr[0];
     }
 
     var ignoreSize = zrUtil.map([0, 1], function (hvIdx) {
-        // If user have set `width` or both `left` and `right`, cellSize
+        // If user have set `width` or both `left` and `right`, cellSizeArr
         // will be automatically set to 'auto', otherwise the default
-        // setting of cellSize will make `width` setting not work.
+        // setting of cellSizeArr will make `width` setting not work.
         if (sizeCalculable(raw, hvIdx)) {
-            cellSize[hvIdx] = 'auto';
+            cellSizeArr[hvIdx] = 'auto';
         }
-        return cellSize[hvIdx] != null && cellSize[hvIdx] !== 'auto';
+        return cellSizeArr[hvIdx] != null && cellSizeArr[hvIdx] !== 'auto';
     });
 
     mergeLayoutParam(target, raw, {
         type: 'box', ignoreSize: ignoreSize
     });
 }
+
+ComponentModel.registerClass(CalendarModel);
 
 export default CalendarModel;

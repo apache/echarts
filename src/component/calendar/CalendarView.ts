@@ -17,13 +17,17 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import * as formatUtil from '../../util/format';
 import * as numberUtil from '../../util/number';
+import CalendarModel from '../../coord/calendar/CalendarModel';
+import {CalendarParsedDateRangeInfo, CalendarParsedDateInfo} from '../../coord/calendar/Calendar';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { LayoutOrient, OptionDataValueDate, ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
+import ComponentView from '../../view/Component';
+import { StyleProps } from 'zrender/src/graphic/Style';
 
 var MONTH_TEXT = {
     EN: [
@@ -45,35 +49,32 @@ var WEEK_TEXT = {
     CN: ['日', '一', '二', '三', '四', '五', '六']
 };
 
-export default echarts.extendComponentView({
+class CalendarView extends ComponentView {
 
-    type: 'calendar',
+    static type = 'calendar'
+    type = CalendarView.type
 
     /**
      * top/left line points
-     *  @private
      */
-    _tlpoints: null,
+    private _tlpoints: number[][]
 
     /**
      * bottom/right line points
-     *  @private
      */
-    _blpoints: null,
+    private _blpoints: number[][]
 
     /**
      * first day of month
-     *  @private
      */
-    _firstDayOfMonth: null,
+    private _firstDayOfMonth: CalendarParsedDateInfo[]
 
     /**
      * first day point of month
-     *  @private
      */
-    _firstDayPoints: null,
+    private _firstDayPoints: number[][]
 
-    render: function (calendarModel, ecModel, api) {
+    render(calendarModel: CalendarModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
         var group = this.group;
 
@@ -95,10 +96,10 @@ export default echarts.extendComponentView({
         this._renderMonthText(calendarModel, orient, group);
 
         this._renderWeekText(calendarModel, rangeData, orient, group);
-    },
+    }
 
     // render day rect
-    _renderDayRect: function (calendarModel, rangeData, group) {
+    _renderDayRect(calendarModel: CalendarModel, rangeData: CalendarParsedDateRangeInfo, group: graphic.Group) {
         var coordSys = calendarModel.coordinateSystem;
         var itemRectStyleModel = calendarModel.getModel('itemStyle').getItemStyle();
         var sw = coordSys.getCellWidth();
@@ -126,17 +127,22 @@ export default echarts.extendComponentView({
             group.add(rect);
         }
 
-    },
+    }
 
     // render separate line
-    _renderLines: function (calendarModel, rangeData, orient, group) {
+    _renderLines(
+        calendarModel: CalendarModel,
+        rangeData: CalendarParsedDateRangeInfo,
+        orient: LayoutOrient,
+        group: graphic.Group
+    ) {
 
         var self = this;
 
         var coordSys = calendarModel.coordinateSystem;
 
-        var lineStyleModel = calendarModel.getModel('splitLine.lineStyle').getLineStyle();
-        var show = calendarModel.get('splitLine.show');
+        var lineStyleModel = calendarModel.getModel(['splitLine', 'lineStyle']).getLineStyle();
+        var show = calendarModel.get(['splitLine', 'show']);
 
         var lineWidth = lineStyleModel.lineWidth;
 
@@ -162,7 +168,7 @@ export default echarts.extendComponentView({
 
         addPoints(coordSys.getNextNDay(rangeData.end.time, 1).formatedDate);
 
-        function addPoints(date) {
+        function addPoints(date: OptionDataValueDate) {
 
             self._firstDayOfMonth.push(coordSys.getDateInfo(date));
             self._firstDayPoints.push(coordSys.dataToRect([date], false).tl);
@@ -182,10 +188,10 @@ export default echarts.extendComponentView({
         // render bottom/right line
         show && this._drawSplitline(self._getEdgesPoints(self._blpoints, lineWidth, orient), lineStyleModel, group);
 
-    },
+    }
 
     // get points at both ends
-    _getEdgesPoints: function (points, lineWidth, orient) {
+    _getEdgesPoints(points: number[][], lineWidth: number, orient: LayoutOrient) {
         var rs = [points[0].slice(), points[points.length - 1].slice()];
         var idx = orient === 'horizontal' ? 0 : 1;
 
@@ -194,33 +200,33 @@ export default echarts.extendComponentView({
         rs[1][idx] = rs[1][idx] + lineWidth / 2;
 
         return rs;
-    },
+    }
 
     // render split line
-    _drawSplitline: function (points, lineStyleModel, group) {
+    _drawSplitline(points: number[][], lineStyle: StyleProps, group: graphic.Group) {
 
         var poyline = new graphic.Polyline({
             z2: 20,
             shape: {
                 points: points
             },
-            style: lineStyleModel
+            style: lineStyle
         });
 
         group.add(poyline);
-    },
+    }
 
     // render month line of one week points
-    _getLinePointsOfOneWeek: function (calendarModel, date, orient) {
+    _getLinePointsOfOneWeek(calendarModel: CalendarModel, date: OptionDataValueDate, orient: LayoutOrient) {
 
         var coordSys = calendarModel.coordinateSystem;
-        date = coordSys.getDateInfo(date);
+        var parsedDate = coordSys.getDateInfo(date);
 
         var points = [];
 
         for (var i = 0; i < 7; i++) {
 
-            var tmpD = coordSys.getNextNDay(date.time, i);
+            var tmpD = coordSys.getNextNDay(parsedDate.time, i);
             var point = coordSys.dataToRect([tmpD.time], false);
 
             points[2 * tmpD.day] = point.tl;
@@ -229,9 +235,12 @@ export default echarts.extendComponentView({
 
         return points;
 
-    },
+    }
 
-    _formatterLabel: function (formatter, params) {
+    _formatterLabel<T extends { nameMap: string }>(
+        formatter: string | ((params: T) => string),
+        params: T
+    ) {
 
         if (typeof formatter === 'string' && formatter) {
             return formatUtil.formatTplSimple(formatter, params);
@@ -243,12 +252,18 @@ export default echarts.extendComponentView({
 
         return params.nameMap;
 
-    },
+    }
 
-    _yearTextPositionControl: function (textEl, point, orient, position, margin) {
+    _yearTextPositionControl(
+        textEl: graphic.Text,
+        point: number[],
+        orient: LayoutOrient,
+        position: 'left' | 'right' | 'top' | 'bottom',
+        margin: number
+    ) {
 
         point = point.slice();
-        var aligns = ['center', 'bottom'];
+        var aligns: [ZRTextAlign, ZRTextVerticalAlign] = ['center', 'bottom'];
 
         if (position === 'bottom') {
             point[1] += margin;
@@ -278,10 +293,15 @@ export default echarts.extendComponentView({
                 textVerticalAlign: aligns[1]
             }
         };
-    },
+    }
 
     // render year
-    _renderYearText: function (calendarModel, rangeData, orient, group) {
+    _renderYearText(
+        calendarModel: CalendarModel,
+        rangeData: CalendarParsedDateRangeInfo,
+        orient: LayoutOrient,
+        group: graphic.Group
+    ) {
         var yearLabel = calendarModel.getModel('yearLabel');
 
         if (!yearLabel.get('show')) {
@@ -329,11 +349,17 @@ export default echarts.extendComponentView({
         yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
         group.add(yearText);
-    },
+    }
 
-    _monthTextPositionControl: function (point, isCenter, orient, position, margin) {
-        var align = 'left';
-        var vAlign = 'top';
+    _monthTextPositionControl(
+        point: number[],
+        isCenter: boolean,
+        orient: LayoutOrient,
+        position: 'start' | 'end',
+        margin: number
+    ) {
+        var align: ZRTextAlign = 'left';
+        var vAlign: ZRTextVerticalAlign = 'top';
         var x = point[0];
         var y = point[1];
 
@@ -366,10 +392,10 @@ export default echarts.extendComponentView({
             textAlign: align,
             textVerticalAlign: vAlign
         };
-    },
+    }
 
     // render month and year text
-    _renderMonthText: function (calendarModel, orient, group) {
+    _renderMonthText(calendarModel: CalendarModel, orient: LayoutOrient, group: graphic.Group) {
         var monthLabel = calendarModel.getModel('monthLabel');
 
         if (!monthLabel.get('show')) {
@@ -384,7 +410,7 @@ export default echarts.extendComponentView({
         var termPoints = [this._tlpoints, this._blpoints];
 
         if (zrUtil.isString(nameMap)) {
-            nameMap = MONTH_TEXT[nameMap.toUpperCase()] || [];
+            nameMap = MONTH_TEXT[nameMap.toUpperCase() as 'CN' | 'EN'] || [];
         }
 
         var idx = pos === 'start' ? 0 : 1;
@@ -422,9 +448,15 @@ export default echarts.extendComponentView({
 
             group.add(monthText);
         }
-    },
+    }
 
-    _weekTextPositionControl: function (point, orient, position, margin, cellSize) {
+    _weekTextPositionControl(
+        point: number[],
+        orient: LayoutOrient,
+        position: 'start' | 'end',
+        margin: number,
+        cellSize: number[]
+    ) {
         var align = 'center';
         var vAlign = 'middle';
         var x = point[0];
@@ -446,10 +478,15 @@ export default echarts.extendComponentView({
             textAlign: align,
             textVerticalAlign: vAlign
         };
-    },
+    }
 
     // render weeks
-    _renderWeekText: function (calendarModel, rangeData, orient, group) {
+    _renderWeekText(
+        calendarModel: CalendarModel,
+        rangeData: CalendarParsedDateRangeInfo,
+        orient: LayoutOrient,
+        group: graphic.Group
+    ) {
         var dayLabel = calendarModel.getModel('dayLabel');
 
         if (!dayLabel.get('show')) {
@@ -463,7 +500,7 @@ export default echarts.extendComponentView({
         var firstDayOfWeek = coordSys.getFirstDayOfWeek();
 
         if (zrUtil.isString(nameMap)) {
-            nameMap = WEEK_TEXT[nameMap.toUpperCase()] || [];
+            nameMap = WEEK_TEXT[nameMap.toUpperCase() as 'CN' | 'EN'] || [];
         }
 
         var start = coordSys.getNextNDay(
@@ -495,4 +532,6 @@ export default echarts.extendComponentView({
             group.add(weekText);
         }
     }
-});
+}
+
+ComponentView.registerClass(CalendarView);

@@ -17,65 +17,138 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
-import CoordinateSystem from '../../CoordinateSystem';
+import { BoundingRect } from 'zrender/src/export';
+import CalendarModel from './CalendarModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import {
+    LayoutOrient,
+    ScaleDataValue,
+    OptionDataValueDate,
+    SeriesOption,
+    SeriesOnCalendarOptionMixin
+} from '../../util/types';
+import { ParsedModelFinder } from '../../util/model';
+import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
+import { __DEV__ } from '../../config';
+import SeriesModel from '../../model/Series';
+import CoordinateSystemManager from '../../CoordinateSystem';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 
 // (24*60*60*1000)
 var PROXIMATE_ONE_DAY = 86400000;
 
-/**
- * Calendar
- *
- * @constructor
- *
- * @param {Object} calendarModel calendarModel
- * @param {Object} ecModel       ecModel
- * @param {Object} api           api
- */
-function Calendar(calendarModel, ecModel, api) {
-    this._model = calendarModel;
+
+export interface CalendarParsedDateRangeInfo {
+    range: [string, string],
+    start: CalendarParsedDateInfo
+    end: CalendarParsedDateInfo
+    allDay: number
+    weeks: number
+    nthWeek: number
+    fweek: number
+    lweek: number
 }
 
-Calendar.prototype = {
+export interface CalendarParsedDateInfo {
+    /**
+     * local full year, eg., '1940'
+     */
+    y: string
+    /**
+     * local month, from '01' ot '12',
+     */
+    m: string
+    /**
+     * local date, from '01' to '31' (if exists),
+     */
+    d: string
+    /**
+     * It is not date.getDay(). It is the location of the cell in a week, from 0 to 6,
+     */
+    day: number
+    /**
+     * Timestamp
+     */
+    time: number
+    /**
+     * yyyy-MM-dd
+     */
+    formatedDate: string
+    /**
+     * The original date object
+     */
+    date: Date
+}
 
-    constructor: Calendar,
+export interface CalendarCellRect {
+    contentShape: RectLike
+    center: number[]
+    tl: number[]
+    tr: number[]
+    br: number[]
+    bl: number[]
+}
 
-    type: 'calendar',
+class Calendar implements CoordinateSystem, CoordinateSystemMaster {
 
-    dimensions: ['time', 'value'],
+    static readonly dimensions = ['time', 'value'];
+    static getDimensionInfo() {
+        return [{
+            name: 'time', type: 'time'
+        }, 'value'];
+    }
 
+    readonly type = 'calendar'
+
+    readonly dimensions = Calendar.dimensions
+
+    private _model: CalendarModel
+
+    private _rect: BoundingRect;
+
+    private _sw: number
+    private _sh: number
+    private _orient: LayoutOrient
+
+    private _firstDayOfWeek: number
+
+    private _rangeInfo: CalendarParsedDateRangeInfo
+
+    private _lineWidth: number
+
+    constructor(calendarModel: CalendarModel, ecModel: GlobalModel, api: ExtensionAPI) {
+        this._model = calendarModel;
+    }
     // Required in createListFromData
-    getDimensionsInfo: function () {
-        return [{name: 'time', type: 'time'}, 'value'];
-    },
+    getDimensionsInfo = Calendar.getDimensionInfo
 
-    getRangeInfo: function () {
+    getRangeInfo() {
         return this._rangeInfo;
-    },
+    }
 
-    getModel: function () {
+    getModel() {
         return this._model;
-    },
+    }
 
-    getRect: function () {
+    getRect() {
         return this._rect;
-    },
+    }
 
-    getCellWidth: function () {
+    getCellWidth() {
         return this._sw;
-    },
+    }
 
-    getCellHeight: function () {
+    getCellHeight() {
         return this._sh;
-    },
+    }
 
-    getOrient: function () {
+    getOrient() {
         return this._orient;
-    },
+    }
 
     /**
      * getFirstDayOfWeek
@@ -86,53 +159,42 @@ Calendar.prototype = {
      *
      * @return {number}
      */
-    getFirstDayOfWeek: function () {
+    getFirstDayOfWeek() {
         return this._firstDayOfWeek;
-    },
+    }
 
     /**
      * get date info
-     *
-     * @param  {string|number} date date
-     * @return {Object}
-     * {
-     *      y: string, local full year, eg., '1940',
-     *      m: string, local month, from '01' ot '12',
-     *      d: string, local date, from '01' to '31' (if exists),
-     *      day: It is not date.getDay(). It is the location of the cell in a week, from 0 to 6,
-     *      time: timestamp,
-     *      formatedDate: string, yyyy-MM-dd,
-     *      date: original date object.
      * }
      */
-    getDateInfo: function (date) {
+    getDateInfo(date: OptionDataValueDate): CalendarParsedDateInfo {
 
         date = numberUtil.parseDate(date);
 
         var y = date.getFullYear();
 
         var m = date.getMonth() + 1;
-        m = m < 10 ? '0' + m : m;
+        var mStr = m < 10 ? '0' + m : '' + m;
 
         var d = date.getDate();
-        d = d < 10 ? '0' + d : d;
+        var dStr = d < 10 ? '0' + d : '' + d;
 
         var day = date.getDay();
 
         day = Math.abs((day + 7 - this.getFirstDayOfWeek()) % 7);
 
         return {
-            y: y,
-            m: m,
-            d: d,
+            y: y + '',
+            m: mStr,
+            d: dStr,
             day: day,
             time: date.getTime(),
-            formatedDate: y + '-' + m + '-' + d,
+            formatedDate: y + '-' + mStr + '-' + dStr,
             date: date
         };
-    },
+    }
 
-    getNextNDay: function (date, n) {
+    getNextNDay(date: OptionDataValueDate, n: number) {
         n = n || 0;
         if (n === 0) {
             return this.getDateInfo(date);
@@ -142,9 +204,9 @@ Calendar.prototype = {
         date.setDate(date.getDate() + n);
 
         return this.getDateInfo(date);
-    },
+    }
 
-    update: function (ecModel, api) {
+    update(ecModel: GlobalModel, api: ExtensionAPI) {
 
         this._firstDayOfWeek = +this._model.getModel('dayLabel').get('firstDay');
         this._orient = this._model.get('orient');
@@ -153,12 +215,12 @@ Calendar.prototype = {
 
         this._rangeInfo = this._getRangeInfo(this._initRangeOption());
         var weeks = this._rangeInfo.weeks || 1;
-        var whNames = ['width', 'height'];
-        var cellSize = this._model.get('cellSize').slice();
+        var whNames = ['width', 'height'] as const;
+        var cellSize = this._model.getCellSize().slice();
         var layoutParams = this._model.getBoxLayoutParams();
         var cellNumbers = this._orient === 'horizontal' ? [weeks, 7] : [7, weeks];
 
-        zrUtil.each([0, 1], function (idx) {
+        zrUtil.each([0, 1] as const, function (idx) {
             if (cellSizeSpecified(cellSize, idx)) {
                 layoutParams[whNames[idx]] = cellSize[idx] * cellNumbers[idx];
             }
@@ -176,24 +238,20 @@ Calendar.prototype = {
             }
         });
 
-        function cellSizeSpecified(cellSize, idx) {
+        function cellSizeSpecified(cellSize: (number | 'auto')[], idx: number): cellSize is number[] {
             return cellSize[idx] != null && cellSize[idx] !== 'auto';
         }
 
-        this._sw = cellSize[0];
-        this._sh = cellSize[1];
-    },
+        // Has been calculated out number.
+        this._sw = cellSize[0] as number;
+        this._sh = cellSize[1] as number;
+    }
 
 
     /**
      * Convert a time data(time, value) item to (x, y) point.
-     *
-     * @override
-     * @param  {Array|number} data data
-     * @param  {boolean} [clamp=true] out of range
-     * @return {Array} point
      */
-    dataToPoint: function (data, clamp) {
+    dataToPoint(data: OptionDataValueDate | OptionDataValueDate[], clamp?: boolean) {
         zrUtil.isArray(data) && (data = data[0]);
         clamp == null && (clamp = true);
 
@@ -225,30 +283,22 @@ Calendar.prototype = {
             this._rect.y + week * this._sh + this._sh / 2
         ];
 
-    },
+    }
 
     /**
      * Convert a (x, y) point to time data
-     *
-     * @override
-     * @param  {string} point point
-     * @return {string}       data
      */
-    pointToData: function (point) {
+    pointToData(point: number[]): number {
 
         var date = this.pointToDate(point);
 
         return date && date.time;
-    },
+    }
 
     /**
      * Convert a time date item to (x, y) four point.
-     *
-     * @param  {Array} data  date[0] is date
-     * @param  {boolean} [clamp=true]  out of range
-     * @return {Object}       point
      */
-    dataToRect: function (data, clamp) {
+    dataToRect(data: OptionDataValueDate | OptionDataValueDate[], clamp?: boolean): CalendarCellRect {
         var point = this.dataToPoint(data, clamp);
 
         return {
@@ -282,7 +332,7 @@ Calendar.prototype = {
             ]
 
         };
-    },
+    }
 
     /**
      * Convert a (x, y) point to time date
@@ -290,7 +340,7 @@ Calendar.prototype = {
      * @param  {Array} point point
      * @return {Object}       date
      */
-    pointToDate: function (point) {
+    pointToDate(point: number[]): CalendarParsedDateInfo {
         var nthX = Math.floor((point[0] - this._rect.x) / this._sw) + 1;
         var nthY = Math.floor((point[1] - this._rect.y) / this._sh) + 1;
         var range = this._rangeInfo.range;
@@ -300,59 +350,77 @@ Calendar.prototype = {
         }
 
         return this._getDateByWeeksAndDay(nthX, nthY - 1, range);
-    },
+    }
 
-    /**
-     * @inheritDoc
-     */
-    convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
+    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]) {
+        const coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.dataToPoint(value) : null;
+    }
 
-    /**
-     * @inheritDoc
-     */
-    convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
+    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
+        const coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.pointToData(pixel) : null;
+    }
+
+    containPoint(point: number[]): boolean {
+        console.warn('Not implemented.');
+        return false;
+    }
 
     /**
      * initRange
-     *
-     * @private
-     * @return {Array} [start, end]
+     * Normalize to an [start, end] array
      */
-    _initRangeOption: function () {
+    private _initRangeOption(): OptionDataValueDate[] {
         var range = this._model.get('range');
+        var normalizedRange: OptionDataValueDate[];
 
-        var rg = range;
-
-        if (zrUtil.isArray(rg) && rg.length === 1) {
-            rg = rg[0];
+        // Convert [1990] to 1990
+        if (zrUtil.isArray(range) && range.length === 1) {
+            range = range[0];
         }
 
-        if (/^\d{4}$/.test(rg)) {
-            range = [rg + '-01-01', rg + '-12-31'];
+        if (!zrUtil.isArray(range)) {
+            let rangeStr = range.toString();
+            // One year.
+            if (/^\d{4}$/.test(rangeStr)) {
+                normalizedRange = [rangeStr + '-01-01', rangeStr + '-12-31'];
+            }
+            // One month
+            if (/^\d{4}[\/|-]\d{1,2}$/.test(rangeStr)) {
+
+                var start = this.getDateInfo(rangeStr);
+                var firstDay = start.date;
+                firstDay.setMonth(firstDay.getMonth() + 1);
+
+                var end = this.getNextNDay(firstDay, -1);
+                normalizedRange = [start.formatedDate, end.formatedDate];
+            }
+            // One day
+            if (/^\d{4}[\/|-]\d{1,2}[\/|-]\d{1,2}$/.test(rangeStr)) {
+                normalizedRange = [rangeStr, rangeStr];
+            }
+        }
+        else {
+            normalizedRange = range;
         }
 
-        if (/^\d{4}[\/|-]\d{1,2}$/.test(rg)) {
-
-            var start = this.getDateInfo(rg);
-            var firstDay = start.date;
-            firstDay.setMonth(firstDay.getMonth() + 1);
-
-            var end = this.getNextNDay(firstDay, -1);
-            range = [start.formatedDate, end.formatedDate];
+        if (!normalizedRange) {
+            if (__DEV__) {
+                zrUtil.logError('Invalid date range.');
+            }
+            // Not handling it.
+            return range as OptionDataValueDate[];
         }
 
-        if (/^\d{4}[\/|-]\d{1,2}[\/|-]\d{1,2}$/.test(rg)) {
-            range = [rg, rg];
-        }
-
-        var tmp = this._getRangeInfo(range);
+        var tmp = this._getRangeInfo(normalizedRange);
 
         if (tmp.start.time > tmp.end.time) {
-            range.reverse();
+            normalizedRange.reverse();
         }
 
-        return range;
-    },
+        return normalizedRange;
+    }
 
     /**
      * range info
@@ -362,20 +430,20 @@ Calendar.prototype = {
      *  If range[0] > range[1], they will not be reversed.
      * @return {Object}       obj
      */
-    _getRangeInfo: function (range) {
-        range = [
+    _getRangeInfo(range: OptionDataValueDate[]): CalendarParsedDateRangeInfo {
+        const parsedRange = [
             this.getDateInfo(range[0]),
             this.getDateInfo(range[1])
         ];
 
         var reversed;
-        if (range[0].time > range[1].time) {
+        if (parsedRange[0].time > parsedRange[1].time) {
             reversed = true;
-            range.reverse();
+            parsedRange.reverse();
         }
 
-        var allDay = Math.floor(range[1].time / PROXIMATE_ONE_DAY)
-            - Math.floor(range[0].time / PROXIMATE_ONE_DAY) + 1;
+        var allDay = Math.floor(parsedRange[1].time / PROXIMATE_ONE_DAY)
+            - Math.floor(parsedRange[0].time / PROXIMATE_ONE_DAY) + 1;
 
         // Consider case:
         // Firstly set system timezone as "Time Zone: America/Toronto",
@@ -385,36 +453,36 @@ Calendar.prototype = {
         // var allDays = Math.floor(second / ONE_DAY) - Math.floor(first / ONE_DAY) + 1;
         // ```
         // will get wrong result because of DST. So we should fix it.
-        var date = new Date(range[0].time);
+        var date = new Date(parsedRange[0].time);
         var startDateNum = date.getDate();
-        var endDateNum = range[1].date.getDate();
+        var endDateNum = parsedRange[1].date.getDate();
         date.setDate(startDateNum + allDay - 1);
         // The bias can not over a month, so just compare date.
         if (date.getDate() !== endDateNum) {
-            var sign = date.getTime() - range[1].time > 0 ? 1 : -1;
-            while (date.getDate() !== endDateNum && (date.getTime() - range[1].time) * sign > 0) {
+            var sign = date.getTime() - parsedRange[1].time > 0 ? 1 : -1;
+            while (date.getDate() !== endDateNum && (date.getTime() - parsedRange[1].time) * sign > 0) {
                 allDay -= sign;
                 date.setDate(startDateNum + allDay - 1);
             }
         }
 
-        var weeks = Math.floor((allDay + range[0].day + 6) / 7);
+        var weeks = Math.floor((allDay + parsedRange[0].day + 6) / 7);
         var nthWeek = reversed ? -weeks + 1 : weeks - 1;
 
-        reversed && range.reverse();
+        reversed && parsedRange.reverse();
 
         return {
-            range: [range[0].formatedDate, range[1].formatedDate],
-            start: range[0],
-            end: range[1],
+            range: [parsedRange[0].formatedDate, parsedRange[1].formatedDate],
+            start: parsedRange[0],
+            end: parsedRange[1],
             allDay: allDay,
             weeks: weeks,
             // From 0.
             nthWeek: nthWeek,
-            fweek: range[0].day,
-            lweek: range[1].day
+            fweek: parsedRange[0].day,
+            lweek: parsedRange[1].day
         };
-    },
+    }
 
     /**
      * get date by nthWeeks and week day in range
@@ -425,48 +493,44 @@ Calendar.prototype = {
      * @param  {Array} range [d1, d2]
      * @return {Object}
      */
-    _getDateByWeeksAndDay: function (nthWeek, day, range) {
+    private _getDateByWeeksAndDay(nthWeek: number, day: number, range: OptionDataValueDate[]): CalendarParsedDateInfo {
         var rangeInfo = this._getRangeInfo(range);
 
         if (nthWeek > rangeInfo.weeks
             || (nthWeek === 0 && day < rangeInfo.fweek)
             || (nthWeek === rangeInfo.weeks && day > rangeInfo.lweek)
         ) {
-            return false;
+            return null;
         }
 
         var nthDay = (nthWeek - 1) * 7 - rangeInfo.fweek + day;
         var date = new Date(rangeInfo.start.time);
-        date.setDate(rangeInfo.start.d + nthDay);
+        date.setDate(+rangeInfo.start.d + nthDay);
 
         return this.getDateInfo(date);
     }
-};
 
-Calendar.dimensions = Calendar.prototype.dimensions;
+    static create(ecModel: GlobalModel, api: ExtensionAPI) {
+        var calendarList: Calendar[] = [];
 
-Calendar.getDimensionsInfo = Calendar.prototype.getDimensionsInfo;
+        ecModel.eachComponent('calendar', function (calendarModel: CalendarModel) {
+            var calendar = new Calendar(calendarModel, ecModel, api);
+            calendarList.push(calendar);
+            calendarModel.coordinateSystem = calendar;
+        });
 
-Calendar.create = function (ecModel, api) {
-    var calendarList = [];
+        ecModel.eachSeries(function (calendarSeries: SeriesModel<SeriesOption & SeriesOnCalendarOptionMixin>) {
+            if (calendarSeries.get('coordinateSystem') === 'calendar') {
+                // Inject coordinate system
+                calendarSeries.coordinateSystem = calendarList[calendarSeries.get('calendarIndex') || 0];
+            }
+        });
+        return calendarList;
+    }
+}
 
-    ecModel.eachComponent('calendar', function (calendarModel) {
-        var calendar = new Calendar(calendarModel, ecModel, api);
-        calendarList.push(calendar);
-        calendarModel.coordinateSystem = calendar;
-    });
-
-    ecModel.eachSeries(function (calendarSeries) {
-        if (calendarSeries.get('coordinateSystem') === 'calendar') {
-            // Inject coordinate system
-            calendarSeries.coordinateSystem = calendarList[calendarSeries.get('calendarIndex') || 0];
-        }
-    });
-    return calendarList;
-};
-
-function doConvert(methodName, ecModel, finder, value) {
-    var calendarModel = finder.calendarModel;
+function getCoordSys(finder: ParsedModelFinder): Calendar {
+    var calendarModel = finder.calendarModel as CalendarModel;
     var seriesModel = finder.seriesModel;
 
     var coordSys = calendarModel
@@ -475,9 +539,10 @@ function doConvert(methodName, ecModel, finder, value) {
         ? seriesModel.coordinateSystem
         : null;
 
-    return coordSys === this ? coordSys[methodName](value) : null;
+    return coordSys as Calendar;
 }
 
-CoordinateSystem.register('calendar', Calendar);
+
+CoordinateSystemManager.register('calendar', Calendar);
 
 export default Calendar;

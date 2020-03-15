@@ -494,7 +494,7 @@ export type MediaUnit = {
 export type ComponentLayoutMode = {
     // Only support 'box' now.
     type: 'box',
-    ignoreSize?: boolean | [boolean, boolean]
+    ignoreSize?: boolean | boolean[]
 };
 /******************* Mixins for Common Option Properties   ********************** */
 export interface ColorPaletteOptionMixin {

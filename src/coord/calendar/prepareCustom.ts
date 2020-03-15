@@ -17,9 +17,10 @@
 * under the License.
 */
 
-// @ts-nocheck
+import Calendar from './Calendar';
+import { OptionDataValueDate } from '../../util/types';
 
-export default function (coordSys) {
+export default function (coordSys: Calendar) {
     var rect = coordSys.getRect();
     var rangeInfo = coordSys.getRangeInfo();
 
@@ -40,7 +41,7 @@ export default function (coordSys) {
             }
         },
         api: {
-            coord: function (data, clamp) {
+            coord: function (data: OptionDataValueDate, clamp?: boolean) {
                 return coordSys.dataToPoint(data, clamp);
             }
         }

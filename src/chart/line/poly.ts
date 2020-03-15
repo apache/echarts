@@ -51,12 +51,19 @@ function drawSegment(
     smoothMonotone: 'x' | 'y' | 'none',
     connectNulls: boolean
 ) {
-    if (smoothMonotone === 'none' || !smoothMonotone) {
-        return drawNonMono.apply(null, arguments as any);
-    }
-    else {
-        return drawMono.apply(null, arguments as any);
-    }
+    return ((smoothMonotone === 'none' || !smoothMonotone) ? drawNonMono : drawMono)(
+        ctx,
+        points,
+        start,
+        segLen,
+        allLen,
+        dir,
+        smoothMin,
+        smoothMax,
+        smooth,
+        smoothMonotone,
+        connectNulls
+    );
 }
 
 /**

@@ -30,7 +30,8 @@ import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
 import type ContinuousModel from '../../component/visualMap/ContinuousModel';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
-import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import type Calendar from '../../coord/calendar/Calendar';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -158,7 +159,7 @@ class HeatmapView extends ChartView {
         incremental?: boolean
     ) {
 
-        var coordSys = seriesModel.coordinateSystem;
+        var coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
         var width;
         var height;
 
