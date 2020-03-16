@@ -26,6 +26,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import { ZRColor, DisplayState, ECElement } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import { VectorArray } from 'zrender/src/core/vector';
 
 function normalizeSymbolSize(symbolSize: number | number[]) {
     if (!zrUtil.isArray(symbolSize)) {
@@ -74,8 +75,8 @@ class RadarView extends ChartView {
         }
 
         function updateSymbols(
-            oldPoints: number[][],
-            newPoints: number[][],
+            oldPoints: VectorArray[],
+            newPoints: VectorArray[],
             symbolGroup: graphic.Group,
             data: List<RadarSeriesModel>,
             idx: number,
