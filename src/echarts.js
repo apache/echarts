@@ -601,7 +601,7 @@ echartsProto.getConnectedDataURL = function (opts) {
             each(canvasList, function (item) {
                 var x = item.left - left;
                 var y = item.top - top;
-                content += '<g transform="translate(' + x + ","
+                content += '<g transform="translate(' + x + ','
                     + y + ')">' + item.dom + '</g>';
             });
             zr.painter.getSvgRoot().innerHTML = content;
