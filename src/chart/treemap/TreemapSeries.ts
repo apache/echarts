@@ -17,57 +17,222 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import Tree from '../../data/Tree';
+import Tree, { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
 import {encodeHTML, addCommas} from '../../util/format';
 import {wrapTreePathInfo} from '../helper/treeHelper';
+import {
+    SeriesOption,
+    BoxLayoutOptionMixin,
+    ItemStyleOption,
+    LabelOption,
+    RoamOptionMixin,
+    // OptionDataValue,
+    CallbackDataParams,
+    ColorString
+} from '../../util/types';
+import GlobalModel from '../../model/Global';
+import { LayoutRect } from '../../util/layout';
 
-export default SeriesModel.extend({
+// Only support numberic value.
+type TreemapSeriesDataValue = number | number[];
 
-    type: 'series.treemap',
+interface BreadcrumbItemStyleOption extends ItemStyleOption {
+    // TODO: textStyle should be in breadcrumb.label
+    textStyle?: LabelOption
+}
 
-    layoutMode: 'box',
+interface TreemapSeriesLabelOption extends LabelOption {
+    ellipsis?: boolean
+}
 
-    dependencies: ['grid', 'polar'],
+interface TreemapSeriesItemStyleOption extends ItemStyleOption {
+    colorAlpha?: number
+    colorSaturation?: number
 
-    preventUsingHoverLayer: true,
+    borderColorSaturation?: number
+
+    gapWidth?: number
+}
+
+interface TreePathInfo {
+    name: string
+    dataIndex: number
+    value: TreemapSeriesDataValue
+}
+
+interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
+    treePathInfo?: TreePathInfo[]
+}
+
+export interface TreemapSeriesVisualOption {
+    /**
+     * Which dimension will be applied with the visual properties.
+     */
+    visualDimension?: number | string
+
+    colorMappingBy?: 'value' | 'index' | 'id'
+
+    visualMin?: number
+    visualMax?: number
+
+    colorAlpha?: number[] | 'none'
+    colorSaturation?: number[] | 'none'
+    // A color list for a level. Each node in the level will obtain a color from the color list.
+    // Only suuport ColorString for interpolation
+    // color?: ColorString[]
 
     /**
-     * @type {module:echarts/data/Tree~Node}
+     * A node will not be shown when its area size is smaller than this value (unit: px square).
      */
-    _viewRoot: null,
+    visibleMin?: number
+    /**
+     * Children will not be shown when area size of a node is smaller than this value (unit: px square).
+     */
+    childrenVisibleMin?: number
+}
 
-    defaultOption: {
+
+export interface TreemapSeriesStyleSetOption {
+    itemStyle?: TreemapSeriesItemStyleOption
+    label?: TreemapSeriesLabelOption
+    upperLabel?: TreemapSeriesLabelOption
+
+    emphasis?: {
+        label?: TreemapSeriesLabelOption
+        upperLabel?: TreemapSeriesLabelOption
+        itemStyle?: TreemapSeriesItemStyleOption
+    }
+}
+export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption, TreemapSeriesStyleSetOption {
+    itemStyle?: TreemapSeriesItemStyleOption
+    label?: TreemapSeriesLabelOption
+    upperLabel?: TreemapSeriesLabelOption
+
+    emphasis?: {
+        label?: TreemapSeriesLabelOption
+        upperLabel?: TreemapSeriesLabelOption
+        itemStyle?: TreemapSeriesItemStyleOption
+    }
+
+    color?: ColorString[] | 'none'
+}
+
+export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption, TreemapSeriesStyleSetOption {
+    id?: string
+    name?: string
+
+    value?: TreemapSeriesDataValue
+
+    children?: TreemapSeriesNodeItemOption[]
+
+    color?: ColorString[] | 'none'
+}
+
+export interface TreemapSeriesOption extends SeriesOption,
+    BoxLayoutOptionMixin,
+    RoamOptionMixin,
+    TreemapSeriesVisualOption,
+    TreemapSeriesStyleSetOption {
+
+    type?: 'treemap'
+
+    /**
+     * configuration in echarts2
+     * @deprecated
+     */
+    size?: (number | string)[]
+
+    /**
+     * If sort in desc order.
+     * Default to be desc. asc has strange effect
+     */
+    sort?: boolean | 'asc' | 'desc'
+
+    /**
+     * Size of clipped window when zooming. 'origin' or 'fullscreen'
+     */
+    clipWindow?: 'origin' | 'fullscreen'
+
+    squareRatio: number
+    /**
+     * Nodes on depth from root are regarded as leaves.
+     * Count from zero (zero represents only view root).
+     */
+    leafDepth: number
+
+    drillDownIcon?: string
+
+    /**
+     * Be effective when using zoomToNode. Specify the proportion of the
+     * target node area in the view area.
+     */
+    zoomToNodeRatio?: number
+    /**
+     * Leaf node click behaviour: 'zoomToNode', 'link', false.
+     * If leafDepth is set and clicking a node which has children but
+     * be on left depth, the behaviour would be changing root. Otherwise
+     * use behavious defined above.
+     */
+    nodeClick?: 'zoomToNode' | 'link'
+
+    breadcrumb?: BoxLayoutOptionMixin & {
+        show?: boolean
+        height?: number
+
+        emptyItemWidth: number  // With of empty width
+        itemStyle?: BreadcrumbItemStyleOption
+
+        emphasis?: {
+            itemStyle?: BreadcrumbItemStyleOption
+        }
+    }
+
+    levels?: TreemapSeriesLevelOption[]
+
+    data?: TreemapSeriesNodeItemOption[]
+}
+
+class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
+
+    static type = 'series.treemap'
+    type = TreemapSeriesModel.type
+
+    layoutMode = 'box'
+
+    dependencies = ['grid', 'polar']
+
+    preventUsingHoverLayer = true
+
+    layoutInfo: LayoutRect
+
+    private _viewRoot: TreeNode
+    private _idIndexMap: zrUtil.HashMap<number>
+    private _idIndexMapCount: number
+
+    static defaultOption: TreemapSeriesOption = {
         // Disable progressive rendering
         progressive: 0,
-        // center: ['50%', '50%'],          // not supported in ec3.
         // size: ['80%', '80%'],            // deprecated, compatible with ec2.
         left: 'center',
         top: 'middle',
-        right: null,
-        bottom: null,
         width: '80%',
         height: '80%',
-        sort: true,                         // Can be null or false or true
-                                            // (order by desc default, asc not supported yet (strange effect))
-        clipWindow: 'origin',               // Size of clipped window when zooming. 'origin' or 'fullscreen'
+        sort: true,
+
+        clipWindow: 'origin',
         squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
-        leafDepth: null,                    // Nodes on depth from root are regarded as leaves.
-                                            // Count from zero (zero represents only view root).
+        leafDepth: null,
+
         drillDownIcon: '▶',                 // Use html character temporarily because it is complicated
                                             // to align specialized icon. ▷▶❒❐▼✚
 
-        zoomToNodeRatio: 0.32 * 0.32,       // Be effective when using zoomToNode. Specify the proportion of the
-                                            // target node area in the view area.
-        roam: true,                         // true, false, 'scale' or 'zoom', 'move'.
-        nodeClick: 'zoomToNode',            // Leaf node click behaviour: 'zoomToNode', 'link', false.
-                                            // If leafDepth is set and clicking a node which has children but
-                                            // be on left depth, the behaviour would be changing root. Otherwise
-                                            // use behavious defined above.
+        zoomToNodeRatio: 0.32 * 0.32,
+
+        roam: true,
+        nodeClick: 'zoomToNode',
         animation: true,
         animationDurationUpdate: 900,
         animationEasing: 'quinticInOut',
@@ -90,9 +255,6 @@ export default SeriesModel.extend({
                 textStyle: {
                     color: '#fff'
                 }
-            },
-            emphasis: {
-                textStyle: {}
             }
         },
         label: {
@@ -171,14 +333,17 @@ export default SeriesModel.extend({
         //      link: 'http://xxx.xxx.xxx',
         //      target: 'blank' or 'self'
         // }
-    },
+    }
 
     /**
      * @override
      */
-    getInitialData: function (option, ecModel) {
+    getInitialData(option: TreemapSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
-        var root = {name: option.name, children: option.data};
+        var root: TreemapSeriesNodeItemOption = {
+            name: option.name,
+            children: option.data
+        };
 
         completeTreeValue(root);
 
@@ -186,34 +351,34 @@ export default SeriesModel.extend({
 
         levels = option.levels = setDefault(levels, ecModel);
 
-        var treeOption = {};
-
-        treeOption.levels = levels;
+        var treeOption = {
+            levels
+        };
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
         return Tree.createTree(root, this, treeOption).data;
-    },
+    }
 
-    optionUpdated: function () {
+    optionUpdated() {
         this.resetViewRoot();
-    },
+    }
 
     /**
      * @override
      * @param {number} dataIndex
      * @param {boolean} [mutipleSeries=false]
      */
-    formatTooltip: function (dataIndex) {
+    formatTooltip(dataIndex: number) {
         var data = this.getData();
-        var value = this.getRawValue(dataIndex);
+        var value = this.getRawValue(dataIndex) as TreemapSeriesDataValue;
         var formattedValue = zrUtil.isArray(value)
-            ? addCommas(value[0]) : addCommas(value);
+            ? addCommas(value[0] as number) : addCommas(value as number);
         var name = data.getName(dataIndex);
 
         return encodeHTML(name + ': ' + formattedValue);
-    },
+    }
 
     /**
      * Add tree path to tooltip param
@@ -222,14 +387,14 @@ export default SeriesModel.extend({
      * @param {number} dataIndex
      * @return {Object}
      */
-    getDataParams: function (dataIndex) {
-        var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
+    getDataParams(dataIndex: number) {
+        var params = super.getDataParams.apply(this, arguments as any) as TreemapSeriesCallbackDataParams;
 
         var node = this.getData().tree.getNodeByDataIndex(dataIndex);
         params.treePathInfo = wrapTreePathInfo(node, this);
 
         return params;
-    },
+    }
 
     /**
      * @public
@@ -240,20 +405,20 @@ export default SeriesModel.extend({
      *                                height: containerGroup height
      *                            }
      */
-    setLayoutInfo: function (layoutInfo) {
+    setLayoutInfo(layoutInfo: LayoutRect) {
         /**
          * @readOnly
          * @type {Object}
          */
-        this.layoutInfo = this.layoutInfo || {};
+        this.layoutInfo = this.layoutInfo || {} as LayoutRect;
         zrUtil.extend(this.layoutInfo, layoutInfo);
-    },
+    }
 
     /**
      * @param  {string} id
      * @return {number} index
      */
-    mapIdToIndex: function (id) {
+    mapIdToIndex(id: string): number {
         // A feature is implemented:
         // index is monotone increasing with the sequence of
         // input id at the first time.
@@ -283,16 +448,13 @@ export default SeriesModel.extend({
         }
 
         return index;
-    },
+    }
 
-    getViewRoot: function () {
+    getViewRoot() {
         return this._viewRoot;
-    },
+    }
 
-    /**
-     * @param {module:echarts/data/Tree~Node} [viewRoot]
-     */
-    resetViewRoot: function (viewRoot) {
+    resetViewRoot(viewRoot?: TreeNode) {
         viewRoot
             ? (this._viewRoot = viewRoot)
             : (viewRoot = this._viewRoot);
@@ -305,12 +467,12 @@ export default SeriesModel.extend({
             this._viewRoot = root;
         }
     }
-});
+}
 
 /**
  * @param {Object} dataNode
  */
-function completeTreeValue(dataNode) {
+function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
     // Postorder travel tree.
     // If value of none-leaf node is not set,
     // calculate it by suming up the value of all children.
@@ -347,7 +509,7 @@ function completeTreeValue(dataNode) {
 /**
  * set default to level configuration
  */
-function setDefault(levels, ecModel) {
+function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     var globalColorList = ecModel.get('color');
 
     if (!globalColorList) {
@@ -360,7 +522,7 @@ function setDefault(levels, ecModel) {
         var model = new Model(levelDefine);
         var modelColor = model.get('color');
 
-        if (model.get('itemStyle.color')
+        if (model.get(['itemStyle', 'color'])
             || (modelColor && modelColor !== 'none')
         ) {
             hasColorDefine = true;
@@ -374,3 +536,7 @@ function setDefault(levels, ecModel) {
 
     return levels;
 }
+
+SeriesModel.registerClass(TreemapSeriesModel);
+
+export default TreemapSeriesModel;

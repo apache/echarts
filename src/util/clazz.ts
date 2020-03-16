@@ -296,7 +296,7 @@ export function enableClassManagement(
 
         if (obj && (obj as SubclassContainer)[IS_CONTAINER]) {
             zrUtil.each(obj as SubclassContainer, function (o, type) {
-                type !== IS_CONTAINER && result.push(o);
+                type !== IS_CONTAINER && result.push(o as Constructor);
             });
         }
         else {

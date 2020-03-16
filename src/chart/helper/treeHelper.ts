@@ -18,12 +18,15 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { Payload } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import {TreeNode} from '../../data/Tree';
 
 export function retrieveTargetInfo(
-    payload: Payload,
+    payload: {
+        type?: string,
+        targetNode?: string | TreeNode
+        targetNodeId?: string
+    },
     validPayloadTypes: string[],
     seriesModel: SeriesModel
 ) {
@@ -64,6 +67,7 @@ export function aboveViewRoot(viewRoot: TreeNode, node: TreeNode) {
     var viewPath = getPathToRoot(viewRoot);
     return zrUtil.indexOf(viewPath, node) >= 0;
 }
+
 
 // From root to the input node (the input node will be included).
 export function wrapTreePathInfo<T = unknown>(node: TreeNode, seriesModel: SeriesModel) {

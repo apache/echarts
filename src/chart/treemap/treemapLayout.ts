@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /*
 * A third-party license is embeded for some of the code in this file:
 * The treemap layout implementation was originally copied from
@@ -30,27 +28,66 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent, MAX_SAFE_INTEGER} from '../../util/number';
 import * as layout from '../../util/layout';
 import * as helper from '../helper/treeHelper';
+import TreemapSeriesModel, { TreemapSeriesNodeItemOption } from './TreemapSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { TreeNode } from '../../data/Tree';
+import Model from '../../model/Model';
+import { TreemapRenderPayload, TreemapMovePayload, TreemapZoomToNodePayload } from './treemapAction';
 
 var mathMax = Math.max;
 var mathMin = Math.min;
 var retrieveValue = zrUtil.retrieve;
 var each = zrUtil.each;
 
-var PATH_BORDER_WIDTH = ['itemStyle', 'borderWidth'];
-var PATH_GAP_WIDTH = ['itemStyle', 'gapWidth'];
-var PATH_UPPER_LABEL_SHOW = ['upperLabel', 'show'];
-var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'height'];
+var PATH_BORDER_WIDTH = ['itemStyle', 'borderWidth'] as const;
+var PATH_GAP_WIDTH = ['itemStyle', 'gapWidth'] as const;
+var PATH_UPPER_LABEL_SHOW = ['upperLabel', 'show'] as const;
+var PATH_UPPER_LABEL_HEIGHT = ['upperLabel', 'height'] as const;
 
+export interface TreemapLayoutNode extends TreeNode {
+    parentNode: TreemapLayoutNode
+    children: TreemapLayoutNode[]
+    viewChildren: TreemapLayoutNode[]
+}
+
+export interface TreemapItemLayout extends RectLike {
+    area: number
+    isLeafRoot: boolean
+    dataExtent: [number, number]
+
+    borderWidth: number
+    upperHeight: number
+    upperLabelHeight: number
+
+    isInView: boolean
+    invisible: boolean
+
+    isAboveViewRoot: boolean
+};
+
+type NodeModel = Model<TreemapSeriesNodeItemOption>
+
+type OrderBy = 'asc' | 'desc' | boolean;
+
+type LayoutRow = TreemapLayoutNode[] & {
+    area: number
+}
 /**
  * @public
  */
 export default {
     seriesType: 'treemap',
-    reset: function (seriesModel, ecModel, api, payload) {
+    reset: function (
+        seriesModel: TreemapSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload?: TreemapZoomToNodePayload | TreemapRenderPayload | TreemapMovePayload
+    ) {
         // Layout result in each node:
         // {x, y, width, height, area, borderWidth}
         var ecWidth = api.getWidth();
@@ -83,7 +120,7 @@ export default {
         var rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
             ? payload.rootRect : null;
         var viewRoot = seriesModel.getViewRoot();
-        var viewAbovePath = helper.getPathToRoot(viewRoot);
+        var viewAbovePath = helper.getPathToRoot(viewRoot) as TreemapLayoutNode[];
 
         if (payloadType !== 'treemapMove') {
             var rootSize = payloadType === 'treemapZoomToNode'
@@ -96,6 +133,7 @@ export default {
 
             var sort = seriesOption.sort;
             if (sort && sort !== 'asc' && sort !== 'desc') {
+                // Default to be desc order.
                 sort = 'desc';
             }
             var options = {
@@ -113,19 +151,25 @@ export default {
             // how to calculate start po
 
             var viewRootLayout = {
-                x: 0, y: 0,
-                width: rootSize[0], height: rootSize[1],
+                x: 0,
+                y: 0,
+                width: rootSize[0],
+                height: rootSize[1],
                 area: rootSize[0] * rootSize[1]
             };
             viewRoot.setLayout(viewRootLayout);
 
             squarify(viewRoot, options, false, 0);
             // Supplement layout.
-            var viewRootLayout = viewRoot.getLayout();
+            viewRootLayout = viewRoot.getLayout();
             each(viewAbovePath, function (node, index) {
                 var childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
                 node.setLayout(zrUtil.extend(
-                    {dataExtent: [childValue, childValue], borderWidth: 0, upperHeight: 0},
+                    {
+                        dataExtent: [childValue, childValue],
+                        borderWidth: 0,
+                        upperHeight: 0
+                    },
                     viewRootLayout
                 ));
             });
@@ -171,7 +215,16 @@ export default {
  * @param {boolean} hideChildren
  * @param {number} depth
  */
-function squarify(node, options, hideChildren, depth) {
+function squarify(
+    node: TreemapLayoutNode,
+    options: {
+        sort?: OrderBy
+        squareRatio?: number
+        leafDepth?: number
+    },
+    hideChildren: boolean,
+    depth: number
+) {
     var width;
     var height;
 
@@ -184,14 +237,13 @@ function squarify(node, options, hideChildren, depth) {
     height = thisLayout.height;
 
     // Considering border and gap
-    var nodeModel = node.getModel();
+    var nodeModel = node.getModel<TreemapSeriesNodeItemOption>();
     var borderWidth = nodeModel.get(PATH_BORDER_WIDTH);
     var halfGapWidth = nodeModel.get(PATH_GAP_WIDTH) / 2;
     var upperLabelHeight = getUpperLabelHeight(nodeModel);
     var upperHeight = Math.max(borderWidth, upperLabelHeight);
     var layoutOffset = borderWidth - halfGapWidth;
     var layoutOffsetUpper = upperHeight - halfGapWidth;
-    var nodeModel = node.getModel();
 
     node.setLayout({
         borderWidth: borderWidth,
@@ -214,7 +266,7 @@ function squarify(node, options, hideChildren, depth) {
     var rect = {x: layoutOffset, y: layoutOffsetUpper, width: width, height: height};
     var rowFixedLength = mathMin(width, height);
     var best = Infinity; // the best row score so far
-    var row = [];
+    var row = [] as LayoutRow;
     row.area = 0;
 
     for (var i = 0, len = viewChildren.length; i < len;) {
@@ -258,7 +310,17 @@ function squarify(node, options, hideChildren, depth) {
 /**
  * Set area to each child, and calculate data extent for visual coding.
  */
-function initChildren(node, nodeModel, totalArea, options, hideChildren, depth) {
+function initChildren(
+    node: TreemapLayoutNode,
+    nodeModel: NodeModel,
+    totalArea: number,
+    options: {
+        sort?: OrderBy
+        leafDepth?: number
+    },
+    hideChildren: boolean,
+    depth: number
+) {
     var viewChildren = node.children || [];
     var orderBy = options.sort;
     orderBy !== 'asc' && orderBy !== 'desc' && (orderBy = null);
@@ -291,18 +353,24 @@ function initChildren(node, nodeModel, totalArea, options, hideChildren, depth) 
 
     // Set area to each child.
     for (var i = 0, len = viewChildren.length; i < len; i++) {
-        var area = viewChildren[i].getValue() / info.sum * totalArea;
+        var area = viewChildren[i].getValue() as number / info.sum * totalArea;
         // Do not use setLayout({...}, true), because it is needed to clear last layout.
-        viewChildren[i].setLayout({area: area});
+        viewChildren[i].setLayout({
+            area: area
+        });
     }
 
     if (overLeafDepth) {
-        viewChildren.length && node.setLayout({isLeafRoot: true}, true);
+        viewChildren.length && node.setLayout({
+            isLeafRoot: true
+        }, true);
         viewChildren.length = 0;
     }
 
     node.viewChildren = viewChildren;
-    node.setLayout({dataExtent: info.dataExtent}, true);
+    node.setLayout({
+        dataExtent: info.dataExtent
+    }, true);
 
     return viewChildren;
 }
@@ -310,7 +378,13 @@ function initChildren(node, nodeModel, totalArea, options, hideChildren, depth) 
 /**
  * Consider 'visibleMin'. Modify viewChildren and get new sum.
  */
-function filterByThreshold(nodeModel, totalArea, sum, orderBy, orderedChildren) {
+function filterByThreshold(
+    nodeModel: NodeModel,
+    totalArea: number,
+    sum: number,
+    orderBy: OrderBy,
+    orderedChildren: TreemapLayoutNode[]
+) {
 
     // visibleMin is not supported yet when no option.sort.
     if (!orderBy) {
@@ -325,7 +399,7 @@ function filterByThreshold(nodeModel, totalArea, sum, orderBy, orderedChildren) 
     for (var i = len - 1; i >= 0; i--) {
         var value = orderedChildren[
             orderBy === 'asc' ? len - i - 1 : i
-        ].getValue();
+        ].getValue() as number;
 
         if (value / sum * totalArea < visibleMin) {
             deletePoint = i;
@@ -343,11 +417,15 @@ function filterByThreshold(nodeModel, totalArea, sum, orderBy, orderedChildren) 
 /**
  * Sort
  */
-function sort(viewChildren, orderBy) {
+function sort(
+    viewChildren: TreemapLayoutNode[],
+    orderBy: OrderBy
+) {
     if (orderBy) {
         viewChildren.sort(function (a, b) {
             var diff = orderBy === 'asc'
-                ? a.getValue() - b.getValue() : b.getValue() - a.getValue();
+                ? a.getValue() as number - (b.getValue() as number)
+                : b.getValue() as number - (a.getValue() as number);
             return diff === 0
                 ? (orderBy === 'asc'
                     ? a.dataIndex - b.dataIndex : b.dataIndex - a.dataIndex
@@ -361,11 +439,15 @@ function sort(viewChildren, orderBy) {
 /**
  * Statistic
  */
-function statistic(nodeModel, children, orderBy) {
+function statistic(
+    nodeModel: NodeModel,
+    children: TreemapLayoutNode[],
+    orderBy: OrderBy
+) {
     // Calculate sum.
     var sum = 0;
     for (var i = 0, len = children.length; i < len; i++) {
-        sum += children[i].getValue();
+        sum += children[i].getValue() as number;
     }
 
     // Statistic data extent for latter visual coding.
@@ -374,7 +456,7 @@ function statistic(nodeModel, children, orderBy) {
     // be stable when zoom (where children is filtered by visibleMin).
 
     var dimension = nodeModel.get('visualDimension');
-    var dataExtent;
+    var dataExtent: number[];
 
     // The same as area dimension.
     if (!children || !children.length) {
@@ -382,8 +464,8 @@ function statistic(nodeModel, children, orderBy) {
     }
     else if (dimension === 'value' && orderBy) {
         dataExtent = [
-            children[children.length - 1].getValue(),
-            children[0].getValue()
+            children[children.length - 1].getValue() as number,
+            children[0].getValue() as number
         ];
         orderBy === 'asc' && dataExtent.reverse();
     }
@@ -391,7 +473,7 @@ function statistic(nodeModel, children, orderBy) {
     else {
         var dataExtent = [Infinity, -Infinity];
         each(children, function (child) {
-            var value = child.getValue(dimension);
+            var value = child.getValue(dimension) as number;
             value < dataExtent[0] && (dataExtent[0] = value);
             value > dataExtent[1] && (dataExtent[1] = value);
         });
@@ -404,7 +486,7 @@ function statistic(nodeModel, children, orderBy) {
  * Computes the score for the specified row,
  * as the worst aspect ratio.
  */
-function worst(row, rowFixedLength, ratio) {
+function worst(row: LayoutRow, rowFixedLength: number, ratio: number) {
     var areaMax = 0;
     var areaMin = Infinity;
 
@@ -430,7 +512,13 @@ function worst(row, rowFixedLength, ratio) {
 /**
  * Positions the specified row of nodes. Modifies `rect`.
  */
-function position(row, rowFixedLength, rect, halfGapWidth, flush) {
+function position(
+    row: LayoutRow,
+    rowFixedLength: number,
+    rect: RectLike,
+    halfGapWidth: number,
+    flush?: boolean
+) {
     // When rowFixedLength === rect.width,
     // it is horizontal subdivision,
     // rowFixedLength is the width of the subdivision,
@@ -442,8 +530,8 @@ function position(row, rowFixedLength, rect, halfGapWidth, flush) {
     //      xy[idx1WhenH] => xy[1] => 'y'.
     var idx0WhenH = rowFixedLength === rect.width ? 0 : 1;
     var idx1WhenH = 1 - idx0WhenH;
-    var xy = ['x', 'y'];
-    var wh = ['width', 'height'];
+    var xy = ['x', 'y'] as const;
+    var wh = ['width', 'height'] as const;
 
     var last = rect[xy[idx0WhenH]];
     var rowOtherLength = rowFixedLength
@@ -454,7 +542,7 @@ function position(row, rowFixedLength, rect, halfGapWidth, flush) {
     }
     for (var i = 0, rowLen = row.length; i < rowLen; i++) {
         var node = row[i];
-        var nodeLayout = {};
+        var nodeLayout = {} as TreemapItemLayout;
         var step = rowOtherLength
             ? node.getLayout().area / rowOtherLength : 0;
 
@@ -477,7 +565,13 @@ function position(row, rowFixedLength, rect, halfGapWidth, flush) {
 }
 
 // Return [containerWidth, containerHeight] as defualt.
-function estimateRootSize(seriesModel, targetInfo, viewRoot, containerWidth, containerHeight) {
+function estimateRootSize(
+    seriesModel: TreemapSeriesModel,
+    targetInfo: { node: TreemapLayoutNode },
+    viewRoot: TreemapLayoutNode,
+    containerWidth: number,
+    containerHeight: number
+) {
     // If targetInfo.node exists, we zoom to the node,
     // so estimate whold width and heigth by target node.
     var currNode = (targetInfo || {}).node;
@@ -496,18 +590,18 @@ function estimateRootSize(seriesModel, targetInfo, viewRoot, containerWidth, con
         var siblings = parent.children;
 
         for (var i = 0, len = siblings.length; i < len; i++) {
-            sum += siblings[i].getValue();
+            sum += siblings[i].getValue() as number;
         }
-        var currNodeValue = currNode.getValue();
+        var currNodeValue = currNode.getValue() as number;
         if (currNodeValue === 0) {
             return defaultSize;
         }
         area *= sum / currNodeValue;
 
         // Considering border, suppose aspect ratio is 1.
-        var parentModel = parent.getModel();
+        var parentModel = parent.getModel<TreemapSeriesNodeItemOption>();
         var borderWidth = parentModel.get(PATH_BORDER_WIDTH);
-        var upperHeight = Math.max(borderWidth, getUpperLabelHeight(parentModel, borderWidth));
+        var upperHeight = Math.max(borderWidth, getUpperLabelHeight(parentModel));
         area += 4 * borderWidth * borderWidth
             + (3 * borderWidth + upperHeight) * Math.pow(area, 0.5);
 
@@ -523,7 +617,11 @@ function estimateRootSize(seriesModel, targetInfo, viewRoot, containerWidth, con
 }
 
 // Root postion base on coord of containerGroup
-function calculateRootPosition(layoutInfo, rootRect, targetInfo) {
+function calculateRootPosition(
+    layoutInfo: layout.LayoutRect,
+    rootRect: RectLike,
+    targetInfo: { node: TreemapLayoutNode }
+) {
     if (rootRect) {
         return {x: rootRect.x, y: rootRect.y};
     }
@@ -562,7 +660,13 @@ function calculateRootPosition(layoutInfo, rootRect, targetInfo) {
 
 // Mark nodes visible for prunning when visual coding and rendering.
 // Prunning depends on layout and root position, so we have to do it after layout.
-function prunning(node, clipRect, viewAbovePath, viewRoot, depth) {
+function prunning(
+    node: TreemapLayoutNode,
+    clipRect: BoundingRect,
+    viewAbovePath: TreemapLayoutNode[],
+    viewRoot: TreemapLayoutNode,
+    depth: number
+) {
     var nodeLayout = node.getLayout();
     var nodeInViewAbovePath = viewAbovePath[depth];
     var isAboveViewRoot = nodeInViewAbovePath && nodeInViewAbovePath === node;
@@ -580,7 +684,7 @@ function prunning(node, clipRect, viewAbovePath, viewRoot, depth) {
         // invisible only means: outside view clip so that the node can not
         // see but still layout for animation preparation but not render.
         invisible: !isAboveViewRoot && !clipRect.intersect(nodeLayout),
-        isAboveViewRoot: isAboveViewRoot
+        isAboveViewRoot
     }, true);
 
     // Transform to child coordinate.
@@ -596,6 +700,6 @@ function prunning(node, clipRect, viewAbovePath, viewRoot, depth) {
     });
 }
 
-function getUpperLabelHeight(model) {
+function getUpperLabelHeight(model: NodeModel): number {
     return model.get(PATH_UPPER_LABEL_SHOW) ? model.get(PATH_UPPER_LABEL_HEIGHT) : 0;
 }

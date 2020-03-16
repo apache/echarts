@@ -38,7 +38,7 @@ interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
 }
 
-export interface TreeSeriesNodeOption extends SymbolOptionMixin {
+export interface TreeSeriesNodeItemOption extends SymbolOptionMixin {
     name?: string
 
     itemStyle?: ItemStyleOption
@@ -56,9 +56,12 @@ export interface TreeSeriesNodeOption extends SymbolOptionMixin {
 
     value?: OptionDataValue | OptionDataValue[]
 
-    children?: TreeSeriesNodeOption[]
+    children?: TreeSeriesNodeItemOption[]
 
     collapsed?: boolean
+
+    link?: string
+    target?: string
 }
 
 export interface TreeSeriesOption extends
@@ -120,7 +123,7 @@ export interface TreeSeriesOption extends
         }
     }
 
-    data?: TreeSeriesNodeOption[]
+    data?: TreeSeriesNodeItemOption[]
 }
 
 class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
@@ -142,7 +145,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     getInitialData(option: TreeSeriesOption): List {
 
         //create an virtual root
-        var root: TreeSeriesNodeOption = {
+        var root: TreeSeriesNodeItemOption = {
             name: option.name,
             children: option.data
         };
@@ -177,7 +180,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
             ? option.initialTreeDepth : treeDepth;
 
         tree.root.eachNode('preorder', function (node) {
-            var item = node.hostTree.data.getRawDataItem(node.dataIndex) as TreeSeriesNodeOption;
+            var item = node.hostTree.data.getRawDataItem(node.dataIndex) as TreeSeriesNodeItemOption;
             // Add item.collapsed != null, because users can collapse node original in the series.data.
             node.isExpand = (item && item.collapsed != null)
                 ? !item.collapsed

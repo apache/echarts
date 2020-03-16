@@ -17,19 +17,35 @@
 * under the License.
 */
 
-// @ts-nocheck
+import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
+import { map, each, extend, isArray } from 'zrender/src/core/util';
+import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
+import { TreemapLayoutNode, TreemapItemLayout } from './treemapLayout';
+import Model from '../../model/Model';
+import { ColorString, ZRColor } from '../../util/types';
+import { modifyHSL, modifyAlpha } from 'zrender/src/tool/color';
+import { makeInner } from '../../util/model';
 
-import VisualMapping from '../../visual/VisualMapping';
-import * as zrColor from 'zrender/src/tool/color';
-import * as zrUtil from 'zrender/src/core/util';
+type NodeModel = Model<TreemapSeriesNodeItemOption>
+type NodeItemStyleModel = Model<TreemapSeriesNodeItemOption['itemStyle']>;
 
-var isArray = zrUtil.isArray;
+const ITEM_STYLE_NORMAL = 'itemStyle';
 
-var ITEM_STYLE_NORMAL = 'itemStyle';
+const inner = makeInner<{
+    drColorMappingBy: TreemapSeriesNodeItemOption['colorMappingBy']
+}, VisualMapping>();
+
+interface TreemapVisual {
+    color?: ZRColor
+    colorAlpha?: number
+    colorSaturation?: number
+}
+
+type TreemapLevelItemStyleOption = TreemapSeriesOption['levels'][number]['itemStyle']
 
 export default {
     seriesType: 'treemap',
-    reset: function (seriesModel, ecModel, api, payload) {
+    reset(seriesModel: TreemapSeriesModel) {
         var tree = seriesModel.getData().tree;
         var root = tree.root;
         var seriesItemStyleModel = seriesModel.getModel(ITEM_STYLE_NORMAL);
@@ -38,7 +54,7 @@ export default {
             return;
         }
 
-        var levelItemStyles = zrUtil.map(tree.levelModels, function (levelModel) {
+        var levelItemStyles = map(tree.levelModels, function (levelModel) {
             return levelModel ? levelModel.get(ITEM_STYLE_NORMAL) : null;
         });
 
@@ -54,10 +70,14 @@ export default {
 };
 
 function travelTree(
-    node, designatedVisual, levelItemStyles, seriesItemStyleModel,
-    viewRootAncestors, seriesModel
+    node: TreemapLayoutNode,
+    designatedVisual: TreemapVisual,
+    levelItemStyles: TreemapLevelItemStyleOption[],
+    seriesItemStyleModel: Model<TreemapSeriesOption['itemStyle']>,
+    viewRootAncestors: TreemapLayoutNode[],
+    seriesModel: TreemapSeriesModel
 ) {
-    var nodeModel = node.getModel();
+    var nodeModel = node.getModel<TreemapSeriesNodeItemOption>();
     var nodeLayout = node.getLayout();
 
     // Optimize
@@ -65,7 +85,7 @@ function travelTree(
         return;
     }
 
-    var nodeItemStyleModel = node.getModel(ITEM_STYLE_NORMAL);
+    var nodeItemStyleModel = nodeModel.getModel(ITEM_STYLE_NORMAL);
     var levelItemStyle = levelItemStyles[node.depth];
     var visuals = buildVisuals(
         nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
@@ -77,14 +97,14 @@ function travelTree(
     var thisNodeColor;
     if (borderColorSaturation != null) {
         // For performance, do not always execute 'calculateColor'.
-        thisNodeColor = calculateColor(visuals, node);
+        thisNodeColor = calculateColor(visuals);
         borderColor = calculateBorderColor(borderColorSaturation, thisNodeColor);
     }
     node.setVisual('borderColor', borderColor);
 
     var viewChildren = node.viewChildren;
     if (!viewChildren || !viewChildren.length) {
-        thisNodeColor = calculateColor(visuals, node);
+        thisNodeColor = calculateColor(visuals);
         // Apply visual to this node.
         node.setVisual('color', thisNodeColor);
     }
@@ -94,7 +114,7 @@ function travelTree(
         );
 
         // Designate visual to children.
-        zrUtil.each(viewChildren, function (child, index) {
+        each(viewChildren, function (child, index) {
             // If higher than viewRoot, only ancestors of viewRoot is needed to visit.
             if (child.depth >= viewRootAncestors.length
                 || child === viewRootAncestors[child.depth]
@@ -112,47 +132,54 @@ function travelTree(
 }
 
 function buildVisuals(
-    nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
+    nodeItemStyleModel: Model<TreemapSeriesNodeItemOption['itemStyle']>,
+    designatedVisual: TreemapVisual,
+    levelItemStyle: TreemapLevelItemStyleOption,
+    seriesItemStyleModel: Model<TreemapSeriesOption['itemStyle']>
 ) {
-    var visuals = zrUtil.extend({}, designatedVisual);
+    var visuals = extend({}, designatedVisual);
 
-    zrUtil.each(['color', 'colorAlpha', 'colorSaturation'], function (visualName) {
+    each(['color', 'colorAlpha', 'colorSaturation'] as const, function (visualName) {
         // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
         var val = nodeItemStyleModel.get(visualName, true); // Ignore parent
         val == null && levelItemStyle && (val = levelItemStyle[visualName]);
         val == null && (val = designatedVisual[visualName]);
         val == null && (val = seriesItemStyleModel.get(visualName));
 
-        val != null && (visuals[visualName] = val);
+        val != null && ((visuals as any)[visualName] = val);
     });
 
     return visuals;
 }
 
-function calculateColor(visuals) {
-    var color = getValueVisualDefine(visuals, 'color');
+function calculateColor(visuals: TreemapVisual) {
+    var color = getValueVisualDefine(visuals, 'color') as ColorString;
 
     if (color) {
-        var colorAlpha = getValueVisualDefine(visuals, 'colorAlpha');
-        var colorSaturation = getValueVisualDefine(visuals, 'colorSaturation');
+        var colorAlpha = getValueVisualDefine(visuals, 'colorAlpha') as number;
+        var colorSaturation = getValueVisualDefine(visuals, 'colorSaturation') as number;
         if (colorSaturation) {
-            color = zrColor.modifyHSL(color, null, null, colorSaturation);
+            color = modifyHSL(color, null, null, colorSaturation);
         }
         if (colorAlpha) {
-            color = zrColor.modifyAlpha(color, colorAlpha);
+            color = modifyAlpha(color, colorAlpha);
         }
 
         return color;
     }
 }
 
-function calculateBorderColor(borderColorSaturation, thisNodeColor) {
+function calculateBorderColor(
+    borderColorSaturation: number,
+    thisNodeColor: ColorString
+) {
     return thisNodeColor != null
-            ? zrColor.modifyHSL(thisNodeColor, null, null, borderColorSaturation)
+            // Can only be string
+            ? modifyHSL(thisNodeColor, null, null, borderColorSaturation)
             : null;
 }
 
-function getValueVisualDefine(visuals, name) {
+function getValueVisualDefine(visuals: TreemapVisual, name: keyof TreemapVisual) {
     var value = visuals[name];
     if (value != null && value !== 'none') {
         return value;
@@ -160,7 +187,12 @@ function getValueVisualDefine(visuals, name) {
 }
 
 function buildVisualMapping(
-    node, nodeModel, nodeLayout, nodeItemStyleModel, visuals, viewChildren
+    node: TreemapLayoutNode,
+    nodeModel: NodeModel,
+    nodeLayout: TreemapItemLayout,
+    nodeItemStyleModel: NodeItemStyleModel,
+    visuals: TreemapVisual,
+    viewChildren: TreemapLayoutNode[]
 ) {
     if (!viewChildren || !viewChildren.length) {
         return;
@@ -182,12 +214,12 @@ function buildVisualMapping(
 
     var visualMin = nodeModel.get('visualMin');
     var visualMax = nodeModel.get('visualMax');
-    var dataExtent = nodeLayout.dataExtent.slice();
+    var dataExtent = nodeLayout.dataExtent.slice() as [number, number];
     visualMin != null && visualMin < dataExtent[0] && (dataExtent[0] = visualMin);
     visualMax != null && visualMax > dataExtent[1] && (dataExtent[1] = visualMax);
 
     var colorMappingBy = nodeModel.get('colorMappingBy');
-    var opt = {
+    var opt: VisualMappingOption = {
         type: rangeVisual.name,
         dataExtent: dataExtent,
         visual: rangeVisual.range
@@ -204,7 +236,7 @@ function buildVisualMapping(
     }
 
     var mapping = new VisualMapping(opt);
-    mapping.__drColorMappingBy = colorMappingBy;
+    inner(mapping).drColorMappingBy = colorMappingBy;
 
     return mapping;
 }
@@ -216,26 +248,37 @@ function buildVisualMapping(
 // If a level-1 node dont have children, and its siblings has children,
 // and colorRange is set on level-1, then the node can not be colored.
 // So we separate 'colorRange' and 'color' to different attributes.
-function getRangeVisual(nodeModel, name) {
+function getRangeVisual(nodeModel: NodeModel, name: keyof TreemapVisual) {
     // 'colorRange', 'colorARange', 'colorSRange'.
     // If not exsits on this node, fetch from levels and series.
     var range = nodeModel.get(name);
-    return (isArray(range) && range.length) ? {name: name, range: range} : null;
+    return (isArray(range) && range.length) ? {
+        name: name,
+        range: range
+    } : null;
 }
 
-function mapVisual(nodeModel, visuals, child, index, mapping, seriesModel) {
-    var childVisuals = zrUtil.extend({}, visuals);
+function mapVisual(
+    nodeModel: NodeModel,
+    visuals: TreemapVisual,
+    child: TreemapLayoutNode,
+    index: number,
+    mapping: VisualMapping,
+    seriesModel: TreemapSeriesModel
+) {
+    var childVisuals = extend({}, visuals);
 
     if (mapping) {
-        var mappingType = mapping.type;
-        var colorMappingBy = mappingType === 'color' && mapping.__drColorMappingBy;
+        // Only support color, colorAlpha, colorSaturation.
+        var mappingType = mapping.type as keyof TreemapVisual;
+        var colorMappingBy = mappingType === 'color' && inner(mapping).drColorMappingBy;
         var value = colorMappingBy === 'index'
             ? index
             : colorMappingBy === 'id'
             ? seriesModel.mapIdToIndex(child.getId())
             : child.getValue(nodeModel.get('visualDimension'));
 
-        childVisuals[mappingType] = mapping.mapValueToVisual(value);
+        (childVisuals as any)[mappingType] = mapping.mapValueToVisual(value);
     }
 
     return childVisuals;

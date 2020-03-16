@@ -30,7 +30,7 @@ export default function (properties: readonly string[][]) {
             properties[i][1] = properties[i][0];
         }
     }
-    return function (model: Model, excludes: readonly string[], includes?: readonly string[]) {
+    return function (model: Model, excludes?: readonly string[], includes?: readonly string[]) {
         var style: Dictionary<any> = {};
         for (var i = 0; i < properties.length; i++) {
             var propName = properties[i][1];

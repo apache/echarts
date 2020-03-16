@@ -28,7 +28,7 @@ import {
     separation as sep,
     radialCoordinate,
     getViewRect,
-    LayoutTreeNode
+    TreeLayoutNode
 } from './layoutHelper';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -61,7 +61,7 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         separation = sep();
     }
 
-    var virtualRoot = seriesModel.getData().tree.root as LayoutTreeNode;
+    var virtualRoot = seriesModel.getData().tree.root as TreeLayoutNode;
     var realRoot = virtualRoot.children[0];
 
     if (realRoot) {
@@ -73,7 +73,7 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         var left = realRoot;
         var right = realRoot;
         var bottom = realRoot;
-        eachBefore(realRoot, function (node: LayoutTreeNode) {
+        eachBefore(realRoot, function (node: TreeLayoutNode) {
             var x = node.getLayout().x;
             if (x < left.getLayout().x) {
                 left = node;

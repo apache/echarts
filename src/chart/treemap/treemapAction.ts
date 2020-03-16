@@ -17,14 +17,12 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-/**
- * @file Treemap action
- */
 
 import * as echarts from '../../echarts';
 import * as helper from '../helper/treeHelper';
+import { Payload } from '../../util/types';
+import TreemapSeriesModel from './TreemapSeries';
+import { TreeNode } from '../../data/Tree';
 
 var noop = function () {};
 
@@ -34,8 +32,28 @@ var actionTypes = [
     'treemapMove'
 ];
 
+export interface TreemapZoomToNodePayload extends Payload {
+    type: 'treemapZoomToNode'
+}
+export interface TreemapRenderPayload extends Payload {
+    type: 'treemapRender'
+}
+export interface TreemapMovePayload extends Payload {
+    type: 'treemapMove'
+}
+export interface TreemapRootToNodePayload extends Payload {
+    type: 'treemapRootToNode'
+    targetNode?: TreeNode | string
+    targetNodeId?: string
+
+    direction?: 'rollUp' | 'drillDown'
+}
+
 for (var i = 0; i < actionTypes.length; i++) {
-    echarts.registerAction({type: actionTypes[i], update: 'updateView'}, noop);
+    echarts.registerAction({
+        type: actionTypes[i],
+        update: 'updateView'
+    }, noop);
 }
 
 echarts.registerAction(
@@ -47,7 +65,7 @@ echarts.registerAction(
             handleRootToNode
         );
 
-        function handleRootToNode(model, index) {
+        function handleRootToNode(model: TreemapSeriesModel, index: number) {
             var types = ['treemapZoomToNode', 'treemapRootToNode'];
             var targetInfo = helper.retrieveTargetInfo(payload, types, model);
 

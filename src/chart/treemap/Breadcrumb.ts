@@ -17,32 +17,57 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as graphic from '../../util/graphic';
 import * as layout from '../../util/layout';
-import * as zrUtil from 'zrender/src/core/util';
 import {wrapTreePathInfo} from '../helper/treeHelper';
+import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
+import ExtensionAPI from '../../ExtensionAPI';
+import { TreeNode } from '../../data/Tree';
+import { curry, defaults } from 'zrender/src/core/util';
+import { ZRElementEvent, BoxLayoutOptionMixin } from '../../util/types';
+import Element from 'zrender/src/Element';
+import Model from '../../model/Model';
 
-var TEXT_PADDING = 8;
-var ITEM_GAP = 8;
-var ARRAY_LENGTH = 5;
+const TEXT_PADDING = 8;
+const ITEM_GAP = 8;
+const ARRAY_LENGTH = 5;
 
-function Breadcrumb(containerGroup) {
-    /**
-     * @private
-     * @type {module:zrender/container/Group}
-     */
-    this.group = new graphic.Group();
-
-    containerGroup.add(this.group);
+interface OnSelectCallback {
+    (node: TreeNode, e: ZRElementEvent): void
 }
 
-Breadcrumb.prototype = {
+interface LayoutParam {
+    pos: BoxLayoutOptionMixin
+    box: {
+        width: number,
+        height: number
+    }
+    emptyItemWidth: number
+    totalWidth: number
+    renderList: {
+        node: TreeNode,
+        text: string
+        width: number
+    }[]
+}
 
-    constructor: Breadcrumb,
+type BreadcrumbItemStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']>
+type BreadcrumbTextStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']['textStyle']>
 
-    render: function (seriesModel, api, targetNode, onSelect) {
+class Breadcrumb {
+
+    group = new graphic.Group()
+
+    constructor(containerGroup: graphic.Group) {
+        containerGroup.add(this.group);
+    }
+
+    render(
+        seriesModel: TreemapSeriesModel,
+        api: ExtensionAPI,
+        targetNode: TreeNode,
+        onSelect: OnSelectCallback
+    ) {
         var model = seriesModel.getModel('breadcrumb');
         var thisGroup = this.group;
 
@@ -56,7 +81,7 @@ Breadcrumb.prototype = {
         // var emphasisStyleModel = model.getModel('emphasis.itemStyle');
         var textStyleModel = normalStyleModel.getModel('textStyle');
 
-        var layoutParam = {
+        var layoutParam: LayoutParam = {
             pos: {
                 left: model.get('left'),
                 right: model.get('right'),
@@ -76,35 +101,43 @@ Breadcrumb.prototype = {
         this._renderContent(seriesModel, layoutParam, normalStyleModel, textStyleModel, onSelect);
 
         layout.positionElement(thisGroup, layoutParam.pos, layoutParam.box);
-    },
+    }
 
     /**
      * Prepare render list and total width
      * @private
      */
-    _prepare: function (targetNode, layoutParam, textStyleModel) {
+    _prepare(targetNode: TreeNode, layoutParam: LayoutParam, textStyleModel: BreadcrumbTextStyleModel) {
         for (var node = targetNode; node; node = node.parentNode) {
-            var text = node.getModel().get('name');
+            var text = node.getModel<TreemapSeriesNodeItemOption>().get('name');
             var textRect = textStyleModel.getTextRect(text);
             var itemWidth = Math.max(
                 textRect.width + TEXT_PADDING * 2,
                 layoutParam.emptyItemWidth
             );
             layoutParam.totalWidth += itemWidth + ITEM_GAP;
-            layoutParam.renderList.push({node: node, text: text, width: itemWidth});
+            layoutParam.renderList.push({
+                node: node,
+                text: text,
+                width: itemWidth
+            });
         }
-    },
+    }
 
     /**
      * @private
      */
-    _renderContent: function (
-        seriesModel, layoutParam, normalStyleModel, textStyleModel, onSelect
+    _renderContent(
+        seriesModel: TreemapSeriesModel,
+        layoutParam: LayoutParam,
+        normalStyleModel: BreadcrumbItemStyleModel,
+        textStyleModel: BreadcrumbTextStyleModel,
+        onSelect: OnSelectCallback
     ) {
         // Start rendering.
         var lastX = 0;
         var emptyItemWidth = layoutParam.emptyItemWidth;
-        var height = seriesModel.get('breadcrumb.height');
+        var height = seriesModel.get(['breadcrumb', 'height']);
         var availableSize = layout.getAvailableSize(layoutParam.pos, layoutParam.box);
         var totalWidth = layoutParam.totalWidth;
         var renderList = layoutParam.renderList;
@@ -129,7 +162,7 @@ Breadcrumb.prototype = {
                         i === renderList.length - 1, i === 0
                     )
                 },
-                style: zrUtil.defaults(
+                style: defaults(
                     normalStyleModel.getItemStyle(),
                     {
                         lineJoin: 'bevel',
@@ -139,7 +172,7 @@ Breadcrumb.prototype = {
                     }
                 ),
                 z: 10,
-                onclick: zrUtil.curry(onSelect, itemNode)
+                onclick: curry(onSelect, itemNode)
             });
             this.group.add(el);
 
@@ -147,17 +180,14 @@ Breadcrumb.prototype = {
 
             lastX += itemWidth + ITEM_GAP;
         }
-    },
+    }
 
-    /**
-     * @override
-     */
-    remove: function () {
+    remove() {
         this.group.removeAll();
     }
-};
+}
 
-function makeItemPoints(x, y, itemWidth, itemHeight, head, tail) {
+function makeItemPoints(x: number, y: number, itemWidth: number, itemHeight: number, head: boolean, tail: boolean) {
     var points = [
         [head ? x : x - ARRAY_LENGTH, y],
         [x + itemWidth, y],
@@ -170,8 +200,8 @@ function makeItemPoints(x, y, itemWidth, itemHeight, head, tail) {
 }
 
 // Package custom mouse event.
-function packEventData(el, seriesModel, itemNode) {
-    el.eventData = {
+function packEventData(el: Element, seriesModel: TreemapSeriesModel, itemNode: TreeNode) {
+    graphic.getECData(el).eventData = {
         componentType: 'series',
         componentSubType: 'treemap',
         componentIndex: seriesModel.componentIndex,

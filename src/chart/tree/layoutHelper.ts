@@ -39,26 +39,26 @@ import TreeSeriesModel from './TreeSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 
 interface HierNode {
-    defaultAncestor: LayoutTreeNode,
-    ancestor: LayoutTreeNode,
+    defaultAncestor: TreeLayoutNode,
+    ancestor: TreeLayoutNode,
     prelim: number,
     modifier: number,
     change: number,
     shift: number,
     i: number,
-    thread: LayoutTreeNode
+    thread: TreeLayoutNode
 }
 
-export interface LayoutTreeNode extends TreeNode {
-    parentNode: LayoutTreeNode
+export interface TreeLayoutNode extends TreeNode {
+    parentNode: TreeLayoutNode
     hierNode: HierNode
-    children: LayoutTreeNode[]
+    children: TreeLayoutNode[]
 }
 /**
  * Initialize all computational message for following algorithm.
  */
 export function init(inRoot: TreeNode) {
-    const root = inRoot as LayoutTreeNode;
+    const root = inRoot as TreeLayoutNode;
     root.hierNode = {
         defaultAncestor: null,
         ancestor: root,
@@ -107,7 +107,7 @@ export function init(inRoot: TreeNode) {
  * apportion(). After spacing out the children by calling executeShifts(), the
  * node is placed to the midpoint of its outermost children.
  */
-export function firstWalk(node: LayoutTreeNode, separation: SeparationFunc) {
+export function firstWalk(node: TreeLayoutNode, separation: SeparationFunc) {
     var children = node.isExpand ? node.children : [];
     var siblings = node.parentNode.children;
     var subtreeW = node.hierNode.i ? siblings[node.hierNode.i - 1] : null;
@@ -142,7 +142,7 @@ export function firstWalk(node: LayoutTreeNode, separation: SeparationFunc) {
  *
  * Computes all real x-coordinates by summing up the modifiers recursively.
  */
-export function secondWalk(node: LayoutTreeNode) {
+export function secondWalk(node: TreeLayoutNode) {
     var nodeX = node.hierNode.prelim + node.parentNode.hierNode.modifier;
     node.setLayout({x: nodeX}, true);
     node.hierNode.modifier += node.parentNode.hierNode.modifier;
@@ -185,7 +185,7 @@ export function getViewRect(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
-function executeShifts(node: LayoutTreeNode) {
+function executeShifts(node: TreeLayoutNode) {
     var children = node.children;
     var n = children.length;
     var shift = 0;
@@ -214,11 +214,11 @@ function executeShifts(node: LayoutTreeNode) {
  * smaller subtrees. Finally, we add a new thread (if necessary).
  */
 function apportion(
-    subtreeV: LayoutTreeNode,
-    subtreeW: LayoutTreeNode,
-    ancestor: LayoutTreeNode,
+    subtreeV: TreeLayoutNode,
+    subtreeW: TreeLayoutNode,
+    ancestor: TreeLayoutNode,
     separation: SeparationFunc
-): LayoutTreeNode {
+): TreeLayoutNode {
 
     if (subtreeW) {
         var nodeOutRight = subtreeV;
@@ -266,7 +266,7 @@ function apportion(
  * It returns the rightmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
  */
-function nextRight(node: LayoutTreeNode): LayoutTreeNode {
+function nextRight(node: TreeLayoutNode): TreeLayoutNode {
     var children = node.children;
     return children.length && node.isExpand ? children[children.length - 1] : node.hierNode.thread;
 }
@@ -276,7 +276,7 @@ function nextRight(node: LayoutTreeNode): LayoutTreeNode {
  * It returns the leftmost child of node or the thread of node. The function
  * returns null if and only if node is on the highest depth of its subtree.
  */
-function nextLeft(node: LayoutTreeNode) {
+function nextLeft(node: TreeLayoutNode) {
     var children = node.children;
     return children.length && node.isExpand ? children[0] : node.hierNode.thread;
 }
@@ -286,10 +286,10 @@ function nextLeft(node: LayoutTreeNode) {
  * Otherwise, returns the specified ancestor.
  */
 function nextAncestor(
-    nodeInLeft: LayoutTreeNode,
-    node: LayoutTreeNode,
-    ancestor: LayoutTreeNode
-): LayoutTreeNode {
+    nodeInLeft: TreeLayoutNode,
+    node: TreeLayoutNode,
+    ancestor: TreeLayoutNode
+): TreeLayoutNode {
     return nodeInLeft.hierNode.ancestor.parentNode === node.parentNode
         ? nodeInLeft.hierNode.ancestor : ancestor;
 }
@@ -304,8 +304,8 @@ function nextAncestor(
  * This is done by increasing prelim(w+) and modifier(w+) by shift.
  */
 function moveSubtree(
-    wl: LayoutTreeNode,
-    wr: LayoutTreeNode,
+    wl: TreeLayoutNode,
+    wr: TreeLayoutNode,
     shift: number
 ) {
     var change = shift / (wr.hierNode.i - wl.hierNode.i);
@@ -322,10 +322,10 @@ function moveSubtree(
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
-function defaultSeparation(node1: LayoutTreeNode, node2: LayoutTreeNode): number {
+function defaultSeparation(node1: TreeLayoutNode, node2: TreeLayoutNode): number {
     return node1.parentNode === node2.parentNode ? 1 : 2;
 }
 
 interface SeparationFunc {
-    (node1: LayoutTreeNode, node2: LayoutTreeNode): number
+    (node1: TreeLayoutNode, node2: TreeLayoutNode): number
 }

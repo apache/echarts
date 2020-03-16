@@ -29,7 +29,7 @@ import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import { __DEV__ } from '../../config';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
-import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeOption } from './TreeSeries';
+import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -57,12 +57,12 @@ interface TreeSeriesScope extends Pick<
     useNameLabel: boolean
     fadeIn: boolean
 
-    itemModel: Model<TreeSeriesNodeOption>
+    itemModel: Model<TreeSeriesNodeItemOption>
     itemStyle: StyleProps
     hoverItemStyle: StyleProps
     lineStyle: StyleProps
-    labelModel: Model<TreeSeriesNodeOption['label']>
-    hoverLabelModel: Model<TreeSeriesNodeOption['label']>
+    labelModel: Model<TreeSeriesNodeItemOption['label']>
+    hoverLabelModel: Model<TreeSeriesNodeItemOption['label']>
     symbolInnerColor: ColorString
 }
 
@@ -390,7 +390,7 @@ function symbolNeedsDraw(data: List, dataIndex: number) {
 
 function getTreeNodeStyle(
     node: TreeNode,
-    itemModel: Model<TreeSeriesNodeOption>,
+    itemModel: Model<TreeSeriesNodeItemOption>,
     seriesScope: TreeSeriesScope
 ): TreeSeriesScope {
     seriesScope.itemModel = itemModel;

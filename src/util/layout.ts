@@ -23,7 +23,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
-import { BoxLayoutOptionMixin, ComponentLayoutMode, ZRRectLike } from './types';
+import { BoxLayoutOptionMixin, ComponentLayoutMode } from './types';
 import { Group } from 'zrender/src/export';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
@@ -160,26 +160,26 @@ export var hbox = zrUtil.curry(boxLayout, 'horizontal');
  */
 export function getAvailableSize(
     positionInfo: {
-        x: number | string
-        y: number | string
-        x2: number | string
-        y2: number | string
+        left?: number | string
+        top?: number | string
+        right?: number | string
+        bottom?: number | string
     },
-    containerRect: ZRRectLike,
-    margin: number[] | number
+    containerRect: { width: number, height: number },
+    margin?: number[] | number
 ) {
     var containerWidth = containerRect.width;
     var containerHeight = containerRect.height;
 
-    var x = parsePercent(positionInfo.x, containerWidth);
-    var y = parsePercent(positionInfo.y, containerHeight);
-    var x2 = parsePercent(positionInfo.x2, containerWidth);
-    var y2 = parsePercent(positionInfo.y2, containerHeight);
+    var x = parsePercent(positionInfo.left, containerWidth);
+    var y = parsePercent(positionInfo.top, containerHeight);
+    var x2 = parsePercent(positionInfo.right, containerWidth);
+    var y2 = parsePercent(positionInfo.bottom, containerHeight);
 
-    (isNaN(x) || isNaN(parseFloat(positionInfo.x as string))) && (x = 0);
-    (isNaN(x2) || isNaN(parseFloat(positionInfo.x2 as string))) && (x2 = containerWidth);
-    (isNaN(y) || isNaN(parseFloat(positionInfo.y as string))) && (y = 0);
-    (isNaN(y2) || isNaN(parseFloat(positionInfo.y2 as string))) && (y2 = containerHeight);
+    (isNaN(x) || isNaN(parseFloat(positionInfo.left as string))) && (x = 0);
+    (isNaN(x2) || isNaN(parseFloat(positionInfo.right as string))) && (x2 = containerWidth);
+    (isNaN(y) || isNaN(parseFloat(positionInfo.top as string))) && (y = 0);
+    (isNaN(y2) || isNaN(parseFloat(positionInfo.bottom as string))) && (y2 = containerHeight);
 
     margin = formatUtil.normalizeCssArray(margin || 0);
 

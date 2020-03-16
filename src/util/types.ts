@@ -1058,6 +1058,13 @@ export interface SeriesOption extends
 
     hoverLayerThreshold?: number
     // FIXME:TS more
+
+    /**
+     * When dataset is used, seriesLayoutBy specifies whether the column or the row of dataset is mapped to the series
+     * namely, the series is "layout" on columns or rows
+     * @default 'column'
+     */
+    seriesLayoutBy?: 'column' | 'row'
 }
 
 export interface SeriesOnCartesianOptionMixin {
