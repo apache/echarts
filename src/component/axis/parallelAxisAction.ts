@@ -17,37 +17,46 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as echarts from '../../echarts';
+import { Payload } from '../../util/types';
+import ParallelAxisModel, { ParallelAxisInterval } from '../../coord/parallel/AxisModel';
+import GlobalModel from '../../model/Global';
+import ParallelModel from '../../coord/parallel/ParallelModel';
 
-/**
- * @payload
- * @property {string} parallelAxisId
- * @property {Array.<Array.<number>>} intervals
- */
+interface ParallelAxisAreaSelectPayload extends Payload {
+    parallelAxisId: string;
+    intervals: ParallelAxisInterval[]
+}
+
 var actionInfo = {
     type: 'axisAreaSelect',
     event: 'axisAreaSelected'
     // update: 'updateVisual'
 };
 
-echarts.registerAction(actionInfo, function (payload, ecModel) {
+echarts.registerAction(actionInfo, function (payload: ParallelAxisAreaSelectPayload, ecModel: GlobalModel) {
     ecModel.eachComponent(
         {mainType: 'parallelAxis', query: payload},
-        function (parallelAxisModel) {
+        function (parallelAxisModel: ParallelAxisModel) {
             parallelAxisModel.axis.model.setActiveIntervals(payload.intervals);
         }
     );
 });
 
+export interface ParallelAxisExpandPayload extends Payload {
+    axisExpandWindow?: number[];
+    // Jumping uses animation, and sliding suppresses animation.
+    animation?: boolean;
+}
+
 /**
  * @payload
  */
-echarts.registerAction('parallelAxisExpand', function (payload, ecModel) {
+echarts.registerAction('parallelAxisExpand', function (payload: ParallelAxisExpandPayload, ecModel) {
     ecModel.eachComponent(
         {mainType: 'parallel', query: payload},
-        function (parallelModel) {
+        function (parallelModel: ParallelModel) {
             parallelModel.setAxisExpand(payload);
         }
     );

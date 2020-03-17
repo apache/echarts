@@ -26,10 +26,10 @@ import { DataZoomPayloadBatchItem } from './helper';
 
 var each = zrUtil.each;
 
-type StoreSnapshot = Dictionary<DataZoomPayloadBatchItem>
+export type DataZoomStoreSnapshot = Dictionary<DataZoomPayloadBatchItem>
 
 type Store = {
-    snapshots: StoreSnapshot[]
+    snapshots: DataZoomStoreSnapshot[]
 }
 
 const inner = makeInner<Store, GlobalModel>();
@@ -38,7 +38,7 @@ const inner = makeInner<Store, GlobalModel>();
  * @param ecModel
  * @param newSnapshot key is dataZoomId
  */
-export function push(ecModel: GlobalModel, newSnapshot: StoreSnapshot) {
+export function push(ecModel: GlobalModel, newSnapshot: DataZoomStoreSnapshot) {
     var storedSnapshots = getStoreSnapshots(ecModel);
 
     // If previous dataZoom can not be found,
@@ -76,7 +76,7 @@ export function pop(ecModel: GlobalModel) {
     storedSnapshots.length > 1 && storedSnapshots.pop();
 
     // Find top for all dataZoom.
-    var snapshot: StoreSnapshot = {};
+    var snapshot: DataZoomStoreSnapshot = {};
     each(head, function (batchItem, dataZoomId) {
         for (var i = storedSnapshots.length - 1; i >= 0; i--) {
             var batchItem = storedSnapshots[i][dataZoomId];

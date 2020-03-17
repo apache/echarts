@@ -29,7 +29,8 @@ import {
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
-    SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin, ScaleDataValue, Dictionary, ColorString
+    SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin,
+    ScaleDataValue, Dictionary, ColorString
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -55,6 +56,7 @@ import List from '../data/List';
 import Source from '../data/Source';
 import Axis from '../coord/Axis';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
+import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
 
 var inner = modelUtil.makeInner<{
     data: List
@@ -90,7 +92,18 @@ interface SeriesModel {
     /**
      * Get position for marker
      */
-    getMarkerPosition(value: ScaleDataValue[]): number[]
+    getMarkerPosition(value: ScaleDataValue[]): number[];
+
+    /**
+     * See `component/brush/selector.js`
+     * Defined the brush selector for this series.
+     */
+    brushSelector(
+        dataIndex: number,
+        data: List,
+        selectors: BrushCommonSelectorsForSeries,
+        area: BrushSelectableArea
+    ): boolean;
 }
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {

@@ -95,8 +95,9 @@ class Source {
     /**
      * encode definition in option.
      * can be null/undefined.
+     * Might be specified outside.
      */
-    readonly encodeDefine: HashMap<OptionEncodeValue>;
+    encodeDefine: HashMap<OptionEncodeValue>;
 
     /**
      * Not null/undefined, uint.

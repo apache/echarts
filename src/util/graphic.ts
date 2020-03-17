@@ -1278,7 +1278,7 @@ export function initProps<Props>(
  * @param target
  * @param [ancestor]
  */
-export function getTransform(target: Transformable, ancestor: Transformable): matrix.MatrixArray {
+export function getTransform(target: Transformable, ancestor?: Transformable): matrix.MatrixArray {
     var mat = matrix.identity([]);
 
     while (target && target !== ancestor) {
@@ -1395,7 +1395,7 @@ export function groupTransition(
     });
 }
 
-export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike): vector.VectorArray[] {
+export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike): number[][] {
     // FIXME: this way migth be incorrect when grpahic clipped by a corner.
     // and when element have border.
     return zrUtil.map(points, function (point) {

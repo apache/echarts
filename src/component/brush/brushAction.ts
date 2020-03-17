@@ -17,24 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
+import GlobalModel from '../../model/Global';
+import { Payload } from '../../util/types';
+import BrushModel, { BrushAreaParam } from './BrushModel';
 
-/**
- * payload: {
- *      brushIndex: number, or,
- *      brushId: string, or,
- *      brushName: string,
- *      globalRanges: Array
- * }
- */
+interface BrushPayload extends Payload {
+    // If "areas" is empty, all of the select-boxes will be deleted
+    areas?: BrushAreaParam[];
+}
+
 echarts.registerAction(
-        {type: 'brush', event: 'brush' /*, update: 'updateView' */},
-    function (payload, ecModel) {
-        ecModel.eachComponent({mainType: 'brush', query: payload}, function (brushModel) {
-            brushModel.setAreas(payload.areas);
-        });
+    {type: 'brush', event: 'brush' /*, update: 'updateView' */},
+    function (payload: BrushPayload, ecModel: GlobalModel) {
+        ecModel.eachComponent(
+            {mainType: 'brush', query: payload},
+            function (brushModel: BrushModel) {
+                brushModel.setAreas(payload.areas);
+            }
+        );
     }
 );
 

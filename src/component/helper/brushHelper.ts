@@ -17,22 +17,24 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {onIrrelevantElement} from './cursorHelper';
 import * as graphicUtil from '../../util/graphic';
+import ExtensionAPI from '../../ExtensionAPI';
+import { ElementEvent } from 'zrender/src/Element';
+import ComponentModel from '../../model/Component';
 
-export function makeRectPanelClipPath(rect) {
+export function makeRectPanelClipPath(rect: RectLike) {
     rect = normalizeRect(rect);
-    return function (localPoints, transform) {
+    return function (localPoints: number[][]) {
         return graphicUtil.clipPointsByRect(localPoints, rect);
     };
 }
 
-export function makeLinearBrushOtherExtent(rect, specifiedXYIndex) {
+export function makeLinearBrushOtherExtent(rect: RectLike, specifiedXYIndex?: 0 | 1) {
     rect = normalizeRect(rect);
-    return function (xyIndex) {
+    return function (xyIndex: 0 | 1) {
         var idx = specifiedXYIndex != null ? specifiedXYIndex : xyIndex;
         var brushWidth = idx ? rect.width : rect.height;
         var base = idx ? rect.x : rect.y;
@@ -40,16 +42,16 @@ export function makeLinearBrushOtherExtent(rect, specifiedXYIndex) {
     };
 }
 
-export function makeRectIsTargetByCursor(rect, api, targetModel) {
-    rect = normalizeRect(rect);
-    return function (e, localCursorPoint, transform) {
-        return rect.contain(localCursorPoint[0], localCursorPoint[1])
+export function makeRectIsTargetByCursor(rect: RectLike, api: ExtensionAPI, targetModel: ComponentModel) {
+    var boundingRect = normalizeRect(rect);
+    return function (e: ElementEvent, localCursorPoint: number[]) {
+        return boundingRect.contain(localCursorPoint[0], localCursorPoint[1])
             && !onIrrelevantElement(e, api, targetModel);
     };
 }
 
 // Consider width/height is negative.
-function normalizeRect(rect) {
+function normalizeRect(rect: RectLike): BoundingRect {
     return BoundingRect.create(rect);
 }
 

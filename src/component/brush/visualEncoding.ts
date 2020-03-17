@@ -17,26 +17,53 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as visualSolution from '../../visual/visualSolution';
-import selector from './selector';
+import selector, { BrushSelectableArea, makeBrushCommonSelectorForSeries } from './selector';
 import * as throttleUtil from '../../util/throttle';
 import BrushTargetManager from '../helper/BrushTargetManager';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Payload } from '../../util/types';
+import BrushModel, { BrushAreaParamInternal } from './BrushModel';
+import SeriesModel from '../../model/Series';
+import ParallelSeries from '../../chart/parallel/ParallelSeries';
+import { ZRenderType } from 'zrender/src/zrender';
+import { BrushType, BrushDimensionMinMax } from '../helper/BrushController';
 
-var STATE_LIST = ['inBrush', 'outOfBrush'];
-var DISPATCH_METHOD = '__ecBrushSelect';
-var DISPATCH_FLAG = '__ecInBrushSelectEvent';
+type BrushVisualState = 'inBrush' | 'outOfBrush';
+
+var STATE_LIST = ['inBrush', 'outOfBrush'] as const;
+var DISPATCH_METHOD = '__ecBrushSelect' as const;
+var DISPATCH_FLAG = '__ecInBrushSelectEvent' as const;
 var PRIORITY_BRUSH = echarts.PRIORITY.VISUAL.BRUSH;
+
+interface BrushGlobalDispatcher extends ZRenderType  {
+    [DISPATCH_FLAG]: boolean;
+    [DISPATCH_METHOD]: typeof doDispatch
+}
+
+interface BrushSelectedItem {
+    brushId: string;
+    brushIndex: number;
+    brushName: string;
+    areas: BrushAreaParamInternal[];
+    selected: {
+        seriesId: string;
+        seriesIndex: number;
+        seriesName: string;
+        dataIndex: number[];
+    }[]
+};
 
 /**
  * Layout for visual, the priority higher than other layout, and before brush visual.
  */
-echarts.registerLayout(PRIORITY_BRUSH, function (ecModel, api, payload) {
-    ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
+echarts.registerLayout(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+    ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
         payload && payload.type === 'takeGlobalCursor' && brushModel.setBrushOption(
             payload.key === 'brush' ? payload.brushOption : {brushType: false}
         );
@@ -44,8 +71,8 @@ echarts.registerLayout(PRIORITY_BRUSH, function (ecModel, api, payload) {
     layoutCovers(ecModel);
 });
 
-export function layoutCovers(ecModel) {
-    ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
+export function layoutCovers(ecModel: GlobalModel): void {
+    ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
         var brushTargetManager = brushModel.brushTargetManager = new BrushTargetManager(brushModel.option, ecModel);
         brushTargetManager.setInputRanges(brushModel.areas, ecModel);
     });
@@ -54,15 +81,15 @@ export function layoutCovers(ecModel) {
 /**
  * Register the visual encoding if this modules required.
  */
-echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
+echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
 
-    var brushSelected = [];
+    var brushSelected: BrushSelectedItem[] = [];
     var throttleType;
     var throttleDelay;
 
-    ecModel.eachComponent({mainType: 'brush'}, function (brushModel, brushIndex) {
+    ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel, brushIndex) {
 
-        var thisBrushSelected = {
+        var thisBrushSelected: BrushSelectedItem = {
             brushId: brushModel.id,
             brushIndex: brushIndex,
             brushName: brushModel.name,
@@ -75,10 +102,10 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
 
         var brushOption = brushModel.option;
         var brushLink = brushOption.brushLink;
-        var linkedSeriesMap = [];
-        var selectedDataIndexForLink = [];
-        var rangeInfoBySeries = [];
-        var hasBrushExists = 0;
+        var linkedSeriesMap: {[seriesIndex: number]: 0 | 1} = [];
+        var selectedDataIndexForLink: {[dataIndex: number]: 0 | 1} = [];
+        var rangeInfoBySeries: {[seriesIndex: number]: BrushSelectableArea[]} = [];
+        var hasBrushExists = false;
 
         if (!brushIndex) { // Only the first throttle setting works.
             throttleType = brushOption.throttleType;
@@ -86,13 +113,14 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
         }
 
         // Add boundingRect and selectors to range.
-        var areas = zrUtil.map(brushModel.areas, function (area) {
-            return bindSelector(
-                zrUtil.defaults(
-                    {boundingRect: boundingRectBuilders[area.brushType](area)},
-                    area
-                )
-            );
+        var areas: BrushSelectableArea[] = zrUtil.map(brushModel.areas, function (area) {
+            var builder = boundingRectBuilders[area.brushType];
+            var selectableArea = zrUtil.defaults(
+                {boundingRect: builder ? builder(area) : void 0},
+                area
+            ) as BrushSelectableArea;
+            selectableArea.selectors = makeBrushCommonSelectorForSeries(selectableArea);
+            return selectableArea;
         });
 
         var visualMappings = visualSolution.createVisualMappings(
@@ -105,13 +133,13 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
             linkedSeriesMap[seriesIndex] = 1;
         });
 
-        function linkOthers(seriesIndex) {
-            return brushLink === 'all' || linkedSeriesMap[seriesIndex];
+        function linkOthers(seriesIndex: number): boolean {
+            return brushLink === 'all' || !!linkedSeriesMap[seriesIndex];
         }
 
         // If no supported brush or no brush on the series,
         // all visuals should be in original state.
-        function brushed(rangeInfoList) {
+        function brushed(rangeInfoList: BrushSelectableArea[]): boolean {
             return !!rangeInfoList.length;
         }
 
@@ -130,16 +158,16 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
 
         // Step A
         ecModel.eachSeries(function (seriesModel, seriesIndex) {
-            var rangeInfoList = rangeInfoBySeries[seriesIndex] = [];
+            var rangeInfoList: BrushSelectableArea[] = rangeInfoBySeries[seriesIndex] = [];
 
             seriesModel.subType === 'parallel'
-                ? stepAParallel(seriesModel, seriesIndex, rangeInfoList)
+                ? stepAParallel(seriesModel as ParallelSeries, seriesIndex)
                 : stepAOthers(seriesModel, seriesIndex, rangeInfoList);
         });
 
-        function stepAParallel(seriesModel, seriesIndex) {
+        function stepAParallel(seriesModel: ParallelSeries, seriesIndex: number): void {
             var coordSys = seriesModel.coordinateSystem;
-            hasBrushExists |= coordSys.hasAxisBrushed();
+            hasBrushExists = hasBrushExists || coordSys.hasAxisBrushed();
 
             linkOthers(seriesIndex) && coordSys.eachActiveState(
                 seriesModel.getData(),
@@ -149,23 +177,24 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
             );
         }
 
-        function stepAOthers(seriesModel, seriesIndex, rangeInfoList) {
-            var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
-            if (!selectorsByBrushType || brushModelNotControll(brushModel, seriesIndex)) {
+        function stepAOthers(
+            seriesModel: SeriesModel, seriesIndex: number, rangeInfoList: BrushSelectableArea[]
+        ): void {
+            if (!seriesModel.brushSelector || brushModelNotControll(brushModel, seriesIndex)) {
                 return;
             }
 
             zrUtil.each(areas, function (area) {
-                selectorsByBrushType[area.brushType]
-                    && brushModel.brushTargetManager.controlSeries(area, seriesModel, ecModel)
-                    && rangeInfoList.push(area);
-                hasBrushExists |= brushed(rangeInfoList);
+                if (brushModel.brushTargetManager.controlSeries(area, seriesModel, ecModel)) {
+                    rangeInfoList.push(area);
+                }
+                hasBrushExists = hasBrushExists || brushed(rangeInfoList);
             });
 
             if (linkOthers(seriesIndex) && brushed(rangeInfoList)) {
                 var data = seriesModel.getData();
                 data.each(function (dataIndex) {
-                    if (checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex)) {
+                    if (checkInRange(seriesModel, rangeInfoList, data, dataIndex)) {
                         selectedDataIndexForLink[dataIndex] = 1;
                     }
                 });
@@ -174,7 +203,7 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
 
         // Step B
         ecModel.eachSeries(function (seriesModel, seriesIndex) {
-            var seriesBrushSelected = {
+            var seriesBrushSelected: BrushSelectedItem['selected'][0] = {
                 seriesId: seriesModel.id,
                 seriesIndex: seriesIndex,
                 seriesName: seriesModel.name,
@@ -184,18 +213,17 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
             // for user to find series by seriesIndex.
             thisBrushSelected.selected.push(seriesBrushSelected);
 
-            var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
             var rangeInfoList = rangeInfoBySeries[seriesIndex];
 
             var data = seriesModel.getData();
             var getValueState = linkOthers(seriesIndex)
-                ? function (dataIndex) {
+                ? function (dataIndex: number): BrushVisualState {
                     return selectedDataIndexForLink[dataIndex]
                         ? (seriesBrushSelected.dataIndex.push(data.getRawIndex(dataIndex)), 'inBrush')
                         : 'outOfBrush';
                 }
-                : function (dataIndex) {
-                    return checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex)
+                : function (dataIndex: number): BrushVisualState {
+                    return checkInRange(seriesModel, rangeInfoList, data, dataIndex)
                         ? (seriesBrushSelected.dataIndex.push(data.getRawIndex(dataIndex)), 'inBrush')
                         : 'outOfBrush';
                 };
@@ -212,7 +240,13 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
     dispatchAction(api, throttleType, throttleDelay, brushSelected, payload);
 });
 
-function dispatchAction(api, throttleType, throttleDelay, brushSelected, payload) {
+function dispatchAction(
+    api: ExtensionAPI,
+    throttleType: throttleUtil.ThrottleType,
+    throttleDelay: number,
+    brushSelected: BrushSelectedItem[],
+    payload: Payload
+): void {
     // This event will not be triggered when `setOpion`, otherwise dead lock may
     // triggered when do `setOption` in event listener, which we do not find
     // satisfactory way to solve yet. Some considered resolutions:
@@ -225,7 +259,7 @@ function dispatchAction(api, throttleType, throttleDelay, brushSelected, payload
         return;
     }
 
-    var zr = api.getZr();
+    var zr = api.getZr() as BrushGlobalDispatcher;
     if (zr[DISPATCH_FLAG]) {
         return;
     }
@@ -239,9 +273,9 @@ function dispatchAction(api, throttleType, throttleDelay, brushSelected, payload
     fn(api, brushSelected);
 }
 
-function doDispatch(api, brushSelected) {
+function doDispatch(api: ExtensionAPI, brushSelected: BrushSelectedItem[]): void {
     if (!api.isDisposed()) {
-        var zr = api.getZr();
+        var zr = api.getZr() as BrushGlobalDispatcher;
         zr[DISPATCH_FLAG] = true;
         api.dispatchAction({
             type: 'brushSelect',
@@ -251,10 +285,15 @@ function doDispatch(api, brushSelected) {
     }
 }
 
-function checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex) {
+function checkInRange(
+    seriesModel: SeriesModel,
+    rangeInfoList: BrushSelectableArea[],
+    data: ReturnType<SeriesModel['getData']>,
+    dataIndex: number
+) {
     for (var i = 0, len = rangeInfoList.length; i < len; i++) {
         var area = rangeInfoList[i];
-        if (selectorsByBrushType[area.brushType](
+        if (seriesModel.brushSelector(
             dataIndex, data, area.selectors, area
         )) {
             return true;
@@ -262,29 +301,7 @@ function checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex) {
     }
 }
 
-function getSelectorsByBrushType(seriesModel) {
-    var brushSelector = seriesModel.brushSelector;
-    if (zrUtil.isString(brushSelector)) {
-        var sels = [];
-        zrUtil.each(selector, function (selectorsByElementType, brushType) {
-            sels[brushType] = function (dataIndex, data, selectors, area) {
-                var itemLayout = data.getItemLayout(dataIndex);
-                return selectorsByElementType[brushSelector](itemLayout, selectors, area);
-            };
-        });
-        return sels;
-    }
-    else if (zrUtil.isFunction(brushSelector)) {
-        var bSelector = {};
-        zrUtil.each(selector, function (sel, brushType) {
-            bSelector[brushType] = brushSelector;
-        });
-        return bSelector;
-    }
-    return brushSelector;
-}
-
-function brushModelNotControll(brushModel, seriesIndex) {
+function brushModelNotControll(brushModel: BrushModel, seriesIndex: number): boolean {
     var seriesIndices = brushModel.option.seriesIndex;
     return seriesIndices != null
         && seriesIndices !== 'all'
@@ -295,30 +312,16 @@ function brushModelNotControll(brushModel, seriesIndex) {
         );
 }
 
-function bindSelector(area) {
-    var selectors = area.selectors = {};
-    zrUtil.each(selector[area.brushType], function (selFn, elType) {
-        // Do not use function binding or curry for performance.
-        selectors[elType] = function (itemLayout) {
-            return selFn(itemLayout, selectors, area);
-        };
-    });
-    return area;
-}
-
-var boundingRectBuilders = {
-
-    lineX: zrUtil.noop,
-
-    lineY: zrUtil.noop,
+type AreaBoundingRectBuilder = (area: BrushAreaParamInternal) => BoundingRect;
+var boundingRectBuilders: Partial<Record<BrushType, AreaBoundingRectBuilder>> = {
 
     rect: function (area) {
-        return getBoundingRectFromMinMax(area.range);
+        return getBoundingRectFromMinMax(area.range as BrushDimensionMinMax[]);
     },
 
     polygon: function (area) {
         var minMax;
-        var range = area.range;
+        var range = area.range as BrushDimensionMinMax[];
 
         for (var i = 0, len = range.length; i < len; i++) {
             minMax = minMax || [[Infinity, -Infinity], [Infinity, -Infinity]];
@@ -333,7 +336,8 @@ var boundingRectBuilders = {
     }
 };
 
-function getBoundingRectFromMinMax(minMax) {
+
+function getBoundingRectFromMinMax(minMax: BrushDimensionMinMax[]): BoundingRect {
     return new BoundingRect(
         minMax[0][0],
         minMax[1][0],

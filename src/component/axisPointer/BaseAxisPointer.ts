@@ -393,10 +393,7 @@ class BaseAxisPointer implements AxisPointer {
         this._moveHandleToValue(value, isInit);
     }
 
-    /**
-     * @private
-     */
-    _moveHandleToValue(value: AxisValue, isInit?: boolean) {
+    private _moveHandleToValue(value: AxisValue, isInit?: boolean) {
         updateProps(
             this._axisPointerModel,
             !isInit && this._moveAnimation,
@@ -407,10 +404,7 @@ class BaseAxisPointer implements AxisPointer {
         );
     }
 
-    /**
-     * @private
-     */
-    _onHandleDragMove(dx: number, dy: number) {
+    private _onHandleDragMove(dx: number, dy: number) {
         var handle = this._handle;
         if (!handle) {
             return;
@@ -436,7 +430,6 @@ class BaseAxisPointer implements AxisPointer {
 
     /**
      * Throttled method.
-     * @private
      */
     _doDispatchAxisPointer() {
         var handle = this._handle;
@@ -458,10 +451,7 @@ class BaseAxisPointer implements AxisPointer {
         });
     }
 
-    /**
-     * @private
-     */
-    _onHandleDragEnd() {
+    private _onHandleDragEnd() {
         this._dragging = false;
         var handle = this._handle;
         if (!handle) {

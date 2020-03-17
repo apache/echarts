@@ -78,11 +78,6 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // higher priority than center and zoom
     boundingCoords?: number[][];
 
-    scaleLimit?: {
-        min?: number;
-        max?: number;
-    };
-
     nameMap?: NameMap;
 }
 
@@ -244,6 +239,8 @@ class GeoModel extends ComponentModel<GeoOption> {
     }
 
 }
+
+ComponentModel.registerClass(GeoModel);
 
 interface GeoModel extends DataSelectableMixin<GeoOption> {};
 zrUtil.mixin(GeoModel, DataSelectableMixin);

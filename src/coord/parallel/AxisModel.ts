@@ -17,34 +17,62 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
-import axisModelCreator from '../axisModelCreator';
+import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreator';
 import * as numberUtil from '../../util/number';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
+import ParallelAxis from './ParallelAxis';
+import { ComponentOption, ZRColor, ParsedValue } from '../../util/types';
+import { AxisBaseOption } from '../axisCommonTypes';
+import { StyleProps } from 'zrender/src/graphic/Style';
+import Parallel from './Parallel';
 
-var AxisModel = ComponentModel.extend({
 
-    type: 'baseParallelAxis',
+// 'normal' means there is no "active intervals" existing.
+export type ParallelActiveState = 'normal' | 'active' | 'inactive';
+export type ParallelAxisInterval = number[];
+type ParallelAreaSelectStyleKey = 'fill' | 'lineWidth' | 'stroke' | 'opacity';
+export type ParallelAreaSelectStyleProps = Pick<StyleProps, ParallelAreaSelectStyleKey> & {
+    // Selected area width.
+    width: number;
+}
 
+export interface ParallelAxisOption extends AxisBaseOption {
     /**
-     * @type {module:echarts/coord/parallel/Axis}
+     * 0, 1, 2, ...
      */
-    axis: null,
+    dim?: number[];
+    parallelIndex?: number;
+    areaSelectStyle?: {
+        width?: number;
+        borderWidth?: number;
+        borderColor?: ZRColor;
+        color?: ZRColor;
+        opacity?: number;
+    };
+    // Whether realtime update view when select.
+    realtime?: boolean;
+}
+
+class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
+
+    static type: 'baseParallelAxis';
+    readonly type = ParallelAxisModel.type;
+
+    axis: ParallelAxis;
+
+    // Inject
+    coordinateSystem: Parallel;
 
     /**
-     * @type {Array.<Array.<number>}
      * @readOnly
      */
-    activeIntervals: [],
+    activeIntervals: ParallelAxisInterval[];
 
-    /**
-     * @return {Object}
-     */
-    getAreaSelectStyle: function () {
+    getAreaSelectStyle(): ParallelAreaSelectStyleProps {
         return makeStyleMapper(
             [
                 ['fill', 'color'],
@@ -53,8 +81,8 @@ var AxisModel = ComponentModel.extend({
                 ['width', 'width'],
                 ['opacity', 'opacity']
             ]
-        )(this.getModel('areaSelectStyle'));
-    },
+        )(this.getModel('areaSelectStyle')) as ParallelAreaSelectStyleProps;
+    }
 
     /**
      * The code of this feature is put on AxisModel but not ParallelAxis,
@@ -62,11 +90,9 @@ var AxisModel = ComponentModel.extend({
      * ParallelAxis having been disposed. this._activeInterval should be kept
      * when action dispatched (i.e. legend click).
      *
-     * @param {Array.<Array<number>>} intervals interval.length === 0
-     *                                          means set all active.
-     * @public
+     * @param intervals `interval.length === 0` means set all active.
      */
-    setActiveIntervals: function (intervals) {
+    setActiveIntervals(intervals: ParallelAxisInterval[]): void {
         var activeIntervals = this.activeIntervals = zrUtil.clone(intervals);
 
         // Normalize
@@ -75,24 +101,20 @@ var AxisModel = ComponentModel.extend({
                 numberUtil.asc(activeIntervals[i]);
             }
         }
-    },
+    }
 
     /**
-     * @param {number|string} [value] When attempting to detect 'no activeIntervals set',
-     *                         value can not be input.
-     * @return {string} 'normal': no activeIntervals set,
-     *                  'active',
-     *                  'inactive'.
-     * @public
+     * @param value When only attempting detect whether 'no activeIntervals set',
+     *        `value` is not needed to be input.
      */
-    getActiveState: function (value) {
+    getActiveState(value?: ParsedValue): ParallelActiveState {
         var activeIntervals = this.activeIntervals;
 
         if (!activeIntervals.length) {
             return 'normal';
         }
 
-        if (value == null || isNaN(value)) {
+        if (value == null || isNaN(+value)) {
             return 'inactive';
         }
 
@@ -114,19 +136,10 @@ var AxisModel = ComponentModel.extend({
         return 'inactive';
     }
 
-});
+}
 
-var defaultOption = {
-
+var defaultOption: ParallelAxisOption = {
     type: 'value',
-
-    /**
-     * @type {Array.<number>}
-     */
-    dim: null, // 0, 1, 2, ...
-
-    // parallelIndex: null,
-
     areaSelectStyle: {
         width: 20,
         borderWidth: 1,
@@ -134,14 +147,19 @@ var defaultOption = {
         color: 'rgba(160,197,232)',
         opacity: 0.3
     },
-
-    realtime: true, // Whether realtime update view when select.
-
+    realtime: true,
     z: 10
 };
 
-zrUtil.mixin(AxisModel, AxisModelCommonMixin);
+ComponentModel.registerClass(ParallelAxisModel);
 
-axisModelCreator('parallel', AxisModel, defaultOption);
+interface ParallelAxisModel extends AxisModelCommonMixin<ParallelAxisOption>,
+    AxisModelExtendedInCreator<ParallelAxisOption> {}
 
-export default AxisModel;
+zrUtil.mixin(ParallelAxisModel, AxisModelCommonMixin);
+
+axisModelCreator<ParallelAxisOption, typeof ParallelAxisModel>(
+    'parallel', ParallelAxisModel, defaultOption
+);
+
+export default ParallelAxisModel;

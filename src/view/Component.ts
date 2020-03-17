@@ -30,7 +30,7 @@ interface ComponentView {
     /**
      * Implement it if needed.
      */
-    updateTransform(
+    updateTransform?(
         seriesModel: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
     ): void | {update: true};
 
@@ -42,7 +42,6 @@ interface ComponentView {
         eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
     ): boolean;
 }
-
 
 class ComponentView {
 
@@ -88,6 +87,7 @@ class ComponentView {
 
     static registerClass: clazzUtil.ClassManager['registerClass'];
 };
+
 
 export type ComponentViewConstructor = typeof ComponentView
     & clazzUtil.ExtendableConstructor

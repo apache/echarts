@@ -17,59 +17,40 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-import * as zrUtil from 'zrender/src/core/util';
 import Axis from '../Axis';
+import Scale from '../../scale/Scale';
+import { DimensionName } from '../../util/types';
+import { OptionAxisType } from '../axisCommonTypes';
+import AxisModel from './AxisModel';
+import Parallel from './Parallel';
 
-/**
- * @constructor module:echarts/coord/parallel/ParallelAxis
- * @extends {module:echarts/coord/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- */
-var ParallelAxis = function (dim, scale, coordExtent, axisType, axisIndex) {
 
-    Axis.call(this, dim, scale, coordExtent);
+class ParallelAxis extends Axis {
 
-    /**
-     * Axis type
-     *  - 'category'
-     *  - 'value'
-     *  - 'time'
-     *  - 'log'
-     * @type {string}
-     */
-    this.type = axisType || 'value';
+    readonly axisIndex: number;
 
-    /**
-     * @type {number}
-     * @readOnly
-     */
-    this.axisIndex = axisIndex;
-};
+    // Inject
+    model: AxisModel;
+    coordinateSystem: Parallel;
 
-ParallelAxis.prototype = {
+    constructor (
+        dim: DimensionName,
+        scale: Scale,
+        coordExtent: [number, number],
+        axisType: OptionAxisType,
+        axisIndex: number
+    ) {
+        super(dim, scale, coordExtent);
 
-    constructor: ParallelAxis,
+        this.type = axisType || 'value';
+        this.axisIndex = axisIndex;
+    }
 
-    /**
-     * Axis model
-     * @param {module:echarts/coord/parallel/AxisModel}
-     */
-    model: null,
-
-    /**
-     * @override
-     */
-    isHorizontal: function () {
+    isHorizontal(): boolean {
         return this.coordinateSystem.getModel().get('layout') !== 'horizontal';
     }
 
-};
-
-zrUtil.inherits(ParallelAxis, Axis);
+}
 
 export default ParallelAxis;

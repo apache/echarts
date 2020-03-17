@@ -259,8 +259,7 @@ function updateElCommon(el, data, dataIndex, seriesScope) {
 //     return false;
 // }
 
-// FIXME
-// 公用方法?
+// FIXME put in common util?
 function isEmptyValue(val, axisType) {
     return axisType === 'category'
         ? val == null

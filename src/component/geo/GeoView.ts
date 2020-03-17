@@ -66,4 +66,6 @@ class GeoView extends ComponentView {
 
 }
 
+ComponentView.registerClass(GeoView);
+
 export default GeoView;

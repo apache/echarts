@@ -721,11 +721,11 @@ class ECharts extends Eventful {
     getVisual(finder: ModelFinder, visualType: string) {
         var ecModel = this._model;
 
-        finder = modelUtil.parseFinder(ecModel, finder, {
+        var parsedFinder = modelUtil.parseFinder(ecModel, finder, {
             defaultMainType: 'series'
         });
 
-        var seriesModel = finder.seriesModel;
+        var seriesModel = parsedFinder.seriesModel;
 
         if (__DEV__) {
             if (!seriesModel) {
@@ -735,10 +735,10 @@ class ECharts extends Eventful {
 
         var data = seriesModel.getData();
 
-        var dataIndexInside = finder.hasOwnProperty('dataIndexInside')
-            ? finder.dataIndexInside
-            : finder.hasOwnProperty('dataIndex')
-            ? data.indexOfRawIndex(finder.dataIndex)
+        var dataIndexInside = parsedFinder.hasOwnProperty('dataIndexInside')
+            ? parsedFinder.dataIndexInside
+            : parsedFinder.hasOwnProperty('dataIndex')
+            ? data.indexOfRawIndex(parsedFinder.dataIndex)
             : null;
 
         return dataIndexInside != null

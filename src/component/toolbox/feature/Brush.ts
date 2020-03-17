@@ -27,6 +27,8 @@ import {
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
+import BrushModel from '../../brush/BrushModel';
+import { BrushTypeUncertain } from '../../helper/BrushController';
 
 var brushLang = lang.toolbox.brush;
 
@@ -42,7 +44,7 @@ interface ToolboxBrushFeatureOption extends ToolboxFeatureOption {
 
 class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
 
-    private _brushType: string
+    private _brushType: BrushTypeUncertain
     private _brushMode: string
 
     render(
@@ -50,17 +52,14 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var brushType: string;
+        var brushType: BrushTypeUncertain;
         var brushMode: string;
         var isBrushed: boolean;
 
-        ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
-            // @ts-ignore BrushModel
+        ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
             brushType = brushModel.brushType;
-            // @ts-ignore BrushModel
             brushMode = brushModel.brushOption.brushMode || 'single';
-            // @ts-ignore BrushModel
-            isBrushed = isBrushed || brushModel.areas.length;
+            isBrushed = isBrushed || !!brushModel.areas.length;
         });
         this._brushType = brushType;
         this._brushMode = brushMode;

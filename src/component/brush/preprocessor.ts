@@ -17,13 +17,14 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
+import { ECUnitOption, Dictionary } from '../../util/types';
+import { BrushOption, BrushToolboxIconType } from './BrushModel';
 
-var DEFAULT_TOOLBOX_BTNS = ['rect', 'polygon', 'keep', 'clear'];
+var DEFAULT_TOOLBOX_BTNS: BrushToolboxIconType[] = ['rect', 'polygon', 'keep', 'clear'];
 
-export default function (option, isNew) {
+export default function (option: ECUnitOption, isNew: boolean): void {
     var brushComponents = option && option.brush;
     if (!zrUtil.isArray(brushComponents)) {
         brushComponents = brushComponents ? [brushComponents] : [];
@@ -33,9 +34,9 @@ export default function (option, isNew) {
         return;
     }
 
-    var brushComponentSpecifiedBtns = [];
+    var brushComponentSpecifiedBtns = [] as string[];
 
-    zrUtil.each(brushComponents, function (brushOpt) {
+    zrUtil.each(brushComponents, function (brushOpt: BrushOption) {
         var tbs = brushOpt.hasOwnProperty('toolbox')
             ? brushOpt.toolbox : [];
 
@@ -67,8 +68,8 @@ export default function (option, isNew) {
     }
 }
 
-function removeDuplicate(arr) {
-    var map = {};
+function removeDuplicate(arr: string[]): void {
+    var map = {} as Dictionary<number>;
     zrUtil.each(arr, function (val) {
         map[val] = 1;
     });

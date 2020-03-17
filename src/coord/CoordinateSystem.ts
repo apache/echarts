@@ -35,7 +35,8 @@ export interface CoordinateSystemCreator {
     // FIXME current dimensions must be string[].
     // check and unify the definition.
     // FIXME:TS check where used (seams only HeatmapSeries used?)
-    dimensions: DimensionName[];
+    // Some coordinate system do not have static dimensions (like parallel)
+    dimensions?: DimensionName[];
 
     // dimensionsInfo like [{name: ..., type: ...}, 'xxx', ...]
     getDimensionsInfo?: () => DimensionDefinitionLoose[];
@@ -59,7 +60,7 @@ export interface CoordinateSystemMaster {
     // coodinate system is applicable to the given `finder`.
     // Each coordinate system will be tried, util one returns none
     // null/undefined value.
-    convertToPixel(
+    convertToPixel?(
         ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
     ): number | number[];
 
@@ -67,7 +68,7 @@ export interface CoordinateSystemMaster {
     // coodinate system is applicable to the given `finder`.
     // Each coordinate system will be tried, util one returns none
     // null/undefined value.
-    convertFromPixel(
+    convertFromPixel?(
         ecModel: GlobalModel, finder: ParsedModelFinder, pixelValue: number | number[]
     ): ScaleDataValue | ScaleDataValue[];
 
@@ -102,21 +103,27 @@ export interface CoordinateSystem {
 
     model?: ComponentModel;
 
-    // @param data
-    // @param reserved Defined by the coordinate system itself
-    // @param out
-    // @return {Array.<number>} point Point in global pixel coordinate system.
+    /**
+     * @param data
+     * @param reserved Defined by the coordinate system itself
+     * @param out
+     * @return {Array.<number>} point Point in global pixel coordinate system.
+     */
     dataToPoint(
         data: ScaleDataValue | ScaleDataValue[],
         reserved?: any,
         out?: number[]
     ): number[];
 
-    // @param point point Point in global pixel coordinate system.
-    // @param reserved Defined by the coordinate system itself
-    // @param out
-    // @return data
-    pointToData(
+    /**
+     * Some coord sys (like Parallel) might do not have `pointToData`,
+     * or the meaning of this kind of features is not clear yet.
+     * @param point point Point in global pixel coordinate system.
+     * @param reserved Defined by the coordinate system itself
+     * @param out
+     * @return data
+     */
+    pointToData?(
         point: number[],
         reserved?: any,
         out?: number[]

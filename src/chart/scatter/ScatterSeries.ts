@@ -35,6 +35,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
+import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
@@ -84,7 +85,6 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
     type = ScatterSeriesModel.type
 
     static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar']
-    readonly brushSelector = 'point'
 
     getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {
@@ -109,6 +109,10 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
             return this.option.large ? 1e4 : this.get('progressiveThreshold');
         }
         return progressiveThreshold;
+    }
+
+    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+        return selectors.point(data.getItemLayout(dataIndex));
     }
 
     static defaultOption: ScatterSeriesOption = {

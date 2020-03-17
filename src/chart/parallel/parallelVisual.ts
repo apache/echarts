@@ -17,22 +17,25 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-var opacityAccessPath = ['lineStyle', 'normal', 'opacity'];
+import ParallelSeries, { ParallelSeriesOption } from './ParallelSeries';
+import { StageHandler } from '../../util/types';
 
-export default {
+
+var opacityAccessPath = ['lineStyle', 'opacity'] as const;
+
+var parallelVisual: StageHandler = {
 
     seriesType: 'parallel',
 
-    reset: function (seriesModel, ecModel, api) {
+    reset: function (seriesModel: ParallelSeries, ecModel) {
 
-        var itemStyleModel = seriesModel.getModel('itemStyle');
+        // var itemStyleModel = seriesModel.getModel('itemStyle');
         var lineStyleModel = seriesModel.getModel('lineStyle');
         var globalColors = ecModel.get('color');
 
         var color = lineStyleModel.get('color')
-            || itemStyleModel.get('color')
+            // || itemStyleModel.get('color')
             || globalColors[seriesModel.seriesIndex % globalColors.length];
         var inactiveOpacity = seriesModel.get('inactiveOpacity');
         var activeOpacity = seriesModel.get('activeOpacity');
@@ -49,18 +52,21 @@ export default {
 
         data.setVisual('color', color);
 
-        function progress(params, data) {
-            coordSys.eachActiveState(data, function (activeState, dataIndex) {
-                var opacity = opacityMap[activeState];
-                if (activeState === 'normal' && data.hasItemOption) {
-                    var itemOpacity = data.getItemModel(dataIndex).get(opacityAccessPath, true);
-                    itemOpacity != null && (opacity = itemOpacity);
-                }
-                data.setItemVisual(dataIndex, 'opacity', opacity);
-            }, params.start, params.end);
-        }
-
-        return {progress: progress};
+        return {
+            progress(params, data) {
+                coordSys.eachActiveState(data, function (activeState, dataIndex) {
+                    var opacity = opacityMap[activeState];
+                    if (activeState === 'normal' && data.hasItemOption) {
+                        var itemOpacity = data.getItemModel<ParallelSeriesOption>(dataIndex).get(
+                            opacityAccessPath, true
+                        );
+                        itemOpacity != null && (opacity = itemOpacity);
+                    }
+                    data.setItemVisual(dataIndex, 'opacity', opacity);
+                }, params.start, params.end);
+            }
+        };
     }
 };
 
+export default parallelVisual;

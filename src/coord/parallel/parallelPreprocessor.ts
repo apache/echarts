@@ -17,12 +17,12 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
+import { ECUnitOption, SeriesOption } from '../../util/types';
 
-export default function (option) {
+export default function (option: ECUnitOption): void {
     createParallelIfNeeded(option);
     mergeAxisOptionFromParallel(option);
 }
@@ -31,14 +31,14 @@ export default function (option) {
  * Create a parallel coordinate if not exists.
  * @inner
  */
-function createParallelIfNeeded(option) {
+function createParallelIfNeeded(option: ECUnitOption): void {
     if (option.parallel) {
         return;
     }
 
     var hasParallelSeries = false;
 
-    zrUtil.each(option.series, function (seriesOpt) {
+    zrUtil.each(option.series, function (seriesOpt: SeriesOption) {
         if (seriesOpt && seriesOpt.type === 'parallel') {
             hasParallelSeries = true;
         }
@@ -53,7 +53,7 @@ function createParallelIfNeeded(option) {
  * Merge aixs definition from parallel option (if exists) to axis option.
  * @inner
  */
-function mergeAxisOptionFromParallel(option) {
+function mergeAxisOptionFromParallel(option: ECUnitOption): void {
     var axes = modelUtil.normalizeToArray(option.parallelAxis);
 
     zrUtil.each(axes, function (axisOption) {

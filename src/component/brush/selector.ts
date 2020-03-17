@@ -17,22 +17,74 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as polygonContain from 'zrender/src/contain/polygon';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {linePolygonIntersect} from '../../util/graphic';
+import { BrushType, BrushDimensionMinMax } from '../helper/BrushController';
+import { BrushAreaParamInternal } from './BrushModel';
 
-// Key of the first level is brushType: `line`, `rect`, `polygon`.
-// Key of the second level is chart element type: `point`, `rect`.
-// See moudule:echarts/component/helper/BrushController
-// function param:
-//      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
-//      {Object} selectors {point: selector, rect: selector, ...}
-//      {Object} area {range: [[], [], ..], boudingRect}
-// function return:
-//      {boolean} Whether in the given brush.
-var selector = {
+
+export interface BrushSelectableArea extends BrushAreaParamInternal {
+    boundingRect: BoundingRect;
+    selectors: BrushCommonSelectorsForSeries
+}
+
+/**
+ * Key of the first level is brushType: `line`, `rect`, `polygon`.
+ * See moudule:echarts/component/helper/BrushController
+ * function param:
+ *      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
+ *      {Object} selectors {point: selector, rect: selector, ...}
+ *      {Object} area {range: [[], [], ..], boudingRect}
+ * function return:
+ *      {boolean} Whether in the given brush.
+ */
+interface BrushSelectorOnBrushType {
+    // For chart element type "point"
+    point(
+        // fetch from data.getItemLayout(dataIndex)
+        itemLayout: number[],
+        selectors: BrushCommonSelectorsForSeries,
+        area: BrushSelectableArea
+    ): boolean;
+    // For chart element type "rect"
+    rect(
+        // fetch from data.getItemLayout(dataIndex)
+        itemLayout: RectLike,
+        selectors: BrushCommonSelectorsForSeries,
+        area: BrushSelectableArea
+    ): boolean;
+}
+
+/**
+ * This methods are corresponding to `BrushSelectorOnBrushType`,
+ * but `area: BrushSelectableArea` is binded to each method.
+ */
+export interface BrushCommonSelectorsForSeries {
+    // For chart element type "point"
+    point(itemLayout: number[]): boolean;
+    // For chart element type "rect"
+    rect(itemLayout: RectLike): boolean;
+}
+
+export function makeBrushCommonSelectorForSeries(
+    area: BrushSelectableArea
+): BrushCommonSelectorsForSeries {
+    var brushType = area.brushType;
+    // Do not use function binding or curry for performance.
+    var selectors: BrushCommonSelectorsForSeries = {
+        point(itemLayout: number[]) {
+            return selector[brushType].point(itemLayout, selectors, area);
+        },
+        rect(itemLayout: RectLike) {
+            return selector[brushType].rect(itemLayout, selectors, area);
+        }
+    };
+    return selectors;
+}
+
+var selector: Record<BrushType, BrushSelectorOnBrushType> = {
     lineX: getLineSelectors(0),
     lineY: getLineSelectors(1),
     rect: {
@@ -46,11 +98,15 @@ var selector = {
     polygon: {
         point: function (itemLayout, selectors, area) {
             return itemLayout
-                && area.boundingRect.contain(itemLayout[0], itemLayout[1])
-                && polygonContain.contain(area.range, itemLayout[0], itemLayout[1]);
+                && area.boundingRect.contain(
+                    itemLayout[0], itemLayout[1]
+                )
+                && polygonContain.contain(
+                    area.range as BrushDimensionMinMax[], itemLayout[0], itemLayout[1]
+                );
         },
         rect: function (itemLayout, selectors, area) {
-            var points = area.range;
+            var points = area.range as BrushDimensionMinMax[];
 
             if (!itemLayout || points.length <= 1) {
                 return false;
@@ -78,21 +134,21 @@ var selector = {
     }
 };
 
-function getLineSelectors(xyIndex) {
-    var xy = ['x', 'y'];
-    var wh = ['width', 'height'];
+function getLineSelectors(xyIndex: 0 | 1): BrushSelectorOnBrushType {
+    var xy = ['x', 'y'] as const;
+    var wh = ['width', 'height'] as const;
 
     return {
         point: function (itemLayout, selectors, area) {
             if (itemLayout) {
-                var range = area.range;
+                var range = area.range as BrushDimensionMinMax;
                 var p = itemLayout[xyIndex];
                 return inLineRange(p, range);
             }
         },
         rect: function (itemLayout, selectors, area) {
             if (itemLayout) {
-                var range = area.range;
+                var range = area.range as BrushDimensionMinMax;
                 var layoutRange = [
                     itemLayout[xy[xyIndex]],
                     itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
@@ -107,7 +163,7 @@ function getLineSelectors(xyIndex) {
     };
 }
 
-function inLineRange(p, range) {
+function inLineRange(p: number, range: BrushDimensionMinMax): boolean {
     return range[0] <= p && p <= range[1];
 }
 

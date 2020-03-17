@@ -42,7 +42,7 @@ import List from '../../data/List';
 
 
 interface PieLabelOption extends Omit<LabelOption, 'rotate'> {
-    rotate?: number | boolean
+    rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
     margin?: string | number
     bleedMargin?: number
@@ -243,7 +243,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
         label: {
             // If rotate around circle
-            rotate: false,
+            rotate: 0,
             show: true,
             // 'outer', 'inside', 'center'
             position: 'outer',

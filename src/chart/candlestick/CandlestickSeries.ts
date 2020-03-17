@@ -33,6 +33,7 @@ import {
 } from '../../util/types';
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type CandlestickDataValue = OptionDataValueNumeric[];
 export interface CandlestickDataItemOption {
@@ -149,8 +150,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         return 'open';
     }
 
-    // @ts-ignore
-    brushSelector(dataIndex: number, data: List, selectors) {
+    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
         var itemLayout = data.getItemLayout(dataIndex);
         return itemLayout && selectors.rect(itemLayout.brushRect);
     }

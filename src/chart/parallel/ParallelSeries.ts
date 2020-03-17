@@ -17,39 +17,72 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import {each, createHashMap} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';
+import { SeriesOption, SeriesEncodeOptionMixin, LineStyleOption, LabelOption, AnimationOptionMixin, SeriesTooltipOption, DimensionName } from '../../util/types';
+import GlobalModel from '../../model/Global';
+import List from '../../data/List';
+import { ParallelActiveState } from '../../coord/parallel/AxisModel';
+import Parallel from '../../coord/parallel/Parallel';
+import Source from '../../data/Source';
+import ParallelModel from '../../coord/parallel/ParallelModel';
 
-export default SeriesModel.extend({
 
-    type: 'series.parallel',
+export interface ParallelSeriesOption extends
+    SeriesOption,
+    SeriesEncodeOptionMixin {
 
-    dependencies: ['parallel'],
+    coordinateSystem?: string;
+    parallelIndex?: number;
+    parallelId?: string;
 
-    visualColorAccessPath: ['lineStyle', 'color'],
+    label?: LabelOption;
+    lineStyle?: LineStyleOption;
 
-    getInitialData: function (option, ecModel) {
+    inactiveOpacity?: number;
+    activeOpacity?: number;
+
+    smooth?: boolean | number;
+    realtime?: boolean;
+    tooltip?: SeriesTooltipOption;
+
+    emphasis?: {
+        label?: LabelOption;
+        lineStyle?: LineStyleOption;
+    }
+}
+
+class ParallelSeries extends SeriesModel<ParallelSeriesOption> {
+
+    static type = 'series.parallel';
+    readonly type = ParallelSeries.type;
+
+    static dependencies = ['parallel'];
+
+    visualColorAccessPath = ['lineStyle', 'color'];
+
+    coordinateSystem: Parallel;
+
+
+    getInitialData(option: ParallelSeriesOption, ecModel: GlobalModel): List {
         var source = this.getSource();
 
         setEncodeAndDimensions(source, this);
 
         return createListFromArray(source, this);
-    },
+    }
 
     /**
      * User can get data raw indices on 'axisAreaSelected' event received.
      *
-     * @public
-     * @param {string} activeState 'active' or 'inactive' or 'normal'
-     * @return {Array.<number>} Raw indices
+     * @return Raw indices
      */
-    getRawIndicesByActiveState: function (activeState) {
+    getRawIndicesByActiveState(activeState: ParallelActiveState): number[] {
         var coordSys = this.coordinateSystem;
         var data = this.getData();
-        var indices = [];
+        var indices = [] as number[];
 
         coordSys.eachActiveState(data, function (theActiveState, dataIndex) {
             if (activeState === theActiveState) {
@@ -58,11 +91,11 @@ export default SeriesModel.extend({
         });
 
         return indices;
-    },
+    }
 
-    defaultOption: {
-        zlevel: 0,                  // 一级层叠
-        z: 2,                       // 二级层叠
+    static defaultOption: ParallelSeriesOption = {
+        zlevel: 0,
+        z: 2,
 
         coordinateSystem: 'parallel',
         parallelIndex: 0,
@@ -89,10 +122,13 @@ export default SeriesModel.extend({
         smooth: false, // true | false | number
 
         animationEasing: 'linear'
-    }
-});
+    };
 
-function setEncodeAndDimensions(source, seriesModel) {
+}
+
+SeriesModel.registerClass(ParallelSeries);
+
+function setEncodeAndDimensions(source: Source, seriesModel: ParallelSeries): void {
     // The mapping of parallelAxis dimension to data dimension can
     // be specified in parallelAxis.option.dim. For example, if
     // parallelAxis.option.dim is 'dim3', it mapping to the third
@@ -106,7 +142,7 @@ function setEncodeAndDimensions(source, seriesModel) {
 
     var parallelModel = seriesModel.ecModel.getComponent(
         'parallel', seriesModel.get('parallelIndex')
-    );
+    ) as ParallelModel;
     if (!parallelModel) {
         return;
     }
@@ -118,6 +154,8 @@ function setEncodeAndDimensions(source, seriesModel) {
     });
 }
 
-function convertDimNameToNumber(dimName) {
+function convertDimNameToNumber(dimName: DimensionName): number {
     return +dimName.replace('dim', '');
 }
+
+export default ParallelSeries;

@@ -17,41 +17,65 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
-import Component from '../../model/Component';
-
+import ComponentModel from '../../model/Component';
 import './AxisModel';
+import Parallel from './Parallel';
+import { DimensionName, ComponentOption, BoxLayoutOptionMixin, Dictionary } from '../../util/types';
+import ParallelAxisModel, { ParallelAxisOption } from './AxisModel';
+import GlobalModel from '../../model/Global';
+import ParallelSeries from '../../chart/parallel/ParallelSeries';
+import SeriesModel from '../../model/Series';
 
-export default Component.extend({
 
-    type: 'parallel',
+export type ParallelLayoutDirection = 'horizontal' | 'vertical';
 
-    dependencies: ['parallelAxis'],
+export interface ParallelCoordinateSystemOption extends ComponentOption, BoxLayoutOptionMixin {
+    layout?: ParallelLayoutDirection;
 
-    /**
-     * @type {module:echarts/coord/parallel/Parallel}
-     */
-    coordinateSystem: null,
+    axisExpandable?: boolean;
+    axisExpandCenter?: number;
+    axisExpandCount?: number;
+    axisExpandWidth?: number; // TODO '10%' ?
+    axisExpandTriggerOn?: 'click' | 'mousemove';
+
+    // Not ready to expose to users yet.
+    axisExpandRate?: number;
+    // Not ready to expose to users yet.
+    axisExpandDebounce?: number;
+    // Not ready to expose to users yet.
+    // [out, in, jumpTarget]. In percentage. If use [null, 0.05], null means full.
+    // Do not doc to user until necessary.
+    axisExpandSlideTriggerArea?: [number, number, number];
+    // Not ready to expose to users yet.
+    axisExpandWindow?: number[];
+
+    parallelAxisDefault?: ParallelAxisOption
+}
+
+class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
+
+    static type = 'parallel';
+    readonly type = ParallelModel.type;
+
+    static dependencies = ['parallelAxis'];
+
+    coordinateSystem: Parallel;
 
     /**
      * Each item like: 'dim0', 'dim1', 'dim2', ...
-     * @type {Array.<string>}
-     * @readOnly
      */
-    dimensions: null,
+    dimensions: DimensionName[];
 
     /**
      * Coresponding to dimensions.
-     * @type {Array.<number>}
-     * @readOnly
      */
-    parallelAxisIndex: null,
+    parallelAxisIndex: number[];
 
-    layoutMode: 'box',
+    static layoutMode = 'box' as const;
 
-    defaultOption: {
+    static defaultOption: ParallelCoordinateSystemOption = {
         zlevel: 0,
         z: 0,
         left: 80,
@@ -77,68 +101,73 @@ export default Component.extend({
         axisExpandTriggerOn: 'click', // 'mousemove' or 'click'
 
         parallelAxisDefault: null
-    },
+    };
 
-    /**
-     * @override
-     */
-    init: function () {
-        Component.prototype.init.apply(this, arguments);
-
+    init() {
+        super.init.apply(this, arguments as any);
         this.mergeOption({});
-    },
+    }
 
-    /**
-     * @override
-     */
-    mergeOption: function (newOption) {
+    mergeOption(newOption: ParallelCoordinateSystemOption) {
         var thisOption = this.option;
 
         newOption && zrUtil.merge(thisOption, newOption, true);
 
         this._initDimensions();
-    },
+    }
 
     /**
      * Whether series or axis is in this coordinate system.
-     * @param {module:echarts/model/Series|module:echarts/coord/parallel/AxisModel} model
-     * @param {module:echarts/model/Global} ecModel
      */
-    contains: function (model, ecModel) {
-        var parallelIndex = model.get('parallelIndex');
+    contains(model: SeriesModel | ParallelAxisModel, ecModel: GlobalModel): boolean {
+        var parallelIndex = (model as ParallelSeries).get('parallelIndex');
         return parallelIndex != null
             && ecModel.getComponent('parallel', parallelIndex) === this;
-    },
+    }
 
-    setAxisExpand: function (opt) {
+    setAxisExpand(opt: {
+        axisExpandable?: boolean,
+        axisExpandCenter?: number,
+        axisExpandCount?: number,
+        axisExpandWidth?: number,
+        axisExpandWindow?: number[]
+    }): void {
         zrUtil.each(
-            ['axisExpandable', 'axisExpandCenter', 'axisExpandCount', 'axisExpandWidth', 'axisExpandWindow'],
+            [
+                'axisExpandable',
+                'axisExpandCenter',
+                'axisExpandCount',
+                'axisExpandWidth',
+                'axisExpandWindow'
+            ] as const,
             function (name) {
                 if (opt.hasOwnProperty(name)) {
+                    // @ts-ignore FIXME: why "never" inferred in this.option[name]?
                     this.option[name] = opt[name];
                 }
             },
             this
         );
-    },
+    }
 
-    /**
-     * @private
-     */
-    _initDimensions: function () {
-        var dimensions = this.dimensions = [];
-        var parallelAxisIndex = this.parallelAxisIndex = [];
+    private _initDimensions(): void {
+        var dimensions = this.dimensions = [] as DimensionName[];
+        var parallelAxisIndex = this.parallelAxisIndex = [] as number[];
 
-        var axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel) {
+        var axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel: ParallelAxisModel) {
             // Can not use this.contains here, because
             // initialization has not been completed yet.
             return (axisModel.get('parallelIndex') || 0) === this.componentIndex;
         }, this);
 
-        zrUtil.each(axisModels, function (axisModel) {
+        zrUtil.each(axisModels, function (axisModel: ParallelAxisModel) {
             dimensions.push('dim' + axisModel.get('dim'));
             parallelAxisIndex.push(axisModel.componentIndex);
         });
     }
 
-});
+}
+
+ComponentModel.registerClass(ParallelModel);
+
+export default ParallelModel;

@@ -17,106 +17,86 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import BrushController from '../helper/BrushController';
+import BrushController, { BrushControllerEvents, BrushCoverConfig } from '../helper/BrushController';
 import {layoutCovers} from './visualEncoding';
+import BrushModel from './BrushModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Payload } from '../../util/types';
+import ComponentView from '../../view/Component';
 
-export default echarts.extendComponentView({
 
-    type: 'brush',
+class BrushView extends ComponentView {
 
-    init: function (ecModel, api) {
+    static type = 'brush';
+    readonly type = BrushView.type;
 
-        /**
-         * @readOnly
-         * @type {module:echarts/model/Global}
-         */
+    ecModel: GlobalModel;
+    api: ExtensionAPI;
+    model: BrushModel;
+    private _brushController: BrushController;
+
+    init(ecModel: GlobalModel, api: ExtensionAPI): void {
         this.ecModel = ecModel;
-
-        /**
-         * @readOnly
-         * @type {module:echarts/ExtensionAPI}
-         */
         this.api = api;
-
-        /**
-         * @readOnly
-         * @type {module:echarts/component/brush/BrushModel}
-         */
         this.model;
 
-        /**
-         * @private
-         * @type {module:echarts/component/helper/BrushController}
-         */
         (this._brushController = new BrushController(api.getZr()))
             .on('brush', zrUtil.bind(this._onBrush, this))
             .mount();
-    },
+    }
 
-    /**
-     * @override
-     */
-    render: function (brushModel) {
+    render(brushModel: BrushModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         this.model = brushModel;
-        return updateController.apply(this, arguments);
-    },
+        this._updateController(brushModel, ecModel, api, payload);
+    }
 
-    /**
-     * @override
-     */
-    updateTransform: function (brushModel, ecModel) {
+    updateTransform(brushModel: BrushModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
         // PENDING: `updateTransform` is a little tricky, whose layout need
         // to be calculate mandatorily and other stages will not be performed.
         // Take care the correctness of the logic. See #11754 .
         layoutCovers(ecModel);
-        return updateController.apply(this, arguments);
-    },
+        this._updateController(brushModel, ecModel, api, payload);
+    }
 
-    /**
-     * @override
-     */
-    updateView: updateController,
+    updateView(brushModel: BrushModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+        this._updateController(brushModel, ecModel, api, payload);
+    }
 
-    // /**
-    //  * @override
-    //  */
+    private _updateController(brushModel: BrushModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+        // Do not update controller when drawing.
+        (!payload || payload.$from !== brushModel.id) && this._brushController
+            .setPanels(brushModel.brushTargetManager.makePanelOpts(api))
+            .enableBrush(brushModel.brushOption)
+            .updateCovers(brushModel.areas.slice() as BrushCoverConfig[]);
+    }
+
     // updateLayout: updateController,
 
-    // /**
-    //  * @override
-    //  */
     // updateVisual: updateController,
 
-    /**
-     * @override
-     */
-    dispose: function () {
+    dispose() {
         this._brushController.dispose();
-    },
+    }
 
-    /**
-     * @private
-     */
-    _onBrush: function (areas, opt) {
+    private _onBrush(eventParam: BrushControllerEvents['brush']): void {
         var modelId = this.model.id;
 
-        this.model.brushTargetManager.setOutputRanges(areas, this.ecModel);
+        var areas = this.model.brushTargetManager.setOutputRanges(eventParam.areas, this.ecModel);
 
         // Action is not dispatched on drag end, because the drag end
         // emits the same params with the last drag move event, and
         // may have some delay when using touch pad, which makes
         // animation not smooth (when using debounce).
-        (!opt.isEnd || opt.removeOnClick) && this.api.dispatchAction({
+        (!eventParam.isEnd || eventParam.removeOnClick) && this.api.dispatchAction({
             type: 'brush',
             brushId: modelId,
             areas: zrUtil.clone(areas),
             $from: modelId
         });
-        opt.isEnd && this.api.dispatchAction({
+        eventParam.isEnd && this.api.dispatchAction({
             type: 'brushEnd',
             brushId: modelId,
             areas: zrUtil.clone(areas),
@@ -124,12 +104,6 @@ export default echarts.extendComponentView({
         });
     }
 
-});
-
-function updateController(brushModel, ecModel, api, payload) {
-    // Do not update controller when drawing.
-    (!payload || payload.$from !== brushModel.id) && this._brushController
-        .setPanels(brushModel.brushTargetManager.makePanelOpts(api))
-        .enableBrush(brushModel.brushOption)
-        .updateCovers(brushModel.areas.slice());
 }
+
+ComponentView.registerClass(BrushView);

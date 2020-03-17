@@ -224,7 +224,7 @@ class Grid implements CoordinateSystemMaster {
     convertToPixel(
         ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
     ): number | number[] {
-        var target = this._findConvertTarget(ecModel, finder);
+        var target = this._findConvertTarget(finder);
 
         return target.cartesian
             ? target.cartesian.dataToPoint(value as ScaleDataValue[])
@@ -239,7 +239,7 @@ class Grid implements CoordinateSystemMaster {
     convertFromPixel(
         ecModel: GlobalModel, finder: ParsedModelFinder, value: number | number[]
     ): number | number[] {
-        var target = this._findConvertTarget(ecModel, finder);
+        var target = this._findConvertTarget(finder);
 
         return target.cartesian
             ? target.cartesian.pointToData(value as number[])
@@ -248,9 +248,10 @@ class Grid implements CoordinateSystemMaster {
             : null;
     }
 
-    private _findConvertTarget(
-        ecModel: GlobalModel, finder: ParsedModelFinder
-    ): {cartesian: Cartesian2D, axis: Axis2D} {
+    private _findConvertTarget(finder: ParsedModelFinder): {
+        cartesian: Cartesian2D,
+        axis: Axis2D
+    } {
         var seriesModel = finder.seriesModel;
         var xAxisModel = finder.xAxisModel
             || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);

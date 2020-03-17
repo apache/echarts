@@ -17,7 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 /**
  * Parallel Coordinates
@@ -32,6 +31,15 @@ import ParallelAxis from './ParallelAxis';
 import * as graphic from '../../util/graphic';
 import * as numberUtil from '../../util/number';
 import sliderMove from '../../component/helper/sliderMove';
+import ParallelModel, { ParallelLayoutDirection } from './ParallelModel';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { Dictionary, DimensionName, ScaleDataValue } from '../../util/types';
+import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
+import ParallelAxisModel, { ParallelActiveState } from './AxisModel';
+import ParallelSeries from '../../chart/parallel/ParallelSeries';
+import List from '../../data/List';
+import { ParsedModelFinder } from '../../util/model';
 
 var each = zrUtil.each;
 var mathMin = Math.min;
@@ -42,54 +50,72 @@ var round = numberUtil.round;
 
 var PI = Math.PI;
 
-function Parallel(parallelModel, ecModel, api) {
+interface ParallelCoordinateSystemLayoutInfo {
+    layout: ParallelLayoutDirection;
+    pixelDimIndex: number;
+    layoutBase: number;
+    layoutLength: number;
+    axisBase: number;
+    axisLength: number;
+    axisExpandable: boolean;
+    axisExpandWidth: number;
+    axisCollapseWidth: number;
+    axisExpandWindow: number[];
+    axisCount: number;
+    winInnerIndices: number[];
+    axisExpandWindow0Pos: number;
+}
+
+export interface ParallelAxisLayoutInfo {
+    position: number[];
+    rotation: number;
+    transform: matrix.MatrixArray;
+    axisNameAvailableWidth: number;
+    axisLabelShow: boolean;
+    nameTruncateMaxWidth: number;
+    tickDirection: -1 | 1;
+    labelDirection: -1 | 1;
+}
+
+type SlidedAxisExpandBehavior = 'none' | 'slide' | 'jump';
+
+class Parallel implements CoordinateSystemMaster, CoordinateSystem {
+
+    readonly type = 'parallel';
 
     /**
      * key: dimension
-     * @type {Object.<string, module:echarts/coord/parallel/Axis>}
-     * @private
      */
-    this._axesMap = zrUtil.createHashMap();
+    private _axesMap = zrUtil.createHashMap<ParallelAxis>();
 
     /**
      * key: dimension
      * value: {position: [], rotation, }
-     * @type {Object.<string, Object>}
-     * @private
      */
-    this._axesLayout = {};
+    private _axesLayout: Dictionary<ParallelAxisLayoutInfo> = {};
 
     /**
      * Always follow axis order.
-     * @type {Array.<string>}
-     * @readOnly
      */
-    this.dimensions = parallelModel.dimensions;
+    readonly dimensions: ParallelModel['dimensions'];
 
-    /**
-     * @type {module:zrender/core/BoundingRect}
-     */
-    this._rect;
+    private _rect: graphic.BoundingRect;
 
-    /**
-     * @type {module:echarts/coord/parallel/ParallelModel}
-     */
-    this._model = parallelModel;
+    private _model: ParallelModel;
 
-    this._init(parallelModel, ecModel, api);
-}
+    // Inject
+    name: string;
+    model: ParallelModel;
 
-Parallel.prototype = {
 
-    type: 'parallel',
+    constructor(parallelModel: ParallelModel, ecModel: GlobalModel, api: ExtensionAPI) {
+        this.dimensions = parallelModel.dimensions;
+        this._model = parallelModel;
 
-    constructor: Parallel,
+        this._init(parallelModel, ecModel, api);
+    }
 
-    /**
-     * Initialize cartesian coordinate systems
-     * @private
-     */
-    _init: function (parallelModel, ecModel, api) {
+    private _init(parallelModel: ParallelModel, ecModel: GlobalModel, api: ExtensionAPI): void {
 
         var dimensions = parallelModel.dimensions;
         var parallelAxisIndex = parallelModel.parallelAxisIndex;
@@ -97,7 +123,7 @@ Parallel.prototype = {
         each(dimensions, function (dim, idx) {
 
             var axisIndex = parallelAxisIndex[idx];
-            var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
+            var axisModel = ecModel.getComponent('parallelAxis', axisIndex) as ParallelAxisModel;
 
             var axis = this._axesMap.set(dim, new ParallelAxis(
                 dim,
@@ -117,21 +143,16 @@ Parallel.prototype = {
             axis.coordinateSystem = axisModel.coordinateSystem = this;
 
         }, this);
-    },
+    }
 
     /**
      * Update axis scale after data processed
-     * @param  {module:echarts/model/Global} ecModel
-     * @param  {module:echarts/ExtensionAPI} api
      */
-    update: function (ecModel, api) {
+    update(ecModel: GlobalModel, api: ExtensionAPI): void {
         this._updateAxesFromSeries(this._model, ecModel);
-    },
+    }
 
-    /**
-     * @override
-     */
-    containPoint: function (point) {
+    containPoint(point: number[]): boolean {
         var layoutInfo = this._makeLayoutInfo();
         var axisBase = layoutInfo.axisBase;
         var layoutBase = layoutInfo.layoutBase;
@@ -143,17 +164,16 @@ Parallel.prototype = {
             && pAxis <= axisBase + layoutInfo.axisLength
             && pLayout >= layoutBase
             && pLayout <= layoutBase + layoutInfo.layoutLength;
-    },
+    }
 
-    getModel: function () {
+    getModel(): ParallelModel {
         return this._model;
-    },
+    }
 
     /**
      * Update properties from series
-     * @private
      */
-    _updateAxesFromSeries: function (parallelModel, ecModel) {
+    private _updateAxesFromSeries(parallelModel: ParallelModel, ecModel: GlobalModel): void {
         ecModel.eachSeries(function (seriesModel) {
 
             if (!parallelModel.contains(seriesModel, ecModel)) {
@@ -168,14 +188,12 @@ Parallel.prototype = {
                 axisHelper.niceScaleExtent(axis.scale, axis.model);
             }, this);
         }, this);
-    },
+    }
 
     /**
      * Resize the parallel coordinate system.
-     * @param {module:echarts/coord/parallel/ParallelModel} parallelModel
-     * @param {module:echarts/ExtensionAPI} api
      */
-    resize: function (parallelModel, api) {
+    resize(parallelModel: ParallelModel, api: ExtensionAPI): void {
         this._rect = layoutUtil.getLayoutRect(
             parallelModel.getBoxLayoutParams(),
             {
@@ -185,23 +203,17 @@ Parallel.prototype = {
         );
 
         this._layoutAxes();
-    },
+    }
 
-    /**
-     * @return {module:zrender/core/BoundingRect}
-     */
-    getRect: function () {
+    getRect(): graphic.BoundingRect {
         return this._rect;
-    },
+    }
 
-    /**
-     * @private
-     */
-    _makeLayoutInfo: function () {
+    private _makeLayoutInfo(): ParallelCoordinateSystemLayoutInfo {
         var parallelModel = this._model;
         var rect = this._rect;
-        var xy = ['x', 'y'];
-        var wh = ['width', 'height'];
+        var xy = ['x', 'y'] as const;
+        var wh = ['width', 'height'] as const;
         var layout = parallelModel.get('layout');
         var pixelDimIndex = layout === 'horizontal' ? 0 : 1;
         var layoutLength = rect[wh[pixelDimIndex]];
@@ -229,8 +241,8 @@ Parallel.prototype = {
             axisExpandWindow[1] = axisExpandWindow[0] + winSize;
         }
         else {
-                winSize = restrict(axisExpandWindow[1] - axisExpandWindow[0], layoutExtent);
-                axisExpandWindow[1] = axisExpandWindow[0] + winSize;
+            winSize = restrict(axisExpandWindow[1] - axisExpandWindow[0], layoutExtent);
+            axisExpandWindow[1] = axisExpandWindow[0] + winSize;
         }
 
         var axisCollapseWidth = (layoutLength - winSize) / (axisCount - axisExpandCount);
@@ -261,12 +273,9 @@ Parallel.prototype = {
             winInnerIndices: winInnerIndices,
             axisExpandWindow0Pos: axisExpandWindow0Pos
         };
-    },
+    }
 
-    /**
-     * @private
-     */
-    _layoutAxes: function () {
+    private _layoutAxes(): void {
         var rect = this._rect;
         var axes = this._axesMap;
         var dimensions = this.dimensions;
@@ -310,10 +319,10 @@ Parallel.prototype = {
             matrix.translate(transform, transform, position);
 
             // TODO
-            // tick等排布信息。
+            // tick layout info
 
             // TODO
-            // 根据axis order 更新 dimensions顺序。
+            // update dimensions info based on axis order.
 
             this._axesLayout[dim] = {
                 position: position,
@@ -326,46 +335,43 @@ Parallel.prototype = {
                 labelDirection: 1
             };
         }, this);
-    },
+    }
 
     /**
      * Get axis by dim.
-     * @param {string} dim
-     * @return {module:echarts/coord/parallel/ParallelAxis} [description]
      */
-    getAxis: function (dim) {
+    getAxis(dim: DimensionName): ParallelAxis {
         return this._axesMap.get(dim);
-    },
+    }
 
     /**
      * Convert a dim value of a single item of series data to Point.
-     * @param {*} value
-     * @param {string} dim
-     * @return {Array}
      */
-    dataToPoint: function (value, dim) {
+    dataToPoint(value: ScaleDataValue, dim: DimensionName): number[] {
         return this.axisCoordToPoint(
             this._axesMap.get(dim).dataToCoord(value),
             dim
         );
-    },
+    }
 
     /**
      * Travel data for one time, get activeState of each data item.
-     * @param {module:echarts/data/List} data
-     * @param {Functio} cb param: {string} activeState 'active' or 'inactive' or 'normal'
-     *                            {number} dataIndex
-     * @param {number} [start=0] the start dataIndex that travel from.
-     * @param {number} [end=data.count()] the next dataIndex of the last dataIndex will be travel.
+     * @param start the start dataIndex that travel from.
+     * @param end the next dataIndex of the last dataIndex will be travel.
      */
-    eachActiveState: function (data, callback, start, end) {
+    eachActiveState(
+        data: List,
+        callback: (activeState: ParallelActiveState, dataIndex: number) => void,
+        start?: number,
+        end?: number
+    ): void {
         start == null && (start = 0);
         end == null && (end = data.count());
 
         var axesMap = this._axesMap;
         var dimensions = this.dimensions;
-        var dataDimensions = [];
-        var axisModels = [];
+        var dataDimensions = [] as DimensionName[];
+        var axisModels = [] as ParallelAxisModel[];
 
         zrUtil.each(dimensions, function (axisDim) {
             dataDimensions.push(data.mapDimension(axisDim));
@@ -375,7 +381,7 @@ Parallel.prototype = {
         var hasActiveSet = this.hasAxisBrushed();
 
         for (var dataIndex = start; dataIndex < end; dataIndex++) {
-            var activeState;
+            var activeState: ParallelActiveState;
 
             if (!hasActiveSet) {
                 activeState = 'normal';
@@ -395,13 +401,12 @@ Parallel.prototype = {
 
             callback(activeState, dataIndex);
         }
-    },
+    }
 
     /**
      * Whether has any activeSet.
-     * @return {boolean}
      */
-    hasAxisBrushed: function () {
+    hasAxisBrushed(): boolean {
         var dimensions = this.dimensions;
         var axesMap = this._axesMap;
         var hasActiveSet = false;
@@ -413,32 +418,31 @@ Parallel.prototype = {
         }
 
         return hasActiveSet;
-    },
+    }
 
     /**
      * Convert coords of each axis to Point.
      *  Return point. For example: [10, 20]
-     * @param {Array.<number>} coords
-     * @param {string} dim
-     * @return {Array.<number>}
      */
-    axisCoordToPoint: function (coord, dim) {
+    axisCoordToPoint(coord: number, dim: DimensionName): number[] {
         var axisLayout = this._axesLayout[dim];
         return graphic.applyTransform([coord, 0], axisLayout.transform);
-    },
+    }
 
     /**
      * Get axis layout.
      */
-    getAxisLayout: function (dim) {
+    getAxisLayout(dim: DimensionName): ParallelAxisLayoutInfo {
         return zrUtil.clone(this._axesLayout[dim]);
-    },
+    }
 
     /**
-     * @param {Array.<number>} point
      * @return {Object} {axisExpandWindow, delta, behavior: 'jump' | 'slide' | 'none'}.
      */
-    getSlidedAxisExpandWindow: function (point) {
+    getSlidedAxisExpandWindow(point: number[]): {
+        axisExpandWindow: number[],
+        behavior: SlidedAxisExpandBehavior
+    } {
         var layoutInfo = this._makeLayoutInfo();
         var pixelDimIndex = layoutInfo.pixelDimIndex;
         var axisExpandWindow = layoutInfo.axisExpandWindow.slice();
@@ -456,7 +460,7 @@ Parallel.prototype = {
         // For dragging operation convenience, the window should not be
         // slided when mouse is the center area of the window.
         var delta;
-        var behavior = 'slide';
+        var behavior: SlidedAxisExpandBehavior = 'slide';
         var axisCollapseWidth = layoutInfo.axisCollapseWidth;
         var triggerArea = this._model.get('axisExpandSlideTriggerArea');
         // But consider touch device, jump is necessary.
@@ -496,13 +500,32 @@ Parallel.prototype = {
             behavior: behavior
         };
     }
-};
 
-function restrict(len, extent) {
+    // TODO
+    // convertToPixel
+    // convertFromPixel
+    // Note:
+    // (1) Consider Parallel, the return type of `convertToPixel` could be number[][] (Point[]).
+    // (2) In parallel coord sys, how to make `convertFromPixel` make sense?
+    // Perhaps convert a point based on "a rensent most axis" is more meaningful rather than based on all axes?
+}
+
+
+function restrict(len: number, extent: number[]): number {
     return mathMin(mathMax(len, extent[0]), extent[1]);
 }
 
-function layoutAxisWithoutExpand(axisIndex, layoutInfo) {
+interface ParallelAxisLayoutPositionInfo {
+    position: number;
+    axisNameAvailableWidth: number;
+    axisLabelShow: boolean;
+    nameTruncateMaxWidth?: number;
+}
+
+function layoutAxisWithoutExpand(
+    axisIndex: number,
+    layoutInfo: ParallelCoordinateSystemLayoutInfo
+): ParallelAxisLayoutPositionInfo {
     var step = layoutInfo.layoutLength / (layoutInfo.axisCount - 1);
     return {
         position: step * axisIndex,
@@ -511,7 +534,10 @@ function layoutAxisWithoutExpand(axisIndex, layoutInfo) {
     };
 }
 
-function layoutAxisWithExpand(axisIndex, layoutInfo) {
+function layoutAxisWithExpand(
+    axisIndex: number,
+    layoutInfo: ParallelCoordinateSystemLayoutInfo
+): ParallelAxisLayoutPositionInfo {
     var layoutLength = layoutInfo.layoutLength;
     var axisExpandWidth = layoutInfo.axisExpandWidth;
     var axisCount = layoutInfo.axisCount;

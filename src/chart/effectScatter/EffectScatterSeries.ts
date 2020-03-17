@@ -34,6 +34,7 @@ import {
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import type { SymbolDrawItemModelOption } from '../helper/SymbolDraw';
+import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[]
 
@@ -80,10 +81,13 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
     static readonly dependencies = ['grid', 'polar']
 
-    brushSelector = 'point'
 
     getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
+    }
+
+    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+        return selectors.point(data.getItemLayout(dataIndex));
     }
 
     static defaultOption: EffectScatterSeriesOption = {

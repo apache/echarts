@@ -17,19 +17,23 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 /**
  * Parallel coordinate system creater.
  */
 
 import Parallel from './Parallel';
-import CoordinateSystem from '../../CoordinateSystem';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import ParallelModel from './ParallelModel';
+import { CoordinateSystemMaster } from '../CoordinateSystem';
+import ParallelSeries from '../../chart/parallel/ParallelSeries';
+import CoordinateSystemManager from '../../CoordinateSystem';
 
-function create(ecModel, api) {
-    var coordSysList = [];
+function create(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster[] {
+    var coordSysList: CoordinateSystemMaster[] = [];
 
-    ecModel.eachComponent('parallel', function (parallelModel, idx) {
+    ecModel.eachComponent('parallel', function (parallelModel: ParallelModel, idx: number) {
         var coordSys = new Parallel(parallelModel, ecModel, api);
 
         coordSys.name = 'parallel_' + idx;
@@ -43,12 +47,12 @@ function create(ecModel, api) {
 
     // Inject the coordinateSystems into seriesModel
     ecModel.eachSeries(function (seriesModel) {
-        if (seriesModel.get('coordinateSystem') === 'parallel') {
+        if ((seriesModel as ParallelSeries).get('coordinateSystem') === 'parallel') {
             var parallelModel = ecModel.queryComponents({
                 mainType: 'parallel',
-                index: seriesModel.get('parallelIndex'),
-                id: seriesModel.get('parallelId')
-            })[0];
+                index: (seriesModel as ParallelSeries).get('parallelIndex'),
+                id: (seriesModel as ParallelSeries).get('parallelId')
+            })[0] as ParallelModel;
             seriesModel.coordinateSystem = parallelModel.coordinateSystem;
         }
     });
@@ -56,4 +60,4 @@ function create(ecModel, api) {
     return coordSysList;
 }
 
-CoordinateSystem.register('parallel', {create: create});
+CoordinateSystemManager.register('parallel', {create: create});

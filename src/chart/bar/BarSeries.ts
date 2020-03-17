@@ -23,6 +23,8 @@ import { ItemStyleOption, OptionDataValue, LabelOption, SeriesStackOptionMixin }
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
+import List from '../../data/List';
+import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type BarDataValue = OptionDataValue | OptionDataValue[]
 
@@ -86,8 +88,6 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
 
     static dependencies = ['grid', 'polar']
 
-    readonly brushSelector = 'rect'
-
     coordinateSystem: Cartesian2D | Polar
 
     /**
@@ -111,6 +111,10 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
             progressiveThreshold = largeThreshold;
         }
         return progressiveThreshold;
+    }
+
+    brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
+        return selectors.rect(data.getItemLayout(dataIndex));
     }
 
     static defaultOption: BarSeriesOption = inheritDefaultOption(BaseBarSeriesModel.defaultOption, {

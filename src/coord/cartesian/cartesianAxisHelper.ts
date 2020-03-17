@@ -26,9 +26,9 @@ interface CartesianAxisLayout {
     position: [number, number];
     rotation: number;
     labelOffset: number;
-    labelDirection: number; // 1 | -1;
-    tickDirection: number; // 1 | -1;
-    nameDirection: number; // 1 | -1;
+    labelDirection: -1 | 1;
+    tickDirection: -1 | 1;
+    nameDirection: -1 | 1;
     labelRotate: number;
     z2: number;
 }
@@ -74,16 +74,16 @@ export function layout(
     layout.rotation = Math.PI / 2 * (axisDim === 'x' ? 0 : 1);
 
     // Tick and label direction, x y is axisDim
-    var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
+    var dirMap = {top: -1, bottom: 1, left: -1, right: 1} as const;
 
     layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
     layout.labelOffset = otherAxisOnZeroOf ? posBound[idx[rawAxisPosition]] - posBound[idx.onZero] : 0;
 
     if (axisModel.get(['axisTick', 'inside'])) {
-        layout.tickDirection = -layout.tickDirection;
+        layout.tickDirection = -layout.tickDirection as 1 | -1;
     }
     if (zrUtil.retrieve(opt.labelInside, axisModel.get(['axisLabel', 'inside']))) {
-        layout.labelDirection = -layout.labelDirection;
+        layout.labelDirection = -layout.labelDirection as 1 | -1;
     }
 
     // Special label rotation

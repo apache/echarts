@@ -17,14 +17,19 @@
 * under the License.
 */
 
-// @ts-nocheck
 
+var ORIGIN_METHOD = '\0__throttleOriginMethod' as const;
+var RATE = '\0__throttleRate' as const;
+var THROTTLE_TYPE = '\0__throttleType' as const;
 
-var ORIGIN_METHOD = '\0__throttleOriginMethod';
-var RATE = '\0__throttleRate';
-var THROTTLE_TYPE = '\0__throttleType';
+type ThrottleFunction = (this: unknown, ...args: unknown[]) => void;
+export type ThrottleType = 'fixRate' | 'debounce';
 
-type ThrottleFunction = (...args: any[]) => void;
+export interface ThrottleController {
+    clear(): void;
+    debounceNextCall(debounceDelay: number): void;
+};
+
 /**
  * @public
  * @param {(Function)} fn
@@ -34,29 +39,33 @@ type ThrottleFunction = (...args: any[]) => void;
  *        false: If call interval less than `delay, call works on fixed rate.
  * @return {(Function)} throttled fn.
  */
-export function throttle<T extends ThrottleFunction>(fn:T, delay?: number, debounce?: boolean): T {
+export function throttle<T extends ThrottleFunction>(
+    fn: T,
+    delay?: number,
+    debounce?: boolean
+): T & ThrottleController {
 
     var currCall;
     var lastCall = 0;
     var lastExec = 0;
-    var timer = null;
+    var timer: ReturnType<typeof setTimeout> = null;
     var diff;
-    var scope;
-    var args;
-    var debounceNextCall;
+    var scope: unknown;
+    var args: unknown[];
+    var debounceNextCall: number;
 
     delay = delay || 0;
 
-    function exec() {
+    function exec(): void {
         lastExec = (new Date()).getTime();
         timer = null;
         fn.apply(scope, args || []);
     }
 
-    var cb = function () {
+    var cb = function (this: unknown, ...cbArgs: unknown[]): void {
         currCall = (new Date()).getTime();
         scope = this;
-        args = arguments;
+        args = cbArgs;
         var thisDelay = debounceNextCall || delay;
         var thisDebounce = debounceNextCall || debounce;
         debounceNextCall = null;
@@ -85,13 +94,13 @@ export function throttle<T extends ThrottleFunction>(fn:T, delay?: number, debou
         }
 
         lastCall = currCall;
-    };
+    } as T & ThrottleController;
 
     /**
      * Clear throttle.
      * @public
      */
-    cb.clear = function () {
+    cb.clear = function (): void {
         if (timer) {
             clearTimeout(timer);
             timer = null;
@@ -101,7 +110,7 @@ export function throttle<T extends ThrottleFunction>(fn:T, delay?: number, debou
     /**
      * Enable debounce once.
      */
-    cb.debounceNextCall = function (debounceDelay) {
+    cb.debounceNextCall = function (debounceDelay: number): void {
         debounceNextCall = debounceDelay;
     };
 
@@ -133,17 +142,17 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
     obj: T,
     fnAttr: S,
     rate: number,
-    throttleType: 'fixRate' | 'debounce'
-): P extends ThrottleFunction ? P : never {
+    throttleType: ThrottleType
+): P extends ThrottleFunction ? P & ThrottleController : never {
     var fn = obj[fnAttr];
 
     if (!fn) {
         return;
     }
 
-    var originFn = fn[ORIGIN_METHOD] || fn;
-    var lastThrottleType = fn[THROTTLE_TYPE];
-    var lastRate = fn[RATE];
+    var originFn = (fn as any)[ORIGIN_METHOD] || fn;
+    var lastThrottleType = (fn as any)[THROTTLE_TYPE];
+    var lastRate = (fn as any)[RATE];
 
     if (lastRate !== rate || lastThrottleType !== throttleType) {
         if (rate == null || !throttleType) {
@@ -153,12 +162,12 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
         fn = obj[fnAttr] = throttle(
             originFn, rate, throttleType === 'debounce'
         );
-        fn[ORIGIN_METHOD] = originFn;
-        fn[THROTTLE_TYPE] = throttleType;
-        fn[RATE] = rate;
+        (fn as any)[ORIGIN_METHOD] = originFn;
+        (fn as any)[THROTTLE_TYPE] = throttleType;
+        (fn as any)[RATE] = rate;
     }
 
-    return fn;
+    return fn as ReturnType<typeof createOrUpdate>;
 }
 
 /**
@@ -166,7 +175,7 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
  */
 export function clear<T, S extends keyof T>(obj: T, fnAttr: S): void {
     var fn = obj[fnAttr];
-    if (fn && fn[ORIGIN_METHOD]) {
-        obj[fnAttr] = fn[ORIGIN_METHOD];
+    if (fn && (fn as any)[ORIGIN_METHOD]) {
+        obj[fnAttr] = (fn as any)[ORIGIN_METHOD];
     }
 }

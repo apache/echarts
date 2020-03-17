@@ -496,16 +496,17 @@ var innerUniqueIndex = Math.round(Math.random() * 5);
  * xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
  * If nothing or null/undefined specified, return nothing.
  */
+export type ModelFinderIndexQuery = number | number[] | 'all' | 'none';
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
-    seriesIndex?: number, seriesId?: string, seriesName?: string,
-    geoIndex?: number, geoId?: string, geoName?: string,
-    bmapIndex?: number, bmapId?: string, bmapName?: string,
-    xAxisIndex?: number, xAxisId?: string, xAxisName?: string,
-    yAxisIndex?: number, yAxisId?: string, yAxisName?: string,
-    gridIndex?: number, gridId?: string, gridName?: string,
+    seriesIndex?: ModelFinderIndexQuery, seriesId?: string, seriesName?: string,
+    geoIndex?: ModelFinderIndexQuery, geoId?: string, geoName?: string,
+    bmapIndex?: ModelFinderIndexQuery, bmapId?: string, bmapName?: string,
+    xAxisIndex?: ModelFinderIndexQuery, xAxisId?: string, xAxisName?: string,
+    yAxisIndex?: ModelFinderIndexQuery, yAxisId?: string, yAxisName?: string,
+    gridIndex?: ModelFinderIndexQuery, gridId?: string, gridName?: string,
     // ... (can be extended)
-    [key: string]: any
+    [key: string]: unknown
 };
 /**
  * {
@@ -516,46 +517,23 @@ export type ModelFinderObject = {
  *     ...
  * }
  */
-export type ParsedModelFinder = {
-    seriesModels?: SeriesModel[],
-    seriesModel?: SeriesModel,
-    xAxisModels?: CartesianAxisModel[],
-    xAxisModel?: CartesianAxisModel,
-    yAxisModels?: CartesianAxisModel[],
-    yAxisModel?: CartesianAxisModel,
-    gridModels?: GridModel[],
-    gridModel?: GridModel,
-    // others:
-    [key: string]: ComponentModel | ComponentModel[]
+type ParsedModelFinderKnown = {
+    seriesModels?: SeriesModel[];
+    seriesModel?: SeriesModel;
+    xAxisModels?: CartesianAxisModel[];
+    xAxisModel?: CartesianAxisModel;
+    yAxisModels?: CartesianAxisModel[];
+    yAxisModel?: CartesianAxisModel;
+    gridModels?: GridModel[];
+    gridModel?: GridModel;
+    dataIndex?: number;
+    dataIndexInside?: number;
 };
+export type ParsedModelFinder = ParsedModelFinderKnown & {
+    // other components
+    [key: string]: ComponentModel | ComponentModel[];
+}
 
-/**
- * @param {module:echarts/model/Global} ecModel
- * @param {string|Object} finder
- *        If string, e.g., 'geo', means {geoIndex: 0}.
- *        If Object, could contain some of these properties below:
- *        {
- *            seriesIndex, seriesId, seriesName,
- *            geoIndex, geoId, geoName,
- *            bmapIndex, bmapId, bmapName,
- *            xAxisIndex, xAxisId, xAxisName,
- *            yAxisIndex, yAxisId, yAxisName,
- *            gridIndex, gridId, gridName,
- *            ... (can be extended)
- *        }
- *        Each properties can be number|string|Array.<number>|Array.<string>
- *        For example, a finder could be
- *        {
- *            seriesIndex: 3,
- *            geoId: ['aa', 'cc'],
- *            gridName: ['xx', 'rr']
- *        }
- *        xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
- *        If nothing or null/undefined specified, return nothing.
- * @param [opt]
- * @param [opt.defaultMainType]
- * @param [opt.includeMainTypes]
- */
 export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
@@ -587,7 +565,7 @@ export function parseFinder(
 
         // Exclude 'dataIndex' and other illgal keys.
         if (key === 'dataIndex' || key === 'dataIndexInside') {
-            result[key] = value;
+            result[key] = value as number;
             return;
         }
 
@@ -606,7 +584,7 @@ export function parseFinder(
 
         var queryParam = {mainType: mainType} as QueryConditionKindB;
         if (queryType !== 'index' || value !== 'all') {
-            queryParam[queryType] = value;
+            queryParam[queryType] = value as any;
         }
 
         var models = ecModel.queryComponents(queryParam);

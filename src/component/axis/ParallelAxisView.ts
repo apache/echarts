@@ -17,38 +17,49 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import AxisBuilder from './AxisBuilder';
-import BrushController from '../helper/BrushController';
+import BrushController, { BrushCoverConfig, BrushControllerEvents, BrushDimensionMinMax } from '../helper/BrushController';
 import * as brushHelper from '../helper/brushHelper';
 import * as graphic from '../../util/graphic';
+import ComponentView from '../../view/Component';
+import ExtensionAPI from '../../ExtensionAPI';
+import GlobalModel from '../../model/Global';
+import ParallelAxisModel, { ParallelAreaSelectStyleProps } from '../../coord/parallel/AxisModel';
+import { Payload } from '../../util/types';
+import ParallelModel from '../../coord/parallel/ParallelModel';
+import { ParallelAxisLayoutInfo } from '../../coord/parallel/Parallel';
+
 
 var elementList = ['axisLine', 'axisTickLabel', 'axisName'];
 
-var AxisView = echarts.extendComponentView({
+class ParallelAxisView extends ComponentView {
 
-    type: 'parallelAxis',
+    static type = 'parallelAxis';
+    readonly type = ParallelAxisView.type;
 
-    /**
-     * @override
-     */
-    init: function (ecModel, api) {
-        AxisView.superApply(this, 'init', arguments);
+    private _brushController: BrushController;
+    private _axisGroup: graphic.Group;
 
-        /**
-         * @type {module:echarts/component/helper/BrushController}
-         */
+    axisModel: ParallelAxisModel;
+    api: ExtensionAPI;
+
+
+    init(ecModel: GlobalModel, api: ExtensionAPI): void {
+        super.init.apply(this, arguments as any);
+
         (this._brushController = new BrushController(api.getZr()))
             .on('brush', zrUtil.bind(this._onBrush, this));
-    },
+    }
 
-    /**
-     * @override
-     */
-    render: function (axisModel, ecModel, api, payload) {
+    render(
+        axisModel: ParallelAxisModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ): void {
         if (fromAxisAreaSelect(axisModel, ecModel, payload)) {
             return;
         }
@@ -92,19 +103,24 @@ var AxisView = echarts.extendComponentView({
 
         var animationModel = (payload && payload.animation === false) ? null : axisModel;
         graphic.groupTransition(oldAxisGroup, this._axisGroup, animationModel);
-    },
+    }
 
     // /**
     //  * @override
     //  */
-    // updateVisual: function (axisModel, ecModel, api, payload) {
+    // updateVisual(axisModel, ecModel, api, payload) {
     //     this._brushController && this._brushController
     //         .updateCovers(getCoverInfoList(axisModel));
-    // },
+    // }
 
-    _refreshBrushController: function (
-        builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api
-    ) {
+    _refreshBrushController(
+        builderOpt: Pick<ParallelAxisLayoutInfo, 'position' | 'rotation'>,
+        areaSelectStyle: ParallelAreaSelectStyleProps,
+        axisModel: ParallelAxisModel,
+        coordSysModel: ParallelModel,
+        areaWidth: ParallelAreaSelectStyleProps['width'],
+        api: ExtensionAPI
+    ): void {
         // After filtering, axis may change, select area needs to be update.
         var extent = axisModel.axis.getExtent();
         var extentLen = extent[1] - extent[0];
@@ -139,40 +155,42 @@ var AxisView = echarts.extendComponentView({
                 removeOnClick: true
             })
             .updateCovers(getCoverInfoList(axisModel));
-    },
+    }
 
-    _onBrush: function (coverInfoList, opt) {
+    _onBrush(eventParam: BrushControllerEvents['brush']): void {
+        var coverInfoList = eventParam.areas;
         // Do not cache these object, because the mey be changed.
         var axisModel = this.axisModel;
         var axis = axisModel.axis;
         var intervals = zrUtil.map(coverInfoList, function (coverInfo) {
             return [
-                axis.coordToData(coverInfo.range[0], true),
-                axis.coordToData(coverInfo.range[1], true)
+                axis.coordToData((coverInfo.range as BrushDimensionMinMax)[0], true),
+                axis.coordToData((coverInfo.range as BrushDimensionMinMax)[1], true)
             ];
         });
 
         // If realtime is true, action is not dispatched on drag end, because
         // the drag end emits the same params with the last drag move event,
         // and may have some delay when using touch pad.
-        if (!axisModel.option.realtime === opt.isEnd || opt.removeOnClick) { // jshint ignore:line
+        if (!axisModel.option.realtime === eventParam.isEnd || eventParam.removeOnClick) { // jshint ignore:line
             this.api.dispatchAction({
                 type: 'axisAreaSelect',
                 parallelAxisId: axisModel.id,
                 intervals: intervals
             });
         }
-    },
+    }
 
-    /**
-     * @override
-     */
-    dispose: function () {
+    dispose(): void {
         this._brushController.dispose();
     }
-});
+}
 
-function fromAxisAreaSelect(axisModel, ecModel, payload) {
+ComponentView.registerClass(ParallelAxisView);
+
+function fromAxisAreaSelect(
+    axisModel: ParallelAxisModel, ecModel: GlobalModel, payload: Payload
+): boolean {
     return payload
         && payload.type === 'axisAreaSelect'
         && ecModel.findComponents(
@@ -180,7 +198,7 @@ function fromAxisAreaSelect(axisModel, ecModel, payload) {
         )[0] === axisModel;
 }
 
-function getCoverInfoList(axisModel) {
+function getCoverInfoList(axisModel: ParallelAxisModel): BrushCoverConfig[] {
     var axis = axisModel.axis;
     return zrUtil.map(axisModel.activeIntervals, function (interval) {
         return {
@@ -194,10 +212,10 @@ function getCoverInfoList(axisModel) {
     });
 }
 
-function getCoordSysModel(axisModel, ecModel) {
+function getCoordSysModel(axisModel: ParallelAxisModel, ecModel: GlobalModel): ParallelModel {
     return ecModel.getComponent(
         'parallel', axisModel.get('parallelIndex')
-    );
+    ) as ParallelModel;
 }
 
-export default AxisView;
+export default ParallelAxisView;
