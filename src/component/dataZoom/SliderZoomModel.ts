@@ -27,6 +27,7 @@ import {
     ItemStyleOption,
     LabelOption
 } from '../../util/types';
+import { inheritDefaultOption } from '../../util/component';
 
 interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
 
@@ -96,7 +97,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
     static readonly layoutMode = 'box'
 
-    static defaultOption: SliderDataZoomOption = {
+    static defaultOption: SliderDataZoomOption = inheritDefaultOption(DataZoomModel.defaultOption, {
         show: true,
 
         // deault value can only be drived in view stage.
@@ -141,7 +142,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         textStyle: {
             color: '#333'
         }
-    }
+    });
 }
 
 ComponentModel.registerClass(SliderZoomModel);

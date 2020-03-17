@@ -27,6 +27,7 @@ import {
     SeriesStackOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import { inheritDefaultOption } from '../../util/component';
 
 interface PictorialBarSeriesSymbolOption {
     /**
@@ -123,7 +124,7 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
 
     coordinateSystem: Cartesian2D
 
-    static defaultOption: PictorialBarSeriesOption = {
+    static defaultOption: PictorialBarSeriesOption = inheritDefaultOption(BaseBarSeriesModel.defaultOption, {
 
         symbol: 'circle',     // Customized bar shape
         symbolSize: null,     //
@@ -146,7 +147,7 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
         // Disable progressive
         progressive: 0,
         hoverAnimation: false // Open only when needed.
-    }
+    });
 
     getInitialData(option: PictorialBarSeriesOption) {
         // Disable stack.

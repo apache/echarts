@@ -27,6 +27,7 @@ import Model from '../../model/Model';
 import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import * as zrUtil from 'zrender/src/core/util';
+import { inheritDefaultOption } from '../../util/component';
 
 export interface ScrollableLegendOption extends LegendOption {
     scrollDataIndex?: number
@@ -86,9 +87,7 @@ class ScrollableLegendModel extends LegendModel<ScrollableLegendOption> {
         mergeAndNormalizeLayoutParams(this, this.option, option);
     }
 
-    static defaultOption: ScrollableLegendOption = zrUtil.merge(
-        zrUtil.clone(LegendModel.defaultOption),
-    {
+    static defaultOption: ScrollableLegendOption = inheritDefaultOption(LegendModel.defaultOption, {
         scrollDataIndex: 0,
         pageButtonItemGap: 5,
         pageButtonGap: null,

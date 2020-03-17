@@ -22,6 +22,7 @@ import VisualMapModel, { VisualMapOption, VisualMeta } from './VisualMapModel';
 import * as numberUtil from '../../util/number';
 import ComponentModel from '../../model/Component';
 import { VisualMappingOption } from '../../visual/VisualMapping';
+import { inheritDefaultOption } from '../../util/component';
 
 // Constant
 var DEFAULT_BAR_BOUND = [20, 140];
@@ -259,9 +260,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         };
     }
 
-    static defaultOption = zrUtil.merge(
-        zrUtil.clone(VisualMapModel.defaultOption),
-    {
+    static defaultOption = inheritDefaultOption(VisualMapModel.defaultOption, {
         align: 'auto',           // 'auto', 'left', 'right', 'top', 'bottom'
         calculable: false,
         hoverLink: true

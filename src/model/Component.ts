@@ -194,15 +194,15 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      * Component.registerClass(XxxModel);
      * ```
      * ```ts
-     * import {mergeOption} from '../model/util';
+     * import {inheritDefaultOption} from '../util/component';
      * import {XxxModel, XxxOption} from './XxxModel';
      * export interface XxxSubOption extends XxxOption {
      *     bbb: number
      * }
      * class XxxSubModel extends XxxModel {
-     *     readonly defaultOption: XxxSubOption = mergeOption({
+     *     static defaultOption: XxxSubOption = inheritDefaultOption(XxxModel.defaultOption, {
      *         bbb: 456
-     *     }, XxxModel.prototype.defaultOption)
+     *     })
      *     fn() {
      *         var opt = this.getDefaultOption();
      *         // opt is {aaa: 123, bbb: 456}

@@ -19,6 +19,7 @@
 
 import DataZoomModel, {DataZoomOption} from './DataZoomModel';
 import ComponentModel from '../../model/Component';
+import { inheritDefaultOption } from '../../util/component';
 
 interface InsideDataZoomOption extends DataZoomOption {
 
@@ -51,14 +52,14 @@ class InsideZoomModel extends DataZoomModel<InsideDataZoomOption> {
     static readonly type = 'dataZoom.inside'
     type = InsideZoomModel.type
 
-    static defaultOption: InsideDataZoomOption = {
+    static defaultOption: InsideDataZoomOption = inheritDefaultOption(DataZoomModel.defaultOption, {
         disabled: false,
         zoomLock: false,
         zoomOnMouseWheel: true,
         moveOnMouseMove: true,
         moveOnMouseWheel: false,
         preventDefaultMouseMove: true
-    }
+    });
 }
 
 ComponentModel.registerClass(InsideZoomModel);

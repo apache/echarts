@@ -21,7 +21,6 @@ import {
     each,
     isObject,
     isArray,
-    merge,
     createHashMap,
     HashMap,
     map,
@@ -668,9 +667,4 @@ export function groupData<T, R extends string | number>(
         keys: keys,
         buckets: buckets
     };
-}
-
-export function mergeOption<T, K>(option1: T, option2: K): T & K {
-    // See also `model/Component.ts#getDefaultOption`
-    return merge(merge({}, option1, true), option2, true);
 }

@@ -22,6 +22,7 @@ import SeriesModel from '../../model/Series';
 import { ItemStyleOption, OptionDataValue, LabelOption, SeriesStackOptionMixin } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
+import { inheritDefaultOption } from '../../util/component';
 
 type BarDataValue = OptionDataValue | OptionDataValue[]
 
@@ -112,7 +113,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
         return progressiveThreshold;
     }
 
-    static defaultOption: BarSeriesOption = {
+    static defaultOption: BarSeriesOption = inheritDefaultOption(BaseBarSeriesModel.defaultOption, {
         // If clipped
         // Only available on cartesian2d
         clip: true,
@@ -132,7 +133,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
             shadowOffsetY: 0,
             opacity: 1
         }
-    }
+    });
 
 }
 

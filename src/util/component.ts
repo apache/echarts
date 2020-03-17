@@ -216,3 +216,8 @@ export function enableTopologicalTravel<T>(
     }
 
 }
+
+export function inheritDefaultOption<T, K>(superOption: T, subOption: K): K {
+    // See also `model/Component.ts#getDefaultOption`
+    return zrUtil.merge(zrUtil.merge({}, superOption, true), subOption, true);
+}

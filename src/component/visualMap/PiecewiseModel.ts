@@ -26,6 +26,7 @@ import {reformIntervals} from '../../util/number';
 import { VisualOptionPiecewise, BuiltinVisualProperty } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import ComponentModel from '../../model/Component';
+import { inheritDefaultOption } from '../../util/component';
 
 
 interface VisualPiece extends VisualOptionPiecewise {
@@ -408,9 +409,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     }
 
 
-    static defaultOption = zrUtil.merge(
-        zrUtil.clone(VisualMapModel.defaultOption),
-    {
+    static defaultOption = inheritDefaultOption(VisualMapModel.defaultOption, {
         selected: null,
         minOpen: false,             // Whether include values that smaller than `min`.
         maxOpen: false,             // Whether include values that bigger than `max`.
