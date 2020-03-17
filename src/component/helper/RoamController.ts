@@ -39,7 +39,7 @@ interface RoamOption {
     preventDefaultMouseMove?: boolean
 }
 
-type RoamEventType = 'zoom' | 'scrollMove' | 'pan'
+type RoamEventType = keyof RoamEventParams;
 
 type RoamBehavior = 'zoomOnMouseWheel' | 'moveOnMouseMove' | 'moveOnMouseWheel'
 
@@ -79,7 +79,7 @@ export interface RoamControllerHost {
     }
 }
 
-class RoamController extends Eventful {
+class RoamController extends Eventful<RoamEventParams> {
 
     pointerChecker: (e: ZRElementEvent, x: number, y: number) => boolean
 

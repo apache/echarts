@@ -168,7 +168,7 @@ messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
 // messageCenterProto.one = createRegisterEventWithLowercaseMessageCenter('one');
 
 
-class ECharts {
+class ECharts extends Eventful {
 
     /**
      * @readonly
@@ -210,7 +210,7 @@ class ECharts {
     // Can't dispatch action during rendering procedure
     private _pendingActions: Payload[] = [];
 
-    private _ecEventProcessor: ECEventProcessor;
+    protected _$eventProcessor: ECEventProcessor;
 
     private _disposed: boolean;
 
@@ -232,6 +232,8 @@ class ECharts {
             height?: number
         }
     ) {
+        super(new ECEventProcessor());
+
         opts = opts || {};
 
         // Get theme by name
@@ -275,9 +277,6 @@ class ECharts {
         timsort(dataProcessorFuncs, prioritySortFunc);
 
         this._scheduler = new Scheduler(this, api, dataProcessorFuncs, visualFuncs);
-
-        this._ecEventProcessor = new ECEventProcessor();
-        Eventful.call(this, this._ecEventProcessor);
 
         this._messageCenter = new MessageCenter();
 
@@ -825,7 +824,7 @@ class ECharts {
                     params.event = e;
                     params.type = eveName;
 
-                    this._ecEventProcessor.eventInfo = {
+                    this._$eventProcessor.eventInfo = {
                         targetEl: el,
                         packedEvent: params,
                         model: model,
@@ -1741,7 +1740,7 @@ class ECharts {
             }
 
             each(eventActionMap, function (actionType, eventType) {
-                chart._messageCenter.on(eventType, function (event) {
+                chart._messageCenter.on(eventType, function (event: ECEvent) {
                     if (connectedGroups[chart.group] && chart[CONNECT_STATUS_KEY] !== CONNECT_STATUS_PENDING) {
                         if (event && event.escapeConnect) {
                             return;
@@ -1814,10 +1813,6 @@ var updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
 var createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 var enableConnect: (chart: ECharts) => void;
 
-
-
-interface ECharts extends Eventful {}
-zrUtil.mixin(ECharts, Eventful);
 
 var echartsProto = ECharts.prototype;
 echartsProto.on = createRegisterEventWithLowercaseECharts('on');

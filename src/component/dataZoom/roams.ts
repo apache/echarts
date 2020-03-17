@@ -27,7 +27,6 @@ import RoamController, { RoamType, RoamEventParams } from '../../component/helpe
 import * as throttleUtil from '../../util/throttle';
 import { makeInner } from '../../util/model';
 import { Dictionary, ZRElementEvent } from '../../util/types';
-import DataZoomModel from './DataZoomModel';
 import ExtensionAPI from '../../ExtensionAPI';
 import InsideZoomModel from './InsideZoomModel';
 import { each, indexOf, curry, Curry1 } from 'zrender/src/core/util';
@@ -44,7 +43,7 @@ interface DataZoomInfo {
         zoom: (controller: RoamController, e: RoamEventParams['zoom']) => [number, number]
         scrollMove: (controller: RoamController, e: RoamEventParams['scrollMove']) => [number, number]
     }
-    dataZoomModel: DataZoomModel
+    dataZoomModel: InsideZoomModel
 }
 interface Record {
     // key is dataZoomId
@@ -150,8 +149,8 @@ function createController(api: ExtensionAPI, newRecord: Record) {
                     return;
                 }
 
-                var method = (info.getRange || {})[eventName];
-                var range = method && method(newRecord.controller, event);
+                var method = (info.getRange || {} as DataZoomInfo['getRange'])[eventName];
+                var range = method && method(newRecord.controller, event as any);
 
                 !(info.dataZoomModel as InsideZoomModel).get('disabled', true) && range && batch.push({
                     dataZoomId: info.dataZoomId,

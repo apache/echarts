@@ -96,7 +96,7 @@ function initGlobalListeners(zr: ZRenderType, api?: ExtensionAPI) {
         eventType: string,
         cb: (record: Record, e: ZRElementEvent, dispatchAction: DispatchActionMethod) => void
     ) {
-        zr.on(eventType, function (e) {
+        zr.on(eventType, function (e: ZRElementEvent) {
             var dis = makeDispatchAction(api);
 
             each(inner(zr).records, function (record) {
