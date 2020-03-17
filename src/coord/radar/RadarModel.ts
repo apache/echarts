@@ -218,5 +218,6 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
     }
 }
 
+ComponentModel.registerClass(RadarModel);
 
 export default RadarModel;

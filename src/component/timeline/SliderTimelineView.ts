@@ -41,6 +41,7 @@ import Scale from '../../scale/Scale';
 import OrdinalScale from '../../scale/Ordinal';
 import TimeScale from '../../scale/Time';
 import IntervalScale from '../../scale/Interval';
+import { VectorArray } from 'zrender/src/core/vector';
 
 var PI = Math.PI;
 
@@ -318,7 +319,7 @@ class SliderTimelineView extends TimelineView {
             ];
         }
 
-        function toBound(fromPos: number[], from: number[][], to: number[][], dimIdx: number, boundIdx: number) {
+        function toBound(fromPos: VectorArray, from: number[][], to: number[][], dimIdx: number, boundIdx: number) {
             fromPos[dimIdx] += to[dimIdx][boundIdx] - from[dimIdx][boundIdx];
         }
     }

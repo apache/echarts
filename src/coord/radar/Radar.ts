@@ -60,6 +60,8 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     private _indicatorAxes: IndicatorAxis[];
 
     constructor(radarModel: RadarModel, ecModel: GlobalModel, api: ExtensionAPI) {
+        this._model = radarModel;
+
         this._indicatorAxes = zrUtil.map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
             var dim = 'indicator_' + idx;
             var indicatorAxis = new IndicatorAxis(dim,

@@ -78,7 +78,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     static readonly type = 'series.radar'
     readonly type = RadarSeriesModel.type
 
-    dependencies = ['radar']
+    static dependencies = ['radar']
 
     coordinateSystem: Radar
 
