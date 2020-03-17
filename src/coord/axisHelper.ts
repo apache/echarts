@@ -74,8 +74,10 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
             boundaryGapInner = [0, 0];
         }
         else {
-            boundaryGapInner[0] = numberUtil.parsePercent(boundaryGapArr[0], 1);
-            boundaryGapInner[1] = numberUtil.parsePercent(boundaryGapArr[1], 1);
+            boundaryGapInner = [
+                numberUtil.parsePercent(boundaryGapArr[0], 1),
+                numberUtil.parsePercent(boundaryGapArr[1], 1)
+            ];
         }
         span = (originalExtent[1] - originalExtent[0])
             || Math.abs(originalExtent[0]);
