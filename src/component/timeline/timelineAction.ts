@@ -17,18 +17,28 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as echarts from '../../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import TimelineModel from './TimelineModel';
+import { defaults } from 'zrender/src/core/util';
+import { Payload } from '../../util/types';
+
+export interface TimelineChangePayload extends Payload {
+    type: 'timelineChange'
+    currentIndex: number
+}
+export interface TimelinePlayChangePayload extends Payload {
+    type: 'timelinePlayChange'
+    playState: boolean
+}
 
 echarts.registerAction(
 
     {type: 'timelineChange', event: 'timelineChanged', update: 'prepareAndUpdate'},
 
-    function (payload, ecModel) {
+    function (payload: TimelineChangePayload, ecModel: GlobalModel) {
 
-        var timelineModel = ecModel.getComponent('timeline');
+        var timelineModel = ecModel.getComponent('timeline') as TimelineModel;
         if (timelineModel && payload.currentIndex != null) {
             timelineModel.setCurrentIndex(payload.currentIndex);
 
@@ -40,7 +50,7 @@ echarts.registerAction(
         // Set normalized currentIndex to payload.
         ecModel.resetOption('timeline');
 
-        return zrUtil.defaults({
+        return defaults({
             currentIndex: timelineModel.option.currentIndex
         }, payload);
     }
@@ -50,8 +60,8 @@ echarts.registerAction(
 
     {type: 'timelinePlayChange', event: 'timelinePlayChanged', update: 'update'},
 
-    function (payload, ecModel) {
-        var timelineModel = ecModel.getComponent('timeline');
+    function (payload: TimelinePlayChangePayload, ecModel: GlobalModel) {
+        var timelineModel = ecModel.getComponent('timeline') as TimelineModel;
         if (timelineModel && payload.playState != null) {
             timelineModel.setPlayState(payload.playState);
         }
