@@ -17,62 +17,43 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
 import Axis from '../../coord/Axis';
+import Scale from '../../scale/Scale';
+import TimelineModel from './TimelineModel';
+import { LabelOption } from '../../util/types';
+import Model from '../../model/Model';
 
 /**
  * Extend axis 2d
- * @constructor module:echarts/coord/cartesian/Axis2D
- * @extends {module:echarts/coord/cartesian/Axis}
- * @param {string} dim
- * @param {*} scale
- * @param {Array.<number>} coordExtent
- * @param {string} axisType
- * @param {string} position
  */
-var TimelineAxis = function (dim, scale, coordExtent, axisType) {
+class TimelineAxis extends Axis {
 
-    Axis.call(this, dim, scale, coordExtent);
+    type: 'category' | 'time' | 'value'
 
-    /**
-     * Axis type
-     *  - 'category'
-     *  - 'value'
-     *  - 'time'
-     *  - 'log'
-     * @type {string}
-     */
-    this.type = axisType || 'value';
+    // Not using the model.
+    model: never
 
-    /**
-     * Axis model
-     * @param {module:echarts/component/TimelineModel}
-     */
-    this.model = null;
-};
+    timelineModel: TimelineModel
 
-TimelineAxis.prototype = {
-
-    constructor: TimelineAxis,
-
-    /**
-     * @override
-     */
-    getLabelModel: function () {
-        return this.model.getModel('label');
-    },
-
-    /**
-     * @override
-     */
-    isHorizontal: function () {
-        return this.model.get('orient') === 'horizontal';
+    constructor(dim: string, scale: Scale, coordExtent: [number, number], axisType: 'category' | 'time' | 'value') {
+        super(dim, scale, coordExtent);
+        this.type = axisType || 'value';
     }
 
-};
+    /**
+     * @override
+     */
+    getLabelModel() {
+        // Force override
+        return this.timelineModel.getModel('label') as Model<LabelOption>;
+    }
 
-zrUtil.inherits(TimelineAxis, Axis);
+    /**
+     * @override
+     */
+    isHorizontal() {
+        return this.timelineModel.get('orient') === 'horizontal';
+    }
+}
 
 export default TimelineAxis;

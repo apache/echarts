@@ -17,20 +17,24 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
-import TimelineModel from './TimelineModel';
+import TimelineModel, { TimelineOption } from './TimelineModel';
 import DataFormatMixin from '../../model/mixin/dataFormat';
+import ComponentModel from '../../model/Component';
+import { mixin } from 'zrender/src/core/util';
+import List from '../../data/List';
 
-var SliderTimelineModel = TimelineModel.extend({
+interface SliderTimelineOption extends TimelineOption {
+}
 
-    type: 'timeline.slider',
+class SliderTimelineModel extends TimelineModel {
+
+    static type = 'timeline.slider'
+    type = SliderTimelineModel.type
 
     /**
      * @protected
      */
-    defaultOption: {
+    static defaultOption: SliderTimelineOption = {
 
         backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
         borderColor: '#ccc',               // 时间轴边框颜色
@@ -117,8 +121,14 @@ var SliderTimelineModel = TimelineModel.extend({
         data: []
     }
 
-});
+}
 
-zrUtil.mixin(SliderTimelineModel, DataFormatMixin.prototype);
+interface SliderTimelineModel extends DataFormatMixin {
+    getData(): List<SliderTimelineModel>
+}
+
+mixin(SliderTimelineModel, DataFormatMixin.prototype);
+
+ComponentModel.registerClass(SliderTimelineModel);
 
 export default SliderTimelineModel;

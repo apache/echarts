@@ -17,10 +17,7 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as graphic from '../../util/graphic';
 import * as layout from '../../util/layout';
@@ -30,57 +27,79 @@ import {createSymbol} from '../../util/symbol';
 import * as axisHelper from '../../coord/axisHelper';
 import * as numberUtil from '../../util/number';
 import {encodeHTML} from '../../util/format';
-
-var bind = zrUtil.bind;
-var each = zrUtil.each;
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { merge, each, extend, clone, isString, bind } from 'zrender/src/core/util';
+import SliderTimelineModel from './SliderTimelineModel';
+import ComponentView from '../../view/Component';
+import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent } from '../../util/types';
+import TimelineModel, { TimelineDataItemOption, TimelineCheckpointStyle } from './TimelineModel';
+import { TimelineChangePayload, TimelinePlayChangePayload } from './timelineAction';
+import Model from '../../model/Model';
+import { PathProps } from 'zrender/src/graphic/Path';
+import Scale from '../../scale/Scale';
+import OrdinalScale from '../../scale/Ordinal';
+import TimeScale from '../../scale/Time';
+import IntervalScale from '../../scale/Interval';
 
 var PI = Math.PI;
 
-export default TimelineView.extend({
+type TimelineSymbol = ReturnType<typeof createSymbol>
 
-    type: 'timeline.slider',
+type RenderMethodName = '_renderAxisLine' | '_renderAxisTick' | '_renderControl' | '_renderCurrentPointer';
 
-    init: function (ecModel, api) {
+type ControlIconName = 'playIcon' | 'stopIcon' | 'nextIcon' | 'prevIcon'
 
+interface LayoutInfo {
+    viewRect: BoundingRect
+    mainLength: number
+    orient: LayoutOrient
+
+    rotation: number
+    labelRotation: number
+    labelPosOpt: number | '+' | '-'
+    labelAlign: ZRTextAlign
+    labelBaseline: ZRTextVerticalAlign
+
+    playPosition: number[]
+    prevBtnPosition: number[]
+    nextBtnPosition: number[]
+    axisExtent: number[]
+
+    controlSize: number
+    controlGap: number
+}
+
+class SliderTimelineView extends TimelineView {
+
+    static type = 'timeline.slider'
+    type = SliderTimelineView.type
+
+    api: ExtensionAPI
+    model: SliderTimelineModel
+    ecModel: GlobalModel
+
+    private _axis: TimelineAxis
+
+    private _viewRect: BoundingRect
+
+    private _timer: number
+
+    private _currentPointer: TimelineSymbol
+
+    private _mainGroup: graphic.Group
+
+    private _labelGroup: graphic.Group
+
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
-
-        /**
-         * @private
-         * @type {module:echarts/component/timeline/TimelineAxis}
-         */
-        this._axis;
-
-        /**
-         * @private
-         * @type {module:zrender/core/BoundingRect}
-         */
-        this._viewRect;
-
-        /**
-         * @type {number}
-         */
-        this._timer;
-
-        /**
-         * @type {module:zrender/Element}
-         */
-        this._currentPointer;
-
-        /**
-         * @type {module:zrender/container/Group}
-         */
-        this._mainGroup;
-
-        /**
-         * @type {module:zrender/container/Group}
-         */
-        this._labelGroup;
-    },
+    }
 
     /**
      * @override
      */
-    render: function (timelineModel, ecModel, api, payload) {
+    render(timelineModel: SliderTimelineModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this.model = timelineModel;
         this.api = api;
         this.ecModel = ecModel;
@@ -90,8 +109,8 @@ export default TimelineView.extend({
         if (timelineModel.get('show', true)) {
 
             var layoutInfo = this._layout(timelineModel, api);
-            var mainGroup = this._createGroup('mainGroup');
-            var labelGroup = this._createGroup('labelGroup');
+            var mainGroup = this._createGroup('_mainGroup');
+            var labelGroup = this._createGroup('_labelGroup');
 
             /**
              * @private
@@ -99,14 +118,14 @@ export default TimelineView.extend({
              */
             var axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
-            timelineModel.formatTooltip = function (dataIndex) {
+            timelineModel.formatTooltip = function (dataIndex: number) {
                 return encodeHTML(axis.scale.getLabel(dataIndex));
             };
 
             each(
-                ['AxisLine', 'AxisTick', 'Control', 'CurrentPointer'],
+                ['AxisLine', 'AxisTick', 'Control', 'CurrentPointer'] as const,
                 function (name) {
-                    this['_render' + name](layoutInfo, mainGroup, axis, timelineModel);
+                    this['_render' + name as RenderMethodName](layoutInfo, mainGroup, axis, timelineModel);
                 },
                 this
             );
@@ -116,47 +135,48 @@ export default TimelineView.extend({
         }
 
         this._doPlayStop();
-    },
+    }
 
     /**
      * @override
      */
-    remove: function () {
+    remove() {
         this._clearTimer();
         this.group.removeAll();
-    },
+    }
 
     /**
      * @override
      */
-    dispose: function () {
+    dispose() {
         this._clearTimer();
-    },
+    }
 
-    _layout: function (timelineModel, api) {
-        var labelPosOpt = timelineModel.get('label.position');
+    _layout(timelineModel: SliderTimelineModel, api: ExtensionAPI): LayoutInfo {
+        var labelPosOpt = timelineModel.get(['label', 'position']);
         var orient = timelineModel.get('orient');
         var viewRect = getViewRect(timelineModel, api);
+        var parsedLabelPos: number | '+' | '-';
         // Auto label offset.
         if (labelPosOpt == null || labelPosOpt === 'auto') {
-            labelPosOpt = orient === 'horizontal'
+            parsedLabelPos = orient === 'horizontal'
                 ? ((viewRect.y + viewRect.height / 2) < api.getHeight() / 2 ? '-' : '+')
                 : ((viewRect.x + viewRect.width / 2) < api.getWidth() / 2 ? '+' : '-');
         }
-        else if (isNaN(labelPosOpt)) {
-            labelPosOpt = ({
+        else if (isString(labelPosOpt)) {
+            parsedLabelPos = ({
                 horizontal: {top: '-', bottom: '+'},
                 vertical: {left: '-', right: '+'}
-            })[orient][labelPosOpt];
+            } as const)[orient][labelPosOpt];
         }
 
         var labelAlignMap = {
             horizontal: 'center',
-            vertical: (labelPosOpt >= 0 || labelPosOpt === '+') ? 'left' : 'right'
+            vertical: (parsedLabelPos >= 0 || parsedLabelPos === '+') ? 'left' : 'right'
         };
 
         var labelBaselineMap = {
-            horizontal: (labelPosOpt >= 0 || labelPosOpt === '+') ? 'top' : 'bottom',
+            horizontal: (parsedLabelPos >= 0 || parsedLabelPos === '+') ? 'top' : 'bottom',
             vertical: 'middle'
         };
         var rotationMap = {
@@ -174,13 +194,13 @@ export default TimelineView.extend({
         var sizePlusGap = controlSize + controlGap;
 
         // Special label rotate.
-        var labelRotation = timelineModel.get('label.rotate') || 0;
+        var labelRotation = timelineModel.get(['label', 'rotate']) || 0;
         labelRotation = labelRotation * PI / 180; // To radian.
 
-        var playPosition;
-        var prevBtnPosition;
-        var nextBtnPosition;
-        var axisExtent;
+        var playPosition: number[];
+        var prevBtnPosition: number[];
+        var nextBtnPosition: number[];
+        var axisExtent: number[];
         var controlPosition = controlModel.get('position', true);
         var showPlayBtn = showControl && controlModel.get('showPlayBtn', true);
         var showPrevBtn = showControl && controlModel.get('showPrevBtn', true);
@@ -212,11 +232,11 @@ export default TimelineView.extend({
 
             rotation: rotationMap[orient],
             labelRotation: labelRotation,
-            labelPosOpt: labelPosOpt,
-            labelAlign: timelineModel.get('label.align') || labelAlignMap[orient],
-            labelBaseline: timelineModel.get('label.verticalAlign')
-                || timelineModel.get('label.baseline')
-                || labelBaselineMap[orient],
+            labelPosOpt: parsedLabelPos,
+            labelAlign: timelineModel.get(['label', 'align']) || labelAlignMap[orient] as ZRTextAlign,
+            labelBaseline: timelineModel.get(['label', 'verticalAlign'])
+                || timelineModel.get(['label', 'baseline'])
+                || labelBaselineMap[orient] as ZRTextVerticalAlign,
 
             // Based on mainGroup.
             playPosition: playPosition,
@@ -227,9 +247,9 @@ export default TimelineView.extend({
             controlSize: controlSize,
             controlGap: controlGap
         };
-    },
+    }
 
-    _position: function (layoutInfo, timelineModel) {
+    _position(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
         // Position is be called finally, because bounding rect is needed for
         // adapt content to fill viewRect (auto adapt offset).
 
@@ -264,7 +284,7 @@ export default TimelineView.extend({
 
         var labelPosOpt = layoutInfo.labelPosOpt;
 
-        if (isNaN(labelPosOpt)) { // '+' or '-'
+        if (isString(labelPosOpt)) { // '+' or '-'
             var mainBoundIdx = labelPosOpt === '+' ? 0 : 1;
             toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
             toBound(labelsPosition, labelBound, viewBound, 1, 1 - mainBoundIdx);
@@ -282,7 +302,7 @@ export default TimelineView.extend({
         setOrigin(mainGroup);
         setOrigin(labelGroup);
 
-        function setOrigin(targetGroup) {
+        function setOrigin(targetGroup: graphic.Group) {
             var pos = targetGroup.position;
             targetGroup.origin = [
                 viewBound[0][0] - pos[0],
@@ -290,7 +310,7 @@ export default TimelineView.extend({
             ];
         }
 
-        function getBound(rect) {
+        function getBound(rect: RectLike) {
             // [[xmin, xmax], [ymin, ymax]]
             return [
                 [rect.x, rect.x + rect.width],
@@ -298,20 +318,20 @@ export default TimelineView.extend({
             ];
         }
 
-        function toBound(fromPos, from, to, dimIdx, boundIdx) {
+        function toBound(fromPos: number[], from: number[][], to: number[][], dimIdx: number, boundIdx: number) {
             fromPos[dimIdx] += to[dimIdx][boundIdx] - from[dimIdx][boundIdx];
         }
-    },
+    }
 
-    _createAxis: function (layoutInfo, timelineModel) {
+    _createAxis(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
         var data = timelineModel.getData();
         var axisType = timelineModel.get('axisType');
 
-        var scale = axisHelper.createScaleByModel(timelineModel, axisType);
+        var scale = createScaleByModel(timelineModel, axisType);
 
         // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {
-            return data.mapArray(['value'], function (value) {
+            return data.mapArray(['value'], function (value: number) {
                 return value;
             });
         };
@@ -320,22 +340,27 @@ export default TimelineView.extend({
         scale.setExtent(dataExtent[0], dataExtent[1]);
         scale.niceTicks();
 
-        var axis = new TimelineAxis('value', scale, layoutInfo.axisExtent, axisType);
-        axis.model = timelineModel;
+        var axis = new TimelineAxis('value', scale, layoutInfo.axisExtent as [number, number], axisType);
+        axis.timelineModel = timelineModel;
 
         return axis;
-    },
+    }
 
-    _createGroup: function (name) {
-        var newGroup = this['_' + name] = new graphic.Group();
+    _createGroup(key: '_mainGroup' | '_labelGroup') {
+        var newGroup = this[key] = new graphic.Group();
         this.group.add(newGroup);
         return newGroup;
-    },
+    }
 
-    _renderAxisLine: function (layoutInfo, group, axis, timelineModel) {
+    _renderAxisLine(
+        layoutInfo: LayoutInfo,
+        group: graphic.Group,
+        axis: TimelineAxis,
+        timelineModel: SliderTimelineModel
+    ) {
         var axisExtent = axis.getExtent();
 
-        if (!timelineModel.get('lineStyle.show')) {
+        if (!timelineModel.get(['lineStyle', 'show'])) {
             return;
         }
 
@@ -344,19 +369,24 @@ export default TimelineView.extend({
                 x1: axisExtent[0], y1: 0,
                 x2: axisExtent[1], y2: 0
             },
-            style: zrUtil.extend(
+            style: extend(
                 {lineCap: 'round'},
                 timelineModel.getModel('lineStyle').getLineStyle()
             ),
             silent: true,
             z2: 1
         }));
-    },
+    }
 
     /**
      * @private
      */
-    _renderAxisTick: function (layoutInfo, group, axis, timelineModel) {
+    _renderAxisTick(
+        layoutInfo: LayoutInfo,
+        group: graphic.Group,
+        axis: TimelineAxis,
+        timelineModel: SliderTimelineModel
+    ) {
         var data = timelineModel.getData();
         // Show all ticks, despite ignoring strategy.
         var ticks = axis.scale.getTicks();
@@ -364,9 +394,9 @@ export default TimelineView.extend({
         // The value is dataIndex, see the costomized scale.
         each(ticks, function (value) {
             var tickCoord = axis.dataToCoord(value);
-            var itemModel = data.getItemModel(value);
+            var itemModel = data.getItemModel<TimelineDataItemOption>(value);
             var itemStyleModel = itemModel.getModel('itemStyle');
-            var hoverStyleModel = itemModel.getModel('emphasis.itemStyle');
+            var hoverStyleModel = itemModel.getModel(['emphasis', 'itemStyle']);
             var symbolOpt = {
                 position: [tickCoord, 0],
                 onclick: bind(this._changeTimeline, this, value)
@@ -374,21 +404,27 @@ export default TimelineView.extend({
             var el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
             graphic.setHoverStyle(el, hoverStyleModel.getItemStyle());
 
+            let ecData = graphic.getECData(el);
             if (itemModel.get('tooltip')) {
-                el.dataIndex = value;
-                el.dataModel = timelineModel;
+                ecData.dataIndex = value;
+                ecData.dataModel = timelineModel;
             }
             else {
-                el.dataIndex = el.dataModel = null;
+                ecData.dataIndex = ecData.dataModel = null;
             }
 
         }, this);
-    },
+    }
 
     /**
      * @private
      */
-    _renderAxisLabel: function (layoutInfo, group, axis, timelineModel) {
+    _renderAxisLabel(
+        layoutInfo: LayoutInfo,
+        group: graphic.Group,
+        axis: TimelineAxis,
+        timelineModel: SliderTimelineModel
+    ) {
         var labelModel = axis.getLabelModel();
 
         if (!labelModel.get('show')) {
@@ -402,9 +438,9 @@ export default TimelineView.extend({
             // The tickValue is dataIndex, see the costomized scale.
             var dataIndex = labelItem.tickValue;
 
-            var itemModel = data.getItemModel(dataIndex);
+            var itemModel = data.getItemModel<TimelineDataItemOption>(dataIndex);
             var normalLabelModel = itemModel.getModel('label');
-            var hoverLabelModel = itemModel.getModel('emphasis.label');
+            var hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
             var tickCoord = axis.dataToCoord(labelItem.tickValue);
             var textEl = new graphic.Text({
                 position: [tickCoord, 0],
@@ -424,39 +460,49 @@ export default TimelineView.extend({
             );
 
         }, this);
-    },
+    }
 
     /**
      * @private
      */
-    _renderControl: function (layoutInfo, group, axis, timelineModel) {
+    _renderControl(
+        layoutInfo: LayoutInfo,
+        group: graphic.Group,
+        axis: TimelineAxis,
+        timelineModel: SliderTimelineModel
+    ) {
         var controlSize = layoutInfo.controlSize;
         var rotation = layoutInfo.rotation;
 
         var itemStyle = timelineModel.getModel('controlStyle').getItemStyle();
-        var hoverStyle = timelineModel.getModel('emphasis.controlStyle').getItemStyle();
+        var hoverStyle = timelineModel.getModel(['emphasis', 'controlStyle']).getItemStyle();
         var rect = [0, -controlSize / 2, controlSize, controlSize];
         var playState = timelineModel.getPlayState();
         var inverse = timelineModel.get('inverse', true);
 
         makeBtn(
             layoutInfo.nextBtnPosition,
-            'controlStyle.nextIcon',
+            'nextIcon',
             bind(this._changeTimeline, this, inverse ? '-' : '+')
         );
         makeBtn(
             layoutInfo.prevBtnPosition,
-            'controlStyle.prevIcon',
+            'prevIcon',
             bind(this._changeTimeline, this, inverse ? '+' : '-')
         );
         makeBtn(
             layoutInfo.playPosition,
-            'controlStyle.' + (playState ? 'stopIcon' : 'playIcon'),
+            (playState ? 'stopIcon' : 'playIcon'),
             bind(this._handlePlayClick, this, !playState),
             true
         );
 
-        function makeBtn(position, iconPath, onclick, willRotate) {
+        function makeBtn(
+            position: number[],
+            iconPath: ControlIconName,
+            onclick: () => void,
+            willRotate?: boolean
+        ) {
             if (!position) {
                 return;
             }
@@ -468,26 +514,32 @@ export default TimelineView.extend({
                 style: itemStyle,
                 onclick: onclick
             };
-            var btn = makeIcon(timelineModel, iconPath, rect, opt);
+            var btn = makeControlIcon(timelineModel, iconPath, rect, opt);
             group.add(btn);
             graphic.setHoverStyle(btn, hoverStyle);
         }
-    },
+    }
 
-    _renderCurrentPointer: function (layoutInfo, group, axis, timelineModel) {
+    _renderCurrentPointer(
+        layoutInfo: LayoutInfo,
+        group: graphic.Group,
+        axis: TimelineAxis,
+        timelineModel: SliderTimelineModel
+    ) {
         var data = timelineModel.getData();
         var currentIndex = timelineModel.getCurrentIndex();
-        var pointerModel = data.getItemModel(currentIndex).getModel('checkpointStyle');
+        var pointerModel = data.getItemModel<TimelineDataItemOption>(currentIndex)
+            .getModel('checkpointStyle');
         var me = this;
 
         var callback = {
-            onCreate: function (pointer) {
+            onCreate(pointer: TimelineSymbol) {
                 pointer.draggable = true;
                 pointer.drift = bind(me._handlePointerDrag, me);
                 pointer.ondragend = bind(me._handlePointerDragend, me);
                 pointerMoveTo(pointer, currentIndex, axis, timelineModel, true);
             },
-            onUpdate: function (pointer) {
+            onUpdate(pointer: TimelineSymbol) {
                 pointerMoveTo(pointer, currentIndex, axis, timelineModel);
             }
         };
@@ -496,27 +548,27 @@ export default TimelineView.extend({
         this._currentPointer = giveSymbol(
             pointerModel, pointerModel, this._mainGroup, {}, this._currentPointer, callback
         );
-    },
+    }
 
-    _handlePlayClick: function (nextState) {
+    _handlePlayClick(nextState: boolean) {
         this._clearTimer();
         this.api.dispatchAction({
             type: 'timelinePlayChange',
             playState: nextState,
             from: this.uid
-        });
-    },
+        } as TimelinePlayChangePayload);
+    }
 
-    _handlePointerDrag: function (dx, dy, e) {
+    _handlePointerDrag(dx: number, dy: number, e: ZRElementEvent) {
         this._clearTimer();
         this._pointerChangeTimeline([e.offsetX, e.offsetY]);
-    },
+    }
 
-    _handlePointerDragend: function (e) {
+    _handlePointerDragend(e: ZRElementEvent) {
         this._pointerChangeTimeline([e.offsetX, e.offsetY], true);
-    },
+    }
 
-    _pointerChangeTimeline: function (mousePos, trigger) {
+    _pointerChangeTimeline(mousePos: number[], trigger?: boolean) {
         var toCoord = this._toAxisCoord(mousePos)[0];
 
         var axis = this._axis;
@@ -537,34 +589,32 @@ export default TimelineView.extend({
         )) {
             this._changeTimeline(targetDataIndex);
         }
-    },
+    }
 
-    _doPlayStop: function () {
+    _doPlayStop() {
         this._clearTimer();
 
         if (this.model.getPlayState()) {
             this._timer = setTimeout(
-                bind(handleFrame, this),
+                () => {
+                    // Do not cache
+                    var timelineModel = this.model;
+                    this._changeTimeline(
+                        timelineModel.getCurrentIndex()
+                        + (timelineModel.get('rewind', true) ? -1 : 1)
+                    );
+                },
                 this.model.get('playInterval')
-            );
+            ) as any;
         }
+    }
 
-        function handleFrame() {
-            // Do not cache
-            var timelineModel = this.model;
-            this._changeTimeline(
-                timelineModel.getCurrentIndex()
-                + (timelineModel.get('rewind', true) ? -1 : 1)
-            );
-        }
-    },
-
-    _toAxisCoord: function (vertex) {
+    _toAxisCoord(vertex: number[]) {
         var trans = this._mainGroup.getLocalTransform();
         return graphic.applyTransform(vertex, trans, true);
-    },
+    }
 
-    _findNearestTick: function (axisCoord) {
+    _findNearestTick(axisCoord: number) {
         var data = this.model.getData();
         var dist = Infinity;
         var targetDataIndex;
@@ -580,16 +630,16 @@ export default TimelineView.extend({
         });
 
         return targetDataIndex;
-    },
+    }
 
-    _clearTimer: function () {
+    _clearTimer() {
         if (this._timer) {
             clearTimeout(this._timer);
             this._timer = null;
         }
-    },
+    }
 
-    _changeTimeline: function (nextIndex) {
+    _changeTimeline(nextIndex: number | '+' | '-') {
         var currentIndex = this.model.getCurrentIndex();
 
         if (nextIndex === '+') {
@@ -603,12 +653,34 @@ export default TimelineView.extend({
             type: 'timelineChange',
             currentIndex: nextIndex,
             from: this.uid
-        });
+        } as TimelineChangePayload);
     }
 
-});
+}
 
-function getViewRect(model, api) {
+function createScaleByModel(model: SliderTimelineModel, axisType?: string): Scale {
+    axisType = axisType || model.get('type');
+    if (axisType) {
+        switch (axisType) {
+            // Buildin scale
+            case 'category':
+                return new OrdinalScale({
+                    ordinalMeta: model.getCategories(),
+                    extent: [Infinity, -Infinity]
+                });
+            case 'time':
+                return new TimeScale({
+                    useUTC: model.ecModel.get('useUTC')
+                });
+            default:
+                // default to be value
+                return new IntervalScale();
+        }
+    }
+}
+
+
+function getViewRect(model: SliderTimelineModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         model.getBoxLayoutParams(),
         {
@@ -619,10 +691,15 @@ function getViewRect(model, api) {
     );
 }
 
-function makeIcon(timelineModel, objPath, rect, opts) {
+function makeControlIcon(
+    timelineModel: TimelineModel,
+    objPath: ControlIconName,
+    rect: number[],
+    opts: PathProps
+) {
     var icon = graphic.makePath(
-        timelineModel.get(objPath).replace(/^path:\/\//, ''),
-        zrUtil.clone(opts || {}),
+        timelineModel.get(['controlStyle', objPath]).replace(/^path:\/\//, ''),
+        clone(opts || {}),
         new BoundingRect(rect[0], rect[1], rect[2], rect[3]),
         'center'
     );
@@ -634,7 +711,17 @@ function makeIcon(timelineModel, objPath, rect, opts) {
  * Create symbol or update symbol
  * opt: basic position and event handlers
  */
-function giveSymbol(hostModel, itemStyleModel, group, opt, symbol, callback) {
+function giveSymbol(
+    hostModel: Model<TimelineDataItemOption | TimelineCheckpointStyle>,
+    itemStyleModel: Model<TimelineDataItemOption['itemStyle'] | TimelineCheckpointStyle>,
+    group: graphic.Group,
+    opt: PathProps,
+    symbol?: TimelineSymbol,
+    callback?: {
+        onCreate?: (symbol: TimelineSymbol) => void
+        onUpdate?: (symbol: TimelineSymbol) => void
+    }
+) {
     var color = itemStyleModel.get('color');
 
     if (!symbol) {
@@ -651,11 +738,11 @@ function giveSymbol(hostModel, itemStyleModel, group, opt, symbol, callback) {
     }
 
     // Style
-    var itemStyle = itemStyleModel.getItemStyle(['color', 'symbol', 'symbolSize']);
+    var itemStyle = itemStyleModel.getItemStyle(['color']);
     symbol.setStyle(itemStyle);
 
     // Transform and events.
-    opt = zrUtil.merge({
+    opt = merge({
         rectHover: true,
         z2: 100
     }, opt, true);
@@ -691,13 +778,19 @@ function giveSymbol(hostModel, itemStyleModel, group, opt, symbol, callback) {
     return symbol;
 }
 
-function pointerMoveTo(pointer, dataIndex, axis, timelineModel, noAnimation) {
+function pointerMoveTo(
+    pointer: TimelineSymbol,
+    dataIndex: number,
+    axis: TimelineAxis,
+    timelineModel: SliderTimelineModel,
+    noAnimation?: boolean
+) {
     if (pointer.dragging) {
         return;
     }
 
     var pointerModel = timelineModel.getModel('checkpointStyle');
-    var toCoord = axis.dataToCoord(timelineModel.getData().get(['value'], dataIndex));
+    var toCoord = axis.dataToCoord(timelineModel.getData().get('value', dataIndex));
 
     if (noAnimation || !pointerModel.get('animation', true)) {
         pointer.attr({position: [toCoord, 0]});
@@ -705,9 +798,14 @@ function pointerMoveTo(pointer, dataIndex, axis, timelineModel, noAnimation) {
     else {
         pointer.stopAnimation(true);
         pointer.animateTo(
-            {position: [toCoord, 0]},
+            { position: [toCoord, 0] },
             pointerModel.get('animationDuration', true),
             pointerModel.get('animationEasing', true)
         );
     }
 }
+
+
+ComponentView.registerClass(SliderTimelineView);
+
+export default SliderTimelineView;

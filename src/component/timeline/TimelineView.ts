@@ -17,10 +17,11 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import ComponentView from '../../view/Component';
 
-export default ComponentView.extend({
-    type: 'timeline'
-});
+class TimelineView extends ComponentView {
+    static type = 'timeline'
+    type = TimelineView.type
+}
+
+export default TimelineView;
