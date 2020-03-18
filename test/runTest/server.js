@@ -178,6 +178,7 @@ function startTests(testsNameList, socket, {
 function checkPuppeteer() {
     try {
         const packageConfig = require('puppeteer/package.json');
+        console.log(`puppeteer version: ${packageConfig.version}`)
         return semver.satisfies(packageConfig.version, '>=1.19.0');
     }
     catch (e) {

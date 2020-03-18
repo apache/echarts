@@ -129,7 +129,7 @@ class EffectLine extends graphic.Group {
         // Ignore when updating
         symbol.ignore = true;
 
-        this._updateAnimationPoints(symbol, points);
+        this.updateAnimationPoints(symbol, points);
 
         if (constantSpeed > 0) {
             period = this._getLineLength(symbol) / constantSpeed * 1000;
@@ -176,7 +176,7 @@ class EffectLine extends graphic.Group {
             + vec2.dist(symbol.__cp1, symbol.__p2));
     }
 
-    private _updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
+    protected updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
         symbol.__p1 = points[0];
         symbol.__p2 = points[1];
         symbol.__cp1 = points[2] || [

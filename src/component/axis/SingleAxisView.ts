@@ -27,6 +27,7 @@ import SingleAxisModel from '../../coord/single/AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload } from '../../util/types';
+import ComponentView from '../../view/Component';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -157,5 +158,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, axisModel);
     }
 };
+
+ComponentView.registerClass(SingleAxisView);
 
 export default SingleAxisView;

@@ -23,8 +23,10 @@ import Cartesian from './Cartesian';
 import { ScaleDataValue } from '../../util/types';
 import Axis2D from './Axis2D';
 import { CoordinateSystem } from '../CoordinateSystem';
-import Grid, {cartesian2DDimensions} from './Grid';
+import Grid from './Grid';
 import GridModel from './GridModel';
+
+export const cartesian2DDimensions = ['x', 'y'];
 
 class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 

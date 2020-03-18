@@ -147,7 +147,8 @@ export interface CheckableConstructor {
     isInstance: (ins: any) => boolean;
 }
 
-var classBase = 0;
+// A random offset.
+var classBase = Math.round(Math.random() * 10);
 
 /**
  * Implements `CheckableConstructor` for `target`.
@@ -163,7 +164,7 @@ var classBase = 0;
  * ```
  */
 export function enableClassCheck(target: CheckableConstructor): void {
-    var classAttr = ['__\0is_clz', classBase++, Math.random().toFixed(3)].join('_');
+    var classAttr = ['__\0is_clz', classBase++].join('_');
     target.prototype[classAttr] = true;
 
     if (__DEV__) {

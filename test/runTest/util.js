@@ -126,11 +126,11 @@ module.exports.buildRuntimeCode = async function () {
             }
         ]
     });
-    const output = await bundle.generate({
+    const { output } = await bundle.generate({
         format: 'iife',
         name: 'autorun'
     });
-    return output.code;
+    return output[0].code;
 };
 
 module.exports.waitTime = function (time) {

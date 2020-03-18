@@ -76,6 +76,7 @@ function updateMarkerLayout(
 class MarkPointView extends MarkerView {
 
     static type = 'markPoint'
+    type = MarkPointView.type
 
     markerGroupMap: HashMap<SymbolDraw>
 

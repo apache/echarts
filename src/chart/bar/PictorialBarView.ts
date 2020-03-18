@@ -948,6 +948,6 @@ function toIntTimes(times: number) {
         : Math.ceil(times);
 }
 
-ComponentView.registerClass(PictorialBarView);
+ChartView.registerClass(PictorialBarView);
 
 export default PictorialBarView;

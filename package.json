@@ -15,6 +15,7 @@
   "scripts": {
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js",
+    "build:full": "node build/build.js --clean",
     "watch": "node build/build.js --watch",
     "release": "node build/build.js --release",
     "help": "node build/build.js --help",

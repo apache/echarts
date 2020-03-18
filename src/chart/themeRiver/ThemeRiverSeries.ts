@@ -340,4 +340,6 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
     }
 }
 
+SeriesModel.registerClass(ThemeRiverSeriesModel);
+
 export default ThemeRiverSeriesModel;

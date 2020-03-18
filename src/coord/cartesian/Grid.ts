@@ -32,7 +32,7 @@ import {
     niceScaleExtent,
     estimateLabelUnionRect
 } from '../../coord/axisHelper';
-import Cartesian2D from './Cartesian2D';
+import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystemManager from '../../CoordinateSystem';
 import {getStackedDimension} from '../../data/helper/dataStackHelper';
@@ -50,7 +50,6 @@ import List from '../../data/List';
 import SeriesModel from '../../model/Series';
 
 
-export const cartesian2DDimensions = ['x', 'y'];
 type Cartesian2DDimensionName = 'x' | 'y';
 
 type FinderAxisIndex = {xAxisIndex?: number, yAxisIndex?: number};

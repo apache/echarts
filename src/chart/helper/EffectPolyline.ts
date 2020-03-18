@@ -38,7 +38,7 @@ class EffectPolyline extends EffectLine {
     };
 
     // Override
-    updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
+    protected updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
         this._points = points;
         var accLenArr = [0];
         var len = 0;

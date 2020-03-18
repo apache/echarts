@@ -86,7 +86,7 @@ class ECLinePath extends graphic.Path<ECLineProps> {
         var shape = this.shape;
         var p = isStraightLine(shape)
             ? [shape.x2 - shape.x1, shape.y2 - shape.y1]
-            : bezierCurveProto.tangentAt(t);
+            : bezierCurveProto.tangentAt.call(this, t);
         return vec2.normalize(p, p);
     }
 

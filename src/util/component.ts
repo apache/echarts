@@ -22,7 +22,9 @@ import {parseClassType, ClassManager} from './clazz';
 import { ComponentOption, ComponentMainType, ComponentSubType, ComponentFullType } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 
-var base = 0;
+// A random offset
+var base = Math.round(Math.random() * 10);
+
 
 /**
  * @public
@@ -32,7 +34,7 @@ var base = 0;
 export function getUID(type: string): string {
     // Considering the case of crossing js context,
     // use Math.random to make id as unique as possible.
-    return [(type || ''), base++, Math.random().toFixed(5)].join('_');
+    return [(type || ''), base++].join('_');
 }
 
 export interface SubTypeDefaulter {

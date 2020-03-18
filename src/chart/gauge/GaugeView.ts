@@ -465,4 +465,6 @@ class GaugeView extends ChartView {
     }
 }
 
+ChartView.registerClass(GaugeView);
+
 export default GaugeView;

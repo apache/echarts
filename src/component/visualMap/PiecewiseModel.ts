@@ -430,7 +430,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
 
 };
 
-type ResetMethod = (pieceList: InnerVisualPiece[]) => void;
+type ResetMethod = (outPieceList: InnerVisualPiece[]) => void;
 /**
  * Key is this._mode
  * @type {Object}
@@ -438,7 +438,7 @@ type ResetMethod = (pieceList: InnerVisualPiece[]) => void;
  */
 var resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 
-    splitNumber(pieceList) {
+    splitNumber(outPieceList) {
         var thisOption = this.option;
         var precision = Math.min(thisOption.precision, 20);
         var dataExtent = this.getExtent();
@@ -457,7 +457,7 @@ var resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
         var index = 0;
 
         if (thisOption.minOpen) {
-            pieceList.push({
+            outPieceList.push({
                 index: index++,
                 interval: [-Infinity, dataExtent[0]],
                 close: [0, 0]
@@ -471,7 +471,7 @@ var resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
         ) {
             var max = index === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
 
-            pieceList.push({
+            outPieceList.push({
                 index: index++,
                 interval: [curr, max],
                 close: [1, 1]
@@ -479,36 +479,36 @@ var resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
         }
 
         if (thisOption.maxOpen) {
-            pieceList.push({
+            outPieceList.push({
                 index: index++,
                 interval: [dataExtent[1], Infinity],
                 close: [0, 0]
             });
         }
 
-        reformIntervals(pieceList as Required<InnerVisualPiece>[]);
+        reformIntervals(outPieceList as Required<InnerVisualPiece>[]);
 
-        zrUtil.each(pieceList, function (piece) {
+        zrUtil.each(outPieceList, function (piece) {
             piece.text = this.formatValueText(piece.interval);
         }, this);
     },
 
-    categories(pieceList) {
+    categories(outPieceList) {
         var thisOption = this.option;
         zrUtil.each(thisOption.categories, function (cate) {
             // FIXME category模式也使用pieceList，但在visualMapping中不是使用pieceList。
             // 是否改一致。
-            pieceList.push({
+            outPieceList.push({
                 text: this.formatValueText(cate, true),
                 value: cate
             });
         }, this);
 
         // See "Order Rule".
-        normalizeReverse(thisOption, pieceList);
+        normalizeReverse(thisOption, outPieceList);
     },
 
-    pieces(pieceList) {
+    pieces(outPieceList) {
         var thisOption = this.option;
 
         zrUtil.each(thisOption.pieces, function (pieceListItem, index) {
@@ -531,7 +531,7 @@ var resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
             else {
                 // `min` `max` is legacy option.
                 // `lt` `gt` `lte` `gte` is recommanded.
-                var interval = item.interval = [0, 0];
+                var interval = item.interval = [] as unknown as [number, number];
                 var close: typeof item.close = item.close = [0, 0];
 
                 var closeList = [1, 0, 1] as const;
@@ -568,16 +568,16 @@ var resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 
             item.visual = VisualMapping.retrieveVisuals(pieceListItem);
 
-            pieceList.push(item);
+            outPieceList.push(item);
 
         }, this);
 
         // See "Order Rule".
-        normalizeReverse(thisOption, pieceList);
+        normalizeReverse(thisOption, outPieceList);
         // Only pieces
-        reformIntervals(pieceList as Required<InnerVisualPiece>[]);
+        reformIntervals(outPieceList as Required<InnerVisualPiece>[]);
 
-        zrUtil.each(pieceList, function (piece) {
+        zrUtil.each(outPieceList, function (piece) {
             var close = piece.close;
             var edgeSymbols = [['<', '≤'][close[1]], ['>', '≥'][close[0]]];
             piece.text = piece.text || this.formatValueText(

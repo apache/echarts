@@ -37,7 +37,10 @@ class HeatmapLayer {
 
     private _brushCanvas: HTMLCanvasElement
 
-    private _gradientPixels: Record<ColorState, Uint8ClampedArray>
+    private _gradientPixels: Record<ColorState, Uint8ClampedArray> = {
+        inRange: null,
+        outOfRange: null
+    }
 
     constructor() {
         var canvas = zrUtil.createCanvas();

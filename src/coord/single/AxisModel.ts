@@ -105,7 +105,7 @@ ComponentModel.registerClass(SingleAxisModel);
 interface SingleAxisModel extends AxisModelCommonMixin<SingleAxisOption>,
     AxisModelExtendedInCreator<SingleAxisOption> {}
 
-zrUtil.mixin(SingleAxisModel, {AxisModelCommonMixin});
+zrUtil.mixin(SingleAxisModel, AxisModelCommonMixin.prototype);
 
 axisModelCreator('single', SingleAxisModel, SingleAxisModel.defaultOption);
 
