@@ -24,7 +24,7 @@ import Parallel from './Parallel';
 import { DimensionName, ComponentOption, BoxLayoutOptionMixin } from '../../util/types';
 import ParallelAxisModel, { ParallelAxisOption } from './AxisModel';
 import GlobalModel from '../../model/Global';
-import ParallelSeries from '../../chart/parallel/ParallelSeries';
+import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
 import SeriesModel from '../../model/Series';
 
 
@@ -119,7 +119,7 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
      * Whether series or axis is in this coordinate system.
      */
     contains(model: SeriesModel | ParallelAxisModel, ecModel: GlobalModel): boolean {
-        var parallelIndex = (model as ParallelSeries).get('parallelIndex');
+        var parallelIndex = (model as ParallelSeriesModel).get('parallelIndex');
         return parallelIndex != null
             && ecModel.getComponent('parallel', parallelIndex) === this;
     }

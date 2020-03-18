@@ -18,7 +18,7 @@
 */
 
 
-import ParallelSeries, { ParallelSeriesOption } from './ParallelSeries';
+import ParallelSeriesModel, { ParallelSeriesOption } from './ParallelSeries';
 import { StageHandler } from '../../util/types';
 
 
@@ -28,7 +28,7 @@ var parallelVisual: StageHandler = {
 
     seriesType: 'parallel',
 
-    reset: function (seriesModel: ParallelSeries, ecModel) {
+    reset: function (seriesModel: ParallelSeriesModel, ecModel) {
 
         // var itemStyleModel = seriesModel.getModel('itemStyle');
         var lineStyleModel = seriesModel.getModel('lineStyle');

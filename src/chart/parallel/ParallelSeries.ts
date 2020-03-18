@@ -21,7 +21,15 @@
 import {each, createHashMap} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';
-import { SeriesOption, SeriesEncodeOptionMixin, LineStyleOption, LabelOption, AnimationOptionMixin, SeriesTooltipOption, DimensionName } from '../../util/types';
+import {
+    SeriesOption,
+    SeriesEncodeOptionMixin,
+    LineStyleOption,
+    LabelOption,
+    SeriesTooltipOption,
+    DimensionName,
+    OptionDataValue
+ } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { ParallelActiveState } from '../../coord/parallel/AxisModel';
@@ -29,6 +37,20 @@ import Parallel from '../../coord/parallel/Parallel';
 import Source from '../../data/Source';
 import ParallelModel from '../../coord/parallel/ParallelModel';
 
+type ParallelSeriesDataValue = OptionDataValue[]
+
+export interface ParallelSeriesDataItemOption {
+
+    value?: ParallelSeriesDataValue[]
+
+    lineStyle?: LineStyleOption
+    label?: LabelOption
+
+    emphasis?: {
+        lineStyle?: LineStyleOption
+        label?: LabelOption
+    }
+}
 
 export interface ParallelSeriesOption extends
     SeriesOption,
@@ -52,12 +74,14 @@ export interface ParallelSeriesOption extends
         label?: LabelOption;
         lineStyle?: LineStyleOption;
     }
+
+    data?: (ParallelSeriesDataValue | ParallelSeriesDataItemOption)[]
 }
 
-class ParallelSeries extends SeriesModel<ParallelSeriesOption> {
+class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
 
     static type = 'series.parallel';
-    readonly type = ParallelSeries.type;
+    readonly type = ParallelSeriesModel.type;
 
     static dependencies = ['parallel'];
 
@@ -126,9 +150,9 @@ class ParallelSeries extends SeriesModel<ParallelSeriesOption> {
 
 }
 
-SeriesModel.registerClass(ParallelSeries);
+SeriesModel.registerClass(ParallelSeriesModel);
 
-function setEncodeAndDimensions(source: Source, seriesModel: ParallelSeries): void {
+function setEncodeAndDimensions(source: Source, seriesModel: ParallelSeriesModel): void {
     // The mapping of parallelAxis dimension to data dimension can
     // be specified in parallelAxis.option.dim. For example, if
     // parallelAxis.option.dim is 'dim3', it mapping to the third
@@ -158,4 +182,4 @@ function convertDimNameToNumber(dimName: DimensionName): number {
     return +dimName.replace('dim', '');
 }
 
-export default ParallelSeries;
+export default ParallelSeriesModel;

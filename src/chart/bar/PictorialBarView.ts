@@ -23,7 +23,6 @@ import {createSymbol} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import {setLabel} from './helper';
 import ChartView from '../../view/Chart';
-import ComponentView from '../../view/Component';
 import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';

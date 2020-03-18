@@ -70,7 +70,7 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
     /**
      * @readOnly
      */
-    activeIntervals: ParallelAxisInterval[];
+    activeIntervals: ParallelAxisInterval[] = [];
 
     getAreaSelectStyle(): ParallelAreaSelectStyleProps {
         return makeStyleMapper(

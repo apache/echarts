@@ -17,42 +17,48 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
+import List from '../../data/List';
+import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
+import Parallel from '../../coord/parallel/Parallel';
+import { StyleProps } from 'zrender/src/graphic/Style';
+import { OptionAxisType } from '../../coord/axisCommonTypes';
 
-var DEFAULT_SMOOTH = 0.3;
+const DEFAULT_SMOOTH = 0.3;
 
-var ParallelView = ChartView.extend({
+interface ParallelDrawSeriesScope {
+    smooth: number
+    lineStyle: StyleProps
+}
+class ParallelView extends ChartView {
+    static type = 'parallel'
+    type = ParallelView.type
 
-    type: 'parallel',
+    private _dataGroup = new graphic.Group()
 
-    init: function () {
+    private _data: List
 
-        /**
-         * @type {module:zrender/container/Group}
-         * @private
-         */
-        this._dataGroup = new graphic.Group();
+    private _initialized = false
 
+    init() {
         this.group.add(this._dataGroup);
-
-        /**
-         * @type {module:echarts/data/List}
-         */
-        this._data;
-
-        /**
-         * @type {boolean}
-         */
-        this._initialized;
-    },
+    }
 
     /**
      * @override
      */
-    render: function (seriesModel, ecModel, api, payload) {
+    render(
+        seriesModel: ParallelSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload & {
+            animation?: boolean
+        }
+    ) {
         var dataGroup = this._dataGroup;
         var data = seriesModel.getData();
         var oldData = this._data;
@@ -66,13 +72,13 @@ var ParallelView = ChartView.extend({
             .remove(remove)
             .execute();
 
-        function add(newDataIndex) {
+        function add(newDataIndex: number) {
             var line = addEl(data, dataGroup, newDataIndex, dimensions, coordSys);
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
 
-        function update(newDataIndex, oldDataIndex) {
-            var line = oldData.getItemGraphicEl(oldDataIndex);
+        function update(newDataIndex: number, oldDataIndex: number) {
+            var line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
             var points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);
             var animationModel = (payload && payload.animation === false) ? null : seriesModel;
@@ -81,7 +87,7 @@ var ParallelView = ChartView.extend({
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
 
-        function remove(oldDataIndex) {
+        function remove(oldDataIndex: number) {
             var line = oldData.getItemGraphicEl(oldDataIndex);
             dataGroup.remove(line);
         }
@@ -101,15 +107,15 @@ var ParallelView = ChartView.extend({
         }
 
         this._data = data;
-    },
+    }
 
-    incrementalPrepareRender: function (seriesModel, ecModel, api) {
+    incrementalPrepareRender(seriesModel: ParallelSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._initialized = true;
         this._data = null;
         this._dataGroup.removeAll();
-    },
+    }
 
-    incrementalRender: function (taskParams, seriesModel, ecModel) {
+    incrementalRender(taskParams: StageHandlerProgressParams, seriesModel: ParallelSeriesModel, ecModel: GlobalModel) {
         var data = seriesModel.getData();
         var coordSys = seriesModel.coordinateSystem;
         var dimensions = coordSys.dimensions;
@@ -120,49 +126,18 @@ var ParallelView = ChartView.extend({
             line.incremental = true;
             updateElCommon(line, data, dataIndex, seriesScope);
         }
-    },
-
-    dispose: function () {},
-
-    // _renderForProgressive: function (seriesModel) {
-    //     var dataGroup = this._dataGroup;
-    //     var data = seriesModel.getData();
-    //     var oldData = this._data;
-    //     var coordSys = seriesModel.coordinateSystem;
-    //     var dimensions = coordSys.dimensions;
-    //     var option = seriesModel.option;
-    //     var progressive = option.progressive;
-    //     var smooth = option.smooth ? SMOOTH : null;
-
-    //     // In progressive animation is disabled, so use simple data diff,
-    //     // which effects performance less.
-    //     // (Typically performance for data with length 7000+ like:
-    //     // simpleDiff: 60ms, addEl: 184ms,
-    //     // in RMBP 2.4GHz intel i7, OSX 10.9 chrome 50.0.2661.102 (64-bit))
-    //     if (simpleDiff(oldData, data, dimensions)) {
-    //         dataGroup.removeAll();
-    //         data.each(function (dataIndex) {
-    //             addEl(data, dataGroup, dataIndex, dimensions, coordSys);
-    //         });
-    //     }
-
-    //     updateElCommon(data, progressive, smooth);
-
-    //     // Consider switch between progressive and not.
-    //     data.__plProgressive = true;
-    //     this._data = data;
-    // },
+    }
 
     /**
      * @override
      */
-    remove: function () {
+    remove() {
         this._dataGroup && this._dataGroup.removeAll();
         this._data = null;
     }
-});
+}
 
-function createGridClipShape(coordSys, seriesModel, cb) {
+function createGridClipShape(coordSys: Parallel, seriesModel: ParallelSeriesModel, cb: () => void) {
     var parallelModel = coordSys.model;
     var rect = coordSys.getRect();
     var rectEl = new graphic.Rect({
@@ -185,7 +160,7 @@ function createGridClipShape(coordSys, seriesModel, cb) {
     return rectEl;
 }
 
-function createLinePoints(data, dataIndex, dimensions, coordSys) {
+function createLinePoints(data: List, dataIndex: number, dimensions: string[], coordSys: Parallel) {
     var points = [];
     for (var i = 0; i < dimensions.length; i++) {
         var dimName = dimensions[i];
@@ -197,7 +172,7 @@ function createLinePoints(data, dataIndex, dimensions, coordSys) {
     return points;
 }
 
-function addEl(data, dataGroup, dataIndex, dimensions, coordSys) {
+function addEl(data: List, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel) {
     var points = createLinePoints(data, dataIndex, dimensions, coordSys);
     var line = new graphic.Polyline({
         shape: {points: points},
@@ -209,20 +184,27 @@ function addEl(data, dataGroup, dataIndex, dimensions, coordSys) {
     return line;
 }
 
-function makeSeriesScope(seriesModel) {
+function makeSeriesScope(seriesModel: ParallelSeriesModel): ParallelDrawSeriesScope {
     var smooth = seriesModel.get('smooth', true);
     smooth === true && (smooth = DEFAULT_SMOOTH);
+
     return {
         lineStyle: seriesModel.getModel('lineStyle').getLineStyle(),
-        smooth: smooth != null ? smooth : DEFAULT_SMOOTH
+        smooth: smooth != null ? +smooth : DEFAULT_SMOOTH
     };
 }
 
-function updateElCommon(el, data, dataIndex, seriesScope) {
+function updateElCommon(
+    el: graphic.Polyline,
+    data: List,
+    dataIndex: number,
+    seriesScope: ParallelDrawSeriesScope
+) {
     var lineStyle = seriesScope.lineStyle;
 
     if (data.hasItemOption) {
-        var lineStyleModel = data.getItemModel(dataIndex).getModel('lineStyle');
+        var lineStyleModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex)
+            .getModel('lineStyle');
         lineStyle = lineStyleModel.getLineStyle();
     }
 
@@ -260,10 +242,12 @@ function updateElCommon(el, data, dataIndex, seriesScope) {
 // }
 
 // FIXME put in common util?
-function isEmptyValue(val, axisType) {
+function isEmptyValue(val: ParsedValue, axisType: OptionAxisType) {
     return axisType === 'category'
         ? val == null
-        : (val == null || isNaN(val)); // axisType === 'value'
+        : (val == null || isNaN(val as number)); // axisType === 'value'
 }
+
+ChartView.registerClass(ParallelView);
 
 export default ParallelView;

@@ -37,9 +37,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Dictionary, DimensionName, ScaleDataValue } from '../../util/types';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelAxisModel, { ParallelActiveState } from './AxisModel';
-import ParallelSeries from '../../chart/parallel/ParallelSeries';
 import List from '../../data/List';
-import { ParsedModelFinder } from '../../util/model';
 
 var each = zrUtil.each;
 var mathMin = Math.min;

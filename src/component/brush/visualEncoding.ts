@@ -22,7 +22,7 @@ import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as visualSolution from '../../visual/visualSolution';
-import selector, { BrushSelectableArea, makeBrushCommonSelectorForSeries } from './selector';
+import { BrushSelectableArea, makeBrushCommonSelectorForSeries } from './selector';
 import * as throttleUtil from '../../util/throttle';
 import BrushTargetManager from '../helper/BrushTargetManager';
 import GlobalModel from '../../model/Global';
@@ -30,7 +30,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Payload } from '../../util/types';
 import BrushModel, { BrushAreaParamInternal } from './BrushModel';
 import SeriesModel from '../../model/Series';
-import ParallelSeries from '../../chart/parallel/ParallelSeries';
+import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
 import { ZRenderType } from 'zrender/src/zrender';
 import { BrushType, BrushDimensionMinMax } from '../helper/BrushController';
 
@@ -41,7 +41,7 @@ var DISPATCH_METHOD = '__ecBrushSelect' as const;
 var DISPATCH_FLAG = '__ecInBrushSelectEvent' as const;
 var PRIORITY_BRUSH = echarts.PRIORITY.VISUAL.BRUSH;
 
-interface BrushGlobalDispatcher extends ZRenderType  {
+interface BrushGlobalDispatcher extends ZRenderType {
     [DISPATCH_FLAG]: boolean;
     [DISPATCH_METHOD]: typeof doDispatch
 }
@@ -161,11 +161,11 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
             var rangeInfoList: BrushSelectableArea[] = rangeInfoBySeries[seriesIndex] = [];
 
             seriesModel.subType === 'parallel'
-                ? stepAParallel(seriesModel as ParallelSeries, seriesIndex)
+                ? stepAParallel(seriesModel as ParallelSeriesModel, seriesIndex)
                 : stepAOthers(seriesModel, seriesIndex, rangeInfoList);
         });
 
-        function stepAParallel(seriesModel: ParallelSeries, seriesIndex: number): void {
+        function stepAParallel(seriesModel: ParallelSeriesModel, seriesIndex: number): void {
             var coordSys = seriesModel.coordinateSystem;
             hasBrushExists = hasBrushExists || coordSys.hasAxisBrushed();
 
