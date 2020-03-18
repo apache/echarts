@@ -25,7 +25,7 @@ import axisModelCreator, { AxisModelExtendedInCreator } from '../axisModelCreato
 import * as numberUtil from '../../util/number';
 import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import ParallelAxis from './ParallelAxis';
-import { ComponentOption, ZRColor, ParsedValue } from '../../util/types';
+import { ZRColor, ParsedValue } from '../../util/types';
 import { AxisBaseOption } from '../axisCommonTypes';
 import { StyleProps } from 'zrender/src/graphic/Style';
 import Parallel from './Parallel';

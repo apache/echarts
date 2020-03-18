@@ -68,8 +68,6 @@ class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     }
 }
 
-ComponentModel.registerClass(CartesianAxisModel);
-
 interface CartesianAxisModel extends AxisModelCommonMixin<CartesianAxisOption>,
     AxisModelExtendedInCreator<CartesianAxisOption> {}
 

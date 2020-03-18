@@ -318,4 +318,6 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 interface MapSeries extends DataSelectableMixin<MapSeriesOption> {}
 zrUtil.mixin(MapSeries, DataSelectableMixin);
 
+SeriesModel.registerClass(MapSeries);
+
 export default MapSeries;

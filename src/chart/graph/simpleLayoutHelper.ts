@@ -37,7 +37,7 @@ export function simpleLayout(seriesModel: GraphSeriesModel) {
 }
 
 export function simpleLayoutEdge(graph: Graph) {
-    graph.eachEdge(function (edge) {
+    graph.eachEdge(function (edge, idx) {
         var curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
         var p1 = vec2.clone(edge.node1.getLayout());
         var p2 = vec2.clone(edge.node2.getLayout());

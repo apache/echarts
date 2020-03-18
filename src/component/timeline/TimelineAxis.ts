@@ -30,10 +30,8 @@ class TimelineAxis extends Axis {
 
     type: 'category' | 'time' | 'value'
 
-    // Not using the model.
-    model: never
-
-    timelineModel: TimelineModel
+    // @ts-ignore
+    model: TimelineModel
 
     constructor(dim: string, scale: Scale, coordExtent: [number, number], axisType: 'category' | 'time' | 'value') {
         super(dim, scale, coordExtent);
@@ -45,14 +43,14 @@ class TimelineAxis extends Axis {
      */
     getLabelModel() {
         // Force override
-        return this.timelineModel.getModel('label') as Model<LabelOption>;
+        return this.model.getModel('label') as Model<LabelOption>;
     }
 
     /**
      * @override
      */
     isHorizontal() {
-        return this.timelineModel.get('orient') === 'horizontal';
+        return this.model.get('orient') === 'horizontal';
     }
 }
 

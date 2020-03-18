@@ -22,6 +22,7 @@ import DataFormatMixin from '../../model/mixin/dataFormat';
 import ComponentModel from '../../model/Component';
 import { mixin } from 'zrender/src/core/util';
 import List from '../../data/List';
+import { inheritDefaultOption } from '../../util/component';
 
 interface SliderTimelineOption extends TimelineOption {
 }
@@ -34,7 +35,7 @@ class SliderTimelineModel extends TimelineModel {
     /**
      * @protected
      */
-    static defaultOption: SliderTimelineOption = {
+    static defaultOption: SliderTimelineOption = inheritDefaultOption(TimelineModel.defaultOption, {
 
         backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
         borderColor: '#ccc',               // 时间轴边框颜色
@@ -119,7 +120,7 @@ class SliderTimelineModel extends TimelineModel {
             }
         },
         data: []
-    }
+    })
 
 }
 

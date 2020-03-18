@@ -82,6 +82,7 @@ export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesian
 class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
 
     static readonly type = 'series.candlestick'
+    readonly type = CandlestickSeriesModel.type
 
     static readonly dependencies = ['xAxis', 'yAxis', 'grid']
 

@@ -37,7 +37,7 @@ function deprecateLog(str: string) {
     }
     if (typeof console !== 'undefined' && console.warn) {
         storedLogs[str] = true;
-        console.warn('DEPRECATED: ' + str);
+        console.warn('[ECharts] DEPRECATED: ' + str);
     }
 }
 
@@ -343,5 +343,5 @@ export default function (option: any, isTheme?: boolean) {
     compatTextStyle(toObj(option.tooltip).axisPointer, 'label');
 
     // Clean logs
-    storedLogs = {};
+    // storedLogs = {};
 }

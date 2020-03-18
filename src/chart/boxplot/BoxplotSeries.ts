@@ -28,7 +28,6 @@ import {
     LabelOption,
     OptionDataValueNumeric
 } from '../../util/types';
-import ComponentModel from '../../model/Component';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
@@ -74,6 +73,7 @@ export interface BoxplotSeriesOption extends SeriesOption, SeriesOnCartesianOpti
 class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
 
     static readonly type = 'series.boxplot'
+    readonly type = BoxplotSeriesModel.type
 
     static readonly dependencies = ['xAxis', 'yAxis', 'grid']
 
@@ -133,6 +133,6 @@ interface BoxplotSeriesModel extends WhiskerBoxCommonMixin<BoxplotSeriesOption> 
 }
 zrUtil.mixin(BoxplotSeriesModel, WhiskerBoxCommonMixin, true);
 
-ComponentModel.registerClass(BoxplotSeriesModel);
+SeriesModel.registerClass(BoxplotSeriesModel);
 
 export default BoxplotSeriesModel;

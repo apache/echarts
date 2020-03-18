@@ -20,9 +20,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
-import './AxisModel';
 import Parallel from './Parallel';
-import { DimensionName, ComponentOption, BoxLayoutOptionMixin, Dictionary } from '../../util/types';
+import { DimensionName, ComponentOption, BoxLayoutOptionMixin } from '../../util/types';
 import ParallelAxisModel, { ParallelAxisOption } from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ParallelSeries from '../../chart/parallel/ParallelSeries';

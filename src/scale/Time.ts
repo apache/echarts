@@ -73,7 +73,7 @@ var bisect = function (
 
 class TimeScale extends IntervalScale {
 
-    type = 'time';
+    readonly type = 'time';
 
     private _stepLvl: [string, number];
 

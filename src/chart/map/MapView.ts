@@ -266,4 +266,6 @@ function enterRegionHighDown(highDownRecord: HighDownRecord, toHighOrDown: boole
     }
 }
 
+ChartView.registerClass(MapView);
+
 export default MapView;

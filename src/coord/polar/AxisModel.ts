@@ -82,13 +82,15 @@ zrUtil.mixin(PolarAxisModel, AxisModelCommonMixin);
 export {PolarAxisModel};
 
 export class AngleAxisModel extends PolarAxisModel<AngleAxisOption> {
+    static type = 'angleAxis'
+    type = AngleAxisModel.type
     axis: AngleAxis
 }
 export class RadiusAxisModel extends PolarAxisModel<RadiusAxisOption> {
+    static type = 'radiusAxis'
+    type = RadiusAxisModel.type
     axis: RadiusAxis
 }
-
-ComponentModel.registerClass(PolarAxisModel);
 
 const angleAxisExtraOption: AngleAxisOption = {
     startAngle: 90,

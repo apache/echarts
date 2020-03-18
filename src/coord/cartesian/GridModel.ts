@@ -65,6 +65,4 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
     }
 }
 
-ComponentModel.registerClass(GridModel);
-
 export default GridModel;

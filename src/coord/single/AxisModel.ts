@@ -35,7 +35,7 @@ export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
 }
 
 class SingleAxisModel extends ComponentModel<SingleAxisOption>
-    implements AxisBaseModel<SingleAxisOption>  {
+    implements AxisBaseModel<SingleAxisOption> {
     static type = 'singleAxis'
     type = SingleAxisModel.type
 

@@ -66,19 +66,19 @@ class ECLinePath extends graphic.Path<ECLineProps> {
 
     buildPath(ctx: CanvasRenderingContext2D, shape: StraightLineShape | CurveShape) {
         if (isStraightLine(shape)) {
-            straightLineProto.buildPath(ctx, shape);
+            straightLineProto.buildPath.call(this, ctx, shape);
         }
         else {
-            bezierCurveProto.buildPath(ctx, shape);
+            bezierCurveProto.buildPath.call(this, ctx, shape);
         }
     }
 
     pointAt(t: number) {
         if (isStraightLine(this.shape)) {
-            return straightLineProto.pointAt(t);
+            return straightLineProto.pointAt.call(this, t);
         }
         else {
-            return bezierCurveProto.pointAt(t);
+            return bezierCurveProto.pointAt.call(this, t);
         }
     }
 

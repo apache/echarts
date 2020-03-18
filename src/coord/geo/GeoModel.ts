@@ -34,7 +34,6 @@ import {
     DisplayState,
     RoamOptionMixin
 } from '../../util/types';
-import { RoamType } from '../../component/helper/RoamController';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 

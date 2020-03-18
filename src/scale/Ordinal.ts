@@ -35,7 +35,7 @@ import { AxisBaseOption } from '../coord/axisCommonTypes';
 
 class OrdinalScale extends Scale {
 
-    type: 'ordinal';
+    readonly type = 'ordinal'
 
     private _ordinalMeta: OrdinalMeta;
 

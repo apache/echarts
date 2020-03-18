@@ -24,7 +24,6 @@ import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
 import TimelineAxis from './TimelineAxis';
 import {createSymbol} from '../../util/symbol';
-import * as axisHelper from '../../coord/axisHelper';
 import * as numberUtil from '../../util/number';
 import {encodeHTML} from '../../util/format';
 import GlobalModel from '../../model/Global';
@@ -342,7 +341,7 @@ class SliderTimelineView extends TimelineView {
         scale.niceTicks();
 
         var axis = new TimelineAxis('value', scale, layoutInfo.axisExtent as [number, number], axisType);
-        axis.timelineModel = timelineModel;
+        axis.model = timelineModel;
 
         return axis;
     }

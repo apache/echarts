@@ -472,4 +472,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 }
 
+SeriesModel.registerClass(GraphSeriesModel);
+
 export default GraphSeriesModel;

@@ -459,8 +459,8 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
 interface GraphEdge extends ReturnType<typeof createGraphDataProxyMixin> {};
 interface GraphNode extends ReturnType<typeof createGraphDataProxyMixin> {};
 
-zrUtil.mixin(GraphEdge, createGraphDataProxyMixin('hostGraph', 'data'));
-zrUtil.mixin(GraphNode, createGraphDataProxyMixin('hostGraph', 'edgeData'));
+zrUtil.mixin(GraphNode, createGraphDataProxyMixin('hostGraph', 'data'));
+zrUtil.mixin(GraphEdge, createGraphDataProxyMixin('hostGraph', 'edgeData'));
 
 export default Graph;
 

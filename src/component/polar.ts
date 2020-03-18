@@ -21,6 +21,9 @@ import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import barPolar from '../layout/barPolar';
 
+// Import self registered models.
+import '../coord/polar/PolarModel';
+import '../coord/polar/AxisModel';
 import '../coord/polar/polarCreator';
 import './angleAxis';
 import './radiusAxis';
