@@ -77,8 +77,8 @@ function boxLayout(
         var rect = child.getBoundingRect();
         var nextChild = group.childAt(idx + 1);
         var nextChildRect = nextChild && nextChild.getBoundingRect();
-        var nextX;
-        var nextY;
+        var nextX: number;
+        var nextY: number;
 
         if (orient === 'horizontal') {
             var moveX = rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);

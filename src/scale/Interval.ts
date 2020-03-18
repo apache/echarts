@@ -27,6 +27,7 @@ var roundNumber = numberUtil.round;
 
 class IntervalScale extends Scale {
 
+    static type = 'interval';
     type = 'interval';
 
     // Step is calculated in adjustExtent.

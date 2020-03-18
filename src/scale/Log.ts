@@ -41,7 +41,7 @@ var mathPow = Math.pow;
 var mathLog = Math.log;
 
 class LogScale extends Scale {
-
+    static type = 'log';
     readonly type = 'log';
 
     base = 10;
@@ -200,5 +200,8 @@ proto.getLabel = intervalScaleProto.getLabel;
 function fixRoundingError(val: number, originalVal: number): number {
     return roundingErrorFix(val, getPrecisionSafe(originalVal));
 }
+
+
+Scale.registerClass(LogScale);
 
 export default LogScale;

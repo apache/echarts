@@ -1444,12 +1444,12 @@ export function createIcon(
             ? (
                 (style as ZImageStyleProps).image = iconStr.slice(8),
                 zrUtil.defaults(style, rect),
-                new ZImage(opt)
+                new ZImage(innerOpts)
             )
             : (
                 makePath(
                     iconStr.replace('path://', ''),
-                    opt,
+                    innerOpts,
                     rect,
                     'center'
                 )

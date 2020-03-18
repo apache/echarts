@@ -96,7 +96,7 @@ export interface CalendarCellRect {
 class Calendar implements CoordinateSystem, CoordinateSystemMaster {
 
     static readonly dimensions = ['time', 'value'];
-    static getDimensionInfo() {
+    static getDimensionsInfo() {
         return [{
             name: 'time', type: 'time'
         }, 'value'];
@@ -124,7 +124,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         this._model = calendarModel;
     }
     // Required in createListFromData
-    getDimensionsInfo = Calendar.getDimensionInfo
+    getDimensionsInfo = Calendar.getDimensionsInfo
 
     getRangeInfo() {
         return this._rangeInfo;

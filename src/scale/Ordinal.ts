@@ -24,17 +24,18 @@
 
 // FIXME only one data
 
-import * as zrUtil from 'zrender/src/core/util';
 import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
 import List from '../data/List';
 import * as scaleHelper from './helper';
 import { OrdinalRawValue, OrdinalNumber, DimensionLoose } from '../util/types';
 import { AxisBaseOption } from '../coord/axisCommonTypes';
+import { isArray } from 'zrender/src/core/util';
 
 
 class OrdinalScale extends Scale {
 
+    static type = 'ordinal'
     readonly type = 'ordinal'
 
     private _ordinalMeta: OrdinalMeta;
@@ -49,7 +50,7 @@ class OrdinalScale extends Scale {
         var ordinalMeta = this.getSetting('ordinalMeta');
         // Caution: Should not use instanceof, consider ec-extensions using
         // import approach to get OrdinalMeta class.
-        if (!ordinalMeta || zrUtil.isArray(ordinalMeta)) {
+        if (!ordinalMeta || isArray(ordinalMeta)) {
             ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
         }
         this._ordinalMeta = ordinalMeta;
@@ -103,8 +104,10 @@ class OrdinalScale extends Scale {
      */
     getLabel(n: OrdinalNumber): string {
         if (!this.isBlank()) {
+            const cateogry = this._ordinalMeta.categories[n];
             // Note that if no data, ordinalMeta.categories is an empty array.
-            return this._ordinalMeta.categories[n] + '';
+            // Return empty if it's not exist.
+            return cateogry == null ? '' : cateogry + '';
         }
     }
 

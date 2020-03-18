@@ -42,6 +42,7 @@ import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
+import Scale from './Scale';
 
 
 var mathCeil = Math.ceil;
@@ -73,6 +74,7 @@ var bisect = function (
 
 class TimeScale extends IntervalScale {
 
+    static type = 'time';
     readonly type = 'time';
 
     private _stepLvl: [string, number];
@@ -231,5 +233,6 @@ var scaleLevels = [
     ['year', ONE_DAY * 380]            // 1Y
 ] as [string, number][];
 
+Scale.registerClass(TimeScale);
 
 export default TimeScale;

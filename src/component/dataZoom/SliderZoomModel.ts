@@ -101,10 +101,10 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         show: true,
 
         // deault value can only be drived in view stage.
-        right: 'auto',  // Default align to grid rect.
-        top: 'auto',    // Default align to grid rect.
-        width: 'auto',  // Default align to grid rect.
-        height: 'auto', // Default align to grid rect.
+        right: 'ph',  // Default align to grid rect.
+        top: 'ph',    // Default align to grid rect.
+        width: 'ph',  // Default align to grid rect.
+        height: 'ph', // Default align to grid rect.
         left: null,   // Default align to grid rect.
         bottom: null, // Default align to grid rect.
 

@@ -206,7 +206,7 @@ class SliderZoomView extends DataZoomView {
 
         // Replace the placeholder value.
         each(['right', 'top', 'width', 'height'] as const, function (name) {
-            if (layoutParams[name] === 'auto') {
+            if (layoutParams[name] === 'ph') {
                 layoutParams[name] = positionInfo[name];
             }
         });
