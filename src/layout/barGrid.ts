@@ -501,7 +501,10 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
                 if (Math.abs(width) < barMinHeight) {
                     width = (width < 0 ? -1 : 1) * barMinHeight;
                 }
-                stacked && (lastStackCoords[stackId][baseValue][sign] += width);
+                // Ignore stack from NaN value
+                if (!isNaN(width)) {
+                    stacked && (lastStackCoords[stackId][baseValue][sign] += width);
+                }
             }
             else {
                 var coord = cartesian.dataToPoint([baseValue, value]);
@@ -514,7 +517,10 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
                     // Include zero to has a positive bar
                     height = (height <= 0 ? -1 : 1) * barMinHeight;
                 }
-                stacked && (lastStackCoords[stackId][baseValue][sign] += height);
+                // Ignore stack from NaN value
+                if (!isNaN(height)) {
+                    stacked && (lastStackCoords[stackId][baseValue][sign] += height);
+                }
             }
 
             data.setItemLayout(idx, {
