@@ -140,6 +140,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
 
         var mode = this._mode = this._determineMode();
 
+        this._pieceList = [];
         resetMethods[this._mode].call(this, this._pieceList);
 
         this._resetSelected(newOption, isInit);

@@ -124,10 +124,10 @@ class PiePiece extends graphic.Group {
         var itemModel = data.getItemModel<PieDataItemOption>(idx);
         var layout = data.getItemLayout(idx) as graphic.Sector['shape'];
         var sectorShape = zrUtil.extend({
-            label: ''
+            label: null
         }, layout);
-        // @ts-ignore FIXME:TS label?
-        // sectorShape.label = null;
+        // Not animate label
+        sectorShape.label = null;
 
         var animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
 

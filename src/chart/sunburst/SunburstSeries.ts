@@ -187,7 +187,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         return params;
     }
 
-    defaultOption: SunburstSeriesOption = {
+    static defaultOption: SunburstSeriesOption = {
         zlevel: 0,
         z: 2,
 

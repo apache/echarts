@@ -112,10 +112,6 @@ class SliderTimelineView extends TimelineView {
             var mainGroup = this._createGroup('_mainGroup');
             var labelGroup = this._createGroup('_labelGroup');
 
-            /**
-             * @private
-             * @type {module:echarts/component/timeline/TimelineAxis}
-             */
             var axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
             timelineModel.formatTooltip = function (dataIndex: number) {
@@ -168,6 +164,10 @@ class SliderTimelineView extends TimelineView {
                 horizontal: {top: '-', bottom: '+'},
                 vertical: {left: '-', right: '+'}
             } as const)[orient][labelPosOpt];
+        }
+        else {
+            // is number
+            parsedLabelPos = labelPosOpt;
         }
 
         var labelAlignMap = {
@@ -284,7 +284,7 @@ class SliderTimelineView extends TimelineView {
 
         var labelPosOpt = layoutInfo.labelPosOpt;
 
-        if (isString(labelPosOpt)) { // '+' or '-'
+        if (labelPosOpt == null || isString(labelPosOpt)) { // '+' or '-'
             var mainBoundIdx = labelPosOpt === '+' ? 0 : 1;
             toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
             toBound(labelsPosition, labelBound, viewBound, 1, 1 - mainBoundIdx);
