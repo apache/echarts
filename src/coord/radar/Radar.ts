@@ -204,7 +204,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
                 );
             }
             else if (fixedMin != null) {
-                var max;
+                let max;
                 // User set min, expand extent on the other side
                 do {
                     max = fixedMin + interval * splitNumber;
@@ -217,7 +217,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
                 } while (max < rawExtent[1] && isFinite(max) && isFinite(rawExtent[1]));
             }
             else if (fixedMax != null) {
-                var min;
+                let min;
                 // User set min, expand extent on the other side
                 do {
                     min = fixedMax - interval * splitNumber;
@@ -227,17 +227,14 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
                 } while (min > rawExtent[0] && isFinite(min) && isFinite(rawExtent[0]));
             }
             else {
-                var nicedSplitNumber = scale.getTicks().length - 1;
+                const nicedSplitNumber = scale.getTicks().length - 1;
                 if (nicedSplitNumber > splitNumber) {
                     interval = increaseInterval(interval);
                 }
-                // PENDING
-                var center = Math.ceil((rawExtent[0] + rawExtent[1]) / 2 / interval) * interval;
-                var halfSplitNumber = Math.round(splitNumber / 2);
-                scale.setExtent(
-                    numberUtil.round(center - halfSplitNumber * interval),
-                    numberUtil.round(center + (splitNumber - halfSplitNumber) * interval)
-                );
+                // TODO
+                const max = Math.ceil(rawExtent[1] / interval) * interval;
+                const min = numberUtil.round(max - interval * splitNumber);
+                scale.setExtent(min, max);
                 scale.setInterval(interval);
             }
         });
