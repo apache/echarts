@@ -1332,8 +1332,6 @@ Draggable.prototype = {
             draggingTarget.dragging = false;
         }
 
-        this.dispatchToElement(param(draggingTarget, e), 'dragend', e.event);
-
         if (this._dropTarget) {
             this.dispatchToElement(param(this._dropTarget, e), 'drop', e.event);
         }
