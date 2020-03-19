@@ -292,7 +292,7 @@ export default function (option: any, isTheme?: boolean) {
     each(toArr(option.radar), function (radarOpt) {
         compatTextStyle(radarOpt, 'name');
         // Use axisName instead of name because component has name property
-        if (radarOpt.name && !radarOpt.axisName) {
+        if (radarOpt.name && radarOpt.axisName == null) {
             radarOpt.axisName = radarOpt.name;
             delete radarOpt.name;
             if (__DEV__) {

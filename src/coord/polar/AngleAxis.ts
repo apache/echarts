@@ -77,7 +77,10 @@ class AngleAxis extends Axis {
         // Not precise, just use height as text width
         // and each distance from axis line yet.
         var rect = textContain.getBoundingRect(
-            tickValue + '', labelModel.getFont(), 'center', 'top'
+            tickValue == null ? '' : tickValue + '',
+            labelModel.getFont(),
+            'center',
+            'top'
         );
         var maxH = Math.max(rect.height, 7);
 

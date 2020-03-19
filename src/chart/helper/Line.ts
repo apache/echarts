@@ -262,7 +262,7 @@ class Line extends graphic.Group {
         // values have to be set on `normalStyle`.
         if (normalText != null || emphasisText != null) {
             graphic.setTextStyle(label.style, labelModel, {
-                text: normalText + ''
+                text: normalText as string
             }, {
                 autoColor: defaultLabelColor
             });
@@ -282,7 +282,7 @@ class Line extends graphic.Group {
         if (emphasisText != null) {
             // Only these properties supported in this emphasis style here.
             label.hoverStyle = {
-                text: emphasisText + '',
+                text: emphasisText as string,
                 textFill: hoverLabelModel.getTextColor(true),
                 // For merging hover style to normal style, do not use
                 // `hoverLabelModel.getFont()` here.

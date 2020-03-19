@@ -24,7 +24,7 @@ import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Payload, DisplayState } from '../../util/types';
+import { Payload, DisplayState, ECElement } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import { Dictionary } from 'zrender/src/core/types';
@@ -39,7 +39,7 @@ function updateDataSelected(
     api: ExtensionAPI
 ): void {
     var data = seriesModel.getData();
-    var dataIndex = this.dataIndex;
+    var dataIndex = graphic.getECData(this).dataIndex;
     var name = data.getName(dataIndex);
     var selectedOffset = seriesModel.get('selectedOffset');
 
@@ -95,10 +95,6 @@ interface PieceElementExtension extends Displayable {
  * Piece of pie including Sector, Label, LabelLine
  */
 class PiePiece extends graphic.Group {
-
-    // FIXME:TS add a type in `util/graphic.ts` for `highDownOnUpdate`.
-    highDownOnUpdate: any;
-    dataIndex: number;
 
     constructor(data: List, idx: number) {
         super();
@@ -197,7 +193,7 @@ class PiePiece extends graphic.Group {
         var withAnimation = !firstCreate && animationTypeUpdate === 'transition';
         this._updateLabel(data, idx, withAnimation);
 
-        this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+        (this as ECElement).highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
             ? function (fromState: DisplayState, toState: DisplayState): void {
                 if (toState === 'emphasis') {
                     labelLine.ignore = labelLine.hoverIgnore;

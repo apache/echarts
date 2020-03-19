@@ -228,7 +228,7 @@ class RadarView extends ChartView {
                         labelFetcher: data.hostModel,
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
-                        defaultText: defaultText + '',
+                        defaultText: defaultText as string,
                         autoColor: color,
                         isRectText: true
                     }

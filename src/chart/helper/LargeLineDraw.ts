@@ -55,8 +55,6 @@ type LargeLinesData = List<Model<LargeLinesCommonOption> & {
 class LargeLinesPath extends graphic.Path {
     shape: LargeLinesPathShape
 
-    seriesIndex: number
-    dataIndex: number
     __startIndex: number
 
     constructor(opts?: LargeLinesPathProps) {
@@ -262,15 +260,16 @@ class LargeLineDraw {
         lineEl.setStyle('fill');
 
         if (!isIncremental) {
+            let ecData = graphic.getECData(lineEl);
             // Enable tooltip
             // PENDING May have performance issue when path is extremely large
-            lineEl.seriesIndex = hostModel.seriesIndex;
+            ecData.seriesIndex = hostModel.seriesIndex;
             lineEl.on('mousemove', function (e) {
-                lineEl.dataIndex = null;
+                ecData.dataIndex = null;
                 var dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
                 if (dataIndex > 0) {
                     // Provide dataIndex for tooltip
-                    lineEl.dataIndex = dataIndex + lineEl.__startIndex;
+                    ecData.dataIndex = dataIndex + lineEl.__startIndex;
                 }
             });
         }

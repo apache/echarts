@@ -57,9 +57,6 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
     startIndex: number
     endIndex: number
 
-    dataIndex: number
-    seriesIndex: number
-
     constructor(opts?: LargeSymbolPathProps) {
         super(opts, null, new LargeSymbolPathShape());
     }
@@ -296,15 +293,16 @@ class LargeSymbolDraw {
         }
 
         if (!isIncremental) {
+            let ecData = graphic.getECData(symbolEl);
             // Enable tooltip
             // PENDING May have performance issue when path is extremely large
-            symbolEl.seriesIndex = (hostModel as SeriesModel).seriesIndex;
+            ecData.seriesIndex = (hostModel as SeriesModel).seriesIndex;
             symbolEl.on('mousemove', function (e) {
-                symbolEl.dataIndex = null;
+                ecData.dataIndex = null;
                 var dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
                 if (dataIndex >= 0) {
                     // Provide dataIndex for tooltip
-                    symbolEl.dataIndex = dataIndex + (symbolEl.startIndex || 0);
+                    ecData.dataIndex = dataIndex + (symbolEl.startIndex || 0);
                 }
             });
         }

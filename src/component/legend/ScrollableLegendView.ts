@@ -136,6 +136,8 @@ class ScrollableLegendView extends LegendView {
         controllerGroup.add(new graphic.Text({
             name: 'pageText',
             style: {
+                // Placeholder to calculate a proper layout.
+                text: 'xx/xx',
                 textFill: pageTextStyleModel.getTextColor(),
                 font: pageTextStyleModel.getFont(),
                 textVerticalAlign: 'middle',
@@ -386,7 +388,8 @@ class ScrollableLegendView extends LegendView {
         pageText && pageFormatter && pageText.setStyle(
             'text',
             zrUtil.isString(pageFormatter)
-                ? pageFormatter.replace('{current}', current + '').replace('{total}', total + '')
+                ? pageFormatter.replace('{current}', current == null ? '' : current + '')
+                    .replace('{total}', total == null ? '' : total + '')
                 : pageFormatter({current: current, total: total})
         );
     }

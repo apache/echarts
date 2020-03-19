@@ -50,10 +50,10 @@ function parsePosition(seriesModel: GaugeSeriesModel, api: ExtensionAPI): PosInf
 }
 
 function formatLabel(value: number, labelFormatter: string | ((value: number) => string)): string {
-    let label = value + '';
+    let label = value == null ? '' : (value + '');
     if (labelFormatter) {
         if (typeof labelFormatter === 'string') {
-            label = labelFormatter.replace('{value}', value != null ? value + '' : '');
+            label = labelFormatter.replace('{value}', label);
         }
         else if (typeof labelFormatter === 'function') {
             label = labelFormatter(value);

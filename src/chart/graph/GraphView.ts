@@ -217,7 +217,7 @@ class GraphView extends ChartView {
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
-                        dataIndex: el.dataIndex
+                        dataIndex: graphic.getECData(el).dataIndex
                     });
                 });
                 el.on('mouseout', (el as any)[UNFOCUS_ADJACENCY] = function () {

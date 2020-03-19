@@ -42,8 +42,6 @@ type ECSymbol = ReturnType<typeof createSymbol> & {
 
 class Symbol extends graphic.Group {
 
-    dataIndex: number
-
     private _seriesModel: SeriesModel
 
     private _symbolType: string
@@ -329,7 +327,7 @@ class Symbol extends graphic.Group {
                 scale: [0, 0]
             },
             this._seriesModel,
-            this.dataIndex,
+            graphic.getECData(this).dataIndex,
             cb
         );
     }
