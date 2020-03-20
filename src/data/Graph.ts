@@ -31,20 +31,20 @@ function generateNodeKey(id: string): string {
 }
 
 class Graph {
-    type: 'graph' = 'graph'
+    type: 'graph' = 'graph';
 
     readonly nodes: GraphNode[] = [];
 
     readonly edges: GraphEdge[] = [];
 
-    data: List
+    data: List;
 
-    edgeData: List
+    edgeData: List;
 
     /**
-     * 是否是有向图
+     * Whether directed graph.
      */
-    private _directed: boolean
+    private _directed: boolean;
 
     private _nodesMap: Dictionary<GraphNode> = {};
     /**
@@ -236,7 +236,7 @@ class Graph {
         var edgeType: 'inEdges' | 'outEdges' | 'edges' = direction === 'out'
             ? 'outEdges' : (direction === 'in' ? 'inEdges' : 'edges');
 
-        for (var i = 0; i < this.nodes.length; i++) {
+        for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].__visited = false;
         }
 
@@ -249,7 +249,7 @@ class Graph {
             var currentNode = queue.shift();
             var edges = currentNode[edgeType];
 
-            for (var i = 0; i < edges.length; i++) {
+            for (let i = 0; i < edges.length; i++) {
                 var e = edges[i];
                 var otherNode = e.node1 === currentNode
                     ? e.node2 : e.node1;
@@ -279,10 +279,10 @@ class Graph {
         var nodes = this.nodes;
         var edges = this.edges;
 
-        for (var i = 0, len = nodes.length; i < len; i++) {
+        for (let i = 0, len = nodes.length; i < len; i++) {
             nodes[i].dataIndex = -1;
         }
-        for (var i = 0, len = data.count(); i < len; i++) {
+        for (let i = 0, len = data.count(); i < len; i++) {
             nodes[data.getRawIndex(i)].dataIndex = i;
         }
 
@@ -292,10 +292,10 @@ class Graph {
         });
 
         // Update edge
-        for (var i = 0, len = edges.length; i < len; i++) {
+        for (let i = 0, len = edges.length; i < len; i++) {
             edges[i].dataIndex = -1;
         }
-        for (var i = 0, len = edgeData.count(); i < len; i++) {
+        for (let i = 0, len = edgeData.count(); i < len; i++) {
             edges[edgeData.getRawIndex(i)].dataIndex = i;
         }
     };
@@ -323,20 +323,20 @@ class Graph {
 
 class GraphNode {
 
-    id: string
+    id: string;
 
-    inEdges: GraphEdge[] = []
+    inEdges: GraphEdge[] = [];
 
-    outEdges: GraphEdge[] = []
+    outEdges: GraphEdge[] = [];
 
     edges: GraphEdge[] = [];
 
-    hostGraph: Graph
+    hostGraph: Graph;
 
-    dataIndex: number = -1
+    dataIndex: number = -1;
 
     // Used in traverse of Graph
-    __visited: boolean
+    __visited: boolean;
 
     constructor(id?: string, dataIndex?: number) {
         this.id = id == null ? '' : id;
@@ -381,17 +381,17 @@ class GraphNode {
 
 class GraphEdge {
     /**
-     * 节点1，如果是有向图则为源节点
+     * The first node. If directed graph, it represents the source node.
      */
-    node1: GraphNode
+    node1: GraphNode;
     /**
-     * 节点2，如果是有向图则为目标节点
+     * The second node. If directed graph, it represents the target node.
      */
-    node2: GraphNode
+    node2: GraphNode;
 
-    dataIndex: number = -1
+    dataIndex: number = -1;
 
-    hostGraph: Graph
+    hostGraph: Graph;
 
     constructor(n1: GraphNode, n2: GraphNode, dataIndex?: number) {
         this.node1 = n1;

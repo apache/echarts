@@ -68,9 +68,9 @@ type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOpt
 
 class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
-    brushController: BrushController
+    brushController: BrushController;
 
-    isZoomActive: boolean
+    isZoomActive: boolean;
 
     render(
         featureModel: ToolboxDataZoomFeatureModel,
@@ -204,7 +204,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         },
         // `zoom`, `back`
         title: zrUtil.clone(dataZoomLang.title)
-    }
+    };
 }
 
 const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {

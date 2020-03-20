@@ -25,12 +25,12 @@ import List from '../../data/List';
 
 
 class EffectPolyline extends EffectLine {
-    private _lastFrame = 0
-    private _lastFramePercent = 0
-    private _length: number
+    private _lastFrame = 0;
+    private _lastFramePercent = 0;
+    private _length: number;
 
-    private _points: number[][]
-    private _offsets: number[]
+    private _points: number[][];
+    private _offsets: number[];
 
     // Override
     createLine(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
@@ -42,7 +42,7 @@ class EffectPolyline extends EffectLine {
         this._points = points;
         var accLenArr = [0];
         var len = 0;
-        for (var i = 1; i < points.length; i++) {
+        for (let i = 1; i < points.length; i++) {
             var p1 = points[i - 1];
             var p2 = points[i];
             len += vec2.dist(p1, p2);
@@ -52,7 +52,7 @@ class EffectPolyline extends EffectLine {
             return;
         }
 
-        for (var i = 0; i < accLenArr.length; i++) {
+        for (let i = 0; i < accLenArr.length; i++) {
             accLenArr[i] /= len;
         }
         this._offsets = accLenArr;

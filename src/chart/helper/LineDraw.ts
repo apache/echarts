@@ -74,7 +74,7 @@ export interface LineDrawModelOption {
     }
 }
 
-type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>
+type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>;
 
 export interface LineDrawSeriesScope {
     lineStyle?: StyleProps
@@ -85,13 +85,13 @@ export interface LineDrawSeriesScope {
 }
 
 class LineDraw {
-    group = new graphic.Group()
+    group = new graphic.Group();
 
-    private _LineCtor: LineLikeCtor
+    private _LineCtor: LineLikeCtor;
 
-    private _lineData: ListForLineDraw
+    private _lineData: ListForLineDraw;
 
-    private _seriesScope: LineDrawSeriesScope
+    private _seriesScope: LineDrawSeriesScope;
 
     constructor(LineCtor?: LineLikeCtor) {
         this._LineCtor = LineCtor || LineGroup;

@@ -76,7 +76,7 @@ export type PerformArgs = {
     skip?: boolean,
     modBy?: number,
     modDataCount?: number
-}
+};
 
 /**
  * @param {Object} define
@@ -106,7 +106,7 @@ export class Task<Ctx extends TaskContext> {
     private _outputDueEnd: number;
     private _settedOutputEnd: number;
     private _dueIndex: number;
-    private _disposed: boolean
+    private _disposed: boolean;
 
     // Injected in schedular
     __pipeline: Pipeline;

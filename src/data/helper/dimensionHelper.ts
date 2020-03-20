@@ -40,7 +40,7 @@ export type DimensionSummary = {
     // All of the data dim names that mapped by coordDim.
     dataDimsOnCoord: DimensionName[],
     encodeFirstDimNotExtra: {[coordDim: string]: DimensionName},
-}
+};
 
 export function summarizeDimensions(data: List): DimensionSummary {
     var summary: DimensionSummary = {} as DimensionSummary;

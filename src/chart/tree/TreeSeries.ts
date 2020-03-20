@@ -127,15 +127,15 @@ export interface TreeSeriesOption extends
 }
 
 class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
-    static readonly type = 'series.tree'
+    static readonly type = 'series.tree';
 
     // can support the position parameters 'left', 'top','right','bottom', 'width',
     // 'height' in the setOption() with 'merge' mode normal.
-    static readonly layoutMode = 'box'
+    static readonly layoutMode = 'box';
 
-    coordinateSystem: View
+    coordinateSystem: View;
 
-    layoutInfo: LayoutRect
+    layoutInfo: LayoutRect;
 
     /**
      * Init a tree data structure from data in option series
@@ -299,7 +299,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         animationDuration: 700,
 
         animationDurationUpdate: 1000
-    }
+    };
 }
 
 SeriesModel.registerClass(TreeSeriesModel);

@@ -23,24 +23,24 @@ import * as zrUtil from 'zrender/src/core/util';
 
 var GRADIENT_LEVELS = 256;
 
-type ColorFunc = (grad: number, fastMode: boolean, output: number[]) => void
+type ColorFunc = (grad: number, fastMode: boolean, output: number[]) => void;
 
-type ColorState = 'inRange' | 'outOfRange'
+type ColorState = 'inRange' | 'outOfRange';
 
 class HeatmapLayer {
-    canvas: HTMLCanvasElement
-    blurSize = 30
-    pointSize = 20
+    canvas: HTMLCanvasElement;
+    blurSize = 30;
+    pointSize = 20;
 
-    maxOpacity = 1
-    minOpacity = 0
+    maxOpacity = 1;
+    minOpacity = 0;
 
-    private _brushCanvas: HTMLCanvasElement
+    private _brushCanvas: HTMLCanvasElement;
 
     private _gradientPixels: Record<ColorState, Uint8ClampedArray> = {
         inRange: null,
         outOfRange: null
-    }
+    };
 
     constructor() {
         var canvas = zrUtil.createCanvas();
@@ -78,7 +78,7 @@ class HeatmapLayer {
             var value = p[2];
 
             // calculate alpha using value
-            var alpha = normalize(value);
+            let alpha = normalize(value);
 
             // draw with the circle brush with alpha
             ctx.globalAlpha = alpha;
@@ -102,7 +102,7 @@ class HeatmapLayer {
         var diffOpacity = maxOpacity - minOpacity;
 
         while (offset < pixelLen) {
-            var alpha = pixels[offset + 3] / 256;
+            let alpha = pixels[offset + 3] / 256;
             var gradientOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1)) * 4;
             // Simple optimize to ignore the empty data
             if (alpha > 0) {

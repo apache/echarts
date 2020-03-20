@@ -41,7 +41,7 @@ type VisualMappingCollection<VisualState extends string>
         } & {
             __alphaForOpacity?: VisualMapping
         }
-    }
+    };
 
 function hasKeys(obj: Dictionary<any>) {
     if (obj) {

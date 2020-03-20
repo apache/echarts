@@ -124,8 +124,8 @@ export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin
 
 class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
 
-    static type = 'series.gauge' as const
-    type = GaugeSeriesModel.type
+    static type = 'series.gauge' as const;
+    type = GaugeSeriesModel.type;
 
     getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): List {
         return createListSimply(this, ['value']);
@@ -221,7 +221,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             color: 'auto',
             fontSize: 30
         }
-    }
+    };
 }
 
 SeriesModel.registerClass(GaugeSeriesModel);

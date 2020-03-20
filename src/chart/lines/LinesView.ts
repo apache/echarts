@@ -38,17 +38,17 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
 class LinesView extends ChartView {
 
-    static readonly type = 'lines'
-    readonly type = LinesView.type
+    static readonly type = 'lines';
+    readonly type = LinesView.type;
 
-    private _lastZlevel: number
-    private _finished: boolean
+    private _lastZlevel: number;
+    private _finished: boolean;
 
-    private _lineDraw: LineDraw | LargeLineDraw
+    private _lineDraw: LineDraw | LargeLineDraw;
 
-    private _hasEffet: boolean
-    private _isPolyline: boolean
-    private _isLargeDraw: boolean
+    private _hasEffet: boolean;
+    private _isPolyline: boolean;
+    private _isLargeDraw: boolean;
 
     render(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();

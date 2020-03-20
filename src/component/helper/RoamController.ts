@@ -41,7 +41,7 @@ interface RoamOption {
 
 type RoamEventType = keyof RoamEventParams;
 
-type RoamBehavior = 'zoomOnMouseWheel' | 'moveOnMouseMove' | 'moveOnMouseWheel'
+type RoamBehavior = 'zoomOnMouseWheel' | 'moveOnMouseMove' | 'moveOnMouseWheel';
 
 export type RoamEventParams = {
     'zoom': {
@@ -68,7 +68,7 @@ export type RoamEventParams = {
 
         isAvailableBehavior: Bind3<typeof isAvailableBehavior, null, RoamBehavior, ZRElementEvent>
     }
-}
+};
 
 export interface RoamControllerHost {
     target: Group
@@ -81,23 +81,23 @@ export interface RoamControllerHost {
 
 class RoamController extends Eventful<RoamEventParams> {
 
-    pointerChecker: (e: ZRElementEvent, x: number, y: number) => boolean
+    pointerChecker: (e: ZRElementEvent, x: number, y: number) => boolean;
 
-    private _zr: ZRenderType
+    private _zr: ZRenderType;
 
-    private _opt: Required<RoamOption>
+    private _opt: Required<RoamOption>;
 
-    private _dragging: boolean
+    private _dragging: boolean;
 
-    private _pinching: boolean
+    private _pinching: boolean;
 
-    private _x: number
+    private _x: number;
 
-    private _y: number
+    private _y: number;
 
-    readonly enable: (this: this, controlType?: RoamType, opt?: RoamOption) => void
+    readonly enable: (this: this, controlType?: RoamType, opt?: RoamOption) => void;
 
-    readonly disable: () => void
+    readonly disable: () => void;
 
 
     constructor(zr: ZRenderType) {

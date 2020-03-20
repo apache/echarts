@@ -26,12 +26,12 @@ export interface PolarOption extends ComponentOption, CircleLayoutOptionMixin {
 }
 
 class PolarModel extends ComponentModel<PolarOption> {
-    static type = 'polar' as const
-    type = PolarModel.type
+    static type = 'polar' as const;
+    type = PolarModel.type;
 
-    static dependencies = ['radiusAxis', 'angleAxis']
+    static dependencies = ['radiusAxis', 'angleAxis'];
 
-    coordinateSystem: Polar
+    coordinateSystem: Polar;
 
     findAxisModel(axisType: 'angleAxis'): AngleAxisModel
     findAxisModel(axisType: 'radiusAxis'): RadiusAxisModel
@@ -56,7 +56,7 @@ class PolarModel extends ComponentModel<PolarOption> {
         center: ['50%', '50%'],
 
         radius: '80%'
-    }
+    };
 }
 
 ComponentModel.registerClass(PolarModel);

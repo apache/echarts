@@ -76,7 +76,8 @@ class Region {
         var min2 = [] as number[];
         var max2 = [] as number[];
         var geometries = this.geometries;
-        for (var i = 0; i < geometries.length; i++) {
+        var i = 0;
+        for (; i < geometries.length; i++) {
             // Only support polygon
             if (geometries[i].type !== 'polygon') {
                 continue;
@@ -142,11 +143,11 @@ class Region {
             }
             var exterior = geometries[i].exterior;
             var interiors = geometries[i].interiors;
-            for (var p = 0; p < exterior.length; p++) {
+            for (let p = 0; p < exterior.length; p++) {
                 vec2.applyTransform(exterior[p], exterior[p], transform);
             }
             for (var h = 0; h < (interiors ? interiors.length : 0); h++) {
-                for (var p = 0; p < interiors[h].length; p++) {
+                for (let p = 0; p < interiors[h].length; p++) {
                     vec2.applyTransform(interiors[h][p], interiors[h][p], transform);
                 }
             }

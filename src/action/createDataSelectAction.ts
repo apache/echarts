@@ -40,7 +40,7 @@ export default function (seriesType: string, actionInfos: DataSelectAction[]) {
          * @property {string} name
          */
         echarts.registerAction(actionInfo, function (payload, ecModel) {
-            var selected: Dictionary<Boolean> = {};
+            let selected: Dictionary<Boolean> = {};
             ecModel.eachComponent(
                 {mainType: 'series', subType: seriesType, query: payload},
                 function (seriesModel: SelectableSeriesModel) {
@@ -51,10 +51,10 @@ export default function (seriesType: string, actionInfos: DataSelectAction[]) {
                             payload.dataIndex
                         );
                     }
-                    var data = seriesModel.getData();
+                    let data = seriesModel.getData();
                     // Create selected map
                     data.each(function (idx) {
-                        var name = data.getName(idx);
+                        let name = data.getName(idx);
                         selected[name] = seriesModel.isSelected(name)
                             || false;
                     });

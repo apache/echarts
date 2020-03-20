@@ -43,7 +43,7 @@ var PRIORITY_BRUSH = echarts.PRIORITY.VISUAL.BRUSH;
 
 interface BrushGlobalDispatcher extends ZRenderType {
     [DISPATCH_FLAG]: boolean;
-    [DISPATCH_METHOD]: typeof doDispatch
+    [DISPATCH_METHOD]: typeof doDispatch;
 }
 
 interface BrushSelectedItem {

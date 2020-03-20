@@ -33,7 +33,7 @@ type MapInputObject = {
     geoJson?: GeoJSONMapSource;
     svg?: SVGMapSource;
     specialAreas?: GeoSpecialAreas;
-}
+};
 
 export type MapRecord = GeoJSONMapRecord | SVGMapRecord;
 export interface GeoJSONMapRecord {

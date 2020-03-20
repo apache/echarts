@@ -285,7 +285,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         animationTypeUpdate: 'transition',
 
         animationEasing: 'cubicOut'
-    }
+    };
 
 }
 

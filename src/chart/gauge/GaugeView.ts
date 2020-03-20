@@ -66,10 +66,10 @@ function formatLabel(value: number, labelFormatter: string | ((value: number) =>
 var PI2 = Math.PI * 2;
 
 class GaugeView extends ChartView {
-    static type = 'gauge' as const
-    type = GaugeView.type
+    static type = 'gauge' as const;
+    type = GaugeView.type;
 
-    private _data: List
+    private _data: List;
 
     render(seriesModel: GaugeSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
@@ -110,7 +110,7 @@ class GaugeView extends ChartView {
         for (var i = 0; showAxis && i < colorList.length; i++) {
             // Clamp
             var percent = Math.min(Math.max(colorList[i][0], 0), 1);
-            var endAngle = startAngle + angleRangeSpan * percent;
+            endAngle = startAngle + angleRangeSpan * percent;
             var sector = new graphic.Sector({
                 shape: {
                     startAngle: prevEndAngle,
@@ -144,7 +144,8 @@ class GaugeView extends ChartView {
             if (percent <= 0) {
                 return colorList[0][1];
             }
-            for (var i = 0; i < colorList.length; i++) {
+            var i;
+            for (i = 0; i < colorList.length; i++) {
                 if (colorList[i][0] >= percent
                     && (i === 0 ? 0 : colorList[i - 1][0]) < percent
                 ) {
@@ -218,9 +219,12 @@ class GaugeView extends ChartView {
         var splitLineStyle = splitLineModel.getModel('lineStyle').getLineStyle();
         var tickLineStyle = tickModel.getModel('lineStyle').getLineStyle();
 
+        var unitX;
+        var unitY;
+
         for (var i = 0; i <= splitNumber; i++) {
-            var unitX = Math.cos(angle);
-            var unitY = Math.sin(angle);
+            unitX = Math.cos(angle);
+            unitY = Math.sin(angle);
             // Split line
             if (splitLineModel.get('show')) {
                 var splitLine = new graphic.Line({
@@ -266,8 +270,8 @@ class GaugeView extends ChartView {
             // Axis tick
             if (tickModel.get('show') && i !== splitNumber) {
                 for (var j = 0; j <= subSplitNumber; j++) {
-                    var unitX = Math.cos(angle);
-                    var unitY = Math.sin(angle);
+                    unitX = Math.cos(angle);
+                    unitY = Math.sin(angle);
                     var tickLine = new graphic.Line({
                         shape: {
                             x1: unitX * r + cx,

@@ -78,14 +78,14 @@ export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOpti
 }
 
 class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
-    static readonly type = 'series.themeRiver'
-    readonly type = ThemeRiverSeriesModel.type
+    static readonly type = 'series.themeRiver';
+    readonly type = ThemeRiverSeriesModel.type;
 
-    static readonly dependencies = ['singleAxis']
+    static readonly dependencies = ['singleAxis'];
 
-    nameMap: zrUtil.HashMap<number>
+    nameMap: zrUtil.HashMap<number>;
 
-    coordinateSystem: Single
+    coordinateSystem: Single;
 
     /**
      * @override
@@ -337,7 +337,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
                 show: true
             }
         }
-    }
+    };
 }
 
 SeriesModel.registerClass(ThemeRiverSeriesModel);

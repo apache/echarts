@@ -37,7 +37,7 @@ var ITEM_SPLITER = '\t';
 type DataItem = {
     name: string
     value: number[] | number
-}
+};
 
 type DataList = (DataItem | number | number[])[];
 
@@ -306,7 +306,7 @@ interface ToolboxDataViewFeatureOption extends ToolboxFeatureOption {
 
 class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
 
-    private _dom: HTMLDivElement
+    private _dom: HTMLDivElement;
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI) {
         var container = api.getDom();
@@ -429,6 +429,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         optionToContent: null,
         contentToOption: null,
 
+        // eslint-disable-next-line
         icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
         title: zrUtil.clone(dataViewLang.title),
         lang: zrUtil.clone(dataViewLang.lang),
@@ -438,7 +439,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         textareaBorderColor: '#333',
         buttonColor: '#c23531',
         buttonTextColor: '#fff'
-    }
+    };
 }
 
 /**

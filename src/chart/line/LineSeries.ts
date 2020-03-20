@@ -37,7 +37,7 @@ import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 
-type LineDataValue = OptionDataValue | OptionDataValue[]
+type LineDataValue = OptionDataValue | OptionDataValue[];
 
 export interface LineDataItemOption extends SymbolOptionMixin {
     name?: string
@@ -96,12 +96,12 @@ export interface LineSeriesOption extends SeriesOption,
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
-    static readonly type = 'series.line'
-    type = LineSeriesModel.type
+    static readonly type = 'series.line';
+    type = LineSeriesModel.type;
 
-    static readonly dependencies = ['grid', 'polar']
+    static readonly dependencies = ['grid', 'polar'];
 
-    coordinateSystem: Cartesian2D | Polar
+    coordinateSystem: Cartesian2D | Polar;
 
     getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
@@ -168,7 +168,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         // Disable progressive
         progressive: 0,
         hoverLayerThreshold: Infinity
-    }
+    };
 }
 
 SeriesModel.registerClass(LineSeriesModel);

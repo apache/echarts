@@ -51,18 +51,18 @@ var WEEK_TEXT = {
 
 class CalendarView extends ComponentView {
 
-    static type = 'calendar'
-    type = CalendarView.type
+    static type = 'calendar';
+    type = CalendarView.type;
 
     /**
      * top/left line points
      */
-    private _tlpoints: number[][]
+    private _tlpoints: number[][];
 
     /**
      * bottom/right line points
      */
-    private _blpoints: number[][]
+    private _blpoints: number[][];
 
     /**
      * first day of month

@@ -66,12 +66,12 @@ export default function (seriesType?: string): StageHandler {
                         var point;
 
                         if (dimLen === 1) {
-                            var x = data.get(dims[0], i) as ParsedValueNumeric;
+                            let x = data.get(dims[0], i) as ParsedValueNumeric;
                             point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
                         }
                         else {
-                            var x = tmpIn[0] = data.get(dims[0], i) as ParsedValueNumeric;
-                            var y = tmpIn[1] = data.get(dims[1], i) as ParsedValueNumeric;
+                            let x = tmpIn[0] = data.get(dims[0], i) as ParsedValueNumeric;
+                            let y = tmpIn[1] = data.get(dims[1], i) as ParsedValueNumeric;
                             // Also {Array.<number>}, not undefined to avoid if...else... statement
                             point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
                         }

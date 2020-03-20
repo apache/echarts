@@ -87,12 +87,12 @@ export interface InnerIndicatorAxisOption extends AxisBaseOption {
 }
 
 class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystemHostModel {
-    static readonly type = 'radar'
-    readonly type = RadarModel.type
+    static readonly type = 'radar';
+    readonly type = RadarModel.type;
 
-    coordinateSystem: Radar
+    coordinateSystem: Radar;
 
-    private _indicatorModels: AxisBaseModel<InnerIndicatorAxisOption>[]
+    private _indicatorModels: AxisBaseModel<InnerIndicatorAxisOption>[];
 
     optionUpdated() {
         var boundaryGap = this.get('boundaryGap');
@@ -215,7 +215,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
         // {text, min, max}
         indicator: []
-    }
+    };
 }
 
 ComponentModel.registerClass(RadarModel);

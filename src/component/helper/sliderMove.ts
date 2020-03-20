@@ -78,7 +78,8 @@ export default function (
     handleEnds[handleIndex] = restrict(handleEnds[handleIndex], realExtent);
 
     // Expand span.
-    var currDistSign = getSpanSign(handleEnds, handleIndex);
+    let currDistSign;
+    currDistSign = getSpanSign(handleEnds, handleIndex);
     if (minSpan != null && (
         currDistSign.sign !== originalDistSign.sign || currDistSign.span < minSpan
     )) {
@@ -87,7 +88,7 @@ export default function (
     }
 
     // Shrink span.
-    var currDistSign = getSpanSign(handleEnds, handleIndex);
+    currDistSign = getSpanSign(handleEnds, handleIndex);
     if (maxSpan != null && currDistSign.span > maxSpan) {
         handleEnds[1 - handleIndex] = handleEnds[handleIndex] + currDistSign.sign * maxSpan;
     }

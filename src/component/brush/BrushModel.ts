@@ -25,7 +25,10 @@ import Model from '../../model/Model';
 import { ComponentOption, ZRColor, VisualOptionFixed } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import BrushTargetManager from '../helper/BrushTargetManager';
-import { BrushCoverCreatorConfig, BrushMode, BrushCoverConfig, BrushDimensionMinMax, BrushAreaRange, BrushTypeUncertain, BrushType } from '../helper/BrushController';
+import {
+    BrushCoverCreatorConfig, BrushMode, BrushCoverConfig, BrushDimensionMinMax,
+    BrushAreaRange, BrushTypeUncertain, BrushType
+} from '../helper/BrushController';
 import { ModelFinderObject } from '../../util/model';
 
 

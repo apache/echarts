@@ -82,12 +82,12 @@ export default function (ecModel: GlobalModel): void {
             seriesList[0].get('mapValueCalculation')
         );
 
-        for (var i = 0; i < seriesList.length; i++) {
+        for (let i = 0; i < seriesList.length; i++) {
             seriesList[i].originalData = seriesList[i].getData();
         }
 
         // FIXME Put where?
-        for (var i = 0; i < seriesList.length; i++) {
+        for (let i = 0; i < seriesList.length; i++) {
             seriesList[i].seriesGroup = seriesList;
             seriesList[i].needsDrawMap = i === 0 && !seriesList[i].getHostGeoModel();
 

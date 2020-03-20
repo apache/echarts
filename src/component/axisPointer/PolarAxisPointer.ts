@@ -38,7 +38,7 @@ import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
 
 // Not use top level axisPointer model
-type AxisPointerModel = Model<CommonAxisPointerOption>
+type AxisPointerModel = Model<CommonAxisPointerOption>;
 
 class PolarAxisPointer extends BaseAxisPointer {
 

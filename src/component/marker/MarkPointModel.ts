@@ -62,8 +62,8 @@ export interface MarkPointOption extends MarkerOption,
 
 class MarkPointModel extends MarkerModel<MarkPointOption> {
 
-    static type = 'markPoint'
-    type = MarkPointModel.type
+    static type = 'markPoint';
+    type = MarkPointModel.type;
 
     createMarkerModelFromSeries(
         markerOpt: MarkPointOption,
@@ -95,7 +95,7 @@ class MarkPointModel extends MarkerModel<MarkPointOption> {
                 show: true
             }
         }
-    }
+    };
 }
 
 ComponentModel.registerClass(MarkPointModel);

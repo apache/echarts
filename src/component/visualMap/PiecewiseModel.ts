@@ -41,12 +41,12 @@ interface VisualPiece extends VisualOptionPiecewise {
     label?: string
 }
 
-type VisualState = VisualMapModel['stateList'][number]
+type VisualState = VisualMapModel['stateList'][number];
 
 type InnerVisualPiece = VisualMappingOption['pieceList'][number];
 
 type GetPieceValueType<T extends InnerVisualPiece>
-    = T extends { interval: InnerVisualPiece['interval'] } ? number : string
+    = T extends { interval: InnerVisualPiece['interval'] } ? number : string;
 
 /**
  * Order Rule:
@@ -120,8 +120,8 @@ export interface PiecewiseVisualMapOption extends VisualMapOption {
 
 class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
 
-    static type = 'visualMap.piecewise' as const
-    type = PiecewiseModel.type
+    static type = 'visualMap.piecewise' as const;
+    type = PiecewiseModel.type;
 
     /**
      * The order is always [low, ..., high].
@@ -129,10 +129,8 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
      */
     private _pieceList: InnerVisualPiece[] = [];
 
-    private _mode: 'pieces' | 'categories' | 'splitNumber'
-    /**
-     * @override
-     */
+    private _mode: 'pieces' | 'categories' | 'splitNumber';
+
     optionUpdated(newOption: PiecewiseVisualMapOption, isInit?: boolean) {
         super.optionUpdated.apply(this, arguments as any);
 
@@ -156,7 +154,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
                 mappingOption.dataExtent = this.getExtent();
                 mappingOption.mappingMethod = 'piecewise';
                 mappingOption.pieceList = zrUtil.map(this._pieceList, function (piece) {
-                    var piece = zrUtil.clone(piece);
+                    piece = zrUtil.clone(piece);
                     if (state !== 'inRange') {
                         // FIXME
                         // outOfRange do not support special visual in pieces.
@@ -303,7 +301,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         type DataIndices = {
             seriesId: string
             dataIndex: number[]
-        }
+        };
 
         const result: DataIndices[] = [];
         const pieceList = this._pieceList;
@@ -427,7 +425,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         selectedMode: 'multiple',   // Can be 'multiple' or 'single'.
         itemGap: 10,                // The gap between two items, in px.
         hoverLink: true             // Enable hover highlight.
-    }) as PiecewiseVisualMapOption
+    }) as PiecewiseVisualMapOption;
 
 };
 

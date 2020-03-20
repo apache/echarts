@@ -38,7 +38,7 @@ export interface NewlineElement extends Element {
     newline: boolean
 }
 
-type BoxLayoutKeys = keyof BoxLayoutOptionMixin
+type BoxLayoutKeys = keyof BoxLayoutOptionMixin;
 /**
  * @public
  */

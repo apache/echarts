@@ -49,8 +49,8 @@ interface InsideDataZoomOption extends DataZoomOption {
 
 
 class InsideZoomModel extends DataZoomModel<InsideDataZoomOption> {
-    static readonly type = 'dataZoom.inside'
-    type = InsideZoomModel.type
+    static readonly type = 'dataZoom.inside';
+    type = InsideZoomModel.type;
 
     static defaultOption: InsideDataZoomOption = inheritDefaultOption(DataZoomModel.defaultOption, {
         disabled: false,

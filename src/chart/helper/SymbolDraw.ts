@@ -122,16 +122,16 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     };
 }
 
-type ListForSymbolDraw = List<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>
+type ListForSymbolDraw = List<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
 
 class SymbolDraw {
     group = new graphic.Group();
 
-    private _data: ListForSymbolDraw
+    private _data: ListForSymbolDraw;
 
-    private _SymbolCtor: SymbolLikeCtor
+    private _SymbolCtor: SymbolLikeCtor;
 
-    private _seriesScope: SymbolDrawSeriesScope
+    private _seriesScope: SymbolDrawSeriesScope;
 
     constructor(SymbolCtor?: SymbolLikeCtor) {
         this._SymbolCtor = SymbolCtor || SymbolClz;

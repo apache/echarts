@@ -47,9 +47,9 @@ const each = zrUtil.each;
 const asc = numberUtil.asc;
 const linearMap = numberUtil.linearMap;
 
-type VisualOptionBase = {[key in BuiltinVisualProperty]?: any}
+type VisualOptionBase = {[key in BuiltinVisualProperty]?: any};
 
-type LabelFormatter = (min: OptionDataValue, max?: OptionDataValue) => string
+type LabelFormatter = (min: OptionDataValue, max?: OptionDataValue) => string;
 
 type VisualState = VisualMapModel['stateList'][number];
 export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> extends
@@ -158,35 +158,35 @@ export interface VisualMeta {
 
 class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends ComponentModel<Opts> {
 
-    static type = 'visualMap'
-    type = VisualMapModel.type
+    static type = 'visualMap';
+    type = VisualMapModel.type;
 
-    static readonly dependencies = ['series']
+    static readonly dependencies = ['series'];
 
-    readonly stateList = ['inRange', 'outOfRange'] as const
+    readonly stateList = ['inRange', 'outOfRange'] as const;
 
     readonly replacableOptionKeys = [
         'inRange', 'outOfRange', 'target', 'controller', 'color'
-    ] as const
+    ] as const;
 
     readonly layoutMode = {
         type: 'box', ignoreSize: true
-    } as const
+    } as const;
 
     /**
      * [lowerBound, upperBound]
      */
-    dataBound = [-Infinity, Infinity]
+    dataBound = [-Infinity, Infinity];
 
-    protected _dataExtent: [number, number]
+    protected _dataExtent: [number, number];
 
-    targetVisuals = {} as ReturnType<typeof visualSolution.createVisualMappings>
+    targetVisuals = {} as ReturnType<typeof visualSolution.createVisualMappings>;
 
-    controllerVisuals = {} as ReturnType<typeof visualSolution.createVisualMappings>
+    controllerVisuals = {} as ReturnType<typeof visualSolution.createVisualMappings>;
 
-    textStyleModel: Model<LabelOption>
+    textStyleModel: Model<LabelOption>;
 
-    itemSize: number[]
+    itemSize: number[];
 
     init(option: Opts, parentModel: Model, ecModel: GlobalModel) {
         this.mergeDefaultAndTheme(option, ecModel);
@@ -610,7 +610,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         textStyle: {
             color: '#333'          // 值域文字颜色
         }
-    }
+    };
 }
 
 export default VisualMapModel;

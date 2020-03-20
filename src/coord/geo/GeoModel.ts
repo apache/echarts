@@ -177,7 +177,7 @@ class GeoModel extends ComponentModel<GeoOption> {
         },
 
         regions: []
-    }
+    };
 
     init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {
         super.init(option, parentModel, ecModel);

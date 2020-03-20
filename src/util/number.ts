@@ -282,9 +282,8 @@ export function isRadianAroundZero(val: number): boolean {
     return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
 }
 
-/* eslint-disable */
+// eslint-disable-next-line
 var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
-/* eslint-enable */
 
 /**
  * @param value These values can be accepted:
@@ -470,7 +469,7 @@ export function quantile(ascArr: number[], p: number): number {
 type IntervalItem = {
     interval: [number, number]
     close: [0 | 1, 0 | 1]
-}
+};
 /**
  * Order intervals asc, and split them when overlap.
  * expect(numberUtil.reformIntervals([

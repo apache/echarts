@@ -35,16 +35,16 @@ interface DrawTreeNode extends TreeNode {
 }
 class SunburstView extends ChartView {
 
-    static readonly type = 'sunburst'
-    readonly type = SunburstView.type
+    static readonly type = 'sunburst';
+    readonly type = SunburstView.type;
 
-    seriesModel: SunburstSeriesModel
-    api: ExtensionAPI
-    ecModel: GlobalModel
+    seriesModel: SunburstSeriesModel;
+    api: ExtensionAPI;
+    ecModel: GlobalModel;
 
-    virtualPiece: SunburstPiece
+    virtualPiece: SunburstPiece;
 
-    private _oldChildren: DrawTreeNode[]
+    private _oldChildren: DrawTreeNode[];
 
     render(
         seriesModel: SunburstSeriesModel,

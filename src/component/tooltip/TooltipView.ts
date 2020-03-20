@@ -131,35 +131,35 @@ type TooltipDataParams = CallbackDataParams & {
     // TODO: TYPE Value type
     axisValue?: string | number
     axisValueLabel?: string
-}
+};
 class TooltipView extends ComponentView {
-    static type = 'tooltip' as const
-    type = TooltipView.type
+    static type = 'tooltip' as const;
+    type = TooltipView.type;
 
-    private _renderMode: TooltipRenderMode
+    private _renderMode: TooltipRenderMode;
 
-    private _newLine: '<br/>' | '\n'
+    private _newLine: '<br/>' | '\n';
 
-    private _tooltipModel: TooltipModel
+    private _tooltipModel: TooltipModel;
 
-    private _ecModel: GlobalModel
+    private _ecModel: GlobalModel;
 
-    private _api: ExtensionAPI
+    private _api: ExtensionAPI;
 
-    private _alwaysShowContent: boolean
+    private _alwaysShowContent: boolean;
 
-    private _tooltipContent: TooltipHTMLContent | TooltipRichContent
+    private _tooltipContent: TooltipHTMLContent | TooltipRichContent;
 
-    private _refreshUpdateTimeout: number
+    private _refreshUpdateTimeout: number;
 
-    private _lastX: number
-    private _lastY: number
+    private _lastX: number;
+    private _lastY: number;
 
-    private _ticket: string
+    private _ticket: string;
 
-    private _showTimout: number
+    private _showTimout: number;
 
-    private _lastDataByCoordSys: DataByCoordSys[]
+    private _lastDataByCoordSys: DataByCoordSys[];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         if (env.node) {
@@ -887,7 +887,7 @@ class TooltipView extends ComponentView {
 
 type TooltipableOption = {
     tooltip?: TooltipOption | string
-}
+};
 /**
  * From top to bottom. (the last one should be globalTooltipModel);
  */

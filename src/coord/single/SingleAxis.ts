@@ -39,15 +39,15 @@ interface SingleAxis {
 }
 class SingleAxis extends Axis {
 
-    position: SingleAxisPosition
+    position: SingleAxisPosition;
 
-    orient: LayoutOrient
+    orient: LayoutOrient;
 
-    reverse: boolean
+    reverse: boolean;
 
-    coordinateSystem: Single
+    coordinateSystem: Single;
 
-    model: SingleAxisModel
+    model: SingleAxisModel;
 
     constructor(
         dim: string,

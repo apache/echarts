@@ -67,7 +67,7 @@ export function makeBackground(rect, componentModel) {
     );
     var style = componentModel.getItemStyle(['color', 'opacity']);
     style.fill = componentModel.get('backgroundColor');
-    var rect = new graphic.Rect({
+    rect = new graphic.Rect({
         shape: {
             x: rect.x - padding[3],
             y: rect.y - padding[0],

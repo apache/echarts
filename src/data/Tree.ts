@@ -43,13 +43,13 @@ interface TreeNodeData {
 }
 
 export class TreeNode {
-    name: string
+    name: string;
 
-    depth: number = 0
+    depth: number = 0;
 
-    height: number = 0
+    height: number = 0;
 
-    parentNode: TreeNode
+    parentNode: TreeNode;
     /**
      * Reference to list item.
      * Do not persistent dataIndex outside,
@@ -57,15 +57,15 @@ export class TreeNode {
      * If dataIndex -1,
      * this node is logical deleted (filtered) in list.
      */
-    dataIndex: number = -1
+    dataIndex: number = -1;
 
-    children: TreeNode[] = []
+    children: TreeNode[] = [];
 
-    viewChildren: TreeNode[] = []
+    viewChildren: TreeNode[] = [];
 
-    isExpand: boolean = false
+    isExpand: boolean = false;
 
-    readonly hostTree: Tree<Model, any, any>    // TODO: TYPE TreeNode use generic?
+    readonly hostTree: Tree<Model, any, any>; // TODO: TYPE TreeNode use generic?
 
     constructor(name: string, hostTree: Tree<Model, any, any>) {
         this.name = name || '';
@@ -291,19 +291,19 @@ export class TreeNode {
 
 class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = any> {
 
-    type: 'tree' = 'tree'
+    type: 'tree' = 'tree';
 
-    root: TreeNode
+    root: TreeNode;
 
-    data: List
+    data: List;
 
-    hostModel: HostModel
+    hostModel: HostModel;
 
-    levelModels: Model<LevelOption>[]
+    levelModels: Model<LevelOption>[];
 
-    leavesModel: Model<LeavesOption>
+    leavesModel: Model<LeavesOption>;
 
-    private _nodes: TreeNode[] = []
+    private _nodes: TreeNode[] = [];
 
     constructor(hostModel: HostModel, levelOptions: LevelOption[], leavesOption: LeavesOption) {
 
@@ -364,11 +364,11 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
         var data = this.data;
         var nodes = this._nodes;
 
-        for (var i = 0, len = nodes.length; i < len; i++) {
+        for (let i = 0, len = nodes.length; i < len; i++) {
             nodes[i].dataIndex = -1;
         }
 
-        for (var i = 0, len = data.count(); i < len; i++) {
+        for (let i = 0, len = data.count(); i < len; i++) {
             nodes[data.getRawIndex(i)].dataIndex = i;
         }
     }

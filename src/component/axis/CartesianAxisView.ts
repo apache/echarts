@@ -39,12 +39,12 @@ const selfBuilderAttrs = [
 
 class CartesianAxisView extends AxisView {
 
-    static type = 'cartesianAxis'
-    type = CartesianAxisView.type
+    static type = 'cartesianAxis';
+    type = CartesianAxisView.type;
 
-    axisPointerClass = 'CartesianAxisPointer'
+    axisPointerClass = 'CartesianAxisPointer';
 
-    private _axisGroup: graphic.Group
+    private _axisGroup: graphic.Group;
 
     /**
      * @override
@@ -213,12 +213,12 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 };
 
 class CartesianXAxisView extends CartesianAxisView {
-    static type = 'xAxis'
-    type = CartesianXAxisView.type
+    static type = 'xAxis';
+    type = CartesianXAxisView.type;
 }
 class CartesianYAxisView extends CartesianAxisView {
-    static type = 'yAxis'
-    type = CartesianXAxisView.type
+    static type = 'yAxis';
+    type = CartesianXAxisView.type;
 }
 
 ComponentView.registerClass(CartesianXAxisView);

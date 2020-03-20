@@ -375,14 +375,14 @@ echarts.extendComponentView({
         var apiHeight = api.getHeight();
 
         // Top-down to calculate percentage width/height of group
-        for (var i = 0; i < elOptions.length; i++) {
-            var elOption = elOptions[i];
-            var el = elMap.get(elOption.id);
+        for (let i = 0; i < elOptions.length; i++) {
+            let elOption = elOptions[i];
+            let el = elMap.get(elOption.id);
 
             if (!el || !el.isGroup) {
                 continue;
             }
-            var parentEl = el.parent;
+            let parentEl = el.parent;
             var isParentRoot = parentEl === rootGroup;
             // Like 'position:absolut' in css, default 0.
             el.__ecGraphicWidth = parsePercent(
@@ -396,15 +396,15 @@ echarts.extendComponentView({
         }
 
         // Bottom-up tranvese all elements (consider ec resize) to locate elements.
-        for (var i = elOptions.length - 1; i >= 0; i--) {
-            var elOption = elOptions[i];
-            var el = elMap.get(elOption.id);
+        for (let i = elOptions.length - 1; i >= 0; i--) {
+            let elOption = elOptions[i];
+            let el = elMap.get(elOption.id);
 
             if (!el) {
                 continue;
             }
 
-            var parentEl = el.parent;
+            let parentEl = el.parent;
             var containerInfo = parentEl === rootGroup
                 ? {
                     width: apiWidth,

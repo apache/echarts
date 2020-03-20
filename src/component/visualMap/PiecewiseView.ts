@@ -30,11 +30,11 @@ import { VisualMappingOption } from '../../visual/VisualMapping';
 
 class PiecewiseVisualMapView extends VisualMapView {
 
-    static type = 'visualMap.piecewise' as const
+    static type = 'visualMap.piecewise' as const;
 
-    type = PiecewiseVisualMapView.type
+    type = PiecewiseVisualMapView.type;
 
-    visualMapModel: PiecewiseModel
+    visualMapModel: PiecewiseModel;
 
     protected doRender() {
         var thisGroup = this.group;

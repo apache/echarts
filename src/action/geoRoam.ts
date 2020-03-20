@@ -23,6 +23,7 @@ import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import {updateCenterAndZoom} from './roamHelper';
 
+
 /**
  * @payload
  * @property {string} [componentType=series]

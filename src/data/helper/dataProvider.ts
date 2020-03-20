@@ -258,7 +258,7 @@ export class DefaultDataProvider implements DataProvider {
             }
         }
 
-    })()
+    })();
 }
 
 var providerMethods: Dictionary<any>;

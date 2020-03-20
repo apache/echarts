@@ -46,18 +46,19 @@ const mathMax = Math.max;
 const mathMin = Math.min;
 
 type CoordSysOfBar = BarSeriesModel['coordinateSystem'];
-type RectShape = Rect['shape']
-type SectorShape = Sector['shape']
+type RectShape = Rect['shape'];
+type SectorShape = Sector['shape'];
 
 type SectorLayout = SectorShape;
 type RectLayout = RectShape;
 
-type BarPossiblePath = Sector | Rect | Sausage
+type BarPossiblePath = Sector | Rect | Sausage;
 
 
 function getClipArea(coord: CoordSysOfBar, data: List) {
+    let coordSysClipArea;
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
-        var coordSysClipArea = coord.getArea && coord.getArea();
+        coordSysClipArea = coord.getArea && coord.getArea();
         var baseAxis = coord.getBaseAxis();
         // When boundaryGap is false or using time axis. bar may exceed the grid.
         // We should not clip this part.
@@ -185,7 +186,7 @@ class BarView extends ChartView {
                     // And return a boolean to determine if the shape are fully clipped.
                     var isClipped = clip[coord.type](coordSysClipArea, layout);
                     if (isClipped) {
-                        group.remove(el);
+                        // group.remove(el);
                         return;
                     }
                 }
@@ -329,7 +330,7 @@ class BarView extends ChartView {
 interface Clipper {
     (coordSysBoundingRect: RectLike, layout: RectLayout | SectorLayout): boolean
 }
-var clip: {
+const clip: {
     [key in 'cartesian2d' | 'polar']: Clipper
 } = {
     cartesian2d(coordSysBoundingRect: RectLike, layout: Rect['shape']) {
@@ -382,7 +383,7 @@ interface ElementCreator {
     ): BarPossiblePath
 }
 
-var elementCreator: {
+const elementCreator: {
     [key in 'polar' | 'cartesian2d']: ElementCreator
 } = {
 
@@ -482,7 +483,7 @@ function removeSector(
 interface GetLayout {
     (data: List, dataIndex: number, itemModel: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
-var getLayout: {
+const getLayout: {
     [key in 'cartesian2d' | 'polar']: GetLayout
 } = {
     cartesian2d(data, dataIndex, itemModel): RectLayout {
@@ -579,20 +580,20 @@ function getLineWidth(
 }
 
 class LagePathShape {
-    points: ArrayLike<number>
+    points: ArrayLike<number>;
 }
 interface LargePathProps extends PathProps {
     shape?: LagePathShape
 }
 class LargePath extends Path {
-    type = 'largeBar'
+    type = 'largeBar';
 
-    shape: LagePathShape
-
-    __startPoint: number[]
-    __baseDimIdx: number
-    __largeDataIndices: ArrayLike<number>
-    __barWidth: number
+    shape: LagePathShape;
+;
+    __startPoint: number[];
+    __baseDimIdx: number;
+    __largeDataIndices: ArrayLike<number>;
+    __barWidth: number;
 
     constructor(opts?: LargePathProps) {
         super(opts, null, new LagePathShape());
@@ -670,7 +671,7 @@ function createLarge(
 }
 
 // Use throttle to avoid frequently traverse to find dataIndex.
-var largePathUpdateDataIndex = throttle(function (this: LargePath, event: ZRElementEvent) {
+const largePathUpdateDataIndex = throttle(function (this: LargePath, event: ZRElementEvent) {
     var largePath = this;
     var dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
     getECData(largePath).dataIndex = dataIndex >= 0 ? dataIndex : null;

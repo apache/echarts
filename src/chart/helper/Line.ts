@@ -31,7 +31,7 @@ import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 
 var SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
-type ECSymbol = ReturnType<typeof createSymbol>
+type ECSymbol = ReturnType<typeof createSymbol>;
 
 export interface LineLabel extends graphic.Text {
     lineLabelOriginalOpacity: number
@@ -86,7 +86,7 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     type CurveShape = ECLinePath['shape'] & {
         cpx1: number
         cpy1: number
-    }
+    };
 
     targetShape.x1 = points[0][0];
     targetShape.y1 = points[0][1];
@@ -108,8 +108,8 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
 
 class Line extends graphic.Group {
 
-    private _fromSymbolType: string
-    private _toSymbolType: string
+    private _fromSymbolType: string;
+    private _toSymbolType: string;
 
     constructor(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
         super();
@@ -356,7 +356,7 @@ class Line extends graphic.Group {
 
         if (symbolFrom) {
             symbolFrom.attr('position', fromPos);
-            var tangent = line.tangentAt(0);
+            let tangent = line.tangentAt(0);
             symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
@@ -364,7 +364,7 @@ class Line extends graphic.Group {
         }
         if (symbolTo) {
             symbolTo.attr('position', toPos);
-            var tangent = line.tangentAt(1);
+            let tangent = line.tangentAt(1);
             symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));

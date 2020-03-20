@@ -22,8 +22,8 @@ import List from '../../data/List';
 import LinesSeriesModel, { LinesDataItemOption } from './LinesSeries';
 import Model from '../../model/Model';
 
-function normalize(a: string | string[]): string[]
-function normalize(a: number | number[]): number[]
+function normalize(a: string | string[]): string[];
+function normalize(a: number | number[]): number[];
 function normalize(a: string | number | (string | number)[]): (string | number)[] {
     if (!(a instanceof Array)) {
         a = [a, a];

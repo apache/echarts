@@ -72,12 +72,12 @@ export interface BoxplotSeriesOption extends SeriesOption, SeriesOnCartesianOpti
 
 class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
 
-    static readonly type = 'series.boxplot'
-    readonly type = BoxplotSeriesModel.type
+    static readonly type = 'series.boxplot';
+    readonly type = BoxplotSeriesModel.type;
 
-    static readonly dependencies = ['xAxis', 'yAxis', 'grid']
+    static readonly dependencies = ['xAxis', 'yAxis', 'grid'];
 
-    coordinateSystem: Cartesian2D
+    coordinateSystem: Cartesian2D;
     // TODO
     // box width represents group size, so dimension should have 'size'.
 
@@ -93,9 +93,9 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         {name: 'median', defaultTooltip: true},
         {name: 'Q3', defaultTooltip: true},
         {name: 'max', defaultTooltip: true}
-    ]
+    ];
 
-    dimensions: string[]
+    dimensions: string[];
 
     static defaultOption: BoxplotSeriesOption = {
         zlevel: 0,
@@ -125,7 +125,7 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
 
         animationEasing: 'elasticOut',
         animationDuration: 800
-    }
+    };
 }
 
 interface BoxplotSeriesModel extends WhiskerBoxCommonMixin<BoxplotSeriesOption> {

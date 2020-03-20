@@ -72,14 +72,14 @@ function fixAngleOverlap(list: TickCoord[]) {
 type TickCoord = ReturnType<AngleAxis['getTicksCoords']>[number];
 type TickLabel = ReturnType<AngleAxis['getViewLabels']>[number] & {
     coord: number
-}
+};
 
 class AngleAxisView extends AxisView {
 
-    static readonly type = 'angleAxis'
-    readonly type = AngleAxisView.type
+    static readonly type = 'angleAxis';
+    readonly type = AngleAxisView.type;
 
-    axisPointerClass = 'PolarAxisPointer'
+    axisPointerClass = 'PolarAxisPointer';
 
     render(angleAxisModel: AngleAxisModel, ecModel: GlobalModel) {
         this.group.removeAll();
@@ -95,7 +95,7 @@ class AngleAxisView extends AxisView {
         var minorTickAngles = angleAxis.getMinorTicksCoords();
 
         var labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
-            var labelItem = zrUtil.clone(labelItem);
+            labelItem = zrUtil.clone(labelItem);
             labelItem.coord = angleAxis.dataToCoord(labelItem.tickValue);
             return labelItem;
         });
@@ -291,7 +291,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
         var splitLines: graphic.Line[][] = [];
 
-        for (var i = 0; i < ticksAngles.length; i++) {
+        for (let i = 0; i < ticksAngles.length; i++) {
             var colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Line({
@@ -301,7 +301,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
         // Simple optimization
         // Batching the lines if color are the same
-        for (var i = 0; i < splitLines.length; i++) {
+        for (let i = 0; i < splitLines.length; i++) {
             group.add(graphic.mergePath(splitLines[i], {
                 style: zrUtil.defaults({
                     stroke: lineColors[i % lineColors.length]
@@ -358,7 +358,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
         var clockwise = angleAxisModel.get('clockwise');
 
-        for (var i = 1; i < ticksAngles.length; i++) {
+        for (let i = 1; i < ticksAngles.length; i++) {
             var colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
             splitAreas[colorIndex].push(new graphic.Sector({
@@ -378,7 +378,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
         // Simple optimization
         // Batching the lines if color are the same
-        for (var i = 0; i < splitAreas.length; i++) {
+        for (let i = 0; i < splitAreas.length; i++) {
             group.add(graphic.mergePath(splitAreas[i], {
                 style: zrUtil.defaults({
                     fill: areaColors[i % areaColors.length]

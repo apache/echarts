@@ -29,9 +29,9 @@ import { StageHandlerProgressParams, LineStyleOption } from '../../util/types';
 import Model from '../../model/Model';
 
 class LargeLinesPathShape {
-    polyline = false
-    curveness = 0
-    segs: ArrayLike<number> = []
+    polyline = false;
+    curveness = 0;
+    segs: ArrayLike<number> = [];
 }
 
 interface LargeLinesPathProps extends PathProps {
@@ -50,12 +50,12 @@ interface LargeLinesCommonOption {
  */
 type LargeLinesData = List<Model<LargeLinesCommonOption> & {
     seriesIndex?: number
-}>
+}>;
 
 class LargeLinesPath extends graphic.Path {
-    shape: LargeLinesPathShape
+    shape: LargeLinesPathShape;
 
-    __startIndex: number
+    __startIndex: number;
 
     constructor(opts?: LargeLinesPathProps) {
         super(opts, {
@@ -69,7 +69,7 @@ class LargeLinesPath extends graphic.Path {
         var curveness = shape.curveness;
 
         if (shape.polyline) {
-            for (var i = 0; i < segs.length;) {
+            for (let i = 0; i < segs.length;) {
                 var count = segs[i++];
                 if (count > 0) {
                     ctx.moveTo(segs[i++], segs[i++]);
@@ -80,7 +80,7 @@ class LargeLinesPath extends graphic.Path {
             }
         }
         else {
-            for (var i = 0; i < segs.length;) {
+            for (let i = 0; i < segs.length;) {
                 var x0 = segs[i++];
                 var y0 = segs[i++];
                 var x1 = segs[i++];
@@ -106,15 +106,15 @@ class LargeLinesPath extends graphic.Path {
         var lineWidth = this.style.lineWidth;
 
         if (shape.polyline) {
-            var dataIndex = 0;
-            for (var i = 0; i < segs.length;) {
+            let dataIndex = 0;
+            for (let i = 0; i < segs.length;) {
                 var count = segs[i++];
                 if (count > 0) {
-                    var x0 = segs[i++];
-                    var y0 = segs[i++];
-                    for (var k = 1; k < count; k++) {
-                        var x1 = segs[i++];
-                        var y1 = segs[i++];
+                    let x0 = segs[i++];
+                    let y0 = segs[i++];
+                    for (let k = 1; k < count; k++) {
+                        let x1 = segs[i++];
+                        let y1 = segs[i++];
                         if (lineContain.containStroke(x0, y0, x1, y1, lineWidth, x, y)) {
                             return dataIndex;
                         }
@@ -125,15 +125,15 @@ class LargeLinesPath extends graphic.Path {
             }
         }
         else {
-            var dataIndex = 0;
-            for (var i = 0; i < segs.length;) {
-                var x0 = segs[i++];
-                var y0 = segs[i++];
-                var x1 = segs[i++];
-                var y1 = segs[i++];
+            let dataIndex = 0;
+            for (let i = 0; i < segs.length;) {
+                let x0 = segs[i++];
+                let y0 = segs[i++];
+                let x1 = segs[i++];
+                let y1 = segs[i++];
                 if (curveness > 0) {
-                    var x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
-                    var y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
+                    let x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
+                    let y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
 
                     if (quadraticContain.containStroke(
                         x0, y0, x2, y2, x1, y1, lineWidth, x, y
@@ -158,9 +158,9 @@ class LargeLinesPath extends graphic.Path {
 }
 
 class LargeLineDraw {
-    group = new graphic.Group()
+    group = new graphic.Group();
 
-    _incremental?: IncrementalDisplayable
+    _incremental?: IncrementalDisplayable;
 
     isPersistent() {
         return !this._incremental;

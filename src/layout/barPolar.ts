@@ -28,7 +28,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import { Dictionary } from '../util/types';
 
-type PolarAxis = AngleAxis | RadiusAxis
+type PolarAxis = AngleAxis | RadiusAxis;
 
 interface StackInfo {
     width: number

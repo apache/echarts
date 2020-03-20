@@ -22,7 +22,10 @@ import {__DEV__} from '../../config';
 import { each, indexOf, curry, assert, map, createHashMap } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import * as brushHelper from './brushHelper';
-import { BrushPanelConfig, BrushControllerEvents, BrushType, BrushAreaRange, BrushDimensionMinMax } from './BrushController';
+import {
+    BrushPanelConfig, BrushControllerEvents, BrushType,
+    BrushAreaRange, BrushDimensionMinMax
+} from './BrushController';
 import ExtensionAPI from '../../ExtensionAPI';
 import GridModel from '../../coord/cartesian/GridModel';
 import GeoModel from '../../coord/geo/GeoModel';
@@ -114,7 +117,7 @@ class BrushTargetManager {
         this.matchOutputRanges(areas, ecModel, function (
             area: BrushAreaParam,
             coordRange: ReturnType<ConvertCoord>['values'],
-            coordSys: BrushableCoordinateSystem,
+            coordSys: BrushableCoordinateSystem
         ) {
             (area.coordRanges || (area.coordRanges = [])).push(coordRange);
             // area.coordRange is the first of area.coordRanges
@@ -264,8 +267,8 @@ class BrushTargetManager {
                 }
             }
             else {
-                for (var i = 0; i < targetInfoMatchers.length; i++) {
-                    if (targetInfoMatchers[i](foundCpts, targetInfo)) {
+                for (var j = 0; j < targetInfoMatchers.length; j++) {
+                    if (targetInfoMatchers[j](foundCpts, targetInfo)) {
                         return targetInfo;
                     }
                 }

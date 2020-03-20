@@ -67,9 +67,9 @@ function compatEc2(seriesOpt: LinesSeriesOption) {
     }
 }
 
-type LinesCoords = number[][]
+type LinesCoords = number[][];
 
-type LinesValue = OptionDataValue | OptionDataValue[]
+type LinesValue = OptionDataValue | OptionDataValue[];
 
 interface LinesLineStyleOption extends LineStyleOption {
     curveness?: number
@@ -144,15 +144,15 @@ export interface LinesSeriesOption extends SeriesOption,
 
 class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
 
-    static readonly type = 'series.lines'
-    readonly type = LinesSeriesModel.type
+    static readonly type = 'series.lines';
+    readonly type = LinesSeriesModel.type;
 
-    static readonly dependencies = ['grid', 'polar', 'geo', 'calendar']
+    static readonly dependencies = ['grid', 'polar', 'geo', 'calendar'];
 
-    visualColorAccessPath = ['lineStyle', 'color']
+    visualColorAccessPath = ['lineStyle', 'color'];
 
-    private _flatCoords: ArrayLike<number>
-    private _flatCoordsOffset: ArrayLike<number>
+    private _flatCoords: ArrayLike<number>;
+    private _flatCoordsOffset: ArrayLike<number>;
 
     init(option: LinesSeriesOption) {
         // The input data may be null/undefined.
@@ -235,7 +235,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         if (this._flatCoordsOffset) {
             var offset = this._flatCoordsOffset[idx * 2];
             var len = this._flatCoordsOffset[idx * 2 + 1];
-            for (var i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 out[i] = out[i] || [];
                 out[i][0] = this._flatCoords[offset + i * 2];
                 out[i][1] = this._flatCoords[offset + i * 2 + 1];
@@ -244,7 +244,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         }
         else {
             var coords = this._getCoordsFromItemModel(idx);
-            for (var i = 0; i < coords.length; i++) {
+            for (let i = 0; i < coords.length; i++) {
                 out[i] = out[i] || [];
                 out[i][0] = coords[i][0];
                 out[i][1] = coords[i][1];
@@ -411,7 +411,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         lineStyle: {
             opacity: 0.5
         }
-    }
+    };
 }
 
 SeriesModel.registerClass(LinesSeriesModel);

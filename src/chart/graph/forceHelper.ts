@@ -152,19 +152,19 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
         step: function (cb?: (finished: boolean) => void) {
             beforeStepCallback && beforeStepCallback(nodes as N[], edges as E[]);
 
-            var v12: number[] = [];
-            var nLen = nodes.length;
-            for (var i = 0; i < edges.length; i++) {
-                var e = edges[i];
+            let v12: number[] = [];
+            let nLen = nodes.length;
+            for (let i = 0; i < edges.length; i++) {
+                let e = edges[i];
                 if (e.ignoreForceLayout) {
                     continue;
                 }
-                var n1 = e.n1;
-                var n2 = e.n2;
+                let n1 = e.n1;
+                let n2 = e.n2;
 
                 vec2.sub(v12, n2.p, n1.p);
-                var d = vec2.len(v12) - e.d;
-                var w = n2.w / (n1.w + n2.w);
+                let d = vec2.len(v12) - e.d;
+                let w = n2.w / (n1.w + n2.w);
 
                 if (isNaN(w)) {
                     w = 0;
@@ -176,8 +176,8 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
                 !n2.fixed && scaleAndAdd(n2.p, n2.p, v12, -(1 - w) * d * friction);
             }
             // Gravity
-            for (var i = 0; i < nLen; i++) {
-                var n = nodes[i];
+            for (let i = 0; i < nLen; i++) {
+                let n = nodes[i];
                 if (!n.fixed) {
                     vec2.sub(v12, center, n.p);
                     // var d = vec2.len(v12);
@@ -189,25 +189,25 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
 
             // Repulsive
             // PENDING
-            for (var i = 0; i < nLen; i++) {
-                var n1 = nodes[i];
-                for (var j = i + 1; j < nLen; j++) {
-                    var n2 = nodes[j];
+            for (let i = 0; i < nLen; i++) {
+                let n1 = nodes[i];
+                for (let j = i + 1; j < nLen; j++) {
+                    let n2 = nodes[j];
                     vec2.sub(v12, n2.p, n1.p);
-                    var d = vec2.len(v12);
+                    let d = vec2.len(v12);
                     if (d === 0) {
                         // Random repulse
                         vec2.set(v12, Math.random() - 0.5, Math.random() - 0.5);
                         d = 1;
                     }
-                    var repFact = (n1.rep + n2.rep) / d / d;
+                    let repFact = (n1.rep + n2.rep) / d / d;
                     !n1.fixed && scaleAndAdd(n1.pp, n1.pp, v12, repFact);
                     !n2.fixed && scaleAndAdd(n2.pp, n2.pp, v12, -repFact);
                 }
             }
-            var v: number[] = [];
-            for (var i = 0; i < nLen; i++) {
-                var n = nodes[i];
+            let v: number[] = [];
+            for (let i = 0; i < nLen; i++) {
+                let n = nodes[i];
                 if (!n.fixed) {
                     vec2.sub(v, n.p, n.pp);
                     scaleAndAdd(n.p, n.p, v, friction);

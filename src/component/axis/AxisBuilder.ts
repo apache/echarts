@@ -36,7 +36,7 @@ import Element from 'zrender/src/Element';
 var PI = Math.PI;
 
 type AxisIndexKey = 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex'
-    | 'angleAxisIndex' | 'singleAxisIndex'
+    | 'angleAxisIndex' | 'singleAxisIndex';
 
 type AxisEventData = {
     componentType: string
@@ -46,7 +46,7 @@ type AxisEventData = {
     value?: string | number
 } & {
     [key in AxisIndexKey]?: number
-}
+};
 
 type LabelFormatterParams = {
     componentType: string
@@ -54,12 +54,12 @@ type LabelFormatterParams = {
     $vars: ['name']
 } & {
     [key in AxisIndexKey]?: number
-}
+};
 
 type AxisLabelText = graphic.Text & {
     __fullText: string
     __truncatedText: string
-} & ECElement
+} & ECElement;
 
 interface AxisBuilderCfg {
     position?: number[]
@@ -126,13 +126,13 @@ interface TickCoord {
  */
 class AxisBuilder {
 
-    axisModel: AxisBaseModel
+    axisModel: AxisBaseModel;
 
-    opt: AxisBuilderCfg
+    opt: AxisBuilderCfg;
 
-    readonly group = new graphic.Group()
+    readonly group = new graphic.Group();
 
-    private _transformGroup: graphic.Group
+    private _transformGroup: graphic.Group;
 
     constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg) {
 

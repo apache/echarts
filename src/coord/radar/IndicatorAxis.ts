@@ -25,13 +25,13 @@ import { InnerIndicatorAxisOption } from './RadarModel';
 
 class IndicatorAxis extends Axis {
 
-    type: OptionAxisType = 'value'
+    type: OptionAxisType = 'value';
 
-    angle = 0
+    angle = 0;
 
-    name = ''
+    name = '';
 
-    model: AxisBaseModel<InnerIndicatorAxisOption>
+    model: AxisBaseModel<InnerIndicatorAxisOption>;
 
     constructor(dim: string, scale: Scale, radiusExtent?: [number, number]) {
         super(dim, scale, radiusExtent);

@@ -27,15 +27,15 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 
-type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>
+type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>;
 
 class ThemeRiverView extends ChartView {
 
-    static readonly type = 'themeRiver'
-    readonly type = ThemeRiverView.type
+    static readonly type = 'themeRiver';
+    readonly type = ThemeRiverView.type;
 
-    private _layersSeries: LayerSeries
-    private _layers: graphic.Group[] = []
+    private _layersSeries: LayerSeries;
+    private _layers: graphic.Group[] = [];
 
     render(seriesModel: ThemeRiverSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
@@ -77,7 +77,8 @@ class ThemeRiverView extends ChartView {
             var points1 = [];
             var color;
             var indices = layersSeries[idx].indices;
-            for (var j = 0; j < indices.length; j++) {
+            var j = 0;
+            for (; j < indices.length; j++) {
                 var layout = data.getItemLayout(indices[j]);
                 var x = layout.x;
                 var y0 = layout.y0;

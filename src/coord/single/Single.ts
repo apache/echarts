@@ -46,15 +46,15 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      */
     readonly dimensions = ['single'];
 
-    name: string
+    name: string;
 
-    axisPointerEnabled: boolean = true
+    axisPointerEnabled: boolean = true;
 
-    model: SingleAxisModel
+    model: SingleAxisModel;
 
-    private _axis: SingleAxis
+    private _axis: SingleAxis;
 
-    private _rect: BoundingRect
+    private _rect: BoundingRect;
 
     constructor(axisModel: SingleAxisModel, ecModel: GlobalModel, api: ExtensionAPI) {
 

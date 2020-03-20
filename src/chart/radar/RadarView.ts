@@ -37,13 +37,13 @@ function normalizeSymbolSize(symbolSize: number | number[]) {
 
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number
-}
+};
 
 class RadarView extends ChartView {
-    static type = 'radar'
-    type = RadarView.type
+    static type = 'radar';
+    type = RadarView.type;
 
-    private _data: List<RadarSeriesModel>
+    private _data: List<RadarSeriesModel>;
 
     render(seriesModel: RadarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var polar = seriesModel.coordinateSystem;

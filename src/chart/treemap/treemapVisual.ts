@@ -41,7 +41,7 @@ interface TreemapVisual {
     colorSaturation?: number
 }
 
-type TreemapLevelItemStyleOption = TreemapSeriesOption['levels'][number]['itemStyle']
+type TreemapLevelItemStyleOption = TreemapSeriesOption['levels'][number]['itemStyle'];
 
 export default {
     seriesType: 'treemap',

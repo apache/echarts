@@ -34,7 +34,7 @@ class ParallelAxis extends Axis {
     model: AxisModel;
     coordinateSystem: Parallel;
 
-    constructor (
+    constructor(
         dim: DimensionName,
         scale: Scale,
         coordExtent: [number, number],

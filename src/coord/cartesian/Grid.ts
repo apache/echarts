@@ -548,7 +548,7 @@ function fixAxisOnZero(
     // 2. When no axis is cross 0 point.
     var otherAxes = axesMap[otherAxisDim];
 
-    var otherAxisOnZeroOf: Axis2D;
+    let otherAxisOnZeroOf: Axis2D;
     var axisModel = axis.model;
     var onZero = axisModel.get(['axisLine', 'onZero']);
     var onZeroAxisIndex = axisModel.get(['axisLine', 'onZeroAxisIndex']);

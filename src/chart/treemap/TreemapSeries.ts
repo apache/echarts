@@ -197,20 +197,20 @@ export interface TreemapSeriesOption extends SeriesOption,
 
 class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
-    static type = 'series.treemap'
-    type = TreemapSeriesModel.type
+    static type = 'series.treemap';
+    type = TreemapSeriesModel.type;
 
-    layoutMode = 'box'
+    layoutMode = 'box';
 
-    dependencies = ['grid', 'polar']
+    dependencies = ['grid', 'polar'];
 
-    preventUsingHoverLayer = true
+    preventUsingHoverLayer = true;
 
-    layoutInfo: LayoutRect
+    layoutInfo: LayoutRect;
 
-    private _viewRoot: TreeNode
-    private _idIndexMap: zrUtil.HashMap<number>
-    private _idIndexMapCount: number
+    private _viewRoot: TreeNode;
+    private _idIndexMap: zrUtil.HashMap<number>;
+    private _idIndexMapCount: number;
 
     static defaultOption: TreemapSeriesOption = {
         // Disable progressive rendering
@@ -333,7 +333,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         //      link: 'http://xxx.xxx.xxx',
         //      target: 'blank' or 'self'
         // }
-    }
+    };
 
     /**
      * @override

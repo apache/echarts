@@ -129,23 +129,23 @@ export interface DataZoomOption extends ComponentOption {
     textStyle?: LabelOption
 }
 
-type RangeOption = Pick<DataZoomOption, 'start' | 'end' | 'startValue' | 'endValue'>
+type RangeOption = Pick<DataZoomOption, 'start' | 'end' | 'startValue' | 'endValue'>;
 
 type ExtendedAxisBaseModel = AxisBaseModel & {
     __dzAxisProxy: AxisProxy
-}
+};
 
 interface SeriesModelOnAxis extends SeriesModel<
     SeriesOption & SeriesOnCartesianOptionMixin & SeriesOnPolarOptionMixin & SeriesOnSingleOptionMixin
 > {}
 
 class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends ComponentModel<Opts> {
-    static type = 'dataZoom'
-    type = DataZoomModel.type
+    static type = 'dataZoom';
+    type = DataZoomModel.type;
 
     static dependencies = [
         'xAxis', 'yAxis', 'zAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'series'
-    ]
+    ];
 
 
     static defaultOption: DataZoomOption = {
@@ -156,18 +156,18 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
         start: 0,
         end: 100
-    }
+    };
 
     /**
      * key like x_0, y_1
      */
-    private _dataIntervalByAxis: Dictionary<[number, number]> = {}
+    private _dataIntervalByAxis: Dictionary<[number, number]> = {};
 
-    private _dataInfo = {}
+    private _dataInfo = {};
 
-    private _axisProxies: Dictionary<AxisProxy> = {}
+    private _axisProxies: Dictionary<AxisProxy> = {};
 
-    private _autoThrottle = true
+    private _autoThrottle = true;
 
     /**
      * It is `[rangeModeForMin, rangeModeForMax]`.
@@ -185,11 +185,11 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      * data are appended, while if in `'percent'` mode, whe window range will be changed alone with
      * the appended data (suppose `axis.min` and `axis.max` are not specified).
      */
-    private _rangePropMode: DataZoomOption['rangeMode'] = ['percent', 'percent']
+    private _rangePropMode: DataZoomOption['rangeMode'] = ['percent', 'percent'];
 
-    textStyleModel: Model<DataZoomOption['textStyle']>
+    textStyleModel: Model<DataZoomOption['textStyle']>;
 
-    settledOption: Opts
+    settledOption: Opts;
 
     init(option: Opts, parentModel: Model, ecModel: GlobalModel) {
 
@@ -627,7 +627,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
         // Find the first hosted axisProxy
         var axisProxies = this._axisProxies;
-        for (var key in axisProxies) {
+        for (let key in axisProxies) {
             if (axisProxies.hasOwnProperty(key) && axisProxies[key].hostedBy(this)) {
                 return axisProxies[key];
             }
@@ -638,7 +638,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         // and the option.start or option.end settings are different. The percentRange
         // should follow axisProxy.
         // (We encounter this problem in toolbox data zoom.)
-        for (var key in axisProxies) {
+        for (let key in axisProxies) {
             if (axisProxies.hasOwnProperty(key) && !axisProxies[key].hostedBy(this)) {
                 return axisProxies[key];
             }

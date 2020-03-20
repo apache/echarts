@@ -36,18 +36,18 @@ interface AxisPointerConstructor {
  */
 class AxisView extends ComponentView {
 
-    static type =  'axis'
-    type = AxisView.type
+    static type = 'axis';
+    type = AxisView.type;
 
     /**
      * @private
      */
-    private _axisPointer: BaseAxisPointer
+    private _axisPointer: BaseAxisPointer;
 
     /**
      * @protected
      */
-    axisPointerClass: string
+    axisPointerClass: string;
 
     /**
      * @override

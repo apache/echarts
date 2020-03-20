@@ -90,7 +90,7 @@ function completeDimensions(sysDims, source, opt) {
             {}, isObject(dimsDef[i]) ? dimsDef[i] : {name: dimsDef[i]}
         );
         var userDimName = dimDefItem.name;
-        var resultItem = result[i] = new DataDimensionInfo();
+        let resultItem = result[i] = new DataDimensionInfo();
         // Name will be applied later for avoiding duplication.
         if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
             // Only if `series.dimensions` is defined in option
@@ -136,7 +136,6 @@ function completeDimensions(sysDims, source, opt) {
     var availDimIdx = 0;
     each(sysDims, function (sysDimItem, sysDimIndex) {
         var coordDim;
-        var sysDimItem;
         var sysDimItemDimsDef;
         var sysDimItemOtherDims;
         if (isString(sysDimItem)) {
@@ -163,7 +162,7 @@ function completeDimensions(sysDims, source, opt) {
             return;
         }
 
-        var dataDims = normalizeToArray(dataDims);
+        dataDims = normalizeToArray(dataDims);
 
         // dimensions provides default dim sequences.
         if (!dataDims.length) {
@@ -210,7 +209,7 @@ function completeDimensions(sysDims, source, opt) {
 
     // Set dim `name` and other `coordDim` and other props.
     for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
-        var resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
+        let resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
         var coordDim = resultItem.coordDim;
 
         if (coordDim == null) {

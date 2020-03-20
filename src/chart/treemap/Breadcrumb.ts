@@ -51,12 +51,12 @@ interface LayoutParam {
     }[]
 }
 
-type BreadcrumbItemStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']>
-type BreadcrumbTextStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']['textStyle']>
+type BreadcrumbItemStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']>;
+type BreadcrumbTextStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']['textStyle']>;
 
 class Breadcrumb {
 
-    group = new graphic.Group()
+    group = new graphic.Group();
 
     constructor(containerGroup: graphic.Group) {
         containerGroup.add(this.group);

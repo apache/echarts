@@ -47,7 +47,7 @@ import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { ForceLayoutInstance } from './forceLayout';
 
-type GraphDataValue = OptionDataValue | OptionDataValue[]
+type GraphDataValue = OptionDataValue | OptionDataValue[];
 
 interface GraphEdgeLineStyleOption extends LineStyleOption {
     curveness: number
@@ -210,11 +210,11 @@ interface GraphSeriesOption extends SeriesOption,
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
-    static readonly type = 'series.graph'
-    readonly type = GraphSeriesModel.type
+    static readonly type = 'series.graph';
+    readonly type = GraphSeriesModel.type;
 
-    private _categoriesData: List
-    private _categoriesModels: Model<GraphCategoryItemOption>[]
+    private _categoriesData: List;
+    private _categoriesModels: Model<GraphCategoryItemOption>[];
 
     /**
      * Preserved points during layouting
@@ -470,7 +470,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
                 show: true
             }
         }
-    }
+    };
 }
 
 SeriesModel.registerClass(GraphSeriesModel);

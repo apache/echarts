@@ -26,11 +26,11 @@ import { DataZoomPayloadBatchItem } from './helper';
 
 var each = zrUtil.each;
 
-export type DataZoomStoreSnapshot = Dictionary<DataZoomPayloadBatchItem>
+export type DataZoomStoreSnapshot = Dictionary<DataZoomPayloadBatchItem>;
 
 type Store = {
     snapshots: DataZoomStoreSnapshot[]
-}
+};
 
 const inner = makeInner<Store, GlobalModel>();
 
@@ -79,7 +79,7 @@ export function pop(ecModel: GlobalModel) {
     var snapshot: DataZoomStoreSnapshot = {};
     each(head, function (batchItem, dataZoomId) {
         for (var i = storedSnapshots.length - 1; i >= 0; i--) {
-            var batchItem = storedSnapshots[i][dataZoomId];
+            batchItem = storedSnapshots[i][dataZoomId];
             if (batchItem) {
                 snapshot[dataZoomId] = batchItem;
                 break;

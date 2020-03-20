@@ -48,7 +48,7 @@ var defaultSelectorOption = {
     }
 };
 
-type SelectorType = 'all' | 'inverse'
+type SelectorType = 'all' | 'inverse';
 export interface LegendSelectorButtonOption {
     type?: SelectorType
     title?: string
@@ -166,10 +166,10 @@ export interface LegendOption extends ComponentOption, BoxLayoutOptionMixin, Bor
 }
 
 class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentModel<Ops> {
-    static type = 'legend.plain'
-    type = LegendModel.type
+    static type = 'legend.plain';
+    type = LegendModel.type;
 
-    static readonly dependencies = ['series']
+    static readonly dependencies = ['series'];
 
     readonly layoutMode = {
         type: 'box',
@@ -181,11 +181,11 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         // then `setOption({legend: {right: 10});`
         // The previous `left` should be cleared by setting `ignoreSize`.
         ignoreSize: true
-    } as const
+    } as const;
 
 
-    private _data: Model<DataItem>[]
-    private _availableNames: string[]
+    private _data: Model<DataItem>[];
+    private _availableNames: string[];
 
     init(option: Ops, parentModel: Model, ecModel: GlobalModel) {
         this.mergeDefaultAndTheme(option, ecModel);
@@ -429,7 +429,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         tooltip: {
             show: false
         }
-    }
+    };
 }
 
 ComponentModel.registerClass(LegendModel);

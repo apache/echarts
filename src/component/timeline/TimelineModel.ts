@@ -139,14 +139,14 @@ export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, S
 }
 class TimelineModel extends ComponentModel<TimelineOption> {
 
-    static type = 'timeline'
-    type = TimelineModel.type
+    static type = 'timeline';
+    type = TimelineModel.type;
 
-    layoutMode = 'box'
+    layoutMode = 'box';
 
-    private _data: List<TimelineModel>
+    private _data: List<TimelineModel>;
 
-    private _names: string[]
+    private _names: string[];
 
     /**
      * @override
@@ -308,7 +308,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
         },
 
         data: []
-    }
+    };
 
 }
 

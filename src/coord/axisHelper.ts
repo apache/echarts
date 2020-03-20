@@ -38,7 +38,7 @@ import Axis from './Axis';
 import { AxisBaseOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
 
-type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>
+type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
 
 /**
  * Get axis scale extent before niced.

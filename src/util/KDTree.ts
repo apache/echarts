@@ -22,15 +22,15 @@ import { VectorArray } from 'zrender/src/core/vector';
 
 type KDTreePoint = {
     array: VectorArray
-}
+};
 
 class KDTreeNode<T> {
 
-    left: KDTreeNode<T>
-    right: KDTreeNode<T>
+    left: KDTreeNode<T>;
+    right: KDTreeNode<T>;
 
-    axis: number
-    data: T
+    axis: number;
+    data: T;
 
     constructor(axis: number, data: T) {
         this.axis = axis;
@@ -50,18 +50,18 @@ class KDTreeNode<T> {
 
 class KDTree<T extends KDTreePoint> {
 
-    dimension: number
-    root: KDTreeNode<T>
+    dimension: number;
+    root: KDTreeNode<T>;
 
     // Use one stack to avoid allocation
     // each time searching the nearest point
-    private _stack: KDTreeNode<T>[] = []
+    private _stack: KDTreeNode<T>[] = [];
     // Again avoid allocating a new array
     // each time searching nearest N points
     private _nearstNList: {
         dist: number,
         node: KDTreeNode<T>
-    }[] = []
+    }[] = [];
 
     constructor(points: T[], dimension?: number) {
         if (!points.length) {
@@ -167,10 +167,10 @@ class KDTree<T extends KDTreePoint> {
 
     _addNearest(found: number, dist: number, node: KDTreeNode<T>) {
         var nearestNList = this._nearstNList;
-
+        var i = found - 1;
         // Insert to the right position
         // Sort from small to large
-        for (var i = found - 1; i > 0; i--) {
+        for (; i > 0; i--) {
             if (dist >= nearestNList[i - 1].dist) {
                 break;
             }
@@ -207,7 +207,7 @@ class KDTree<T extends KDTreePoint> {
         var idx = 0;
 
         var nearestNList = this._nearstNList;
-        for (var i = 0; i < N; i++) {
+        for (let i = 0; i < N; i++) {
             // Allocate
             if (!nearestNList[i]) {
                 nearestNList[i] = {
@@ -217,7 +217,7 @@ class KDTree<T extends KDTreePoint> {
             nearestNList[i].dist = 0;
             nearestNList[i].node = null;
         }
-        var currDist = squaredDistance(curr.data, target);
+        let currDist = squaredDistance(curr.data, target);
 
         var found = 0;
         if (curr.data !== target) {
@@ -238,7 +238,7 @@ class KDTree<T extends KDTreePoint> {
 
         while (idx--) {
             curr = stack[idx];
-            var currDist = target.array[curr.axis] - curr.data.array[curr.axis];
+            let currDist = target.array[curr.axis] - curr.data.array[curr.axis];
             var isLeft = currDist < 0;
             var needsCheckOtherSide = false;
             currDist = currDist * currDist;
@@ -273,7 +273,7 @@ class KDTree<T extends KDTreePoint> {
         }
 
         // Copy to output
-        for (var i = 0; i < found; i++) {
+        for (let i = 0; i < found; i++) {
             output[i] = nearestNList[i].node.data;
         }
         output.length = found;

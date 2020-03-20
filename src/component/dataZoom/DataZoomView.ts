@@ -32,12 +32,12 @@ export interface CoordInfo {
 }
 
 class DataZoomView extends ComponentView {
-    static type = 'dataZoom'
-    type = DataZoomView.type
+    static type = 'dataZoom';
+    type = DataZoomView.type;
 
-    dataZoomModel: DataZoomModel
-    ecModel: GlobalModel
-    api: ExtensionAPI
+    dataZoomModel: DataZoomModel;
+    ecModel: GlobalModel;
+    api: ExtensionAPI;
 
     render(dataZoomModel: DataZoomModel, ecModel: GlobalModel, api: ExtensionAPI, payload: any) {
         this.dataZoomModel = dataZoomModel;

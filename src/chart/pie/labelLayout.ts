@@ -144,7 +144,7 @@ function adjustSingleSide(
     var len = list.length;
     var upList = [];
     var downList = [];
-    for (var i = 0; i < len; i++) {
+    for (let i = 0; i < len; i++) {
         if (list[i].position === 'outer' && list[i].labelAlignTo === 'labelLine') {
             var dx = list[i].x - farthestX;
             list[i].linePoints[1][0] += dx;
@@ -160,7 +160,7 @@ function adjustSingleSide(
     if (viewHeight - lastY < 0) {
         shiftUp(len - 1, lastY - viewHeight);
     }
-    for (var i = 0; i < len; i++) {
+    for (let i = 0; i < len; i++) {
         if (list[i].y >= cy) {
             downList.push(list[i]);
         }
@@ -186,7 +186,7 @@ function avoidOverlap(
     var rightList = [];
     var leftmostX = Number.MAX_VALUE;
     var rightmostX = -Number.MAX_VALUE;
-    for (var i = 0; i < labelLayoutList.length; i++) {
+    for (let i = 0; i < labelLayoutList.length; i++) {
         if (isPositionCenter(labelLayoutList[i])) {
             continue;
         }
@@ -203,7 +203,7 @@ function avoidOverlap(
     adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, viewLeft, viewTop, rightmostX);
     adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
 
-    for (var i = 0; i < labelLayoutList.length; i++) {
+    for (let i = 0; i < labelLayoutList.length; i++) {
         var layout = labelLayoutList[i];
         if (isPositionCenter(layout)) {
             continue;

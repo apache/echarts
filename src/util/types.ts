@@ -54,26 +54,26 @@ export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
 
-export type LayoutOrient = 'vertical' | 'horizontal'
-export type HorizontalAlign = 'left' | 'center' | 'right'
-export type VerticalAlign = 'top' | 'middle' | 'bottom'
+export type LayoutOrient = 'vertical' | 'horizontal';
+export type HorizontalAlign = 'left' | 'center' | 'right';
+export type VerticalAlign = 'top' | 'middle' | 'bottom';
 
 // Types from zrender
 export type ColorString = string;
-export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject
-export type ZRLineType = 'solid' | 'dotted' | 'dashed'
+export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject;
+export type ZRLineType = 'solid' | 'dotted' | 'dashed';
 
-export type ZRFontStyle = 'normal' | 'italic' | 'oblique'
-export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number
+export type ZRFontStyle = 'normal' | 'italic' | 'oblique';
+export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number;
 
-export type ZREasing = easingType
+export type ZREasing = easingType;
 
-export type ZRTextAlign = TextAlign
-export type ZRTextVerticalAlign = TextVerticalAlign
+export type ZRTextAlign = TextAlign;
+export type ZRTextVerticalAlign = TextVerticalAlign;
 
-export type ZRElementEvent = ElementEvent
+export type ZRElementEvent = ElementEvent;
 
-export type ZRRectLike = RectLike
+export type ZRRectLike = RectLike;
 
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
@@ -342,7 +342,7 @@ export type ECUnitOption = {
     media?: never
     timeline?: ComponentOption | ComponentOption[]
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<any> | any
-} & AnimationOptionMixin
+} & AnimationOptionMixin;
 
 /**
  * [ECOption]:
@@ -537,7 +537,7 @@ export interface BorderOptionMixin {
 export type AnimationDelayCallbackParam = {
     count: number
     index: number
-}
+};
 export type AnimationDurationCallback = (idx: number) => number;
 export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
 
@@ -606,8 +606,8 @@ export interface RoamOptionMixin {
 }
 
 // TODO: TYPE value type?
-export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[]
-export type SymbolCallback<T> = (rawValue: any, params: T) => string
+export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
+export type SymbolCallback<T> = (rawValue: any, params: T) => string;
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -658,8 +658,8 @@ export interface AreaStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     opacity?: number
 }
 
-type Arrayable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | T[key][] }
-type Dictionaryable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | Dictionary<T[key]>}
+type Arrayable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | T[key][] };
+type Dictionaryable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | Dictionary<T[key]>};
 
 export interface VisualOptionUnit {
     symbol?: string
@@ -680,11 +680,11 @@ export type VisualOptionFixed = VisualOptionUnit;
  * Option about visual properties used in piecewise mapping
  * Used in each piece.
  */
-export type VisualOptionPiecewise = VisualOptionUnit
+export type VisualOptionPiecewise = VisualOptionUnit;
 /**
  * Option about visual properties used in linear mapping
  */
-export type VisualOptionLinear = Arrayable<VisualOptionUnit>
+export type VisualOptionLinear = Arrayable<VisualOptionUnit>;
 
 /**
  * Option about visual properties can be encoded from ordinal categories.
@@ -692,7 +692,7 @@ export type VisualOptionLinear = Arrayable<VisualOptionUnit>
  * be an array to lookup with category index. In this case the array length should
  * be same with categories
  */
-export type VisualOptionCategory = Arrayable<VisualOptionUnit> | Dictionaryable<VisualOptionUnit>
+export type VisualOptionCategory = Arrayable<VisualOptionUnit> | Dictionaryable<VisualOptionUnit>;
 
 /**
  * All visual properties can be encoded.
@@ -801,10 +801,10 @@ interface TooltipFormatterCallback<T> {
     (params: T, asyncTicket: string, callback: (cbTicket: string, html: string) => void): string
 }
 
-type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom'
+type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
 type TooltipBoxLayoutOption = Pick<
     BoxLayoutOptionMixin, 'top' | 'left' | 'right' | 'bottom'
->
+>;
 /**
  * Position relative to the hoverred element. Only available when trigger is item.
  */
@@ -919,14 +919,14 @@ export interface CommonTooltipOption<FormatterParams> {
  */
 export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
     trigger?: 'item' | 'axis' | boolean | 'none'
-}
+};
 
 type LabelFormatterParams = {
     value: ScaleDataValue
     axisDimension: string
     axisIndex: number
     seriesData: CallbackDataParams[]
-}
+};
 /**
  * Common axis option. can be configured on each axis
  */
@@ -1106,7 +1106,7 @@ export interface SeriesStackOptionMixin {
     stack?: string
 }
 
-type SamplingFunc = (frame: ArrayLike<number>) => number
+type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
     sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | SamplingFunc

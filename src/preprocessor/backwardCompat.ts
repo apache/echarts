@@ -41,7 +41,8 @@ function set(opt: Dictionary<any>, path: string, val: any, overwrite?: boolean) 
     const pathArr = path.split(',');
     var obj = opt;
     var key;
-    for (var i = 0; i < pathArr.length - 1; i++) {
+    var i = 0;
+    for (; i < pathArr.length - 1; i++) {
         key = pathArr[i];
         if (obj[key] == null) {
             obj[key] = {};

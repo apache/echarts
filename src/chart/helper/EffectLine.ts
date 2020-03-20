@@ -38,16 +38,16 @@ export type ECSymbolOnEffectLine = ReturnType<typeof createSymbol> & {
     __p1: number[]
     __p2: number[]
     __cp1: number[]
-}
+};
 class EffectLine extends graphic.Group {
 
-    private _symbolType: string
+    private _symbolType: string;
 
-    private _period: number
+    private _period: number;
 
-    private _loop: boolean
+    private _loop: boolean;
 
-    private _symbolScale: number[]
+    private _symbolScale: number[];
 
     constructor(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
         super();
@@ -210,7 +210,7 @@ class EffectLine extends graphic.Group {
         // enable continuity trail for 'line', 'rect', 'roundRect' symbolType
         if (this._symbolType === 'line' || this._symbolType === 'rect' || this._symbolType === 'roundRect') {
             if (symbol.__lastT !== undefined && symbol.__lastT < symbol.__t) {
-                var scaleY = vec2.dist(lastPos, pos) * 1.05;
+                let scaleY = vec2.dist(lastPos, pos) * 1.05;
                 symbol.attr('scale', [symbol.scale[0], scaleY]);
                 // make sure the last segment render within endPoint
                 if (t === 1) {
@@ -220,7 +220,7 @@ class EffectLine extends graphic.Group {
             }
             else if (symbol.__lastT === 1) {
                 // After first loop, symbol.__t does NOT start with 0, so connect p1 to pos directly.
-                var scaleY = 2 * vec2.dist(p1, pos);
+                let scaleY = 2 * vec2.dist(p1, pos);
                 symbol.attr('scale', [symbol.scale[0], scaleY ]);
             }
             else {

@@ -46,8 +46,8 @@ type BarItemStyleKeys = 'fill'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
-    | 'shadowColor'
-type ItemStyleProps = Pick<StyleProps, BarItemStyleKeys>
+    | 'shadowColor';
+type ItemStyleProps = Pick<StyleProps, BarItemStyleKeys>;
 
 export function getBarItemStyle(model: Model, excludes?: BarItemStyleKeys[]): ItemStyleProps {
     var style = mapStyle(model, excludes);

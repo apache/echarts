@@ -30,18 +30,18 @@ var bezierCurveProto = graphic.BezierCurve.prototype;
 
 class StraightLineShape {
     // Start point
-    x1 = 0
-    y1 = 0
+    x1 = 0;
+    y1 = 0;
     // End point
-    x2 = 0
-    y2 = 0
+    x2 = 0;
+    y2 = 0;
 
-    percent = 1
+    percent = 1;
 }
 
 class CurveShape extends StraightLineShape {
-    cpx1: number
-    cpy1: number
+    cpx1: number;
+    cpy1: number;
 }
 
 interface ECLineProps extends PathProps {
@@ -53,9 +53,9 @@ function isStraightLine(shape: StraightLineShape | CurveShape): shape is Straigh
 
 class ECLinePath extends graphic.Path<ECLineProps> {
 
-    type = 'ec-line'
+    type = 'ec-line';
 
-    shape: StraightLineShape | CurveShape
+    shape: StraightLineShape | CurveShape;
 
     constructor(opts?: ECLineProps) {
         super(opts, {

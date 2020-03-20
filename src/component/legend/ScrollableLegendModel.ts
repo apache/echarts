@@ -105,7 +105,7 @@ class ScrollableLegendModel extends LegendModel<ScrollableLegendOption> {
         },
 
         animationDurationUpdate: 800
-    })
+    });
 };
 
 // Do not `ignoreSize` to enable setting {left: 10, right: 10}.

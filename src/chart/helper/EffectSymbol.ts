@@ -65,7 +65,7 @@ function updateRipplePath(rippleGroup: Group, effectCfg: RippleEffectCfg) {
 
 class EffectSymbol extends Group {
 
-    private _effectCfg: RippleEffectCfg
+    private _effectCfg: RippleEffectCfg;
 
     constructor(data: List, idx: number) {
         super();

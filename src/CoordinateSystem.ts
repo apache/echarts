@@ -50,11 +50,11 @@ class CoordinateSystemManager {
 
     static register = function (type: string, creator: CoordinateSystemCreator): void {
         coordinateSystemCreators[type] = creator;
-    }
+    };
 
     static get = function (type: string): CoordinateSystemCreator {
         return coordinateSystemCreators[type];
-    }
+    };
 
 }
 

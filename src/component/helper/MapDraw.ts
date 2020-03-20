@@ -206,8 +206,8 @@ class MapDraw {
                 if (geometry.type !== 'polygon') {
                     return;
                 }
-                var points = [];
-                for (var i = 0; i < geometry.exterior.length; ++i) {
+                let points = [];
+                for (let i = 0; i < geometry.exterior.length; ++i) {
                     points.push(transformPoint(geometry.exterior[i]));
                 }
                 compoundPath.shape.paths.push(new graphic.Polygon({
@@ -217,9 +217,9 @@ class MapDraw {
                     }
                 }));
 
-                for (var i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); ++i) {
+                for (let i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); ++i) {
                     var interior = geometry.interiors[i];
-                    var points = [];
+                    let points = [];
                     for (var j = 0; j < interior.length; ++j) {
                         points.push(transformPoint(interior[j]));
                     }

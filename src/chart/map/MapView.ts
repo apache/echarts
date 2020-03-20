@@ -83,7 +83,7 @@ class MapView extends ChartView {
             )
         ) {
             if (mapModel.needsDrawMap) {
-                var mapDraw = this._mapDraw || new MapDraw(api, true);
+                let mapDraw = this._mapDraw || new MapDraw(api, true);
                 group.add(mapDraw.group);
 
                 mapDraw.draw(mapModel, ecModel, api, this, payload);
@@ -97,7 +97,7 @@ class MapView extends ChartView {
             }
         }
         else {
-            var mapDraw = this._mapDraw;
+            let mapDraw = this._mapDraw;
             mapDraw && group.add(mapDraw.group);
         }
 

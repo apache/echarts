@@ -74,7 +74,7 @@ export type MarkLine2DDataItemOption = [
     MarkLine2DDataItemDimOption,
     // End point
     MarkLine2DDataItemDimOption
-]
+];
 
 export interface MarkLineOption extends MarkerOption {
 
@@ -104,8 +104,8 @@ export interface MarkLineOption extends MarkerOption {
 
 class MarkLineModel extends MarkerModel<MarkLineOption> {
 
-    static type = 'markLine'
-    type = MarkLineModel.type
+    static type = 'markLine';
+    type = MarkLineModel.type;
 
     createMarkerModelFromSeries(
         markerOpt: MarkLineOption,
@@ -145,7 +145,7 @@ class MarkLineModel extends MarkerModel<MarkLineOption> {
             }
         },
         animationEasing: 'linear'
-    }
+    };
 }
 
 ComponentModel.registerClass(MarkLineModel);

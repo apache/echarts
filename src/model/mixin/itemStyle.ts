@@ -45,9 +45,9 @@ type ItemStyleKeys = 'fill'
     | 'shadowOffsetY'
     | 'shadowColor'
     | 'textPosition'
-    | 'textAlign'
+    | 'textAlign';
 
-type ItemStyleProps = Pick<StyleProps, ItemStyleKeys>
+type ItemStyleProps = Pick<StyleProps, ItemStyleKeys>;
 
 class ItemStyleMixin {
 

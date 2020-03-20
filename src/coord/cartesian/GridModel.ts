@@ -62,7 +62,7 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         backgroundColor: 'rgba(0,0,0,0)',
         borderWidth: 1,
         borderColor: '#ccc'
-    }
+    };
 }
 
 export default GridModel;

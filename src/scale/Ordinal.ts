@@ -35,8 +35,8 @@ import { isArray } from 'zrender/src/core/util';
 
 class OrdinalScale extends Scale {
 
-    static type = 'ordinal'
-    readonly type = 'ordinal'
+    static type = 'ordinal';
+    readonly type = 'ordinal';
 
     private _ordinalMeta: OrdinalMeta;
 

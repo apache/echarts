@@ -27,7 +27,7 @@ import { AxisBaseOption } from '../axisCommonTypes';
 import { BoxLayoutOptionMixin, LayoutOrient } from '../../util/types';
 import { AxisBaseModel } from '../AxisBaseModel';
 
-export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right'
+export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
 export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
     position?: SingleAxisPosition
@@ -36,14 +36,14 @@ export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
 
 class SingleAxisModel extends ComponentModel<SingleAxisOption>
     implements AxisBaseModel<SingleAxisOption> {
-    static type = 'singleAxis'
-    type = SingleAxisModel.type
+    static type = 'singleAxis';
+    type = SingleAxisModel.type;
 
-    static readonly layoutMode = 'box'
+    static readonly layoutMode = 'box';
 
-    axis: SingleAxis
+    axis: SingleAxis;
 
-    coordinateSystem: Single
+    coordinateSystem: Single;
 
     getCoordSysModel() {
         return this;
@@ -97,7 +97,7 @@ class SingleAxisModel extends ComponentModel<SingleAxisOption>
                 opacity: 0.2
             }
         }
-    }
+    };
 }
 
 ComponentModel.registerClass(SingleAxisModel);

@@ -20,11 +20,11 @@
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 
 class PointerShape {
-    angle = 0
-    width = 10
-    r = 10
-    x = 0
-    y = 0
+    angle = 0;
+    width = 10;
+    r = 10;
+    x = 0;
+    y = 0;
 }
 
 interface PointerPathProps extends PathProps {
@@ -33,9 +33,9 @@ interface PointerPathProps extends PathProps {
 
 export default class PointerPath extends Path<PointerPathProps> {
 
-    readonly type = 'pointer'
+    readonly type = 'pointer';
 
-    shape: PointerShape
+    shape: PointerShape;
 
     constructor(opts?: PointerPathProps) {
         super(opts, null, new PointerShape());

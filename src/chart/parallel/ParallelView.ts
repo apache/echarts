@@ -35,14 +35,14 @@ interface ParallelDrawSeriesScope {
     lineStyle: StyleProps
 }
 class ParallelView extends ChartView {
-    static type = 'parallel'
-    type = ParallelView.type
+    static type = 'parallel';
+    type = ParallelView.type;
 
-    private _dataGroup = new graphic.Group()
+    private _dataGroup = new graphic.Group();
 
-    private _data: List
+    private _data: List;
 
-    private _initialized = false
+    private _initialized = false;
 
     init() {
         this.group.add(this._dataGroup);

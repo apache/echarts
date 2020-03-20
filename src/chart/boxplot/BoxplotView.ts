@@ -32,10 +32,10 @@ import { StyleProps } from 'zrender/src/graphic/Style';
 var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
 
 class BoxplotView extends ChartView {
-    static type = 'boxplot'
-    type = BoxplotView.type
+    static type = 'boxplot';
+    type = BoxplotView.type;
 
-    private _data: List
+    private _data: List;
 
     render(seriesModel: BoxplotSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();
@@ -100,7 +100,7 @@ class BoxplotView extends ChartView {
 }
 
 class BoxPathShape {
-    points: number[][]
+    points: number[][];
 }
 
 interface BoxPathProps extends PathProps {
@@ -109,8 +109,8 @@ interface BoxPathProps extends PathProps {
 
 class BoxPath extends Path<BoxPathProps> {
 
-    readonly type = 'boxplotBoxPath'
-    shape: BoxPathShape
+    readonly type = 'boxplotBoxPath';
+    shape: BoxPathShape;
 
     constructor(opts?: BoxPathProps) {
         super(opts, null, new BoxPathShape());

@@ -20,8 +20,8 @@
 import ComponentView from '../../view/Component';
 
 class TimelineView extends ComponentView {
-    static type = 'timeline'
-    type = TimelineView.type
+    static type = 'timeline';
+    type = TimelineView.type;
 }
 
 export default TimelineView;

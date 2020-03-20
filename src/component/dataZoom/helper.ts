@@ -43,7 +43,8 @@ type AxisAttrMap = {
     'axisIndex': 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex' | 'angleAxisIndex' | 'singleAxisIndex'
     'axis': 'xAxis' | 'yAxis' | 'radiusAxis' | 'angleAxis' | 'singleAxis'
     'axisId': 'xAxisId' | 'yAxisId' | 'radiusAxisId' | 'angleAxisId' | 'singleAxisId'
-}
+};
+
 /**
  * Create "each" method to iterate names.
  */
@@ -115,7 +116,8 @@ export function createLinkedNodesFinder<N, E extends {name: string}>(
         nodes: N[]
         // key: edgeType.name, value: Object (key: edge id, value: boolean).
         records: Dictionary<Dictionary<boolean>>
-    }
+    };
+
     return function (sourceNode: N) {
         var result: Result = {
             nodes: [],

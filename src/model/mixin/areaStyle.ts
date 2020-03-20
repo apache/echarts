@@ -38,7 +38,7 @@ type AreaStyleProps = Pick<StyleProps,
     | 'shadowOffsetY'
     | 'opacity'
     | 'shadowColor'
->
+>;
 
 class AreaStyleMixin {
     getAreaStyle(

@@ -100,7 +100,7 @@ type LastCfgStorage = {
     //     old: Pick<graphic.Rect, 'shape'>
     //     fadein: boolean
     // }[]
-}
+};
 
 interface FoundTargetInfo {
     node: TreeNode
@@ -135,22 +135,22 @@ const inner = makeInner<{
 
 class TreemapView extends ChartView {
 
-    static type = 'treemap'
-    type = TreemapView.type
+    static type = 'treemap';
+    type = TreemapView.type;
 
-    private _containerGroup: graphic.Group
-    private _breadcrumb: Breadcrumb
-    private _controller: RoamController
+    private _containerGroup: graphic.Group;
+    private _breadcrumb: Breadcrumb;
+    private _controller: RoamController;
 
-    private _oldTree: Tree
+    private _oldTree: Tree;
 
-    private _state: 'ready' | 'animating' = 'ready'
+    private _state: 'ready' | 'animating' = 'ready';
 
     private _storage = createStorage() as RenderElementStorage;
 
-    seriesModel: TreemapSeriesModel
-    api: ExtensionAPI
-    ecModel: GlobalModel
+    seriesModel: TreemapSeriesModel;
+    api: ExtensionAPI;
+    ecModel: GlobalModel;
 
     /**
      * @override

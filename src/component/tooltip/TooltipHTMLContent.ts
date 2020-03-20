@@ -155,25 +155,25 @@ interface TooltipContentOption {
 
 class TooltipHTMLContent {
 
-    el: HTMLDivElement
+    el: HTMLDivElement;
 
-    private _container: HTMLElement
+    private _container: HTMLElement;
 
-    private _show: boolean = false
+    private _show: boolean = false;
 
-    private _styleCoord: [number, number] = [0, 0]
-    private _appendToBody: boolean
+    private _styleCoord: [number, number] = [0, 0];
+    private _appendToBody: boolean;
 
-    private _enterable = true
-    private _zr: ZRenderType
+    private _enterable = true;
+    private _zr: ZRenderType;
 
-    private _hideTimeout: number
+    private _hideTimeout: number;
     /**
      * Hide delay time
      */
-    private _hideDelay: number
+    private _hideDelay: number;
 
-    private _inContent: boolean
+    private _inContent: boolean;
 
 
     constructor(

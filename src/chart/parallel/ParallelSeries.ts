@@ -37,7 +37,7 @@ import Parallel from '../../coord/parallel/Parallel';
 import Source from '../../data/Source';
 import ParallelModel from '../../coord/parallel/ParallelModel';
 
-type ParallelSeriesDataValue = OptionDataValue[]
+type ParallelSeriesDataValue = OptionDataValue[];
 
 export interface ParallelSeriesDataItemOption {
 

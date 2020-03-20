@@ -33,8 +33,8 @@ var axisBuilderAttrs = [
 
 class RadarView extends ComponentView {
 
-    static type = 'radar'
-    type = RadarView.type
+    static type = 'radar';
+    type = RadarView.type;
 
     render(radarModel: RadarModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var group = this.group;
@@ -101,9 +101,9 @@ class RadarView extends ComponentView {
             var ticksRadius = indicatorAxes[0].getTicksCoords();
             var cx = radar.cx;
             var cy = radar.cy;
-            for (var i = 0; i < ticksRadius.length; i++) {
+            for (let i = 0; i < ticksRadius.length; i++) {
                 if (showSplitLine) {
-                    var colorIndex = getColorIndex(splitLines, splitLineColorsArr, i);
+                    let colorIndex = getColorIndex(splitLines, splitLineColorsArr, i);
                     splitLines[colorIndex].push(new graphic.Circle({
                         shape: {
                             cx: cx,
@@ -113,7 +113,7 @@ class RadarView extends ComponentView {
                     }));
                 }
                 if (showSplitArea && i < ticksRadius.length - 1) {
-                    var colorIndex = getColorIndex(splitAreas, splitAreaColorsArr, i);
+                    let colorIndex = getColorIndex(splitAreas, splitAreaColorsArr, i);
                     splitAreas[colorIndex].push(new graphic.Ring({
                         shape: {
                             cx: cx,
@@ -139,7 +139,7 @@ class RadarView extends ComponentView {
             });
 
             var prevPoints: number[][] = [];
-            for (var i = 0; i <= realSplitNumber; i++) {
+            for (let i = 0; i <= realSplitNumber; i++) {
                 var points: number[][] = [];
                 for (var j = 0; j < indicatorAxes.length; j++) {
                     points.push(axesTicksPoints[j][i]);
@@ -155,7 +155,7 @@ class RadarView extends ComponentView {
                 }
 
                 if (showSplitLine) {
-                    var colorIndex = getColorIndex(splitLines, splitLineColorsArr, i);
+                    let colorIndex = getColorIndex(splitLines, splitLineColorsArr, i);
                     splitLines[colorIndex].push(new graphic.Polyline({
                         shape: {
                             points: points
@@ -163,7 +163,7 @@ class RadarView extends ComponentView {
                     }));
                 }
                 if (showSplitArea && prevPoints) {
-                    var colorIndex = getColorIndex(splitAreas, splitAreaColorsArr, i - 1);
+                    let colorIndex = getColorIndex(splitAreas, splitAreaColorsArr, i - 1);
                     splitAreas[colorIndex].push(new graphic.Polygon({
                         shape: {
                             points: points.concat(prevPoints)

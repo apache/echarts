@@ -34,14 +34,14 @@ import SingleAxis from '../../coord/single/SingleAxis';
 type SupportedCoordSysName = 'polar' | 'grid' | 'singleAxis';
 
 class InsideZoomView extends DataZoomView {
-    static type = 'dataZoom.inside'
-    type = 'dataZoom.inside'
+    static type = 'dataZoom.inside';
+    type = 'dataZoom.inside';
 
     /**
      * 'throttle' is used in this.dispatchAction, so we save range
      * to avoid missing some 'pan' info.
      */
-    range: [number, number]
+    range: [number, number];
 
     /**
      * @override

@@ -55,7 +55,7 @@ export type Pipeline = {
     count: number,
     currentTask?: GeneralTask,
     context?: PipelineContext
-}
+};
 export type PipelineContext = {
     progressiveRender: boolean,
     modDataCount: number,
@@ -651,9 +651,9 @@ function detectSeriseType(legacyFunc: StageHandlerOverallReset): string {
     return seriesType;
 }
 
-var ecModelMock: GlobalModel = {} as GlobalModel;
-var apiMock: ExtensionAPI = {} as ExtensionAPI;
-var seriesType;
+let ecModelMock: GlobalModel = {} as GlobalModel;
+let apiMock: ExtensionAPI = {} as ExtensionAPI;
+let seriesType;
 
 mockMethods(ecModelMock, GlobalModel);
 mockMethods(apiMock, ExtensionAPI);

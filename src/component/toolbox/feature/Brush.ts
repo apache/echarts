@@ -44,8 +44,8 @@ interface ToolboxBrushFeatureOption extends ToolboxFeatureOption {
 
 class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
 
-    private _brushType: BrushTypeUncertain
-    private _brushMode: string
+    private _brushType: BrushTypeUncertain;
+    private _brushMode: string;
 
     render(
         featureModel: ToolboxFeatureModel<ToolboxBrushFeatureOption>,
@@ -147,7 +147,7 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
         },
         // `rect`, `polygon`, `lineX`, `lineY`, `keep`, `clear`
         title: zrUtil.clone(brushLang.title)
-    }
+    };
 }
 
 registerFeature('brush', BrushFeature);

@@ -234,7 +234,7 @@ class PiePiece extends graphic.Group {
         var itemModel = data.getItemModel<PieDataItemOption>(idx);
         var layout = data.getItemLayout(idx);
         var labelLayout = layout.label;
-        var visualColor = data.getItemVisual(idx, 'color');
+        // var visualColor = data.getItemVisual(idx, 'color');
 
         if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
             labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
@@ -453,10 +453,7 @@ class PieView extends ChartView {
         return clipPath;
     }
 
-    /**
-     * @implements
-     */
-    containPoint = function (point: number[], seriesModel: PieSeriesModel): boolean {
+    containPoint(point: number[], seriesModel: PieSeriesModel): boolean {
         var data = seriesModel.getData();
         var itemLayout = data.getItemLayout(0);
         if (itemLayout) {

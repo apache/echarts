@@ -105,23 +105,23 @@ function fadeInItem(
 
 class GraphView extends ChartView {
 
-    static readonly type = 'graph'
-    readonly type = GraphView.type
+    static readonly type = 'graph';
+    readonly type = GraphView.type;
 
-    private _symbolDraw: SymbolDraw
-    private _lineDraw: LineDraw
+    private _symbolDraw: SymbolDraw;
+    private _lineDraw: LineDraw;
 
-    private _controller: RoamController
-    private _controllerHost: RoamControllerHost
+    private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
 
-    private _firstRender: boolean
+    private _firstRender: boolean;
 
-    private _model: GraphSeriesModel
+    private _model: GraphSeriesModel;
 
-    private _layoutTimeout: number
-    private _unfocusDelayTimer: number
+    private _layoutTimeout: number;
+    private _unfocusDelayTimer: number;
 
-    private _layouting: boolean
+    private _layouting: boolean;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         var symbolDraw = new SymbolDraw();

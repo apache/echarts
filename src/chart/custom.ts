@@ -296,14 +296,14 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     elOption.rotation && (transitionProps.rotation = elOption.rotation);
 
     if (el.type === 'image' && elOption.style) {
-        var targetStyle = transitionProps.style = {};
+        let targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y', 'width', 'height'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });
     }
 
     if (el.type === 'text' && elOption.style) {
-        var targetStyle = transitionProps.style = {};
+        let targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });

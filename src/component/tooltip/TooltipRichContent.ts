@@ -31,19 +31,19 @@ import Model from '../../model/Model';
 
 class TooltipRichContent {
 
-    private _zr: ZRenderType
+    private _zr: ZRenderType;
 
-    private _show = false
+    private _show = false;
 
-    private _hideTimeout: number
+    private _hideTimeout: number;
 
-    private _enterable = true
+    private _enterable = true;
 
-    private _inContent: boolean
+    private _inContent: boolean;
 
-    private _hideDelay: number
+    private _hideDelay: number;
 
-    el: graphic.Text
+    el: graphic.Text;
 
     constructor(api: ExtensionAPI) {
         this._zr = api.getZr();

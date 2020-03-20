@@ -66,10 +66,10 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
-    static type = 'tooltip' as const
-    type = TooltipModel.type
+    static type = 'tooltip' as const;
+    type = TooltipModel.type;
 
-    static dependencies = ['axisPointer']
+    static dependencies = ['axisPointer'];
 
     static defaultOption: TooltipOption = {
         zlevel: 0,
@@ -156,7 +156,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             color: '#fff',
             fontSize: 14
         }
-    }
+    };
 }
 
 ComponentModel.registerClass(TooltipModel);

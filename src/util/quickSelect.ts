@@ -74,8 +74,8 @@ function select<T>(arr: T[], left: number, right: number, nth: number, compareFu
  *
  * @return {number}
  */
-function quickSelect<T>(arr: T[], nth: number, compareFunc: CompareFunc<T>): number
-function quickSelect<T>(arr: T[], nth: number, left: number, right: number, compareFunc: CompareFunc<T>): number
+function quickSelect<T>(arr: T[], nth: number, compareFunc: CompareFunc<T>): number;
+function quickSelect<T>(arr: T[], nth: number, left: number, right: number, compareFunc: CompareFunc<T>): number;
 function quickSelect<T>(
     arr: T[], left: number, right: number | CompareFunc<T>, nth?: number, compareFunc?: CompareFunc<T>
 ): number {

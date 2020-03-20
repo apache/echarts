@@ -24,7 +24,7 @@ import { LabelOption, ColorString } from '../../util/types';
 
 var PATH_COLOR = ['textStyle', 'color'] as const;
 
-type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
 > & LabelFontOption;

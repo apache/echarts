@@ -36,7 +36,7 @@ import List from '../../data/List';
 import type { SymbolDrawItemModelOption } from '../helper/SymbolDraw';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-type ScatterDataValue = OptionDataValue | OptionDataValue[]
+type ScatterDataValue = OptionDataValue | OptionDataValue[];
 
 export interface EffectScatterDataItemOption extends SymbolOptionMixin {
     name?: string
@@ -76,10 +76,10 @@ export interface EffectScatterSeriesOption extends SeriesOption,
     data?: (EffectScatterDataItemOption | OptionDataValue)[]
 }
 class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
-    static readonly type = 'series.effectScatter'
-    type = EffectScatterSeriesModel.type
+    static readonly type = 'series.effectScatter';
+    type = EffectScatterSeriesModel.type;
 
-    static readonly dependencies = ['grid', 'polar']
+    static readonly dependencies = ['grid', 'polar'];
 
 
     getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): List {
@@ -129,7 +129,7 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
         // itemStyle: {
         //     opacity: 1
         // }
-    }
+    };
 }
 
 SeriesModel.registerClass(EffectScatterSeriesModel);

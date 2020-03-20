@@ -40,7 +40,7 @@ const linesLayout: StageHandler = {
                     var segCount = params.end - params.start;
                     if (isPolyline) {
                         var totalCoordsCount = 0;
-                        for (var i = params.start; i < params.end; i++) {
+                        for (let i = params.start; i < params.end; i++) {
                             totalCoordsCount += seriesModel.getLineCoordsCount(i);
                         }
                         points = new Float32Array(segCount + totalCoordsCount * 2);
@@ -51,8 +51,8 @@ const linesLayout: StageHandler = {
 
                     var offset = 0;
                     var pt: number[] = [];
-                    for (var i = params.start; i < params.end; i++) {
-                        var len = seriesModel.getLineCoords(i, lineCoords);
+                    for (let i = params.start; i < params.end; i++) {
+                        let len = seriesModel.getLineCoords(i, lineCoords);
                         if (isPolyline) {
                             points[offset++] = len;
                         }
@@ -66,9 +66,9 @@ const linesLayout: StageHandler = {
                     lineData.setLayout('linesPoints', points);
                 }
                 else {
-                    for (var i = params.start; i < params.end; i++) {
+                    for (let i = params.start; i < params.end; i++) {
                         var itemModel = lineData.getItemModel<LinesDataItemOption>(i);
-                        var len = seriesModel.getLineCoords(i, lineCoords);
+                        let len = seriesModel.getLineCoords(i, lineCoords);
 
                         var pts = [];
                         if (isPolyline) {

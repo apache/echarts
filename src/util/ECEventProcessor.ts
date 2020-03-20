@@ -48,11 +48,11 @@ export class ECEventProcessor implements EventProcessor {
 
     // These info required: targetEl, packedEvent, model, view
     eventInfo: {
-        targetEl: Element,
-        packedEvent: ECEvent,
-        model: ComponentModel
-        view: ComponentView | ChartView
-    }
+        targetEl: Element;
+        packedEvent: ECEvent;
+        model: ComponentModel;
+        view: ComponentView | ChartView;
+    };
 
     normalizeQuery(query: EventQuery): NormalizedEventQuery {
         var cptQuery: EventQueryItem = {};

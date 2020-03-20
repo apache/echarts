@@ -37,10 +37,10 @@ type TickCoord = ReturnType<RadiusAxis['getTicksCoords']>[number];
 
 class RadiusAxisView extends AxisView {
 
-    static readonly type = 'radiusAxis'
-    readonly type = RadiusAxisView.type
+    static readonly type = 'radiusAxis';
+    readonly type = RadiusAxisView.type;
 
-    axisPointerClass = 'PolarAxisPointer'
+    axisPointerClass = 'PolarAxisPointer';
 
     render(radiusAxisModel: RadiusAxisModel, ecModel: GlobalModel) {
         this.group.removeAll();
@@ -100,7 +100,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         var splitLines: graphic.Circle[][] = [];
 
-        for (var i = 0; i < ticksCoords.length; i++) {
+        for (let i = 0; i < ticksCoords.length; i++) {
             var colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Circle({
@@ -114,7 +114,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         // Simple optimization
         // Batching the lines if color are the same
-        for (var i = 0; i < splitLines.length; i++) {
+        for (let i = 0; i < splitLines.length; i++) {
             group.add(graphic.mergePath(splitLines[i], {
                 style: zrUtil.defaults({
                     stroke: lineColors[i % lineColors.length],
@@ -170,7 +170,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         var splitAreas: graphic.Sector[][] = [];
 
         var prevRadius = ticksCoords[0].coord;
-        for (var i = 1; i < ticksCoords.length; i++) {
+        for (let i = 1; i < ticksCoords.length; i++) {
             var colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
             splitAreas[colorIndex].push(new graphic.Sector({
@@ -189,7 +189,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         // Simple optimization
         // Batching the lines if color are the same
-        for (var i = 0; i < splitAreas.length; i++) {
+        for (let i = 0; i < splitAreas.length; i++) {
             group.add(graphic.mergePath(splitAreas[i], {
                 style: zrUtil.defaults({
                     fill: areaColors[i % areaColors.length]

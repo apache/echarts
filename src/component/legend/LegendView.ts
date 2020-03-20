@@ -43,22 +43,22 @@ var each = zrUtil.each;
 var Group = graphic.Group;
 
 class LegendView extends ComponentView {
-    static type = 'legend.plain'
-    type = LegendView.type
+    static type = 'legend.plain';
+    type = LegendView.type;
 
-    newlineDisabled = false
+    newlineDisabled = false;
 
-    private _contentGroup: graphic.Group
+    private _contentGroup: graphic.Group;
 
-    private _backgroundEl: graphic.Rect
+    private _backgroundEl: graphic.Rect;
 
-    private _selectorGroup: graphic.Group
+    private _selectorGroup: graphic.Group;
 
     /**
      * If first rendering, `contentGroup.position` is [0, 0], which
      * does not make sense and may cause unexepcted animation if adopted.
      */
-    private _isFirstRender: boolean
+    private _isFirstRender: boolean;
 
     init() {
 

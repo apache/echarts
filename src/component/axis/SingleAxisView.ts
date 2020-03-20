@@ -37,12 +37,12 @@ var selfBuilderAttrs = ['splitArea', 'splitLine'] as const;
 
 class SingleAxisView extends AxisView {
 
-    static readonly type = 'singleAxis'
-    readonly type = SingleAxisView.type
+    static readonly type = 'singleAxis';
+    readonly type = SingleAxisView.type;
 
-    private _axisGroup: graphic.Group
+    private _axisGroup: graphic.Group;
 
-    axisPointerClass = 'SingleAxisPointer'
+    axisPointerClass = 'SingleAxisPointer';
 
     render(axisModel: SingleAxisModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
 
@@ -111,7 +111,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         var p1 = [];
         var p2 = [];
 
-        for (var i = 0; i < ticksCoords.length; ++i) {
+        for (let i = 0; i < ticksCoords.length; ++i) {
             var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
             if (isHorizontal) {
                 p1[0] = tickCoord;
@@ -142,7 +142,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             }));
         }
 
-        for (var i = 0; i < splitLines.length; ++i) {
+        for (let i = 0; i < splitLines.length; ++i) {
             group.add(graphic.mergePath(splitLines[i], {
                 style: {
                     stroke: lineColors[i % lineColors.length],

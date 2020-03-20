@@ -38,13 +38,13 @@ type ECSymbol = ReturnType<typeof createSymbol> & {
     __symbolOriginalScale: number[]
     __z2Origin: number
     highDownOnUpdate(fromState: DisplayState, toState: DisplayState): void
-}
+};
 
 class Symbol extends graphic.Group {
 
-    private _seriesModel: SeriesModel
+    private _seriesModel: SeriesModel;
 
-    private _symbolType: string
+    private _symbolType: string;
 
     constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
         super();

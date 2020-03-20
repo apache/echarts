@@ -145,10 +145,10 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
 }
 
 class CalendarModel extends ComponentModel<CalendarOption> {
-    static type = 'calendar'
-    type = CalendarModel.type
+    static type = 'calendar';
+    type = CalendarModel.type;
 
-    coordinateSystem: Calendar
+    coordinateSystem: Calendar;
 
     /**
      * @override
@@ -246,7 +246,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
             fontWeight: 'bolder',
             fontSize: 20
         }
-    }
+    };
 }
 
 

@@ -35,13 +35,13 @@ interface MarkerDraw {
 }
 abstract class MarkerView extends ComponentView {
 
-    static type = 'marker'
-    type = MarkerView.type
+    static type = 'marker';
+    type = MarkerView.type;
 
     /**
      * Markline grouped by series
      */
-    markerGroupMap: HashMap<MarkerDraw>
+    markerGroupMap: HashMap<MarkerDraw>;
 
     init() {
         this.markerGroupMap = createHashMap();
@@ -75,7 +75,7 @@ abstract class MarkerView extends ComponentView {
         markerModel: MarkerModel,
         ecModel: GlobalModel,
         api: ExtensionAPI
-    ): void
+    ): void;
 }
 
 export default MarkerView;

@@ -45,7 +45,7 @@ var getECData = graphic.getECData;
 var HOVER_LINK_SIZE = 12;
 var HOVER_LINK_OUT = 6;
 
-type Orient = VisualMapModel['option']['orient']
+type Orient = VisualMapModel['option']['orient'];
 
 type ShapeStorage = {
     handleThumbs: graphic.Polygon[]
@@ -62,13 +62,13 @@ type ShapeStorage = {
     indicatorLabelPoint: number[]
 }
 
-type TargetDataIndices = ReturnType<ContinuousModel['findTargetDataIndices']>
+type TargetDataIndices = ReturnType<ContinuousModel['findTargetDataIndices']>;
 
 type BarVisual = {
     barColor: LinearGradient,
     barPoints: number[][]
     handlesColor: ColorString[]
-}
+};
 
 type Direction = 'left' | 'right' | 'top' | 'bottom';
 // Notice:
@@ -80,26 +80,26 @@ type Direction = 'left' | 'right' | 'top' | 'bottom';
 // The logic of transform is implemented in this._createBarGroup.
 
 class ContinuousView extends VisualMapView {
-    static type = 'visualMap.continuous'
-    type = ContinuousView.type
+    static type = 'visualMap.continuous';
+    type = ContinuousView.type;
 
-    visualMapModel: ContinuousModel
+    visualMapModel: ContinuousModel;
 
-    private _shapes = {} as ShapeStorage
+    private _shapes = {} as ShapeStorage;
 
-    private _dataInterval: number[] = []
+    private _dataInterval: number[] = [];
 
-    private _handleEnds: number[] = []
+    private _handleEnds: number[] = [];
 
-    private _orient: Orient
+    private _orient: Orient;
 
-    private _useHandle: boolean
+    private _useHandle: boolean;
 
-    private _hoverLinkDataIndices: TargetDataIndices = []
+    private _hoverLinkDataIndices: TargetDataIndices = [];
 
-    private _dragging: boolean
+    private _dragging: boolean;
 
-    private _hovering: boolean
+    private _hovering: boolean;
 
 
     doRender(

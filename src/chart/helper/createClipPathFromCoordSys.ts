@@ -26,7 +26,7 @@ import type Polar from '../../coord/polar/Polar';
 
 type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
     lineStyle?: { width?: number }
-}>
+}>;
 function createGridClipPath(
     cartesian: Cartesian2D,
     hasAnimation: boolean,

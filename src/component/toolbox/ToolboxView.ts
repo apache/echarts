@@ -41,14 +41,14 @@ type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
 type ExtendedPath = IconPath & {
     __title: string
-}
+};
 
 class ToolboxView extends ComponentView {
-    static type = 'toolbox' as const
+    static type = 'toolbox' as const;
 
-    _features: Dictionary<ToolboxFeature | UserDefinedToolboxFeature>
+    _features: Dictionary<ToolboxFeature | UserDefinedToolboxFeature>;
 
-    _featureNames: string[]
+    _featureNames: string[];
 
     render(
         toolboxModel: ToolboxModel,

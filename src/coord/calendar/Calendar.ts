@@ -102,29 +102,29 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         }, 'value'];
     }
 
-    readonly type = 'calendar'
+    readonly type = 'calendar';
 
-    readonly dimensions = Calendar.dimensions
+    readonly dimensions = Calendar.dimensions;
 
-    private _model: CalendarModel
+    private _model: CalendarModel;
 
     private _rect: BoundingRect;
 
-    private _sw: number
-    private _sh: number
-    private _orient: LayoutOrient
+    private _sw: number;
+    private _sh: number;
+    private _orient: LayoutOrient;
 
-    private _firstDayOfWeek: number
+    private _firstDayOfWeek: number;
 
-    private _rangeInfo: CalendarParsedDateRangeInfo
+    private _rangeInfo: CalendarParsedDateRangeInfo;
 
-    private _lineWidth: number
+    private _lineWidth: number;
 
     constructor(calendarModel: CalendarModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._model = calendarModel;
     }
     // Required in createListFromData
-    getDimensionsInfo = Calendar.getDimensionsInfo
+    getDimensionsInfo = Calendar.getDimensionsInfo;
 
     getRangeInfo() {
         return this._rangeInfo;

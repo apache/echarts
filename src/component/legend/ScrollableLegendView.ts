@@ -64,25 +64,25 @@ interface ItemInfo {
 
 type LegendGroup = graphic.Group & {
     __rectSize: number
-}
+};
 
 type LegendItemElement = Element & {
     __legendDataIndex: number
-}
+};
 
 class ScrollableLegendView extends LegendView {
 
-    static type = 'legend.scroll' as const
-    type = ScrollableLegendView.type
+    static type = 'legend.scroll' as const;
+    type = ScrollableLegendView.type;
 
-    newlineDisabled = true
+    newlineDisabled = true;
 
-    private _containerGroup: LegendGroup
-    private _controllerGroup: graphic.Group
+    private _containerGroup: LegendGroup;
+    private _controllerGroup: graphic.Group;
 
-    private _currentIndex: number = 0
+    private _currentIndex: number = 0;
 
-    private _showController: boolean
+    private _showController: boolean;
 
     init() {
 
@@ -443,7 +443,7 @@ class ScrollableLegendView extends LegendView {
         // (4) The window is to narrow to contain more than
         // one item, we should make sure that the page can be fliped.
 
-        for (var i = targetItemIndex + 1,
+        for (let i = targetItemIndex + 1,
             winStartItemInfo = targetItemInfo,
             winEndItemInfo = targetItemInfo,
             currItemInfo = null;
@@ -474,7 +474,7 @@ class ScrollableLegendView extends LegendView {
             winEndItemInfo = currItemInfo;
         }
 
-        for (var i = targetItemIndex - 1,
+        for (let i = targetItemIndex - 1,
             winStartItemInfo = targetItemInfo,
             winEndItemInfo = targetItemInfo,
             currItemInfo = null;

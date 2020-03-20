@@ -29,9 +29,9 @@ interface RadiusAxis {
 
 class RadiusAxis extends Axis {
 
-    polar: Polar
+    polar: Polar;
 
-    model: RadiusAxisModel
+    model: RadiusAxisModel;
 
     constructor(scale?: Scale, radiusExtent?: [number, number]) {
         super('radius', scale, radiusExtent);

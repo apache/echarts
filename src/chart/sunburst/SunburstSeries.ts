@@ -146,10 +146,10 @@ interface SunburstSeriesModel {
 }
 class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
-    static readonly type = 'series.sunburst'
-    readonly type = SunburstSeriesModel.type
+    static readonly type = 'series.sunburst';
+    readonly type = SunburstSeriesModel.type;
 
-    private _viewRoot: TreeNode
+    private _viewRoot: TreeNode;
 
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
@@ -268,7 +268,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
          * }
          */
         sort: 'desc'
-    }
+    };
 
     getViewRoot() {
         return this._viewRoot;

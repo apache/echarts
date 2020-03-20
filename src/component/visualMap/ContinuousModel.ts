@@ -29,9 +29,9 @@ var DEFAULT_BAR_BOUND = [20, 140];
 
 type RangeWithAuto = {
     auto?: 0 | 1
-}
+};
 
-type VisualState = VisualMapModel['stateList'][number]
+type VisualState = VisualMapModel['stateList'][number];
 
 export interface ContinousVisualMapOption extends VisualMapOption {
 
@@ -67,8 +67,8 @@ export interface ContinousVisualMapOption extends VisualMapOption {
 
 class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
 
-    static type = 'visualMap.continuous' as const
-    type = ContinuousModel.type
+    static type = 'visualMap.continuous' as const;
+    type = ContinuousModel.type;
 
     /**
      * @override
@@ -182,7 +182,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         type DataIndices = {
             seriesId: string
             dataIndex: number[]
-        }
+        };
         var result: DataIndices[] = [];
 
         this.eachTargetSeries(function (seriesModel) {
@@ -232,13 +232,13 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
                 setStop(oVals[oIdx], 'outOfRange');
             }
         }
-        for (var first = 1; iIdx < iLen; iIdx++, first = 0) {
+        for (let first = 1; iIdx < iLen; iIdx++, first = 0) {
             // If range is full, value beyond min, max will be clamped.
             // make a singularity
             first && stops.length && setStop(iVals[iIdx], 'outOfRange');
             setStop(iVals[iIdx], 'inRange');
         }
-        for (var first = 1; oIdx < oLen; oIdx++) {
+        for (let first = 1; oIdx < oLen; oIdx++) {
             if (!iVals.length || iVals[iVals.length - 1] < oVals[oIdx]) {
                 // make a singularity
                 if (first) {
@@ -264,7 +264,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         align: 'auto',           // 'auto', 'left', 'right', 'top', 'bottom'
         calculable: false,
         hoverLink: true
-    }) as ContinousVisualMapOption
+    }) as ContinousVisualMapOption;
 }
 
 

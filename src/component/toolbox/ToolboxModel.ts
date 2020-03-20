@@ -76,13 +76,13 @@ export interface ToolboxOption extends ComponentOption,
 
 class ToolboxModel extends ComponentModel<ToolboxOption> {
 
-    static type = 'toolbox' as const
-    type = ToolboxModel.type
+    static type = 'toolbox' as const;
+    type = ToolboxModel.type;
 
     static layoutMode = {
         type: 'box',
         ignoreSize: true
-    } as const
+    } as const;
 
     optionUpdated() {
         super.optionUpdated.apply(this, arguments as any);
@@ -142,7 +142,7 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         tooltip: {
             show: false
         }
-    }
+    };
 }
 
 ComponentModel.registerClass(ToolboxModel);

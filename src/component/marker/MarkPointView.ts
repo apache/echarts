@@ -75,10 +75,10 @@ function updateMarkerLayout(
 
 class MarkPointView extends MarkerView {
 
-    static type = 'markPoint'
-    type = MarkPointView.type
+    static type = 'markPoint';
+    type = MarkPointView.type;
 
-    markerGroupMap: HashMap<SymbolDraw>
+    markerGroupMap: HashMap<SymbolDraw>;
 
     updateTransform(markPointModel: MarkPointModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {

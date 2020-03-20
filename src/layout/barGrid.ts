@@ -72,7 +72,7 @@ type BarWidthAndOffset = Dictionary<Dictionary<{
     offset: number
     offsetCenter: number
     width: number
-}>>
+}>>;
 
 interface LayoutOption {
     axis: Axis2D
@@ -97,7 +97,7 @@ export function getLayoutOnAxis(opt: LayoutOption) {
     }
     var bandWidth = baseAxis.getBandWidth();
 
-    for (var i = 0; i < opt.count || 0; i++) {
+    for (let i = 0; i < opt.count || 0; i++) {
         params.push(zrUtil.defaults({
             bandWidth: bandWidth,
             axisKey: axisKey,
@@ -107,7 +107,7 @@ export function getLayoutOnAxis(opt: LayoutOption) {
     var widthAndOffsets = doCalBarWidthAndOffset(params);
 
     var result = [];
-    for (var i = 0; i < opt.count; i++) {
+    for (let i = 0; i < opt.count; i++) {
         var item = widthAndOffsets[axisKey][STACK_PREFIX + i];
         item.offsetCenter = item.offset + item.width / 2;
         result.push(item);
@@ -335,7 +335,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             var minWidth = column.minWidth;
 
             if (!column.width) {
-                var finalWidth = autoWidth;
+                let finalWidth = autoWidth;
                 if (maxWidth && maxWidth < finalWidth) {
                     finalWidth = Math.min(maxWidth, remainedWidth);
                 }
@@ -357,7 +357,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
                 // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
                 // CSS does. Becuase barWidth can be a percent value, where
                 // `barMaxWidth` can be used to restrict the final width.
-                var finalWidth = column.width;
+                let finalWidth = column.width;
                 if (maxWidth) {
                     finalWidth = Math.min(finalWidth, maxWidth);
                 }
@@ -411,9 +411,9 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
  * @param seriesModel If not provided, return all.
  * @return {stackId: {offset, width}} or {offset, width} if seriesModel provided.
  */
-function retrieveColumnLayout(barWidthAndOffset: BarWidthAndOffset, axis: Axis2D): typeof barWidthAndOffset[string]
+function retrieveColumnLayout(barWidthAndOffset: BarWidthAndOffset, axis: Axis2D): typeof barWidthAndOffset[string];
 // eslint-disable-next-line max-len
-function retrieveColumnLayout(barWidthAndOffset: BarWidthAndOffset, axis: Axis2D, seriesModel: BarSeriesModel): typeof barWidthAndOffset[string][string]
+function retrieveColumnLayout(barWidthAndOffset: BarWidthAndOffset, axis: Axis2D, seriesModel: BarSeriesModel): typeof barWidthAndOffset[string][string];
 function retrieveColumnLayout(
     barWidthAndOffset: BarWidthAndOffset,
     axis: Axis2D,
@@ -492,7 +492,7 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
             var height;
 
             if (isValueAxisH) {
-                var coord = cartesian.dataToPoint([value, baseValue]);
+                let coord = cartesian.dataToPoint([value, baseValue]);
                 x = baseCoord;
                 y = coord[1] + columnOffset;
                 width = coord[0] - valueAxisStart;
@@ -507,7 +507,7 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
                 }
             }
             else {
-                var coord = cartesian.dataToPoint([baseValue, value]);
+                let coord = cartesian.dataToPoint([baseValue, value]);
                 x = coord[0] + columnOffset;
                 y = baseCoord;
                 width = columnWidth;

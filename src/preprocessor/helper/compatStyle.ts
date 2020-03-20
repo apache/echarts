@@ -191,7 +191,7 @@ function processSeries(seriesOpt: any) {
         data = data || seriesOpt.nodes;
         var edgeData = seriesOpt.links || seriesOpt.edges;
         if (edgeData && !zrUtil.isTypedArray(edgeData)) {
-            for (var i = 0; i < edgeData.length; i++) {
+            for (let i = 0; i < edgeData.length; i++) {
                 compatEC3CommonStyles(edgeData[i]);
             }
         }
@@ -201,24 +201,24 @@ function processSeries(seriesOpt: any) {
     }
 
     if (data && !zrUtil.isTypedArray(data)) {
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
             compatEC3CommonStyles(data[i]);
         }
     }
 
     // mark point data
-    var markPoint = seriesOpt.markPoint;
+    markPoint = seriesOpt.markPoint;
     if (markPoint && markPoint.data) {
         var mpData = markPoint.data;
-        for (var i = 0; i < mpData.length; i++) {
+        for (let i = 0; i < mpData.length; i++) {
             compatEC3CommonStyles(mpData[i]);
         }
     }
     // mark line data
-    var markLine = seriesOpt.markLine;
+    markLine = seriesOpt.markLine;
     if (markLine && markLine.data) {
         var mlData = markLine.data;
-        for (var i = 0; i < mlData.length; i++) {
+        for (let i = 0; i < mlData.length; i++) {
             if (zrUtil.isArray(mlData[i])) {
                 compatEC3CommonStyles(mlData[i][0]);
                 compatEC3CommonStyles(mlData[i][1]);

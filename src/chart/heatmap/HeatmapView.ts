@@ -57,17 +57,18 @@ function getIsInPiecewiseRange(
     var lastIndex = 0;
 
     return function (val: number) {
+        let i;
         // Try to find in the location of the last found
-        for (var i = lastIndex; i < len; i++) {
-            var interval = pieceList[i].interval;
+        for (i = lastIndex; i < len; i++) {
+            let interval = pieceList[i].interval;
             if (interval[0] <= val && val <= interval[1]) {
                 lastIndex = i;
                 break;
             }
         }
         if (i === len) { // Not found, back interation
-            for (var i = lastIndex - 1; i >= 0; i--) {
-                var interval = pieceList[i].interval;
+            for (i = lastIndex - 1; i >= 0; i--) {
+                let interval = pieceList[i].interval;
                 if (interval[0] <= val && val <= interval[1]) {
                     lastIndex = i;
                     break;
@@ -97,12 +98,12 @@ function isGeoCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys 
 
 class HeatmapView extends ChartView {
 
-    static readonly type = 'heatmap'
-    readonly type = HeatmapView.type
+    static readonly type = 'heatmap';
+    readonly type = HeatmapView.type;
 
-    private _incrementalDisplayable: boolean
+    private _incrementalDisplayable: boolean;
 
-    private _hmLayer: HeatmapLayer
+    private _hmLayer: HeatmapLayer;
 
     render(seriesModel: HeatmapSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var visualMapOfThisSeries;

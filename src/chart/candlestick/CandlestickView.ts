@@ -36,12 +36,12 @@ var SKIP_PROPS = ['color', 'borderColor'] as const;
 
 class CandlestickView extends ChartView {
 
-    static readonly type = 'candlestick'
-    readonly type = CandlestickView.type
+    static readonly type = 'candlestick';
+    readonly type = CandlestickView.type;
 
-    private _isLargeDraw: boolean
+    private _isLargeDraw: boolean;
 
-    private _data: List
+    private _data: List;
 
     render(seriesModel: CandlestickSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         // If there is clipPath created in large mode. Remove it.
@@ -206,7 +206,7 @@ class CandlestickView extends ChartView {
 ChartView.registerClass(CandlestickView);
 
 class NormalBoxPathShape {
-    points: number[][]
+    points: number[][];
 }
 
 interface NormalBoxPathProps extends PathProps {
@@ -215,11 +215,11 @@ interface NormalBoxPathProps extends PathProps {
 
 class NormalBoxPath extends Path<NormalBoxPathProps> {
 
-    readonly type = 'normalCandlestickBox'
+    readonly type = 'normalCandlestickBox';
 
-    shape: NormalBoxPathShape
+    shape: NormalBoxPathShape;
 
-    __simpleBox: boolean
+    __simpleBox: boolean;
 
     constructor(opts?: NormalBoxPathProps) {
         super(opts, null, new NormalBoxPathShape());
@@ -304,7 +304,7 @@ function transInit(points: number[][], itemLayout: CandlestickItemLayout) {
 
 
 class LargeBoxPathShape {
-    points: ArrayLike<number>
+    points: ArrayLike<number>;
 }
 
 interface LargeBoxPathProps extends PathProps {
@@ -313,11 +313,11 @@ interface LargeBoxPathProps extends PathProps {
 }
 
 class LargeBoxPath extends Path {
-    readonly type = 'largeCandlestickBox'
+    readonly type = 'largeCandlestickBox';
 
-    shape: LargeBoxPathShape
+    shape: LargeBoxPathShape;
 
-    __sign: number
+    __sign: number;
 
     constructor(opts?: LargeBoxPathProps) {
         super(opts, null, new LargeBoxPathShape());

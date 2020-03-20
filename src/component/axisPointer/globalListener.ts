@@ -25,13 +25,13 @@ import { ZRenderType } from 'zrender/src/zrender';
 import { ZRElementEvent } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
-type DispatchActionMethod = ExtensionAPI['dispatchAction']
+type DispatchActionMethod = ExtensionAPI['dispatchAction'];
 
 type Handler = (
     currTrigger: 'click' | 'mousemove' | 'leave',
     event: ZRElementEvent,
     dispatchAction: DispatchActionMethod
-) => void
+) => void;
 
 interface Record {
     handler: Handler

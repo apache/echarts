@@ -38,9 +38,9 @@ type LineStyleKeys = 'lineWidth'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
-    | 'shadowColor'
+    | 'shadowColor';
 
-type LineStyleProps = Pick<StyleProps, LineStyleKeys>
+type LineStyleProps = Pick<StyleProps, LineStyleKeys>;
 
 class LineStyleMixin {
 

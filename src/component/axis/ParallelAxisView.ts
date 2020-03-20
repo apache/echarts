@@ -18,10 +18,12 @@
 */
 
 
-import * as echarts from '../../echarts';
+// import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import AxisBuilder from './AxisBuilder';
-import BrushController, { BrushCoverConfig, BrushControllerEvents, BrushDimensionMinMax } from '../helper/BrushController';
+import BrushController, {
+    BrushCoverConfig, BrushControllerEvents, BrushDimensionMinMax
+} from '../helper/BrushController';
 import * as brushHelper from '../helper/brushHelper';
 import * as graphic from '../../util/graphic';
 import ComponentView from '../../view/Component';

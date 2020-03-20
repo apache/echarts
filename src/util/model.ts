@@ -187,7 +187,7 @@ export function mappingToExists<T extends MappingExistItem>(
         }
 
         // id has highest priority.
-        for (var i = 0; i < result.length; i++) {
+        for (let i = 0; i < result.length; i++) {
             if (!result[i].option // Consider name: two map to one.
                 && cptOption.id != null
                 && result[i].exist.id === cptOption.id + ''
@@ -198,7 +198,7 @@ export function mappingToExists<T extends MappingExistItem>(
             }
         }
 
-        for (var i = 0; i < result.length; i++) {
+        for (let i = 0; i < result.length; i++) {
             var exist = result[i].exist;
             if (!result[i].option // Consider name: two map to one.
                 // Can not match when both ids exist but different.
@@ -532,7 +532,7 @@ type ParsedModelFinderKnown = {
 export type ParsedModelFinder = ParsedModelFinderKnown & {
     // other components
     [key: string]: ComponentModel | ComponentModel[];
-}
+};
 
 export function parseFinder(
     ecModel: GlobalModel,
@@ -561,8 +561,6 @@ export function parseFinder(
     var result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
-        var value = finder[key];
-
         // Exclude 'dataIndex' and other illgal keys.
         if (key === 'dataIndex' || key === 'dataIndexInside') {
             result[key] = value as number;

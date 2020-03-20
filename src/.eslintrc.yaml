@@ -14,6 +14,7 @@ globals:
     jQuery: true
     Promise: true
 rules:
+    # Check the rules in: node_modules/@typescript-eslint/eslint-plugin/README.md
     no-console:
         - 2
         -
@@ -36,7 +37,7 @@ rules:
     no-unreachable: 2
     use-isnan: 2
     valid-typeof: 2
-    block-scoped-var: 0
+    block-scoped-var: 2
     curly:
         - 2
         - "all"
@@ -63,7 +64,7 @@ rules:
     no-octal: 2
     no-octal-escape: 2
     no-proto: 2
-    no-redeclare: 0
+    no-redeclare: 2
     no-self-compare: 2
     no-unneeded-ternary: 2
     no-with: 2
@@ -78,7 +79,8 @@ rules:
     no-shadow-restricted-names: 2
     no-undef: 2
     no-undef-init: 2
-    no-use-before-define: 0
+    "no-use-before-define": "off"
+    "@typescript-eslint/no-use-before-define": 2
     brace-style:
         - 2
         - "stroustrup"
@@ -115,10 +117,12 @@ rules:
         -
             overrides:
                 "=": "after"
-    quotes:
+    "quotes": "off"
+    "@typescript-eslint/quotes":
         - 2
         - "single"
-    semi:
+    "semi": "off"
+    "@typescript-eslint/semi":
         - 2
         - "always"
     semi-spacing: 2
@@ -128,7 +132,8 @@ rules:
         -
             beforeColon: false
             afterColon: true
-    space-before-function-paren:
+    "space-before-function-paren": "off"
+    "@typescript-eslint/space-before-function-paren":
         - 2
         -
             anonymous: "always"
@@ -187,7 +192,10 @@ rules:
 
     no-useless-constructor: 0
 
+    "func-call-spacing": "off"
+    "@typescript-eslint/func-call-spacing": "error"
 
+    "no-unused-vars": "off"
     "@typescript-eslint/no-unused-vars":
         - 1
         -

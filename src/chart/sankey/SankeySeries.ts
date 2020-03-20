@@ -36,9 +36,9 @@ import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
 
-type SankeyDataValue = OptionDataValue | OptionDataValue[]
+type SankeyDataValue = OptionDataValue | OptionDataValue[];
 
-type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges'
+type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
 
 interface SankeyEdgeStyleOption extends LineStyleOption {
     curveness?: number
@@ -142,12 +142,12 @@ export interface SankeySeriesOption extends SeriesOption, BoxLayoutOptionMixin {
 }
 
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
-    static readonly type = 'series.sankey'
-    readonly type = SankeySeriesModel.type
+    static readonly type = 'series.sankey';
+    readonly type = SankeySeriesModel.type;
 
-    levelModels: Model<SankeyLevelOption>[]
+    levelModels: Model<SankeyLevelOption>[];
 
-    layoutInfo: LayoutRect
+    layoutInfo: LayoutRect;
 
     /**
      * Init a graph data structure from data in option series
@@ -232,7 +232,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         if (dataType === 'edge') {
             var params = this.getDataParams(dataIndex, dataType);
             var rawDataOpt = params.data;
-            var html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
+            let html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
             if (params.value) {
                 html += ' : ' + params.value;
             }
@@ -242,9 +242,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             var node = this.getGraph().getNodeByIndex(dataIndex);
             var value = node.getLayout().value;
             var name = this.getDataParams(dataIndex, dataType).data.name;
-            if (value) {
-                var html = name + ' : ' + value;
-            }
+            var html = value ? name + ' : ' + value : '';
             return encodeHTML(html);
         }
         return super.formatTooltip(dataIndex, multipleSeries);
@@ -324,7 +322,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         animationEasing: 'linear',
 
         animationDuration: 1000
-    }
+    };
 }
 
 SeriesModel.registerClass(SankeySeriesModel);

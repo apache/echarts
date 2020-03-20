@@ -34,34 +34,34 @@ import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 var BOOST_SIZE_THRESHOLD = 4;
 
 class LargeSymbolPathShape {
-    points: ArrayLike<number>
-    size: number[]
+    points: ArrayLike<number>;
+    size: number[];
 }
 
 type LargeSymbolPathProps = PathProps & {
     shape?: Partial<LargeSymbolPathShape>
     startIndex?: number
     endIndex?: number
-}
+};
 
-type ECSymbol = ReturnType<typeof createSymbol>
+type ECSymbol = ReturnType<typeof createSymbol>;
 
 class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 
-    shape: LargeSymbolPathShape
+    shape: LargeSymbolPathShape;
 
-    symbolProxy: ECSymbol
+    symbolProxy: ECSymbol;
 
-    softClipShape: CoordinateSystemClipArea
+    softClipShape: CoordinateSystemClipArea;
 
-    startIndex: number
-    endIndex: number
+    startIndex: number;
+    endIndex: number;
 
     constructor(opts?: LargeSymbolPathProps) {
         super(opts, null, new LargeSymbolPathShape());
     }
 
-    setColor: ECSymbol['setColor']
+    setColor: ECSymbol['setColor'];
 
     buildPath(path: PathProxy, shape: LargeSymbolPathShape) {
         var points = shape.points;
@@ -162,9 +162,9 @@ interface UpdateOpt {
 
 class LargeSymbolDraw {
 
-    group = new graphic.Group()
+    group = new graphic.Group();
 
-    _incremental: IncrementalDisplayable
+    _incremental: IncrementalDisplayable;
 
     isPersistent() {
         return !this._incremental;

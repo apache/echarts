@@ -33,9 +33,9 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     readonly name: string;
 
-    readonly dimensions = ['radius', 'angle']
+    readonly dimensions = ['radius', 'angle'];
 
-    readonly type = 'polar'
+    readonly type = 'polar';
 
     /**
      * x of polar center
@@ -51,9 +51,9 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     private _angleAxis = new AngleAxis();
 
-    axisPointerEnabled = true
+    axisPointerEnabled = true;
 
-    model: PolarModel
+    model: PolarModel;
 
     constructor(name: string) {
         this.name = name || '';

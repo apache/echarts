@@ -28,12 +28,17 @@ import Model from '../../model/Model';
  */
 class TimelineAxis extends Axis {
 
-    type: 'category' | 'time' | 'value'
+    type: 'category' | 'time' | 'value';
 
     // @ts-ignore
-    model: TimelineModel
+    model: TimelineModel;
 
-    constructor(dim: string, scale: Scale, coordExtent: [number, number], axisType: 'category' | 'time' | 'value') {
+    constructor(
+        dim: string,
+        scale: Scale,
+        coordExtent: [number, number],
+        axisType: 'category' | 'time' | 'value'
+    ) {
         super(dim, scale, coordExtent);
         this.type = axisType || 'value';
     }

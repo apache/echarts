@@ -101,19 +101,19 @@ const inner = makeInner<Dictionary<MarkerModel>, SeriesModel>();
 
 abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends ComponentModel<Opts> {
 
-    static type = 'marker'
-    type = MarkerModel.type
+    static type = 'marker';
+    type = MarkerModel.type;
 
     /**
      * If marker model is created by self from series
      */
-    createdBySelf = false
+    createdBySelf = false;
 
-    static readonly dependencies = ['series', 'grid', 'polar', 'geo']
+    static readonly dependencies = ['series', 'grid', 'polar', 'geo'];
 
-    __hostSeries: SeriesModel
+    __hostSeries: SeriesModel;
 
-    private _data: List
+    private _data: List;
 
     /**
      * @overrite
@@ -238,7 +238,7 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         markerOpt: Opts,
         masterMarkerModel: MarkerModel,
         ecModel: GlobalModel
-    ): MarkerModel
+    ): MarkerModel;
 
     static getMarkerModelFromSeries(
         seriesModel: SeriesModel,

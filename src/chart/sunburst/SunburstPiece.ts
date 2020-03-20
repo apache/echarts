@@ -43,10 +43,10 @@ interface DrawTreeNode extends TreeNode {
  */
 class SunburstPiece extends graphic.Group {
 
-    node: TreeNode
+    node: TreeNode;
 
-    private _seriesModel: SunburstSeriesModel
-    private _ecModel: GlobalModel
+    private _seriesModel: SunburstSeriesModel;
+    private _ecModel: GlobalModel;
 
     constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel) {
         super();

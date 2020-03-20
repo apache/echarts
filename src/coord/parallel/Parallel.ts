@@ -486,11 +486,11 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         }
         // When screen is too narrow, make it visible and slidable, although it is hard to interact.
         else {
-            var winSize = axisExpandWindow[1] - axisExpandWindow[0];
-            var pos = extent[1] * pointCoord / winSize;
-            axisExpandWindow = [mathMax(0, pos - winSize / 2)];
-            axisExpandWindow[1] = mathMin(extent[1], axisExpandWindow[0] + winSize);
-            axisExpandWindow[0] = axisExpandWindow[1] - winSize;
+            var winSize2 = axisExpandWindow[1] - axisExpandWindow[0];
+            var pos = extent[1] * pointCoord / winSize2;
+            axisExpandWindow = [mathMax(0, pos - winSize2 / 2)];
+            axisExpandWindow[1] = mathMin(extent[1], axisExpandWindow[0] + winSize2);
+            axisExpandWindow[0] = axisExpandWindow[1] - winSize2;
         }
 
         return {

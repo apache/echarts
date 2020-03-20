@@ -134,10 +134,10 @@ function computeBaseline(data: number[][][]) {
     var sums = [];
     var y0 = [];
     var max = 0;
-    var temp = 0;
 
     for (var i = 0; i < pointNum; ++i) {
-        for (var j = 0, temp = 0; j < layerNum; ++j) {
+        var temp = 0;
+        for (var j = 0; j < layerNum; ++j) {
             temp += data[j][i][1];
         }
         if (temp > max) {

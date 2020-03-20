@@ -320,13 +320,13 @@ function normalizeDimensionsDefine(dimensionsDefine) {
 function arrayRowsTravelFirst(cb, seriesLayoutBy, data, maxLoop) {
     maxLoop == null && (maxLoop = Infinity);
     if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
-        for (var i = 0; i < data.length && i < maxLoop; i++) {
+        for (let i = 0; i < data.length && i < maxLoop; i++) {
             cb(data[i] ? data[i][0] : null, i);
         }
     }
     else {
         var value0 = data[0] || [];
-        for (var i = 0; i < value0.length && i < maxLoop; i++) {
+        for (let i = 0; i < value0.length && i < maxLoop; i++) {
             cb(value0[i], i);
         }
     }
@@ -402,7 +402,7 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
 
         // In value way.
         if (baseCategoryDimIndex == null) {
-            var start = datasetRecord.valueWayDim;
+            let start = datasetRecord.valueWayDim;
             pushDim(encode[coordDimName], start, count);
             pushDim(encodeSeriesName, start, count);
             datasetRecord.valueWayDim += count;
@@ -421,7 +421,7 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
         }
         // In category way, the other axis.
         else {
-            var start = datasetRecord.categoryWayDim;
+            let start = datasetRecord.categoryWayDim;
             pushDim(encode[coordDimName], start, count);
             pushDim(encodeSeriesName, start, count);
             datasetRecord.categoryWayDim += count;
@@ -611,15 +611,15 @@ function doGuessOrdinal(
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
         if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
-            var sample = data[dimIndex];
-            for (var i = 0; i < (sample || []).length && i < maxLoop; i++) {
+            let sample = data[dimIndex];
+            for (let i = 0; i < (sample || []).length && i < maxLoop; i++) {
                 if ((result = detectValue(sample[startIndex + i])) != null) {
                     return result;
                 }
             }
         }
         else {
-            for (var i = 0; i < data.length && i < maxLoop; i++) {
+            for (let i = 0; i < data.length && i < maxLoop; i++) {
                 var row = data[startIndex + i];
                 if (row && (result = detectValue(row[dimIndex])) != null) {
                     return result;
@@ -631,8 +631,8 @@ function doGuessOrdinal(
         if (!dimName) {
             return BE_ORDINAL.Not;
         }
-        for (var i = 0; i < data.length && i < maxLoop; i++) {
-            var item = data[i];
+        for (let i = 0; i < data.length && i < maxLoop; i++) {
+            let item = data[i];
             if (item && (result = detectValue(item[dimName])) != null) {
                 return result;
             }
@@ -646,7 +646,7 @@ function doGuessOrdinal(
         if (!sample || isTypedArray(sample)) {
             return BE_ORDINAL.Not;
         }
-        for (var i = 0; i < sample.length && i < maxLoop; i++) {
+        for (let i = 0; i < sample.length && i < maxLoop; i++) {
             if ((result = detectValue(sample[i])) != null) {
                 return result;
             }

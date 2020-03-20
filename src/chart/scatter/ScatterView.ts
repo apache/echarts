@@ -30,14 +30,14 @@ import { TaskProgressParams } from '../../stream/task';
 import type { StageHandlerProgressExecutor } from '../../util/types';
 
 class ScatterView extends ChartView {
-    static readonly type = 'scatter'
-    type = ScatterView.type
+    static readonly type = 'scatter';
+    type = ScatterView.type;
 
-    _finished: boolean
+    _finished: boolean;
 
-    _isLargeDraw: boolean
+    _isLargeDraw: boolean;
 
-    _symbolDraw: SymbolDraw | LargeSymbolDraw
+    _symbolDraw: SymbolDraw | LargeSymbolDraw;
 
     render(seriesModel: ScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();

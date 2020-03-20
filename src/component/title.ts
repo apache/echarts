@@ -84,10 +84,10 @@ export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, Bord
     borderRadius?: number | number[]
 }
 class TitleModel extends ComponentModel<TitleOption> {
-    static type = 'title' as const
-    type = TitleModel.type
+    static type = 'title' as const;
+    type = TitleModel.type;
 
-    readonly layoutMode = {type: 'box', ignoreSize: true} as const
+    readonly layoutMode = {type: 'box', ignoreSize: true} as const;
 
     static defaultOption: TitleOption = {
         zlevel: 0,
@@ -120,7 +120,7 @@ class TitleModel extends ComponentModel<TitleOption> {
         subtextStyle: {
             color: '#aaa'
         }
-    }
+    };
 }
 ComponentModel.registerClass(TitleModel);
 
@@ -128,8 +128,8 @@ ComponentModel.registerClass(TitleModel);
 // View
 class TitleView extends ComponentView {
 
-    static type = 'title' as const
-    type = TitleView.type
+    static type = 'title' as const;
+    type = TitleView.type;
 
 
     render(titleModel: TitleModel, ecModel: GlobalModel, api: ExtensionAPI) {

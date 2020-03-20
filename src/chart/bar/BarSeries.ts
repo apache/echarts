@@ -26,7 +26,7 @@ import { inheritDefaultOption } from '../../util/component';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-type BarDataValue = OptionDataValue | OptionDataValue[]
+type BarDataValue = OptionDataValue | OptionDataValue[];
 
 export interface BarItemStyleOption extends ItemStyleOption {
     /**
@@ -83,12 +83,12 @@ export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionM
 }
 
 class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
-    static type = 'series.bar'
-    type = BarSeriesModel.type
+    static type = 'series.bar';
+    type = BarSeriesModel.type;
 
-    static dependencies = ['grid', 'polar']
+    static dependencies = ['grid', 'polar'];
 
-    coordinateSystem: Cartesian2D | Polar
+    coordinateSystem: Cartesian2D | Polar;
 
     /**
      * @override

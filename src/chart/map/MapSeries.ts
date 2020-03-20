@@ -311,7 +311,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
                 areaColor: 'rgba(255,215,0,0.8)'
             }
         }
-    }
+    };
 
 }
 

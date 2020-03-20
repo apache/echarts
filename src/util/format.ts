@@ -156,7 +156,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     } : (inOpt || {}) as GetTooltipMarkerOpt;
     var color = opt.color;
     var type = opt.type;
-    var extraCssText = opt.extraCssText;
+    extraCssText = opt.extraCssText;
     var renderMode = opt.renderMode || 'html';
     var markerId = opt.markerId || 'X';
 

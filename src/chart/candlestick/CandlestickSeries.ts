@@ -81,21 +81,21 @@ export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesian
 
 class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
 
-    static readonly type = 'series.candlestick'
-    readonly type = CandlestickSeriesModel.type
+    static readonly type = 'series.candlestick';
+    readonly type = CandlestickSeriesModel.type;
 
-    static readonly dependencies = ['xAxis', 'yAxis', 'grid']
+    static readonly dependencies = ['xAxis', 'yAxis', 'grid'];
 
-    coordinateSystem: Cartesian2D
+    coordinateSystem: Cartesian2D;
 
-    dimensions: string[]
+    dimensions: string[];
 
     defaultValueDimensions = [
         {name: 'open', defaultTooltip: true},
         {name: 'close', defaultTooltip: true},
         {name: 'lowest', defaultTooltip: true},
         {name: 'highest', defaultTooltip: true}
-    ]
+    ];
 
     static defaultOption: CandlestickSeriesOption = {
         zlevel: 0,
@@ -141,7 +141,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
 
         animationEasing: 'linear',
         animationDuration: 300
-    }
+    };
 
     /**
      * Get dimension for shadow in dataZoom

@@ -44,11 +44,11 @@ import { VectorArray } from 'zrender/src/core/vector';
 
 var PI = Math.PI;
 
-type TimelineSymbol = ReturnType<typeof createSymbol>
+type TimelineSymbol = ReturnType<typeof createSymbol>;
 
 type RenderMethodName = '_renderAxisLine' | '_renderAxisTick' | '_renderControl' | '_renderCurrentPointer';
 
-type ControlIconName = 'playIcon' | 'stopIcon' | 'nextIcon' | 'prevIcon'
+type ControlIconName = 'playIcon' | 'stopIcon' | 'nextIcon' | 'prevIcon';
 
 interface LayoutInfo {
     viewRect: BoundingRect
@@ -72,24 +72,24 @@ interface LayoutInfo {
 
 class SliderTimelineView extends TimelineView {
 
-    static type = 'timeline.slider'
-    type = SliderTimelineView.type
+    static type = 'timeline.slider';
+    type = SliderTimelineView.type;
 
-    api: ExtensionAPI
-    model: SliderTimelineModel
-    ecModel: GlobalModel
+    api: ExtensionAPI;
+    model: SliderTimelineModel;
+    ecModel: GlobalModel;
 
-    private _axis: TimelineAxis
+    private _axis: TimelineAxis;
 
-    private _viewRect: BoundingRect
+    private _viewRect: BoundingRect;
 
-    private _timer: number
+    private _timer: number;
 
-    private _currentPointer: TimelineSymbol
+    private _currentPointer: TimelineSymbol;
 
-    private _mainGroup: graphic.Group
+    private _mainGroup: graphic.Group;
 
-    private _labelGroup: graphic.Group
+    private _labelGroup: graphic.Group;
 
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
@@ -285,12 +285,12 @@ class SliderTimelineView extends TimelineView {
         var labelPosOpt = layoutInfo.labelPosOpt;
 
         if (labelPosOpt == null || isString(labelPosOpt)) { // '+' or '-'
-            var mainBoundIdx = labelPosOpt === '+' ? 0 : 1;
+            let mainBoundIdx = labelPosOpt === '+' ? 0 : 1;
             toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
             toBound(labelsPosition, labelBound, viewBound, 1, 1 - mainBoundIdx);
         }
         else {
-            var mainBoundIdx = labelPosOpt >= 0 ? 0 : 1;
+            let mainBoundIdx = labelPosOpt >= 0 ? 0 : 1;
             toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
             labelsPosition[1] = mainPosition[1] + labelPosOpt;
         }

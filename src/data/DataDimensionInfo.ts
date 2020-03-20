@@ -44,7 +44,7 @@ class DataDimensionInfo {
 
     // FIXME: check whether it is still used.
     // See Series.ts#formatArrayValue
-    tooltip?: boolean
+    tooltip?: boolean;
 
     /**
      * Which coordSys dimension this dimension mapped to.
@@ -112,7 +112,7 @@ class DataDimensionInfo {
     /**
      * If this dimension if for calculated value like stacking
      */
-    isCalculationCoord?: boolean
+    isCalculationCoord?: boolean;
 
     defaultTooltip?: boolean;
 

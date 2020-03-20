@@ -82,7 +82,7 @@ interface PictorialBarSeriesSymbolOption {
     symbolPatternSize?: number
 }
 
-type PictorialBarValue = OptionDataValue
+type PictorialBarValue = OptionDataValue;
 
 export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOption,
     // Pictorial bar support configure animation in each data item.
@@ -117,12 +117,12 @@ export interface PictorialBarSeriesOption extends BaseBarSeriesOption,
 }
 
 class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOption> {
-    static type = 'series.pictorialBar'
-    type = PictorialBarSeriesModel.type
+    static type = 'series.pictorialBar';
+    type = PictorialBarSeriesModel.type;
 
-    static dependencies = ['grid']
+    static dependencies = ['grid'];
 
-    coordinateSystem: Cartesian2D
+    coordinateSystem: Cartesian2D;
 
     static defaultOption: PictorialBarSeriesOption = inheritDefaultOption(BaseBarSeriesModel.defaultOption, {
 

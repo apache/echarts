@@ -51,7 +51,7 @@ interface LayoutInfo {
 }
 
 // Not use top level axisPointer model
-type AxisPointerModel = Model<CommonAxisPointerOption>
+type AxisPointerModel = Model<CommonAxisPointerOption>;
 
 export function buildElStyle(axisPointerModel: AxisPointerModel) {
     var axisPointerType = axisPointerModel.get('type');

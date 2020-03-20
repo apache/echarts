@@ -51,7 +51,7 @@ import { makeInner } from '../../util/model';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
-type MarkLineMergedItemOption = MarkLine2DDataItemOption[number]
+type MarkLineMergedItemOption = MarkLine2DDataItemOption[number];
 
 const inner = makeInner<{
     // from data
@@ -218,7 +218,7 @@ function updateSingleMarkerEndLayout(
             );
         }
         else {
-            var dims = coordSys.dimensions;
+            let dims = coordSys.dimensions;
             var x = data.get(dims[0], idx);
             var y = data.get(dims[1], idx);
             point = coordSys.dataToPoint([x, y]);
@@ -235,7 +235,7 @@ function updateSingleMarkerEndLayout(
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
             var xAxis = coordSys.getAxis('x');
             var yAxis = coordSys.getAxis('y');
-            var dims = coordSys.dimensions;
+            let dims = coordSys.dimensions;
             if (isInifinity(data.get(dims[0], idx))) {
                 point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[isFrom ? 0 : 1]);
             }
@@ -258,10 +258,10 @@ function updateSingleMarkerEndLayout(
 
 class MarkLineView extends MarkerView {
 
-    static type = 'markLine'
-    type = MarkLineView.type
+    static type = 'markLine';
+    type = MarkLineView.type;
 
-    markerGroupMap: HashMap<LineDraw>
+    markerGroupMap: HashMap<LineDraw>;
 
     updateTransform(markLineModel: MarkLineModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {

@@ -39,7 +39,7 @@ import ComponentModel from '../../model/Component';
 
 type FunnelLabelOption = Omit<LabelOption, 'position'> & {
     position?: LabelOption['position'] | 'outer'
-}
+};
 
 export interface FunnelDataItemOption {
     name?: string
@@ -92,8 +92,8 @@ export interface FunnelSeriesOption
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
-    static type = 'series.funnel' as const
-    type = FunnelSeriesModel.type
+    static type = 'series.funnel' as const;
+    type = FunnelSeriesModel.type;
 
     init(option: FunnelSeriesOption) {
         super.init.apply(this, arguments as any);
@@ -183,7 +183,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
                 show: true
             }
         }
-    }
+    };
 
 }
 

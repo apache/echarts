@@ -89,7 +89,7 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
 
     var viewRect: layout.LayoutRect;
     if (useCenterAndSize) {
-        var viewRect = {} as layout.LayoutRect;
+        viewRect = {} as layout.LayoutRect;
         if (aspect > 1) {
             // Width is same with size
             viewRect.width = size;

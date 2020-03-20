@@ -31,7 +31,7 @@ import { VectorArray } from 'zrender/src/core/vector';
 import Model from '../../model/Model';
 
 // Not use top level axisPointer model
-type AxisPointerModel = Model<CommonAxisPointerOption>
+type AxisPointerModel = Model<CommonAxisPointerOption>;
 
 class CartesianAxisPointer extends BaseAxisPointer {
 

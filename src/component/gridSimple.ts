@@ -29,8 +29,8 @@ import ComponentModel from '../model/Component';
 
 // Grid view
 class GridView extends ComponentView {
-    static readonly type = 'grid'
-    readonly type = 'grid'
+    static readonly type = 'grid';
+    readonly type = 'grid';
 
     render(gridModel: GridModel, ecModel: GlobalModel) {
         this.group.removeAll();

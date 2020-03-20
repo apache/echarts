@@ -77,7 +77,7 @@ export default function (
     var newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
     var oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
 
-    for (var i = 0; i < diff.length; i++) {
+    for (let i = 0; i < diff.length; i++) {
         var diffItem = diff[i];
         var pointAdded = true;
 
@@ -100,38 +100,38 @@ export default function (
                 rawIndices.push(newData.getRawIndex(diffItem.idx1));
                 break;
             case '+':
-                var idx = diffItem.idx;
+                let idxAdd = diffItem.idx;
                 currPoints.push(
                     oldCoordSys.dataToPoint([
-                        newData.get(newDataOldCoordInfo.dataDimsForPoint[0], idx),
-                        newData.get(newDataOldCoordInfo.dataDimsForPoint[1], idx)
+                        newData.get(newDataOldCoordInfo.dataDimsForPoint[0], idxAdd),
+                        newData.get(newDataOldCoordInfo.dataDimsForPoint[1], idxAdd)
                     ])
                 );
 
-                nextPoints.push((newData.getItemLayout(idx) as number[]).slice());
+                nextPoints.push((newData.getItemLayout(idxAdd) as number[]).slice());
 
                 currStackedPoints.push(
-                    getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, idx)
+                    getStackedOnPoint(newDataOldCoordInfo, oldCoordSys, newData, idxAdd)
                 );
-                nextStackedPoints.push(newStackedOnPoints[idx]);
+                nextStackedPoints.push(newStackedOnPoints[idxAdd]);
 
-                rawIndices.push(newData.getRawIndex(idx));
+                rawIndices.push(newData.getRawIndex(idxAdd));
                 break;
             case '-':
-                var idx = diffItem.idx;
-                var rawIndex = oldData.getRawIndex(idx);
+                let idxMinus = diffItem.idx;
+                var rawIndex = oldData.getRawIndex(idxMinus);
                 // Data is replaced. In the case of dynamic data queue
                 // FIXME FIXME FIXME
-                if (rawIndex !== idx) {
-                    currPoints.push(oldData.getItemLayout(idx) as number[]);
+                if (rawIndex !== idxMinus) {
+                    currPoints.push(oldData.getItemLayout(idxMinus) as number[]);
                     nextPoints.push(newCoordSys.dataToPoint([
-                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[0], idx),
-                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[1], idx)
+                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[0], idxMinus),
+                        oldData.get(oldDataNewCoordInfo.dataDimsForPoint[1], idxMinus)
                     ]));
 
-                    currStackedPoints.push(oldStackedOnPoints[idx]);
+                    currStackedPoints.push(oldStackedOnPoints[idxMinus]);
                     nextStackedPoints.push(
-                        getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, idx)
+                        getStackedOnPoint(oldDataNewCoordInfo, newCoordSys, oldData, idxMinus)
                     );
 
                     rawIndices.push(rawIndex);
@@ -161,8 +161,8 @@ export default function (
     var sortedNextStackedPoints = [];
 
     var sortedStatus = [];
-    for (var i = 0; i < sortedIndices.length; i++) {
-        var idx = sortedIndices[i];
+    for (let i = 0; i < sortedIndices.length; i++) {
+        let idx = sortedIndices[i];
         sortedCurrPoints[i] = currPoints[idx];
         sortedNextPoints[i] = nextPoints[idx];
 

@@ -97,20 +97,20 @@ function fadeInItem(
 }
 
 class SankeyPathShape {
-    x1 = 0
-    y1 = 0
+    x1 = 0;
+    y1 = 0;
 
-    x2 = 0
-    y2 = 0
+    x2 = 0;
+    y2 = 0;
 
-    cpx1 = 0
-    cpy1 = 0
+    cpx1 = 0;
+    cpy1 = 0;
 
-    cpx2 = 0
-    cpy2 = 0
+    cpx2 = 0;
+    cpy2 = 0;
 
-    extent = 0
-    orient: LayoutOrient
+    extent = 0;
+    orient: LayoutOrient;
 }
 
 interface SankeyPathProps extends PathProps {
@@ -118,7 +118,7 @@ interface SankeyPathProps extends PathProps {
 }
 
 class SankeyPath extends graphic.Path {
-    shape: SankeyPathShape
+    shape: SankeyPathShape;
 
     constructor(opts?: SankeyPathProps) {
         super(opts, null, new SankeyPathShape());
@@ -162,16 +162,16 @@ class SankeyPath extends graphic.Path {
 
 class SankeyView extends ChartView {
 
-    static readonly type = 'sankey'
-    readonly type = SankeyView.type
+    static readonly type = 'sankey';
+    readonly type = SankeyView.type;
 
-    private _model: SankeySeriesModel
+    private _model: SankeySeriesModel;
 
-    private _focusAdjacencyDisabled = false
+    private _focusAdjacencyDisabled = false;
 
-    private _data: List
+    private _data: List;
 
-    private _unfocusDelayTimer: number
+    private _unfocusDelayTimer: number;
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var sankeyView = this;

@@ -29,8 +29,8 @@ import { ZRColor } from './types';
 type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
     setColor: (color: ZRColor, innerColor?: string) => void
-}
-type SymbolCtor = { new(): ECSymbol }
+};
+type SymbolCtor = { new(): ECSymbol };
 type SymbolShapeMaker = (x: number, y: number, w: number, h: number, shape: Dictionary<any>) => void
 
 /**

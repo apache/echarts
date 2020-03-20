@@ -45,7 +45,7 @@ function intersectCurveCircle(
     for (var _t = 0.1; _t <= 0.9; _t += 0.1) {
         v1[0] = quadraticAt(p0[0], p1[0], p2[0], _t);
         v1[1] = quadraticAt(p0[1], p1[1], p2[1], _t);
-        var diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
+        let diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
         if (diff < d) {
             d = diff;
             t = _t;
@@ -64,7 +64,7 @@ function intersectCurveCircle(
         v3[0] = quadraticAt(p0[0], p1[0], p2[0], next);
         v3[1] = quadraticAt(p0[1], p1[1], p2[1], next);
 
-        var diff = v2DistSquare(v2, center) - radiusSquare;
+        let diff = v2DistSquare(v2, center) - radiusSquare;
         if (mathAbs(diff) < 1e-2) {
             break;
         }
@@ -124,9 +124,9 @@ export default function (graph: Graph, scale: number) {
             vec2.copy(pts[1], originalPoints[2]);
             vec2.copy(pts[2], originalPoints[1]);
             if (fromSymbol && fromSymbol !== 'none') {
-                var symbolSize = getSymbolSize(edge.node1);
+                let symbolSize = getSymbolSize(edge.node1);
 
-                var t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
+                let t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
                 // Subdivide and get the second
                 quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                 pts[0][0] = tmp0[3];
@@ -136,9 +136,9 @@ export default function (graph: Graph, scale: number) {
                 pts[1][1] = tmp0[4];
             }
             if (toSymbol && toSymbol !== 'none') {
-                var symbolSize = getSymbolSize(edge.node2);
+                let symbolSize = getSymbolSize(edge.node2);
 
-                var t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
+                let t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
                 // Subdivide and get the first
                 quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                 pts[1][0] = tmp0[1];
@@ -161,12 +161,12 @@ export default function (graph: Graph, scale: number) {
             vec2.normalize(v, v);
             if (fromSymbol && fromSymbol !== 'none') {
 
-                var symbolSize = getSymbolSize(edge.node1);
+                let symbolSize = getSymbolSize(edge.node1);
 
                 vec2.scaleAndAdd(pts2[0], pts2[0], v, symbolSize * scale);
             }
             if (toSymbol && toSymbol !== 'none') {
-                var symbolSize = getSymbolSize(edge.node2);
+                let symbolSize = getSymbolSize(edge.node2);
 
                 vec2.scaleAndAdd(pts2[1], pts2[1], v, -symbolSize * scale);
             }

@@ -36,7 +36,7 @@ export interface ForceLayoutInstance {
 
 export default function (ecModel: GlobalModel) {
     ecModel.eachSeriesByType('graph', function (graphSeries: GraphSeriesModel) {
-        var coordSys = graphSeries.coordinateSystem;
+        const coordSys = graphSeries.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {
             return;
         }
@@ -102,7 +102,7 @@ export default function (ecModel: GlobalModel) {
                 };
             });
 
-            var coordSys = graphSeries.coordinateSystem;
+            // var coordSys = graphSeries.coordinateSystem;
             var rect = coordSys.getBoundingRect();
             var forceInstance = forceLayout(nodes, edges, {
                 rect: rect,
@@ -121,13 +121,13 @@ export default function (ecModel: GlobalModel) {
                 }
             });
             forceInstance.afterStep(function (nodes, edges, stopped) {
-                for (var i = 0, l = nodes.length; i < l; i++) {
+                for (let i = 0, l = nodes.length; i < l; i++) {
                     if (!nodes[i].fixed) {
                         graph.getNodeByIndex(i).setLayout(nodes[i].p);
                     }
                     preservedPoints[nodeData.getId(i)] = nodes[i].p;
                 }
-                for (var i = 0, l = edges.length; i < l; i++) {
+                for (let i = 0, l = edges.length; i < l; i++) {
                     var e = edges[i];
                     var edge = graph.getEdgeByIndex(i);
                     var p1 = e.n1.p;

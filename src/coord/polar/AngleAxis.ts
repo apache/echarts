@@ -36,9 +36,9 @@ interface AngleAxis {
 }
 class AngleAxis extends Axis {
 
-    polar: Polar
+    polar: Polar;
 
-    model: AngleAxisModel
+    model: AngleAxisModel;
 
     constructor(scale?: Scale, angleExtent?: [number, number]) {
         super('angle', scale, angleExtent || [0, 360]);

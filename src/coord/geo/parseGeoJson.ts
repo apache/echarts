@@ -140,7 +140,7 @@ export default function (geoJson: GeoJSON | GeoJSONCompressed): Region[] {
         let region = new Region(
             properties.name,
             geometries,
-            properties.cp,
+            properties.cp
         );
         region.properties = properties;
         return region;

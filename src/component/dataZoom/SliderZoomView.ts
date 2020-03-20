@@ -48,42 +48,42 @@ const LABEL_GAP = 5;
 const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
 
-type Icon = ReturnType<typeof graphic.createIcon>
+type Icon = ReturnType<typeof graphic.createIcon>;
 interface Displayables {
-    barGroup: graphic.Group
-    handles: [Icon, Icon]
-    handleLabels: [graphic.Text, graphic.Text]
-    filler: graphic.Rect
+    barGroup: graphic.Group;
+    handles: [Icon, Icon];
+    handleLabels: [graphic.Text, graphic.Text];
+    filler: graphic.Rect;
 }
 class SliderZoomView extends DataZoomView {
-    static type = 'dataZoom.slider'
-    type = SliderZoomView.type
+    static type = 'dataZoom.slider';
+    type = SliderZoomView.type;
 
-    dataZoomModel: SliderZoomModel
+    dataZoomModel: SliderZoomModel;
 
-    private _displayables = {} as Displayables
+    private _displayables = {} as Displayables;
 
-    private _orient: LayoutOrient
+    private _orient: LayoutOrient;
 
-    private _range: [number, number]
+    private _range: [number, number];
 
     /**
      * [coord of the first handle, coord of the second handle]
      */
-    private _handleEnds: [number, number]
+    private _handleEnds: [number, number];
 
     /**
      * [length, thick]
      */
-    private _size: [number, number]
+    private _size: [number, number];
 
-    private _handleWidth: number
+    private _handleWidth: number;
 
-    private _handleHeight: number
+    private _handleHeight: number;
 
-    private _location: {x: number, y: number}
+    private _location: {x: number, y: number};
 
-    private _dragging: boolean
+    private _dragging: boolean;
 
     private _dataShadowInfo: {
         thisAxis: Axis
@@ -91,7 +91,7 @@ class SliderZoomView extends DataZoomView {
         thisDim: string
         otherDim: string
         otherAxisInverse: boolean
-    }
+    };
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;

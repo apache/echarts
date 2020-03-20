@@ -70,13 +70,13 @@ export interface TreemapItemLayout extends RectLike {
     isAboveViewRoot: boolean
 };
 
-type NodeModel = Model<TreemapSeriesNodeItemOption>
+type NodeModel = Model<TreemapSeriesNodeItemOption>;
 
 type OrderBy = 'asc' | 'desc' | boolean;
 
 type LayoutRow = TreemapLayoutNode[] & {
     area: number
-}
+};
 /**
  * @public
  */
@@ -269,7 +269,7 @@ function squarify(
     var row = [] as LayoutRow;
     row.area = 0;
 
-    for (var i = 0, len = viewChildren.length; i < len;) {
+    for (let i = 0, len = viewChildren.length; i < len;) {
         var child = viewChildren[i];
 
         row.push(child);
@@ -302,7 +302,7 @@ function squarify(
         }
     }
 
-    for (var i = 0, len = viewChildren.length; i < len; i++) {
+    for (let i = 0, len = viewChildren.length; i < len; i++) {
         squarify(viewChildren[i], options, hideChildren, depth + 1);
     }
 }
@@ -471,7 +471,7 @@ function statistic(
     }
     // Other dimension.
     else {
-        var dataExtent = [Infinity, -Infinity];
+        dataExtent = [Infinity, -Infinity];
         each(children, function (child) {
             var value = child.getValue(dimension) as number;
             value < dataExtent[0] && (dataExtent[0] = value);

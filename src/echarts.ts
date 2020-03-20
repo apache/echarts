@@ -1101,7 +1101,7 @@ class ECharts extends Eventful {
             var zr = ecIns._zr;
             var api = ecIns._api;
 
-            for (var i = 0; i < viewList.length; i++) {
+            for (let i = 0; i < viewList.length; i++) {
                 viewList[i].__alive = false;
             }
 
@@ -1152,7 +1152,7 @@ class ECharts extends Eventful {
                 );
             }
 
-            for (var i = 0; i < viewList.length;) {
+            for (let i = 0; i < viewList.length;) {
                 var view = viewList[i];
                 if (!view.__alive) {
                     !isComponent && (view as ChartView).renderTask.dispose();
@@ -1767,7 +1767,7 @@ class ECharts extends Eventful {
             });
         };
 
-    })()
+    })();
 }
 
 
@@ -1779,7 +1779,7 @@ var prepareView: (ecIns: ECharts, isComponent: boolean) => void;
 var updateDirectly: (
     ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
 ) => void;
-type UpdateMethod = (this: ECharts, payload?: Payload) => void
+type UpdateMethod = (this: ECharts, payload?: Payload) => void;
 var updateMethods: {
     prepareAndUpdate: UpdateMethod,
     update: UpdateMethod,
@@ -2132,8 +2132,8 @@ export function getCoordinateSystemDimensions(type: string): DimensionDefinition
  * Most visual encoding like color are common for different chart
  * But each chart has it's own layout algorithm
  */
-function registerLayout(priority: number, layoutTask: StageHandler | StageHandlerOverallReset): void
-function registerLayout(layoutTask: StageHandler | StageHandlerOverallReset): void
+function registerLayout(priority: number, layoutTask: StageHandler | StageHandlerOverallReset): void;
+function registerLayout(layoutTask: StageHandler | StageHandlerOverallReset): void;
 function registerLayout(
     priority: number | StageHandler | StageHandlerOverallReset,
     layoutTask?: StageHandler | StageHandlerOverallReset
@@ -2141,8 +2141,8 @@ function registerLayout(
     normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT, 'layout');
 }
 
-function registerVisual(priority: number, layoutTask: StageHandler | StageHandlerOverallReset): void
-function registerVisual(layoutTask: StageHandler | StageHandlerOverallReset): void
+function registerVisual(priority: number, layoutTask: StageHandler | StageHandlerOverallReset): void;
+function registerVisual(layoutTask: StageHandler | StageHandlerOverallReset): void;
 function registerVisual(
     priority: number | StageHandler | StageHandlerOverallReset,
     visualTask?: StageHandler | StageHandlerOverallReset

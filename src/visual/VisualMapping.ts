@@ -37,11 +37,11 @@ const isObject = zrUtil.isObject;
 const CATEGORY_DEFAULT_VISUAL_INDEX = -1;
 
 // Type of raw value
-type RawValue = ParsedValue
+type RawValue = ParsedValue;
 // Type of mapping visual value
-type VisualValue = AllPropTypes<VisualOptionUnit>
+type VisualValue = AllPropTypes<VisualOptionUnit>;
 // Type of value after normalized. 0 - 1
-type NormalizedValue = number
+type NormalizedValue = number;
 
 type MappingMethod = 'linear' | 'piecewise' | 'category' | 'fixed';
 
@@ -159,19 +159,19 @@ class VisualMapping<VisualOption
     extends VisualOptionPiecewise | VisualOptionCategory | VisualOptionUnit | VisualOptionLinear = {}
 > {
 
-    option: VisualMappingInnerOption
+    option: VisualMappingInnerOption;
 
-    type: BuiltinVisualProperty
+    type: BuiltinVisualProperty;
 
-    mappingMethod: MappingMethod
+    mappingMethod: MappingMethod;
 
-    applyVisual: VisualHandler['applyVisual']
+    applyVisual: VisualHandler['applyVisual'];
 
-    getColorMapper: VisualHandler['getColorMapper']
+    getColorMapper: VisualHandler['getColorMapper'];
 
-    _normalizeData: Normalizer
+    _normalizeData: Normalizer;
 
-    _normalizedToVisual: DoMap
+    _normalizedToVisual: DoMap;
 
     constructor(option: VisualMappingOption) {
         const mappingMethod = option.mappingMethod;
@@ -326,7 +326,7 @@ class VisualMapping<VisualOption
             applyVisual: makeApplyVisual('symbolSize'),
             _normalizedToVisual: createNormalizedToNumericVisual([0, 1])
         }
-    }
+    };
 
 
     /**
@@ -470,7 +470,7 @@ class VisualMapping<VisualOption
         var abs = Infinity;
 
         // value has the higher priority.
-        for (var i = 0, len = pieceList.length; i < len; i++) {
+        for (let i = 0, len = pieceList.length; i < len; i++) {
             var pieceValue = pieceList[i].value;
             if (pieceValue != null) {
                 if (pieceValue === value
@@ -487,7 +487,7 @@ class VisualMapping<VisualOption
             }
         }
 
-        for (var i = 0, len = pieceList.length; i < len; i++) {
+        for (let i = 0, len = pieceList.length; i < len; i++) {
             var piece = pieceList[i];
             var interval = piece.interval;
             var close = piece.close;

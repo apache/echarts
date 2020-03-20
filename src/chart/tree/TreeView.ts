@@ -46,7 +46,7 @@ type TreeSymbol = SymbolClz & {
     __radialOldRawY: number
     __radialRawX: number
     __radialRawY: number
-}
+};
 
 interface TreeSeriesScope extends Pick<
     TreeSeriesOption,
@@ -67,10 +67,10 @@ interface TreeSeriesScope extends Pick<
 }
 
 class TreeEdgeShape {
-    parentPoint: number[] = []
-    childPoints: number[][] = []
-    orient: TreeSeriesOption['orient']
-    forkPosition: TreeSeriesOption['edgeForkPosition']
+    parentPoint: number[] = [];
+    childPoints: number[][] = [];
+    orient: TreeSeriesOption['orient'];
+    forkPosition: TreeSeriesOption['edgeForkPosition'];
 }
 
 interface TreeEdgePathProps extends PathProps {
@@ -85,7 +85,7 @@ interface TreeNodeLayout {
 }
 
 class TreePath extends Path {
-    shape: TreeEdgeShape
+    shape: TreeEdgeShape;
     constructor(opts?: TreeEdgePathProps) {
         super(opts, {
             stroke: '#000',
@@ -134,22 +134,22 @@ class TreePath extends Path {
 
 class TreeView extends ChartView {
 
-    static readonly type = 'tree'
-    readonly type = TreeView.type
+    static readonly type = 'tree';
+    readonly type = TreeView.type;
 
-    private _oldTree: Tree
-    private _mainGroup = new graphic.Group()
+    private _oldTree: Tree;
+    private _mainGroup = new graphic.Group();
 
-    private _controller: RoamController
-    private _controllerHost: RoamControllerHost
+    private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
 
-    private _data: List<TreeSeriesModel>
+    private _data: List<TreeSeriesModel>;
 
-    private _nodeScaleRatio: number
-    private _min: number[]
-    private _max: number[]
+    private _nodeScaleRatio: number;
+    private _min: number[];
+    private _max: number[];
 
-    private _viewCoordSys: View
+    private _viewCoordSys: View;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
 
@@ -420,7 +420,7 @@ function updateNode(
     var isInit = !symbolEl;
     var node = data.tree.getNodeByDataIndex(dataIndex);
     var itemModel = node.getModel();
-    var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
+    seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
     var virtualRoot = data.tree.root;
 
     var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
@@ -595,10 +595,10 @@ function removeNode(
     var node = data.tree.getNodeByDataIndex(dataIndex);
     var virtualRoot = data.tree.root;
     var itemModel = node.getModel();
-    var seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
+    seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
 
     var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
-    var edgeShape = seriesScope.edgeShape;
+    // var edgeShape = seriesScope.edgeShape;
     var sourceLayout;
     while (sourceLayout = source.getLayout(), sourceLayout == null) {
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;

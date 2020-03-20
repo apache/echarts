@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Polar from './Polar';
 import RadiusAxis from './RadiusAxis';
-import AngleAxis from './AngleAxis';
+// import AngleAxis from './AngleAxis';
 
 function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
     // dataItem is necessary in log axis.

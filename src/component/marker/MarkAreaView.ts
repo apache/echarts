@@ -53,7 +53,7 @@ type MarkAreaMergedItemOption = Omit<MarkArea2DDataItemOption[number], 'coord'> 
     y0: number | string
     x1: number | string
     y1: number | string
-}
+};
 
 var markAreaTransform = function (
     seriesModel: SeriesModel,
@@ -157,17 +157,17 @@ function getSingleMarkerEndPoint(
             );
         }
         else {
-            var x = data.get(dims[0], idx) as number;
-            var y = data.get(dims[1], idx) as number;
-            var pt = [x, y];
+            let x = data.get(dims[0], idx) as number;
+            let y = data.get(dims[1], idx) as number;
+            let pt = [x, y];
             coordSys.clampData && coordSys.clampData(pt, pt);
             point = coordSys.dataToPoint(pt, true);
         }
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-            var xAxis = coordSys.getAxis('x');
-            var yAxis = coordSys.getAxis('y');
-            var x = data.get(dims[0], idx) as number;
-            var y = data.get(dims[1], idx) as number;
+            let xAxis = coordSys.getAxis('x');
+            let yAxis = coordSys.getAxis('y');
+            let x = data.get(dims[0], idx) as number;
+            let y = data.get(dims[1], idx) as number;
             if (isInifinity(x)) {
                 point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[dims[0] === 'x0' ? 0 : 1]);
             }
@@ -192,10 +192,10 @@ var dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']] a
 
 class MarkAreaView extends MarkerView {
 
-    static type = 'markArea'
-    type = MarkAreaView.type
+    static type = 'markArea';
+    type = MarkAreaView.type;
 
-    markerGroupMap: HashMap<MarkAreaDrawGroup>
+    markerGroupMap: HashMap<MarkAreaDrawGroup>;
 
     updateTransform(markAreaModel: MarkAreaModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {

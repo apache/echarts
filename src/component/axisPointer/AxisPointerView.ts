@@ -25,8 +25,8 @@ import ExtensionAPI from '../../ExtensionAPI';
 import TooltipModel from '../tooltip/TooltipModel';
 
 class AxisPointerView extends ComponentView {
-    static type = 'axisPointer' as const
-    type = AxisPointerView.type
+    static type = 'axisPointer' as const;
+    type = AxisPointerView.type;
 
     render(globalAxisPointerModel: AxisPointerModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var globalTooltipModel = ecModel.getComponent('tooltip') as TooltipModel;

@@ -126,12 +126,12 @@ function computeNodeBreadths(
     var zeroIndegrees: GraphNode[] = [];
     var nextTargetNode: GraphNode[] = [];
     var x = 0;
-    var kx = 0;
+    // var kx = 0;
 
-    for (var i = 0; i < edges.length; i++) {
+    for (let i = 0; i < edges.length; i++) {
         remainEdges[i] = 1;
     }
-    for (i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < nodes.length; i++) {
         indegreeArr[i] = nodes[i].inEdges.length;
         if (indegreeArr[i] === 0) {
             zeroIndegrees.push(nodes[i]);
@@ -170,7 +170,7 @@ function computeNodeBreadths(
         nextTargetNode = [];
     }
 
-    for (i = 0; i < remainEdges.length; i++) {
+    for (let i = 0; i < remainEdges.length; i++) {
         if (remainEdges[i] === 1) {
             throw new Error('Sankey is a DAG, the original data has cycle!');
         }
@@ -181,8 +181,8 @@ function computeNodeBreadths(
         adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth);
     }
     var kx = orient === 'vertical'
-                ? (height - nodeWidth) / maxDepth
-                : (width - nodeWidth) / maxDepth;
+        ? (height - nodeWidth) / maxDepth
+        : (width - nodeWidth) / maxDepth;
 
     scaleNodeBreadths(nodes, kx, orient);
 }
@@ -379,7 +379,7 @@ function resolveCollisions(
         var y0 = 0;
         var n = nodes.length;
         var nodeDyAttr = orient === 'vertical' ? 'dx' : 'dy';
-        for (var i = 0; i < n; i++) {
+        for (let i = 0; i < n; i++) {
             node = nodes[i];
             dy = y0 - node.getLayout()[keyAttr];
             if (dy > 0) {
@@ -400,7 +400,7 @@ function resolveCollisions(
                 : node.setLayout({y: nodeX}, true);
 
             y0 = nodeX;
-            for (i = n - 2; i >= 0; --i) {
+            for (let i = n - 2; i >= 0; --i) {
                 node = nodes[i];
                 dy = node.getLayout()[keyAttr] + node.getLayout()[nodeDyAttr] + nodeGap - y0;
                 if (dy > 0) {
@@ -429,7 +429,7 @@ function relaxRightToLeft(
         zrUtil.each(nodes, function (node) {
             if (node.outEdges.length) {
                 var y = sum(node.outEdges, weightedTarget, orient)
-                        / sum(node.outEdges, getEdgeValue);
+                    / sum(node.outEdges, getEdgeValue);
                 if (orient === 'vertical') {
                     var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);

@@ -31,7 +31,7 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
     // ??? TODO
     // support dataset?
     var graph = new Graph(directed);
-    for (var i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < nodes.length; i++) {
         graph.addNode(zrUtil.retrieve(
             // Id, name, dataIndex
             nodes[i].id, nodes[i].name, i
@@ -41,7 +41,7 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
     var linkNameList = [];
     var validEdges = [];
     var linkCount = 0;
-    for (var i = 0; i < edges.length; i++) {
+    for (let i = 0; i < edges.length; i++) {
         var link = edges[i];
         var source = link.source;
         var target = link.target;

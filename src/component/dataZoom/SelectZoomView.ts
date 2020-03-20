@@ -21,8 +21,8 @@ import DataZoomView from './DataZoomView';
 import ComponentView from '../../view/Component';
 
 class SelectDataZoomView extends DataZoomView {
-    static type = 'dataZoom.select'
-    type = SelectDataZoomView.type
+    static type = 'dataZoom.select';
+    type = SelectDataZoomView.type;
 }
 
 ComponentView.registerClass(SelectDataZoomView);

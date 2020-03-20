@@ -105,15 +105,14 @@ type ExtendedProps = {
     __highDownOnUpdate: (fromState: DisplayState, toState: DisplayState) => void
 
     __highDownDispatcher: boolean
-
-}
-type ExtendedElement = Element & ExtendedProps
-type ExtendedDisplayable = Displayable & ExtendedProps
+};
+type ExtendedElement = Element & ExtendedProps;
+type ExtendedDisplayable = Displayable & ExtendedProps;
 
 type ExtendedStyleProps = StyleProps & {
     insideRollback?: StyleProps
     insideRollbackOpt?: TextCommonParams
-}
+};
 
 type TextCommonParams = {
     /**
@@ -140,7 +139,7 @@ type TextCommonParams = {
     getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
     textStyle?: StyleProps
-}
+};
 
 /**
  * Extend shape with parameters
@@ -152,7 +151,7 @@ export function extendShape(opts: ExtendShapeOpt): ExtendShapeReturn {
 const extendPathFromString = pathTool.extendFromString;
 type SVGPathOption = Parameters<typeof extendPathFromString>[1];
 type SVGPathCtor = ReturnType<typeof extendPathFromString>;
-type SVGPath = InstanceType<SVGPathCtor>
+type SVGPath = InstanceType<SVGPathCtor>;
 /**
  * Extend path
  */

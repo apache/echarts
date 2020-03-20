@@ -74,11 +74,11 @@ export interface HeatmapSeriesOption extends SeriesOption,
 }
 
 class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
-    static readonly type = 'series.heatmap'
-    readonly type = HeatmapSeriesModel.type
+    static readonly type = 'series.heatmap';
+    readonly type = HeatmapSeriesModel.type;
 
     // @ts-ignore
-    coordinateSystem: Cartesian2D | Geo | Calendar
+    coordinateSystem: Cartesian2D | Geo | Calendar;
 
     getInitialData(option: HeatmapSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {
@@ -115,7 +115,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
         maxOpacity: 1,
 
         minOpacity: 0
-    }
+    };
 }
 
 SeriesModel.registerClass(HeatmapSeriesModel);

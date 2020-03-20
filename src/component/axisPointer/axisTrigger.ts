@@ -68,8 +68,8 @@ interface DataByCoordSysCollection {
     map: Dictionary<DataByCoordSys>
 }
 
-type CollectedCoordInfo = ReturnType<typeof modelHelper['collect']>
-type CollectedAxisInfo = CollectedCoordInfo['axesInfo'][string]
+type CollectedCoordInfo = ReturnType<typeof modelHelper['collect']>;
+type CollectedAxisInfo = CollectedCoordInfo['axesInfo'][string];
 
 interface AxisTriggerPayload extends Payload {
     currTrigger?: 'click' | 'mousemove' | 'leave'

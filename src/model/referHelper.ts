@@ -56,22 +56,22 @@ import type { AxisBaseModel } from '../coord/AxisBaseModel';
 
 class CoordSysInfo {
 
-    coordSysName: string
+    coordSysName: string;
 
-    coordSysDims: string[] = []
+    coordSysDims: string[] = [];
 
-    axisMap = createHashMap<AxisBaseModel>()
+    axisMap = createHashMap<AxisBaseModel>();
 
-    categoryAxisMap = createHashMap<AxisBaseModel>()
+    categoryAxisMap = createHashMap<AxisBaseModel>();
 
-    firstCategoryDimIndex: number
+    firstCategoryDimIndex: number;
 
     constructor(coordSysName: string) {
         this.coordSysName = coordSysName;
     }
 }
 
-type SupportedCoordSys = 'cartesian2d' | 'polar' | 'singleAxis' | 'geo' | 'parallel'
+type SupportedCoordSys = 'cartesian2d' | 'polar' | 'singleAxis' | 'geo' | 'parallel';
 type Fetcher = (
     seriesModel: SeriesModel,
     result: CoordSysInfo,

@@ -29,19 +29,19 @@ import VisualMapModel from './VisualMapModel';
 import { VisualOptionUnit, ColorString } from '../../util/types';
 import PiecewiseModel from './PiecewiseModel';
 
-type VisualState = VisualMapModel['stateList'][number]
+type VisualState = VisualMapModel['stateList'][number];
 
 class VisualMapView extends ComponentView {
-    static type = 'visualMap'
-    type = VisualMapView.type
+    static type = 'visualMap';
+    type = VisualMapView.type;
 
-    autoPositionValues = {left: 1, right: 1, top: 1, bottom: 1} as const
+    autoPositionValues = {left: 1, right: 1, top: 1, bottom: 1} as const;
 
-    ecModel: GlobalModel
+    ecModel: GlobalModel;
 
-    api: ExtensionAPI
+    api: ExtensionAPI;
 
-    visualMapModel: VisualMapModel
+    visualMapModel: VisualMapModel;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.ecModel = ecModel;

@@ -21,9 +21,9 @@ import {ArrayLike} from 'zrender/src/core/types';
 
 // return key.
 export type DiffKeyGetter = (this: DataDiffer, value: any, index: number) => string;
-export type DiffCallbackAdd = (newIndex: number) => void
-export type DiffCallbackUpdate = (newIndex: number, oldIndex: number) => void
-export type DiffCallbackRemove = (oldIndex: number) => void
+export type DiffCallbackAdd = (newIndex: number) => void;
+export type DiffCallbackUpdate = (newIndex: number, oldIndex: number) => void;
+export type DiffCallbackRemove = (oldIndex: number) => void;
 
 type DataIndexMap = {[key: string]: number | number[]};
 
@@ -101,14 +101,14 @@ class DataDiffer {
         this._initIndexMap(newArr, newDataIndexMap, newDataKeyArr, '_newKeyGetter');
 
         for (i = 0; i < oldArr.length; i++) {
-            var key = oldDataKeyArr[i];
-            var idx = newDataIndexMap[key];
+            let key = oldDataKeyArr[i];
+            let idx = newDataIndexMap[key];
 
             // idx can never be empty array here. see 'set null' logic below.
             if (idx != null) {
                 // Consider there is duplicate key (for example, use dataItem.name as key).
                 // We should make sure every item in newArr and oldArr can be visited.
-                var len = (idx as number[]).length;
+                let len = (idx as number[]).length;
                 if (len) {
                     len === 1 && (newDataIndexMap[key] = null);
                     idx = (idx as number[]).shift();
@@ -124,9 +124,9 @@ class DataDiffer {
         }
 
         for (i = 0; i < newDataKeyArr.length; i++) {
-            var key = newDataKeyArr[i];
+            let key = newDataKeyArr[i];
             if (newDataIndexMap.hasOwnProperty(key)) {
-                var idx = newDataIndexMap[key];
+                let idx = newDataIndexMap[key];
                 if (idx == null) {
                     continue;
                 }
@@ -135,7 +135,7 @@ class DataDiffer {
                     this._add && this._add(idx as number);
                 }
                 else {
-                    for (var j = 0, len = (idx as number[]).length; j < len; j++) {
+                    for (let j = 0, len = (idx as number[]).length; j < len; j++) {
                         this._add && this._add((idx as number[])[j]);
                     }
                 }

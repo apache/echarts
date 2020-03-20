@@ -37,7 +37,7 @@ import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-type ScatterDataValue = OptionDataValue | OptionDataValue[]
+type ScatterDataValue = OptionDataValue | OptionDataValue[];
 
 export interface ScatterDataItemOption extends SymbolOptionMixin {
     name?: string
@@ -81,10 +81,10 @@ export interface ScatterSeriesOption extends SeriesOption,
 
 
 class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
-    static readonly type = 'series.scatter'
-    type = ScatterSeriesModel.type
+    static readonly type = 'series.scatter';
+    type = ScatterSeriesModel.type;
 
-    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar']
+    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
     getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {
@@ -140,7 +140,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         clip: true
 
         // progressive: null
-    }
+    };
 
 }
 

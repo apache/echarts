@@ -79,8 +79,8 @@ export interface BaseBarSeriesOption extends SeriesOption, SeriesOnCartesianOpti
 
 class BaseBarSeriesModel<Opts extends BaseBarSeriesOption = BaseBarSeriesOption> extends SeriesModel<Opts> {
 
-    static type = 'series.__base_bar__'
-    type = BaseBarSeriesModel.type
+    static type = 'series.__base_bar__';
+    type = BaseBarSeriesModel.type;
 
     getInitialData(option: Opts, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});
@@ -123,7 +123,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption = BaseBarSeriesOption>
 
         itemStyle: {},
         emphasis: {}
-    }
+    };
 }
 
 SeriesModel.registerClass(BaseBarSeriesModel);

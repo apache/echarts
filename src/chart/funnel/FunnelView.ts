@@ -32,7 +32,7 @@ const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 type FunnelLabelEl = Displayable & {
     hoverIgnore?: boolean
     normalIgnore?: boolean
-}
+};
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
@@ -130,7 +130,7 @@ class FunnelPiece extends graphic.Group {
         var itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         var layout = data.getItemLayout(idx);
         var labelLayout = layout.label;
-        var visualColor = data.getItemVisual(idx, 'color');
+        // var visualColor = data.getItemVisual(idx, 'color');
 
         graphic.updateProps(labelLine, {
             shape: {
@@ -188,10 +188,10 @@ class FunnelPiece extends graphic.Group {
 }
 
 class FunnelView extends ChartView {
-    static type = 'funnel' as const
-    type = FunnelView.type
+    static type = 'funnel' as const;
+    type = FunnelView.type;
 
-    private _data: List
+    private _data: List;
 
     render(seriesModel: FunnelSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         var data = seriesModel.getData();

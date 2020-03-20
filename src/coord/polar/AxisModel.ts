@@ -61,9 +61,9 @@ type PolarAxisOption = AngleAxisOption | RadiusAxisOption;
 
 class PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends ComponentModel<T>
     implements AxisBaseModel<T> {
-    static type = 'polarAxis'
+    static type = 'polarAxis';
 
-    axis: AngleAxis | RadiusAxis
+    axis: AngleAxis | RadiusAxis;
 
     getCoordSysModel(): ComponentModel {
         return this.ecModel.queryComponents({
@@ -82,14 +82,14 @@ zrUtil.mixin(PolarAxisModel, AxisModelCommonMixin);
 export {PolarAxisModel};
 
 export class AngleAxisModel extends PolarAxisModel<AngleAxisOption> {
-    static type = 'angleAxis'
-    type = AngleAxisModel.type
-    axis: AngleAxis
+    static type = 'angleAxis';
+    type = AngleAxisModel.type;
+    axis: AngleAxis;
 }
 export class RadiusAxisModel extends PolarAxisModel<RadiusAxisOption> {
-    static type = 'radiusAxis'
-    type = RadiusAxisModel.type
-    axis: RadiusAxis
+    static type = 'radiusAxis';
+    type = RadiusAxisModel.type;
+    axis: RadiusAxis;
 }
 
 const angleAxisExtraOption: AngleAxisOption = {

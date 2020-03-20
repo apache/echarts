@@ -40,7 +40,7 @@ interface MinMaxSpan {
     maxValueSpan: number
 }
 
-type SupportedAxis = 'xAxis' | 'yAxis' | 'angleAxis' | 'radiusAxis' | 'singleAxis'
+type SupportedAxis = 'xAxis' | 'yAxis' | 'angleAxis' | 'radiusAxis' | 'singleAxis';
 
 /**
  * Operate single axis.
@@ -51,20 +51,19 @@ type SupportedAxis = 'xAxis' | 'yAxis' | 'angleAxis' | 'radiusAxis' | 'singleAxi
  */
 class AxisProxy {
 
-    ecModel: GlobalModel
+    ecModel: GlobalModel;
 
+    private _dimName: string;
+    private _axisIndex: number;
 
-    private _dimName: string
-    private _axisIndex: number
+    private _valueWindow: [number, number];
+    private _percentWindow: [number, number];
 
-    private _valueWindow: [number, number]
-    private _percentWindow: [number, number]
+    private _dataExtent: [number, number];
 
-    private _dataExtent: [number, number]
+    private _minMaxSpan: MinMaxSpan;
 
-    private _minMaxSpan: MinMaxSpan
-
-    private _dataZoomModel: DataZoomModel
+    private _dataZoomModel: DataZoomModel;
 
     constructor(dimName: string, axisIndex: number, dataZoomModel: DataZoomModel, ecModel: GlobalModel) {
         this._dimName = dimName;

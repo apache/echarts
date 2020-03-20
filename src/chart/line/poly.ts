@@ -121,7 +121,8 @@ function drawMono(
 ) {
     var prevIdx = 0;
     var idx = start;
-    for (var k = 0; k < segLen; k++) {
+    var k = 0;
+    for (; k < segLen; k++) {
         var p = points[idx];
         if (idx >= allLen || idx < 0) {
             break;
@@ -189,7 +190,8 @@ function drawNonMono(
 ) {
     var prevIdx = 0;
     var idx = start;
-    for (var k = 0; k < segLen; k++) {
+    var k = 0;
+    for (; k < segLen; k++) {
         var p = points[idx];
         if (idx >= allLen || idx < 0) {
             break;
@@ -220,7 +222,7 @@ function drawNonMono(
 
                 var ratioNextSeg = 0.5;
                 var prevP = points[prevIdx];
-                var nextP = points[nextIdx];
+                nextP = points[nextIdx];
                 // Last point
                 if (!nextP || isPointNull(nextP)) {
                     v2Copy(cp1, p);
@@ -303,11 +305,11 @@ function getBoundingBox(points: number[][], smoothConstraint?: boolean) {
 }
 
 class ECPolylineShape {
-    points: number[][]
-    smooth = 0
-    smoothConstraint = true
-    smoothMonotone: 'x' | 'y' | 'none'
-    connectNulls = false
+    points: number[][];
+    smooth = 0;
+    smoothConstraint = true;
+    smoothMonotone: 'x' | 'y' | 'none';
+    connectNulls = false;
 }
 
 interface ECPolylineProps extends PathProps {
@@ -316,11 +318,11 @@ interface ECPolylineProps extends PathProps {
 
 export class ECPolyline extends Path<ECPolylineProps> {
 
-    readonly type = 'ec-polyline'
+    readonly type = 'ec-polyline';
 
-    shape: ECPolylineShape
+    shape: ECPolylineShape;
 
-    brush = fixClipWithShadow(Path.prototype.brush)
+    brush = fixClipWithShadow(Path.prototype.brush);
 
     constructor(opts?: ECPolylineProps) {
         super(opts, {
@@ -361,8 +363,8 @@ export class ECPolyline extends Path<ECPolylineProps> {
 }
 class ECPolygonShape extends ECPolylineShape {
     // Offset between stacked base points and points
-    stackedOnPoints: number[][]
-    stackedOnSmooth: number
+    stackedOnPoints: number[][];
+    stackedOnSmooth: number;
 }
 
 interface ECPolygonProps extends PathProps {
@@ -370,12 +372,12 @@ interface ECPolygonProps extends PathProps {
 }
 export class ECPolygon extends Path {
 
-    readonly type = 'ec-polygon'
+    readonly type = 'ec-polygon';
 
-    shape: ECPolygonShape
+    shape: ECPolygonShape;
 
     // @ts-ignore
-    brush = fixClipWithShadow(Path.prototype.brush)
+    brush = fixClipWithShadow(Path.prototype.brush);
 
     constructor(opts?: ECPolygonProps) {
         super(opts, null, new ECPolygonShape());

@@ -32,7 +32,7 @@ type IconStyle = ItemStyleOption & {
     textAlign?: LabelOption['align']
     textBorderRadius?: LabelOption['borderRadius']
     textPadding?: LabelOption['padding']
-}
+};
 export interface ToolboxFeatureOption {
 
     show?: boolean
@@ -74,16 +74,16 @@ interface ToolboxFeature<Opts extends ToolboxFeatureOption = ToolboxFeatureOptio
     updateView?(featureModel: ToolboxFeatureModel, model: GlobalModel, api: ExtensionAPI, payload: unknown): void
 }
 abstract class ToolboxFeature<Opts extends ToolboxFeatureOption = ToolboxFeatureOption> {
-    uid: string
+    uid: string;
 
-    model: ToolboxFeatureModel<Opts>
-    ecModel: GlobalModel
-    api: ExtensionAPI
+    model: ToolboxFeatureModel<Opts>;
+    ecModel: GlobalModel;
+    api: ExtensionAPI;
 
     /**
      * If toolbox feature can't be used on some platform.
      */
-    unusable?: boolean
+    unusable?: boolean;
 }
 
 export {ToolboxFeature};

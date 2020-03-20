@@ -44,8 +44,8 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 
 
-type PolarArea = ReturnType<Polar['getArea']>
-type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>
+type PolarArea = ReturnType<Polar['getArea']>;
+type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
 
 interface SymbolExtended extends SymbolClz {
     __temp: boolean
@@ -95,7 +95,8 @@ function turnPointsIntoStep(
     var baseIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
 
     var stepPoints = [];
-    for (var i = 0; i < points.length - 1; i++) {
+    var i = 0;
+    for (; i < points.length - 1; i++) {
         var nextPt = points[i + 1];
         var pt = points[i];
         stepPoints.push(pt);
@@ -333,25 +334,25 @@ function createLineClipPath(
 
 class LineView extends ChartView {
 
-    static readonly type = 'line'
+    static readonly type = 'line';
 
-    _symbolDraw: SymbolDraw
+    _symbolDraw: SymbolDraw;
 
-    _lineGroup: graphic.Group
-    _coordSys: Cartesian2D | Polar
+    _lineGroup: graphic.Group;
+    _coordSys: Cartesian2D | Polar;
 
-    _polyline: ECPolyline
-    _polygon: ECPolygon
+    _polyline: ECPolyline;
+    _polygon: ECPolygon;
 
-    _stackedOnPoints: number[][]
-    _points: number[][]
+    _stackedOnPoints: number[][];
+    _points: number[][];
 
-    _step: LineSeriesOption['step']
-    _valueOrigin: LineSeriesOption['areaStyle']['origin']
+    _step: LineSeriesOption['step'];
+    _valueOrigin: LineSeriesOption['areaStyle']['origin'];
 
-    _clipShapeForSymbol: CoordinateSystemClipArea
+    _clipShapeForSymbol: CoordinateSystemClipArea;
 
-    _data: List
+    _data: List;
 
     init() {
         var lineGroup = new graphic.Group();

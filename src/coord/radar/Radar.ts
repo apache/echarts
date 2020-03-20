@@ -38,22 +38,22 @@ import { ParsedModelFinder } from '../../util/model';
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
-    readonly type: 'radar'
+    readonly type: 'radar';
     /**
      *
      * Radar dimensions
      */
-    readonly dimensions: string[] = []
+    readonly dimensions: string[] = [];
 
-    cx: number
+    cx: number;
 
-    cy: number
+    cy: number;
 
-    r: number
+    r: number;
 
-    r0: number
+    r0: number;
 
-    startAngle: number
+    startAngle: number;
 
     private _model: RadarModel;
 
@@ -255,7 +255,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Radar dimensions is based on the data
      */
-    static dimensions: string[] = []
+    static dimensions: string[] = [];
 
     static create(ecModel: GlobalModel, api: ExtensionAPI) {
         var radarList: Radar[] = [];

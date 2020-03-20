@@ -75,12 +75,12 @@ export interface RadarSeriesOption extends SeriesOption, SymbolOptionMixin {
 
 class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
-    static readonly type = 'series.radar'
-    readonly type = RadarSeriesModel.type
+    static readonly type = 'series.radar';
+    readonly type = RadarSeriesModel.type;
 
-    static dependencies = ['radar']
+    static dependencies = ['radar'];
 
-    coordinateSystem: Radar
+    coordinateSystem: Radar;
 
     // Overwrite
     init(option: RadarSeriesOption) {
@@ -154,7 +154,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         symbol: 'emptyCircle',
         symbolSize: 4
         // symbolRotate: null
-    }
+    };
 }
 
 SeriesModel.registerClass(RadarSeriesModel);

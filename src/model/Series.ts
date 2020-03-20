@@ -496,7 +496,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ': ')
             : '';
 
-        var colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
+        colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
         var html = !multipleSeries
             ? seriesName + colorStr
                 + (name

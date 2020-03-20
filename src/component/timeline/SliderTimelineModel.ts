@@ -29,8 +29,8 @@ interface SliderTimelineOption extends TimelineOption {
 
 class SliderTimelineModel extends TimelineModel {
 
-    static type = 'timeline.slider'
-    type = SliderTimelineModel.type
+    static type = 'timeline.slider';
+    type = SliderTimelineModel.type;
 
     /**
      * @protected
@@ -120,7 +120,7 @@ class SliderTimelineModel extends TimelineModel {
             }
         },
         data: []
-    })
+    });
 
 }
 

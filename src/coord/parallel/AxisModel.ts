@@ -38,7 +38,7 @@ type ParallelAreaSelectStyleKey = 'fill' | 'lineWidth' | 'stroke' | 'opacity';
 export type ParallelAreaSelectStyleProps = Pick<StyleProps, ParallelAreaSelectStyleKey> & {
     // Selected area width.
     width: number;
-}
+};
 
 export interface ParallelAxisOption extends AxisBaseOption {
     /**

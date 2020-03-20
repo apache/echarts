@@ -56,7 +56,7 @@ export type MarkArea2DDataItemOption = [
     MarkArea2DDataItemDimOption,
     // End point
     MarkArea2DDataItemDimOption
-]
+];
 
 export interface MarkAreaOption extends MarkerOption {
 
@@ -75,8 +75,8 @@ export interface MarkAreaOption extends MarkerOption {
 
 class MarkAreaModel extends MarkerModel<MarkAreaOption> {
 
-    static type = 'markArea'
-    type = MarkAreaModel.type
+    static type = 'markArea';
+    type = MarkAreaModel.type;
 
     createMarkerModelFromSeries(
         markerOpt: MarkAreaOption,
@@ -112,7 +112,7 @@ class MarkAreaModel extends MarkerModel<MarkAreaOption> {
                 position: 'top'
             }
         }
-    }
+    };
 }
 
 ComponentModel.registerClass(MarkAreaModel);

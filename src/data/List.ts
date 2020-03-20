@@ -139,11 +139,11 @@ class List<HostModel extends Model = Model> {
     /**
      * Host graph if List is used to store graph nodes / edges.
      */
-    readonly graph?: Graph
+    readonly graph?: Graph;
     /**
      * Host tree if List is used to store tree ndoes.
      */
-    readonly tree?: Tree
+    readonly tree?: Tree;
 
     // Indices stores the indices of data subset after filtered.
     // This data subset will be used in chart.
@@ -469,7 +469,7 @@ class List<HostModel extends Model = Model> {
         var originalChunkCount = this._chunkCount;
 
         for (var i = 0; i < dimLen; i++) {
-            var dim = dimensions[i];
+            let dim = dimensions[i];
             if (!rawExtent[dim]) {
                 rawExtent[dim] = getInitialExtent();
             }
@@ -488,7 +488,7 @@ class List<HostModel extends Model = Model> {
 
             // Store the data by dimensions
             for (var k = 0; k < dimLen; k++) {
-                var dim = dimensions[k];
+                let dim = dimensions[k];
                 var val = this._dimValueGetterArrayRows(
                     values[sourceIdx] || emptyDataItem, dim, sourceIdx, k
                 ) as ParsedValueNumeric;
@@ -531,7 +531,7 @@ class List<HostModel extends Model = Model> {
 
         var originalChunkCount = this._chunkCount;
         for (var i = 0; i < dimLen; i++) {
-            var dim = dimensions[i];
+            let dim = dimensions[i];
             if (!rawExtent[dim]) {
                 rawExtent[dim] = getInitialExtent();
             }
@@ -568,7 +568,7 @@ class List<HostModel extends Model = Model> {
 
             // Store the data by dimensions
             for (var k = 0; k < dimLen; k++) {
-                var dim = dimensions[k];
+                let dim = dimensions[k];
                 var dimStorage = storage[dim][chunkIndex];
                 // PENDING NULL is empty or zero
                 var val = this._dimValueGetter(dataItem, dim, idx, k) as ParsedValueNumeric;
@@ -644,12 +644,12 @@ class List<HostModel extends Model = Model> {
 
         var indices = this._indices;
         if (indices) {
-            var Ctor = indices.constructor as DataArrayLikeConstructor;
+            let Ctor = indices.constructor as DataArrayLikeConstructor;
             var thisCount = this._count;
             // `new Array(a, b, c)` is different from `new Uint32Array(a, b, c)`.
             if (Ctor === Array) {
                 newIndices = new Ctor(thisCount);
-                for (var i = 0; i < thisCount; i++) {
+                for (let i = 0; i < thisCount; i++) {
                     newIndices[i] = indices[i];
                 }
             }
@@ -660,9 +660,9 @@ class List<HostModel extends Model = Model> {
             }
         }
         else {
-            var Ctor = getIndicesCtor(this);
+            let Ctor = getIndicesCtor(this);
             newIndices = new Ctor(this.count());
-            for (var i = 0; i < newIndices.length; i++) {
+            for (let i = 0; i < newIndices.length; i++) {
                 newIndices[i] = i;
             }
         }
@@ -1221,7 +1221,8 @@ class List<HostModel extends Model = Model> {
                 keep = (cb as FilterCb1<Ctx>).call(fCtx, val, i);
             }
             else {
-                for (var k = 0; k < dimSize; k++) {
+                let k = 0;
+                for (; k < dimSize; k++) {
                     value[k] = this._getFast(dim0, rawIdx);
                 }
                 value[k] = i;
@@ -1287,12 +1288,12 @@ class List<HostModel extends Model = Model> {
             // Extreme optimization for common case. About 2x faster in chrome.
             var idx = 0;
             if (dimSize === 1) {
-                var dimStorage = this._storage[dimensions[0]];
-                for (var k = 0; k < this._chunkCount; k++) {
-                    var chunkStorage = dimStorage[k];
-                    var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
-                    for (var i = 0; i < len; i++) {
-                        var val = chunkStorage[i];
+                let dimStorage = this._storage[dimensions[0]];
+                for (let k = 0; k < this._chunkCount; k++) {
+                    let chunkStorage = dimStorage[k];
+                    let len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+                    for (let i = 0; i < len; i++) {
+                        let val = chunkStorage[i];
                         // NaN will not be filtered. Consider the case, in line chart, empty
                         // value indicates the line should be broken. But for the case like
                         // scatter plot, a data item with empty value will not be rendered,
@@ -1309,16 +1310,16 @@ class List<HostModel extends Model = Model> {
                 quickFinished = true;
             }
             else if (dimSize === 2) {
-                var dimStorage = this._storage[dim0];
+                let dimStorage = this._storage[dim0];
                 var dimStorage2 = this._storage[dimensions[1]];
                 var min2 = range[dimensions[1]][0];
                 var max2 = range[dimensions[1]][1];
-                for (var k = 0; k < this._chunkCount; k++) {
+                for (let k = 0; k < this._chunkCount; k++) {
                     var chunkStorage = dimStorage[k];
                     var chunkStorage2 = dimStorage2[k];
-                    var len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
-                    for (var i = 0; i < len; i++) {
-                        var val = chunkStorage[i];
+                    let len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+                    for (let i = 0; i < len; i++) {
+                        let val = chunkStorage[i];
                         var val2 = chunkStorage2[i];
                         // Do not filter NaN, see comment above.
                         if ((
@@ -1338,9 +1339,9 @@ class List<HostModel extends Model = Model> {
         }
         if (!quickFinished) {
             if (dimSize === 1) {
-                for (var i = 0; i < originalCount; i++) {
-                    var rawIndex = this.getRawIndex(i);
-                    var val = this._getFast(dim0, rawIndex);
+                for (let i = 0; i < originalCount; i++) {
+                    let rawIndex = this.getRawIndex(i);
+                    let val = this._getFast(dim0, rawIndex);
                     // Do not filter NaN, see comment above.
                     if (
                         (val >= min && val <= max) || isNaN(val as any)
@@ -1350,12 +1351,12 @@ class List<HostModel extends Model = Model> {
                 }
             }
             else {
-                for (var i = 0; i < originalCount; i++) {
-                    var keep = true;
-                    var rawIndex = this.getRawIndex(i);
-                    for (var k = 0; k < dimSize; k++) {
-                        var dimk = dimensions[k];
-                        var val = this._getFast(dim, rawIndex);
+                for (let i = 0; i < originalCount; i++) {
+                    let keep = true;
+                    let rawIndex = this.getRawIndex(i);
+                    for (let k = 0; k < dimSize; k++) {
+                        let dimk = dimensions[k];
+                        let val = this._getFast(dimk, rawIndex);
                         // Do not filter NaN, see comment above.
                         if (val < range[dimk][0] || val > range[dimk][1]) {
                             keep = false;
@@ -1924,10 +1925,10 @@ class List<HostModel extends Model = Model> {
                     );
                     // The default value of TypedArray is 0. To avoid miss
                     // mapping to 0, we should set it as INDEX_NOT_FOUND.
-                    for (var i = 0; i < invertedIndices.length; i++) {
+                    for (let i = 0; i < invertedIndices.length; i++) {
                         invertedIndices[i] = INDEX_NOT_FOUND;
                     }
-                    for (var i = 0; i < list._count; i++) {
+                    for (let i = 0; i < list._count; i++) {
                         // Only support the case that all values are distinct.
                         invertedIndices[list.get(dim, i) as number] = i;
                     }

@@ -61,7 +61,7 @@ type GeoJSONGeometry =
     | GeoJSONGeometryLineString
     | GeoJSONGeometryMultiLineString
     | GeoJSONGeometryPolygon
-    | GeoJSONGeometryMultiPolygon
+    | GeoJSONGeometryMultiPolygon;
     // Do not support `GeometryCollection` yet.
     // | GeoJSONGeometryGeometryCollection
 
@@ -72,7 +72,7 @@ type GeoJSONGeometryCompressed =
     | GeoJSONGeometryMultiLineString
     // Currenly only Polygon and MultiPolygon can be parsed from compression.
     | GeoJSONGeometryPolygonCompressed
-    | GeoJSONGeometryMultiPolygonCompressed
+    | GeoJSONGeometryMultiPolygonCompressed;
     // Do not support `GeometryCollection` yet.
     // | GeoJSONGeometryGeometryCollection
 

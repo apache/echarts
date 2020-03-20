@@ -48,14 +48,14 @@ var pathForLineWidth = new graphic.Circle();
 type ItemModel = Model<PictorialBarDataItemOption> & {
     getAnimationDelayParams(path: any): {index: number, count: number}
     isAnimationEnabled(): boolean
-}
-type RectShape = graphic.Rect['shape']
-type RectLayout = RectShape
+};
+type RectShape = graphic.Rect['shape'];
+type RectLayout = RectShape;
 
 type PictorialSymbol = ReturnType<typeof createSymbol> & {
     __pictorialAnimationIndex: number
     __pictorialRepeatTimes: number
-}
+};
 
 interface SymbolMeta {
     dataIndex: number
@@ -122,10 +122,10 @@ interface PictorialBarElement extends graphic.Group {
 }
 
 class PictorialBarView extends ChartView {
-    static type = 'pictorialBar'
-    readonly type = PictorialBarView.type
+    static type = 'pictorialBar';
+    readonly type = PictorialBarView.type;
 
-    private _data: List
+    private _data: List;
 
     render(
         seriesModel: PictorialBarSeriesModel,

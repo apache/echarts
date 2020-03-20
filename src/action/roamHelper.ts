@@ -37,7 +37,7 @@ export function updateCenterAndZoom(
     }
 ) {
     var previousZoom = view.getZoom();
-    var center = view.getCenter();
+    let center = view.getCenter();
     var zoom = payload.zoom;
 
     var point = view.dataToPoint(center);
@@ -46,8 +46,7 @@ export function updateCenterAndZoom(
         point[0] -= payload.dx;
         point[1] -= payload.dy;
 
-        var center = view.pointToData(point);
-        view.setCenter(center);
+        view.setCenter(view.pointToData(point));
     }
     if (zoom != null) {
         if (zoomLimit) {
@@ -71,8 +70,7 @@ export function updateCenterAndZoom(
 
         view.updateTransform();
         // Get the new center
-        var center = view.pointToData(point);
-        view.setCenter(center);
+        view.setCenter(view.pointToData(point));
         view.setZoom(zoom * previousZoom);
     }
 

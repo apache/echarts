@@ -92,10 +92,10 @@ interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
 
 
 class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
-    static readonly type = 'dataZoom.slider'
-    type = SliderZoomModel.type
+    static readonly type = 'dataZoom.slider';
+    type = SliderZoomModel.type;
 
-    static readonly layoutMode = 'box'
+    static readonly layoutMode = 'box';
 
     static defaultOption: SliderDataZoomOption = inheritDefaultOption(DataZoomModel.defaultOption, {
         show: true,
@@ -125,9 +125,8 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
         fillerColor: 'rgba(167,183,204,0.4)',     // Color of selected area.
         // handleColor: 'rgba(89,170,216,0.95)',     // Color of handle.
-        /* eslint-disable */
+        // eslint-disable-next-line
         handleIcon: 'M8.2,13.6V3.9H6.3v9.7H3.1v14.9h3.3v9.7h1.8v-9.7h3.3V13.6H8.2z M9.7,24.4H4.8v-1.4h4.9V24.4z M9.7,19.1H4.8v-1.4h4.9V19.1z',
-        /* eslint-enable */
         // Percent of the slider height
         handleSize: '100%',
 

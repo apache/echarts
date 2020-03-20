@@ -42,16 +42,16 @@ var inner = makeInner<{
 var clone = zrUtil.clone;
 var bind = zrUtil.bind;
 
-type Icon = ReturnType<typeof graphic.createIcon>
+type Icon = ReturnType<typeof graphic.createIcon>;
 interface Transform {
     position: VectorArray,
     rotation: number
 }
 
-type AxisValue = CommonAxisPointerOption['value']
+type AxisValue = CommonAxisPointerOption['value'];
 
 // Not use top level axisPointer model
-type AxisPointerModel = Model<CommonAxisPointerOption>
+type AxisPointerModel = Model<CommonAxisPointerOption>;
 
 interface BaseAxisPointer {
 
@@ -92,34 +92,34 @@ export interface AxisPointerElementOptions {
  */
 class BaseAxisPointer implements AxisPointer {
 
-    private _group: graphic.Group
+    private _group: graphic.Group;
 
-    private _lastGraphicKey: string
+    private _lastGraphicKey: string;
 
-    private _handle: Icon
+    private _handle: Icon;
 
-    private _dragging = false
+    private _dragging = false;
 
-    private _lastValue: AxisValue
+    private _lastValue: AxisValue;
 
-    private _lastStatus: CommonAxisPointerOption['status']
+    private _lastStatus: CommonAxisPointerOption['status'];
 
-    private _payloadInfo: ReturnType<BaseAxisPointer['updateHandleTransform']>
+    private _payloadInfo: ReturnType<BaseAxisPointer['updateHandleTransform']>;
 
     /**
      * If have transition animation
      */
-    private _moveAnimation: boolean
+    private _moveAnimation: boolean;
 
-    private _axisModel: AxisBaseModel
-    private _axisPointerModel: AxisPointerModel
-    private _api: ExtensionAPI
+    private _axisModel: AxisBaseModel;
+    private _axisPointerModel: AxisPointerModel;
+    private _api: ExtensionAPI;
 
     /**
      * In px, arbitrary value. Do not set too small,
      * no animation is ok for most cases.
      */
-    protected animationThreshold = 15
+    protected animationThreshold = 15;
 
     /**
      * @implement

@@ -25,13 +25,13 @@ import { PathProps } from 'zrender/src/graphic/Path';
  */
 
 class SausageShape {
-    cx = 0
-    cy = 0
-    r0 = 0
-    r = 0
-    startAngle = 0
-    endAngle = Math.PI * 2
-    clockwise = true
+    cx = 0;
+    cy = 0;
+    r0 = 0;
+    r = 0;
+    startAngle = 0;
+    endAngle = Math.PI * 2;
+    clockwise = true;
 }
 
 interface SausagePathProps extends PathProps {
@@ -40,7 +40,7 @@ interface SausagePathProps extends PathProps {
 
 class SausagePath extends Path {
 
-    type = 'sausage'
+    type = 'sausage';
 
     constructor(opts?: SausagePathProps) {
         super(opts, null, new SausageShape());

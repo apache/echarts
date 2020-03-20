@@ -29,10 +29,10 @@ import EffectScatterSeriesModel from './EffectScatterSeries';
 import { StageHandlerProgressExecutor } from '../../util/types';
 
 class EffectScatterView extends ChartView {
-    static readonly type = 'effectScatter'
-    readonly type = EffectScatterView.type
+    static readonly type = 'effectScatter';
+    readonly type = EffectScatterView.type;
 
-    private _symbolDraw: SymbolDraw
+    private _symbolDraw: SymbolDraw;
 
     init() {
         this._symbolDraw = new SymbolDraw(EffectSymbol);

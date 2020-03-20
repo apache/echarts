@@ -35,7 +35,7 @@ interface CommonOption extends SeriesOption, SeriesOnCartesianOptionMixin {
     // data?: (DataItemOption | number[])[]
 }
 
-type WhiskerBoxCommonData = (DataItemOption | number[])[]
+type WhiskerBoxCommonData = (DataItemOption | number[])[];
 
 interface DataItemOption {
     value?: number[]
@@ -48,9 +48,9 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
      * @private
      * @type {string}
      */
-    _baseAxisDim: string
+    _baseAxisDim: string;
 
-    defaultValueDimensions: Partial<DataDimensionInfo>[]
+    defaultValueDimensions: Partial<DataDimensionInfo>[];
 
     /**
      * @override
