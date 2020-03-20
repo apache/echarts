@@ -57,7 +57,7 @@ import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { Dictionary } from 'zrender/src/core/types';
 
-var OPTION_INNER_KEY = '\0_ec_inner';
+const OPTION_INNER_KEY = '\0_ec_inner';
 
 
 class GlobalModel extends Model<ECUnitOption> {
@@ -118,11 +118,11 @@ class GlobalModel extends Model<ECUnitOption> {
      * @return Whether option changed.
      */
     resetOption(type: string): boolean {
-        var optionChanged = false;
-        var optionManager = this._optionManager;
+        let optionChanged = false;
+        let optionManager = this._optionManager;
 
         if (!type || type === 'recreate') {
-            var baseOption = optionManager.mountOption(type === 'recreate');
+            let baseOption = optionManager.mountOption(type === 'recreate');
 
             if (!this.option || type === 'recreate') {
                 initBase(this, baseOption);
@@ -139,7 +139,7 @@ class GlobalModel extends Model<ECUnitOption> {
         }
 
         if (!type || type === 'recreate' || type === 'timeline') {
-            var timelineOption = optionManager.getTimelineOption(this);
+            let timelineOption = optionManager.getTimelineOption(this);
             if (timelineOption) {
                 optionChanged = true;
                 this.mergeOption(timelineOption);
@@ -147,7 +147,7 @@ class GlobalModel extends Model<ECUnitOption> {
         }
 
         if (!type || type === 'recreate' || type === 'media') {
-            var mediaOptions = optionManager.getMediaOption(this);
+            let mediaOptions = optionManager.getMediaOption(this);
             if (mediaOptions.length) {
                 each(mediaOptions, function (mediaOption) {
                     optionChanged = true;
@@ -160,9 +160,9 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     mergeOption(newOption: ECUnitOption): void {
-        var option = this.option;
-        var componentsMap = this._componentsMap;
-        var newCptTypes: ComponentMainType[] = [];
+        let option = this.option;
+        let componentsMap = this._componentsMap;
+        let newCptTypes: ComponentMainType[] = [];
 
         resetSourceDefaulter(this);
 
@@ -197,9 +197,9 @@ class GlobalModel extends Model<ECUnitOption> {
             dependencies: string | string[]
         ): void {
 
-            var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
+            let newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
-            var mapResult = modelUtil.mappingToExists(
+            let mapResult = modelUtil.mappingToExists(
                 componentsMap.get(mainType), newCptOptionList
             );
 
@@ -207,14 +207,14 @@ class GlobalModel extends Model<ECUnitOption> {
 
             // Set mainType and complete subType.
             each(mapResult, function (item) {
-                var opt = item.option;
+                let opt = item.option;
                 if (isObject(opt)) {
                     item.keyInfo.mainType = mainType;
                     item.keyInfo.subType = determineSubType(mainType, opt, item.exist);
                 }
             });
 
-            var dependentModels = getComponentsByTypes(
+            let dependentModels = getComponentsByTypes(
                 componentsMap, dependencies
             );
 
@@ -222,8 +222,8 @@ class GlobalModel extends Model<ECUnitOption> {
             componentsMap.set(mainType, []);
 
             each(mapResult, function (resultItem, index) {
-                var componentModel = resultItem.exist;
-                var newCptOption = resultItem.option;
+                let componentModel = resultItem.exist;
+                let newCptOption = resultItem.option;
 
                 assert(
                     isObject(newCptOption) || componentModel,
@@ -238,7 +238,7 @@ class GlobalModel extends Model<ECUnitOption> {
                     componentModel.optionUpdated({}, false);
                 }
                 else {
-                    var ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
+                    let ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
                         mainType, resultItem.keyInfo.subType, true
                     );
 
@@ -250,7 +250,7 @@ class GlobalModel extends Model<ECUnitOption> {
                     }
                     else {
                         // PENDING Global as parent ?
-                        var extraOpt = extend(
+                        let extraOpt = extend(
                             {
                                 dependentModels: dependentModels,
                                 componentIndex: index
@@ -290,12 +290,12 @@ class GlobalModel extends Model<ECUnitOption> {
      * Get option for output (cloned option and inner info removed)
      */
     getOption(): ECUnitOption {
-        var option = clone(this.option);
+        let option = clone(this.option);
 
         each(option, function (opts, mainType) {
             if ((ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
                 opts = modelUtil.normalizeToArray(opts);
-                for (var i = opts.length - 1; i >= 0; i--) {
+                for (let i = opts.length - 1; i >= 0; i--) {
                     // Remove options with inner id.
                     if (modelUtil.isIdInner(opts[i])) {
                         opts.splice(i, 1);
@@ -318,29 +318,29 @@ class GlobalModel extends Model<ECUnitOption> {
      * @param idx 0 by default
      */
     getComponent(mainType: string, idx?: number): ComponentModel {
-        var list = this._componentsMap.get(mainType);
+        let list = this._componentsMap.get(mainType);
         if (list) {
             return list[idx || 0];
         }
     }
 
     queryComponents(condition: QueryConditionKindB): ComponentModel[] {
-        var mainType = condition.mainType;
+        let mainType = condition.mainType;
         if (!mainType) {
             return [];
         }
 
-        var index = condition.index;
-        var id = condition.id;
-        var name = condition.name;
+        let index = condition.index;
+        let id = condition.id;
+        let name = condition.name;
 
-        var cpts = this._componentsMap.get(mainType);
+        let cpts = this._componentsMap.get(mainType);
 
         if (!cpts || !cpts.length) {
             return [];
         }
 
-        var result;
+        let result;
 
         if (index != null) {
             if (!isArray(index)) {
@@ -353,14 +353,14 @@ class GlobalModel extends Model<ECUnitOption> {
             });
         }
         else if (id != null) {
-            var isIdArray = isArray(id);
+            let isIdArray = isArray(id);
             result = filter(cpts, function (cpt) {
                 return (isIdArray && indexOf(id as string[], cpt.id) >= 0)
                     || (!isIdArray && cpt.id === id);
             });
         }
         else if (name != null) {
-            var isNameArray = isArray(name);
+            let isNameArray = isArray(name);
             result = filter(cpts, function (cpt) {
                 return (isNameArray && indexOf(name as string[], cpt.name) >= 0)
                     || (!isNameArray && cpt.name === name);
@@ -379,33 +379,33 @@ class GlobalModel extends Model<ECUnitOption> {
      * which is convenient for inner usage.
      *
      * @usage
-     * var result = findComponents(
+     * let result = findComponents(
      *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}}
      * );
-     * var result = findComponents(
+     * let result = findComponents(
      *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}}
      * );
-     * var result = findComponents(
+     * let result = findComponents(
      *     {mainType: 'series',
      *     filter: function (model, index) {...}}
      * );
      * // result like [component0, componnet1, ...]
      */
     findComponents(condition: QueryConditionKindA): ComponentModel[] {
-        var query = condition.query;
-        var mainType = condition.mainType;
+        let query = condition.query;
+        let mainType = condition.mainType;
 
-        var queryCond = getQueryCond(query);
-        var result = queryCond
+        let queryCond = getQueryCond(query);
+        let result = queryCond
             ? this.queryComponents(queryCond)
             : this._componentsMap.get(mainType);
 
         return doFilter(filterBySubType(result, condition));
 
         function getQueryCond(q: QueryConditionKindA['query']): QueryConditionKindB {
-            var indexAttr = mainType + 'Index';
-            var idAttr = mainType + 'Id';
-            var nameAttr = mainType + 'Name';
+            let indexAttr = mainType + 'Index';
+            let idAttr = mainType + 'Id';
+            let nameAttr = mainType + 'Name';
             return q && (
                     q[indexAttr] != null
                     || q[idAttr] != null
@@ -465,11 +465,11 @@ class GlobalModel extends Model<ECUnitOption> {
         cb?: EachComponentInMainTypeCallback | T,
         context?: T
     ) {
-        var componentsMap = this._componentsMap;
+        let componentsMap = this._componentsMap;
 
         if (typeof mainType === 'function') {
-            var contextReal = cb as T;
-            var cbReal = mainType as EachComponentAllCallback;
+            let contextReal = cb as T;
+            let cbReal = mainType as EachComponentAllCallback;
             componentsMap.each(function (components, componentType) {
                 each(components, function (component, index) {
                     cbReal.call(contextReal, componentType, component, index);
@@ -480,13 +480,13 @@ class GlobalModel extends Model<ECUnitOption> {
             each(componentsMap.get(mainType), cb as EachComponentInMainTypeCallback, context);
         }
         else if (isObject(mainType)) {
-            var queryResult = this.findComponents(mainType);
+            let queryResult = this.findComponents(mainType);
             each(queryResult, cb as EachComponentInMainTypeCallback, context);
         }
     }
 
     getSeriesByName(name: string): SeriesModel[] {
-        var series = this._componentsMap.get('series') as SeriesModel[];
+        let series = this._componentsMap.get('series') as SeriesModel[];
         return filter(series, function (oneSeries) {
             return oneSeries.name === name;
         });
@@ -501,7 +501,7 @@ class GlobalModel extends Model<ECUnitOption> {
      * FIXME: rename to getRawSeriesByType?
      */
     getSeriesByType(subType: ComponentSubType): SeriesModel[] {
-        var series = this._componentsMap.get('series') as SeriesModel[];
+        let series = this._componentsMap.get('series') as SeriesModel[];
         return filter(series, function (oneSeries) {
             return oneSeries.subType === subType;
         });
@@ -525,7 +525,7 @@ class GlobalModel extends Model<ECUnitOption> {
     ): void {
         assertSeriesInitialized(this);
         each(this._seriesIndices, function (rawSeriesIndex) {
-            var series = this._componentsMap.get('series')[rawSeriesIndex] as SeriesModel;
+            let series = this._componentsMap.get('series')[rawSeriesIndex] as SeriesModel;
             cb.call(context, series, rawSeriesIndex);
         }, this);
     }
@@ -554,7 +554,7 @@ class GlobalModel extends Model<ECUnitOption> {
     ): void {
         assertSeriesInitialized(this);
         each(this._seriesIndices, function (rawSeriesIndex) {
-            var series = this._componentsMap.get('series')[rawSeriesIndex] as SeriesModel;
+            let series = this._componentsMap.get('series')[rawSeriesIndex] as SeriesModel;
             if (series.subType === subType) {
                 cb.call(context, series, rawSeriesIndex);
             }
@@ -586,18 +586,18 @@ class GlobalModel extends Model<ECUnitOption> {
         context?: T
     ): void {
         assertSeriesInitialized(this);
-        var filteredSeries = filter(
+        let filteredSeries = filter(
             this._componentsMap.get('series') as SeriesModel[], cb, context
         );
         createSeriesIndices(this, filteredSeries);
     }
 
     restoreData(payload?: Payload): void {
-        var componentsMap = this._componentsMap;
+        let componentsMap = this._componentsMap;
 
         createSeriesIndices(this, componentsMap.get('series'));
 
-        var componentTypes: string[] = [];
+        let componentTypes: string[] = [];
         componentsMap.each(function (components, componentType) {
             componentTypes.push(componentType);
         });
@@ -660,9 +660,9 @@ class GlobalModel extends Model<ECUnitOption> {
 // -----------------------
 // Internal method names:
 // -----------------------
-var createSeriesIndices: (ecModel: GlobalModel, seriesModels: ComponentModel[]) => void;
-var assertSeriesInitialized: (ecModel: GlobalModel) => void;
-var initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
+let createSeriesIndices: (ecModel: GlobalModel, seriesModels: ComponentModel[]) => void;
+let assertSeriesInitialized: (ecModel: GlobalModel) => void;
+let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
 
 
 /**
@@ -709,9 +709,9 @@ interface EachComponentInMainTypeCallback {
 
 function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean {
     if (payload) {
-        var index = payload.seiresIndex;
-        var id = payload.seriesId;
-        var name = payload.seriesName;
+        let index = payload.seiresIndex;
+        let id = payload.seriesId;
+        let name = payload.seriesName;
         return (index != null && seriesModel.componentIndex !== index)
             || (id != null && seriesModel.id !== id)
             || (name != null && seriesModel.name !== name);
@@ -721,7 +721,7 @@ function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean 
 function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
     // PENDING
     // NOT use `colorLayer` in theme if option has `color`
-    var notMergeColorLayer = option.color && !option.colorLayer;
+    let notMergeColorLayer = option.color && !option.colorLayer;
 
     each(theme, function (themeItem, name) {
         if (name === 'colorLayer' && notMergeColorLayer) {
@@ -756,7 +756,7 @@ function getComponentsByTypes(
         types = types ? [types] : [];
     }
 
-    var ret: Dictionary<ComponentModel[]> = {};
+    let ret: Dictionary<ComponentModel[]> = {};
     each(types, function (type) {
         ret[type] = (componentsMap.get(type) || []).slice();
     });
@@ -769,7 +769,7 @@ function determineSubType(
     newCptOption: ComponentOption,
     existComponent: {subType: ComponentSubType} | ComponentModel
 ): ComponentSubType {
-    var subType = newCptOption.type
+    let subType = newCptOption.type
         ? newCptOption.type
         : existComponent
         ? existComponent.subType

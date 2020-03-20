@@ -44,16 +44,16 @@ function hasXAndY(item: MarkerPositionOption) {
 
 // Make it simple, do not visit all stacked value to count precision.
 // function getPrecision(data, valueAxisDim, dataIndex) {
-//     var precision = -1;
-//     var stackedDim = data.mapDimension(valueAxisDim);
+//     let precision = -1;
+//     let stackedDim = data.mapDimension(valueAxisDim);
 //     do {
 //         precision = Math.max(
 //             numberUtil.getPrecision(data.get(stackedDim, dataIndex)),
 //             precision
 //         );
-//         var stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
+//         let stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
 //         if (stackedOnSeries) {
-//             var byValue = data.get(data.getCalculationInfo('stackedByDimension'), dataIndex);
+//             let byValue = data.get(data.getCalculationInfo('stackedByDimension'), dataIndex);
 //             data = stackedOnSeries.getData();
 //             dataIndex = data.indexOf(data.getCalculationInfo('stackedByDimension'), byValue);
 //             stackedDim = data.getCalculationInfo('stackedDimension');
@@ -74,21 +74,21 @@ function markerTypeCalculatorWithExtent(
     otherCoordIndex: number,
     targetCoordIndex: number
 ): [ParsedValue[], ParsedValue] {
-    var coordArr: ParsedValue[] = [];
+    let coordArr: ParsedValue[] = [];
 
-    var stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
-    var calcDataDim = stacked
+    let stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
+    let calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
 
-    var value = numCalculate(data, calcDataDim, markerType);
+    let value = numCalculate(data, calcDataDim, markerType);
 
-    var dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
+    let dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
     coordArr[targetCoordIndex] = data.get(calcDataDim, dataIndex);
-    var coordArrValue = data.get(targetDataDim, dataIndex);
+    let coordArrValue = data.get(targetDataDim, dataIndex);
     // Make it simple, do not visit all stacked value to count precision.
-    var precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
+    let precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
     precision = Math.min(precision, 20);
     if (precision >= 0) {
         coordArr[targetCoordIndex] = +(coordArr[targetCoordIndex] as number).toFixed(precision);
@@ -98,7 +98,7 @@ function markerTypeCalculatorWithExtent(
 }
 
 // TODO Specified percent
-var markerTypeCalculator = {
+const markerTypeCalculator = {
     min: curry(markerTypeCalculatorWithExtent, 'min'),
     max: curry(markerTypeCalculatorWithExtent, 'max'),
     average: curry(markerTypeCalculatorWithExtent, 'average'),
@@ -118,8 +118,8 @@ export function dataTransform(
     seriesModel: SeriesModel,
     item: MarkerPositionOption
 ) {
-    var data = seriesModel.getData();
-    var coordSys = seriesModel.coordinateSystem;
+    let data = seriesModel.getData();
+    let coordSys = seriesModel.coordinateSystem;
 
     // 1. If not specify the position with pixel directly
     // 2. If `coord` is not a data array. Which uses `xAxis`,
@@ -127,8 +127,8 @@ export function dataTransform(
 
     // parseFloat first because item.x and item.y can be percent string like '20%'
     if (item && !hasXAndY(item) && !isArray(item.coord) && coordSys) {
-        var dims = coordSys.dimensions;
-        var axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
+        let dims = coordSys.dimensions;
+        let axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
 
         // Clone the option
         // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
@@ -138,10 +138,10 @@ export function dataTransform(
             && markerTypeCalculator[item.type]
             && axisInfo.baseAxis && axisInfo.valueAxis
         ) {
-            var otherCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
-            var targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
+            let otherCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
+            let targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
 
-            var coordInfo = markerTypeCalculator[item.type](
+            let coordInfo = markerTypeCalculator[item.type](
                 data, axisInfo.baseDataDim, axisInfo.valueDataDim,
                 otherCoordIndex, targetCoordIndex
             );
@@ -153,12 +153,12 @@ export function dataTransform(
         }
         else {
             // FIXME Only has one of xAxis and yAxis.
-            var coord = [
+            let coord = [
                 item.xAxis != null ? item.xAxis : item.radiusAxis,
                 item.yAxis != null ? item.yAxis : item.angleAxis
             ];
             // Each coord support max, min, average
-            for (var i = 0; i < 2; i++) {
+            for (let i = 0; i < 2; i++) {
                 if (markerTypeCalculator[coord[i] as MarkerStatisticType]) {
                     coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i] as MarkerStatisticType);
                 }
@@ -175,7 +175,7 @@ export function getAxisInfo(
     coordSys: CoordinateSystem,
     seriesModel: SeriesModel
 ) {
-    var ret = {} as MarkerAxisInfo;
+    let ret = {} as MarkerAxisInfo;
 
     if (item.valueIndex != null || item.valueDim != null) {
         ret.valueDataDim = item.valueIndex != null
@@ -195,11 +195,11 @@ export function getAxisInfo(
 }
 
 function dataDimToCoordDim(seriesModel: SeriesModel, dataDim: string) {
-    var data = seriesModel.getData();
-    var dimensions = data.dimensions;
+    let data = seriesModel.getData();
+    let dimensions = data.dimensions;
     dataDim = data.getDimension(dataDim);
-    for (var i = 0; i < dimensions.length; i++) {
-        var dimItem = data.getDimensionInfo(dimensions[i]);
+    for (let i = 0; i < dimensions.length; i++) {
+        let dimItem = data.getDimensionInfo(dimensions[i]);
         if (dimItem.name === dataDim) {
             return dimItem.coordDim;
         }
@@ -241,8 +241,8 @@ export function numCalculate(
     type: MarkerStatisticType
 ) {
     if (type === 'average') {
-        var sum = 0;
-        var count = 0;
+        let sum = 0;
+        let count = 0;
         data.each(valueDataDim, function (val: number, idx) {
             if (!isNaN(val)) {
                 sum += val;

@@ -58,18 +58,18 @@ class ToolboxView extends ComponentView {
             newTitle?: ToolboxFeatureOption['title']
         }
     ) {
-        var group = this.group;
+        let group = this.group;
         group.removeAll();
 
         if (!toolboxModel.get('show')) {
             return;
         }
 
-        var itemSize = +toolboxModel.get('itemSize');
-        var featureOpts = toolboxModel.get('feature') || {};
-        var features = this._features || (this._features = {});
+        let itemSize = +toolboxModel.get('itemSize');
+        let featureOpts = toolboxModel.get('feature') || {};
+        let features = this._features || (this._features = {});
 
-        var featureNames: string[] = [];
+        let featureNames: string[] = [];
         zrUtil.each(featureOpts, function (opt, name) {
             featureNames.push(name);
         });
@@ -84,11 +84,11 @@ class ToolboxView extends ComponentView {
         this._featureNames = featureNames;
 
         function processFeature(newIndex: number, oldIndex?: number) {
-            var featureName = featureNames[newIndex];
-            var oldName = featureNames[oldIndex];
-            var featureOpt = featureOpts[featureName];
-            var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel) as ToolboxFeatureModel;
-            var feature: ToolboxFeature | UserDefinedToolboxFeature;
+            let featureName = featureNames[newIndex];
+            let oldName = featureNames[oldIndex];
+            let featureOpt = featureOpts[featureName];
+            let featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel) as ToolboxFeatureModel;
+            let feature: ToolboxFeature | UserDefinedToolboxFeature;
 
             // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
             if (payload && payload.newTitle != null) {
@@ -103,7 +103,7 @@ class ToolboxView extends ComponentView {
                     } as UserDefinedToolboxFeature;
                 }
                 else {
-                    var Feature = getFeature(featureName);
+                    let Feature = getFeature(featureName);
                     if (!Feature) {
                         return;
                     }
@@ -137,8 +137,8 @@ class ToolboxView extends ComponentView {
             createIconPaths(featureModel, feature, featureName);
 
             featureModel.setIconStatus = function (this: ToolboxFeatureModel, iconName: string, status: DisplayState) {
-                var option = this.option;
-                var iconPaths = this.iconPaths;
+                let option = this.option;
+                let iconPaths = this.iconPaths;
                 option.iconStatus = option.iconStatus || {};
                 option.iconStatus[iconName] = status;
                 // FIXME
@@ -157,8 +157,8 @@ class ToolboxView extends ComponentView {
             feature: ToolboxFeature | UserDefinedToolboxFeature,
             featureName: string
         ) {
-            var iconStyleModel = featureModel.getModel('iconStyle');
-            var iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']);
+            let iconStyleModel = featureModel.getModel('iconStyle');
+            let iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']);
 
             // If one feature has mutiple icon. they are orginaized as
             // {
@@ -171,11 +171,11 @@ class ToolboxView extends ComponentView {
             //         bar: ''
             //     }
             // }
-            var icons = (feature instanceof ToolboxFeature && feature.getIcons)
+            let icons = (feature instanceof ToolboxFeature && feature.getIcons)
                 ? feature.getIcons() : featureModel.get('icon');
-            var titles = featureModel.get('title') || {};
-            var iconsMap: Dictionary<string>;
-            var titlesMap: Dictionary<string>;
+            let titles = featureModel.get('title') || {};
+            let iconsMap: Dictionary<string>;
+            let titlesMap: Dictionary<string>;
             if (typeof icons === 'string') {
                 iconsMap = {};
                 iconsMap[featureName] = icons;
@@ -190,9 +190,9 @@ class ToolboxView extends ComponentView {
             else {
                 titlesMap = titles;
             }
-            var iconPaths: ToolboxFeatureModel['iconPaths'] = featureModel.iconPaths = {};
+            let iconPaths: ToolboxFeatureModel['iconPaths'] = featureModel.iconPaths = {};
             zrUtil.each(iconsMap, function (iconStr, iconName) {
-                var path = graphic.createIcon(
+                let path = graphic.createIcon(
                     iconStr,
                     {},
                     {
@@ -214,7 +214,7 @@ class ToolboxView extends ComponentView {
                     textFill: null
                 });
 
-                var tooltipModel = toolboxModel.getModel('tooltip');
+                let tooltipModel = toolboxModel.getModel('tooltip');
                 if (tooltipModel && tooltipModel.get('show')) {
                     (path as ECElement).tooltip = zrUtil.extend({
                         content: titlesMap[iconName],
@@ -238,8 +238,8 @@ class ToolboxView extends ComponentView {
                     (path as ExtendedPath).__title = titlesMap[iconName];
                     (path as graphic.Path).on('mouseover', function () {
                             // Should not reuse above hoverStyle, which might be modified.
-                            var hoverStyle = iconStyleEmphasisModel.getItemStyle();
-                            var defaultTextPosition = toolboxModel.get('orient') === 'vertical'
+                            let hoverStyle = iconStyleEmphasisModel.getItemStyle();
+                            let defaultTextPosition = toolboxModel.get('orient') === 'vertical'
                                 ? (toolboxModel.get('right') == null ? 'right' : 'left')
                                 : (toolboxModel.get('bottom') == null ? 'bottom' : 'top');
                             (path as graphic.Path).setStyle({
@@ -274,22 +274,22 @@ class ToolboxView extends ComponentView {
 
         // Adjust icon title positions to avoid them out of screen
         group.eachChild(function (icon: IconPath) {
-            var titleText = (icon as ExtendedPath).__title;
-            var hoverStyle = icon.hoverStyle;
+            let titleText = (icon as ExtendedPath).__title;
+            let hoverStyle = icon.hoverStyle;
             // May be background element
             if (hoverStyle && titleText) {
-                var rect = textContain.getBoundingRect(
+                let rect = textContain.getBoundingRect(
                     titleText, textContain.makeFont(hoverStyle)
                 );
-                var offsetX = icon.position[0] + group.position[0];
-                var offsetY = icon.position[1] + group.position[1] + itemSize;
+                let offsetX = icon.position[0] + group.position[0];
+                let offsetY = icon.position[1] + group.position[1] + itemSize;
 
-                var needPutOnTop = false;
+                let needPutOnTop = false;
                 if (offsetY + rect.height > api.getHeight()) {
                     hoverStyle.textPosition = 'top';
                     needPutOnTop = true;
                 }
-                var topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
+                let topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
                 if (offsetX + rect.width / 2 > api.getWidth()) {
                     hoverStyle.textPosition = ['100%', topOffset];
                     hoverStyle.textAlign = 'right';

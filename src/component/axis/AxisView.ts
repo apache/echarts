@@ -26,7 +26,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, Dictionary } from '../../util/types';
 import type BaseAxisPointer from '../axisPointer/BaseAxisPointer';
 
-var axisPointerClazz: Dictionary<AxisPointerConstructor> = {};
+const axisPointerClazz: Dictionary<AxisPointerConstructor> = {};
 
 interface AxisPointerConstructor {
     new(): BaseAxisPointer
@@ -81,7 +81,7 @@ class AxisView extends ComponentView {
      * @override
      */
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
-        var axisPointer = this._axisPointer;
+        let axisPointer = this._axisPointer;
         axisPointer && axisPointer.remove(api);
     }
 
@@ -94,11 +94,11 @@ class AxisView extends ComponentView {
     }
 
     private _doUpdateAxisPointerClass(axisModel: AxisBaseModel, api: ExtensionAPI, forceRender?: boolean) {
-        var Clazz = AxisView.getAxisPointerClass(this.axisPointerClass);
+        let Clazz = AxisView.getAxisPointerClass(this.axisPointerClass);
         if (!Clazz) {
             return;
         }
-        var axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
+        let axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
         axisPointerModel
             ? (this._axisPointer || (this._axisPointer = new Clazz()))
                 .render(axisModel, axisPointerModel, api, forceRender)

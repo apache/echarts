@@ -20,10 +20,10 @@
 // @ts-nocheck
 import * as zrUtil from 'zrender/src/core/util';
 
-var each = zrUtil.each;
+const each = zrUtil.each;
 
 export default function (option) {
-    var visualMap = option && option.visualMap;
+    let visualMap = option && option.visualMap;
 
     if (!zrUtil.isArray(visualMap)) {
         visualMap = visualMap ? [visualMap] : [];
@@ -40,7 +40,7 @@ export default function (option) {
             delete opt.splitList;
         }
 
-        var pieces = opt.pieces;
+        let pieces = opt.pieces;
         if (pieces && zrUtil.isArray(pieces)) {
             each(pieces, function (piece) {
                 if (zrUtil.isObject(piece)) {

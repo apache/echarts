@@ -52,23 +52,23 @@ class PolarAxisPointer extends BaseAxisPointer {
         axisPointerModel: Model<CommonAxisPointerOption>,
         api: ExtensionAPI
     ) {
-        var axis = axisModel.axis;
+        let axis = axisModel.axis;
 
         if (axis.dim === 'angle') {
             this.animationThreshold = Math.PI / 18;
         }
 
-        var polar = axis.polar;
-        var otherAxis = polar.getOtherAxis(axis);
-        var otherExtent = otherAxis.getExtent();
+        let polar = axis.polar;
+        let otherAxis = polar.getOtherAxis(axis);
+        let otherExtent = otherAxis.getExtent();
 
-        var coordValue;
+        let coordValue;
         coordValue = axis.dataToCoord(value);
 
-        var axisPointerType = axisPointerModel.get('type');
+        let axisPointerType = axisPointerModel.get('type');
         if (axisPointerType && axisPointerType !== 'none') {
-            var elStyle = viewHelper.buildElStyle(axisPointerModel);
-            var pointerOption = pointerShapeBuilder[axisPointerType](
+            let elStyle = viewHelper.buildElStyle(axisPointerModel);
+            let pointerOption = pointerShapeBuilder[axisPointerType](
                 axis, polar, coordValue, otherExtent
             );
             pointerOption.style = elStyle;
@@ -76,8 +76,8 @@ class PolarAxisPointer extends BaseAxisPointer {
             elOption.pointer = pointerOption;
         }
 
-        var labelMargin = axisPointerModel.get(['label', 'margin']);
-        var labelPos = getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin);
+        let labelMargin = axisPointerModel.get(['label', 'margin']);
+        let labelPos = getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin);
         viewHelper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, labelPos);
     }
 
@@ -92,34 +92,34 @@ function getLabelPosition(
     polar: Polar,
     labelMargin: number
 ) {
-    var axis = axisModel.axis;
-    var coord = axis.dataToCoord(value);
-    var axisAngle = polar.getAngleAxis().getExtent()[0];
+    let axis = axisModel.axis;
+    let coord = axis.dataToCoord(value);
+    let axisAngle = polar.getAngleAxis().getExtent()[0];
     axisAngle = axisAngle / 180 * Math.PI;
-    var radiusExtent = polar.getRadiusAxis().getExtent();
-    var position;
-    var align: ZRTextAlign;
-    var verticalAlign: ZRTextVerticalAlign;
+    let radiusExtent = polar.getRadiusAxis().getExtent();
+    let position;
+    let align: ZRTextAlign;
+    let verticalAlign: ZRTextVerticalAlign;
 
     if (axis.dim === 'radius') {
-        var transform = matrix.create();
+        let transform = matrix.create();
         matrix.rotate(transform, transform, axisAngle);
         matrix.translate(transform, transform, [polar.cx, polar.cy]);
         position = graphic.applyTransform([coord, -labelMargin], transform);
 
-        var labelRotation = axisModel.getModel('axisLabel').get('rotate') || 0;
+        let labelRotation = axisModel.getModel('axisLabel').get('rotate') || 0;
         // @ts-ignore
-        var labelLayout = AxisBuilder.innerTextLayout(
+        let labelLayout = AxisBuilder.innerTextLayout(
             axisAngle, labelRotation * Math.PI / 180, -1
         );
         align = labelLayout.textAlign;
         verticalAlign = labelLayout.textVerticalAlign;
     }
     else { // angle axis
-        var r = radiusExtent[1];
+        let r = radiusExtent[1];
         position = polar.coordToPoint([r + labelMargin, coord]);
-        var cx = polar.cx;
-        var cy = polar.cy;
+        let cx = polar.cx;
+        let cy = polar.cy;
         align = Math.abs(position[0] - cx) / r < 0.3
             ? 'center' : (position[0] > cx ? 'left' : 'right');
         verticalAlign = Math.abs(position[1] - cy) / r < 0.3
@@ -134,7 +134,7 @@ function getLabelPosition(
 }
 
 
-var pointerShapeBuilder = {
+const pointerShapeBuilder = {
 
     line: function (
         axis: AngleAxis | RadiusAxis,
@@ -166,8 +166,8 @@ var pointerShapeBuilder = {
         coordValue: number,
         otherExtent: number[]
     ): PathProps & { type: 'Sector' } {
-        var bandWidth = Math.max(1, axis.getBandWidth());
-        var radian = Math.PI / 180;
+        let bandWidth = Math.max(1, axis.getBandWidth());
+        let radian = Math.PI / 180;
 
         return axis.dim === 'angle'
             ? {

@@ -25,21 +25,21 @@ import GraphSeriesModel from './GraphSeries';
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
-        var layout = seriesModel.get('layout');
-        var coordSys = seriesModel.coordinateSystem;
+        let layout = seriesModel.get('layout');
+        let coordSys = seriesModel.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {
-            var data = seriesModel.getData();
+            let data = seriesModel.getData();
 
-            var dimensions: string[] = [];
+            let dimensions: string[] = [];
             each(coordSys.dimensions, function (coordDim) {
                 dimensions = dimensions.concat(data.mapDimension(coordDim, true));
             });
 
-            for (var dataIndex = 0; dataIndex < data.count(); dataIndex++) {
-                var value = [];
-                var hasValue = false;
-                for (var i = 0; i < dimensions.length; i++) {
-                    var val = data.get(dimensions[i], dataIndex) as number;
+            for (let dataIndex = 0; dataIndex < data.count(); dataIndex++) {
+                let value = [];
+                let hasValue = false;
+                for (let i = 0; i < dimensions.length; i++) {
+                    let val = data.get(dimensions[i], dataIndex) as number;
                     if (!isNaN(val)) {
                         hasValue = true;
                     }

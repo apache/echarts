@@ -22,29 +22,29 @@ import ParallelSeriesModel, { ParallelSeriesOption } from './ParallelSeries';
 import { StageHandler } from '../../util/types';
 
 
-var opacityAccessPath = ['lineStyle', 'opacity'] as const;
+const opacityAccessPath = ['lineStyle', 'opacity'] as const;
 
-var parallelVisual: StageHandler = {
+const parallelVisual: StageHandler = {
 
     seriesType: 'parallel',
 
     reset: function (seriesModel: ParallelSeriesModel, ecModel) {
 
-        // var itemStyleModel = seriesModel.getModel('itemStyle');
-        var lineStyleModel = seriesModel.getModel('lineStyle');
-        var globalColors = ecModel.get('color');
+        // let itemStyleModel = seriesModel.getModel('itemStyle');
+        let lineStyleModel = seriesModel.getModel('lineStyle');
+        let globalColors = ecModel.get('color');
 
-        var color = lineStyleModel.get('color')
+        let color = lineStyleModel.get('color')
             // || itemStyleModel.get('color')
             || globalColors[seriesModel.seriesIndex % globalColors.length];
-        var inactiveOpacity = seriesModel.get('inactiveOpacity');
-        var activeOpacity = seriesModel.get('activeOpacity');
-        var lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
+        let inactiveOpacity = seriesModel.get('inactiveOpacity');
+        let activeOpacity = seriesModel.get('activeOpacity');
+        let lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
 
-        var coordSys = seriesModel.coordinateSystem;
-        var data = seriesModel.getData();
+        let coordSys = seriesModel.coordinateSystem;
+        let data = seriesModel.getData();
 
-        var opacityMap = {
+        let opacityMap = {
             normal: lineStyle.opacity,
             active: activeOpacity,
             inactive: inactiveOpacity
@@ -55,9 +55,9 @@ var parallelVisual: StageHandler = {
         return {
             progress(params, data) {
                 coordSys.eachActiveState(data, function (activeState, dataIndex) {
-                    var opacity = opacityMap[activeState];
+                    let opacity = opacityMap[activeState];
                     if (activeState === 'normal' && data.hasItemOption) {
-                        var itemOpacity = data.getItemModel<ParallelSeriesOption>(dataIndex).get(
+                        let itemOpacity = data.getItemModel<ParallelSeriesOption>(dataIndex).get(
                             opacityAccessPath, true
                         );
                         itemOpacity != null && (opacity = itemOpacity);

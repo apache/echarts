@@ -29,7 +29,7 @@ import { BoxplotItemLayout } from './boxplotLayout';
 import { StyleProps } from 'zrender/src/graphic/Style';
 
 // Update common properties
-var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
+const EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
 
 class BoxplotView extends ChartView {
     static type = 'boxplot';
@@ -38,9 +38,9 @@ class BoxplotView extends ChartView {
     private _data: List;
 
     render(seriesModel: BoxplotSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var data = seriesModel.getData();
-        var group = this.group;
-        var oldData = this._data;
+        let data = seriesModel.getData();
+        let group = this.group;
+        let oldData = this._data;
 
         // There is no old data only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
@@ -48,19 +48,19 @@ class BoxplotView extends ChartView {
             group.removeAll();
         }
 
-        var constDim = seriesModel.get('layout') === 'horizontal' ? 1 : 0;
+        let constDim = seriesModel.get('layout') === 'horizontal' ? 1 : 0;
 
         data.diff(oldData)
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
-                    var itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
-                    var symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
+                    let itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
+                    let symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
             })
             .update(function (newIdx, oldIdx) {
-                var symbolEl = oldData.getItemGraphicEl(oldIdx) as BoxPath;
+                let symbolEl = oldData.getItemGraphicEl(oldIdx) as BoxPath;
 
                 // Empty data
                 if (!data.hasValue(newIdx)) {
@@ -68,7 +68,7 @@ class BoxplotView extends ChartView {
                     return;
                 }
 
-                var itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
+                let itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
                 if (!symbolEl) {
                     symbolEl = createNormalBox(itemLayout, data, newIdx, constDim);
                 }
@@ -81,7 +81,7 @@ class BoxplotView extends ChartView {
                 data.setItemGraphicEl(newIdx, symbolEl);
             })
             .remove(function (oldIdx) {
-                var el = oldData.getItemGraphicEl(oldIdx);
+                let el = oldData.getItemGraphicEl(oldIdx);
                 el && group.remove(el);
             })
             .execute();
@@ -90,8 +90,8 @@ class BoxplotView extends ChartView {
     }
 
     remove(ecModel: GlobalModel) {
-        var group = this.group;
-        var data = this._data;
+        let group = this.group;
+        let data = this._data;
         this._data = null;
         data && data.eachItemGraphicEl(function (el) {
             el && group.remove(el);
@@ -117,9 +117,9 @@ class BoxPath extends Path<BoxPathProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: BoxPathShape) {
-        var ends = shape.points;
+        let ends = shape.points;
 
-        var i = 0;
+        let i = 0;
         ctx.moveTo(ends[i][0], ends[i][1]);
         i++;
         for (; i < 4; i++) {
@@ -143,9 +143,9 @@ function createNormalBox(
     constDim: number,
     isInit?: boolean
 ) {
-    var ends = itemLayout.ends;
+    let ends = itemLayout.ends;
 
-    var el = new BoxPath({
+    let el = new BoxPath({
         shape: {
             points: isInit
                 ? transInit(ends, constDim, itemLayout)
@@ -165,8 +165,8 @@ function updateNormalBoxData(
     dataIndex: number,
     isInit?: boolean
 ) {
-    var seriesModel = data.hostModel;
-    var updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
+    let seriesModel = data.hostModel;
+    let updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
 
     updateMethod(
         el,
@@ -175,19 +175,19 @@ function updateNormalBoxData(
         dataIndex
     );
 
-    var itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
-    var normalItemStyleModel = itemModel.getModel('itemStyle');
-    var borderColor = data.getItemVisual(dataIndex, 'color');
+    let itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
+    let normalItemStyleModel = itemModel.getModel('itemStyle');
+    let borderColor = data.getItemVisual(dataIndex, 'color');
 
     // Exclude borderColor.
-    var itemStyle = normalItemStyleModel.getItemStyle(['borderColor']) as StyleProps;
+    let itemStyle = normalItemStyleModel.getItemStyle(['borderColor']) as StyleProps;
     itemStyle.stroke = borderColor;
     itemStyle.strokeNoScale = true;
     el.useStyle(itemStyle);
 
     el.z2 = 100;
 
-    var hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
+    let hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
     graphic.setHoverStyle(el, hoverStyle);
 }
 

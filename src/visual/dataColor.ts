@@ -32,8 +32,8 @@ export default function (seriesType: string): StageHandler {
     return {
         getTargetSeries: function (ecModel) {
             // Pie and funnel may use diferrent scope
-            var paletteScope = {};
-            var seiresModelMap = createHashMap<SeriesModel>();
+            let paletteScope = {};
+            let seiresModelMap = createHashMap<SeriesModel>();
 
             ecModel.eachSeriesByType(seriesType, function (seriesModel) {
                 (seriesModel as SeriesModelWithPaletteScope).__paletteScope = paletteScope;
@@ -43,33 +43,33 @@ export default function (seriesType: string): StageHandler {
             return seiresModelMap;
         },
         reset: function (seriesModel) {
-            var dataAll = seriesModel.getRawData();
-            var idxMap: {[key: number]: number} = {};
-            var data = seriesModel.getData();
+            let dataAll = seriesModel.getRawData();
+            let idxMap: {[key: number]: number} = {};
+            let data = seriesModel.getData();
 
             data.each(function (idx) {
-                var rawIdx = data.getRawIndex(idx);
+                let rawIdx = data.getRawIndex(idx);
                 idxMap[rawIdx] = idx;
             });
 
             dataAll.each(function (rawIdx) {
-                var filteredIdx = idxMap[rawIdx];
+                let filteredIdx = idxMap[rawIdx];
 
                 // If series.itemStyle.normal.color is a function. itemVisual may be encoded
-                var singleDataColor = filteredIdx != null
+                let singleDataColor = filteredIdx != null
                     && data.getItemVisual(filteredIdx, 'color', true);
 
-                var singleDataBorderColor = filteredIdx != null
+                let singleDataBorderColor = filteredIdx != null
                     && data.getItemVisual(filteredIdx, 'borderColor', true);
 
-                var itemModel;
+                let itemModel;
                 if (!singleDataColor || !singleDataBorderColor) {
                     // FIXME Performance
                     itemModel = dataAll.getItemModel<{itemStyle: ItemStyleOption}>(rawIdx);
                 }
 
                 if (!singleDataColor) {
-                    var color = itemModel.get(['itemStyle', 'color'])
+                    let color = itemModel.get(['itemStyle', 'color'])
                         || seriesModel.getColorFromPalette(
                             dataAll.getName(rawIdx) || (rawIdx + ''),
                             (seriesModel as SeriesModelWithPaletteScope).__paletteScope,
@@ -82,7 +82,7 @@ export default function (seriesType: string): StageHandler {
                 }
 
                 if (!singleDataBorderColor) {
-                    var borderColor = itemModel.get(['itemStyle', 'borderColor']);
+                    let borderColor = itemModel.get(['itemStyle', 'borderColor']);
 
                     // Data is not filtered
                     if (filteredIdx != null) {

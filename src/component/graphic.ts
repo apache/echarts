@@ -28,7 +28,7 @@ import * as graphicUtil from '../util/graphic';
 import * as layoutUtil from '../util/layout';
 import {parsePercent} from '../util/number';
 
-var _nonShapeGraphicElements = {
+const _nonShapeGraphicElements = {
 
     // Reserved but not supported in graphic component.
     path: null,
@@ -45,7 +45,7 @@ var _nonShapeGraphicElements = {
 // -------------
 
 echarts.registerPreprocessor(function (option) {
-    var graphicOption = option.graphic;
+    let graphicOption = option.graphic;
 
     // Convert
     // {graphic: [{left: 10, type: 'circle'}, ...]}
@@ -72,7 +72,7 @@ echarts.registerPreprocessor(function (option) {
 // Model
 // ------
 
-var GraphicModel = echarts.extendComponentModel({
+const GraphicModel = echarts.extendComponentModel({
 
     type: 'graphic',
 
@@ -123,7 +123,7 @@ var GraphicModel = echarts.extendComponentModel({
      */
     mergeOption: function (option) {
         // Prevent default merge to elements
-        var elements = this.option.elements;
+        let elements = this.option.elements;
         this.option.elements = null;
 
         GraphicModel.superApply(this, 'mergeOption', arguments);
@@ -135,21 +135,21 @@ var GraphicModel = echarts.extendComponentModel({
      * @override
      */
     optionUpdated: function (newOption, isInit) {
-        var thisOption = this.option;
-        var newList = (isInit ? thisOption : newOption).elements;
-        var existList = thisOption.elements = isInit ? [] : thisOption.elements;
+        let thisOption = this.option;
+        let newList = (isInit ? thisOption : newOption).elements;
+        let existList = thisOption.elements = isInit ? [] : thisOption.elements;
 
-        var flattenedList = [];
+        let flattenedList = [];
         this._flatten(newList, flattenedList);
 
-        var mappingResult = modelUtil.mappingToExists(existList, flattenedList);
+        let mappingResult = modelUtil.mappingToExists(existList, flattenedList);
         modelUtil.makeIdAndName(mappingResult);
 
         // Clear elOptionsToUpdate
-        var elOptionsToUpdate = this._elOptionsToUpdate = [];
+        let elOptionsToUpdate = this._elOptionsToUpdate = [];
 
         zrUtil.each(mappingResult, function (resultItem, index) {
-            var newElOption = resultItem.option;
+            let newElOption = resultItem.option;
 
             if (__DEV__) {
                 zrUtil.assert(
@@ -173,7 +173,7 @@ var GraphicModel = echarts.extendComponentModel({
         }, this);
 
         // Clean
-        for (var i = existList.length - 1; i >= 0; i--) {
+        for (let i = existList.length - 1; i >= 0; i--) {
             if (existList[i] == null) {
                 existList.splice(i, 1);
             }
@@ -216,7 +216,7 @@ var GraphicModel = echarts.extendComponentModel({
 
             result.push(option);
 
-            var children = option.children;
+            let children = option.children;
             if (option.type === 'group' && children) {
                 this._flatten(children, result, option);
             }
@@ -228,7 +228,7 @@ var GraphicModel = echarts.extendComponentModel({
     // FIXME
     // Pass to view using payload? setOption has a payload?
     useElOptionsToUpdate: function () {
-        var els = this._elOptionsToUpdate;
+        let els = this._elOptionsToUpdate;
         // Clear to avoid render duplicately when zooming.
         this._elOptionsToUpdate = null;
         return els;
@@ -292,24 +292,24 @@ echarts.extendComponentView({
      * @param {Object} graphicModel graphic model
      */
     _updateElements: function (graphicModel) {
-        var elOptionsToUpdate = graphicModel.useElOptionsToUpdate();
+        let elOptionsToUpdate = graphicModel.useElOptionsToUpdate();
 
         if (!elOptionsToUpdate) {
             return;
         }
 
-        var elMap = this._elMap;
-        var rootGroup = this.group;
+        let elMap = this._elMap;
+        let rootGroup = this.group;
 
         // Top-down tranverse to assign graphic settings to each elements.
         zrUtil.each(elOptionsToUpdate, function (elOption) {
-            var $action = elOption.$action;
-            var id = elOption.id;
-            var existEl = elMap.get(id);
-            var parentId = elOption.parentId;
-            var targetElParent = parentId != null ? elMap.get(parentId) : rootGroup;
+            let $action = elOption.$action;
+            let id = elOption.id;
+            let existEl = elMap.get(id);
+            let parentId = elOption.parentId;
+            let targetElParent = parentId != null ? elMap.get(parentId) : rootGroup;
 
-            var elOptionStyle = elOption.style;
+            let elOptionStyle = elOption.style;
             if (elOption.type === 'text' && elOptionStyle) {
                 // In top/bottom mode, textVerticalAlign should not be used, which cause
                 // inaccurately locating.
@@ -328,7 +328,7 @@ echarts.extendComponentView({
             }
 
             // Remove unnecessary props to avoid potential problems.
-            var elOptionCleaned = getCleanedElOption(elOption);
+            let elOptionCleaned = getCleanedElOption(elOption);
 
             // For simple, do not support parent change, otherwise reorder is needed.
             if (__DEV__) {
@@ -351,7 +351,7 @@ echarts.extendComponentView({
                 removeEl(existEl, elMap);
             }
 
-            var el = elMap.get(id);
+            let el = elMap.get(id);
             if (el) {
                 el.__ecGraphicWidthOption = elOption.width;
                 el.__ecGraphicHeightOption = elOption.height;
@@ -368,11 +368,11 @@ echarts.extendComponentView({
      * @param {module:echarts/ExtensionAPI} api extension API
      */
     _relocate: function (graphicModel, api) {
-        var elOptions = graphicModel.option.elements;
-        var rootGroup = this.group;
-        var elMap = this._elMap;
-        var apiWidth = api.getWidth();
-        var apiHeight = api.getHeight();
+        let elOptions = graphicModel.option.elements;
+        let rootGroup = this.group;
+        let elMap = this._elMap;
+        let apiWidth = api.getWidth();
+        let apiHeight = api.getHeight();
 
         // Top-down to calculate percentage width/height of group
         for (let i = 0; i < elOptions.length; i++) {
@@ -383,7 +383,7 @@ echarts.extendComponentView({
                 continue;
             }
             let parentEl = el.parent;
-            var isParentRoot = parentEl === rootGroup;
+            let isParentRoot = parentEl === rootGroup;
             // Like 'position:absolut' in css, default 0.
             el.__ecGraphicWidth = parsePercent(
                 el.__ecGraphicWidthOption,
@@ -405,7 +405,7 @@ echarts.extendComponentView({
             }
 
             let parentEl = el.parent;
-            var containerInfo = parentEl === rootGroup
+            let containerInfo = parentEl === rootGroup
                 ? {
                     width: apiWidth,
                     height: apiHeight
@@ -432,7 +432,7 @@ echarts.extendComponentView({
      * @private
      */
     _clear: function () {
-        var elMap = this._elMap;
+        let elMap = this._elMap;
         elMap.each(function (el) {
             removeEl(el, elMap);
         });
@@ -448,13 +448,13 @@ echarts.extendComponentView({
 });
 
 function createEl(id, targetElParent, elOption, elMap) {
-    var graphicType = elOption.type;
+    let graphicType = elOption.type;
 
     if (__DEV__) {
         zrUtil.assert(graphicType, 'graphic type MUST be set');
     }
 
-    var Clz = _nonShapeGraphicElements.hasOwnProperty(graphicType)
+    let Clz = _nonShapeGraphicElements.hasOwnProperty(graphicType)
         // Those graphic elements are not shapes. They should not be
         // overwritten by users, so do them first.
         ? _nonShapeGraphicElements[graphicType]
@@ -464,14 +464,14 @@ function createEl(id, targetElParent, elOption, elMap) {
         zrUtil.assert(Clz, 'graphic type can not be found');
     }
 
-    var el = new Clz(elOption);
+    let el = new Clz(elOption);
     targetElParent.add(el);
     elMap.set(id, el);
     el.__ecGraphicId = id;
 }
 
 function removeEl(existEl, elMap) {
-    var existElParent = existEl && existEl.parent;
+    let existElParent = existEl && existEl.parent;
     if (existElParent) {
         existEl.type === 'group' && existEl.traverse(function (el) {
             removeEl(el, elMap);
@@ -494,7 +494,7 @@ function getCleanedElOption(elOption) {
 }
 
 function isSetLoc(obj, props) {
-    var isSet;
+    let isSet;
     zrUtil.each(props, function (prop) {
         obj[prop] != null && obj[prop] !== 'auto' && (isSet = true);
     });
@@ -502,7 +502,7 @@ function isSetLoc(obj, props) {
 }
 
 function setKeyInfoToNewElOption(resultItem, newElOption) {
-    var existElOption = resultItem.exist;
+    let existElOption = resultItem.exist;
 
     // Set id and type after id assigned.
     newElOption.id = resultItem.keyInfo.id;
@@ -510,7 +510,7 @@ function setKeyInfoToNewElOption(resultItem, newElOption) {
 
     // Set parent id if not specified
     if (newElOption.parentId == null) {
-        var newElParentOption = newElOption.parentOption;
+        let newElParentOption = newElOption.parentOption;
         if (newElParentOption) {
             newElOption.parentId = newElParentOption.id;
         }
@@ -525,15 +525,15 @@ function setKeyInfoToNewElOption(resultItem, newElOption) {
 
 function mergeNewElOptionToExist(existList, index, newElOption) {
     // Update existing options, for `getOption` feature.
-    var newElOptCopy = zrUtil.extend({}, newElOption);
-    var existElOption = existList[index];
+    let newElOptCopy = zrUtil.extend({}, newElOption);
+    let existElOption = existList[index];
 
-    var $action = newElOption.$action || 'merge';
+    let $action = newElOption.$action || 'merge';
     if ($action === 'merge') {
         if (existElOption) {
 
             if (__DEV__) {
-                var newType = newElOption.type;
+                let newType = newElOption.type;
                 zrUtil.assert(
                     !newType || existElOption.type === newType,
                     'Please set $action: "replace" to change `type`'
@@ -579,7 +579,7 @@ function setLayoutInfoToExist(existItem, newElOption) {
 }
 
 function setEventData(el, graphicModel, elOption) {
-    var eventData = el.eventData;
+    let eventData = el.eventData;
     // Simple optimize for large amount of elements that no need event.
     if (!el.silent && !el.ignore && !eventData) {
         eventData = el.eventData = {

@@ -37,21 +37,21 @@ type MapRecordInner = {
     };
 };
 
-var inner = makeInner<MapRecordInner, GeoJSONMapRecord>();
+const inner = makeInner<MapRecordInner, GeoJSONMapRecord>();
 
 export default {
 
     load(mapName: string, mapRecord: GeoJSONMapRecord): MapRecordInner['parsed'] {
 
-        var parsed = inner(mapRecord).parsed;
+        let parsed = inner(mapRecord).parsed;
 
         if (parsed) {
             return parsed;
         }
 
-        var specialAreas = mapRecord.specialAreas || {};
-        var geoJSON = mapRecord.geoJSON;
-        var regions;
+        let specialAreas = mapRecord.specialAreas || {};
+        let geoJSON = mapRecord.geoJSON;
+        let regions;
 
         // https://jsperf.com/try-catch-performance-overhead
         try {
@@ -64,7 +64,7 @@ export default {
         fixNanhai(mapName, regions);
 
         each(regions, function (region) {
-            var regionName = region.name;
+            let regionName = region.name;
 
             fixTextCoord(mapName, region);
             fixGeoCoord(mapName, region);
@@ -72,7 +72,7 @@ export default {
 
             // Some area like Alaska in USA map needs to be tansformed
             // to look better
-            var specialArea = specialAreas[regionName];
+            let specialArea = specialAreas[regionName];
             if (specialArea) {
                 region.transformTo(
                     specialArea.left, specialArea.top, specialArea.width, specialArea.height
@@ -88,9 +88,9 @@ export default {
 };
 
 function getBoundingRect(regions: Region[]): BoundingRect {
-    var rect;
-    for (var i = 0; i < regions.length; i++) {
-        var regionRect = regions[i].getBoundingRect();
+    let rect;
+    for (let i = 0; i < regions.length; i++) {
+        let regionRect = regions[i].getBoundingRect();
         rect = rect || regionRect.clone();
         rect.union(regionRect);
     }

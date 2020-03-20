@@ -220,7 +220,7 @@ export function makePath(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ): SVGPath {
-    var path = pathTool.createFromString(pathData, opts);
+    let path = pathTool.createFromString(pathData, opts);
     if (rect) {
         if (layout === 'center') {
             rect = centerGraphic(rect, path.getBoundingRect());
@@ -242,7 +242,7 @@ export function makeImage(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ) {
-    var path = new ZImage({
+    let path = new ZImage({
         style: {
             image: imageUrl,
             x: rect.x,
@@ -252,7 +252,7 @@ export function makeImage(
         },
         onload: function (img: ImageLike) {
             if (layout === 'center') {
-                var boundingRect = {
+                let boundingRect = {
                     width: img.width,
                     height: img.height
                 };
@@ -275,9 +275,9 @@ function centerGraphic(rect: ZRRectLike, boundingRect: {
     height: number
 }): ZRRectLike {
     // Set rect to center, keep width / height ratio.
-    var aspect = boundingRect.width / boundingRect.height;
-    var width = rect.height * aspect;
-    var height;
+    let aspect = boundingRect.width / boundingRect.height;
+    let width = rect.height * aspect;
+    let height;
     if (width <= rect.width) {
         height = rect.height;
     }
@@ -285,8 +285,8 @@ function centerGraphic(rect: ZRRectLike, boundingRect: {
         width = rect.width;
         height = width / aspect;
     }
-    var cx = rect.x + rect.width / 2;
-    var cy = rect.y + rect.height / 2;
+    let cx = rect.x + rect.width / 2;
+    let cy = rect.y + rect.height / 2;
 
     return {
         x: cx - width / 2,
@@ -296,7 +296,7 @@ function centerGraphic(rect: ZRRectLike, boundingRect: {
     };
 }
 
-export var mergePath = pathTool.mergePath;
+export let mergePath = pathTool.mergePath;
 
 /**
  * Resize a path to fit the rect
@@ -308,9 +308,9 @@ export function resizePath(path: SVGPath, rect: ZRRectLike): void {
         return;
     }
 
-    var pathRect = path.getBoundingRect();
+    let pathRect = path.getBoundingRect();
 
-    var m = pathRect.calculateTransform(rect);
+    let m = pathRect.calculateTransform(rect);
 
     path.applyTransform(m);
 }
@@ -353,7 +353,7 @@ export function subPixelOptimizeRect(param: {
  * @param positiveOrNegative Default false (negative).
  * @return Optimized position.
  */
-export var subPixelOptimize = subPixelOptimizeUtil.subPixelOptimize;
+export let subPixelOptimize = subPixelOptimizeUtil.subPixelOptimize;
 
 
 function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) {
@@ -361,13 +361,13 @@ function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) 
 }
 
 // Most lifted color are duplicated.
-var liftedColorCache = new LRU<string>(100);
+const liftedColorCache = new LRU<string>(100);
 
 function liftColor(color: string): string {
     if (typeof color !== 'string') {
         return color;
     }
-    var liftedColor = liftedColorCache.get(color);
+    let liftedColor = liftedColorCache.get(color);
     if (!liftedColor) {
         liftedColor = colorTool.lift(color, -0.1);
         liftedColorCache.put(color, liftedColor);
@@ -381,15 +381,15 @@ function cacheElementStl(el: ExtendedDisplayable) {
     }
     el.__hoverStlDirty = false;
 
-    var hoverStyle = el.__hoverStl;
+    let hoverStyle = el.__hoverStl;
     if (!hoverStyle) {
         el.__cachedNormalStl = el.__cachedNormalZ2 = null;
         return;
     }
 
-    var normalStyle = el.__cachedNormalStl = {} as StyleProps;
+    let normalStyle = el.__cachedNormalStl = {} as StyleProps;
     el.__cachedNormalZ2 = el.z2;
-    var elStyle = el.style;
+    let elStyle = el.style;
 
     const styleKeys = zrUtil.keys(hoverStyle);
     for (let idx = 0; idx < styleKeys.length; idx++) {
@@ -405,23 +405,23 @@ function cacheElementStl(el: ExtendedDisplayable) {
 }
 
 function singleEnterEmphasis(el: ExtendedDisplayable) {
-    var hoverStl = el.__hoverStl;
+    let hoverStl = el.__hoverStl;
 
     if (!hoverStl || el.__highlighted) {
         return;
     }
 
-    var zr = el.__zr;
+    let zr = el.__zr;
 
-    var useHoverLayer = el.useHoverLayer && zr && zr.painter.type === 'canvas';
+    let useHoverLayer = el.useHoverLayer && zr && zr.painter.type === 'canvas';
     el.__highlighted = useHoverLayer ? 'layer' : 'plain';
 
     if (el.isGroup || (!zr && el.useHoverLayer)) {
         return;
     }
 
-    var elTarget = el;
-    var targetStyle = el.style;
+    let elTarget = el;
+    let targetStyle = el.style;
 
     if (useHoverLayer) {
         elTarget = zr.addHover(el);
@@ -481,7 +481,7 @@ function setDefaultHoverFillStroke(
 }
 
 function singleEnterNormal(el: ExtendedDisplayable) {
-    var highlighted = el.__highlighted;
+    let highlighted = el.__highlighted;
 
     if (!highlighted) {
         return;
@@ -497,9 +497,9 @@ function singleEnterNormal(el: ExtendedDisplayable) {
         el.__zr && el.__zr.removeHover(el);
     }
     else {
-        var style = el.style;
+        let style = el.style;
 
-        var normalStl = el.__cachedNormalStl;
+        let normalStl = el.__cachedNormalStl;
         if (normalStl) {
             rollbackDefaultTextStyle(style);
             el.setStyle(normalStl);
@@ -508,7 +508,7 @@ function singleEnterNormal(el: ExtendedDisplayable) {
         // `__cachedNormalZ2` will not be reset if calling `setElementHoverStyle`
         // when `el` is on emphasis state. So here by comparing with 1, we try
         // hard to make the bug case rare.
-        var normalZ2 = el.__cachedNormalZ2;
+        let normalZ2 = el.__cachedNormalZ2;
         if (normalZ2 != null && el.z2 - normalZ2 === Z2_EMPHASIS_LIFT) {
             el.z2 = normalZ2;
         }
@@ -521,9 +521,9 @@ function traverseUpdate<T>(
     commonParam?: T
 ) {
     // If root is group, also enter updater for `highDownOnUpdate`.
-    var fromState: DisplayState = NORMAL;
-    var toState: DisplayState = NORMAL;
-    var trigger;
+    let fromState: DisplayState = NORMAL;
+    let toState: DisplayState = NORMAL;
+    let trigger;
     // See the rule of `highDownOnUpdate` on `graphic.setAsHighDownDispatcher`.
     el.__highlighted && (fromState = EMPHASIS, trigger = true);
     updater(el, commonParam);
@@ -690,7 +690,7 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.
     if (!disable || extendedEl.__highDownDispatcher) {
-        var method: 'on' | 'off' = disable ? 'off' : 'on';
+        let method: 'on' | 'off' = disable ? 'off' : 'on';
 
         // Duplicated function will be auto-ignored, see Eventful.js.
         el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
@@ -716,7 +716,7 @@ export function isHighDownDispatcher(el: Element): boolean {
  * @return {number} highlightDigit
  */
 export function getHighlightDigit(highlightKey: number) {
-    var highlightDigit = _highlightKeyMap[highlightKey];
+    let highlightDigit = _highlightKeyMap[highlightKey];
     if (highlightDigit == null && _highlightNextDigit <= 32) {
         highlightDigit = _highlightKeyMap[highlightKey] = _highlightNextDigit++;
     }
@@ -753,20 +753,20 @@ export function setLabelStyle<LDI>(
     emphasisSpecified?: StyleProps
 ) {
     opt = opt || EMPTY_OBJ;
-    var labelFetcher = opt.labelFetcher;
-    var labelDataIndex = opt.labelDataIndex;
-    var labelDimIndex = opt.labelDimIndex;
+    let labelFetcher = opt.labelFetcher;
+    let labelDataIndex = opt.labelDataIndex;
+    let labelDimIndex = opt.labelDimIndex;
 
     // This scenario, `label.normal.show = true; label.emphasis.show = false`,
     // is not supported util someone requests.
 
-    var showNormal = normalModel.getShallow('show');
-    var showEmphasis = emphasisModel.getShallow('show');
+    let showNormal = normalModel.getShallow('show');
+    let showEmphasis = emphasisModel.getShallow('show');
 
     // Consider performance, only fetch label when necessary.
     // If `normal.show` is `false` and `emphasis.show` is `true` and `emphasis.formatter` is not set,
     // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
-    var baseText;
+    let baseText;
     if (showNormal || showEmphasis) {
         if (labelFetcher) {
             baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex);
@@ -775,8 +775,8 @@ export function setLabelStyle<LDI>(
             baseText = zrUtil.isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
         }
     }
-    var normalStyleText = showNormal ? baseText : null;
-    var emphasisStyleText = showEmphasis
+    let normalStyleText = showNormal ? baseText : null;
+    let emphasisStyleText = showEmphasis
         ? zrUtil.retrieve2(
             labelFetcher
                 ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
@@ -811,7 +811,7 @@ export function modifyLabelStyle(
     emphasisStyleProps?: StyleProps
 ) {
     const extendedEl = el as ExtendedDisplayable;
-    var elStyle = extendedEl.style as StyleProps;
+    let elStyle = extendedEl.style as StyleProps;
     if (normalStyleProps) {
         rollbackDefaultTextStyle(elStyle);
         extendedEl.setStyle(normalStyleProps);
@@ -857,8 +857,8 @@ export function setText(
     labelModel: Model,
     defaultColor: string | false
 ) {
-    var opt: TextCommonParams = {isRectText: true};
-    var isEmphasis;
+    let opt: TextCommonParams = {isRectText: true};
+    let isEmphasis;
 
     if (defaultColor === false) {
         isEmphasis = true;
@@ -898,7 +898,7 @@ function setTextStyleCommon(
     opt = opt || EMPTY_OBJ;
 
     if (opt.isRectText) {
-        var textPosition;
+        let textPosition;
         if (opt.getTextPosition) {
             textPosition = opt.getTextPosition(textStyleModel, isEmphasis);
         }
@@ -912,7 +912,7 @@ function setTextStyleCommon(
 
         textStyle.textPosition = textPosition;
         textStyle.textOffset = textStyleModel.getShallow('offset');
-        var labelRotate = textStyleModel.getShallow('rotate');
+        let labelRotate = textStyleModel.getShallow('rotate');
         labelRotate != null && (labelRotate *= Math.PI / 180);
         textStyle.textRotation = labelRotate;
         textStyle.textDistance = zrUtil.retrieve2(
@@ -920,8 +920,8 @@ function setTextStyleCommon(
         );
     }
 
-    var ecModel = textStyleModel.ecModel;
-    var globalTextStyle = ecModel && ecModel.option.textStyle;
+    let ecModel = textStyleModel.ecModel;
+    let globalTextStyle = ecModel && ecModel.option.textStyle;
 
     // Consider case:
     // {
@@ -937,14 +937,14 @@ function setTextStyleCommon(
     //         a: { ... }
     //     }
     // }
-    var richItemNames = getRichItemNames(textStyleModel);
-    var richResult: Dictionary<StyleProps>;
+    let richItemNames = getRichItemNames(textStyleModel);
+    let richResult: Dictionary<StyleProps>;
     if (richItemNames) {
         richResult = {};
-        for (var name in richItemNames) {
+        for (let name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
-                var richTextStyle = textStyleModel.getModel(['rich', name]);
+                let richTextStyle = textStyleModel.getModel(['rich', name]);
                 // In rich, never `disableBox`.
                 // FIXME: consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
@@ -982,9 +982,9 @@ function setTextStyleCommon(
 // TODO TextStyleModel
 function getRichItemNames(textStyleModel: Model<LabelOption>) {
     // Use object to remove duplicated names.
-    var richItemNameMap: Dictionary<number>;
+    let richItemNameMap: Dictionary<number>;
     while (textStyleModel && textStyleModel !== textStyleModel.ecModel) {
-        var rich = (textStyleModel.option || EMPTY_OBJ as LabelOption).rich;
+        let rich = (textStyleModel.option || EMPTY_OBJ as LabelOption).rich;
         if (rich) {
             richItemNameMap = richItemNameMap || {};
             const richKeys = zrUtil.keys(rich);
@@ -1094,16 +1094,16 @@ function getAutoColor(color: ColorString, opt?: {
  * does, `rollbackDefaultTextStyle` is not needed to be called).
  */
 function applyDefaultTextStyle(textStyle: StyleProps) {
-    var textPosition = textStyle.textPosition;
-    var opt = (textStyle as ExtendedStyleProps).insideRollbackOpt;
-    var insideRollback;
+    let textPosition = textStyle.textPosition;
+    let opt = (textStyle as ExtendedStyleProps).insideRollbackOpt;
+    let insideRollback;
 
     if (opt && textStyle.textFill == null) {
-        var autoColor = opt.autoColor;
-        var isRectText = opt.isRectText;
-        var useInsideStyle = opt.useInsideStyle;
+        let autoColor = opt.autoColor;
+        let isRectText = opt.isRectText;
+        let useInsideStyle = opt.useInsideStyle;
 
-        var useInsideStyleCache = useInsideStyle !== false
+        let useInsideStyleCache = useInsideStyle !== false
             && (useInsideStyle === true
                 || (isRectText
                     && textPosition
@@ -1112,7 +1112,7 @@ function applyDefaultTextStyle(textStyle: StyleProps) {
                     && textPosition.indexOf('inside') >= 0
                 )
             );
-        var useAutoColorCache = !useInsideStyleCache && autoColor != null;
+        let useAutoColorCache = !useInsideStyleCache && autoColor != null;
 
         // All of the props declared in `CACHED_LABEL_STYLE_PROPERTIES` are to be cached.
         if (useInsideStyleCache || useAutoColorCache) {
@@ -1150,7 +1150,7 @@ function applyDefaultTextStyle(textStyle: StyleProps) {
  * should be retured to 'autoColor', but not keep '#fff'.
  */
 function rollbackDefaultTextStyle(style: StyleProps) {
-    var insideRollback = (style as ExtendedStyleProps).insideRollback;
+    let insideRollback = (style as ExtendedStyleProps).insideRollback;
     if (insideRollback) {
         // Reset all of the props in `CACHED_LABEL_STYLE_PROPERTIES`.
         style.textFill = insideRollback.textFill;
@@ -1161,7 +1161,7 @@ function rollbackDefaultTextStyle(style: StyleProps) {
 }
 
 export function getFont(opt: LabelOption, ecModel: GlobalModel) {
-    var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
+    let gTextStyleModel = ecModel && ecModel.getModel('textStyle');
     return zrUtil.trim([
         // FIXME in node-canvas fontWeight is before fontStyle
         opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',
@@ -1188,16 +1188,16 @@ function animateOrSetProps<Props>(
     // Do not check 'animation' property directly here. Consider this case:
     // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
     // but its parent model (`seriesModel`) does.
-    var animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
+    let animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
     if (animationEnabled) {
-        var duration = animatableModel.getShallow(
+        let duration = animatableModel.getShallow(
             isUpdate ? 'animationDurationUpdate' : 'animationDuration'
         );
-        var animationEasing = animatableModel.getShallow(
+        let animationEasing = animatableModel.getShallow(
             isUpdate ? 'animationEasingUpdate' : 'animationEasing'
         );
-        var animationDelay = animatableModel.getShallow(
+        let animationDelay = animatableModel.getShallow(
             isUpdate ? 'animationDelayUpdate' : 'animationDelay'
         );
         if (typeof animationDelay === 'function') {
@@ -1278,7 +1278,7 @@ export function initProps<Props>(
  * @param [ancestor]
  */
 export function getTransform(target: Transformable, ancestor?: Transformable): matrix.MatrixArray {
-    var mat = matrix.identity([]);
+    let mat = matrix.identity([]);
 
     while (target && target !== ancestor) {
         matrix.mul(mat, target.getLocalTransform(), mat);
@@ -1325,12 +1325,12 @@ export function transformDirection(
 ): 'left' | 'right' | 'top' | 'bottom' {
 
     // Pick a base, ensure that transform result will not be (0, 0).
-    var hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
+    let hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
         ? 1 : Math.abs(2 * transform[4] / transform[0]);
-    var vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
+    let vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
         ? 1 : Math.abs(2 * transform[4] / transform[2]);
 
-    var vertex: vector.VectorArray = [
+    let vertex: vector.VectorArray = [
         direction === 'left' ? -hBase : direction === 'right' ? hBase : 0,
         direction === 'top' ? -vBase : direction === 'bottom' ? vBase : 0
     ];
@@ -1362,7 +1362,7 @@ export function groupTransition(
     }
 
     function getElMap(g: Group) {
-        var elMap: Dictionary<Displayable> = {};
+        let elMap: Dictionary<Displayable> = {};
         g.traverse(function (el: Element) {
             if (isNotGroup(el) && el.anid) {
                 elMap[el.anid];
@@ -1371,7 +1371,7 @@ export function groupTransition(
         return elMap;
     }
     function getAnimatableProps(el: Displayable) {
-        var obj: PathProps = {
+        let obj: PathProps = {
             position: vector.clone(el.position),
             rotation: el.rotation
         };
@@ -1380,13 +1380,13 @@ export function groupTransition(
         }
         return obj;
     }
-    var elMap1 = getElMap(g1);
+    let elMap1 = getElMap(g1);
 
     g2.traverse(function (el) {
         if (isNotGroup(el) && el.anid) {
-            var oldEl = elMap1[el.anid];
+            let oldEl = elMap1[el.anid];
             if (oldEl) {
-                var newProp = getAnimatableProps(el);
+                let newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
                 updateProps(el, newProp, animatableModel, getECData(el).dataIndex);
             }
@@ -1398,10 +1398,10 @@ export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike)
     // FIXME: this way migth be incorrect when grpahic clipped by a corner.
     // and when element have border.
     return zrUtil.map(points, function (point) {
-        var x = point[0];
+        let x = point[0];
         x = mathMax(x, rect.x);
         x = mathMin(x, rect.x + rect.width);
-        var y = point[1];
+        let y = point[1];
         y = mathMax(y, rect.y);
         y = mathMin(y, rect.y + rect.height);
         return [x, y];
@@ -1412,10 +1412,10 @@ export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike)
  * Return a new clipped rect. If rect size are negative, return undefined.
  */
 export function clipRectByRect(targetRect: ZRRectLike, rect: ZRRectLike): ZRRectLike {
-    var x = mathMax(targetRect.x, rect.x);
-    var x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
-    var y = mathMax(targetRect.y, rect.y);
-    var y2 = mathMin(targetRect.y + targetRect.height, rect.y + rect.height);
+    let x = mathMax(targetRect.x, rect.x);
+    let x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
+    let y = mathMax(targetRect.y, rect.y);
+    let y2 = mathMin(targetRect.y + targetRect.height, rect.y + rect.height);
 
     // If the total rect is cliped, nothing, including the border,
     // should be painted. So return undefined.
@@ -1466,8 +1466,8 @@ export function linePolygonIntersect(
     a1x: number, a1y: number, a2x: number, a2y: number,
     points: vector.VectorArray[]
 ): boolean {
-    for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
-        var p = points[i];
+    for (let i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
+        let p = points[i];
         if (lineLineIntersect(a1x, a1y, a2x, a2y, p[0], p[1], p2[0], p2[1])) {
             return true;
         }
@@ -1486,14 +1486,14 @@ export function lineLineIntersect(
     b1x: number, b1y: number, b2x: number, b2y: number
 ): boolean {
     // let `vec_m` to be `vec_a2 - vec_a1` and `vec_n` to be `vec_b2 - vec_b1`.
-    var mx = a2x - a1x;
-    var my = a2y - a1y;
-    var nx = b2x - b1x;
-    var ny = b2y - b1y;
+    let mx = a2x - a1x;
+    let my = a2y - a1y;
+    let nx = b2x - b1x;
+    let ny = b2y - b1y;
 
     // `vec_m` and `vec_n` are parallel iff
     //     exising `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
-    var nmCrossProduct = crossProduct2d(nx, ny, mx, my);
+    let nmCrossProduct = crossProduct2d(nx, ny, mx, my);
     if (nearZero(nmCrossProduct)) {
         return false;
     }
@@ -1502,13 +1502,13 @@ export function lineLineIntersect(
     //     existing `p` and `q` in [0, 1] such that `vec_a1 + p * vec_m = vec_b1 + q * vec_n`,
     //     such that `q = ((vec_a1 - vec_b1) X vec_m) / (vec_n X vec_m)`
     //           and `p = ((vec_a1 - vec_b1) X vec_n) / (vec_n X vec_m)`.
-    var b1a1x = a1x - b1x;
-    var b1a1y = a1y - b1y;
-    var q = crossProduct2d(b1a1x, b1a1y, mx, my) / nmCrossProduct;
+    let b1a1x = a1x - b1x;
+    let b1a1y = a1y - b1y;
+    let q = crossProduct2d(b1a1x, b1a1y, mx, my) / nmCrossProduct;
     if (q < 0 || q > 1) {
         return false;
     }
-    var p = crossProduct2d(b1a1x, b1a1y, nx, ny) / nmCrossProduct;
+    let p = crossProduct2d(b1a1x, b1a1y, nx, ny) / nmCrossProduct;
     if (p < 0 || p > 1) {
         return false;
     }

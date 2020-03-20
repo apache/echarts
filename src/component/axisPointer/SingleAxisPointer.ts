@@ -48,15 +48,15 @@ class SingleAxisPointer extends BaseAxisPointer {
         axisPointerModel: AxisPointerModel,
         api: ExtensionAPI
     ) {
-        var axis = axisModel.axis;
-        var coordSys = axis.coordinateSystem;
-        var otherExtent = getGlobalExtent(coordSys, 1 - getPointDimIndex(axis));
-        var pixelValue = coordSys.dataToPoint(value)[0];
+        let axis = axisModel.axis;
+        let coordSys = axis.coordinateSystem;
+        let otherExtent = getGlobalExtent(coordSys, 1 - getPointDimIndex(axis));
+        let pixelValue = coordSys.dataToPoint(value)[0];
 
-        var axisPointerType = axisPointerModel.get('type');
+        let axisPointerType = axisPointerModel.get('type');
         if (axisPointerType && axisPointerType !== 'none') {
-            var elStyle = viewHelper.buildElStyle(axisPointerModel);
-            var pointerOption = pointerShapeBuilder[axisPointerType](
+            let elStyle = viewHelper.buildElStyle(axisPointerModel);
+            let pointerOption = pointerShapeBuilder[axisPointerType](
                 axis, pixelValue, otherExtent
             );
             pointerOption.style = elStyle;
@@ -65,7 +65,7 @@ class SingleAxisPointer extends BaseAxisPointer {
             elOption.pointer = pointerOption;
         }
 
-        var layoutInfo = singleAxisHelper.layout(axisModel);
+        let layoutInfo = singleAxisHelper.layout(axisModel);
         viewHelper.buildCartesianSingleLabelElOption(
             // @ts-ignore
             value, elOption, layoutInfo, axisModel, axisPointerModel, api
@@ -80,7 +80,7 @@ class SingleAxisPointer extends BaseAxisPointer {
         axisModel: SingleAxisModel,
         axisPointerModel: AxisPointerModel
     ) {
-        var layoutInfo = singleAxisHelper.layout(axisModel, {labelInside: false});
+        let layoutInfo = singleAxisHelper.layout(axisModel, {labelInside: false});
         // @ts-ignore
         layoutInfo.labelMargin = axisPointerModel.get(['handle', 'margin']);
         return {
@@ -101,17 +101,17 @@ class SingleAxisPointer extends BaseAxisPointer {
         axisModel: SingleAxisModel,
         axisPointerModel: AxisPointerModel
     ) {
-        var axis = axisModel.axis;
-        var coordSys = axis.coordinateSystem;
-        var dimIndex = getPointDimIndex(axis);
-        var axisExtent = getGlobalExtent(coordSys, dimIndex);
-        var currPosition = transform.position;
+        let axis = axisModel.axis;
+        let coordSys = axis.coordinateSystem;
+        let dimIndex = getPointDimIndex(axis);
+        let axisExtent = getGlobalExtent(coordSys, dimIndex);
+        let currPosition = transform.position;
         currPosition[dimIndex] += delta[dimIndex];
         currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
         currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
-        var otherExtent = getGlobalExtent(coordSys, 1 - dimIndex);
-        var cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
-        var cursorPoint = [cursorOtherValue, cursorOtherValue];
+        let otherExtent = getGlobalExtent(coordSys, 1 - dimIndex);
+        let cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
+        let cursorPoint = [cursorOtherValue, cursorOtherValue];
         cursorPoint[dimIndex] = currPosition[dimIndex];
 
         return {
@@ -125,12 +125,12 @@ class SingleAxisPointer extends BaseAxisPointer {
     }
 }
 
-var pointerShapeBuilder = {
+const pointerShapeBuilder = {
 
     line: function (axis: SingleAxis, pixelValue: number, otherExtent: number[]): PathProps & {
         type: 'Line'
     } {
-        var targetShape = viewHelper.makeLineShape(
+        let targetShape = viewHelper.makeLineShape(
             [pixelValue, otherExtent[0]],
             [pixelValue, otherExtent[1]],
             getPointDimIndex(axis)
@@ -145,8 +145,8 @@ var pointerShapeBuilder = {
     shadow: function (axis: SingleAxis, pixelValue: number, otherExtent: number[]): PathProps & {
         type: 'Rect'
     } {
-        var bandWidth = axis.getBandWidth();
-        var span = otherExtent[1] - otherExtent[0];
+        let bandWidth = axis.getBandWidth();
+        let span = otherExtent[1] - otherExtent[0];
         return {
             type: 'Rect',
             shape: viewHelper.makeRectShape(
@@ -163,7 +163,7 @@ function getPointDimIndex(axis: SingleAxis): number {
 }
 
 function getGlobalExtent(coordSys: Single, dimIndex: number) {
-    var rect = coordSys.getRect();
+    let rect = coordSys.getRect();
     return [rect[XY[dimIndex]], rect[XY[dimIndex]] + rect[WH[dimIndex]]];
 }
 

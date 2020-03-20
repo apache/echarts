@@ -73,7 +73,7 @@ interface CartesianAxisModel extends AxisModelCommonMixin<CartesianAxisOption>,
 
 zrUtil.mixin(CartesianAxisModel, AxisModelCommonMixin);
 
-var extraOption: CartesianAxisOption = {
+const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
     offset: 0

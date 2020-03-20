@@ -100,8 +100,8 @@ export interface GeoOption extends
     regions: RegoinOption[];
 }
 
-var LABEL_FORMATTER_NORMAL = ['label', 'formatter'] as const;
-var LABEL_FORMATTER_EMPHASIS = ['emphasis', 'label', 'formatter'] as const;
+const LABEL_FORMATTER_NORMAL = ['label', 'formatter'] as const;
+const LABEL_FORMATTER_EMPHASIS = ['emphasis', 'label', 'formatter'] as const;
 
 class GeoModel extends ComponentModel<GeoOption> {
 
@@ -186,8 +186,8 @@ class GeoModel extends ComponentModel<GeoOption> {
     }
 
     optionUpdated(): void {
-        var option = this.option;
-        var self = this;
+        let option = this.option;
+        let self = this;
 
         option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
 
@@ -213,11 +213,11 @@ class GeoModel extends ComponentModel<GeoOption> {
      * @param name Region name
      */
     getFormattedLabel(name: string, status?: DisplayState) {
-        var regionModel = this.getRegionModel(name);
-        var formatter = status === 'normal'
+        let regionModel = this.getRegionModel(name);
+        let formatter = status === 'normal'
             ? regionModel.get(LABEL_FORMATTER_NORMAL)
             : regionModel.get(LABEL_FORMATTER_EMPHASIS);
-        var params = {
+        let params = {
             name: name
         } as GeoLabelFormatterDataParams;
         if (typeof formatter === 'function') {

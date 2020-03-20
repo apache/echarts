@@ -34,7 +34,7 @@ import { ElementEvent } from 'zrender/src/Element';
 import { ParallelAxisExpandPayload } from './axis/parallelAxisAction';
 
 
-var CLICK_THRESHOLD = 5; // > 4
+const CLICK_THRESHOLD = 5; // > 4
 
 
 class ParallelView extends ComponentView {
@@ -103,7 +103,7 @@ class ParallelView extends ComponentView {
 ComponentView.registerClass(ParallelView);
 
 type ElementEventHandler = (this: ParallelView, e: ElementEvent) => void;
-var handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
+const handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
 
     mousedown: function (e) {
         if (checkTrigger(this, 'click')) {
@@ -112,18 +112,18 @@ var handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
     },
 
     mouseup: function (e) {
-        var mouseDownPoint = this._mouseDownPoint;
+        let mouseDownPoint = this._mouseDownPoint;
 
         if (checkTrigger(this, 'click') && mouseDownPoint) {
-            var point = [e.offsetX, e.offsetY];
-            var dist = Math.pow(mouseDownPoint[0] - point[0], 2)
+            let point = [e.offsetX, e.offsetY];
+            let dist = Math.pow(mouseDownPoint[0] - point[0], 2)
                 + Math.pow(mouseDownPoint[1] - point[1], 2);
 
             if (dist > CLICK_THRESHOLD) {
                 return;
             }
 
-            var result = this._model.coordinateSystem.getSlidedAxisExpandWindow(
+            let result = this._model.coordinateSystem.getSlidedAxisExpandWindow(
                 [e.offsetX, e.offsetY]
             );
 
@@ -140,12 +140,12 @@ var handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
         if (this._mouseDownPoint || !checkTrigger(this, 'mousemove')) {
             return;
         }
-        var model = this._model;
-        var result = model.coordinateSystem.getSlidedAxisExpandWindow(
+        let model = this._model;
+        let result = model.coordinateSystem.getSlidedAxisExpandWindow(
             [e.offsetX, e.offsetY]
         );
 
-        var behavior = result.behavior;
+        let behavior = result.behavior;
         behavior === 'jump' && (
             this._throttledDispatchExpand as ParallelView['_throttledDispatchExpand'] & throttleUtil.ThrottleController
         ).debounceNextCall(model.get('axisExpandDebounce'));
@@ -165,7 +165,7 @@ function checkTrigger(
     view: ParallelView,
     triggerOn: ParallelCoordinateSystemOption['axisExpandTriggerOn']
 ): boolean {
-    var model = view._model;
+    let model = view._model;
     return model.get('axisExpandable') && model.get('axisExpandTriggerOn') === triggerOn;
 }
 

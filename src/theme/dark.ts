@@ -17,8 +17,8 @@
 * under the License.
 */
 
-var contrastColor = '#eee';
-var axisCommon = function () {
+const contrastColor = '#eee';
+const axisCommon = function () {
     return {
         axisLine: {
             lineStyle: {
@@ -49,11 +49,11 @@ var axisCommon = function () {
     };
 };
 
-var colorPalette = [
+const colorPalette = [
     '#dd6b66', '#759aa0', '#e69d87', '#8dc1a9', '#ea7e53',
     '#eedd78', '#73a373', '#73b9bc', '#7289ab', '#91ca8c', '#f49f42'
 ];
-var theme = {
+const theme = {
     color: colorPalette,
     backgroundColor: '#333',
     tooltip: {

@@ -22,7 +22,7 @@ import Model from '../Model';
 import { ZRColor, ColorPaletteOptionMixin } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
-var inner = makeInner<{
+const inner = makeInner<{
     colorIdx: number
     colorNameMap: Dictionary<ZRColor>
 }, ColorPaletteMixin>();
@@ -30,9 +30,9 @@ var inner = makeInner<{
 function getNearestColorPalette(
     colors: ZRColor[][], requestColorNum: number
 ): ZRColor[] {
-    var paletteNum = colors.length;
+    let paletteNum = colors.length;
     // TODO colors must be in order
-    for (var i = 0; i < paletteNum; i++) {
+    for (let i = 0; i < paletteNum; i++) {
         if (colors[i].length > requestColorNum) {
             return colors[i];
         }
@@ -64,16 +64,16 @@ class ColorPaletteMixin<T extends ColorPaletteOptionMixin = ColorPaletteOptionMi
         requestColorNum?: number
     ): ZRColor {
         scope = scope || this;
-        var scopeFields = inner(scope);
-        var colorIdx = scopeFields.colorIdx || 0;
-        var colorNameMap = scopeFields.colorNameMap = scopeFields.colorNameMap || {};
+        let scopeFields = inner(scope);
+        let colorIdx = scopeFields.colorIdx || 0;
+        let colorNameMap = scopeFields.colorNameMap = scopeFields.colorNameMap || {};
         // Use `hasOwnProperty` to avoid conflict with Object.prototype.
         if (colorNameMap.hasOwnProperty(name)) {
             return colorNameMap[name];
         }
-        var defaultColorPalette = normalizeToArray(this.get('color', true));
-        var layeredColorPalette = this.get('colorLayer', true);
-        var colorPalette = ((requestColorNum == null || !layeredColorPalette)
+        let defaultColorPalette = normalizeToArray(this.get('color', true));
+        let layeredColorPalette = this.get('colorLayer', true);
+        let colorPalette = ((requestColorNum == null || !layeredColorPalette)
             ? defaultColorPalette : getNearestColorPalette(layeredColorPalette, requestColorNum));
 
         // In case can't find in layered color palette.
@@ -83,7 +83,7 @@ class ColorPaletteMixin<T extends ColorPaletteOptionMixin = ColorPaletteOptionMi
             return;
         }
 
-        var color = colorPalette[colorIdx];
+        let color = colorPalette[colorIdx];
         if (name) {
             colorNameMap[name] = color;
         }

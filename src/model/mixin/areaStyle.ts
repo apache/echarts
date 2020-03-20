@@ -22,7 +22,7 @@ import { StyleProps } from 'zrender/src/graphic/Style';
 import Model from '../Model';
 import { AreaStyleOption } from '../../util/types';
 
-var getAreaStyle = makeStyleMapper([
+const getAreaStyle = makeStyleMapper([
     ['fill', 'color'],
     ['shadowBlur'],
     ['shadowOffsetX'],

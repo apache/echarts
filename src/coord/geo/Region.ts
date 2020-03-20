@@ -52,7 +52,7 @@ class Region {
         this.geometries = geometries;
 
         if (!cp) {
-            var rect = this.getBoundingRect();
+            let rect = this.getBoundingRect();
             cp = [
                 rect.x + rect.width / 2,
                 rect.y + rect.height / 2
@@ -65,25 +65,25 @@ class Region {
     }
 
     getBoundingRect(): BoundingRect {
-        var rect = this._rect;
+        let rect = this._rect;
         if (rect) {
             return rect;
         }
 
-        var MAX_NUMBER = Number.MAX_VALUE;
-        var min = [MAX_NUMBER, MAX_NUMBER];
-        var max = [-MAX_NUMBER, -MAX_NUMBER];
-        var min2 = [] as number[];
-        var max2 = [] as number[];
-        var geometries = this.geometries;
-        var i = 0;
+        let MAX_NUMBER = Number.MAX_VALUE;
+        let min = [MAX_NUMBER, MAX_NUMBER];
+        let max = [-MAX_NUMBER, -MAX_NUMBER];
+        let min2 = [] as number[];
+        let max2 = [] as number[];
+        let geometries = this.geometries;
+        let i = 0;
         for (; i < geometries.length; i++) {
             // Only support polygon
             if (geometries[i].type !== 'polygon') {
                 continue;
             }
             // Doesn't consider hole
-            var exterior = geometries[i].exterior;
+            let exterior = geometries[i].exterior;
             bbox.fromPoints(exterior, min2, max2);
             vec2.min(min, min, min2);
             vec2.max(max, max, max2);
@@ -99,21 +99,21 @@ class Region {
     }
 
     contain(coord: number[]): boolean {
-        var rect = this.getBoundingRect();
-        var geometries = this.geometries;
+        let rect = this.getBoundingRect();
+        let geometries = this.geometries;
         if (!rect.contain(coord[0], coord[1])) {
             return false;
         }
-        loopGeo: for (var i = 0, len = geometries.length; i < len; i++) {
+        loopGeo: for (let i = 0, len = geometries.length; i < len; i++) {
             // Only support polygon.
             if (geometries[i].type !== 'polygon') {
                 continue;
             }
-            var exterior = geometries[i].exterior;
-            var interiors = geometries[i].interiors;
+            let exterior = geometries[i].exterior;
+            let interiors = geometries[i].interiors;
             if (polygonContain.contain(exterior, coord[0], coord[1])) {
                 // Not in the region if point is in the hole.
-                for (var k = 0; k < (interiors ? interiors.length : 0); k++) {
+                for (let k = 0; k < (interiors ? interiors.length : 0); k++) {
                     if (polygonContain.contain(interiors[k], coord[0], coord[1])) {
                         continue loopGeo;
                     }
@@ -125,28 +125,28 @@ class Region {
     }
 
     transformTo(x: number, y: number, width: number, height: number): void {
-        var rect = this.getBoundingRect();
-        var aspect = rect.width / rect.height;
+        let rect = this.getBoundingRect();
+        let aspect = rect.width / rect.height;
         if (!width) {
             width = aspect * height;
         }
         else if (!height) {
             height = width / aspect;
         }
-        var target = new BoundingRect(x, y, width, height);
-        var transform = rect.calculateTransform(target);
-        var geometries = this.geometries;
-        for (var i = 0; i < geometries.length; i++) {
+        let target = new BoundingRect(x, y, width, height);
+        let transform = rect.calculateTransform(target);
+        let geometries = this.geometries;
+        for (let i = 0; i < geometries.length; i++) {
             // Only support polygon.
             if (geometries[i].type !== 'polygon') {
                 continue;
             }
-            var exterior = geometries[i].exterior;
-            var interiors = geometries[i].interiors;
+            let exterior = geometries[i].exterior;
+            let interiors = geometries[i].interiors;
             for (let p = 0; p < exterior.length; p++) {
                 vec2.applyTransform(exterior[p], exterior[p], transform);
             }
-            for (var h = 0; h < (interiors ? interiors.length : 0); h++) {
+            for (let h = 0; h < (interiors ? interiors.length : 0); h++) {
                 for (let p = 0; p < interiors[h].length; p++) {
                     vec2.applyTransform(interiors[h][p], interiors[h][p], transform);
                 }
@@ -163,7 +163,7 @@ class Region {
 
     cloneShallow(name: string): Region {
         name == null && (name = this.name);
-        var newRegion = new Region(name, this.geometries, this.center);
+        let newRegion = new Region(name, this.geometries, this.center);
         newRegion._rect = this._rect;
         newRegion.transformTo = null; // Simply avoid to be called.
         return newRegion;

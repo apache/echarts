@@ -33,12 +33,12 @@ type MapRecordInner = {
     originRootHostKey: string;
 };
 
-var inner = makeInner<MapRecordInner, SVGMapRecord>();
+const inner = makeInner<MapRecordInner, SVGMapRecord>();
 
 export default {
 
     load(mapName: string, mapRecord: SVGMapRecord): ReturnType<typeof buildGraphic> {
-        var originRoot = inner(mapRecord).originRoot;
+        let originRoot = inner(mapRecord).originRoot;
         if (originRoot) {
             return {
                 root: originRoot,
@@ -46,7 +46,7 @@ export default {
             };
         }
 
-        var graphic = buildGraphic(mapRecord);
+        let graphic = buildGraphic(mapRecord);
 
         inner(mapRecord).originRoot = graphic.root;
         inner(mapRecord).boundingRect = graphic.boundingRect;
@@ -57,16 +57,16 @@ export default {
     makeGraphic(mapName: string, mapRecord: SVGMapRecord, hostKey: string): Group {
         // For performance consideration (in large SVG), graphic only maked
         // when necessary and reuse them according to hostKey.
-        var field = inner(mapRecord);
-        var rootMap = field.rootMap || (field.rootMap = createHashMap());
+        let field = inner(mapRecord);
+        let rootMap = field.rootMap || (field.rootMap = createHashMap());
 
-        var root = rootMap.get(hostKey);
+        let root = rootMap.get(hostKey);
         if (root) {
             return root;
         }
 
-        var originRoot = field.originRoot;
-        var boundingRect = field.boundingRect;
+        let originRoot = field.originRoot;
+        let boundingRect = field.boundingRect;
 
         // For performance, if originRoot is not used by a view,
         // assign it to a view, but not reproduce graphic elements.
@@ -82,8 +82,8 @@ export default {
     },
 
     removeGraphic(mapName: string, mapRecord: SVGMapRecord, hostKey: string): void {
-        var field = inner(mapRecord);
-        var rootMap = field.rootMap;
+        let field = inner(mapRecord);
+        let rootMap = field.rootMap;
         rootMap && rootMap.removeKey(hostKey);
         if (hostKey === field.originRootHostKey) {
             field.originRootHostKey = null;
@@ -97,9 +97,9 @@ function buildGraphic(
     root: Group;
     boundingRect: BoundingRect;
 } {
-    var svgXML = mapRecord.svgXML;
-    var result;
-    var root;
+    let svgXML = mapRecord.svgXML;
+    let result;
+    let root;
 
     try {
         result = svgXML && parseSVG(svgXML, {
@@ -113,9 +113,9 @@ function buildGraphic(
         throw new Error('Invalid svg format\n' + e.message);
     }
 
-    var svgWidth = result.width;
-    var svgHeight = result.height;
-    var viewBoxRect = result.viewBoxRect;
+    let svgWidth = result.width;
+    let svgHeight = result.height;
+    let viewBoxRect = result.viewBoxRect;
 
     if (!boundingRect) {
         boundingRect = (svgWidth == null || svgHeight == null)
@@ -133,8 +133,8 @@ function buildGraphic(
     }
 
     if (viewBoxRect) {
-        var viewBoxTransform = makeViewBoxTransform(viewBoxRect, boundingRect.width, boundingRect.height);
-        var elRoot = root;
+        let viewBoxTransform = makeViewBoxTransform(viewBoxRect, boundingRect.width, boundingRect.height);
+        let elRoot = root;
         root = new Group();
         root.add(elRoot);
         elRoot.scale = viewBoxTransform.scale;

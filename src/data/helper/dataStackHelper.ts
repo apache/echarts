@@ -60,15 +60,15 @@ export function enableDataStack(
     }
 ): DataStackResult {
     opt = opt || {};
-    var byIndex = opt.byIndex;
-    var stackedCoordDimension = opt.stackedCoordDimension;
+    let byIndex = opt.byIndex;
+    let stackedCoordDimension = opt.stackedCoordDimension;
 
     // Compatibal: when `stack` is set as '', do not stack.
-    var mayStack = !!(seriesModel && seriesModel.get('stack'));
-    var stackedByDimInfo: DataDimensionInfo;
-    var stackedDimInfo: DataDimensionInfo;
-    var stackResultDimension: string;
-    var stackedOverDimension: string;
+    let mayStack = !!(seriesModel && seriesModel.get('stack'));
+    let stackedByDimInfo: DataDimensionInfo;
+    let stackedDimInfo: DataDimensionInfo;
+    let stackResultDimension: string;
+    let stackedOverDimension: string;
 
     each(dimensionInfoList, function (dimensionInfo, index) {
         if (isString(dimensionInfo)) {
@@ -112,9 +112,9 @@ export function enableDataStack(
             stackedByDimInfo.createInvertedIndices = true;
         }
 
-        var stackedDimCoordDim = stackedDimInfo.coordDim;
-        var stackedDimType = stackedDimInfo.type;
-        var stackedDimCoordIndex = 0;
+        let stackedDimCoordDim = stackedDimInfo.coordDim;
+        let stackedDimType = stackedDimInfo.type;
+        let stackedDimCoordIndex = 0;
 
         each(dimensionInfoList, function (dimensionInfo: DataDimensionInfo) {
             if (dimensionInfo.coordDim === stackedDimCoordDim) {

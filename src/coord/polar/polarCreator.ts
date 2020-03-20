@@ -44,17 +44,17 @@ import { SeriesOption } from '../../util/types';
  * Resize method bound to the polar
  */
 function resizePolar(polar: Polar, polarModel: PolarModel, api: ExtensionAPI) {
-    var center = polarModel.get('center');
-    var width = api.getWidth();
-    var height = api.getHeight();
+    let center = polarModel.get('center');
+    let width = api.getWidth();
+    let height = api.getHeight();
 
     polar.cx = parsePercent(center[0], width);
     polar.cy = parsePercent(center[1], height);
 
-    var radiusAxis = polar.getRadiusAxis();
-    var size = Math.min(width, height) / 2;
+    let radiusAxis = polar.getRadiusAxis();
+    let size = Math.min(width, height) / 2;
 
-    var radius = polarModel.get('radius');
+    let radius = polarModel.get('radius');
     if (radius == null) {
         radius = [0, '100%'];
     }
@@ -76,16 +76,16 @@ function resizePolar(polar: Polar, polarModel: PolarModel, api: ExtensionAPI) {
  * Update polar
  */
 function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) {
-    var polar = this;
-    var angleAxis = polar.getAngleAxis();
-    var radiusAxis = polar.getRadiusAxis();
+    let polar = this;
+    let angleAxis = polar.getAngleAxis();
+    let radiusAxis = polar.getRadiusAxis();
     // Reset scale
     angleAxis.scale.setExtent(Infinity, -Infinity);
     radiusAxis.scale.setExtent(Infinity, -Infinity);
 
     ecModel.eachSeries(function (seriesModel) {
         if (seriesModel.coordinateSystem === polar) {
-            var data = seriesModel.getData();
+            let data = seriesModel.getData();
             zrUtil.each(data.mapDimension('radius', true), function (dim) {
                 radiusAxis.scale.unionExtentFromData(
                     data, getStackedDimension(data, dim)
@@ -104,8 +104,8 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
 
     // Fix extent of category angle axis
     if (angleAxis.type === 'category' && !angleAxis.onBand) {
-        var extent = angleAxis.getExtent();
-        var diff = 360 / (angleAxis.scale as OrdinalScale).count();
+        let extent = angleAxis.getExtent();
+        let diff = 360 / (angleAxis.scale as OrdinalScale).count();
         angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
         angleAxis.setExtent(extent[0], extent[1]);
     }
@@ -125,7 +125,7 @@ function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
 
     if (isAngleAxisModel(axisModel)) {
         axis.inverse = axis.inverse !== axisModel.get('clockwise');
-        var startAngle = axisModel.get('startAngle');
+        let startAngle = axisModel.get('startAngle');
         axis.setExtent(startAngle, startAngle + (axis.inverse ? -360 : 360));
     }
 
@@ -135,22 +135,22 @@ function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
 }
 
 
-var polarCreator = {
+const polarCreator = {
 
     dimensions: Polar.prototype.dimensions,
 
     create: function (ecModel: GlobalModel, api: ExtensionAPI) {
-        var polarList: Polar[] = [];
+        let polarList: Polar[] = [];
         ecModel.eachComponent('polar', function (polarModel: PolarModel, idx: number) {
-            var polar = new Polar(idx + '');
+            let polar = new Polar(idx + '');
             // Inject resize and update method
             polar.update = updatePolarScale;
 
-            var radiusAxis = polar.getRadiusAxis();
-            var angleAxis = polar.getAngleAxis();
+            let radiusAxis = polar.getRadiusAxis();
+            let angleAxis = polar.getAngleAxis();
 
-            var radiusAxisModel = polarModel.findAxisModel('radiusAxis');
-            var angleAxisModel = polarModel.findAxisModel('angleAxis');
+            let radiusAxisModel = polarModel.findAxisModel('radiusAxis');
+            let angleAxisModel = polarModel.findAxisModel('angleAxis');
 
             setAxis(radiusAxis, radiusAxisModel);
             setAxis(angleAxis, angleAxisModel);
@@ -168,7 +168,7 @@ var polarCreator = {
             polarId?: string
         }>) {
             if (seriesModel.get('coordinateSystem') === 'polar') {
-                var polarModel = ecModel.queryComponents({
+                let polarModel = ecModel.queryComponents({
                     mainType: 'polar',
                     index: seriesModel.get('polarIndex'),
                     id: seriesModel.get('polarId')

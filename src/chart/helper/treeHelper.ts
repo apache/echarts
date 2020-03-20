@@ -31,8 +31,8 @@ export function retrieveTargetInfo(
     seriesModel: SeriesModel
 ) {
     if (payload && zrUtil.indexOf(validPayloadTypes, payload.type) >= 0) {
-        var root = seriesModel.getData().tree.root;
-        var targetNode = payload.targetNode;
+        let root = seriesModel.getData().tree.root;
+        let targetNode = payload.targetNode;
 
         if (typeof targetNode === 'string') {
             targetNode = root.getNodeById(targetNode);
@@ -44,7 +44,7 @@ export function retrieveTargetInfo(
             };
         }
 
-        var targetNodeId = payload.targetNodeId;
+        let targetNodeId = payload.targetNodeId;
         if (targetNodeId != null && (targetNode = root.getNodeById(targetNodeId))) {
             return {
                 node: targetNode
@@ -55,7 +55,7 @@ export function retrieveTargetInfo(
 
 // Not includes the given node at the last item.
 export function getPathToRoot(node: TreeNode): TreeNode[] {
-    var path = [];
+    let path = [];
     while (node) {
         node = node.parentNode;
         node && path.push(node);
@@ -64,17 +64,17 @@ export function getPathToRoot(node: TreeNode): TreeNode[] {
 }
 
 export function aboveViewRoot(viewRoot: TreeNode, node: TreeNode) {
-    var viewPath = getPathToRoot(viewRoot);
+    let viewPath = getPathToRoot(viewRoot);
     return zrUtil.indexOf(viewPath, node) >= 0;
 }
 
 
 // From root to the input node (the input node will be included).
 export function wrapTreePathInfo<T = unknown>(node: TreeNode, seriesModel: SeriesModel) {
-    var treePathInfo = [];
+    let treePathInfo = [];
 
     while (node) {
-        var nodeDataIndex = node.dataIndex;
+        let nodeDataIndex = node.dataIndex;
         treePathInfo.push({
             name: node.name,
             dataIndex: nodeDataIndex,

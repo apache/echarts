@@ -33,7 +33,7 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import Radar from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
 
-var valueAxisDefault = axisDefault.value;
+const valueAxisDefault = axisDefault.value;
 
 function defaultsShow(opt: object, show: boolean) {
     return zrUtil.defaults({
@@ -95,20 +95,20 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
     private _indicatorModels: AxisBaseModel<InnerIndicatorAxisOption>[];
 
     optionUpdated() {
-        var boundaryGap = this.get('boundaryGap');
-        var splitNumber = this.get('splitNumber');
-        var scale = this.get('scale');
-        var axisLine = this.get('axisLine');
-        var axisTick = this.get('axisTick');
-        // var axisType = this.get('axisType');
-        var axisLabel = this.get('axisLabel');
-        var nameTextStyle = this.get('axisName');
-        var showName = this.get(['axisName', 'show']);
-        var nameFormatter = this.get(['axisName', 'formatter']);
-        var nameGap = this.get('axisNameGap');
-        var triggerEvent = this.get('triggerEvent');
+        let boundaryGap = this.get('boundaryGap');
+        let splitNumber = this.get('splitNumber');
+        let scale = this.get('scale');
+        let axisLine = this.get('axisLine');
+        let axisTick = this.get('axisTick');
+        // let axisType = this.get('axisType');
+        let axisLabel = this.get('axisLabel');
+        let nameTextStyle = this.get('axisName');
+        let showName = this.get(['axisName', 'show']);
+        let nameFormatter = this.get(['axisName', 'formatter']);
+        let nameGap = this.get('axisNameGap');
+        let triggerEvent = this.get('triggerEvent');
 
-        var indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
+        let indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
             // PENDING
             if (indicatorOpt.max != null && indicatorOpt.max > 0 && !indicatorOpt.min) {
                 indicatorOpt.min = 0;
@@ -116,7 +116,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
             else if (indicatorOpt.min != null && indicatorOpt.min < 0 && !indicatorOpt.max) {
                 indicatorOpt.max = 0;
             }
-            var iNameTextStyle = nameTextStyle;
+            let iNameTextStyle = nameTextStyle;
             if (indicatorOpt.color != null) {
                 iNameTextStyle = zrUtil.defaults({
                     color: indicatorOpt.color
@@ -143,7 +143,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 innerIndicatorOpt.name = '';
             }
             if (typeof nameFormatter === 'string') {
-                var indName = innerIndicatorOpt.name;
+                let indName = innerIndicatorOpt.name;
                 innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
             }
             else if (typeof nameFormatter === 'function') {
@@ -151,7 +151,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                     innerIndicatorOpt.name, innerIndicatorOpt
                 );
             }
-            var model = zrUtil.extend(
+            let model = zrUtil.extend(
                 new Model(innerIndicatorOpt, null, this.ecModel),
                 AxisModelCommonMixin.prototype
             ) as AxisBaseModel<InnerIndicatorAxisOption>;

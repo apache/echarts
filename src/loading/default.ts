@@ -22,7 +22,7 @@ import * as graphic from '../util/graphic';
 import { LoadingEffect } from '../util/types';
 import ExtensionAPI from '../ExtensionAPI';
 
-var PI = Math.PI;
+const PI = Math.PI;
 
 /**
  * @param {module:echarts/ExtensionAPI} api
@@ -50,14 +50,14 @@ export default function (
         maskColor: 'rgba(255, 255, 255, 0.8)',
         zlevel: 0
     });
-    var mask = new graphic.Rect({
+    let mask = new graphic.Rect({
         style: {
             fill: opts.maskColor
         },
         zlevel: opts.zlevel,
         z: 10000
     });
-    var arc = new graphic.Arc({
+    let arc = new graphic.Arc({
         shape: {
             startAngle: -PI / 2,
             endAngle: -PI / 2 + 0.1,
@@ -71,7 +71,7 @@ export default function (
         zlevel: opts.zlevel,
         z: 10001
     });
-    var labelRect = new graphic.Rect({
+    let labelRect = new graphic.Rect({
         style: {
             fill: 'none',
             text: opts.text,
@@ -95,20 +95,20 @@ export default function (
         .delay(300)
         .start('circularInOut');
 
-    var group = new graphic.Group() as (graphic.Group & LoadingEffect);
+    let group = new graphic.Group() as (graphic.Group & LoadingEffect);
     group.add(arc);
     group.add(labelRect);
     group.add(mask);
 
     // Inject resize
     group.resize = function () {
-        var cx = api.getWidth() / 2;
-        var cy = api.getHeight() / 2;
+        let cx = api.getWidth() / 2;
+        let cy = api.getHeight() / 2;
         arc.setShape({
             cx: cx,
             cy: cy
         });
-        var r = arc.shape.r;
+        let r = arc.shape.r;
         labelRect.setShape({
             x: cx - r,
             y: cy - r,

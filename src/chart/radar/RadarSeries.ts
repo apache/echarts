@@ -102,13 +102,13 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     }
 
     formatTooltip(dataIndex: number) {
-        var data = this.getData();
-        var coordSys = this.coordinateSystem;
-        var indicatorAxes = coordSys.getIndicatorAxes();
-        var name = this.getData().getName(dataIndex);
+        let data = this.getData();
+        let coordSys = this.coordinateSystem;
+        let indicatorAxes = coordSys.getIndicatorAxes();
+        let name = this.getData().getName(dataIndex);
         return encodeHTML(name === '' ? this.name : name) + '<br/>'
             + zrUtil.map(indicatorAxes, function (axis, idx) {
-                var val = data.get(data.mapDimension(axis.dim), dataIndex);
+                let val = data.get(data.mapDimension(axis.dim), dataIndex);
                 return encodeHTML(axis.name + ' : ' + val);
             }).join('<br />');
     }
@@ -118,17 +118,17 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
      */
     getTooltipPosition(dataIndex: number) {
         if (dataIndex != null) {
-            var data = this.getData();
-            var coordSys = this.coordinateSystem;
-            var values = data.getValues(
+            let data = this.getData();
+            let coordSys = this.coordinateSystem;
+            let values = data.getValues(
                 zrUtil.map(coordSys.dimensions, function (dim) {
                     return data.mapDimension(dim);
                 }), dataIndex
             );
 
-            for (var i = 0, len = values.length; i < len; i++) {
+            for (let i = 0, len = values.length; i < len; i++) {
                 if (!isNaN(values[i] as number)) {
-                    var indicatorAxes = coordSys.getIndicatorAxes();
+                    let indicatorAxes = coordSys.getIndicatorAxes();
                     return coordSys.coordToPoint(indicatorAxes[i].dataToCoord(values[i]), i);
                 }
             }

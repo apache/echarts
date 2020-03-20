@@ -27,16 +27,16 @@ function eachAfter<T>(
     callback: (node: TreeNode, separation: T) => void,
     separation: T
 ) {
-    var nodes = [root];
-    var next = [];
-    var node;
+    let nodes = [root];
+    let next = [];
+    let node;
 
     while (node = nodes.pop()) { // jshint ignore:line
         next.push(node);
         if (node.isExpand) {
-            var children = node.children;
+            let children = node.children;
             if (children.length) {
-                for (var i = 0; i < children.length; i++) {
+                for (let i = 0; i < children.length; i++) {
                     nodes.push(children[i]);
                 }
             }
@@ -52,14 +52,14 @@ function eachAfter<T>(
  * Traverse the tree from top to bottom and do something
  */
 function eachBefore(root: TreeNode, callback: (node: TreeNode) => void) {
-    var nodes = [root];
-    var node;
+    let nodes = [root];
+    let node;
     while (node = nodes.pop()) { // jshint ignore:line
         callback(node);
         if (node.isExpand) {
-            var children = node.children;
+            let children = node.children;
             if (children.length) {
-                for (var i = children.length - 1; i >= 0; i--) {
+                for (let i = children.length - 1; i >= 0; i--) {
                     nodes.push(children[i]);
                 }
             }

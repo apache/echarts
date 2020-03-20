@@ -88,14 +88,14 @@ class DataDiffer {
     }
 
     execute(): void {
-        var oldArr = this._old;
-        var newArr = this._new;
+        let oldArr = this._old;
+        let newArr = this._new;
 
-        var oldDataIndexMap: DataIndexMap = {};
-        var newDataIndexMap: DataIndexMap = {};
-        var oldDataKeyArr: string[] = [];
-        var newDataKeyArr: string[] = [];
-        var i;
+        let oldDataIndexMap: DataIndexMap = {};
+        let newDataIndexMap: DataIndexMap = {};
+        let oldDataKeyArr: string[] = [];
+        let newDataKeyArr: string[] = [];
+        let i;
 
         this._initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, '_oldKeyGetter');
         this._initIndexMap(newArr, newDataIndexMap, newDataKeyArr, '_newKeyGetter');
@@ -149,10 +149,10 @@ class DataDiffer {
         keyArr: string[],
         keyGetterName: '_oldKeyGetter' | '_newKeyGetter'
     ): void {
-        for (var i = 0; i < arr.length; i++) {
+        for (let i = 0; i < arr.length; i++) {
             // Add prefix to avoid conflict with Object.prototype.
-            var key = '_ec_' + this[keyGetterName](arr[i], i);
-            var existence = map[key];
+            let key = '_ec_' + this[keyGetterName](arr[i], i);
+            let existence = map[key];
             if (existence == null) {
                 keyArr.push(key);
                 map[key] = i;

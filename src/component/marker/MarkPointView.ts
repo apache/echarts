@@ -38,12 +38,12 @@ function updateMarkerLayout(
     seriesModel: SeriesModel,
     api: ExtensionAPI
 ) {
-    var coordSys = seriesModel.coordinateSystem;
+    let coordSys = seriesModel.coordinateSystem;
     mpData.each(function (idx: number) {
-        var itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
-        var point;
-        var xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
-        var yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
+        let itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
+        let point;
+        let xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
+        let yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
         if (!isNaN(xPx) && !isNaN(yPx)) {
             point = [xPx, yPx];
         }
@@ -55,8 +55,8 @@ function updateMarkerLayout(
             );
         }
         else if (coordSys) {
-            var x = mpData.get(coordSys.dimensions[0], idx);
-            var y = mpData.get(coordSys.dimensions[1], idx);
+            let x = mpData.get(coordSys.dimensions[0], idx);
+            let y = mpData.get(coordSys.dimensions[1], idx);
             point = coordSys.dataToPoint([x, y]);
 
         }
@@ -82,7 +82,7 @@ class MarkPointView extends MarkerView {
 
     updateTransform(markPointModel: MarkPointModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
-            var mpModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markPoint') as MarkPointModel;
+            let mpModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markPoint') as MarkPointModel;
             if (mpModel) {
                 updateMarkerLayout(
                     mpModel.getData(),
@@ -99,15 +99,15 @@ class MarkPointView extends MarkerView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var coordSys = seriesModel.coordinateSystem;
-        var seriesId = seriesModel.id;
-        var seriesData = seriesModel.getData();
+        let coordSys = seriesModel.coordinateSystem;
+        let seriesId = seriesModel.id;
+        let seriesData = seriesModel.getData();
 
-        var symbolDrawMap = this.markerGroupMap;
-        var symbolDraw = symbolDrawMap.get(seriesId)
+        let symbolDrawMap = this.markerGroupMap;
+        let symbolDraw = symbolDrawMap.get(seriesId)
             || symbolDrawMap.set(seriesId, new SymbolDraw());
 
-        var mpData = createList(coordSys, seriesModel, mpModel);
+        let mpData = createList(coordSys, seriesModel, mpModel);
 
         // FIXME
         mpModel.setData(mpData);
@@ -115,13 +115,13 @@ class MarkPointView extends MarkerView {
         updateMarkerLayout(mpModel.getData(), seriesModel, api);
 
         mpData.each(function (idx) {
-            var itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
-            var symbol = itemModel.getShallow('symbol');
-            var symbolSize = itemModel.getShallow('symbolSize');
+            let itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
+            let symbol = itemModel.getShallow('symbol');
+            let symbolSize = itemModel.getShallow('symbolSize');
 
             if (isFunction(symbol) || isFunction(symbolSize)) {
-                var rawIdx = mpModel.getRawValue(idx);
-                var dataParams = mpModel.getDataParams(idx);
+                let rawIdx = mpModel.getRawValue(idx);
+                let dataParams = mpModel.getDataParams(idx);
                 if (isFunction(symbol)) {
                     symbol = symbol(rawIdx, dataParams);
                 }
@@ -162,10 +162,10 @@ function createList(
     seriesModel: SeriesModel,
     mpModel: MarkPointModel
 ) {
-    var coordDimsInfos;
+    let coordDimsInfos;
     if (coordSys) {
         coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
-            var info = seriesModel.getData().getDimensionInfo(
+            let info = seriesModel.getData().getDimensionInfo(
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
@@ -179,8 +179,8 @@ function createList(
         }];
     }
 
-    var mpData = new List(coordDimsInfos, mpModel);
-    var dataOpt = map(mpModel.get('data'), curry(
+    let mpData = new List(coordDimsInfos, mpModel);
+    let dataOpt = map(mpModel.get('data'), curry(
             markerHelper.dataTransform, seriesModel
         ));
     if (coordSys) {

@@ -55,24 +55,24 @@ BMapCoordSys.prototype.getBMap = function () {
 };
 
 BMapCoordSys.prototype.dataToPoint = function (data) {
-    var point = new BMap.Point(data[0], data[1]);
+    let point = new BMap.Point(data[0], data[1]);
     // TODO mercator projection is toooooooo slow
-    // var mercatorPoint = this._projection.lngLatToPoint(point);
+    // let mercatorPoint = this._projection.lngLatToPoint(point);
 
-    // var width = this._api.getZr().getWidth();
-    // var height = this._api.getZr().getHeight();
-    // var divider = Math.pow(2, 18 - 10);
+    // let width = this._api.getZr().getWidth();
+    // let height = this._api.getZr().getHeight();
+    // let divider = Math.pow(2, 18 - 10);
     // return [
     //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
     //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
     // ];
-    var px = this._bmap.pointToOverlayPixel(point);
-    var mapOffset = this._mapOffset;
+    let px = this._bmap.pointToOverlayPixel(point);
+    let mapOffset = this._mapOffset;
     return [px.x - mapOffset[0], px.y - mapOffset[1]];
 };
 
 BMapCoordSys.prototype.pointToData = function (pt) {
-    var mapOffset = this._mapOffset;
+    let mapOffset = this._mapOffset;
     pt = this._bmap.overlayPixelToPoint({
         x: pt[0] + mapOffset[0],
         y: pt[1] + mapOffset[1]
@@ -81,7 +81,7 @@ BMapCoordSys.prototype.pointToData = function (pt) {
 };
 
 BMapCoordSys.prototype.getViewRect = function () {
-    var api = this._api;
+    let api = this._api;
     return new graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
 };
 
@@ -90,7 +90,7 @@ BMapCoordSys.prototype.getRoamTransform = function () {
 };
 
 BMapCoordSys.prototype.prepareCustoms = function (data) {
-    var rect = this.getViewRect();
+    let rect = this.getViewRect();
     return {
         coordSys: {
             // The name exposed to user is always 'cartesian2d' but not 'grid'.
@@ -110,10 +110,10 @@ BMapCoordSys.prototype.prepareCustoms = function (data) {
 function dataToCoordSize(dataSize, dataItem) {
     dataItem = dataItem || [0, 0];
     return zrUtil.map([0, 1], function (dimIdx) {
-        var val = dataItem[dimIdx];
-        var halfSize = dataSize[dimIdx] / 2;
-        var p1 = [];
-        var p2 = [];
+        let val = dataItem[dimIdx];
+        let halfSize = dataSize[dimIdx] / 2;
+        let p1 = [];
+        let p2 = [];
         p1[dimIdx] = val - halfSize;
         p2[dimIdx] = val + halfSize;
         p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
@@ -151,13 +151,13 @@ function createOverlayCtor() {
 }
 
 BMapCoordSys.create = function (ecModel, api) {
-    var bmapCoordSys;
-    var root = api.getDom();
+    let bmapCoordSys;
+    let root = api.getDom();
 
     // TODO Dispose
     ecModel.eachComponent('bmap', function (bmapModel) {
-        var painter = api.getZr().painter;
-        var viewportRoot = painter.getViewportRoot();
+        let painter = api.getZr().painter;
+        let viewportRoot = painter.getViewportRoot();
         if (typeof BMap === 'undefined') {
             throw new Error('BMap api is not loaded');
         }
@@ -165,10 +165,10 @@ BMapCoordSys.create = function (ecModel, api) {
         if (bmapCoordSys) {
             throw new Error('Only one bmap component can exist');
         }
-        var bmap;
+        let bmap;
         if (!bmapModel.__bmap) {
             // Not support IE8
-            var bmapRoot = root.querySelector('.ec-extension-bmap');
+            let bmapRoot = root.querySelector('.ec-extension-bmap');
             if (bmapRoot) {
                 // Reset viewport left and top, which will be changed
                 // in moving handler in BMapView
@@ -183,7 +183,7 @@ BMapCoordSys.create = function (ecModel, api) {
             root.appendChild(bmapRoot);
             bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
 
-            var overlay = new Overlay(viewportRoot);
+            let overlay = new Overlay(viewportRoot);
             bmap.addOverlay(overlay);
 
             // Override
@@ -195,10 +195,10 @@ BMapCoordSys.create = function (ecModel, api) {
 
         // Set bmap options
         // centerAndZoom before layout and render
-        var center = bmapModel.get('center');
-        var zoom = bmapModel.get('zoom');
+        let center = bmapModel.get('center');
+        let zoom = bmapModel.get('zoom');
         if (center && zoom) {
-            var pt = new BMap.Point(center[0], center[1]);
+            let pt = new BMap.Point(center[0], center[1]);
             bmap.centerAndZoom(pt, zoom);
         }
 

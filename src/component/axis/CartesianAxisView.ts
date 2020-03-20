@@ -53,7 +53,7 @@ class CartesianAxisView extends AxisView {
 
         this.group.removeAll();
 
-        var oldAxisGroup = this._axisGroup;
+        let oldAxisGroup = this._axisGroup;
         this._axisGroup = new graphic.Group();
 
         this.group.add(this._axisGroup);
@@ -62,11 +62,11 @@ class CartesianAxisView extends AxisView {
             return;
         }
 
-        var gridModel = axisModel.getCoordSysModel();
+        let gridModel = axisModel.getCoordSysModel();
 
-        var layout = cartesianAxisHelper.layout(gridModel, axisModel);
+        let layout = cartesianAxisHelper.layout(gridModel, axisModel);
 
-        var axisBuilder = new AxisBuilder(axisModel, layout);
+        let axisBuilder = new AxisBuilder(axisModel, layout);
 
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 
@@ -95,33 +95,33 @@ interface AxisElementBuilder {
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
     splitLine(axisView, axisGroup, axisModel, gridModel) {
-        var axis = axisModel.axis;
+        let axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
             return;
         }
 
-        var splitLineModel = axisModel.getModel('splitLine');
-        var lineStyleModel = splitLineModel.getModel('lineStyle');
-        var lineColors = lineStyleModel.get('color');
+        let splitLineModel = axisModel.getModel('splitLine');
+        let lineStyleModel = splitLineModel.getModel('lineStyle');
+        let lineColors = lineStyleModel.get('color');
 
         lineColors = zrUtil.isArray(lineColors) ? lineColors : [lineColors];
 
-        var gridRect = gridModel.coordinateSystem.getRect();
-        var isHorizontal = axis.isHorizontal();
+        let gridRect = gridModel.coordinateSystem.getRect();
+        let isHorizontal = axis.isHorizontal();
 
-        var lineCount = 0;
+        let lineCount = 0;
 
-        var ticksCoords = axis.getTicksCoords({
+        let ticksCoords = axis.getTicksCoords({
             tickModel: splitLineModel
         });
 
-        var p1 = [];
-        var p2 = [];
+        let p1 = [];
+        let p2 = [];
 
-        var lineStyle = lineStyleModel.getLineStyle();
-        for (var i = 0; i < ticksCoords.length; i++) {
-            var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
+        let lineStyle = lineStyleModel.getLineStyle();
+        for (let i = 0; i < ticksCoords.length; i++) {
+            let tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
             if (isHorizontal) {
                 p1[0] = tickCoord;
@@ -136,8 +136,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 p2[1] = tickCoord;
             }
 
-            var colorIndex = (lineCount++) % lineColors.length;
-            var tickValue = ticksCoords[i].tickValue;
+            let colorIndex = (lineCount++) % lineColors.length;
+            let tickValue = ticksCoords[i].tickValue;
             axisGroup.add(new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 subPixelOptimize: true,
@@ -156,27 +156,27 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
     },
 
     minorSplitLine(axisView, axisGroup, axisModel, gridModel) {
-        var axis = axisModel.axis;
+        let axis = axisModel.axis;
 
-        var minorSplitLineModel = axisModel.getModel('minorSplitLine');
-        var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
+        let minorSplitLineModel = axisModel.getModel('minorSplitLine');
+        let lineStyleModel = minorSplitLineModel.getModel('lineStyle');
 
-        var gridRect = gridModel.coordinateSystem.getRect();
-        var isHorizontal = axis.isHorizontal();
+        let gridRect = gridModel.coordinateSystem.getRect();
+        let isHorizontal = axis.isHorizontal();
 
-        var minorTicksCoords = axis.getMinorTicksCoords();
+        let minorTicksCoords = axis.getMinorTicksCoords();
         if (!minorTicksCoords.length) {
             return;
         }
-        var p1 = [];
-        var p2 = [];
+        let p1 = [];
+        let p2 = [];
 
-        var lineStyle = lineStyleModel.getLineStyle();
+        let lineStyle = lineStyleModel.getLineStyle();
 
 
-        for (var i = 0; i < minorTicksCoords.length; i++) {
-            for (var k = 0; k < minorTicksCoords[i].length; k++) {
-                var tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k].coord);
+        for (let i = 0; i < minorTicksCoords.length; i++) {
+            for (let k = 0; k < minorTicksCoords[i].length; k++) {
+                let tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k].coord);
 
                 if (isHorizontal) {
                     p1[0] = tickCoord;

@@ -65,15 +65,15 @@ class LargeLinesPath extends graphic.Path {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: LargeLinesPathShape) {
-        var segs = shape.segs;
-        var curveness = shape.curveness;
+        let segs = shape.segs;
+        let curveness = shape.curveness;
 
         if (shape.polyline) {
             for (let i = 0; i < segs.length;) {
-                var count = segs[i++];
+                let count = segs[i++];
                 if (count > 0) {
                     ctx.moveTo(segs[i++], segs[i++]);
-                    for (var k = 1; k < count; k++) {
+                    for (let k = 1; k < count; k++) {
                         ctx.lineTo(segs[i++], segs[i++]);
                     }
                 }
@@ -81,14 +81,14 @@ class LargeLinesPath extends graphic.Path {
         }
         else {
             for (let i = 0; i < segs.length;) {
-                var x0 = segs[i++];
-                var y0 = segs[i++];
-                var x1 = segs[i++];
-                var y1 = segs[i++];
+                let x0 = segs[i++];
+                let y0 = segs[i++];
+                let x1 = segs[i++];
+                let y1 = segs[i++];
                 ctx.moveTo(x0, y0);
                 if (curveness > 0) {
-                    var x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
-                    var y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
+                    let x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
+                    let y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
                     ctx.quadraticCurveTo(x2, y2, x1, y1);
                 }
                 else {
@@ -100,15 +100,15 @@ class LargeLinesPath extends graphic.Path {
 
     findDataIndex(x: number, y: number) {
 
-        var shape = this.shape;
-        var segs = shape.segs;
-        var curveness = shape.curveness;
-        var lineWidth = this.style.lineWidth;
+        let shape = this.shape;
+        let segs = shape.segs;
+        let curveness = shape.curveness;
+        let lineWidth = this.style.lineWidth;
 
         if (shape.polyline) {
             let dataIndex = 0;
             for (let i = 0; i < segs.length;) {
-                var count = segs[i++];
+                let count = segs[i++];
                 if (count > 0) {
                     let x0 = segs[i++];
                     let y0 = segs[i++];
@@ -172,7 +172,7 @@ class LargeLineDraw {
     updateData(data: LargeLinesData) {
         this.group.removeAll();
 
-        var lineEl = new LargeLinesPath({
+        let lineEl = new LargeLinesPath({
             rectHover: true,
             cursor: 'default'
         });
@@ -213,7 +213,7 @@ class LargeLineDraw {
      * @override
      */
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: LargeLinesData) {
-        var lineEl = new LargeLinesPath();
+        let lineEl = new LargeLinesPath();
         lineEl.setShape({
             segs: data.getLayout('linesPoints')
         });
@@ -241,7 +241,7 @@ class LargeLineDraw {
     };
 
     _setCommon(lineEl: LargeLinesPath, data: LargeLinesData, isIncremental?: boolean) {
-        var hostModel = data.hostModel;
+        let hostModel = data.hostModel;
 
         lineEl.setShape({
             polyline: hostModel.get('polyline'),
@@ -253,7 +253,7 @@ class LargeLineDraw {
         );
         lineEl.style.strokeNoScale = true;
 
-        var visualColor = data.getVisual('color');
+        let visualColor = data.getVisual('color');
         if (visualColor) {
             lineEl.setStyle('stroke', visualColor);
         }
@@ -266,7 +266,7 @@ class LargeLineDraw {
             ecData.seriesIndex = hostModel.seriesIndex;
             lineEl.on('mousemove', function (e) {
                 ecData.dataIndex = null;
-                var dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
+                let dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
                 if (dataIndex > 0) {
                     // Provide dataIndex for tooltip
                     ecData.dataIndex = dataIndex + lineEl.__startIndex;
@@ -276,7 +276,7 @@ class LargeLineDraw {
     };
 
     _clearIncremental() {
-        var incremental = this._incremental;
+        let incremental = this._incremental;
         if (incremental) {
             incremental.clearDisplaybles();
         }

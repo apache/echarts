@@ -38,28 +38,28 @@ class ThemeRiverView extends ChartView {
     private _layers: graphic.Group[] = [];
 
     render(seriesModel: ThemeRiverSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var data = seriesModel.getData();
-        var self = this;
+        let data = seriesModel.getData();
+        let self = this;
 
-        var group = this.group;
+        let group = this.group;
 
-        var layersSeries = seriesModel.getLayerSeries();
+        let layersSeries = seriesModel.getLayerSeries();
 
-        var layoutInfo = data.getLayout('layoutInfo');
-        var rect = layoutInfo.rect;
-        var boundaryGap = layoutInfo.boundaryGap;
+        let layoutInfo = data.getLayout('layoutInfo');
+        let rect = layoutInfo.rect;
+        let boundaryGap = layoutInfo.boundaryGap;
 
         group.attr('position', [0, rect.y + boundaryGap[0]]);
 
         function keyGetter(item: LayerSeries[number]) {
             return item.name;
         }
-        var dataDiffer = new DataDiffer(
+        let dataDiffer = new DataDiffer(
             this._layersSeries || [], layersSeries,
             keyGetter, keyGetter
         );
 
-        var newLayersGroups: graphic.Group[] = [];
+        let newLayersGroups: graphic.Group[] = [];
 
         dataDiffer
             .add(bind(process, this, 'add'))
@@ -68,21 +68,21 @@ class ThemeRiverView extends ChartView {
             .execute();
 
         function process(status: 'add' | 'update' | 'remove', idx: number, oldIdx?: number) {
-            var oldLayersGroups = self._layers;
+            let oldLayersGroups = self._layers;
             if (status === 'remove') {
                 group.remove(oldLayersGroups[idx]);
                 return;
             }
-            var points0 = [];
-            var points1 = [];
-            var color;
-            var indices = layersSeries[idx].indices;
-            var j = 0;
+            let points0 = [];
+            let points1 = [];
+            let color;
+            let indices = layersSeries[idx].indices;
+            let j = 0;
             for (; j < indices.length; j++) {
-                var layout = data.getItemLayout(indices[j]);
-                var x = layout.x;
-                var y0 = layout.y0;
-                var y = layout.y;
+                let layout = data.getItemLayout(indices[j]);
+                let x = layout.x;
+                let y0 = layout.y0;
+                let y = layout.y;
 
                 points0.push([x, y0]);
                 points1.push([x, y0 + y]);
@@ -90,11 +90,11 @@ class ThemeRiverView extends ChartView {
                 color = data.getItemVisual(indices[j], 'color');
             }
 
-            var polygon: ECPolygon;
-            var text: graphic.Text;
-            var textLayout = data.getItemLayout(indices[0]);
-            var labelModel = seriesModel.getModel('label');
-            var margin = labelModel.get('margin');
+            let polygon: ECPolygon;
+            let text: graphic.Text;
+            let textLayout = data.getItemLayout(indices[0]);
+            let labelModel = seriesModel.getModel('label');
+            let margin = labelModel.get('margin');
             if (status === 'add') {
                 const layerGroup = newLayersGroups[idx] = new graphic.Group();
                 polygon = new ECPolygon({
@@ -144,8 +144,8 @@ class ThemeRiverView extends ChartView {
                 }, seriesModel);
             }
 
-            var hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
-            var itemStyleModel = seriesModel.getModel('itemStyle');
+            let hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
+            let itemStyleModel = seriesModel.getModel('itemStyle');
 
             graphic.setTextStyle(text.style, labelModel, {
                 text: labelModel.get('show')
@@ -169,7 +169,7 @@ class ThemeRiverView extends ChartView {
 
 // add animation to the view
 function createGridClipShape(rect: RectLike, seriesModel: ThemeRiverSeriesModel, cb: () => void) {
-    var rectEl = new graphic.Rect({
+    let rectEl = new graphic.Rect({
         shape: {
             x: rect.x - 10,
             y: rect.y - 10,

@@ -29,10 +29,10 @@ import GlobalModel from '../model/Global';
 import type Cartesian2D from '../coord/cartesian/Cartesian2D';
 import { StageHandler, Dictionary } from '../util/types';
 
-var STACK_PREFIX = '__ec_stack_';
-var LARGE_BAR_MIN_WIDTH = 0.5;
+const STACK_PREFIX = '__ec_stack_';
+const LARGE_BAR_MIN_WIDTH = 0.5;
 
-var LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
+const LargeArr = typeof Float32Array !== 'undefined' ? Float32Array : Array;
 
 
 function getSeriesStackId(seriesModel: BarSeriesModel): string {
@@ -88,14 +88,14 @@ interface LayoutOption {
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
  */
 export function getLayoutOnAxis(opt: LayoutOption) {
-    var params: LayoutSeriesInfo[] = [];
-    var baseAxis = opt.axis;
-    var axisKey = 'axis0';
+    let params: LayoutSeriesInfo[] = [];
+    let baseAxis = opt.axis;
+    let axisKey = 'axis0';
 
     if (baseAxis.type !== 'category') {
         return;
     }
-    var bandWidth = baseAxis.getBandWidth();
+    let bandWidth = baseAxis.getBandWidth();
 
     for (let i = 0; i < opt.count || 0; i++) {
         params.push(zrUtil.defaults({
@@ -104,11 +104,11 @@ export function getLayoutOnAxis(opt: LayoutOption) {
             stackId: STACK_PREFIX + i
         }, opt) as LayoutSeriesInfo);
     }
-    var widthAndOffsets = doCalBarWidthAndOffset(params);
+    let widthAndOffsets = doCalBarWidthAndOffset(params);
 
-    var result = [];
+    let result = [];
     for (let i = 0; i < opt.count; i++) {
-        var item = widthAndOffsets[axisKey][STACK_PREFIX + i];
+        let item = widthAndOffsets[axisKey][STACK_PREFIX + i];
         item.offsetCenter = item.offset + item.width / 2;
         result.push(item);
     }
@@ -117,7 +117,7 @@ export function getLayoutOnAxis(opt: LayoutOption) {
 }
 
 export function prepareLayoutBarSeries(seriesType: string, ecModel: GlobalModel): BarSeriesModel[] {
-    var seriesModels: BarSeriesModel[] = [];
+    let seriesModels: BarSeriesModel[] = [];
     ecModel.eachSeriesByType(seriesType, function (seriesModel: BarSeriesModel) {
         // Check series coordinate, do layout for cartesian2d only
         if (isOnCartesian(seriesModel) && !isInLargeMode(seriesModel)) {
@@ -144,19 +144,19 @@ function getValueAxesMinGaps(barSeries: BarSeriesModel[]) {
      * Items in axisValues[x], e.g. 1495555200000, are time values of all
      * series.
      */
-    var axisValues: Dictionary<number[]> = {};
+    let axisValues: Dictionary<number[]> = {};
     zrUtil.each(barSeries, function (seriesModel) {
-        var cartesian = seriesModel.coordinateSystem as Cartesian2D;
-        var baseAxis = cartesian.getBaseAxis();
+        let cartesian = seriesModel.coordinateSystem as Cartesian2D;
+        let baseAxis = cartesian.getBaseAxis();
         if (baseAxis.type !== 'time' && baseAxis.type !== 'value') {
             return;
         }
 
-        var data = seriesModel.getData();
-        var key = baseAxis.dim + '_' + baseAxis.index;
-        var dim = data.mapDimension(baseAxis.dim);
-        for (var i = 0, cnt = data.count(); i < cnt; ++i) {
-            var value = data.get(dim, i) as number;
+        let data = seriesModel.getData();
+        let key = baseAxis.dim + '_' + baseAxis.index;
+        let dim = data.mapDimension(baseAxis.dim);
+        for (let i = 0, cnt = data.count(); i < cnt; ++i) {
+            let value = data.get(dim, i) as number;
             if (!axisValues[key]) {
                 // No previous data for the axis
                 axisValues[key] = [value];
@@ -169,19 +169,19 @@ function getValueAxesMinGaps(barSeries: BarSeriesModel[]) {
         }
     });
 
-    var axisMinGaps: Dictionary<number> = {};
-    for (var key in axisValues) {
+    let axisMinGaps: Dictionary<number> = {};
+    for (let key in axisValues) {
         if (axisValues.hasOwnProperty(key)) {
-            var valuesInAxis = axisValues[key];
+            let valuesInAxis = axisValues[key];
             if (valuesInAxis) {
                 // Sort axis values into ascending order to calculate gaps
                 valuesInAxis.sort(function (a, b) {
                     return a - b;
                 });
 
-                var min = null;
-                for (var j = 1; j < valuesInAxis.length; ++j) {
-                    var delta = valuesInAxis[j] - valuesInAxis[j - 1];
+                let min = null;
+                for (let j = 1; j < valuesInAxis.length; ++j) {
+                    let delta = valuesInAxis[j] - valuesInAxis[j - 1];
                     if (delta > 0) {
                         // Ignore 0 delta because they are of the same axis value
                         min = min === null ? delta : Math.min(min, delta);
@@ -196,46 +196,46 @@ function getValueAxesMinGaps(barSeries: BarSeriesModel[]) {
 }
 
 export function makeColumnLayout(barSeries: BarSeriesModel[]) {
-    var axisMinGaps = getValueAxesMinGaps(barSeries);
+    let axisMinGaps = getValueAxesMinGaps(barSeries);
 
-    var seriesInfoList: LayoutSeriesInfo[] = [];
+    let seriesInfoList: LayoutSeriesInfo[] = [];
     zrUtil.each(barSeries, function (seriesModel) {
-        var cartesian = seriesModel.coordinateSystem as Cartesian2D;
-        var baseAxis = cartesian.getBaseAxis();
-        var axisExtent = baseAxis.getExtent();
+        let cartesian = seriesModel.coordinateSystem as Cartesian2D;
+        let baseAxis = cartesian.getBaseAxis();
+        let axisExtent = baseAxis.getExtent();
 
-        var bandWidth;
+        let bandWidth;
         if (baseAxis.type === 'category') {
             bandWidth = baseAxis.getBandWidth();
         }
         else if (baseAxis.type === 'value' || baseAxis.type === 'time') {
-            var key = baseAxis.dim + '_' + baseAxis.index;
-            var minGap = axisMinGaps[key];
-            var extentSpan = Math.abs(axisExtent[1] - axisExtent[0]);
-            var scale = baseAxis.scale.getExtent();
-            var scaleSpan = Math.abs(scale[1] - scale[0]);
+            let key = baseAxis.dim + '_' + baseAxis.index;
+            let minGap = axisMinGaps[key];
+            let extentSpan = Math.abs(axisExtent[1] - axisExtent[0]);
+            let scale = baseAxis.scale.getExtent();
+            let scaleSpan = Math.abs(scale[1] - scale[0]);
             bandWidth = minGap
                 ? extentSpan / scaleSpan * minGap
                 : extentSpan; // When there is only one data value
         }
         else {
-            var data = seriesModel.getData();
+            let data = seriesModel.getData();
             bandWidth = Math.abs(axisExtent[1] - axisExtent[0]) / data.count();
         }
 
-        var barWidth = parsePercent(
+        let barWidth = parsePercent(
             seriesModel.get('barWidth'), bandWidth
         );
-        var barMaxWidth = parsePercent(
+        let barMaxWidth = parsePercent(
             seriesModel.get('barMaxWidth'), bandWidth
         );
-        var barMinWidth = parsePercent(
+        let barMinWidth = parsePercent(
             // barMinWidth by default is 1 in cartesian. Because in value axis,
             // the auto-calculated bar width might be less than 1.
             seriesModel.get('barMinWidth') || 1, bandWidth
         );
-        var barGap = seriesModel.get('barGap');
-        var barCategoryGap = seriesModel.get('barCategoryGap');
+        let barGap = seriesModel.get('barGap');
+        let barCategoryGap = seriesModel.get('barCategoryGap');
 
         seriesInfoList.push({
             bandWidth: bandWidth,
@@ -263,12 +263,12 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
     }
 
     // Columns info on each category axis. Key is cartesian name
-    var columnsMap: Dictionary<ColumnOnAxisInfo> = {};
+    let columnsMap: Dictionary<ColumnOnAxisInfo> = {};
 
     zrUtil.each(seriesInfoList, function (seriesInfo, idx) {
-        var axisKey = seriesInfo.axisKey;
-        var bandWidth = seriesInfo.bandWidth;
-        var columnsOnAxis: ColumnOnAxisInfo = columnsMap[axisKey] || {
+        let axisKey = seriesInfo.axisKey;
+        let bandWidth = seriesInfo.bandWidth;
+        let columnsOnAxis: ColumnOnAxisInfo = columnsMap[axisKey] || {
             bandWidth: bandWidth,
             remainedWidth: bandWidth,
             autoWidthCount: 0,
@@ -276,10 +276,10 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             gap: '30%',
             stacks: {}
         };
-        var stacks = columnsOnAxis.stacks;
+        let stacks = columnsOnAxis.stacks;
         columnsMap[axisKey] = columnsOnAxis;
 
-        var stackId = seriesInfo.stackId;
+        let stackId = seriesInfo.stackId;
 
         if (!stacks[stackId]) {
             columnsOnAxis.autoWidthCount++;
@@ -294,7 +294,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
         // only the attributes set on the last series will work.
         // Do not change this fact unless there will be a break change.
 
-        var barWidth = seriesInfo.barWidth;
+        let barWidth = seriesInfo.barWidth;
         if (barWidth && !stacks[stackId].width) {
             // See #6312, do not restrict width.
             stacks[stackId].width = barWidth;
@@ -302,37 +302,37 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             columnsOnAxis.remainedWidth -= barWidth;
         }
 
-        var barMaxWidth = seriesInfo.barMaxWidth;
+        let barMaxWidth = seriesInfo.barMaxWidth;
         barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
-        var barMinWidth = seriesInfo.barMinWidth;
+        let barMinWidth = seriesInfo.barMinWidth;
         barMinWidth && (stacks[stackId].minWidth = barMinWidth);
-        var barGap = seriesInfo.barGap;
+        let barGap = seriesInfo.barGap;
         (barGap != null) && (columnsOnAxis.gap = barGap);
-        var barCategoryGap = seriesInfo.barCategoryGap;
+        let barCategoryGap = seriesInfo.barCategoryGap;
         (barCategoryGap != null) && (columnsOnAxis.categoryGap = barCategoryGap);
     });
 
-    var result: BarWidthAndOffset = {};
+    let result: BarWidthAndOffset = {};
 
     zrUtil.each(columnsMap, function (columnsOnAxis, coordSysName) {
 
         result[coordSysName] = {};
 
-        var stacks = columnsOnAxis.stacks;
-        var bandWidth = columnsOnAxis.bandWidth;
-        var categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
-        var barGapPercent = parsePercent(columnsOnAxis.gap, 1);
+        let stacks = columnsOnAxis.stacks;
+        let bandWidth = columnsOnAxis.bandWidth;
+        let categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
+        let barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
-        var remainedWidth = columnsOnAxis.remainedWidth;
-        var autoWidthCount = columnsOnAxis.autoWidthCount;
-        var autoWidth = (remainedWidth - categoryGap)
+        let remainedWidth = columnsOnAxis.remainedWidth;
+        let autoWidthCount = columnsOnAxis.autoWidthCount;
+        let autoWidth = (remainedWidth - categoryGap)
             / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
         autoWidth = Math.max(autoWidth, 0);
 
         // Find if any auto calculated bar exceeded maxBarWidth
         zrUtil.each(stacks, function (column) {
-            var maxWidth = column.maxWidth;
-            var minWidth = column.minWidth;
+            let maxWidth = column.maxWidth;
+            let minWidth = column.minWidth;
 
             if (!column.width) {
                 let finalWidth = autoWidth;
@@ -378,8 +378,8 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
         autoWidth = Math.max(autoWidth, 0);
 
 
-        var widthSum = 0;
-        var lastColumn: StackInfo;
+        let widthSum = 0;
+        let lastColumn: StackInfo;
         zrUtil.each(stacks, function (column, idx) {
             if (!column.width) {
                 column.width = autoWidth;
@@ -391,7 +391,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             widthSum -= lastColumn.width * barGapPercent;
         }
 
-        var offset = -widthSum / 2;
+        let offset = -widthSum / 2;
         zrUtil.each(stacks, function (column, stackId) {
             result[coordSysName][stackId] = result[coordSysName][stackId] || {
                 bandWidth: bandWidth,
@@ -420,7 +420,7 @@ function retrieveColumnLayout(
     seriesModel?: BarSeriesModel
 ) {
     if (barWidthAndOffset && axis) {
-        var result = barWidthAndOffset[getAxisKey(axis)];
+        let result = barWidthAndOffset[getAxisKey(axis)];
         if (result != null && seriesModel != null) {
             return result[getSeriesStackId(seriesModel)];
         }
@@ -431,24 +431,24 @@ export {retrieveColumnLayout};
 
 export function layout(seriesType: string, ecModel: GlobalModel) {
 
-    var seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
-    var barWidthAndOffset = makeColumnLayout(seriesModels);
+    let seriesModels = prepareLayoutBarSeries(seriesType, ecModel);
+    let barWidthAndOffset = makeColumnLayout(seriesModels);
 
-    var lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
+    let lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
 
     zrUtil.each(seriesModels, function (seriesModel) {
 
-        var data = seriesModel.getData();
-        var cartesian = seriesModel.coordinateSystem as Cartesian2D;
-        var baseAxis = cartesian.getBaseAxis();
+        let data = seriesModel.getData();
+        let cartesian = seriesModel.coordinateSystem as Cartesian2D;
+        let baseAxis = cartesian.getBaseAxis();
 
-        var stackId = getSeriesStackId(seriesModel);
-        var columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
-        var columnOffset = columnLayoutInfo.offset;
-        var columnWidth = columnLayoutInfo.width;
-        var valueAxis = cartesian.getOtherAxis(baseAxis);
+        let stackId = getSeriesStackId(seriesModel);
+        let columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
+        let columnOffset = columnLayoutInfo.offset;
+        let columnWidth = columnLayoutInfo.width;
+        let valueAxis = cartesian.getOtherAxis(baseAxis);
 
-        var barMinHeight = seriesModel.get('barMinHeight') || 0;
+        let barMinHeight = seriesModel.get('barMinHeight') || 0;
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
@@ -458,19 +458,19 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
             size: columnWidth
         });
 
-        var valueDim = data.mapDimension(valueAxis.dim);
-        var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
-        var isValueAxisH = valueAxis.isHorizontal();
+        let valueDim = data.mapDimension(valueAxis.dim);
+        let baseDim = data.mapDimension(baseAxis.dim);
+        let stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        let isValueAxisH = valueAxis.isHorizontal();
 
-        var valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
+        let valueAxisStart = getValueAxisStart(baseAxis, valueAxis, stacked);
 
-        for (var idx = 0, len = data.count(); idx < len; idx++) {
-            var value = data.get(valueDim, idx);
-            var baseValue = data.get(baseDim, idx) as number;
+        for (let idx = 0, len = data.count(); idx < len; idx++) {
+            let value = data.get(valueDim, idx);
+            let baseValue = data.get(baseDim, idx) as number;
 
-            var sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
-            var baseCoord = valueAxisStart;
+            let sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
+            let baseCoord = valueAxisStart;
 
             // Because of the barMinHeight, we can not use the value in
             // stackResultDimension directly.
@@ -486,10 +486,10 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
                 baseCoord = lastStackCoords[stackId][baseValue][sign];
             }
 
-            var x;
-            var y;
-            var width;
-            var height;
+            let x;
+            let y;
+            let width;
+            let height;
 
             if (isValueAxisH) {
                 let coord = cartesian.dataToPoint([value, baseValue]);
@@ -535,7 +535,7 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
 }
 
 // TODO: Do not support stack in large mode yet.
-export var largeLayout: StageHandler = {
+export let largeLayout: StageHandler = {
 
     seriesType: 'bar',
 
@@ -546,17 +546,17 @@ export var largeLayout: StageHandler = {
             return;
         }
 
-        var data = seriesModel.getData();
-        var cartesian = seriesModel.coordinateSystem as Cartesian2D;
-        var coordLayout = cartesian.grid.getRect();
-        var baseAxis = cartesian.getBaseAxis();
-        var valueAxis = cartesian.getOtherAxis(baseAxis);
-        var valueDim = data.mapDimension(valueAxis.dim);
-        var baseDim = data.mapDimension(baseAxis.dim);
-        var valueAxisHorizontal = valueAxis.isHorizontal();
-        var valueDimIdx = valueAxisHorizontal ? 0 : 1;
+        let data = seriesModel.getData();
+        let cartesian = seriesModel.coordinateSystem as Cartesian2D;
+        let coordLayout = cartesian.grid.getRect();
+        let baseAxis = cartesian.getBaseAxis();
+        let valueAxis = cartesian.getOtherAxis(baseAxis);
+        let valueDim = data.mapDimension(valueAxis.dim);
+        let baseDim = data.mapDimension(baseAxis.dim);
+        let valueAxisHorizontal = valueAxis.isHorizontal();
+        let valueDimIdx = valueAxisHorizontal ? 0 : 1;
 
-        var barWidth = retrieveColumnLayout(
+        let barWidth = retrieveColumnLayout(
             makeColumnLayout([seriesModel]), baseAxis, seriesModel
         ).width;
         if (!(barWidth > LARGE_BAR_MIN_WIDTH)) { // jshint ignore:line
@@ -565,15 +565,15 @@ export var largeLayout: StageHandler = {
 
         return {
             progress: function (params, data) {
-                var count = params.count;
-                var largePoints = new LargeArr(count * 2);
-                var largeBackgroundPoints = new LargeArr(count * 2);
-                var largeDataIndices = new LargeArr(count);
-                var dataIndex;
-                var coord: number[] = [];
-                var valuePair = [];
-                var pointsOffset = 0;
-                var idxOffset = 0;
+                let count = params.count;
+                let largePoints = new LargeArr(count * 2);
+                let largeBackgroundPoints = new LargeArr(count * 2);
+                let largeDataIndices = new LargeArr(count);
+                let dataIndex;
+                let coord: number[] = [];
+                let valuePair = [];
+                let pointsOffset = 0;
+                let idxOffset = 0;
 
                 while ((dataIndex = params.next()) != null) {
                     valuePair[valueDimIdx] = data.get(valueDim, dataIndex);

@@ -29,7 +29,7 @@ import { LayoutOrient, OptionDataValueDate, ZRTextAlign, ZRTextVerticalAlign } f
 import ComponentView from '../../view/Component';
 import { StyleProps } from 'zrender/src/graphic/Style';
 
-var MONTH_TEXT = {
+const MONTH_TEXT = {
     EN: [
         'Jan', 'Feb', 'Mar',
         'Apr', 'May', 'Jun',
@@ -44,7 +44,7 @@ var MONTH_TEXT = {
     ]
 };
 
-var WEEK_TEXT = {
+const WEEK_TEXT = {
     EN: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
     CN: ['日', '一', '二', '三', '四', '五', '六']
 };
@@ -76,15 +76,15 @@ class CalendarView extends ComponentView {
 
     render(calendarModel: CalendarModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
-        var group = this.group;
+        let group = this.group;
 
         group.removeAll();
 
-        var coordSys = calendarModel.coordinateSystem;
+        let coordSys = calendarModel.coordinateSystem;
 
         // range info
-        var rangeData = coordSys.getRangeInfo();
-        var orient = coordSys.getOrient();
+        let rangeData = coordSys.getRangeInfo();
+        let orient = coordSys.getOrient();
 
         this._renderDayRect(calendarModel, rangeData, group);
 
@@ -100,20 +100,20 @@ class CalendarView extends ComponentView {
 
     // render day rect
     _renderDayRect(calendarModel: CalendarModel, rangeData: CalendarParsedDateRangeInfo, group: graphic.Group) {
-        var coordSys = calendarModel.coordinateSystem;
-        var itemRectStyleModel = calendarModel.getModel('itemStyle').getItemStyle();
-        var sw = coordSys.getCellWidth();
-        var sh = coordSys.getCellHeight();
+        let coordSys = calendarModel.coordinateSystem;
+        let itemRectStyleModel = calendarModel.getModel('itemStyle').getItemStyle();
+        let sw = coordSys.getCellWidth();
+        let sh = coordSys.getCellHeight();
 
-        for (var i = rangeData.start.time;
+        for (let i = rangeData.start.time;
             i <= rangeData.end.time;
             i = coordSys.getNextNDay(i, 1).time
         ) {
 
-            var point = coordSys.dataToRect([i], false).tl;
+            let point = coordSys.dataToRect([i], false).tl;
 
             // every rect
-            var rect = new graphic.Rect({
+            let rect = new graphic.Rect({
                 shape: {
                     x: point[0],
                     y: point[1],
@@ -137,14 +137,14 @@ class CalendarView extends ComponentView {
         group: graphic.Group
     ) {
 
-        var self = this;
+        let self = this;
 
-        var coordSys = calendarModel.coordinateSystem;
+        let coordSys = calendarModel.coordinateSystem;
 
-        var lineStyleModel = calendarModel.getModel(['splitLine', 'lineStyle']).getLineStyle();
-        var show = calendarModel.get(['splitLine', 'show']);
+        let lineStyleModel = calendarModel.getModel(['splitLine', 'lineStyle']).getLineStyle();
+        let show = calendarModel.get(['splitLine', 'show']);
 
-        var lineWidth = lineStyleModel.lineWidth;
+        let lineWidth = lineStyleModel.lineWidth;
 
         this._tlpoints = [];
         this._blpoints = [];
@@ -152,16 +152,16 @@ class CalendarView extends ComponentView {
         this._firstDayPoints = [];
 
 
-        var firstDay = rangeData.start;
+        let firstDay = rangeData.start;
 
-        for (var i = 0; firstDay.time <= rangeData.end.time; i++) {
+        for (let i = 0; firstDay.time <= rangeData.end.time; i++) {
             addPoints(firstDay.formatedDate);
 
             if (i === 0) {
                 firstDay = coordSys.getDateInfo(rangeData.start.y + '-' + rangeData.start.m);
             }
 
-            var date = firstDay.date;
+            let date = firstDay.date;
             date.setMonth(date.getMonth() + 1);
             firstDay = coordSys.getDateInfo(date);
         }
@@ -173,7 +173,7 @@ class CalendarView extends ComponentView {
             self._firstDayOfMonth.push(coordSys.getDateInfo(date));
             self._firstDayPoints.push(coordSys.dataToRect([date], false).tl);
 
-            var points = self._getLinePointsOfOneWeek(calendarModel, date, orient);
+            let points = self._getLinePointsOfOneWeek(calendarModel, date, orient);
 
             self._tlpoints.push(points[0]);
             self._blpoints.push(points[points.length - 1]);
@@ -192,8 +192,8 @@ class CalendarView extends ComponentView {
 
     // get points at both ends
     _getEdgesPoints(points: number[][], lineWidth: number, orient: LayoutOrient) {
-        var rs = [points[0].slice(), points[points.length - 1].slice()];
-        var idx = orient === 'horizontal' ? 0 : 1;
+        let rs = [points[0].slice(), points[points.length - 1].slice()];
+        let idx = orient === 'horizontal' ? 0 : 1;
 
         // both ends of the line are extend half lineWidth
         rs[0][idx] = rs[0][idx] - lineWidth / 2;
@@ -205,7 +205,7 @@ class CalendarView extends ComponentView {
     // render split line
     _drawSplitline(points: number[][], lineStyle: StyleProps, group: graphic.Group) {
 
-        var poyline = new graphic.Polyline({
+        let poyline = new graphic.Polyline({
             z2: 20,
             shape: {
                 points: points
@@ -219,15 +219,15 @@ class CalendarView extends ComponentView {
     // render month line of one week points
     _getLinePointsOfOneWeek(calendarModel: CalendarModel, date: OptionDataValueDate, orient: LayoutOrient) {
 
-        var coordSys = calendarModel.coordinateSystem;
-        var parsedDate = coordSys.getDateInfo(date);
+        let coordSys = calendarModel.coordinateSystem;
+        let parsedDate = coordSys.getDateInfo(date);
 
-        var points = [];
+        let points = [];
 
-        for (var i = 0; i < 7; i++) {
+        for (let i = 0; i < 7; i++) {
 
-            var tmpD = coordSys.getNextNDay(parsedDate.time, i);
-            var point = coordSys.dataToRect([tmpD.time], false);
+            let tmpD = coordSys.getNextNDay(parsedDate.time, i);
+            let point = coordSys.dataToRect([tmpD.time], false);
 
             points[2 * tmpD.day] = point.tl;
             points[2 * tmpD.day + 1] = point[orient === 'horizontal' ? 'bl' : 'tr'];
@@ -263,7 +263,7 @@ class CalendarView extends ComponentView {
     ) {
 
         point = point.slice();
-        var aligns: [ZRTextAlign, ZRTextVerticalAlign] = ['center', 'bottom'];
+        let aligns: [ZRTextAlign, ZRTextVerticalAlign] = ['center', 'bottom'];
 
         if (position === 'bottom') {
             point[1] += margin;
@@ -280,7 +280,7 @@ class CalendarView extends ComponentView {
             point[1] -= margin;
         }
 
-        var rotate = 0;
+        let rotate = 0;
         if (position === 'left' || position === 'right') {
             rotate = Math.PI / 2;
         }
@@ -302,49 +302,49 @@ class CalendarView extends ComponentView {
         orient: LayoutOrient,
         group: graphic.Group
     ) {
-        var yearLabel = calendarModel.getModel('yearLabel');
+        let yearLabel = calendarModel.getModel('yearLabel');
 
         if (!yearLabel.get('show')) {
             return;
         }
 
-        var margin = yearLabel.get('margin');
-        var pos = yearLabel.get('position');
+        let margin = yearLabel.get('margin');
+        let pos = yearLabel.get('position');
 
         if (!pos) {
             pos = orient !== 'horizontal' ? 'top' : 'left';
         }
 
-        var points = [this._tlpoints[this._tlpoints.length - 1], this._blpoints[0]];
-        var xc = (points[0][0] + points[1][0]) / 2;
-        var yc = (points[0][1] + points[1][1]) / 2;
+        let points = [this._tlpoints[this._tlpoints.length - 1], this._blpoints[0]];
+        let xc = (points[0][0] + points[1][0]) / 2;
+        let yc = (points[0][1] + points[1][1]) / 2;
 
-        var idx = orient === 'horizontal' ? 0 : 1;
+        let idx = orient === 'horizontal' ? 0 : 1;
 
-        var posPoints = {
+        let posPoints = {
             top: [xc, points[idx][1]],
             bottom: [xc, points[1 - idx][1]],
             left: [points[1 - idx][0], yc],
             right: [points[idx][0], yc]
         };
 
-        var name = rangeData.start.y;
+        let name = rangeData.start.y;
 
         if (+rangeData.end.y > +rangeData.start.y) {
             name = name + '-' + rangeData.end.y;
         }
 
-        var formatter = yearLabel.get('formatter');
+        let formatter = yearLabel.get('formatter');
 
-        var params = {
+        let params = {
             start: rangeData.start.y,
             end: rangeData.end.y,
             nameMap: name
         };
 
-        var content = this._formatterLabel(formatter, params);
+        let content = this._formatterLabel(formatter, params);
 
-        var yearText = new graphic.Text({z2: 30});
+        let yearText = new graphic.Text({z2: 30});
         graphic.setTextStyle(yearText.style, yearLabel, {text: content}),
         yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
@@ -358,10 +358,10 @@ class CalendarView extends ComponentView {
         position: 'start' | 'end',
         margin: number
     ) {
-        var align: ZRTextAlign = 'left';
-        var vAlign: ZRTextVerticalAlign = 'top';
-        var x = point[0];
-        var y = point[1];
+        let align: ZRTextAlign = 'left';
+        let vAlign: ZRTextVerticalAlign = 'top';
+        let x = point[0];
+        let y = point[1];
 
         if (orient === 'horizontal') {
             y = y + margin;
@@ -396,41 +396,41 @@ class CalendarView extends ComponentView {
 
     // render month and year text
     _renderMonthText(calendarModel: CalendarModel, orient: LayoutOrient, group: graphic.Group) {
-        var monthLabel = calendarModel.getModel('monthLabel');
+        let monthLabel = calendarModel.getModel('monthLabel');
 
         if (!monthLabel.get('show')) {
             return;
         }
 
-        var nameMap = monthLabel.get('nameMap');
-        var margin = monthLabel.get('margin');
-        var pos = monthLabel.get('position');
-        var align = monthLabel.get('align');
+        let nameMap = monthLabel.get('nameMap');
+        let margin = monthLabel.get('margin');
+        let pos = monthLabel.get('position');
+        let align = monthLabel.get('align');
 
-        var termPoints = [this._tlpoints, this._blpoints];
+        let termPoints = [this._tlpoints, this._blpoints];
 
         if (zrUtil.isString(nameMap)) {
             nameMap = MONTH_TEXT[nameMap.toUpperCase() as 'CN' | 'EN'] || [];
         }
 
-        var idx = pos === 'start' ? 0 : 1;
-        var axis = orient === 'horizontal' ? 0 : 1;
+        let idx = pos === 'start' ? 0 : 1;
+        let axis = orient === 'horizontal' ? 0 : 1;
         margin = pos === 'start' ? -margin : margin;
-        var isCenter = (align === 'center');
+        let isCenter = (align === 'center');
 
-        for (var i = 0; i < termPoints[idx].length - 1; i++) {
+        for (let i = 0; i < termPoints[idx].length - 1; i++) {
 
-            var tmp = termPoints[idx][i].slice();
-            var firstDay = this._firstDayOfMonth[i];
+            let tmp = termPoints[idx][i].slice();
+            let firstDay = this._firstDayOfMonth[i];
 
             if (isCenter) {
-                var firstDayPoints = this._firstDayPoints[i];
+                let firstDayPoints = this._firstDayPoints[i];
                 tmp[axis] = (firstDayPoints[axis] + termPoints[0][i + 1][axis]) / 2;
             }
 
-            var formatter = monthLabel.get('formatter');
-            var name = nameMap[+firstDay.m - 1];
-            var params = {
+            let formatter = monthLabel.get('formatter');
+            let name = nameMap[+firstDay.m - 1];
+            let params = {
                 yyyy: firstDay.y,
                 yy: (firstDay.y + '').slice(2),
                 MM: firstDay.m,
@@ -438,9 +438,9 @@ class CalendarView extends ComponentView {
                 nameMap: name
             };
 
-            var content = this._formatterLabel(formatter, params);
+            let content = this._formatterLabel(formatter, params);
 
-            var monthText = new graphic.Text({z2: 30});
+            let monthText = new graphic.Text({z2: 30});
             zrUtil.extend(
                 graphic.setTextStyle(monthText.style, monthLabel, {text: content}),
                 this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
@@ -457,11 +457,11 @@ class CalendarView extends ComponentView {
         margin: number,
         cellSize: number[]
     ) {
-        var align = 'center';
-        var vAlign = 'middle';
-        var x = point[0];
-        var y = point[1];
-        var isStart = position === 'start';
+        let align = 'center';
+        let vAlign = 'middle';
+        let x = point[0];
+        let y = point[1];
+        let isStart = position === 'start';
 
         if (orient === 'horizontal') {
             x = x + margin + (isStart ? 1 : -1) * cellSize[0] / 2;
@@ -487,27 +487,27 @@ class CalendarView extends ComponentView {
         orient: LayoutOrient,
         group: graphic.Group
     ) {
-        var dayLabel = calendarModel.getModel('dayLabel');
+        let dayLabel = calendarModel.getModel('dayLabel');
 
         if (!dayLabel.get('show')) {
             return;
         }
 
-        var coordSys = calendarModel.coordinateSystem;
-        var pos = dayLabel.get('position');
-        var nameMap = dayLabel.get('nameMap');
-        var margin = dayLabel.get('margin');
-        var firstDayOfWeek = coordSys.getFirstDayOfWeek();
+        let coordSys = calendarModel.coordinateSystem;
+        let pos = dayLabel.get('position');
+        let nameMap = dayLabel.get('nameMap');
+        let margin = dayLabel.get('margin');
+        let firstDayOfWeek = coordSys.getFirstDayOfWeek();
 
         if (zrUtil.isString(nameMap)) {
             nameMap = WEEK_TEXT[nameMap.toUpperCase() as 'CN' | 'EN'] || [];
         }
 
-        var start = coordSys.getNextNDay(
+        let start = coordSys.getNextNDay(
             rangeData.end.time, (7 - rangeData.lweek)
         ).time;
 
-        var cellSize = [coordSys.getCellWidth(), coordSys.getCellHeight()];
+        let cellSize = [coordSys.getCellWidth(), coordSys.getCellHeight()];
         margin = numberUtil.parsePercent(margin, cellSize[orient === 'horizontal' ? 0 : 1]);
 
         if (pos === 'start') {
@@ -517,13 +517,13 @@ class CalendarView extends ComponentView {
             margin = -margin;
         }
 
-        for (var i = 0; i < 7; i++) {
+        for (let i = 0; i < 7; i++) {
 
-            var tmpD = coordSys.getNextNDay(start, i);
-            var point = coordSys.dataToRect([tmpD.time], false).center;
-            var day = i;
+            let tmpD = coordSys.getNextNDay(start, i);
+            let point = coordSys.dataToRect([tmpD.time], false).center;
+            let day = i;
             day = Math.abs((i + firstDayOfWeek) % 7);
-            var weekText = new graphic.Text({z2: 30});
+            let weekText = new graphic.Text({z2: 30});
 
             zrUtil.extend(
                 graphic.setTextStyle(weekText.style, dayLabel, {text: nameMap[day]}),

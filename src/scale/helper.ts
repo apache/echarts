@@ -19,7 +19,7 @@
 
 import * as numberUtil from '../util/number';
 
-var roundNumber = numberUtil.round;
+const roundNumber = numberUtil.round;
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -38,10 +38,10 @@ export function intervalScaleNiceTicks(
     maxInterval?: number
 ): intervalScaleNiceTicksResult {
 
-    var result = {} as intervalScaleNiceTicksResult;
+    let result = {} as intervalScaleNiceTicksResult;
 
-    var span = extent[1] - extent[0];
-    var interval = result.interval = numberUtil.nice(span / splitNumber, true);
+    let span = extent[1] - extent[0];
+    let interval = result.interval = numberUtil.nice(span / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }
@@ -49,9 +49,9 @@ export function intervalScaleNiceTicks(
         interval = result.interval = maxInterval;
     }
     // Tow more digital for tick.
-    var precision = result.intervalPrecision = getIntervalPrecision(interval);
+    let precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
-    var niceTickExtent = result.niceTickExtent = [
+    let niceTickExtent = result.niceTickExtent = [
         roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
         roundNumber(Math.floor(extent[1] / interval) * interval, precision)
     ];

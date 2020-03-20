@@ -30,7 +30,7 @@
 import * as vec2 from 'zrender/src/core/vector';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 
-var scaleAndAdd = vec2.scaleAndAdd;
+const scaleAndAdd = vec2.scaleAndAdd;
 
 interface InputNode {
     p?: vec2.VectorArray
@@ -76,27 +76,27 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
     inEdges: E[],
     opts: LayoutCfg
 ) {
-    var nodes = inNodes as LayoutNode[];
-    var edges = inEdges as LayoutEdge[];
-    var rect = opts.rect;
-    var width = rect.width;
-    var height = rect.height;
-    var center = [rect.x + width / 2, rect.y + height / 2];
-    // var scale = opts.scale || 1;
-    var gravity = opts.gravity == null ? 0.1 : opts.gravity;
+    let nodes = inNodes as LayoutNode[];
+    let edges = inEdges as LayoutEdge[];
+    let rect = opts.rect;
+    let width = rect.width;
+    let height = rect.height;
+    let center = [rect.x + width / 2, rect.y + height / 2];
+    // let scale = opts.scale || 1;
+    let gravity = opts.gravity == null ? 0.1 : opts.gravity;
 
-    // for (var i = 0; i < edges.length; i++) {
-    //     var e = edges[i];
-    //     var n1 = e.n1;
-    //     var n2 = e.n2;
+    // for (let i = 0; i < edges.length; i++) {
+    //     let e = edges[i];
+    //     let n1 = e.n1;
+    //     let n2 = e.n2;
     //     n1.edges = n1.edges || [];
     //     n2.edges = n2.edges || [];
     //     n1.edges.push(e);
     //     n2.edges.push(e);
     // }
     // Init position
-    for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i] as LayoutNode;
+    for (let i = 0; i < nodes.length; i++) {
+        let n = nodes[i] as LayoutNode;
         if (!n.p) {
             n.p = vec2.create(
                 width * (Math.random() - 0.5) + center[0],
@@ -108,14 +108,14 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
     }
 
     // Formula in 'Graph Drawing by Force-directed Placement'
-    // var k = scale * Math.sqrt(width * height / nodes.length);
-    // var k2 = k * k;
+    // let k = scale * Math.sqrt(width * height / nodes.length);
+    // let k2 = k * k;
 
-    var initialFriction = opts.friction == null ? 0.6 : opts.friction;
-    var friction = initialFriction;
+    let initialFriction = opts.friction == null ? 0.6 : opts.friction;
+    let friction = initialFriction;
 
-    var beforeStepCallback: (nodes: N[], edges: E[]) => void;
-    var afterStepCallback: (nodes: N[], edges: E[], finished: boolean) => void;
+    let beforeStepCallback: (nodes: N[], edges: E[]) => void;
+    let afterStepCallback: (nodes: N[], edges: E[], finished: boolean) => void;
 
     return {
         warmUp: function () {
@@ -180,9 +180,9 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
                 let n = nodes[i];
                 if (!n.fixed) {
                     vec2.sub(v12, center, n.p);
-                    // var d = vec2.len(v12);
+                    // let d = vec2.len(v12);
                     // vec2.scale(v12, v12, 1 / d);
-                    // var gravityFactor = gravity;
+                    // let gravityFactor = gravity;
                     scaleAndAdd(n.p, n.p, v12, gravity * friction);
                 }
             }

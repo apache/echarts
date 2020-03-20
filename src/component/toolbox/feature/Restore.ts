@@ -24,7 +24,7 @@ import { ToolboxFeatureOption, ToolboxFeature, registerFeature } from '../featur
 import ExtensionAPI from '../../../ExtensionAPI';
 import GlobalModel from '../../../model/Global';
 
-var restoreLang = lang.toolbox.restore;
+const restoreLang = lang.toolbox.restore;
 
 export interface ToolboxRestoreFeatureOption extends ToolboxFeatureOption {
     icon?: string

@@ -29,21 +29,21 @@ function defaultCompareFunc(a: any, b: any): any {
 }
 
 function swapElement<T>(arr: T[], idx0: number, idx1: number) {
-    var tmp = arr[idx0];
+    let tmp = arr[idx0];
     arr[idx0] = arr[idx1];
     arr[idx1] = tmp;
 }
 
 function select<T>(arr: T[], left: number, right: number, nth: number, compareFunc: CompareFunc<T>): number {
-    var pivotIdx = left;
-    var pivotValue;
+    let pivotIdx = left;
+    let pivotValue;
     while (right > left) {
         pivotIdx = Math.round((right + left) / 2);
         pivotValue = arr[pivotIdx];
         // Swap pivot to the end
         swapElement(arr, pivotIdx, right);
         pivotIdx = left;
-        for (var i = left; i <= right - 1; i++) {
+        for (let i = left; i <= right - 1; i++) {
             if (compareFunc(pivotValue, arr[i]) >= 0) {
                 swapElement(arr, i, pivotIdx);
                 pivotIdx++;
@@ -67,8 +67,8 @@ function select<T>(arr: T[], left: number, right: number, nth: number, compareFu
 
 /**
  * @example
- *     var quickSelect = require('echarts/core/quickSelect');
- *     var arr = [5, 2, 1, 4, 3]
+ *     let quickSelect = require('echarts/core/quickSelect');
+ *     let arr = [5, 2, 1, 4, 3]
  *     quickSelect(arr, 3);
  *     quickSelect(arr, 0, 3, 1, function (a, b) {return a - b});
  *

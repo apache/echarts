@@ -23,7 +23,7 @@ import * as formatUtil from '../util/format';
 import Scale from './Scale';
 import * as helper from './helper';
 
-var roundNumber = numberUtil.round;
+const roundNumber = numberUtil.round;
 
 class IntervalScale extends Scale {
 
@@ -53,7 +53,7 @@ class IntervalScale extends Scale {
     }
 
     setExtent(start: number | string, end: number | string): void {
-        var thisExtent = this._extent;
+        let thisExtent = this._extent;
         // start,end may be a Number like '25',so...
         if (!isNaN(start as any)) {
             thisExtent[0] = parseFloat(start as any);
@@ -64,7 +64,7 @@ class IntervalScale extends Scale {
     }
 
     unionExtent(other: [number, number]): void {
-        var extent = this._extent;
+        let extent = this._extent;
         other[0] < extent[0] && (extent[0] = other[0]);
         other[1] > extent[1] && (extent[1] = other[1]);
 
@@ -89,19 +89,19 @@ class IntervalScale extends Scale {
      * @param expandToNicedExtent Whether expand the ticks to niced extent.
      */
     getTicks(expandToNicedExtent?: boolean): number[] {
-        var interval = this._interval;
-        var extent = this._extent;
-        var niceTickExtent = this._niceExtent;
-        var intervalPrecision = this._intervalPrecision;
+        let interval = this._interval;
+        let extent = this._extent;
+        let niceTickExtent = this._niceExtent;
+        let intervalPrecision = this._intervalPrecision;
 
-        var ticks = [] as number[];
+        let ticks = [] as number[];
         // If interval is 0, return [];
         if (!interval) {
             return ticks;
         }
 
         // Consider this case: using dataZoom toolbox, zoom and zoom.
-        var safeLimit = 10000;
+        let safeLimit = 10000;
 
         if (extent[0] < niceTickExtent[0]) {
             if (expandToNicedExtent) {
@@ -111,7 +111,7 @@ class IntervalScale extends Scale {
                 ticks.push(extent[0]);
             }
         }
-        var tick = niceTickExtent[0];
+        let tick = niceTickExtent[0];
 
         while (tick <= niceTickExtent[1]) {
             ticks.push(tick);
@@ -128,7 +128,7 @@ class IntervalScale extends Scale {
         }
         // Consider this case: the last item of ticks is smaller
         // than niceTickExtent[1] and niceTickExtent[1] === extent[1].
-        var lastNiceTick = ticks.length ? ticks[ticks.length - 1] : niceTickExtent[1];
+        let lastNiceTick = ticks.length ? ticks[ticks.length - 1] : niceTickExtent[1];
         if (extent[1] > lastNiceTick) {
             if (expandToNicedExtent) {
                 ticks.push(roundNumber(lastNiceTick + interval, intervalPrecision));
@@ -142,20 +142,20 @@ class IntervalScale extends Scale {
     }
 
     getMinorTicks(splitNumber: number): number[][] {
-        var ticks = this.getTicks(true);
-        var minorTicks = [];
-        var extent = this.getExtent();
+        let ticks = this.getTicks(true);
+        let minorTicks = [];
+        let extent = this.getExtent();
 
-        for (var i = 1; i < ticks.length; i++) {
-            var nextTick = ticks[i];
-            var prevTick = ticks[i - 1];
-            var count = 0;
-            var minorTicksGroup = [];
-            var interval = nextTick - prevTick;
-            var minorInterval = interval / splitNumber;
+        for (let i = 1; i < ticks.length; i++) {
+            let nextTick = ticks[i];
+            let prevTick = ticks[i - 1];
+            let count = 0;
+            let minorTicksGroup = [];
+            let interval = nextTick - prevTick;
+            let minorInterval = interval / splitNumber;
 
             while (count < splitNumber - 1) {
-                var minorTick = roundNumber(prevTick + (count + 1) * minorInterval);
+                let minorTick = roundNumber(prevTick + (count + 1) * minorInterval);
 
                 // For the first and last interval. The count may be less than splitNumber.
                 if (minorTick > extent[0] && minorTick < extent[1]) {
@@ -184,7 +184,7 @@ class IntervalScale extends Scale {
             return '';
         }
 
-        var precision = opt && opt.precision;
+        let precision = opt && opt.precision;
 
         if (precision == null) {
             precision = numberUtil.getPrecisionSafe(data) || 0;
@@ -196,7 +196,7 @@ class IntervalScale extends Scale {
 
         // (1) If `precision` is set, 12.005 should be display as '12.00500'.
         // (2) Use roundNumber (toFixed) to avoid scientific notation like '3.5e-7'.
-        var dataNum = roundNumber(data, precision as number, true);
+        let dataNum = roundNumber(data, precision as number, true);
 
         return formatUtil.addCommas(dataNum);
     }
@@ -206,8 +206,8 @@ class IntervalScale extends Scale {
      */
     niceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
         splitNumber = splitNumber || 5;
-        var extent = this._extent;
-        var span = extent[1] - extent[0];
+        let extent = this._extent;
+        let span = extent[1] - extent[0];
         if (!isFinite(span)) {
             return;
         }
@@ -218,7 +218,7 @@ class IntervalScale extends Scale {
             extent.reverse();
         }
 
-        var result = helper.intervalScaleNiceTicks(
+        let result = helper.intervalScaleNiceTicks(
             extent, splitNumber, minInterval, maxInterval
         );
 
@@ -234,12 +234,12 @@ class IntervalScale extends Scale {
         minInterval?: number,
         maxInterval?: number
     }): void {
-        var extent = this._extent;
+        let extent = this._extent;
         // If extent start and end are same, expand them
         if (extent[0] === extent[1]) {
             if (extent[0] !== 0) {
                 // Expand extent
-                var expandSize = extent[0];
+                let expandSize = extent[0];
                 // In the fowllowing case
                 //      Axis has been fixed max 100
                 //      Plus data are all 100 and axis extent are [100, 100].
@@ -257,7 +257,7 @@ class IntervalScale extends Scale {
                 extent[1] = 1;
             }
         }
-        var span = extent[1] - extent[0];
+        let span = extent[1] - extent[0];
         // If there are no data and extent are [Infinity, -Infinity]
         if (!isFinite(span)) {
             extent[0] = 0;
@@ -266,8 +266,8 @@ class IntervalScale extends Scale {
 
         this.niceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
 
-        // var extent = this._extent;
-        var interval = this._interval;
+        // let extent = this._extent;
+        let interval = this._interval;
 
         if (!opt.fixMin) {
             extent[0] = roundNumber(Math.floor(extent[0] / interval) * interval);

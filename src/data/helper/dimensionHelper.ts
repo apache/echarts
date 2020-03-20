@@ -43,28 +43,28 @@ export type DimensionSummary = {
 };
 
 export function summarizeDimensions(data: List): DimensionSummary {
-    var summary: DimensionSummary = {} as DimensionSummary;
-    var encode = summary.encode = {} as DimensionSummaryEncode;
-    var notExtraCoordDimMap = createHashMap();
-    var defaultedLabel = [];
-    var defaultedTooltip = [];
+    let summary: DimensionSummary = {} as DimensionSummary;
+    let encode = summary.encode = {} as DimensionSummaryEncode;
+    let notExtraCoordDimMap = createHashMap();
+    let defaultedLabel = [];
+    let defaultedTooltip = [];
 
     // See the comment of `List.js#userOutput`.
-    var userOutput = summary.userOutput = {
+    let userOutput = summary.userOutput = {
         dimensionNames: data.dimensions.slice(),
         encode: {}
     };
 
     each(data.dimensions, function (dimName) {
-        var dimItem = data.getDimensionInfo(dimName);
+        let dimItem = data.getDimensionInfo(dimName);
 
-        var coordDim = dimItem.coordDim;
+        let coordDim = dimItem.coordDim;
         if (coordDim) {
             if (__DEV__) {
                 assert(VISUAL_DIMENSIONS.get(coordDim) == null);
             }
 
-            var coordDimIndex = dimItem.coordDimIndex;
+            let coordDimIndex = dimItem.coordDimIndex;
             getOrCreateEncodeArr(encode, coordDim)[coordDimIndex] = dimName;
 
             if (!dimItem.isExtraCoord) {
@@ -88,20 +88,20 @@ export function summarizeDimensions(data: List): DimensionSummary {
         }
 
         VISUAL_DIMENSIONS.each(function (v, otherDim) {
-            var encodeArr = getOrCreateEncodeArr(encode, otherDim);
+            let encodeArr = getOrCreateEncodeArr(encode, otherDim);
 
-            var dimIndex = dimItem.otherDims[otherDim];
+            let dimIndex = dimItem.otherDims[otherDim];
             if (dimIndex != null && dimIndex !== false) {
                 encodeArr[dimIndex] = dimItem.name;
             }
         });
     });
 
-    var dataDimsOnCoord = [];
-    var encodeFirstDimNotExtra = {};
+    let dataDimsOnCoord = [];
+    let encodeFirstDimNotExtra = {};
 
     notExtraCoordDimMap.each(function (v, coordDim) {
-        var dimArr = encode[coordDim];
+        let dimArr = encode[coordDim];
         // ??? FIXME extra coord should not be set in dataDimsOnCoord.
         // But should fix the case that radar axes: simplify the logic
         // of `completeDimension`, remove `extraPrefix`.
@@ -114,14 +114,14 @@ export function summarizeDimensions(data: List): DimensionSummary {
     summary.dataDimsOnCoord = dataDimsOnCoord;
     summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
 
-    var encodeLabel = encode.label;
+    let encodeLabel = encode.label;
     // FIXME `encode.label` is not recommanded, because formatter can not be set
     // in this way. Use label.formatter instead. May be remove this approach someday.
     if (encodeLabel && encodeLabel.length) {
         defaultedLabel = encodeLabel.slice();
     }
 
-    var encodeTooltip = encode.tooltip;
+    let encodeTooltip = encode.tooltip;
     if (encodeTooltip && encodeTooltip.length) {
         defaultedTooltip = encodeTooltip.slice();
     }
@@ -161,9 +161,9 @@ function mayLabelDimType(dimType: DimensionType): boolean {
 
 // function findTheLastDimMayLabel(data) {
 //     // Get last value dim
-//     var dimensions = data.dimensions.slice();
-//     var valueType;
-//     var valueDim;
+//     let dimensions = data.dimensions.slice();
+//     let valueType;
+//     let valueDim;
 //     while (dimensions.length && (
 //         valueDim = dimensions.pop(),
 //         valueType = data.getDimensionInfo(valueDim).type,

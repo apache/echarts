@@ -22,7 +22,7 @@ import * as graphicUtil from '../../util/graphic';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
 
-var PATH_COLOR = ['textStyle', 'color'] as const;
+const PATH_COLOR = ['textStyle', 'color'] as const;
 
 type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
@@ -35,7 +35,7 @@ class TextStyleMixin {
      */
     // TODO Callback
     getTextColor(this: Model, isEmphasis?: boolean): ColorString {
-        var ecModel = this.ecModel;
+        let ecModel = this.ecModel;
         return this.getShallow('color')
             || (
                 (!isEmphasis && ecModel) ? ecModel.get(PATH_COLOR) : null

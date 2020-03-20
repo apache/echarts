@@ -25,8 +25,8 @@ import * as graphic from '../../util/graphic';
 import * as vec2 from 'zrender/src/core/vector';
 import { PathProps } from 'zrender/src/graphic/Path';
 
-var straightLineProto = graphic.Line.prototype;
-var bezierCurveProto = graphic.BezierCurve.prototype;
+const straightLineProto = graphic.Line.prototype;
+const bezierCurveProto = graphic.BezierCurve.prototype;
 
 class StraightLineShape {
     // Start point
@@ -83,8 +83,8 @@ class ECLinePath extends graphic.Path<ECLineProps> {
     }
 
     tangentAt(t: number) {
-        var shape = this.shape;
-        var p = isStraightLine(shape)
+        let shape = this.shape;
+        let p = isStraightLine(shape)
             ? [shape.x2 - shape.x1, shape.y2 - shape.y1]
             : bezierCurveProto.tangentAt.call(this, t);
         return vec2.normalize(p, p);

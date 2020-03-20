@@ -32,21 +32,21 @@ export default function (seriesType?: string): StageHandler {
         plan: createRenderPlanner(),
 
         reset: function (seriesModel: SeriesModel) {
-            var data = seriesModel.getData();
-            var coordSys = seriesModel.coordinateSystem;
-            var pipelineContext = seriesModel.pipelineContext;
-            var isLargeRender = pipelineContext.large;
+            let data = seriesModel.getData();
+            let coordSys = seriesModel.coordinateSystem;
+            let pipelineContext = seriesModel.pipelineContext;
+            let isLargeRender = pipelineContext.large;
 
             if (!coordSys) {
                 return;
             }
 
-            var dims = map(coordSys.dimensions, function (dim) {
+            let dims = map(coordSys.dimensions, function (dim) {
                 return data.mapDimension(dim);
             }).slice(0, 2);
-            var dimLen = dims.length;
+            let dimLen = dims.length;
 
-            var stackResultDim = data.getCalculationInfo('stackResultDimension');
+            let stackResultDim = data.getCalculationInfo('stackResultDimension');
             if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) {
                 dims[0] = stackResultDim;
             }
@@ -57,13 +57,13 @@ export default function (seriesType?: string): StageHandler {
 
             return dimLen && {
                 progress(params, data) {
-                    var segCount = params.end - params.start;
-                    var points = isLargeRender && new Float32Array(segCount * dimLen);
+                    let segCount = params.end - params.start;
+                    let points = isLargeRender && new Float32Array(segCount * dimLen);
 
-                    var tmpIn: ParsedValueNumeric[] = [];
-                    var tmpOut: number[] = [];
-                    for (var i = params.start, offset = 0; i < params.end; i++) {
-                        var point;
+                    let tmpIn: ParsedValueNumeric[] = [];
+                    let tmpOut: number[] = [];
+                    for (let i = params.start, offset = 0; i < params.end; i++) {
+                        let point;
 
                         if (dimLen === 1) {
                             let x = data.get(dims[0], i) as ParsedValueNumeric;

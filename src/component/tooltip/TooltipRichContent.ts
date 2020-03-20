@@ -77,14 +77,14 @@ class TooltipRichContent {
             this._zr.remove(this.el);
         }
 
-        var markers: StyleProps['rich'] = {};
-        var text = content;
-        var prefix = '{marker';
-        var suffix = '|}';
-        var startId = text.indexOf(prefix);
+        let markers: StyleProps['rich'] = {};
+        let text = content;
+        let prefix = '{marker';
+        let suffix = '|}';
+        let startId = text.indexOf(prefix);
         while (startId >= 0) {
-            var endId = text.indexOf(suffix);
-            var name = text.substr(startId + prefix.length, endId - startId - prefix.length);
+            let endId = text.indexOf(suffix);
+            let name = text.substr(startId + prefix.length, endId - startId - prefix.length);
             if (name.indexOf('sub') > -1) {
                 markers['marker' + name] = {
                     textWidth: 4,
@@ -123,7 +123,7 @@ class TooltipRichContent {
         });
         this._zr.add(this.el);
 
-        var self = this;
+        let self = this;
         this.el.on('mouseover', function () {
             // clear the timeout in hideLater and keep showing tooltip
             if (self._enterable) {
@@ -147,7 +147,7 @@ class TooltipRichContent {
     }
 
     getSize() {
-        var bounding = this.el.getBoundingRect();
+        let bounding = this.el.getBoundingRect();
         return [bounding.width, bounding.height];
     }
 
@@ -183,7 +183,7 @@ class TooltipRichContent {
     }
 
     getOuterSize() {
-        var size = this.getSize();
+        let size = this.getSize();
         return {
             width: size[0],
             height: size[1]

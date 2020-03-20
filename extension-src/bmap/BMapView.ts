@@ -24,17 +24,17 @@ export default echarts.extendComponentView({
     type: 'bmap',
 
     render: function (bMapModel, ecModel, api) {
-        var rendering = true;
+        let rendering = true;
 
-        var bmap = bMapModel.getBMap();
-        var viewportRoot = api.getZr().painter.getViewportRoot();
-        var coordSys = bMapModel.coordinateSystem;
-        var moveHandler = function (type, target) {
+        let bmap = bMapModel.getBMap();
+        let viewportRoot = api.getZr().painter.getViewportRoot();
+        let coordSys = bMapModel.coordinateSystem;
+        let moveHandler = function (type, target) {
             if (rendering) {
                 return;
             }
-            var offsetEl = viewportRoot.parentNode.parentNode.parentNode;
-            var mapOffset = [
+            let offsetEl = viewportRoot.parentNode.parentNode.parentNode;
+            let mapOffset = [
                 -parseInt(offsetEl.style.left, 10) || 0,
                 -parseInt(offsetEl.style.top, 10) || 0
             ];
@@ -70,7 +70,7 @@ export default echarts.extendComponentView({
         this._oldMoveHandler = moveHandler;
         this._oldZoomEndHandler = zoomEndHandler;
 
-        var roam = bMapModel.get('roam');
+        let roam = bMapModel.get('roam');
         if (roam && roam !== 'scale') {
             bmap.enableDragging();
         }
@@ -89,11 +89,11 @@ export default echarts.extendComponentView({
         }
 
         /* map 2.0 */
-        var originalStyle = bMapModel.__mapStyle;
+        let originalStyle = bMapModel.__mapStyle;
 
-        var newMapStyle = bMapModel.get('mapStyle') || {};
+        let newMapStyle = bMapModel.get('mapStyle') || {};
         // FIXME, Not use JSON methods
-        var mapStyleStr = JSON.stringify(newMapStyle);
+        let mapStyleStr = JSON.stringify(newMapStyle);
         if (JSON.stringify(originalStyle) !== mapStyleStr) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (Object.keys(newMapStyle).length) {
@@ -103,11 +103,11 @@ export default echarts.extendComponentView({
         }
 
         /* map 3.0 */
-        var originalStyle2 = bMapModel.__mapStyle2;
+        let originalStyle2 = bMapModel.__mapStyle2;
 
-        var newMapStyle2 = bMapModel.get('mapStyleV2') || {};
+        let newMapStyle2 = bMapModel.get('mapStyleV2') || {};
         // FIXME, Not use JSON methods
-        var mapStyleStr2 = JSON.stringify(newMapStyle2);
+        let mapStyleStr2 = JSON.stringify(newMapStyle2);
         if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (Object.keys(newMapStyle2).length) {

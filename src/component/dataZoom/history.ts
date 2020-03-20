@@ -24,7 +24,7 @@ import DataZoomModel from './DataZoomModel';
 import { makeInner } from '../../util/model';
 import { DataZoomPayloadBatchItem } from './helper';
 
-var each = zrUtil.each;
+const each = zrUtil.each;
 
 export type DataZoomStoreSnapshot = Dictionary<DataZoomPayloadBatchItem>;
 
@@ -39,25 +39,25 @@ const inner = makeInner<Store, GlobalModel>();
  * @param newSnapshot key is dataZoomId
  */
 export function push(ecModel: GlobalModel, newSnapshot: DataZoomStoreSnapshot) {
-    var storedSnapshots = getStoreSnapshots(ecModel);
+    let storedSnapshots = getStoreSnapshots(ecModel);
 
     // If previous dataZoom can not be found,
     // complete an range with current range.
     each(newSnapshot, function (batchItem, dataZoomId) {
-        var i = storedSnapshots.length - 1;
+        let i = storedSnapshots.length - 1;
         for (; i >= 0; i--) {
-            var snapshot = storedSnapshots[i];
+            let snapshot = storedSnapshots[i];
             if (snapshot[dataZoomId]) {
                 break;
             }
         }
         if (i < 0) {
             // No origin range set, create one by current range.
-            var dataZoomModel = ecModel.queryComponents(
+            let dataZoomModel = ecModel.queryComponents(
                 {mainType: 'dataZoom', subType: 'select', id: dataZoomId}
             )[0] as DataZoomModel;
             if (dataZoomModel) {
-                var percentRange = dataZoomModel.getPercentRange();
+                let percentRange = dataZoomModel.getPercentRange();
                 storedSnapshots[0][dataZoomId] = {
                     dataZoomId: dataZoomId,
                     start: percentRange[0],
@@ -71,14 +71,14 @@ export function push(ecModel: GlobalModel, newSnapshot: DataZoomStoreSnapshot) {
 }
 
 export function pop(ecModel: GlobalModel) {
-    var storedSnapshots = getStoreSnapshots(ecModel);
-    var head = storedSnapshots[storedSnapshots.length - 1];
+    let storedSnapshots = getStoreSnapshots(ecModel);
+    let head = storedSnapshots[storedSnapshots.length - 1];
     storedSnapshots.length > 1 && storedSnapshots.pop();
 
     // Find top for all dataZoom.
-    var snapshot: DataZoomStoreSnapshot = {};
+    let snapshot: DataZoomStoreSnapshot = {};
     each(head, function (batchItem, dataZoomId) {
-        for (var i = storedSnapshots.length - 1; i >= 0; i--) {
+        for (let i = storedSnapshots.length - 1; i >= 0; i--) {
             batchItem = storedSnapshots[i][dataZoomId];
             if (batchItem) {
                 snapshot[dataZoomId] = batchItem;
@@ -103,7 +103,7 @@ export function count(ecModel: GlobalModel) {
  * this._history[0] is used to store origin range.
  */
 function getStoreSnapshots(ecModel: GlobalModel) {
-    var store = inner(ecModel);
+    let store = inner(ecModel);
     if (!store.snapshots) {
         store.snapshots = [{}];
     }

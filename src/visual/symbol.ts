@@ -42,17 +42,17 @@ export default function (seriesType: string, defaultSymbolType: string, legendSy
             seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin<CallbackDataParams>>,
             ecModel: GlobalModel
         ) {
-            var data = seriesModel.getData();
+            let data = seriesModel.getData();
 
-            var symbolType = seriesModel.get('symbol');
-            var symbolSize = seriesModel.get('symbolSize');
-            var keepAspect = seriesModel.get('symbolKeepAspect');
+            let symbolType = seriesModel.get('symbol');
+            let symbolSize = seriesModel.get('symbolSize');
+            let keepAspect = seriesModel.get('symbolKeepAspect');
 
-            var hasSymbolTypeCallback = isFunction(symbolType);
-            var hasSymbolSizeCallback = isFunction(symbolSize);
-            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
-            var seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : defaultSymbolType;
-            var seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
+            let hasSymbolTypeCallback = isFunction(symbolType);
+            let hasSymbolSizeCallback = isFunction(symbolSize);
+            let hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
+            let seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : defaultSymbolType;
+            let seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
 
             data.setVisual({
                 legendSymbol: legendSymbol || seriesSymbol,
@@ -72,8 +72,8 @@ export default function (seriesType: string, defaultSymbolType: string, legendSy
 
             function dataEach(data: List, idx: number) {
                 if (hasCallback) {
-                    var rawValue = seriesModel.getRawValue(idx);
-                    var params = seriesModel.getDataParams(idx);
+                    let rawValue = seriesModel.getRawValue(idx);
+                    let params = seriesModel.getDataParams(idx);
                     hasSymbolTypeCallback && data.setItemVisual(
                         idx, 'symbol', (symbolType as SymbolCallback<CallbackDataParams>)(rawValue, params)
                     );
@@ -83,10 +83,10 @@ export default function (seriesType: string, defaultSymbolType: string, legendSy
                 }
 
                 if (data.hasItemOption) {
-                    var itemModel = data.getItemModel<SymbolOptionMixin>(idx);
-                    var itemSymbolType = itemModel.getShallow('symbol', true);
-                    var itemSymbolSize = itemModel.getShallow('symbolSize', true);
-                    var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
+                    let itemModel = data.getItemModel<SymbolOptionMixin>(idx);
+                    let itemSymbolType = itemModel.getShallow('symbol', true);
+                    let itemSymbolSize = itemModel.getShallow('symbolSize', true);
+                    let itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
 
                     // If has item symbol
                     if (itemSymbolType != null) {

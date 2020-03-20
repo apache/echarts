@@ -29,12 +29,12 @@ import ExtensionAPI from '../ExtensionAPI';
 import { OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption } from '../util/types';
 import GlobalModel from './Global';
 
-var each = zrUtil.each;
-var clone = zrUtil.clone;
-var map = zrUtil.map;
-var merge = zrUtil.merge;
+const each = zrUtil.each;
+const clone = zrUtil.clone;
+const map = zrUtil.map;
+const merge = zrUtil.merge;
 
-var QUERY_REG = /^(min|max)?(.+)$/;
+const QUERY_REG = /^(min|max)?(.+)$/;
 
 interface ParsedRawOption {
     baseOption: ECUnitOption;
@@ -97,8 +97,8 @@ class OptionManager {
         // If some property is set in timeline options or media option but
         // not set in baseOption, a warning should be given.
 
-        var oldOptionBackup = this._optionBackup;
-        var newParsedOption = parseRawOption(
+        let oldOptionBackup = this._optionBackup;
+        let newParsedOption = parseRawOption(
             rawOption, optionPreprocessorFuncs, !oldOptionBackup
         );
         this._newBaseOption = newParsedOption.baseOption;
@@ -127,7 +127,7 @@ class OptionManager {
     }
 
     mountOption(isRecreate: boolean): ECUnitOption {
-        var optionBackup = this._optionBackup;
+        let optionBackup = this._optionBackup;
 
         this._timelineOptions = map(optionBackup.timelineOptions, clone);
         this._mediaList = map(optionBackup.mediaList, clone);
@@ -145,13 +145,13 @@ class OptionManager {
     }
 
     getTimelineOption(ecModel: GlobalModel): ECUnitOption {
-        var option;
-        var timelineOptions = this._timelineOptions;
+        let option;
+        let timelineOptions = this._timelineOptions;
 
         if (timelineOptions.length) {
             // getTimelineOption can only be called after ecModel inited,
             // so we can get currentIndex from timelineModel.
-            var timelineModel = ecModel.getComponent('timeline');
+            let timelineModel = ecModel.getComponent('timeline');
             if (timelineModel) {
                 option = clone(
                     // FIXME:TS as TimelineModel or quivlant interface
@@ -164,12 +164,12 @@ class OptionManager {
     }
 
     getMediaOption(ecModel: GlobalModel): ECUnitOption[] {
-        var ecWidth = this._api.getWidth();
-        var ecHeight = this._api.getHeight();
-        var mediaList = this._mediaList;
-        var mediaDefault = this._mediaDefault;
-        var indices = [];
-        var result: ECUnitOption[] = [];
+        let ecWidth = this._api.getWidth();
+        let ecHeight = this._api.getHeight();
+        let mediaList = this._mediaList;
+        let mediaDefault = this._mediaDefault;
+        let indices = [];
+        let result: ECUnitOption[] = [];
 
         // No media defined.
         if (!mediaList.length && !mediaDefault) {
@@ -177,7 +177,7 @@ class OptionManager {
         }
 
         // Multi media may be applied, the latter defined media has higher priority.
-        for (var i = 0, len = mediaList.length; i < len; i++) {
+        for (let i = 0, len = mediaList.length; i < len; i++) {
             if (applyMediaQuery(mediaList[i].query, ecWidth, ecHeight)) {
                 indices.push(i);
             }
@@ -210,13 +210,13 @@ function parseRawOption(
     optionPreprocessorFuncs: OptionPreprocessor[],
     isNew: boolean
 ): ParsedRawOption {
-    var timelineOptions: ECUnitOption[] = [];
-    var mediaList: MediaUnit[] = [];
-    var mediaDefault: MediaUnit;
-    var baseOption: ECUnitOption;
+    let timelineOptions: ECUnitOption[] = [];
+    let mediaList: MediaUnit[] = [];
+    let mediaDefault: MediaUnit;
+    let baseOption: ECUnitOption;
 
     // Compatible with ec2.
-    var timelineOpt = rawOption.timeline;
+    let timelineOpt = rawOption.timeline;
 
     if (rawOption.baseOption) {
         baseOption = rawOption.baseOption;
@@ -231,7 +231,7 @@ function parseRawOption(
     // For media query
     if (rawOption.media) {
         baseOption = baseOption || {} as ECUnitOption;
-        var media = rawOption.media;
+        let media = rawOption.media;
         each(media, function (singleMedia) {
             if (singleMedia && singleMedia.option) {
                 if (singleMedia.query) {
@@ -282,23 +282,23 @@ function parseRawOption(
  * Can use max or min as prefix.
  */
 function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): boolean {
-    var realMap = {
+    let realMap = {
         width: ecWidth,
         height: ecHeight,
         aspectratio: ecWidth / ecHeight // lowser case for convenientce.
     };
 
-    var applicatable = true;
+    let applicatable = true;
 
     zrUtil.each(query, function (value: number, attr) {
-        var matched = attr.match(QUERY_REG);
+        let matched = attr.match(QUERY_REG);
 
         if (!matched || !matched[1] || !matched[2]) {
             return;
         }
 
-        var operator = matched[1];
-        var realAttr = matched[2].toLowerCase();
+        let operator = matched[1];
+        let realAttr = matched[2].toLowerCase();
 
         if (!compare(realMap[realAttr as keyof typeof realMap], value, operator)) {
             applicatable = false;
@@ -354,7 +354,7 @@ function mergeOption(oldOption: ECUnitOption, newOption: ECUnitOption): void {
             return;
         }
 
-        var oldCptOpt = oldOption[mainType];
+        let oldCptOpt = oldOption[mainType];
 
         if (!(ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
             oldOption[mainType] = merge(oldCptOpt, newCptOpt, true);
@@ -363,7 +363,7 @@ function mergeOption(oldOption: ECUnitOption, newOption: ECUnitOption): void {
             newCptOpt = modelUtil.normalizeToArray(newCptOpt);
             oldCptOpt = modelUtil.normalizeToArray(oldCptOpt);
 
-            var mapResult = modelUtil.mappingToExists(oldCptOpt, newCptOpt);
+            let mapResult = modelUtil.mappingToExists(oldCptOpt, newCptOpt);
 
             oldOption[mainType] = map(mapResult, function (item) {
                 return (item.option && item.exist)

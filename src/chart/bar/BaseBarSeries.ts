@@ -87,14 +87,14 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption = BaseBarSeriesOption>
     }
 
     getMarkerPosition(value: ScaleDataValue[]) {
-        var coordSys = this.coordinateSystem;
+        let coordSys = this.coordinateSystem;
         if (coordSys) {
             // PENDING if clamp ?
-            var pt = coordSys.dataToPoint(coordSys.clampData(value));
-            var data = this.getData();
-            var offset = data.getLayout('offset');
-            var size = data.getLayout('size');
-            var offsetIndex = (coordSys as Cartesian2D).getBaseAxis().isHorizontal() ? 0 : 1;
+            let pt = coordSys.dataToPoint(coordSys.clampData(value));
+            let data = this.getData();
+            let offset = data.getLayout('offset');
+            let size = data.getLayout('size');
+            let offsetIndex = (coordSys as Cartesian2D).getBaseAxis().isHorizontal() ? 0 : 1;
             pt[offsetIndex] += offset + size / 2;
             return pt;
         }

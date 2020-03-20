@@ -20,7 +20,7 @@ import { Dictionary } from 'zrender/src/core/types';
 * under the License.
 */
 
-var geoCoordMap = {
+const geoCoordMap = {
     'Russia': [100, 60],
     'United States': [-99, 38],
     'United States of America': [-99, 38]
@@ -28,9 +28,9 @@ var geoCoordMap = {
 
 export default function (mapType: string, region: Region) {
     if (mapType === 'world') {
-        var geoCoord = geoCoordMap[region.name];
+        let geoCoord = geoCoordMap[region.name];
         if (geoCoord) {
-            var cp = region.center;
+            let cp = region.center;
             cp[0] = geoCoord[0];
             cp[1] = geoCoord[1];
         }

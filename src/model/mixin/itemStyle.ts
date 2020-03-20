@@ -22,7 +22,7 @@ import Model from '../Model';
 import { StyleProps } from 'zrender/src/graphic/Style';
 import { ItemStyleOption } from '../../util/types';
 
-var getItemStyle = makeStyleMapper([
+const getItemStyle = makeStyleMapper([
     ['fill', 'color'],
     ['stroke', 'borderColor'],
     ['lineWidth', 'borderWidth'],
@@ -56,14 +56,14 @@ class ItemStyleMixin {
         excludes?: readonly (keyof ItemStyleOption)[],
         includes?: readonly (keyof ItemStyleOption)[]
     ): ItemStyleProps {
-        var style = getItemStyle(this, excludes, includes);
-        var lineDash = this.getBorderLineDash();
+        let style = getItemStyle(this, excludes, includes);
+        let lineDash = this.getBorderLineDash();
         lineDash && ((style as any).lineDash = lineDash);
         return style;
     }
 
     getBorderLineDash(this: Model): number[] {
-        var lineType = this.get('borderType');
+        let lineType = this.get('borderType');
         return (lineType === 'solid' || lineType == null) ? null
             : (lineType === 'dashed' ? [5, 5] : [1, 1]);
     }

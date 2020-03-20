@@ -74,23 +74,23 @@ export class DefaultDataProvider implements DataProvider {
     static protoInitialize = (function () {
         // PENDING: To avoid potential incompat (e.g., prototype
         // is visited somewhere), still init them on prototype.
-        var proto = DefaultDataProvider.prototype;
+        let proto = DefaultDataProvider.prototype;
         proto.pure = false;
         proto.persistent = true;
     })();
 
 
     constructor(sourceParam: Source | OptionSourceData, dimSize?: number) {
-        // var source: Source;
-        var source: Source = !(sourceParam instanceof Source)
+        // let source: Source;
+        let source: Source = !(sourceParam instanceof Source)
             ? Source.seriesDataToSource(sourceParam as OptionSourceData)
             : sourceParam as Source;
 
         // declare source is Source;
         this._source = source;
 
-        var data = this._data = source.data;
-        var sourceFormat = source.sourceFormat;
+        let data = this._data = source.data;
+        let sourceFormat = source.sourceFormat;
 
         // Typed array. TODO IE10+?
         if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
@@ -104,7 +104,7 @@ export class DefaultDataProvider implements DataProvider {
             this._data = data;
         }
 
-        var methods = providerMethods[
+        let methods = providerMethods[
             sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
             ? sourceFormat + '_' + source.seriesLayoutBy
             : sourceFormat
@@ -153,15 +153,15 @@ export class DefaultDataProvider implements DataProvider {
             [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: {
                 pure: true,
                 count: function (this: DefaultDataProvider): number {
-                    var row = (this._data as OptionDataValue[][])[0];
+                    let row = (this._data as OptionDataValue[][])[0];
                     return row ? Math.max(0, row.length - this._source.startIndex) : 0;
                 },
                 getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
                     idx += this._source.startIndex;
-                    var item = [];
-                    var data = this._data as OptionDataValue[][];
-                    for (var i = 0; i < data.length; i++) {
-                        var row = data[i];
+                    let item = [];
+                    let data = this._data as OptionDataValue[][];
+                    for (let i = 0; i < data.length; i++) {
+                        let row = data[i];
                         item.push(row ? row[idx] : null);
                     }
                     return item;
@@ -181,24 +181,24 @@ export class DefaultDataProvider implements DataProvider {
             [SOURCE_FORMAT_KEYED_COLUMNS]: {
                 pure: true,
                 count: function (this: DefaultDataProvider): number {
-                    var dimName = this._source.dimensionsDefine[0].name;
-                    var col = (this._data as Dictionary<OptionDataValue[]>)[dimName];
+                    let dimName = this._source.dimensionsDefine[0].name;
+                    let col = (this._data as Dictionary<OptionDataValue[]>)[dimName];
                     return col ? col.length : 0;
                 },
                 getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
-                    var item = [];
-                    var dims = this._source.dimensionsDefine;
-                    for (var i = 0; i < dims.length; i++) {
-                        var col = (this._data as Dictionary<OptionDataValue[]>)[dims[i].name];
+                    let item = [];
+                    let dims = this._source.dimensionsDefine;
+                    for (let i = 0; i < dims.length; i++) {
+                        let col = (this._data as Dictionary<OptionDataValue[]>)[dims[i].name];
                         item.push(col ? col[idx] : null);
                     }
                     return item;
                 },
                 appendData: function (this: DefaultDataProvider, newData: Dictionary<OptionDataValue[]>) {
-                    var data = this._data as Dictionary<OptionDataValue[]>;
+                    let data = this._data as Dictionary<OptionDataValue[]>;
                     each(newData, function (newCol, key) {
-                        var oldCol = data[key] || (data[key] = []);
-                        for (var i = 0; i < (newCol || []).length; i++) {
+                        let oldCol = data[key] || (data[key] = []);
+                        for (let i = 0; i < (newCol || []).length; i++) {
                             oldCol.push(newCol[i]);
                         }
                     });
@@ -220,8 +220,8 @@ export class DefaultDataProvider implements DataProvider {
                 getItem: function (this: DefaultDataProvider, idx: number, out: ArrayLike<number>): ArrayLike<number> {
                     idx = idx - this._offset;
                     out = out || [];
-                    var offset = this._dimSize * idx;
-                    for (var i = 0; i < this._dimSize; i++) {
+                    let offset = this._dimSize * idx;
+                    for (let i = 0; i < this._dimSize; i++) {
                         out[i] = (this._data as ArrayLike<number>)[offset + i];
                     }
                     return out;
@@ -253,7 +253,7 @@ export class DefaultDataProvider implements DataProvider {
             return (this._data as [])[idx];
         }
         function appendDataSimply(this: DefaultDataProvider, newData: ArrayLike<OptionDataItem>): void {
-            for (var i = 0; i < newData.length; i++) {
+            for (let i = 0; i < newData.length; i++) {
                 (this._data as any[]).push(newData[i]);
             }
         }
@@ -261,7 +261,7 @@ export class DefaultDataProvider implements DataProvider {
     })();
 }
 
-var providerMethods: Dictionary<any>;
+let providerMethods: Dictionary<any>;
 
 // TODO
 // merge it to dataProvider?
@@ -274,7 +274,7 @@ type RawValueGetter = (
     // If dimIndex provided, return OptionDataPrimitive.
 ) => OptionDataValue | OptionDataItem;
 
-var rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
+const rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
 
     [SOURCE_FORMAT_ARRAY_ROWS]: getRawValueSimply,
 
@@ -291,7 +291,7 @@ var rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
     ): OptionDataValue | OptionDataItem {
         // FIXME: In some case (markpoint in geo (geo-map.html)),
         // dataItem is {coord: [...]}
-        var value = getDataItemValue(dataItem);
+        let value = getDataItemValue(dataItem);
         return (dimIndex == null || !(value instanceof Array))
             ? value
             : value[dimIndex];
@@ -321,17 +321,17 @@ export function retrieveRawValue(
     }
 
     // Consider data may be not persistent.
-    var dataItem = data.getRawDataItem(dataIndex);
+    let dataItem = data.getRawDataItem(dataIndex);
 
     if (dataItem == null) {
         return;
     }
 
-    var sourceFormat = data.getProvider().getSource().sourceFormat;
-    var dimName;
-    var dimIndex;
+    let sourceFormat = data.getProvider().getSource().sourceFormat;
+    let dimName;
+    let dimIndex;
 
-    var dimInfo = data.getDimensionInfo(dim);
+    let dimInfo = data.getDimensionInfo(dim);
     if (dimInfo) {
         dimName = dimInfo.name;
         dimIndex = dimInfo.index;
@@ -357,7 +357,7 @@ export function retrieveRawAttr(data: List, dataIndex: number, attr: string): an
         return;
     }
 
-    var sourceFormat = data.getProvider().getSource().sourceFormat;
+    let sourceFormat = data.getProvider().getSource().sourceFormat;
 
     if (sourceFormat !== SOURCE_FORMAT_ORIGINAL
         && sourceFormat !== SOURCE_FORMAT_OBJECT_ROWS
@@ -365,7 +365,7 @@ export function retrieveRawAttr(data: List, dataIndex: number, attr: string): an
         return;
     }
 
-    var dataItem = data.getRawDataItem(dataIndex);
+    let dataItem = data.getRawDataItem(dataIndex);
     if (sourceFormat === SOURCE_FORMAT_ORIGINAL && !isObject(dataItem)) {
         dataItem = null;
     }

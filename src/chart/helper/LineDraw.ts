@@ -102,10 +102,10 @@ class LineDraw {
     };
 
     updateData(lineData: ListForLineDraw) {
-        var lineDraw = this;
-        var group = lineDraw.group;
+        let lineDraw = this;
+        let group = lineDraw.group;
 
-        var oldLineData = lineDraw._lineData;
+        let oldLineData = lineDraw._lineData;
         lineDraw._lineData = lineData;
 
         // There is no oldLineData only when first rendering or switching from
@@ -114,7 +114,7 @@ class LineDraw {
             group.removeAll();
         }
 
-        var seriesScope = makeSeriesScope(lineData);
+        let seriesScope = makeSeriesScope(lineData);
 
         lineData.diff(oldLineData)
             .add((idx) => {
@@ -130,7 +130,7 @@ class LineDraw {
     };
 
     updateLayout() {
-        var lineData = this._lineData;
+        let lineData = this._lineData;
 
         // Do not support update layout in incremental mode.
         if (!lineData) {
@@ -155,11 +155,11 @@ class LineDraw {
             }
         }
 
-        for (var idx = taskParams.start; idx < taskParams.end; idx++) {
-            var itemLayout = lineData.getItemLayout(idx);
+        for (let idx = taskParams.start; idx < taskParams.end; idx++) {
+            let itemLayout = lineData.getItemLayout(idx);
 
             if (lineNeedsDraw(itemLayout)) {
-                var el = new this._LineCtor(lineData, idx, this._seriesScope);
+                let el = new this._LineCtor(lineData, idx, this._seriesScope);
                 el.traverse(updateIncrementalAndHover);
 
                 this.group.add(el);
@@ -177,13 +177,13 @@ class LineDraw {
         idx: number,
         seriesScope: LineDrawSeriesScope
     ) {
-        var itemLayout = lineData.getItemLayout(idx);
+        let itemLayout = lineData.getItemLayout(idx);
 
         if (!lineNeedsDraw(itemLayout)) {
             return;
         }
 
-        var el = new this._LineCtor(lineData, idx, seriesScope);
+        let el = new this._LineCtor(lineData, idx, seriesScope);
         lineData.setItemGraphicEl(idx, el);
         this.group.add(el);
     }
@@ -194,7 +194,7 @@ class LineDraw {
         newIdx: number,
         seriesScope: LineDrawSeriesScope
     ) {
-        var itemEl = oldLineData.getItemGraphicEl(oldIdx) as LineLike;
+        let itemEl = oldLineData.getItemGraphicEl(oldIdx) as LineLike;
 
         if (!lineNeedsDraw(newLineData.getItemLayout(newIdx))) {
             this.group.remove(itemEl);
@@ -215,7 +215,7 @@ class LineDraw {
 }
 
 function makeSeriesScope(lineData: ListForLineDraw) {
-    var hostModel = lineData.hostModel;
+    let hostModel = lineData.hostModel;
     return {
         lineStyle: hostModel.getModel('lineStyle').getLineStyle(),
         hoverLineStyle: hostModel.getModel(['emphasis', 'lineStyle']).getLineStyle(),

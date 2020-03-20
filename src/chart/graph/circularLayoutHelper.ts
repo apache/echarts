@@ -24,9 +24,9 @@ import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
 import Graph from '../../data/Graph';
 import List from '../../data/List';
 
-var PI = Math.PI;
+const PI = Math.PI;
 
-var _symbolRadiansHalf: number[] = [];
+const _symbolRadiansHalf: number[] = [];
 
 /**
  * `basedOn` can be:
@@ -51,20 +51,20 @@ export function circularLayout(
     seriesModel: GraphSeriesModel,
     basedOn: 'value' | 'symbolSize'
 ) {
-    var coordSys = seriesModel.coordinateSystem;
+    let coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
         return;
     }
 
-    var rect = coordSys.getBoundingRect();
+    let rect = coordSys.getBoundingRect();
 
-    var nodeData = seriesModel.getData();
-    var graph = nodeData.graph;
+    let nodeData = seriesModel.getData();
+    let graph = nodeData.graph;
 
-    var cx = rect.width / 2 + rect.x;
-    var cy = rect.height / 2 + rect.y;
-    var r = Math.min(rect.width, rect.height) / 2;
-    var count = nodeData.count();
+    let cx = rect.width / 2 + rect.x;
+    let cy = rect.height / 2 + rect.y;
+    let r = Math.min(rect.width, rect.height) / 2;
+    let count = nodeData.count();
 
     nodeData.setLayout({
         cx: cx,
@@ -78,12 +78,12 @@ export function circularLayout(
     _layoutNodesBasedOn[basedOn](seriesModel, graph, nodeData, r, cx, cy, count);
 
     graph.eachEdge(function (edge) {
-        var curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
-        var p1 = vec2.clone(edge.node1.getLayout());
-        var p2 = vec2.clone(edge.node2.getLayout());
-        var cp1;
-        var x12 = (p1[0] + p2[0]) / 2;
-        var y12 = (p1[1] + p2[1]) / 2;
+        let curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
+        let p1 = vec2.clone(edge.node1.getLayout());
+        let p2 = vec2.clone(edge.node2.getLayout());
+        let cp1;
+        let x12 = (p1[0] + p2[0]) / 2;
+        let y12 = (p1[1] + p2[1]) / 2;
         if (+curveness) {
             curveness *= 3;
             cp1 = [
@@ -107,16 +107,16 @@ interface LayoutNode {
     ): void
 }
 
-var _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
+const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
 
     value(seriesModel, graph, nodeData, r, cx, cy, count) {
-        var angle = 0;
-        var sum = nodeData.getSum('value');
-        var unitAngle = Math.PI * 2 / (sum || count);
+        let angle = 0;
+        let sum = nodeData.getSum('value');
+        let unitAngle = Math.PI * 2 / (sum || count);
 
         graph.eachNode(function (node) {
-            var value = node.getValue('value') as number;
-            var radianHalf = unitAngle * (sum ? value : 1) / 2;
+            let value = node.getValue('value') as number;
+            let radianHalf = unitAngle * (sum ? value : 1) / 2;
 
             angle += radianHalf;
             node.setLayout([
@@ -128,13 +128,13 @@ var _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
     },
 
     symbolSize(seriesModel, graph, nodeData, r, cx, cy, count) {
-        var sumRadian = 0;
+        let sumRadian = 0;
         _symbolRadiansHalf.length = count;
 
-        var nodeScale = getNodeGlobalScale(seriesModel);
+        let nodeScale = getNodeGlobalScale(seriesModel);
 
         graph.eachNode(function (node) {
-            var symbolSize = getSymbolSize(node);
+            let symbolSize = getSymbolSize(node);
 
             // Normally this case will not happen, but we still add
             // some the defensive code (2px is an arbitrary value).
@@ -143,18 +143,18 @@ var _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
 
             symbolSize *= nodeScale;
 
-            var symbolRadianHalf = Math.asin(symbolSize / 2 / r);
+            let symbolRadianHalf = Math.asin(symbolSize / 2 / r);
             // when `symbolSize / 2` is bigger than `r`.
             isNaN(symbolRadianHalf) && (symbolRadianHalf = PI / 2);
             _symbolRadiansHalf[node.dataIndex] = symbolRadianHalf;
             sumRadian += symbolRadianHalf * 2;
         });
 
-        var halfRemainRadian = (2 * PI - sumRadian) / count / 2;
+        let halfRemainRadian = (2 * PI - sumRadian) / count / 2;
 
-        var angle = 0;
+        let angle = 0;
         graph.eachNode(function (node) {
-            var radianHalf = halfRemainRadian + _symbolRadiansHalf[node.dataIndex];
+            let radianHalf = halfRemainRadian + _symbolRadiansHalf[node.dataIndex];
 
             angle += radianHalf;
             node.setLayout([

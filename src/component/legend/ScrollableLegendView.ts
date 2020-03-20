@@ -34,10 +34,10 @@ import ComponentView from '../../view/Component';
 import Element from 'zrender/src/Element';
 import { ZRRectLike } from '../../util/types';
 
-var Group = graphic.Group;
+const Group = graphic.Group;
 
-var WH = ['width', 'height'] as const;
-var XY = ['x', 'y'] as const;
+const WH = ['width', 'height'] as const;
+const XY = ['x', 'y'] as const;
 
 interface PageInfo {
     contentPosition: number[]
@@ -117,12 +117,12 @@ class ScrollableLegendView extends LegendView {
         orient: ScrollableLegendOption['orient'],
         selectorPosition: ScrollableLegendOption['selectorPosition']
     ) {
-        var self = this;
+        let self = this;
 
         // Render content items.
         super.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
-        var controllerGroup = this._controllerGroup;
+        let controllerGroup = this._controllerGroup;
 
         // FIXME: support be 'auto' adapt to size number text length,
         // e.g., '3/12345' should not overlap with the control arrow button.
@@ -132,7 +132,7 @@ class ScrollableLegendView extends LegendView {
 
         createPageButton('pagePrev', 0);
 
-        var pageTextStyleModel = legendModel.getModel('pageTextStyle');
+        let pageTextStyleModel = legendModel.getModel('pageTextStyle');
         controllerGroup.add(new graphic.Text({
             name: 'pageText',
             style: {
@@ -149,8 +149,8 @@ class ScrollableLegendView extends LegendView {
         createPageButton('pageNext', 1);
 
         function createPageButton(name: string, iconIdx: number) {
-            var pageDataIndexName = (name + 'DataIndex') as 'pagePrevDataIndex' | 'pageNextDataIndex';
-            var icon = graphic.createIcon(
+            let pageDataIndexName = (name + 'DataIndex') as 'pagePrevDataIndex' | 'pageNextDataIndex';
+            let icon = graphic.createIcon(
                 legendModel.get('pageIcons', true)[legendModel.getOrient().name][iconIdx],
                 {
                     // Buttons will be created in each render, so we do not need
@@ -182,13 +182,13 @@ class ScrollableLegendView extends LegendView {
         selector: LegendSelectorButtonOption[],
         selectorPosition: ScrollableLegendOption['selectorPosition']
     ) {
-        var selectorGroup = this.getSelectorGroup();
+        let selectorGroup = this.getSelectorGroup();
 
-        var orientIdx = legendModel.getOrient().index;
-        var wh = WH[orientIdx];
-        var xy = XY[orientIdx];
-        var hw = WH[1 - orientIdx];
-        var yx = XY[1 - orientIdx];
+        let orientIdx = legendModel.getOrient().index;
+        let wh = WH[orientIdx];
+        let xy = XY[orientIdx];
+        let hw = WH[1 - orientIdx];
+        let yx = XY[1 - orientIdx];
 
         selector && layoutUtil.box(
             // Buttons in selectorGroup always layout horizontally
@@ -197,14 +197,14 @@ class ScrollableLegendView extends LegendView {
             legendModel.get('selectorItemGap', true)
         );
 
-        var selectorButtonGap = legendModel.get('selectorButtonGap', true);
-        var selectorRect = selectorGroup.getBoundingRect();
-        var selectorPos = [-selectorRect.x, -selectorRect.y];
+        let selectorButtonGap = legendModel.get('selectorButtonGap', true);
+        let selectorRect = selectorGroup.getBoundingRect();
+        let selectorPos = [-selectorRect.x, -selectorRect.y];
 
-        var processMaxSize = zrUtil.clone(maxSize);
+        let processMaxSize = zrUtil.clone(maxSize);
         selector && (processMaxSize[wh] = maxSize[wh] - selectorRect[wh] - selectorButtonGap);
 
-        var mainRect = this._layoutContentAndController(legendModel, isFirstRender,
+        let mainRect = this._layoutContentAndController(legendModel, isFirstRender,
             processMaxSize, orientIdx, wh, hw, yx
         );
 
@@ -213,7 +213,7 @@ class ScrollableLegendView extends LegendView {
                 selectorPos[orientIdx] += mainRect[wh] + selectorButtonGap;
             }
             else {
-                var offset = selectorRect[wh] + selectorButtonGap;
+                let offset = selectorRect[wh] + selectorButtonGap;
                 selectorPos[orientIdx] -= offset;
                 mainRect[xy] -= offset;
             }
@@ -238,9 +238,9 @@ class ScrollableLegendView extends LegendView {
         hw: 'width' | 'height',
         yx: 'x' | 'y'
     ) {
-        var contentGroup = this.getContentGroup();
-        var containerGroup = this._containerGroup;
-        var controllerGroup = this._controllerGroup;
+        let contentGroup = this.getContentGroup();
+        let containerGroup = this._containerGroup;
+        let controllerGroup = this._controllerGroup;
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -258,11 +258,11 @@ class ScrollableLegendView extends LegendView {
             legendModel.get('pageButtonItemGap', true)
         );
 
-        var contentRect = contentGroup.getBoundingRect();
-        var controllerRect = controllerGroup.getBoundingRect();
-        var showController = this._showController = contentRect[wh] > maxSize[wh];
+        let contentRect = contentGroup.getBoundingRect();
+        let controllerRect = controllerGroup.getBoundingRect();
+        let showController = this._showController = contentRect[wh] > maxSize[wh];
 
-        var contentPos = [-contentRect.x, -contentRect.y];
+        let contentPos = [-contentRect.x, -contentRect.y];
         // Remain contentPos when scroll animation perfroming.
         // If first rendering, `contentGroup.position` is [0, 0], which
         // does not make sense and may cause unexepcted animation if adopted.
@@ -271,15 +271,15 @@ class ScrollableLegendView extends LegendView {
         }
 
         // Layout container group based on 0.
-        var containerPos = [0, 0];
-        var controllerPos = [-controllerRect.x, -controllerRect.y];
-        var pageButtonGap = zrUtil.retrieve2(
+        let containerPos = [0, 0];
+        let controllerPos = [-controllerRect.x, -controllerRect.y];
+        let pageButtonGap = zrUtil.retrieve2(
             legendModel.get('pageButtonGap', true), legendModel.get('itemGap', true)
         );
 
         // Place containerGroup and controllerGroup and contentGroup.
         if (showController) {
-            var pageButtonPosition = legendModel.get('pageButtonPosition', true);
+            let pageButtonPosition = legendModel.get('pageButtonPosition', true);
             // controller is on the right / bottom.
             if (pageButtonPosition === 'end') {
                 controllerPos[orientIdx] += maxSize[wh] - controllerRect[wh];
@@ -300,7 +300,7 @@ class ScrollableLegendView extends LegendView {
         // Calculate `mainRect` and set `clipPath`.
         // mainRect should not be calculated by `this.group.getBoundingRect()`
         // for sake of the overflow.
-        var mainRect = {x: 0, y: 0} as ZRRectLike;
+        let mainRect = {x: 0, y: 0} as ZRRectLike;
 
         // Consider content may be overflow (should be clipped).
         mainRect[wh] = showController ? maxSize[wh] : contentRect[wh];
@@ -311,7 +311,7 @@ class ScrollableLegendView extends LegendView {
 
         containerGroup.__rectSize = maxSize[wh];
         if (showController) {
-            var clipShape = {x: 0, y: 0} as graphic.Rect['shape'];
+            let clipShape = {x: 0, y: 0} as graphic.Rect['shape'];
             clipShape[wh] = Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap, 0);
             clipShape[hw] = mainRect[hw];
             containerGroup.setClipPath(new graphic.Rect({shape: clipShape}));
@@ -330,7 +330,7 @@ class ScrollableLegendView extends LegendView {
         }
 
         // Content translate animation.
-        var pageInfo = this._getPageInfo(legendModel);
+        let pageInfo = this._getPageInfo(legendModel);
         pageInfo.pageIndex != null && graphic.updateProps(
             contentGroup,
             {position: pageInfo.contentPosition},
@@ -349,7 +349,7 @@ class ScrollableLegendView extends LegendView {
         legendModel: ScrollableLegendModel,
         api: ExtensionAPI
     ) {
-        var scrollDataIndex = this._getPageInfo(legendModel)[to];
+        let scrollDataIndex = this._getPageInfo(legendModel)[to];
 
         scrollDataIndex != null && api.dispatchAction({
             type: 'legendScroll',
@@ -362,12 +362,12 @@ class ScrollableLegendView extends LegendView {
         legendModel: ScrollableLegendModel,
         pageInfo: PageInfo
     ) {
-        var controllerGroup = this._controllerGroup;
+        let controllerGroup = this._controllerGroup;
 
         zrUtil.each(['pagePrev', 'pageNext'], function (name) {
             const key = (name + 'DataIndex') as'pagePrevDataIndex' | 'pageNextDataIndex';
-            var canJump = pageInfo[key] != null;
-            var icon = controllerGroup.childOfName(name) as graphic.Path;
+            let canJump = pageInfo[key] != null;
+            let icon = controllerGroup.childOfName(name) as graphic.Path;
             if (icon) {
                 icon.setStyle(
                     'fill',
@@ -379,11 +379,11 @@ class ScrollableLegendView extends LegendView {
             }
         });
 
-        var pageText = controllerGroup.childOfName('pageText') as graphic.Text;
-        var pageFormatter = legendModel.get('pageFormatter');
-        var pageIndex = pageInfo.pageIndex;
-        var current = pageIndex != null ? pageIndex + 1 : 0;
-        var total = pageInfo.pageCount;
+        let pageText = controllerGroup.childOfName('pageText') as graphic.Text;
+        let pageFormatter = legendModel.get('pageFormatter');
+        let pageIndex = pageInfo.pageIndex;
+        let current = pageIndex != null ? pageIndex + 1 : 0;
+        let total = pageInfo.pageCount;
 
         pageText && pageFormatter && pageText.setStyle(
             'text',
@@ -403,20 +403,20 @@ class ScrollableLegendView extends LegendView {
      * }
      */
     _getPageInfo(legendModel: ScrollableLegendModel): PageInfo {
-        var scrollDataIndex = legendModel.get('scrollDataIndex', true);
-        var contentGroup = this.getContentGroup();
-        var containerRectSize = this._containerGroup.__rectSize;
-        var orientIdx = legendModel.getOrient().index;
-        var wh = WH[orientIdx];
-        var xy = XY[orientIdx];
+        let scrollDataIndex = legendModel.get('scrollDataIndex', true);
+        let contentGroup = this.getContentGroup();
+        let containerRectSize = this._containerGroup.__rectSize;
+        let orientIdx = legendModel.getOrient().index;
+        let wh = WH[orientIdx];
+        let xy = XY[orientIdx];
 
-        var targetItemIndex = this._findTargetItemIndex(scrollDataIndex);
-        var children = contentGroup.children();
-        var targetItem = children[targetItemIndex];
-        var itemCount = children.length;
-        var pCount = !itemCount ? 0 : 1;
+        let targetItemIndex = this._findTargetItemIndex(scrollDataIndex);
+        let children = contentGroup.children();
+        let targetItem = children[targetItemIndex];
+        let itemCount = children.length;
+        let pCount = !itemCount ? 0 : 1;
 
-        var result: PageInfo = {
+        let result: PageInfo = {
             contentPosition: zrUtil.slice(contentGroup.position),
             pageCount: pCount,
             pageIndex: pCount - 1,
@@ -428,7 +428,7 @@ class ScrollableLegendView extends LegendView {
             return result;
         }
 
-        var targetItemInfo = getItemInfo(targetItem);
+        let targetItemInfo = getItemInfo(targetItem);
         result.contentPosition[orientIdx] = -targetItemInfo.s;
 
         // Strategy:
@@ -503,8 +503,8 @@ class ScrollableLegendView extends LegendView {
 
         function getItemInfo(el: Element): ItemInfo {
             if (el) {
-                var itemRect = el.getBoundingRect();
-                var start = itemRect[xy] + el.position[orientIdx];
+                let itemRect = el.getBoundingRect();
+                let start = itemRect[xy] + el.position[orientIdx];
                 return {
                     s: start,
                     e: start + itemRect[wh],
@@ -523,12 +523,12 @@ class ScrollableLegendView extends LegendView {
             return 0;
         }
 
-        var index;
-        var contentGroup = this.getContentGroup();
-        var defaultIndex: number;
+        let index;
+        let contentGroup = this.getContentGroup();
+        let defaultIndex: number;
 
         contentGroup.eachChild(function (child, idx) {
-            var legendDataIdx = (child as LegendItemElement).__legendDataIndex;
+            let legendDataIdx = (child as LegendItemElement).__legendDataIndex;
             // FIXME
             // If the given targetDataIndex (from model) is illegal,
             // we use defualtIndex. But the index on the legend model and

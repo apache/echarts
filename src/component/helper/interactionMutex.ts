@@ -21,16 +21,16 @@
 
 import * as echarts from '../../echarts';
 
-var ATTR = '\0_ec_interaction_mutex';
+const ATTR = '\0_ec_interaction_mutex';
 
 export function take(zr, resourceKey, userKey) {
-    var store = getStore(zr);
+    let store = getStore(zr);
     store[resourceKey] = userKey;
 }
 
 export function release(zr, resourceKey, userKey) {
-    var store = getStore(zr);
-    var uKey = store[resourceKey];
+    let store = getStore(zr);
+    let uKey = store[resourceKey];
 
     if (uKey === userKey) {
         store[resourceKey] = null;

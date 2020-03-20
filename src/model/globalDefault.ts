@@ -18,7 +18,7 @@
 */
 
 
-var platform = '';
+let platform = '';
 // Navigator not exists in node
 if (typeof navigator !== 'undefined') {
     platform = navigator.platform || '';

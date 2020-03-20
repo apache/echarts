@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import { AxisBaseOption } from './axisCommonTypes';
 
 
-var defaultOption: AxisBaseOption = {
+const defaultOption: AxisBaseOption = {
     show: true,
     zlevel: 0,
     z: 0,
@@ -108,7 +108,7 @@ var defaultOption: AxisBaseOption = {
 };
 
 
-var categoryAxis: AxisBaseOption = zrUtil.merge({
+const categoryAxis: AxisBaseOption = zrUtil.merge({
     // The gap at both ends of the axis. For categoryAxis, boolean.
     boundaryGap: true,
     // Set false to faster category collection.
@@ -129,7 +129,7 @@ var categoryAxis: AxisBaseOption = zrUtil.merge({
     }
 }, defaultOption);
 
-var valueAxis: AxisBaseOption = zrUtil.merge({
+const valueAxis: AxisBaseOption = zrUtil.merge({
     boundaryGap: [0, 0],
 
     // TODO
@@ -161,13 +161,13 @@ var valueAxis: AxisBaseOption = zrUtil.merge({
     }
 }, defaultOption);
 
-var timeAxis: AxisBaseOption = zrUtil.defaults({
+const timeAxis: AxisBaseOption = zrUtil.defaults({
     scale: true,
     min: 'dataMin',
     max: 'dataMax'
 }, valueAxis);
 
-var logAxis: AxisBaseOption = zrUtil.defaults({
+const logAxis: AxisBaseOption = zrUtil.defaults({
     scale: true,
     logBase: 10
 }, valueAxis);

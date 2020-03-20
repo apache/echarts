@@ -94,7 +94,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
 
     getProgressive() {
-        var progressive = this.option.progressive;
+        let progressive = this.option.progressive;
         if (progressive == null) {
             // PENDING
             return this.option.large ? 5e3 : this.get('progressive');
@@ -103,7 +103,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
     }
 
     getProgressiveThreshold() {
-        var progressiveThreshold = this.option.progressiveThreshold;
+        let progressiveThreshold = this.option.progressiveThreshold;
         if (progressiveThreshold == null) {
             // PENDING
             return this.option.large ? 1e4 : this.get('progressiveThreshold');

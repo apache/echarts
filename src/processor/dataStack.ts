@@ -38,15 +38,15 @@ interface StackInfo {
 // (2) Only register once when import repeatly.
 //     Should be executed after series filtered and before stack calculation.
 export default function (ecModel: GlobalModel) {
-    var stackInfoMap = createHashMap<StackInfo[]>();
+    let stackInfoMap = createHashMap<StackInfo[]>();
     ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>) {
-        var stack = seriesModel.get('stack');
+        let stack = seriesModel.get('stack');
         // Compatibal: when `stack` is set as '', do not stack.
         if (stack) {
-            var stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
-            var data = seriesModel.getData();
+            let stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
+            let data = seriesModel.getData();
 
-            var stackInfo: StackInfo = {
+            let stackInfo: StackInfo = {
                 // Used for calculate axis extent automatically.
                 // TODO: Type getCalculationInfo return more specific type?
                 stackResultDimension: data.getCalculationInfo('stackResultDimension'),
@@ -78,16 +78,16 @@ export default function (ecModel: GlobalModel) {
 
 function calculateStack(stackInfoList: StackInfo[]) {
     each(stackInfoList, function (targetStackInfo, idxInStack) {
-        var resultVal: number[] = [];
-        var resultNaN = [NaN, NaN];
-        var dims: [string, string] = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
-        var targetData = targetStackInfo.data;
-        var isStackedByIndex = targetStackInfo.isStackedByIndex;
+        let resultVal: number[] = [];
+        let resultNaN = [NaN, NaN];
+        let dims: [string, string] = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
+        let targetData = targetStackInfo.data;
+        let isStackedByIndex = targetStackInfo.isStackedByIndex;
 
         // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
-        var newData = targetData.map(dims, function (v0, v1, dataIndex) {
-            var sum = targetData.get(targetStackInfo.stackedDimension, dataIndex) as number;
+        let newData = targetData.map(dims, function (v0, v1, dataIndex) {
+            let sum = targetData.get(targetStackInfo.stackedDimension, dataIndex) as number;
 
             // Consider `connectNulls` of line area, if value is NaN, stackedOver
             // should also be NaN, to draw a appropriate belt area.
@@ -95,8 +95,8 @@ function calculateStack(stackInfoList: StackInfo[]) {
                 return resultNaN;
             }
 
-            var byValue: number;
-            var stackedDataRawIndex;
+            let byValue: number;
+            let stackedDataRawIndex;
 
             if (isStackedByIndex) {
                 stackedDataRawIndex = targetData.getRawIndex(dataIndex);
@@ -106,10 +106,10 @@ function calculateStack(stackInfoList: StackInfo[]) {
             }
 
             // If stackOver is NaN, chart view will render point on value start.
-            var stackedOver = NaN;
+            let stackedOver = NaN;
 
-            for (var j = idxInStack - 1; j >= 0; j--) {
-                var stackInfo = stackInfoList[j];
+            for (let j = idxInStack - 1; j >= 0; j--) {
+                let stackInfo = stackInfoList[j];
 
                 // Has been optimized by inverted indices on `stackedByDimension`.
                 if (!isStackedByIndex) {
@@ -117,7 +117,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
                 }
 
                 if (stackedDataRawIndex >= 0) {
-                    var val = stackInfo.data.getByRawIndex(
+                    let val = stackInfo.data.getByRawIndex(
                         stackInfo.stackResultDimension, stackedDataRawIndex
                     ) as number;
 

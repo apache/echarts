@@ -25,14 +25,14 @@ import VisualMapModel, { VisualMeta } from './VisualMapModel';
 import { StageHandlerProgressExecutor, BuiltinVisualProperty, ParsedValue } from '../../util/types';
 import SeriesModel from '../../model/Series';
 
-var VISUAL_PRIORITY = echarts.PRIORITY.VISUAL.COMPONENT;
+const VISUAL_PRIORITY = echarts.PRIORITY.VISUAL.COMPONENT;
 
 echarts.registerVisual(VISUAL_PRIORITY, {
     createOnAllSeries: true,
     reset: function (seriesModel, ecModel) {
-        var resetDefines: StageHandlerProgressExecutor[] = [];
+        let resetDefines: StageHandlerProgressExecutor[] = [];
         ecModel.eachComponent('visualMap', function (visualMapModel: VisualMapModel) {
-            var pipelineContext = seriesModel.pipelineContext;
+            let pipelineContext = seriesModel.pipelineContext;
             if (!visualMapModel.isTargetSeries(seriesModel)
                 || (pipelineContext && pipelineContext.large)
             ) {
@@ -55,20 +55,20 @@ echarts.registerVisual(VISUAL_PRIORITY, {
 echarts.registerVisual(VISUAL_PRIORITY, {
     createOnAllSeries: true,
     reset: function (seriesModel, ecModel) {
-        var data = seriesModel.getData();
-        var visualMetaList: VisualMeta[] = [];
+        let data = seriesModel.getData();
+        let visualMetaList: VisualMeta[] = [];
 
         ecModel.eachComponent('visualMap', function (visualMapModel: VisualMapModel) {
             if (visualMapModel.isTargetSeries(seriesModel)) {
-                var visualMeta = visualMapModel.getVisualMeta(
+                let visualMeta = visualMapModel.getVisualMeta(
                     zrUtil.bind(getColorVisual, null, seriesModel, visualMapModel)
                 ) || {
                     stops: [],
                     outerColors: []
                 } as VisualMeta;
 
-                var concreteDim = visualMapModel.getDataDimension(data);
-                var dimInfo = data.getDimensionInfo(concreteDim);
+                let concreteDim = visualMapModel.getDataDimension(data);
+                let dimInfo = data.getDimensionInfo(concreteDim);
                 if (dimInfo != null) {
                     // visualMeta.dimension should be dimension index, but not concrete dimension.
                     visualMeta.dimension = dimInfo.index;
@@ -91,15 +91,15 @@ function getColorVisual(
     value: ParsedValue,
     valueState: VisualMapModel['stateList'][number]
 ) {
-    var mappings = visualMapModel.targetVisuals[valueState];
-    var visualTypes = VisualMapping.prepareVisualTypes(mappings);
-    var resultVisual: Partial<Record<BuiltinVisualProperty, any>> = {
+    let mappings = visualMapModel.targetVisuals[valueState];
+    let visualTypes = VisualMapping.prepareVisualTypes(mappings);
+    let resultVisual: Partial<Record<BuiltinVisualProperty, any>> = {
         color: seriesModel.getData().getVisual('color') // default color.
     };
 
-    for (var i = 0, len = visualTypes.length; i < len; i++) {
-        var type = visualTypes[i];
-        var mapping = mappings[
+    for (let i = 0, len = visualTypes.length; i < len; i++) {
+        let type = visualTypes[i];
+        let mapping = mappings[
             (type === 'opacity' ? '__alphaForOpacity' : type) as BuiltinVisualProperty
         ];
         mapping && mapping.applyVisual(value, getVisual, setVisual);

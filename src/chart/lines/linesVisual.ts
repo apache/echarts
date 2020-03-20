@@ -31,14 +31,14 @@ function normalize(a: string | number | (string | number)[]): (string | number)[
     return a;
 }
 
-var opacityQuery = ['lineStyle', 'opacity'] as const;
+const opacityQuery = ['lineStyle', 'opacity'] as const;
 
 const linesVisual: StageHandler = {
     seriesType: 'lines',
     reset(seriesModel: LinesSeriesModel) {
-        var symbolType = normalize(seriesModel.get('symbol'));
-        var symbolSize = normalize(seriesModel.get('symbolSize'));
-        var data = seriesModel.getData();
+        let symbolType = normalize(seriesModel.get('symbol'));
+        let symbolSize = normalize(seriesModel.get('symbolSize'));
+        let data = seriesModel.getData();
 
         data.setVisual('fromSymbol', symbolType && symbolType[0]);
         data.setVisual('toSymbol', symbolType && symbolType[1]);
@@ -47,10 +47,10 @@ const linesVisual: StageHandler = {
         data.setVisual('opacity', seriesModel.get(opacityQuery));
 
         function dataEach(data: List<LinesSeriesModel>, idx: number): void {
-            var itemModel = data.getItemModel(idx) as Model<LinesDataItemOption>;
-            var symbolType = normalize(itemModel.getShallow('symbol', true));
-            var symbolSize = normalize(itemModel.getShallow('symbolSize', true));
-            var opacity = itemModel.get(opacityQuery);
+            let itemModel = data.getItemModel(idx) as Model<LinesDataItemOption>;
+            let symbolType = normalize(itemModel.getShallow('symbol', true));
+            let symbolSize = normalize(itemModel.getShallow('symbolSize', true));
+            let opacity = itemModel.get(opacityQuery);
 
             symbolType[0] && data.setItemVisual(idx, 'fromSymbol', symbolType[0]);
             symbolType[1] && data.setItemVisual(idx, 'toSymbol', symbolType[1]);

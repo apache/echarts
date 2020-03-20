@@ -30,32 +30,32 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
     ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
 
-        var nodeWidth = seriesModel.get('nodeWidth');
-        var nodeGap = seriesModel.get('nodeGap');
+        let nodeWidth = seriesModel.get('nodeWidth');
+        let nodeGap = seriesModel.get('nodeGap');
 
-        var layoutInfo = getViewRect(seriesModel, api);
+        let layoutInfo = getViewRect(seriesModel, api);
 
         seriesModel.layoutInfo = layoutInfo;
 
-        var width = layoutInfo.width;
-        var height = layoutInfo.height;
+        let width = layoutInfo.width;
+        let height = layoutInfo.height;
 
-        var graph = seriesModel.getGraph();
+        let graph = seriesModel.getGraph();
 
-        var nodes = graph.nodes;
-        var edges = graph.edges;
+        let nodes = graph.nodes;
+        let edges = graph.edges;
 
         computeNodeValues(nodes);
 
-        var filteredNodes = zrUtil.filter(nodes, function (node) {
+        let filteredNodes = zrUtil.filter(nodes, function (node) {
             return node.getLayout().value === 0;
         });
 
-        var iterations = filteredNodes.length !== 0 ? 0 : seriesModel.get('layoutIterations');
+        let iterations = filteredNodes.length !== 0 ? 0 : seriesModel.get('layoutIterations');
 
-        var orient = seriesModel.get('orient');
+        let orient = seriesModel.get('orient');
 
-        var nodeAlign = seriesModel.get('nodeAlign');
+        let nodeAlign = seriesModel.get('nodeAlign');
 
         layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign);
     });
@@ -94,10 +94,10 @@ function layoutSankey(
  */
 function computeNodeValues(nodes: GraphNode[]) {
     zrUtil.each(nodes, function (node) {
-        var value1 = sum(node.outEdges, getEdgeValue);
-        var value2 = sum(node.inEdges, getEdgeValue);
-        var nodeRawValue = node.getValue() as number || 0;
-        var value = Math.max(value1, value2, nodeRawValue);
+        let value1 = sum(node.outEdges, getEdgeValue);
+        let value2 = sum(node.inEdges, getEdgeValue);
+        let nodeRawValue = node.getValue() as number || 0;
+        let value = Math.max(value1, value2, nodeRawValue);
         node.setLayout({value: value}, true);
     });
 }
@@ -119,14 +119,14 @@ function computeNodeBreadths(
 ) {
     // Used to mark whether the edge is deleted. if it is deleted,
     // the value is 0, otherwise it is 1.
-    var remainEdges = [];
+    let remainEdges = [];
     // Storage each node's indegree.
-    var indegreeArr = [];
+    let indegreeArr = [];
     //Used to storage the node with indegree is equal to 0.
-    var zeroIndegrees: GraphNode[] = [];
-    var nextTargetNode: GraphNode[] = [];
-    var x = 0;
-    // var kx = 0;
+    let zeroIndegrees: GraphNode[] = [];
+    let nextTargetNode: GraphNode[] = [];
+    let x = 0;
+    // let kx = 0;
 
     for (let i = 0; i < edges.length; i++) {
         remainEdges[i] = 1;
@@ -137,15 +137,15 @@ function computeNodeBreadths(
             zeroIndegrees.push(nodes[i]);
         }
     }
-    var maxNodeDepth = -1;
+    let maxNodeDepth = -1;
     // Traversing nodes using topological sorting to calculate the
     // horizontal(if orient === 'horizontal') or vertical(if orient === 'vertical')
     // position of the nodes.
     while (zeroIndegrees.length) {
-        for (var idx = 0; idx < zeroIndegrees.length; idx++) {
-            var node = zeroIndegrees[idx];
-            var item = node.hostGraph.data.getRawDataItem(node.dataIndex) as SankeyNodeItemOption;
-            var isItemDepth = item.depth != null && item.depth >= 0;
+        for (let idx = 0; idx < zeroIndegrees.length; idx++) {
+            let node = zeroIndegrees[idx];
+            let item = node.hostGraph.data.getRawDataItem(node.dataIndex) as SankeyNodeItemOption;
+            let isItemDepth = item.depth != null && item.depth >= 0;
             if (isItemDepth && item.depth > maxNodeDepth) {
                 maxNodeDepth = item.depth;
             }
@@ -154,12 +154,12 @@ function computeNodeBreadths(
                 ? node.setLayout({dy: nodeWidth}, true)
                 : node.setLayout({dx: nodeWidth}, true);
 
-            for (var edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
-                var edge = node.outEdges[edgeIdx];
-                var indexEdge = edges.indexOf(edge);
+            for (let edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
+                let edge = node.outEdges[edgeIdx];
+                let indexEdge = edges.indexOf(edge);
                 remainEdges[indexEdge] = 0;
-                var targetNode = edge.node2;
-                var nodeIndex = nodes.indexOf(targetNode);
+                let targetNode = edge.node2;
+                let nodeIndex = nodes.indexOf(targetNode);
                 if (--indegreeArr[nodeIndex] === 0 && nextTargetNode.indexOf(targetNode) < 0) {
                     nextTargetNode.push(targetNode);
                 }
@@ -176,11 +176,11 @@ function computeNodeBreadths(
         }
     }
 
-    var maxDepth = maxNodeDepth > x - 1 ? maxNodeDepth : x - 1;
+    let maxDepth = maxNodeDepth > x - 1 ? maxNodeDepth : x - 1;
     if (nodeAlign && nodeAlign !== 'left') {
         adjustNodeWithNodeAlign(nodes, nodeAlign, orient, maxDepth);
     }
-    var kx = orient === 'vertical'
+    let kx = orient === 'vertical'
         ? (height - nodeWidth) / maxDepth
         : (width - nodeWidth) / maxDepth;
 
@@ -188,7 +188,7 @@ function computeNodeBreadths(
 }
 
 function isNodeDepth(node: GraphNode) {
-    var item = node.hostGraph.data.getRawDataItem(node.dataIndex) as SankeyNodeItemOption;
+    let item = node.hostGraph.data.getRawDataItem(node.dataIndex) as SankeyNodeItemOption;
     return item.depth != null && item.depth >= 0;
 }
 
@@ -199,15 +199,15 @@ function adjustNodeWithNodeAlign(
     maxDepth: number
 ) {
     if (nodeAlign === 'right') {
-        var nextSourceNode: GraphNode[] = [];
-        var remainNodes = nodes;
-        var nodeHeight = 0;
+        let nextSourceNode: GraphNode[] = [];
+        let remainNodes = nodes;
+        let nodeHeight = 0;
         while (remainNodes.length) {
-            for (var i = 0; i < remainNodes.length; i++) {
-                var node = remainNodes[i];
+            for (let i = 0; i < remainNodes.length; i++) {
+                let node = remainNodes[i];
                 node.setLayout({skNodeHeight: nodeHeight}, true);
-                for (var j = 0; j < node.inEdges.length; j++) {
-                    var edge = node.inEdges[j];
+                for (let j = 0; j < node.inEdges.length; j++) {
+                    let edge = node.inEdges[j];
                     if (nextSourceNode.indexOf(edge.node1) < 0) {
                         nextSourceNode.push(edge.node1);
                     }
@@ -252,7 +252,7 @@ function moveSinksRight(nodes: GraphNode[], maxDepth: number) {
  */
 function scaleNodeBreadths(nodes: GraphNode[], kx: number, orient: LayoutOrient) {
     zrUtil.each(nodes, function (node) {
-        var nodeDepth = node.getLayout().depth * kx;
+        let nodeDepth = node.getLayout().depth * kx;
         orient === 'vertical'
             ? node.setLayout({y: nodeDepth}, true)
             : node.setLayout({x: nodeDepth}, true);
@@ -278,12 +278,12 @@ function computeNodeDepths(
     iterations: number,
     orient: LayoutOrient
 ) {
-    var nodesByBreadth = prepareNodesByBreadth(nodes, orient);
+    let nodesByBreadth = prepareNodesByBreadth(nodes, orient);
 
     initializeNodeDepth(nodesByBreadth, edges, height, width, nodeGap, orient);
     resolveCollisions(nodesByBreadth, nodeGap, height, width, orient);
 
-    for (var alpha = 1; iterations > 0; iterations--) {
+    for (let alpha = 1; iterations > 0; iterations--) {
         // 0.99 is a experience parameter, ensure that each iterations of
         // changes as small as possible.
         alpha *= 0.99;
@@ -295,10 +295,10 @@ function computeNodeDepths(
 }
 
 function prepareNodesByBreadth(nodes: GraphNode[], orient: LayoutOrient) {
-    var nodesByBreadth: GraphNode[][] = [];
-    var keyAttr = orient === 'vertical' ? 'y' : 'x';
+    let nodesByBreadth: GraphNode[][] = [];
+    let keyAttr = orient === 'vertical' ? 'y' : 'x';
 
-    var groupResult = groupData(nodes, function (node) {
+    let groupResult = groupData(nodes, function (node) {
         return node.getLayout()[keyAttr] as number;
     });
     groupResult.keys.sort(function (a, b) {
@@ -322,14 +322,14 @@ function initializeNodeDepth(
     nodeGap: number,
     orient: LayoutOrient
 ) {
-    var minKy = Infinity;
+    let minKy = Infinity;
     zrUtil.each(nodesByBreadth, function (nodes) {
-        var n = nodes.length;
-        var sum = 0;
+        let n = nodes.length;
+        let sum = 0;
         zrUtil.each(nodes, function (node) {
             sum += node.getLayout().value;
         });
-        var ky = orient === 'vertical'
+        let ky = orient === 'vertical'
                     ? (width - (n - 1) * nodeGap) / sum
                     : (height - (n - 1) * nodeGap) / sum;
 
@@ -340,7 +340,7 @@ function initializeNodeDepth(
 
     zrUtil.each(nodesByBreadth, function (nodes) {
         zrUtil.each(nodes, function (node, i) {
-            var nodeDy = node.getLayout().value * minKy;
+            let nodeDy = node.getLayout().value * minKy;
             if (orient === 'vertical') {
                 node.setLayout({x: i}, true);
                 node.setLayout({dx: nodeDy}, true);
@@ -353,7 +353,7 @@ function initializeNodeDepth(
     });
 
     zrUtil.each(edges, function (edge) {
-        var edgeDy = +edge.getValue() * minKy;
+        let edgeDy = +edge.getValue() * minKy;
         edge.setLayout({dy: edgeDy}, true);
     });
 }
@@ -368,17 +368,17 @@ function resolveCollisions(
     width: number,
     orient: LayoutOrient
 ) {
-    var keyAttr = orient === 'vertical' ? 'x' : 'y';
+    let keyAttr = orient === 'vertical' ? 'x' : 'y';
     zrUtil.each(nodesByBreadth, function (nodes) {
         nodes.sort(function (a, b) {
             return a.getLayout()[keyAttr] - b.getLayout()[keyAttr];
         });
-        var nodeX;
-        var node;
-        var dy;
-        var y0 = 0;
-        var n = nodes.length;
-        var nodeDyAttr = orient === 'vertical' ? 'dx' : 'dy';
+        let nodeX;
+        let node;
+        let dy;
+        let y0 = 0;
+        let n = nodes.length;
+        let nodeDyAttr = orient === 'vertical' ? 'dx' : 'dy';
         for (let i = 0; i < n; i++) {
             node = nodes[i];
             dy = y0 - node.getLayout()[keyAttr];
@@ -390,7 +390,7 @@ function resolveCollisions(
             }
             y0 = node.getLayout()[keyAttr] + node.getLayout()[nodeDyAttr] + nodeGap;
         }
-        var viewWidth = orient === 'vertical' ? width : height;
+        let viewWidth = orient === 'vertical' ? width : height;
         // If the bottommost node goes outside the bounds, push it back up
         dy = y0 - nodeGap - viewWidth;
         if (dy > 0) {
@@ -428,14 +428,14 @@ function relaxRightToLeft(
     zrUtil.each(nodesByBreadth.slice().reverse(), function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.outEdges.length) {
-                var y = sum(node.outEdges, weightedTarget, orient)
+                let y = sum(node.outEdges, weightedTarget, orient)
                     / sum(node.outEdges, getEdgeValue);
                 if (orient === 'vertical') {
-                    var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
+                    let nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
                 }
                 else {
-                    var nodeY = node.getLayout().y + (y - center(node, orient)) * alpha;
+                    let nodeY = node.getLayout().y + (y - center(node, orient)) * alpha;
                     node.setLayout({y: nodeY}, true);
                 }
             }
@@ -462,11 +462,11 @@ function getEdgeValue(edge: GraphEdge) {
 }
 
 function sum<T>(array: T[], cb: (item: T, orient?: LayoutOrient) => number, orient?: LayoutOrient) {
-    var sum = 0;
-    var len = array.length;
-    var i = -1;
+    let sum = 0;
+    let len = array.length;
+    let i = -1;
     while (++i < len) {
-        var value = +cb(array[i], orient);
+        let value = +cb(array[i], orient);
         if (!isNaN(value)) {
             sum += value;
         }
@@ -481,14 +481,14 @@ function relaxLeftToRight(nodesByBreadth: GraphNode[][], alpha: number, orient: 
     zrUtil.each(nodesByBreadth, function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.inEdges.length) {
-                var y = sum(node.inEdges, weightedSource, orient)
+                let y = sum(node.inEdges, weightedSource, orient)
                         / sum(node.inEdges, getEdgeValue);
                 if (orient === 'vertical') {
-                    var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
+                    let nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
                 }
                 else {
-                    var nodeY = node.getLayout().y + (y - center(node, orient)) * alpha;
+                    let nodeY = node.getLayout().y + (y - center(node, orient)) * alpha;
                     node.setLayout({y: nodeY}, true);
                 }
             }
@@ -500,7 +500,7 @@ function relaxLeftToRight(nodesByBreadth: GraphNode[][], alpha: number, orient: 
  * Compute the depth(y-position) of each edge
  */
 function computeEdgeDepths(nodes: GraphNode[], orient: LayoutOrient) {
-    var keyAttr = orient === 'vertical' ? 'x' : 'y';
+    let keyAttr = orient === 'vertical' ? 'x' : 'y';
     zrUtil.each(nodes, function (node) {
         node.outEdges.sort(function (a, b) {
             return a.node2.getLayout()[keyAttr] - b.node2.getLayout()[keyAttr];
@@ -510,8 +510,8 @@ function computeEdgeDepths(nodes: GraphNode[], orient: LayoutOrient) {
         });
     });
     zrUtil.each(nodes, function (node) {
-        var sy = 0;
-        var ty = 0;
+        let sy = 0;
+        let ty = 0;
         zrUtil.each(node.outEdges, function (edge) {
             edge.setLayout({sy: sy}, true);
             sy += edge.getLayout().dy;

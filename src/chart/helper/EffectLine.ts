@@ -61,15 +61,15 @@ class EffectLine extends graphic.Group {
     }
 
     _updateEffectSymbol(lineData: List, idx: number) {
-        var itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
-        var effectModel = itemModel.getModel('effect');
-        var size = effectModel.get('symbolSize');
-        var symbolType = effectModel.get('symbol');
+        let itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
+        let effectModel = itemModel.getModel('effect');
+        let size = effectModel.get('symbolSize');
+        let symbolType = effectModel.get('symbol');
         if (!zrUtil.isArray(size)) {
             size = [size, size];
         }
-        var color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
-        var symbol = this.childAt(1) as ECSymbolOnEffectLine;
+        let color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
+        let symbol = this.childAt(1) as ECSymbolOnEffectLine;
 
         if (this._symbolType !== symbolType) {
             // Remove previous
@@ -110,19 +110,19 @@ class EffectLine extends graphic.Group {
         idx: number
     ) {
 
-        var symbol = this.childAt(1) as ECSymbolOnEffectLine;
+        let symbol = this.childAt(1) as ECSymbolOnEffectLine;
         if (!symbol) {
             return;
         }
 
-        var self = this;
+        let self = this;
 
-        var points = lineData.getItemLayout(idx);
+        let points = lineData.getItemLayout(idx);
 
-        var period = effectModel.get('period') * 1000;
-        var loop = effectModel.get('loop');
-        var constantSpeed = effectModel.get('constantSpeed');
-        var delayExpr = zrUtil.retrieve(effectModel.get('delay'), function (idx) {
+        let period = effectModel.get('period') * 1000;
+        let loop = effectModel.get('loop');
+        let constantSpeed = effectModel.get('constantSpeed');
+        let delayExpr = zrUtil.retrieve(effectModel.get('delay'), function (idx) {
             return idx / lineData.count() * period / 3;
         });
 
@@ -139,7 +139,7 @@ class EffectLine extends graphic.Group {
 
             symbol.stopAnimation();
 
-            var delayNum: number;
+            let delayNum: number;
             if (typeof delayExpr === 'function') {
                 delayNum = delayExpr(idx);
             }
@@ -150,7 +150,7 @@ class EffectLine extends graphic.Group {
                 delayNum = -period * symbol.__t;
             }
             symbol.__t = 0;
-            var animator = symbol.animate('', loop)
+            let animator = symbol.animate('', loop)
                 .when(period, {
                     __t: 1
                 })
@@ -191,20 +191,20 @@ class EffectLine extends graphic.Group {
     }
 
     updateSymbolPosition(symbol: ECSymbolOnEffectLine) {
-        var p1 = symbol.__p1;
-        var p2 = symbol.__p2;
-        var cp1 = symbol.__cp1;
-        var t = symbol.__t;
-        var pos = symbol.position;
-        var lastPos = [pos[0], pos[1]];
-        var quadraticAt = curveUtil.quadraticAt;
-        var quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
+        let p1 = symbol.__p1;
+        let p2 = symbol.__p2;
+        let cp1 = symbol.__cp1;
+        let t = symbol.__t;
+        let pos = symbol.position;
+        let lastPos = [pos[0], pos[1]];
+        let quadraticAt = curveUtil.quadraticAt;
+        let quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
         pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
         pos[1] = quadraticAt(p1[1], cp1[1], p2[1], t);
 
         // Tangent
-        var tx = quadraticDerivativeAt(p1[0], cp1[0], p2[0], t);
-        var ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
+        let tx = quadraticDerivativeAt(p1[0], cp1[0], p2[0], t);
+        let ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
 
         symbol.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
         // enable continuity trail for 'line', 'rect', 'roundRect' symbolType
@@ -235,7 +235,7 @@ class EffectLine extends graphic.Group {
     updateLayout(lineData: List, idx: number) {
         (this.childAt(0) as Line).updateLayout(lineData, idx);
 
-        var effectModel = lineData.getItemModel<LineDrawModelOption>(idx).getModel('effect');
+        let effectModel = lineData.getItemModel<LineDrawModelOption>(idx).getModel('effect');
         this._updateEffectAnimation(lineData, effectModel, idx);
     }
 }

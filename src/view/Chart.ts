@@ -36,10 +36,10 @@ import {
 import { SeriesTaskContext, SeriesTask } from '../stream/Scheduler';
 import List from '../data/List';
 
-var inner = modelUtil.makeInner<{
+const inner = modelUtil.makeInner<{
     updateMethod: keyof ChartView
 }, Payload>();
-var renderPlanner = createRenderPlanner();
+const renderPlanner = createRenderPlanner();
 
 interface ChartView {
     /**
@@ -118,7 +118,7 @@ class ChartView {
     __id: string;
 
     static protoInitialize = (function () {
-        var proto = ChartView.prototype;
+        let proto = ChartView.prototype;
         proto.type = 'chart';
     })();
 
@@ -197,7 +197,7 @@ function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
             // Simple optimize.
             && !graphicUtil.isHighDownDispatcher(el)
         ) {
-            for (var i = 0, len = (el as Group).childCount(); i < len; i++) {
+            for (let i = 0, len = (el as Group).childCount(); i < len; i++) {
                 elSetState((el as Group).childAt(i), state, highlightDigit);
             }
         }
@@ -205,9 +205,9 @@ function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
 }
 
 function toggleHighlight(data: List, payload: Payload, state: DisplayState) {
-    var dataIndex = modelUtil.queryDataIndex(data, payload);
+    let dataIndex = modelUtil.queryDataIndex(data, payload);
 
-    var highlightDigit = (payload && payload.highlightKey != null)
+    let highlightDigit = (payload && payload.highlightKey != null)
         ? graphicUtil.getHighlightDigit(payload.highlightKey)
         : null;
 
@@ -236,16 +236,16 @@ function renderTaskPlan(context: SeriesTaskContext): StageHandlerPlanReturn {
 }
 
 function renderTaskReset(context: SeriesTaskContext): TaskResetCallbackReturn<SeriesTaskContext> {
-    var seriesModel = context.model;
-    var ecModel = context.ecModel;
-    var api = context.api;
-    var payload = context.payload;
+    let seriesModel = context.model;
+    let ecModel = context.ecModel;
+    let api = context.api;
+    let payload = context.payload;
     // FIXME: remove updateView updateVisual
-    var progressiveRender = seriesModel.pipelineContext.progressiveRender;
-    var view = context.view;
+    let progressiveRender = seriesModel.pipelineContext.progressiveRender;
+    let view = context.view;
 
-    var updateMethod = payload && inner(payload).updateMethod;
-    var methodName: keyof ChartView = progressiveRender
+    let updateMethod = payload && inner(payload).updateMethod;
+    let methodName: keyof ChartView = progressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
         ? updateMethod
@@ -260,7 +260,7 @@ function renderTaskReset(context: SeriesTaskContext): TaskResetCallbackReturn<Se
     return progressMethodMap[methodName];
 }
 
-var progressMethodMap: {[method: string]: TaskResetCallbackReturn<SeriesTaskContext>} = {
+const progressMethodMap: {[method: string]: TaskResetCallbackReturn<SeriesTaskContext>} = {
     incrementalPrepareRender: {
         progress: function (params: StageHandlerProgressParams, context: SeriesTaskContext): void {
             context.view.incrementalRender(

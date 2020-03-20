@@ -27,7 +27,7 @@ import GlobalModel from '../../model/Global';
 import { extend } from 'zrender/src/core/util';
 
 function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: number) {
-    var option = extend(seriesModel.getBoxLayoutParams(), {
+    let option = extend(seriesModel.getBoxLayoutParams(), {
         aspect: aspect
     });
     return getLayoutRect(option, {
@@ -37,19 +37,19 @@ function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: n
 }
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
-    var viewList: View[] = [];
+    let viewList: View[] = [];
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
-        var coordSysType = seriesModel.get('coordinateSystem');
+        let coordSysType = seriesModel.get('coordinateSystem');
         if (!coordSysType || coordSysType === 'view') {
 
-            var data = seriesModel.getData();
-            var positions = data.mapArray(function (idx) {
-                var itemModel = data.getItemModel<GraphNodeItemOption>(idx);
+            let data = seriesModel.getData();
+            let positions = data.mapArray(function (idx) {
+                let itemModel = data.getItemModel<GraphNodeItemOption>(idx);
                 return [+itemModel.get('x'), +itemModel.get('y')];
             });
 
-            var min: number[] = [];
-            var max: number[] = [];
+            let min: number[] = [];
+            let max: number[] = [];
 
             bbox.fromPoints(positions, min, max);
 
@@ -62,22 +62,22 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 max[1] += 1;
                 min[1] -= 1;
             }
-            var aspect = (max[0] - min[0]) / (max[1] - min[1]);
+            let aspect = (max[0] - min[0]) / (max[1] - min[1]);
             // FIXME If get view rect after data processed?
-            var viewRect = getViewRect(seriesModel, api, aspect);
+            let viewRect = getViewRect(seriesModel, api, aspect);
             // Position may be NaN, use view rect instead
             if (isNaN(aspect)) {
                 min = [viewRect.x, viewRect.y];
                 max = [viewRect.x + viewRect.width, viewRect.y + viewRect.height];
             }
 
-            var bbWidth = max[0] - min[0];
-            var bbHeight = max[1] - min[1];
+            let bbWidth = max[0] - min[0];
+            let bbHeight = max[1] - min[1];
 
-            var viewWidth = viewRect.width;
-            var viewHeight = viewRect.height;
+            let viewWidth = viewRect.width;
+            let viewHeight = viewRect.height;
 
-            var viewCoordSys = seriesModel.coordinateSystem = new View();
+            let viewCoordSys = seriesModel.coordinateSystem = new View();
             viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
             viewCoordSys.setBoundingRect(

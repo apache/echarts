@@ -59,9 +59,9 @@ function getAxisKey(polar: Polar, axis: PolarAxis) {
 
 function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: ExtensionAPI) {
 
-    var lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
+    let lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
 
-    var barWidthAndOffset = calRadialBar(
+    let barWidthAndOffset = calRadialBar(
         zrUtil.filter(
             ecModel.getSeriesByType(seriesType) as BarSeriesModel[],
             function (seriesModel) {
@@ -79,39 +79,39 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
             return;
         }
 
-        var data = seriesModel.getData();
-        var polar = seriesModel.coordinateSystem as Polar;
-        var baseAxis = polar.getBaseAxis();
-        var axisKey = getAxisKey(polar, baseAxis);
+        let data = seriesModel.getData();
+        let polar = seriesModel.coordinateSystem as Polar;
+        let baseAxis = polar.getBaseAxis();
+        let axisKey = getAxisKey(polar, baseAxis);
 
-        var stackId = getSeriesStackId(seriesModel);
-        var columnLayoutInfo = barWidthAndOffset[axisKey][stackId];
-        var columnOffset = columnLayoutInfo.offset;
-        var columnWidth = columnLayoutInfo.width;
-        var valueAxis = polar.getOtherAxis(baseAxis);
+        let stackId = getSeriesStackId(seriesModel);
+        let columnLayoutInfo = barWidthAndOffset[axisKey][stackId];
+        let columnOffset = columnLayoutInfo.offset;
+        let columnWidth = columnLayoutInfo.width;
+        let valueAxis = polar.getOtherAxis(baseAxis);
 
-        var cx = seriesModel.coordinateSystem.cx;
-        var cy = seriesModel.coordinateSystem.cy;
+        let cx = seriesModel.coordinateSystem.cx;
+        let cy = seriesModel.coordinateSystem.cy;
 
-        var barMinHeight = seriesModel.get('barMinHeight') || 0;
-        var barMinAngle = seriesModel.get('barMinAngle') || 0;
+        let barMinHeight = seriesModel.get('barMinHeight') || 0;
+        let barMinAngle = seriesModel.get('barMinAngle') || 0;
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
-        var valueDim = data.mapDimension(valueAxis.dim);
-        var baseDim = data.mapDimension(baseAxis.dim);
-        var stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
-        var clampLayout = baseAxis.dim !== 'radius'
+        let valueDim = data.mapDimension(valueAxis.dim);
+        let baseDim = data.mapDimension(baseAxis.dim);
+        let stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        let clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        var valueAxisStart = valueAxis.getExtent()[0];
+        let valueAxisStart = valueAxis.getExtent()[0];
 
-        for (var idx = 0, len = data.count(); idx < len; idx++) {
-            var value = data.get(valueDim, idx);
-            var baseValue = data.get(baseDim, idx) as number;
+        for (let idx = 0, len = data.count(); idx < len; idx++) {
+            let value = data.get(valueDim, idx);
+            let baseValue = data.get(baseDim, idx) as number;
 
-            var sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
-            var baseCoord = valueAxisStart;
+            let sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
+            let baseCoord = valueAxisStart;
 
             // Because of the barMinHeight, we can not use the value in
             // stackResultDimension directly.
@@ -127,15 +127,15 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
                 baseCoord = lastStackCoords[stackId][baseValue][sign];
             }
 
-            var r0;
-            var r;
-            var startAngle;
-            var endAngle;
+            let r0;
+            let r;
+            let startAngle;
+            let endAngle;
 
             // radial sector
             if (valueAxis.dim === 'radius') {
-                var radiusSpan = valueAxis.dataToCoord(value) - valueAxisStart;
-                var angle = baseAxis.dataToCoord(baseValue);
+                let radiusSpan = valueAxis.dataToCoord(value) - valueAxisStart;
+                let angle = baseAxis.dataToCoord(baseValue);
 
                 if (Math.abs(radiusSpan) < barMinHeight) {
                     radiusSpan = (radiusSpan < 0 ? -1 : 1) * barMinHeight;
@@ -150,8 +150,8 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
             }
             // tangential sector
             else {
-                var angleSpan = valueAxis.dataToCoord(value, clampLayout) - valueAxisStart;
-                var radius = baseAxis.dataToCoord(baseValue);
+                let angleSpan = valueAxis.dataToCoord(value, clampLayout) - valueAxisStart;
+                let radius = baseAxis.dataToCoord(baseValue);
 
                 if (Math.abs(angleSpan) < barMinAngle) {
                     angleSpan = (angleSpan < 0 ? -1 : 1) * barMinAngle;
@@ -164,8 +164,8 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
 
                 // if the previous stack is at the end of the ring,
                 // add a round to differentiate it from origin
-                // var extent = angleAxis.getExtent();
-                // var stackCoord = angle;
+                // let extent = angleAxis.getExtent();
+                // let stackCoord = angle;
                 // if (stackCoord === extent[0] && value > 0) {
                 //     stackCoord = extent[1];
                 // }
@@ -197,21 +197,21 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
  */
 function calRadialBar(barSeries: BarSeriesModel[]) {
     // Columns info on each category axis. Key is polar name
-    var columnsMap: Dictionary<LayoutColumnInfo> = {};
+    let columnsMap: Dictionary<LayoutColumnInfo> = {};
 
     zrUtil.each(barSeries, function (seriesModel, idx) {
-        var data = seriesModel.getData();
-        var polar = seriesModel.coordinateSystem as Polar;
+        let data = seriesModel.getData();
+        let polar = seriesModel.coordinateSystem as Polar;
 
-        var baseAxis = polar.getBaseAxis();
-        var axisKey = getAxisKey(polar, baseAxis);
+        let baseAxis = polar.getBaseAxis();
+        let axisKey = getAxisKey(polar, baseAxis);
 
-        var axisExtent = baseAxis.getExtent();
-        var bandWidth = baseAxis.type === 'category'
+        let axisExtent = baseAxis.getExtent();
+        let bandWidth = baseAxis.type === 'category'
             ? baseAxis.getBandWidth()
             : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
 
-        var columnsOnAxis = columnsMap[axisKey] || {
+        let columnsOnAxis = columnsMap[axisKey] || {
             bandWidth: bandWidth,
             remainedWidth: bandWidth,
             autoWidthCount: 0,
@@ -219,10 +219,10 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
             gap: '30%',
             stacks: {}
         };
-        var stacks = columnsOnAxis.stacks;
+        let stacks = columnsOnAxis.stacks;
         columnsMap[axisKey] = columnsOnAxis;
 
-        var stackId = getSeriesStackId(seriesModel);
+        let stackId = getSeriesStackId(seriesModel);
 
         if (!stacks[stackId]) {
             columnsOnAxis.autoWidthCount++;
@@ -232,16 +232,16 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
             maxWidth: 0
         };
 
-        var barWidth = parsePercent(
+        let barWidth = parsePercent(
             seriesModel.get('barWidth'),
             bandWidth
         );
-        var barMaxWidth = parsePercent(
+        let barMaxWidth = parsePercent(
             seriesModel.get('barMaxWidth'),
             bandWidth
         );
-        var barGap = seriesModel.get('barGap');
-        var barCategoryGap = seriesModel.get('barCategoryGap');
+        let barGap = seriesModel.get('barGap');
+        let barCategoryGap = seriesModel.get('barCategoryGap');
 
         if (barWidth && !stacks[stackId].width) {
             barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
@@ -255,26 +255,26 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
     });
 
 
-    var result: Dictionary<Dictionary<BarWidthAndOffset>> = {};
+    let result: Dictionary<Dictionary<BarWidthAndOffset>> = {};
 
     zrUtil.each(columnsMap, function (columnsOnAxis, coordSysName) {
 
         result[coordSysName] = {};
 
-        var stacks = columnsOnAxis.stacks;
-        var bandWidth = columnsOnAxis.bandWidth;
-        var categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
-        var barGapPercent = parsePercent(columnsOnAxis.gap, 1);
+        let stacks = columnsOnAxis.stacks;
+        let bandWidth = columnsOnAxis.bandWidth;
+        let categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
+        let barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
-        var remainedWidth = columnsOnAxis.remainedWidth;
-        var autoWidthCount = columnsOnAxis.autoWidthCount;
-        var autoWidth = (remainedWidth - categoryGap)
+        let remainedWidth = columnsOnAxis.remainedWidth;
+        let autoWidthCount = columnsOnAxis.autoWidthCount;
+        let autoWidth = (remainedWidth - categoryGap)
             / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
         autoWidth = Math.max(autoWidth, 0);
 
         // Find if any auto calculated bar exceeded maxBarWidth
         zrUtil.each(stacks, function (column, stack) {
-            var maxWidth = column.maxWidth;
+            let maxWidth = column.maxWidth;
             if (maxWidth && maxWidth < autoWidth) {
                 maxWidth = Math.min(maxWidth, remainedWidth);
                 if (column.width) {
@@ -291,8 +291,8 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
             / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
         autoWidth = Math.max(autoWidth, 0);
 
-        var widthSum = 0;
-        var lastColumn: StackInfo;
+        let widthSum = 0;
+        let lastColumn: StackInfo;
         zrUtil.each(stacks, function (column, idx) {
             if (!column.width) {
                 column.width = autoWidth;
@@ -304,7 +304,7 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
             widthSum -= lastColumn.width * barGapPercent;
         }
 
-        var offset = -widthSum / 2;
+        let offset = -widthSum / 2;
         zrUtil.each(stacks, function (column, stackId) {
             result[coordSysName][stackId] = result[coordSysName][stackId] || {
                 offset: offset,

@@ -25,19 +25,19 @@ import Radar from '../../coord/radar/Radar';
 type Point = number[];
 export default function (ecModel: GlobalModel) {
     ecModel.eachSeriesByType('radar', function (seriesModel: RadarSeriesModel) {
-        var data = seriesModel.getData();
-        var points: Point[][] = [];
-        var coordSys = seriesModel.coordinateSystem;
+        let data = seriesModel.getData();
+        let points: Point[][] = [];
+        let coordSys = seriesModel.coordinateSystem;
         if (!coordSys) {
             return;
         }
 
-        var axes = coordSys.getIndicatorAxes();
+        let axes = coordSys.getIndicatorAxes();
 
         zrUtil.each(axes, function (axis, axisIndex) {
             data.each(data.mapDimension(axes[axisIndex].dim), function (val, dataIndex) {
                 points[dataIndex] = points[dataIndex] || [];
-                var point = coordSys.dataToPoint(val, axisIndex);
+                let point = coordSys.dataToPoint(val, axisIndex);
                 points[dataIndex][axisIndex] = isValidPoint(point)
                     ? point : getValueMissingPoint(coordSys);
             });
@@ -48,7 +48,7 @@ export default function (ecModel: GlobalModel) {
             // TODO
             // Is it appropriate to connect to the next data when some data is missing?
             // Or, should trade it like `connectNull` in line chart?
-            var firstPoint = zrUtil.find(points[idx], function (point) {
+            let firstPoint = zrUtil.find(points[idx], function (point) {
                 return isValidPoint(point);
             }) || getValueMissingPoint(coordSys);
 

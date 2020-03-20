@@ -76,20 +76,20 @@ function completeDimensions(sysDims, source, opt) {
 
     opt = opt || {};
     sysDims = (sysDims || []).slice();
-    var dimsDef = (opt.dimsDef || []).slice();
-    var dataDimNameMap = createHashMap();
-    var coordDimNameMap = createHashMap();
-    // var valueCandidate;
-    var result = [];
+    let dimsDef = (opt.dimsDef || []).slice();
+    let dataDimNameMap = createHashMap();
+    let coordDimNameMap = createHashMap();
+    // let valueCandidate;
+    let result = [];
 
-    var dimCount = getDimCount(source, sysDims, dimsDef, opt.dimCount);
+    let dimCount = getDimCount(source, sysDims, dimsDef, opt.dimCount);
 
     // Apply user defined dims (`name` and `type`) and init result.
-    for (var i = 0; i < dimCount; i++) {
-        var dimDefItem = dimsDef[i] = extend(
+    for (let i = 0; i < dimCount; i++) {
+        let dimDefItem = dimsDef[i] = extend(
             {}, isObject(dimsDef[i]) ? dimsDef[i] : {name: dimsDef[i]}
         );
-        var userDimName = dimDefItem.name;
+        let userDimName = dimDefItem.name;
         let resultItem = result[i] = new DataDimensionInfo();
         // Name will be applied later for avoiding duplication.
         if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
@@ -103,7 +103,7 @@ function completeDimensions(sysDims, source, opt) {
         dimDefItem.displayName != null && (resultItem.displayName = dimDefItem.displayName);
     }
 
-    var encodeDef = opt.encodeDef;
+    let encodeDef = opt.encodeDef;
     if (!encodeDef && opt.encodeDefaulter) {
         encodeDef = opt.encodeDefaulter(source, dimCount);
     }
@@ -121,7 +121,7 @@ function completeDimensions(sysDims, source, opt) {
             return;
         }
 
-        var validDataDims = encodeDef.set(coordDim, []);
+        let validDataDims = encodeDef.set(coordDim, []);
         each(dataDims, function (resultDimIdx, idx) {
             // The input resultDimIdx can be dim name or index.
             isString(resultDimIdx) && (resultDimIdx = dataDimNameMap.get(resultDimIdx));
@@ -133,18 +133,18 @@ function completeDimensions(sysDims, source, opt) {
     });
 
     // Apply templetes and default order from `sysDims`.
-    var availDimIdx = 0;
+    let availDimIdx = 0;
     each(sysDims, function (sysDimItem, sysDimIndex) {
-        var coordDim;
-        var sysDimItemDimsDef;
-        var sysDimItemOtherDims;
+        let coordDim;
+        let sysDimItemDimsDef;
+        let sysDimItemOtherDims;
         if (isString(sysDimItem)) {
             coordDim = sysDimItem;
             sysDimItem = {};
         }
         else {
             coordDim = sysDimItem.name;
-            var ordinalMeta = sysDimItem.ordinalMeta;
+            let ordinalMeta = sysDimItem.ordinalMeta;
             sysDimItem.ordinalMeta = null;
             sysDimItem = clone(sysDimItem);
             sysDimItem.ordinalMeta = ordinalMeta;
@@ -155,7 +155,7 @@ function completeDimensions(sysDims, source, opt) {
                 sysDimItem.dimsDef = sysDimItem.otherDims = null;
         }
 
-        var dataDims = encodeDef.get(coordDim);
+        let dataDims = encodeDef.get(coordDim);
 
         // negative resultDimIdx means no need to mapping.
         if (dataDims === false) {
@@ -166,7 +166,7 @@ function completeDimensions(sysDims, source, opt) {
 
         // dimensions provides default dim sequences.
         if (!dataDims.length) {
-            for (var i = 0; i < (sysDimItemDimsDef && sysDimItemDimsDef.length || 1); i++) {
+            for (let i = 0; i < (sysDimItemDimsDef && sysDimItemDimsDef.length || 1); i++) {
                 while (availDimIdx < result.length && result[availDimIdx].coordDim != null) {
                     availDimIdx++;
                 }
@@ -176,10 +176,10 @@ function completeDimensions(sysDims, source, opt) {
 
         // Apply templates.
         each(dataDims, function (resultDimIdx, coordDimIndex) {
-            var resultItem = result[resultDimIdx];
+            let resultItem = result[resultDimIdx];
             applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
-                var sysDimItemDimsDefItem = sysDimItemDimsDef[coordDimIndex];
+                let sysDimItemDimsDefItem = sysDimItemDimsDef[coordDimIndex];
                 !isObject(sysDimItemDimsDefItem) && (sysDimItemDimsDefItem = {name: sysDimItemDimsDefItem});
                 resultItem.name = resultItem.displayName = sysDimItemDimsDefItem.name;
                 resultItem.defaultTooltip = sysDimItemDimsDefItem.defaultTooltip;
@@ -201,16 +201,16 @@ function completeDimensions(sysDims, source, opt) {
     }
 
     // Make sure the first extra dim is 'value'.
-    var generateCoord = opt.generateCoord;
-    var generateCoordCount = opt.generateCoordCount;
-    var fromZero = generateCoordCount != null;
+    let generateCoord = opt.generateCoord;
+    let generateCoordCount = opt.generateCoordCount;
+    let fromZero = generateCoordCount != null;
     generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
-    var extra = generateCoord || 'value';
+    let extra = generateCoord || 'value';
 
     // Set dim `name` and other `coordDim` and other props.
-    for (var resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
+    for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
         let resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
-        var coordDim = resultItem.coordDim;
+        let coordDim = resultItem.coordDim;
 
         if (coordDim == null) {
             resultItem.coordDim = genName(
@@ -270,14 +270,14 @@ function completeDimensions(sysDims, source, opt) {
 function getDimCount(source, sysDims, dimsDef, optDimCount) {
     // Note that the result dimCount should not small than columns count
     // of data, otherwise `dataDimNameMap` checking will be incorrect.
-    var dimCount = Math.max(
+    let dimCount = Math.max(
         source.dimensionsDetectCount || 1,
         sysDims.length,
         dimsDef.length,
         optDimCount || 0
     );
     each(sysDims, function (sysDimItem) {
-        var sysDimItemDimsDef = sysDimItem.dimsDef;
+        let sysDimItemDimsDef = sysDimItem.dimsDef;
         sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
     });
     return dimCount;
@@ -285,7 +285,7 @@ function getDimCount(source, sysDims, dimsDef, optDimCount) {
 
 function genName(name, map, fromZero) {
     if (fromZero || map.get(name) != null) {
-        var i = 0;
+        let i = 0;
         while (map.get(name + i) != null) {
             i++;
         }

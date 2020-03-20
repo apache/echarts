@@ -25,8 +25,8 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import PieSeriesModel from './PieSeries';
 
-var PI2 = Math.PI * 2;
-var RADIAN = Math.PI / 180;
+const PI2 = Math.PI * 2;
+const RADIAN = Math.PI / 180;
 
 function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
@@ -43,12 +43,12 @@ export default function (
     api: ExtensionAPI
 ) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeriesModel) {
-        var data = seriesModel.getData();
-        var valueDim = data.mapDimension('value');
-        var viewRect = getViewRect(seriesModel, api);
+        let data = seriesModel.getData();
+        let valueDim = data.mapDimension('value');
+        let viewRect = getViewRect(seriesModel, api);
 
-        var center = seriesModel.get('center');
-        var radius = seriesModel.get('radius');
+        let center = seriesModel.get('center');
+        let radius = seriesModel.get('radius');
 
         if (!zrUtil.isArray(radius)) {
             radius = [0, radius];
@@ -57,45 +57,45 @@ export default function (
             center = [center, center];
         }
 
-        var width = parsePercent(viewRect.width, api.getWidth());
-        var height = parsePercent(viewRect.height, api.getHeight());
-        var size = Math.min(width, height);
-        var cx = parsePercent(center[0], width) + viewRect.x;
-        var cy = parsePercent(center[1], height) + viewRect.y;
-        var r0 = parsePercent(radius[0], size / 2);
-        var r = parsePercent(radius[1], size / 2);
+        let width = parsePercent(viewRect.width, api.getWidth());
+        let height = parsePercent(viewRect.height, api.getHeight());
+        let size = Math.min(width, height);
+        let cx = parsePercent(center[0], width) + viewRect.x;
+        let cy = parsePercent(center[1], height) + viewRect.y;
+        let r0 = parsePercent(radius[0], size / 2);
+        let r = parsePercent(radius[1], size / 2);
 
-        var startAngle = -seriesModel.get('startAngle') * RADIAN;
+        let startAngle = -seriesModel.get('startAngle') * RADIAN;
 
-        var minAngle = seriesModel.get('minAngle') * RADIAN;
+        let minAngle = seriesModel.get('minAngle') * RADIAN;
 
-        var validDataCount = 0;
+        let validDataCount = 0;
         data.each(valueDim, function (value: number) {
             !isNaN(value) && validDataCount++;
         });
 
-        var sum = data.getSum(valueDim);
+        let sum = data.getSum(valueDim);
         // Sum may be 0
-        var unitRadian = Math.PI / (sum || validDataCount) * 2;
+        let unitRadian = Math.PI / (sum || validDataCount) * 2;
 
-        var clockwise = seriesModel.get('clockwise');
+        let clockwise = seriesModel.get('clockwise');
 
-        var roseType = seriesModel.get('roseType');
-        var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
+        let roseType = seriesModel.get('roseType');
+        let stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
-        var extent = data.getDataExtent(valueDim);
+        let extent = data.getDataExtent(valueDim);
         extent[0] = 0;
 
         // In the case some sector angle is smaller than minAngle
-        var restAngle = PI2;
-        var valueSumLargerThanMinAngle = 0;
+        let restAngle = PI2;
+        let valueSumLargerThanMinAngle = 0;
 
-        var currentAngle = startAngle;
-        var dir = clockwise ? 1 : -1;
+        let currentAngle = startAngle;
+        let dir = clockwise ? 1 : -1;
 
         data.each(valueDim, function (value: number, idx: number) {
-            var angle;
+            let angle;
             if (isNaN(value)) {
                 data.setItemLayout(idx, {
                     angle: NaN,
@@ -130,7 +130,7 @@ export default function (
                 valueSumLargerThanMinAngle += value;
             }
 
-            var endAngle = currentAngle + dir * angle;
+            let endAngle = currentAngle + dir * angle;
             data.setItemLayout(idx, {
                 angle: angle,
                 startAngle: currentAngle,
@@ -154,10 +154,10 @@ export default function (
             // Average the angle if rest angle is not enough after all angles is
             // Constrained by minAngle
             if (restAngle <= 1e-3) {
-                var angle = PI2 / validDataCount;
+                let angle = PI2 / validDataCount;
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
-                        var layout = data.getItemLayout(idx);
+                        let layout = data.getItemLayout(idx);
                         layout.angle = angle;
                         layout.startAngle = startAngle + dir * idx * angle;
                         layout.endAngle = startAngle + dir * (idx + 1) * angle;
@@ -169,8 +169,8 @@ export default function (
                 currentAngle = startAngle;
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
-                        var layout = data.getItemLayout(idx);
-                        var angle = layout.angle === minAngle
+                        let layout = data.getItemLayout(idx);
+                        let angle = layout.angle === minAngle
                             ? minAngle : value * unitRadian;
                         layout.startAngle = currentAngle;
                         layout.endAngle = currentAngle + dir * angle;

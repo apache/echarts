@@ -118,8 +118,8 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         // Extend labelLine emphasis
         defaultEmphasis(option, 'labelLine', ['show']);
 
-        var labelLineNormalOpt = option.labelLine;
-        var labelLineEmphasisOpt = option.emphasis.labelLine;
+        let labelLineNormalOpt = option.labelLine;
+        let labelLineEmphasisOpt = option.emphasis.labelLine;
         // Not show label line if `label.normal.show = false`
         labelLineNormalOpt.show = labelLineNormalOpt.show
             && option.label.show;
@@ -129,10 +129,10 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
 
     // Overwrite
     getDataParams(dataIndex: number) {
-        var data = this.getData();
-        var params = super.getDataParams(dataIndex);
-        var valueDim = data.mapDimension('value');
-        var sum = data.getSum(valueDim);
+        let data = this.getData();
+        let params = super.getDataParams(dataIndex);
+        let valueDim = data.mapDimension('value');
+        let sum = data.getSum(valueDim);
         // Percent is 0 if sum is 0
         params.percent = !sum ? 0 : +(data.get(valueDim, dataIndex) as number / sum * 100).toFixed(2);
 

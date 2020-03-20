@@ -39,7 +39,7 @@ import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
 import Single from '../../coord/single/Single';
 
-var DATA_NAME_INDEX = 2;
+const DATA_NAME_INDEX = 2;
 
 // export interface ThemeRiverSeriesDataItemOption {
 //     date: OptionDataValueDate
@@ -109,13 +109,13 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      * @return {Array}
      */
     fixData(data: ThemeRiverSeriesOption['data']) {
-        var rawDataLength = data.length;
+        let rawDataLength = data.length;
 
         // grouped data by name
-        var groupResult = groupData(data, function (item) {
+        let groupResult = groupData(data, function (item) {
             return item[2];
         });
-        var layData: {
+        let layData: {
             name: string,
             dataList: ThemeRiverSeriesOption['data']
         }[] = [];
@@ -126,28 +126,28 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             });
         });
 
-        var layerNum = layData.length;
-        var largestLayer = -1;
-        var index = -1;
-        for (var i = 0; i < layerNum; ++i) {
-            var len = layData[i].dataList.length;
+        let layerNum = layData.length;
+        let largestLayer = -1;
+        let index = -1;
+        for (let i = 0; i < layerNum; ++i) {
+            let len = layData[i].dataList.length;
             if (len > largestLayer) {
                 largestLayer = len;
                 index = i;
             }
         }
 
-        for (var k = 0; k < layerNum; ++k) {
+        for (let k = 0; k < layerNum; ++k) {
             if (k === index) {
                 continue;
             }
-            var name = layData[k].name;
-            for (var j = 0; j < largestLayer; ++j) {
-                var timeValue = layData[index].dataList[j][0];
-                var length = layData[k].dataList.length;
-                var keyIndex = -1;
-                for (var l = 0; l < length; ++l) {
-                    var value = layData[k].dataList[l][0];
+            let name = layData[k].name;
+            for (let j = 0; j < largestLayer; ++j) {
+                let timeValue = layData[index].dataList[j][0];
+                let length = layData[k].dataList.length;
+                let keyIndex = -1;
+                for (let l = 0; l < length; ++l) {
+                    let value = layData[k].dataList[l][0];
                     if (value === timeValue) {
                         keyIndex = l;
                         break;
@@ -170,26 +170,26 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      */
     getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): List {
 
-        var singleAxisModel = ecModel.queryComponents({
+        let singleAxisModel = ecModel.queryComponents({
             mainType: 'singleAxis',
             index: this.get('singleAxisIndex'),
             id: this.get('singleAxisId')
         })[0];
 
-        var axisType = singleAxisModel.get('type');
+        let axisType = singleAxisModel.get('type');
 
         // filter the data item with the value of label is undefined
-        var filterData = zrUtil.filter(option.data, function (dataItem) {
+        let filterData = zrUtil.filter(option.data, function (dataItem) {
             return dataItem[2] !== undefined;
         });
 
         // ??? TODO design a stage to transfer data for themeRiver and lines?
-        var data = this.fixData(filterData || []);
-        var nameList = [];
-        var nameMap = this.nameMap = zrUtil.createHashMap();
-        var count = 0;
+        let data = this.fixData(filterData || []);
+        let nameList = [];
+        let nameMap = this.nameMap = zrUtil.createHashMap();
+        let count = 0;
 
-        for (var i = 0; i < data.length; ++i) {
+        for (let i = 0; i < data.length; ++i) {
             nameList.push(data[i][DATA_NAME_INDEX]);
             if (!nameMap.get(data[i][DATA_NAME_INDEX] as string)) {
                 nameMap.set(data[i][DATA_NAME_INDEX] as string, count);
@@ -197,7 +197,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         }
 
-        var dimensionsInfo = createDimensions(data, {
+        let dimensionsInfo = createDimensions(data, {
             coordDimensions: ['single'],
             dimensionsDefine: [
                 {
@@ -220,7 +220,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         });
 
-        var list = new List(dimensionsInfo, this);
+        let list = new List(dimensionsInfo, this);
         list.initData(data);
 
         return list;
@@ -231,21 +231,21 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      *     has same name.
      */
     getLayerSeries() {
-        var data = this.getData();
-        var lenCount = data.count();
-        var indexArr = [];
+        let data = this.getData();
+        let lenCount = data.count();
+        let indexArr = [];
 
-        for (var i = 0; i < lenCount; ++i) {
+        for (let i = 0; i < lenCount; ++i) {
             indexArr[i] = i;
         }
 
-        var timeDim = data.mapDimension('single');
+        let timeDim = data.mapDimension('single');
 
         // data group by name
-        var groupResult = groupData(indexArr, function (index) {
+        let groupResult = groupData(indexArr, function (index) {
             return data.get('name', index) as string;
         });
-        var layerSeries: {
+        let layerSeries: {
             name: string
             indices: number[]
         }[] = [];
@@ -270,19 +270,19 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             dim = dim ? [dim] : [];
         }
 
-        var data = this.getData();
-        var layerSeries = this.getLayerSeries();
-        var indices = [];
-        var layerNum = layerSeries.length;
-        var nestestValue;
+        let data = this.getData();
+        let layerSeries = this.getLayerSeries();
+        let indices = [];
+        let layerNum = layerSeries.length;
+        let nestestValue;
 
-        for (var i = 0; i < layerNum; ++i) {
-            var minDist = Number.MAX_VALUE;
-            var nearestIdx = -1;
-            var pointNum = layerSeries[i].indices.length;
-            for (var j = 0; j < pointNum; ++j) {
-                var theValue = data.get(dim[0], layerSeries[i].indices[j]) as number;
-                var dist = Math.abs(theValue - value);
+        for (let i = 0; i < layerNum; ++i) {
+            let minDist = Number.MAX_VALUE;
+            let nearestIdx = -1;
+            let pointNum = layerSeries[i].indices.length;
+            for (let j = 0; j < pointNum; ++j) {
+                let theValue = data.get(dim[0], layerSeries[i].indices[j]) as number;
+                let dist = Math.abs(theValue - value);
                 if (dist <= minDist) {
                     nestestValue = theValue;
                     minDist = dist;
@@ -300,9 +300,9 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      * @param {number} dataIndex  index of data
      */
     formatTooltip(dataIndex: number): string {
-        var data = this.getData();
-        var htmlName = data.getName(dataIndex);
-        var htmlValue = data.get(data.mapDimension('value'), dataIndex);
+        let data = this.getData();
+        let htmlName = data.getName(dataIndex);
+        let htmlValue = data.get(data.mapDimension('value'), dataIndex);
         if (isNaN(htmlValue as number) || htmlValue == null) {
             htmlValue = '-';
         }

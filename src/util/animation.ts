@@ -35,9 +35,9 @@ import { ZREasing } from './types';
  */
 export function createWrap() {
 
-    var storage = [];
-    var elExistsMap = {};
-    var doneCallback;
+    let storage = [];
+    let elExistsMap = {};
+    let doneCallback;
 
     return {
 
@@ -91,10 +91,10 @@ export function createWrap() {
          * Will stop exist animation firstly.
          */
         start: function () {
-            var count = storage.length;
+            let count = storage.length;
 
-            for (var i = 0, len = storage.length; i < len; i++) {
-                var item = storage[i];
+            for (let i = 0, len = storage.length; i < len; i++) {
+                let item = storage[i];
                 item.el.animateTo(item.target, item.time, item.delay, item.easing, done);
             }
 

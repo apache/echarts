@@ -44,9 +44,9 @@ class OrdinalMeta {
     }
 
     static createByAxisModel(axisModel: Model): OrdinalMeta {
-        var option = axisModel.option;
-        var data = option.data;
-        var categories = data && map(data, getName);
+        let option = axisModel.option;
+        let data = option.data;
+        let categories = data && map(data, getName);
 
         return new OrdinalMeta({
             categories: categories,
@@ -65,8 +65,8 @@ class OrdinalMeta {
      * @return The ordinal. If not found, return NaN.
      */
     parseAndCollect(category: OrdinalRawValue | OrdinalNumber): OrdinalNumber {
-        var index;
-        var needCollect = this._needCollect;
+        let index;
+        let needCollect = this._needCollect;
 
         // The value of category dim can be the index of the given category set.
         // This feature is only supported when !needCollect, because we should
@@ -91,7 +91,7 @@ class OrdinalMeta {
             return index;
         }
 
-        var map = this._getOrCreateMap();
+        let map = this._getOrCreateMap();
         // @ts-ignore
         index = map.get(category);
 

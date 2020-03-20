@@ -62,9 +62,9 @@ export interface ToolboxMagicTypeFeatureOption extends ToolboxFeatureOption {
 class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
 
     getIcons() {
-        var model = this.model;
-        var availableIcons = model.get('icon');
-        var icons: ToolboxMagicTypeFeatureOption['icon'] = {};
+        let model = this.model;
+        let availableIcons = model.get('icon');
+        let icons: ToolboxMagicTypeFeatureOption['icon'] = {};
         zrUtil.each(model.get('type'), function (type) {
             if (availableIcons[type]) {
                 icons[type] = availableIcons[type];
@@ -90,19 +90,19 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
     };
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI, type: IconType) {
-        var model = this.model;
-        var seriesIndex = model.get(['seriesIndex', type as 'line' | 'bar']);
+        let model = this.model;
+        let seriesIndex = model.get(['seriesIndex', type as 'line' | 'bar']);
         // Not supported magicType
         if (!seriesOptGenreator[type]) {
             return;
         }
-        var newOption: ECUnitOption = {
+        let newOption: ECUnitOption = {
             series: []
         };
-        var generateNewSeriesTypes = function (seriesModel: SeriesModel) {
-            var seriesType = seriesModel.subType;
-            var seriesId = seriesModel.id;
-            var newSeriesOpt = seriesOptGenreator[type](
+        let generateNewSeriesTypes = function (seriesModel: SeriesModel) {
+            let seriesType = seriesModel.subType;
+            let seriesId = seriesModel.id;
+            let newSeriesOpt = seriesOptGenreator[type](
                 seriesType, seriesId, seriesModel, model
             );
             if (newSeriesOpt) {
@@ -111,21 +111,21 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                 newOption.series.push(newSeriesOpt);
             }
             // Modify boundaryGap
-            var coordSys = seriesModel.coordinateSystem;
+            let coordSys = seriesModel.coordinateSystem;
             if (coordSys && coordSys.type === 'cartesian2d' && (type === 'line' || type === 'bar')) {
-                var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
+                let categoryAxis = coordSys.getAxesByScale('ordinal')[0];
                 if (categoryAxis) {
-                    var axisDim = categoryAxis.dim;
-                    var axisType = axisDim + 'Axis';
-                    var axisModel = ecModel.queryComponents({
+                    let axisDim = categoryAxis.dim;
+                    let axisType = axisDim + 'Axis';
+                    let axisModel = ecModel.queryComponents({
                         mainType: axisType,
                         index: seriesModel.get(name + 'Index' as any),
                         id: seriesModel.get(name + 'Id' as any)
                     })[0];
-                    var axisIndex = axisModel.componentIndex;
+                    let axisIndex = axisModel.componentIndex;
 
                     newOption[axisType] = newOption[axisType] || [];
-                    for (var i = 0; i <= axisIndex; i++) {
+                    for (let i = 0; i <= axisIndex; i++) {
                         newOption[axisType][axisIndex] = newOption[axisType][axisIndex] || {};
                     }
                     newOption[axisType][axisIndex].boundaryGap = type === 'bar';
@@ -152,10 +152,10 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             }, generateNewSeriesTypes
         );
 
-        var newTitle;
+        let newTitle;
         // Change title of stack
         if (type === 'stack') {
-            var isStack = newOption.series && newOption.series[0] && newOption.series[0].stack === INNER_STACK_KEYWORD;
+            let isStack = newOption.series && newOption.series[0] && newOption.series[0].stack === INNER_STACK_KEYWORD;
             newTitle = isStack
                 ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
                 : zrUtil.clone(magicTypeLang.title);
@@ -212,7 +212,7 @@ const seriesOptGenreator: Record<IconType, SeriesOptGenreator> = {
         }
     },
     'stack': function (seriesType, seriesId, seriesModel, model) {
-        var isStack = seriesModel.get('stack') === INNER_STACK_KEYWORD;
+        let isStack = seriesModel.get('stack') === INNER_STACK_KEYWORD;
         if (seriesType === 'line' || seriesType === 'bar') {
             model.setIconStatus('stack', isStack ? 'normal' : 'emphasis');
             return zrUtil.merge({

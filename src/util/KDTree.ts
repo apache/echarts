@@ -83,16 +83,16 @@ class KDTree<T extends KDTreePoint> {
             return null;
         }
 
-        var medianIndex = Math.floor((left + right) / 2);
+        let medianIndex = Math.floor((left + right) / 2);
         medianIndex = quickSelect(
             points, left, right, medianIndex,
             function (a: T, b: T) {
                 return a.array[axis] - b.array[axis];
             }
         );
-        var median = points[medianIndex];
+        let median = points[medianIndex];
 
-        var node = new KDTreeNode(axis, median);
+        let node = new KDTreeNode(axis, median);
 
         axis = (axis + 1) % this.dimension;
         if (right > left) {
@@ -110,11 +110,11 @@ class KDTree<T extends KDTreePoint> {
      * @return Nearest point
      */
     nearest(target: T, squaredDistance: (a: T, b: T) => number) {
-        var curr = this.root;
-        var stack = this._stack;
-        var idx = 0;
-        var minDist = Infinity;
-        var nearestNode = null;
+        let curr = this.root;
+        let stack = this._stack;
+        let idx = 0;
+        let minDist = Infinity;
+        let nearestNode = null;
         if (curr.data !== target) {
             minDist = squaredDistance(curr.data, target);
             nearestNode = curr;
@@ -133,9 +133,9 @@ class KDTree<T extends KDTreePoint> {
 
         while (idx--) {
             curr = stack[idx];
-            var currDist = target.array[curr.axis] - curr.data.array[curr.axis];
-            var isLeft = currDist < 0;
-            var needsCheckOtherSide = false;
+            let currDist = target.array[curr.axis] - curr.data.array[curr.axis];
+            let isLeft = currDist < 0;
+            let needsCheckOtherSide = false;
             currDist = currDist * currDist;
             // Intersecting right hyperplane with minDist hypersphere
             if (currDist < minDist) {
@@ -166,8 +166,8 @@ class KDTree<T extends KDTreePoint> {
     };
 
     _addNearest(found: number, dist: number, node: KDTreeNode<T>) {
-        var nearestNList = this._nearstNList;
-        var i = found - 1;
+        let nearestNList = this._nearstNList;
+        let i = found - 1;
         // Insert to the right position
         // Sort from small to large
         for (; i > 0; i--) {
@@ -202,11 +202,11 @@ class KDTree<T extends KDTreePoint> {
             return output;
         }
 
-        var curr = this.root;
-        var stack = this._stack;
-        var idx = 0;
+        let curr = this.root;
+        let stack = this._stack;
+        let idx = 0;
 
-        var nearestNList = this._nearstNList;
+        let nearestNList = this._nearstNList;
         for (let i = 0; i < N; i++) {
             // Allocate
             if (!nearestNList[i]) {
@@ -219,7 +219,7 @@ class KDTree<T extends KDTreePoint> {
         }
         let currDist = squaredDistance(curr.data, target);
 
-        var found = 0;
+        let found = 0;
         if (curr.data !== target) {
             found++;
             this._addNearest(found, currDist, curr);
@@ -239,8 +239,8 @@ class KDTree<T extends KDTreePoint> {
         while (idx--) {
             curr = stack[idx];
             let currDist = target.array[curr.axis] - curr.data.array[curr.axis];
-            var isLeft = currDist < 0;
-            var needsCheckOtherSide = false;
+            let isLeft = currDist < 0;
+            let needsCheckOtherSide = false;
             currDist = currDist * currDist;
             // Intersecting right hyperplane with minDist hypersphere
             if (found < N || currDist < nearestNList[found - 1].dist) {

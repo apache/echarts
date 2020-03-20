@@ -226,7 +226,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     init(option: GraphSeriesOption) {
         super.init.apply(this, arguments as any);
 
-        var self = this;
+        let self = this;
         function getCategoriesData() {
             return self._categoriesData;
         }
@@ -254,9 +254,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     getInitialData(option: GraphSeriesOption, ecModel: GlobalModel) {
-        var edges = option.edges || option.links || [];
-        var nodes = option.data || option.nodes || [];
-        var self = this;
+        let edges = option.edges || option.links || [];
+        let nodes = option.data || option.nodes || [];
+        let self = this;
 
         if (nodes && edges) {
             return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
@@ -265,9 +265,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         function beforeLink(nodeData: List, edgeData: List) {
             // Overwrite nodeData.getItemModel to
             nodeData.wrapMethod('getItemModel', function (model) {
-                var categoriesModels = self._categoriesModels;
-                var categoryIdx = model.getShallow('category');
-                var categoryModel = categoriesModels[categoryIdx];
+                let categoriesModels = self._categoriesModels;
+                let categoryIdx = model.getShallow('category');
+                let categoryModel = categoriesModels[categoryIdx];
                 if (categoryModel) {
                     categoryModel.parentModel = model.parentModel;
                     model.parentModel = categoryModel;
@@ -275,15 +275,15 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
                 return model;
             });
 
-            var edgeLabelModel = self.getModel('edgeLabel');
+            let edgeLabelModel = self.getModel('edgeLabel');
             // For option `edgeLabel` can be found by label.xxx.xxx on item mode.
-            var fakeSeriesModel = new Model(
+            let fakeSeriesModel = new Model(
                 {label: edgeLabelModel.option},
                 edgeLabelModel.parentModel,
                 ecModel
             );
-            var emphasisEdgeLabelModel = self.getModel(['emphasis', 'edgeLabel']);
-            var emphasisFakeSeriesModel = new Model(
+            let emphasisEdgeLabelModel = self.getModel(['emphasis', 'edgeLabel']);
+            let emphasisFakeSeriesModel = new Model(
                 {emphasis: {label: emphasisEdgeLabelModel.option}},
                 emphasisEdgeLabelModel.parentModel,
                 ecModel
@@ -322,16 +322,16 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
      */
     formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: string) {
         if (dataType === 'edge') {
-            var nodeData = this.getData();
-            var params = this.getDataParams(dataIndex, dataType);
-            var edge = nodeData.graph.getEdgeByIndex(dataIndex);
-            var sourceName = nodeData.getName(edge.node1.dataIndex);
-            var targetName = nodeData.getName(edge.node2.dataIndex);
+            let nodeData = this.getData();
+            let params = this.getDataParams(dataIndex, dataType);
+            let edge = nodeData.graph.getEdgeByIndex(dataIndex);
+            let sourceName = nodeData.getName(edge.node1.dataIndex);
+            let targetName = nodeData.getName(edge.node2.dataIndex);
 
-            var html = [];
+            let html = [];
             sourceName != null && html.push(sourceName);
             targetName != null && html.push(targetName);
-            var htmlStr = encodeHTML(html.join(' > '));
+            let htmlStr = encodeHTML(html.join(' > '));
 
             if (params.value) {
                 htmlStr += ' : ' + encodeHTML(params.value);
@@ -344,13 +344,13 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     _updateCategoriesData() {
-        var categories = zrUtil.map(this.option.categories || [], function (category) {
+        let categories = zrUtil.map(this.option.categories || [], function (category) {
             // Data must has value
             return category.value != null ? category : zrUtil.extend({
                 value: 0
             }, category);
         });
-        var categoriesData = new List(['value'], this);
+        let categoriesData = new List(['value'], this);
         categoriesData.initData(categories);
 
         this._categoriesData = categoriesData;

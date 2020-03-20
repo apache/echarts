@@ -87,7 +87,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
     }
 
     preventIncremental() {
-        var coordSysCreator = CoordinateSystem.get(this.get('coordinateSystem'));
+        let coordSysCreator = CoordinateSystem.get(this.get('coordinateSystem'));
         if (coordSysCreator && coordSysCreator.dimensions) {
             return coordSysCreator.dimensions[0] === 'lng' && coordSysCreator.dimensions[1] === 'lat';
         }

@@ -34,13 +34,13 @@ function makeAction(
 ): void {
     actionInfo.update = 'updateView';
     echarts.registerAction(actionInfo, function (payload, ecModel) {
-        var selected = {} as {[regionName: string]: boolean};
+        let selected = {} as {[regionName: string]: boolean};
 
         ecModel.eachComponent(
             { mainType: 'geo', query: payload},
             function (geoModel: GeoModel) {
                 geoModel[method](payload.name);
-                var geo = geoModel.coordinateSystem;
+                let geo = geoModel.coordinateSystem;
                 zrUtil.each(geo.regions, function (region) {
                     selected[region.name] = geoModel.isSelected(region.name) || false;
                 });

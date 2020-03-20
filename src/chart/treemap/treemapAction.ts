@@ -24,9 +24,9 @@ import { Payload } from '../../util/types';
 import TreemapSeriesModel from './TreemapSeries';
 import { TreeNode } from '../../data/Tree';
 
-var noop = function () {};
+const noop = function () {};
 
-var actionTypes = [
+const actionTypes = [
     'treemapZoomToNode',
     'treemapRender',
     'treemapMove'
@@ -49,7 +49,7 @@ export interface TreemapRootToNodePayload extends Payload {
     direction?: 'rollUp' | 'drillDown'
 }
 
-for (var i = 0; i < actionTypes.length; i++) {
+for (let i = 0; i < actionTypes.length; i++) {
     echarts.registerAction({
         type: actionTypes[i],
         update: 'updateView'
@@ -66,11 +66,11 @@ echarts.registerAction(
         );
 
         function handleRootToNode(model: TreemapSeriesModel, index: number) {
-            var types = ['treemapZoomToNode', 'treemapRootToNode'];
-            var targetInfo = helper.retrieveTargetInfo(payload, types, model);
+            let types = ['treemapZoomToNode', 'treemapRootToNode'];
+            let targetInfo = helper.retrieveTargetInfo(payload, types, model);
 
             if (targetInfo) {
-                var originViewRoot = model.getViewRoot();
+                let originViewRoot = model.getViewRoot();
                 if (originViewRoot) {
                     payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
                         ? 'rollUp' : 'drillDown';

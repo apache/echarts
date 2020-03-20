@@ -37,7 +37,7 @@ interface Loader {
     makeGraphic?: (mapName: string, mapRecord: MapRecord, hostKey: string) => Group;
     removeGraphic?: (mapName: string, mapRecord: MapRecord, hostKey: string) => void;
 }
-var loaders = {
+const loaders = {
     geoJSON: geoJSONLoader,
     svg: geoSVGLoader
 } as Dictionary<Loader>;
@@ -52,17 +52,17 @@ export default {
         nameCoordMap: HashMap<number[]>;
         boundingRect: BoundingRect
     } {
-        var regions = [] as Region[];
-        var regionsMap = createHashMap<Region>();
-        var nameCoordMap = createHashMap<Region['center']>();
-        var boundingRect: BoundingRect;
-        var mapRecords = retrieveMap(mapName);
+        let regions = [] as Region[];
+        let regionsMap = createHashMap<Region>();
+        let nameCoordMap = createHashMap<Region['center']>();
+        let boundingRect: BoundingRect;
+        let mapRecords = retrieveMap(mapName);
 
         each(mapRecords, function (record) {
-            var singleSource = loaders[record.type].load(mapName, record);
+            let singleSource = loaders[record.type].load(mapName, record);
 
             each(singleSource.regions, function (region) {
-                var regionName = region.name;
+                let regionName = region.name;
 
                 // Try use the alias in geoNameMap
                 if (nameMap && nameMap.hasOwnProperty(regionName)) {
@@ -74,7 +74,7 @@ export default {
                 nameCoordMap.set(regionName, region.center);
             });
 
-            var rect = singleSource.boundingRect;
+            let rect = singleSource.boundingRect;
             if (rect) {
                 boundingRect
                     ? boundingRect.union(rect)
@@ -96,10 +96,10 @@ export default {
      * @return Roots.
      */
     makeGraphic: function (mapName: string, hostKey: string): Group[] {
-        var mapRecords = retrieveMap(mapName);
-        var results = [] as Group[];
+        let mapRecords = retrieveMap(mapName);
+        let results = [] as Group[];
         each(mapRecords, function (record) {
-            var method = loaders[record.type].makeGraphic;
+            let method = loaders[record.type].makeGraphic;
             method && results.push(method(mapName, record, hostKey));
         });
         return results;
@@ -109,9 +109,9 @@ export default {
      * @param hostKey For cache.
      */
     removeGraphic: function (mapName: string, hostKey: string): void {
-        var mapRecords = retrieveMap(mapName);
+        let mapRecords = retrieveMap(mapName);
         each(mapRecords, function (record) {
-            var method = loaders[record.type].makeGraphic;
+            let method = loaders[record.type].makeGraphic;
             method && method(mapName, record, hostKey);
         });
     }
@@ -126,7 +126,7 @@ function mapNotExistsError(mapName: string): void {
 }
 
 function retrieveMap(mapName: string): MapRecord[] {
-    var mapRecords = mapDataStorage.retrieveMap(mapName) || [];
+    let mapRecords = mapDataStorage.retrieveMap(mapName) || [];
 
     if (__DEV__) {
         if (!mapRecords.length) {

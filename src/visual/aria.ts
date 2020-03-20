@@ -24,7 +24,7 @@ import lang from '../lang';
 import { retrieveRawValue } from '../data/helper/dataProvider';
 
 export default function (dom, ecModel) {
-    var ariaModel = ecModel.getModel('aria');
+    let ariaModel = ecModel.getModel('aria');
     if (!ariaModel.get('show')) {
         return;
     }
@@ -33,22 +33,22 @@ export default function (dom, ecModel) {
         return;
     }
 
-    var seriesCnt = 0;
+    let seriesCnt = 0;
     ecModel.eachSeries(function (seriesModel, idx) {
         ++seriesCnt;
     }, this);
 
-    var maxDataCnt = ariaModel.get('data.maxCount') || 10;
-    var maxSeriesCnt = ariaModel.get('series.maxCount') || 10;
-    var displaySeriesCnt = Math.min(seriesCnt, maxSeriesCnt);
+    let maxDataCnt = ariaModel.get('data.maxCount') || 10;
+    let maxSeriesCnt = ariaModel.get('series.maxCount') || 10;
+    let displaySeriesCnt = Math.min(seriesCnt, maxSeriesCnt);
 
-    var ariaLabel;
+    let ariaLabel;
     if (seriesCnt < 1) {
         // No series, no aria label
         return;
     }
     else {
-        var title = getTitle();
+        let title = getTitle();
         if (title) {
             ariaLabel = replace(getConfig('general.withTitle'), {
                 title: title
@@ -58,18 +58,18 @@ export default function (dom, ecModel) {
             ariaLabel = getConfig('general.withoutTitle');
         }
 
-        var seriesLabels = [];
-        var prefix = seriesCnt > 1
+        let seriesLabels = [];
+        let prefix = seriesCnt > 1
             ? 'series.multiple.prefix'
             : 'series.single.prefix';
         ariaLabel += replace(getConfig(prefix), { seriesCount: seriesCnt });
 
         ecModel.eachSeries(function (seriesModel, idx) {
             if (idx < displaySeriesCnt) {
-                var seriesLabel;
+                let seriesLabel;
 
-                var seriesName = seriesModel.get('name');
-                var seriesTpl = 'series.'
+                let seriesName = seriesModel.get('name');
+                let seriesTpl = 'series.'
                     + (seriesCnt > 1 ? 'multiple' : 'single') + '.';
                 seriesLabel = getConfig(seriesName
                     ? seriesTpl + 'withName'
@@ -81,7 +81,7 @@ export default function (dom, ecModel) {
                     seriesType: getSeriesTypeName(seriesModel.subType)
                 });
 
-                var data = seriesModel.getData();
+                let data = seriesModel.getData();
                 window.data = data;
                 if (data.count() > maxDataCnt) {
                     // Show part of data
@@ -93,11 +93,11 @@ export default function (dom, ecModel) {
                     seriesLabel += getConfig('data.allData');
                 }
 
-                var dataLabels = [];
-                for (var i = 0; i < data.count(); i++) {
+                let dataLabels = [];
+                for (let i = 0; i < data.count(); i++) {
                     if (i < maxDataCnt) {
-                        var name = data.getName(i);
-                        var value = retrieveRawValue(data, i);
+                        let name = data.getName(i);
+                        let value = retrieveRawValue(data, i);
                         dataLabels.push(
                             replace(
                                 name
@@ -131,7 +131,7 @@ export default function (dom, ecModel) {
             return str;
         }
 
-        var result = str;
+        let result = str;
         zrUtil.each(keyValues, function (value, key) {
             result = result.replace(
                 new RegExp('\\{\\s*' + key + '\\s*\\}', 'g'),
@@ -142,11 +142,11 @@ export default function (dom, ecModel) {
     }
 
     function getConfig(path) {
-        var userConfig = ariaModel.get(path);
+        let userConfig = ariaModel.get(path);
         if (userConfig == null) {
-            var pathArr = path.split('.');
-            var result = lang.aria;
-            for (var i = 0; i < pathArr.length; ++i) {
+            let pathArr = path.split('.');
+            let result = lang.aria;
+            for (let i = 0; i < pathArr.length; ++i) {
                 result = result[pathArr[i]];
             }
             return result;
@@ -157,7 +157,7 @@ export default function (dom, ecModel) {
     }
 
     function getTitle() {
-        var title = ecModel.getModel('title').option;
+        let title = ecModel.getModel('title').option;
         if (title && title.length) {
             title = title[0];
         }

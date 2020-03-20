@@ -23,7 +23,7 @@
 // declaration is behind of the using position (for example in `Model.extent`,
 // And tools like rollup can not analysis the dependency if not import).
 
-var dev;
+let dev;
 
 // In browser
 if (typeof window !== 'undefined') {
@@ -38,4 +38,4 @@ if (typeof dev === 'undefined') {
     dev = true;
 }
 
-export var __DEV__ = dev;
+export let __DEV__ = dev;

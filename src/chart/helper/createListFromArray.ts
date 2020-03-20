@@ -40,21 +40,21 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
         source = Source.seriesDataToSource(source);
     }
 
-    var coordSysName = seriesModel.get('coordinateSystem');
-    var registeredCoordSys = CoordinateSystem.get(coordSysName);
+    let coordSysName = seriesModel.get('coordinateSystem');
+    let registeredCoordSys = CoordinateSystem.get(coordSysName);
 
-    var coordSysInfo = getCoordSysInfoBySeries(seriesModel);
+    let coordSysInfo = getCoordSysInfoBySeries(seriesModel);
 
-    var coordSysDimDefs: DimensionDefinitionLoose[];
+    let coordSysDimDefs: DimensionDefinitionLoose[];
 
     if (coordSysInfo) {
         coordSysDimDefs = zrUtil.map(coordSysInfo.coordSysDims, function (dim) {
-            var dimInfo = {
+            let dimInfo = {
                 name: dim
             } as DimensionDefinition;
-            var axisModel = coordSysInfo.axisMap.get(dim);
+            let axisModel = coordSysInfo.axisMap.get(dim);
             if (axisModel) {
-                var axisType = axisModel.get('type');
+                let axisType = axisModel.get('type');
                 dimInfo.type = getDimensionTypeByAxis(axisType);
                 // dimInfo.stackable = isStackable(axisType);
             }
@@ -71,7 +71,7 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
         )) || ['x', 'y'];
     }
 
-    var dimInfoList = createDimensions(source, {
+    let dimInfoList = createDimensions(source, {
         coordDimensions: coordSysDimDefs,
         generateCoord: opt.generateCoord,
         encodeDefaulter: opt.useEncodeDefaulter
@@ -79,11 +79,11 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
             : null
     });
 
-    var firstCategoryDimIndex: number;
-    var hasNameEncode: boolean;
+    let firstCategoryDimIndex: number;
+    let hasNameEncode: boolean;
     coordSysInfo && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
-        var coordDim = dimInfo.coordDim;
-        var categoryAxisModel = coordSysInfo.categoryAxisMap.get(coordDim);
+        let coordDim = dimInfo.coordDim;
+        let categoryAxisModel = coordSysInfo.categoryAxisMap.get(coordDim);
         if (categoryAxisModel) {
             if (firstCategoryDimIndex == null) {
                 firstCategoryDimIndex = dimIndex;
@@ -98,13 +98,13 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
         dimInfoList[firstCategoryDimIndex].otherDims.itemName = 0;
     }
 
-    var stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
+    let stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
 
-    var list = new List(dimInfoList, seriesModel);
+    let list = new List(dimInfoList, seriesModel);
 
     list.setCalculationInfo(stackCalculationInfo);
 
-    var dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
+    let dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
         ? function (this: List, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
             // Use dataIndex as ordinal value in categoryAxis
             return dimIndex === firstCategoryDimIndex
@@ -121,14 +121,14 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
 
 function isNeedCompleteOrdinalData(source: Source) {
     if (source.sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        var sampleItem = firstDataNotNull(source.data as ArrayLike<any> || []);
+        let sampleItem = firstDataNotNull(source.data as ArrayLike<any> || []);
         return sampleItem != null
             && !zrUtil.isArray(getDataItemValue(sampleItem));
     }
 }
 
 function firstDataNotNull(data: ArrayLike<any>) {
-    var i = 0;
+    let i = 0;
     while (i < data.length && data[i] == null) {
         i++;
     }

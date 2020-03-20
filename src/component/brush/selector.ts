@@ -71,9 +71,9 @@ export interface BrushCommonSelectorsForSeries {
 export function makeBrushCommonSelectorForSeries(
     area: BrushSelectableArea
 ): BrushCommonSelectorsForSeries {
-    var brushType = area.brushType;
+    let brushType = area.brushType;
     // Do not use function binding or curry for performance.
-    var selectors: BrushCommonSelectorsForSeries = {
+    let selectors: BrushCommonSelectorsForSeries = {
         point(itemLayout: number[]) {
             return selector[brushType].point(itemLayout, selectors, area);
         },
@@ -84,7 +84,7 @@ export function makeBrushCommonSelectorForSeries(
     return selectors;
 }
 
-var selector: Record<BrushType, BrushSelectorOnBrushType> = {
+const selector: Record<BrushType, BrushSelectorOnBrushType> = {
     lineX: getLineSelectors(0),
     lineY: getLineSelectors(1),
     rect: {
@@ -106,17 +106,17 @@ var selector: Record<BrushType, BrushSelectorOnBrushType> = {
                 );
         },
         rect: function (itemLayout, selectors, area) {
-            var points = area.range as BrushDimensionMinMax[];
+            let points = area.range as BrushDimensionMinMax[];
 
             if (!itemLayout || points.length <= 1) {
                 return false;
             }
 
-            var x = itemLayout.x;
-            var y = itemLayout.y;
-            var width = itemLayout.width;
-            var height = itemLayout.height;
-            var p = points[0];
+            let x = itemLayout.x;
+            let y = itemLayout.y;
+            let width = itemLayout.width;
+            let height = itemLayout.height;
+            let p = points[0];
 
             if (polygonContain.contain(points, x, y)
                 || polygonContain.contain(points, x + width, y)
@@ -135,21 +135,21 @@ var selector: Record<BrushType, BrushSelectorOnBrushType> = {
 };
 
 function getLineSelectors(xyIndex: 0 | 1): BrushSelectorOnBrushType {
-    var xy = ['x', 'y'] as const;
-    var wh = ['width', 'height'] as const;
+    let xy = ['x', 'y'] as const;
+    let wh = ['width', 'height'] as const;
 
     return {
         point: function (itemLayout, selectors, area) {
             if (itemLayout) {
-                var range = area.range as BrushDimensionMinMax;
-                var p = itemLayout[xyIndex];
+                let range = area.range as BrushDimensionMinMax;
+                let p = itemLayout[xyIndex];
                 return inLineRange(p, range);
             }
         },
         rect: function (itemLayout, selectors, area) {
             if (itemLayout) {
-                var range = area.range as BrushDimensionMinMax;
-                var layoutRange = [
+                let range = area.range as BrushDimensionMinMax;
+                let layoutRange = [
                     itemLayout[xy[xyIndex]],
                     itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
                 ];

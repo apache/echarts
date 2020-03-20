@@ -39,18 +39,18 @@ class EffectScatterView extends ChartView {
     }
 
     render(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var data = seriesModel.getData();
-        var effectSymbolDraw = this._symbolDraw;
+        let data = seriesModel.getData();
+        let effectSymbolDraw = this._symbolDraw;
         effectSymbolDraw.updateData(data);
         this.group.add(effectSymbolDraw.group);
     }
 
     updateTransform(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var data = seriesModel.getData();
+        let data = seriesModel.getData();
 
         this.group.dirty();
 
-        var res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
+        let res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
         if (res.progress) {
             res.progress({
                 start: 0,
@@ -63,7 +63,7 @@ class EffectScatterView extends ChartView {
     }
 
     _updateGroupTransform(seriesModel: EffectScatterSeriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
+        let coordSys = seriesModel.coordinateSystem;
         if (coordSys && coordSys.getRoamTransform) {
             this.group.transform = matrix.clone(coordSys.getRoamTransform());
             this.group.decomposeTransform();

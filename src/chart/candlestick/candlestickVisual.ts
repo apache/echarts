@@ -22,10 +22,10 @@ import { StageHandler } from '../../util/types';
 import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
 import Model from '../../model/Model';
 
-var positiveBorderColorQuery = ['itemStyle', 'borderColor'] as const;
-var negativeBorderColorQuery = ['itemStyle', 'borderColor0'] as const;
-var positiveColorQuery = ['itemStyle', 'color'] as const;
-var negativeColorQuery = ['itemStyle', 'color0'] as const;
+const positiveBorderColorQuery = ['itemStyle', 'borderColor'] as const;
+const negativeBorderColorQuery = ['itemStyle', 'borderColor0'] as const;
+const positiveColorQuery = ['itemStyle', 'color'] as const;
+const negativeColorQuery = ['itemStyle', 'color0'] as const;
 
 const candlestickVisual: StageHandler = {
 
@@ -50,7 +50,7 @@ const candlestickVisual: StageHandler = {
             );
         }
 
-        var data = seriesModel.getData();
+        let data = seriesModel.getData();
 
         data.setVisual({
             legendSymbol: 'roundRect',
@@ -65,13 +65,13 @@ const candlestickVisual: StageHandler = {
             return;
         }
 
-        var isLargeRender = seriesModel.pipelineContext.large;
+        let isLargeRender = seriesModel.pipelineContext.large;
         return !isLargeRender && {
             progress(params, data) {
-                var dataIndex;
+                let dataIndex;
                 while ((dataIndex = params.next()) != null) {
-                    var itemModel = data.getItemModel(dataIndex);
-                    var sign = data.getItemLayout(dataIndex).sign;
+                    let itemModel = data.getItemModel(dataIndex);
+                    let sign = data.getItemLayout(dataIndex).sign;
 
                     data.setItemVisual(
                         dataIndex,

@@ -34,8 +34,8 @@ export function setLabel(
     dataIndex: number,
     labelPositionOutside: LabelOption['position']
 ) {
-    var labelModel = itemModel.getModel('label');
-    var hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+    let labelModel = itemModel.getModel('label');
+    let hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
     graphic.setLabelStyle(
         normalStyle, hoverStyle, labelModel, hoverLabelModel,

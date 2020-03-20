@@ -36,7 +36,7 @@ function createParallelIfNeeded(option: ECUnitOption): void {
         return;
     }
 
-    var hasParallelSeries = false;
+    let hasParallelSeries = false;
 
     zrUtil.each(option.series, function (seriesOpt: SeriesOption) {
         if (seriesOpt && seriesOpt.type === 'parallel') {
@@ -54,15 +54,15 @@ function createParallelIfNeeded(option: ECUnitOption): void {
  * @inner
  */
 function mergeAxisOptionFromParallel(option: ECUnitOption): void {
-    var axes = modelUtil.normalizeToArray(option.parallelAxis);
+    let axes = modelUtil.normalizeToArray(option.parallelAxis);
 
     zrUtil.each(axes, function (axisOption) {
         if (!zrUtil.isObject(axisOption)) {
             return;
         }
 
-        var parallelIndex = axisOption.parallelIndex || 0;
-        var parallelOption = modelUtil.normalizeToArray(option.parallel)[parallelIndex];
+        let parallelIndex = axisOption.parallelIndex || 0;
+        let parallelOption = modelUtil.normalizeToArray(option.parallel)[parallelIndex];
 
         if (parallelOption && parallelOption.parallelAxisDefault) {
             zrUtil.merge(axisOption, parallelOption.parallelAxisDefault, false);

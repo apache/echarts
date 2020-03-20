@@ -22,7 +22,7 @@ import { ECUnitOption, SeriesOption } from '../../util/types';
 
 export default function (option: ECUnitOption) {
     // Save geoCoord
-    var mapSeries = [];
+    let mapSeries = [];
     zrUtil.each(option.series, function (seriesOpt: SeriesOption) {
         if (seriesOpt && seriesOpt.type === 'map') {
             mapSeries.push(seriesOpt);

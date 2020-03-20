@@ -31,7 +31,7 @@ function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
         const val = dataItem[dimIdx];
         const halfSize = dataSize[dimIdx] / 2;
 
-        var result = axis.type === 'category'
+        let result = axis.type === 'category'
             ? axis.getBandWidth()
             : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 
@@ -45,9 +45,9 @@ function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
 }
 
 export default function (coordSys: Polar) {
-    var radiusAxis = coordSys.getRadiusAxis();
-    var angleAxis = coordSys.getAngleAxis();
-    var radius = radiusAxis.getExtent();
+    let radiusAxis = coordSys.getRadiusAxis();
+    let angleAxis = coordSys.getAngleAxis();
+    let radius = radiusAxis.getExtent();
     radius[0] > radius[1] && radius.reverse();
 
     return {
@@ -60,9 +60,9 @@ export default function (coordSys: Polar) {
         },
         api: {
             coord: function (data: number[]) {
-                var radius = radiusAxis.dataToRadius(data[0]);
-                var angle = angleAxis.dataToAngle(data[1]);
-                var coord = coordSys.coordToPoint([radius, angle]);
+                let radius = radiusAxis.dataToRadius(data[0]);
+                let angle = angleAxis.dataToAngle(data[1]);
+                let coord = coordSys.coordToPoint([radius, angle]);
                 coord.push(radius, angle * Math.PI / 180);
                 return coord;
             },

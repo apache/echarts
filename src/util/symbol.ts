@@ -220,7 +220,7 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
     },
 
     square: function (x: number, y: number, w: number, h: number, shape: graphic.Rect['shape']) {
-        var size = Math.min(w, h);
+        let size = Math.min(w, h);
         shape.x = x;
         shape.y = y;
         shape.width = size;
@@ -263,12 +263,12 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
     }
 };
 
-var symbolBuildProxies: Dictionary<ECSymbol> = {};
+const symbolBuildProxies: Dictionary<ECSymbol> = {};
 zrUtil.each(symbolCtors, function (Ctor, name) {
     symbolBuildProxies[name] = new Ctor();
 });
 
-var SymbolClz = graphic.Path.extend({
+const SymbolClz = graphic.Path.extend({
 
     type: 'symbol',
 
@@ -281,8 +281,8 @@ var SymbolClz = graphic.Path.extend({
     },
 
     calculateTextPosition: function (out, style, rect) {
-        var res = calculateTextPosition(out, style, rect);
-        var shape = this.shape;
+        let res = calculateTextPosition(out, style, rect);
+        let shape = this.shape;
         if (shape && shape.symbolType === 'pin' && style.textPosition === 'inside') {
             res.y = rect.y + rect.height * 0.4;
         }
@@ -290,9 +290,9 @@ var SymbolClz = graphic.Path.extend({
     },
 
     buildPath: function (ctx, shape, inBundle) {
-        var symbolType = shape.symbolType;
+        let symbolType = shape.symbolType;
         if (symbolType !== 'none') {
-            var proxySymbol = symbolBuildProxies[symbolType];
+            let proxySymbol = symbolBuildProxies[symbolType];
             if (!proxySymbol) {
                 // Default rect
                 symbolType = 'rect';
@@ -309,8 +309,8 @@ var SymbolClz = graphic.Path.extend({
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
 function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string) {
     if (this.type !== 'image') {
-        var symbolStyle = this.style;
-        var symbolShape = this.shape;
+        let symbolStyle = this.style;
+        let symbolShape = this.shape;
         if (symbolShape && symbolShape.symbolType === 'line') {
             symbolStyle.stroke = color;
         }
@@ -342,11 +342,11 @@ export function createSymbol(
 ) {
     // TODO Support image object, DynamicImage.
 
-    var isEmpty = symbolType.indexOf('empty') === 0;
+    let isEmpty = symbolType.indexOf('empty') === 0;
     if (isEmpty) {
         symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
     }
-    var symbolPath: ECSymbol | graphic.Image;
+    let symbolPath: ECSymbol | graphic.Image;
 
     if (symbolType.indexOf('image://') === 0) {
         symbolPath = graphic.makeImage(

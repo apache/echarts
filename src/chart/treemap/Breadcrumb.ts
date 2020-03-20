@@ -68,8 +68,8 @@ class Breadcrumb {
         targetNode: TreeNode,
         onSelect: OnSelectCallback
     ) {
-        var model = seriesModel.getModel('breadcrumb');
-        var thisGroup = this.group;
+        let model = seriesModel.getModel('breadcrumb');
+        let thisGroup = this.group;
 
         thisGroup.removeAll();
 
@@ -77,11 +77,11 @@ class Breadcrumb {
             return;
         }
 
-        var normalStyleModel = model.getModel('itemStyle');
-        // var emphasisStyleModel = model.getModel('emphasis.itemStyle');
-        var textStyleModel = normalStyleModel.getModel('textStyle');
+        let normalStyleModel = model.getModel('itemStyle');
+        // let emphasisStyleModel = model.getModel('emphasis.itemStyle');
+        let textStyleModel = normalStyleModel.getModel('textStyle');
 
-        var layoutParam: LayoutParam = {
+        let layoutParam: LayoutParam = {
             pos: {
                 left: model.get('left'),
                 right: model.get('right'),
@@ -108,10 +108,10 @@ class Breadcrumb {
      * @private
      */
     _prepare(targetNode: TreeNode, layoutParam: LayoutParam, textStyleModel: BreadcrumbTextStyleModel) {
-        for (var node = targetNode; node; node = node.parentNode) {
-            var text = node.getModel<TreemapSeriesNodeItemOption>().get('name');
-            var textRect = textStyleModel.getTextRect(text);
-            var itemWidth = Math.max(
+        for (let node = targetNode; node; node = node.parentNode) {
+            let text = node.getModel<TreemapSeriesNodeItemOption>().get('name');
+            let textRect = textStyleModel.getTextRect(text);
+            let itemWidth = Math.max(
                 textRect.width + TEXT_PADDING * 2,
                 layoutParam.emptyItemWidth
             );
@@ -135,18 +135,18 @@ class Breadcrumb {
         onSelect: OnSelectCallback
     ) {
         // Start rendering.
-        var lastX = 0;
-        var emptyItemWidth = layoutParam.emptyItemWidth;
-        var height = seriesModel.get(['breadcrumb', 'height']);
-        var availableSize = layout.getAvailableSize(layoutParam.pos, layoutParam.box);
-        var totalWidth = layoutParam.totalWidth;
-        var renderList = layoutParam.renderList;
+        let lastX = 0;
+        let emptyItemWidth = layoutParam.emptyItemWidth;
+        let height = seriesModel.get(['breadcrumb', 'height']);
+        let availableSize = layout.getAvailableSize(layoutParam.pos, layoutParam.box);
+        let totalWidth = layoutParam.totalWidth;
+        let renderList = layoutParam.renderList;
 
-        for (var i = renderList.length - 1; i >= 0; i--) {
-            var item = renderList[i];
-            var itemNode = item.node;
-            var itemWidth = item.width;
-            var text = item.text;
+        for (let i = renderList.length - 1; i >= 0; i--) {
+            let item = renderList[i];
+            let itemNode = item.node;
+            let itemWidth = item.width;
+            let text = item.text;
 
             // Hdie text and shorten width if necessary.
             if (totalWidth > availableSize.width) {
@@ -155,7 +155,7 @@ class Breadcrumb {
                 text = null;
             }
 
-            var el = new graphic.Polygon({
+            let el = new graphic.Polygon({
                 shape: {
                     points: makeItemPoints(
                         lastX, 0, itemWidth, height,
@@ -188,7 +188,7 @@ class Breadcrumb {
 }
 
 function makeItemPoints(x: number, y: number, itemWidth: number, itemHeight: number, head: boolean, tail: boolean) {
-    var points = [
+    let points = [
         [head ? x : x - ARRAY_LENGTH, y],
         [x + itemWidth, y],
         [x + itemWidth, y + itemHeight],

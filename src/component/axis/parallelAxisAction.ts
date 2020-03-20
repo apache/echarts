@@ -29,7 +29,7 @@ interface ParallelAxisAreaSelectPayload extends Payload {
     intervals: ParallelAxisInterval[]
 }
 
-var actionInfo = {
+const actionInfo = {
     type: 'axisAreaSelect',
     event: 'axisAreaSelected'
     // update: 'updateVisual'

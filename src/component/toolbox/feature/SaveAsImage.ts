@@ -26,7 +26,7 @@ import { ZRColor } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
 
-var saveAsImageLang = lang.toolbox.saveAsImage;
+const saveAsImageLang = lang.toolbox.saveAsImage;
 
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
@@ -48,10 +48,10 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI) {
 
-        var model = this.model;
-        var title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
-        var type = model.get('type', true) || 'png';
-        var url = api.getConnectedDataURL({
+        let model = this.model;
+        let title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
+        let type = model.get('type', true) || 'png';
+        let url = api.getConnectedDataURL({
             type: type,
             backgroundColor: model.get('backgroundColor', true)
                 || ecModel.get('backgroundColor') || '#fff',
@@ -61,11 +61,11 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         });
         // Chrome and Firefox
         if (typeof MouseEvent === 'function' && !env.browser.ie && !env.browser.edge) {
-            var $a = document.createElement('a');
+            let $a = document.createElement('a');
             $a.download = title + '.' + type;
             $a.target = '_blank';
             $a.href = url;
-            var evt = new MouseEvent('click', {
+            let evt = new MouseEvent('click', {
                 view: window,
                 bubbles: true,
                 cancelable: false
@@ -75,22 +75,22 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         // IE
         else {
             if (window.navigator.msSaveOrOpenBlob) {
-                var bstr = atob(url.split(',')[1]);
-                var n = bstr.length;
-                var u8arr = new Uint8Array(n);
+                let bstr = atob(url.split(',')[1]);
+                let n = bstr.length;
+                let u8arr = new Uint8Array(n);
                 while (n--) {
                     u8arr[n] = bstr.charCodeAt(n);
                 }
-                var blob = new Blob([u8arr]);
+                let blob = new Blob([u8arr]);
                 window.navigator.msSaveOrOpenBlob(blob, title + '.' + type);
             }
             else {
-                var lang = model.get('lang');
-                var html = ''
+                let lang = model.get('lang');
+                let html = ''
                     + '<body style="margin:0;">'
                     + '<img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />'
                     + '</body>';
-                var tab = window.open();
+                let tab = window.open();
                 tab.document.write(html);
             }
         }

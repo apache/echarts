@@ -29,11 +29,11 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Payload } from '../../util/types';
 import ComponentView from '../../view/Component';
 
-var axisBuilderAttrs = [
+const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ] as const;
 
-var selfBuilderAttrs = ['splitArea', 'splitLine'] as const;
+const selfBuilderAttrs = ['splitArea', 'splitLine'] as const;
 
 class SingleAxisView extends AxisView {
 
@@ -46,16 +46,16 @@ class SingleAxisView extends AxisView {
 
     render(axisModel: SingleAxisModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
 
-        var group = this.group;
+        let group = this.group;
 
         group.removeAll();
 
-        var oldAxisGroup = this._axisGroup;
+        let oldAxisGroup = this._axisGroup;
         this._axisGroup = new graphic.Group();
 
-        var layout = singleAxisHelper.layout(axisModel);
+        let layout = singleAxisHelper.layout(axisModel);
 
-        var axisBuilder = new AxisBuilder(axisModel, layout);
+        let axisBuilder = new AxisBuilder(axisModel, layout);
 
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 
@@ -85,34 +85,34 @@ interface AxisElementBuilder {
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
     splitLine(axisView, group, axisGroup, axisModel) {
-        var axis = axisModel.axis;
+        let axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
             return;
         }
 
-        var splitLineModel = axisModel.getModel('splitLine');
-        var lineStyleModel = splitLineModel.getModel('lineStyle');
-        var lineWidth = lineStyleModel.get('width');
-        var lineColors = lineStyleModel.get('color');
+        let splitLineModel = axisModel.getModel('splitLine');
+        let lineStyleModel = splitLineModel.getModel('lineStyle');
+        let lineWidth = lineStyleModel.get('width');
+        let lineColors = lineStyleModel.get('color');
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
-        var gridRect = axisModel.coordinateSystem.getRect();
-        var isHorizontal = axis.isHorizontal();
+        let gridRect = axisModel.coordinateSystem.getRect();
+        let isHorizontal = axis.isHorizontal();
 
-        var splitLines: graphic.Line[][] = [];
-        var lineCount = 0;
+        let splitLines: graphic.Line[][] = [];
+        let lineCount = 0;
 
-        var ticksCoords = axis.getTicksCoords({
+        let ticksCoords = axis.getTicksCoords({
             tickModel: splitLineModel
         });
 
-        var p1 = [];
-        var p2 = [];
+        let p1 = [];
+        let p2 = [];
 
         for (let i = 0; i < ticksCoords.length; ++i) {
-            var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
+            let tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
             if (isHorizontal) {
                 p1[0] = tickCoord;
                 p1[1] = gridRect.y;
@@ -125,7 +125,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 p2[0] = gridRect.x + gridRect.width;
                 p2[1] = tickCoord;
             }
-            var colorIndex = (lineCount++) % lineColors.length;
+            let colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Line({
                 subPixelOptimize: true,

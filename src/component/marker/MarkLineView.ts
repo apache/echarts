@@ -60,18 +60,18 @@ const inner = makeInner<{
     to: List<MarkLineModel>
 }, MarkLineModel>();
 
-var markLineTransform = function (
+const markLineTransform = function (
     seriesModel: SeriesModel,
     coordSys: CoordinateSystem,
     mlModel: MarkLineModel,
     item: MarkLineOption['data'][number]
 ) {
-    var data = seriesModel.getData();
+    let data = seriesModel.getData();
 
     let itemArray: MarkLineMergedItemOption[];
     if (!isArray(item)) {
         // Special type markLine like 'min', 'max', 'average', 'median'
-        var mlType = item.type;
+        let mlType = item.type;
         if (
             mlType === 'min' || mlType === 'max' || mlType === 'average' || mlType === 'median'
             // In case
@@ -81,25 +81,25 @@ var markLineTransform = function (
             || (item.xAxis != null || item.yAxis != null)
         ) {
 
-            var valueAxis;
-            var value;
+            let valueAxis;
+            let value;
 
             if (item.yAxis != null || item.xAxis != null) {
                 valueAxis = coordSys.getAxis(item.yAxis != null ? 'y' : 'x');
                 value = retrieve(item.yAxis, item.xAxis);
             }
             else {
-                var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
+                let axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
                 valueAxis = axisInfo.valueAxis;
-                var valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
+                let valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
                 value = markerHelper.numCalculate(data, valueDataDim, mlType);
             }
-            var valueIndex = valueAxis.dim === 'x' ? 0 : 1;
-            var baseIndex = 1 - valueIndex;
+            let valueIndex = valueAxis.dim === 'x' ? 0 : 1;
+            let baseIndex = 1 - valueIndex;
 
             // Normized to 2d data with start and end point
-            var mlFrom = clone(item) as MarkLine2DDataItemOption[number];
-            var mlTo = {
+            let mlFrom = clone(item) as MarkLine2DDataItemOption[number];
+            let mlTo = {
                 coord: []
             } as MarkLine2DDataItemOption[number];
 
@@ -109,7 +109,7 @@ var markLineTransform = function (
             mlFrom.coord[baseIndex] = -Infinity;
             mlTo.coord[baseIndex] = Infinity;
 
-            var precision = mlModel.get('precision');
+            let precision = mlModel.get('precision');
             if (precision >= 0 && typeof value === 'number') {
                 value = +value.toFixed(Math.min(precision, 20));
             }
@@ -162,8 +162,8 @@ function ifMarkLineHasOnlyDim(
     toCoord: ScaleDataValue[],
     coordSys: CoordinateSystem
 ) {
-    var otherDimIndex = 1 - dimIndex;
-    var dimName = coordSys.dimensions[dimIndex];
+    let otherDimIndex = 1 - dimIndex;
+    let dimName = coordSys.dimensions[dimIndex];
     return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex])
         && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
 }
@@ -173,8 +173,8 @@ function markLineFilter(
     item: MarkLine2DDataItemOption
 ) {
     if (coordSys.type === 'cartesian2d') {
-        var fromCoord = item[0].coord;
-        var toCoord = item[1].coord;
+        let fromCoord = item[0].coord;
+        let toCoord = item[1].coord;
         // In case
         // {
         //  markLine: {
@@ -200,12 +200,12 @@ function updateSingleMarkerEndLayout(
     seriesModel: SeriesModel,
     api: ExtensionAPI
 ) {
-    var coordSys = seriesModel.coordinateSystem;
-    var itemModel = data.getItemModel<MarkLine2DDataItemOption[number]>(idx);
+    let coordSys = seriesModel.coordinateSystem;
+    let itemModel = data.getItemModel<MarkLine2DDataItemOption[number]>(idx);
 
-    var point;
-    var xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
-    var yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
+    let point;
+    let xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
+    let yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
     if (!isNaN(xPx) && !isNaN(yPx)) {
         point = [xPx, yPx];
     }
@@ -219,8 +219,8 @@ function updateSingleMarkerEndLayout(
         }
         else {
             let dims = coordSys.dimensions;
-            var x = data.get(dims[0], idx);
-            var y = data.get(dims[1], idx);
+            let x = data.get(dims[0], idx);
+            let y = data.get(dims[1], idx);
             point = coordSys.dataToPoint([x, y]);
         }
         // Expand line to the edge of grid if value on one axis is Inifnity
@@ -233,8 +233,8 @@ function updateSingleMarkerEndLayout(
         //    }]
         //  }
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-            var xAxis = coordSys.getAxis('x');
-            var yAxis = coordSys.getAxis('y');
+            let xAxis = coordSys.getAxis('x');
+            let yAxis = coordSys.getAxis('y');
             let dims = coordSys.dimensions;
             if (isInifinity(data.get(dims[0], idx))) {
                 point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[isFrom ? 0 : 1]);
@@ -265,11 +265,11 @@ class MarkLineView extends MarkerView {
 
     updateTransform(markLineModel: MarkLineModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
-            var mlModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markLine') as MarkLineModel;
+            let mlModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markLine') as MarkLineModel;
             if (mlModel) {
-                var mlData = mlModel.getData();
-                var fromData = inner(mlModel).from;
-                var toData = inner(mlModel).to;
+                let mlData = mlModel.getData();
+                let fromData = inner(mlModel).from;
+                let toData = inner(mlModel).to;
                 // Update visual and layout of from symbol and to symbol
                 fromData.each(function (idx) {
                     updateSingleMarkerEndLayout(fromData, idx, true, seriesModel, api);
@@ -295,28 +295,28 @@ class MarkLineView extends MarkerView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var coordSys = seriesModel.coordinateSystem;
-        var seriesId = seriesModel.id;
-        var seriesData = seriesModel.getData();
+        let coordSys = seriesModel.coordinateSystem;
+        let seriesId = seriesModel.id;
+        let seriesData = seriesModel.getData();
 
-        var lineDrawMap = this.markerGroupMap;
-        var lineDraw = lineDrawMap.get(seriesId)
+        let lineDrawMap = this.markerGroupMap;
+        let lineDraw = lineDrawMap.get(seriesId)
             || lineDrawMap.set(seriesId, new LineDraw());
         this.group.add(lineDraw.group);
 
-        var mlData = createList(coordSys, seriesModel, mlModel);
+        let mlData = createList(coordSys, seriesModel, mlModel);
 
-        var fromData = mlData.from;
-        var toData = mlData.to;
-        var lineData = mlData.line;
+        let fromData = mlData.from;
+        let toData = mlData.to;
+        let lineData = mlData.line;
 
         inner(mlModel).from = fromData;
         inner(mlModel).to = toData;
         // Line data for tooltip and formatter
         mlModel.setData(lineData);
 
-        var symbolType = mlModel.get('symbol');
-        var symbolSize = mlModel.get('symbolSize');
+        let symbolType = mlModel.get('symbol');
+        let symbolSize = mlModel.get('symbolSize');
         if (!isArray(symbolType)) {
             symbolType = [symbolType, symbolType];
         }
@@ -332,7 +332,7 @@ class MarkLineView extends MarkerView {
 
         // Update visual and layout of line
         lineData.each(function (idx) {
-            var lineColor = lineData.getItemModel<MarkLineMergedItemOption>(idx).get(['lineStyle', 'color']);
+            let lineColor = lineData.getItemModel<MarkLineMergedItemOption>(idx).get(['lineStyle', 'color']);
             lineData.setItemVisual(idx, {
                 color: lineColor || fromData.getItemVisual(idx, 'color')
             });
@@ -364,7 +364,7 @@ class MarkLineView extends MarkerView {
             idx: number,
             isFrom: boolean
         ) {
-            var itemModel = data.getItemModel<MarkLineMergedItemOption>(idx);
+            let itemModel = data.getItemModel<MarkLineMergedItemOption>(idx);
 
             updateSingleMarkerEndLayout(
                 data, idx, isFrom, seriesModel, api
@@ -385,10 +385,10 @@ class MarkLineView extends MarkerView {
 
 function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlModel: MarkLineModel) {
 
-    var coordDimsInfos;
+    let coordDimsInfos;
     if (coordSys) {
         coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
-            var info = seriesModel.getData().getDimensionInfo(
+            let info = seriesModel.getData().getDimensionInfo(
                 seriesModel.getData().mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
@@ -402,12 +402,12 @@ function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlMode
         }];
     }
 
-    var fromData = new List(coordDimsInfos, mlModel);
-    var toData = new List(coordDimsInfos, mlModel);
+    let fromData = new List(coordDimsInfos, mlModel);
+    let toData = new List(coordDimsInfos, mlModel);
     // No dimensions
-    var lineData = new List([], mlModel);
+    let lineData = new List([], mlModel);
 
-    var optData = map(mlModel.get('data'), curry(
+    let optData = map(mlModel.get('data'), curry(
         markLineTransform, seriesModel, coordSys, mlModel
     ));
     if (coordSys) {
@@ -415,7 +415,7 @@ function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlMode
             optData, curry(markLineFilter, coordSys)
         );
     }
-    var dimValueGetter = coordSys ? markerHelper.dimValueGetter : function (item: MarkLineMergedItemOption) {
+    let dimValueGetter = coordSys ? markerHelper.dimValueGetter : function (item: MarkLineMergedItemOption) {
         return item.value;
     };
     fromData.initData(

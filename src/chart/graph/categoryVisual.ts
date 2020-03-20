@@ -23,32 +23,32 @@ import { Dictionary, ColorString } from '../../util/types';
 
 export default function (ecModel: GlobalModel) {
 
-    var paletteScope: Dictionary<ColorString> = {};
+    let paletteScope: Dictionary<ColorString> = {};
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
-        var categoriesData = seriesModel.getCategoriesData();
-        var data = seriesModel.getData();
+        let categoriesData = seriesModel.getCategoriesData();
+        let data = seriesModel.getData();
 
-        var categoryNameIdxMap: Dictionary<number> = {};
+        let categoryNameIdxMap: Dictionary<number> = {};
 
         categoriesData.each(function (idx) {
-            var name = categoriesData.getName(idx);
+            let name = categoriesData.getName(idx);
             // Add prefix to avoid conflict with Object.prototype.
             categoryNameIdxMap['ec-' + name] = idx;
-            var itemModel = categoriesData.getItemModel<GraphNodeItemOption>(idx);
+            let itemModel = categoriesData.getItemModel<GraphNodeItemOption>(idx);
 
-            var color = itemModel.get(['itemStyle', 'color'])
+            let color = itemModel.get(['itemStyle', 'color'])
                 || seriesModel.getColorFromPalette(name, paletteScope);
             categoriesData.setItemVisual(idx, 'color', color);
 
-            var opacity = itemModel.get(['itemStyle', 'opacity']);
+            let opacity = itemModel.get(['itemStyle', 'opacity']);
             if (opacity != null) {
                 categoriesData.setItemVisual(idx, 'opacity', opacity);
             }
 
-            var symbolVisualList = ['symbol', 'symbolSize', 'symbolKeepAspect'] as const;
+            let symbolVisualList = ['symbol', 'symbolSize', 'symbolKeepAspect'] as const;
 
-            for (var i = 0; i < symbolVisualList.length; i++) {
-                var symbolVisual = itemModel.getShallow(symbolVisualList[i], true);
+            for (let i = 0; i < symbolVisualList.length; i++) {
+                let symbolVisual = itemModel.getShallow(symbolVisualList[i], true);
                 if (symbolVisual != null) {
                     categoriesData.setItemVisual(idx, symbolVisualList[i], symbolVisual);
                 }
@@ -58,16 +58,16 @@ export default function (ecModel: GlobalModel) {
         // Assign category color to visual
         if (categoriesData.count()) {
             data.each(function (idx) {
-                var model = data.getItemModel<GraphNodeItemOption>(idx);
-                var category = model.getShallow('category');
+                let model = data.getItemModel<GraphNodeItemOption>(idx);
+                let category = model.getShallow('category');
                 if (category != null) {
                     if (typeof category === 'string') {
                         category = categoryNameIdxMap['ec-' + category];
                     }
 
-                    var visualList = ['color', 'opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'] as const;
+                    let visualList = ['color', 'opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'] as const;
 
-                    for (var i = 0; i < visualList.length; i++) {
+                    for (let i = 0; i < visualList.length; i++) {
                         if (data.getItemVisual(idx, visualList[i], true) == null) {
                             data.setItemVisual(
                                 idx, visualList[i],

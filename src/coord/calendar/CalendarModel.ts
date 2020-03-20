@@ -154,7 +154,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
      * @override
      */
     init(option: CalendarOption, parentModel: Model, ecModel: GlobalModel) {
-        var inputPositionParams = getLayoutParams(option);
+        let inputPositionParams = getLayoutParams(option);
 
         super.init.apply(this, arguments as any);
 
@@ -252,8 +252,8 @@ class CalendarModel extends ComponentModel<CalendarOption> {
 
 function mergeAndNormalizeLayoutParams(target: CalendarOption, raw: BoxLayoutOptionMixin) {
     // Normalize cellSize
-    var cellSize = target.cellSize;
-    var cellSizeArr: (number | 'auto')[];
+    let cellSize = target.cellSize;
+    let cellSizeArr: (number | 'auto')[];
 
     if (!zrUtil.isArray(cellSize)) {
         cellSizeArr = target.cellSize = [cellSize, cellSize];
@@ -266,7 +266,7 @@ function mergeAndNormalizeLayoutParams(target: CalendarOption, raw: BoxLayoutOpt
         cellSizeArr[1] = cellSizeArr[0];
     }
 
-    var ignoreSize = zrUtil.map([0, 1], function (hvIdx) {
+    let ignoreSize = zrUtil.map([0, 1], function (hvIdx) {
         // If user have set `width` or both `left` and `right`, cellSizeArr
         // will be automatically set to 'auto', otherwise the default
         // setting of cellSizeArr will make `width` setting not work.

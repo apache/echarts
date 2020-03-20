@@ -45,22 +45,22 @@ import IntervalScale from './Interval';
 import Scale from './Scale';
 
 
-var mathCeil = Math.ceil;
-var mathFloor = Math.floor;
-var ONE_SECOND = 1000;
-var ONE_MINUTE = ONE_SECOND * 60;
-var ONE_HOUR = ONE_MINUTE * 60;
-var ONE_DAY = ONE_HOUR * 24;
+const mathCeil = Math.ceil;
+const mathFloor = Math.floor;
+const ONE_SECOND = 1000;
+const ONE_MINUTE = ONE_SECOND * 60;
+const ONE_HOUR = ONE_MINUTE * 60;
+const ONE_DAY = ONE_HOUR * 24;
 
 // FIXME 公用？
-var bisect = function (
+const bisect = function (
     a: [string, number][],
     x: number,
     lo: number,
     hi: number
 ): number {
     while (lo < hi) {
-        var mid = lo + hi >>> 1;
+        let mid = lo + hi >>> 1;
         if (a[mid][1] < x) {
             lo = mid + 1;
         }
@@ -80,9 +80,9 @@ class TimeScale extends IntervalScale {
     private _stepLvl: [string, number];
 
     getLabel(val: number): string {
-        var stepLvl = this._stepLvl;
+        let stepLvl = this._stepLvl;
 
-        var date = new Date(val);
+        let date = new Date(val);
 
         return formatUtil.formatTime(stepLvl[0], date, this.getSetting('useUTC'));
     }
@@ -96,7 +96,7 @@ class TimeScale extends IntervalScale {
             maxInterval?: number
         }
     ): void {
-        var extent = this._extent;
+        let extent = this._extent;
         // If extent start and end are same, expand them
         if (extent[0] === extent[1]) {
             // Expand extent
@@ -105,15 +105,15 @@ class TimeScale extends IntervalScale {
         }
         // If there are no data and extent are [Infinity, -Infinity]
         if (extent[1] === -Infinity && extent[0] === Infinity) {
-            var d = new Date();
+            let d = new Date();
             extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
             extent[0] = extent[1] - ONE_DAY;
         }
 
         this.niceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
 
-        // var extent = this._extent;
-        var interval = this._interval;
+        // let extent = this._extent;
+        let interval = this._interval;
 
         if (!opt.fixMin) {
             extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
@@ -126,9 +126,9 @@ class TimeScale extends IntervalScale {
     niceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
         approxTickNum = approxTickNum || 10;
 
-        var extent = this._extent;
-        var span = extent[1] - extent[0];
-        var approxInterval = span / approxTickNum;
+        let extent = this._extent;
+        let span = extent[1] - extent[0];
+        let approxInterval = span / approxTickNum;
 
         if (minInterval != null && approxInterval < minInterval) {
             approxInterval = minInterval;
@@ -137,25 +137,25 @@ class TimeScale extends IntervalScale {
             approxInterval = maxInterval;
         }
 
-        var scaleLevelsLen = scaleLevels.length;
-        var idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
+        let scaleLevelsLen = scaleLevels.length;
+        let idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
 
-        var level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
-        var interval = level[1];
+        let level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
+        let interval = level[1];
         // Same with interval scale if span is much larger than 1 year
         if (level[0] === 'year') {
-            var yearSpan = span / interval;
+            let yearSpan = span / interval;
 
             // From "Nice Numbers for Graph Labels" of Graphic Gems
-            // var niceYearSpan = numberUtil.nice(yearSpan, false);
-            var yearStep = numberUtil.nice(yearSpan / approxTickNum, true);
+            // let niceYearSpan = numberUtil.nice(yearSpan, false);
+            let yearStep = numberUtil.nice(yearSpan / approxTickNum, true);
 
             interval *= yearStep;
         }
 
-        var timezoneOffset = this.getSetting('useUTC')
+        let timezoneOffset = this.getSetting('useUTC')
             ? 0 : (new Date(+extent[0] || +extent[1])).getTimezoneOffset() * 60 * 1000;
-        var niceExtent = [
+        let niceExtent = [
             Math.round(mathCeil((extent[0] - timezoneOffset) / interval) * interval + timezoneOffset),
             Math.round(mathFloor((extent[1] - timezoneOffset) / interval) * interval + timezoneOffset)
         ] as [number, number];
@@ -194,7 +194,7 @@ class TimeScale extends IntervalScale {
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
-var scaleLevels = [
+const scaleLevels = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s
     ['hh:mm:ss', ONE_SECOND * 5],      // 5s

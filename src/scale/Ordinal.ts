@@ -47,7 +47,7 @@ class OrdinalScale extends Scale {
     }) {
         super(setting);
 
-        var ordinalMeta = this.getSetting('ordinalMeta');
+        let ordinalMeta = this.getSetting('ordinalMeta');
         // Caution: Should not use instanceof, consider ec-extensions using
         // import approach to get OrdinalMeta class.
         if (!ordinalMeta || isArray(ordinalMeta)) {
@@ -82,9 +82,9 @@ class OrdinalScale extends Scale {
     }
 
     getTicks(): OrdinalNumber[] {
-        var ticks = [];
-        var extent = this._extent;
-        var rank = extent[0];
+        let ticks = [];
+        let extent = this._extent;
+        let rank = extent[0];
 
         while (rank <= extent[1]) {
             ticks.push(rank);

@@ -37,9 +37,9 @@ export default function (finder: {
     point: number[]
     el?: Element
 } {
-    var point: number[] = [];
-    var seriesIndex = finder.seriesIndex;
-    var seriesModel;
+    let point: number[] = [];
+    let seriesIndex = finder.seriesIndex;
+    let seriesModel;
     if (seriesIndex == null || !(
         seriesModel = ecModel.getSeriesByIndex(seriesIndex)
     )) {
@@ -48,14 +48,14 @@ export default function (finder: {
         };
     }
 
-    var data = seriesModel.getData();
-    var dataIndex = modelUtil.queryDataIndex(data, finder as Payload);
+    let data = seriesModel.getData();
+    let dataIndex = modelUtil.queryDataIndex(data, finder as Payload);
     if (dataIndex == null || dataIndex < 0 || zrUtil.isArray(dataIndex)) {
         return {point: []};
     }
 
-    var el = data.getItemGraphicEl(dataIndex);
-    var coordSys = seriesModel.coordinateSystem;
+    let el = data.getItemGraphicEl(dataIndex);
+    let coordSys = seriesModel.coordinateSystem;
 
     if (seriesModel.getTooltipPosition) {
         point = seriesModel.getTooltipPosition(dataIndex) || [];
@@ -71,7 +71,7 @@ export default function (finder: {
     }
     else if (el) {
         // Use graphic bounding rect
-        var rect = el.getBoundingRect().clone();
+        let rect = el.getBoundingRect().clone();
         rect.applyTransform(el.transform);
         point = [
             rect.x + rect.width / 2,

@@ -26,10 +26,10 @@ import Polar from '../../coord/polar/Polar';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
 import GlobalModel from '../../model/Global';
 
-var axisBuilderAttrs = [
+const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ] as const;
-var selfBuilderAttrs = [
+const selfBuilderAttrs = [
     'splitLine', 'splitArea', 'minorSplitLine'
 ] as const;
 
@@ -47,16 +47,16 @@ class RadiusAxisView extends AxisView {
         if (!radiusAxisModel.get('show')) {
             return;
         }
-        var radiusAxis = radiusAxisModel.axis;
-        var polar = radiusAxis.polar;
-        var angleAxis = polar.getAngleAxis();
-        var ticksCoords = radiusAxis.getTicksCoords();
-        var minorTicksCoords = radiusAxis.getMinorTicksCoords();
-        var axisAngle = angleAxis.getExtent()[0];
-        var radiusExtent = radiusAxis.getExtent();
+        let radiusAxis = radiusAxisModel.axis;
+        let polar = radiusAxis.polar;
+        let angleAxis = polar.getAngleAxis();
+        let ticksCoords = radiusAxis.getTicksCoords();
+        let minorTicksCoords = radiusAxis.getMinorTicksCoords();
+        let axisAngle = angleAxis.getExtent()[0];
+        let radiusExtent = radiusAxis.getExtent();
 
-        var layout = layoutAxis(polar, radiusAxisModel, axisAngle);
-        var axisBuilder = new AxisBuilder(radiusAxisModel, layout);
+        let layout = layoutAxis(polar, radiusAxisModel, axisAngle);
+        let axisBuilder = new AxisBuilder(radiusAxisModel, layout);
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
         this.group.add(axisBuilder.getGroup());
 
@@ -91,17 +91,17 @@ interface AxisElementBuilder {
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
     splitLine(group, radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
-        var splitLineModel = radiusAxisModel.getModel('splitLine');
-        var lineStyleModel = splitLineModel.getModel('lineStyle');
-        var lineColors = lineStyleModel.get('color');
-        var lineCount = 0;
+        let splitLineModel = radiusAxisModel.getModel('splitLine');
+        let lineStyleModel = splitLineModel.getModel('lineStyle');
+        let lineColors = lineStyleModel.get('color');
+        let lineCount = 0;
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
-        var splitLines: graphic.Circle[][] = [];
+        let splitLines: graphic.Circle[][] = [];
 
         for (let i = 0; i < ticksCoords.length; i++) {
-            var colorIndex = (lineCount++) % lineColors.length;
+            let colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Circle({
                 shape: {
@@ -130,13 +130,13 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             return;
         }
 
-        var minorSplitLineModel = radiusAxisModel.getModel('minorSplitLine');
-        var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
+        let minorSplitLineModel = radiusAxisModel.getModel('minorSplitLine');
+        let lineStyleModel = minorSplitLineModel.getModel('lineStyle');
 
-        var lines: graphic.Circle[] = [];
+        let lines: graphic.Circle[] = [];
 
-        for (var i = 0; i < minorTicksCoords.length; i++) {
-            for (var k = 0; k < minorTicksCoords[i].length; k++) {
+        for (let i = 0; i < minorTicksCoords.length; i++) {
+            for (let k = 0; k < minorTicksCoords[i].length; k++) {
                 lines.push(new graphic.Circle({
                     shape: {
                         cx: polar.cx,
@@ -160,18 +160,18 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             return;
         }
 
-        var splitAreaModel = radiusAxisModel.getModel('splitArea');
-        var areaStyleModel = splitAreaModel.getModel('areaStyle');
-        var areaColors = areaStyleModel.get('color');
-        var lineCount = 0;
+        let splitAreaModel = radiusAxisModel.getModel('splitArea');
+        let areaStyleModel = splitAreaModel.getModel('areaStyle');
+        let areaColors = areaStyleModel.get('color');
+        let lineCount = 0;
 
         areaColors = areaColors instanceof Array ? areaColors : [areaColors];
 
-        var splitAreas: graphic.Sector[][] = [];
+        let splitAreas: graphic.Sector[][] = [];
 
-        var prevRadius = ticksCoords[0].coord;
+        let prevRadius = ticksCoords[0].coord;
         for (let i = 1; i < ticksCoords.length; i++) {
-            var colorIndex = (lineCount++) % areaColors.length;
+            let colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
             splitAreas[colorIndex].push(new graphic.Sector({
                 shape: {

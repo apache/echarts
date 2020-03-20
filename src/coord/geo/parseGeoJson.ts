@@ -30,17 +30,17 @@ function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
     if (!(json as GeoJSONCompressed).UTF8Encoding) {
         return json as GeoJSON;
     }
-    var jsonCompressed = json as GeoJSONCompressed;
-    var encodeScale = jsonCompressed.UTF8Scale;
+    let jsonCompressed = json as GeoJSONCompressed;
+    let encodeScale = jsonCompressed.UTF8Scale;
     if (encodeScale == null) {
         encodeScale = 1024;
     }
 
-    var features = jsonCompressed.features;
+    let features = jsonCompressed.features;
 
-    for (var f = 0; f < features.length; f++) {
-        var feature = features[f];
-        var geometry = feature.geometry;
+    for (let f = 0; f < features.length; f++) {
+        let feature = features[f];
+        let geometry = feature.geometry;
 
         if (geometry.type === 'Polygon') {
             let coordinates = geometry.coordinates;
@@ -56,7 +56,7 @@ function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
             let coordinates = geometry.coordinates;
             for (let c = 0; c < coordinates.length; c++) {
                 let coordinate = coordinates[c];
-                for (var c2 = 0; c2 < coordinate.length; c2++) {
+                for (let c2 = 0; c2 < coordinate.length; c2++) {
                     coordinate[c2] = decodePolygon(
                         coordinate[c2],
                         geometry.encodeOffsets[c][c2],
@@ -77,13 +77,13 @@ function decodePolygon(
     encodeOffsets: number[],
     encodeScale: number
 ): number[][] {
-    var result = [];
-    var prevX = encodeOffsets[0];
-    var prevY = encodeOffsets[1];
+    let result = [];
+    let prevX = encodeOffsets[0];
+    let prevY = encodeOffsets[1];
 
-    for (var i = 0; i < coordinate.length; i += 2) {
-        var x = coordinate.charCodeAt(i) - 64;
-        var y = coordinate.charCodeAt(i + 1) - 64;
+    for (let i = 0; i < coordinate.length; i += 2) {
+        let x = coordinate.charCodeAt(i) - 64;
+        let y = coordinate.charCodeAt(i + 1) - 64;
         // ZigZag decoding
         x = (x >> 1) ^ (-(x & 1));
         y = (y >> 1) ^ (-(y & 1));

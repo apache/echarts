@@ -254,7 +254,7 @@ export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = ListDimensionType;
 
-export var VISUAL_DIMENSIONS = createHashMap([
+export let VISUAL_DIMENSIONS = createHashMap([
     'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
@@ -276,12 +276,12 @@ export type DimensionDefinition = {
 };
 export type DimensionDefinitionLoose = DimensionDefinition['type'] | DimensionDefinition;
 
-export var SOURCE_FORMAT_ORIGINAL = 'original' as const;
-export var SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows' as const;
-export var SOURCE_FORMAT_OBJECT_ROWS = 'objectRows' as const;
-export var SOURCE_FORMAT_KEYED_COLUMNS = 'keyedColumns' as const;
-export var SOURCE_FORMAT_TYPED_ARRAY = 'typedArray' as const;
-export var SOURCE_FORMAT_UNKNOWN = 'unknown' as const;
+export let SOURCE_FORMAT_ORIGINAL = 'original' as const;
+export let SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows' as const;
+export let SOURCE_FORMAT_OBJECT_ROWS = 'objectRows' as const;
+export let SOURCE_FORMAT_KEYED_COLUMNS = 'keyedColumns' as const;
+export let SOURCE_FORMAT_TYPED_ARRAY = 'typedArray' as const;
+export let SOURCE_FORMAT_UNKNOWN = 'unknown' as const;
 
 export type SourceFormat =
     typeof SOURCE_FORMAT_ORIGINAL
@@ -291,8 +291,8 @@ export type SourceFormat =
     | typeof SOURCE_FORMAT_TYPED_ARRAY
     | typeof SOURCE_FORMAT_UNKNOWN;
 
-export var SERIES_LAYOUT_BY_COLUMN = 'column' as const;
-export var SERIES_LAYOUT_BY_ROW = 'row' as const;
+export let SERIES_LAYOUT_BY_COLUMN = 'column' as const;
+export let SERIES_LAYOUT_BY_ROW = 'row' as const;
 
 export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYOUT_BY_ROW;
 
@@ -308,7 +308,7 @@ export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYO
  * and other properties. For example:
  *
  * ```ts
- * var option: ECUnitOption = {
+ * let option: ECUnitOption = {
  *
  *     // Single `title` component:
  *     title: {...},
@@ -351,7 +351,7 @@ export type ECUnitOption = {
  * or may be an object contains multi-options. For example:
  *
  * ```ts
- * var option: ECOption = {
+ * let option: ECOption = {
  *     baseOption: {
  *         title: {...},
  *         legend: {...},

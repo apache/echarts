@@ -64,14 +64,14 @@ class DataZoomView extends ComponentView {
      *                   ]
      */
     getTargetCoordInfo() {
-        var dataZoomModel = this.dataZoomModel;
-        var ecModel = this.ecModel;
-        var coordSysLists: Dictionary<CoordInfo[]> = {};
+        let dataZoomModel = this.dataZoomModel;
+        let ecModel = this.ecModel;
+        let coordSysLists: Dictionary<CoordInfo[]> = {};
 
         dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-            var axisModel = ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel;
+            let axisModel = ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel;
             if (axisModel) {
-                var coordModel = axisModel.getCoordSysModel();
+                let coordModel = axisModel.getCoordSysModel();
                 coordModel && save(
                     coordModel,
                     axisModel,
@@ -87,8 +87,8 @@ class DataZoomView extends ComponentView {
             store: CoordInfo[],
             coordIndex: number
         ) {
-            var item;
-            for (var i = 0; i < store.length; i++) {
+            let item;
+            for (let i = 0; i < store.length; i++) {
                 if (store[i].model === coordModel) {
                     item = store[i];
                     break;

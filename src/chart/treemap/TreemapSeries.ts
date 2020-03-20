@@ -340,18 +340,18 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
      */
     getInitialData(option: TreemapSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
-        var root: TreemapSeriesNodeItemOption = {
+        let root: TreemapSeriesNodeItemOption = {
             name: option.name,
             children: option.data
         };
 
         completeTreeValue(root);
 
-        var levels = option.levels || [];
+        let levels = option.levels || [];
 
         levels = option.levels = setDefault(levels, ecModel);
 
-        var treeOption = {
+        let treeOption = {
             levels
         };
 
@@ -371,11 +371,11 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
      * @param {boolean} [mutipleSeries=false]
      */
     formatTooltip(dataIndex: number) {
-        var data = this.getData();
-        var value = this.getRawValue(dataIndex) as TreemapSeriesDataValue;
-        var formattedValue = zrUtil.isArray(value)
+        let data = this.getData();
+        let value = this.getRawValue(dataIndex) as TreemapSeriesDataValue;
+        let formattedValue = zrUtil.isArray(value)
             ? addCommas(value[0] as number) : addCommas(value as number);
-        var name = data.getName(dataIndex);
+        let name = data.getName(dataIndex);
 
         return encodeHTML(name + ': ' + formattedValue);
     }
@@ -388,9 +388,9 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
      * @return {Object}
      */
     getDataParams(dataIndex: number) {
-        var params = super.getDataParams.apply(this, arguments as any) as TreemapSeriesCallbackDataParams;
+        let params = super.getDataParams.apply(this, arguments as any) as TreemapSeriesCallbackDataParams;
 
-        var node = this.getData().tree.getNodeByDataIndex(dataIndex);
+        let node = this.getData().tree.getNodeByDataIndex(dataIndex);
         params.treePathInfo = wrapTreePathInfo(node, this);
 
         return params;
@@ -431,7 +431,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
          * @private
          * @type {Object}
          */
-        var idIndexMap = this._idIndexMap;
+        let idIndexMap = this._idIndexMap;
 
         if (!idIndexMap) {
             idIndexMap = this._idIndexMap = zrUtil.createHashMap();
@@ -442,7 +442,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             this._idIndexMapCount = 0;
         }
 
-        var index = idIndexMap.get(id);
+        let index = idIndexMap.get(id);
         if (index == null) {
             idIndexMap.set(id, index = this._idIndexMapCount++);
         }
@@ -459,7 +459,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             ? (this._viewRoot = viewRoot)
             : (viewRoot = this._viewRoot);
 
-        var root = this.getRawData().tree.root;
+        let root = this.getRawData().tree.root;
 
         if (!viewRoot
             || (viewRoot !== root && !root.contains(viewRoot))
@@ -476,19 +476,19 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
     // Postorder travel tree.
     // If value of none-leaf node is not set,
     // calculate it by suming up the value of all children.
-    var sum = 0;
+    let sum = 0;
 
     zrUtil.each(dataNode.children, function (child) {
 
         completeTreeValue(child);
 
-        var childValue = child.value;
+        let childValue = child.value;
         zrUtil.isArray(childValue) && (childValue = childValue[0]);
 
         sum += childValue;
     });
 
-    var thisValue = dataNode.value;
+    let thisValue = dataNode.value;
     if (zrUtil.isArray(thisValue)) {
         thisValue = thisValue[0];
     }
@@ -510,17 +510,17 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  * set default to level configuration
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
-    var globalColorList = ecModel.get('color');
+    let globalColorList = ecModel.get('color');
 
     if (!globalColorList) {
         return;
     }
 
     levels = levels || [];
-    var hasColorDefine;
+    let hasColorDefine;
     zrUtil.each(levels, function (levelDefine) {
-        var model = new Model(levelDefine);
-        var modelColor = model.get('color');
+        let model = new Model(levelDefine);
+        let modelColor = model.get('color');
 
         if (model.get(['itemStyle', 'color'])
             || (modelColor && modelColor !== 'none')
@@ -530,7 +530,7 @@ function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
     });
 
     if (!hasColorDefine) {
-        var level0 = levels[0] || (levels[0] = {});
+        let level0 = levels[0] || (levels[0] = {});
         level0.color = globalColorList.slice();
     }
 

@@ -30,7 +30,7 @@ import ExtensionAPI from '../../../ExtensionAPI';
 import BrushModel from '../../brush/BrushModel';
 import { BrushTypeUncertain } from '../../helper/BrushController';
 
-var brushLang = lang.toolbox.brush;
+const brushLang = lang.toolbox.brush;
 
 const ICON_TYPES = ['rect', 'polygon', 'lineX', 'lineY', 'keep', 'clear'] as const;
 
@@ -52,9 +52,9 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var brushType: BrushTypeUncertain;
-        var brushMode: string;
-        var isBrushed: boolean;
+        let brushType: BrushTypeUncertain;
+        let brushMode: string;
+        let isBrushed: boolean;
 
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
             brushType = brushModel.brushType;
@@ -87,9 +87,9 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
     }
 
     getIcons() {
-        var model = this.model;
-        var availableIcons = model.get('icon', true);
-        var icons: ToolboxBrushFeatureOption['icon'] = {};
+        let model = this.model;
+        let availableIcons = model.get('icon', true);
+        let icons: ToolboxBrushFeatureOption['icon'] = {};
         zrUtil.each(model.get('type', true), function (type) {
             if (availableIcons[type]) {
                 icons[type] = availableIcons[type];
@@ -99,8 +99,8 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
     };
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI, type: IconType) {
-        var brushType = this._brushType;
-        var brushMode = this._brushMode;
+        let brushType = this._brushType;
+        let brushMode = this._brushMode;
 
         if (type === 'clear') {
             // Trigger parallel action firstly

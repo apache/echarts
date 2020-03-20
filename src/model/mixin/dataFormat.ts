@@ -24,7 +24,7 @@ import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams } from '.
 import GlobalModel from '../Global';
 import Element from 'zrender/src/Element';
 
-var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
+const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 
 interface DataFormatMixin extends DataHost {
@@ -47,20 +47,20 @@ class DataFormatMixin {
         el?: Element // May be used in override.
     ): CallbackDataParams {
 
-        var data = this.getData(dataType);
-        var rawValue = this.getRawValue(dataIndex, dataType);
-        var rawDataIndex = data.getRawIndex(dataIndex);
-        var name = data.getName(dataIndex);
-        var itemOpt = data.getRawDataItem(dataIndex);
-        var color = data.getItemVisual(dataIndex, 'color');
-        var borderColor = data.getItemVisual(dataIndex, 'borderColor');
-        var tooltipModel = this.ecModel.getComponent('tooltip');
+        let data = this.getData(dataType);
+        let rawValue = this.getRawValue(dataIndex, dataType);
+        let rawDataIndex = data.getRawIndex(dataIndex);
+        let name = data.getName(dataIndex);
+        let itemOpt = data.getRawDataItem(dataIndex);
+        let color = data.getItemVisual(dataIndex, 'color');
+        let borderColor = data.getItemVisual(dataIndex, 'borderColor');
+        let tooltipModel = this.ecModel.getComponent('tooltip');
         // @ts-ignore FIXME:TooltipModel
-        var renderModeOption = tooltipModel && tooltipModel.get('renderMode');
-        var renderMode = getTooltipRenderMode(renderModeOption);
-        var mainType = this.mainType;
-        var isSeries = mainType === 'series';
-        var userOutput = data.userOutput;
+        let renderModeOption = tooltipModel && tooltipModel.get('renderMode');
+        let renderMode = getTooltipRenderMode(renderModeOption);
+        let mainType = this.mainType;
+        let isSeries = mainType === 'series';
+        let userOutput = data.userOutput;
 
         return {
             componentType: mainType,
@@ -107,16 +107,16 @@ class DataFormatMixin {
         labelProp?: string
     ): string {
         status = status || 'normal';
-        var data = this.getData(dataType);
-        var itemModel = data.getItemModel(dataIndex);
+        let data = this.getData(dataType);
+        let itemModel = data.getItemModel(dataIndex);
 
-        var params = this.getDataParams(dataIndex, dataType);
+        let params = this.getDataParams(dataIndex, dataType);
         if (dimIndex != null && (params.value instanceof Array)) {
             params.value = params.value[dimIndex];
         }
 
         // @ts-ignore FIXME:TooltipModel
-        var formatter = itemModel.get(status === 'normal'
+        let formatter = itemModel.get(status === 'normal'
             ? [(labelProp || 'label'), 'formatter']
             : [status, labelProp || 'label', 'formatter']
         );
@@ -127,12 +127,12 @@ class DataFormatMixin {
             return formatter(params);
         }
         else if (typeof formatter === 'string') {
-            var str = formatTpl(formatter, params);
+            let str = formatTpl(formatter, params);
 
             // Support 'aaa{@[3]}bbb{@product}ccc'.
             // Do not support '}' in dim name util have to.
             return str.replace(DIMENSION_LABEL_REG, function (origin, dim) {
-                var len = dim.length;
+                let len = dim.length;
                 if (dim.charAt(0) === '[' && dim.charAt(len - 1) === ']') {
                     dim = +dim.slice(1, len - 1); // Also: '[]' => 0
                 }

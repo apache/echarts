@@ -23,10 +23,10 @@ import Geo from './Geo';
 function dataToCoordSize(this: Geo, dataSize: number[], dataItem: number[]): number[] {
     dataItem = dataItem || [0, 0];
     return zrUtil.map([0, 1], function (dimIdx) {
-        var val = dataItem[dimIdx];
-        var halfSize = dataSize[dimIdx] / 2;
-        var p1 = [];
-        var p2 = [];
+        let val = dataItem[dimIdx];
+        let halfSize = dataSize[dimIdx] / 2;
+        let p1 = [];
+        let p2 = [];
         p1[dimIdx] = val - halfSize;
         p2[dimIdx] = val + halfSize;
         p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
@@ -35,7 +35,7 @@ function dataToCoordSize(this: Geo, dataSize: number[], dataItem: number[]): num
 }
 
 export default function (coordSys: Geo) {
-    var rect = coordSys.getBoundingRect();
+    let rect = coordSys.getBoundingRect();
     return {
         coordSys: {
             type: 'geo',

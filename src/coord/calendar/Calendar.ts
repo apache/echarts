@@ -39,7 +39,7 @@ import CoordinateSystemManager from '../../CoordinateSystem';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 
 // (24*60*60*1000)
-var PROXIMATE_ONE_DAY = 86400000;
+const PROXIMATE_ONE_DAY = 86400000;
 
 
 export interface CalendarParsedDateRangeInfo {
@@ -171,15 +171,15 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
 
         date = numberUtil.parseDate(date);
 
-        var y = date.getFullYear();
+        let y = date.getFullYear();
 
-        var m = date.getMonth() + 1;
-        var mStr = m < 10 ? '0' + m : '' + m;
+        let m = date.getMonth() + 1;
+        let mStr = m < 10 ? '0' + m : '' + m;
 
-        var d = date.getDate();
-        var dStr = d < 10 ? '0' + d : '' + d;
+        let d = date.getDate();
+        let dStr = d < 10 ? '0' + d : '' + d;
 
-        var day = date.getDay();
+        let day = date.getDay();
 
         day = Math.abs((day + 7 - this.getFirstDayOfWeek()) % 7);
 
@@ -214,11 +214,11 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
 
 
         this._rangeInfo = this._getRangeInfo(this._initRangeOption());
-        var weeks = this._rangeInfo.weeks || 1;
-        var whNames = ['width', 'height'] as const;
-        var cellSize = this._model.getCellSize().slice();
-        var layoutParams = this._model.getBoxLayoutParams();
-        var cellNumbers = this._orient === 'horizontal' ? [weeks, 7] : [7, weeks];
+        let weeks = this._rangeInfo.weeks || 1;
+        let whNames = ['width', 'height'] as const;
+        let cellSize = this._model.getCellSize().slice();
+        let layoutParams = this._model.getBoxLayoutParams();
+        let cellNumbers = this._orient === 'horizontal' ? [weeks, 7] : [7, weeks];
 
         zrUtil.each([0, 1] as const, function (idx) {
             if (cellSizeSpecified(cellSize, idx)) {
@@ -226,11 +226,11 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             }
         });
 
-        var whGlobal = {
+        let whGlobal = {
             width: api.getWidth(),
             height: api.getHeight()
         };
-        var calendarRect = this._rect = layout.getLayoutRect(layoutParams, whGlobal);
+        let calendarRect = this._rect = layout.getLayoutRect(layoutParams, whGlobal);
 
         zrUtil.each([0, 1], function (idx) {
             if (!cellSizeSpecified(cellSize, idx)) {
@@ -255,9 +255,9 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         zrUtil.isArray(data) && (data = data[0]);
         clamp == null && (clamp = true);
 
-        var dayInfo = this.getDateInfo(data);
-        var range = this._rangeInfo;
-        var date = dayInfo.formatedDate;
+        let dayInfo = this.getDateInfo(data);
+        let range = this._rangeInfo;
+        let date = dayInfo.formatedDate;
 
         // if not in range return [NaN, NaN]
         if (clamp && !(
@@ -267,8 +267,8 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             return [NaN, NaN];
         }
 
-        var week = dayInfo.day;
-        var nthWeek = this._getRangeInfo([range.start.time, date]).nthWeek;
+        let week = dayInfo.day;
+        let nthWeek = this._getRangeInfo([range.start.time, date]).nthWeek;
 
         if (this._orient === 'vertical') {
             return [
@@ -290,7 +290,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
      */
     pointToData(point: number[]): number {
 
-        var date = this.pointToDate(point);
+        let date = this.pointToDate(point);
 
         return date && date.time;
     }
@@ -299,7 +299,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
      * Convert a time date item to (x, y) four point.
      */
     dataToRect(data: OptionDataValueDate | OptionDataValueDate[], clamp?: boolean): CalendarCellRect {
-        var point = this.dataToPoint(data, clamp);
+        let point = this.dataToPoint(data, clamp);
 
         return {
             contentShape: {
@@ -341,9 +341,9 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
      * @return {Object}       date
      */
     pointToDate(point: number[]): CalendarParsedDateInfo {
-        var nthX = Math.floor((point[0] - this._rect.x) / this._sw) + 1;
-        var nthY = Math.floor((point[1] - this._rect.y) / this._sh) + 1;
-        var range = this._rangeInfo.range;
+        let nthX = Math.floor((point[0] - this._rect.x) / this._sw) + 1;
+        let nthY = Math.floor((point[1] - this._rect.y) / this._sh) + 1;
+        let range = this._rangeInfo.range;
 
         if (this._orient === 'vertical') {
             return this._getDateByWeeksAndDay(nthY, nthX - 1, range);
@@ -372,8 +372,8 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
      * Normalize to an [start, end] array
      */
     private _initRangeOption(): OptionDataValueDate[] {
-        var range = this._model.get('range');
-        var normalizedRange: OptionDataValueDate[];
+        let range = this._model.get('range');
+        let normalizedRange: OptionDataValueDate[];
 
         // Convert [1990] to 1990
         if (zrUtil.isArray(range) && range.length === 1) {
@@ -389,11 +389,11 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             // One month
             if (/^\d{4}[\/|-]\d{1,2}$/.test(rangeStr)) {
 
-                var start = this.getDateInfo(rangeStr);
-                var firstDay = start.date;
+                let start = this.getDateInfo(rangeStr);
+                let firstDay = start.date;
                 firstDay.setMonth(firstDay.getMonth() + 1);
 
-                var end = this.getNextNDay(firstDay, -1);
+                let end = this.getNextNDay(firstDay, -1);
                 normalizedRange = [start.formatedDate, end.formatedDate];
             }
             // One day
@@ -413,7 +413,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             return range as OptionDataValueDate[];
         }
 
-        var tmp = this._getRangeInfo(normalizedRange);
+        let tmp = this._getRangeInfo(normalizedRange);
 
         if (tmp.start.time > tmp.end.time) {
             normalizedRange.reverse();
@@ -436,38 +436,38 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             this.getDateInfo(range[1])
         ];
 
-        var reversed;
+        let reversed;
         if (parsedRange[0].time > parsedRange[1].time) {
             reversed = true;
             parsedRange.reverse();
         }
 
-        var allDay = Math.floor(parsedRange[1].time / PROXIMATE_ONE_DAY)
+        let allDay = Math.floor(parsedRange[1].time / PROXIMATE_ONE_DAY)
             - Math.floor(parsedRange[0].time / PROXIMATE_ONE_DAY) + 1;
 
         // Consider case:
         // Firstly set system timezone as "Time Zone: America/Toronto",
         // ```
-        // var first = new Date(1478412000000 - 3600 * 1000 * 2.5);
-        // var second = new Date(1478412000000);
-        // var allDays = Math.floor(second / ONE_DAY) - Math.floor(first / ONE_DAY) + 1;
+        // let first = new Date(1478412000000 - 3600 * 1000 * 2.5);
+        // let second = new Date(1478412000000);
+        // let allDays = Math.floor(second / ONE_DAY) - Math.floor(first / ONE_DAY) + 1;
         // ```
         // will get wrong result because of DST. So we should fix it.
-        var date = new Date(parsedRange[0].time);
-        var startDateNum = date.getDate();
-        var endDateNum = parsedRange[1].date.getDate();
+        let date = new Date(parsedRange[0].time);
+        let startDateNum = date.getDate();
+        let endDateNum = parsedRange[1].date.getDate();
         date.setDate(startDateNum + allDay - 1);
         // The bias can not over a month, so just compare date.
         if (date.getDate() !== endDateNum) {
-            var sign = date.getTime() - parsedRange[1].time > 0 ? 1 : -1;
+            let sign = date.getTime() - parsedRange[1].time > 0 ? 1 : -1;
             while (date.getDate() !== endDateNum && (date.getTime() - parsedRange[1].time) * sign > 0) {
                 allDay -= sign;
                 date.setDate(startDateNum + allDay - 1);
             }
         }
 
-        var weeks = Math.floor((allDay + parsedRange[0].day + 6) / 7);
-        var nthWeek = reversed ? -weeks + 1 : weeks - 1;
+        let weeks = Math.floor((allDay + parsedRange[0].day + 6) / 7);
+        let nthWeek = reversed ? -weeks + 1 : weeks - 1;
 
         reversed && parsedRange.reverse();
 
@@ -494,7 +494,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
      * @return {Object}
      */
     private _getDateByWeeksAndDay(nthWeek: number, day: number, range: OptionDataValueDate[]): CalendarParsedDateInfo {
-        var rangeInfo = this._getRangeInfo(range);
+        let rangeInfo = this._getRangeInfo(range);
 
         if (nthWeek > rangeInfo.weeks
             || (nthWeek === 0 && day < rangeInfo.fweek)
@@ -503,18 +503,18 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             return null;
         }
 
-        var nthDay = (nthWeek - 1) * 7 - rangeInfo.fweek + day;
-        var date = new Date(rangeInfo.start.time);
+        let nthDay = (nthWeek - 1) * 7 - rangeInfo.fweek + day;
+        let date = new Date(rangeInfo.start.time);
         date.setDate(+rangeInfo.start.d + nthDay);
 
         return this.getDateInfo(date);
     }
 
     static create(ecModel: GlobalModel, api: ExtensionAPI) {
-        var calendarList: Calendar[] = [];
+        let calendarList: Calendar[] = [];
 
         ecModel.eachComponent('calendar', function (calendarModel: CalendarModel) {
-            var calendar = new Calendar(calendarModel, ecModel, api);
+            let calendar = new Calendar(calendarModel, ecModel, api);
             calendarList.push(calendar);
             calendarModel.coordinateSystem = calendar;
         });
@@ -530,10 +530,10 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
 }
 
 function getCoordSys(finder: ParsedModelFinder): Calendar {
-    var calendarModel = finder.calendarModel as CalendarModel;
-    var seriesModel = finder.seriesModel;
+    let calendarModel = finder.calendarModel as CalendarModel;
+    let seriesModel = finder.seriesModel;
 
-    var coordSys = calendarModel
+    let coordSys = calendarModel
         ? calendarModel.coordinateSystem
         : seriesModel
         ? seriesModel.coordinateSystem

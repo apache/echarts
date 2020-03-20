@@ -71,10 +71,10 @@ class DataSelectableMixin<Opt extends DataSelectableOptionMixin> {
      */
     // PENGING If selectedMode is null ?
     select(name?: string, idx?: number): void {
-        var target = idx != null
+        let target = idx != null
             ? this._targetList[idx]
             : this._selectTargetMap.get(name);
-        var selectedMode = this.get('selectedMode');
+        let selectedMode = this.get('selectedMode');
         if (selectedMode === 'single') {
             this._selectTargetMap.each(function (target) {
                 target.selected = false;
@@ -91,10 +91,10 @@ class DataSelectableMixin<Opt extends DataSelectableOptionMixin> {
      * @param idx dataIndex of data. Can be null/undefined.
      */
     unSelect(name?: string, idx?: number): void {
-        var target = idx != null
+        let target = idx != null
             ? this._targetList[idx]
             : this._selectTargetMap.get(name);
-        // var selectedMode = this.get('selectedMode');
+        // let selectedMode = this.get('selectedMode');
         // selectedMode !== 'single' && target && (target.selected = false);
         target && (target.selected = false);
     }
@@ -107,7 +107,7 @@ class DataSelectableMixin<Opt extends DataSelectableOptionMixin> {
      * @param idx dataIndex of data. Can be null/undefined.
      */
     toggleSelected(name?: string, idx?: number): boolean {
-        var target = idx != null
+        let target = idx != null
             ? this._targetList[idx]
             : this._selectTargetMap.get(name);
         if (target != null) {
@@ -124,7 +124,7 @@ class DataSelectableMixin<Opt extends DataSelectableOptionMixin> {
      * @param idx dataIndex of data. Can be null/undefined.
      */
     isSelected(name?: string, idx?: number): boolean {
-        var target = idx != null
+        let target = idx != null
             ? this._targetList[idx]
             : this._selectTargetMap.get(name);
         return target && target.selected;

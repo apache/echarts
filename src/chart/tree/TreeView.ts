@@ -94,11 +94,11 @@ class TreePath extends Path {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: TreeEdgeShape) {
-        var childPoints = shape.childPoints;
-        var childLen = childPoints.length;
-        var parentPoint = shape.parentPoint;
-        var firstChildPos = childPoints[0];
-        var lastChildPos = childPoints[childLen - 1];
+        let childPoints = shape.childPoints;
+        let childLen = childPoints.length;
+        let parentPoint = shape.parentPoint;
+        let firstChildPos = childPoints[0];
+        let lastChildPos = childPoints[childLen - 1];
 
         if (childLen === 1) {
             ctx.moveTo(parentPoint[0], parentPoint[1]);
@@ -106,11 +106,11 @@ class TreePath extends Path {
             return;
         }
 
-        var orient = shape.orient;
-        var forkDim = (orient === 'TB' || orient === 'BT') ? 0 : 1;
-        var otherDim = 1 - forkDim;
-        var forkPosition = parsePercent(shape.forkPosition, 1);
-        var tmpPoint = [];
+        let orient = shape.orient;
+        let forkDim = (orient === 'TB' || orient === 'BT') ? 0 : 1;
+        let otherDim = 1 - forkDim;
+        let forkPosition = parsePercent(shape.forkPosition, 1);
+        let tmpPoint = [];
         tmpPoint[forkDim] = parentPoint[forkDim];
         tmpPoint[otherDim] = parentPoint[otherDim] + (lastChildPos[otherDim] - parentPoint[otherDim]) * forkPosition;
 
@@ -123,8 +123,8 @@ class TreePath extends Path {
         ctx.lineTo(tmpPoint[0], tmpPoint[1]);
         ctx.lineTo(lastChildPos[0], lastChildPos[1]);
 
-        for (var i = 1; i < childLen - 1; i++) {
-            var point = childPoints[i];
+        for (let i = 1; i < childLen - 1; i++) {
+            let point = childPoints[i];
             ctx.moveTo(point[0], point[1]);
             tmpPoint[forkDim] = point[forkDim];
             ctx.lineTo(tmpPoint[0], tmpPoint[1]);
@@ -168,13 +168,13 @@ class TreeView extends ChartView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var data = seriesModel.getData();
+        let data = seriesModel.getData();
 
-        var layoutInfo = seriesModel.layoutInfo;
+        let layoutInfo = seriesModel.layoutInfo;
 
-        var group = this._mainGroup;
+        let group = this._mainGroup;
 
-        var layout = seriesModel.get('layout');
+        let layout = seriesModel.get('layout');
 
         if (layout === 'radial') {
             group.attr('position', [layoutInfo.x + layoutInfo.width / 2, layoutInfo.y + layoutInfo.height / 2]);
@@ -186,9 +186,9 @@ class TreeView extends ChartView {
         this._updateViewCoordSys(seriesModel);
         this._updateController(seriesModel, ecModel, api);
 
-        var oldData = this._data;
+        let oldData = this._data;
 
-        var seriesScope = {
+        let seriesScope = {
             expandAndCollapse: seriesModel.get('expandAndCollapse'),
             layout: layout,
             edgeShape: seriesModel.get('edgeShape'),
@@ -210,7 +210,7 @@ class TreeView extends ChartView {
                 }
             })
             .update(function (newIdx, oldIdx) {
-                var symbolEl = oldData.getItemGraphicEl(oldIdx) as TreeSymbol;
+                let symbolEl = oldData.getItemGraphicEl(oldIdx) as TreeSymbol;
                 if (!symbolNeedsDraw(data, newIdx)) {
                     symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
                     return;
@@ -219,7 +219,7 @@ class TreeView extends ChartView {
                 updateNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
             })
             .remove(function (oldIdx) {
-                var symbolEl = oldData.getItemGraphicEl(oldIdx) as TreeSymbol;
+                let symbolEl = oldData.getItemGraphicEl(oldIdx) as TreeSymbol;
                 // When remove a collapsed node of subtree, since the collapsed
                 // node haven't been initialized with a symbol element,
                 // you can't found it's symbol element through index.
@@ -250,22 +250,22 @@ class TreeView extends ChartView {
     }
 
     _updateViewCoordSys(seriesModel: TreeSeriesModel) {
-        var data = seriesModel.getData();
-        var points: number[][] = [];
+        let data = seriesModel.getData();
+        let points: number[][] = [];
         data.each(function (idx) {
-            var layout = data.getItemLayout(idx);
+            let layout = data.getItemLayout(idx);
             if (layout && !isNaN(layout.x) && !isNaN(layout.y)) {
                 points.push([+layout.x, +layout.y]);
             }
         });
-        var min: number[] = [];
-        var max: number[] = [];
+        let min: number[] = [];
+        let max: number[] = [];
         bbox.fromPoints(points, min, max);
 
         // If don't Store min max when collapse the root node after roam,
         // the root node will disappear.
-        var oldMin = this._min;
-        var oldMax = this._max;
+        let oldMin = this._min;
+        let oldMax = this._max;
 
         // If width or height is 0
         if (max[0] - min[0] === 0) {
@@ -277,7 +277,7 @@ class TreeView extends ChartView {
             max[1] = oldMax ? oldMax[1] : max[1] + 1;
         }
 
-        var viewCoordSys = seriesModel.coordinateSystem = new View();
+        let viewCoordSys = seriesModel.coordinateSystem = new View();
         viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
@@ -301,11 +301,11 @@ class TreeView extends ChartView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var controller = this._controller;
-        var controllerHost = this._controllerHost;
-        var group = this.group;
+        let controller = this._controller;
+        let controllerHost = this._controllerHost;
+        let group = this.group;
         controller.setPointerChecker(function (e, x, y) {
-            var rect = group.getBoundingRect();
+            let rect = group.getBoundingRect();
             rect.applyTransform(group.transform);
             return rect.contain(x, y)
                 && !onIrrelevantElement(e, api, seriesModel);
@@ -341,10 +341,10 @@ class TreeView extends ChartView {
     }
 
     _updateNodeAndLinkScale(seriesModel: TreeSeriesModel) {
-        var data = seriesModel.getData();
+        let data = seriesModel.getData();
 
-        var nodeScale = this._getNodeGlobalScale(seriesModel);
-        var invScale = [nodeScale, nodeScale];
+        let nodeScale = this._getNodeGlobalScale(seriesModel);
+        let invScale = [nodeScale, nodeScale];
 
         data.eachItemGraphicEl(function (el, idx) {
             el.attr('scale', invScale);
@@ -352,18 +352,18 @@ class TreeView extends ChartView {
     }
 
     _getNodeGlobalScale(seriesModel: TreeSeriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
+        let coordSys = seriesModel.coordinateSystem;
         if (coordSys.type !== 'view') {
             return 1;
         }
 
-        var nodeScaleRatio = this._nodeScaleRatio;
+        let nodeScaleRatio = this._nodeScaleRatio;
 
-        var groupScale = coordSys.scale;
-        var groupZoom = (groupScale && groupScale[0]) || 1;
+        let groupScale = coordSys.scale;
+        let groupZoom = (groupScale && groupScale[0]) || 1;
         // Scale node when zoom changes
-        var roamZoom = coordSys.getZoom();
-        var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
+        let roamZoom = coordSys.getZoom();
+        let nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
 
         return nodeScale / groupZoom;
     }
@@ -381,7 +381,7 @@ class TreeView extends ChartView {
 }
 
 function symbolNeedsDraw(data: List, dataIndex: number) {
-    var layout = data.getItemLayout(dataIndex);
+    let layout = data.getItemLayout(dataIndex);
 
     return layout
         && !isNaN(layout.x) && !isNaN(layout.y)
@@ -417,16 +417,16 @@ function updateNode(
     seriesModel: TreeSeriesModel,
     seriesScope: TreeSeriesScope
 ) {
-    var isInit = !symbolEl;
-    var node = data.tree.getNodeByDataIndex(dataIndex);
-    var itemModel = node.getModel();
+    let isInit = !symbolEl;
+    let node = data.tree.getNodeByDataIndex(dataIndex);
+    let itemModel = node.getModel();
     seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
-    var virtualRoot = data.tree.root;
+    let virtualRoot = data.tree.root;
 
-    var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
-    var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
-    var sourceLayout = source.getLayout() as TreeNodeLayout;
-    var sourceOldLayout = sourceSymbolEl
+    let source = node.parentNode === virtualRoot ? node : node.parentNode || node;
+    let sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
+    let sourceLayout = source.getLayout() as TreeNodeLayout;
+    let sourceOldLayout = sourceSymbolEl
         ? {
             x: sourceSymbolEl.position[0],
             y: sourceSymbolEl.position[1],
@@ -434,7 +434,7 @@ function updateNode(
             rawY: sourceSymbolEl.__radialOldRawY
         }
         : sourceLayout;
-    var targetLayout = node.getLayout();
+    let targetLayout = node.getLayout();
 
     if (isInit) {
         symbolEl = new SymbolClz(data, dataIndex, seriesScope) as TreeSymbol;
@@ -455,17 +455,17 @@ function updateNode(
         position: [targetLayout.x, targetLayout.y]
     }, seriesModel);
 
-    var symbolPath = symbolEl.getSymbolPath();
+    let symbolPath = symbolEl.getSymbolPath();
 
     if (seriesScope.layout === 'radial') {
-        var realRoot = virtualRoot.children[0];
-        var rootLayout = realRoot.getLayout();
-        var length = realRoot.children.length;
-        var rad;
-        var isLeft;
+        let realRoot = virtualRoot.children[0];
+        let rootLayout = realRoot.getLayout();
+        let length = realRoot.children.length;
+        let rad;
+        let isLeft;
 
         if (targetLayout.x === rootLayout.x && node.isExpand === true) {
-            var center = {
+            let center = {
                 x: (realRoot.children[0].getLayout().x + realRoot.children[length - 1].getLayout().x) / 2,
                 y: (realRoot.children[0].getLayout().y + realRoot.children[length - 1].getLayout().y) / 2
             };
@@ -497,9 +497,9 @@ function updateNode(
             }
         }
 
-        var textPosition = isLeft ? 'left' : 'right';
-        var rotate = seriesScope.labelModel.get('rotate');
-        var labelRotateRadian = rotate * (Math.PI / 180);
+        let textPosition = isLeft ? 'left' : 'right';
+        let rotate = seriesScope.labelModel.get('rotate');
+        let labelRotateRadian = rotate * (Math.PI / 180);
 
         symbolPath.setStyle({
             textPosition: seriesScope.labelModel.get('position') || textPosition,
@@ -528,8 +528,8 @@ function drawEdge(
     seriesScope: TreeSeriesScope
 ) {
 
-    var edgeShape = seriesScope.edgeShape;
-    var edge = symbolEl.__edge;
+    let edgeShape = seriesScope.edgeShape;
+    let edge = symbolEl.__edge;
     if (edgeShape === 'curve') {
         if (node.parentNode && node.parentNode !== virtualRoot) {
             if (!edge) {
@@ -548,10 +548,10 @@ function drawEdge(
     else if (edgeShape === 'polyline') {
         if (seriesScope.layout === 'orthogonal') {
             if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
-                var children = node.children;
-                var childPoints = [];
-                for (var i = 0; i < children.length; i++) {
-                    var childLayout = children[i].getLayout();
+                let children = node.children;
+                let childPoints = [];
+                for (let i = 0; i < children.length; i++) {
+                    let childLayout = children[i].getLayout();
                     childPoints.push([childLayout.x, childLayout.y]);
                 }
 
@@ -592,14 +592,14 @@ function removeNode(
     seriesModel: TreeSeriesModel,
     seriesScope: TreeSeriesScope
 ) {
-    var node = data.tree.getNodeByDataIndex(dataIndex);
-    var virtualRoot = data.tree.root;
-    var itemModel = node.getModel();
+    let node = data.tree.getNodeByDataIndex(dataIndex);
+    let virtualRoot = data.tree.root;
+    let itemModel = node.getModel();
     seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
 
-    var source = node.parentNode === virtualRoot ? node : node.parentNode || node;
-    // var edgeShape = seriesScope.edgeShape;
-    var sourceLayout;
+    let source = node.parentNode === virtualRoot ? node : node.parentNode || node;
+    // let edgeShape = seriesScope.edgeShape;
+    let sourceLayout;
     while (sourceLayout = source.getLayout(), sourceLayout == null) {
         source = source.parentNode === virtualRoot ? source : source.parentNode || source;
     }
@@ -613,17 +613,17 @@ function removeNode(
 
     symbolEl.fadeOut(null, {keepLabel: true});
 
-    var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
-    var sourceEdge = sourceSymbolEl.__edge;
+    let sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
+    let sourceEdge = sourceSymbolEl.__edge;
 
     // 1. when expand the sub tree, delete the children node should delete the edge of
     // the source at the same time. because the polyline edge shape is only owned by the source.
     // 2.when the node is the only children of the source, delete the node should delete the edge of
     // the source at the same time. the same reason as above.
-    var edge = symbolEl.__edge
+    let edge = symbolEl.__edge
         || ((source.isExpand === false || source.children.length === 1) ? sourceEdge : undefined);
 
-    var edgeShape = seriesScope.edgeShape;
+    let edgeShape = seriesScope.edgeShape;
 
     if (edge) {
         if (edgeShape === 'curve') {
@@ -653,15 +653,15 @@ function removeNode(
 }
 
 function getEdgeShape(seriesScope: TreeSeriesScope, sourceLayout: TreeNodeLayout, targetLayout: TreeNodeLayout) {
-    var cpx1: number;
-    var cpy1: number;
-    var cpx2: number;
-    var cpy2: number;
-    var orient = seriesScope.orient;
-    var x1: number;
-    var x2: number;
-    var y1: number;
-    var y2: number;
+    let cpx1: number;
+    let cpy1: number;
+    let cpx2: number;
+    let cpy2: number;
+    let orient = seriesScope.orient;
+    let x1: number;
+    let x2: number;
+    let y1: number;
+    let y2: number;
 
     if (seriesScope.layout === 'radial') {
         x1 = sourceLayout.rawX;
@@ -669,10 +669,10 @@ function getEdgeShape(seriesScope: TreeSeriesScope, sourceLayout: TreeNodeLayout
         x2 = targetLayout.rawX;
         y2 = targetLayout.rawY;
 
-        var radialCoor1 = radialCoordinate(x1, y1);
-        var radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * seriesScope.curvature);
-        var radialCoor3 = radialCoordinate(x2, y2 + (y1 - y2) * seriesScope.curvature);
-        var radialCoor4 = radialCoordinate(x2, y2);
+        let radialCoor1 = radialCoordinate(x1, y1);
+        let radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * seriesScope.curvature);
+        let radialCoor3 = radialCoordinate(x2, y2 + (y1 - y2) * seriesScope.curvature);
+        let radialCoor4 = radialCoordinate(x2, y2);
 
         return {
             x1: radialCoor1.x,

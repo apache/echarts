@@ -22,9 +22,9 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Region from '../Region';
 
-var geoCoord = [126, 25];
+const geoCoord = [126, 25];
 
-var points = [
+const points = [
     [[0, 3.5], [7, 11.2], [15, 11.9], [30, 7], [42, 0.7], [52, 0.7],
         [56, 7.7], [59, 0.7], [64, 0.7], [64, 0], [5, 0], [0, 3.5]],
     [[13, 16.1], [19, 14.7], [16, 21.7], [11, 23.1], [13, 16.1]],
@@ -41,8 +41,8 @@ var points = [
         [1, 92.4], [1, 3.5], [0, 3.5]]
 ];
 
-for (var i = 0; i < points.length; i++) {
-    for (var k = 0; k < points[i].length; k++) {
+for (let i = 0; i < points.length; i++) {
+    for (let k = 0; k < points[i].length; k++) {
         points[i][k][0] /= 10.5;
         points[i][k][1] /= -10.5 / 0.75;
 

@@ -27,13 +27,13 @@ import Single from './Single';
 interface SingleAxis {
     /**
      * Transform global coord to local coord,
-     * i.e. var localCoord = axis.toLocalCoord(80);
+     * i.e. let localCoord = axis.toLocalCoord(80);
      */
     toLocalCoord(coord: number): number;
 
     /**
      * Transform global coord to local coord,
-     * i.e. var globalCoord = axis.toLocalCoord(40);
+     * i.e. let globalCoord = axis.toLocalCoord(40);
      */
     toGlobalCoord(coord: number): number;
 }
@@ -66,7 +66,7 @@ class SingleAxis extends Axis {
      * Judge the orient of the axis.
      */
     isHorizontal() {
-        var position = this.position;
+        let position = this.position;
         return position === 'top' || position === 'bottom';
     }
 

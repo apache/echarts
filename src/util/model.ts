@@ -52,7 +52,7 @@ import GridModel from '../coord/cartesian/GridModel';
  * make sure it is not duplicated with user
  * specified name, so use '\0';
  */
-var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
+const DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
 
 /**
  * If value is not array, then translate it to array.
@@ -91,8 +91,8 @@ export function defaultEmphasis(
         opt.emphasis[key] = opt.emphasis[key] || {};
 
         // Default emphasis option from normal
-        for (var i = 0, len = subOpts.length; i < len; i++) {
-            var subOptName = subOpts[i];
+        for (let i = 0, len = subOpts.length; i < len; i++) {
+            let subOptName = subOpts[i];
             if (!opt.emphasis[key].hasOwnProperty(subOptName)
                 && opt[key].hasOwnProperty(subOptName)
             ) {
@@ -102,7 +102,7 @@ export function defaultEmphasis(
     }
 }
 
-export var TEXT_STYLE_OPTIONS = [
+export let TEXT_STYLE_OPTIONS = [
     'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
     'rich', 'tag', 'color', 'textBorderColor', 'textBorderWidth',
     'width', 'height', 'lineHeight', 'align', 'verticalAlign', 'baseline',
@@ -176,7 +176,7 @@ export function mappingToExists<T extends MappingExistItem>(
     // update partial option but not be expected to change order.
     newCptOptions = (newCptOptions || []).slice();
 
-    var result: MappingResultItem<T>[] = map(exists || [], function (obj, index) {
+    let result: MappingResultItem<T>[] = map(exists || [], function (obj, index) {
         return {exist: obj};
     });
 
@@ -199,7 +199,7 @@ export function mappingToExists<T extends MappingExistItem>(
         }
 
         for (let i = 0; i < result.length; i++) {
-            var exist = result[i].exist;
+            let exist = result[i].exist;
             if (!result[i].option // Consider name: two map to one.
                 // Can not match when both ids exist but different.
                 && (exist.id == null || cptOption.id == null)
@@ -221,9 +221,9 @@ export function mappingToExists<T extends MappingExistItem>(
             return;
         }
 
-        var i = 0;
+        let i = 0;
         for (; i < result.length; i++) {
-            var exist = result[i].exist;
+            let exist = result[i].exist;
             if (!result[i].option
                 // Existing model that already has id should be able to
                 // mapped to (because after mapping performed model may
@@ -269,15 +269,15 @@ export function makeIdAndName(
     // to specify multi components (like series) by one name.
 
     // Ensure that each id is distinct.
-    var idMap = createHashMap();
+    let idMap = createHashMap();
 
     each(mapResult, function (item, index) {
-        var existCpt = item.exist;
+        let existCpt = item.exist;
         existCpt && idMap.set(existCpt.id, item);
     });
 
     each(mapResult, function (item, index) {
-        var opt = item.option;
+        let opt = item.option;
 
         assert(
             !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
@@ -290,9 +290,9 @@ export function makeIdAndName(
 
     // Make name and id.
     each(mapResult, function (item, index) {
-        var existCpt = item.exist;
-        var opt = item.option;
-        var keyInfo = item.keyInfo;
+        let existCpt = item.exist;
+        let opt = item.option;
+        let keyInfo = item.keyInfo;
 
         if (!isObject<ComponentOption>(opt)) {
             return;
@@ -322,7 +322,7 @@ export function makeIdAndName(
             //  optionB [{..}, {name: 'a'}, {name: 'a'}]
             // Series with the same name between optionA and optionB
             // should be mapped.
-            var idNum = 0;
+            let idNum = 0;
             do {
                 keyInfo.id = '\0' + keyInfo.name + '\0' + idNum++;
             }
@@ -334,7 +334,7 @@ export function makeIdAndName(
 }
 
 export function isNameSpecified(componentModel: ComponentModel): boolean {
-    var name = componentModel.name;
+    let name = componentModel.name;
     // Is specified when `indexOf` get -1 or > 0.
     return !!(name && name.indexOf(DUMMY_COMPONENT_NAME_PREFIX));
 }
@@ -372,8 +372,8 @@ export function compressBatches(
             [dataIndex: string]: 1
         }
     };
-    var mapA = {} as InnerMap;
-    var mapB = {} as InnerMap;
+    let mapA = {} as InnerMap;
+    let mapB = {} as InnerMap;
 
     makeMap(batchA || [], mapA);
     makeMap(batchB || [], mapB, mapA);
@@ -381,13 +381,13 @@ export function compressBatches(
     return [mapToArray(mapA), mapToArray(mapB)];
 
     function makeMap(sourceBatch: BatchItem[], map: InnerMap, otherMap?: InnerMap): void {
-        for (var i = 0, len = sourceBatch.length; i < len; i++) {
-            var seriesId = sourceBatch[i].seriesId;
-            var dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
-            var otherDataIndices = otherMap && otherMap[seriesId];
+        for (let i = 0, len = sourceBatch.length; i < len; i++) {
+            let seriesId = sourceBatch[i].seriesId;
+            let dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
+            let otherDataIndices = otherMap && otherMap[seriesId];
 
-            for (var j = 0, lenj = dataIndices.length; j < lenj; j++) {
-                var dataIndex = dataIndices[j];
+            for (let j = 0, lenj = dataIndices.length; j < lenj; j++) {
+                let dataIndex = dataIndices[j];
 
                 if (otherDataIndices && otherDataIndices[dataIndex]) {
                     otherDataIndices[dataIndex] = null;
@@ -400,14 +400,14 @@ export function compressBatches(
     }
 
     function mapToArray(map: Dictionary<any>, isData?: boolean): any[] {
-        var result = [];
-        for (var i in map) {
+        let result = [];
+        for (let i in map) {
             if (map.hasOwnProperty(i) && map[i] != null) {
                 if (isData) {
                     result.push(+i);
                 }
                 else {
-                    var dataIndices = mapToArray(map[i], true);
+                    let dataIndices = mapToArray(map[i], true);
                     dataIndices.length && result.push({seriesId: i, dataIndex: dataIndices});
                 }
             }
@@ -450,14 +450,14 @@ export function queryDataIndex(data: List, payload: Payload & {
  * Notice: Serialization is not supported.
  *
  * For example:
- * var inner = zrUitl.makeInner();
+ * let inner = zrUitl.makeInner();
  *
  * function some1(hostObj) {
  *      inner(hostObj).someProperty = 1212;
  *      ...
  * }
  * function some2() {
- *      var fields = inner(this);
+ *      let fields = inner(this);
  *      fields.someProperty1 = 1212;
  *      fields.someProperty2 = 'xx';
  *      ...
@@ -466,13 +466,13 @@ export function queryDataIndex(data: List, payload: Payload & {
  * @return {Function}
  */
 export function makeInner<T, Host extends object>() {
-    var key = '__ec_inner_' + innerUniqueIndex++;
+    let key = '__ec_inner_' + innerUniqueIndex++;
     return function (hostObj: Host): T {
         return (hostObj as any)[key] || ((hostObj as any)[key] = {});
     };
 }
 // A random start point.
-var innerUniqueIndex = Math.round(Math.random() * 5);
+let innerUniqueIndex = Math.round(Math.random() * 5);
 
 /**
  * If string, e.g., 'geo', means {geoIndex: 0}.
@@ -539,9 +539,9 @@ export function parseFinder(
     finderInput: ModelFinder,
     opt?: {defaultMainType?: string, includeMainTypes?: string[]}
 ): ParsedModelFinder {
-    var finder: ModelFinderObject;
+    let finder: ModelFinderObject;
     if (isString(finderInput)) {
-        var obj = {};
+        let obj = {};
         (obj as any)[finderInput + 'Index'] = 0;
         finder = obj;
     }
@@ -549,7 +549,7 @@ export function parseFinder(
         finder = finderInput;
     }
 
-    var defaultMainType = opt && opt.defaultMainType;
+    let defaultMainType = opt && opt.defaultMainType;
     if (defaultMainType
         && !has(finder, defaultMainType + 'Index')
         && !has(finder, defaultMainType + 'Id')
@@ -558,7 +558,7 @@ export function parseFinder(
         finder[defaultMainType + 'Index'] = 0;
     }
 
-    var result = {} as ParsedModelFinder;
+    let result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
         // Exclude 'dataIndex' and other illgal keys.
@@ -567,9 +567,9 @@ export function parseFinder(
             return;
         }
 
-        var parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
-        var mainType = parsedKey[1];
-        var queryType = (parsedKey[2] || '').toLowerCase() as ('id' | 'index' | 'name');
+        let parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
+        let mainType = parsedKey[1];
+        let queryType = (parsedKey[2] || '').toLowerCase() as ('id' | 'index' | 'name');
 
         if (!mainType
             || !queryType
@@ -580,12 +580,12 @@ export function parseFinder(
             return;
         }
 
-        var queryParam = {mainType: mainType} as QueryConditionKindB;
+        let queryParam = {mainType: mainType} as QueryConditionKindB;
         if (queryType !== 'index' || value !== 'all') {
             queryParam[queryType] = value as any;
         }
 
-        var models = ecModel.queryComponents(queryParam);
+        let models = ecModel.queryComponents(queryParam);
         result[mainType + 'Models'] = models;
         result[mainType + 'Model'] = models[0];
     });
@@ -629,11 +629,11 @@ export function groupData<T, R extends string | number>(
     keys: R[],
     buckets: HashMap<T[]> // hasmap key: the key returned by `getKey`.
 } {
-    var buckets = createHashMap<T[]>();
-    var keys: R[] = [];
+    let buckets = createHashMap<T[]>();
+    let keys: R[] = [];
 
     each(array, function (item) {
-        var key = getKey(item);
+        let key = getKey(item);
         (buckets.get(key)
             || (keys.push(key), buckets.set(key, []))
         ).push(item);

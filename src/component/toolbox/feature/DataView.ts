@@ -29,10 +29,10 @@ import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 
-var dataViewLang = lang.toolbox.dataView;
+const dataViewLang = lang.toolbox.dataView;
 
-var BLOCK_SPLITER = new Array(60).join('-');
-var ITEM_SPLITER = '\t';
+const BLOCK_SPLITER = new Array(60).join('-');
+const ITEM_SPLITER = '\t';
 
 type DataItem = {
     name: string
@@ -64,17 +64,17 @@ interface SeriesGroup {
  *  2. others, like scatter, pie
  */
 function groupSeries(ecModel: GlobalModel) {
-    var seriesGroupByCategoryAxis: Dictionary<SeriesGroup> = {};
-    var otherSeries: SeriesModel[] = [];
-    var meta: SeriesGroupMeta[] = [];
+    let seriesGroupByCategoryAxis: Dictionary<SeriesGroup> = {};
+    let otherSeries: SeriesModel[] = [];
+    let meta: SeriesGroupMeta[] = [];
     ecModel.eachRawSeries(function (seriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
+        let coordSys = seriesModel.coordinateSystem;
 
         if (coordSys && (coordSys.type === 'cartesian2d' || coordSys.type === 'polar')) {
             // TODO: TYPE Consider polar? Include polar may increase unecessary bundle size.
-            var baseAxis = (coordSys as Cartesian2D).getBaseAxis();
+            let baseAxis = (coordSys as Cartesian2D).getBaseAxis();
             if (baseAxis.type === 'category') {
-                var key = baseAxis.dim + '_' + baseAxis.index;
+                let key = baseAxis.dim + '_' + baseAxis.index;
                 if (!seriesGroupByCategoryAxis[key]) {
                     seriesGroupByCategoryAxis[key] = {
                         categoryAxis: baseAxis,
@@ -109,27 +109,27 @@ function groupSeries(ecModel: GlobalModel) {
  * @inner
  */
 function assembleSeriesWithCategoryAxis(groups: Dictionary<SeriesGroup>): string {
-    var tables: string[] = [];
+    let tables: string[] = [];
     zrUtil.each(groups, function (group, key) {
-        var categoryAxis = group.categoryAxis;
-        var valueAxis = group.valueAxis;
-        var valueAxisDim = valueAxis.dim;
+        let categoryAxis = group.categoryAxis;
+        let valueAxis = group.valueAxis;
+        let valueAxisDim = valueAxis.dim;
 
-        var headers = [' '].concat(zrUtil.map(group.series, function (series) {
+        let headers = [' '].concat(zrUtil.map(group.series, function (series) {
             return series.name;
         }));
         // @ts-ignore TODO Polar
-        var columns = [categoryAxis.model.getCategories()];
+        let columns = [categoryAxis.model.getCategories()];
         zrUtil.each(group.series, function (series) {
             columns.push(series.getRawData().mapArray(valueAxisDim, function (val) {
                 return val;
             }));
         });
         // Assemble table content
-        var lines = [headers.join(ITEM_SPLITER)];
-        for (var i = 0; i < columns[0].length; i++) {
-            var items = [];
-            for (var j = 0; j < columns.length; j++) {
+        let lines = [headers.join(ITEM_SPLITER)];
+        for (let i = 0; i < columns[0].length; i++) {
+            let items = [];
+            for (let j = 0; j < columns.length; j++) {
                 items.push(columns[j][i]);
             }
             lines.push(items.join(ITEM_SPLITER));
@@ -144,14 +144,14 @@ function assembleSeriesWithCategoryAxis(groups: Dictionary<SeriesGroup>): string
  */
 function assembleOtherSeries(series: SeriesModel[]) {
     return zrUtil.map(series, function (series) {
-        var data = series.getRawData();
-        var lines = [series.name];
-        var vals: string[] = [];
+        let data = series.getRawData();
+        let lines = [series.name];
+        let vals: string[] = [];
         data.each(data.dimensions, function () {
-            var argLen = arguments.length;
-            var dataIndex = arguments[argLen - 1];
-            var name = data.getName(dataIndex);
-            for (var i = 0; i < argLen - 1; i++) {
+            let argLen = arguments.length;
+            let dataIndex = arguments[argLen - 1];
+            let name = data.getName(dataIndex);
+            for (let i = 0; i < argLen - 1; i++) {
                 vals[i] = arguments[i];
             }
             lines.push((name ? (name + ITEM_SPLITER) : '') + vals.join(ITEM_SPLITER));
@@ -162,7 +162,7 @@ function assembleOtherSeries(series: SeriesModel[]) {
 
 function getContentFromModel(ecModel: GlobalModel) {
 
-    var result = groupSeries(ecModel);
+    let result = groupSeries(ecModel);
 
     return {
         value: zrUtil.filter([
@@ -185,32 +185,32 @@ function trim(str: string) {
  */
 function isTSVFormat(block: string): boolean {
     // Simple method to find out if a block is tsv format
-    var firstLine = block.slice(0, block.indexOf('\n'));
+    let firstLine = block.slice(0, block.indexOf('\n'));
     if (firstLine.indexOf(ITEM_SPLITER) >= 0) {
         return true;
     }
 }
 
-var itemSplitRegex = new RegExp('[' + ITEM_SPLITER + ']+', 'g');
+const itemSplitRegex = new RegExp('[' + ITEM_SPLITER + ']+', 'g');
 /**
  * @param {string} tsv
  * @return {Object}
  */
 function parseTSVContents(tsv: string) {
-    var tsvLines = tsv.split(/\n+/g);
-    var headers = trim(tsvLines.shift()).split(itemSplitRegex);
+    let tsvLines = tsv.split(/\n+/g);
+    let headers = trim(tsvLines.shift()).split(itemSplitRegex);
 
-    var categories: string[] = [];
-    var series: {name: string, data: string[]}[] = zrUtil.map(headers, function (header) {
+    let categories: string[] = [];
+    let series: {name: string, data: string[]}[] = zrUtil.map(headers, function (header) {
         return {
             name: header,
             data: []
         };
     });
-    for (var i = 0; i < tsvLines.length; i++) {
-        var items = trim(tsvLines[i]).split(itemSplitRegex);
+    for (let i = 0; i < tsvLines.length; i++) {
+        let items = trim(tsvLines[i]).split(itemSplitRegex);
         categories.push(items.shift());
-        for (var j = 0; j < items.length; j++) {
+        for (let j = 0; j < items.length; j++) {
             series[j] && (series[j].data[i] = items[j]);
         }
     }
@@ -221,15 +221,15 @@ function parseTSVContents(tsv: string) {
 }
 
 function parseListContents(str: string) {
-    var lines = str.split(/\n+/g);
-    var seriesName = trim(lines.shift());
+    let lines = str.split(/\n+/g);
+    let seriesName = trim(lines.shift());
 
-    var data: DataList = [];
-    for (var i = 0; i < lines.length; i++) {
-        var items = trim(lines[i]).split(itemSplitRegex);
-        var name = '';
-        var value: number[];
-        var hasName = false;
+    let data: DataList = [];
+    for (let i = 0; i < lines.length; i++) {
+        let items = trim(lines[i]).split(itemSplitRegex);
+        let name = '';
+        let value: number[];
+        let hasName = false;
         if (isNaN(items[0] as unknown as number)) { // First item is name
             hasName = true;
             name = items[0];
@@ -243,7 +243,7 @@ function parseListContents(str: string) {
         else {
             value = data[i] = [];
         }
-        for (var j = 0; j < items.length; j++) {
+        for (let j = 0; j < items.length; j++) {
             value.push(+items[j]);
         }
         if (value.length === 1) {
@@ -258,8 +258,8 @@ function parseListContents(str: string) {
 }
 
 function parseContents(str: string, blockMetaList: SeriesGroupMeta[]) {
-    var blocks = str.split(new RegExp('\n*' + BLOCK_SPLITER + '\n*', 'g'));
-    var newOption: ECUnitOption = {
+    let blocks = str.split(new RegExp('\n*' + BLOCK_SPLITER + '\n*', 'g'));
+    let newOption: ECUnitOption = {
         series: []
     };
     zrUtil.each(blocks, function (block, idx) {
@@ -309,31 +309,31 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
     private _dom: HTMLDivElement;
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI) {
-        var container = api.getDom();
-        var model = this.model;
+        let container = api.getDom();
+        let model = this.model;
         if (this._dom) {
             container.removeChild(this._dom);
         }
-        var root = document.createElement('div');
+        let root = document.createElement('div');
         root.style.cssText = 'position:absolute;left:5px;top:5px;bottom:5px;right:5px;';
         root.style.backgroundColor = model.get('backgroundColor') || '#fff';
 
         // Create elements
-        var header = document.createElement('h4');
-        var lang = model.get('lang') || [];
+        let header = document.createElement('h4');
+        let lang = model.get('lang') || [];
         header.innerHTML = lang[0] || model.get('title');
         header.style.cssText = 'margin: 10px 20px;';
         header.style.color = model.get('textColor');
 
-        var viewMain = document.createElement('div');
-        var textarea = document.createElement('textarea');
+        let viewMain = document.createElement('div');
+        let textarea = document.createElement('textarea');
         viewMain.style.cssText = 'display:block;width:100%;overflow:auto;';
 
-        var optionToContent = model.get('optionToContent');
-        var contentToOption = model.get('contentToOption');
-        var result = getContentFromModel(ecModel);
+        let optionToContent = model.get('optionToContent');
+        let contentToOption = model.get('contentToOption');
+        let result = getContentFromModel(ecModel);
         if (typeof optionToContent === 'function') {
-            var htmlOrDom = optionToContent(api.getOption());
+            let htmlOrDom = optionToContent(api.getOption());
             if (typeof htmlOrDom === 'string') {
                 viewMain.innerHTML = htmlOrDom;
             }
@@ -352,20 +352,20 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
             textarea.value = result.value;
         }
 
-        var blockMetaList = result.meta;
+        let blockMetaList = result.meta;
 
-        var buttonContainer = document.createElement('div');
+        let buttonContainer = document.createElement('div');
         buttonContainer.style.cssText = 'position:absolute;bottom:0;left:0;right:0;';
 
-        var buttonStyle = 'float:right;margin-right:20px;border:none;'
+        let buttonStyle = 'float:right;margin-right:20px;border:none;'
             + 'cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
-        var closeButton = document.createElement('div');
-        var refreshButton = document.createElement('div');
+        let closeButton = document.createElement('div');
+        let refreshButton = document.createElement('div');
 
         buttonStyle += ';background-color:' + model.get('buttonColor');
         buttonStyle += ';color:' + model.get('buttonTextColor');
 
-        var self = this;
+        let self = this;
 
         function close() {
             container.removeChild(root);
@@ -374,7 +374,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         addEventListener(closeButton, 'click', close);
 
         addEventListener(refreshButton, 'click', function () {
-            var newOption;
+            let newOption;
             try {
                 if (typeof contentToOption === 'function') {
                     newOption = contentToOption(viewMain, api.getOption());
@@ -447,7 +447,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
  */
 function tryMergeDataOption(newData: DataList, originalData: DataList) {
     return zrUtil.map(newData, function (newVal, idx) {
-        var original = originalData && originalData[idx];
+        let original = originalData && originalData[idx];
         if (zrUtil.isObject(original) && !zrUtil.isArray(original)) {
             if (zrUtil.isObject(newVal) && !zrUtil.isArray(newVal)) {
                 newVal = newVal.value;
@@ -470,9 +470,9 @@ echarts.registerAction({
     event: 'dataViewChanged',
     update: 'prepareAndUpdate'
 }, function (payload: ChangeDataViewPayload, ecModel: GlobalModel) {
-    var newSeriesOptList: SeriesOption[] = [];
+    let newSeriesOptList: SeriesOption[] = [];
     zrUtil.each(payload.newOption.series, function (seriesOpt) {
-        var seriesModel = ecModel.getSeriesByName(seriesOpt.name)[0];
+        let seriesModel = ecModel.getSeriesByName(seriesOpt.name)[0];
         if (!seriesModel) {
             // New created series
             // Geuss the series type
@@ -482,7 +482,7 @@ echarts.registerAction({
             }, seriesOpt));
         }
         else {
-            var originalData = seriesModel.get('data');
+            let originalData = seriesModel.get('data');
             newSeriesOptList.push({
                 name: seriesOpt.name,
                 data: tryMergeDataOption(seriesOpt.data, originalData)

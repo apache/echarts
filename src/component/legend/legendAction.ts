@@ -23,9 +23,9 @@ import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 
 function legendSelectActionHandler(methodName, payload, ecModel) {
-    var selectedMap = {};
-    var isToggleSelect = methodName === 'toggleSelected';
-    var isSelected;
+    let selectedMap = {};
+    let isToggleSelect = methodName === 'toggleSelected';
+    let isSelected;
     // Update all legend components
     ecModel.eachComponent('legend', function (legendModel) {
         if (isToggleSelect && isSelected != null) {
@@ -42,14 +42,14 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
             legendModel[methodName](payload.name);
             isSelected = legendModel.isSelected(payload.name);
         }
-        var legendData = legendModel.getData();
+        let legendData = legendModel.getData();
         zrUtil.each(legendData, function (model) {
-            var name = model.get('name');
+            let name = model.get('name');
             // Wrap element
             if (name === '\n' || name === '') {
                 return;
             }
-            var isItemSelected = legendModel.isSelected(name);
+            let isItemSelected = legendModel.isSelected(name);
             if (selectedMap.hasOwnProperty(name)) {
                 // Unselected if any legend is unselected
                 selectedMap[name] = selectedMap[name] && isItemSelected;

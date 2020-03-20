@@ -27,8 +27,8 @@ import { ECUnitOption, SeriesOption } from '../util/types';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
-    var obj = opt;
-    for (var i = 0; i < pathArr.length; i++) {
+    let obj = opt;
+    for (let i = 0; i < pathArr.length; i++) {
         obj = obj && obj[pathArr[i]];
         if (obj == null) {
             break;
@@ -39,9 +39,9 @@ function get(opt: Dictionary<any>, path: string): any {
 
 function set(opt: Dictionary<any>, path: string, val: any, overwrite?: boolean) {
     const pathArr = path.split(',');
-    var obj = opt;
-    var key;
-    var i = 0;
+    let obj = opt;
+    let key;
+    let i = 0;
     for (; i < pathArr.length - 1; i++) {
         key = pathArr[i];
         if (obj[key] == null) {
@@ -62,11 +62,11 @@ function compatLayoutProperties(option: Dictionary<any>) {
     });
 }
 
-var LAYOUT_PROPERTIES = [
+const LAYOUT_PROPERTIES = [
     ['x', 'left'], ['y', 'top'], ['x2', 'right'], ['y2', 'bottom']
 ];
 
-var COMPATITABLE_COMPONENTS = [
+const COMPATITABLE_COMPONENTS = [
     'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
 ];
 
@@ -81,7 +81,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             return;
         }
 
-        var seriesType = seriesOpt.type;
+        let seriesType = seriesOpt.type;
 
         if (seriesType === 'line') {
             // @ts-ignore
@@ -98,7 +98,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             }
         }
         else if (seriesType === 'gauge') {
-            var pointerColor = get(seriesOpt, 'pointer.color');
+            let pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
                 && set(seriesOpt, 'itemStyle.color', pointerColor);
         }
@@ -112,7 +112,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
     }
 
     each(COMPATITABLE_COMPONENTS, function (componentName) {
-        var options = option[componentName];
+        let options = option[componentName];
         if (options) {
             if (!isArray(options)) {
                 options = [options];

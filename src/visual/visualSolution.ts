@@ -32,7 +32,7 @@ import {
 } from '../util/types';
 import List from '../data/List';
 
-var each = zrUtil.each;
+const each = zrUtil.each;
 
 type VisualMappingCollection<VisualState extends string>
     = {
@@ -45,7 +45,7 @@ type VisualMappingCollection<VisualState extends string>
 
 function hasKeys(obj: Dictionary<any>) {
     if (obj) {
-        for (var name in obj) {
+        for (let name in obj) {
             if (obj.hasOwnProperty(name)) {
                 return true;
             }
@@ -61,16 +61,16 @@ export function createVisualMappings<VisualState extends string>(
     stateList: readonly VisualState[],
     supplementVisualOption: (mappingOption: VisualMappingOption, state: string) => void
 ) {
-    var visualMappings: VisualMappingCollection<VisualState> = {};
+    let visualMappings: VisualMappingCollection<VisualState> = {};
 
     each(stateList, function (state) {
-        var mappings = visualMappings[state] = createMappings();
+        let mappings = visualMappings[state] = createMappings();
 
         each(option[state], function (visualData: VisualOption, visualType: BuiltinVisualProperty) {
             if (!VisualMapping.isValidType(visualType)) {
                 return;
             }
-            var mappingOption = {
+            let mappingOption = {
                 type: visualType,
                 visual: visualData
             };
@@ -90,11 +90,11 @@ export function createVisualMappings<VisualState extends string>(
     return visualMappings;
 
     function createMappings() {
-        var Creater = function () {};
+        let Creater = function () {};
         // Make sure hidden fields will not be visited by
         // object iteration (with hasOwnProperty checking).
         Creater.prototype.__hidden = Creater.prototype;
-        var obj = new (Creater as any)();
+        let obj = new (Creater as any)();
         return obj;
     }
 }
@@ -106,7 +106,7 @@ export function replaceVisualOption<T extends string>(
     // brings overcomplicated merge logic. See #2853. So if
     // newOption has anyone of these keys, all of these keys
     // will be reset. Otherwise, all keys remain.
-    var has;
+    let has;
     zrUtil.each(keys, function (key) {
         if (newOption.hasOwnProperty(key) && hasKeys(newOption[key])) {
             has = true;
@@ -139,13 +139,13 @@ export function applyVisual<VisualState extends string, Scope>(
     scope?: Scope,
     dimension?: DimensionLoose
 ) {
-    var visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
+    let visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
     zrUtil.each(stateList, function (state) {
-        var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
+        let visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
     });
 
-    var dataIndex: number;
+    let dataIndex: number;
 
     function getVisual(key: string) {
         return data.getItemVisual(dataIndex, key);
@@ -167,19 +167,19 @@ export function applyVisual<VisualState extends string, Scope>(
             ? valueOrIndex as number    // First argument is index
             : index;
 
-        var rawDataItem = data.getRawDataItem(dataIndex);
+        let rawDataItem = data.getRawDataItem(dataIndex);
         // Consider performance
         // @ts-ignore
         if (rawDataItem && rawDataItem.visualMap === false) {
             return;
         }
 
-        var valueState = getValueState.call(scope, valueOrIndex);
-        var mappings = visualMappings[valueState];
-        var visualTypes = visualTypesMap[valueState];
+        let valueState = getValueState.call(scope, valueOrIndex);
+        let mappings = visualMappings[valueState];
+        let visualTypes = visualTypesMap[valueState];
 
-        for (var i = 0, len = visualTypes.length; i < len; i++) {
-            var type = visualTypes[i];
+        for (let i = 0, len = visualTypes.length; i < len; i++) {
+            let type = visualTypes[i];
             mappings[type] && mappings[type].applyVisual(
                 valueOrIndex, getVisual, setVisual
             );
@@ -200,9 +200,9 @@ export function incrementalApplyVisual<VisualState extends string>(
     getValueState: (valueOrIndex: ParsedValue | number) => VisualState,
     dim?: DimensionLoose
 ): StageHandlerProgressExecutor {
-    var visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
+    let visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
     zrUtil.each(stateList, function (state) {
-        var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
+        let visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
     });
 
@@ -221,9 +221,9 @@ export function incrementalApplyVisual<VisualState extends string>(
                 data.setItemVisual(dataIndex, key, value);
             }
 
-            var dataIndex: number;
+            let dataIndex: number;
             while ((dataIndex = params.next()) != null) {
-                var rawDataItem = data.getRawDataItem(dataIndex);
+                let rawDataItem = data.getRawDataItem(dataIndex);
 
                 // Consider performance
                 // @ts-ignore
@@ -231,16 +231,16 @@ export function incrementalApplyVisual<VisualState extends string>(
                     continue;
                 }
 
-                var value = dim != null
+                let value = dim != null
                     ? data.get(dimName, dataIndex)
                     : dataIndex;
 
-                var valueState = getValueState(value);
-                var mappings = visualMappings[valueState];
-                var visualTypes = visualTypesMap[valueState];
+                let valueState = getValueState(value);
+                let mappings = visualMappings[valueState];
+                let visualTypes = visualTypesMap[valueState];
 
-                for (var i = 0, len = visualTypes.length; i < len; i++) {
-                    var type = visualTypes[i];
+                for (let i = 0, len = visualTypes.length; i < len; i++) {
+                    let type = visualTypes[i];
                     mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
                 }
             }

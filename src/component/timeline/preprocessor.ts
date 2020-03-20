@@ -22,7 +22,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 
 export default function (option) {
-    var timelineOpt = option && option.timeline;
+    let timelineOpt = option && option.timeline;
 
     if (!zrUtil.isArray(timelineOpt)) {
         timelineOpt = timelineOpt ? [timelineOpt] : [];
@@ -38,9 +38,9 @@ export default function (option) {
 }
 
 function compatibleEC2(opt) {
-    var type = opt.type;
+    let type = opt.type;
 
-    var ec2Types = {'number': 'value', 'time': 'time'};
+    let ec2Types = {'number': 'value', 'time': 'time'};
 
     // Compatible with ec2
     if (ec2Types[type]) {
@@ -51,7 +51,7 @@ function compatibleEC2(opt) {
     transferItem(opt);
 
     if (has(opt, 'controlPosition')) {
-        var controlStyle = opt.controlStyle || (opt.controlStyle = {});
+        let controlStyle = opt.controlStyle || (opt.controlStyle = {});
         if (!has(controlStyle, 'position')) {
             controlStyle.position = opt.controlPosition;
         }
@@ -74,14 +74,14 @@ function compatibleEC2(opt) {
 }
 
 function transferItem(opt) {
-    var itemStyle = opt.itemStyle || (opt.itemStyle = {});
+    let itemStyle = opt.itemStyle || (opt.itemStyle = {});
 
-    var itemStyleEmphasis = itemStyle.emphasis || (itemStyle.emphasis = {});
+    let itemStyleEmphasis = itemStyle.emphasis || (itemStyle.emphasis = {});
 
     // Transfer label out
-    var label = opt.label || (opt.label || {});
-    var labelNormal = label.normal || (label.normal = {});
-    var excludeLabelAttr = {normal: 1, emphasis: 1};
+    let label = opt.label || (opt.label || {});
+    let labelNormal = label.normal || (label.normal = {});
+    let excludeLabelAttr = {normal: 1, emphasis: 1};
 
     zrUtil.each(label, function (value, name) {
         if (!excludeLabelAttr[name] && !has(labelNormal, name)) {

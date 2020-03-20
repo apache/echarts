@@ -136,14 +136,14 @@ export class Task<Ctx extends TaskContext> {
      * @return whether unfinished.
      */
     perform(performArgs?: PerformArgs): boolean {
-        var upTask = this._upstream;
-        var skip = performArgs && performArgs.skip;
+        let upTask = this._upstream;
+        let skip = performArgs && performArgs.skip;
 
         // TODO some refactor.
         // Pull data. Must pull data each time, because context.data
         // may be updated by Series.setData.
         if (this._dirty && upTask) {
-            var context = this.context;
+            let context = this.context;
             context.data = context.outputData = upTask.context.outputData;
         }
 
@@ -151,17 +151,17 @@ export class Task<Ctx extends TaskContext> {
             this.__pipeline.currentTask = this;
         }
 
-        var planResult;
+        let planResult;
         if (this._plan && !skip) {
             planResult = this._plan(this.context);
         }
 
         // Support sharding by mod, which changes the render sequence and makes the rendered graphic
         // elements uniformed distributed when progress, especially when moving or zooming.
-        var lastModBy = normalizeModBy(this._modBy);
-        var lastModDataCount = this._modDataCount || 0;
-        var modBy = normalizeModBy(performArgs && performArgs.modBy);
-        var modDataCount = performArgs && performArgs.modDataCount || 0;
+        let lastModBy = normalizeModBy(this._modBy);
+        let lastModDataCount = this._modDataCount || 0;
+        let modBy = normalizeModBy(performArgs && performArgs.modBy);
+        let modDataCount = performArgs && performArgs.modDataCount || 0;
         if (lastModBy !== modBy || lastModDataCount !== modDataCount) {
             planResult = 'reset';
         }
@@ -171,7 +171,7 @@ export class Task<Ctx extends TaskContext> {
             return val;
         }
 
-        var forceFirstProgress;
+        let forceFirstProgress;
         if (this._dirty || planResult === 'reset') {
             this._dirty = false;
             forceFirstProgress = this._doReset(skip);
@@ -180,7 +180,7 @@ export class Task<Ctx extends TaskContext> {
         this._modBy = modBy;
         this._modDataCount = modDataCount;
 
-        var step = performArgs && performArgs.step;
+        let step = performArgs && performArgs.step;
 
         if (upTask) {
 
@@ -200,16 +200,16 @@ export class Task<Ctx extends TaskContext> {
         // Note: Stubs, that its host overall task let it has progress, has progress.
         // If no progress, pass index from upstream to downstream each time plan called.
         if (this._progress) {
-            var start = this._dueIndex;
-            var end = Math.min(
+            let start = this._dueIndex;
+            let end = Math.min(
                 step != null ? this._dueIndex + step : Infinity,
                 this._dueEnd
             );
 
             if (!skip && (forceFirstProgress || start < end)) {
-                var progress = this._progress;
+                let progress = this._progress;
                 if (isArray(progress)) {
-                    for (var i = 0; i < progress.length; i++) {
+                    for (let i = 0; i < progress.length; i++) {
                         this._doProgress(progress[i], start, end, modBy, modDataCount);
                     }
                 }
@@ -221,7 +221,7 @@ export class Task<Ctx extends TaskContext> {
             this._dueIndex = end;
             // If no `outputDueEnd`, assume that output data and
             // input data is the same, so use `dueIndex` as `outputDueEnd`.
-            var outputDueEnd = this._settedOutputEnd != null
+            let outputDueEnd = this._settedOutputEnd != null
                 ? this._settedOutputEnd : end;
 
             if (__DEV__) {
@@ -265,8 +265,8 @@ export class Task<Ctx extends TaskContext> {
         this._dueIndex = this._outputDueEnd = this._dueEnd = 0;
         this._settedOutputEnd = null;
 
-        var progress: TaskResetCallbackReturn<Ctx>;
-        var forceFirstProgress: boolean;
+        let progress: TaskResetCallbackReturn<Ctx>;
+        let forceFirstProgress: boolean;
 
         if (!skip && this._reset) {
             progress = this._reset(this.context);
@@ -283,7 +283,7 @@ export class Task<Ctx extends TaskContext> {
         this._progress = progress as TaskProgressCallback<Ctx>;
         this._modBy = this._modDataCount = null;
 
-        var downstream = this._downstream;
+        let downstream = this._downstream;
         downstream && downstream.dirty();
 
         return forceFirstProgress;
@@ -341,15 +341,15 @@ export class Task<Ctx extends TaskContext> {
 
 }
 
-var iterator: TaskDataIterator = (function () {
+const iterator: TaskDataIterator = (function () {
 
-    var end: number;
-    var current: number;
-    var modBy: number;
-    var modDataCount: number;
-    var winCount: number;
+    let end: number;
+    let current: number;
+    let modBy: number;
+    let modDataCount: number;
+    let winCount: number;
 
-    var it: TaskDataIterator = {
+    let it: TaskDataIterator = {
         reset: function (s: number, e: number, sStep: number, sCount: number): void {
             current = s;
             end = e;
@@ -369,8 +369,8 @@ var iterator: TaskDataIterator = (function () {
     }
 
     function modNext(): number {
-        var dataIndex = (current % winCount) * modBy + Math.ceil(current / winCount);
-        var result = current >= end
+        let dataIndex = (current % winCount) * modBy + Math.ceil(current / winCount);
+        let result = current >= end
             ? null
             : dataIndex < modDataCount
             ? dataIndex
@@ -392,12 +392,12 @@ var iterator: TaskDataIterator = (function () {
 //     window.ecTaskUID == null && (window.ecTaskUID = 0);
 //     task.uidDebug == null && (task.uidDebug = `task_${window.ecTaskUID++}`);
 //     task.agent && task.agent.uidDebug == null && (task.agent.uidDebug = `task_${window.ecTaskUID++}`);
-//     var props = [];
+//     let props = [];
 //     if (task.__pipeline) {
-//         var val = `${task.__idxInPipeline}/${task.__pipeline.tail.__idxInPipeline} ${task.agent ? '(stub)' : ''}`;
+//         let val = `${task.__idxInPipeline}/${task.__pipeline.tail.__idxInPipeline} ${task.agent ? '(stub)' : ''}`;
 //         props.push({text: 'idx', value: val});
 //     } else {
-//         var stubCount = 0;
+//         let stubCount = 0;
 //         task.agentStubMap.each(() => stubCount++);
 //         props.push({text: 'idx', value: `overall (stubs: ${stubCount})`});
 //     }
@@ -419,8 +419,8 @@ var iterator: TaskDataIterator = (function () {
 //             props.push({text: key, value: extra[key]});
 //         });
 //     }
-//     var args = ['color: blue'];
-//     var msg = `%c[${prefix || 'T'}] %c` + props.map(item => (
+//     let args = ['color: blue'];
+//     let msg = `%c[${prefix || 'T'}] %c` + props.map(item => (
 //         args.push('color: black', 'color: red'),
 //         `${item.text}: %c${item.value}`
 //     )).join('%c, ');

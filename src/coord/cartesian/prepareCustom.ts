@@ -24,9 +24,9 @@ function dataToCoordSize(this: Cartesian2D, dataSize: number[], dataItem: number
     // dataItem is necessary in log axis.
     dataItem = dataItem || [0, 0];
     return zrUtil.map(['x', 'y'], function (dim, dimIdx) {
-        var axis = this.getAxis(dim);
-        var val = dataItem[dimIdx];
-        var halfSize = dataSize[dimIdx] / 2;
+        let axis = this.getAxis(dim);
+        let val = dataItem[dimIdx];
+        let halfSize = dataSize[dimIdx] / 2;
         return axis.type === 'category'
             ? axis.getBandWidth()
             : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
@@ -34,7 +34,7 @@ function dataToCoordSize(this: Cartesian2D, dataSize: number[], dataItem: number
 }
 
 export default function (coordSys: Cartesian2D) {
-    var rect = coordSys.grid.getRect();
+    let rect = coordSys.grid.getRect();
     return {
         coordSys: {
             // The name exposed to user is always 'cartesian2d' but not 'grid'.

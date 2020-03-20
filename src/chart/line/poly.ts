@@ -23,16 +23,16 @@ import Path, { PathProps } from 'zrender/src/graphic/Path';
 import * as vec2 from 'zrender/src/core/vector';
 import fixClipWithShadow from 'zrender/src/graphic/helper/fixClipWithShadow';
 
-var vec2Min = vec2.min;
-var vec2Max = vec2.max;
+const vec2Min = vec2.min;
+const vec2Max = vec2.max;
 
-var scaleAndAdd = vec2.scaleAndAdd;
-var v2Copy = vec2.copy;
+const scaleAndAdd = vec2.scaleAndAdd;
+const v2Copy = vec2.copy;
 
 // Temporary variable
-var v: number[] = [];
-var cp0: number[] = [];
-var cp1: number[] = [];
+const v: number[] = [];
+const cp0: number[] = [];
+const cp1: number[] = [];
 
 function isPointNull(p: number[]) {
     return isNaN(p[0]) || isNaN(p[1]);
@@ -82,11 +82,11 @@ function drawSegment(
 //         return true;
 //     }
 
-//     var dim = smoothMonotone === 'x' ? 0 : 1;
-//     var last = points[0][dim];
-//     var lastDiff = 0;
-//     for (var i = 1; i < points.length; ++i) {
-//         var diff = points[i][dim] - last;
+//     let dim = smoothMonotone === 'x' ? 0 : 1;
+//     let last = points[0][dim];
+//     let lastDiff = 0;
+//     for (let i = 1; i < points.length; ++i) {
+//         let diff = points[i][dim] - last;
 //         if (!isNaN(diff) && !isNaN(lastDiff)
 //             && diff !== 0 && lastDiff !== 0
 //             && ((diff >= 0) !== (lastDiff >= 0))
@@ -119,11 +119,11 @@ function drawMono(
     smoothMonotone: 'x' | 'y' | 'none',
     connectNulls: boolean
 ) {
-    var prevIdx = 0;
-    var idx = start;
-    var k = 0;
+    let prevIdx = 0;
+    let idx = start;
+    let k = 0;
     for (; k < segLen; k++) {
-        var p = points[idx];
+        let p = points[idx];
         if (idx >= allLen || idx < 0) {
             break;
         }
@@ -140,11 +140,11 @@ function drawMono(
         }
         else {
             if (smooth > 0) {
-                var prevP = points[prevIdx];
-                var dim = smoothMonotone === 'y' ? 1 : 0;
+                let prevP = points[prevIdx];
+                let dim = smoothMonotone === 'y' ? 1 : 0;
 
                 // Length of control point to p, either in x or y, but not both
-                var ctrlLen = (p[dim] - prevP[dim]) * smooth;
+                let ctrlLen = (p[dim] - prevP[dim]) * smooth;
 
                 v2Copy(cp0, prevP);
                 cp0[dim] = prevP[dim] + ctrlLen;
@@ -188,11 +188,11 @@ function drawNonMono(
     smoothMonotone: 'x' | 'y' | 'none',
     connectNulls: boolean
 ) {
-    var prevIdx = 0;
-    var idx = start;
-    var k = 0;
+    let prevIdx = 0;
+    let idx = start;
+    let k = 0;
     for (; k < segLen; k++) {
-        var p = points[idx];
+        let p = points[idx];
         if (idx >= allLen || idx < 0) {
             break;
         }
@@ -210,8 +210,8 @@ function drawNonMono(
         }
         else {
             if (smooth > 0) {
-                var nextIdx = idx + dir;
-                var nextP = points[nextIdx];
+                let nextIdx = idx + dir;
+                let nextP = points[nextIdx];
                 if (connectNulls) {
                     // Find next point not null
                     while (nextP && isPointNull(points[nextIdx])) {
@@ -220,8 +220,8 @@ function drawNonMono(
                     }
                 }
 
-                var ratioNextSeg = 0.5;
-                var prevP = points[prevIdx];
+                let ratioNextSeg = 0.5;
+                let prevP = points[prevIdx];
                 nextP = points[nextIdx];
                 // Last point
                 if (!nextP || isPointNull(nextP)) {
@@ -235,10 +235,10 @@ function drawNonMono(
 
                     vec2.sub(v, nextP, prevP);
 
-                    var lenPrevSeg;
-                    var lenNextSeg;
+                    let lenPrevSeg;
+                    let lenNextSeg;
                     if (smoothMonotone === 'x' || smoothMonotone === 'y') {
-                        var dim = smoothMonotone === 'x' ? 0 : 1;
+                        let dim = smoothMonotone === 'x' ? 0 : 1;
                         lenPrevSeg = Math.abs(p[dim] - prevP[dim]);
                         lenNextSeg = Math.abs(p[dim] - nextP[dim]);
                     }
@@ -279,11 +279,11 @@ function drawNonMono(
 }
 
 function getBoundingBox(points: number[][], smoothConstraint?: boolean) {
-    var ptMin = [Infinity, Infinity];
-    var ptMax = [-Infinity, -Infinity];
+    let ptMin = [Infinity, Infinity];
+    let ptMax = [-Infinity, -Infinity];
     if (smoothConstraint) {
-        for (var i = 0; i < points.length; i++) {
-            var pt = points[i];
+        for (let i = 0; i < points.length; i++) {
+            let pt = points[i];
             if (pt[0] < ptMin[0]) {
                 ptMin[0] = pt[0];
             }
@@ -332,12 +332,12 @@ export class ECPolyline extends Path<ECPolylineProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: ECPolylineShape) {
-        var points = shape.points;
+        let points = shape.points;
 
-        var i = 0;
-        var len = points.length;
+        let i = 0;
+        let len = points.length;
 
-        var result = getBoundingBox(points, shape.smoothConstraint);
+        let result = getBoundingBox(points, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
@@ -383,14 +383,14 @@ export class ECPolygon extends Path {
         super(opts, null, new ECPolygonShape());
     }
     buildPath(ctx: CanvasRenderingContext2D, shape: ECPolygonShape) {
-        var points = shape.points;
-        var stackedOnPoints = shape.stackedOnPoints;
+        let points = shape.points;
+        let stackedOnPoints = shape.stackedOnPoints;
 
-        var i = 0;
-        var len = points.length;
-        var smoothMonotone = shape.smoothMonotone;
-        var bbox = getBoundingBox(points, shape.smoothConstraint);
-        var stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
+        let i = 0;
+        let len = points.length;
+        let smoothMonotone = shape.smoothMonotone;
+        let bbox = getBoundingBox(points, shape.smoothConstraint);
+        let stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
@@ -406,7 +406,7 @@ export class ECPolygon extends Path {
             }
         }
         while (i < len) {
-            var k = drawSegment(
+            let k = drawSegment(
                 ctx, points, i, len, len,
                 1, bbox.min, bbox.max, shape.smooth,
                 smoothMonotone, shape.connectNulls

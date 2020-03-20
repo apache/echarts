@@ -23,7 +23,7 @@ import type GlobalModel from '../../model/Global';
 import BoxplotSeriesModel from './BoxplotSeries';
 import Axis2D from '../../coord/cartesian/Axis2D';
 
-var each = zrUtil.each;
+const each = zrUtil.each;
 
 interface GroupItem {
     seriesModels: BoxplotSeriesModel[]
@@ -39,10 +39,10 @@ export interface BoxplotItemLayout {
 
 export default function (ecModel: GlobalModel) {
 
-    var groupResult = groupSeriesByAxis(ecModel);
+    let groupResult = groupSeriesByAxis(ecModel);
 
     each(groupResult, function (groupItem) {
-        var seriesModels = groupItem.seriesModels;
+        let seriesModels = groupItem.seriesModels;
 
         if (!seriesModels.length) {
             return;
@@ -64,12 +64,12 @@ export default function (ecModel: GlobalModel) {
  * Group series by axis.
  */
 function groupSeriesByAxis(ecModel: GlobalModel) {
-    var result: GroupItem[] = [];
-    var axisList: Axis2D[] = [];
+    let result: GroupItem[] = [];
+    let axisList: Axis2D[] = [];
 
     ecModel.eachSeriesByType('boxplot', function (seriesModel: BoxplotSeriesModel) {
-        var baseAxis = seriesModel.getBaseAxis();
-        var idx = zrUtil.indexOf(axisList, baseAxis);
+        let baseAxis = seriesModel.getBaseAxis();
+        let idx = zrUtil.indexOf(axisList, baseAxis);
 
         if (idx < 0) {
             idx = axisList.length;
@@ -90,21 +90,21 @@ function groupSeriesByAxis(ecModel: GlobalModel) {
  * Calculate offset and box width for each series.
  */
 function calculateBase(groupItem: GroupItem) {
-    var extent;
-    var baseAxis = groupItem.axis;
-    var seriesModels = groupItem.seriesModels;
-    var seriesCount = seriesModels.length;
+    let extent;
+    let baseAxis = groupItem.axis;
+    let seriesModels = groupItem.seriesModels;
+    let seriesCount = seriesModels.length;
 
-    var boxWidthList: number[] = groupItem.boxWidthList = [];
-    var boxOffsetList: number[] = groupItem.boxOffsetList = [];
-    var boundList: number[][] = [];
+    let boxWidthList: number[] = groupItem.boxWidthList = [];
+    let boxOffsetList: number[] = groupItem.boxOffsetList = [];
+    let boundList: number[][] = [];
 
-    var bandWidth: number;
+    let bandWidth: number;
     if (baseAxis.type === 'category') {
         bandWidth = baseAxis.getBandWidth();
     }
     else {
-        var maxDataCount = 0;
+        let maxDataCount = 0;
         each(seriesModels, function (seriesModel) {
             maxDataCount = Math.max(maxDataCount, seriesModel.getData().count());
         });
@@ -113,7 +113,7 @@ function calculateBase(groupItem: GroupItem) {
     }
 
     each(seriesModels, function (seriesModel) {
-        var boxWidthBound = seriesModel.get('boxWidth');
+        let boxWidthBound = seriesModel.get('boxWidth');
         if (!zrUtil.isArray(boxWidthBound)) {
             boxWidthBound = [boxWidthBound, boxWidthBound];
         }
@@ -123,10 +123,10 @@ function calculateBase(groupItem: GroupItem) {
         ]);
     });
 
-    var availableWidth = bandWidth * 0.8 - 2;
-    var boxGap = availableWidth / seriesCount * 0.3;
-    var boxWidth = (availableWidth - boxGap * (seriesCount - 1)) / seriesCount;
-    var base = boxWidth / 2 - availableWidth / 2;
+    let availableWidth = bandWidth * 0.8 - 2;
+    let boxGap = availableWidth / seriesCount * 0.3;
+    let boxWidth = (availableWidth - boxGap * (seriesCount - 1)) / seriesCount;
+    let base = boxWidth / 2 - availableWidth / 2;
 
     each(seriesModels, function (seriesModel, idx) {
         boxOffsetList.push(base);
@@ -142,29 +142,29 @@ function calculateBase(groupItem: GroupItem) {
  * Calculate points location for each series.
  */
 function layoutSingleSeries(seriesModel: BoxplotSeriesModel, offset: number, boxWidth: number) {
-    var coordSys = seriesModel.coordinateSystem;
-    var data = seriesModel.getData();
-    var halfWidth = boxWidth / 2;
-    var cDimIdx = seriesModel.get('layout') === 'horizontal' ? 0 : 1;
-    var vDimIdx = 1 - cDimIdx;
-    var coordDims = ['x', 'y'];
-    var cDim = data.mapDimension(coordDims[cDimIdx]);
-    var vDims = data.mapDimension(coordDims[vDimIdx], true);
+    let coordSys = seriesModel.coordinateSystem;
+    let data = seriesModel.getData();
+    let halfWidth = boxWidth / 2;
+    let cDimIdx = seriesModel.get('layout') === 'horizontal' ? 0 : 1;
+    let vDimIdx = 1 - cDimIdx;
+    let coordDims = ['x', 'y'];
+    let cDim = data.mapDimension(coordDims[cDimIdx]);
+    let vDims = data.mapDimension(coordDims[vDimIdx], true);
 
     if (cDim == null || vDims.length < 5) {
         return;
     }
 
-    for (var dataIndex = 0; dataIndex < data.count(); dataIndex++) {
-        var axisDimVal = data.get(cDim, dataIndex) as number;
+    for (let dataIndex = 0; dataIndex < data.count(); dataIndex++) {
+        let axisDimVal = data.get(cDim, dataIndex) as number;
 
-        var median = getPoint(axisDimVal, vDims[2], dataIndex);
-        var end1 = getPoint(axisDimVal, vDims[0], dataIndex);
-        var end2 = getPoint(axisDimVal, vDims[1], dataIndex);
-        var end4 = getPoint(axisDimVal, vDims[3], dataIndex);
-        var end5 = getPoint(axisDimVal, vDims[4], dataIndex);
+        let median = getPoint(axisDimVal, vDims[2], dataIndex);
+        let end1 = getPoint(axisDimVal, vDims[0], dataIndex);
+        let end2 = getPoint(axisDimVal, vDims[1], dataIndex);
+        let end4 = getPoint(axisDimVal, vDims[3], dataIndex);
+        let end5 = getPoint(axisDimVal, vDims[4], dataIndex);
 
-        var ends: number[][] = [];
+        let ends: number[][] = [];
         addBodyEnd(ends, end2, false);
         addBodyEnd(ends, end4, true);
 
@@ -180,11 +180,11 @@ function layoutSingleSeries(seriesModel: BoxplotSeriesModel, offset: number, box
     }
 
     function getPoint(axisDimVal: number, dim: string, dataIndex: number) {
-        var val = data.get(dim, dataIndex) as number;
-        var p = [];
+        let val = data.get(dim, dataIndex) as number;
+        let p = [];
         p[cDimIdx] = axisDimVal;
         p[vDimIdx] = val;
-        var point;
+        let point;
         if (isNaN(axisDimVal) || isNaN(val)) {
             point = [NaN, NaN];
         }
@@ -196,8 +196,8 @@ function layoutSingleSeries(seriesModel: BoxplotSeriesModel, offset: number, box
     }
 
     function addBodyEnd(ends: number[][], point: number[], start?: boolean) {
-        var point1 = point.slice();
-        var point2 = point.slice();
+        let point1 = point.slice();
+        let point2 = point.slice();
         point1[cDimIdx] += halfWidth;
         point2[cDimIdx] -= halfWidth;
         start
@@ -206,8 +206,8 @@ function layoutSingleSeries(seriesModel: BoxplotSeriesModel, offset: number, box
     }
 
     function layEndLine(ends: number[][], endCenter: number[]) {
-        var from = endCenter.slice();
-        var to = endCenter.slice();
+        let from = endCenter.slice();
+        let to = endCenter.slice();
         from[cDimIdx] -= halfWidth;
         to[cDimIdx] += halfWidth;
         ends.push(from, to);

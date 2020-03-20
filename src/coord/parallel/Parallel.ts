@@ -39,14 +39,13 @@ import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelAxisModel, { ParallelActiveState } from './AxisModel';
 import List from '../../data/List';
 
-var each = zrUtil.each;
-var mathMin = Math.min;
-var mathMax = Math.max;
-var mathFloor = Math.floor;
-var mathCeil = Math.ceil;
-var round = numberUtil.round;
-
-var PI = Math.PI;
+const each = zrUtil.each;
+const mathMin = Math.min;
+const mathMax = Math.max;
+const mathFloor = Math.floor;
+const mathCeil = Math.ceil;
+const round = numberUtil.round;
+const PI = Math.PI;
 
 interface ParallelCoordinateSystemLayoutInfo {
     layout: ParallelLayoutDirection;
@@ -115,15 +114,15 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
 
     private _init(parallelModel: ParallelModel, ecModel: GlobalModel, api: ExtensionAPI): void {
 
-        var dimensions = parallelModel.dimensions;
-        var parallelAxisIndex = parallelModel.parallelAxisIndex;
+        let dimensions = parallelModel.dimensions;
+        let parallelAxisIndex = parallelModel.parallelAxisIndex;
 
         each(dimensions, function (dim, idx) {
 
-            var axisIndex = parallelAxisIndex[idx];
-            var axisModel = ecModel.getComponent('parallelAxis', axisIndex) as ParallelAxisModel;
+            let axisIndex = parallelAxisIndex[idx];
+            let axisModel = ecModel.getComponent('parallelAxis', axisIndex) as ParallelAxisModel;
 
-            var axis = this._axesMap.set(dim, new ParallelAxis(
+            let axis = this._axesMap.set(dim, new ParallelAxis(
                 dim,
                 axisHelper.createScaleByModel(axisModel),
                 [0, 0],
@@ -131,7 +130,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
                 axisIndex
             ));
 
-            var isCategory = axis.type === 'category';
+            let isCategory = axis.type === 'category';
             axis.onBand = isCategory && axisModel.get('boundaryGap');
             axis.inverse = axisModel.get('inverse');
 
@@ -151,12 +150,12 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
     }
 
     containPoint(point: number[]): boolean {
-        var layoutInfo = this._makeLayoutInfo();
-        var axisBase = layoutInfo.axisBase;
-        var layoutBase = layoutInfo.layoutBase;
-        var pixelDimIndex = layoutInfo.pixelDimIndex;
-        var pAxis = point[1 - pixelDimIndex];
-        var pLayout = point[pixelDimIndex];
+        let layoutInfo = this._makeLayoutInfo();
+        let axisBase = layoutInfo.axisBase;
+        let layoutBase = layoutInfo.layoutBase;
+        let pixelDimIndex = layoutInfo.pixelDimIndex;
+        let pAxis = point[1 - pixelDimIndex];
+        let pLayout = point[pixelDimIndex];
 
         return pAxis >= axisBase
             && pAxis <= axisBase + layoutInfo.axisLength
@@ -178,10 +177,10 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
                 return;
             }
 
-            var data = seriesModel.getData();
+            let data = seriesModel.getData();
 
             each(this.dimensions, function (dim) {
-                var axis = this._axesMap.get(dim);
+                let axis = this._axesMap.get(dim);
                 axis.scale.unionExtentFromData(data, data.mapDimension(dim));
                 axisHelper.niceScaleExtent(axis.scale, axis.model);
             }, this);
@@ -208,19 +207,19 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
     }
 
     private _makeLayoutInfo(): ParallelCoordinateSystemLayoutInfo {
-        var parallelModel = this._model;
-        var rect = this._rect;
-        var xy = ['x', 'y'] as const;
-        var wh = ['width', 'height'] as const;
-        var layout = parallelModel.get('layout');
-        var pixelDimIndex = layout === 'horizontal' ? 0 : 1;
-        var layoutLength = rect[wh[pixelDimIndex]];
-        var layoutExtent = [0, layoutLength];
-        var axisCount = this.dimensions.length;
+        let parallelModel = this._model;
+        let rect = this._rect;
+        let xy = ['x', 'y'] as const;
+        let wh = ['width', 'height'] as const;
+        let layout = parallelModel.get('layout');
+        let pixelDimIndex = layout === 'horizontal' ? 0 : 1;
+        let layoutLength = rect[wh[pixelDimIndex]];
+        let layoutExtent = [0, layoutLength];
+        let axisCount = this.dimensions.length;
 
-        var axisExpandWidth = restrict(parallelModel.get('axisExpandWidth'), layoutExtent);
-        var axisExpandCount = restrict(parallelModel.get('axisExpandCount') || 0, [0, axisCount]);
-        var axisExpandable = parallelModel.get('axisExpandable')
+        let axisExpandWidth = restrict(parallelModel.get('axisExpandWidth'), layoutExtent);
+        let axisExpandCount = restrict(parallelModel.get('axisExpandCount') || 0, [0, axisCount]);
+        let axisExpandable = parallelModel.get('axisExpandable')
             && axisCount > 3
             && axisCount > axisExpandCount
             && axisExpandCount > 1
@@ -230,11 +229,11 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         // `axisExpandWindow` is According to the coordinates of [0, axisExpandLength],
         // for sake of consider the case that axisCollapseWidth is 0 (when screen is narrow),
         // where collapsed axes should be overlapped.
-        var axisExpandWindow = parallelModel.get('axisExpandWindow');
-        var winSize;
+        let axisExpandWindow = parallelModel.get('axisExpandWindow');
+        let winSize;
         if (!axisExpandWindow) {
             winSize = restrict(axisExpandWidth * (axisExpandCount - 1), layoutExtent);
-            var axisExpandCenter = parallelModel.get('axisExpandCenter') || mathFloor(axisCount / 2);
+            let axisExpandCenter = parallelModel.get('axisExpandCenter') || mathFloor(axisCount / 2);
             axisExpandWindow = [axisExpandWidth * axisExpandCenter - winSize / 2];
             axisExpandWindow[1] = axisExpandWindow[0] + winSize;
         }
@@ -243,18 +242,18 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
             axisExpandWindow[1] = axisExpandWindow[0] + winSize;
         }
 
-        var axisCollapseWidth = (layoutLength - winSize) / (axisCount - axisExpandCount);
+        let axisCollapseWidth = (layoutLength - winSize) / (axisCount - axisExpandCount);
         // Avoid axisCollapseWidth is too small.
         axisCollapseWidth < 3 && (axisCollapseWidth = 0);
 
         // Find the first and last indices > ewin[0] and < ewin[1].
-        var winInnerIndices = [
+        let winInnerIndices = [
             mathFloor(round(axisExpandWindow[0] / axisExpandWidth, 1)) + 1,
             mathCeil(round(axisExpandWindow[1] / axisExpandWidth, 1)) - 1
         ];
 
         // Pos in ec coordinates.
-        var axisExpandWindow0Pos = axisCollapseWidth / axisExpandWidth * axisExpandWindow[0];
+        let axisExpandWindow0Pos = axisCollapseWidth / axisExpandWidth * axisExpandWindow[0];
 
         return {
             layout: layout,
@@ -274,24 +273,24 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
     }
 
     private _layoutAxes(): void {
-        var rect = this._rect;
-        var axes = this._axesMap;
-        var dimensions = this.dimensions;
-        var layoutInfo = this._makeLayoutInfo();
-        var layout = layoutInfo.layout;
+        let rect = this._rect;
+        let axes = this._axesMap;
+        let dimensions = this.dimensions;
+        let layoutInfo = this._makeLayoutInfo();
+        let layout = layoutInfo.layout;
 
         axes.each(function (axis) {
-            var axisExtent = [0, layoutInfo.axisLength];
-            var idx = axis.inverse ? 1 : 0;
+            let axisExtent = [0, layoutInfo.axisLength];
+            let idx = axis.inverse ? 1 : 0;
             axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
         });
 
         each(dimensions, function (dim, idx) {
-            var posInfo = (layoutInfo.axisExpandable
+            let posInfo = (layoutInfo.axisExpandable
                 ? layoutAxisWithExpand : layoutAxisWithoutExpand
             )(idx, layoutInfo);
 
-            var positionTable = {
+            let positionTable = {
                 horizontal: {
                     x: posInfo.position,
                     y: layoutInfo.axisLength
@@ -301,18 +300,18 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
                     y: posInfo.position
                 }
             };
-            var rotationTable = {
+            let rotationTable = {
                 horizontal: PI / 2,
                 vertical: 0
             };
 
-            var position = [
+            let position = [
                 positionTable[layout].x + rect.x,
                 positionTable[layout].y + rect.y
             ];
 
-            var rotation = rotationTable[layout];
-            var transform = matrix.create();
+            let rotation = rotationTable[layout];
+            let transform = matrix.create();
             matrix.rotate(transform, transform, rotation);
             matrix.translate(transform, transform, position);
 
@@ -366,29 +365,29 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         start == null && (start = 0);
         end == null && (end = data.count());
 
-        var axesMap = this._axesMap;
-        var dimensions = this.dimensions;
-        var dataDimensions = [] as DimensionName[];
-        var axisModels = [] as ParallelAxisModel[];
+        let axesMap = this._axesMap;
+        let dimensions = this.dimensions;
+        let dataDimensions = [] as DimensionName[];
+        let axisModels = [] as ParallelAxisModel[];
 
         zrUtil.each(dimensions, function (axisDim) {
             dataDimensions.push(data.mapDimension(axisDim));
             axisModels.push(axesMap.get(axisDim).model);
         });
 
-        var hasActiveSet = this.hasAxisBrushed();
+        let hasActiveSet = this.hasAxisBrushed();
 
-        for (var dataIndex = start; dataIndex < end; dataIndex++) {
-            var activeState: ParallelActiveState;
+        for (let dataIndex = start; dataIndex < end; dataIndex++) {
+            let activeState: ParallelActiveState;
 
             if (!hasActiveSet) {
                 activeState = 'normal';
             }
             else {
                 activeState = 'active';
-                var values = data.getValues(dataDimensions, dataIndex);
-                for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
-                    var state = axisModels[j].getActiveState(values[j]);
+                let values = data.getValues(dataDimensions, dataIndex);
+                for (let j = 0, lenj = dimensions.length; j < lenj; j++) {
+                    let state = axisModels[j].getActiveState(values[j]);
 
                     if (state === 'inactive') {
                         activeState = 'inactive';
@@ -405,11 +404,11 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      * Whether has any activeSet.
      */
     hasAxisBrushed(): boolean {
-        var dimensions = this.dimensions;
-        var axesMap = this._axesMap;
-        var hasActiveSet = false;
+        let dimensions = this.dimensions;
+        let axesMap = this._axesMap;
+        let hasActiveSet = false;
 
-        for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
+        for (let j = 0, lenj = dimensions.length; j < lenj; j++) {
             if (axesMap.get(dimensions[j]).model.getActiveState() !== 'normal') {
                 hasActiveSet = true;
             }
@@ -423,7 +422,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      *  Return point. For example: [10, 20]
      */
     axisCoordToPoint(coord: number, dim: DimensionName): number[] {
-        var axisLayout = this._axesLayout[dim];
+        let axisLayout = this._axesLayout[dim];
         return graphic.applyTransform([coord, 0], axisLayout.transform);
     }
 
@@ -441,11 +440,11 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         axisExpandWindow: number[],
         behavior: SlidedAxisExpandBehavior
     } {
-        var layoutInfo = this._makeLayoutInfo();
-        var pixelDimIndex = layoutInfo.pixelDimIndex;
-        var axisExpandWindow = layoutInfo.axisExpandWindow.slice();
-        var winSize = axisExpandWindow[1] - axisExpandWindow[0];
-        var extent = [0, layoutInfo.axisExpandWidth * (layoutInfo.axisCount - 1)];
+        let layoutInfo = this._makeLayoutInfo();
+        let pixelDimIndex = layoutInfo.pixelDimIndex;
+        let axisExpandWindow = layoutInfo.axisExpandWindow.slice();
+        let winSize = axisExpandWindow[1] - axisExpandWindow[0];
+        let extent = [0, layoutInfo.axisExpandWidth * (layoutInfo.axisCount - 1)];
 
         // Out of the area of coordinate system.
         if (!this.containPoint(point)) {
@@ -453,16 +452,16 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         }
 
         // Conver the point from global to expand coordinates.
-        var pointCoord = point[pixelDimIndex] - layoutInfo.layoutBase - layoutInfo.axisExpandWindow0Pos;
+        let pointCoord = point[pixelDimIndex] - layoutInfo.layoutBase - layoutInfo.axisExpandWindow0Pos;
 
         // For dragging operation convenience, the window should not be
         // slided when mouse is the center area of the window.
-        var delta;
-        var behavior: SlidedAxisExpandBehavior = 'slide';
-        var axisCollapseWidth = layoutInfo.axisCollapseWidth;
-        var triggerArea = this._model.get('axisExpandSlideTriggerArea');
+        let delta;
+        let behavior: SlidedAxisExpandBehavior = 'slide';
+        let axisCollapseWidth = layoutInfo.axisCollapseWidth;
+        let triggerArea = this._model.get('axisExpandSlideTriggerArea');
         // But consider touch device, jump is necessary.
-        var useJump = triggerArea[0] != null;
+        let useJump = triggerArea[0] != null;
 
         if (axisCollapseWidth) {
             if (useJump && axisCollapseWidth && pointCoord < winSize * triggerArea[0]) {
@@ -486,8 +485,8 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         }
         // When screen is too narrow, make it visible and slidable, although it is hard to interact.
         else {
-            var winSize2 = axisExpandWindow[1] - axisExpandWindow[0];
-            var pos = extent[1] * pointCoord / winSize2;
+            let winSize2 = axisExpandWindow[1] - axisExpandWindow[0];
+            let pos = extent[1] * pointCoord / winSize2;
             axisExpandWindow = [mathMax(0, pos - winSize2 / 2)];
             axisExpandWindow[1] = mathMin(extent[1], axisExpandWindow[0] + winSize2);
             axisExpandWindow[0] = axisExpandWindow[1] - winSize2;
@@ -524,7 +523,7 @@ function layoutAxisWithoutExpand(
     axisIndex: number,
     layoutInfo: ParallelCoordinateSystemLayoutInfo
 ): ParallelAxisLayoutPositionInfo {
-    var step = layoutInfo.layoutLength / (layoutInfo.axisCount - 1);
+    let step = layoutInfo.layoutLength / (layoutInfo.axisCount - 1);
     return {
         position: step * axisIndex,
         axisNameAvailableWidth: step,
@@ -536,16 +535,16 @@ function layoutAxisWithExpand(
     axisIndex: number,
     layoutInfo: ParallelCoordinateSystemLayoutInfo
 ): ParallelAxisLayoutPositionInfo {
-    var layoutLength = layoutInfo.layoutLength;
-    var axisExpandWidth = layoutInfo.axisExpandWidth;
-    var axisCount = layoutInfo.axisCount;
-    var axisCollapseWidth = layoutInfo.axisCollapseWidth;
-    var winInnerIndices = layoutInfo.winInnerIndices;
+    let layoutLength = layoutInfo.layoutLength;
+    let axisExpandWidth = layoutInfo.axisExpandWidth;
+    let axisCount = layoutInfo.axisCount;
+    let axisCollapseWidth = layoutInfo.axisCollapseWidth;
+    let winInnerIndices = layoutInfo.winInnerIndices;
 
-    var position;
-    var axisNameAvailableWidth = axisCollapseWidth;
-    var axisLabelShow = false;
-    var nameTruncateMaxWidth;
+    let position;
+    let axisNameAvailableWidth = axisCollapseWidth;
+    let axisLabelShow = false;
+    let nameTruncateMaxWidth;
 
     if (axisIndex < winInnerIndices[0]) {
         position = axisIndex * axisCollapseWidth;

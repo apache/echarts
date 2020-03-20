@@ -35,15 +35,15 @@ export function makeRectPanelClipPath(rect: RectLike) {
 export function makeLinearBrushOtherExtent(rect: RectLike, specifiedXYIndex?: 0 | 1) {
     rect = normalizeRect(rect);
     return function (xyIndex: 0 | 1) {
-        var idx = specifiedXYIndex != null ? specifiedXYIndex : xyIndex;
-        var brushWidth = idx ? rect.width : rect.height;
-        var base = idx ? rect.x : rect.y;
+        let idx = specifiedXYIndex != null ? specifiedXYIndex : xyIndex;
+        let brushWidth = idx ? rect.width : rect.height;
+        let base = idx ? rect.x : rect.y;
         return [base, base + (brushWidth || 0)];
     };
 }
 
 export function makeRectIsTargetByCursor(rect: RectLike, api: ExtensionAPI, targetModel: ComponentModel) {
-    var boundingRect = normalizeRect(rect);
+    let boundingRect = normalizeRect(rect);
     return function (e: ElementEvent, localCursorPoint: number[]) {
         return boundingRect.contain(localCursorPoint[0], localCursorPoint[1])
             && !onIrrelevantElement(e, api, targetModel);

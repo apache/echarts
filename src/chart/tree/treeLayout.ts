@@ -41,12 +41,12 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 }
 
 function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
-    var layoutInfo = getViewRect(seriesModel, api);
+    let layoutInfo = getViewRect(seriesModel, api);
     seriesModel.layoutInfo = layoutInfo;
-    var layout = seriesModel.get('layout');
-    var width = 0;
-    var height = 0;
-    var separation = null;
+    let layout = seriesModel.get('layout');
+    let width = 0;
+    let height = 0;
+    let separation = null;
 
     if (layout === 'radial') {
         width = 2 * Math.PI;
@@ -61,8 +61,8 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         separation = sep();
     }
 
-    var virtualRoot = seriesModel.getData().tree.root as TreeLayoutNode;
-    var realRoot = virtualRoot.children[0];
+    let virtualRoot = seriesModel.getData().tree.root as TreeLayoutNode;
+    let realRoot = virtualRoot.children[0];
 
     if (realRoot) {
         init(virtualRoot);
@@ -70,11 +70,11 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         virtualRoot.hierNode.modifier = -realRoot.hierNode.prelim;
         eachBefore(realRoot, secondWalk);
 
-        var left = realRoot;
-        var right = realRoot;
-        var bottom = realRoot;
+        let left = realRoot;
+        let right = realRoot;
+        let bottom = realRoot;
         eachBefore(realRoot, function (node: TreeLayoutNode) {
-            var x = node.getLayout().x;
+            let x = node.getLayout().x;
             if (x < left.getLayout().x) {
                 left = node;
             }
@@ -86,12 +86,12 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
             }
         });
 
-        var delta = left === right ? 1 : separation(left, right) / 2;
-        var tx = delta - left.getLayout().x;
-        var kx = 0;
-        var ky = 0;
-        var coorX = 0;
-        var coorY = 0;
+        let delta = left === right ? 1 : separation(left, right) / 2;
+        let tx = delta - left.getLayout().x;
+        let kx = 0;
+        let ky = 0;
+        let coorX = 0;
+        let coorY = 0;
         if (layout === 'radial') {
             kx = width / (right.getLayout().x + delta + tx);
             // here we use (node.depth - 1), bucause the real root's depth is 1
@@ -99,12 +99,12 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
             eachBefore(realRoot, function (node) {
                 coorX = (node.getLayout().x + tx) * kx;
                 coorY = (node.depth - 1) * ky;
-                var finalCoor = radialCoordinate(coorX, coorY);
+                let finalCoor = radialCoordinate(coorX, coorY);
                 node.setLayout({x: finalCoor.x, y: finalCoor.y, rawX: coorX, rawY: coorY}, true);
             });
         }
         else {
-            var orient = seriesModel.getOrient();
+            let orient = seriesModel.getOrient();
             if (orient === 'RL' || orient === 'LR') {
                 ky = height / (right.getLayout().x + delta + tx);
                 kx = width / ((bottom.depth - 1) || 1);

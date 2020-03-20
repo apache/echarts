@@ -29,7 +29,7 @@ import ComponentView from '../../view/Component';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
 
-var elementList = [
+const elementList = [
     'axisLine',
     'axisLabel',
     'axisTick',
@@ -41,8 +41,8 @@ var elementList = [
 
 function getAxisLineShape(polar: Polar, rExtent: number[], angle: number) {
     rExtent[1] > rExtent[0] && (rExtent = rExtent.slice().reverse());
-    var start = polar.coordToPoint([rExtent[0], angle]);
-    var end = polar.coordToPoint([rExtent[1], angle]);
+    let start = polar.coordToPoint([rExtent[0], angle]);
+    let end = polar.coordToPoint([rExtent[1], angle]);
 
     return {
         x1: start[0],
@@ -53,14 +53,14 @@ function getAxisLineShape(polar: Polar, rExtent: number[], angle: number) {
 }
 
 function getRadiusIdx(polar: Polar) {
-    var radiusAxis = polar.getRadiusAxis();
+    let radiusAxis = polar.getRadiusAxis();
     return radiusAxis.inverse ? 0 : 1;
 }
 
 // Remove the last tick which will overlap the first tick
 function fixAngleOverlap(list: TickCoord[]) {
-    var firstItem = list[0];
-    var lastItem = list[list.length - 1];
+    let firstItem = list[0];
+    let lastItem = list[list.length - 1];
     if (firstItem
         && lastItem
         && Math.abs(Math.abs(firstItem.coord - lastItem.coord) - 360) < 1e-4
@@ -87,14 +87,14 @@ class AngleAxisView extends AxisView {
             return;
         }
 
-        var angleAxis = angleAxisModel.axis;
-        var polar = angleAxis.polar;
-        var radiusExtent = polar.getRadiusAxis().getExtent();
+        let angleAxis = angleAxisModel.axis;
+        let polar = angleAxis.polar;
+        let radiusExtent = polar.getRadiusAxis().getExtent();
 
-        var ticksAngles = angleAxis.getTicksCoords();
-        var minorTickAngles = angleAxis.getMinorTicksCoords();
+        let ticksAngles = angleAxis.getTicksCoords();
+        let minorTickAngles = angleAxis.getMinorTicksCoords();
 
-        var labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
+        let labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
             labelItem = zrUtil.clone(labelItem);
             labelItem.coord = angleAxis.dataToCoord(labelItem.tickValue);
             return labelItem;
@@ -131,13 +131,13 @@ interface AngleAxisElementBuilder {
 const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisElementBuilder> = {
 
     axisLine(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
-        var lineStyleModel = angleAxisModel.getModel(['axisLine', 'lineStyle']);
+        let lineStyleModel = angleAxisModel.getModel(['axisLine', 'lineStyle']);
 
         // extent id of the axis radius (r0 and r)
-        var rId = getRadiusIdx(polar);
-        var r0Id = rId ? 0 : 1;
+        let rId = getRadiusIdx(polar);
+        let r0Id = rId ? 0 : 1;
 
-        var shape;
+        let shape;
         if (radiusExtent[r0Id] === 0) {
             shape = new graphic.Circle({
                 shape: {
@@ -168,12 +168,12 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
     },
 
     axisTick(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
-        var tickModel = angleAxisModel.getModel('axisTick');
+        let tickModel = angleAxisModel.getModel('axisTick');
 
-        var tickLen = (tickModel.get('inside') ? -1 : 1) * tickModel.get('length');
-        var radius = radiusExtent[getRadiusIdx(polar)];
+        let tickLen = (tickModel.get('inside') ? -1 : 1) * tickModel.get('length');
+        let radius = radiusExtent[getRadiusIdx(polar)];
 
-        var lines = zrUtil.map(ticksAngles, function (tickAngleItem) {
+        let lines = zrUtil.map(ticksAngles, function (tickAngleItem) {
             return new graphic.Line({
                 shape: getAxisLineShape(polar, [radius, radius + tickLen], tickAngleItem.coord)
             });
@@ -195,16 +195,16 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
             return;
         }
 
-        var tickModel = angleAxisModel.getModel('axisTick');
-        var minorTickModel = angleAxisModel.getModel('minorTick');
+        let tickModel = angleAxisModel.getModel('axisTick');
+        let minorTickModel = angleAxisModel.getModel('minorTick');
 
-        var tickLen = (tickModel.get('inside') ? -1 : 1) * minorTickModel.get('length');
-        var radius = radiusExtent[getRadiusIdx(polar)];
+        let tickLen = (tickModel.get('inside') ? -1 : 1) * minorTickModel.get('length');
+        let radius = radiusExtent[getRadiusIdx(polar)];
 
-        var lines = [];
+        let lines = [];
 
-        for (var i = 0; i < minorTickAngles.length; i++) {
-            for (var k = 0; k < minorTickAngles[i].length; k++) {
+        for (let i = 0; i < minorTickAngles.length; i++) {
+            for (let k = 0; k < minorTickAngles[i].length; k++) {
                 lines.push(new graphic.Line({
                     shape: getAxisLineShape(polar, [radius, radius + tickLen], minorTickAngles[i][k].coord)
                 }));
@@ -226,26 +226,26 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
     },
 
     axisLabel(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent, labels) {
-        var rawCategoryData = angleAxisModel.getCategories(true);
+        let rawCategoryData = angleAxisModel.getCategories(true);
 
-        var commonLabelModel = angleAxisModel.getModel('axisLabel');
+        let commonLabelModel = angleAxisModel.getModel('axisLabel');
 
-        var labelMargin = commonLabelModel.get('margin');
-        var triggerEvent = angleAxisModel.get('triggerEvent');
+        let labelMargin = commonLabelModel.get('margin');
+        let triggerEvent = angleAxisModel.get('triggerEvent');
 
         // Use length of ticksAngles because it may remove the last tick to avoid overlapping
         zrUtil.each(labels, function (labelItem, idx) {
-            var labelModel = commonLabelModel;
-            var tickValue = labelItem.tickValue;
+            let labelModel = commonLabelModel;
+            let tickValue = labelItem.tickValue;
 
-            var r = radiusExtent[getRadiusIdx(polar)];
-            var p = polar.coordToPoint([r + labelMargin, labelItem.coord]);
-            var cx = polar.cx;
-            var cy = polar.cy;
+            let r = radiusExtent[getRadiusIdx(polar)];
+            let p = polar.coordToPoint([r + labelMargin, labelItem.coord]);
+            let cx = polar.cx;
+            let cy = polar.cy;
 
-            var labelTextAlign: ZRTextAlign = Math.abs(p[0] - cx) / r < 0.3
+            let labelTextAlign: ZRTextAlign = Math.abs(p[0] - cx) / r < 0.3
                 ? 'center' : (p[0] > cx ? 'left' : 'right');
-            var labelTextVerticalAlign: ZRTextVerticalAlign = Math.abs(p[1] - cy) / r < 0.3
+            let labelTextVerticalAlign: ZRTextVerticalAlign = Math.abs(p[1] - cy) / r < 0.3
                 ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
             if (rawCategoryData && rawCategoryData[tickValue]) {
@@ -257,7 +257,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     }
             }
 
-            var textEl = new graphic.Text({
+            let textEl = new graphic.Text({
                 silent: AxisBuilder.isLabelSilent(angleAxisModel)
             });
             group.add(textEl);
@@ -282,17 +282,17 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
     },
 
     splitLine(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
-        var splitLineModel = angleAxisModel.getModel('splitLine');
-        var lineStyleModel = splitLineModel.getModel('lineStyle');
-        var lineColors = lineStyleModel.get('color');
-        var lineCount = 0;
+        let splitLineModel = angleAxisModel.getModel('splitLine');
+        let lineStyleModel = splitLineModel.getModel('lineStyle');
+        let lineColors = lineStyleModel.get('color');
+        let lineCount = 0;
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
-        var splitLines: graphic.Line[][] = [];
+        let splitLines: graphic.Line[][] = [];
 
         for (let i = 0; i < ticksAngles.length; i++) {
-            var colorIndex = (lineCount++) % lineColors.length;
+            let colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Line({
                 shape: getAxisLineShape(polar, radiusExtent, ticksAngles[i].coord)
@@ -317,13 +317,13 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
             return;
         }
 
-        var minorSplitLineModel = angleAxisModel.getModel('minorSplitLine');
-        var lineStyleModel = minorSplitLineModel.getModel('lineStyle');
+        let minorSplitLineModel = angleAxisModel.getModel('minorSplitLine');
+        let lineStyleModel = minorSplitLineModel.getModel('lineStyle');
 
-        var lines = [];
+        let lines = [];
 
-        for (var i = 0; i < minorTickAngles.length; i++) {
-            for (var k = 0; k < minorTickAngles[i].length; k++) {
+        for (let i = 0; i < minorTickAngles.length; i++) {
+            for (let k = 0; k < minorTickAngles[i].length; k++) {
                 lines.push(new graphic.Line({
                     shape: getAxisLineShape(polar, radiusExtent, minorTickAngles[i][k].coord)
                 }));
@@ -342,24 +342,24 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
             return;
         }
 
-        var splitAreaModel = angleAxisModel.getModel('splitArea');
-        var areaStyleModel = splitAreaModel.getModel('areaStyle');
-        var areaColors = areaStyleModel.get('color');
-        var lineCount = 0;
+        let splitAreaModel = angleAxisModel.getModel('splitArea');
+        let areaStyleModel = splitAreaModel.getModel('areaStyle');
+        let areaColors = areaStyleModel.get('color');
+        let lineCount = 0;
 
         areaColors = areaColors instanceof Array ? areaColors : [areaColors];
 
-        var splitAreas: graphic.Sector[][] = [];
+        let splitAreas: graphic.Sector[][] = [];
 
-        var RADIAN = Math.PI / 180;
-        var prevAngle = -ticksAngles[0].coord * RADIAN;
-        var r0 = Math.min(radiusExtent[0], radiusExtent[1]);
-        var r1 = Math.max(radiusExtent[0], radiusExtent[1]);
+        let RADIAN = Math.PI / 180;
+        let prevAngle = -ticksAngles[0].coord * RADIAN;
+        let r0 = Math.min(radiusExtent[0], radiusExtent[1]);
+        let r1 = Math.max(radiusExtent[0], radiusExtent[1]);
 
-        var clockwise = angleAxisModel.get('clockwise');
+        let clockwise = angleAxisModel.get('clockwise');
 
         for (let i = 1; i < ticksAngles.length; i++) {
-            var colorIndex = (lineCount++) % areaColors.length;
+            let colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
             splitAreas[colorIndex].push(new graphic.Sector({
                 shape: {

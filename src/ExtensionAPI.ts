@@ -23,7 +23,7 @@ import {CoordinateSystemMaster} from './coord/CoordinateSystem';
 import Element from 'zrender/src/Element';
 import ComponentModel from './model/Component';
 
-var availableMethods = {
+const availableMethods = {
     getDom: 1,
     getZr: 1,
     getWidth: 1,

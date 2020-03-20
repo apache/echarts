@@ -21,7 +21,7 @@ import { Dictionary } from 'zrender/src/core/types';
 */
 
 
-var coordsOffsetMap = {
+const coordsOffsetMap = {
     '南海诸岛': [32, 80],
     // 全国
     '广东': [0, -10],
@@ -33,9 +33,9 @@ var coordsOffsetMap = {
 
 export default function (mapType: string, region: Region) {
     if (mapType === 'china') {
-        var coordFix = coordsOffsetMap[region.name];
+        let coordFix = coordsOffsetMap[region.name];
         if (coordFix) {
-            var cp = region.center;
+            let cp = region.center;
             cp[0] += coordFix[0] / 10.5;
             cp[1] += -coordFix[1] / (10.5 / 0.75);
         }

@@ -31,7 +31,7 @@ import Model from '../model/Model';
 import { AxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
 
-var NORMALIZED_EXTENT = [0, 1] as [number, number];
+const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
 interface TickCoord {
     coord: number;
@@ -76,9 +76,9 @@ class Axis {
      * If axis extent contain given coord
      */
     contain(coord: number): boolean {
-        var extent = this._extent;
-        var min = Math.min(extent[0], extent[1]);
-        var max = Math.max(extent[0], extent[1]);
+        let extent = this._extent;
+        let min = Math.min(extent[0], extent[1]);
+        let max = Math.max(extent[0], extent[1]);
         return coord >= min && coord <= max;
     }
 
@@ -110,7 +110,7 @@ class Axis {
      * Set coord extent
      */
     setExtent(start: number, end: number): void {
-        var extent = this._extent;
+        let extent = this._extent;
         extent[0] = start;
         extent[1] = end;
     }
@@ -119,8 +119,8 @@ class Axis {
      * Convert data to coord. Data is the rank if it has an ordinal scale
      */
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
-        var extent = this._extent;
-        var scale = this.scale;
+        let extent = this._extent;
+        let scale = this.scale;
         data = scale.normalize(data);
 
         if (this.onBand && scale.type === 'ordinal') {
@@ -135,15 +135,15 @@ class Axis {
      * Convert coord to data. Data is the rank if it has an ordinal scale
      */
     coordToData(coord: number, clamp?: boolean): number {
-        var extent = this._extent;
-        var scale = this.scale;
+        let extent = this._extent;
+        let scale = this.scale;
 
         if (this.onBand && scale.type === 'ordinal') {
             extent = extent.slice() as [number, number];
             fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
-        var t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
+        let t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
 
         return this.scale.scale(t);
     }
@@ -171,18 +171,18 @@ class Axis {
     }): TickCoord[] {
         opt = opt || {};
 
-        var tickModel = opt.tickModel || this.getTickModel();
-        var result = createAxisTicks(this, tickModel);
-        var ticks = result.ticks;
+        let tickModel = opt.tickModel || this.getTickModel();
+        let result = createAxisTicks(this, tickModel);
+        let ticks = result.ticks;
 
-        var ticksCoords = map(ticks, function (tickValue) {
+        let ticksCoords = map(ticks, function (tickValue) {
             return {
                 coord: this.dataToCoord(tickValue),
                 tickValue: tickValue
             };
         }, this);
 
-        var alignWithLabel = tickModel.get('alignWithLabel');
+        let alignWithLabel = tickModel.get('alignWithLabel');
 
         fixOnBandTicksCoords(
             this, ticksCoords, alignWithLabel, opt.clamp
@@ -197,14 +197,14 @@ class Axis {
             return [];
         }
 
-        var minorTickModel = this.model.getModel('minorTick');
-        var splitNumber = minorTickModel.get('splitNumber');
+        let minorTickModel = this.model.getModel('minorTick');
+        let splitNumber = minorTickModel.get('splitNumber');
         // Protection.
         if (!(splitNumber > 0 && splitNumber < 100)) {
             splitNumber = 5;
         }
-        var minorTicks = this.scale.getMinorTicks(splitNumber);
-        var minorTicksCoords = map(minorTicks, function (minorTicksGroup) {
+        let minorTicks = this.scale.getMinorTicks(splitNumber);
+        let minorTicksCoords = map(minorTicks, function (minorTicksGroup) {
             return map(minorTicksGroup, function (minorTick) {
                 return {
                     coord: this.dataToCoord(minorTick),
@@ -238,14 +238,14 @@ class Axis {
      * Get width of band
      */
     getBandWidth(): number {
-        var axisExtent = this._extent;
-        var dataExtent = this.scale.getExtent();
+        let axisExtent = this._extent;
+        let dataExtent = this.scale.getExtent();
 
-        var len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+        let len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
         // Fix #2728, avoid NaN when only one data.
         len === 0 && (len = 1);
 
-        var size = Math.abs(axisExtent[1] - axisExtent[0]);
+        let size = Math.abs(axisExtent[1] - axisExtent[0]);
 
         return Math.abs(size) / len;
     }
@@ -267,9 +267,9 @@ class Axis {
 }
 
 function fixExtentWithBands(extent: [number, number], nTick: number): void {
-    var size = extent[1] - extent[0];
-    var len = nTick;
-    var margin = size / len / 2;
+    let size = extent[1] - extent[0];
+    let len = nTick;
+    let margin = size / len / 2;
     extent[0] += margin;
     extent[1] -= margin;
 }
@@ -286,28 +286,28 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 function fixOnBandTicksCoords(
     axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, clamp: boolean
 ) {
-    var ticksLen = ticksCoords.length;
+    let ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
         return;
     }
 
-    var axisExtent = axis.getExtent();
-    var last;
-    var diffSize;
+    let axisExtent = axis.getExtent();
+    let last;
+    let diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {coord: axisExtent[0]};
     }
     else {
-        var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
-        var shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
+        let crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
+        let shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
 
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
         });
 
-        var dataExtent = axis.scale.getExtent();
+        let dataExtent = axis.scale.getExtent();
         diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
 
         last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
@@ -315,7 +315,7 @@ function fixOnBandTicksCoords(
         ticksCoords.push(last);
     }
 
-    var inverse = axisExtent[0] > axisExtent[1];
+    let inverse = axisExtent[0] > axisExtent[1];
 
     // Handling clamp.
     if (littleThan(ticksCoords[0].coord, axisExtent[0])) {

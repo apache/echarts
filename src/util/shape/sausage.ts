@@ -47,22 +47,22 @@ class SausagePath extends Path {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: SausageShape) {
-        var x = shape.cx;
-        var y = shape.cy;
-        var r0 = Math.max(shape.r0 || 0, 0);
-        var r = Math.max(shape.r, 0);
-        var dr = (r - r0) * 0.5;
-        var rCenter = r0 + dr;
-        var startAngle = shape.startAngle;
-        var endAngle = shape.endAngle;
-        var clockwise = shape.clockwise;
+        let x = shape.cx;
+        let y = shape.cy;
+        let r0 = Math.max(shape.r0 || 0, 0);
+        let r = Math.max(shape.r, 0);
+        let dr = (r - r0) * 0.5;
+        let rCenter = r0 + dr;
+        let startAngle = shape.startAngle;
+        let endAngle = shape.endAngle;
+        let clockwise = shape.clockwise;
 
-        var unitStartX = Math.cos(startAngle);
-        var unitStartY = Math.sin(startAngle);
-        var unitEndX = Math.cos(endAngle);
-        var unitEndY = Math.sin(endAngle);
+        let unitStartX = Math.cos(startAngle);
+        let unitStartY = Math.sin(startAngle);
+        let unitEndX = Math.cos(endAngle);
+        let unitEndY = Math.sin(endAngle);
 
-        var lessThanCircle = clockwise
+        let lessThanCircle = clockwise
             ? endAngle - startAngle < Math.PI * 2
             : startAngle - endAngle < Math.PI * 2;
 

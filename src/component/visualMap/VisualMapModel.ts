@@ -196,7 +196,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      * @protected
      */
     optionUpdated(newOption: Opts, isInit?: boolean) {
-        var thisOption = this.option;
+        let thisOption = this.option;
 
         // FIXME
         // necessary?
@@ -222,7 +222,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     resetVisual(
         supplementVisualOption: (this: this, mappingOption: VisualMappingOption, state: string) => void
     ) {
-        var stateList = this.stateList;
+        let stateList = this.stateList;
         supplementVisualOption = zrUtil.bind(supplementVisualOption, this);
 
         this.controllerVisuals = visualSolution.createVisualMappings(
@@ -238,8 +238,8 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      * @return {Array.<number>} An array of series indices.
      */
     getTargetSeriesIndices() {
-        var optionSeriesIndex = this.option.seriesIndex;
-        var seriesIndices: number[] = [];
+        let optionSeriesIndex = this.option.seriesIndex;
+        let seriesIndices: number[] = [];
 
         if (optionSeriesIndex == null || optionSeriesIndex === 'all') {
             this.ecModel.eachSeries(function (seriesModel, index) {
@@ -269,7 +269,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      * @pubilc
      */
     isTargetSeries(seriesModel: SeriesModel) {
-        var is = false;
+        let is = false;
         this.eachTargetSeries(function (model) {
             model === seriesModel && (is = true);
         });
@@ -294,12 +294,12 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         isCategory?: boolean,
         edgeSymbols?: string[]
     ): string {
-        var option = this.option;
-        var precision = option.precision;
-        var dataBound = this.dataBound;
-        var formatter = option.formatter;
-        var isMinMax: boolean;
-        var textValue: string | string[];
+        let option = this.option;
+        let precision = option.precision;
+        let dataBound = this.dataBound;
+        let formatter = option.formatter;
+        let isMinMax: boolean;
+        let textValue: string | string[];
         edgeSymbols = edgeSymbols || ['<', '>'] as [string, string];
 
         if (zrUtil.isArray(value)) {
@@ -353,13 +353,13 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      * @protected
      */
     resetExtent() {
-        var thisOption = this.option;
+        let thisOption = this.option;
 
         // Can not calculate data extent by data here.
         // Because series and data may be modified in processing stage.
         // So we do not support the feature "auto min/max".
 
-        var extent = asc([thisOption.min, thisOption.max] as [number, number]);
+        let extent = asc([thisOption.min, thisOption.max] as [number, number]);
 
         this._dataExtent = extent;
     }
@@ -368,8 +368,8 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      * Return  Concrete dimention. If return null/undefined, no dimension used.
      */
     getDataDimension(list: List) {
-        var optDim = this.option.dimension;
-        var listDimensions = list.dimensions;
+        let optDim = this.option.dimension;
+        let listDimensions = list.dimensions;
         if (optDim == null && !listDimensions.length) {
             return;
         }
@@ -378,10 +378,10 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             return list.getDimension(optDim);
         }
 
-        var dimNames = list.dimensions;
-        for (var i = dimNames.length - 1; i >= 0; i--) {
-            var dimName = dimNames[i];
-            var dimInfo = list.getDimensionInfo(dimName);
+        let dimNames = list.dimensions;
+        for (let i = dimNames.length - 1; i >= 0; i--) {
+            let dimName = dimNames[i];
+            let dimInfo = list.getDimensionInfo(dimName);
             if (!dimInfo.isCalculationCoord) {
                 return dimName;
             }
@@ -394,20 +394,20 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
 
     completeVisualOption() {
 
-        var ecModel = this.ecModel;
-        var thisOption = this.option;
-        var base = {
+        let ecModel = this.ecModel;
+        let thisOption = this.option;
+        let base = {
             inRange: thisOption.inRange,
             outOfRange: thisOption.outOfRange
         };
 
-        var target = thisOption.target || (thisOption.target = {});
-        var controller = thisOption.controller || (thisOption.controller = {});
+        let target = thisOption.target || (thisOption.target = {});
+        let controller = thisOption.controller || (thisOption.controller = {});
 
         zrUtil.merge(target, base); // Do not override
         zrUtil.merge(controller, base); // Do not override
 
-        var isCategory = this.isCategory();
+        let isCategory = this.isCategory();
 
         completeSingle.call(this, target);
         completeSingle.call(this, controller);
@@ -443,8 +443,8 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             stateExist: VisualState,
             stateAbsent: VisualState
         ) {
-            var optExist = base[stateExist];
-            var optAbsent = base[stateAbsent];
+            let optExist = base[stateExist];
+            let optAbsent = base[stateAbsent];
 
             if (optExist && !optAbsent) {
                 optAbsent = base[stateAbsent] = {};
@@ -453,7 +453,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                         return;
                     }
 
-                    var defa = visualDefault.get(visualType, 'inactive', isCategory);
+                    let defa = visualDefault.get(visualType, 'inactive', isCategory);
 
                     if (defa != null) {
                         optAbsent[visualType] = defa;
@@ -473,16 +473,16 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         }
 
         function completeController(this: VisualMapModel, controller?: VisualMapOption['controller']) {
-            var symbolExists = (controller.inRange || {}).symbol
+            let symbolExists = (controller.inRange || {}).symbol
                 || (controller.outOfRange || {}).symbol;
-            var symbolSizeExists = (controller.inRange || {}).symbolSize
+            let symbolSizeExists = (controller.inRange || {}).symbolSize
                 || (controller.outOfRange || {}).symbolSize;
-            var inactiveColor = this.get('inactiveColor');
+            let inactiveColor = this.get('inactiveColor');
 
             each(this.stateList, function (state: VisualState) {
 
-                var itemSize = this.itemSize;
-                var visuals = controller[state];
+                let itemSize = this.itemSize;
+                let visuals = controller[state];
 
                 // Set inactive color for controller if no other color
                 // attr (like colorAlpha) specified.
@@ -510,10 +510,10 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                 });
 
                 // Normalize symbolSize
-                var symbolSize = visuals.symbolSize;
+                let symbolSize = visuals.symbolSize;
 
                 if (symbolSize != null) {
-                    var max = -Infinity;
+                    let max = -Infinity;
                     // symbolSize can be object when categories defined.
                     eachVisual(symbolSize, function (value) {
                         value > max && (max = value);

@@ -49,11 +49,11 @@ export function toCamelCase(str: string, upperCaseFirst?: boolean): string {
     return str;
 }
 
-export var normalizeCssArray = zrUtil.normalizeCssArray;
+export let normalizeCssArray = zrUtil.normalizeCssArray;
 
 
-var replaceReg = /([&<>"'])/g;
-var replaceMap: Dictionary<string> = {
+const replaceReg = /([&<>"'])/g;
+const replaceMap: Dictionary<string> = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
@@ -69,9 +69,9 @@ export function encodeHTML(source: string): string {
         });
 }
 
-var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+const TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
-var wrapVar = function (varName: string, seriesIdx?: number): string {
+const wrapVar = function (varName: string, seriesIdx?: number): string {
     return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
 };
 
@@ -91,19 +91,19 @@ export function formatTpl(
     if (!zrUtil.isArray(paramsList)) {
         paramsList = [paramsList];
     }
-    var seriesLen = paramsList.length;
+    let seriesLen = paramsList.length;
     if (!seriesLen) {
         return '';
     }
 
-    var $vars = paramsList[0].$vars || [];
-    for (var i = 0; i < $vars.length; i++) {
-        var alias = TPL_VAR_ALIAS[i];
+    let $vars = paramsList[0].$vars || [];
+    for (let i = 0; i < $vars.length; i++) {
+        let alias = TPL_VAR_ALIAS[i];
         tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
     }
-    for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-        for (var k = 0; k < $vars.length; k++) {
-            var val = paramsList[seriesIdx][$vars[k]];
+    for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+        for (let k = 0; k < $vars.length; k++) {
+            let val = paramsList[seriesIdx][$vars[k]];
             tpl = tpl.replace(
                 wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
                 encode ? encodeHTML(val) : val
@@ -150,15 +150,15 @@ interface GetTooltipMarkerOpt {
 export function getTooltipMarker(color: ColorString, extraCssText?: string): TooltipMarker;
 export function getTooltipMarker(opt: GetTooltipMarkerOpt): TooltipMarker;
 export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extraCssText?: string): TooltipMarker {
-    var opt = zrUtil.isString(inOpt) ? {
+    let opt = zrUtil.isString(inOpt) ? {
         color: inOpt,
         extraCssText: extraCssText
     } : (inOpt || {}) as GetTooltipMarkerOpt;
-    var color = opt.color;
-    var type = opt.type;
+    let color = opt.color;
+    let type = opt.type;
     extraCssText = opt.extraCssText;
-    var renderMode = opt.renderMode || 'html';
-    var markerId = opt.markerId || 'X';
+    let renderMode = opt.renderMode || 'html';
+    let markerId = opt.markerId || 'X';
 
     if (!color) {
         return '';
@@ -211,15 +211,15 @@ export function formatTime(tpl: string, value: number | string | Date, isUTC?: b
         tpl = 'MM-dd\nyyyy';
     }
 
-    var date = numberUtil.parseDate(value);
-    var utc = isUTC ? 'UTC' : '';
-    var y = (date as any)['get' + utc + 'FullYear']();
-    var M = (date as any)['get' + utc + 'Month']() + 1;
-    var d = (date as any)['get' + utc + 'Date']();
-    var h = (date as any)['get' + utc + 'Hours']();
-    var m = (date as any)['get' + utc + 'Minutes']();
-    var s = (date as any)['get' + utc + 'Seconds']();
-    var S = (date as any)['get' + utc + 'Milliseconds']();
+    let date = numberUtil.parseDate(value);
+    let utc = isUTC ? 'UTC' : '';
+    let y = (date as any)['get' + utc + 'FullYear']();
+    let M = (date as any)['get' + utc + 'Month']() + 1;
+    let d = (date as any)['get' + utc + 'Date']();
+    let h = (date as any)['get' + utc + 'Hours']();
+    let m = (date as any)['get' + utc + 'Minutes']();
+    let s = (date as any)['get' + utc + 'Seconds']();
+    let S = (date as any)['get' + utc + 'Milliseconds']();
 
     tpl = tpl.replace('MM', pad(M, 2))
         .replace('M', M)
@@ -247,7 +247,7 @@ export function capitalFirst(str: string): string {
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
 }
 
-export var truncateText = textContain.truncateText;
+export let truncateText = textContain.truncateText;
 
 export function getTextBoundingRect(opt: StyleProps): ReturnType<typeof textContain.getBoundingRect> {
     return textContain.getBoundingRect(

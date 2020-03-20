@@ -23,12 +23,12 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 
-var visualDefault = {
+const visualDefault = {
     /**
      * @public
      */
     get: function (visualType: string, key: 'active' | 'inactive', isCategory?: boolean) {
-        var value = zrUtil.clone(
+        let value = zrUtil.clone(
             (defaultOption[visualType] || {})[key]
         );
 
@@ -38,7 +38,7 @@ var visualDefault = {
     }
 };
 
-var defaultOption: {[key: string]: {
+const defaultOption: {[key: string]: {
     active: string[] | number[]
     inactive: string[] | number[]
 }} = {

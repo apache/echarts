@@ -28,7 +28,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 
-var RADIAN_EPSILON = 1e-4;
+const RADIAN_EPSILON = 1e-4;
 
 function _trim(str: string): string {
     return str.replace(/^\s+|\s+$/g, '');
@@ -47,8 +47,8 @@ export function linearMap(
     range: number[],
     clamp?: boolean
 ): number {
-    var subDomain = domain[1] - domain[0];
-    var subRange = range[1] - range[0];
+    let subDomain = domain[1] - domain[0];
+    let subRange = range[1] - range[0];
 
     if (subDomain === 0) {
         return subRange === 0
@@ -158,11 +158,11 @@ export function getPrecision(val: string | number): number {
         return 0;
     }
     // It is much faster than methods converting number to string as follows
-    //      var tmp = val.toString();
+    //      let tmp = val.toString();
     //      return tmp.length - 1 - tmp.indexOf('.');
     // especially when precision is low
-    var e = 1;
-    var count = 0;
+    let e = 1;
+    let count = 0;
     while (Math.round(val * e) / e !== val) {
         e *= 10;
         count++;
@@ -174,16 +174,16 @@ export function getPrecision(val: string | number): number {
  * Get precision with slow but safe method
  */
 export function getPrecisionSafe(val: string | number): number {
-    var str = val.toString();
+    let str = val.toString();
 
     // Consider scientific notation: '3.4e-12' '3.4e+12'
-    var eIndex = str.indexOf('e');
+    let eIndex = str.indexOf('e');
     if (eIndex > 0) {
-        var precision = +str.slice(eIndex + 1);
+        let precision = +str.slice(eIndex + 1);
         return precision < 0 ? -precision : 0;
     }
     else {
-        var dotIndex = str.indexOf('.');
+        let dotIndex = str.indexOf('.');
         return dotIndex < 0 ? 0 : str.length - 1 - dotIndex;
     }
 }
@@ -192,12 +192,12 @@ export function getPrecisionSafe(val: string | number): number {
  * Minimal dicernible data precisioin according to a single pixel.
  */
 export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [number, number]): number {
-    var log = Math.log;
-    var LN10 = Math.LN10;
-    var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
-    var sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
+    let log = Math.log;
+    let LN10 = Math.LN10;
+    let dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
+    let sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
     // toFixed() digits argument must be between 0 and 20.
-    var precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
+    let precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
     return !isFinite(precision) ? 20 : precision;
 }
 
@@ -217,37 +217,37 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
         return 0;
     }
 
-    var sum = zrUtil.reduce(valueList, function (acc, val) {
+    let sum = zrUtil.reduce(valueList, function (acc, val) {
         return acc + (isNaN(val) ? 0 : val);
     }, 0);
     if (sum === 0) {
         return 0;
     }
 
-    var digits = Math.pow(10, precision);
-    var votesPerQuota = zrUtil.map(valueList, function (val) {
+    let digits = Math.pow(10, precision);
+    let votesPerQuota = zrUtil.map(valueList, function (val) {
         return (isNaN(val) ? 0 : val) / sum * digits * 100;
     });
-    var targetSeats = digits * 100;
+    let targetSeats = digits * 100;
 
-    var seats = zrUtil.map(votesPerQuota, function (votes) {
+    let seats = zrUtil.map(votesPerQuota, function (votes) {
         // Assign automatic seats.
         return Math.floor(votes);
     });
-    var currentSum = zrUtil.reduce(seats, function (acc, val) {
+    let currentSum = zrUtil.reduce(seats, function (acc, val) {
         return acc + val;
     }, 0);
 
-    var remainder = zrUtil.map(votesPerQuota, function (votes, idx) {
+    let remainder = zrUtil.map(votesPerQuota, function (votes, idx) {
         return votes - seats[idx];
     });
 
     // Has remainding votes.
     while (currentSum < targetSeats) {
         // Find next largest remainder.
-        var max = Number.NEGATIVE_INFINITY;
-        var maxId = null;
-        for (var i = 0, len = remainder.length; i < len; ++i) {
+        let max = Number.NEGATIVE_INFINITY;
+        let maxId = null;
+        for (let i = 0, len = remainder.length; i < len; ++i) {
             if (remainder[i] > max) {
                 max = remainder[i];
                 maxId = i;
@@ -264,13 +264,13 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
 }
 
 // Number.MAX_SAFE_INTEGER, ie do not support.
-export var MAX_SAFE_INTEGER = 9007199254740991;
+export let MAX_SAFE_INTEGER = 9007199254740991;
 
 /**
  * To 0 - 2 * PI, considering negative radian.
  */
 export function remRadian(radian: number): number {
-    var pi2 = Math.PI * 2;
+    let pi2 = Math.PI * 2;
     return (radian % pi2 + pi2) % pi2;
 }
 
@@ -283,7 +283,7 @@ export function isRadianAroundZero(val: number): boolean {
 }
 
 // eslint-disable-next-line
-var TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
+const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
 
 /**
  * @param value These values can be accepted:
@@ -310,7 +310,7 @@ export function parseDate(value: number | string | Date): Date {
         // new Date('1970-01-01') is UTC,
         // new Date('1970/01/01') and new Date('1970-1-01') is local.
         // See issue #3623
-        var match = TIME_REG.exec(value);
+        let match = TIME_REG.exec(value);
 
         if (!match) {
             // return Invalid Date.
@@ -339,7 +339,7 @@ export function parseDate(value: number | string | Date): Date {
         // `new Date(1478412000000).getTimezoneOffset();  // get 300`
         // So we should not use `new Date`, but use `Date.UTC`.
         else {
-            var hour = +match[4] || 0;
+            let hour = +match[4] || 0;
             if (match[8].toUpperCase() !== 'Z') {
                 hour -= +match[8].slice(0, 3);
             }
@@ -383,7 +383,7 @@ export function quantityExponent(val: number): number {
         return 0;
     }
 
-    var exp = Math.floor(Math.log(val) / Math.LN10);
+    let exp = Math.floor(Math.log(val) / Math.LN10);
     /**
      * exp is expected to be the rounded-down result of the base-10 log of val.
      * But due to the precision loss with Math.log(val), we need to restore it
@@ -407,10 +407,10 @@ export function quantityExponent(val: number): number {
  * @return Niced number
  */
 export function nice(val: number, round?: boolean): number {
-    var exponent = quantityExponent(val);
-    var exp10 = Math.pow(10, exponent);
-    var f = val / exp10; // 1 <= f < 10
-    var nf;
+    let exponent = quantityExponent(val);
+    let exp10 = Math.pow(10, exponent);
+    let f = val / exp10; // 1 <= f < 10
+    let nf;
     if (round) {
         if (f < 1.5) {
             nf = 1;
@@ -459,10 +459,10 @@ export function nice(val: number, round?: boolean): number {
  * @param ascArr
  */
 export function quantile(ascArr: number[], p: number): number {
-    var H = (ascArr.length - 1) * p + 1;
-    var h = Math.floor(H);
-    var v = +ascArr[h - 1];
-    var e = H - h;
+    let H = (ascArr.length - 1) * p + 1;
+    let h = Math.floor(H);
+    let v = +ascArr[h - 1];
+    let e = H - h;
     return e ? v + e * (ascArr[h] - v) : v;
 }
 
@@ -497,13 +497,13 @@ export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
         return littleThan(a, b, 0) ? -1 : 1;
     });
 
-    var curr = -Infinity;
-    var currClose = 1;
-    for (var i = 0; i < list.length;) {
-        var interval = list[i].interval;
-        var close = list[i].close;
+    let curr = -Infinity;
+    let currClose = 1;
+    for (let i = 0; i < list.length;) {
+        let interval = list[i].interval;
+        let close = list[i].close;
 
-        for (var lg = 0; lg < 2; lg++) {
+        for (let lg = 0; lg < 2; lg++) {
             if (interval[lg] <= curr) {
                 interval[lg] = curr;
                 close[lg] = (!lg ? 1 - currClose : 1) as 0 | 1;

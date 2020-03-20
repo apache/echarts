@@ -38,9 +38,9 @@ import {
 } from '../../util/types';
 import Model from '../../model/Model';
 
-var curry = zrUtil.curry;
-var each = zrUtil.each;
-var Group = graphic.Group;
+const curry = zrUtil.curry;
+const each = zrUtil.each;
+const Group = graphic.Group;
 
 class LegendView extends ComponentView {
     static type = 'legend.plain';
@@ -90,7 +90,7 @@ class LegendView extends ComponentView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var isFirstRender = this._isFirstRender;
+        let isFirstRender = this._isFirstRender;
         this._isFirstRender = false;
 
         this.resetInner();
@@ -99,8 +99,8 @@ class LegendView extends ComponentView {
             return;
         }
 
-        var itemAlign = legendModel.get('align');
-        var orient = legendModel.get('orient');
+        let itemAlign = legendModel.get('align');
+        let orient = legendModel.get('orient');
         if (!itemAlign || itemAlign === 'auto') {
             itemAlign = (
                 legendModel.get('left') === 'right'
@@ -109,8 +109,8 @@ class LegendView extends ComponentView {
         }
 
         // selector has been normalized to an array in model
-        var selector = legendModel.get('selector', true) as LegendSelectorButtonOption[];
-        var selectorPosition = legendModel.get('selectorPosition', true);
+        let selector = legendModel.get('selector', true) as LegendSelectorButtonOption[];
+        let selectorPosition = legendModel.get('selectorPosition', true);
         if (selector && (!selectorPosition || selectorPosition === 'auto')) {
             selectorPosition = orient === 'horizontal' ? 'end' : 'start';
         }
@@ -118,16 +118,16 @@ class LegendView extends ComponentView {
         this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         // Perform layout.
-        var positionInfo = legendModel.getBoxLayoutParams();
-        var viewportSize = {width: api.getWidth(), height: api.getHeight()};
-        var padding = legendModel.get('padding');
+        let positionInfo = legendModel.getBoxLayoutParams();
+        let viewportSize = {width: api.getWidth(), height: api.getHeight()};
+        let padding = legendModel.get('padding');
 
-        var maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
+        let maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
 
-        var mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
+        let mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
 
         // Place mainGroup, based on the calculated `mainRect`.
-        var layoutRect = layoutUtil.getLayoutRect(
+        let layoutRect = layoutUtil.getLayoutRect(
             zrUtil.defaults({
                 width: mainRect.width,
                 height: mainRect.height
@@ -158,17 +158,17 @@ class LegendView extends ComponentView {
         orient: LegendOption['orient'],
         selectorPosition: LegendOption['selectorPosition']
     ) {
-        var contentGroup = this.getContentGroup();
-        var legendDrawnMap = zrUtil.createHashMap();
-        var selectMode = legendModel.get('selectedMode');
+        let contentGroup = this.getContentGroup();
+        let legendDrawnMap = zrUtil.createHashMap();
+        let selectMode = legendModel.get('selectedMode');
 
-        var excludeSeriesId: string[] = [];
+        let excludeSeriesId: string[] = [];
         ecModel.eachRawSeries(function (seriesModel) {
             !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
         });
 
         each(legendModel.getData(), function (itemModel, dataIndex) {
-            var name = itemModel.get('name');
+            let name = itemModel.get('name');
 
             // Use empty string or \n as a newline string
             if (!this.newlineDisabled && (name === '' || name === '\n')) {
@@ -180,7 +180,7 @@ class LegendView extends ComponentView {
             }
 
             // Representitive series.
-            var seriesModel = ecModel.getSeriesByName(name)[0];
+            let seriesModel = ecModel.getSeriesByName(name)[0];
 
             if (legendDrawnMap.get(name)) {
                 // Have been drawed
@@ -189,9 +189,9 @@ class LegendView extends ComponentView {
 
             // Legend to control series.
             if (seriesModel) {
-                var data = seriesModel.getData();
-                var color = data.getVisual('color');
-                var borderColor = data.getVisual('borderColor');
+                let data = seriesModel.getData();
+                let color = data.getVisual('color');
+                let borderColor = data.getVisual('borderColor');
 
                 // If color is a callback function
                 if (typeof color === 'function') {
@@ -206,10 +206,10 @@ class LegendView extends ComponentView {
                 }
 
                 // Using rect symbol defaultly
-                var legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
-                var symbolType = data.getVisual('symbol');
+                let legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
+                let symbolType = data.getVisual('symbol');
 
-                var itemGroup = this._createItem(
+                let itemGroup = this._createItem(
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType,
                     itemAlign, color, borderColor,
@@ -232,19 +232,19 @@ class LegendView extends ComponentView {
                     }
 
                     if (seriesModel.legendVisualProvider) {
-                        var provider = seriesModel.legendVisualProvider;
+                        let provider = seriesModel.legendVisualProvider;
                         if (!provider.containName(name)) {
                             return;
                         }
 
-                        var idx = provider.indexOfName(name);
+                        let idx = provider.indexOfName(name);
 
-                        var color = provider.getItemVisual(idx, 'color');
-                        var borderColor = provider.getItemVisual(idx, 'borderColor');
+                        let color = provider.getItemVisual(idx, 'color');
+                        let borderColor = provider.getItemVisual(idx, 'borderColor');
 
-                        var legendSymbolType = 'roundRect';
+                        let legendSymbolType = 'roundRect';
 
-                        var itemGroup = this._createItem(
+                        let itemGroup = this._createItem(
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null,
                             itemAlign, color, borderColor,
@@ -285,12 +285,12 @@ class LegendView extends ComponentView {
         orient: LegendOption['orient'],
         selectorPosition: LegendOption['selectorPosition']
     ) {
-        var selectorGroup = this.getSelectorGroup();
+        let selectorGroup = this.getSelectorGroup();
 
         each(selector, function createSelectorButton(selectorItem) {
-            var type = selectorItem.type;
+            let type = selectorItem.type;
 
-            var labelText = new graphic.Text({
+            let labelText = new graphic.Text({
                 style: {
                     x: 0,
                     y: 0,
@@ -306,8 +306,8 @@ class LegendView extends ComponentView {
 
             selectorGroup.add(labelText);
 
-            var labelModel = legendModel.getModel('selectorLabel');
-            var emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
+            let labelModel = legendModel.getModel('selectorLabel');
+            let emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
             graphic.setLabelStyle(
                 labelText.style, labelText.hoverStyle = {}, labelModel, emphasisLabelModel,
@@ -332,26 +332,26 @@ class LegendView extends ComponentView {
         borderColor: ColorString,
         selectMode: LegendOption['selectedMode']
     ) {
-        var itemWidth = legendModel.get('itemWidth');
-        var itemHeight = legendModel.get('itemHeight');
-        var inactiveColor = legendModel.get('inactiveColor');
-        var inactiveBorderColor = legendModel.get('inactiveBorderColor');
-        var symbolKeepAspect = legendModel.get('symbolKeepAspect');
-        var legendModelItemStyle = legendModel.getModel('itemStyle');
+        let itemWidth = legendModel.get('itemWidth');
+        let itemHeight = legendModel.get('itemHeight');
+        let inactiveColor = legendModel.get('inactiveColor');
+        let inactiveBorderColor = legendModel.get('inactiveBorderColor');
+        let symbolKeepAspect = legendModel.get('symbolKeepAspect');
+        let legendModelItemStyle = legendModel.getModel('itemStyle');
 
-        var isSelected = legendModel.isSelected(name);
-        var itemGroup = new Group();
+        let isSelected = legendModel.isSelected(name);
+        let itemGroup = new Group();
 
-        var textStyleModel = itemModel.getModel('textStyle');
+        let textStyleModel = itemModel.getModel('textStyle');
 
-        var itemIcon = itemModel.get('icon');
+        let itemIcon = itemModel.get('icon');
 
-        var tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
-        var legendGlobalTooltipModel = tooltipModel.parentModel;
+        let tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
+        let legendGlobalTooltipModel = tooltipModel.parentModel;
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
-        var legendSymbol = createSymbol(
+        let legendSymbol = createSymbol(
             legendSymbolType,
             0,
             0,
@@ -374,11 +374,11 @@ class LegendView extends ComponentView {
             // At least show one symbol, can't be all none
             && ((symbolType !== legendSymbolType) || symbolType === 'none')
         ) {
-            var size = itemHeight * 0.8;
+            let size = itemHeight * 0.8;
             if (symbolType === 'none') {
                 symbolType = 'circle';
             }
-            var legendSymbolCenter = createSymbol(
+            let legendSymbolCenter = createSymbol(
                 symbolType,
                 (itemWidth - size) / 2,
                 (itemHeight - size) / 2,
@@ -397,11 +397,11 @@ class LegendView extends ComponentView {
             );
         }
 
-        var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
-        var textAlign = itemAlign as ZRTextAlign;
+        let textX = itemAlign === 'left' ? itemWidth + 5 : -5;
+        let textAlign = itemAlign as ZRTextAlign;
 
-        var formatter = legendModel.get('formatter');
-        var content = name;
+        let formatter = legendModel.get('formatter');
+        let content = name;
         if (typeof formatter === 'string' && formatter) {
             content = formatter.replace('{name}', name != null ? name : '');
         }
@@ -421,7 +421,7 @@ class LegendView extends ComponentView {
         }));
 
         // Add a invisible rect to increase the area of mouse hover
-        var hitRect = new graphic.Rect({
+        let hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
             invisible: true
         });
@@ -468,8 +468,8 @@ class LegendView extends ComponentView {
         selector: LegendOption['selector'],
         selectorPosition: LegendOption['selectorPosition']
     ): ZRRectLike {
-        var contentGroup = this.getContentGroup();
-        var selectorGroup = this.getSelectorGroup();
+        let contentGroup = this.getContentGroup();
+        let selectorGroup = this.getSelectorGroup();
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -480,8 +480,8 @@ class LegendView extends ComponentView {
             maxSize.height
         );
 
-        var contentRect = contentGroup.getBoundingRect();
-        var contentPos = [-contentRect.x, -contentRect.y];
+        let contentRect = contentGroup.getBoundingRect();
+        let contentPos = [-contentRect.x, -contentRect.y];
 
         if (selector) {
             // Place buttons in selectorGroup
@@ -492,14 +492,14 @@ class LegendView extends ComponentView {
                 legendModel.get('selectorItemGap', true)
             );
 
-            var selectorRect = selectorGroup.getBoundingRect();
-            var selectorPos = [-selectorRect.x, -selectorRect.y];
-            var selectorButtonGap = legendModel.get('selectorButtonGap', true);
+            let selectorRect = selectorGroup.getBoundingRect();
+            let selectorPos = [-selectorRect.x, -selectorRect.y];
+            let selectorButtonGap = legendModel.get('selectorButtonGap', true);
 
-            var orientIdx = legendModel.getOrient().index;
-            var wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
-            var hw: 'width' | 'height' = orientIdx === 0 ? 'height' : 'width';
-            var yx: 'x' | 'y' = orientIdx === 0 ? 'y' : 'x';
+            let orientIdx = legendModel.getOrient().index;
+            let wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
+            let hw: 'width' | 'height' = orientIdx === 0 ? 'height' : 'width';
+            let yx: 'x' | 'y' = orientIdx === 0 ? 'y' : 'x';
 
             if (selectorPosition === 'end') {
                 selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
@@ -513,7 +513,7 @@ class LegendView extends ComponentView {
             selectorGroup.attr('position', selectorPos);
             contentGroup.attr('position', contentPos);
 
-            var mainRect = {x: 0, y: 0} as ZRRectLike;
+            let mainRect = {x: 0, y: 0} as ZRRectLike;
             mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
             mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
             mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
@@ -543,7 +543,7 @@ function setSymbolStyle(
     inactiveBorderColor: ZRColor,
     isSelected: boolean
 ) {
-    var itemStyle;
+    let itemStyle;
     if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
         itemStyle = legendModelItemStyle.getItemStyle();
         symbol.style.stroke = borderColor;
@@ -580,7 +580,7 @@ function dispatchHighlightAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    var el = api.getZr().storage.getDisplayList()[0];
+    let el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'highlight',
@@ -598,7 +598,7 @@ function dispatchDownplayAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    var el = api.getZr().storage.getDisplayList()[0];
+    let el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'downplay',

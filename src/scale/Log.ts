@@ -27,18 +27,18 @@ import IntervalScale from './Interval';
 import List from '../data/List';
 import { DimensionName } from '../util/types';
 
-var scaleProto = Scale.prototype;
+const scaleProto = Scale.prototype;
 // FIXME:TS refactor: not good to call it directly with `this`?
-var intervalScaleProto = IntervalScale.prototype;
+const intervalScaleProto = IntervalScale.prototype;
 
-var getPrecisionSafe = numberUtil.getPrecisionSafe;
-var roundingErrorFix = numberUtil.round;
+const getPrecisionSafe = numberUtil.getPrecisionSafe;
+const roundingErrorFix = numberUtil.round;
 
-var mathFloor = Math.floor;
-var mathCeil = Math.ceil;
-var mathPow = Math.pow;
+const mathFloor = Math.floor;
+const mathCeil = Math.ceil;
+const mathPow = Math.pow;
 
-var mathLog = Math.log;
+const mathLog = Math.log;
 
 class LogScale extends Scale {
     static type = 'log';
@@ -61,14 +61,14 @@ class LogScale extends Scale {
      * @param Whether expand the ticks to niced extent.
      */
     getTicks(expandToNicedExtent: boolean): number[] {
-        var originalScale = this._originalScale;
-        var extent = this._extent;
-        var originalExtent = originalScale.getExtent();
+        let originalScale = this._originalScale;
+        let extent = this._extent;
+        let originalExtent = originalScale.getExtent();
 
-        var ticks = intervalScaleProto.getTicks.call(this, expandToNicedExtent);
+        let ticks = intervalScaleProto.getTicks.call(this, expandToNicedExtent);
 
         return zrUtil.map(ticks, function (val) {
-            var powVal = numberUtil.round(mathPow(this.base, val));
+            let powVal = numberUtil.round(mathPow(this.base, val));
 
             // Fix #4158
             powVal = (val === extent[0] && this._fixMin)
@@ -83,7 +83,7 @@ class LogScale extends Scale {
     }
 
     setExtent(start: number, end: number): void {
-        var base = this.base;
+        let base = this.base;
         start = mathLog(start) / mathLog(base);
         end = mathLog(end) / mathLog(base);
         intervalScaleProto.setExtent.call(this, start, end);
@@ -93,14 +93,14 @@ class LogScale extends Scale {
      * @return {number} end
      */
     getExtent() {
-        var base = this.base;
-        var extent = scaleProto.getExtent.call(this);
+        let base = this.base;
+        let extent = scaleProto.getExtent.call(this);
         extent[0] = mathPow(base, extent[0]);
         extent[1] = mathPow(base, extent[1]);
 
         // Fix #4158
-        var originalScale = this._originalScale;
-        var originalExtent = originalScale.getExtent();
+        let originalScale = this._originalScale;
+        let originalExtent = originalScale.getExtent();
         this._fixMin && (extent[0] = fixRoundingError(extent[0], originalExtent[0]));
         this._fixMax && (extent[1] = fixRoundingError(extent[1], originalExtent[1]));
 
@@ -110,7 +110,7 @@ class LogScale extends Scale {
     unionExtent(extent: [number, number]): void {
         this._originalScale.unionExtent(extent);
 
-        var base = this.base;
+        let base = this.base;
         extent[0] = mathLog(extent[0]) / mathLog(base);
         extent[1] = mathLog(extent[1]) / mathLog(base);
         scaleProto.unionExtent.call(this, extent);
@@ -128,14 +128,14 @@ class LogScale extends Scale {
      */
     niceTicks(approxTickNum: number): void {
         approxTickNum = approxTickNum || 10;
-        var extent = this._extent;
-        var span = extent[1] - extent[0];
+        let extent = this._extent;
+        let span = extent[1] - extent[0];
         if (span === Infinity || span <= 0) {
             return;
         }
 
-        var interval = numberUtil.quantity(span);
-        var err = approxTickNum / span * interval;
+        let interval = numberUtil.quantity(span);
+        let err = approxTickNum / span * interval;
 
         // Filter ticks to get closer to the desired count.
         if (err <= 0.5) {
@@ -147,7 +147,7 @@ class LogScale extends Scale {
             interval *= 10;
         }
 
-        var niceExtent = [
+        let niceExtent = [
             numberUtil.round(mathCeil(extent[0] / interval) * interval),
             numberUtil.round(mathFloor(extent[1] / interval) * interval)
         ] as [number, number];
@@ -192,7 +192,7 @@ class LogScale extends Scale {
     getLabel: IntervalScale['getLabel'];
 }
 
-var proto = LogScale.prototype;
+const proto = LogScale.prototype;
 proto.getMinorTicks = intervalScaleProto.getMinorTicks;
 proto.getLabel = intervalScaleProto.getLabel;
 

@@ -91,7 +91,7 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
 
 
     getInitialData(option: ParallelSeriesOption, ecModel: GlobalModel): List {
-        var source = this.getSource();
+        let source = this.getSource();
 
         setEncodeAndDimensions(source, this);
 
@@ -104,9 +104,9 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
      * @return Raw indices
      */
     getRawIndicesByActiveState(activeState: ParallelActiveState): number[] {
-        var coordSys = this.coordinateSystem;
-        var data = this.getData();
-        var indices = [] as number[];
+        let coordSys = this.coordinateSystem;
+        let data = this.getData();
+        let indices = [] as number[];
 
         coordSys.eachActiveState(data, function (theActiveState, dataIndex) {
             if (activeState === theActiveState) {
@@ -164,16 +164,16 @@ function setEncodeAndDimensions(source: Source, seriesModel: ParallelSeriesModel
         return;
     }
 
-    var parallelModel = seriesModel.ecModel.getComponent(
+    let parallelModel = seriesModel.ecModel.getComponent(
         'parallel', seriesModel.get('parallelIndex')
     ) as ParallelModel;
     if (!parallelModel) {
         return;
     }
 
-    var encodeDefine = source.encodeDefine = createHashMap();
+    let encodeDefine = source.encodeDefine = createHashMap();
     each(parallelModel.dimensions, function (axisDim) {
-        var dataDimIndex = convertDimNameToNumber(axisDim);
+        let dataDimIndex = convertDimNameToNumber(axisDim);
         encodeDefine.set(axisDim, dataDimIndex);
     });
 }

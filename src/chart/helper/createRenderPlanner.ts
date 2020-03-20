@@ -27,20 +27,20 @@ import { StageHandlerPlanReturn } from '../../util/types';
  * @return {string} If large mode changed, return string 'reset';
  */
 export default function () {
-    var inner = makeInner();
+    let inner = makeInner();
 
     return function (seriesModel: SeriesModel): StageHandlerPlanReturn {
-        var fields = inner(seriesModel);
-        var pipelineContext = seriesModel.pipelineContext;
+        let fields = inner(seriesModel);
+        let pipelineContext = seriesModel.pipelineContext;
 
-        var originalLarge = fields.large;
-        var originalProgressive = fields.progressiveRender;
+        let originalLarge = fields.large;
+        let originalProgressive = fields.progressiveRender;
 
         // FIXME: if the planner works on a filtered series, `pipelineContext` does not
         // exists. See #11611 . Probably we need to modify this structure, see the comment
         // on `performRawSeries` in `Schedular.js`.
-        var large = fields.large = pipelineContext && pipelineContext.large;
-        var progressive = fields.progressiveRender = pipelineContext && pipelineContext.progressiveRender;
+        let large = fields.large = pipelineContext && pipelineContext.large;
+        let progressive = fields.progressiveRender = pipelineContext && pipelineContext.progressiveRender;
 
         return (
             !!((originalLarge ^ large as any) || (originalProgressive ^ progressive as any)) && 'reset'

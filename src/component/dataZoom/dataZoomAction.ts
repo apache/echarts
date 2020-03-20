@@ -26,7 +26,7 @@ import DataZoomModel from './DataZoomModel';
 
 echarts.registerAction('dataZoom', function (payload, ecModel: GlobalModel) {
 
-    var linkedNodesFinder = createLinkedNodesFinder(
+    let linkedNodesFinder = createLinkedNodesFinder(
         zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom' as any),
         eachAxisDim,
         function (model: DataZoomModel, dimNames) {
@@ -35,7 +35,7 @@ echarts.registerAction('dataZoom', function (payload, ecModel: GlobalModel) {
         }
     );
 
-    var effectedModels: DataZoomModel[] = [];
+    let effectedModels: DataZoomModel[] = [];
 
     ecModel.eachComponent(
         {mainType: 'dataZoom', query: payload},

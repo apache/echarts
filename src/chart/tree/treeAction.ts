@@ -35,9 +35,9 @@ echarts.registerAction({
     ecModel.eachComponent({
         mainType: 'series', subType: 'tree', query: payload
     }, function (seriesModel: TreeSeriesModel) {
-        var dataIndex = payload.dataIndex;
-        var tree = seriesModel.getData().tree;
-        var node = tree.getNodeByDataIndex(dataIndex);
+        let dataIndex = payload.dataIndex;
+        let tree = seriesModel.getData().tree;
+        let node = tree.getNodeByDataIndex(dataIndex);
         node.isExpand = !node.isExpand;
     });
 });
@@ -54,8 +54,8 @@ echarts.registerAction({
     ecModel.eachComponent({
         mainType: 'series', subType: 'tree', query: payload
     }, function (seriesModel: TreeSeriesModel) {
-        var coordSys = seriesModel.coordinateSystem;
-        var res = updateCenterAndZoom(coordSys, payload);
+        let coordSys = seriesModel.coordinateSystem;
+        let res = updateCenterAndZoom(coordSys, payload);
 
         seriesModel.setCenter
             && seriesModel.setCenter(res.center);

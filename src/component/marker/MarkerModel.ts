@@ -37,8 +37,8 @@ import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { makeInner, defaultEmphasis } from '../../util/model';
 
-var addCommas = formatUtil.addCommas;
-var encodeHTML = formatUtil.encodeHTML;
+const addCommas = formatUtil.addCommas;
+const encodeHTML = formatUtil.encodeHTML;
 
 function fillLabel(opt: DisplayStateHostOption) {
     defaultEmphasis(opt, 'label', ['show']);
@@ -134,7 +134,7 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
             return false;
         }
 
-        var hostSeries = this.__hostSeries;
+        let hostSeries = this.__hostSeries;
         return this.getShallow('animation') && hostSeries && hostSeries.isAnimationEnabled();
     }
 
@@ -146,16 +146,16 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
     }
 
     _mergeOption(newOpt: Opts, ecModel: GlobalModel, createdBySelf?: boolean, isInit?: boolean) {
-        var componentType = this.mainType;
+        let componentType = this.mainType;
         if (!createdBySelf) {
             ecModel.eachSeries(function (seriesModel) {
 
                 // mainType can be markPoint, markLine, markArea
-                var markerOpt = seriesModel.get(
+                let markerOpt = seriesModel.get(
                     this.mainType as any, true
                 ) as Opts;
 
-                var markerModel = inner(seriesModel)[componentType];
+                let markerModel = inner(seriesModel)[componentType];
                 if (!markerOpt || !markerOpt.data) {
                     inner(seriesModel)[componentType] = null;
                     return;
@@ -202,12 +202,12 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
     }
 
     formatTooltip(dataIndex: number) {
-        var data = this.getData();
-        var value = this.getRawValue(dataIndex);
-        var formattedValue = zrUtil.isArray(value)
+        let data = this.getData();
+        let value = this.getRawValue(dataIndex);
+        let formattedValue = zrUtil.isArray(value)
             ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
-        var name = data.getName(dataIndex);
-        var html = encodeHTML(this.name);
+        let name = data.getName(dataIndex);
+        let html = encodeHTML(this.name);
         if (value != null || name) {
             html += '<br />';
         }

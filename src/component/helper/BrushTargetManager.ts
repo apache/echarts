@@ -42,12 +42,12 @@ import {
 } from '../../util/model';
 
 
-var COORD_CONVERTS = ['dataToPoint', 'pointToData'] as const;
+const COORD_CONVERTS = ['dataToPoint', 'pointToData'] as const;
 type COORD_CONVERTS_INDEX = 0 | 1;
 
 // FIXME
 // how to genarialize to more coordinate systems.
-var INCLUDE_FINDER_MAIN_TYPES = [
+const INCLUDE_FINDER_MAIN_TYPES = [
     'grid', 'xAxis', 'yAxis', 'geo', 'graph',
     'polar', 'radiusAxis', 'angleAxis', 'bmap'
 ];
@@ -101,7 +101,7 @@ class BrushTargetManager {
         ecModel: GlobalModel,
         opt?: {include?: BrushTargetBuilderKey[]}
     ) {
-        var foundCpts = parseFinder(ecModel, finder);
+        let foundCpts = parseFinder(ecModel, finder);
 
         each(targetInfoBuilders, (builder, type) => {
             if (!opt || !opt.include || indexOf(opt.include, type) >= 0) {
@@ -128,7 +128,7 @@ class BrushTargetManager {
                 // brushing only one item. So we use __rangeOffset to rebuilding range
                 // by coordRange. And this it only used in brush component so it is no
                 // need to be adapted to coordRanges.
-                var result = coordConvert[area.brushType](0, coordSys, coordRange);
+                let result = coordConvert[area.brushType](0, coordSys, coordRange);
                 area.__rangeOffset = {
                     offset: diffProcessor[area.brushType](result.values, area.range, [1, 1]),
                     xyMinMax: result.xyMinMax
@@ -154,13 +154,13 @@ class BrushTargetManager {
         ) => void
     ) {
         each(areas, function (area) {
-            var targetInfo = this.findTargetInfo(area, ecModel);
+            let targetInfo = this.findTargetInfo(area, ecModel);
 
             if (targetInfo && targetInfo !== true) {
                 each(
                     targetInfo.coordSyses,
                     function (coordSys) {
-                        var result = coordConvert[area.brushType](1, coordSys, area.range);
+                        let result = coordConvert[area.brushType](1, coordSys, area.range);
                         cb(area, result.values, coordSys, ecModel);
                     }
                 );
@@ -178,7 +178,7 @@ class BrushTargetManager {
         ecModel: GlobalModel
     ): void {
         each(areas, function (area) {
-            var targetInfo = this.findTargetInfo(area, ecModel);
+            let targetInfo = this.findTargetInfo(area, ecModel);
 
             if (__DEV__) {
                 assert(
@@ -202,8 +202,8 @@ class BrushTargetManager {
                 // (2) Only support converting one coordRange to pixel range in brush
                 // component. So do not consider `coordRanges`.
                 // (3) About __rangeOffset, see comment above.
-                var result = coordConvert[area.brushType](0, targetInfo.coordSys, area.coordRange);
-                var rangeOffset = area.__rangeOffset;
+                let result = coordConvert[area.brushType](0, targetInfo.coordSys, area.coordRange);
+                let rangeOffset = area.__rangeOffset;
                 area.range = rangeOffset
                     ? diffProcessor[area.brushType](
                         result.values,
@@ -220,7 +220,7 @@ class BrushTargetManager {
         getDefaultBrushType?: (targetInfo: BrushTargetInfo) => BrushType
     ): BrushPanelConfig[] {
         return map(this._targetInfoList, function (targetInfo) {
-            var rect = targetInfo.getPanelRect();
+            let rect = targetInfo.getPanelRect();
             return {
                 panelId: targetInfo.panelId,
                 defaultBrushType: getDefaultBrushType ? getDefaultBrushType(targetInfo) : null,
@@ -236,7 +236,7 @@ class BrushTargetManager {
     controlSeries(area: BrushAreaParamInternal, seriesModel: SeriesModel, ecModel: GlobalModel): boolean {
         // Check whether area is bound in coord, and series do not belong to that coord.
         // If do not do this check, some brush (like lineX) will controll all axes.
-        var targetInfo = this.findTargetInfo(area, ecModel);
+        let targetInfo = this.findTargetInfo(area, ecModel);
         return targetInfo === true || (
             targetInfo && indexOf(
                 targetInfo.coordSyses, seriesModel.coordinateSystem as BrushableCoordinateSystem
@@ -255,19 +255,19 @@ class BrushTargetManager {
         },
         ecModel: GlobalModel
     ): BrushTargetInfo | true {
-        var targetInfoList = this._targetInfoList;
-        var foundCpts = parseFinder(ecModel, area);
+        let targetInfoList = this._targetInfoList;
+        let foundCpts = parseFinder(ecModel, area);
 
-        for (var i = 0; i < targetInfoList.length; i++) {
-            var targetInfo = targetInfoList[i];
-            var areaPanelId = area.panelId;
+        for (let i = 0; i < targetInfoList.length; i++) {
+            let targetInfo = targetInfoList[i];
+            let areaPanelId = area.panelId;
             if (areaPanelId) {
                 if (targetInfo.panelId === areaPanelId) {
                     return targetInfo;
                 }
             }
             else {
-                for (var j = 0; j < targetInfoMatchers.length; j++) {
+                for (let j = 0; j < targetInfoMatchers.length; j++) {
                     if (targetInfoMatchers[j](foundCpts, targetInfo)) {
                         return targetInfo;
                     }
@@ -296,28 +296,28 @@ function parseFinder(
 type TargetInfoBuilder = (
     foundCpts: ParsedModelFinder, targetInfoList: BrushTargetInfo[]
 ) => void;
-var targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
+const targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
 
     grid: function (foundCpts, targetInfoList) {
-        var xAxisModels = foundCpts.xAxisModels;
-        var yAxisModels = foundCpts.yAxisModels;
-        var gridModels = foundCpts.gridModels;
+        let xAxisModels = foundCpts.xAxisModels;
+        let yAxisModels = foundCpts.yAxisModels;
+        let gridModels = foundCpts.gridModels;
         // Remove duplicated.
-        var gridModelMap = createHashMap<GridModel>();
-        var xAxesHas = {} as Dictionary<boolean>;
-        var yAxesHas = {} as Dictionary<boolean>;
+        let gridModelMap = createHashMap<GridModel>();
+        let xAxesHas = {} as Dictionary<boolean>;
+        let yAxesHas = {} as Dictionary<boolean>;
 
         if (!xAxisModels && !yAxisModels && !gridModels) {
             return;
         }
 
         each(xAxisModels, function (axisModel) {
-            var gridModel = axisModel.axis.grid.model;
+            let gridModel = axisModel.axis.grid.model;
             gridModelMap.set(gridModel.id, gridModel);
             xAxesHas[gridModel.id] = true;
         });
         each(yAxisModels, function (axisModel) {
-            var gridModel = axisModel.axis.grid.model;
+            let gridModel = axisModel.axis.grid.model;
             gridModelMap.set(gridModel.id, gridModel);
             yAxesHas[gridModel.id] = true;
         });
@@ -328,8 +328,8 @@ var targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
         });
 
         gridModelMap.each(function (gridModel) {
-            var grid = gridModel.coordinateSystem;
-            var cartesians = [] as Cartesian2D[];
+            let grid = gridModel.coordinateSystem;
+            let cartesians = [] as Cartesian2D[];
 
             each(grid.getCartesians(), function (cartesian, index) {
                 if (indexOf(xAxisModels, cartesian.getAxis('x').model) >= 0
@@ -354,7 +354,7 @@ var targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
 
     geo: function (foundCpts, targetInfoList) {
         each(foundCpts.geoModels, function (geoModel: GeoModel) {
-            var coordSys = geoModel.coordinateSystem;
+            let coordSys = geoModel.coordinateSystem;
             targetInfoList.push({
                 panelId: 'geo--' + geoModel.id,
                 geoModel: geoModel,
@@ -370,13 +370,13 @@ var targetInfoBuilders: Record<BrushTargetBuilderKey, TargetInfoBuilder> = {
 type TargetInfoMatcher = (
     foundCpts: ParsedModelFinder, targetInfo: BrushTargetInfo
 ) => boolean;
-var targetInfoMatchers: TargetInfoMatcher[] = [
+const targetInfoMatchers: TargetInfoMatcher[] = [
 
     // grid
     function (foundCpts, targetInfo) {
-        var xAxisModel = foundCpts.xAxisModel;
-        var yAxisModel = foundCpts.yAxisModel;
-        var gridModel = foundCpts.gridModel;
+        let xAxisModel = foundCpts.xAxisModel;
+        let yAxisModel = foundCpts.yAxisModel;
+        let gridModel = foundCpts.gridModel;
 
         !gridModel && xAxisModel && (gridModel = xAxisModel.axis.grid.model);
         !gridModel && yAxisModel && (gridModel = yAxisModel.axis.grid.model);
@@ -386,13 +386,13 @@ var targetInfoMatchers: TargetInfoMatcher[] = [
 
     // geo
     function (foundCpts, targetInfo) {
-        var geoModel = foundCpts.geoModel;
+        let geoModel = foundCpts.geoModel;
         return geoModel && geoModel === (targetInfo as BrushTargetInfoGeo).geoModel;
     }
 ];
 
 type PanelRectBuilder = (this: BrushTargetInfo) => graphic.BoundingRect;
-var panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
+const panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
 
     grid: function (this: BrushTargetInfoCartesian2D) {
         // grid is not Transformable.
@@ -400,8 +400,8 @@ var panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
     },
 
     geo: function (this: BrushTargetInfoGeo) {
-        var coordSys = this.coordSys;
-        var rect = coordSys.getBoundingRect().clone();
+        let coordSys = this.coordSys;
+        let rect = coordSys.getBoundingRect().clone();
         // geo roam and zoom transform
         rect.applyTransform(graphic.getTransform(coordSys));
         return rect;
@@ -416,7 +416,7 @@ type ConvertCoord = (
     values: BrushAreaRange,
     xyMinMax: BrushDimensionMinMax[]
 };
-var coordConvert: Record<BrushType, ConvertCoord> = {
+const coordConvert: Record<BrushType, ConvertCoord> = {
 
     lineX: curry(axisConvert, 0),
 
@@ -426,9 +426,9 @@ var coordConvert: Record<BrushType, ConvertCoord> = {
         values: BrushDimensionMinMax[],
         xyMinMax: BrushDimensionMinMax[]
     } {
-        var xminymin = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][0], rangeOrCoordRange[1][0]]);
-        var xmaxymax = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][1], rangeOrCoordRange[1][1]]);
-        var values = [
+        let xminymin = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][0], rangeOrCoordRange[1][0]]);
+        let xmaxymax = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][1], rangeOrCoordRange[1][1]]);
+        let values = [
             formatMinMax([xminymin[0], xmaxymax[0]]),
             formatMinMax([xminymin[1], xmaxymax[1]])
         ];
@@ -439,9 +439,9 @@ var coordConvert: Record<BrushType, ConvertCoord> = {
         values: BrushDimensionMinMax[],
         xyMinMax: BrushDimensionMinMax[]
     } {
-        var xyMinMax = [[Infinity, -Infinity], [Infinity, -Infinity]];
-        var values = map(rangeOrCoordRange, function (item) {
-            var p = coordSys[COORD_CONVERTS[to]](item);
+        let xyMinMax = [[Infinity, -Infinity], [Infinity, -Infinity]];
+        let values = map(rangeOrCoordRange, function (item) {
+            let p = coordSys[COORD_CONVERTS[to]](item);
             xyMinMax[0][0] = Math.min(xyMinMax[0][0], p[0]);
             xyMinMax[1][0] = Math.min(xyMinMax[1][0], p[1]);
             xyMinMax[0][1] = Math.max(xyMinMax[0][1], p[0]);
@@ -468,13 +468,13 @@ function axisConvert(
         );
     }
 
-    var axis = coordSys.getAxis(['x', 'y'][axisNameIndex]);
-    var values = formatMinMax(map([0, 1], function (i) {
+    let axis = coordSys.getAxis(['x', 'y'][axisNameIndex]);
+    let values = formatMinMax(map([0, 1], function (i) {
         return to
             ? axis.coordToData(axis.toLocalCoord(rangeOrCoordRange[i]))
             : axis.toGlobalCoord(axis.dataToCoord(rangeOrCoordRange[i]));
     }));
-    var xyMinMax = [];
+    let xyMinMax = [];
     xyMinMax[axisNameIndex] = values;
     xyMinMax[1 - axisNameIndex] = [NaN, NaN];
 
@@ -488,7 +488,7 @@ type DiffProcess = (
     scales: ReturnType<typeof getScales>
 ) => BrushDimensionMinMax | BrushDimensionMinMax[];
 
-var diffProcessor: Record<BrushType, DiffProcess> = {
+const diffProcessor: Record<BrushType, DiffProcess> = {
 
     lineX: curry(axisDiffProcessor, 0),
 
@@ -528,9 +528,9 @@ function axisDiffProcessor(
 // although it might be not accurate.
 // Return [0~1, 0~1]
 function getScales(xyMinMaxCurr: BrushDimensionMinMax[], xyMinMaxOrigin: BrushDimensionMinMax[]): number[] {
-    var sizeCurr = getSize(xyMinMaxCurr);
-    var sizeOrigin = getSize(xyMinMaxOrigin);
-    var scales = [sizeCurr[0] / sizeOrigin[0], sizeCurr[1] / sizeOrigin[1]];
+    let sizeCurr = getSize(xyMinMaxCurr);
+    let sizeOrigin = getSize(xyMinMaxOrigin);
+    let scales = [sizeCurr[0] / sizeOrigin[0], sizeCurr[1] / sizeOrigin[1]];
     isNaN(scales[0]) && (scales[0] = 1);
     isNaN(scales[1]) && (scales[1] = 1);
     return scales;

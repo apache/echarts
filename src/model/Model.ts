@@ -35,8 +35,8 @@ import GlobalModel from './Global';
 import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 
-var mixin = zrUtil.mixin;
-var inner = makeInner<{
+const mixin = zrUtil.mixin;
+const inner = makeInner<{
     getParent(path: string | string[]): Model
 }, Model>();
 
@@ -129,11 +129,11 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     getShallow<R extends keyof Opt>(
         key: R, ignoreParent?: boolean
     ): Opt[R] {
-        var option = this.option;
+        let option = this.option;
 
-        var val = option == null ? option : option[key];
+        let val = option == null ? option : option[key];
         if (val == null) {
-            var parentModel = !ignoreParent && getParent(this, key as string);
+            let parentModel = !ignoreParent && getParent(this, key as string);
             if (parentModel) {
                 // FIXME:TS do not know how to make it works
                 val = parentModel.getShallow(key);
@@ -159,13 +159,13 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     // getModel(path: string | string[], parentModel?: Model): Model;
     // TODO 'xxx.yyy.zzz' is deprecated
     getModel(path: string | readonly string[], parentModel?: Model): Model<any> {
-        var hasPath = path != null;
-        var pathFinal = hasPath ? this.parsePath(path) : null;
-        var obj = hasPath
+        let hasPath = path != null;
+        let pathFinal = hasPath ? this.parsePath(path) : null;
+        let obj = hasPath
             ? doGet(this.option, pathFinal)
             : this.option;
 
-        var thisParentModel;
+        let thisParentModel;
         parentModel = parentModel || (
             (thisParentModel = getParent(this, pathFinal))
                 && thisParentModel.getModel(pathFinal as readonly [string])
@@ -185,7 +185,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
 
     // Pending
     clone(): Model<Opt> {
-        var Ctor = this.constructor;
+        let Ctor = this.constructor;
         return new (Ctor as any)(zrUtil.clone(this.option));
     }
 
@@ -222,7 +222,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
 };
 
 function doGet(obj: ModelOption, pathArr: readonly string[], parentModel?: Model<Dictionary<any>>) {
-    for (var i = 0; i < pathArr.length; i++) {
+    for (let i = 0; i < pathArr.length; i++) {
         // Ignore empty
         if (!pathArr[i]) {
             continue;
@@ -242,7 +242,7 @@ function doGet(obj: ModelOption, pathArr: readonly string[], parentModel?: Model
 
 // `path` can be null/undefined
 function getParent(model: Model, path: string | readonly string[]): Model {
-    var getParentMethod = inner(model).getParent;
+    let getParentMethod = inner(model).getParent;
     return getParentMethod ? getParentMethod.call(model, path) : model.parentModel;
 }
 

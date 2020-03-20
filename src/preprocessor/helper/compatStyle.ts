@@ -22,10 +22,10 @@ import * as modelUtil from '../../util/model';
 import { Dictionary } from 'zrender/src/core/types';
 import { __DEV__ } from '../../config';
 
-var each = zrUtil.each;
-var isObject = zrUtil.isObject;
+const each = zrUtil.each;
+const isObject = zrUtil.isObject;
 
-var POSSIBLE_STYLES = [
+const POSSIBLE_STYLES = [
     'areaStyle', 'lineStyle', 'nodeStyle', 'linkStyle',
     'chordStyle', 'label', 'labelLine'
 ];
@@ -42,14 +42,14 @@ function deprecateLog(str: string) {
 }
 
 function compatEC2ItemStyle(opt: Dictionary<any>) {
-    var itemStyleOpt = opt && opt.itemStyle;
+    let itemStyleOpt = opt && opt.itemStyle;
     if (!itemStyleOpt) {
         return;
     }
-    for (var i = 0, len = POSSIBLE_STYLES.length; i < len; i++) {
-        var styleName = POSSIBLE_STYLES[i];
-        var normalItemStyleOpt = itemStyleOpt.normal;
-        var emphasisItemStyleOpt = itemStyleOpt.emphasis;
+    for (let i = 0, len = POSSIBLE_STYLES.length; i < len; i++) {
+        let styleName = POSSIBLE_STYLES[i];
+        let normalItemStyleOpt = itemStyleOpt.normal;
+        let emphasisItemStyleOpt = itemStyleOpt.emphasis;
         if (normalItemStyleOpt && normalItemStyleOpt[styleName]) {
             if (__DEV__) {
                 deprecateLog(`itemStyle.normal.${styleName} has been changed to ${styleName}`);
@@ -81,8 +81,8 @@ function compatEC2ItemStyle(opt: Dictionary<any>) {
 
 function convertNormalEmphasis(opt: Dictionary<any>, optType: string, useExtend?: boolean) {
     if (opt && opt[optType] && (opt[optType].normal || opt[optType].emphasis)) {
-        var normalOpt = opt[optType].normal;
-        var emphasisOpt = opt[optType].emphasis;
+        let normalOpt = opt[optType].normal;
+        let emphasisOpt = opt[optType].emphasis;
 
         if (normalOpt) {
             if (__DEV__) {
@@ -120,15 +120,15 @@ function removeEC3NormalStatus(opt: Dictionary<any>) {
 
 function compatTextStyle(opt: any, propName: string) {
     // Check whether is not object (string\null\undefined ...)
-    var labelOptSingle = isObject(opt) && opt[propName];
-    var textStyle = isObject(labelOptSingle) && labelOptSingle.textStyle;
+    let labelOptSingle = isObject(opt) && opt[propName];
+    let textStyle = isObject(labelOptSingle) && labelOptSingle.textStyle;
     if (textStyle) {
         if (__DEV__) {
             // eslint-disable-next-line max-len
             deprecateLog(`textStyle hierarchy in ${propName} has been removed since 4.0. All textStyle properties are configured in ${propName} directly now.`);
         }
-        for (var i = 0, len = modelUtil.TEXT_STYLE_OPTIONS.length; i < len; i++) {
-            var textPropName = modelUtil.TEXT_STYLE_OPTIONS[i];
+        for (let i = 0, len = modelUtil.TEXT_STYLE_OPTIONS.length; i < len; i++) {
+            let textPropName = modelUtil.TEXT_STYLE_OPTIONS[i];
             if (textStyle.hasOwnProperty(textPropName)) {
                 labelOptSingle[textPropName] = textStyle[textPropName];
             }
@@ -165,31 +165,31 @@ function processSeries(seriesOpt: any) {
         compatTextStyle(seriesOpt.emphasis, 'edgeLabel');
     }
 
-    var markPoint = seriesOpt.markPoint;
+    let markPoint = seriesOpt.markPoint;
     if (markPoint) {
         compatEC2ItemStyle(markPoint);
         compatEC3CommonStyles(markPoint);
     }
 
-    var markLine = seriesOpt.markLine;
+    let markLine = seriesOpt.markLine;
     if (markLine) {
         compatEC2ItemStyle(markLine);
         compatEC3CommonStyles(markLine);
     }
 
-    var markArea = seriesOpt.markArea;
+    let markArea = seriesOpt.markArea;
     if (markArea) {
         compatEC3CommonStyles(markArea);
     }
 
-    var data = seriesOpt.data;
+    let data = seriesOpt.data;
 
     // Break with ec3: if `setOption` again, there may be no `type` in option,
     // then the backward compat based on option type will not be performed.
 
     if (seriesOpt.type === 'graph') {
         data = data || seriesOpt.nodes;
-        var edgeData = seriesOpt.links || seriesOpt.edges;
+        let edgeData = seriesOpt.links || seriesOpt.edges;
         if (edgeData && !zrUtil.isTypedArray(edgeData)) {
             for (let i = 0; i < edgeData.length; i++) {
                 compatEC3CommonStyles(edgeData[i]);
@@ -209,7 +209,7 @@ function processSeries(seriesOpt: any) {
     // mark point data
     markPoint = seriesOpt.markPoint;
     if (markPoint && markPoint.data) {
-        var mpData = markPoint.data;
+        let mpData = markPoint.data;
         for (let i = 0; i < mpData.length; i++) {
             compatEC3CommonStyles(mpData[i]);
         }
@@ -217,7 +217,7 @@ function processSeries(seriesOpt: any) {
     // mark line data
     markLine = seriesOpt.markLine;
     if (markLine && markLine.data) {
-        var mlData = markLine.data;
+        let mlData = markLine.data;
         for (let i = 0; i < mlData.length; i++) {
             if (zrUtil.isArray(mlData[i])) {
                 compatEC3CommonStyles(mlData[i][0]);
@@ -260,7 +260,7 @@ export default function (option: any, isTheme?: boolean) {
         isObject(seriesOpt) && processSeries(seriesOpt);
     });
 
-    var axes = ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis', 'radar'];
+    let axes = ['xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'parallelAxis', 'radar'];
     isTheme && axes.push('valueAxis', 'categoryAxis', 'logAxis', 'timeAxis');
 
     each(
@@ -276,7 +276,7 @@ export default function (option: any, isTheme?: boolean) {
     );
 
     each(toArr(option.parallel), function (parallelOpt) {
-        var parallelAxisDefault = parallelOpt && parallelOpt.parallelAxisDefault;
+        let parallelAxisDefault = parallelOpt && parallelOpt.parallelAxisDefault;
         compatTextStyle(parallelAxisDefault, 'axisLabel');
         compatTextStyle(parallelAxisDefault && parallelAxisDefault.axisPointer, 'label');
     });
@@ -323,7 +323,7 @@ export default function (option: any, isTheme?: boolean) {
         convertNormalEmphasis(timelineOpt, 'itemStyle');
         convertNormalEmphasis(timelineOpt, 'controlStyle', true);
 
-        var data = timelineOpt.data;
+        let data = timelineOpt.data;
         zrUtil.isArray(data) && zrUtil.each(data, function (item) {
             if (zrUtil.isObject(item)) {
                 convertNormalEmphasis(item, 'label');

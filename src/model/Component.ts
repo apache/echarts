@@ -41,7 +41,7 @@ import {
     BoxLayoutOptionMixin
 } from '../util/types';
 
-var inner = makeInner<{
+const inner = makeInner<{
     defaultOption: ComponentOption
 }, ComponentModel>();
 
@@ -127,7 +127,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     __viewId: string;
 
     static protoInitialize = (function () {
-        var proto = ComponentModel.prototype;
+        let proto = ComponentModel.prototype;
         proto.type = 'component';
         proto.id = '';
         proto.name = '';
@@ -147,11 +147,11 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     }
 
     mergeDefaultAndTheme(option: Opt, ecModel: GlobalModel): void {
-        var layoutMode = layout.fetchLayoutMode(this);
-        var inputPositionParams = layoutMode
+        let layoutMode = layout.fetchLayoutMode(this);
+        let inputPositionParams = layoutMode
             ? layout.getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
-        var themeModel = ecModel.getTheme();
+        let themeModel = ecModel.getTheme();
         zrUtil.merge(option, themeModel.get(this.mainType));
         zrUtil.merge(option, this.getDefaultOption());
 
@@ -163,7 +163,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     mergeOption(option: Opt, ecModel: GlobalModel): void {
         zrUtil.merge(this.option, option, true);
 
-        var layoutMode = layout.fetchLayoutMode(this);
+        let layoutMode = layout.fetchLayoutMode(this);
         if (layoutMode) {
             layout.mergeLayoutParam(
                 this.option as BoxLayoutOptionMixin,
@@ -204,7 +204,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      *         bbb: 456
      *     })
      *     fn() {
-     *         var opt = this.getDefaultOption();
+     *         let opt = this.getDefaultOption();
      *         // opt is {aaa: 123, bbb: 456}
      *     }
      * }
@@ -212,26 +212,26 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      *
      * (B) If using class extend (previous approach in echarts 3 & 4):
      * ```js
-     * var XxxComponent = Component.extend({
+     * let XxxComponent = Component.extend({
      *     defaultOption: {
      *         xx: 123
      *     }
      * })
      * ```
      * ```js
-     * var XxxSubComponent = XxxComponent.extend({
+     * let XxxSubComponent = XxxComponent.extend({
      *     defaultOption: {
      *         yy: 456
      *     },
      *     fn: function () {
-     *         var opt = this.getDefaultOption();
+     *         let opt = this.getDefaultOption();
      *         // opt is {xx: 123, yy: 456}
      *     }
      * })
      * ```
      */
     getDefaultOption(): Opt {
-        var ctor = this.constructor;
+        let ctor = this.constructor;
 
         // If using class declaration, it is different to travel super class
         // in legacy env and auto merge defaultOption. So if using class
@@ -242,18 +242,18 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         }
 
         // FIXME: remove this approach?
-        var fields = inner(this);
+        let fields = inner(this);
         if (!fields.defaultOption) {
-            var optList = [];
-            var clz = ctor as ExtendableConstructor;
+            let optList = [];
+            let clz = ctor as ExtendableConstructor;
             while (clz) {
-                var opt = clz.prototype.defaultOption;
+                let opt = clz.prototype.defaultOption;
                 opt && optList.push(opt);
                 clz = clz.superClass;
             }
 
-            var defaultOption = {};
-            for (var i = optList.length - 1; i >= 0; i--) {
+            let defaultOption = {};
+            for (let i = optList.length - 1; i >= 0; i--) {
                 defaultOption = zrUtil.merge(defaultOption, optList[i], true);
             }
             fields.defaultOption = defaultOption;
@@ -318,7 +318,7 @@ componentUtil.enableTopologicalTravel(ComponentModel as ComponentModelConstructo
 
 
 function getDependencies(componentType: string): string[] {
-    var deps: string[] = [];
+    let deps: string[] = [];
     zrUtil.each((ComponentModel as ComponentModelConstructor).getClassesByMainType(componentType), function (clz) {
         deps = deps.concat((clz as any).dependencies || (clz as any).prototype.dependencies || []);
     });

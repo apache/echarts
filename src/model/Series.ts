@@ -58,7 +58,7 @@ import Axis from '../coord/Axis';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
 
-var inner = modelUtil.makeInner<{
+const inner = modelUtil.makeInner<{
     data: List
     dataBeforeProcessed: List
 }, SeriesModel>();
@@ -143,7 +143,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     readonly preventUsingHoverLayer: boolean;
 
     static protoInitialize = (function () {
-        var proto = SeriesModel.prototype;
+        let proto = SeriesModel.prototype;
         proto.type = 'series.__base__';
         proto.seriesIndex = 0;
         proto.visualColorAccessPath = ['itemStyle', 'color'];
@@ -165,7 +165,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         prepareSource(this);
 
-        var data = this.getInitialData(option, ecModel);
+        let data = this.getInitialData(option, ecModel);
         wrapData(data, this);
         this.dataTask.context.data = data;
 
@@ -194,15 +194,15 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * Util for merge default and theme to option
      */
     mergeDefaultAndTheme(option: Opt, ecModel: GlobalModel): void {
-        var layoutMode = fetchLayoutMode(this);
-        var inputPositionParams = layoutMode
+        let layoutMode = fetchLayoutMode(this);
+        let inputPositionParams = layoutMode
             ? getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
         // Backward compat: using subType on theme.
         // But if name duplicate between series subType
         // (for example: parallel) add component mainType,
         // add suffix 'Series'.
-        var themeSubType = this.subType;
+        let themeSubType = this.subType;
         if ((ComponentModel as ComponentModelConstructor).hasClass(themeSubType)) {
             themeSubType += 'Series';
         }
@@ -228,7 +228,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
         this.fillDataTextStyle(newSeriesOption.data as ArrayLike<any>);
 
-        var layoutMode = fetchLayoutMode(this);
+        let layoutMode = fetchLayoutMode(this);
         if (layoutMode) {
             mergeLayoutParam(
                 this.option as BoxLayoutOptionMixin,
@@ -239,7 +239,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         prepareSource(this);
 
-        var data = this.getInitialData(newSeriesOption, ecModel);
+        let data = this.getInitialData(newSeriesOption, ecModel);
         wrapData(data, this);
         this.dataTask.dirty();
         this.dataTask.context.data = data;
@@ -254,8 +254,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // FIXME Tree structure data ?
         // FIXME Performance ?
         if (data && !zrUtil.isTypedArray(data)) {
-            var props = ['show'];
-            for (var i = 0; i < data.length; i++) {
+            let props = ['show'];
+            for (let i = 0; i < data.length; i++) {
                 if (data[i] && data[i].label) {
                     modelUtil.defaultEmphasis(data[i], 'label', props);
                 }
@@ -278,7 +278,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // FIXME ???
         // (1) If data from dataset, forbidden append.
         // (2) support append data of dataset.
-        var data = this.getRawData();
+        let data = this.getRawData();
         data.appendData(params.data);
     }
 
@@ -289,9 +289,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * each time `task.perform` called.
      */
     getData(dataType?: string): List<this> {
-        var task = getCurrentTask(this);
+        let task = getCurrentTask(this);
         if (task) {
-            var data = task.context.data;
+            let data = task.context.data;
             return dataType == null ? data : data.getLinkedData(dataType);
         }
         else {
@@ -304,9 +304,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     setData(data: List): void {
-        var task = getCurrentTask(this);
+        let task = getCurrentTask(this);
         if (task) {
-            var context = task.context;
+            let context = task.context;
             // Consider case: filter, data sample.
             // FIXME:TS never used, so comment it
             // if (context.data !== data && task.modifyOutputEnd) {
@@ -346,7 +346,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * @return {type} description
      */
     getBaseAxis(): Axis {
-        var coordSys = this.coordinateSystem;
+        let coordSys = this.coordinateSystem;
         // @ts-ignore
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
     }
@@ -375,22 +375,22 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         markers: Dictionary<ColorString>
     } | string { // The override method can also return string
 
-        var series = this;
+        let series = this;
         renderMode = renderMode || 'html';
-        var newLine = renderMode === 'html' ? '<br/>' : '\n';
-        var isRichText = renderMode === 'richText';
-        var markers: Dictionary<ColorString> = {};
-        var markerId = 0;
+        let newLine = renderMode === 'html' ? '<br/>' : '\n';
+        let isRichText = renderMode === 'richText';
+        let markers: Dictionary<ColorString> = {};
+        let markerId = 0;
 
         function formatArrayValue(value: any[]) {
             // ??? TODO refactor these logic.
             // check: category-no-encode-has-axis-data in dataset.html
-            var vertially = zrUtil.reduce(value, function (vertially, val, idx) {
-                var dimItem = data.getDimensionInfo(idx);
+            let vertially = zrUtil.reduce(value, function (vertially, val, idx) {
+                let dimItem = data.getDimensionInfo(idx);
                 return vertially |= (dimItem && dimItem.tooltip !== false && dimItem.displayName != null) as any;
             }, 0);
 
-            var result: string[] = [];
+            let result: string[] = [];
 
             tooltipDims.length
                 ? zrUtil.each(tooltipDims, function (dim) {
@@ -400,22 +400,22 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 : zrUtil.each(value, setEachItem);
 
             function setEachItem(val: any, dim: DimensionName | number): void {
-                var dimInfo = data.getDimensionInfo(dim);
+                let dimInfo = data.getDimensionInfo(dim);
                 // If `dimInfo.tooltip` is not set, show tooltip.
                 if (!dimInfo || dimInfo.otherDims.tooltip === false) {
                     return;
                 }
-                var dimType = dimInfo.type;
-                var markName = 'sub' + series.seriesIndex + 'at' + markerId;
-                var dimHead = getTooltipMarker({
+                let dimType = dimInfo.type;
+                let markName = 'sub' + series.seriesIndex + 'at' + markerId;
+                let dimHead = getTooltipMarker({
                     color: colorStr,
                     type: 'subItem',
                     renderMode: renderMode,
                     markerId: markName
                 });
 
-                var dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
-                var valStr = (vertially
+                let dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
+                let valStr = (vertially
                         ? dimHeadStr + encodeHTML(dimInfo.displayName || '-') + ': '
                         : ''
                     )
@@ -434,8 +434,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 }
             }
 
-            var newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
-            var content = newLine + result.join(newLine || ', ');
+            let newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
+            let content = newLine + result.join(newLine || ', ');
             return {
                 renderMode: renderMode,
                 content: content,
@@ -452,14 +452,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             };
         }
 
-        var data = this.getData();
-        var tooltipDims = data.mapDimension('defaultedTooltip', true);
-        var tooltipDimLen = tooltipDims.length;
-        var value = this.getRawValue(dataIndex) as any;
-        var isValueArr = zrUtil.isArray(value);
+        let data = this.getData();
+        let tooltipDims = data.mapDimension('defaultedTooltip', true);
+        let tooltipDimLen = tooltipDims.length;
+        let value = this.getRawValue(dataIndex) as any;
+        let isValueArr = zrUtil.isArray(value);
 
-        var color = data.getItemVisual(dataIndex, 'color') as ZRColor;
-        var colorStr: ColorString;
+        let color = data.getItemVisual(dataIndex, 'color') as ZRColor;
+        let colorStr: ColorString;
         if (zrUtil.isString(color)) {
             colorStr = color;
         }
@@ -469,15 +469,15 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         colorStr = colorStr || 'transparent';
 
         // Complicated rule for pretty tooltip.
-        var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
+        let formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
             ? formatArrayValue(value)
             : tooltipDimLen
             ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
-        var content = formattedValue.content;
+        let content = formattedValue.content;
 
-        var markName = series.seriesIndex + 'at' + markerId;
-        var colorEl = getTooltipMarker({
+        let markName = series.seriesIndex + 'at' + markerId;
+        let colorEl = getTooltipMarker({
             color: colorStr,
             type: 'item',
             renderMode: renderMode,
@@ -486,9 +486,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         markers[markName] = colorStr;
         ++markerId;
 
-        var name = data.getName(dataIndex);
+        let name = data.getName(dataIndex);
 
-        var seriesName = this.name;
+        let seriesName = this.name;
         if (!modelUtil.isNameSpecified(this)) {
             seriesName = '';
         }
@@ -497,7 +497,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : '';
 
         colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
-        var html = !multipleSeries
+        let html = !multipleSeries
             ? seriesName + colorStr
                 + (name
                     ? encodeHTML(name) + ': ' + content
@@ -518,7 +518,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         if (env.node) {
             return false;
         }
-        var animationEnabled = this.getShallow('animation');
+        let animationEnabled = this.getShallow('animation');
         if (animationEnabled) {
             if (this.getData().count() > this.getShallow('animationThreshold')) {
                 animationEnabled = false;
@@ -532,9 +532,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     getColorFromPalette(name: string, scope: any, requestColorNum?: number): ZRColor {
-        var ecModel = this.ecModel;
+        let ecModel = this.ecModel;
         // PENDING
-        var color = ColorPaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);
+        let color = ColorPaletteMixin.prototype.getColorFromPalette.call(this, name, scope, requestColorNum);
         if (!color) {
             color = ecModel.getColorFromPalette(name, scope, requestColorNum);
         }
@@ -598,18 +598,18 @@ mountExtend(SeriesModel, ComponentModel as SeriesModelConstructor);
 function autoSeriesName(seriesModel: SeriesModel): void {
     // User specified name has higher priority, otherwise it may cause
     // series can not be queried unexpectedly.
-    var name = seriesModel.name;
+    let name = seriesModel.name;
     if (!modelUtil.isNameSpecified(seriesModel)) {
         seriesModel.name = getSeriesAutoName(seriesModel) || name;
     }
 }
 
 function getSeriesAutoName(seriesModel: SeriesModel): string {
-    var data = seriesModel.getRawData();
-    var dataDims = data.mapDimension('seriesName', true);
-    var nameArr: string[] = [];
+    let data = seriesModel.getRawData();
+    let dataDims = data.mapDimension('seriesName', true);
+    let nameArr: string[] = [];
     zrUtil.each(dataDims, function (dataDim) {
-        var dimInfo = data.getDimensionInfo(dataDim);
+        let dimInfo = data.getDimensionInfo(dataDim);
         dimInfo.displayName && nameArr.push(dimInfo.displayName);
     });
     return nameArr.join(' ');
@@ -620,7 +620,7 @@ function dataTaskCount(context: SeriesTaskContext): number {
 }
 
 function dataTaskReset(context: SeriesTaskContext) {
-    var seriesModel = context.model;
+    let seriesModel = context.model;
     seriesModel.setData(seriesModel.getRawData().cloneShallow());
     return dataTaskProgress;
 }
@@ -640,7 +640,7 @@ function wrapData(data: List, seriesModel: SeriesModel): void {
 }
 
 function onDataSelfChange(this: List, seriesModel: SeriesModel): void {
-    var task = getCurrentTask(seriesModel);
+    let task = getCurrentTask(seriesModel);
     if (task) {
         // Consider case: filter, selectRange
         task.setOutputEnd(this.count());
@@ -648,15 +648,15 @@ function onDataSelfChange(this: List, seriesModel: SeriesModel): void {
 }
 
 function getCurrentTask(seriesModel: SeriesModel): GeneralTask {
-    var scheduler = (seriesModel.ecModel || {}).scheduler;
-    var pipeline = scheduler && scheduler.getPipeline(seriesModel.uid);
+    let scheduler = (seriesModel.ecModel || {}).scheduler;
+    let pipeline = scheduler && scheduler.getPipeline(seriesModel.uid);
 
     if (pipeline) {
         // When pipline finished, the currrentTask keep the last
         // task (renderTask).
-        var task = pipeline.currentTask;
+        let task = pipeline.currentTask;
         if (task) {
-            var agentStubMap = (task as OverallTask).agentStubMap;
+            let agentStubMap = (task as OverallTask).agentStubMap;
             if (agentStubMap) {
                 task = agentStubMap.get(seriesModel.uid);
             }

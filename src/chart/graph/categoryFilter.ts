@@ -22,28 +22,28 @@ import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import type LegendModel from '../../component/legend/LegendModel';
 
 export default function (ecModel: GlobalModel) {
-    var legendModels = ecModel.findComponents({
+    let legendModels = ecModel.findComponents({
         mainType: 'legend'
     }) as LegendModel[];
     if (!legendModels || !legendModels.length) {
         return;
     }
     ecModel.eachSeriesByType('graph', function (graphSeries: GraphSeriesModel) {
-        var categoriesData = graphSeries.getCategoriesData();
-        var graph = graphSeries.getGraph();
-        var data = graph.data;
+        let categoriesData = graphSeries.getCategoriesData();
+        let graph = graphSeries.getGraph();
+        let data = graph.data;
 
-        var categoryNames = categoriesData.mapArray(categoriesData.getName);
+        let categoryNames = categoriesData.mapArray(categoriesData.getName);
 
         data.filterSelf(function (idx) {
-            var model = data.getItemModel<GraphNodeItemOption>(idx);
-            var category = model.getShallow('category');
+            let model = data.getItemModel<GraphNodeItemOption>(idx);
+            let category = model.getShallow('category');
             if (category != null) {
                 if (typeof category === 'number') {
                     category = categoryNames[category];
                 }
                 // If in any legend component the status is not selected.
-                for (var i = 0; i < legendModels.length; i++) {
+                for (let i = 0; i < legendModels.length; i++) {
                     if (!legendModels[i].isSelected(category)) {
                         return false;
                     }

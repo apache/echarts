@@ -21,12 +21,12 @@ import Region from '../Region';
 
 // Fix for 钓鱼岛
 
-// var Region = require('../Region');
-// var zrUtil = require('zrender/src/core/util');
+// let Region = require('../Region');
+// let zrUtil = require('zrender/src/core/util');
 
-// var geoCoord = [126, 25];
+// let geoCoord = [126, 25];
 
-var points = [
+const points = [
     [
         [123.45165252685547, 25.73527164402261],
         [123.49731445312499, 25.73527164402261],

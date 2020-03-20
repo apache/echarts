@@ -65,12 +65,12 @@ function createNameEach<T extends string>(names: readonly T[]) {
         context?: Ctx
     ) {
         zrUtil.each(names, function (name, index) {
-            var nameObj = {
+            let nameObj = {
                 name: name,
                 capital: capitalNames[index]
             } as NameObj;
 
-            for (var j = 0; j < attrs.length; j++) {
+            for (let j = 0; j < attrs.length; j++) {
                 nameObj[attrs[j]] = (name + capitalAttrs[j]) as never;
             }
 
@@ -93,7 +93,7 @@ function createNameEach<T extends string>(names: readonly T[]) {
  *                            }
  * @param context
  */
-export var eachAxisDim = createNameEach(AXIS_DIMS);
+export let eachAxisDim = createNameEach(AXIS_DIMS);
 
 /**
  * If tow dataZoomModels has the same axis controlled, we say that they are 'linked'.
@@ -119,7 +119,7 @@ export function createLinkedNodesFinder<N, E extends {name: string}>(
     };
 
     return function (sourceNode: N) {
-        var result: Result = {
+        let result: Result = {
             nodes: [],
             records: {}
         };
@@ -134,7 +134,7 @@ export function createLinkedNodesFinder<N, E extends {name: string}>(
 
         absorb(sourceNode, result);
 
-        var existsLink;
+        let existsLink;
         do {
             existsLink = false;
             forEachNode(processSingleNode);
@@ -156,7 +156,7 @@ export function createLinkedNodesFinder<N, E extends {name: string}>(
     }
 
     function isLinked(node: N, result: Result) {
-        var hasLink = false;
+        let hasLink = false;
         forEachEdgeType(function (edgeType: E) {
             zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
                 result.records[edgeType.name][edgeId] && (hasLink = true);

@@ -22,27 +22,27 @@ import * as vec2 from 'zrender/src/core/vector';
 import {getSymbolSize} from './graphHelper';
 import Graph from '../../data/Graph';
 
-var v1: number[] = [];
-var v2: number[] = [];
-var v3: number[] = [];
-var quadraticAt = curveTool.quadraticAt;
-var v2DistSquare = vec2.distSquare;
-var mathAbs = Math.abs;
+const v1: number[] = [];
+const v2: number[] = [];
+const v3: number[] = [];
+const quadraticAt = curveTool.quadraticAt;
+const v2DistSquare = vec2.distSquare;
+const mathAbs = Math.abs;
 function intersectCurveCircle(
     curvePoints: number[][],
     center: number[],
     radius: number
 ) {
-    var p0 = curvePoints[0];
-    var p1 = curvePoints[1];
-    var p2 = curvePoints[2];
+    let p0 = curvePoints[0];
+    let p1 = curvePoints[1];
+    let p2 = curvePoints[2];
 
-    var d = Infinity;
-    var t;
-    var radiusSquare = radius * radius;
-    var interval = 0.1;
+    let d = Infinity;
+    let t;
+    let radiusSquare = radius * radius;
+    let interval = 0.1;
 
-    for (var _t = 0.1; _t <= 0.9; _t += 0.1) {
+    for (let _t = 0.1; _t <= 0.9; _t += 0.1) {
         v1[0] = quadraticAt(p0[0], p1[0], p2[0], _t);
         v1[1] = quadraticAt(p0[1], p1[1], p2[1], _t);
         let diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
@@ -54,9 +54,9 @@ function intersectCurveCircle(
 
     // Assume the segment is monotone，Find root through Bisection method
     // At most 32 iteration
-    for (var i = 0; i < 32; i++) {
-        // var prev = t - interval;
-        var next = t + interval;
+    for (let i = 0; i < 32; i++) {
+        // let prev = t - interval;
+        let next = t + interval;
         // v1[0] = quadraticAt(p0[0], p1[0], p2[0], prev);
         // v1[1] = quadraticAt(p0[1], p1[1], p2[1], prev);
         v2[0] = quadraticAt(p0[0], p1[0], p2[0], t);
@@ -69,8 +69,8 @@ function intersectCurveCircle(
             break;
         }
 
-        // var prevDiff = v2DistSquare(v1, center) - radiusSquare;
-        var nextDiff = v2DistSquare(v3, center) - radiusSquare;
+        // let prevDiff = v2DistSquare(v1, center) - radiusSquare;
+        let nextDiff = v2DistSquare(v3, center) - radiusSquare;
 
         interval /= 2;
         if (diff < 0) {
@@ -96,17 +96,17 @@ function intersectCurveCircle(
 
 // Adjust edge to avoid
 export default function (graph: Graph, scale: number) {
-    var tmp0: number[] = [];
-    var quadraticSubdivide = curveTool.quadraticSubdivide;
-    var pts: number[][] = [[], [], []];
-    var pts2: number[][] = [[], []];
-    var v: number[] = [];
+    let tmp0: number[] = [];
+    let quadraticSubdivide = curveTool.quadraticSubdivide;
+    let pts: number[][] = [[], [], []];
+    let pts2: number[][] = [[], []];
+    let v: number[] = [];
     scale /= 2;
 
     graph.eachEdge(function (edge, idx) {
-        var linePoints = edge.getLayout();
-        var fromSymbol = edge.getVisual('fromSymbol');
-        var toSymbol = edge.getVisual('toSymbol');
+        let linePoints = edge.getLayout();
+        let fromSymbol = edge.getVisual('fromSymbol');
+        let toSymbol = edge.getVisual('toSymbol');
 
         if (!linePoints.__original) {
             linePoints.__original = [
@@ -117,7 +117,7 @@ export default function (graph: Graph, scale: number) {
                 linePoints.__original.push(vec2.clone(linePoints[2]));
             }
         }
-        var originalPoints = linePoints.__original;
+        let originalPoints = linePoints.__original;
         // Quadratic curve
         if (linePoints[2] != null) {
             vec2.copy(pts[0], originalPoints[0]);

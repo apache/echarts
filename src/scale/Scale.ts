@@ -70,7 +70,7 @@ abstract class Scale {
      * Set extent from data
      */
     unionExtent(other: [number, number]): void {
-        var extent = this._extent;
+        let extent = this._extent;
         other[0] < extent[0] && (extent[0] = other[0]);
         other[1] > extent[1] && (extent[1] = other[1]);
         // not setExtent because in log axis it may transformed to power
@@ -95,7 +95,7 @@ abstract class Scale {
      * Set extent
      */
     setExtent(start: number, end: number): void {
-        var thisExtent = this._extent;
+        let thisExtent = this._extent;
         if (!isNaN(start)) {
             thisExtent[0] = start;
         }

@@ -25,21 +25,21 @@ import { Dictionary } from 'zrender/src/core/types';
 
 export default function (properties: readonly string[][]) {
     // Normalize
-    for (var i = 0; i < properties.length; i++) {
+    for (let i = 0; i < properties.length; i++) {
         if (!properties[i][1]) {
             properties[i][1] = properties[i][0];
         }
     }
     return function (model: Model, excludes?: readonly string[], includes?: readonly string[]) {
-        var style: Dictionary<any> = {};
-        for (var i = 0; i < properties.length; i++) {
-            var propName = properties[i][1];
+        let style: Dictionary<any> = {};
+        for (let i = 0; i < properties.length; i++) {
+            let propName = properties[i][1];
             if ((excludes && zrUtil.indexOf(excludes, propName) >= 0)
                 || (includes && zrUtil.indexOf(includes, propName) < 0)
             ) {
                 continue;
             }
-            var val = model.getShallow(propName);
+            let val = model.getShallow(propName);
             if (val != null) {
                 style[properties[i][0]] = val;
             }

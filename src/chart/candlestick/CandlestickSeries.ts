@@ -152,7 +152,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
     }
 
     brushSelector(dataIndex: number, data: List, selectors: BrushCommonSelectorsForSeries): boolean {
-        var itemLayout = data.getItemLayout(dataIndex);
+        let itemLayout = data.getItemLayout(dataIndex);
         return itemLayout && selectors.rect(itemLayout.brushRect);
     }
 }

@@ -51,18 +51,18 @@ class LinesView extends ChartView {
     private _isLargeDraw: boolean;
 
     render(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var data = seriesModel.getData();
+        let data = seriesModel.getData();
 
-        var lineDraw = this._updateLineDraw(data, seriesModel);
+        let lineDraw = this._updateLineDraw(data, seriesModel);
 
-        var zlevel = seriesModel.get('zlevel');
-        var trailLength = seriesModel.get(['effect', 'trailLength']);
+        let zlevel = seriesModel.get('zlevel');
+        let trailLength = seriesModel.get(['effect', 'trailLength']);
 
-        var zr = api.getZr();
+        let zr = api.getZr();
         // Avoid the drag cause ghost shadow
         // FIXME Better way ?
         // SVG doesn't support
-        var isSvg = zr.painter.getType() === 'svg';
+        let isSvg = zr.painter.getType() === 'svg';
         if (!isSvg) {
             (zr.painter as CanvasPainter).getLayer(zlevel).clear(true);
         }
@@ -74,7 +74,7 @@ class LinesView extends ChartView {
         }
         if (this._showEffect(seriesModel) && trailLength) {
             if (__DEV__) {
-                var notInIndividual = false;
+                let notInIndividual = false;
                 ecModel.eachSeries(function (otherSeriesModel) {
                     if (otherSeriesModel !== seriesModel && otherSeriesModel.get('zlevel') === zlevel) {
                         notInIndividual = true;
@@ -93,7 +93,7 @@ class LinesView extends ChartView {
 
         lineDraw.updateData(data as List);
 
-        var clipPath = seriesModel.get('clip', true) && createClipPath(
+        let clipPath = seriesModel.get('clip', true) && createClipPath(
             (seriesModel.coordinateSystem as Polar | Cartesian2D), false, seriesModel
         );
         if (clipPath) {
@@ -109,9 +109,9 @@ class LinesView extends ChartView {
     }
 
     incrementalPrepareRender(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var data = seriesModel.getData();
+        let data = seriesModel.getData();
 
-        var lineDraw = this._updateLineDraw(data, seriesModel);
+        let lineDraw = this._updateLineDraw(data, seriesModel);
 
         lineDraw.incrementalPrepareUpdate(data);
 
@@ -131,8 +131,8 @@ class LinesView extends ChartView {
     }
 
     updateTransform(seriesModel: LinesSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var data = seriesModel.getData();
-        var pipelineContext = seriesModel.pipelineContext;
+        let data = seriesModel.getData();
+        let pipelineContext = seriesModel.pipelineContext;
 
         if (!this._finished || pipelineContext.large || pipelineContext.progressiveRender) {
             // TODO Don't have to do update in large mode. Only do it when there are millions of data.
@@ -143,7 +143,7 @@ class LinesView extends ChartView {
         else {
             // TODO Use same logic with ScatterView.
             // Manually update layout
-            var res = linesLayout.reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
+            let res = linesLayout.reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
             if (res.progress) {
                 res.progress({
                     start: 0,
@@ -158,11 +158,11 @@ class LinesView extends ChartView {
     }
 
     _updateLineDraw(data: List, seriesModel: LinesSeriesModel) {
-        var lineDraw = this._lineDraw;
-        var hasEffect = this._showEffect(seriesModel);
-        var isPolyline = !!seriesModel.get('polyline');
-        var pipelineContext = seriesModel.pipelineContext;
-        var isLargeDraw = pipelineContext.large;
+        let lineDraw = this._lineDraw;
+        let hasEffect = this._showEffect(seriesModel);
+        let isPolyline = !!seriesModel.get('polyline');
+        let pipelineContext = seriesModel.pipelineContext;
+        let isLargeDraw = pipelineContext.large;
 
         if (__DEV__) {
             if (hasEffect && isLargeDraw) {
@@ -201,8 +201,8 @@ class LinesView extends ChartView {
 
     _clearLayer(api: ExtensionAPI) {
         // Not use motion when dragging or zooming
-        var zr = api.getZr();
-        var isSvg = zr.painter.getType() === 'svg';
+        let zr = api.getZr();
+        let isSvg = zr.painter.getType() === 'svg';
         if (!isSvg && this._lastZlevel != null) {
             (zr.painter as CanvasPainter).getLayer(this._lastZlevel).clear(true);
         }

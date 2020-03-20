@@ -31,7 +31,7 @@ import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
 import GlobalModel from '../model/Global';
 import { ParsedModelFinder } from '../util/model';
 
-var v2ApplyTransform = vector.applyTransform;
+const v2ApplyTransform = vector.applyTransform;
 
 class View extends Transformable implements CoordinateSystemMaster, CoordinateSystem {
 
@@ -85,8 +85,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Transformed to particular position and size
      */
     transformTo(x: number, y: number, width: number, height: number): void {
-        var rect = this.getBoundingRect();
-        var rawTransform = this._rawTransformable;
+        let rect = this.getBoundingRect();
+        let rawTransform = this._rawTransformable;
 
         rawTransform.transform = rect.calculateTransform(
             new BoundingRect(x, y, width, height)
@@ -112,7 +112,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     setZoom(zoom: number): void {
         zoom = zoom || 1;
 
-        var zoomLimit = this.zoomLimit;
+        let zoomLimit = this.zoomLimit;
         if (zoomLimit) {
             if (zoomLimit.max != null) {
                 zoom = Math.min(zoomLimit.max, zoom);
@@ -131,9 +131,9 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      */
     getDefaultCenter(): number[] {
         // Rect before any transform
-        var rawRect = this.getBoundingRect();
-        var cx = rawRect.x + rawRect.width / 2;
-        var cy = rawRect.y + rawRect.height / 2;
+        let rawRect = this.getBoundingRect();
+        let cx = rawRect.x + rawRect.width / 2;
+        let cy = rawRect.y + rawRect.height / 2;
 
         return [cx, cy];
     }
@@ -155,11 +155,11 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      */
     private _updateCenterAndZoom(): void {
         // Must update after view transform updated
-        var rawTransformMatrix = this._rawTransformable.getLocalTransform();
-        var roamTransform = this._roamTransformable;
-        var defaultCenter = this.getDefaultCenter();
-        var center = this.getCenter();
-        var zoom = this.getZoom();
+        let rawTransformMatrix = this._rawTransformable.getLocalTransform();
+        let roamTransform = this._roamTransformable;
+        let defaultCenter = this.getDefaultCenter();
+        let center = this.getCenter();
+        let zoom = this.getZoom();
 
         center = vector.applyTransform([], center, rawTransformMatrix);
         defaultCenter = vector.applyTransform([], defaultCenter, rawTransformMatrix);
@@ -178,8 +178,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Update transform from roam and mapLocation
      */
     protected _updateTransform(): void {
-        var roamTransformable = this._roamTransformable;
-        var rawTransformable = this._rawTransformable;
+        let roamTransformable = this._roamTransformable;
+        let rawTransformable = this._rawTransformable;
 
         rawTransformable.parent = roamTransformable;
         roamTransformable.updateTransform();
@@ -200,8 +200,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         rawScale: number[],
         rawPosition: number[]
     } {
-        var roamTransform = this._roamTransformable.transform;
-        var rawTransformable = this._rawTransformable;
+        let roamTransform = this._roamTransformable.transform;
+        let rawTransformable = this._rawTransformable;
         return {
             roamTransform: roamTransform ? zrUtil.slice(roamTransform) : matrix.create(),
             rawScale: zrUtil.slice(rawTransformable.scale),
@@ -217,7 +217,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Get view rect after roam transform
      */
     getViewRectAfterRoam(): BoundingRect {
-        var rect = this.getBoundingRect().clone();
+        let rect = this.getBoundingRect().clone();
         rect.applyTransform(this.transform);
         return rect;
     }
@@ -226,7 +226,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Convert a single (lon, lat) data item to (x, y) point.
      */
     dataToPoint(data: number[], noRoam?: boolean, out?: number[]): number[] {
-        var transform = noRoam ? this._rawTransform : this.transform;
+        let transform = noRoam ? this._rawTransform : this.transform;
         out = out || [];
         return transform
             ? v2ApplyTransform(out, data, transform)
@@ -237,19 +237,19 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Convert a (x, y) point to (lon, lat) data
      */
     pointToData(point: number[]): number[] {
-        var invTransform = this.invTransform;
+        let invTransform = this.invTransform;
         return invTransform
             ? v2ApplyTransform([], point, invTransform)
             : [point[0], point[1]];
     }
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
-        var coordSys = getCoordSys(finder);
+        let coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.dataToPoint(value) : null;
     }
 
     convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
-        var coordSys = getCoordSys(finder);
+        let coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }
 
@@ -265,14 +265,14 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      */
     // getScalarScale() {
     //     // Use determinant square root of transform to mutiply scalar
-    //     var m = this.transform;
-    //     var det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
+    //     let m = this.transform;
+    //     let det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
     //     return det;
     // }
 }
 
 function getCoordSys(finder: ParsedModelFinder): View {
-    var seriesModel = finder.seriesModel;
+    let seriesModel = finder.seriesModel;
     return seriesModel ? seriesModel.coordinateSystem as View : null; // e.g., graph.
 }
 

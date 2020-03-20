@@ -23,12 +23,12 @@
 import * as zrUtil from 'zrender/src/core/util';
 
 export default function (option) {
-    var polarOptArr = option.polar;
+    let polarOptArr = option.polar;
     if (polarOptArr) {
         if (!zrUtil.isArray(polarOptArr)) {
             polarOptArr = [polarOptArr];
         }
-        var polarNotRadar = [];
+        let polarNotRadar = [];
         zrUtil.each(polarOptArr, function (polarOpt, idx) {
             if (polarOpt.indicator) {
                 if (polarOpt.type && !polarOpt.shape) {

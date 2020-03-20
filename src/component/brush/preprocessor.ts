@@ -22,10 +22,10 @@ import * as zrUtil from 'zrender/src/core/util';
 import { ECUnitOption, Dictionary } from '../../util/types';
 import { BrushOption, BrushToolboxIconType } from './BrushModel';
 
-var DEFAULT_TOOLBOX_BTNS: BrushToolboxIconType[] = ['rect', 'polygon', 'keep', 'clear'];
+const DEFAULT_TOOLBOX_BTNS: BrushToolboxIconType[] = ['rect', 'polygon', 'keep', 'clear'];
 
 export default function (option: ECUnitOption, isNew: boolean): void {
-    var brushComponents = option && option.brush;
+    let brushComponents = option && option.brush;
     if (!zrUtil.isArray(brushComponents)) {
         brushComponents = brushComponents ? [brushComponents] : [];
     }
@@ -34,10 +34,10 @@ export default function (option: ECUnitOption, isNew: boolean): void {
         return;
     }
 
-    var brushComponentSpecifiedBtns = [] as string[];
+    let brushComponentSpecifiedBtns = [] as string[];
 
     zrUtil.each(brushComponents, function (brushOpt: BrushOption) {
-        var tbs = brushOpt.hasOwnProperty('toolbox')
+        let tbs = brushOpt.hasOwnProperty('toolbox')
             ? brushOpt.toolbox : [];
 
         if (tbs instanceof Array) {
@@ -45,7 +45,7 @@ export default function (option: ECUnitOption, isNew: boolean): void {
         }
     });
 
-    var toolbox = option && option.toolbox;
+    let toolbox = option && option.toolbox;
 
     if (zrUtil.isArray(toolbox)) {
         toolbox = toolbox[0];
@@ -55,9 +55,9 @@ export default function (option: ECUnitOption, isNew: boolean): void {
         option.toolbox = [toolbox];
     }
 
-    var toolboxFeature = (toolbox.feature || (toolbox.feature = {}));
-    var toolboxBrush = toolboxFeature.brush || (toolboxFeature.brush = {});
-    var brushTypes = toolboxBrush.type || (toolboxBrush.type = []);
+    let toolboxFeature = (toolbox.feature || (toolbox.feature = {}));
+    let toolboxBrush = toolboxFeature.brush || (toolboxFeature.brush = {});
+    let brushTypes = toolboxBrush.type || (toolboxBrush.type = []);
 
     brushTypes.push.apply(brushTypes, brushComponentSpecifiedBtns);
 
@@ -69,7 +69,7 @@ export default function (option: ECUnitOption, isNew: boolean): void {
 }
 
 function removeDuplicate(arr: string[]): void {
-    var map = {} as Dictionary<number>;
+    let map = {} as Dictionary<number>;
     zrUtil.each(arr, function (val) {
         map[val] = 1;
     });

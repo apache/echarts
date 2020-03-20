@@ -33,11 +33,11 @@ import { SeriesOption } from '../../util/types';
  * Create single coordinate system and inject it into seriesModel.
  */
 function create(ecModel: GlobalModel, api: ExtensionAPI) {
-    var singles: Single[] = [];
+    let singles: Single[] = [];
 
     ecModel.eachComponent('singleAxis', function (axisModel: SingleAxisModel, idx: number) {
 
-        var single = new Single(axisModel, ecModel, api);
+        let single = new Single(axisModel, ecModel, api);
         single.name = 'single_' + idx;
         single.resize(axisModel, api);
         axisModel.coordinateSystem = single;
@@ -50,7 +50,7 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
         singleAxisId?: string
     }>) {
         if (seriesModel.get('coordinateSystem') === 'singleAxis') {
-            var singleAxisModel = ecModel.queryComponents({
+            let singleAxisModel = ecModel.queryComponents({
                 mainType: 'singleAxis',
                 index: seriesModel.get('singleAxisIndex'),
                 id: seriesModel.get('singleAxisId')

@@ -29,10 +29,10 @@ class Polyline extends graphic.Group {
     }
 
     private _createPolyline(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
-        // var seriesModel = lineData.hostModel;
-        var points = lineData.getItemLayout(idx);
+        // let seriesModel = lineData.hostModel;
+        let points = lineData.getItemLayout(idx);
 
-        var line = new graphic.Polyline({
+        let line = new graphic.Polyline({
             shape: {
                 points: points
             }
@@ -44,10 +44,10 @@ class Polyline extends graphic.Group {
     };
 
     updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
-        var seriesModel = lineData.hostModel;
+        let seriesModel = lineData.hostModel;
 
-        var line = this.childAt(0) as graphic.Polyline;
-        var target = {
+        let line = this.childAt(0) as graphic.Polyline;
+        let target = {
             shape: {
                 points: lineData.getItemLayout(idx) as number[][]
             }
@@ -58,13 +58,13 @@ class Polyline extends graphic.Group {
     };
 
     _updateCommonStl(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
-        var line = this.childAt(0) as graphic.Polyline;
-        var itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
+        let line = this.childAt(0) as graphic.Polyline;
+        let itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
-        var visualColor = lineData.getItemVisual(idx, 'color');
+        let visualColor = lineData.getItemVisual(idx, 'color');
 
-        var lineStyle = seriesScope && seriesScope.lineStyle;
-        var hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
+        let lineStyle = seriesScope && seriesScope.lineStyle;
+        let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
 
         if (!seriesScope || lineData.hasItemOption) {
             lineStyle = itemModel.getModel('lineStyle').getLineStyle();
@@ -84,7 +84,7 @@ class Polyline extends graphic.Group {
     };
 
     updateLayout(lineData: List, idx: number) {
-        var polyline = this.childAt(0) as graphic.Polyline;
+        let polyline = this.childAt(0) as graphic.Polyline;
         polyline.setShape('points', lineData.getItemLayout(idx));
     };
 

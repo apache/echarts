@@ -25,7 +25,7 @@ import PieSeriesModel, { PieSeriesOption, PieDataItemOption } from './PieSeries'
 import { VectorArray } from 'zrender/src/core/vector';
 import { HorizontalAlign, VerticalAlign, ZRRectLike } from '../../util/types';
 
-var RADIAN = Math.PI / 180;
+const RADIAN = Math.PI / 180;
 
 interface LabelLayout {
     x: number
@@ -65,7 +65,7 @@ function adjustSingleSide(
     });
 
     function shiftDown(start: number, end: number, delta: number, dir: number) {
-        for (var j = start; j < end; j++) {
+        for (let j = start; j < end; j++) {
             if (list[j].y + delta > viewTop + viewHeight) {
                 break;
             }
@@ -84,7 +84,7 @@ function adjustSingleSide(
     }
 
     function shiftUp(end: number, delta: number) {
-        for (var j = end; j >= 0; j--) {
+        for (let j = end; j >= 0; j--) {
             if (list[j].y - delta < viewTop) {
                 break;
             }
@@ -103,7 +103,7 @@ function adjustSingleSide(
         cx: number, cy: number, r: number,
         dir: 1 | -1
     ) {
-        var lastDeltaX = dir > 0
+        let lastDeltaX = dir > 0
             ? isDownList                // right-side
                 ? Number.MAX_VALUE      // down
                 : 0                     // up
@@ -111,15 +111,15 @@ function adjustSingleSide(
                 ? Number.MAX_VALUE      // down
                 : 0;                    // up
 
-        for (var i = 0, l = list.length; i < l; i++) {
+        for (let i = 0, l = list.length; i < l; i++) {
             if (list[i].labelAlignTo !== 'none') {
                 continue;
             }
 
-            var deltaY = Math.abs(list[i].y - cy);
-            var length = list[i].len;
-            var length2 = list[i].len2;
-            var deltaX = (deltaY < r + length)
+            let deltaY = Math.abs(list[i].y - cy);
+            let length = list[i].len;
+            let length2 = list[i].len2;
+            let deltaX = (deltaY < r + length)
                 ? Math.sqrt(
                         (r + length + length2) * (r + length + length2)
                         - deltaY * deltaY
@@ -139,14 +139,14 @@ function adjustSingleSide(
         }
     }
 
-    var lastY = 0;
-    var delta;
-    var len = list.length;
-    var upList = [];
-    var downList = [];
+    let lastY = 0;
+    let delta;
+    let len = list.length;
+    let upList = [];
+    let downList = [];
     for (let i = 0; i < len; i++) {
         if (list[i].position === 'outer' && list[i].labelAlignTo === 'labelLine') {
-            var dx = list[i].x - farthestX;
+            let dx = list[i].x - farthestX;
             list[i].linePoints[1][0] += dx;
             list[i].x = farthestX;
         }
@@ -182,10 +182,10 @@ function avoidOverlap(
     viewLeft: number,
     viewTop: number
 ) {
-    var leftList = [];
-    var rightList = [];
-    var leftmostX = Number.MAX_VALUE;
-    var rightmostX = -Number.MAX_VALUE;
+    let leftList = [];
+    let rightList = [];
+    let leftmostX = Number.MAX_VALUE;
+    let rightmostX = -Number.MAX_VALUE;
     for (let i = 0; i < labelLayoutList.length; i++) {
         if (isPositionCenter(labelLayoutList[i])) {
             continue;
@@ -204,17 +204,17 @@ function avoidOverlap(
     adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
 
     for (let i = 0; i < labelLayoutList.length; i++) {
-        var layout = labelLayoutList[i];
+        let layout = labelLayoutList[i];
         if (isPositionCenter(layout)) {
             continue;
         }
 
-        var linePoints = layout.linePoints;
+        let linePoints = layout.linePoints;
         if (linePoints) {
-            var isAlignToEdge = layout.labelAlignTo === 'edge';
+            let isAlignToEdge = layout.labelAlignTo === 'edge';
 
-            var realTextWidth = layout.textRect.width;
-            var targetTextWidth;
+            let realTextWidth = layout.textRect.width;
+            let targetTextWidth;
             if (isAlignToEdge) {
                 if (layout.x < cx) {
                     targetTextWidth = linePoints[2][0] - layout.labelDistance
@@ -240,7 +240,7 @@ function avoidOverlap(
                 }
             }
 
-            var dist = linePoints[1][0] - linePoints[2][0];
+            let dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
                 if (layout.x < cx) {
                     linePoints[2][0] = viewLeft + layout.labelMargin + realTextWidth + layout.labelDistance;
@@ -277,71 +277,71 @@ export default function (
     viewLeft: number,
     viewTop: number
 ) {
-    var data = seriesModel.getData();
-    var labelLayoutList: LabelLayout[] = [];
-    var cx;
-    var cy;
-    var hasLabelRotate = false;
-    var minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
+    let data = seriesModel.getData();
+    let labelLayoutList: LabelLayout[] = [];
+    let cx;
+    let cy;
+    let hasLabelRotate = false;
+    let minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
 
     data.each(function (idx) {
-        var layout = data.getItemLayout(idx);
+        let layout = data.getItemLayout(idx);
 
-        var itemModel = data.getItemModel<PieDataItemOption>(idx);
-        var labelModel = itemModel.getModel('label');
+        let itemModel = data.getItemModel<PieDataItemOption>(idx);
+        let labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis
-        var labelPosition = labelModel.get('position') || itemModel.get(['emphasis', 'label', 'position']);
-        var labelDistance = labelModel.get('distanceToLabelLine');
-        var labelAlignTo = labelModel.get('alignTo');
-        var labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
-        var bleedMargin = labelModel.get('bleedMargin');
-        var font = labelModel.getFont();
+        let labelPosition = labelModel.get('position') || itemModel.get(['emphasis', 'label', 'position']);
+        let labelDistance = labelModel.get('distanceToLabelLine');
+        let labelAlignTo = labelModel.get('alignTo');
+        let labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
+        let bleedMargin = labelModel.get('bleedMargin');
+        let font = labelModel.getFont();
 
-        var labelLineModel = itemModel.getModel('labelLine');
-        var labelLineLen = labelLineModel.get('length');
+        let labelLineModel = itemModel.getModel('labelLine');
+        let labelLineLen = labelLineModel.get('length');
         labelLineLen = parsePercent(labelLineLen, viewWidth);
-        var labelLineLen2 = labelLineModel.get('length2');
+        let labelLineLen2 = labelLineModel.get('length2');
         labelLineLen2 = parsePercent(labelLineLen2, viewWidth);
 
         if (layout.angle < minShowLabelRadian) {
             return;
         }
 
-        var midAngle = (layout.startAngle + layout.endAngle) / 2;
-        var dx = Math.cos(midAngle);
-        var dy = Math.sin(midAngle);
+        let midAngle = (layout.startAngle + layout.endAngle) / 2;
+        let dx = Math.cos(midAngle);
+        let dy = Math.sin(midAngle);
 
-        var textX;
-        var textY;
-        var linePoints;
-        var textAlign;
+        let textX;
+        let textY;
+        let linePoints;
+        let textAlign;
 
         cx = layout.cx;
         cy = layout.cy;
 
-        var text = seriesModel.getFormattedLabel(idx, 'normal')
+        let text = seriesModel.getFormattedLabel(idx, 'normal')
                 || data.getName(idx);
-        var textRect = textContain.getBoundingRect(text, font, textAlign, 'top');
+        let textRect = textContain.getBoundingRect(text, font, textAlign, 'top');
 
-        var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
+        let isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         if (labelPosition === 'center') {
             textX = layout.cx;
             textY = layout.cy;
             textAlign = 'center';
         }
         else {
-            var x1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dx : layout.r * dx) + cx;
-            var y1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dy : layout.r * dy) + cy;
+            let x1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dx : layout.r * dx) + cx;
+            let y1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dy : layout.r * dy) + cy;
 
             textX = x1 + dx * 3;
             textY = y1 + dy * 3;
 
             if (!isLabelInside) {
                 // For roseType
-                var x2 = x1 + dx * (labelLineLen + r - layout.r);
-                var y2 = y1 + dy * (labelLineLen + r - layout.r);
-                var x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
-                var y3 = y2;
+                let x2 = x1 + dx * (labelLineLen + r - layout.r);
+                let y2 = y1 + dy * (labelLineLen + r - layout.r);
+                let x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
+                let y3 = y2;
 
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
@@ -363,8 +363,8 @@ export default function (
                     : (dx > 0 ? 'left' : 'right'));
         }
 
-        var labelRotate;
-        var rotate = labelModel.get('rotate');
+        let labelRotate;
+        let rotate = labelModel.get('rotate');
         if (typeof rotate === 'number') {
             labelRotate = rotate * (Math.PI / 180);
         }

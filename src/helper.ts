@@ -40,8 +40,8 @@ export function createList(seriesModel: SeriesModel) {
 }
 
 // export function createGraph(seriesModel) {
-//     var nodes = seriesModel.get('data');
-//     var links = seriesModel.get('links');
+//     let nodes = seriesModel.get('data');
+//     let links = seriesModel.get('links');
 //     return createGraphFromNodeEdge(nodes, links, seriesModel);
 // }
 
@@ -49,7 +49,7 @@ export {getLayoutRect};
 
 export {default as createDimensions} from './data/helper/createDimensions';
 
-export var dataStack = {
+export let dataStack = {
     isDimensionStacked: isDimensionStacked,
     enableDataStack: enableDataStack,
     getStackedDimension: getStackedDimension
@@ -73,7 +73,7 @@ export {createSymbol} from './util/symbol';
  *        is secified, it can only be `'value'` currently.
  */
 export function createScale(dataExtent: number[], option: object | AxisBaseModel) {
-    var axisModel = option;
+    let axisModel = option;
     if (!(option instanceof Model)) {
         axisModel = new Model(option);
         // FIXME
@@ -86,7 +86,7 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
         // zrUtil.mixin(axisModel, AxisModelCommonMixin);
     }
 
-    var scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
+    let scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
     scale.setExtent(dataExtent[0], dataExtent[1]);
 
     axisHelper.niceScaleExtent(scale, axisModel as AxisBaseModel);

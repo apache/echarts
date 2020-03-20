@@ -53,7 +53,7 @@ export default function <
 
     zrUtil.each(AXIS_TYPES, function (v, axisType) {
 
-        var defaultOption = zrUtil.merge(
+        let defaultOption = zrUtil.merge(
             zrUtil.merge({}, axisDefault[axisType], true),
             extraDefaultOption, true
         );
@@ -72,11 +72,11 @@ export default function <
             }
 
             mergeDefaultAndTheme(option: AxisOptionT, ecModel: GlobalModel): void {
-                var layoutMode = fetchLayoutMode(this);
-                var inputPositionParams = layoutMode
+                let layoutMode = fetchLayoutMode(this);
+                let inputPositionParams = layoutMode
                     ? getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
-                var themeModel = ecModel.getTheme();
+                let themeModel = ecModel.getTheme();
                 zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
                 zrUtil.merge(option, this.getDefaultOption());
 
@@ -88,7 +88,7 @@ export default function <
             }
 
             optionUpdated(): void {
-                var thisOption = this.option;
+                let thisOption = this.option;
                 if (thisOption.type === 'category') {
                     this.__ordinalMeta = OrdinalMeta.createByAxisModel(this);
                 }
@@ -99,7 +99,7 @@ export default function <
              * Because categories are collected during initializing data.
              */
             getCategories(rawData?: boolean): OrdinalRawValue[] | AxisBaseOption['data'] {
-                var option = this.option;
+                let option = this.option;
                 // FIXME
                 // warning if called before all of 'getInitailData' finished.
                 if (option.type === 'category') {

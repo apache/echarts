@@ -153,15 +153,15 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
-        var root = { name: option.name, children: option.data };
+        let root = { name: option.name, children: option.data };
 
         completeTreeValue(root);
 
-        var levels = option.levels || [];
+        let levels = option.levels || [];
 
         // levels = option.levels = setDefault(levels, ecModel);
 
-        var treeOption = {
+        let treeOption = {
             levels: levels
         };
 
@@ -179,9 +179,9 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
      * @override
      */
     getDataParams(dataIndex: number) {
-        var params = super.getDataParams.apply(this, arguments as any) as SunburstDataParams;
+        let params = super.getDataParams.apply(this, arguments as any) as SunburstDataParams;
 
-        var node = this.getData().tree.getNodeByDataIndex(dataIndex);
+        let node = this.getData().tree.getNodeByDataIndex(dataIndex);
         params.treePathInfo = wrapTreePathInfo<SunburstSeriesNodeOption['value']>(node, this);
 
         return params;
@@ -279,7 +279,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
             ? (this._viewRoot = viewRoot)
             : (viewRoot = this._viewRoot);
 
-        var root = this.getRawData().tree.root;
+        let root = this.getRawData().tree.root;
 
         if (!viewRoot
             || (viewRoot !== root && !root.contains(viewRoot))
@@ -295,19 +295,19 @@ function completeTreeValue(dataNode: SunburstSeriesNodeOption) {
     // Postorder travel tree.
     // If value of none-leaf node is not set,
     // calculate it by suming up the value of all children.
-    var sum = 0;
+    let sum = 0;
 
     zrUtil.each(dataNode.children, function (child) {
 
         completeTreeValue(child);
 
-        var childValue = child.value;
+        let childValue = child.value;
         // TODO First value of array must be a number
         zrUtil.isArray(childValue) && (childValue = childValue[0]);
         sum += childValue as number;
     });
 
-    var thisValue = dataNode.value as number;
+    let thisValue = dataNode.value as number;
     if (zrUtil.isArray(thisValue)) {
         thisValue = thisValue[0];
     }

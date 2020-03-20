@@ -28,9 +28,9 @@
 import * as zrUtil from 'zrender/src/core/util';
 
 export function parse(xml) {
-    var doc;
+    let doc;
     if (typeof xml === 'string') {
-        var parser = new DOMParser();
+        let parser = new DOMParser();
         doc = parser.parseFromString(xml, 'text/xml');
     }
     else {
@@ -40,17 +40,17 @@ export function parse(xml) {
         return null;
     }
 
-    var gexfRoot = getChildByTagName(doc, 'gexf');
+    let gexfRoot = getChildByTagName(doc, 'gexf');
 
     if (!gexfRoot) {
         return null;
     }
 
-    var graphRoot = getChildByTagName(gexfRoot, 'graph');
+    let graphRoot = getChildByTagName(gexfRoot, 'graph');
 
-    var attributes = parseAttributes(getChildByTagName(graphRoot, 'attributes'));
-    var attributesMap = {};
-    for (var i = 0; i < attributes.length; i++) {
+    let attributes = parseAttributes(getChildByTagName(graphRoot, 'attributes'));
+    let attributesMap = {};
+    for (let i = 0; i < attributes.length; i++) {
         attributesMap[attributes[i].id] = attributes[i];
     }
 
@@ -73,10 +73,10 @@ function parseAttributes(parent) {
 function parseNodes(parent, attributesMap) {
     return parent ? zrUtil.map(getChildrenByTagName(parent, 'node'), function (nodeDom) {
 
-        var id = getAttr(nodeDom, 'id');
-        var label = getAttr(nodeDom, 'label');
+        let id = getAttr(nodeDom, 'id');
+        let label = getAttr(nodeDom, 'label');
 
-        var node = {
+        let node = {
             id: id,
             name: label,
             itemStyle: {
@@ -84,12 +84,12 @@ function parseNodes(parent, attributesMap) {
             }
         };
 
-        var vizSizeDom = getChildByTagName(nodeDom, 'viz:size');
-        var vizPosDom = getChildByTagName(nodeDom, 'viz:position');
-        var vizColorDom = getChildByTagName(nodeDom, 'viz:color');
-        // var vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
+        let vizSizeDom = getChildByTagName(nodeDom, 'viz:size');
+        let vizPosDom = getChildByTagName(nodeDom, 'viz:position');
+        let vizColorDom = getChildByTagName(nodeDom, 'viz:color');
+        // let vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
 
-        var attvaluesDom = getChildByTagName(nodeDom, 'attvalues');
+        let attvaluesDom = getChildByTagName(nodeDom, 'attvalues');
 
         if (vizSizeDom) {
             node.symbolSize = parseFloat(getAttr(vizSizeDom, 'value'));
@@ -110,15 +110,15 @@ function parseNodes(parent, attributesMap) {
             // node.shape = getAttr(vizShapeDom, 'shape');
         // }
         if (attvaluesDom) {
-            var attvalueDomList = getChildrenByTagName(attvaluesDom, 'attvalue');
+            let attvalueDomList = getChildrenByTagName(attvaluesDom, 'attvalue');
 
             node.attributes = {};
 
-            for (var j = 0; j < attvalueDomList.length; j++) {
-                var attvalueDom = attvalueDomList[j];
-                var attId = getAttr(attvalueDom, 'for');
-                var attValue = getAttr(attvalueDom, 'value');
-                var attribute = attributesMap[attId];
+            for (let j = 0; j < attvalueDomList.length; j++) {
+                let attvalueDom = attvalueDomList[j];
+                let attId = getAttr(attvalueDom, 'for');
+                let attValue = getAttr(attvalueDom, 'value');
+                let attribute = attributesMap[attId];
 
                 if (attribute) {
                     switch (attribute.type) {
@@ -146,13 +146,13 @@ function parseNodes(parent, attributesMap) {
 
 function parseEdges(parent) {
     return parent ? zrUtil.map(getChildrenByTagName(parent, 'edge'), function (edgeDom) {
-        var id = getAttr(edgeDom, 'id');
-        var label = getAttr(edgeDom, 'label');
+        let id = getAttr(edgeDom, 'id');
+        let label = getAttr(edgeDom, 'label');
 
-        var sourceId = getAttr(edgeDom, 'source');
-        var targetId = getAttr(edgeDom, 'target');
+        let sourceId = getAttr(edgeDom, 'source');
+        let targetId = getAttr(edgeDom, 'target');
 
-        var edge = {
+        let edge = {
             id: id,
             name: label,
             source: sourceId,
@@ -162,11 +162,11 @@ function parseEdges(parent) {
             }
         };
 
-        var lineStyle = edge.lineStyle.normal;
+        let lineStyle = edge.lineStyle.normal;
 
-        var vizThicknessDom = getChildByTagName(edgeDom, 'viz:thickness');
-        var vizColorDom = getChildByTagName(edgeDom, 'viz:color');
-        // var vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
+        let vizThicknessDom = getChildByTagName(edgeDom, 'viz:thickness');
+        let vizColorDom = getChildByTagName(edgeDom, 'viz:color');
+        // let vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
 
         if (vizThicknessDom) {
             lineStyle.width = parseFloat(vizThicknessDom.getAttribute('value'));
@@ -191,7 +191,7 @@ function getAttr(el, attrName) {
 }
 
 function getChildByTagName(parent, tagName) {
-    var node = parent.firstChild;
+    let node = parent.firstChild;
 
     while (node) {
         if (
@@ -209,8 +209,8 @@ function getChildByTagName(parent, tagName) {
 }
 
 function getChildrenByTagName(parent, tagName) {
-    var node = parent.firstChild;
-    var children = [];
+    let node = parent.firstChild;
+    let children = [];
     while (node) {
         if (node.nodeName.toLowerCase() === tagName.toLowerCase()) {
             children.push(node);

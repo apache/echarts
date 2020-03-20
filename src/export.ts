@@ -48,9 +48,9 @@ export {colorTool as color};
 export {default as env} from 'zrender/src/core/env';
 
 export {parseGeoJSON};
-export var parseGeoJson = parseGeoJSON;
+export let parseGeoJson = parseGeoJSON;
 
-var ecUtil = {};
+const ecUtil = {};
 zrUtil.each(
     [
         'map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter',
@@ -89,7 +89,7 @@ const GRAPHIC_KEYS = [
     'BoundingRect'
 ] as const;
 
-var graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
+const graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
 zrUtil.each(
     GRAPHIC_KEYS,
     function (name) {

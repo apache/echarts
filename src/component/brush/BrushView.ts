@@ -82,9 +82,9 @@ class BrushView extends ComponentView {
     }
 
     private _onBrush(eventParam: BrushControllerEvents['brush']): void {
-        var modelId = this.model.id;
+        let modelId = this.model.id;
 
-        var areas = this.model.brushTargetManager.setOutputRanges(eventParam.areas, this.ecModel);
+        let areas = this.model.brushTargetManager.setOutputRanges(eventParam.areas, this.ecModel);
 
         // Action is not dispatched on drag end, because the drag end
         // emits the same params with the last drag move event, and

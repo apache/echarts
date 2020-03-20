@@ -60,7 +60,7 @@ class Geo extends View {
 
         this.map = map;
 
-        var source = geoSourceManager.load(map, nameMap);
+        let source = geoSourceManager.load(map, nameMap);
 
         this._nameCoordMap = source.nameCoordMap;
         this._regionsMap = source.regionsMap;
@@ -73,8 +73,8 @@ class Geo extends View {
      * Whether contain the given [lng, lat] coord.
      */
     containCoord(coord: number[]) {
-        var regions = this.regions;
-        for (var i = 0; i < regions.length; i++) {
+        let regions = this.regions;
+        for (let i = 0; i < regions.length; i++) {
             if (regions[i].contain(coord)) {
                 return true;
             }
@@ -83,8 +83,8 @@ class Geo extends View {
     }
 
     transformTo(x: number, y: number, width: number, height: number): void {
-        var rect = this.getBoundingRect();
-        var invertLongitute = this._invertLongitute;
+        let rect = this.getBoundingRect();
+        let invertLongitute = this._invertLongitute;
 
         rect = rect.clone();
 
@@ -93,7 +93,7 @@ class Geo extends View {
             rect.y = -rect.y - rect.height;
         }
 
-        var rawTransformable = this._rawTransformable;
+        let rawTransformable = this._rawTransformable;
 
         rawTransformable.transform = rect.calculateTransform(
             new BoundingRect(x, y, width, height)
@@ -102,7 +102,7 @@ class Geo extends View {
         rawTransformable.decomposeTransform();
 
         if (invertLongitute) {
-            var scale = rawTransformable.scale;
+            let scale = rawTransformable.scale;
             scale[1] = -scale[1];
         }
 
@@ -116,8 +116,8 @@ class Geo extends View {
     }
 
     getRegionByCoord(coord: number[]): Region {
-        var regions = this.regions;
-        for (var i = 0; i < regions.length; i++) {
+        let regions = this.regions;
+        for (let i = 0; i < regions.length; i++) {
             if (regions[i].contain(coord)) {
                 return regions[i];
             }
@@ -153,12 +153,12 @@ class Geo extends View {
     }
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
-        var coordSys = getCoordSys(finder);
+        let coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.dataToPoint(value) : null;
     }
 
     convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
-        var coordSys = getCoordSys(finder);
+        let coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }
 
@@ -167,8 +167,8 @@ class Geo extends View {
 zrUtil.mixin(Geo, View);
 
 function getCoordSys(finder: ParsedModelFinder): Geo {
-    var geoModel = finder.geoModel as GeoModel;
-    var seriesModel = finder.seriesModel;
+    let geoModel = finder.geoModel as GeoModel;
+    let seriesModel = finder.seriesModel;
     return geoModel
         ? geoModel.coordinateSystem
         : seriesModel

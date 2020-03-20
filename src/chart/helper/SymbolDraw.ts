@@ -109,7 +109,7 @@ export interface SymbolDrawSeriesScope {
 }
 
 function makeSeriesScope(data: List): SymbolDrawSeriesScope {
-    var seriesModel = data.hostModel;
+    let seriesModel = data.hostModel;
     return {
         itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
         hoverItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
@@ -143,12 +143,12 @@ class SymbolDraw {
     updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
         opt = normalizeUpdateOpt(opt);
 
-        var group = this.group;
-        var seriesModel = data.hostModel;
-        var oldData = this._data;
-        var SymbolCtor = this._SymbolCtor;
+        let group = this.group;
+        let seriesModel = data.hostModel;
+        let oldData = this._data;
+        let SymbolCtor = this._SymbolCtor;
 
-        var seriesScope = makeSeriesScope(data);
+        let seriesScope = makeSeriesScope(data);
 
         // There is no oldLineData only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
@@ -158,17 +158,17 @@ class SymbolDraw {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                var point = data.getItemLayout(newIdx) as number[];
+                let point = data.getItemLayout(newIdx) as number[];
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
-                    var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+                    let symbolEl = new SymbolCtor(data, newIdx, seriesScope);
                     symbolEl.attr('position', point);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
             })
             .update(function (newIdx, oldIdx) {
-                var symbolEl = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
-                var point = data.getItemLayout(newIdx) as number[];
+                let symbolEl = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
+                let point = data.getItemLayout(newIdx) as number[];
                 if (!symbolNeedsDraw(data, point, newIdx, opt)) {
                     group.remove(symbolEl);
                     return;
@@ -190,7 +190,7 @@ class SymbolDraw {
                 data.setItemGraphicEl(newIdx, symbolEl);
             })
             .remove(function (oldIdx) {
-                var el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
+                let el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
                 el && el.fadeOut(function () {
                     group.remove(el);
                 });
@@ -205,11 +205,11 @@ class SymbolDraw {
     };
 
     updateLayout() {
-        var data = this._data;
+        let data = this._data;
         if (data) {
             // Not use animation
             data.eachItemGraphicEl(function (el, idx) {
-                var point = data.getItemLayout(idx);
+                let point = data.getItemLayout(idx);
                 el.attr('position', point);
             });
         }
@@ -232,10 +232,10 @@ class SymbolDraw {
                 el.incremental = el.useHoverLayer = true;
             }
         }
-        for (var idx = taskParams.start; idx < taskParams.end; idx++) {
-            var point = data.getItemLayout(idx) as number[];
+        for (let idx = taskParams.start; idx < taskParams.end; idx++) {
+            let point = data.getItemLayout(idx) as number[];
             if (symbolNeedsDraw(data, point, idx, opt)) {
-                var el = new this._SymbolCtor(data, idx, this._seriesScope);
+                let el = new this._SymbolCtor(data, idx, this._seriesScope);
                 el.traverse(updateIncrementalAndHover);
                 el.attr('position', point);
                 this.group.add(el);
@@ -245,8 +245,8 @@ class SymbolDraw {
     };
 
     remove(enableAnimation?: boolean) {
-        var group = this.group;
-        var data = this._data;
+        let group = this.group;
+        let data = this._data;
         // Incremental model do not have this._data.
         if (data && enableAnimation) {
             data.eachItemGraphicEl(function (el: SymbolLike) {

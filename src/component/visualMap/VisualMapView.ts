@@ -71,9 +71,9 @@ class VisualMapView extends ComponentView {
      * @protected
      */
     renderBackground(group: Group) {
-        var visualMapModel = this.visualMapModel;
-        var padding = formatUtil.normalizeCssArray(visualMapModel.get('padding') || 0);
-        var rect = group.getBoundingRect();
+        let visualMapModel = this.visualMapModel;
+        let padding = formatUtil.normalizeCssArray(visualMapModel.get('padding') || 0);
+        let rect = group.getBoundingRect();
 
         group.add(new Rect({
             z2: -1, // Lay background rect on the lowest layer.
@@ -112,16 +112,16 @@ class VisualMapView extends ComponentView {
 
         opts = opts || {};
 
-        var forceState = opts.forceState;
-        var visualMapModel = this.visualMapModel;
-        var visualObj: {[key in typeof visualCluster]?: VisualOptionUnit[key]} = {};
+        let forceState = opts.forceState;
+        let visualMapModel = this.visualMapModel;
+        let visualObj: {[key in typeof visualCluster]?: VisualOptionUnit[key]} = {};
 
         // Default values.
         if (visualCluster === 'symbol') {
             visualObj.symbol = (visualMapModel as PiecewiseModel).get('itemSymbol');
         }
         if (visualCluster === 'color') {
-            var defaultColor = visualMapModel.get('contentColor');
+            let defaultColor = visualMapModel.get('contentColor');
             visualObj.color = defaultColor as ColorString;
         }
 
@@ -133,13 +133,13 @@ class VisualMapView extends ComponentView {
             (visualObj as any)[key] = value;
         }
 
-        var mappings = visualMapModel.controllerVisuals[
+        let mappings = visualMapModel.controllerVisuals[
             forceState || visualMapModel.getValueState(targetValue)
         ];
-        var visualTypes = VisualMapping.prepareVisualTypes(mappings);
+        let visualTypes = VisualMapping.prepareVisualTypes(mappings);
 
         zrUtil.each(visualTypes, function (type) {
-            var visualMapping = mappings[type];
+            let visualMapping = mappings[type];
             if (opts.convertOpacityToAlpha && type === 'opacity') {
                 type = 'colorAlpha';
                 visualMapping = mappings.__alphaForOpacity;
@@ -155,8 +155,8 @@ class VisualMapView extends ComponentView {
     }
 
     protected positionGroup(group: Group) {
-        var model = this.visualMapModel;
-        var api = this.api;
+        let model = this.visualMapModel;
+        let api = this.api;
 
         layout.positionElement(
             group,

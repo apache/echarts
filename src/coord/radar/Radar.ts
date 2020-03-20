@@ -63,8 +63,8 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         this._model = radarModel;
 
         this._indicatorAxes = zrUtil.map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
-            var dim = 'indicator_' + idx;
-            var indicatorAxis = new IndicatorAxis(dim,
+            let dim = 'indicator_' + idx;
+            let indicatorAxis = new IndicatorAxis(dim,
                 new IntervalScale()
                 // (indicatorModel.get('axisType') === 'log') ? new LogScale() : new IntervalScale()
             );
@@ -84,37 +84,37 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     dataToPoint(value: ScaleDataValue, indicatorIndex: number) {
-        var indicatorAxis = this._indicatorAxes[indicatorIndex];
+        let indicatorAxis = this._indicatorAxes[indicatorIndex];
 
         return this.coordToPoint(indicatorAxis.dataToCoord(value), indicatorIndex);
     }
 
     // TODO: API should be coordToPoint([coord, indicatorIndex])
     coordToPoint(coord: number, indicatorIndex: number) {
-        var indicatorAxis = this._indicatorAxes[indicatorIndex];
-        var angle = indicatorAxis.angle;
-        var x = this.cx + coord * Math.cos(angle);
-        var y = this.cy - coord * Math.sin(angle);
+        let indicatorAxis = this._indicatorAxes[indicatorIndex];
+        let angle = indicatorAxis.angle;
+        let x = this.cx + coord * Math.cos(angle);
+        let y = this.cy - coord * Math.sin(angle);
         return [x, y];
     }
 
     pointToData(pt: number[]) {
-        var dx = pt[0] - this.cx;
-        var dy = pt[1] - this.cy;
-        var radius = Math.sqrt(dx * dx + dy * dy);
+        let dx = pt[0] - this.cx;
+        let dy = pt[1] - this.cy;
+        let radius = Math.sqrt(dx * dx + dy * dy);
         dx /= radius;
         dy /= radius;
 
-        var radian = Math.atan2(-dy, dx);
+        let radian = Math.atan2(-dy, dx);
 
         // Find the closest angle
         // FIXME index can calculated directly
-        var minRadianDiff = Infinity;
-        var closestAxis;
-        var closestAxisIdx = -1;
-        for (var i = 0; i < this._indicatorAxes.length; i++) {
-            var indicatorAxis = this._indicatorAxes[i];
-            var diff = Math.abs(radian - indicatorAxis.angle);
+        let minRadianDiff = Infinity;
+        let closestAxis;
+        let closestAxisIdx = -1;
+        for (let i = 0; i < this._indicatorAxes.length; i++) {
+            let indicatorAxis = this._indicatorAxes[i];
+            let diff = Math.abs(radian - indicatorAxis.angle);
             if (diff < minRadianDiff) {
                 closestAxis = indicatorAxis;
                 closestAxisIdx = i;
@@ -126,17 +126,17 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     resize(radarModel: RadarModel, api: ExtensionAPI) {
-        var center = radarModel.get('center');
-        var viewWidth = api.getWidth();
-        var viewHeight = api.getHeight();
-        var viewSize = Math.min(viewWidth, viewHeight) / 2;
+        let center = radarModel.get('center');
+        let viewWidth = api.getWidth();
+        let viewHeight = api.getHeight();
+        let viewSize = Math.min(viewWidth, viewHeight) / 2;
         this.cx = numberUtil.parsePercent(center[0], viewWidth);
         this.cy = numberUtil.parsePercent(center[1], viewHeight);
 
         this.startAngle = radarModel.get('startAngle') * Math.PI / 180;
 
         // radius may be single value like `20`, `'80%'`, or array like `[10, '80%']`
-        var radius = radarModel.get('radius');
+        let radius = radarModel.get('radius');
         if (typeof radius === 'string' || typeof radius === 'number') {
             radius = [0, radius];
         }
@@ -145,7 +145,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
         zrUtil.each(this._indicatorAxes, function (indicatorAxis, idx) {
             indicatorAxis.setExtent(this.r0, this.r);
-            var angle = (this.startAngle + idx * Math.PI * 2 / this._indicatorAxes.length);
+            let angle = (this.startAngle + idx * Math.PI * 2 / this._indicatorAxes.length);
             // Normalize to [-PI, PI]
             angle = Math.atan2(Math.sin(angle), Math.cos(angle));
             indicatorAxis.angle = angle;
@@ -153,8 +153,8 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     update(ecModel: GlobalModel, api: ExtensionAPI) {
-        var indicatorAxes = this._indicatorAxes;
-        var radarModel = this._model;
+        let indicatorAxes = this._indicatorAxes;
+        let radarModel = this._model;
         zrUtil.each(indicatorAxes, function (indicatorAxis) {
             indicatorAxis.scale.setExtent(Infinity, -Infinity);
         });
@@ -165,18 +165,18 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
             ) {
                 return;
             }
-            var data = radarSeries.getData();
+            let data = radarSeries.getData();
             zrUtil.each(indicatorAxes, function (indicatorAxis) {
                 indicatorAxis.scale.unionExtentFromData(data, data.mapDimension(indicatorAxis.dim));
             });
         }, this);
 
-        var splitNumber = radarModel.get('splitNumber');
+        let splitNumber = radarModel.get('splitNumber');
 
         function increaseInterval(interval: number) {
-            var exp10 = Math.pow(10, Math.floor(Math.log(interval) / Math.LN10));
+            let exp10 = Math.pow(10, Math.floor(Math.log(interval) / Math.LN10));
             // Increase interval
-            var f = interval / exp10;
+            let f = interval / exp10;
             if (f === 2) {
                 f = 5;
             }
@@ -187,14 +187,14 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         }
         // Force all the axis fixing the maxSplitNumber.
         zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-            var rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
+            let rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
             niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
 
-            var axisModel = indicatorAxis.model;
-            var scale = indicatorAxis.scale as IntervalScale;
-            var fixedMin = axisModel.getMin() as number;
-            var fixedMax = axisModel.getMax() as number;
-            var interval = scale.getInterval();
+            let axisModel = indicatorAxis.model;
+            let scale = indicatorAxis.scale as IntervalScale;
+            let fixedMin = axisModel.getMin() as number;
+            let fixedMax = axisModel.getMax() as number;
+            let interval = scale.getInterval();
 
             if (fixedMin != null && fixedMax != null) {
                 // User set min, max, divide to get new interval
@@ -258,9 +258,9 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     static dimensions: string[] = [];
 
     static create(ecModel: GlobalModel, api: ExtensionAPI) {
-        var radarList: Radar[] = [];
+        let radarList: Radar[] = [];
         ecModel.eachComponent('radar', function (radarModel: RadarModel) {
-            var radar = new Radar(radarModel, ecModel, api);
+            let radar = new Radar(radarModel, ecModel, api);
             radarList.push(radar);
             radarModel.coordinateSystem = radar;
         });

@@ -35,9 +35,9 @@ import {
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 
-var langSelector = lang.legend.selector;
+const langSelector = lang.legend.selector;
 
-var defaultSelectorOption = {
+const defaultSelectorOption = {
     all: {
         type: 'all',
         title: zrUtil.clone(langSelector.all)
@@ -200,7 +200,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     _updateSelector(option: Ops) {
-        var selector = option.selector;
+        let selector = option.selector;
         if (selector === true) {
             selector = option.selector = ['all', 'inverse'];
         }
@@ -217,14 +217,14 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     optionUpdated() {
         this._updateData(this.ecModel);
 
-        var legendData = this._data;
+        let legendData = this._data;
 
         // If selectedMode is single, try to select one
         if (legendData[0] && this.get('selectedMode') === 'single') {
-            var hasSelected = false;
+            let hasSelected = false;
             // If has any selected in option.selected
-            for (var i = 0; i < legendData.length; i++) {
-                var name = legendData[i].get('name');
+            for (let i = 0; i < legendData.length; i++) {
+                let name = legendData[i].get('name');
                 if (this.isSelected(name)) {
                     // Force to unselect others
                     this.select(name);
@@ -238,17 +238,17 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     _updateData(ecModel: GlobalModel) {
-        var potentialData: string[] = [];
-        var availableNames: string[] = [];
+        let potentialData: string[] = [];
+        let availableNames: string[] = [];
 
         ecModel.eachRawSeries(function (seriesModel) {
-            var seriesName = seriesModel.name;
+            let seriesName = seriesModel.name;
             availableNames.push(seriesName);
-            var isPotential;
+            let isPotential;
 
             if (seriesModel.legendVisualProvider) {
-                var provider = seriesModel.legendVisualProvider;
-                var names = provider.getAllNames();
+                let provider = seriesModel.legendVisualProvider;
+                let names = provider.getAllNames();
 
                 if (!ecModel.isSeriesFiltered(seriesModel)) {
                     availableNames = availableNames.concat(names);
@@ -278,9 +278,9 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
         // If legend.data not specified in option, use availableNames as data,
         // which is convinient for user preparing option.
-        var rawData = this.get('data') || potentialData;
+        let rawData = this.get('data') || potentialData;
 
-        var legendData = zrUtil.map(rawData, function (dataItem) {
+        let legendData = zrUtil.map(rawData, function (dataItem) {
             // Can be string or number
             if (typeof dataItem === 'string' || typeof dataItem === 'number') {
                 dataItem = {
@@ -302,10 +302,10 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     select(name: string) {
-        var selected = this.option.selected;
-        var selectedMode = this.get('selectedMode');
+        let selected = this.option.selected;
+        let selectedMode = this.get('selectedMode');
         if (selectedMode === 'single') {
-            var data = this._data;
+            let data = this._data;
             zrUtil.each(data, function (dataItem) {
                 selected[dataItem.get('name')] = false;
             });
@@ -320,7 +320,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     toggleSelected(name: string) {
-        var selected = this.option.selected;
+        let selected = this.option.selected;
         // Default is true
         if (!selected.hasOwnProperty(name)) {
             selected[name] = true;
@@ -329,18 +329,18 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     allSelect() {
-        var data = this._data;
-        var selected = this.option.selected;
+        let data = this._data;
+        let selected = this.option.selected;
         zrUtil.each(data, function (dataItem) {
             selected[dataItem.get('name', true)] = true;
         });
     }
 
     inverseSelect() {
-        var data = this._data;
-        var selected = this.option.selected;
+        let data = this._data;
+        let selected = this.option.selected;
         zrUtil.each(data, function (dataItem) {
-            var name = dataItem.get('name', true);
+            let name = dataItem.get('name', true);
             // Initially, default value is true
             if (!selected.hasOwnProperty(name)) {
                 selected[name] = true;
@@ -350,7 +350,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     isSelected(name: string) {
-        var selected = this.option.selected;
+        let selected = this.option.selected;
         return !(selected.hasOwnProperty(name) && !selected[name])
             && zrUtil.indexOf(this._availableNames, name) >= 0;
     }

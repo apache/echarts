@@ -42,22 +42,22 @@ export function prepareDataCoordInfo(
     data: List,
     valueOrigin?: LineSeriesOption['areaStyle']['origin']
 ): CoordInfo {
-    var baseAxis = coordSys.getBaseAxis();
-    var valueAxis = coordSys.getOtherAxis(baseAxis as any);
-    var valueStart = getValueStart(valueAxis, valueOrigin);
+    let baseAxis = coordSys.getBaseAxis();
+    let valueAxis = coordSys.getOtherAxis(baseAxis as any);
+    let valueStart = getValueStart(valueAxis, valueOrigin);
 
-    var baseAxisDim = baseAxis.dim;
-    var valueAxisDim = valueAxis.dim;
-    var valueDim = data.mapDimension(valueAxisDim);
-    var baseDim = data.mapDimension(baseAxisDim);
-    var baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
+    let baseAxisDim = baseAxis.dim;
+    let valueAxisDim = valueAxis.dim;
+    let valueDim = data.mapDimension(valueAxisDim);
+    let baseDim = data.mapDimension(baseAxisDim);
+    let baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
 
-    var dims = map(coordSys.dimensions, function (coordDim) {
+    let dims = map(coordSys.dimensions, function (coordDim) {
         return data.mapDimension(coordDim);
     });
 
-    var stacked = false;
-    var stackResultDim = data.getCalculationInfo('stackResultDimension');
+    let stacked = false;
+    let stackResultDim = data.getCalculationInfo('stackResultDimension');
     if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
         stacked = true;
         dims[0] = stackResultDim;
@@ -81,8 +81,8 @@ export function prepareDataCoordInfo(
 }
 
 function getValueStart(valueAxis: Axis, valueOrigin: LineSeriesOption['areaStyle']['origin']) {
-    var valueStart = 0;
-    var extent = valueAxis.scale.getExtent();
+    let valueStart = 0;
+    let extent = valueAxis.scale.getExtent();
 
     if (valueOrigin === 'start') {
         valueStart = extent[0];
@@ -112,7 +112,7 @@ export function getStackedOnPoint(
     data: List,
     idx: number
     ) {
-    var value = NaN;
+    let value = NaN;
     if (dataCoordInfo.stacked) {
         value = data.get(data.getCalculationInfo('stackedOverDimension'), idx) as number;
     }
@@ -120,8 +120,8 @@ export function getStackedOnPoint(
         value = dataCoordInfo.valueStart;
     }
 
-    var baseDataOffset = dataCoordInfo.baseDataOffset;
-    var stackedData = [];
+    let baseDataOffset = dataCoordInfo.baseDataOffset;
+    let stackedData = [];
     stackedData[baseDataOffset] = data.get(dataCoordInfo.baseDim, idx);
     stackedData[1 - baseDataOffset] = value;
 

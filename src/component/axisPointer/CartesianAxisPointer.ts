@@ -45,15 +45,15 @@ class CartesianAxisPointer extends BaseAxisPointer {
         axisPointerModel: AxisPointerModel,
         api: ExtensionAPI
     ) {
-        var axis = axisModel.axis;
-        var grid = axis.grid;
-        var axisPointerType = axisPointerModel.get('type');
-        var otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
-        var pixelValue = axis.toGlobalCoord(axis.dataToCoord(value, true));
+        let axis = axisModel.axis;
+        let grid = axis.grid;
+        let axisPointerType = axisPointerModel.get('type');
+        let otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
+        let pixelValue = axis.toGlobalCoord(axis.dataToCoord(value, true));
 
         if (axisPointerType && axisPointerType !== 'none') {
-            var elStyle = viewHelper.buildElStyle(axisPointerModel);
-            var pointerOption = pointerShapeBuilder[axisPointerType](
+            let elStyle = viewHelper.buildElStyle(axisPointerModel);
+            let pointerOption = pointerShapeBuilder[axisPointerType](
                 axis, pixelValue, otherExtent
             );
             pointerOption.style = elStyle;
@@ -61,7 +61,7 @@ class CartesianAxisPointer extends BaseAxisPointer {
             elOption.pointer = pointerOption;
         }
 
-        var layoutInfo = cartesianAxisHelper.layout(grid.model, axisModel);
+        let layoutInfo = cartesianAxisHelper.layout(grid.model, axisModel);
         viewHelper.buildCartesianSingleLabelElOption(
             // @ts-ignore
             value, elOption, layoutInfo, axisModel, axisPointerModel, api
@@ -76,7 +76,7 @@ class CartesianAxisPointer extends BaseAxisPointer {
         axisModel: CartesianAxisModel,
         axisPointerModel: AxisPointerModel
     ) {
-        var layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.model, axisModel, {
+        let layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.model, axisModel, {
             labelInside: false
         });
         // @ts-ignore
@@ -100,23 +100,23 @@ class CartesianAxisPointer extends BaseAxisPointer {
         axisModel: CartesianAxisModel,
         axisPointerModel: AxisPointerModel
     ) {
-        var axis = axisModel.axis;
-        var grid = axis.grid;
-        var axisExtent = axis.getGlobalExtent(true);
-        var otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
-        var dimIndex = axis.dim === 'x' ? 0 : 1;
+        let axis = axisModel.axis;
+        let grid = axis.grid;
+        let axisExtent = axis.getGlobalExtent(true);
+        let otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
+        let dimIndex = axis.dim === 'x' ? 0 : 1;
 
-        var currPosition = transform.position;
+        let currPosition = transform.position;
         currPosition[dimIndex] += delta[dimIndex];
         currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
         currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
 
-        var cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
-        var cursorPoint = [cursorOtherValue, cursorOtherValue];
+        let cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
+        let cursorPoint = [cursorOtherValue, cursorOtherValue];
         cursorPoint[dimIndex] = currPosition[dimIndex];
 
         // Make tooltip do not overlap axisPointer and in the middle of the grid.
-        var tooltipOptions: {
+        let tooltipOptions: {
             verticalAlign?: VerticalAlign
             align?: HorizontalAlign
         }[] = [
@@ -134,7 +134,7 @@ class CartesianAxisPointer extends BaseAxisPointer {
 }
 
 function getCartesian(grid: Grid, axis: Axis2D) {
-    var opt = {} as {
+    let opt = {} as {
         xAxisIndex?: number
         yAxisIndex?: number
     };
@@ -142,10 +142,10 @@ function getCartesian(grid: Grid, axis: Axis2D) {
     return grid.getCartesian(opt);
 }
 
-var pointerShapeBuilder = {
+const pointerShapeBuilder = {
 
     line: function (axis: Axis2D, pixelValue: number, otherExtent: number[]): PathProps & { type: 'Line'} {
-        var targetShape = viewHelper.makeLineShape(
+        let targetShape = viewHelper.makeLineShape(
             [pixelValue, otherExtent[0]],
             [pixelValue, otherExtent[1]],
             getAxisDimIndex(axis)
@@ -158,8 +158,8 @@ var pointerShapeBuilder = {
     },
 
     shadow: function (axis: Axis2D, pixelValue: number, otherExtent: number[]): PathProps & { type: 'Rect'} {
-        var bandWidth = Math.max(1, axis.getBandWidth());
-        var span = otherExtent[1] - otherExtent[0];
+        let bandWidth = Math.max(1, axis.getBandWidth());
+        let span = otherExtent[1] - otherExtent[0];
         return {
             type: 'Rect',
             shape: viewHelper.makeRectShape(

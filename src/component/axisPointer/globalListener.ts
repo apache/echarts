@@ -71,12 +71,12 @@ export function register(key: string, api: ExtensionAPI, handler?: Handler) {
         return;
     }
 
-    var zr = api.getZr();
+    let zr = api.getZr();
     inner(zr).records || (inner(zr).records = {});
 
     initGlobalListeners(zr, api);
 
-    var record = inner(zr).records[key] || (inner(zr).records[key] = {} as Record);
+    let record = inner(zr).records[key] || (inner(zr).records[key] = {} as Record);
     record.handler = handler;
 }
 
@@ -97,7 +97,7 @@ function initGlobalListeners(zr: ZRenderType, api?: ExtensionAPI) {
         cb: (record: Record, e: ZRElementEvent, dispatchAction: DispatchActionMethod) => void
     ) {
         zr.on(eventType, function (e: ZRElementEvent) {
-            var dis = makeDispatchAction(api);
+            let dis = makeDispatchAction(api);
 
             each(inner(zr).records, function (record) {
                 record && cb(record, e, dis.dispatchAction);
@@ -109,10 +109,10 @@ function initGlobalListeners(zr: ZRenderType, api?: ExtensionAPI) {
 }
 
 function dispatchTooltipFinally(pendings: Pendings, api: ExtensionAPI) {
-    var showLen = pendings.showTip.length;
-    var hideLen = pendings.hideTip.length;
+    let showLen = pendings.showTip.length;
+    let hideLen = pendings.hideTip.length;
 
-    var actuallyPayload;
+    let actuallyPayload;
     if (showLen) {
         actuallyPayload = pendings.showTip[showLen - 1];
     }
@@ -143,7 +143,7 @@ function doEnter(
 }
 
 function makeDispatchAction(api: ExtensionAPI) {
-    var pendings: Pendings = {
+    let pendings: Pendings = {
         showTip: [],
         hideTip: []
     };
@@ -152,8 +152,8 @@ function makeDispatchAction(api: ExtensionAPI) {
     // 'showTip' and 'hideTip' can be triggered by axisPointer and tooltip,
     // which may be conflict, (axisPointer call showTip but tooltip call hideTip);
     // So we have to add "final stage" to merge those dispatched actions.
-    var dispatchAction = function (payload: ShowTipPayload | HideTipPayload) {
-        var pendingList = pendings[payload.type];
+    let dispatchAction = function (payload: ShowTipPayload | HideTipPayload) {
+        let pendingList = pendings[payload.type];
         if (pendingList) {
             (pendingList as ShowTipPayload[]).push(payload as ShowTipPayload);
         }
@@ -173,8 +173,8 @@ export function unregister(key: string, api: ExtensionAPI) {
     if (env.node) {
         return;
     }
-    var zr = api.getZr();
-    var record = (inner(zr).records || {})[key];
+    let zr = api.getZr();
+    let record = (inner(zr).records || {})[key];
     if (record) {
         inner(zr).records[key] = null;
     }

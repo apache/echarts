@@ -108,7 +108,7 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
     }
 
     mergeOption(newOption: ParallelCoordinateSystemOption) {
-        var thisOption = this.option;
+        let thisOption = this.option;
 
         newOption && zrUtil.merge(thisOption, newOption, true);
 
@@ -119,7 +119,7 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
      * Whether series or axis is in this coordinate system.
      */
     contains(model: SeriesModel | ParallelAxisModel, ecModel: GlobalModel): boolean {
-        var parallelIndex = (model as ParallelSeriesModel).get('parallelIndex');
+        let parallelIndex = (model as ParallelSeriesModel).get('parallelIndex');
         return parallelIndex != null
             && ecModel.getComponent('parallel', parallelIndex) === this;
     }
@@ -150,10 +150,10 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
     }
 
     private _initDimensions(): void {
-        var dimensions = this.dimensions = [] as DimensionName[];
-        var parallelAxisIndex = this.parallelAxisIndex = [] as number[];
+        let dimensions = this.dimensions = [] as DimensionName[];
+        let parallelAxisIndex = this.parallelAxisIndex = [] as number[];
 
-        var axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel: ParallelAxisModel) {
+        let axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel: ParallelAxisModel) {
             // Can not use this.contains here, because
             // initialization has not been completed yet.
             return (axisModel.get('parallelIndex') || 0) === this.componentIndex;

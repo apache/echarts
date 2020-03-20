@@ -59,7 +59,7 @@ class Cartesian<AxisT extends Axis> {
     }
 
     addAxis(axis: AxisT): void {
-        var dim = axis.dim;
+        let dim = axis.dim;
 
         this._axes[dim] = axis;
 
@@ -87,13 +87,13 @@ class Cartesian<AxisT extends Axis> {
     // }
 
     // _dataCoordConvert(input, method) {
-    //     var dimList = this._dimList;
+    //     let dimList = this._dimList;
 
-    //     var output = input instanceof Array ? [] : {};
+    //     let output = input instanceof Array ? [] : {};
 
-    //     for (var i = 0; i < dimList.length; i++) {
-    //         var dim = dimList[i];
-    //         var axis = this._axes[dim];
+    //     for (let i = 0; i < dimList.length; i++) {
+    //         let dim = dimList[i];
+    //         let axis = this._axes[dim];
 
     //         output[dim] = axis[method](input[dim]);
     //     }

@@ -25,10 +25,10 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 
-var each = zrUtil.each;
+const each = zrUtil.each;
 
-var DATAS = '\0__link_datas';
-var MAIN_DATA = '\0__link_mainData';
+const DATAS = '\0__link_datas';
+const MAIN_DATA = '\0__link_mainData';
 
 // Caution:
 // In most case, either list or its shallow clones (see list.cloneShallow)
@@ -49,8 +49,8 @@ var MAIN_DATA = '\0__link_mainData';
  *                 designation: struct[datasAttr[dataType]] = list;
  */
 function linkList(opt) {
-    var mainData = opt.mainData;
-    var datas = opt.datas;
+    let mainData = opt.mainData;
+    let datas = opt.datas;
 
     if (!datas) {
         datas = {main: mainData};
@@ -84,7 +84,7 @@ function linkList(opt) {
 function transferInjection(opt, res) {
     if (isMainData(this)) {
         // Transfer datas to new main data.
-        var datas = zrUtil.extend({}, this[DATAS]);
+        let datas = zrUtil.extend({}, this[DATAS]);
         datas[this.dataType] = res;
         linkAll(res, datas, opt);
     }
@@ -119,7 +119,7 @@ function cloneShallowInjection(opt, res) {
  * @return {module:echarts/data/List}
  */
 function getLinkedData(dataType) {
-    var mainData = this[MAIN_DATA];
+    let mainData = this[MAIN_DATA];
     return (dataType == null || mainData == null)
         ? mainData
         : mainData[DATAS][dataType];

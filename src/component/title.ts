@@ -139,17 +139,17 @@ class TitleView extends ComponentView {
             return;
         }
 
-        var group = this.group;
+        let group = this.group;
 
-        var textStyleModel = titleModel.getModel('textStyle');
-        var subtextStyleModel = titleModel.getModel('subtextStyle');
+        let textStyleModel = titleModel.getModel('textStyle');
+        let subtextStyleModel = titleModel.getModel('subtextStyle');
 
-        var textAlign = titleModel.get('textAlign');
-        var textVerticalAlign = zrUtil.retrieve2(
+        let textAlign = titleModel.get('textAlign');
+        let textVerticalAlign = zrUtil.retrieve2(
             titleModel.get('textBaseline'), titleModel.get('textVerticalAlign')
         );
 
-        var textEl = new graphic.Text({
+        let textEl = new graphic.Text({
             style: graphic.setTextStyle({}, textStyleModel, {
                 text: titleModel.get('text'),
                 textFill: textStyleModel.getTextColor()
@@ -157,10 +157,10 @@ class TitleView extends ComponentView {
             z2: 10
         });
 
-        var textRect = textEl.getBoundingRect();
+        let textRect = textEl.getBoundingRect();
 
-        var subText = titleModel.get('subtext');
-        var subTextEl = new graphic.Text({
+        let subText = titleModel.get('subtext');
+        let subTextEl = new graphic.Text({
             style: graphic.setTextStyle({}, subtextStyleModel, {
                 text: subText,
                 textFill: subtextStyleModel.getTextColor(),
@@ -170,9 +170,9 @@ class TitleView extends ComponentView {
             z2: 10
         });
 
-        var link = titleModel.get('link');
-        var sublink = titleModel.get('sublink');
-        var triggerEvent = titleModel.get('triggerEvent', true);
+        let link = titleModel.get('link');
+        let sublink = titleModel.get('sublink');
+        let triggerEvent = titleModel.get('triggerEvent', true);
 
         textEl.silent = !link && !triggerEvent;
         subTextEl.silent = !sublink && !triggerEvent;
@@ -199,11 +199,11 @@ class TitleView extends ComponentView {
         subText && group.add(subTextEl);
         // If no subText, but add subTextEl, there will be an empty line.
 
-        var groupRect = group.getBoundingRect();
-        var layoutOption = titleModel.getBoxLayoutParams();
+        let groupRect = group.getBoundingRect();
+        let layoutOption = titleModel.getBoxLayoutParams();
         layoutOption.width = groupRect.width;
         layoutOption.height = groupRect.height;
-        var layoutRect = getLayoutRect(
+        let layoutRect = getLayoutRect(
             layoutOption, {
                 width: api.getWidth(),
                 height: api.getHeight()
@@ -240,7 +240,7 @@ class TitleView extends ComponentView {
         }
 
         group.attr('position', [layoutRect.x, layoutRect.y]);
-        var alignStyle = {
+        let alignStyle = {
             textAlign: textAlign,
             textVerticalAlign: textVerticalAlign
         };
@@ -250,10 +250,10 @@ class TitleView extends ComponentView {
         // Render background
         // Get groupRect again because textAlign has been changed
         groupRect = group.getBoundingRect();
-        var padding = layoutRect.margin;
-        var style = titleModel.getItemStyle(['color', 'opacity']);
+        let padding = layoutRect.margin;
+        let style = titleModel.getItemStyle(['color', 'opacity']);
         style.fill = titleModel.get('backgroundColor');
-        var rect = new graphic.Rect({
+        let rect = new graphic.Rect({
             shape: {
                 x: groupRect.x - padding[3],
                 y: groupRect.y - padding[0],

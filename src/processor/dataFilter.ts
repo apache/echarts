@@ -23,17 +23,17 @@ export default function (seriesType: string): StageHandler {
     return {
         seriesType: seriesType,
         reset: function (seriesModel, ecModel) {
-            var legendModels = ecModel.findComponents({
+            let legendModels = ecModel.findComponents({
                 mainType: 'legend'
             });
             if (!legendModels || !legendModels.length) {
                 return;
             }
-            var data = seriesModel.getData();
+            let data = seriesModel.getData();
             data.filterSelf(function (idx) {
-                var name = data.getName(idx);
+                let name = data.getName(idx);
                 // If in any legend component the status is not selected.
-                for (var i = 0; i < legendModels.length; i++) {
+                for (let i = 0; i < legendModels.length; i++) {
                     // @ts-ignore FIXME: LegendModel
                     if (!legendModels[i].isSelected(name)) {
                         return false;

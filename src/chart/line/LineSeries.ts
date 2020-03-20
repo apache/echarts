@@ -105,7 +105,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
     getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
-            var coordSys = option.coordinateSystem;
+            let coordSys = option.coordinateSystem;
             if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }

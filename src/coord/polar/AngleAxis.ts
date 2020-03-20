@@ -25,7 +25,7 @@ import OrdinalScale from '../../scale/Ordinal';
 import Polar from './Polar';
 import { AngleAxisModel } from './AxisModel';
 
-var inner = makeInner<{
+const inner = makeInner<{
     lastAutoInterval: number
     lastTickCount: number
 }, AngleAxisModel>();
@@ -56,42 +56,42 @@ class AngleAxis extends Axis {
      * @return {number} Auto interval for cateogry axis tick and label
      */
     calculateCategoryInterval() {
-        var axis = this;
-        var labelModel = axis.getLabelModel();
+        let axis = this;
+        let labelModel = axis.getLabelModel();
 
-        var ordinalScale = axis.scale as OrdinalScale;
-        var ordinalExtent = ordinalScale.getExtent();
+        let ordinalScale = axis.scale as OrdinalScale;
+        let ordinalExtent = ordinalScale.getExtent();
         // Providing this method is for optimization:
         // avoid generating a long array by `getTicks`
         // in large category data case.
-        var tickCount = ordinalScale.count();
+        let tickCount = ordinalScale.count();
 
         if (ordinalExtent[1] - ordinalExtent[0] < 1) {
             return 0;
         }
 
-        var tickValue = ordinalExtent[0];
-        var unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
-        var unitH = Math.abs(unitSpan);
+        let tickValue = ordinalExtent[0];
+        let unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
+        let unitH = Math.abs(unitSpan);
 
         // Not precise, just use height as text width
         // and each distance from axis line yet.
-        var rect = textContain.getBoundingRect(
+        let rect = textContain.getBoundingRect(
             tickValue == null ? '' : tickValue + '',
             labelModel.getFont(),
             'center',
             'top'
         );
-        var maxH = Math.max(rect.height, 7);
+        let maxH = Math.max(rect.height, 7);
 
-        var dh = maxH / unitH;
+        let dh = maxH / unitH;
         // 0/0 is NaN, 1/0 is Infinity.
         isNaN(dh) && (dh = Infinity);
-        var interval = Math.max(0, Math.floor(dh));
+        let interval = Math.max(0, Math.floor(dh));
 
-        var cache = inner(axis.model);
-        var lastAutoInterval = cache.lastAutoInterval;
-        var lastTickCount = cache.lastTickCount;
+        let cache = inner(axis.model);
+        let lastAutoInterval = cache.lastAutoInterval;
+        let lastTickCount = cache.lastTickCount;
 
         // Use cache to keep interval stable while moving zoom window,
         // otherwise the calculated interval might jitter when the zoom

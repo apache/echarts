@@ -24,7 +24,7 @@ import GlobalModel from '../../model/Global';
 import GraphSeriesModel from './GraphSeries';
 import View from '../../coord/View';
 
-var actionInfo = {
+const actionInfo = {
     type: 'graphRoam',
     event: 'graphRoam',
     update: 'none'
@@ -43,9 +43,9 @@ echarts.registerAction(actionInfo, function (payload: RoamPaylod, ecModel: Globa
     ecModel.eachComponent({
         mainType: 'series', query: payload
     }, function (seriesModel: GraphSeriesModel) {
-        var coordSys = seriesModel.coordinateSystem as View;
+        let coordSys = seriesModel.coordinateSystem as View;
 
-        var res = updateCenterAndZoom(coordSys, payload);
+        let res = updateCenterAndZoom(coordSys, payload);
 
         seriesModel.setCenter
             && seriesModel.setCenter(res.center);

@@ -25,12 +25,12 @@ import GlobalModel from '../../model/Global';
 
 // FIXME 公用？
 function dataStatistics(datas: List[], statisticType: MapValueCalculationType): List {
-    var dataNameMap = {} as {[mapKey: string]: number[]};
+    let dataNameMap = {} as {[mapKey: string]: number[]};
 
     zrUtil.each(datas, function (data) {
         data.each(data.mapDimension('value'), function (value: number, idx) {
             // Add prefix to avoid conflict with Object.prototype.
-            var mapKey = 'ec-' + data.getName(idx);
+            let mapKey = 'ec-' + data.getName(idx);
             dataNameMap[mapKey] = dataNameMap[mapKey] || [];
             if (!isNaN(value)) {
                 dataNameMap[mapKey].push(value);
@@ -39,17 +39,17 @@ function dataStatistics(datas: List[], statisticType: MapValueCalculationType): 
     });
 
     return datas[0].map(datas[0].mapDimension('value'), function (value, idx) {
-        var mapKey = 'ec-' + datas[0].getName(idx);
-        var sum = 0;
-        var min = Infinity;
-        var max = -Infinity;
-        var len = dataNameMap[mapKey].length;
-        for (var i = 0; i < len; i++) {
+        let mapKey = 'ec-' + datas[0].getName(idx);
+        let sum = 0;
+        let min = Infinity;
+        let max = -Infinity;
+        let len = dataNameMap[mapKey].length;
+        for (let i = 0; i < len; i++) {
             min = Math.min(min, dataNameMap[mapKey][i]);
             max = Math.max(max, dataNameMap[mapKey][i]);
             sum += dataNameMap[mapKey][i];
         }
-        var result;
+        let result;
         if (statisticType === 'min') {
             result = min;
         }
@@ -67,15 +67,15 @@ function dataStatistics(datas: List[], statisticType: MapValueCalculationType): 
 }
 
 export default function (ecModel: GlobalModel): void {
-    var seriesGroups = {} as {[key: string]: MapSeries[]};
+    let seriesGroups = {} as {[key: string]: MapSeries[]};
     ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
-        var hostGeoModel = seriesModel.getHostGeoModel();
-        var key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
+        let hostGeoModel = seriesModel.getHostGeoModel();
+        let key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
         (seriesGroups[key] = seriesGroups[key] || []).push(seriesModel);
     });
 
     zrUtil.each(seriesGroups, function (seriesList, key) {
-        var data = dataStatistics(
+        let data = dataStatistics(
             zrUtil.map(seriesList, function (seriesModel) {
                 return seriesModel.getData();
             }),

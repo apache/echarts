@@ -32,7 +32,7 @@ import {
 import { ModelFinderObject } from '../../util/model';
 
 
-var DEFAULT_OUT_OF_BRUSH_COLOR = '#ddd';
+const DEFAULT_OUT_OF_BRUSH_COLOR = '#ddd';
 
 /**
  * The input to define brush areas.
@@ -164,13 +164,13 @@ class BrushModel extends ComponentModel<BrushOption> {
 
 
     optionUpdated(newOption: BrushOption, isInit: boolean): void {
-        var thisOption = this.option;
+        let thisOption = this.option;
 
         !isInit && visualSolution.replaceVisualOption(
             thisOption, newOption, ['inBrush', 'outOfBrush']
         );
 
-        var inBrush = thisOption.inBrush = thisOption.inBrush || {};
+        let inBrush = thisOption.inBrush = thisOption.inBrush || {};
         // Always give default visual, consider setOption at the second time.
         thisOption.outOfBrush = thisOption.outOfBrush || {color: DEFAULT_OUT_OF_BRUSH_COLOR};
 

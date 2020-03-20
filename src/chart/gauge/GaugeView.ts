@@ -34,13 +34,13 @@ interface PosInfo {
 }
 
 function parsePosition(seriesModel: GaugeSeriesModel, api: ExtensionAPI): PosInfo {
-    var center = seriesModel.get('center');
-    var width = api.getWidth();
-    var height = api.getHeight();
-    var size = Math.min(width, height);
-    var cx = parsePercent(center[0], api.getWidth());
-    var cy = parsePercent(center[1], api.getHeight());
-    var r = parsePercent(seriesModel.get('radius'), size / 2);
+    let center = seriesModel.get('center');
+    let width = api.getWidth();
+    let height = api.getHeight();
+    let size = Math.min(width, height);
+    let cx = parsePercent(center[0], api.getWidth());
+    let cy = parsePercent(center[1], api.getHeight());
+    let r = parsePercent(seriesModel.get('radius'), size / 2);
 
     return {
         cx: cx,
@@ -63,7 +63,7 @@ function formatLabel(value: number, labelFormatter: string | ((value: number) =>
     return label;
 }
 
-var PI2 = Math.PI * 2;
+const PI2 = Math.PI * 2;
 
 class GaugeView extends ChartView {
     static type = 'gauge' as const;
@@ -75,8 +75,8 @@ class GaugeView extends ChartView {
 
         this.group.removeAll();
 
-        var colorList = seriesModel.get(['axisLine', 'lineStyle', 'color']);
-        var posInfo = parsePosition(seriesModel, api);
+        let colorList = seriesModel.get(['axisLine', 'lineStyle', 'color']);
+        let posInfo = parsePosition(seriesModel, api);
 
         this._renderMain(
             seriesModel, ecModel, api, colorList, posInfo
@@ -92,26 +92,26 @@ class GaugeView extends ChartView {
         colorList: [number, ColorString][],
         posInfo: PosInfo
     ) {
-        var group = this.group;
+        let group = this.group;
 
-        var axisLineModel = seriesModel.getModel('axisLine');
-        var lineStyleModel = axisLineModel.getModel('lineStyle');
+        let axisLineModel = seriesModel.getModel('axisLine');
+        let lineStyleModel = axisLineModel.getModel('lineStyle');
 
-        var clockwise = seriesModel.get('clockwise');
-        var startAngle = -seriesModel.get('startAngle') / 180 * Math.PI;
-        var endAngle = -seriesModel.get('endAngle') / 180 * Math.PI;
+        let clockwise = seriesModel.get('clockwise');
+        let startAngle = -seriesModel.get('startAngle') / 180 * Math.PI;
+        let endAngle = -seriesModel.get('endAngle') / 180 * Math.PI;
 
-        var angleRangeSpan = (endAngle - startAngle) % PI2;
+        let angleRangeSpan = (endAngle - startAngle) % PI2;
 
-        var prevEndAngle = startAngle;
-        var axisLineWidth = lineStyleModel.get('width');
-        var showAxis = axisLineModel.get('show');
+        let prevEndAngle = startAngle;
+        let axisLineWidth = lineStyleModel.get('width');
+        let showAxis = axisLineModel.get('show');
 
-        for (var i = 0; showAxis && i < colorList.length; i++) {
+        for (let i = 0; showAxis && i < colorList.length; i++) {
             // Clamp
-            var percent = Math.min(Math.max(colorList[i][0], 0), 1);
+            let percent = Math.min(Math.max(colorList[i][0], 0), 1);
             endAngle = startAngle + angleRangeSpan * percent;
-            var sector = new graphic.Sector({
+            let sector = new graphic.Sector({
                 shape: {
                     startAngle: prevEndAngle,
                     endAngle: endAngle,
@@ -139,12 +139,12 @@ class GaugeView extends ChartView {
             prevEndAngle = endAngle;
         }
 
-        var getColor = function (percent: number) {
+        let getColor = function (percent: number) {
             // Less than 0
             if (percent <= 0) {
                 return colorList[0][1];
             }
-            var i;
+            let i;
             for (i = 0; i < colorList.length; i++) {
                 if (colorList[i][0] >= percent
                     && (i === 0 ? 0 : colorList[i - 1][0]) < percent
@@ -157,7 +157,7 @@ class GaugeView extends ChartView {
         };
 
         if (!clockwise) {
-            var tmp = startAngle;
+            let tmp = startAngle;
             startAngle = endAngle;
             endAngle = tmp;
         }
@@ -190,44 +190,44 @@ class GaugeView extends ChartView {
         endAngle: number,
         clockwise: boolean
     ) {
-        var group = this.group;
-        var cx = posInfo.cx;
-        var cy = posInfo.cy;
-        var r = posInfo.r;
+        let group = this.group;
+        let cx = posInfo.cx;
+        let cy = posInfo.cy;
+        let r = posInfo.r;
 
-        var minVal = +seriesModel.get('min');
-        var maxVal = +seriesModel.get('max');
+        let minVal = +seriesModel.get('min');
+        let maxVal = +seriesModel.get('max');
 
-        var splitLineModel = seriesModel.getModel('splitLine');
-        var tickModel = seriesModel.getModel('axisTick');
-        var labelModel = seriesModel.getModel('axisLabel');
+        let splitLineModel = seriesModel.getModel('splitLine');
+        let tickModel = seriesModel.getModel('axisTick');
+        let labelModel = seriesModel.getModel('axisLabel');
 
-        var splitNumber = seriesModel.get('splitNumber');
-        var subSplitNumber = tickModel.get('splitNumber');
+        let splitNumber = seriesModel.get('splitNumber');
+        let subSplitNumber = tickModel.get('splitNumber');
 
-        var splitLineLen = parsePercent(
+        let splitLineLen = parsePercent(
             splitLineModel.get('length'), r
         );
-        var tickLen = parsePercent(
+        let tickLen = parsePercent(
             tickModel.get('length'), r
         );
 
-        var angle = startAngle;
-        var step = (endAngle - startAngle) / splitNumber;
-        var subStep = step / subSplitNumber;
+        let angle = startAngle;
+        let step = (endAngle - startAngle) / splitNumber;
+        let subStep = step / subSplitNumber;
 
-        var splitLineStyle = splitLineModel.getModel('lineStyle').getLineStyle();
-        var tickLineStyle = tickModel.getModel('lineStyle').getLineStyle();
+        let splitLineStyle = splitLineModel.getModel('lineStyle').getLineStyle();
+        let tickLineStyle = tickModel.getModel('lineStyle').getLineStyle();
 
-        var unitX;
-        var unitY;
+        let unitX;
+        let unitY;
 
-        for (var i = 0; i <= splitNumber; i++) {
+        for (let i = 0; i <= splitNumber; i++) {
             unitX = Math.cos(angle);
             unitY = Math.sin(angle);
             // Split line
             if (splitLineModel.get('show')) {
-                var splitLine = new graphic.Line({
+                let splitLine = new graphic.Line({
                     shape: {
                         x1: unitX * r + cx,
                         y1: unitY * r + cy,
@@ -248,12 +248,12 @@ class GaugeView extends ChartView {
 
             // Label
             if (labelModel.get('show')) {
-                var label = formatLabel(
+                let label = formatLabel(
                     round(i / splitNumber * (maxVal - minVal) + minVal),
                     labelModel.get('formatter')
                 );
-                var distance = labelModel.get('distance');
-                var autoColor = getColor(i / splitNumber);
+                let distance = labelModel.get('distance');
+                let autoColor = getColor(i / splitNumber);
 
                 group.add(new graphic.Text({
                     style: graphic.setTextStyle({}, labelModel, {
@@ -269,10 +269,10 @@ class GaugeView extends ChartView {
 
             // Axis tick
             if (tickModel.get('show') && i !== splitNumber) {
-                for (var j = 0; j <= subSplitNumber; j++) {
+                for (let j = 0; j <= subSplitNumber; j++) {
                     unitX = Math.cos(angle);
                     unitY = Math.sin(angle);
-                    var tickLine = new graphic.Line({
+                    let tickLine = new graphic.Line({
                         shape: {
                             x1: unitX * r + cx,
                             y1: unitY * r + cy,
@@ -311,8 +311,8 @@ class GaugeView extends ChartView {
         clockwise: boolean
     ) {
 
-        var group = this.group;
-        var oldData = this._data;
+        let group = this.group;
+        let oldData = this._data;
 
         if (!seriesModel.get(['pointer', 'show'])) {
             // Remove old element
@@ -322,15 +322,15 @@ class GaugeView extends ChartView {
             return;
         }
 
-        var valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
-        var angleExtent = [startAngle, endAngle];
+        let valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
+        let angleExtent = [startAngle, endAngle];
 
-        var data = seriesModel.getData();
-        var valueDim = data.mapDimension('value');
+        let data = seriesModel.getData();
+        let valueDim = data.mapDimension('value');
 
         data.diff(oldData)
             .add(function (idx) {
-                var pointer = new PointerPath({
+                let pointer = new PointerPath({
                     shape: {
                         angle: startAngle
                     }
@@ -346,7 +346,7 @@ class GaugeView extends ChartView {
                 data.setItemGraphicEl(idx, pointer);
             })
             .update(function (newIdx, oldIdx) {
-                var pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
+                let pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
 
                 graphic.updateProps(pointer, {
                     shape: {
@@ -358,14 +358,14 @@ class GaugeView extends ChartView {
                 data.setItemGraphicEl(newIdx, pointer);
             })
             .remove(function (idx) {
-                var pointer = oldData.getItemGraphicEl(idx);
+                let pointer = oldData.getItemGraphicEl(idx);
                 group.remove(pointer);
             })
             .execute();
 
         data.eachItemGraphicEl(function (pointer: PointerPath, idx) {
-            var itemModel = data.getItemModel<GaugeDataItemOption>(idx);
-            var pointerModel = itemModel.getModel('pointer');
+            let itemModel = data.getItemModel<GaugeDataItemOption>(idx);
+            let pointerModel = itemModel.getModel('pointer');
 
             pointer.setShape({
                 x: posInfo.cx,
@@ -399,18 +399,18 @@ class GaugeView extends ChartView {
         getColor: (percent: number) => ColorString,
         posInfo: PosInfo
     ) {
-        var data = seriesModel.getData();
-        var valueDim = data.mapDimension('value');
-        var titleModel = seriesModel.getModel('title');
+        let data = seriesModel.getData();
+        let valueDim = data.mapDimension('value');
+        let titleModel = seriesModel.getModel('title');
         if (titleModel.get('show')) {
-            var offsetCenter = titleModel.get('offsetCenter');
-            var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
-            var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
+            let offsetCenter = titleModel.get('offsetCenter');
+            let x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
+            let y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
 
-            var minVal = +seriesModel.get('min');
-            var maxVal = +seriesModel.get('max');
-            var value = seriesModel.getData().get(valueDim, 0) as number;
-            var autoColor = getColor(
+            let minVal = +seriesModel.get('min');
+            let maxVal = +seriesModel.get('max');
+            let value = seriesModel.getData().get(valueDim, 0) as number;
+            let autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );
 
@@ -435,18 +435,18 @@ class GaugeView extends ChartView {
         getColor: (percent: number) => ColorString,
         posInfo: PosInfo
     ) {
-        var detailModel = seriesModel.getModel('detail');
-        var minVal = +seriesModel.get('min');
-        var maxVal = +seriesModel.get('max');
+        let detailModel = seriesModel.getModel('detail');
+        let minVal = +seriesModel.get('min');
+        let maxVal = +seriesModel.get('max');
         if (detailModel.get('show')) {
-            var offsetCenter = detailModel.get('offsetCenter');
-            var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
-            var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
-            var width = parsePercent(detailModel.get('width'), posInfo.r);
-            var height = parsePercent(detailModel.get('height'), posInfo.r);
-            var data = seriesModel.getData();
-            var value = data.get(data.mapDimension('value'), 0) as number;
-            var autoColor = getColor(
+            let offsetCenter = detailModel.get('offsetCenter');
+            let x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
+            let y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
+            let width = parsePercent(detailModel.get('width'), posInfo.r);
+            let height = parsePercent(detailModel.get('height'), posInfo.r);
+            let data = seriesModel.getData();
+            let value = data.get(data.mapDimension('value'), 0) as number;
+            let autoColor = getColor(
                 linearMap(value, [minVal, maxVal], [0, 1], true)
             );
 

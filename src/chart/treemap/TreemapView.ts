@@ -74,7 +74,7 @@ const getItemStyleEmphasis = makeStyleMapper([
 ]);
 const getItemStyleNormal = function (model: Model<TreemapSeriesNodeItemOption['itemStyle']>): StyleProps {
     // Normal style props should include emphasis style props.
-    var itemStyle = getItemStyleEmphasis(model) as StyleProps;
+    let itemStyle = getItemStyleEmphasis(model) as StyleProps;
     // Clear styles set by emphasis.
     itemStyle.stroke = itemStyle.fill = itemStyle.lineWidth = null;
     return itemStyle;
@@ -162,7 +162,7 @@ class TreemapView extends ChartView {
         payload: TreemapZoomToNodePayload | TreemapRenderPayload | TreemapMovePayload | TreemapRootToNodePayload
     ) {
 
-        var models = ecModel.findComponents({
+        let models = ecModel.findComponents({
             mainType: 'series', subType: 'treemap', query: payload
         });
         if (indexOf(models, seriesModel) < 0) {
@@ -173,25 +173,25 @@ class TreemapView extends ChartView {
         this.api = api;
         this.ecModel = ecModel;
 
-        var types = ['treemapZoomToNode', 'treemapRootToNode'];
-        var targetInfo = helper
+        let types = ['treemapZoomToNode', 'treemapRootToNode'];
+        let targetInfo = helper
             .retrieveTargetInfo(payload, types, seriesModel);
-        var payloadType = payload && payload.type;
-        var layoutInfo = seriesModel.layoutInfo;
-        var isInit = !this._oldTree;
-        var thisStorage = this._storage;
+        let payloadType = payload && payload.type;
+        let layoutInfo = seriesModel.layoutInfo;
+        let isInit = !this._oldTree;
+        let thisStorage = this._storage;
 
         // Mark new root when action is treemapRootToNode.
-        var reRoot = (payloadType === 'treemapRootToNode' && targetInfo && thisStorage)
+        let reRoot = (payloadType === 'treemapRootToNode' && targetInfo && thisStorage)
             ? {
                 rootNodeGroup: thisStorage.nodeGroup[targetInfo.node.getRawIndex()],
                 direction: (payload as TreemapRootToNodePayload).direction
             }
             : null;
 
-        var containerGroup = this._giveContainerGroup(layoutInfo);
+        let containerGroup = this._giveContainerGroup(layoutInfo);
 
-        var renderResult = this._doRender(containerGroup, seriesModel, reRoot);
+        let renderResult = this._doRender(containerGroup, seriesModel, reRoot);
         (
             !isInit && (
                 !payloadType
@@ -211,7 +211,7 @@ class TreemapView extends ChartView {
      * @private
      */
     _giveContainerGroup(layoutInfo: LayoutRect) {
-        var containerGroup = this._containerGroup;
+        let containerGroup = this._containerGroup;
         if (!containerGroup) {
             // FIXME
             // 加一层containerGroup是为了clip，但是现在clip功能并没有实现。
@@ -228,14 +228,14 @@ class TreemapView extends ChartView {
      * @private
      */
     _doRender(containerGroup: graphic.Group, seriesModel: TreemapSeriesModel, reRoot: ReRoot): RenderResult {
-        var thisTree = seriesModel.getData().tree;
-        var oldTree = this._oldTree;
+        let thisTree = seriesModel.getData().tree;
+        let oldTree = this._oldTree;
 
         // Clear last shape records.
-        var lastsForAnimation = createStorage() as LastCfgStorage;
-        var thisStorage = createStorage() as RenderElementStorage;
-        var oldStorage = this._storage;
-        var willInvisibleEls: RenderResult['willInvisibleEls'] = [];
+        let lastsForAnimation = createStorage() as LastCfgStorage;
+        let thisStorage = createStorage() as RenderElementStorage;
+        let oldStorage = this._storage;
+        let willInvisibleEls: RenderResult['willInvisibleEls'] = [];
 
         function doRenderNode(thisNode: TreeNode, oldNode: TreeNode, parentGroup: graphic.Group, depth: number) {
             return renderNode(
@@ -260,7 +260,7 @@ class TreemapView extends ChartView {
         );
 
         // Process all removing.
-        var willDeleteEls = clearStorage(oldStorage) as RenderElementStorage;
+        let willDeleteEls = clearStorage(oldStorage) as RenderElementStorage;
 
         this._oldTree = thisTree;
         this._storage = thisStorage;
@@ -303,10 +303,10 @@ class TreemapView extends ChartView {
             }
 
             function processNode(newIndex: number, oldIndex?: number) {
-                var thisNode = newIndex != null ? thisViewChildren[newIndex] : null;
-                var oldNode = oldIndex != null ? oldViewChildren[oldIndex] : null;
+                let thisNode = newIndex != null ? thisViewChildren[newIndex] : null;
+                let oldNode = oldIndex != null ? oldViewChildren[oldIndex] : null;
 
-                var group = doRenderNode(thisNode, oldNode, parentGroup, depth);
+                let group = doRenderNode(thisNode, oldNode, parentGroup, depth);
 
                 group && dualTravel(
                     thisNode && thisNode.viewChildren || [],
@@ -319,9 +319,9 @@ class TreemapView extends ChartView {
         }
 
         function clearStorage(storage: RenderElementStorage) {
-            var willDeleteEls = createStorage() as RenderElementStorage;
+            let willDeleteEls = createStorage() as RenderElementStorage;
             storage && each(storage, function (store, storageName) {
-                var delEls = willDeleteEls[storageName];
+                let delEls = willDeleteEls[storageName];
                 each(store, function (el) {
                     el && (delEls.push(el as any), inner(el).willDelete = true);
                 });
@@ -357,9 +357,9 @@ class TreemapView extends ChartView {
             return;
         }
 
-        var duration = seriesModel.get('animationDurationUpdate');
-        var easing = seriesModel.get('animationEasing');
-        var animationWrap = animationUtil.createWrap();
+        let duration = seriesModel.get('animationDurationUpdate');
+        let easing = seriesModel.get('animationEasing');
+        let animationWrap = animationUtil.createWrap();
 
         // Make delete animations.
         each(renderResult.willDeleteEls, function (store, storageName) {
@@ -368,9 +368,9 @@ class TreemapView extends ChartView {
                     return;
                 }
 
-                var parent = el.parent; // Always has parent, and parent is nodeGroup.
-                var target: PathProps;
-                var innerStore = inner(parent);
+                let parent = el.parent; // Always has parent, and parent is nodeGroup.
+                let target: PathProps;
+                let innerStore = inner(parent);
 
                 if (reRoot && reRoot.direction === 'drillDown') {
                     target = parent === reRoot.rootNodeGroup
@@ -392,8 +392,8 @@ class TreemapView extends ChartView {
                         : {style: {opacity: 0}};
                 }
                 else {
-                    var targetX = 0;
-                    var targetY = 0;
+                    let targetX = 0;
+                    let targetY = 0;
 
                     if (!innerStore.willDelete) {
                         // Let node animate to right-bottom corner, cooperating with fadeout,
@@ -418,8 +418,8 @@ class TreemapView extends ChartView {
         // Make other animations
         each(this._storage, function (store, storageName) {
             each(store, function (el, rawIndex) {
-                var last = renderResult.lastsForAnimation[storageName][rawIndex];
-                var target: PathProps = {};
+                let last = renderResult.lastsForAnimation[storageName][rawIndex];
+                let target: PathProps = {};
 
                 if (!last) {
                     return;
@@ -467,7 +467,7 @@ class TreemapView extends ChartView {
      * @private
      */
     _resetController(api: ExtensionAPI) {
-        var controller = this._controller;
+        let controller = this._controller;
 
         // Init controller.
         if (!controller) {
@@ -477,7 +477,7 @@ class TreemapView extends ChartView {
             controller.on('zoom', bind(this._onZoom, this));
         }
 
-        var rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
+        let rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
         controller.setPointerChecker(function (e, x, y) {
             return rect.contain(x, y);
         });
@@ -487,7 +487,7 @@ class TreemapView extends ChartView {
      * @private
      */
     _clearController() {
-        var controller = this._controller;
+        let controller = this._controller;
         if (controller) {
             controller.dispose();
             controller = null;
@@ -502,13 +502,13 @@ class TreemapView extends ChartView {
             && (Math.abs(e.dx) > DRAG_THRESHOLD || Math.abs(e.dy) > DRAG_THRESHOLD)
         ) {
             // These param must not be cached.
-            var root = this.seriesModel.getData().tree.root;
+            let root = this.seriesModel.getData().tree.root;
 
             if (!root) {
                 return;
             }
 
-            var rootLayout = root.getLayout();
+            let rootLayout = root.getLayout();
 
             if (!rootLayout) {
                 return;
@@ -530,34 +530,34 @@ class TreemapView extends ChartView {
      * @private
      */
     _onZoom(e: RoamEventParams['zoom']) {
-        var mouseX = e.originX;
-        var mouseY = e.originY;
+        let mouseX = e.originX;
+        let mouseY = e.originY;
 
         if (this._state !== 'animating') {
             // These param must not be cached.
-            var root = this.seriesModel.getData().tree.root;
+            let root = this.seriesModel.getData().tree.root;
 
             if (!root) {
                 return;
             }
 
-            var rootLayout = root.getLayout();
+            let rootLayout = root.getLayout();
 
             if (!rootLayout) {
                 return;
             }
 
-            var rect = new BoundingRect(
+            let rect = new BoundingRect(
                 rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
             );
-            var layoutInfo = this.seriesModel.layoutInfo;
+            let layoutInfo = this.seriesModel.layoutInfo;
 
             // Transform mouse coord from global to containerGroup.
             mouseX -= layoutInfo.x;
             mouseY -= layoutInfo.y;
 
             // Scale root bounding rect.
-            var m = matrix.create();
+            let m = matrix.create();
             matrix.translate(m, m, [-mouseX, -mouseY]);
             matrix.scale(m, m, [e.scale, e.scale]);
             matrix.translate(m, m, [mouseX, mouseY]);
@@ -585,19 +585,19 @@ class TreemapView extends ChartView {
                 return;
             }
 
-            var nodeClick = this.seriesModel.get('nodeClick', true);
+            let nodeClick = this.seriesModel.get('nodeClick', true);
 
             if (!nodeClick) {
                 return;
             }
 
-            var targetInfo = this.findTarget(e.offsetX, e.offsetY);
+            let targetInfo = this.findTarget(e.offsetX, e.offsetY);
 
             if (!targetInfo) {
                 return;
             }
 
-            var node = targetInfo.node;
+            let node = targetInfo.node;
             if (node.getLayout().isLeafRoot) {
                 this._rootToNode(targetInfo);
             }
@@ -606,9 +606,9 @@ class TreemapView extends ChartView {
                     this._zoomToNode(targetInfo);
                 }
                 else if (nodeClick === 'link') {
-                    var itemModel = node.hostTree.data.getItemModel<TreeSeriesNodeItemOption>(node.dataIndex);
-                    var link = itemModel.get('link', true);
-                    var linkTarget = itemModel.get('target', true) || 'blank';
+                    let itemModel = node.hostTree.data.getItemModel<TreeSeriesNodeItemOption>(node.dataIndex);
+                    let link = itemModel.get('link', true);
+                    let linkTarget = itemModel.get('target', true) || 'blank';
                     link && window.open(link, linkTarget);
                 }
             }
@@ -692,15 +692,15 @@ class TreemapView extends ChartView {
      * @return {number} info.offsetY y refer to target node.
      */
     findTarget(x: number, y: number): FoundTargetInfo {
-        var targetInfo;
-        var viewRoot = this.seriesModel.getViewRoot();
+        let targetInfo;
+        let viewRoot = this.seriesModel.getViewRoot();
 
         viewRoot.eachNode({attr: 'viewChildren', order: 'preorder'}, function (node) {
-            var bgEl = this._storage.background[node.getRawIndex()];
+            let bgEl = this._storage.background[node.getRawIndex()];
             // If invisible, there might be no element.
             if (bgEl) {
-                var point = bgEl.transformCoordToLocal(x, y);
-                var shape = bgEl.shape;
+                let point = bgEl.transformCoordToLocal(x, y);
+                let shape = bgEl.shape;
 
                 // For performance consideration, dont use 'getBoundingRect'.
                 if (shape.x <= point[0]
@@ -762,9 +762,9 @@ function renderNode(
     // -------------------------------------------------------------------
     // Start of closure variables available in "Procedures in renderNode".
 
-    var thisLayout = thisNode.getLayout();
-    var data = seriesModel.getData();
-    var nodeModel = thisNode.getModel<TreemapSeriesNodeItemOption>();
+    let thisLayout = thisNode.getLayout();
+    let data = seriesModel.getData();
+    let nodeModel = thisNode.getModel<TreemapSeriesNodeItemOption>();
 
     // Only for enabling highlight/downplay. Clear firstly.
     // Because some node will not be rendered.
@@ -774,25 +774,25 @@ function renderNode(
         return;
     }
 
-    var thisWidth = thisLayout.width;
-    var thisHeight = thisLayout.height;
-    var borderWidth = thisLayout.borderWidth;
-    var thisInvisible = thisLayout.invisible;
+    let thisWidth = thisLayout.width;
+    let thisHeight = thisLayout.height;
+    let borderWidth = thisLayout.borderWidth;
+    let thisInvisible = thisLayout.invisible;
 
-    var thisRawIndex = thisNode.getRawIndex();
-    var oldRawIndex = oldNode && oldNode.getRawIndex();
+    let thisRawIndex = thisNode.getRawIndex();
+    let oldRawIndex = oldNode && oldNode.getRawIndex();
 
-    var thisViewChildren = thisNode.viewChildren;
-    var upperHeight = thisLayout.upperHeight;
-    var isParent = thisViewChildren && thisViewChildren.length;
-    var itemStyleNormalModel = nodeModel.getModel('itemStyle');
-    var itemStyleEmphasisModel = nodeModel.getModel(['emphasis', 'itemStyle']);
+    let thisViewChildren = thisNode.viewChildren;
+    let upperHeight = thisLayout.upperHeight;
+    let isParent = thisViewChildren && thisViewChildren.length;
+    let itemStyleNormalModel = nodeModel.getModel('itemStyle');
+    let itemStyleEmphasisModel = nodeModel.getModel(['emphasis', 'itemStyle']);
 
     // End of closure ariables available in "Procedures in renderNode".
     // -----------------------------------------------------------------
 
     // Node group
-    var group = giveGraphic('nodeGroup', Group);
+    let group = giveGraphic('nodeGroup', Group);
 
     if (!group) {
         return;
@@ -809,7 +809,7 @@ function renderNode(
     }
 
     // Background
-    var bg = giveGraphic('background', Rect, depth, Z_BG);
+    let bg = giveGraphic('background', Rect, depth, Z_BG);
     bg && renderBackground(group, bg, isParent && thisLayout.upperHeight);
 
     // No children, render content.
@@ -827,7 +827,7 @@ function renderNode(
         }
     }
     else {
-        var content = giveGraphic('content', Rect, depth, Z_CONTENT);
+        let content = giveGraphic('content', Rect, depth, Z_CONTENT);
         content && renderContent(group, content);
 
         if (bg && graphic.isHighDownDispatcher(bg)) {
@@ -860,15 +860,15 @@ function renderNode(
         }
         else {
             bg.invisible = false;
-            var visualBorderColor = thisNode.getVisual('borderColor', true);
-            var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
-            var normalStyle = getItemStyleNormal(itemStyleNormalModel);
+            let visualBorderColor = thisNode.getVisual('borderColor', true);
+            let emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
+            let normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
-            var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
+            let emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
             emphasisStyle.fill = emphasisBorderColor;
 
             if (useUpperLabel) {
-                var upperLabelWidth = thisWidth - 2 * borderWidth;
+                let upperLabelWidth = thisWidth - 2 * borderWidth;
 
                 prepareText(
                     normalStyle, emphasisStyle, visualBorderColor, upperLabelWidth, upperHeight,
@@ -893,8 +893,8 @@ function renderNode(
         ecData.dataIndex = thisNode.dataIndex;
         ecData.seriesIndex = seriesModel.seriesIndex;
 
-        var contentWidth = Math.max(thisWidth - 2 * borderWidth, 0);
-        var contentHeight = Math.max(thisHeight - 2 * borderWidth, 0);
+        let contentWidth = Math.max(thisWidth - 2 * borderWidth, 0);
+        let contentHeight = Math.max(thisHeight - 2 * borderWidth, 0);
 
         content.culling = true;
         content.setShape({
@@ -912,10 +912,10 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            var visualColor = thisNode.getVisual('color', true);
-            var normalStyle = getItemStyleNormal(itemStyleNormalModel);
+            let visualColor = thisNode.getVisual('color', true);
+            let normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
-            var emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
+            let emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
 
             prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight);
 
@@ -940,25 +940,25 @@ function renderNode(
         height: number,
         upperLabelRect?: RectLike
     ) {
-        var text = retrieve(
+        let text = retrieve(
             seriesModel.getFormattedLabel(
                 thisNode.dataIndex, 'normal', null, null, upperLabelRect ? 'upperLabel' : 'label'
             ),
             nodeModel.get('name')
         );
         if (!upperLabelRect && thisLayout.isLeafRoot) {
-            var iconChar = seriesModel.get('drillDownIcon', true);
+            let iconChar = seriesModel.get('drillDownIcon', true);
             text = iconChar ? iconChar + ' ' + text : text;
         }
 
-        var normalLabelModel = nodeModel.getModel(
+        let normalLabelModel = nodeModel.getModel(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
         );
-        var emphasisLabelModel = nodeModel.getModel(
+        let emphasisLabelModel = nodeModel.getModel(
             upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
         );
 
-        var isShow = normalLabelModel.getShallow('show');
+        let isShow = normalLabelModel.getShallow('show');
 
         graphic.setLabelStyle(
             normalStyle, emphasisStyle, normalLabelModel, emphasisLabelModel,
@@ -986,8 +986,8 @@ function renderNode(
         depth?: number,
         z?: number
     ): T {
-        var element = oldRawIndex != null && oldStorage[storageName][oldRawIndex];
-        var lasts = lastsForAnimation[storageName];
+        let element = oldRawIndex != null && oldStorage[storageName][oldRawIndex];
+        let lasts = lastsForAnimation[storageName];
 
         if (element) {
             // Remove from oldStorage
@@ -1008,7 +1008,7 @@ function renderNode(
     }
 
     function prepareAnimationWhenHasOld(lasts: LastCfg[], element: graphic.Group | graphic.Rect) {
-        var lastCfg = lasts[thisRawIndex] = {} as LastCfg;
+        let lastCfg = lasts[thisRawIndex] = {} as LastCfg;
         if (element instanceof Group) {
             lastCfg.oldPos = element.position.slice();
         }
@@ -1020,17 +1020,17 @@ function renderNode(
     // If a element is new, we need to find the animation start point carefully,
     // otherwise it will looks strange when 'zoomToNode'.
     function prepareAnimationWhenNoOld(lasts: LastCfg[], element: graphic.Group | graphic.Rect) {
-        var lastCfg = lasts[thisRawIndex] = {} as LastCfg;
-        var parentNode = thisNode.parentNode;
-        var isGroup = element instanceof graphic.Group;
+        let lastCfg = lasts[thisRawIndex] = {} as LastCfg;
+        let parentNode = thisNode.parentNode;
+        let isGroup = element instanceof graphic.Group;
 
         if (parentNode && (!reRoot || reRoot.direction === 'drillDown')) {
-            var parentOldX = 0;
-            var parentOldY = 0;
+            let parentOldX = 0;
+            let parentOldY = 0;
 
             // New nodes appear from right-bottom corner in 'zoomToNode' animation.
             // For convenience, get old bounding rect from background.
-            var parentOldBg = lastsForAnimation.background[parentNode.getRawIndex()];
+            let parentOldBg = lastsForAnimation.background[parentNode.getRawIndex()];
             if (!reRoot && parentOldBg && parentOldBg.oldShape) {
                 parentOldX = parentOldBg.oldShape.width;
                 parentOldY = parentOldBg.oldShape.height;
@@ -1059,7 +1059,7 @@ function renderNode(
 // Moreover, we try to shrink down z interval to [0, 1] to avoid that
 // treemap with large z overlaps other components.
 function calculateZ(depth: number, zInLevel: number) {
-    var zb = depth * Z_BASE + zInLevel;
+    let zb = depth * Z_BASE + zInLevel;
     return (zb - 1) / zb;
 }
 

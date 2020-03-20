@@ -50,7 +50,7 @@ export interface SVGMapRecord {
 }
 
 
-var storage = createHashMap<MapRecord[]>();
+const storage = createHashMap<MapRecord[]>();
 
 
 export default {
@@ -86,7 +86,7 @@ export default {
         rawSpecialAreas?: GeoSpecialAreas
     ): MapRecord[] {
 
-        var records: MapRecord[];
+        let records: MapRecord[];
 
         if (isArray(rawDef)) {
             records = rawDef as MapRecord[];
@@ -100,7 +100,7 @@ export default {
         }
         else {
             // Backward compatibility.
-            var geoSource = (rawDef as MapInputObject).geoJson
+            let geoSource = (rawDef as MapInputObject).geoJson
                 || (rawDef as MapInputObject).geoJSON;
             if (geoSource && !(rawDef as GeoJSON).features) {
                 rawSpecialAreas = (rawDef as MapInputObject).specialAreas;
@@ -114,10 +114,10 @@ export default {
         }
 
         each(records, function (record) {
-            var type = record.type;
+            let type = record.type;
             (type as any) === 'geoJson' && (type = record.type = 'geoJSON');
 
-            var parse = parsers[type];
+            let parse = parsers[type];
 
             if (__DEV__) {
                 assert(parse, 'Illegal map type: ' + type);
@@ -135,10 +135,10 @@ export default {
 
 };
 
-var parsers: Dictionary<(record: MapRecord) => void> = {
+const parsers: Dictionary<(record: MapRecord) => void> = {
 
     geoJSON: function (record: GeoJSONMapRecord): void {
-        var source = record.source;
+        let source = record.source;
         record.geoJSON = !isString(source)
             ? source
             : (typeof JSON !== 'undefined' && JSON.parse)

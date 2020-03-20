@@ -46,15 +46,15 @@ type TreemapLevelItemStyleOption = TreemapSeriesOption['levels'][number]['itemSt
 export default {
     seriesType: 'treemap',
     reset(seriesModel: TreemapSeriesModel) {
-        var tree = seriesModel.getData().tree;
-        var root = tree.root;
-        var seriesItemStyleModel = seriesModel.getModel(ITEM_STYLE_NORMAL);
+        let tree = seriesModel.getData().tree;
+        let root = tree.root;
+        let seriesItemStyleModel = seriesModel.getModel(ITEM_STYLE_NORMAL);
 
         if (root.isRemoved()) {
             return;
         }
 
-        var levelItemStyles = map(tree.levelModels, function (levelModel) {
+        let levelItemStyles = map(tree.levelModels, function (levelModel) {
             return levelModel ? levelModel.get(ITEM_STYLE_NORMAL) : null;
         });
 
@@ -77,24 +77,24 @@ function travelTree(
     viewRootAncestors: TreemapLayoutNode[],
     seriesModel: TreemapSeriesModel
 ) {
-    var nodeModel = node.getModel<TreemapSeriesNodeItemOption>();
-    var nodeLayout = node.getLayout();
+    let nodeModel = node.getModel<TreemapSeriesNodeItemOption>();
+    let nodeLayout = node.getLayout();
 
     // Optimize
     if (!nodeLayout || nodeLayout.invisible || !nodeLayout.isInView) {
         return;
     }
 
-    var nodeItemStyleModel = nodeModel.getModel(ITEM_STYLE_NORMAL);
-    var levelItemStyle = levelItemStyles[node.depth];
-    var visuals = buildVisuals(
+    let nodeItemStyleModel = nodeModel.getModel(ITEM_STYLE_NORMAL);
+    let levelItemStyle = levelItemStyles[node.depth];
+    let visuals = buildVisuals(
         nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
     );
 
     // calculate border color
-    var borderColor = nodeItemStyleModel.get('borderColor');
-    var borderColorSaturation = nodeItemStyleModel.get('borderColorSaturation');
-    var thisNodeColor;
+    let borderColor = nodeItemStyleModel.get('borderColor');
+    let borderColorSaturation = nodeItemStyleModel.get('borderColorSaturation');
+    let thisNodeColor;
     if (borderColorSaturation != null) {
         // For performance, do not always execute 'calculateColor'.
         thisNodeColor = calculateColor(visuals);
@@ -102,14 +102,14 @@ function travelTree(
     }
     node.setVisual('borderColor', borderColor);
 
-    var viewChildren = node.viewChildren;
+    let viewChildren = node.viewChildren;
     if (!viewChildren || !viewChildren.length) {
         thisNodeColor = calculateColor(visuals);
         // Apply visual to this node.
         node.setVisual('color', thisNodeColor);
     }
     else {
-        var mapping = buildVisualMapping(
+        let mapping = buildVisualMapping(
             node, nodeModel, nodeLayout, nodeItemStyleModel, visuals, viewChildren
         );
 
@@ -119,7 +119,7 @@ function travelTree(
             if (child.depth >= viewRootAncestors.length
                 || child === viewRootAncestors[child.depth]
             ) {
-                var childVisual = mapVisual(
+                let childVisual = mapVisual(
                     nodeModel, visuals, child, index, mapping, seriesModel
                 );
                 travelTree(
@@ -137,11 +137,11 @@ function buildVisuals(
     levelItemStyle: TreemapLevelItemStyleOption,
     seriesItemStyleModel: Model<TreemapSeriesOption['itemStyle']>
 ) {
-    var visuals = extend({}, designatedVisual);
+    let visuals = extend({}, designatedVisual);
 
     each(['color', 'colorAlpha', 'colorSaturation'] as const, function (visualName) {
         // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
-        var val = nodeItemStyleModel.get(visualName, true); // Ignore parent
+        let val = nodeItemStyleModel.get(visualName, true); // Ignore parent
         val == null && levelItemStyle && (val = levelItemStyle[visualName]);
         val == null && (val = designatedVisual[visualName]);
         val == null && (val = seriesItemStyleModel.get(visualName));
@@ -153,11 +153,11 @@ function buildVisuals(
 }
 
 function calculateColor(visuals: TreemapVisual) {
-    var color = getValueVisualDefine(visuals, 'color') as ColorString;
+    let color = getValueVisualDefine(visuals, 'color') as ColorString;
 
     if (color) {
-        var colorAlpha = getValueVisualDefine(visuals, 'colorAlpha') as number;
-        var colorSaturation = getValueVisualDefine(visuals, 'colorSaturation') as number;
+        let colorAlpha = getValueVisualDefine(visuals, 'colorAlpha') as number;
+        let colorSaturation = getValueVisualDefine(visuals, 'colorSaturation') as number;
         if (colorSaturation) {
             color = modifyHSL(color, null, null, colorSaturation);
         }
@@ -180,7 +180,7 @@ function calculateBorderColor(
 }
 
 function getValueVisualDefine(visuals: TreemapVisual, name: keyof TreemapVisual) {
-    var value = visuals[name];
+    let value = visuals[name];
     if (value != null && value !== 'none') {
         return value;
     }
@@ -198,7 +198,7 @@ function buildVisualMapping(
         return;
     }
 
-    var rangeVisual = getRangeVisual(nodeModel, 'color')
+    let rangeVisual = getRangeVisual(nodeModel, 'color')
         || (
             visuals.color != null
             && visuals.color !== 'none'
@@ -212,14 +212,14 @@ function buildVisualMapping(
         return;
     }
 
-    var visualMin = nodeModel.get('visualMin');
-    var visualMax = nodeModel.get('visualMax');
-    var dataExtent = nodeLayout.dataExtent.slice() as [number, number];
+    let visualMin = nodeModel.get('visualMin');
+    let visualMax = nodeModel.get('visualMax');
+    let dataExtent = nodeLayout.dataExtent.slice() as [number, number];
     visualMin != null && visualMin < dataExtent[0] && (dataExtent[0] = visualMin);
     visualMax != null && visualMax > dataExtent[1] && (dataExtent[1] = visualMax);
 
-    var colorMappingBy = nodeModel.get('colorMappingBy');
-    var opt: VisualMappingOption = {
+    let colorMappingBy = nodeModel.get('colorMappingBy');
+    let opt: VisualMappingOption = {
         type: rangeVisual.name,
         dataExtent: dataExtent,
         visual: rangeVisual.range
@@ -235,7 +235,7 @@ function buildVisualMapping(
         opt.mappingMethod = 'linear';
     }
 
-    var mapping = new VisualMapping(opt);
+    let mapping = new VisualMapping(opt);
     inner(mapping).drColorMappingBy = colorMappingBy;
 
     return mapping;
@@ -251,7 +251,7 @@ function buildVisualMapping(
 function getRangeVisual(nodeModel: NodeModel, name: keyof TreemapVisual) {
     // 'colorRange', 'colorARange', 'colorSRange'.
     // If not exsits on this node, fetch from levels and series.
-    var range = nodeModel.get(name);
+    let range = nodeModel.get(name);
     return (isArray(range) && range.length) ? {
         name: name,
         range: range
@@ -266,13 +266,13 @@ function mapVisual(
     mapping: VisualMapping,
     seriesModel: TreemapSeriesModel
 ) {
-    var childVisuals = extend({}, visuals);
+    let childVisuals = extend({}, visuals);
 
     if (mapping) {
         // Only support color, colorAlpha, colorSaturation.
-        var mappingType = mapping.type as keyof TreemapVisual;
-        var colorMappingBy = mappingType === 'color' && inner(mapping).drColorMappingBy;
-        var value = colorMappingBy === 'index'
+        let mappingType = mapping.type as keyof TreemapVisual;
+        let colorMappingBy = mappingType === 'color' && inner(mapping).drColorMappingBy;
+        let value = colorMappingBy === 'index'
             ? index
             : colorMappingBy === 'id'
             ? seriesModel.mapIdToIndex(child.getId())

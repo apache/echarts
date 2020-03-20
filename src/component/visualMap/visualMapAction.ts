@@ -20,7 +20,7 @@
 import * as echarts from '../../echarts';
 import VisualMapModel from './VisualMapModel';
 
-var actionInfo = {
+const actionInfo = {
     type: 'selectDataRange',
     event: 'dataRangeSelected',
     // FIXME use updateView appears wrong

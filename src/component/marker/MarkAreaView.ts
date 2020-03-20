@@ -55,18 +55,18 @@ type MarkAreaMergedItemOption = Omit<MarkArea2DDataItemOption[number], 'coord'> 
     y1: number | string
 };
 
-var markAreaTransform = function (
+const markAreaTransform = function (
     seriesModel: SeriesModel,
     coordSys: CoordinateSystem,
     maModel: MarkAreaModel,
     item: MarkArea2DDataItemOption
 ): MarkAreaMergedItemOption {
-    var lt = markerHelper.dataTransform(seriesModel, item[0]);
-    var rb = markerHelper.dataTransform(seriesModel, item[1]);
+    let lt = markerHelper.dataTransform(seriesModel, item[0]);
+    let rb = markerHelper.dataTransform(seriesModel, item[1]);
 
     // FIXME make sure lt is less than rb
-    var ltCoord = lt.coord;
-    var rbCoord = rb.coord;
+    let ltCoord = lt.coord;
+    let rbCoord = rb.coord;
     ltCoord[0] = retrieve(ltCoord[0], -Infinity);
     ltCoord[1] = retrieve(ltCoord[1], -Infinity);
 
@@ -74,7 +74,7 @@ var markAreaTransform = function (
     rbCoord[1] = retrieve(rbCoord[1], Infinity);
 
     // Merge option into one
-    var result: MarkAreaMergedItemOption = mergeAll([{}, lt, rb]);
+    let result: MarkAreaMergedItemOption = mergeAll([{}, lt, rb]);
 
     result.coord = [
         lt.coord, rb.coord
@@ -97,13 +97,13 @@ function ifMarkAreaHasOnlyDim(
     toCoord: ScaleDataValue[],
     coordSys: CoordinateSystem
 ) {
-    var otherDimIndex = 1 - dimIndex;
+    let otherDimIndex = 1 - dimIndex;
     return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex]);
 }
 
 function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOption) {
-    var fromCoord = item.coord[0];
-    var toCoord = item.coord[1];
+    let fromCoord = item.coord[0];
+    let toCoord = item.coord[1];
     if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
         // In case
         // {
@@ -139,12 +139,12 @@ function getSingleMarkerEndPoint(
     seriesModel: SeriesModel,
     api: ExtensionAPI
 ) {
-    var coordSys = seriesModel.coordinateSystem;
-    var itemModel = data.getItemModel<MarkAreaMergedItemOption>(idx);
+    let coordSys = seriesModel.coordinateSystem;
+    let itemModel = data.getItemModel<MarkAreaMergedItemOption>(idx);
 
-    var point;
-    var xPx = numberUtil.parsePercent(itemModel.get(dims[0]), api.getWidth());
-    var yPx = numberUtil.parsePercent(itemModel.get(dims[1]), api.getHeight());
+    let point;
+    let xPx = numberUtil.parsePercent(itemModel.get(dims[0]), api.getWidth());
+    let yPx = numberUtil.parsePercent(itemModel.get(dims[1]), api.getHeight());
     if (!isNaN(xPx) && !isNaN(yPx)) {
         point = [xPx, yPx];
     }
@@ -188,7 +188,7 @@ function getSingleMarkerEndPoint(
     return point;
 }
 
-var dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']] as const;
+const dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']] as const;
 
 class MarkAreaView extends MarkerView {
 
@@ -199,16 +199,16 @@ class MarkAreaView extends MarkerView {
 
     updateTransform(markAreaModel: MarkAreaModel, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
-            var maModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markArea');
+            let maModel = MarkerModel.getMarkerModelFromSeries(seriesModel, 'markArea');
             if (maModel) {
-                var areaData = maModel.getData();
+                let areaData = maModel.getData();
                 areaData.each(function (idx) {
-                    var points = map(dimPermutations, function (dim) {
+                    let points = map(dimPermutations, function (dim) {
                         return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
                     });
                     // Layout
                     areaData.setItemLayout(idx, points);
-                    var el = areaData.getItemGraphicEl(idx) as graphic.Rect;
+                    let el = areaData.getItemGraphicEl(idx) as graphic.Rect;
                     el.setShape('points', points);
                 });
             }
@@ -221,18 +221,18 @@ class MarkAreaView extends MarkerView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        var coordSys = seriesModel.coordinateSystem;
-        var seriesId = seriesModel.id;
-        var seriesData = seriesModel.getData();
+        let coordSys = seriesModel.coordinateSystem;
+        let seriesId = seriesModel.id;
+        let seriesData = seriesModel.getData();
 
-        var areaGroupMap = this.markerGroupMap;
-        var polygonGroup = areaGroupMap.get(seriesId)
+        let areaGroupMap = this.markerGroupMap;
+        let polygonGroup = areaGroupMap.get(seriesId)
             || areaGroupMap.set(seriesId, {group: new graphic.Group()});
 
         this.group.add(polygonGroup.group);
         this.markKeep(polygonGroup);
 
-        var areaData = createList(coordSys, seriesModel, maModel);
+        let areaData = createList(coordSys, seriesModel, maModel);
 
         // Line data for tooltip and formatter
         maModel.setData(areaData);
@@ -253,7 +253,7 @@ class MarkAreaView extends MarkerView {
 
         areaData.diff(inner(polygonGroup).data)
             .add(function (idx) {
-                var polygon = new graphic.Polygon({
+                let polygon = new graphic.Polygon({
                     shape: {
                         points: areaData.getItemLayout(idx)
                     }
@@ -262,7 +262,7 @@ class MarkAreaView extends MarkerView {
                 polygonGroup.group.add(polygon);
             })
             .update(function (newIdx, oldIdx) {
-                var polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
+                let polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
                 graphic.updateProps(polygon, {
                     shape: {
                         points: areaData.getItemLayout(newIdx)
@@ -272,16 +272,16 @@ class MarkAreaView extends MarkerView {
                 areaData.setItemGraphicEl(newIdx, polygon);
             })
             .remove(function (idx) {
-                var polygon = inner(polygonGroup).data.getItemGraphicEl(idx);
+                let polygon = inner(polygonGroup).data.getItemGraphicEl(idx);
                 polygonGroup.group.remove(polygon);
             })
             .execute();
 
         areaData.eachItemGraphicEl(function (polygon: graphic.Polygon, idx) {
-            var itemModel = areaData.getItemModel<MarkAreaMergedItemOption>(idx);
-            var labelModel = itemModel.getModel('label');
-            var labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-            var color = areaData.getItemVisual(idx, 'color');
+            let itemModel = areaData.getItemModel<MarkAreaMergedItemOption>(idx);
+            let labelModel = itemModel.getModel('label');
+            let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+            let color = areaData.getItemVisual(idx, 'color');
             polygon.useStyle(
                 defaults(
                     itemModel.getModel('itemStyle').getItemStyle(),
@@ -322,13 +322,13 @@ function createList(
     maModel: MarkAreaModel
 ) {
 
-    var coordDimsInfos: DataDimensionInfo[];
-    var areaData: List<MarkAreaModel>;
-    var dims = ['x0', 'y0', 'x1', 'y1'];
+    let coordDimsInfos: DataDimensionInfo[];
+    let areaData: List<MarkAreaModel>;
+    let dims = ['x0', 'y0', 'x1', 'y1'];
     if (coordSys) {
         coordDimsInfos = map(coordSys && coordSys.dimensions, function (coordDim) {
-            var data = seriesModel.getData();
-            var info = data.getDimensionInfo(
+            let data = seriesModel.getData();
+            let info = data.getDimensionInfo(
                 data.mapDimension(coordDim)
             ) || {};
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
@@ -351,7 +351,7 @@ function createList(
         areaData = new List(coordDimsInfos, maModel);
     }
 
-    var optData = map(maModel.get('data'), curry(
+    let optData = map(maModel.get('data'), curry(
         markAreaTransform, seriesModel, coordSys, maModel
     ));
     if (coordSys) {
@@ -360,7 +360,7 @@ function createList(
         );
     }
 
-    var dimValueGetter = coordSys ? function (
+    let dimValueGetter = coordSys ? function (
         item: MarkAreaMergedItemOption,
         dimName: string,
         dataIndex: number,

@@ -29,7 +29,7 @@ import ScrollableLegendModel from './ScrollableLegendModel';
 echarts.registerAction(
     'legendScroll', 'legendscroll',
     function (payload, ecModel) {
-        var scrollDataIndex = payload.scrollDataIndex;
+        let scrollDataIndex = payload.scrollDataIndex;
 
         scrollDataIndex != null && ecModel.eachComponent(
             {mainType: 'legend', subType: 'scroll', query: payload},

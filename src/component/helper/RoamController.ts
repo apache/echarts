@@ -177,8 +177,8 @@ class RoamController extends Eventful<RoamEventParams> {
             return;
         }
 
-        var x = e.offsetX;
-        var y = e.offsetY;
+        let x = e.offsetX;
+        let y = e.offsetY;
 
         // Only check on mosedown, but not mousemove.
         // Mouse can be out of target when mouse moving.
@@ -198,14 +198,14 @@ class RoamController extends Eventful<RoamEventParams> {
             return;
         }
 
-        var x = e.offsetX;
-        var y = e.offsetY;
+        let x = e.offsetX;
+        let y = e.offsetY;
 
-        var oldX = this._x;
-        var oldY = this._y;
+        let oldX = this._x;
+        let oldY = this._y;
 
-        var dx = x - oldX;
-        var dy = y - oldY;
+        let dx = x - oldX;
+        let dy = y - oldY;
 
         this._x = x;
         this._y = y;
@@ -224,12 +224,12 @@ class RoamController extends Eventful<RoamEventParams> {
     }
 
     private _mousewheelHandler(e: ZRElementEvent) {
-        var shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
-        var shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
-        var wheelDelta = e.wheelDelta;
-        var absWheelDeltaDelta = Math.abs(wheelDelta);
-        var originX = e.offsetX;
-        var originY = e.offsetY;
+        let shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
+        let shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
+        let wheelDelta = e.wheelDelta;
+        let absWheelDeltaDelta = Math.abs(wheelDelta);
+        let originX = e.offsetX;
+        let originY = e.offsetY;
 
         // wheelDelta maybe -0 in chrome mac.
         if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
@@ -250,8 +250,8 @@ class RoamController extends Eventful<RoamEventParams> {
             // (https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel),
             // although it has been normallized by zrender.
             // wheelDelta of mouse wheel is bigger than touch pad.
-            var factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
-            var scale = wheelDelta > 0 ? factor : 1 / factor;
+            let factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
+            let scale = wheelDelta > 0 ? factor : 1 / factor;
             checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
                 scale: scale, originX: originX, originY: originY, isAvailableBehavior: null
             });
@@ -259,9 +259,9 @@ class RoamController extends Eventful<RoamEventParams> {
 
         if (shouldMove) {
             // FIXME: Should do more test in different environment.
-            var absDelta = Math.abs(wheelDelta);
+            let absDelta = Math.abs(wheelDelta);
             // wheelDelta of mouse wheel is bigger than touch pad.
-            var scrollDelta = (wheelDelta > 0 ? 1 : -1) * (absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05);
+            let scrollDelta = (wheelDelta > 0 ? 1 : -1) * (absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05);
             checkPointerAndTrigger(this, 'scrollMove', 'moveOnMouseWheel', e, {
                 scrollDelta: scrollDelta, originX: originX, originY: originY, isAvailableBehavior: null
             });
@@ -272,7 +272,7 @@ class RoamController extends Eventful<RoamEventParams> {
         if (interactionMutex.isTaken(this._zr, 'globalPan')) {
             return;
         }
-        var scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
+        let scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
         checkPointerAndTrigger(this, 'zoom', null, e, {
             scale: scale, originX: e.pinchX, originY: e.pinchY, isAvailableBehavior: null
         });
@@ -323,7 +323,7 @@ function isAvailableBehavior(
     e: ZRElementEvent,
     settings: Pick<RoamOption, RoamBehavior>
 ) {
-    var setting = settings[behaviorToCheck];
+    let setting = settings[behaviorToCheck];
     return !behaviorToCheck || (
         setting && (!isString(setting) || e.event[setting + 'Key' as 'shiftKey' | 'ctrlKey' | 'altKey'])
     );

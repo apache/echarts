@@ -22,7 +22,7 @@ import Model from '../Model';
 import { StyleProps } from 'zrender/src/graphic/Style';
 import { LineStyleOption } from '../../util/types';
 
-var getLineStyle = makeStyleMapper([
+const getLineStyle = makeStyleMapper([
     ['lineWidth', 'width'],
     ['stroke', 'color'],
     ['opacity'],
@@ -45,7 +45,7 @@ type LineStyleProps = Pick<StyleProps, LineStyleKeys>;
 class LineStyleMixin {
 
     getLineStyle(this: Model, excludes?: readonly (keyof LineStyleOption)[]): LineStyleProps {
-        var style = getLineStyle(this, excludes);
+        let style = getLineStyle(this, excludes);
         // Always set lineDash whether dashed, otherwise we can not
         // erase the previous style when assigning to el.style.
         (style as any).lineDash = this.getLineDash((style as any).lineWidth);
@@ -56,9 +56,9 @@ class LineStyleMixin {
         if (lineWidth == null) {
             lineWidth = 1;
         }
-        var lineType = this.get('type');
-        var dotSize = Math.max(lineWidth, 2);
-        var dashSize = lineWidth * 4;
+        let lineType = this.get('type');
+        let dotSize = Math.max(lineWidth, 2);
+        let dashSize = lineWidth * 4;
         return (lineType === 'solid' || lineType == null)
             // Use `false` but not `null` for the solid line here, because `null` might be
             // ignored when assigning to `el.style`. e.g., when setting `lineStyle.type` as

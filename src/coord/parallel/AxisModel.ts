@@ -93,11 +93,11 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
      * @param intervals `interval.length === 0` means set all active.
      */
     setActiveIntervals(intervals: ParallelAxisInterval[]): void {
-        var activeIntervals = this.activeIntervals = zrUtil.clone(intervals);
+        let activeIntervals = this.activeIntervals = zrUtil.clone(intervals);
 
         // Normalize
         if (activeIntervals) {
-            for (var i = activeIntervals.length - 1; i >= 0; i--) {
+            for (let i = activeIntervals.length - 1; i >= 0; i--) {
                 numberUtil.asc(activeIntervals[i]);
             }
         }
@@ -108,7 +108,7 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
      *        `value` is not needed to be input.
      */
     getActiveState(value?: ParsedValue): ParallelActiveState {
-        var activeIntervals = this.activeIntervals;
+        let activeIntervals = this.activeIntervals;
 
         if (!activeIntervals.length) {
             return 'normal';
@@ -120,13 +120,13 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
 
         // Simple optimization
         if (activeIntervals.length === 1) {
-            var interval = activeIntervals[0];
+            let interval = activeIntervals[0];
             if (interval[0] <= value && value <= interval[1]) {
                 return 'active';
             }
         }
         else {
-            for (var i = 0, len = activeIntervals.length; i < len; i++) {
+            for (let i = 0, len = activeIntervals.length; i < len; i++) {
                 if (activeIntervals[i][0] <= value && value <= activeIntervals[i][1]) {
                     return 'active';
                 }
@@ -138,7 +138,7 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
 
 }
 
-var defaultOption: ParallelAxisOption = {
+const defaultOption: ParallelAxisOption = {
     type: 'value',
     areaSelectStyle: {
         width: 20,

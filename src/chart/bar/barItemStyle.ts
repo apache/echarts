@@ -21,7 +21,7 @@ import makeStyleMapper from '../../model/mixin/makeStyleMapper';
 import { StyleProps } from 'zrender/src/graphic/Style';
 import Model from '../../model/Model';
 
-var mapStyle = makeStyleMapper(
+const mapStyle = makeStyleMapper(
     [
         ['fill', 'color'],
         ['stroke', 'borderColor'],
@@ -50,9 +50,9 @@ type BarItemStyleKeys = 'fill'
 type ItemStyleProps = Pick<StyleProps, BarItemStyleKeys>;
 
 export function getBarItemStyle(model: Model, excludes?: BarItemStyleKeys[]): ItemStyleProps {
-    var style = mapStyle(model, excludes);
+    let style = mapStyle(model, excludes);
     if (model.getBorderLineDash) {
-        var lineDash = model.getBorderLineDash();
+        let lineDash = model.getBorderLineDash();
         lineDash && (style.lineDash = lineDash);
     }
     return style;

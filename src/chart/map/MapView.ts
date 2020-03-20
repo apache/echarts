@@ -29,9 +29,9 @@ import { Payload } from '../../util/types';
 import Model from '../../model/Model';
 
 
-var HIGH_DOWN_PROP = '__seriesMapHighDown' as const;
-var RECORD_VERSION_PROP = '__seriesMapCallKey' as const;
-var ORIGINAL_Z2 = '__mapOriginalZ2' as const;
+const HIGH_DOWN_PROP = '__seriesMapHighDown' as const;
+const RECORD_VERSION_PROP = '__seriesMapCallKey' as const;
+const ORIGINAL_Z2 = '__mapOriginalZ2' as const;
 
 interface CircleExtend extends graphic.Circle {
     [ORIGINAL_Z2]: number;
@@ -69,7 +69,7 @@ class MapView extends ChartView {
             return;
         }
 
-        var group = this.group;
+        let group = this.group;
         group.removeAll();
 
         if (mapModel.getHostGeoModel()) {
@@ -117,25 +117,25 @@ class MapView extends ChartView {
     }
 
     private _renderSymbols(mapModel: MapSeries, ecModel: GlobalModel, api: ExtensionAPI): void {
-        var originalData = mapModel.originalData;
-        var group = this.group;
+        let originalData = mapModel.originalData;
+        let group = this.group;
 
         originalData.each(originalData.mapDimension('value'), function (value, originalDataIndex) {
             if (isNaN(value as number)) {
                 return;
             }
 
-            var layout = originalData.getItemLayout(originalDataIndex);
+            let layout = originalData.getItemLayout(originalDataIndex);
 
             if (!layout || !layout.point) {
                 // Not exists in map
                 return;
             }
 
-            var point = layout.point;
-            var offset = layout.offset;
+            let point = layout.point;
+            let offset = layout.offset;
 
-            var circle = new graphic.Circle({
+            let circle = new graphic.Circle({
                 style: {
                     // Because the special of map draw.
                     // Which needs statistic of multiple series and draw on one map.
@@ -165,16 +165,16 @@ class MapView extends ChartView {
             // settings on series `X` but render label `C` by the settings on series `Y`.
             if (!offset) {
 
-                var fullData = mapModel.mainSeries.getData();
-                var name = originalData.getName(originalDataIndex);
+                let fullData = mapModel.mainSeries.getData();
+                let name = originalData.getName(originalDataIndex);
 
-                var fullIndex = fullData.indexOfName(name);
+                let fullIndex = fullData.indexOfName(name);
 
-                var itemModel = originalData.getItemModel<MapDataItemOption>(originalDataIndex);
-                var labelModel = itemModel.getModel('label');
-                var hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+                let itemModel = originalData.getItemModel<MapDataItemOption>(originalDataIndex);
+                let labelModel = itemModel.getModel('label');
+                let hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
-                var regionGroup = fullData.getItemGraphicEl(fullIndex) as RegionGroupExtend;
+                let regionGroup = fullData.getItemGraphicEl(fullIndex) as RegionGroupExtend;
 
                 // `getFormattedLabel` needs to use `getData` inside. Here
                 // `mapModel.getData()` is shallow cloned from `mainSeries.getData()`.
@@ -183,23 +183,23 @@ class MapView extends ChartView {
                 // set on original data item will never get. But it has been working
                 // like that from the begining, and this scenario is rarely encountered.
                 // So it won't be fixed until have to.
-                var normalText = zrUtil.retrieve2(
+                let normalText = zrUtil.retrieve2(
                     mapModel.getFormattedLabel(fullIndex, 'normal'),
                     name
                 );
-                var emphasisText = zrUtil.retrieve2(
+                let emphasisText = zrUtil.retrieve2(
                     mapModel.getFormattedLabel(fullIndex, 'emphasis'),
                     normalText
                 );
 
-                var highDownRecord = regionGroup[HIGH_DOWN_PROP];
-                var recordVersion = Math.random();
+                let highDownRecord = regionGroup[HIGH_DOWN_PROP];
+                let recordVersion = Math.random();
 
                 // Prevent from register listeners duplicatedly when roaming.
                 if (!highDownRecord) {
                     highDownRecord = regionGroup[HIGH_DOWN_PROP] = {} as HighDownRecord;
-                    var onEmphasis = zrUtil.curry(onRegionHighDown, true);
-                    var onNormal = zrUtil.curry(onRegionHighDown, false);
+                    let onEmphasis = zrUtil.curry(onRegionHighDown, true);
+                    let onNormal = zrUtil.curry(onRegionHighDown, false);
                     regionGroup.on('mouseover', onEmphasis)
                         .on('mouseout', onNormal)
                         .on('emphasis', onEmphasis)
@@ -228,18 +228,18 @@ class MapView extends ChartView {
 }
 
 function onRegionHighDown(this: RegionGroupExtend, toHighOrDown: boolean): void {
-    var highDownRecord = this[HIGH_DOWN_PROP];
+    let highDownRecord = this[HIGH_DOWN_PROP];
     if (highDownRecord && highDownRecord.recordVersion === this[RECORD_VERSION_PROP]) {
         enterRegionHighDown(highDownRecord, toHighOrDown);
     }
 }
 
 function enterRegionHighDown(highDownRecord: HighDownRecord, toHighOrDown: boolean): void {
-    var circle = highDownRecord.circle;
-    var labelModel = highDownRecord.labelModel;
-    var hoverLabelModel = highDownRecord.hoverLabelModel;
-    var emphasisText = highDownRecord.emphasisText;
-    var normalText = highDownRecord.normalText;
+    let circle = highDownRecord.circle;
+    let labelModel = highDownRecord.labelModel;
+    let hoverLabelModel = highDownRecord.hoverLabelModel;
+    let emphasisText = highDownRecord.emphasisText;
+    let normalText = highDownRecord.normalText;
 
     if (toHighOrDown) {
         circle.style.extendFrom(

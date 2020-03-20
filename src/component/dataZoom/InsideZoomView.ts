@@ -57,12 +57,12 @@ class InsideZoomView extends DataZoomView {
         // Reset controllers.
         each(this.getTargetCoordInfo(), function (coordInfoList, coordSysName: SupportedCoordSysName) {
 
-            var allCoordIds = map(coordInfoList, function (coordInfo) {
+            let allCoordIds = map(coordInfoList, function (coordInfo) {
                 return roams.generateCoordId(coordInfo.model);
             });
 
             each(coordInfoList, function (coordInfo) {
-                var coordModel = coordInfo.model;
+                let coordModel = coordInfo.model;
 
                 roams.register(
                     api,
@@ -105,37 +105,37 @@ interface RoamHandler<T extends RoamEventParams['zoom'] | RoamEventParams['scrol
     ): [number, number]
 }
 
-var roamHandlers: {
+const roamHandlers: {
     pan: RoamHandler<RoamEventParams['pan']>
     zoom: RoamHandler<RoamEventParams['zoom']>
     scrollMove: RoamHandler<RoamEventParams['scrollMove']>
 } & ThisType<InsideZoomView> = {
 
     zoom(coordInfo, coordSysName, controller, e: RoamEventParams['zoom']) {
-        var lastRange = this.range;
-        var range = lastRange.slice() as [number, number];
+        let lastRange = this.range;
+        let range = lastRange.slice() as [number, number];
 
         // Calculate transform by the first axis.
-        var axisModel = coordInfo.axisModels[0];
+        let axisModel = coordInfo.axisModels[0];
         if (!axisModel) {
             return;
         }
 
-        var directionInfo = getDirectionInfo[coordSysName](
+        let directionInfo = getDirectionInfo[coordSysName](
             null, [e.originX, e.originY], axisModel, controller, coordInfo
         );
-        var percentPoint = (
+        let percentPoint = (
             directionInfo.signal > 0
                 ? (directionInfo.pixelStart + directionInfo.pixelLength - directionInfo.pixel)
                 : (directionInfo.pixel - directionInfo.pixelStart)
             ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
-        var scale = Math.max(1 / e.scale, 0);
+        let scale = Math.max(1 / e.scale, 0);
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
         // Restrict range.
-        var minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+        let minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
 
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
@@ -147,7 +147,7 @@ var roamHandlers: {
     },
 
     pan: makeMover(function (range, axisModel, coordInfo, coordSysName, controller, e: RoamEventParams['pan']) {
-        var directionInfo = getDirectionInfo[coordSysName](
+        let directionInfo = getDirectionInfo[coordSysName](
             [e.oldX, e.oldY], [e.newX, e.newY], axisModel, controller, coordInfo
         );
 
@@ -159,7 +159,7 @@ var roamHandlers: {
     scrollMove: makeMover(
         function (range, axisModel, coordInfo, coordSysName, controller, e: RoamEventParams['scrollMove']
     ) {
-        var directionInfo = getDirectionInfo[coordSysName](
+        let directionInfo = getDirectionInfo[coordSysName](
             [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordInfo
         );
         return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
@@ -183,16 +183,16 @@ function makeMover(
         controller: RoamController,
         e: RoamEventParams['scrollMove']| RoamEventParams['pan']
     ): [number, number] {
-        var lastRange = this.range;
-        var range = lastRange.slice() as [number, number];
+        let lastRange = this.range;
+        let range = lastRange.slice() as [number, number];
 
         // Calculate transform by the first axis.
-        var axisModel = coordInfo.axisModels[0];
+        let axisModel = coordInfo.axisModels[0];
         if (!axisModel) {
             return;
         }
 
-        var percentDelta = getPercentDelta(
+        let percentDelta = getPercentDelta(
             range, axisModel, coordInfo, coordSysName, controller, e
         );
 
@@ -222,12 +222,12 @@ interface GetDirectionInfo {
     ): DirectionInfo
 }
 
-var getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo> = {
+const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo> = {
 
     grid(oldPoint, newPoint, axisModel, controller, coordInfo) {
-        var axis = axisModel.axis;
-        var ret = {} as DirectionInfo;
-        var rect = coordInfo.model.coordinateSystem.getRect();
+        let axis = axisModel.axis;
+        let ret = {} as DirectionInfo;
+        let rect = coordInfo.model.coordinateSystem.getRect();
         oldPoint = oldPoint || [0, 0];
 
         if (axis.dim === 'x') {
@@ -247,11 +247,11 @@ var getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo> 
     },
 
     polar(oldPoint, newPoint, axisModel, controller, coordInfo) {
-        var axis = axisModel.axis;
-        var ret = {} as DirectionInfo;
-        var polar = coordInfo.model.coordinateSystem as Polar;
-        var radiusExtent = polar.getRadiusAxis().getExtent();
-        var angleExtent = polar.getAngleAxis().getExtent();
+        let axis = axisModel.axis;
+        let ret = {} as DirectionInfo;
+        let polar = coordInfo.model.coordinateSystem as Polar;
+        let radiusExtent = polar.getRadiusAxis().getExtent();
+        let angleExtent = polar.getAngleAxis().getExtent();
 
         oldPoint = oldPoint ? polar.pointToCoord(oldPoint) : [0, 0];
         newPoint = polar.pointToCoord(newPoint);
@@ -277,9 +277,9 @@ var getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo> 
     },
 
     singleAxis(oldPoint, newPoint, axisModel, controller, coordInfo) {
-        var axis = axisModel.axis as SingleAxis;
-        var rect = coordInfo.model.coordinateSystem.getRect();
-        var ret = {} as DirectionInfo;
+        let axis = axisModel.axis as SingleAxis;
+        let rect = coordInfo.model.coordinateSystem.getRect();
+        let ret = {} as DirectionInfo;
 
         oldPoint = oldPoint || [0, 0];
 

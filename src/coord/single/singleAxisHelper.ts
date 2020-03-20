@@ -35,17 +35,17 @@ export function layout(axisModel: SingleAxisModel, opt?: {
     rotate?: number
 }) {
     opt = opt || {};
-    var single = axisModel.coordinateSystem;
-    var axis = axisModel.axis;
-    var layout = {} as LayoutResult;
+    let single = axisModel.coordinateSystem;
+    let axis = axisModel.axis;
+    let layout = {} as LayoutResult;
 
-    var axisPosition = axis.position;
-    var orient = axis.orient;
+    let axisPosition = axis.position;
+    let orient = axis.orient;
 
-    var rect = single.getRect();
-    var rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
+    let rect = single.getRect();
+    let rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
 
-    var positionMap = {
+    let positionMap = {
         horizontal: {top: rectBound[2], bottom: rectBound[3]},
         vertical: {left: rectBound[0], right: rectBound[1]}
     } as const;
@@ -59,7 +59,7 @@ export function layout(axisModel: SingleAxisModel, opt?: {
             : rectBound[3]
     ] as [number, number];
 
-    var r = {horizontal: 0, vertical: 1};
+    let r = {horizontal: 0, vertical: 1};
     layout.rotation = Math.PI / 2 * r[orient];
 
     const directionMap = {top: -1, bottom: 1, right: 1, left: -1} as const;
@@ -75,7 +75,7 @@ export function layout(axisModel: SingleAxisModel, opt?: {
         layout.labelDirection = -layout.labelDirection;
     }
 
-    var labelRotation = opt.rotate;
+    let labelRotation = opt.rotate;
     labelRotation == null && (labelRotation = axisModel.get(['axisLabel', 'rotate']));
     layout.labelRotation = axisPosition === 'top' ? -labelRotation : labelRotation;
 

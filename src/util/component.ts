@@ -23,7 +23,7 @@ import { ComponentOption, ComponentMainType, ComponentSubType, ComponentFullType
 import { Dictionary } from 'zrender/src/core/types';
 
 // A random offset
-var base = Math.round(Math.random() * 10);
+let base = Math.round(Math.random() * 10);
 
 
 /**
@@ -51,13 +51,13 @@ export interface SubTypeDefaulterManager {
  * Implements `SubTypeDefaulterManager` for `target`.
  */
 export function enableSubTypeDefaulter(target: SubTypeDefaulterManager & ClassManager): void {
-    var subTypeDefaulters: Dictionary<SubTypeDefaulter> = {};
+    let subTypeDefaulters: Dictionary<SubTypeDefaulter> = {};
 
     target.registerSubTypeDefaulter = function (
         componentType: ComponentFullType,
         defaulter: SubTypeDefaulter
     ): void {
-        var componentTypeInfo = parseClassType(componentType);
+        let componentTypeInfo = parseClassType(componentType);
         subTypeDefaulters[componentTypeInfo.main] = defaulter;
     };
 
@@ -65,9 +65,9 @@ export function enableSubTypeDefaulter(target: SubTypeDefaulterManager & ClassMa
         componentType: ComponentFullType,
         option: ComponentOption
     ): string {
-        var type = option.type;
+        let type = option.type;
         if (!type) {
-            var componentTypeMain = parseClassType(componentType).main;
+            let componentTypeMain = parseClassType(componentType).main;
             if (target.hasSubTypes(componentType) && subTypeDefaulters[componentTypeMain]) {
                 type = subTypeDefaulters[componentTypeMain](option);
             }
@@ -125,19 +125,19 @@ export function enableTopologicalTravel<T>(
             return;
         }
 
-        var result = makeDepndencyGraph(fullNameList);
-        var graph = result.graph;
-        var stack = result.noEntryList;
+        let result = makeDepndencyGraph(fullNameList);
+        let graph = result.graph;
+        let stack = result.noEntryList;
 
-        var targetNameSet: {[cmtpMainType: string]: boolean} = {};
+        let targetNameSet: {[cmtpMainType: string]: boolean} = {};
         zrUtil.each(targetNameList, function (name) {
             targetNameSet[name] = true;
         });
 
         while (stack.length) {
-            var currComponentType = stack.pop();
-            var currVertex = graph[currComponentType];
-            var isInTargetNameSet = !!targetNameSet[currComponentType];
+            let currComponentType = stack.pop();
+            let currVertex = graph[currComponentType];
+            let isInTargetNameSet = !!targetNameSet[currComponentType];
             if (isInTargetNameSet) {
                 callback.call(context, currComponentType, currVertex.originalDeps.slice());
                 delete targetNameSet[currComponentType];
@@ -172,15 +172,15 @@ export function enableTopologicalTravel<T>(
     };
 
     function makeDepndencyGraph(fullNameList: ComponentMainType[]) {
-        var graph: DepGraph = {};
-        var noEntryList: ComponentMainType[] = [];
+        let graph: DepGraph = {};
+        let noEntryList: ComponentMainType[] = [];
 
         zrUtil.each(fullNameList, function (name: ComponentMainType) {
 
-            var thisItem = createDependencyGraphItem(graph, name);
-            var originalDeps = thisItem.originalDeps = dependencyGetter(name);
+            let thisItem = createDependencyGraphItem(graph, name);
+            let originalDeps = thisItem.originalDeps = dependencyGetter(name);
 
-            var availableDeps = getAvailableDependencies(originalDeps, fullNameList);
+            let availableDeps = getAvailableDependencies(originalDeps, fullNameList);
             thisItem.entryCount = availableDeps.length;
             if (thisItem.entryCount === 0) {
                 noEntryList.push(name);
@@ -190,7 +190,7 @@ export function enableTopologicalTravel<T>(
                 if (zrUtil.indexOf(thisItem.predecessor, dependentName) < 0) {
                     thisItem.predecessor.push(dependentName);
                 }
-                var thatItem = createDependencyGraphItem(graph, dependentName);
+                let thatItem = createDependencyGraphItem(graph, dependentName);
                 if (zrUtil.indexOf(thatItem.successor, dependentName) < 0) {
                     thatItem.successor.push(name);
                 }
@@ -210,7 +210,7 @@ export function enableTopologicalTravel<T>(
     function getAvailableDependencies(
         originalDeps: ComponentMainType[], fullNameList: ComponentMainType[]
     ): ComponentMainType[] {
-        var availableDeps = [] as ComponentMainType[];
+        let availableDeps = [] as ComponentMainType[];
         zrUtil.each(originalDeps, function (dep) {
             zrUtil.indexOf(fullNameList, dep) >= 0 && availableDeps.push(dep);
         });

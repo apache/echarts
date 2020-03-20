@@ -23,11 +23,11 @@ import SeriesModel from '../model/Series';
 
 
 type Sampler = (frame: ArrayLike<number>) => number;
-var samplers: Dictionary<Sampler> = {
+const samplers: Dictionary<Sampler> = {
     average: function (frame) {
-        var sum = 0;
-        var count = 0;
-        for (var i = 0; i < frame.length; i++) {
+        let sum = 0;
+        let count = 0;
+        for (let i = 0; i < frame.length; i++) {
             if (!isNaN(frame[i])) {
                 sum += frame[i];
                 count++;
@@ -37,24 +37,24 @@ var samplers: Dictionary<Sampler> = {
         return count === 0 ? NaN : sum / count;
     },
     sum: function (frame) {
-        var sum = 0;
-        for (var i = 0; i < frame.length; i++) {
+        let sum = 0;
+        for (let i = 0; i < frame.length; i++) {
             // Ignore NaN
             sum += frame[i] || 0;
         }
         return sum;
     },
     max: function (frame) {
-        var max = -Infinity;
-        for (var i = 0; i < frame.length; i++) {
+        let max = -Infinity;
+        for (let i = 0; i < frame.length; i++) {
             frame[i] > max && (max = frame[i]);
         }
         // NaN will cause illegal axis extent.
         return isFinite(max) ? max : NaN;
     },
     min: function (frame) {
-        var min = Infinity;
-        for (var i = 0; i < frame.length; i++) {
+        let min = Infinity;
+        for (let i = 0; i < frame.length; i++) {
             frame[i] < min && (min = frame[i]);
         }
         // NaN will cause illegal axis extent.
@@ -67,7 +67,7 @@ var samplers: Dictionary<Sampler> = {
     }
 };
 
-var indexSampler = function (frame: ArrayLike<number>) {
+const indexSampler = function (frame: ArrayLike<number>) {
     return Math.round(frame.length / 2);
 };
 
@@ -80,19 +80,19 @@ export default function (seriesType: string): StageHandler {
         // modifyOutputEnd: true,
 
         reset: function (seriesModel: SeriesModel<SeriesOption & SeriesSamplingOptionMixin>, ecModel, api) {
-            var data = seriesModel.getData();
-            var sampling = seriesModel.get('sampling');
-            var coordSys = seriesModel.coordinateSystem;
+            let data = seriesModel.getData();
+            let sampling = seriesModel.get('sampling');
+            let coordSys = seriesModel.coordinateSystem;
             // Only cartesian2d support down sampling
             if (coordSys.type === 'cartesian2d' && sampling) {
-                var baseAxis = coordSys.getBaseAxis();
-                var valueAxis = coordSys.getOtherAxis(baseAxis);
-                var extent = baseAxis.getExtent();
+                let baseAxis = coordSys.getBaseAxis();
+                let valueAxis = coordSys.getOtherAxis(baseAxis);
+                let extent = baseAxis.getExtent();
                 // Coordinste system has been resized
-                var size = extent[1] - extent[0];
-                var rate = Math.round(data.count() / size);
+                let size = extent[1] - extent[0];
+                let rate = Math.round(data.count() / size);
                 if (rate > 1) {
-                    var sampler;
+                    let sampler;
                     if (typeof sampling === 'string') {
                         sampler = samplers[sampling];
                     }

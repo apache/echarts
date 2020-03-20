@@ -29,7 +29,7 @@ import { ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 
-var SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
+const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -52,9 +52,9 @@ function makeSymbolTypeKey(symbolCategory: string) {
  * @inner
  */
 function createSymbol(name: string, lineData: List, idx: number) {
-    var color = lineData.getItemVisual(idx, 'color');
-    var symbolType = lineData.getItemVisual(idx, name);
-    var symbolSize = lineData.getItemVisual(idx, name + 'Size');
+    let color = lineData.getItemVisual(idx, 'color');
+    let symbolType = lineData.getItemVisual(idx, name);
+    let symbolSize = lineData.getItemVisual(idx, name + 'Size');
 
     if (!symbolType || symbolType === 'none') {
         return;
@@ -63,7 +63,7 @@ function createSymbol(name: string, lineData: List, idx: number) {
     if (!zrUtil.isArray(symbolSize)) {
         symbolSize = [symbolSize, symbolSize];
     }
-    var symbolPath = symbolUtil.createSymbol(
+    let symbolPath = symbolUtil.createSymbol(
         symbolType, -symbolSize[0] / 2, -symbolSize[1] / 2,
         symbolSize[0], symbolSize[1], color
     );
@@ -74,7 +74,7 @@ function createSymbol(name: string, lineData: List, idx: number) {
 }
 
 function createLine(points: number[][]) {
-    var line = new ECLinePath({
+    let line = new ECLinePath({
         name: 'line',
         subPixelOptimize: true
     });
@@ -94,7 +94,7 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     targetShape.y2 = points[1][1];
     targetShape.percent = 1;
 
-    var cp1 = points[2];
+    let cp1 = points[2];
     if (cp1) {
         (targetShape as CurveShape).cpx1 = cp1[0];
         (targetShape as CurveShape).cpy1 = cp1[1];
@@ -117,9 +117,9 @@ class Line extends graphic.Group {
     }
 
     _createLine(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
-        var seriesModel = lineData.hostModel;
-        var linePoints = lineData.getItemLayout(idx);
-        var line = createLine(linePoints);
+        let seriesModel = lineData.hostModel;
+        let linePoints = lineData.getItemLayout(idx);
+        let line = createLine(linePoints);
         line.shape.percent = 0;
         graphic.initProps(line, {
             shape: {
@@ -129,7 +129,7 @@ class Line extends graphic.Group {
 
         this.add(line);
 
-        var label = new graphic.Text({
+        let label = new graphic.Text({
             name: 'label'
         }) as InnerLineLabel;
         // FIXME
@@ -139,7 +139,7 @@ class Line extends graphic.Group {
         this.add(label);
 
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
-            var symbol = createSymbol(symbolCategory, lineData, idx);
+            let symbol = createSymbol(symbolCategory, lineData, idx);
             // symbols must added after line to make sure
             // it will be updated after line#update.
             // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
@@ -151,11 +151,11 @@ class Line extends graphic.Group {
     }
 
     updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
-        var seriesModel = lineData.hostModel;
+        let seriesModel = lineData.hostModel;
 
-        var line = this.childOfName('line') as ECLinePath;
-        var linePoints = lineData.getItemLayout(idx);
-        var target = {
+        let line = this.childOfName('line') as ECLinePath;
+        let linePoints = lineData.getItemLayout(idx);
+        let target = {
             shape: {} as ECLinePath['shape']
         };
 
@@ -163,12 +163,12 @@ class Line extends graphic.Group {
         graphic.updateProps(line, target, seriesModel, idx);
 
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
-            var symbolType = lineData.getItemVisual(idx, symbolCategory);
-            var key = makeSymbolTypeKey(symbolCategory);
+            let symbolType = lineData.getItemVisual(idx, symbolCategory);
+            let key = makeSymbolTypeKey(symbolCategory);
             // Symbol changed
             if (this[key] !== symbolType) {
                 this.remove(this.childOfName(symbolCategory));
-                var symbol = createSymbol(symbolCategory, lineData, idx);
+                let symbol = createSymbol(symbolCategory, lineData, idx);
                 this.add(symbol);
             }
             this[key] = symbolType;
@@ -178,18 +178,18 @@ class Line extends graphic.Group {
     };
 
     _updateCommonStl(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
-        var seriesModel = lineData.hostModel as SeriesModel;
+        let seriesModel = lineData.hostModel as SeriesModel;
 
-        var line = this.childOfName('line') as ECLinePath;
+        let line = this.childOfName('line') as ECLinePath;
 
-        var lineStyle = seriesScope && seriesScope.lineStyle;
-        var hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
-        var labelModel = seriesScope && seriesScope.labelModel;
-        var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
+        let lineStyle = seriesScope && seriesScope.lineStyle;
+        let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
+        let labelModel = seriesScope && seriesScope.labelModel;
+        let hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
 
         // Optimization for large dataset
         if (!seriesScope || lineData.hasItemOption) {
-            var itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
+            let itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
             lineStyle = itemModel.getModel('lineStyle').getLineStyle();
             hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
@@ -198,8 +198,8 @@ class Line extends graphic.Group {
             hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
         }
 
-        var visualColor = lineData.getItemVisual(idx, 'color');
-        var visualOpacity = zrUtil.retrieve3(
+        let visualColor = lineData.getItemVisual(idx, 'color');
+        let visualOpacity = zrUtil.retrieve3(
             lineData.getItemVisual(idx, 'opacity'),
             lineStyle.opacity,
             1
@@ -218,7 +218,7 @@ class Line extends graphic.Group {
 
         // Update symbol
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
-            var symbol = this.childOfName(symbolCategory) as ECSymbol;
+            let symbol = this.childOfName(symbolCategory) as ECSymbol;
             if (symbol) {
                 symbol.setColor(visualColor);
                 symbol.setStyle({
@@ -227,12 +227,12 @@ class Line extends graphic.Group {
             }
         }, this);
 
-        var showLabel = labelModel.getShallow('show');
-        var hoverShowLabel = hoverLabelModel.getShallow('show');
+        let showLabel = labelModel.getShallow('show');
+        let hoverShowLabel = hoverLabelModel.getShallow('show');
 
-        var label = this.childOfName('label') as InnerLineLabel;
-        var defaultLabelColor;
-        var baseText;
+        let label = this.childOfName('label') as InnerLineLabel;
+        let defaultLabelColor;
+        let baseText;
 
         // FIXME: the logic below probably should be merged to `graphic.setLabelStyle`.
         if (showLabel || hoverShowLabel) {
@@ -240,7 +240,7 @@ class Line extends graphic.Group {
 
             baseText = seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType);
             if (baseText == null) {
-                var rawVal = seriesModel.getRawValue(idx) as number;
+                let rawVal = seriesModel.getRawValue(idx) as number;
                 baseText = rawVal == null
                     ? lineData.getName(idx)
                     : isFinite(rawVal)
@@ -248,15 +248,15 @@ class Line extends graphic.Group {
                     : rawVal;
             }
         }
-        var normalText = showLabel ? baseText : null;
-        var emphasisText = hoverShowLabel
+        let normalText = showLabel ? baseText : null;
+        let emphasisText = hoverShowLabel
             ? zrUtil.retrieve2(
                 seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
                 baseText
             )
             : null;
 
-        var labelStyle = label.style;
+        let labelStyle = label.style;
 
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.
@@ -272,7 +272,7 @@ class Line extends graphic.Group {
             // 'start', 'middle', 'end'
             label.__position = labelModel.get('position') || 'middle';
 
-            var distance = labelModel.get('distance');
+            let distance = labelModel.get('distance');
             if (!zrUtil.isArray(distance)) {
                 distance = [distance, distance];
             }
@@ -316,23 +316,23 @@ class Line extends graphic.Group {
     }
 
     setLinePoints(points: number[][]) {
-        var linePath = this.childOfName('line') as ECLinePath;
+        let linePath = this.childOfName('line') as ECLinePath;
         setLinePoints(linePath.shape, points);
         linePath.dirty();
     }
 
     beforeUpdate() {
-        var lineGroup = this;
-        var symbolFrom = lineGroup.childOfName('fromSymbol') as ECSymbol;
-        var symbolTo = lineGroup.childOfName('toSymbol') as ECSymbol;
-        var label = lineGroup.childOfName('label') as InnerLineLabel;
+        let lineGroup = this;
+        let symbolFrom = lineGroup.childOfName('fromSymbol') as ECSymbol;
+        let symbolTo = lineGroup.childOfName('toSymbol') as ECSymbol;
+        let label = lineGroup.childOfName('label') as InnerLineLabel;
         // Quick reject
         if (!symbolFrom && !symbolTo && label.ignore) {
             return;
         }
 
-        var invScale = 1;
-        var parentNode = this.parent;
+        let invScale = 1;
+        let parentNode = this.parent;
         while (parentNode) {
             if (parentNode.scale) {
                 invScale /= parentNode.scale[0];
@@ -340,18 +340,18 @@ class Line extends graphic.Group {
             parentNode = parentNode.parent;
         }
 
-        var line = lineGroup.childOfName('line') as ECLinePath;
+        let line = lineGroup.childOfName('line') as ECLinePath;
         // If line not changed
         // FIXME Parent scale changed
         if (!this.__dirty && !line.__dirty) {
             return;
         }
 
-        var percent = line.shape.percent;
-        var fromPos = line.pointAt(0);
-        var toPos = line.pointAt(percent);
+        let percent = line.shape.percent;
+        let fromPos = line.pointAt(0);
+        let toPos = line.pointAt(percent);
 
-        var d = vector.sub([], toPos, fromPos);
+        let d = vector.sub([], toPos, fromPos);
         vector.normalize(d, d);
 
         if (symbolFrom) {
@@ -374,33 +374,33 @@ class Line extends graphic.Group {
         if (!label.ignore) {
             label.attr('position', toPos);
 
-            var textPosition;
-            var textAlign: ZRTextAlign;
-            var textVerticalAlign: ZRTextVerticalAlign;
-            var textOrigin;
+            let textPosition;
+            let textAlign: ZRTextAlign;
+            let textVerticalAlign: ZRTextVerticalAlign;
+            let textOrigin;
 
-            var distance = label.__labelDistance;
-            var distanceX = distance[0] * invScale;
-            var distanceY = distance[1] * invScale;
-            var halfPercent = percent / 2;
-            var tangent = line.tangentAt(halfPercent);
-            var n = [tangent[1], -tangent[0]];
-            var cp = line.pointAt(halfPercent);
+            let distance = label.__labelDistance;
+            let distanceX = distance[0] * invScale;
+            let distanceY = distance[1] * invScale;
+            let halfPercent = percent / 2;
+            let tangent = line.tangentAt(halfPercent);
+            let n = [tangent[1], -tangent[0]];
+            let cp = line.pointAt(halfPercent);
             if (n[1] > 0) {
                 n[0] = -n[0];
                 n[1] = -n[1];
             }
-            var dir = tangent[0] < 0 ? -1 : 1;
+            let dir = tangent[0] < 0 ? -1 : 1;
 
             if (label.__position !== 'start' && label.__position !== 'end') {
-                var rotation = -Math.atan2(tangent[1], tangent[0]);
+                let rotation = -Math.atan2(tangent[1], tangent[0]);
                 if (toPos[0] < fromPos[0]) {
                     rotation = Math.PI + rotation;
                 }
                 label.attr('rotation', rotation);
             }
 
-            var dy;
+            let dy;
             switch (label.__position) {
                 case 'insideStartTop':
                 case 'insideMiddleTop':

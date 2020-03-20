@@ -25,17 +25,17 @@ import List from '../../data/List';
  * @return label string. Not null/undefined
  */
 export function getDefaultLabel(data: List, dataIndex: number): string {
-    var labelDims = data.mapDimension('defaultedLabel', true);
-    var len = labelDims.length;
+    let labelDims = data.mapDimension('defaultedLabel', true);
+    let len = labelDims.length;
 
     // Simple optimization (in lots of cases, label dims length is 1)
     if (len === 1) {
         return retrieveRawValue(data, dataIndex, labelDims[0]);
     }
     else if (len) {
-        var vals = [];
-        for (var i = 0; i < labelDims.length; i++) {
-            var val = retrieveRawValue(data, dataIndex, labelDims[i]);
+        let vals = [];
+        for (let i = 0; i < labelDims.length; i++) {
+            let val = retrieveRawValue(data, dataIndex, labelDims[i]);
             vals.push(val);
         }
         return vals.join(' ');

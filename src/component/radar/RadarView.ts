@@ -27,7 +27,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRColor } from '../../util/types';
 
-var axisBuilderAttrs = [
+const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ] as const;
 
@@ -37,7 +37,7 @@ class RadarView extends ComponentView {
     type = RadarView.type;
 
     render(radarModel: RadarModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        var group = this.group;
+        let group = this.group;
         group.removeAll();
 
         this._buildAxes(radarModel);
@@ -45,10 +45,10 @@ class RadarView extends ComponentView {
     }
 
     _buildAxes(radarModel: RadarModel) {
-        var radar = radarModel.coordinateSystem;
-        var indicatorAxes = radar.getIndicatorAxes();
-        var axisBuilders = zrUtil.map(indicatorAxes, function (indicatorAxis) {
-            var axisBuilder = new AxisBuilder(indicatorAxis.model, {
+        let radar = radarModel.coordinateSystem;
+        let indicatorAxes = radar.getIndicatorAxes();
+        let axisBuilders = zrUtil.map(indicatorAxes, function (indicatorAxis) {
+            let axisBuilder = new AxisBuilder(indicatorAxis.model, {
                 position: [radar.cx, radar.cy],
                 rotation: indicatorAxis.angle,
                 labelDirection: -1,
@@ -65,42 +65,42 @@ class RadarView extends ComponentView {
     }
 
     _buildSplitLineAndArea(radarModel: RadarModel) {
-        var radar = radarModel.coordinateSystem;
-        var indicatorAxes = radar.getIndicatorAxes();
+        let radar = radarModel.coordinateSystem;
+        let indicatorAxes = radar.getIndicatorAxes();
         if (!indicatorAxes.length) {
             return;
         }
-        var shape = radarModel.get('shape');
-        var splitLineModel = radarModel.getModel('splitLine');
-        var splitAreaModel = radarModel.getModel('splitArea');
-        var lineStyleModel = splitLineModel.getModel('lineStyle');
-        var areaStyleModel = splitAreaModel.getModel('areaStyle');
+        let shape = radarModel.get('shape');
+        let splitLineModel = radarModel.getModel('splitLine');
+        let splitAreaModel = radarModel.getModel('splitArea');
+        let lineStyleModel = splitLineModel.getModel('lineStyle');
+        let areaStyleModel = splitAreaModel.getModel('areaStyle');
 
-        var showSplitLine = splitLineModel.get('show');
-        var showSplitArea = splitAreaModel.get('show');
-        var splitLineColors = lineStyleModel.get('color');
-        var splitAreaColors = areaStyleModel.get('color');
+        let showSplitLine = splitLineModel.get('show');
+        let showSplitArea = splitAreaModel.get('show');
+        let splitLineColors = lineStyleModel.get('color');
+        let splitAreaColors = areaStyleModel.get('color');
 
-        var splitLineColorsArr = zrUtil.isArray(splitLineColors) ? splitLineColors : [splitLineColors];
-        var splitAreaColorsArr = zrUtil.isArray(splitAreaColors) ? splitAreaColors : [splitAreaColors];
+        let splitLineColorsArr = zrUtil.isArray(splitLineColors) ? splitLineColors : [splitLineColors];
+        let splitAreaColorsArr = zrUtil.isArray(splitAreaColors) ? splitAreaColors : [splitAreaColors];
 
-        var splitLines: (graphic.Circle | graphic.Polyline)[][] = [];
-        var splitAreas: (graphic.Ring | graphic.Polygon)[][] = [];
+        let splitLines: (graphic.Circle | graphic.Polyline)[][] = [];
+        let splitAreas: (graphic.Ring | graphic.Polygon)[][] = [];
 
         function getColorIndex(
             areaOrLine: any[][],
             areaOrLineColorList: ZRColor[],
             idx: number
         ) {
-            var colorIndex = idx % areaOrLineColorList.length;
+            let colorIndex = idx % areaOrLineColorList.length;
             areaOrLine[colorIndex] = areaOrLine[colorIndex] || [];
             return colorIndex;
         }
 
         if (shape === 'circle') {
-            var ticksRadius = indicatorAxes[0].getTicksCoords();
-            var cx = radar.cx;
-            var cy = radar.cy;
+            let ticksRadius = indicatorAxes[0].getTicksCoords();
+            let cx = radar.cx;
+            let cy = radar.cy;
             for (let i = 0; i < ticksRadius.length; i++) {
                 if (showSplitLine) {
                     let colorIndex = getColorIndex(splitLines, splitLineColorsArr, i);
@@ -127,9 +127,9 @@ class RadarView extends ComponentView {
         }
         // Polyyon
         else {
-            var realSplitNumber: number;
-            var axesTicksPoints = zrUtil.map(indicatorAxes, function (indicatorAxis, idx) {
-                var ticksCoords = indicatorAxis.getTicksCoords();
+            let realSplitNumber: number;
+            let axesTicksPoints = zrUtil.map(indicatorAxes, function (indicatorAxis, idx) {
+                let ticksCoords = indicatorAxis.getTicksCoords();
                 realSplitNumber = realSplitNumber == null
                     ? ticksCoords.length - 1
                     : Math.min(ticksCoords.length - 1, realSplitNumber);
@@ -138,10 +138,10 @@ class RadarView extends ComponentView {
                 });
             });
 
-            var prevPoints: number[][] = [];
+            let prevPoints: number[][] = [];
             for (let i = 0; i <= realSplitNumber; i++) {
-                var points: number[][] = [];
-                for (var j = 0; j < indicatorAxes.length; j++) {
+                let points: number[][] = [];
+                for (let j = 0; j < indicatorAxes.length; j++) {
                     points.push(axesTicksPoints[j][i]);
                 }
                 // Close
@@ -174,8 +174,8 @@ class RadarView extends ComponentView {
             }
         }
 
-        var lineStyle = lineStyleModel.getLineStyle();
-        var areaStyle = areaStyleModel.getAreaStyle();
+        let lineStyle = lineStyleModel.getLineStyle();
+        let areaStyle = areaStyleModel.getAreaStyle();
         // Add splitArea before splitLine
         zrUtil.each(splitAreas, function (splitAreas, idx) {
             this.group.add(graphic.mergePath(

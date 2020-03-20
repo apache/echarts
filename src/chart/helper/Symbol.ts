@@ -61,15 +61,15 @@ class Symbol extends graphic.Group {
         // Remove paths created before
         this.removeAll();
 
-        var color = data.getItemVisual(idx, 'color');
+        let color = data.getItemVisual(idx, 'color');
 
-        // var symbolPath = createSymbol(
+        // let symbolPath = createSymbol(
         //     symbolType, -0.5, -0.5, 1, 1, color
         // );
         // If width/height are set too small (e.g., set to 1) on ios10
         // and macOS Sierra, a circle stroke become a rect, no matter what
         // the scale is set. So we set width/height as 2. See #4150.
-        var symbolPath = createSymbol(
+        let symbolPath = createSymbol(
             symbolType, -1, -1, 2, 2, color, keepAspect
         );
 
@@ -134,13 +134,13 @@ class Symbol extends graphic.Group {
      * @param {number} z
      */
     setZ(zlevel: number, z: number) {
-        var symbolPath = this.childAt(0) as ECSymbol;
+        let symbolPath = this.childAt(0) as ECSymbol;
         symbolPath.zlevel = zlevel;
         symbolPath.z = z;
     }
 
     setDraggable(draggable: boolean) {
-        var symbolPath = this.childAt(0) as ECSymbol;
+        let symbolPath = this.childAt(0) as ECSymbol;
         symbolPath.draggable = draggable;
         symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
     }
@@ -151,13 +151,13 @@ class Symbol extends graphic.Group {
     updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
         this.silent = false;
 
-        var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
-        var seriesModel = data.hostModel as SeriesModel;
-        var symbolSize = Symbol.getSymbolSize(data, idx);
-        var isInit = symbolType !== this._symbolType;
+        let symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
+        let seriesModel = data.hostModel as SeriesModel;
+        let symbolSize = Symbol.getSymbolSize(data, idx);
+        let isInit = symbolType !== this._symbolType;
 
         if (isInit) {
-            var keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
+            let keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
             this._createSymbol(symbolType, data, idx, symbolSize, keepAspect);
         }
         else {
@@ -172,9 +172,9 @@ class Symbol extends graphic.Group {
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
-            var fadeIn = seriesScope && seriesScope.fadeIn;
+            let fadeIn = seriesScope && seriesScope.fadeIn;
 
-            var target: PathProps = {
+            let target: PathProps = {
                 scale: symbolPath.scale.slice()
             };
             fadeIn && (target.style = {
@@ -196,9 +196,9 @@ class Symbol extends graphic.Group {
         symbolSize: number[],
         seriesScope?: SymbolDrawSeriesScope
     ) {
-        var symbolPath = this.childAt(0) as ECSymbol;
-        var seriesModel = data.hostModel as SeriesModel;
-        var color = data.getItemVisual(idx, 'color');
+        let symbolPath = this.childAt(0) as ECSymbol;
+        let seriesModel = data.hostModel as SeriesModel;
+        let color = data.getItemVisual(idx, 'color');
 
         // Reset style
         if (symbolPath.type !== 'image') {
@@ -216,17 +216,17 @@ class Symbol extends graphic.Group {
             });
         }
 
-        var itemStyle = seriesScope && seriesScope.itemStyle;
-        var hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
-        var symbolRotate = seriesScope && seriesScope.symbolRotate;
-        var symbolOffset = seriesScope && seriesScope.symbolOffset;
-        var labelModel = seriesScope && seriesScope.labelModel;
-        var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
-        var hoverAnimation = seriesScope && seriesScope.hoverAnimation;
-        var cursorStyle = seriesScope && seriesScope.cursorStyle;
+        let itemStyle = seriesScope && seriesScope.itemStyle;
+        let hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
+        let symbolRotate = seriesScope && seriesScope.symbolRotate;
+        let symbolOffset = seriesScope && seriesScope.symbolOffset;
+        let labelModel = seriesScope && seriesScope.labelModel;
+        let hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
+        let hoverAnimation = seriesScope && seriesScope.hoverAnimation;
+        let cursorStyle = seriesScope && seriesScope.cursorStyle;
 
         if (!seriesScope || data.hasItemOption) {
-            var itemModel = (seriesScope && seriesScope.itemModel)
+            let itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
 
             // Color must be excluded.
@@ -246,7 +246,7 @@ class Symbol extends graphic.Group {
             hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
         }
 
-        var elStyle = symbolPath.style;
+        let elStyle = symbolPath.style;
 
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
@@ -264,13 +264,13 @@ class Symbol extends graphic.Group {
 
         symbolPath.setStyle(itemStyle);
 
-        var opacity = data.getItemVisual(idx, 'opacity');
+        let opacity = data.getItemVisual(idx, 'opacity');
         if (opacity != null) {
             elStyle.opacity = opacity;
         }
 
-        var liftZ = data.getItemVisual(idx, 'liftZ');
-        var z2Origin = symbolPath.__z2Origin;
+        let liftZ = data.getItemVisual(idx, 'liftZ');
+        let z2Origin = symbolPath.__z2Origin;
         if (liftZ != null) {
             if (z2Origin == null) {
                 symbolPath.__z2Origin = symbolPath.z2;
@@ -282,7 +282,7 @@ class Symbol extends graphic.Group {
             symbolPath.__z2Origin = null;
         }
 
-        var useNameLabel = seriesScope && seriesScope.useNameLabel;
+        let useNameLabel = seriesScope && seriesScope.useNameLabel;
 
         graphic.setLabelStyle(
             elStyle, hoverItemStyle, labelModel, hoverLabelModel,
@@ -312,7 +312,7 @@ class Symbol extends graphic.Group {
     fadeOut(cb: () => void, opt?: {
         keepLabel: boolean
     }) {
-        var symbolPath = this.childAt(0) as ECSymbol;
+        let symbolPath = this.childAt(0) as ECSymbol;
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
@@ -333,7 +333,7 @@ class Symbol extends graphic.Group {
     }
 
     static getSymbolSize(data: List, idx: number) {
-        var symbolSize = data.getItemVisual(idx, 'symbolSize');
+        let symbolSize = data.getItemVisual(idx, 'symbolSize');
         return symbolSize instanceof Array
             ? symbolSize.slice()
             : [+symbolSize, +symbolSize];
@@ -348,9 +348,9 @@ function highDownOnUpdate(this: ECSymbol, fromState: DisplayState, toState: Disp
     }
 
     if (toState === 'emphasis') {
-        var scale = this.__symbolOriginalScale;
-        var ratio = scale[1] / scale[0];
-        var emphasisOpt = {
+        let scale = this.__symbolOriginalScale;
+        let ratio = scale[1] / scale[0];
+        let emphasisOpt = {
             scale: [
                 Math.max(scale[0] * 1.1, scale[0] + 3),
                 Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)

@@ -27,7 +27,7 @@ import SunburstSeriesModel from './SunburstSeries';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
-var ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
+const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
 interface SunburstRootToNodePayload extends Payload {}
 
@@ -41,11 +41,11 @@ echarts.registerAction(
         );
 
         function handleRootToNode(model: SunburstSeriesModel, index: number) {
-            var targetInfo = helper
+            let targetInfo = helper
                 .retrieveTargetInfo(payload, [ROOT_TO_NODE_ACTION], model);
 
             if (targetInfo) {
-                var originViewRoot = model.getViewRoot();
+                let originViewRoot = model.getViewRoot();
                 if (originViewRoot) {
                     payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
                         ? 'rollUp' : 'drillDown';
@@ -56,7 +56,7 @@ echarts.registerAction(
     }
 );
 
-var HIGHLIGHT_ACTION = 'sunburstHighlight';
+const HIGHLIGHT_ACTION = 'sunburstHighlight';
 
 interface SunburstHighlightPayload extends Payload {}
 
@@ -70,7 +70,7 @@ echarts.registerAction(
         );
 
         function handleHighlight(model: SunburstSeriesModel, index: number) {
-            var targetInfo = helper
+            let targetInfo = helper
                 .retrieveTargetInfo(payload, [HIGHLIGHT_ACTION], model);
 
             if (targetInfo) {
@@ -81,7 +81,7 @@ echarts.registerAction(
 );
 
 
-var UNHIGHLIGHT_ACTION = 'sunburstUnhighlight';
+const UNHIGHLIGHT_ACTION = 'sunburstUnhighlight';
 
 interface SunburstUnhighlightPayload extends Payload {}
 

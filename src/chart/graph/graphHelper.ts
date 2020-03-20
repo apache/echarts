@@ -22,24 +22,24 @@ import View from '../../coord/View';
 import { GraphNode } from '../../data/Graph';
 
 export function getNodeGlobalScale(seriesModel: GraphSeriesModel) {
-    var coordSys = seriesModel.coordinateSystem as View;
+    let coordSys = seriesModel.coordinateSystem as View;
     if (coordSys.type !== 'view') {
         return 1;
     }
 
-    var nodeScaleRatio = seriesModel.option.nodeScaleRatio;
+    let nodeScaleRatio = seriesModel.option.nodeScaleRatio;
 
-    var groupScale = coordSys.scale;
-    var groupZoom = (groupScale && groupScale[0]) || 1;
+    let groupScale = coordSys.scale;
+    let groupZoom = (groupScale && groupScale[0]) || 1;
     // Scale node when zoom changes
-    var roamZoom = coordSys.getZoom();
-    var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
+    let roamZoom = coordSys.getZoom();
+    let nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
 
     return nodeScale / groupZoom;
 }
 
 export function getSymbolSize(node: GraphNode) {
-    var symbolSize = node.getVisual('symbolSize');
+    let symbolSize = node.getVisual('symbolSize');
     if (symbolSize instanceof Array) {
         symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
     }

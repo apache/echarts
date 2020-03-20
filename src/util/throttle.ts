@@ -18,9 +18,9 @@
 */
 
 
-var ORIGIN_METHOD = '\0__throttleOriginMethod' as const;
-var RATE = '\0__throttleRate' as const;
-var THROTTLE_TYPE = '\0__throttleType' as const;
+const ORIGIN_METHOD = '\0__throttleOriginMethod' as const;
+const RATE = '\0__throttleRate' as const;
+const THROTTLE_TYPE = '\0__throttleType' as const;
 
 type ThrottleFunction = (this: unknown, ...args: unknown[]) => void;
 export type ThrottleType = 'fixRate' | 'debounce';
@@ -45,14 +45,14 @@ export function throttle<T extends ThrottleFunction>(
     debounce?: boolean
 ): T & ThrottleController {
 
-    var currCall;
-    var lastCall = 0;
-    var lastExec = 0;
-    var timer: ReturnType<typeof setTimeout> = null;
-    var diff;
-    var scope: unknown;
-    var args: unknown[];
-    var debounceNextCall: number;
+    let currCall;
+    let lastCall = 0;
+    let lastExec = 0;
+    let timer: ReturnType<typeof setTimeout> = null;
+    let diff;
+    let scope: unknown;
+    let args: unknown[];
+    let debounceNextCall: number;
 
     delay = delay || 0;
 
@@ -62,12 +62,12 @@ export function throttle<T extends ThrottleFunction>(
         fn.apply(scope, args || []);
     }
 
-    var cb = function (this: unknown, ...cbArgs: unknown[]): void {
+    let cb = function (this: unknown, ...cbArgs: unknown[]): void {
         currCall = (new Date()).getTime();
         scope = this;
         args = cbArgs;
-        var thisDelay = debounceNextCall || delay;
-        var thisDebounce = debounceNextCall || debounce;
+        let thisDelay = debounceNextCall || delay;
+        let thisDebounce = debounceNextCall || debounce;
         debounceNextCall = null;
         diff = currCall - (thisDebounce ? lastCall : lastExec) - thisDelay;
 
@@ -144,15 +144,15 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
     rate: number,
     throttleType: ThrottleType
 ): P extends ThrottleFunction ? P & ThrottleController : never {
-    var fn = obj[fnAttr];
+    let fn = obj[fnAttr];
 
     if (!fn) {
         return;
     }
 
-    var originFn = (fn as any)[ORIGIN_METHOD] || fn;
-    var lastThrottleType = (fn as any)[THROTTLE_TYPE];
-    var lastRate = (fn as any)[RATE];
+    let originFn = (fn as any)[ORIGIN_METHOD] || fn;
+    let lastThrottleType = (fn as any)[THROTTLE_TYPE];
+    let lastRate = (fn as any)[RATE];
 
     if (lastRate !== rate || lastThrottleType !== throttleType) {
         if (rate == null || !throttleType) {
@@ -174,7 +174,7 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
  * Clear throttle. Example see throttle.createOrUpdate.
  */
 export function clear<T, S extends keyof T>(obj: T, fnAttr: S): void {
-    var fn = obj[fnAttr];
+    let fn = obj[fnAttr];
     if (fn && (fn as any)[ORIGIN_METHOD]) {
         obj[fnAttr] = (fn as any)[ORIGIN_METHOD];
     }

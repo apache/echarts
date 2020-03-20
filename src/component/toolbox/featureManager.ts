@@ -108,7 +108,7 @@ type ToolboxFeatureCtor = {
     defaultOption: ToolboxFeatureOption
 };
 
-var features: Dictionary<ToolboxFeatureCtor> = {};
+const features: Dictionary<ToolboxFeatureCtor> = {};
 
 export function registerFeature(name: string, ctor: ToolboxFeatureCtor) {
     features[name] = ctor;
