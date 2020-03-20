@@ -1,3 +1,15 @@
+# Note:
+# If eslint does not work in VSCode, please check:
+# (1) Whether "@typescript-eslint/eslint-plugin" and "@typescript-eslint/parser"
+# are npm installed locally. Should better in the same version.
+# (2) Whether "VSCode ESlint extension" is installed.
+# (3) If the project folder is not the root folder of your working space, please
+# config the "VSCode ESlint extension" in "settings":
+# ```json
+# "eslint.workingDirectories": [{"mode": "auto"}]
+# ```
+# Note that it should be "workingDirectories" rather than "WorkingDirectories".
+
 parser: "@typescript-eslint/parser"
 parserOptions:
     ecmaVersion: 6
