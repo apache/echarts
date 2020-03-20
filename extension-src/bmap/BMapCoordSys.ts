@@ -73,7 +73,7 @@ BMapCoordSys.prototype.dataToPoint = function (data) {
 
 BMapCoordSys.prototype.pointToData = function (pt) {
     var mapOffset = this._mapOffset;
-    var pt = this._bmap.overlayPixelToPoint({
+    pt = this._bmap.overlayPixelToPoint({
         x: pt[0] + mapOffset[0],
         y: pt[1] + mapOffset[1]
     });
@@ -165,6 +165,7 @@ BMapCoordSys.create = function (ecModel, api) {
         if (bmapCoordSys) {
             throw new Error('Only one bmap component can exist');
         }
+        var bmap;
         if (!bmapModel.__bmap) {
             // Not support IE8
             var bmapRoot = root.querySelector('.ec-extension-bmap');
@@ -180,7 +181,7 @@ BMapCoordSys.create = function (ecModel, api) {
             // Not support IE8
             bmapRoot.classList.add('ec-extension-bmap');
             root.appendChild(bmapRoot);
-            var bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
+            bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
 
             var overlay = new Overlay(viewportRoot);
             bmap.addOverlay(overlay);
@@ -190,7 +191,7 @@ BMapCoordSys.create = function (ecModel, api) {
                 return {offsetLeft: 0, offsetTop: 0};
             };
         }
-        var bmap = bmapModel.__bmap;
+        bmap = bmapModel.__bmap;
 
         // Set bmap options
         // centerAndZoom before layout and render
