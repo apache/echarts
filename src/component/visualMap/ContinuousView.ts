@@ -60,7 +60,7 @@ type ShapeStorage = {
     indicator: graphic.Polygon
     indicatorLabel: graphic.Text
     indicatorLabelPoint: number[]
-}
+};
 
 type TargetDataIndices = ReturnType<ContinuousModel['findTargetDataIndices']>;
 

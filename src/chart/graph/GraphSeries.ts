@@ -219,9 +219,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     /**
      * Preserved points during layouting
      */
-    preservedPoints?: Dictionary<VectorArray>
+    preservedPoints?: Dictionary<VectorArray>;
 
-    forceLayout?: ForceLayoutInstance
+    forceLayout?: ForceLayoutInstance;
 
     init(option: GraphSeriesOption) {
         super.init.apply(this, arguments as any);

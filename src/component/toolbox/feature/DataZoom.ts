@@ -64,7 +64,7 @@ interface ToolboxDataZoomFeatureOption extends ToolboxFeatureOption {
     yAxisIndex?: ModelFinderIndexQuery | false
 }
 
-type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOption>
+type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOption>;
 
 class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 

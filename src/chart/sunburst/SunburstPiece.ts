@@ -313,7 +313,7 @@ class SunburstPiece extends graphic.Group {
         }
         label.attr('rotation', rotate);
 
-        type LabelOption = SunburstSeriesNodeOption['label']
+        type LabelOption = SunburstSeriesNodeOption['label'];
         function getLabelAttr<T extends keyof LabelOption>(name: T): LabelOption[T] {
             var stateAttr = labelModel.get(name);
             if (stateAttr == null) {

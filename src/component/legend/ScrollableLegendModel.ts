@@ -26,7 +26,6 @@ import { ZRColor, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
-import * as zrUtil from 'zrender/src/core/util';
 import { inheritDefaultOption } from '../../util/component';
 
 export interface ScrollableLegendOption extends LegendOption {
@@ -56,8 +55,8 @@ export interface ScrollableLegendOption extends LegendOption {
 
 class ScrollableLegendModel extends LegendModel<ScrollableLegendOption> {
 
-    static type = 'legend.scroll' as const
-    type = ScrollableLegendModel.type
+    static type = 'legend.scroll' as const;
+    type = ScrollableLegendModel.type;
 
     /**
      * @param {number} scrollDataIndex

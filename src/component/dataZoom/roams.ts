@@ -58,7 +58,7 @@ interface PayloadBatch {
     dataZoomId: string
 }
 
-type Store = Dictionary<Record>
+type Store = Dictionary<Record>;
 
 const inner = makeInner<Store, ExtensionAPI>();
 

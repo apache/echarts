@@ -26,7 +26,7 @@ import { ColorString, ZRColor } from '../../util/types';
 import { modifyHSL, modifyAlpha } from 'zrender/src/tool/color';
 import { makeInner } from '../../util/model';
 
-type NodeModel = Model<TreemapSeriesNodeItemOption>
+type NodeModel = Model<TreemapSeriesNodeItemOption>;
 type NodeItemStyleModel = Model<TreemapSeriesNodeItemOption['itemStyle']>;
 
 const ITEM_STYLE_NORMAL = 'itemStyle';

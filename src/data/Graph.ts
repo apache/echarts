@@ -307,10 +307,10 @@ class Graph {
         var graph = new Graph(this._directed);
         var nodes = this.nodes;
         var edges = this.edges;
-        for (var i = 0; i < nodes.length; i++) {
+        for (let i = 0; i < nodes.length; i++) {
             graph.addNode(nodes[i].id, nodes[i].dataIndex);
         }
-        for (var i = 0; i < edges.length; i++) {
+        for (let i = 0; i < edges.length; i++) {
             var e = edges[i];
             graph.addEdge(e.node1.id, e.node2.id, e.dataIndex);
         }

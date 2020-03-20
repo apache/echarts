@@ -81,16 +81,16 @@ function getClipArea(coord: CoordSysOfBar, data: List) {
 
 
 class BarView extends ChartView {
-    static type = 'bar' as const
-    type = BarView.type
+    static type = 'bar' as const;
+    type = BarView.type;
 
-    _data: List
+    _data: List;
 
-    _isLargeDraw: boolean
+    _isLargeDraw: boolean;
 
-    _backgroundGroup: Group
+    _backgroundGroup: Group;
 
-    _backgroundEls: (Rect | Sector)[]
+    _backgroundEls: (Rect | Sector)[];
 
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._updateDrawMode(seriesModel);

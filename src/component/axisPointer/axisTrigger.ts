@@ -100,7 +100,7 @@ interface AxisTriggerPayload extends Payload {
 type ShowValueMap = Dictionary<{
     value: AxisValue
     payloadBatch: BatchItem[]
-}>
+}>;
 
 /**
  * Basic logic: check all axis, if they do not demand show/highlight,

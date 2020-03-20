@@ -67,12 +67,12 @@ class CalendarView extends ComponentView {
     /**
      * first day of month
      */
-    private _firstDayOfMonth: CalendarParsedDateInfo[]
+    private _firstDayOfMonth: CalendarParsedDateInfo[];
 
     /**
      * first day point of month
      */
-    private _firstDayPoints: number[][]
+    private _firstDayPoints: number[][];
 
     render(calendarModel: CalendarModel, ecModel: GlobalModel, api: ExtensionAPI) {
 

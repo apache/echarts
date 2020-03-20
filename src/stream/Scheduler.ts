@@ -131,8 +131,8 @@ class Scheduler {
         // processors might be registered after echarts instance created.
         // Register processors incrementally for a echarts instance is
         // not supported by this stream architecture.
-        var dataProcessorHandlers = this._dataProcessorHandlers = dataProcessorHandlers.slice();
-        var visualHandlers = this._visualHandlers = visualHandlers.slice();
+        dataProcessorHandlers = this._dataProcessorHandlers = dataProcessorHandlers.slice();
+        visualHandlers = this._visualHandlers = visualHandlers.slice();
         this._allHandlers = dataProcessorHandlers.concat(visualHandlers);
     }
 

@@ -654,7 +654,7 @@ class GlobalModel extends Model<ECUnitOption> {
             ecModel.mergeOption(baseOption);
         };
 
-    })()
+    })();
 }
 
 // -----------------------

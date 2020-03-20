@@ -34,7 +34,7 @@ const XY = ['x', 'y'] as const;
 const WH = ['width', 'height'] as const;
 
 // Not use top level axisPointer model
-type AxisPointerModel = Model<CommonAxisPointerOption>
+type AxisPointerModel = Model<CommonAxisPointerOption>;
 
 class SingleAxisPointer extends BaseAxisPointer {
 

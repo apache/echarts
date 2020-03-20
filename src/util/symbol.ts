@@ -31,7 +31,7 @@ type ECSymbol = graphic.Path & {
     setColor: (color: ZRColor, innerColor?: string) => void
 };
 type SymbolCtor = { new(): ECSymbol };
-type SymbolShapeMaker = (x: number, y: number, w: number, h: number, shape: Dictionary<any>) => void
+type SymbolShapeMaker = (x: number, y: number, w: number, h: number, shape: Dictionary<any>) => void;
 
 /**
  * Triangle shape

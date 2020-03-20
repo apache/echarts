@@ -108,7 +108,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         excludeComponents: ['toolbox'],
         pixelRatio: 1,
         lang: saveAsImageLang.lang.slice()
-    }
+    };
 }
 SaveAsImage.prototype.unusable = !env.canvasSupported;
 
