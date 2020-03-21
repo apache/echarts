@@ -24,6 +24,7 @@ import {encodeHTML, addCommas} from '../../util/format';
 import dataSelectableMixin from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
+import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 
 var MapSeries = SeriesModel.extend({
 
@@ -46,7 +47,10 @@ var MapSeries = SeriesModel.extend({
     seriesGroup: [],
 
     getInitialData: function (option) {
-        var data = createListSimply(this, ['value']);
+        var data = createListSimply(this, {
+            coordDimensions: ['value'],
+            encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
+        });
         var valueDim = data.mapDimension('value');
         var dataNameMap = zrUtil.createHashMap();
         var selectTargetList = [];
@@ -62,7 +66,7 @@ var MapSeries = SeriesModel.extend({
             });
         }
 
-        var geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap);
+        var geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap, this.option.nameProperty);
         zrUtil.each(geoSource.regions, function (region) {
             var name = region.name;
             if (!dataNameMap.get(name)) {
@@ -252,7 +256,8 @@ var MapSeries = SeriesModel.extend({
             itemStyle: {
                 areaColor: 'rgba(255,215,0,0.8)'
             }
-        }
+        },
+        nameProperty: 'name'
     }
 
 });

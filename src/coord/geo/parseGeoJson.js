@@ -96,9 +96,10 @@ function decodePolygon(coordinate, encodeOffsets, encodeScale) {
 /**
  * @alias module:echarts/coord/geo/parseGeoJson
  * @param {Object} geoJson
+ * @param {string} nameProperty
  * @return {module:zrender/container/Group}
  */
-export default function (geoJson) {
+export default function (geoJson, nameProperty) {
 
     decode(geoJson);
 
@@ -136,7 +137,7 @@ export default function (geoJson) {
         }
 
         var region = new Region(
-            properties.name,
+            properties[nameProperty],
             geometries,
             properties.cp
         );

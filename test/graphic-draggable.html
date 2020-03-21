@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <div id="main0"></div>
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                graphic: [{
+                    elements: [{
+                        type: 'rect',
+                        shape: {
+                            x: -50, y: -50, width: 100, height: 100
+                        },
+                        style: {
+                            fill: 'blue'
+                        },
+                        position: [200, 200],
+                        rotation: 1,
+                        cursor: 'move',
+                        draggable: true
+                    }, {
+                        type: 'circle',
+                        shape: {
+                            cx: 100, cy: 100, r: 50
+                        },
+                        style: {
+                            fill: 'red'
+                        },
+                        rotation: 0.3,
+                        cursor: 'move',
+                        draggable: true
+                    }, {
+                        type: 'text',
+                        style: {
+                            text: 'DRAG ME',
+                            font: '20px sans-serif'
+                        },
+                        position: [300, 50],
+                        cursor: 'move',
+                        draggable: true
+                    }, {
+                        type: 'bezierCurve',
+                        shape: {
+                            x1: 10,
+                            y1: 10,
+                            x2: 100,
+                            y2: 10,
+                            cpx1: 60,
+                            cpy1: 100
+                        },
+                        style: {
+                            fill: 'green',
+                            lineWidth: 10
+                        },
+                        left: 300,
+                        bottom: 100,
+                        cursor: 'move',
+                        draggable: true
+                    }, {
+                        type: 'group',
+                        draggable: true,
+                        children: [{
+                            type: 'rect',
+                            shape: {
+                                x: -30, y: -30, width: 60, height: 60
+                            },
+                            style: {
+                                fill: '#aaa'
+                            },
+                            rotation: 2,
+                            cursor: 'move'
+                        }, {
+                            type: 'circle',
+                            shape: {
+                                cx: 40, cy: 0, r: 40
+                            },
+                            style: {
+                                fill: '#777'
+                            },
+                            cursor: 'move'
+                        }, {
+                            type: 'text',
+                            style: {
+                                x: 100,
+                                text: 'DRAG GROUP',
+                                textAlign: 'left',
+                                font: '16px sans-serif'
+                            },
+                            cursor: 'move'
+                        }],
+                        position: [500, 200]
+                    }]
+                },]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Draggable on different elements'
+                ],
+                option: option
+            });
+        });
+        </script>
+    </body>
+</html>
+

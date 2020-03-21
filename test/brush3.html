@@ -41,6 +41,7 @@ under the License.
 
         <div id="main1"></div>
         <div id="main0"></div>
+        <div id="main2"></div>
 
 
 
@@ -171,6 +172,73 @@ under the License.
 
 
 
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            var testGeoJson1 = {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'geometry': {
+                            'type': 'Polygon',
+                            'coordinates': [
+                                [[2000, 3000], [5000, 3000], [5000, 8000], [2000, 8000]]
+                            ]
+                        },
+                        'properties': {
+                            'name': 'Some Area',
+                            'childNum': 1
+                        }
+                    }
+                ]
+            };
+            echarts.registerMap('test1', testGeoJson1);
+
+            var data = [];
+            var step = 500;
+            var lngStart = 1000;
+            var latStart = 2000;
+            for (var i = 0; i < 10; i++) {
+                for (var j = 0; j < 10; j++) {
+                    data.push({
+                        value: [lngStart + j * step, latStart + i * step],
+                        symbolSize: 5 + j * 5
+                    });
+                }
+            }
+
+            var option = {
+                geo: [{
+                    map: 'test1',
+                    zoom: 4,
+                    roam: true
+                }],
+                brush: {
+                    geoIndex: 0
+                },
+                series: [{
+                    type: 'scatter',
+                    coordinateSystem: 'geo',
+                    symbol: 'roundRect',
+                    symbolSize: 30,
+                    data: data
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Test updateTransform: ',
+                    'click "保持选择", then brush, then roam the scatter',
+                    'the "cover" of the brush should be roamed together with the scatter'
+                ],
+                option: option
+            });
+        });
+        </script>
 
 
 

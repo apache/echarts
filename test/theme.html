@@ -95,7 +95,12 @@ under the License.
                         top: 'bottom',
                         align: 'right'
                     },
-                    tooltip: {},
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
                     dataZoom: {
                         start: 10,
                         end: 20

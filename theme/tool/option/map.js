@@ -17,7 +17,7 @@
 * under the License.
 */
 
-module.exports = {
+export default {
     visualMap: {
         show: true,
         min: 0,

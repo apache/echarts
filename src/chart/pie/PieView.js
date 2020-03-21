@@ -171,7 +171,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     toggleItemSelected(
         this,
         data.getItemLayout(idx),
-        seriesModel.isSelected(null, idx),
+        seriesModel.isSelected(data.getName(idx)),
         seriesModel.get('selectedOffset'),
         seriesModel.get('animation')
     );
@@ -273,7 +273,7 @@ piePieceProto._updateLabel = function (data, idx, withAnimation) {
         {
             labelFetcher: data.hostModel,
             labelDataIndex: idx,
-            defaultText: data.getName(idx),
+            defaultText: labelLayout.text,
             autoColor: visualColor,
             useInsideStyle: !!labelLayout.inside
         },

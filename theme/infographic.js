@@ -17,18 +17,22 @@
 * under the License.
 */
 
-(function (root, factory) {if (typeof define === 'function' && define.amd) {
+(function(root, factory) {
+    if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['exports', 'echarts'], factory);
-    } else if (typeof exports === 'object' && typeof exports.nodeName !== 'string') {
+    } else if (
+        typeof exports === 'object' &&
+        typeof exports.nodeName !== 'string'
+    ) {
         // CommonJS
         factory(exports, require('echarts'));
     } else {
         // Browser globals
         factory({}, root.echarts);
     }
-}(this, function (exports, echarts) {
-    var log = function (msg) {
+})(this, function(exports, echarts) {
+    var log = function(msg) {
         if (typeof console !== 'undefined') {
             console && console.error && console.error(msg);
         }
@@ -39,13 +43,24 @@
     }
 
     var colorPalette = [
-        '#C1232B','#27727B','#FCCE10','#E87C25','#B5C334',
-        '#FE8463','#9BCA63','#FAD860','#F3A43B','#60C0DD',
-        '#D7504B','#C6E579','#F4E001','#F0805A','#26C0C0'
+        '#C1232B',
+        '#27727B',
+        '#FCCE10',
+        '#E87C25',
+        '#B5C334',
+        '#FE8463',
+        '#9BCA63',
+        '#FAD860',
+        '#F3A43B',
+        '#60C0DD',
+        '#D7504B',
+        '#C6E579',
+        '#F4E001',
+        '#F0805A',
+        '#26C0C0'
     ];
 
     var theme = {
-
         color: colorPalette,
 
         title: {
@@ -56,7 +71,7 @@
         },
 
         visualMap: {
-            color:['#C1232B','#FCCE10']
+            color: ['#C1232B', '#FCCE10']
         },
 
         toolbox: {
@@ -69,16 +84,16 @@
 
         tooltip: {
             backgroundColor: 'rgba(50,50,50,0.5)',
-            axisPointer : {
-                type : 'line',
-                lineStyle : {
+            axisPointer: {
+                type: 'line',
+                lineStyle: {
                     color: '#27727B',
                     type: 'dashed'
                 },
                 crossStyle: {
                     color: '#27727B'
                 },
-                shadowStyle : {
+                shadowStyle: {
                     color: 'rgba(200,200,200,0.3)'
                 }
             }
@@ -105,7 +120,7 @@
             axisLine: {
                 show: false
             },
-            splitArea : {
+            splitArea: {
                 show: false
             },
             splitLine: {
@@ -117,14 +132,15 @@
         },
 
         timeline: {
+            itemStyle: {
+                color: '#27727B'
+            },
             lineStyle: {
                 color: '#27727B'
             },
             controlStyle: {
-                normal: {
-                    color: '#27727B',
-                    borderColor: '#27727B'
-                }
+                color: '#27727B',
+                borderColor: '#27727B'
             },
             symbol: 'emptyCircle',
             symbolSize: 3
@@ -132,15 +148,13 @@
 
         line: {
             itemStyle: {
-                normal: {
-                    borderWidth:2,
-                    borderColor:'#fff',
-                    lineStyle: {
-                        width: 3
-                    }
+                borderWidth: 2,
+                borderColor: '#fff',
+                lineStyle: {
+                    width: 3
                 },
                 emphasis: {
-                    borderWidth:0
+                    borderWidth: 0
                 }
             },
             symbol: 'circle',
@@ -149,50 +163,51 @@
 
         candlestick: {
             itemStyle: {
-                normal: {
-                    color: '#C1232B',
-                    color0: '#B5C334',
-                    lineStyle: {
-                        width: 1,
-                        color: '#C1232B',
-                        color0: '#B5C334'
-                    }
-                }
+                color: '#c1232b',
+                color0: '#b5c334'
+            },
+            lineStyle: {
+                width: 1,
+                color: '#c1232b',
+                color0: '#b5c334'
+            },
+            areaStyle: {
+                color: '#c1232b',
+                color0: '#27727b'
             }
         },
 
         graph: {
-            color: colorPalette
+            itemStyle: {
+                color: '#c1232b'
+            },
+            linkStyle: {
+                color: '#b5c334'
+            }
         },
 
         map: {
-            label: {
-                normal: {
-                    textStyle: {
-                        color: '#C1232B'
-                    }
-                },
-                emphasis: {
-                    textStyle: {
-                        color: 'rgb(100,0,0)'
-                    }
-                }
-            },
             itemStyle: {
-                normal: {
-                    areaColor: '#ddd',
-                    borderColor: '#eee'
-                },
-                emphasis: {
-                    areaColor: '#fe994e'
-                }
+                color: '#f2385a',
+                areaColor: '#ddd',
+                borderColor: '#eee'
+            },
+            areaStyle: {
+                color: '#fe994e'
+            },
+            label: {
+                color: '#c1232b'
             }
         },
 
         gauge: {
             axisLine: {
                 lineStyle: {
-                    color: [[0.2, '#B5C334'],[0.8, '#27727B'],[1, '#C1232B']]
+                    color: [
+                        [0.2, '#B5C334'],
+                        [0.8, '#27727B'],
+                        [1, '#C1232B']
+                    ]
                 }
             },
             axisTick: {
@@ -213,11 +228,11 @@
                     color: '#fff'
                 }
             },
-            title : {
+            title: {
                 offsetCenter: [0, -20]
             }
         }
     };
 
     echarts.registerTheme('infographic', theme);
-}));
+});

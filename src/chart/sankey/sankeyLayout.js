@@ -87,7 +87,8 @@ function computeNodeValues(nodes) {
     zrUtil.each(nodes, function (node) {
         var value1 = sum(node.outEdges, getEdgeValue);
         var value2 = sum(node.inEdges, getEdgeValue);
-        var value = Math.max(value1, value2);
+        var nodeRawValue = node.getValue() || 0;
+        var value = Math.max(value1, value2, nodeRawValue);
         node.setLayout({value: value}, true);
     });
 }
@@ -431,12 +432,12 @@ function getEdgeValue(edge) {
     return edge.getValue();
 }
 
-function sum(array, f, orient) {
+function sum(array, cb, orient) {
     var sum = 0;
     var len = array.length;
     var i = -1;
     while (++i < len) {
-        var value = +f.call(array, array[i], orient);
+        var value = +cb.call(array, array[i], orient);
         if (!isNaN(value)) {
             sum += value;
         }

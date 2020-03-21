@@ -23,12 +23,13 @@ import AxisBuilder from './AxisBuilder';
 import * as graphic from '../../util/graphic';
 import * as singleAxisHelper from '../../coord/single/singleAxisHelper';
 import AxisView from './AxisView';
+import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 
 var axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ];
 
-var selfBuilderAttr = 'splitLine';
+var selfBuilderAttrs = ['splitArea', 'splitLine'];
 
 var SingleAxisView = AxisView.extend({
 
@@ -42,19 +43,31 @@ var SingleAxisView = AxisView.extend({
 
         group.removeAll();
 
+        var oldAxisGroup = this._axisGroup;
+        this._axisGroup = new graphic.Group();
+
         var layout = singleAxisHelper.layout(axisModel);
 
         var axisBuilder = new AxisBuilder(axisModel, layout);
 
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 
+        group.add(this._axisGroup);
         group.add(axisBuilder.getGroup());
 
-        if (axisModel.get(selfBuilderAttr + '.show')) {
-            this['_' + selfBuilderAttr](axisModel);
-        }
+        zrUtil.each(selfBuilderAttrs, function (name) {
+            if (axisModel.get(name + '.show')) {
+                this['_' + name](axisModel);
+            }
+        }, this);
+
+        graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
 
         SingleAxisView.superCall(this, 'render', axisModel, ecModel, api, payload);
+    },
+
+    remove: function () {
+        rectCoordAxisHandleRemove(this);
     },
 
     _splitLine: function (axisModel) {
@@ -125,6 +138,10 @@ var SingleAxisView = AxisView.extend({
                 silent: true
             }));
         }
+    },
+
+    _splitArea: function (axisModel) {
+        rectCoordAxisBuildSplitArea(this, this._axisGroup, axisModel, axisModel);
     }
 });
 

@@ -94,6 +94,7 @@ export default echarts.extendChartView({
     },
 
     render: function (seriesModel, ecModel, api) {
+        var graphView = this;
         var coordSys = seriesModel.coordinateSystem;
 
         this._model = seriesModel;
@@ -163,6 +164,7 @@ export default echarts.extendChartView({
 
             if (itemModel.get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                    graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -170,10 +172,7 @@ export default echarts.extendChartView({
                     });
                 });
                 el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
-                    api.dispatchAction({
-                        type: 'unfocusNodeAdjacency',
-                        seriesId: seriesModel.id
-                    });
+                    graphView._dispatchUnfocus(api);
                 });
             }
 
@@ -187,6 +186,7 @@ export default echarts.extendChartView({
 
             if (edge.getModel().get('focusNodeAdjacency')) {
                 el.on('mouseover', el[FOCUS_ADJACENCY] = function () {
+                    graphView._clearTimer();
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
                         seriesId: seriesModel.id,
@@ -194,10 +194,7 @@ export default echarts.extendChartView({
                     });
                 });
                 el.on('mouseout', el[UNFOCUS_ADJACENCY] = function () {
-                    api.dispatchAction({
-                        type: 'unfocusNodeAdjacency',
-                        seriesId: seriesModel.id
-                    });
+                    graphView._dispatchUnfocus(api);
                 });
             }
         });
@@ -249,10 +246,31 @@ export default echarts.extendChartView({
     dispose: function () {
         this._controller && this._controller.dispose();
         this._controllerHost = {};
+        this._clearTimer();
+    },
+
+    _dispatchUnfocus: function (api, opt) {
+        var self = this;
+        this._clearTimer();
+        this._unfocusDelayTimer = setTimeout(function () {
+            self._unfocusDelayTimer = null;
+            api.dispatchAction({
+                type: 'unfocusNodeAdjacency',
+                seriesId: self._model.id
+            });
+        }, 500);
+
+    },
+
+    _clearTimer: function () {
+        if (this._unfocusDelayTimer) {
+            clearTimeout(this._unfocusDelayTimer);
+            this._unfocusDelayTimer = null;
+        }
     },
 
     focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var data = this._model.getData();
+        var data = seriesModel.getData();
         var graph = data.graph;
         var dataIndex = payload.dataIndex;
         var edgeDataIndex = payload.edgeDataIndex;
@@ -290,7 +308,7 @@ export default echarts.extendChartView({
     },
 
     unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
-        var graph = this._model.getData().graph;
+        var graph = seriesModel.getData().graph;
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);

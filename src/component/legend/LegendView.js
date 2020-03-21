@@ -175,7 +175,7 @@ export default echarts.extendComponentView({
                 return;
             }
 
-            // Series legend
+            // Legend to control series.
             if (seriesModel) {
                 var data = seriesModel.getData();
                 var color = data.getVisual('color');
@@ -204,29 +204,31 @@ export default echarts.extendComponentView({
                     selectMode
                 );
 
-                itemGroup.on('click', curry(dispatchSelectAction, name, api))
+                itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
                 legendDrawnMap.set(name, true);
             }
             else {
-                // Data legend of pie, funnel
+                // Legend to control data. In pie and funnel.
                 ecModel.eachRawSeries(function (seriesModel) {
+
                     // In case multiple series has same data name
                     if (legendDrawnMap.get(name)) {
                         return;
                     }
 
-                    if (seriesModel.legendDataProvider) {
-                        var data = seriesModel.legendDataProvider();
-                        var idx = data.indexOfName(name);
-                        if (idx < 0) {
+                    if (seriesModel.legendVisualProvider) {
+                        var provider = seriesModel.legendVisualProvider;
+                        if (!provider.containName(name)) {
                             return;
                         }
 
-                        var color = data.getItemVisual(idx, 'color');
-                        var borderColor = data.getItemVisual(idx, 'borderColor');
+                        var idx = provider.indexOfName(name);
+
+                        var color = provider.getItemVisual(idx, 'color');
+                        var borderColor = provider.getItemVisual(idx, 'borderColor');
 
                         var legendSymbolType = 'roundRect';
 
@@ -238,7 +240,7 @@ export default echarts.extendComponentView({
                         );
 
                         // FIXME: consider different series has items with the same name.
-                        itemGroup.on('click', curry(dispatchSelectAction, name, api))
+                        itemGroup.on('click', curry(dispatchSelectAction, null, name, api, excludeSeriesId))
                             // Should not specify the series name, consider legend controls
                             // more than one pie series.
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
@@ -518,11 +520,15 @@ function setSymbolStyle(symbol, symbolType, legendModelItemStyle, borderColor, i
     return symbol.setStyle(itemStyle);
 }
 
-function dispatchSelectAction(name, api) {
+function dispatchSelectAction(seriesName, dataName, api, excludeSeriesId) {
+    // downplay before unselect
+    dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId);
     api.dispatchAction({
         type: 'legendToggleSelect',
-        name: name
+        name: seriesName != null ? seriesName : dataName
     });
+    // highlight after select
+    dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 
 function dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId) {
