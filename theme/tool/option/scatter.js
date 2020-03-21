@@ -17,7 +17,7 @@
 * under the License.
 */
 
-module.exports = {
+export default {
     timeline: {
         left: '2%',
         right: '2%',

@@ -31,6 +31,7 @@ import DataDiffer from './DataDiffer';
 import Source from './Source';
 import {defaultDimValueGetters, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions} from './helper/dimensionHelper';
+import DataDimensionInfo from './DataDimensionInfo';
 
 var isObject = zrUtil.isObject;
 
@@ -102,13 +103,9 @@ function transferProperties(target, source) {
  * @constructor
  * @alias module:echarts/data/List
  *
- * @param {Array.<string|Object>} dimensions
+ * @param {Array.<string|Object|module:data/DataDimensionInfo>} dimensions
  *      For example, ['someDimName', {name: 'someDimName', type: 'someDimType'}, ...].
  *      Dimensions should be concrete names like x, y, z, lng, lat, angle, radius
- *      Spetial fields: {
- *          ordinalMeta: <module:echarts/data/OrdinalMeta>
- *          createInvertedIndices: <boolean>
- *      }
  * @param {module:echarts/model/Model} hostModel
  */
 var List = function (dimensions, hostModel) {
@@ -124,7 +121,10 @@ var List = function (dimensions, hostModel) {
         var dimensionInfo = dimensions[i];
 
         if (zrUtil.isString(dimensionInfo)) {
-            dimensionInfo = {name: dimensionInfo};
+            dimensionInfo = new DataDimensionInfo({name: dimensionInfo});
+        }
+        else if (!(dimensionInfo instanceof DataDimensionInfo)) {
+            dimensionInfo = new DataDimensionInfo(dimensionInfo);
         }
 
         var dimensionName = dimensionInfo.name;
@@ -1144,7 +1144,8 @@ listProto.indexOfRawIndex = function (rawIndex) {
  * @param {string} dim
  * @param {number} value
  * @param {number} [maxDistance=Infinity]
- * @return {Array.<number>} Considere multiple points has the same value.
+ * @return {Array.<number>} If and only if multiple indices has
+ *        the same value, they are put to the result.
  */
 listProto.indicesOfNearest = function (dim, value, maxDistance) {
     var storage = this._storage;
@@ -1159,23 +1160,35 @@ listProto.indicesOfNearest = function (dim, value, maxDistance) {
         maxDistance = Infinity;
     }
 
-    var minDist = Number.MAX_VALUE;
+    var minDist = Infinity;
     var minDiff = -1;
+    var nearestIndicesLen = 0;
+
+    // Check the test case of `test/ut/spec/data/List.js`.
     for (var i = 0, len = this.count(); i < len; i++) {
-        var diff = value - this.get(dim, i /*, stack */);
+        var diff = value - this.get(dim, i);
         var dist = Math.abs(diff);
-        if (diff <= maxDistance && dist <= minDist) {
-            // For the case of two data are same on xAxis, which has sequence data.
-            // Show the nearest index
-            // https://github.com/ecomfe/echarts/issues/2869
-            if (dist < minDist || (diff >= 0 && minDiff < 0)) {
+        if (dist <= maxDistance) {
+            // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
+            // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
+            // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
+            // So we chose the one that `diff >= 0` in this csae.
+            // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
+            // should be push to `nearestIndices`.
+            if (dist < minDist
+                || (dist === minDist && diff >= 0 && minDiff < 0)
+            ) {
                 minDist = dist;
                 minDiff = diff;
-                nearestIndices.length = 0;
+                nearestIndicesLen = 0;
             }
-            nearestIndices.push(i);
+            if (diff === minDiff) {
+                nearestIndices[nearestIndicesLen++] = i;
+            }
         }
     }
+    nearestIndices.length = nearestIndicesLen;
+
     return nearestIndices;
 };
 

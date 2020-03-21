@@ -62,11 +62,11 @@ var SeriesModel = ComponentModel.extend({
     defaultOption: null,
 
     /**
-     * Data provided for legend
-     * @type {Function}
+     * legend visual provider to the legend component
+     * @type {Object}
      */
     // PENDING
-    legendDataProvider: null,
+    legendVisualProvider: null,
 
     /**
      * Access path of color for visual
@@ -584,7 +584,7 @@ function dataTaskReset(context) {
 
 function dataTaskProgress(param, context) {
     // Avoid repead cloneShallow when data just created in reset.
-    if (param.end > context.outputData.count()) {
+    if (context.outputData && param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
     }
 }

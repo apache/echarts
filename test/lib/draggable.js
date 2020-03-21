@@ -38,7 +38,6 @@
          * @param {boolean} [opt.lockX=false]
          * @param {boolean} [opt.lockY=false]
          * @param {number} [opt.throttle=false]
-         * @param {boolean} [opt.addPlaceholder=false]
          * @param {Function} [opt.onDrag]
          * @return {type}  description
          */
@@ -55,17 +54,23 @@
             var mainEl = $(mainEl);
             var id = mainEl.attr('data-draggable-id');
 
-            if (opt.addPlaceholder) {
-                var width = mainEl.outerWidth();
-                var height = mainEl.outerHeight();
-                $('<div></div>').css({
-                    width: width,
-                    height: height,
-                    margin: 0,
-                    padding: 0,
-                    visibility: 'hidden'
-                }).insertAfter(mainEl);
-            }
+            var width = mainEl.outerWidth();
+            var height = mainEl.outerHeight();
+            var mainStyle = mainEl[0].style;
+            var placeholder = $('<div></div>').css({
+                position: mainStyle.position,
+                width: width,
+                height: height,
+                top: mainStyle.top,
+                bottom: mainStyle.bottom,
+                left: mainStyle.left,
+                right: mainStyle.right,
+                borderWidth: 0,
+                margin: 0,
+                padding: 0,
+                visibility: 'hidden'
+            });
+            placeholder.insertAfter(mainEl);
 
             if (id == null) {
                 id = +Math.random();
@@ -111,8 +116,6 @@
 
             mainEl.css({
                 'position': 'absolute',
-                'left': mainEl[0].offsetLeft + 'px',
-                'top': mainEl[0].offsetTop + 'px',
                 'width': mainEl[0].offsetWidth + 'px',
                 'height': mainEl[0].offsetHeight + 'px',
                 'border-style': 'solid',
@@ -124,21 +127,8 @@
 
             mainEl.parent().append(controlEl);
 
+            var locationMaker = createLocationMaker(mainEl);
             var controlSize = controlEl[0].offsetWidth;
-
-            var boxSizing = mainEl.css('box-sizing');
-
-            var borderBoxBroder = boxSizing === 'border-box' ? 2 * BORDER_WIDTH : 0;
-            var mainContentWidth = opt.width || (mainEl.width() + borderBoxBroder);
-            var mainContentHeight = opt.height || (mainEl.height() + borderBoxBroder);
-
-            var mainOffset = mainEl.offset();
-            resize(
-                mainOffset.left + mainContentWidth + BORDER_WIDTH,
-                mainOffset.top + mainContentHeight + BORDER_WIDTH,
-                true
-            );
-
             var dragging = false;
 
             controlEl.on('mousedown', function () {
@@ -155,7 +145,31 @@
                 dragging = false;
             });
 
+            relocate(opt.width, opt.height);
 
+            // A temporarily way to handle the reflow.
+            // Where the position should be sync to the placeholder.
+            $(function () {
+                setTimeout(function () {
+                    relocate();
+                }, 0);
+            });
+
+            function relocate(width, height) {
+                mainEl.css({
+                    'left': locationMaker.left(placeholder[0].offsetLeft) + 'px',
+                    'top': locationMaker.top(placeholder[0].offsetTop) + 'px',
+                });
+                var mainContentWidth = width != null ? width : locationMaker.width(mainEl.width());
+                var mainContentHeight = height != null ? height : locationMaker.height(mainEl.height());
+
+                var mainOffset = mainEl.offset();
+                resize(
+                    mainOffset.left + mainContentWidth + BORDER_WIDTH,
+                    mainOffset.top + mainContentHeight + BORDER_WIDTH,
+                    true
+                );
+            }
 
             function resize(x, y, isInit) {
                 var mainOffset = mainEl.offset();
@@ -170,7 +184,7 @@
                     );
                     mainEl.css(
                         'width',
-                        (mainContentWidth + borderBoxBroder) + 'px'
+                        locationMaker.width(mainContentWidth) + 'px'
                     );
                 }
 
@@ -181,7 +195,7 @@
                     );
                     mainEl.css(
                         'height',
-                        (mainContentHeight + borderBoxBroder) + 'px'
+                        locationMaker.height(mainContentHeight) + 'px'
                     );
                 }
 
@@ -191,6 +205,25 @@
             }
         }
     };
+
+    function createLocationMaker(mainEl) {
+        var isBorderBox = mainEl.css('box-sizing') === 'border-box';
+
+        return {
+            width: function (w) {
+                return w + (isBorderBox ? 2 * BORDER_WIDTH : 0);
+            },
+            height: function (h) {
+                return h + (isBorderBox ? 2 * BORDER_WIDTH : 0);
+            },
+            left: function (l) {
+                return l - (isBorderBox ? 0: BORDER_WIDTH);
+            },
+            top: function (t) {
+                return t - (isBorderBox ? 0: BORDER_WIDTH);
+            }
+        };
+    }
 
     function throttle(fn, delay, trailing, debounce) {
 

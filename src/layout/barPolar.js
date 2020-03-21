@@ -88,10 +88,6 @@ function barLayoutPolar(seriesType, ecModel, api) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
 
-            if (isNaN(value)) {
-                continue;
-            }
-
             var sign = value >= 0 ? 'p' : 'n';
             var baseCoord = valueAxisStart;
 

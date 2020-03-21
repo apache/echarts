@@ -50,7 +50,7 @@ function resizePolar(polar, polarModel, api) {
 
     var radius = polarModel.get('radius');
     if (radius == null) {
-        radius = [0, "100%"];
+        radius = [0, '100%'];
     }
     else if (!zrUtil.isArray(radius)) {
         // r0 = 0

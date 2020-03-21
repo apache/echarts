@@ -539,6 +539,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
      * @param {number} opt.count Positive interger.
      * @param {number} [opt.barWidth]
      * @param {number} [opt.barMaxWidth]
+     * @param {number} [opt.barMinWidth]
      * @param {number} [opt.barGap]
      * @param {number} [opt.barCategoryGap]
      * @return {Object} {width, offset, offsetCenter} is not support, return undefined.

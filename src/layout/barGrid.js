@@ -43,6 +43,7 @@ function getAxisKey(axis) {
  * @param {number} opt.count Positive interger.
  * @param {number} [opt.barWidth]
  * @param {number} [opt.barMaxWidth]
+ * @param {number} [opt.barMinWidth]
  * @param {number} [opt.barGap]
  * @param {number} [opt.barCategoryGap]
  * @return {Object} {width, offset, offsetCenter} If axis.type is not 'category', return undefined.
@@ -130,24 +131,26 @@ function getValueAxesMinGaps(barSeries) {
     });
 
     var axisMinGaps = [];
-    for (var i in axisValues) {
-        var valuesInAxis = axisValues[i];
-        if (valuesInAxis) {
-            // Sort axis values into ascending order to calculate gaps
-            valuesInAxis.sort(function (a, b) {
-                return a - b;
-            });
+    for (var key in axisValues) {
+        if (axisValues.hasOwnProperty(key)) {
+            var valuesInAxis = axisValues[key];
+            if (valuesInAxis) {
+                // Sort axis values into ascending order to calculate gaps
+                valuesInAxis.sort(function (a, b) {
+                    return a - b;
+                });
 
-            var min = null;
-            for (var j = 1; j < valuesInAxis.length; ++j) {
-                var delta = valuesInAxis[j] - valuesInAxis[j - 1];
-                if (delta > 0) {
-                    // Ignore 0 delta because they are of the same axis value
-                    min = min === null ? delta : Math.min(min, delta);
+                var min = null;
+                for (var j = 1; j < valuesInAxis.length; ++j) {
+                    var delta = valuesInAxis[j] - valuesInAxis[j - 1];
+                    if (delta > 0) {
+                        // Ignore 0 delta because they are of the same axis value
+                        min = min === null ? delta : Math.min(min, delta);
+                    }
                 }
+                // Set to null if only have one data
+                axisMinGaps[key] = min;
             }
-            // Set to null if only have one data
-            axisMinGaps[i] = min;
         }
     }
     return axisMinGaps;
@@ -187,6 +190,11 @@ export function makeColumnLayout(barSeries) {
         var barMaxWidth = parsePercent(
             seriesModel.get('barMaxWidth'), bandWidth
         );
+        var barMinWidth = parsePercent(
+            // barMinWidth by default is 1 in cartesian. Because in value axis,
+            // the auto-calculated bar width might be less than 1.
+            seriesModel.get('barMinWidth') || 1, bandWidth
+        );
         var barGap = seriesModel.get('barGap');
         var barCategoryGap = seriesModel.get('barCategoryGap');
 
@@ -194,6 +202,7 @@ export function makeColumnLayout(barSeries) {
             bandWidth: bandWidth,
             barWidth: barWidth,
             barMaxWidth: barMaxWidth,
+            barMinWidth: barMinWidth,
             barGap: barGap,
             barCategoryGap: barCategoryGap,
             axisKey: getAxisKey(baseAxis),
@@ -237,7 +246,6 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         // only the attributes set on the last series will work.
         // Do not change this fact unless there will be a break change.
 
-        // TODO
         var barWidth = seriesInfo.barWidth;
         if (barWidth && !stacks[stackId].width) {
             // See #6312, do not restrict width.
@@ -248,6 +256,8 @@ function doCalBarWidthAndOffset(seriesInfoList) {
 
         var barMaxWidth = seriesInfo.barMaxWidth;
         barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
+        var barMinWidth = seriesInfo.barMinWidth;
+        barMinWidth && (stacks[stackId].minWidth = barMinWidth);
         var barGap = seriesInfo.barGap;
         (barGap != null) && (columnsOnAxis.gap = barGap);
         var barCategoryGap = seriesInfo.barCategoryGap;
@@ -272,15 +282,43 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         autoWidth = Math.max(autoWidth, 0);
 
         // Find if any auto calculated bar exceeded maxBarWidth
-        zrUtil.each(stacks, function (column, stack) {
+        zrUtil.each(stacks, function (column) {
             var maxWidth = column.maxWidth;
-            if (maxWidth && maxWidth < autoWidth) {
-                maxWidth = Math.min(maxWidth, remainedWidth);
-                if (column.width) {
-                    maxWidth = Math.min(maxWidth, column.width);
+            var minWidth = column.minWidth;
+
+            if (!column.width) {
+                var finalWidth = autoWidth;
+                if (maxWidth && maxWidth < finalWidth) {
+                    finalWidth = Math.min(maxWidth, remainedWidth);
                 }
-                remainedWidth -= maxWidth;
-                column.width = maxWidth;
+                // `minWidth` has higher priority. `minWidth` decide that wheter the
+                // bar is able to be visible. So `minWidth` should not be restricted
+                // by `maxWidth` or `remainedWidth` (which is from `bandWidth`). In
+                // the extreme cases for `value` axis, bars are allowed to overlap
+                // with each other if `minWidth` specified.
+                if (minWidth && minWidth > finalWidth) {
+                    finalWidth = minWidth;
+                }
+                if (finalWidth !== autoWidth) {
+                    column.width = finalWidth;
+                    remainedWidth -= finalWidth + barGapPercent * finalWidth;
+                    autoWidthCount--;
+                }
+            }
+            else {
+                // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
+                // CSS does. Becuase barWidth can be a percent value, where
+                // `barMaxWidth` can be used to restrict the final width.
+                var finalWidth = column.width;
+                if (maxWidth) {
+                    finalWidth = Math.min(finalWidth, maxWidth);
+                }
+                // `minWidth` has higher priority, as described above
+                if (minWidth) {
+                    finalWidth = Math.max(finalWidth, minWidth);
+                }
+                column.width = finalWidth;
+                remainedWidth -= finalWidth + barGapPercent * finalWidth;
                 autoWidthCount--;
             }
         });
@@ -288,7 +326,9 @@ function doCalBarWidthAndOffset(seriesInfoList) {
         // Recalculate width again
         autoWidth = (remainedWidth - categoryGap)
             / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
+
         autoWidth = Math.max(autoWidth, 0);
+
 
         var widthSum = 0;
         var lastColumn;
@@ -380,11 +420,6 @@ export function layout(seriesType, ecModel) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
 
-            // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
-            if (isNaN(value) || isNaN(baseValue)) {
-                continue;
-            }
-
             var sign = value >= 0 ? 'p' : 'n';
             var baseCoord = valueAxisStart;
 
@@ -432,6 +467,7 @@ export function layout(seriesType, ecModel) {
                 }
                 stacked && (lastStackCoords[stackId][baseValue][sign] += height);
             }
+
             data.setItemLayout(idx, {
                 x: x,
                 y: y,
@@ -457,6 +493,7 @@ export var largeLayout = {
 
         var data = seriesModel.getData();
         var cartesian = seriesModel.coordinateSystem;
+        var coordLayout = cartesian.grid.getRect();
         var baseAxis = cartesian.getBaseAxis();
         var valueAxis = cartesian.getOtherAxis(baseAxis);
         var valueDim = data.mapDimension(valueAxis.dim);
@@ -476,6 +513,7 @@ export var largeLayout = {
         function progress(params, data) {
             var count = params.count;
             var largePoints = new LargeArr(count * 2);
+            var largeBackgroundPoints = new LargeArr(count * 2);
             var largeDataIndices = new LargeArr(count);
             var dataIndex;
             var coord = [];
@@ -489,7 +527,11 @@ export var largeLayout = {
 
                 coord = cartesian.dataToPoint(valuePair, null, coord);
                 // Data index might not be in order, depends on `progressiveChunkMode`.
+                largeBackgroundPoints[pointsOffset] = valueAxisHorizontal
+                    ? coordLayout.x + coordLayout.width : coord[0];
                 largePoints[pointsOffset++] = coord[0];
+                largeBackgroundPoints[pointsOffset] = valueAxisHorizontal
+                    ? coord[1] : coordLayout.y + coordLayout.height;
                 largePoints[pointsOffset++] = coord[1];
                 largeDataIndices[idxOffset++] = dataIndex;
             }
@@ -497,8 +539,10 @@ export var largeLayout = {
             data.setLayout({
                 largePoints: largePoints,
                 largeDataIndices: largeDataIndices,
+                largeBackgroundPoints: largeBackgroundPoints,
                 barWidth: barWidth,
                 valueAxisStart: getValueAxisStart(baseAxis, valueAxis, false),
+                backgroundStart: valueAxisHorizontal ? coordLayout.x : coordLayout.y,
                 valueAxisHorizontal: valueAxisHorizontal
             });
         }
