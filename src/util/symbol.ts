@@ -196,7 +196,7 @@ const symbolCtors: Dictionary<SymbolCtor> = {
 
 const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
 
-    line: function (x: number, y: number, w: number, h: number, shape: graphic.Line['shape']) {
+    line: function (x, y, w, h, shape: graphic.Line['shape']) {
         // FIXME
         shape.x1 = x;
         shape.y1 = y + h / 2;
@@ -204,14 +204,14 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
         shape.y2 = y + h / 2;
     },
 
-    rect: function (x: number, y: number, w: number, h: number, shape: graphic.Rect['shape']) {
+    rect: function (x, y, w, h, shape: graphic.Rect['shape']) {
         shape.x = x;
         shape.y = y;
         shape.width = w;
         shape.height = h;
     },
 
-    roundRect: function (x: number, y: number, w: number, h: number, shape: graphic.Rect['shape']) {
+    roundRect: function (x, y, w, h, shape: graphic.Rect['shape']) {
         shape.x = x;
         shape.y = y;
         shape.width = w;
@@ -219,7 +219,7 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
         shape.r = Math.min(w, h) / 4;
     },
 
-    square: function (x: number, y: number, w: number, h: number, shape: graphic.Rect['shape']) {
+    square: function (x, y, w, h, shape: graphic.Rect['shape']) {
         let size = Math.min(w, h);
         shape.x = x;
         shape.y = y;
@@ -227,35 +227,35 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
         shape.height = size;
     },
 
-    circle: function (x: number, y: number, w: number, h: number, shape: graphic.Circle['shape']) {
+    circle: function (x, y, w, h, shape: graphic.Circle['shape']) {
         // Put circle in the center of square
         shape.cx = x + w / 2;
         shape.cy = y + h / 2;
         shape.r = Math.min(w, h) / 2;
     },
 
-    diamond: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Diamond>['shape']) {
+    diamond: function (x, y, w, h, shape: InstanceType<typeof Diamond>['shape']) {
         shape.cx = x + w / 2;
         shape.cy = y + h / 2;
         shape.width = w;
         shape.height = h;
     },
 
-    pin: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Pin>['shape']) {
+    pin: function (x, y, w, h, shape: InstanceType<typeof Pin>['shape']) {
         shape.x = x + w / 2;
         shape.y = y + h / 2;
         shape.width = w;
         shape.height = h;
     },
 
-    arrow: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Arrow>['shape']) {
+    arrow: function (x, y, w, h, shape: InstanceType<typeof Arrow>['shape']) {
         shape.x = x + w / 2;
         shape.y = y + h / 2;
         shape.width = w;
         shape.height = h;
     },
 
-    triangle: function (x: number, y: number, w: number, h: number, shape: InstanceType<typeof Triangle>['shape']) {
+    triangle: function (x, y, w, h, shape: InstanceType<typeof Triangle>['shape']) {
         shape.cx = x + w / 2;
         shape.cy = y + h / 2;
         shape.width = w;

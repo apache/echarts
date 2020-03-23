@@ -217,7 +217,8 @@ class ToolboxView extends ComponentView {
                         borderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
                         padding: iconStyleEmphasisModel.get('textPadding'),
                         fill: null
-                    }
+                    },
+                    ignore: true
                 });
                 path.setTextContent(textContent);
 
@@ -285,7 +286,7 @@ class ToolboxView extends ComponentView {
             // const hoverStyle = icon.hoverStyle;
 
             // TODO simplify code?
-            const emphasisState = icon.states.emphasis;
+            const emphasisState = icon.ensureState('emphasis');
             const emphasisTextConfig = emphasisState.textConfig || (emphasisState.textConfig = {});
             const textContent = icon.getTextContent();
             const emphasisTextState = textContent && textContent.states.emphasis;

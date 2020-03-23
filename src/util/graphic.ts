@@ -367,7 +367,22 @@ function liftColor(color: string): string {
 }
 
 function singleEnterEmphasis(el: Displayable) {
+    if (!el.states.emphasis) {
+        return;
+    }
+
+    const emphasisStyle = el.states.emphasis.style;
+    const currentFill = el.style.fill;
+    const currentStroke = el.style.stroke;
+
     el.useState('emphasis');
+
+    if (emphasisStyle && !hasFillOrStroke(emphasisStyle.fill)) {
+        el.style.fill = liftColor(currentFill);
+    }
+    if (emphasisStyle && !hasFillOrStroke(emphasisStyle.stroke)) {
+        el.style.stroke = liftColor(currentStroke);
+    }
 
     // TODO default lift fill/stroke. z2
     // TODO hover layer
