@@ -82,7 +82,7 @@ under the License.
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push((Math.random() * 5).toFixed(2));
+                    data1.push(i === 0 ? '-' : (Math.random() * 5).toFixed(2));
                     data2.push(-Math.random().toFixed(2));
                     data3.push((Math.random() + 0.5).toFixed(2));
                     data4.push((Math.random() + 0.3).toFixed(2));
