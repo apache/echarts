@@ -39,7 +39,8 @@ import {
     SymbolOptionMixin,
     BoxLayoutOptionMixin,
     LabelFormatterCallback,
-    Dictionary
+    Dictionary,
+    LineLabelOption
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -102,11 +103,11 @@ export interface GraphEdgeItemOption {
     value?: number
 
     lineStyle?: GraphEdgeLineStyleOption
-    label?: LabelOption
+    label?: LineLabelOption
 
     emphasis?: {
         lineStyle?: GraphEdgeLineStyleOption
-        label?: LabelOption
+        label?: LineLabelOption
     }
 
     /**
@@ -171,7 +172,7 @@ interface GraphSeriesOption extends SeriesOption,
     edgeSymbol: string | string[]
     edgeSymbolSize: number | number[]
 
-    edgeLabel?: LabelOption & {
+    edgeLabel?: LineLabelOption & {
         formatter?: LabelFormatterCallback | string
     }
     label?: LabelOption & {

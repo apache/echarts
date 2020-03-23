@@ -37,6 +37,7 @@ import {
     CommonTooltipOption
 } from '../../util/types';
 import Model from '../../model/Model';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -294,8 +295,8 @@ class LegendView extends ComponentView {
                 style: {
                     x: 0,
                     y: 0,
-                    textAlign: 'center',
-                    textVerticalAlign: 'middle'
+                    align: 'center',
+                    verticalAlign: 'middle'
                 },
                 onclick() {
                     api.dispatchAction({
@@ -310,13 +311,12 @@ class LegendView extends ComponentView {
             let emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
             graphic.setLabelStyle(
-                labelText.style, labelText.hoverStyle = {}, labelModel, emphasisLabelModel,
+                labelText, labelModel, emphasisLabelModel,
                 {
-                    defaultText: selectorItem.title,
-                    isRectText: false
+                    defaultText: selectorItem.title
                 }
             );
-            graphic.setHoverStyle(labelText);
+            graphic.enableHoverEmphasis(labelText);
         });
     }
 
@@ -410,13 +410,13 @@ class LegendView extends ComponentView {
         }
 
         itemGroup.add(new graphic.Text({
-            style: graphic.setTextStyle({}, textStyleModel, {
+            style: graphic.setTextStyle({}, null, textStyleModel, {
                 text: content,
                 x: textX,
                 y: itemHeight / 2,
-                textFill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
-                textAlign: textAlign,
-                textVerticalAlign: 'middle'
+                fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
+                align: textAlign,
+                verticalAlign: 'middle'
             })
         }));
 
@@ -452,7 +452,7 @@ class LegendView extends ComponentView {
 
         this.getContentGroup().add(itemGroup);
 
-        graphic.setHoverStyle(itemGroup);
+        graphic.enableHoverEmphasis(itemGroup);
 
         // @ts-ignore
         itemGroup.__legendDataIndex = dataIndex;
@@ -546,7 +546,7 @@ function setSymbolStyle(
     let itemStyle;
     if (symbolType !== 'line' && symbolType.indexOf('empty') < 0) {
         itemStyle = legendModelItemStyle.getItemStyle();
-        symbol.style.stroke = borderColor;
+        (symbol as graphic.Path).style.stroke = borderColor;
         if (!isSelected) {
             itemStyle.stroke = inactiveBorderColor;
         }
@@ -554,7 +554,8 @@ function setSymbolStyle(
     else {
         itemStyle = legendModelItemStyle.getItemStyle(['borderWidth', 'borderColor']);
     }
-    return symbol.setStyle(itemStyle);
+    (symbol as Displayable).setStyle(itemStyle);
+    return symbol;
 }
 
 function dispatchSelectAction(

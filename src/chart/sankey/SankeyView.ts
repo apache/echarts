@@ -117,11 +117,15 @@ interface SankeyPathProps extends PathProps {
     shape?: Partial<SankeyPathShape>
 }
 
-class SankeyPath extends graphic.Path {
+class SankeyPath extends graphic.Path<SankeyPathProps> {
     shape: SankeyPathShape;
 
     constructor(opts?: SankeyPathProps) {
-        super(opts, null, new SankeyPathShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new SankeyPathShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: SankeyPathShape) {
@@ -266,7 +270,7 @@ class SankeyView extends ChartView {
                     break;
             }
 
-            graphic.setHoverStyle(
+            graphic.enableHoverEmphasis(
                 curve,
                 edgeModel.getModel(['emphasis', 'lineStyle']).getItemStyle()
             );
@@ -298,18 +302,17 @@ class SankeyView extends ChartView {
             let hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
             graphic.setLabelStyle(
-                rect.style, hoverStyle, labelModel, labelHoverModel,
+                rect, labelModel, labelHoverModel,
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: node.dataIndex,
-                    defaultText: node.id,
-                    isRectText: true
+                    defaultText: node.id
                 }
             );
 
             rect.setStyle('fill', node.getVisual('color'));
 
-            graphic.setHoverStyle(rect, hoverStyle);
+            graphic.enableHoverEmphasis(rect, hoverStyle);
 
             group.add(rect);
 

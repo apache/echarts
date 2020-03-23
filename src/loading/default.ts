@@ -73,11 +73,17 @@ export default function (
     });
     let labelRect = new graphic.Rect({
         style: {
-            fill: 'none',
-            text: opts.text,
-            textPosition: 'right',
-            textDistance: 10,
-            textFill: opts.textColor
+            fill: 'none'
+        },
+        textContent: new graphic.Text({
+            style: {
+                text: opts.text,
+                fill: opts.textColor
+            }
+        }),
+        textConfig: {
+            position: 'right',
+            distance: 10
         },
         zlevel: opts.zlevel,
         z: 10001

@@ -33,10 +33,11 @@ import Element from 'zrender/src/Element';
 import { VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
+import { RichTextProps } from 'zrender/src/graphic/RichText';
 
 const inner = makeInner<{
     lastProp?: DisplayableProps
-    labelEl?: graphic.Rect
+    labelEl?: graphic.Text
     pointerEl?: Displayable
 }, Element>();
 const clone = zrUtil.clone;
@@ -85,7 +86,7 @@ export interface AxisPointerElementOptions {
         type: 'Line' | 'Rect' | 'Circle' | 'Sector'
     }
 
-    label: PathProps
+    label: RichTextProps
 }
 /**
  * Base axis pointer class in 2D.
@@ -281,7 +282,7 @@ class BaseAxisPointer implements AxisPointer {
         axisPointerModel: AxisPointerModel
     ) {
         if (elOption.label) {
-            let labelEl = inner(group).labelEl = new graphic.Rect(
+            let labelEl = inner(group).labelEl = new graphic.Text(
                 clone(elOption.label)
             );
 
@@ -320,7 +321,8 @@ class BaseAxisPointer implements AxisPointer {
             updateProps(labelEl, {
                 // Consider text length change in vertical axis, animation should
                 // be used on shape, otherwise the effect will be weird.
-                shape: elOption.label.shape,
+                // TODOTODO
+                // shape: elOption.label.shape,
                 position: elOption.label.position
             });
 
@@ -371,7 +373,7 @@ class BaseAxisPointer implements AxisPointer {
         updateMandatoryProps(handle, axisPointerModel, false);
 
         // update style
-        handle.setStyle(handleModel.getItemStyle(null, [
+        (handle as graphic.Path).setStyle(handleModel.getItemStyle(null, [
             'color', 'borderColor', 'borderWidth', 'opacity',
             'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
         ]));

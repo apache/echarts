@@ -280,10 +280,10 @@ const SymbolClz = graphic.Path.extend({
         height: 0
     },
 
-    calculateTextPosition: function (out, style, rect) {
-        let res = calculateTextPosition(out, style, rect);
+    calculateTextPosition(out, config, rect) {
+        let res = calculateTextPosition(out, config, rect);
         let shape = this.shape;
-        if (shape && shape.symbolType === 'pin' && style.textPosition === 'inside') {
+        if (shape && shape.symbolType === 'pin' && config.position === 'inside') {
             res.y = rect.y + rect.height * 0.4;
         }
         return res;
@@ -323,7 +323,7 @@ function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string)
             symbolStyle.fill && (symbolStyle.fill = color);
             symbolStyle.stroke && (symbolStyle.stroke = color);
         }
-        this.dirty(false);
+        this.markRedraw();
     }
 }
 

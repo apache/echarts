@@ -18,7 +18,6 @@
 */
 
 import {retrieve, defaults, extend, each, isObject} from 'zrender/src/core/util';
-import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
@@ -27,10 +26,10 @@ import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { ZRTextVerticalAlign, ZRTextAlign, ECElement } from '../../util/types';
+import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import Element from 'zrender/src/Element';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 
 const PI = Math.PI;
@@ -414,14 +413,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         let maxWidth = retrieve(
             opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
-        // FIXME
-        // truncate rich text? (consider performance)
-        let truncatedText = (ellipsis != null && maxWidth != null)
-            ? formatUtil.truncateText(
-                name, maxWidth, textFont, ellipsis,
-                {minChar: 2, placeholder: truncateOpt.placeholder}
-            )
-            : name;
 
         let tooltipOpt = axisModel.get('tooltip', true);
 
@@ -449,18 +440,20 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             }, tooltipOpt)
             : null;
         textEl.__fullText = name;
-        textEl.__truncatedText = truncatedText;
         // Id for animation
         textEl.anid = 'name';
 
-        graphic.setTextStyle(textEl.style, textStyleModel, {
-            text: truncatedText,
-            textFont: textFont,
-            textFill: textStyleModel.getTextColor()
-                || axisModel.get(['axisLine', 'lineStyle', 'color']),
-            textAlign: textStyleModel.get('align')
+        graphic.setTextStyle(textEl.style, null, textStyleModel, {
+            text: name,
+            font: textFont,
+            overflow: 'truncate',
+            width: maxWidth,
+            ellipsis,
+            fill: textStyleModel.getTextColor()
+                || axisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
+            align: textStyleModel.get('align')
                 || labelLayout.textAlign,
-            textVerticalAlign: textStyleModel.get('verticalAlign')
+            verticalAlign: textStyleModel.get('verticalAlign')
                 || labelLayout.textVerticalAlign
         });
 
@@ -615,7 +608,7 @@ function createTicks(
     ticksCoords: TickCoord[],
     tickTransform: matrixUtil.MatrixArray,
     tickEndCoord: number,
-    tickLineStyle: StyleProps,
+    tickLineStyle: PathStyleProps,
     anidPrefix: string
 ) {
     let tickEls = [];
@@ -788,14 +781,14 @@ function buildAxisLabel(
         });
         textEl.anid = 'label_' + tickValue;
 
-        graphic.setTextStyle(textEl.style, itemLabelModel, {
+        graphic.setTextStyle(textEl.style, null, itemLabelModel, {
             text: formattedLabel,
-            textAlign: itemLabelModel.getShallow('align', true)
+            align: itemLabelModel.getShallow('align', true)
                 || labelLayout.textAlign,
-            textVerticalAlign: itemLabelModel.getShallow('verticalAlign', true)
+            verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
                 || itemLabelModel.getShallow('baseline', true)
                 || labelLayout.textVerticalAlign,
-            textFill: typeof textColor === 'function'
+            fill: typeof textColor === 'function'
                 ? textColor(
                     // (1) In category axis with data zoom, tick is not the original
                     // index of axis.data. So tick should not be exposed to user
@@ -811,7 +804,7 @@ function buildAxisLabel(
                         : tickValue,
                     index
                 )
-                : textColor
+                : textColor as string
         });
 
         // Pack data for mouse event

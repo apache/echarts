@@ -27,7 +27,7 @@ import GlobalModel from '../../model/Global';
 import Polar from '../../coord/polar/Polar';
 import ComponentView from '../../view/Component';
 import AngleAxis from '../../coord/polar/AngleAxis';
-import { ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
+import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
 
 const elementList = [
     'axisLine',
@@ -261,13 +261,14 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 silent: AxisBuilder.isLabelSilent(angleAxisModel)
             });
             group.add(textEl);
-            graphic.setTextStyle(textEl.style, labelModel, {
+            graphic.setTextStyle(textEl.style, null, labelModel, {
                 x: p[0],
                 y: p[1],
-                textFill: labelModel.getTextColor() || angleAxisModel.get(['axisLine', 'lineStyle', 'color']),
+                fill: labelModel.getTextColor()
+                    || angleAxisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
                 text: labelItem.formattedLabel,
-                textAlign: labelTextAlign,
-                textVerticalAlign: labelTextVerticalAlign
+                align: labelTextAlign,
+                verticalAlign: labelTextVerticalAlign
             });
 
             // Pack data for mouse event

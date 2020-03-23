@@ -18,9 +18,9 @@
 */
 
 import makeStyleMapper from './makeStyleMapper';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import Model from '../Model';
 import { AreaStyleOption } from '../../util/types';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 const getAreaStyle = makeStyleMapper([
     ['fill', 'color'],
@@ -31,7 +31,7 @@ const getAreaStyle = makeStyleMapper([
     ['shadowColor']
 ]);
 
-type AreaStyleProps = Pick<StyleProps,
+type AreaStyleProps = Pick<PathStyleProps,
     'fill'
     | 'shadowBlur'
     | 'shadowOffsetX'

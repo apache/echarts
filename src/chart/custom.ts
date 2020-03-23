@@ -352,7 +352,7 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     let styleEmphasis = elOption.styleEmphasis;
     // hoverStyle should always be set here, because if the hover style
     // may already be changed, where the inner cache should be reset.
-    graphicUtil.setElementHoverStyle(el, styleEmphasis);
+    graphicUtil.enableElementHoverEmphasis(el, styleEmphasis);
     if (isRoot) {
         graphicUtil.setAsHighDownDispatcher(el, styleEmphasis !== false);
     }

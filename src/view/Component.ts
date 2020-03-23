@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import Group from 'zrender/src/container/Group';
+import Group from 'zrender/src/graphic/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import ComponentModel from '../model/Component';

@@ -21,7 +21,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {createSymbol} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
-import {setLabel} from './helper';
 import ChartView from '../../view/Chart';
 import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -33,6 +32,7 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Element from 'zrender/src/Element';
+import { getDefaultLabel } from '../helper/labelHelper';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -835,7 +835,7 @@ function removeBar(
 ) {
     // Not show text when animating
     let labelRect = bar.__pictorialBarRect;
-    labelRect && (labelRect.style.text = null);
+    labelRect && (labelRect.removeTextContent());
 
     let pathes = [];
     eachPath(bar, function (path) {
@@ -921,7 +921,7 @@ function updateCommon(
             },
             normalStyle
         ));
-        graphic.setHoverStyle(path, hoverStyle);
+        graphic.enableHoverEmphasis(path, hoverStyle);
 
         cursorStyle && (path.cursor = cursorStyle);
         path.z2 = symbolMeta.z2;
@@ -931,12 +931,21 @@ function updateCommon(
     let barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
     let barRect = bar.__pictorialBarRect;
 
-    setLabel(
-        barRect.style, barRectHoverStyle, itemModel,
-        color, opt.seriesModel, dataIndex, barPositionOutside
+    let labelModel = itemModel.getModel('label');
+    let hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+
+    graphic.setLabelStyle(
+        barRect, labelModel, hoverLabelModel,
+        {
+            labelFetcher: opt.seriesModel,
+            labelDataIndex: dataIndex,
+            defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
+            autoColor: color,
+            defaultOutsidePosition: barPositionOutside
+        }
     );
 
-    graphic.setHoverStyle(barRect, barRectHoverStyle);
+    graphic.enableHoverEmphasis(barRect, barRectHoverStyle);
 }
 
 function toIntTimes(times: number) {

@@ -21,7 +21,6 @@
 
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import * as vec2 from 'zrender/src/core/vector';
-import fixClipWithShadow from 'zrender/src/graphic/helper/fixClipWithShadow';
 
 const vec2Min = vec2.min;
 const vec2Max = vec2.max;
@@ -322,13 +321,19 @@ export class ECPolyline extends Path<ECPolylineProps> {
 
     shape: ECPolylineShape;
 
-    brush = fixClipWithShadow(Path.prototype.brush);
-
     constructor(opts?: ECPolylineProps) {
-        super(opts, {
+        super(opts);
+    }
+
+    getDefaultStyle() {
+        return {
             stroke: '#000',
-            fill: null
-        }, new ECPolylineShape());
+            fill: null as string
+        };
+    }
+
+    getDefaultShape() {
+        return new ECPolylineShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: ECPolylineShape) {
@@ -376,12 +381,14 @@ export class ECPolygon extends Path {
 
     shape: ECPolygonShape;
 
-    // @ts-ignore
-    brush = fixClipWithShadow(Path.prototype.brush);
-
     constructor(opts?: ECPolygonProps) {
-        super(opts, null, new ECPolygonShape());
+        super(opts);
     }
+
+    getDefaultShape() {
+        return new ECPolygonShape();
+    }
+
     buildPath(ctx: CanvasRenderingContext2D, shape: ECPolygonShape) {
         let points = shape.points;
         let stackedOnPoints = shape.stackedOnPoints;

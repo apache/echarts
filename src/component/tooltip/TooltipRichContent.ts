@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-// import Group from 'zrender/src/container/Group';
+// import Group from 'zrender/src/graphic/Group';
 import Text from 'zrender/src/graphic/Text';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
@@ -26,8 +26,8 @@ import { TooltipOption } from './TooltipModel';
 import * as graphic from '../../util/graphic';
 import { Dictionary } from 'zrender/src/core/types';
 import { ColorString } from '../../util/types';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import Model from '../../model/Model';
+import RichText, { RichTextStyleProps } from 'zrender/src/graphic/RichText';
 
 class TooltipRichContent {
 
@@ -77,7 +77,7 @@ class TooltipRichContent {
             this._zr.remove(this.el);
         }
 
-        let markers: StyleProps['rich'] = {};
+        let markers: RichTextStyleProps['rich'] = {};
         let text = content;
         let prefix = '{marker';
         let suffix = '|}';
@@ -87,10 +87,10 @@ class TooltipRichContent {
             let name = text.substr(startId + prefix.length, endId - startId - prefix.length);
             if (name.indexOf('sub') > -1) {
                 markers['marker' + name] = {
-                    textWidth: 4,
-                    textHeight: 4,
-                    textBorderRadius: 2,
-                    textBackgroundColor: markerRich[name]
+                    width: 4,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: markerRich[name]
 
                     // TODO: textOffset is not implemented for rich text
                     // textOffset: [3, 0]
@@ -98,10 +98,10 @@ class TooltipRichContent {
             }
             else {
                 markers['marker' + name] = {
-                    textWidth: 10,
-                    textHeight: 10,
-                    textBorderRadius: 5,
-                    textBackgroundColor: markerRich[name]
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: markerRich[name]
                 };
             }
 
@@ -109,15 +109,15 @@ class TooltipRichContent {
             startId = text.indexOf('{marker');
         }
 
-        this.el = new Text({
+        this.el = new RichText({
             style: {
                 rich: markers,
                 text: content,
-                textLineHeight: 20,
-                textBackgroundColor: tooltipModel.get('backgroundColor'),
-                textBorderRadius: tooltipModel.get('borderRadius'),
-                textFill: tooltipModel.get(['textStyle', 'color']),
-                textPadding: tooltipModel.get('padding')
+                lineHeight: 20,
+                backgroundColor: tooltipModel.get('backgroundColor'),
+                borderRadius: tooltipModel.get('borderRadius'),
+                fill: tooltipModel.get(['textStyle', 'color']),
+                padding: tooltipModel.get('padding')
             },
             z: tooltipModel.get('z')
         });

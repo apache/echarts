@@ -208,7 +208,7 @@ class MarkAreaView extends MarkerView {
                     });
                     // Layout
                     areaData.setItemLayout(idx, points);
-                    let el = areaData.getItemGraphicEl(idx) as graphic.Rect;
+                    let el = areaData.getItemGraphicEl(idx) as graphic.Polygon;
                     el.setShape('points', points);
                 });
             }
@@ -292,20 +292,17 @@ class MarkAreaView extends MarkerView {
                 )
             );
 
-            polygon.hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
-
             graphic.setLabelStyle(
-                polygon.style, polygon.hoverStyle, labelModel, labelHoverModel,
+                polygon, labelModel, labelHoverModel,
                 {
                     labelFetcher: maModel,
                     labelDataIndex: idx,
                     defaultText: areaData.getName(idx) || '',
-                    isRectText: true,
                     autoColor: color
                 }
             );
 
-            graphic.setHoverStyle(polygon, {});
+            graphic.enableHoverEmphasis(polygon, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle());
 
             graphic.getECData(polygon).dataModel = maModel;
         });

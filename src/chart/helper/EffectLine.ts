@@ -19,7 +19,6 @@
 
 /**
  * Provide effect for line
- * @module echarts/chart/helper/EffectLine
  */
 
 import * as graphic from '../../util/graphic';

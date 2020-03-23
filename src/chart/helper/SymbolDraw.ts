@@ -29,10 +29,10 @@ import {
     SymbolOptionMixin,
     ItemStyleOption,
     ZRColor,
-    AnimationOptionMixin
+    AnimationOptionMixin,
+    ZRStyleProps
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import Model from '../../model/Model';
 
 interface UpdateOpt {
@@ -94,8 +94,8 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object> {
 }
 
 export interface SymbolDrawSeriesScope {
-    itemStyle?: StyleProps
-    hoverItemStyle?: StyleProps
+    itemStyle?: ZRStyleProps
+    hoverItemStyle?: ZRStyleProps
     symbolRotate?: number
     symbolOffset?: number[]
     labelModel?: Model<LabelOption>

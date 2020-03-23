@@ -270,7 +270,7 @@ class MapDraw {
                 });
 
                 graphic.setLabelStyle<typeof query>(
-                    textEl.style, textEl.hoverStyle = {}, labelModel, hoverLabelModel,
+                    textEl, labelModel, hoverLabelModel,
                     {
                         labelFetcher: labelFetcher,
                         labelDataIndex: query,
@@ -278,8 +278,8 @@ class MapDraw {
                         useInsideStyle: false
                     },
                     {
-                        textAlign: 'center',
-                        textVerticalAlign: 'middle'
+                        align: 'center',
+                        verticalAlign: 'middle'
                     }
                 );
 
@@ -308,7 +308,7 @@ class MapDraw {
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
-            graphic.setHoverStyle(regionGroup, hoverItemStyle);
+            graphic.enableHoverEmphasis(regionGroup, hoverItemStyle);
 
             regionsGroup.add(regionGroup);
         });

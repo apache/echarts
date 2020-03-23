@@ -57,25 +57,36 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
     startIndex: number;
     endIndex: number;
 
+    private _ctx: CanvasRenderingContext2D;
+
     constructor(opts?: LargeSymbolPathProps) {
-        super(opts, null, new LargeSymbolPathShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new LargeSymbolPathShape();
     }
 
     setColor: ECSymbol['setColor'];
 
-    buildPath(path: PathProxy, shape: LargeSymbolPathShape) {
+    buildPath(path: PathProxy | CanvasRenderingContext2D, shape: LargeSymbolPathShape) {
         let points = shape.points;
         let size = shape.size;
 
         let symbolProxy = this.symbolProxy;
         let symbolProxyShape = symbolProxy.shape;
-        let ctx = path.getContext ? path.getContext() : path;
+        let ctx = (path as PathProxy).getContext
+            ? (path as PathProxy).getContext()
+            : path as CanvasRenderingContext2D;
         let canBoost = ctx && size[0] < BOOST_SIZE_THRESHOLD;
 
         // Do draw in afterBrush.
         if (canBoost) {
+            this._ctx = ctx;
             return;
         }
+
+        this._ctx = null;
 
         for (let i = 0; i < points.length;) {
             let x = points[i++];
@@ -97,17 +108,16 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
         }
     }
 
-    afterBrush(ctx: CanvasRenderingContext2D) {
+    afterBrush() {
         let shape = this.shape;
         let points = shape.points;
         let size = shape.size;
-        let canBoost = size[0] < BOOST_SIZE_THRESHOLD;
+        let ctx = this._ctx;
 
-        if (!canBoost) {
+        if (!ctx) {
             return;
         }
 
-        this.setTransform(ctx);
         // PENDING If style or other canvas status changed?
         for (let i = 0; i < points.length;) {
             let x = points[i++];
@@ -125,8 +135,6 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
                 size[0], size[1]
             );
         }
-
-        this.restoreTransform(ctx);
     }
 
     findDataIndex(x: number, y: number) {

@@ -114,11 +114,12 @@ class FunnelPiece extends graphic.Group {
                 itemStyleModel.getItemStyle(['opacity'])
             )
         );
-        polygon.hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        const polygonEmphasisState = polygon.ensureState('emphasis');
+        polygonEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
         this._updateLabel(data, idx);
 
-        graphic.setHoverStyle(this);
+        graphic.enableHoverEmphasis(this);
     }
 
     _updateLabel(data: List, idx: number) {
@@ -157,7 +158,7 @@ class FunnelPiece extends graphic.Group {
         let visualColor = data.getItemVisual(idx, 'color');
 
         graphic.setLabelStyle(
-            labelText.style, labelText.hoverStyle = {}, labelModel, labelHoverModel,
+            labelText, labelModel, labelHoverModel,
             {
                 labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
@@ -166,8 +167,8 @@ class FunnelPiece extends graphic.Group {
                 useInsideStyle: !!labelLayout.inside
             },
             {
-                textAlign: labelLayout.textAlign,
-                textVerticalAlign: labelLayout.verticalAlign
+                align: labelLayout.textAlign,
+                verticalAlign: labelLayout.verticalAlign
             }
         );
 
@@ -183,7 +184,8 @@ class FunnelPiece extends graphic.Group {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
+        const lineEmphasisState = labelLine.ensureState('emphasis');
+        lineEmphasisState.style = labelLineHoverModel.getModel('lineStyle').getLineStyle();
     }
 }
 

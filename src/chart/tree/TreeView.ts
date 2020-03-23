@@ -30,13 +30,12 @@ import { __DEV__ } from '../../config';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
-import Path, { PathProps } from 'zrender/src/graphic/Path';
+import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import Tree, { TreeNode } from '../../data/Tree';
 import List from '../../data/List';
 import Model from '../../model/Model';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import { ColorString } from '../../util/types';
 
 type TreeSymbol = SymbolClz & {
@@ -58,9 +57,9 @@ interface TreeSeriesScope extends Pick<
     fadeIn: boolean
 
     itemModel: Model<TreeSeriesNodeItemOption>
-    itemStyle: StyleProps
-    hoverItemStyle: StyleProps
-    lineStyle: StyleProps
+    itemStyle: PathStyleProps
+    hoverItemStyle: PathStyleProps
+    lineStyle: PathStyleProps
     labelModel: Model<TreeSeriesNodeItemOption['label']>
     hoverLabelModel: Model<TreeSeriesNodeItemOption['label']>
     symbolInnerColor: ColorString
@@ -84,13 +83,21 @@ interface TreeNodeLayout {
     rawY: number
 }
 
-class TreePath extends Path {
+class TreePath extends Path<TreeEdgePathProps> {
     shape: TreeEdgeShape;
     constructor(opts?: TreeEdgePathProps) {
-        super(opts, {
+        super(opts);
+    }
+
+    getDefaultStyle() {
+        return {
             stroke: '#000',
-            fill: null
-        }, new TreeEdgeShape());
+            fill: null as string
+        };
+    }
+
+    getDefaultShape() {
+        return new TreeEdgeShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: TreeEdgeShape) {
@@ -497,16 +504,20 @@ function updateNode(
             }
         }
 
-        let textPosition = isLeft ? 'left' : 'right';
+        let textPosition = isLeft ? 'left' as const : 'right' as const;
         let rotate = seriesScope.labelModel.get('rotate');
         let labelRotateRadian = rotate * (Math.PI / 180);
 
-        symbolPath.setStyle({
-            textPosition: seriesScope.labelModel.get('position') || textPosition,
-            textRotation: rotate == null ? -rad : labelRotateRadian,
-            textOrigin: 'center',
-            textVerticalAlign: 'middle'
-        });
+        const textContent = symbolPath.getTextContent();
+        if (textContent) {
+            symbolPath.setTextConfig({
+                position: seriesScope.labelModel.get('position') || textPosition,
+                rotation: rotate == null ? -rad : labelRotateRadian
+                // textOrigin: 'center',
+            });
+            textContent.setStyle('verticalAlign', 'middle');
+        }
+
     }
 
     drawEdge(
@@ -539,7 +550,7 @@ function drawEdge(
                 });
             }
 
-            graphic.updateProps(edge, {
+            graphic.updateProps(edge as Path, {
                 shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
                 style: {opacity: 1}
             }, seriesModel);
@@ -566,7 +577,7 @@ function drawEdge(
                         style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
                     });
                 }
-                graphic.updateProps(edge, {
+                graphic.updateProps(edge as Path, {
                     shape: {
                         parentPoint: [targetLayout.x, targetLayout.y],
                         childPoints: childPoints
@@ -627,7 +638,7 @@ function removeNode(
 
     if (edge) {
         if (edgeShape === 'curve') {
-            graphic.updateProps(edge, {
+            graphic.updateProps(edge as Path, {
                 shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
                 style: {
                     opacity: 0
@@ -637,7 +648,7 @@ function removeNode(
             });
         }
         else if (edgeShape === 'polyline' && seriesScope.layout === 'orthogonal') {
-            graphic.updateProps(edge, {
+            graphic.updateProps(edge as Path, {
                 shape: {
                     parentPoint: [sourceLayout.x, sourceLayout.y],
                     childPoints: [[sourceLayout.x, sourceLayout.y]]

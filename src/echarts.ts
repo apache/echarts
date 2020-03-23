@@ -66,6 +66,8 @@ import {
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
+// At least canvas renderer.
+import 'zrender/src/canvas/canvas';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;

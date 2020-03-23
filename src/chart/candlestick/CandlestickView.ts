@@ -222,7 +222,11 @@ class NormalBoxPath extends Path<NormalBoxPathProps> {
     __simpleBox: boolean;
 
     constructor(opts?: NormalBoxPathProps) {
-        super(opts, null, new NormalBoxPathShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new NormalBoxPathShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: NormalBoxPathShape) {
@@ -290,7 +294,7 @@ function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimple
     el.__simpleBox = isSimpleBox;
 
     let hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
-    graphic.setHoverStyle(el, hoverStyle);
+    graphic.enableHoverEmphasis(el, hoverStyle);
 }
 
 function transInit(points: number[][], itemLayout: CandlestickItemLayout) {
@@ -320,7 +324,11 @@ class LargeBoxPath extends Path {
     __sign: number;
 
     constructor(opts?: LargeBoxPathProps) {
-        super(opts, null, new LargeBoxPathShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new LargeBoxPathShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: LargeBoxPathShape) {

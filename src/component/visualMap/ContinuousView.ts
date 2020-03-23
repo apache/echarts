@@ -178,23 +178,23 @@ class ContinuousView extends VisualMapView {
             style: {
                 x: position[0],
                 y: position[1],
-                textVerticalAlign: orient === 'horizontal' ? 'middle' : align as TextVerticalAlign,
-                textAlign: orient === 'horizontal' ? align as TextAlign : 'center',
+                verticalAlign: orient === 'horizontal' ? 'middle' : align as TextVerticalAlign,
+                align: orient === 'horizontal' ? align as TextAlign : 'center',
                 text: text,
-                textFont: textStyleModel.getFont(),
-                textFill: textStyleModel.getTextColor()
+                font: textStyleModel.getFont(),
+                fill: textStyleModel.getTextColor()
             }
         }));
     }
 
     private _renderBar(targetGroup: graphic.Group) {
-        let visualMapModel = this.visualMapModel;
-        let shapes = this._shapes;
-        let itemSize = visualMapModel.itemSize;
-        let orient = this._orient;
-        let useHandle = this._useHandle;
-        let itemAlign = helper.getItemAlign(visualMapModel, this.api, itemSize);
-        let barGroup = shapes.barGroup = this._createBarGroup(itemAlign);
+        const visualMapModel = this.visualMapModel;
+        const shapes = this._shapes;
+        const itemSize = visualMapModel.itemSize;
+        const orient = this._orient;
+        const useHandle = this._useHandle;
+        const itemAlign = helper.getItemAlign(visualMapModel, this.api, itemSize);
+        const barGroup = shapes.barGroup = this._createBarGroup(itemAlign);
 
         // Bar
         barGroup.add(shapes.outOfRange = createPolygon());
@@ -205,8 +205,8 @@ class ContinuousView extends VisualMapView {
             zrUtil.bind(this._dragHandle, this, 'all', true)
         ));
 
-        let textRect = visualMapModel.textStyleModel.getTextRect('国');
-        let textSize = mathMax(textRect.width, textRect.height);
+        const textRect = visualMapModel.textStyleModel.getTextRect('国');
+        const textSize = mathMax(textRect.width, textRect.height);
 
         // Handle
         if (useHandle) {
@@ -230,9 +230,9 @@ class ContinuousView extends VisualMapView {
         textSize: number,
         orient: Orient
     ) {
-        let onDrift = zrUtil.bind(this._dragHandle, this, handleIndex, false);
-        let onDragEnd = zrUtil.bind(this._dragHandle, this, handleIndex, true);
-        let handleThumb = createPolygon(
+        const onDrift = zrUtil.bind(this._dragHandle, this, handleIndex, false);
+        const onDragEnd = zrUtil.bind(this._dragHandle, this, handleIndex, true);
+        const handleThumb = createPolygon(
             createHandlePoints(handleIndex, textSize),
             getCursor(this._orient),
             onDrift,
@@ -245,8 +245,8 @@ class ContinuousView extends VisualMapView {
         // transform (orient/inverse). So label is built separately but not
         // use zrender/graphic/helper/RectText, and is located based on view
         // group (according to handleLabelPoint) but not barGroup.
-        let textStyleModel = this.visualMapModel.textStyleModel;
-        let handleLabel = new graphic.Text({
+        const textStyleModel = this.visualMapModel.textStyleModel;
+        const handleLabel = new graphic.Text({
             draggable: true,
             drift: onDrift,
             onmousemove(e) {
@@ -256,13 +256,13 @@ class ContinuousView extends VisualMapView {
             ondragend: onDragEnd,
             style: {
                 x: 0, y: 0, text: '',
-                textFont: textStyleModel.getFont(),
-                textFill: textStyleModel.getTextColor()
+                font: textStyleModel.getFont(),
+                fill: textStyleModel.getTextColor()
             }
         });
         this.group.add(handleLabel);
 
-        let handleLabelPoint = [
+        const handleLabelPoint = [
             orient === 'horizontal'
                 ? textSize / 2
                 : textSize * 1.5,
@@ -283,29 +283,29 @@ class ContinuousView extends VisualMapView {
         textSize: number,
         orient: Orient
     ) {
-        let indicator = createPolygon([[0, 0]], 'move');
+        const indicator = createPolygon([[0, 0]], 'move');
         indicator.position[0] = itemSize[0];
         indicator.attr({invisible: true, silent: true});
         barGroup.add(indicator);
 
-        let textStyleModel = this.visualMapModel.textStyleModel;
-        let indicatorLabel = new graphic.Text({
+        const textStyleModel = this.visualMapModel.textStyleModel;
+        const indicatorLabel = new graphic.Text({
             silent: true,
             invisible: true,
             style: {
                 x: 0, y: 0, text: '',
-                textFont: textStyleModel.getFont(),
-                textFill: textStyleModel.getTextColor()
+                font: textStyleModel.getFont(),
+                fill: textStyleModel.getTextColor()
             }
         });
         this.group.add(indicatorLabel);
 
-        let indicatorLabelPoint = [
+        const indicatorLabelPoint = [
             orient === 'horizontal' ? textSize / 2 : HOVER_LINK_OUT + 3,
             0
         ];
 
-        let shapes = this._shapes;
+        const shapes = this._shapes;
         shapes.indicator = indicator;
         shapes.indicatorLabel = indicatorLabel;
         shapes.indicatorLabelPoint = indicatorLabelPoint;
@@ -395,17 +395,17 @@ class ContinuousView extends VisualMapView {
     }
 
     private _updateView(forSketch?: boolean) {
-        let visualMapModel = this.visualMapModel;
-        let dataExtent = visualMapModel.getExtent();
-        let shapes = this._shapes;
+        const visualMapModel = this.visualMapModel;
+        const dataExtent = visualMapModel.getExtent();
+        const shapes = this._shapes;
 
-        let outOfRangeHandleEnds = [0, visualMapModel.itemSize[1]];
-        let inRangeHandleEnds = forSketch ? outOfRangeHandleEnds : this._handleEnds;
+        const outOfRangeHandleEnds = [0, visualMapModel.itemSize[1]];
+        const inRangeHandleEnds = forSketch ? outOfRangeHandleEnds : this._handleEnds;
 
-        let visualInRange = this._createBarVisual(
+        const visualInRange = this._createBarVisual(
             this._dataInterval, dataExtent, inRangeHandleEnds, 'inRange'
         );
-        let visualOutOfRange = this._createBarVisual(
+        const visualOutOfRange = this._createBarVisual(
             dataExtent, dataExtent, outOfRangeHandleEnds, 'outOfRange'
         );
 
@@ -431,17 +431,17 @@ class ContinuousView extends VisualMapView {
         handleEnds: number[],
         forceState: ContinuousModel['stateList'][number]
     ): BarVisual {
-        let opts = {
+        const opts = {
             forceState: forceState,
             convertOpacityToAlpha: true
         };
-        let colorStops = this._makeColorGradient(dataInterval, opts);
+        const colorStops = this._makeColorGradient(dataInterval, opts);
 
-        let symbolSizes = [
+        const symbolSizes = [
             this.getControllerVisual(dataInterval[0], 'symbolSize', opts) as number,
             this.getControllerVisual(dataInterval[1], 'symbolSize', opts) as number
         ];
-        let barPoints = this._createBarPoints(handleEnds, symbolSizes);
+        const barPoints = this._createBarPoints(handleEnds, symbolSizes);
 
         return {
             barColor: new LinearGradient(0, 0, 0, 1, colorStops),
@@ -541,8 +541,8 @@ class ContinuousView extends VisualMapView {
                 x: textPoint[0],
                 y: textPoint[1],
                 text: visualMapModel.formatValueText(this._dataInterval[handleIndex]),
-                textVerticalAlign: 'middle',
-                textAlign: this._applyTransform(
+                verticalAlign: 'middle',
+                align: this._applyTransform(
                     this._orient === 'horizontal'
                         ? (handleIndex === 0 ? 'bottom' : 'top')
                         : 'left',
@@ -577,7 +577,7 @@ class ContinuousView extends VisualMapView {
         ));
 
         let opts = {convertOpacityToAlpha: true};
-        let color = this.getControllerVisual(cursorValue, 'color', opts);
+        let color = this.getControllerVisual(cursorValue, 'color', opts) as ColorString;
         indicator.setStyle('fill', color);
 
         // Update handle label position.
@@ -586,14 +586,15 @@ class ContinuousView extends VisualMapView {
             graphic.getTransform(indicator, this.group)
         );
 
-        let indicatorLabel = shapes.indicatorLabel;
+        const indicatorLabel = shapes.indicatorLabel;
         indicatorLabel.attr('invisible', false);
-        let align = this._applyTransform('left', shapes.barGroup);
-        let orient = this._orient;
+        const align = this._applyTransform('left', shapes.barGroup);
+        const orient = this._orient;
+        const isHorizontal = orient === 'horizontal';
         indicatorLabel.setStyle({
             text: (rangeSymbol ? rangeSymbol : '') + visualMapModel.formatValueText(textValue),
-            textVerticalAlign: orient === 'horizontal' ? align as TextVerticalAlign : 'middle',
-            textAlign: orient === 'horizontal' ? 'center' : align as TextAlign,
+            verticalAlign: isHorizontal ? align as TextVerticalAlign : 'middle',
+            align: isHorizontal ? 'center' : align as TextAlign,
             x: textPoint[0],
             y: textPoint[1]
         });

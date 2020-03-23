@@ -31,10 +31,11 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
-interface SunburstLabelOption extends Omit<LabelOption, 'rotate'> {
+interface SunburstLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: 'radial' | 'tangential' | number
     minAngle?: number
     silent?: boolean
+    position?: LabelOption['position'] | 'outside'
 }
 
 interface SunburstDataParams extends CallbackDataParams {

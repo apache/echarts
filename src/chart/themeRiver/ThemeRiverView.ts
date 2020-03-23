@@ -147,19 +147,19 @@ class ThemeRiverView extends ChartView {
             let hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
             let itemStyleModel = seriesModel.getModel('itemStyle');
 
-            graphic.setTextStyle(text.style, labelModel, {
+            graphic.setTextStyle(text.style, null, labelModel, {
                 text: labelModel.get('show')
                     ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
                         || data.getName(indices[j - 1])
                     : null,
-                textVerticalAlign: 'middle'
+                verticalAlign: 'middle'
             });
 
             polygon.setStyle(extend({
                 fill: color
             }, itemStyleModel.getItemStyle(['color'])));
 
-            graphic.setHoverStyle(polygon, hoverItemStyleModel.getItemStyle());
+            graphic.enableHoverEmphasis(polygon, hoverItemStyleModel.getItemStyle());
         }
 
         this._layersSeries = layersSeries;

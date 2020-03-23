@@ -102,6 +102,7 @@ class PiePiece extends graphic.Group {
         let sector = new graphic.Sector({
             z2: 2
         });
+
         let polyline = new graphic.Polyline();
         let text = new graphic.Text();
         this.add(sector);
@@ -118,12 +119,11 @@ class PiePiece extends graphic.Group {
 
         let seriesModel = data.hostModel as PieSeriesModel;
         let itemModel = data.getItemModel<PieDataItemOption>(idx);
-        let layout = data.getItemLayout(idx) as graphic.Sector['shape'];
-        let sectorShape = zrUtil.extend({
-            label: null
-        }, layout);
+        let layout = data.getItemLayout(idx);
+        let sectorShape = zrUtil.extend({}, layout);
         // Not animate label
         sectorShape.label = null;
+        sectorShape.viewRect = null;
 
         let animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
 
@@ -175,7 +175,8 @@ class PiePiece extends graphic.Group {
                 itemModel.getModel('itemStyle').getItemStyle()
             )
         );
-        sector.hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        const sectorEmphasisState = sector.ensureState('emphasis');
+        sectorEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
         let cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
@@ -222,7 +223,7 @@ class PiePiece extends graphic.Group {
             }
             : null;
 
-        graphic.setHoverStyle(this);
+        graphic.enableHoverEmphasis(this);
     }
 
     private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
@@ -284,8 +285,7 @@ class PiePiece extends graphic.Group {
         let visualColor = data.getItemVisual(idx, 'color');
 
         graphic.setLabelStyle(
-            labelText.style,
-            labelText.hoverStyle = {},
+            labelText,
             labelModel,
             labelHoverModel,
             {
@@ -296,8 +296,8 @@ class PiePiece extends graphic.Group {
                 useInsideStyle: !!labelLayout.inside
             },
             {
-                textAlign: labelLayout.textAlign,
-                textVerticalAlign: labelLayout.verticalAlign,
+                align: labelLayout.textAlign,
+                verticalAlign: labelLayout.verticalAlign,
                 opacity: data.getItemVisual(idx, 'opacity')
             }
         );
@@ -315,14 +315,15 @@ class PiePiece extends graphic.Group {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
+        const lineEmphasisState = labelLine.ensureState('emphasis');
+        lineEmphasisState.style = labelLineHoverModel.getModel('lineStyle').getLineStyle();
 
         let smooth = labelLineModel.get('smooth');
         if (smooth && smooth === true) {
             smooth = 0.4;
         }
         labelLine.setShape({
-            smooth: smooth
+            smooth: smooth as number
         });
     }
 }

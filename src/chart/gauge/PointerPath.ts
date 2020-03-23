@@ -38,7 +38,11 @@ export default class PointerPath extends Path<PointerPathProps> {
     shape: PointerShape;
 
     constructor(opts?: PointerPathProps) {
-        super(opts, null, new PointerShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new PointerShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: PointerShape) {

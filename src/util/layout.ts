@@ -127,7 +127,7 @@ function boxLayout(
 /**
  * VBox or HBox layouting
  * @param {string} orient
- * @param {module:zrender/container/Group} group
+ * @param {module:zrender/graphic/Group} group
  * @param {number} gap
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
@@ -136,7 +136,7 @@ export let box = boxLayout;
 
 /**
  * VBox layouting
- * @param {module:zrender/container/Group} group
+ * @param {module:zrender/graphic/Group} group
  * @param {number} gap
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
@@ -145,7 +145,7 @@ export let vbox = zrUtil.curry(boxLayout, 'vertical');
 
 /**
  * HBox layouting
- * @param {module:zrender/container/Group} group
+ * @param {module:zrender/graphic/Group} group
  * @param {number} gap
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]

@@ -150,9 +150,9 @@ class TitleView extends ComponentView {
         );
 
         let textEl = new graphic.Text({
-            style: graphic.setTextStyle({}, textStyleModel, {
+            style: graphic.setTextStyle({}, null, textStyleModel, {
                 text: titleModel.get('text'),
-                textFill: textStyleModel.getTextColor()
+                fill: textStyleModel.getTextColor()
             }, {disableBox: true}),
             z2: 10
         });
@@ -161,11 +161,11 @@ class TitleView extends ComponentView {
 
         let subText = titleModel.get('subtext');
         let subTextEl = new graphic.Text({
-            style: graphic.setTextStyle({}, subtextStyleModel, {
+            style: graphic.setTextStyle({}, null, subtextStyleModel, {
                 text: subText,
-                textFill: subtextStyleModel.getTextColor(),
+                fill: subtextStyleModel.getTextColor(),
                 y: textRect.height + titleModel.get('itemGap'),
-                textVerticalAlign: 'top'
+                verticalAlign: 'top'
             }, {disableBox: true}),
             z2: 10
         });
@@ -213,6 +213,7 @@ class TitleView extends ComponentView {
         if (!textAlign) {
             // Align left if title is on the left. center and right is same
             textAlign = (titleModel.get('left') || titleModel.get('right')) as ZRTextAlign;
+            // @ts-ignore
             if (textAlign === 'middle') {
                 textAlign = 'center';
             }
@@ -226,6 +227,7 @@ class TitleView extends ComponentView {
         }
         if (!textVerticalAlign) {
             textVerticalAlign = (titleModel.get('top') || titleModel.get('bottom')) as ZRTextVerticalAlign;
+            // @ts-ignore
             if (textVerticalAlign === 'center') {
                 textVerticalAlign = 'middle';
             }
@@ -241,8 +243,8 @@ class TitleView extends ComponentView {
 
         group.attr('position', [layoutRect.x, layoutRect.y]);
         let alignStyle = {
-            textAlign: textAlign,
-            textVerticalAlign: textVerticalAlign
+            align: textAlign,
+            verticalAlign: textVerticalAlign
         };
         textEl.setStyle(alignStyle);
         subTextEl.setStyle(alignStyle);

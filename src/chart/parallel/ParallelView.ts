@@ -25,14 +25,14 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
 import Parallel from '../../coord/parallel/Parallel';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 const DEFAULT_SMOOTH = 0.3;
 
 interface ParallelDrawSeriesScope {
     smooth: number
-    lineStyle: StyleProps
+    lineStyle: PathStyleProps
 }
 class ParallelView extends ChartView {
     static type = 'parallel';
@@ -149,7 +149,7 @@ function createGridClipShape(coordSys: Parallel, seriesModel: ParallelSeriesMode
         }
     });
 
-    let dim = parallelModel.get('layout') === 'horizontal' ? 'width' : 'height';
+    let dim = parallelModel.get('layout') === 'horizontal' ? 'width' as const : 'height' as const;
     rectEl.setShape(dim, 0);
     graphic.initProps(rectEl, {
         shape: {

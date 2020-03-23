@@ -25,8 +25,8 @@
  * be put in this file.
  */
 
-import Group from 'zrender/src/container/Group';
-import Element, {ElementEvent} from 'zrender/src/Element';
+import Group from 'zrender/src/graphic/Group';
+import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
 import DataFormatMixin from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
@@ -38,11 +38,14 @@ import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import Source from '../data/Source';
 import { TooltipMarker } from './format';
-import { easingType } from 'zrender/src/animation/easing';
+import { AnimationEasing } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import ZRText from 'zrender/src/graphic/Text';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { ImageStyleProps } from 'zrender/src/graphic/Image';
+import RichText, { RichTextStyleProps } from 'zrender/src/graphic/RichText';
 
 
 
@@ -66,7 +69,7 @@ export type ZRLineType = 'solid' | 'dotted' | 'dashed';
 export type ZRFontStyle = 'normal' | 'italic' | 'oblique';
 export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number;
 
-export type ZREasing = easingType;
+export type ZREasing = AnimationEasing;
 
 export type ZRTextAlign = TextAlign;
 export type ZRTextVerticalAlign = TextVerticalAlign;
@@ -74,6 +77,8 @@ export type ZRTextVerticalAlign = TextVerticalAlign;
 export type ZRElementEvent = ElementEvent;
 
 export type ZRRectLike = RectLike;
+
+export type ZRStyleProps = PathStyleProps | ImageStyleProps | TextStyleProps | RichTextStyleProps;
 
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
@@ -562,7 +567,7 @@ export interface AnimationOptionMixin {
     /**
      * Easing of initialize animation
      */
-    animationEasing?: easingType
+    animationEasing?: AnimationEasing
     /**
      * Delay of initialize animation
      * Can be a callback to specify duration of each element
@@ -577,7 +582,7 @@ export interface AnimationOptionMixin {
     /**
      * Easing of data update animation.
      */
-    animationEasingUpdate?: easingType
+    animationEasingUpdate?: AnimationEasing
     /**
      * Delay of data update animation.
      * Can be a callback to specify duration of each element
@@ -748,10 +753,12 @@ export interface LabelOption extends TextCommonOption {
     show?: boolean
     // TODO: TYPE More specified 'inside', 'insideTop'....
     // x, y can be both percent string or number px.
-    position?: string | (number | string)[]
+    position?: ElementTextConfig['position']
     distance?: number
     rotate?: number
     offset?: number[]
+
+    overflow?: RichTextStyleProps['overflow']
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)
@@ -762,14 +769,17 @@ export interface LabelOption extends TextCommonOption {
 /**
  * Option for labels on line, like markLine, lines
  */
-export interface LineLabelOption extends Omit<LabelOption, 'distance'> {
+export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'position'> {
     position?: 'start'
         | 'middle'
         | 'end'
+        | 'insideStart'
         | 'insideStartTop'
         | 'insideStartBottom'
+        | 'insideMiddle'
         | 'insideMiddleTop'
         | 'insideMiddleBottom'
+        | 'insideEnd'
         | 'insideEndTop'
         | 'insideEndBottom'
         | 'insideMiddleBottom'
@@ -819,7 +829,7 @@ interface PositionCallback {
          * Will be HTMLDivElement when renderMode is html
          * Otherwise it's graphic.Text
          */
-        el: HTMLDivElement | ZRText | null,
+        el: HTMLDivElement | RichText | null,
         /**
          * Rect of hover elements. Will be null if not hovered
          */

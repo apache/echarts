@@ -36,6 +36,8 @@ import {
     UserDefinedToolboxFeature
 } from './featureManager';
 import { getUID } from '../../util/component';
+import { RichText } from 'zrender/src/export';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -201,18 +203,23 @@ class ToolboxView extends ComponentView {
                         width: itemSize,
                         height: itemSize
                     }
-                );
+                ) as Displayable;  // TODO handling image
                 path.setStyle(iconStyleModel.getItemStyle());
-                path.hoverStyle = iconStyleEmphasisModel.getItemStyle();
+
+                const pathEmphasisState = path.ensureState('emphasis');
+                pathEmphasisState.style = iconStyleEmphasisModel.getItemStyle();
 
                 // Text position calculation
-                path.setStyle({
-                    text: titlesMap[iconName],
-                    textAlign: iconStyleEmphasisModel.get('textAlign'),
-                    textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
-                    textPadding: iconStyleEmphasisModel.get('textPadding'),
-                    textFill: null
+                const textContent = new RichText({
+                    style: {
+                        text: titlesMap[iconName],
+                        align: iconStyleEmphasisModel.get('textAlign'),
+                        borderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
+                        padding: iconStyleEmphasisModel.get('textPadding'),
+                        fill: null
+                    }
                 });
+                path.setTextContent(textContent);
 
                 let tooltipModel = toolboxModel.getModel('tooltip');
                 if (tooltipModel && tooltipModel.get('show')) {
@@ -232,29 +239,29 @@ class ToolboxView extends ComponentView {
                     }, tooltipModel.option);
                 }
 
-                graphic.setHoverStyle(path);
+                graphic.enableHoverEmphasis(path);
 
                 if (toolboxModel.get('showTitle')) {
                     (path as ExtendedPath).__title = titlesMap[iconName];
                     (path as graphic.Path).on('mouseover', function () {
-                            // Should not reuse above hoverStyle, which might be modified.
-                            let hoverStyle = iconStyleEmphasisModel.getItemStyle();
-                            let defaultTextPosition = toolboxModel.get('orient') === 'vertical'
-                                ? (toolboxModel.get('right') == null ? 'right' : 'left')
-                                : (toolboxModel.get('bottom') == null ? 'bottom' : 'top');
-                            (path as graphic.Path).setStyle({
-                                textFill: iconStyleEmphasisModel.get('textFill')
-                                    || hoverStyle.fill || hoverStyle.stroke || '#000',
-                                textBackgroundColor: iconStyleEmphasisModel.get('textBackgroundColor'),
-                                textPosition: iconStyleEmphasisModel.get('textPosition') || defaultTextPosition
-                            });
-                        })
-                        .on('mouseout', function () {
-                            path.setStyle({
-                                textFill: null,
-                                textBackgroundColor: null
-                            });
+                        // Should not reuse above hoverStyle, which might be modified.
+                        let hoverStyle = iconStyleEmphasisModel.getItemStyle();
+                        let defaultTextPosition = toolboxModel.get('orient') === 'vertical'
+                            ? (toolboxModel.get('right') == null ? 'right' as const : 'left' as const)
+                            : (toolboxModel.get('bottom') == null ? 'bottom' as const : 'top' as const);
+                        textContent.setStyle({
+                            fill: (iconStyleEmphasisModel.get('textFill')
+                                || hoverStyle.fill || hoverStyle.stroke || '#000') as string,
+                            backgroundColor: iconStyleEmphasisModel.get('textBackgroundColor')
                         });
+                        path.setTextConfig({
+                            position: iconStyleEmphasisModel.get('textPosition') || defaultTextPosition
+                        });
+                        textContent.ignore = false;
+                    })
+                    .on('mouseout', function () {
+                        textContent.ignore = true;
+                    });
                 }
                 path.trigger(featureModel.get(['iconStatus', iconName]) || 'normal');
 
@@ -274,29 +281,36 @@ class ToolboxView extends ComponentView {
 
         // Adjust icon title positions to avoid them out of screen
         group.eachChild(function (icon: IconPath) {
-            let titleText = (icon as ExtendedPath).__title;
-            let hoverStyle = icon.hoverStyle;
+            const titleText = (icon as ExtendedPath).__title;
+            // const hoverStyle = icon.hoverStyle;
+
+            // TODO simplify code?
+            const emphasisState = icon.states.emphasis;
+            const emphasisTextConfig = emphasisState.textConfig || (emphasisState.textConfig = {});
+            const textContent = icon.getTextContent();
+            const emphasisTextState = textContent && textContent.states.emphasis;
             // May be background element
-            if (hoverStyle && titleText) {
+            if (emphasisTextState && titleText) {
+                const emphasisTextStyle = emphasisTextState.style || (emphasisTextState.style = {});
                 let rect = textContain.getBoundingRect(
-                    titleText, textContain.makeFont(hoverStyle)
+                    titleText, RichText.makeFont(emphasisTextStyle)
                 );
                 let offsetX = icon.position[0] + group.position[0];
                 let offsetY = icon.position[1] + group.position[1] + itemSize;
 
                 let needPutOnTop = false;
                 if (offsetY + rect.height > api.getHeight()) {
-                    hoverStyle.textPosition = 'top';
+                    emphasisTextConfig.position = 'top';
                     needPutOnTop = true;
                 }
                 let topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
                 if (offsetX + rect.width / 2 > api.getWidth()) {
-                    hoverStyle.textPosition = ['100%', topOffset];
-                    hoverStyle.textAlign = 'right';
+                    emphasisTextConfig.position = ['100%', topOffset];
+                    emphasisTextStyle.align = 'right';
                 }
                 else if (offsetX - rect.width / 2 < 0) {
-                    hoverStyle.textPosition = [0, topOffset];
-                    hoverStyle.textAlign = 'left';
+                    emphasisTextConfig.position = [0, topOffset];
+                    emphasisTextStyle.align = 'left';
                 }
             }
         });

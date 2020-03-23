@@ -26,7 +26,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import { NameMap } from './geoTypes';
 import Region from './Region';
 import { Dictionary } from 'zrender/src/core/types';
-import Group from 'zrender/src/container/Group';
+import Group from 'zrender/src/graphic/Group';
 
 
 interface Loader {

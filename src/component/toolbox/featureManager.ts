@@ -21,8 +21,9 @@ import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import * as graphic from '../../util/graphic';
+import Displayable from 'zrender/src/graphic/Displayable';
 
-type IconPath = ReturnType<typeof graphic.createIcon>;
+// type IconPath = ReturnType<typeof graphic.createIcon>;
 
 type IconStyle = ItemStyleOption & {
     // TODO Move to a individual textStyle option
@@ -57,7 +58,7 @@ export interface ToolboxFeatureModel<Opts extends ToolboxFeatureOption = Toolbox
      * Collection of icon paths.
      * Will be injected during rendering in the view.
      */
-    iconPaths: Dictionary<IconPath>
+    iconPaths: Dictionary<Displayable>
 
     setIconStatus(iconName: string, status: DisplayState): void
 }

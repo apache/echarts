@@ -18,8 +18,8 @@
 */
 
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import Model from '../../model/Model';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 const mapStyle = makeStyleMapper(
     [
@@ -47,7 +47,7 @@ type BarItemStyleKeys = 'fill'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
     | 'shadowColor';
-type ItemStyleProps = Pick<StyleProps, BarItemStyleKeys>;
+type ItemStyleProps = Pick<PathStyleProps, BarItemStyleKeys>;
 
 export function getBarItemStyle(model: Model, excludes?: BarItemStyleKeys[]): ItemStyleProps {
     let style = mapStyle(model, excludes);

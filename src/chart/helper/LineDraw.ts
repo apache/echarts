@@ -25,11 +25,11 @@ import {
     LineStyleOption,
     LineLabelOption,
     ColorString,
-    AnimationOptionMixin
+    AnimationOptionMixin,
+    ZRStyleProps
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
-import { StyleProps } from 'zrender/src/graphic/Style';
 
 interface LineLike extends graphic.Group {
     updateData(data: List, idx: number, scope?: LineDrawSeriesScope): void
@@ -77,8 +77,8 @@ export interface LineDrawModelOption {
 type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>;
 
 export interface LineDrawSeriesScope {
-    lineStyle?: StyleProps
-    hoverLineStyle?: StyleProps
+    lineStyle?: ZRStyleProps
+    hoverLineStyle?: ZRStyleProps
 
     labelModel?: Model<LineLabelOption>
     hoverLabelModel?: Model<LineLabelOption>

@@ -27,15 +27,15 @@ import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import ParallelAxis from './ParallelAxis';
 import { ZRColor, ParsedValue } from '../../util/types';
 import { AxisBaseOption } from '../axisCommonTypes';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import Parallel from './Parallel';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 
 // 'normal' means there is no "active intervals" existing.
 export type ParallelActiveState = 'normal' | 'active' | 'inactive';
 export type ParallelAxisInterval = number[];
 type ParallelAreaSelectStyleKey = 'fill' | 'lineWidth' | 'stroke' | 'opacity';
-export type ParallelAreaSelectStyleProps = Pick<StyleProps, ParallelAreaSelectStyleKey> & {
+export type ParallelAreaSelectStyleProps = Pick<PathStyleProps, ParallelAreaSelectStyleKey> & {
     // Selected area width.
     width: number;
 };

@@ -38,7 +38,8 @@ import ComponentModel from '../../model/Component';
 
 
 type FunnelLabelOption = Omit<LabelOption, 'position'> & {
-    position?: LabelOption['position'] | 'outer'
+    position?: LabelOption['position']
+        | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
 
 export interface FunnelDataItemOption {

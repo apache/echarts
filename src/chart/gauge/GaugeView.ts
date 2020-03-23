@@ -256,12 +256,12 @@ class GaugeView extends ChartView {
                 let autoColor = getColor(i / splitNumber);
 
                 group.add(new graphic.Text({
-                    style: graphic.setTextStyle({}, labelModel, {
+                    style: graphic.setTextStyle({}, null, labelModel, {
                         text: label,
                         x: unitX * (r - splitLineLen - distance) + cx,
                         y: unitY * (r - splitLineLen - distance) + cy,
-                        textVerticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
-                        textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
+                        verticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
+                        align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
                     }, {autoColor: autoColor}),
                     silent: true
                 }));
@@ -384,7 +384,7 @@ class GaugeView extends ChartView {
                 ));
             }
 
-            graphic.setHoverStyle(
+            graphic.enableHoverEmphasis(
                 pointer, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle()
             );
         });
@@ -416,13 +416,13 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.setTextStyle({}, titleModel, {
+                style: graphic.setTextStyle({}, null, titleModel, {
                     x: x,
                     y: y,
                     // FIXME First data name ?
                     text: data.getName(0),
-                    textAlign: 'center',
-                    textVerticalAlign: 'middle'
+                    align: 'center',
+                    verticalAlign: 'middle'
                 }, {autoColor: autoColor, forceRich: true})
             }));
         }
@@ -452,17 +452,17 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.setTextStyle({}, detailModel, {
+                style: graphic.setTextStyle({}, null, detailModel, {
                     x: x,
                     y: y,
                     text: formatLabel(
                         // FIXME First data name ?
                         value, detailModel.get('formatter')
                     ),
-                    textWidth: isNaN(width) ? null : width,
-                    textHeight: isNaN(height) ? null : height,
-                    textAlign: 'center',
-                    textVerticalAlign: 'middle'
+                    width: isNaN(width) ? null : width,
+                    height: isNaN(height) ? null : height,
+                    align: 'center',
+                    verticalAlign: 'middle'
                 }, {autoColor: autoColor, forceRich: true})
             }));
         }

@@ -24,10 +24,10 @@ import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
 import {round} from '../../util/number';
 import List from '../../data/List';
-import { StyleProps } from 'zrender/src/graphic/Style';
-import { ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
+import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
+import { RichTextStyleProps } from 'zrender/src/graphic/RichText';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
@@ -38,9 +38,9 @@ export interface LineLabel extends graphic.Text {
 }
 
 interface InnerLineLabel extends LineLabel {
-    __textAlign: StyleProps['textAlign']
-    __verticalAlign: StyleProps['textVerticalAlign']
-    __position: StyleProps['textPosition']
+    __align: RichTextStyleProps['align']
+    __verticalAlign: RichTextStyleProps['verticalAlign']
+    __position: LineLabelOption['position']
     __labelDistance: number[]
 }
 
@@ -214,7 +214,8 @@ class Line extends graphic.Group {
             },
             lineStyle
         ));
-        line.hoverStyle = hoverLineStyle;
+        const lineEmphasisState = line.ensureState('emphasis');
+        lineEmphasisState.style = hoverLineStyle;
 
         // Update symbol
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
@@ -261,14 +262,14 @@ class Line extends graphic.Group {
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.
         if (normalText != null || emphasisText != null) {
-            graphic.setTextStyle(label.style, labelModel, {
+            graphic.setTextStyle(label.style, null, labelModel, {
                 text: normalText as string
             }, {
                 autoColor: defaultLabelColor
             });
 
-            label.__textAlign = labelStyle.textAlign;
-            label.__verticalAlign = labelStyle.textVerticalAlign;
+            label.__align = labelStyle.align;
+            label.__verticalAlign = labelStyle.verticalAlign;
             // 'start', 'middle', 'end'
             label.__position = labelModel.get('position') || 'middle';
 
@@ -279,9 +280,11 @@ class Line extends graphic.Group {
             label.__labelDistance = distance;
         }
 
+        const emphasisState = label.ensureState('emphasis');
         if (emphasisText != null) {
+            emphasisState.ignore = false;
             // Only these properties supported in this emphasis style here.
-            label.hoverStyle = {
+            emphasisState.style = {
                 text: emphasisText as string,
                 textFill: hoverLabelModel.getTextColor(true),
                 // For merging hover style to normal style, do not use
@@ -293,14 +296,12 @@ class Line extends graphic.Group {
             };
         }
         else {
-            label.hoverStyle = {
-                text: null
-            };
+            emphasisState.ignore = true;
         }
 
         label.ignore = !showLabel && !hoverShowLabel;
 
-        graphic.setHoverStyle(this);
+        graphic.enableHoverEmphasis(this);
     }
 
     highlight() {
@@ -464,8 +465,8 @@ class Line extends graphic.Group {
             label.attr({
                 style: {
                     // Use the user specified text align and baseline first
-                    textVerticalAlign: label.__verticalAlign || textVerticalAlign,
-                    textAlign: label.__textAlign || textAlign
+                    verticalAlign: label.__verticalAlign || textVerticalAlign,
+                    align: label.__align || textAlign
                 },
                 position: textPosition,
                 scale: [invScale, invScale],

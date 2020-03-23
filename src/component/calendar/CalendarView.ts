@@ -27,7 +27,8 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { LayoutOrient, OptionDataValueDate, ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
 import ComponentView from '../../view/Component';
-import { StyleProps } from 'zrender/src/graphic/Style';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { RichTextStyleProps, RichTextProps } from 'zrender/src/graphic/RichText';
 
 const MONTH_TEXT = {
     EN: [
@@ -203,7 +204,7 @@ class CalendarView extends ComponentView {
     }
 
     // render split line
-    _drawSplitline(points: number[][], lineStyle: StyleProps, group: graphic.Group) {
+    _drawSplitline(points: number[][], lineStyle: PathStyleProps, group: graphic.Group) {
 
         let poyline = new graphic.Polyline({
             z2: 20,
@@ -260,7 +261,7 @@ class CalendarView extends ComponentView {
         orient: LayoutOrient,
         position: 'left' | 'right' | 'top' | 'bottom',
         margin: number
-    ) {
+    ): RichTextProps {
 
         point = point.slice();
         let aligns: [ZRTextAlign, ZRTextVerticalAlign] = ['center', 'bottom'];
@@ -289,8 +290,8 @@ class CalendarView extends ComponentView {
             rotation: rotate,
             position: point,
             style: {
-                textAlign: aligns[0],
-                textVerticalAlign: aligns[1]
+                align: aligns[0],
+                verticalAlign: aligns[1]
             }
         };
     }
@@ -345,7 +346,7 @@ class CalendarView extends ComponentView {
         let content = this._formatterLabel(formatter, params);
 
         let yearText = new graphic.Text({z2: 30});
-        graphic.setTextStyle(yearText.style, yearLabel, {text: content}),
+        graphic.setTextStyle(yearText.style, null, yearLabel, {text: content}),
         yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
         group.add(yearText);
@@ -357,7 +358,7 @@ class CalendarView extends ComponentView {
         orient: LayoutOrient,
         position: 'start' | 'end',
         margin: number
-    ) {
+    ): RichTextStyleProps {
         let align: ZRTextAlign = 'left';
         let vAlign: ZRTextVerticalAlign = 'top';
         let x = point[0];
@@ -389,8 +390,8 @@ class CalendarView extends ComponentView {
         return {
             x: x,
             y: y,
-            textAlign: align,
-            textVerticalAlign: vAlign
+            align: align,
+            verticalAlign: vAlign
         };
     }
 
@@ -442,7 +443,7 @@ class CalendarView extends ComponentView {
 
             let monthText = new graphic.Text({z2: 30});
             zrUtil.extend(
-                graphic.setTextStyle(monthText.style, monthLabel, {text: content}),
+                graphic.setTextStyle(monthText.style, null, monthLabel, {text: content}),
                 this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
             );
 
@@ -456,9 +457,9 @@ class CalendarView extends ComponentView {
         position: 'start' | 'end',
         margin: number,
         cellSize: number[]
-    ) {
-        let align = 'center';
-        let vAlign = 'middle';
+    ): RichTextStyleProps {
+        let align: ZRTextAlign = 'center';
+        let vAlign: ZRTextVerticalAlign = 'middle';
         let x = point[0];
         let y = point[1];
         let isStart = position === 'start';
@@ -475,8 +476,8 @@ class CalendarView extends ComponentView {
         return {
             x: x,
             y: y,
-            textAlign: align,
-            textVerticalAlign: vAlign
+            align: align,
+            verticalAlign: vAlign
         };
     }
 
@@ -526,7 +527,7 @@ class CalendarView extends ComponentView {
             let weekText = new graphic.Text({z2: 30});
 
             zrUtil.extend(
-                graphic.setTextStyle(weekText.style, dayLabel, {text: nameMap[day]}),
+                graphic.setTextStyle(weekText.style, null, dayLabel, {text: nameMap[day]}),
                 this._weekTextPositionControl(point, orient, pos, margin, cellSize)
             );
             group.add(weekText);

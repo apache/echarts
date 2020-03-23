@@ -20,13 +20,12 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
-import Path, { PathProps } from 'zrender/src/graphic/Path';
+import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import { BoxplotItemLayout } from './boxplotLayout';
-import { StyleProps } from 'zrender/src/graphic/Style';
 
 // Update common properties
 const EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
@@ -113,7 +112,11 @@ class BoxPath extends Path<BoxPathProps> {
     shape: BoxPathShape;
 
     constructor(opts?: BoxPathProps) {
-        super(opts, null, new BoxPathShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new BoxPathShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: BoxPathShape) {
@@ -180,7 +183,7 @@ function updateNormalBoxData(
     let borderColor = data.getItemVisual(dataIndex, 'color');
 
     // Exclude borderColor.
-    let itemStyle = normalItemStyleModel.getItemStyle(['borderColor']) as StyleProps;
+    let itemStyle = normalItemStyleModel.getItemStyle(['borderColor']) as PathStyleProps;
     itemStyle.stroke = borderColor;
     itemStyle.strokeNoScale = true;
     el.useStyle(itemStyle);
@@ -188,7 +191,7 @@ function updateNormalBoxData(
     el.z2 = 100;
 
     let hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
-    graphic.setHoverStyle(el, hoverStyle);
+    graphic.enableHoverEmphasis(el, hoverStyle);
 }
 
 function transInit(points: number[][], dim: number, itemLayout: BoxplotItemLayout) {

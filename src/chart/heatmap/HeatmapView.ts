@@ -260,17 +260,16 @@ class HeatmapView extends ChartView {
             }
 
             graphic.setLabelStyle(
-                style, hoverStl, labelModel, hoverLabelModel,
+                rect, labelModel, hoverLabelModel,
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: idx,
-                    defaultText: defaultText,
-                    isRectText: true
+                    defaultText: defaultText
                 }
             );
 
             rect.setStyle(style);
-            graphic.setHoverStyle(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
+            graphic.enableHoverEmphasis(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
 
             rect.incremental = incremental;
             // PENDING

@@ -19,11 +19,10 @@
 
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
-import {Rect, Sector, getECData, updateProps, initProps, setHoverStyle} from '../../util/graphic';
-import {setLabel} from './helper';
+import {Rect, Sector, getECData, updateProps, initProps, enableHoverEmphasis, setLabelStyle} from '../../util/graphic';
 import {getBarItemStyle} from './barItemStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
-import Group from 'zrender/src/container/Group';
+import Group from 'zrender/src/graphic/Group';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
@@ -38,6 +37,7 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type { RectLike } from 'zrender/src/core/BoundingRect';
 import type Model from '../../model/Model';
 import { isCoordinateSystemType } from '../../coord/CoordinateSystem';
+import { getDefaultLabel } from '../helper/labelHelper';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 const _eventPos = [0, 0];
@@ -53,7 +53,6 @@ type SectorLayout = SectorShape;
 type RectLayout = RectShape;
 
 type BarPossiblePath = Sector | Rect | Sausage;
-
 
 function getClipArea(coord: CoordSysOfBar, data: List) {
     let coordSysClipArea;
@@ -454,7 +453,7 @@ function removeRect(
     el: Rect
 ) {
     // Not show text when animating
-    el.style.text = null;
+    el.removeTextContent();
     updateProps(el, {
         shape: {
             width: 0
@@ -470,7 +469,7 @@ function removeSector(
     el: Sector
 ) {
     // Not show text when animating
-    el.style.text = null;
+    el.removeTextContent();
     updateProps(el, {
         shape: {
             r: el.shape.r0
@@ -536,7 +535,7 @@ function updateStyle(
     let hoverStyle = getBarItemStyle(itemModel.getModel(['emphasis', 'itemStyle']));
 
     if (!isPolar) {
-        el.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
+        (el as Rect).setShape('r', itemStyleModel.get('barBorderRadius') || 0);
     }
 
     el.useStyle(zrUtil.defaults(
@@ -549,22 +548,30 @@ function updateStyle(
     ));
 
     let cursorStyle = itemModel.getShallow('cursor');
-    cursorStyle && el.attr('cursor', cursorStyle);
+    cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
     if (!isPolar) {
         let labelPositionOutside = isHorizontal
-            ? ((layout as RectLayout).height > 0 ? 'bottom' : 'top')
-            : ((layout as RectLayout).width > 0 ? 'left' : 'right');
+            ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
+            : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
 
-        setLabel(
-            el.style, hoverStyle, itemModel, color,
-            seriesModel, dataIndex, labelPositionOutside
+        let labelModel = itemModel.getModel('label');
+        let hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+        setLabelStyle(
+            el, labelModel, hoverLabelModel,
+            {
+                labelFetcher: seriesModel,
+                labelDataIndex: dataIndex,
+                defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
+                autoColor: color,
+                defaultOutsidePosition: labelPositionOutside
+            }
         );
     }
     if (isZeroOnPolar(layout as SectorLayout)) {
         hoverStyle.fill = hoverStyle.stroke = 'none';
     }
-    setHoverStyle(el, hoverStyle);
+    enableHoverEmphasis(el, hoverStyle);
 }
 
 // In case width or height are too small.
@@ -585,7 +592,7 @@ class LagePathShape {
 interface LargePathProps extends PathProps {
     shape?: LagePathShape
 }
-class LargePath extends Path {
+class LargePath extends Path<LargePathProps> {
     type = 'largeBar';
 
     shape: LagePathShape;
@@ -596,7 +603,11 @@ class LargePath extends Path {
     __barWidth: number;
 
     constructor(opts?: LargePathProps) {
-        super(opts, null, new LagePathShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new LagePathShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: LagePathShape) {

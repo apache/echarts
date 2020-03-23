@@ -18,12 +18,9 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import * as textContain from 'zrender/src/contain/text';
 import * as numberUtil from './number';
 import {TooltipRenderMode, ColorString} from './types';
 import { Dictionary } from 'zrender/src/core/types';
-import { StyleProps } from 'zrender/src/graphic/Style';
-// import Text from 'zrender/src/graphic/Text';
 
 /**
  * Add a comma each three digit.
@@ -245,40 +242,4 @@ export function formatTime(tpl: string, value: number | string | Date, isUTC?: b
  */
 export function capitalFirst(str: string): string {
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
-}
-
-export let truncateText = textContain.truncateText;
-
-export function getTextBoundingRect(opt: StyleProps): ReturnType<typeof textContain.getBoundingRect> {
-    return textContain.getBoundingRect(
-        opt.text,
-        opt.font,
-        opt.textAlign,
-        opt.textVerticalAlign,
-        opt.textPadding as number[],
-        opt.textLineHeight,
-        opt.rich,
-        opt.truncate
-    );
-}
-
-/**
- * @deprecated
- * the `textLineHeight` was added later.
- * For backward compatiblility, put it as the last parameter.
- * But deprecated this interface. Please use `getTextBoundingRect` instead.
- */
-export function getTextRect(
-    text: StyleProps['text'],
-    font: StyleProps['font'],
-    textAlign: StyleProps['textAlign'],
-    textVerticalAlign: StyleProps['textVerticalAlign'],
-    textPadding: StyleProps['textPadding'],
-    rich: StyleProps['rich'],
-    truncate: StyleProps['truncate'],
-    textLineHeight: number
-): ReturnType<typeof textContain.getBoundingRect> {
-    return textContain.getBoundingRect(
-        text, font, textAlign, textVerticalAlign, textPadding as number[], textLineHeight, rich, truncate
-    );
 }

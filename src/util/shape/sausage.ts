@@ -38,12 +38,16 @@ interface SausagePathProps extends PathProps {
     shape?: SausageShape
 }
 
-class SausagePath extends Path {
+class SausagePath extends Path<SausagePathProps> {
 
     type = 'sausage';
 
     constructor(opts?: SausagePathProps) {
-        super(opts, null, new SausageShape());
+        super(opts);
+    }
+
+    getDefaultShape() {
+        return new SausageShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: SausageShape) {

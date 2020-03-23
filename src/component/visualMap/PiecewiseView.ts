@@ -79,10 +79,10 @@ class PiecewiseVisualMapView extends VisualMapView {
                         x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
                         y: itemSize[1] / 2,
                         text: piece.text,
-                        textVerticalAlign: 'middle',
-                        textAlign: itemAlign as TextAlign,
-                        textFont: textFont,
-                        textFill: textFill,
+                        verticalAlign: 'middle',
+                        align: itemAlign as TextAlign,
+                        font: textFont,
+                        fill: textFill,
                         opacity: visualState === 'outOfRange' ? 0.5 : 1
                     }
                 }));
@@ -161,11 +161,11 @@ class PiecewiseVisualMapView extends VisualMapView {
             style: {
                 x: showLabel ? (itemAlign === 'right' ? itemSize[0] : 0) : itemSize[0] / 2,
                 y: itemSize[1] / 2,
-                textVerticalAlign: 'middle',
-                textAlign: showLabel ? (itemAlign as TextAlign) : 'center',
+                verticalAlign: 'middle',
+                align: showLabel ? (itemAlign as TextAlign) : 'center',
                 text: text,
-                textFont: textStyleModel.getFont(),
-                textFill: textStyleModel.getTextColor()
+                font: textStyleModel.getFont(),
+                fill: textStyleModel.getTextColor()
             }
         }));
 

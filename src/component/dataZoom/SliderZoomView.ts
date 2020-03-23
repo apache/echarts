@@ -22,7 +22,7 @@ import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
 import DataZoomView from './DataZoomView';
-import {linearMap, asc} from '../../util/number';
+import {linearMap, asc, parsePercent} from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
@@ -30,7 +30,6 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue } from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
 import ComponentView from '../../view/Component';
-import { parsePercent } from 'zrender/src/graphic/helper/text';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
@@ -436,7 +435,7 @@ class SliderZoomView extends DataZoomView {
 
     _renderHandle() {
         let displaybles = this._displayables;
-        let handles: [Icon, Icon] = displaybles.handles = [null, null];
+        let handles: [graphic.Path, graphic.Path] = displaybles.handles = [null, null];
         let handleLabels: [graphic.Text, graphic.Text] = displaybles.handleLabels = [null, null];
         let barGroup = this._displayables.barGroup;
         let size = this._size;
@@ -451,8 +450,10 @@ class SliderZoomView extends DataZoomView {
             onmouseover: bind(this._showDataInfo, this, true),
             onmouseout: bind(this._showDataInfo, this, false),
             style: {
-                fill: dataZoomModel.get('fillerColor'),
-                textPosition: 'inside'
+                fill: dataZoomModel.get('fillerColor')
+            },
+            textConfig: {
+                position: 'inside'
             }
         }));
 
@@ -486,7 +487,7 @@ class SliderZoomView extends DataZoomView {
                     onmouseout: bind(this._showDataInfo, this, false)
                 },
                 {x: -1, y: 0, width: 2, height: 2}
-            );
+            ) as graphic.Path;
 
             let bRect = path.getBoundingRect();
             this._handleHeight = parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
@@ -509,10 +510,10 @@ class SliderZoomView extends DataZoomView {
                 invisible: true,
                 style: {
                     x: 0, y: 0, text: '',
-                    textVerticalAlign: 'middle',
-                    textAlign: 'center',
-                    textFill: textStyleModel.getTextColor(),
-                    textFont: textStyleModel.getFont()
+                    verticalAlign: 'middle',
+                    align: 'center',
+                    fill: textStyleModel.getTextColor(),
+                    font: textStyleModel.getFont()
                 },
                 z2: 10
             }));
@@ -643,8 +644,8 @@ class SliderZoomView extends DataZoomView {
             handleLabels[handleIndex].setStyle({
                 x: textPoint[0],
                 y: textPoint[1],
-                textVerticalAlign: orient === HORIZONTAL ? 'middle' : direction as ZRTextVerticalAlign,
-                textAlign: orient === HORIZONTAL ? direction as ZRTextAlign : 'center',
+                verticalAlign: orient === HORIZONTAL ? 'middle' : direction as ZRTextVerticalAlign,
+                align: orient === HORIZONTAL ? direction as ZRTextAlign : 'center',
                 text: labelTexts[handleIndex]
             });
         }

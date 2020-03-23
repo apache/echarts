@@ -285,12 +285,11 @@ class Symbol extends graphic.Group {
         let useNameLabel = seriesScope && seriesScope.useNameLabel;
 
         graphic.setLabelStyle(
-            elStyle, hoverItemStyle, labelModel, hoverLabelModel,
+            symbolPath, labelModel, hoverLabelModel,
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
-                isRectText: true,
                 autoColor: color
             }
         );
@@ -301,12 +300,11 @@ class Symbol extends graphic.Group {
         }
 
         symbolPath.__symbolOriginalScale = getScale(symbolSize);
-        symbolPath.hoverStyle = hoverItemStyle;
         symbolPath.highDownOnUpdate = (
             hoverAnimation && seriesModel.isAnimationEnabled()
         ) ? highDownOnUpdate : null;
 
-        graphic.setHoverStyle(symbolPath);
+        graphic.enableHoverEmphasis(symbolPath, hoverItemStyle);
     }
 
     fadeOut(cb: () => void, opt?: {
@@ -316,7 +314,7 @@ class Symbol extends graphic.Group {
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
-        !(opt && opt.keepLabel) && (symbolPath.style.text = null);
+        !(opt && opt.keepLabel) && (symbolPath.removeTextContent());
 
         graphic.updateProps(
             symbolPath,

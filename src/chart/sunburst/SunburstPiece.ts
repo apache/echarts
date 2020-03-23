@@ -241,7 +241,7 @@ class SunburstPiece extends graphic.Group {
         let label = this.childAt(1) as graphic.Text;
 
         graphic.setLabelStyle(
-            label.style, label.hoverStyle || {}, normalModel, labelHoverModel,
+            label, normalModel, labelHoverModel,
             {
                 defaultText: labelModel.getShallow('show') ? text : null,
                 autoColor: visualColor,
@@ -282,8 +282,8 @@ class SunburstPiece extends graphic.Group {
 
         label.attr('style', {
             text: text,
-            textAlign: textAlign,
-            textVerticalAlign: getLabelAttr('verticalAlign') || 'middle',
+            align: textAlign,
+            verticalAlign: getLabelAttr('verticalAlign') || 'middle',
             opacity: getLabelAttr('opacity')
         });
 

@@ -191,7 +191,8 @@ class RadarView extends ChartView {
                     }
                 )
             );
-            polyline.hoverStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
+            const polylineEmphasisState = polyline.ensureState('emphasis');
+            polylineEmphasisState.style = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
 
             let areaStyleModel = itemModel.getModel('areaStyle');
             let hoverAreaStyleModel = itemModel.getModel(['emphasis', 'areaStyle']);
@@ -210,7 +211,8 @@ class RadarView extends ChartView {
                     }
                 )
             );
-            polygon.hoverStyle = hoverAreaStyleModel.getAreaStyle();
+            const polygonEmphasisState = polygon.ensureState('emphasis');
+            polygonEmphasisState.style = hoverAreaStyleModel.getAreaStyle();
 
             let itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
             let itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
@@ -218,19 +220,19 @@ class RadarView extends ChartView {
             let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
                 symbolPath.setStyle(itemStyle);
-                symbolPath.hoverStyle = zrUtil.clone(itemHoverStyle);
+                const pathEmphasisState = symbolPath.ensureState('emphasis');
+                pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
                 let defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
                 graphic.setLabelStyle(
-                    symbolPath.style, symbolPath.hoverStyle, labelModel, labelHoverModel,
+                    symbolPath, labelModel, labelHoverModel,
                     {
                         labelFetcher: data.hostModel,
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
                         defaultText: defaultText as string,
-                        autoColor: color,
-                        isRectText: true
+                        autoColor: color
                     }
                 );
             });
@@ -238,7 +240,7 @@ class RadarView extends ChartView {
             (itemGroup as ECElement).highDownOnUpdate = function (fromState: DisplayState, toState: DisplayState) {
                 polygon.attr('ignore', toState === 'emphasis' ? hoverPolygonIgnore : polygonIgnore);
             };
-            graphic.setHoverStyle(itemGroup);
+            graphic.enableHoverEmphasis(itemGroup);
         });
 
         this._data = data;

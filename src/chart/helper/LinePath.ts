@@ -24,6 +24,7 @@
 import * as graphic from '../../util/graphic';
 import * as vec2 from 'zrender/src/core/vector';
 import { PathProps } from 'zrender/src/graphic/Path';
+import { ColorString } from '../../util/types';
 
 const straightLineProto = graphic.Line.prototype;
 const bezierCurveProto = graphic.BezierCurve.prototype;
@@ -58,10 +59,18 @@ class ECLinePath extends graphic.Path<ECLineProps> {
     shape: StraightLineShape | CurveShape;
 
     constructor(opts?: ECLineProps) {
-        super(opts, {
+        super(opts);
+    }
+
+    getDefaultStyle() {
+        return {
             stroke: '#000',
-            fill: null
-        }, new StraightLineShape());// Default to be line
+            fill: null as ColorString
+        };
+    }
+
+    getDefaultShape() {
+        return new StraightLineShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: StraightLineShape | CurveShape) {

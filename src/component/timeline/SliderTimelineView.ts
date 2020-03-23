@@ -402,7 +402,7 @@ class SliderTimelineView extends TimelineView {
                 onclick: bind(this._changeTimeline, this, value)
             };
             let el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
-            graphic.setHoverStyle(el, hoverStyleModel.getItemStyle());
+            graphic.enableHoverEmphasis(el, hoverStyleModel.getItemStyle());
 
             let ecData = graphic.getECData(el);
             if (itemModel.get('tooltip')) {
@@ -448,15 +448,15 @@ class SliderTimelineView extends TimelineView {
                 onclick: bind(this._changeTimeline, this, dataIndex),
                 silent: false
             });
-            graphic.setTextStyle(textEl.style, normalLabelModel, {
+            graphic.setTextStyle(textEl.style, null, normalLabelModel, {
                 text: labelItem.formattedLabel,
-                textAlign: layoutInfo.labelAlign,
-                textVerticalAlign: layoutInfo.labelBaseline
+                align: layoutInfo.labelAlign,
+                verticalAlign: layoutInfo.labelBaseline
             });
 
             group.add(textEl);
-            graphic.setHoverStyle(
-                textEl, graphic.setTextStyle({}, hoverLabelModel)
+            graphic.enableHoverEmphasis(
+                textEl, graphic.setTextStyle({}, null, hoverLabelModel)
             );
 
         }, this);
@@ -516,7 +516,7 @@ class SliderTimelineView extends TimelineView {
             };
             let btn = makeControlIcon(timelineModel, iconPath, rect, opt);
             group.add(btn);
-            graphic.setHoverStyle(btn, hoverStyle);
+            graphic.enableHoverEmphasis(btn, hoverStyle);
         }
     }
 

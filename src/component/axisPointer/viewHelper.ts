@@ -24,10 +24,9 @@ import * as formatUtil from '../../util/format';
 import * as matrix from 'zrender/src/core/matrix';
 import * as axisHelper from '../../coord/axisHelper';
 import AxisBuilder from '../axis/AxisBuilder';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import Axis from '../../coord/Axis';
 import {
-    ScaleDataValue, CallbackDataParams, ZRTextAlign, ZRTextVerticalAlign, ZRColor, CommonAxisPointerOption
+    ScaleDataValue, CallbackDataParams, ZRTextAlign, ZRTextVerticalAlign, ZRColor, CommonAxisPointerOption, ColorString
 } from '../../util/types';
 import { VectorArray } from 'zrender/src/core/vector';
 import GlobalModel from '../../model/Global';
@@ -38,6 +37,7 @@ import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import ExtensionAPI from '../../ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import Model from '../../model/Model';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 interface LayoutInfo {
     position: VectorArray
@@ -56,7 +56,7 @@ type AxisPointerModel = Model<CommonAxisPointerOption>;
 export function buildElStyle(axisPointerModel: AxisPointerModel) {
     let axisPointerType = axisPointerModel.get('type');
     let styleModel = axisPointerModel.getModel(axisPointerType + 'Style' as 'lineStyle' | 'shadowStyle');
-    let style: StyleProps;
+    let style: PathStyleProps;
     if (axisPointerType === 'line') {
         style = styleModel.getLineStyle();
         style.fill = null;
@@ -118,22 +118,23 @@ export function buildLabelElOption(
     }
 
     elOption.label = {
-        shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
+        // shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
         position: position.slice(),
         // TODO: rich
         style: {
             text: text,
             textFont: font,
-            textFill: labelModel.getTextColor(),
-            textPosition: 'inside',
-            textPadding: paddings,
-            fill: bgColor,
-            stroke: labelModel.get('borderColor') || 'transparent',
-            lineWidth: labelModel.get('borderWidth') || 0,
-            shadowBlur: labelModel.get('shadowBlur'),
-            shadowColor: labelModel.get('shadowColor'),
-            shadowOffsetX: labelModel.get('shadowOffsetX'),
-            shadowOffsetY: labelModel.get('shadowOffsetY')
+            fill: labelModel.getTextColor(),
+            align: 'center',
+            padding: paddings,
+            backgroundColor: bgColor as ColorString,
+            borderColor: labelModel.get('borderColor') || 'transparent',
+            borderRadius: labelModel.get('borderRadius'),
+            borderWidth: labelModel.get('borderWidth') || 0,
+            boxShadowBlur: labelModel.get('shadowBlur'),
+            boxShadowColor: labelModel.get('shadowColor'),
+            boxShadowOffsetX: labelModel.get('shadowOffsetX'),
+            boxShadowOffsetY: labelModel.get('shadowOffsetY')
         },
         // Lable should be over axisPointer.
         z2: 10

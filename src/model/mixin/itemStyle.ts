@@ -19,8 +19,8 @@
 
 import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import { ItemStyleOption } from '../../util/types';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 const getItemStyle = makeStyleMapper([
     ['fill', 'color'],
@@ -30,10 +30,7 @@ const getItemStyle = makeStyleMapper([
     ['shadowBlur'],
     ['shadowOffsetX'],
     ['shadowOffsetY'],
-    ['shadowColor'],
-    // TODO?
-    ['textPosition'],
-    ['textAlign']
+    ['shadowColor']
 ]);
 
 type ItemStyleKeys = 'fill'
@@ -43,11 +40,9 @@ type ItemStyleKeys = 'fill'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
-    | 'shadowColor'
-    | 'textPosition'
-    | 'textAlign';
+    | 'shadowColor';
 
-type ItemStyleProps = Pick<StyleProps, ItemStyleKeys>;
+type ItemStyleProps = Pick<PathStyleProps, ItemStyleKeys>;
 
 class ItemStyleMixin {
 

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {bind, each, indexOf, curry, extend, retrieve, clone} from 'zrender/src/core/util';
+import {bind, each, indexOf, curry, extend, retrieve} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
@@ -38,7 +38,7 @@ import { TreemapLayoutNode } from './treemapLayout';
 import Element from 'zrender/src/Element';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { makeInner } from '../../util/model';
-import { PathProps } from 'zrender/src/graphic/Path';
+import { PathStyleProps, PathProps } from 'zrender/src/graphic/Path';
 import { TreeSeriesNodeItemOption } from '../tree/TreeSeries';
 import {
     TreemapRootToNodePayload,
@@ -46,7 +46,6 @@ import {
     TreemapRenderPayload,
     TreemapZoomToNodePayload
 } from './treemapAction';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import { ColorString } from '../../util/types';
 
 const Group = graphic.Group;
@@ -72,9 +71,9 @@ const getItemStyleEmphasis = makeStyleMapper([
     ['shadowOffsetY'],
     ['shadowColor']
 ]);
-const getItemStyleNormal = function (model: Model<TreemapSeriesNodeItemOption['itemStyle']>): StyleProps {
+const getItemStyleNormal = function (model: Model<TreemapSeriesNodeItemOption['itemStyle']>): PathStyleProps {
     // Normal style props should include emphasis style props.
-    let itemStyle = getItemStyleEmphasis(model) as StyleProps;
+    let itemStyle = getItemStyleEmphasis(model) as PathStyleProps;
     // Clear styles set by emphasis.
     itemStyle.stroke = itemStyle.fill = itemStyle.lineWidth = null;
     return itemStyle;
@@ -871,17 +870,17 @@ function renderNode(
                 let upperLabelWidth = thisWidth - 2 * borderWidth;
 
                 prepareText(
-                    normalStyle, emphasisStyle, visualBorderColor, upperLabelWidth, upperHeight,
+                    bg, visualBorderColor, upperLabelWidth, upperHeight,
                     {x: borderWidth, y: 0, width: upperLabelWidth, height: upperHeight}
                 );
             }
             // For old bg.
             else {
-                normalStyle.text = emphasisStyle.text = null;
+                bg.removeTextContent();
             }
 
             bg.setStyle(normalStyle);
-            graphic.setElementHoverStyle(bg, emphasisStyle);
+            graphic.enableElementHoverEmphasis(bg, emphasisStyle);
         }
 
         group.add(bg);
@@ -917,10 +916,10 @@ function renderNode(
             normalStyle.fill = visualColor;
             let emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
 
-            prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight);
+            prepareText(content, visualColor, contentWidth, contentHeight);
 
             content.setStyle(normalStyle);
-            graphic.setElementHoverStyle(content, emphasisStyle);
+            graphic.enableElementHoverEmphasis(content, emphasisStyle);
         }
 
         group.add(content);
@@ -933,8 +932,7 @@ function renderNode(
     }
 
     function prepareText(
-        normalStyle: StyleProps,
-        emphasisStyle: StyleProps,
+        rectEl: graphic.Rect,
         visualColor: ColorString,
         width: number,
         height: number,
@@ -961,23 +959,23 @@ function renderNode(
         let isShow = normalLabelModel.getShallow('show');
 
         graphic.setLabelStyle(
-            normalStyle, emphasisStyle, normalLabelModel, emphasisLabelModel,
+            rectEl, normalLabelModel, emphasisLabelModel,
             {
                 defaultText: isShow ? text : null,
-                autoColor: visualColor,
-                isRectText: true
+                autoColor: visualColor
             }
         );
 
-        upperLabelRect && (normalStyle.textRect = clone(upperLabelRect));
+        // TODOTODO
+        // upperLabelRect && (normalStyle.textRect = clone(upperLabelRect));
 
-        normalStyle.truncate = (isShow && normalLabelModel.get('ellipsis'))
-            ? {
-                outerWidth: width,
-                outerHeight: height,
-                minChar: 2
-            }
-            : null;
+        // normalStyle.truncate = (isShow && normalLabelModel.get('ellipsis'))
+        //     ? {
+        //         outerWidth: width,
+        //         outerHeight: height,
+        //         minChar: 2
+        //     }
+        //     : null;
     }
 
     function giveGraphic<T extends graphic.Group | graphic.Rect>(

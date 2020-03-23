@@ -24,9 +24,9 @@ import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Transformable from 'zrender/src/core/Transformable';
-import ZImage, {ZImageStyleProps} from 'zrender/src/graphic/Image';
-import Group from 'zrender/src/container/Group';
-import Text from 'zrender/src/graphic/Text';
+import ZImage, { ImageStyleProps } from 'zrender/src/graphic/Image';
+import Group from 'zrender/src/graphic/Group';
+import RichText, { RichTextStyleProps } from 'zrender/src/graphic/RichText';
 import Circle from 'zrender/src/graphic/shape/Circle';
 import Sector from 'zrender/src/graphic/shape/Sector';
 import Ring from 'zrender/src/graphic/shape/Ring';
@@ -42,10 +42,9 @@ import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
-import { Dictionary, ImageLike } from 'zrender/src/core/types';
+import { Dictionary } from 'zrender/src/core/types';
 import LRU from 'zrender/src/core/LRU';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
@@ -59,7 +58,8 @@ import {
     ZRRectLike,
     ColorString,
     DataModel,
-    ECEventData
+    ECEventData,
+    ZRStyleProps
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
@@ -93,11 +93,6 @@ type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
 
 type ExtendedProps = {
-    __hoverStlDirty?: boolean
-    __hoverStl?: StyleProps
-    __cachedNormalStl?: StyleProps
-    __cachedNormalZ2?: number
-
     __highlighted?: boolean | 'layer' | 'plain'
     __highByOuter: number
 
@@ -109,17 +104,11 @@ type ExtendedProps = {
 type ExtendedElement = Element & ExtendedProps;
 type ExtendedDisplayable = Displayable & ExtendedProps;
 
-type ExtendedStyleProps = StyleProps & {
-    insideRollback?: StyleProps
-    insideRollbackOpt?: TextCommonParams
-};
-
 type TextCommonParams = {
     /**
      * Whether diable drawing box of block (outer most).
      */
     disableBox?: boolean
-    isRectText?: boolean
     /**
      * Specify a color when color is 'auto',
      * for textFill, textStroke, textBackgroundColor, and textBorderColor. If autoColor specified, it is used as default textFill.
@@ -138,7 +127,9 @@ type TextCommonParams = {
 
     getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
-    textStyle?: StyleProps
+    defaultOutsidePosition?: LabelOption['position']
+
+    textStyle?: ZRStyleProps
 };
 
 /**
@@ -250,7 +241,7 @@ export function makeImage(
             width: rect.width,
             height: rect.height
         },
-        onload: function (img: ImageLike) {
+        onload(img) {
             if (layout === 'center') {
                 let boundingRect = {
                     width: img.width,
@@ -375,144 +366,18 @@ function liftColor(color: string): string {
     return liftedColor;
 }
 
-function cacheElementStl(el: ExtendedDisplayable) {
-    if (!el.__hoverStlDirty) {
-        return;
-    }
-    el.__hoverStlDirty = false;
+function singleEnterEmphasis(el: Displayable) {
+    el.useState('emphasis');
 
-    let hoverStyle = el.__hoverStl;
-    if (!hoverStyle) {
-        el.__cachedNormalStl = el.__cachedNormalZ2 = null;
-        return;
-    }
+    // TODO default lift fill/stroke. z2
+    // TODO hover layer
 
-    let normalStyle = el.__cachedNormalStl = {} as StyleProps;
-    el.__cachedNormalZ2 = el.z2;
-    let elStyle = el.style;
-
-    const styleKeys = zrUtil.keys(hoverStyle);
-    for (let idx = 0; idx < styleKeys.length; idx++) {
-        const key = styleKeys[idx];
-        if (hoverStyle[key] != null) {
-            (normalStyle as any)[key] = elStyle[key];
-        }
-    }
-
-    // Always cache fill and stroke to normalStyle for lifting color.
-    normalStyle.fill = elStyle.fill;
-    normalStyle.stroke = elStyle.stroke;
+    // applyDefaultTextStyle(targetStyle);
 }
 
-function singleEnterEmphasis(el: ExtendedDisplayable) {
-    let hoverStl = el.__hoverStl;
 
-    if (!hoverStl || el.__highlighted) {
-        return;
-    }
-
-    let zr = el.__zr;
-
-    let useHoverLayer = el.useHoverLayer && zr && zr.painter.type === 'canvas';
-    el.__highlighted = useHoverLayer ? 'layer' : 'plain';
-
-    if (el.isGroup || (!zr && el.useHoverLayer)) {
-        return;
-    }
-
-    let elTarget = el;
-    let targetStyle = el.style;
-
-    if (useHoverLayer) {
-        elTarget = zr.addHover(el);
-        targetStyle = elTarget.style;
-    }
-
-    rollbackDefaultTextStyle(targetStyle);
-
-    if (!useHoverLayer) {
-        cacheElementStl(elTarget);
-    }
-
-    // styles can be:
-    // {
-    //    label: {
-    //        show: false,
-    //        position: 'outside',
-    //        fontSize: 18
-    //    },
-    //    emphasis: {
-    //        label: {
-    //            show: true
-    //        }
-    //    }
-    // },
-    // where properties of `emphasis` may not appear in `normal`. We previously use
-    // module:echarts/util/model#defaultEmphasis to merge `normal` to `emphasis`.
-    // But consider rich text and setOption in merge mode, it is impossible to cover
-    // all properties in merge. So we use merge mode when setting style here.
-    // But we choose the merge strategy that only properties that is not `null/undefined`.
-    // Because when making a textStyle (espacially rich text), it is not easy to distinguish
-    // `hasOwnProperty` and `null/undefined` in code, so we trade them as the same for simplicity.
-    // But this strategy brings a trouble that `null/undefined` can not be used to remove
-    // style any more in `emphasis`. Users can both set properties directly on normal and
-    // emphasis to avoid this issue, or we might support `'none'` for this case if required.
-    targetStyle.extendFrom(hoverStl);
-
-    setDefaultHoverFillStroke(targetStyle, hoverStl, 'fill');
-    setDefaultHoverFillStroke(targetStyle, hoverStl, 'stroke');
-
-    applyDefaultTextStyle(targetStyle);
-
-    if (!useHoverLayer) {
-        el.dirty(false);
-        el.z2 += Z2_EMPHASIS_LIFT;
-    }
-}
-
-function setDefaultHoverFillStroke(
-    targetStyle: StyleProps,
-    hoverStyle: StyleProps,
-    prop: 'fill' | 'stroke'
-) {
-    if (!hasFillOrStroke(hoverStyle[prop]) && hasFillOrStroke(targetStyle[prop])) {
-        targetStyle[prop] = liftColor(targetStyle[prop] as string);
-    }
-}
-
-function singleEnterNormal(el: ExtendedDisplayable) {
-    let highlighted = el.__highlighted;
-
-    if (!highlighted) {
-        return;
-    }
-
-    el.__highlighted = false;
-
-    if (el.isGroup) {
-        return;
-    }
-
-    if (highlighted === 'layer') {
-        el.__zr && el.__zr.removeHover(el);
-    }
-    else {
-        let style = el.style;
-
-        let normalStl = el.__cachedNormalStl;
-        if (normalStl) {
-            rollbackDefaultTextStyle(style);
-            el.setStyle(normalStl);
-            applyDefaultTextStyle(style);
-        }
-        // `__cachedNormalZ2` will not be reset if calling `setElementHoverStyle`
-        // when `el` is on emphasis state. So here by comparing with 1, we try
-        // hard to make the bug case rare.
-        let normalZ2 = el.__cachedNormalZ2;
-        if (normalZ2 != null && el.z2 - normalZ2 === Z2_EMPHASIS_LIFT) {
-            el.z2 = normalZ2;
-        }
-    }
+function singleEnterNormal(el: Displayable) {
+    el.clearStates();
 }
 
 function traverseUpdate<T>(
@@ -537,27 +402,14 @@ function traverseUpdate<T>(
 }
 
 /**
- * Set hover style (namely "emphasis style") of element, based on the current
- * style of the given `el`.
- * This method should be called after all of the normal styles have been adopted
- * to the `el`. See the reason on `setHoverStyle`.
- *
- * @param el Should not be `zrender/container/Group`.
- * @param el.hoverStyle Can be set on el or its descendants,
- *        e.g., `el.hoverStyle = ...; graphic.setHoverStyle(el); `.
- *        Often used when item group has a label element and it's hoverStyle is different.
- * @param hoverStl The specified hover style.
- *        If set as `false`, disable the hover style.
- *        Similarly, The `el.hoverStyle` can alse be set
- *        as `false` to disable the hover style.
- *        Otherwise, use the default hover style if not provided.
+ * Set hover style (namely "emphasis style") of element.
+ * @param el Should not be `zrender/graphic/Group`.
  */
-export function setElementHoverStyle(el: Displayable, hoverStl: StyleProps) {
-    const extendedEl = el as ExtendedDisplayable;
-    // For performance consideration, it might be better to make the "hover style" only the
-    // difference properties from the "normal style", but not a entire copy of all styles.
-    hoverStl = extendedEl.__hoverStl = hoverStl !== false && (extendedEl.hoverStyle || hoverStl || {});
-    extendedEl.__hoverStlDirty = true;
+export function enableElementHoverEmphasis(el: Displayable, hoverStl?: ZRStyleProps) {
+    if (hoverStl) {
+        const emphasisState = el.ensureState('emphasis');
+        emphasisState.style = hoverStl;
+    }
 
     // FIXME
     // It is not completely right to save "normal"/"emphasis" flag on elements.
@@ -565,19 +417,9 @@ export function setElementHoverStyle(el: Displayable, hoverStl: StyleProps) {
     // (1) A highlighted elements are moved out of the view port and re-enter
     // again by dataZoom.
     // (2) call `setOption` and replace elements totally when they are highlighted.
-    if (extendedEl.__highlighted) {
-        // Consider the case:
-        // The styles of a highlighted `el` is being updated. The new "emphasis style"
-        // should be adapted to the `el`. Notice here new "normal styles" should have
-        // been set outside and the cached "normal style" is out of date.
-        extendedEl.__cachedNormalStl = null;
-        // Do not clear `__cachedNormalZ2` here, because setting `z2` is not a constraint
-        // of this method. In most cases, `z2` is not set and hover style should be able
-        // to rollback. Of course, that would bring bug, but only in a rare case, see
-        // `doSingleLeaveHover` for details.
-        singleEnterNormal(extendedEl);
-
-        singleEnterEmphasis(extendedEl);
+    if ((el as ExtendedDisplayable).__highlighted) {
+        singleEnterNormal(el);
+        singleEnterEmphasis(el);
     }
 }
 
@@ -610,39 +452,23 @@ function shouldSilent(el: ExtendedDisplayable, e: ElementEvent) {
 }
 
 /**
- * Set hover style (namely "emphasis style") of element,
- * based on the current style of the given `el`.
+ * Enable the function that mouseover will trigger the emphasis state.
  *
+ * It will set hoverStyle to 'emphasis' state of each children displayables.
+ * If hoverStyle is not given, it will just ignore it and use the preset 'emphasis' state.
+ *
+ * NOTICE
  * (1)
- * **CONSTRAINTS** for this method:
- * <A> This method MUST be called after all of the normal styles having been adopted
- * to the `el`.
- * <B> The input `hoverStyle` (that is, "emphasis style") MUST be the subset of the
- * "normal style" having been set to the el.
- * <C> `color` MUST be one of the "normal styles" (because color might be lifted as
- * a default hover style).
- *
- * The reason: this method treat the current style of the `el` as the "normal style"
- * and cache them when enter/update the "emphasis style". Consider the case: the `el`
- * is in "emphasis" state and `setOption`/`dispatchAction` trigger the style updating
- * logic, where the el should shift from the original emphasis style to the new
- * "emphasis style" and should be able to "downplay" back to the new "normal style".
- *
- * Indeed, it is error-prone to make a interface has so many constraints, but I have
- * not found a better solution yet to fit the backward compatibility, performance and
- * the current programming style.
- *
- * (2)
  * Call the method for a "root" element once. Do not call it for each descendants.
  * If the descendants elemenets of a group has itself hover style different from the
  * root group, we can simply mount the style on `el.hoverStyle` for them, but should
  * not call this method for them.
  *
- * (3) These input parameters can be set directly on `el`:
+ * (2) These input parameters can be set directly on `el`:
  */
-export function setHoverStyle(el: Element, hoverStyle?: StyleProps) {
+export function enableHoverEmphasis(el: Element, hoverStyle?: ZRStyleProps) {
     setAsHighDownDispatcher(el, true);
-    traverseUpdate(el as ExtendedElement, setElementHoverStyle, hoverStyle);
+    traverseUpdate(el as ExtendedElement, enableElementHoverEmphasis, hoverStyle);
 }
 
 /**
@@ -744,24 +570,25 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
  * See more info in `setTextStyleCommon`.
  */
 export function setLabelStyle<LDI>(
-    normalStyle: StyleProps,
-    emphasisStyle: StyleProps,
+    hostEl: Element,
     normalModel: Model,
     emphasisModel: Model,
     opt?: SetLabelStyleOpt<LDI>,
-    normalSpecified?: StyleProps,
-    emphasisSpecified?: StyleProps
+    normalSpecified?: RichTextStyleProps,
+    emphasisSpecified?: RichTextStyleProps
+    // TODO specified position?
 ) {
     opt = opt || EMPTY_OBJ;
-    let labelFetcher = opt.labelFetcher;
-    let labelDataIndex = opt.labelDataIndex;
-    let labelDimIndex = opt.labelDimIndex;
+    const isSetOnRichText = hostEl instanceof RichText;
+    const labelFetcher = opt.labelFetcher;
+    const labelDataIndex = opt.labelDataIndex;
+    const labelDimIndex = opt.labelDimIndex;
 
     // This scenario, `label.normal.show = true; label.emphasis.show = false`,
     // is not supported util someone requests.
 
-    let showNormal = normalModel.getShallow('show');
-    let showEmphasis = emphasisModel.getShallow('show');
+    const showNormal = normalModel.getShallow('show');
+    const showEmphasis = emphasisModel.getShallow('show');
 
     // Consider performance, only fetch label when necessary.
     // If `normal.show` is `false` and `emphasis.show` is `true` and `emphasis.formatter` is not set,
@@ -785,44 +612,67 @@ export function setLabelStyle<LDI>(
         )
         : null;
 
+    let richText = isSetOnRichText ? hostEl as RichText : null;
     // Optimize: If style.text is null, text will not be drawn.
     if (normalStyleText != null || emphasisStyleText != null) {
+        if (!isSetOnRichText) {
+            // Reuse the previous
+            richText = hostEl.getTextContent();
+            if (!richText) {
+                richText = new RichText();
+                hostEl.setTextContent(richText);
+            }
+            richText.ignore = !normalStyleText;
+        }
+        const emphasisStyle: RichTextStyleProps = {};
+
+        const emphasisState = richText.ensureState('emphasis');
+        emphasisState.style = emphasisStyle;
+        emphasisState.ignore = !emphasisStyleText;
+
+        let textConfig: Element['textConfig'];
+        let emphasisTextLayout: Element['textConfig'];
+        if (!isSetOnRichText) {
+            textConfig = {};
+            emphasisTextLayout = emphasisState.textConfig = {};
+        }
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.
         // If we set default values on `emphasisStyle`, consider case:
         // Firstly, `setOption(... label: {normal: {text: null}, emphasis: {show: true}} ...);`
         // Secondly, `setOption(... label: {noraml: {show: true, text: 'abc', color: 'red'} ...);`
         // Then the 'red' will not work on emphasis.
-        setTextStyle(normalStyle, normalModel, normalSpecified, opt);
-        setTextStyle(emphasisStyle, emphasisModel, emphasisSpecified, opt, true);
+        setTextStyle(
+            richText.style,
+            textConfig,
+            normalModel,
+            normalSpecified,
+            opt
+        );
+        setTextStyle(
+            emphasisStyle,
+            emphasisTextLayout,
+            emphasisModel,
+            emphasisSpecified,
+            opt,
+            true
+        );
+
+        if (!isSetOnRichText) {
+            hostEl.setTextConfig(textConfig);
+        }
+
+        richText.style.text = normalStyleText;
+        richText.states.emphasis.style.text = emphasisStyleText;
+
+        richText.dirty();
+    }
+    else if (richText) {
+        // Not display rich text.
+        richText.ignore = true;
     }
 
-    normalStyle.text = normalStyleText;
-    emphasisStyle.text = emphasisStyleText;
-}
-
-/**
- * Modify label style manually.
- * Only works after `setLabelStyle` and `setElementHoverStyle` called.
- */
-export function modifyLabelStyle(
-    el: Displayable,
-    normalStyleProps?: StyleProps,
-    emphasisStyleProps?: StyleProps
-) {
-    const extendedEl = el as ExtendedDisplayable;
-    let elStyle = extendedEl.style as StyleProps;
-    if (normalStyleProps) {
-        rollbackDefaultTextStyle(elStyle);
-        extendedEl.setStyle(normalStyleProps);
-        applyDefaultTextStyle(elStyle);
-    }
-    elStyle = extendedEl.__hoverStl;
-    if (emphasisStyleProps && elStyle) {
-        rollbackDefaultTextStyle(elStyle);
-        zrUtil.extend(elStyle, emphasisStyleProps);
-        applyDefaultTextStyle(elStyle);
-    }
+    hostEl.dirty();
 }
 
 /**
@@ -830,46 +680,20 @@ export function modifyLabelStyle(
  * See more info in `setTextStyleCommon`.
  */
 export function setTextStyle(
-    textStyle: StyleProps,
+    textStyle: RichTextStyleProps,
+    textConfig: Element['textConfig'],  // If textContent is attached on RichText.
     textStyleModel: Model,
-    specifiedTextStyle?: StyleProps,    // Can be overrided by settings in model.
+    specifiedTextStyle?: RichTextStyleProps,    // Can be overrided by settings in model.
     opt?: TextCommonParams,
     isEmphasis?: boolean
 ) {
-    setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis);
+    setTextStyleCommon(textStyle, textConfig, textStyleModel, opt, isEmphasis);
     specifiedTextStyle && zrUtil.extend(textStyle, specifiedTextStyle);
     // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
     return textStyle;
 }
 
-/**
- * Set text option in the style.
- * See more info in `setTextStyleCommon`.
- * @deprecated
- * @param {Object} textStyle
- * @param {module:echarts/model/Model} labelModel
- * @param {string|boolean} defaultColor Default text color.
- *        If set as false, it will be processed as a emphasis style.
- */
-export function setText(
-    textStyle: StyleProps,
-    labelModel: Model,
-    defaultColor: string | false
-) {
-    let opt: TextCommonParams = {isRectText: true};
-    let isEmphasis;
-
-    if (defaultColor === false) {
-        isEmphasis = true;
-    }
-    else {
-        // Support setting color as 'auto' to get visual color.
-        opt.autoColor = defaultColor;
-    }
-    setTextStyleCommon(textStyle, labelModel, opt, isEmphasis);
-    // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
-}
 
 /**
  * The uniform entry of set text style, that is, retrieve style definitions
@@ -880,8 +704,7 @@ export function setText(
  * default value can be adopted, merge would make the logic too complicated
  * to manage.)
  *
- * The `textStyle` object can either be a plain object or an instance of
- * `zrender/src/graphic/Style`, and either be the style of normal or emphasis.
+ * The `textStyle` object can either be the style of normal or emphasis.
  * After this mothod called, the `textStyle` object can then be used in
  * `el.setStyle(textStyle)` or `el.hoverStyle = textStyle`.
  *
@@ -889,36 +712,14 @@ export function setText(
  * See `applyDefaultTextStyle` `rollbackDefaultTextStyle` for more details.
  */
 function setTextStyleCommon(
-    textStyle: StyleProps,
+    textStyle: RichTextStyleProps,
+    textConfig: Element['textConfig'],  // If textContent is attached on RichText.
     textStyleModel: Model,
     opt?: TextCommonParams,
     isEmphasis?: boolean
 ) {
     // Consider there will be abnormal when merge hover style to normal style if given default value.
     opt = opt || EMPTY_OBJ;
-
-    if (opt.isRectText) {
-        let textPosition;
-        if (opt.getTextPosition) {
-            textPosition = opt.getTextPosition(textStyleModel, isEmphasis);
-        }
-        else {
-            textPosition = textStyleModel.getShallow('position')
-                || (isEmphasis ? null : 'inside');
-            // 'outside' is not a valid zr textPostion value, but used
-            // in bar series, and magric type should be considered.
-            textPosition === 'outside' && (textPosition = 'top');
-        }
-
-        textStyle.textPosition = textPosition;
-        textStyle.textOffset = textStyleModel.getShallow('offset');
-        let labelRotate = textStyleModel.getShallow('rotate');
-        labelRotate != null && (labelRotate *= Math.PI / 180);
-        textStyle.textRotation = labelRotate;
-        textStyle.textDistance = zrUtil.retrieve2(
-            textStyleModel.getShallow('distance'), isEmphasis ? null : 5
-        );
-    }
 
     let ecModel = textStyleModel.ecModel;
     let globalTextStyle = ecModel && ecModel.option.textStyle;
@@ -938,7 +739,7 @@ function setTextStyleCommon(
     //     }
     // }
     let richItemNames = getRichItemNames(textStyleModel);
-    let richResult: Dictionary<StyleProps>;
+    let richResult: RichTextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
         for (let name in richItemNames) {
@@ -955,14 +756,43 @@ function setTextStyleCommon(
         }
     }
     textStyle.rich = richResult;
+    textStyle.overflow = textStyleModel.get('overflow');
 
     setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, true);
 
+    if (textConfig) {
+        let textPosition;
+        if (opt.getTextPosition) {
+            textPosition = opt.getTextPosition(textStyleModel, isEmphasis);
+        }
+        else {
+            textPosition = textStyleModel.getShallow('position')
+                || (isEmphasis ? null : 'inside');
+            // 'outside' is not a valid zr textPostion value, but used
+            // in bar series, and magric type should be considered.
+            textPosition === 'outside' && (textPosition = opt.defaultOutsidePosition || 'top');
+        }
+
+        textConfig.position = textPosition;
+        textConfig.offset = textStyleModel.getShallow('offset');
+        let labelRotate = textStyleModel.getShallow('rotate');
+        labelRotate != null && (labelRotate *= Math.PI / 180);
+        textConfig.rotation = labelRotate;
+        textConfig.distance = zrUtil.retrieve2(
+            textStyleModel.getShallow('distance'), isEmphasis ? null : 5
+        );
+
+        // fill and auto is determined by the color of path fill if it's not specified by developers.
+        textConfig.insideFill = textStyle.fill ? 'auto' : null;
+        // TODO: stroke set to autoColor. if label is inside?
+        textConfig.insideStroke = textStyle.stroke ? 'auto' : (opt.autoColor || null);
+    }
+
+
+    // TODO
     if (opt.forceRich && !opt.textStyle) {
         opt.textStyle = {};
     }
-
-    return textStyle;
 }
 
 // Consider case:
@@ -999,7 +829,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
 }
 
 function setTokenTextStyle(
-    textStyle: StyleProps,
+    textStyle: RichTextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
     opt?: TextCommonParams,
@@ -1009,24 +839,19 @@ function setTokenTextStyle(
     // In merge mode, default value should not be given.
     globalTextStyle = !isEmphasis && globalTextStyle || EMPTY_OBJ;
 
-    textStyle.textFill = getAutoColor(textStyleModel.getShallow('color'), opt)
+    textStyle.fill = getAutoColor(textStyleModel.getShallow('color'), opt)
         || globalTextStyle.color;
-    textStyle.textStroke = getAutoColor(textStyleModel.getShallow('textBorderColor'), opt)
+    textStyle.stroke = getAutoColor(textStyleModel.getShallow('textBorderColor'), opt)
         || globalTextStyle.textBorderColor;
-    textStyle.textStrokeWidth = zrUtil.retrieve2(
+    textStyle.lineWidth = zrUtil.retrieve2(
         textStyleModel.getShallow('textBorderWidth'),
         globalTextStyle.textBorderWidth
     );
 
     if (!isEmphasis) {
-        if (isBlock) {
-            (textStyle as ExtendedStyleProps).insideRollbackOpt = opt;
-            applyDefaultTextStyle(textStyle);
-        }
-
         // Set default finally.
-        if (textStyle.textFill == null) {
-            textStyle.textFill = opt.autoColor;
+        if (textStyle.fill == null) {
+            textStyle.fill = opt.autoColor;
         }
     }
 
@@ -1038,26 +863,26 @@ function setTokenTextStyle(
     textStyle.fontSize = textStyleModel.getShallow('fontSize') || globalTextStyle.fontSize;
     textStyle.fontFamily = textStyleModel.getShallow('fontFamily') || globalTextStyle.fontFamily;
 
-    textStyle.textAlign = textStyleModel.getShallow('align');
-    textStyle.textVerticalAlign = textStyleModel.getShallow('verticalAlign')
+    textStyle.align = textStyleModel.getShallow('align');
+    textStyle.verticalAlign = textStyleModel.getShallow('verticalAlign')
         || textStyleModel.getShallow('baseline');
 
-    textStyle.textLineHeight = textStyleModel.getShallow('lineHeight');
-    textStyle.textWidth = textStyleModel.getShallow('width');
-    textStyle.textHeight = textStyleModel.getShallow('height');
+    textStyle.lineHeight = textStyleModel.getShallow('lineHeight');
+    textStyle.width = textStyleModel.getShallow('width');
+    textStyle.height = textStyleModel.getShallow('height');
     textStyle.textTag = textStyleModel.getShallow('tag');
 
     if (!isBlock || !opt.disableBox) {
-        textStyle.textBackgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor') as string, opt);
-        textStyle.textPadding = textStyleModel.getShallow('padding');
-        textStyle.textBorderColor = getAutoColor(textStyleModel.getShallow('borderColor'), opt);
-        textStyle.textBorderWidth = textStyleModel.getShallow('borderWidth');
-        textStyle.textBorderRadius = textStyleModel.getShallow('borderRadius');
+        textStyle.backgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor') as string, opt);
+        textStyle.padding = textStyleModel.getShallow('padding');
+        textStyle.borderColor = getAutoColor(textStyleModel.getShallow('borderColor'), opt);
+        textStyle.borderWidth = textStyleModel.getShallow('borderWidth');
+        textStyle.borderRadius = textStyleModel.getShallow('borderRadius');
 
-        textStyle.textBoxShadowColor = textStyleModel.getShallow('shadowColor');
-        textStyle.textBoxShadowBlur = textStyleModel.getShallow('shadowBlur');
-        textStyle.textBoxShadowOffsetX = textStyleModel.getShallow('shadowOffsetX');
-        textStyle.textBoxShadowOffsetY = textStyleModel.getShallow('shadowOffsetY');
+        textStyle.boxShadowColor = textStyleModel.getShallow('shadowColor');
+        textStyle.boxShadowBlur = textStyleModel.getShallow('shadowBlur');
+        textStyle.boxShadowOffsetX = textStyleModel.getShallow('shadowOffsetX');
+        textStyle.boxShadowOffsetY = textStyleModel.getShallow('shadowOffsetY');
     }
 
     textStyle.textShadowColor = textStyleModel.getShallow('textShadowColor')
@@ -1074,90 +899,6 @@ function getAutoColor(color: ColorString, opt?: {
     autoColor?: ColorString
 }): ColorString {
     return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
-}
-
-/**
- * Give some default value to the input `textStyle` object, based on the current settings
- * in this `textStyle` object.
- *
- * The Scenario:
- * when text position is `inside` and `textFill` is not specified, we show
- * text border by default for better view. But it should be considered that text position
- * might be changed when hovering or being emphasis, where the `insideRollback` is used to
- * restore the style.
- *
- * Usage (& NOTICE):
- * When a style object (eithor plain object or instance of `zrender/src/graphic/Style`) is
- * about to be modified on its text related properties, `rollbackDefaultTextStyle` should
- * be called before the modification and `applyDefaultTextStyle` should be called after that.
- * (For the case that all of the text related properties is reset, like `setTextStyleCommon`
- * does, `rollbackDefaultTextStyle` is not needed to be called).
- */
-function applyDefaultTextStyle(textStyle: StyleProps) {
-    let textPosition = textStyle.textPosition;
-    let opt = (textStyle as ExtendedStyleProps).insideRollbackOpt;
-    let insideRollback;
-
-    if (opt && textStyle.textFill == null) {
-        let autoColor = opt.autoColor;
-        let isRectText = opt.isRectText;
-        let useInsideStyle = opt.useInsideStyle;
-
-        let useInsideStyleCache = useInsideStyle !== false
-            && (useInsideStyle === true
-                || (isRectText
-                    && textPosition
-                    // textPosition can be [10, 30]
-                    && typeof textPosition === 'string'
-                    && textPosition.indexOf('inside') >= 0
-                )
-            );
-        let useAutoColorCache = !useInsideStyleCache && autoColor != null;
-
-        // All of the props declared in `CACHED_LABEL_STYLE_PROPERTIES` are to be cached.
-        if (useInsideStyleCache || useAutoColorCache) {
-            insideRollback = {
-                textFill: textStyle.textFill,
-                textStroke: textStyle.textStroke,
-                textStrokeWidth: textStyle.textStrokeWidth
-            };
-        }
-        if (useInsideStyleCache) {
-            textStyle.textFill = '#fff';
-            // Consider text with #fff overflow its container.
-            if (textStyle.textStroke == null) {
-                textStyle.textStroke = autoColor;
-                textStyle.textStrokeWidth == null && (textStyle.textStrokeWidth = 2);
-            }
-        }
-        if (useAutoColorCache) {
-            textStyle.textFill = autoColor;
-        }
-    }
-
-    // Always set `insideRollback`, so that the previous one can be cleared.
-    (textStyle as ExtendedStyleProps).insideRollback = insideRollback;
-}
-
-/**
- * Consider the case: in a scatter,
- * label: {
- *     normal: {position: 'inside'},
- *     emphasis: {position: 'top'}
- * }
- * In the normal state, the `textFill` will be set as '#fff' for pretty view (see
- * `applyDefaultTextStyle`), but when switching to emphasis state, the `textFill`
- * should be retured to 'autoColor', but not keep '#fff'.
- */
-function rollbackDefaultTextStyle(style: StyleProps) {
-    let insideRollback = (style as ExtendedStyleProps).insideRollback;
-    if (insideRollback) {
-        // Reset all of the props in `CACHED_LABEL_STYLE_PROPERTIES`.
-        style.textFill = insideRollback.textFill;
-        style.textStroke = insideRollback.textStroke;
-        style.textStrokeWidth = insideRollback.textStrokeWidth;
-        (style as ExtendedStyleProps).insideRollback = null;
-    }
 }
 
 export function getFont(opt: LabelOption, ecModel: GlobalModel) {
@@ -1435,13 +1176,13 @@ export function createIcon(
     rect?: ZRRectLike
 ): SVGPath | ZImage {
     const innerOpts: DisplayableProps = zrUtil.extend({rectHover: true}, opt);
-    const style: StyleProps = innerOpts.style = {strokeNoScale: true};
+    const style: ZRStyleProps = innerOpts.style = {strokeNoScale: true};
     rect = rect || {x: -1, y: -1, width: 2, height: 2};
 
     if (iconStr) {
         return iconStr.indexOf('image://') === 0
             ? (
-                (style as ZImageStyleProps).image = iconStr.slice(8),
+                (style as ImageStyleProps).image = iconStr.slice(8),
                 zrUtil.defaults(style, rect),
                 new ZImage(innerOpts)
             )
@@ -1556,7 +1297,7 @@ registerShape('arc', Arc);
 export {
     Group,
     ZImage as Image,
-    Text,
+    RichText as Text,
     Circle,
     Sector,
     Ring,

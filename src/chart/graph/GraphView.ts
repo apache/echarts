@@ -266,26 +266,22 @@ class GraphView extends ChartView {
                 if (isLeft) {
                     rad = rad - Math.PI;
                 }
-                let textPosition = isLeft ? 'left' : 'right';
-                graphic.modifyLabelStyle(
-                    symbolPath,
-                    {
-                        textRotation: -rad,
-                        textPosition: textPosition,
-                        textOrigin: 'center'
-                    },
-                    {
-                        textPosition: textPosition
-                    }
-                );
+                let textPosition = isLeft ? 'left' as const : 'right' as const;
+
+                symbolPath.setTextConfig({
+                    rotation: -rad,
+                    position: textPosition
+                    // textOrigin: 'center'
+                });
+                const emphasisState = symbolPath.ensureState('emphasis');
+                zrUtil.extend(emphasisState.textConfig || (emphasisState.textConfig = {}), {
+                    position: textPosition
+                });
             }
             else {
-                graphic.modifyLabelStyle(
-                    symbolPath,
-                    {
-                        textRotation: labelRotate *= Math.PI / 180
-                    }
-                );
+                symbolPath.setTextConfig({
+                    rotation: labelRotate *= Math.PI / 180
+                });
             }
         });
 

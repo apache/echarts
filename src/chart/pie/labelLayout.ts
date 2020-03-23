@@ -234,7 +234,8 @@ function avoidOverlap(
                 }
             }
             if (targetTextWidth < layout.textRect.width) {
-                layout.text = textContain.truncateText(layout.text, targetTextWidth, layout.font);
+                // TODOTODO
+                // layout.text = textContain.truncateText(layout.text, targetTextWidth, layout.font);
                 if (layout.labelAlignTo === 'edge') {
                     realTextWidth = textContain.getWidth(layout.text, layout.font);
                 }

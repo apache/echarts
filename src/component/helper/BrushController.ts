@@ -25,11 +25,11 @@ import * as graphic from '../../util/graphic';
 import * as interactionMutex from './interactionMutex';
 import DataDiffer from '../../data/DataDiffer';
 import { Dictionary } from '../../util/types';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import { ZRenderType } from 'zrender/src/zrender';
 import { ElementEvent } from 'zrender/src/Element';
 import * as matrix from 'zrender/src/core/matrix';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 
 /**
@@ -73,7 +73,7 @@ export interface BrushCoverConfig {
 
     brushMode?: BrushMode;
     // `brushStyle`, `transformable` is not mandatory, use DEFAULT_BRUSH_OPT by default.
-    brushStyle?: Pick<StyleProps, BrushStyleKey>;
+    brushStyle?: Pick<PathStyleProps, BrushStyleKey>;
     transformable?: boolean;
     removeOnClick?: boolean;
     z?: number;

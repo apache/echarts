@@ -41,12 +41,14 @@ import {
 import List from '../../data/List';
 
 
-interface PieLabelOption extends Omit<LabelOption, 'rotate'> {
+interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
     margin?: string | number
     bleedMargin?: number
     distanceToLabelLine?: number
+
+    position?: LabelOption['position'] | 'outer' | 'inner' | 'center'
 }
 
 export interface PieDataItemOption extends

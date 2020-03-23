@@ -17,10 +17,10 @@
 * under the License.
 */
 
-import * as textContain from 'zrender/src/contain/text';
 import * as graphicUtil from '../../util/graphic';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
+import { RichText } from 'zrender/src/export';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 
@@ -29,6 +29,8 @@ type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
 > & LabelFontOption;
 
+// TODO Performance improvement?
+const tmpRichText = new RichText();
 class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color
@@ -56,16 +58,19 @@ class TextStyleMixin {
     }
 
     getTextRect(this: Model<LabelRectRelatedOption> & TextStyleMixin, text: string): graphicUtil.BoundingRect {
-        return textContain.getBoundingRect(
+        tmpRichText.useStyle({
             text,
-            this.getFont(),
-            this.getShallow('align'),
-            this.getShallow('verticalAlign') || this.getShallow('baseline'),
-            this.getShallow('padding') as number[],
-            this.getShallow('lineHeight'),
-            this.getShallow('rich')
-            // this.getShallow('truncateText')
-        );
+            fontStyle: this.getShallow('fontStyle'),
+            fontWeight: this.getShallow('fontWeight'),
+            fontSize: this.getShallow('fontSize'),
+            fontFamily: this.getShallow('fontFamily'),
+            verticalAlign: this.getShallow('verticalAlign') || this.getShallow('baseline'),
+            padding: this.getShallow('padding') as number[],
+            lineHeight: this.getShallow('lineHeight'),
+            rich: this.getShallow('rich')
+        });
+        tmpRichText.update();
+        return tmpRichText.getBoundingRect();
     }
 };
 

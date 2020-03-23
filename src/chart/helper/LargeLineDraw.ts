@@ -25,7 +25,7 @@ import * as lineContain from 'zrender/src/contain/line';
 import * as quadraticContain from 'zrender/src/contain/quadratic';
 import { PathProps } from 'zrender/src/graphic/Path';
 import List from '../../data/List';
-import { StageHandlerProgressParams, LineStyleOption } from '../../util/types';
+import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../util/types';
 import Model from '../../model/Model';
 
 class LargeLinesPathShape {
@@ -58,10 +58,18 @@ class LargeLinesPath extends graphic.Path {
     __startIndex: number;
 
     constructor(opts?: LargeLinesPathProps) {
-        super(opts, {
+        super(opts);
+    }
+
+    getDefaultStyle() {
+        return {
             stroke: '#000',
-            fill: null
-        }, new LargeLinesPathShape());
+            fill: null as ColorString
+        };
+    }
+
+    getDefaultShape() {
+        return new LargeLinesPathShape();
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: LargeLinesPathShape) {
@@ -257,7 +265,7 @@ class LargeLineDraw {
         if (visualColor) {
             lineEl.setStyle('stroke', visualColor);
         }
-        lineEl.setStyle('fill');
+        lineEl.setStyle('fill', null);
 
         if (!isIncremental) {
             let ecData = graphic.getECData(lineEl);

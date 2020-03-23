@@ -78,9 +78,11 @@ class Polyline extends graphic.Group {
             },
             lineStyle
         ));
-        line.hoverStyle = hoverLineStyle;
 
-        graphic.setHoverStyle(this);
+        const lineEmphasisState = line.ensureState('emphasis');
+        lineEmphasisState.style = hoverLineStyle;
+
+        graphic.enableHoverEmphasis(this);
     };
 
     updateLayout(lineData: List, idx: number) {

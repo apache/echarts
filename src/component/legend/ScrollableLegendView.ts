@@ -138,10 +138,10 @@ class ScrollableLegendView extends LegendView {
             style: {
                 // Placeholder to calculate a proper layout.
                 text: 'xx/xx',
-                textFill: pageTextStyleModel.getTextColor(),
+                fill: pageTextStyleModel.getTextColor(),
                 font: pageTextStyleModel.getFont(),
-                textVerticalAlign: 'middle',
-                textAlign: 'center'
+                verticalAlign: 'middle',
+                align: 'center'
             },
             silent: true
         }));

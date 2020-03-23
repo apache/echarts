@@ -19,8 +19,8 @@
 
 import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
-import { StyleProps } from 'zrender/src/graphic/Style';
 import { LineStyleOption } from '../../util/types';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 const getLineStyle = makeStyleMapper([
     ['lineWidth', 'width'],
@@ -40,7 +40,7 @@ type LineStyleKeys = 'lineWidth'
     | 'shadowOffsetY'
     | 'shadowColor';
 
-type LineStyleProps = Pick<StyleProps, LineStyleKeys>;
+type LineStyleProps = Pick<PathStyleProps, LineStyleKeys>;
 
 class LineStyleMixin {
 

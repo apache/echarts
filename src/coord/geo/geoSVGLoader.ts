@@ -18,7 +18,7 @@
 */
 
 import {parseSVG, makeViewBoxTransform} from 'zrender/src/tool/parseSVG';
-import Group from 'zrender/src/container/Group';
+import Group from 'zrender/src/graphic/Group';
 import Rect from 'zrender/src/graphic/shape/Rect';
 import {assert, createHashMap, HashMap} from 'zrender/src/core/util';
 import BoundingRect from 'zrender/src/core/BoundingRect';
