@@ -428,6 +428,19 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             position: pos,
             rotation: labelLayout.rotation,
             silent: AxisBuilder.isLabelSilent(axisModel),
+            style: graphic.createTextStyle(textStyleModel, {
+                text: name,
+                font: textFont,
+                overflow: 'truncate',
+                width: maxWidth,
+                ellipsis,
+                fill: textStyleModel.getTextColor()
+                    || axisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
+                align: textStyleModel.get('align')
+                    || labelLayout.textAlign,
+                verticalAlign: textStyleModel.get('verticalAlign')
+                    || labelLayout.textVerticalAlign
+            }),
             z2: 1
         }) as AxisLabelText;
         textEl.tooltip = (tooltipOpt && tooltipOpt.show)
@@ -442,20 +455,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         textEl.__fullText = name;
         // Id for animation
         textEl.anid = 'name';
-
-        graphic.setTextStyle(textEl.style, null, textStyleModel, {
-            text: name,
-            font: textFont,
-            overflow: 'truncate',
-            width: maxWidth,
-            ellipsis,
-            fill: textStyleModel.getTextColor()
-                || axisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
-            align: textStyleModel.get('align')
-                || labelLayout.textAlign,
-            verticalAlign: textStyleModel.get('verticalAlign')
-                || labelLayout.textVerticalAlign
-        });
 
         if (axisModel.get('triggerEvent')) {
             let eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
@@ -777,35 +776,35 @@ function buildAxisLabel(
             position: pos,
             rotation: labelLayout.rotation,
             silent: silent,
-            z2: 10
+            z2: 10,
+            style: graphic.createTextStyle(itemLabelModel, {
+                text: formattedLabel,
+                align: itemLabelModel.getShallow('align', true)
+                    || labelLayout.textAlign,
+                verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
+                    || itemLabelModel.getShallow('baseline', true)
+                    || labelLayout.textVerticalAlign,
+                fill: typeof textColor === 'function'
+                    ? textColor(
+                        // (1) In category axis with data zoom, tick is not the original
+                        // index of axis.data. So tick should not be exposed to user
+                        // in category axis.
+                        // (2) Compatible with previous version, which always use formatted label as
+                        // input. But in interval scale the formatted label is like '223,445', which
+                        // maked user repalce ','. So we modify it to return original val but remain
+                        // it as 'string' to avoid error in replacing.
+                        axis.type === 'category'
+                            ? rawLabel
+                            : axis.type === 'value'
+                            ? tickValue + ''
+                            : tickValue,
+                        index
+                    )
+                    : textColor as string
+            })
         });
         textEl.anid = 'label_' + tickValue;
 
-        graphic.setTextStyle(textEl.style, null, itemLabelModel, {
-            text: formattedLabel,
-            align: itemLabelModel.getShallow('align', true)
-                || labelLayout.textAlign,
-            verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
-                || itemLabelModel.getShallow('baseline', true)
-                || labelLayout.textVerticalAlign,
-            fill: typeof textColor === 'function'
-                ? textColor(
-                    // (1) In category axis with data zoom, tick is not the original
-                    // index of axis.data. So tick should not be exposed to user
-                    // in category axis.
-                    // (2) Compatible with previous version, which always use formatted label as
-                    // input. But in interval scale the formatted label is like '223,445', which
-                    // maked user repalce ','. So we modify it to return original val but remain
-                    // it as 'string' to avoid error in replacing.
-                    axis.type === 'category'
-                        ? rawLabel
-                        : axis.type === 'value'
-                        ? tickValue + ''
-                        : tickValue,
-                    index
-                )
-                : textColor as string
-        });
 
         // Pack data for mouse event
         if (triggerEvent) {

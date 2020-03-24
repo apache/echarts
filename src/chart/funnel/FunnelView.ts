@@ -133,24 +133,6 @@ class FunnelPiece extends graphic.Group {
         let labelLayout = layout.label;
         // let visualColor = data.getItemVisual(idx, 'color');
 
-        graphic.updateProps(labelLine, {
-            shape: {
-                points: labelLayout.linePoints || labelLayout.linePoints
-            }
-        }, seriesModel, idx);
-
-        graphic.updateProps(labelText, {
-            style: {
-                x: labelLayout.x,
-                y: labelLayout.y
-            }
-        }, seriesModel, idx);
-        labelText.attr({
-            rotation: labelLayout.rotation,
-            origin: [labelLayout.x, labelLayout.y],
-            z2: 10
-        });
-
         let labelModel = itemModel.getModel('label');
         let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
         let labelLineModel = itemModel.getModel('labelLine');
@@ -171,6 +153,26 @@ class FunnelPiece extends graphic.Group {
                 verticalAlign: labelLayout.verticalAlign
             }
         );
+
+        graphic.updateProps(labelLine, {
+            shape: {
+                points: labelLayout.linePoints || labelLayout.linePoints
+            }
+        }, seriesModel, idx);
+
+        // Make sure update style on labelText after setLabelStyle.
+        // Because setLabelStyle will replace a new style on it.
+        graphic.updateProps(labelText, {
+            style: {
+                x: labelLayout.x,
+                y: labelLayout.y
+            }
+        }, seriesModel, idx);
+        labelText.attr({
+            rotation: labelLayout.rotation,
+            origin: [labelLayout.x, labelLayout.y],
+            z2: 10
+        });
 
         labelText.ignore = (labelText as FunnelLabelEl).normalIgnore = !labelModel.get('show');
         (labelText as FunnelLabelEl).hoverIgnore = !labelHoverModel.get('show');

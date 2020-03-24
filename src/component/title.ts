@@ -150,7 +150,7 @@ class TitleView extends ComponentView {
         );
 
         let textEl = new graphic.Text({
-            style: graphic.setTextStyle({}, null, textStyleModel, {
+            style: graphic.createTextStyle(textStyleModel, {
                 text: titleModel.get('text'),
                 fill: textStyleModel.getTextColor()
             }, {disableBox: true}),
@@ -161,7 +161,7 @@ class TitleView extends ComponentView {
 
         let subText = titleModel.get('subtext');
         let subTextEl = new graphic.Text({
-            style: graphic.setTextStyle({}, null, subtextStyleModel, {
+            style: graphic.createTextStyle(subtextStyleModel, {
                 text: subText,
                 fill: subtextStyleModel.getTextColor(),
                 y: textRect.height + titleModel.get('itemGap'),

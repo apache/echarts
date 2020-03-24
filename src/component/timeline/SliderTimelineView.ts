@@ -446,17 +446,17 @@ class SliderTimelineView extends TimelineView {
                 position: [tickCoord, 0],
                 rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                 onclick: bind(this._changeTimeline, this, dataIndex),
-                silent: false
-            });
-            graphic.setTextStyle(textEl.style, null, normalLabelModel, {
-                text: labelItem.formattedLabel,
-                align: layoutInfo.labelAlign,
-                verticalAlign: layoutInfo.labelBaseline
+                silent: false,
+                style: graphic.createTextStyle(normalLabelModel, {
+                    text: labelItem.formattedLabel,
+                    align: layoutInfo.labelAlign,
+                    verticalAlign: layoutInfo.labelBaseline
+                })
             });
 
             group.add(textEl);
             graphic.enableHoverEmphasis(
-                textEl, graphic.setTextStyle({}, null, hoverLabelModel)
+                textEl, graphic.createTextStyle(hoverLabelModel)
             );
 
         }, this);

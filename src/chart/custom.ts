@@ -481,10 +481,13 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             ? applyExtraBefore(extra, currLabelNormalModel)
             : currLabelNormalModel;
 
-        graphicUtil.setTextStyle(itemStyle, labelModel, null, {
+        const textStyle = graphicUtil.createTextStyle(labelModel, null, {
             autoColor: currVisualColor,
             isRectText: true
         });
+
+        // TODO
+        zrUtil.extend(itemStyle, textStyle);
 
         itemStyle.text = labelModel.getShallow('show')
             ? zrUtil.retrieve2(
@@ -513,9 +516,11 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             ? applyExtraBefore(extra, currLabelEmphasisModel)
             : currLabelEmphasisModel;
 
-        graphicUtil.setTextStyle(itemStyle, labelModel, null, {
+        const textStyle = graphicUtil.createTextStyle(labelModel, null, {
             isRectText: true
         }, true);
+        zrUtil.extend(itemStyle, textStyle);
+
 
         itemStyle.text = labelModel.getShallow('show')
             ? zrUtil.retrieve3(

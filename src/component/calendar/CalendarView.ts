@@ -345,8 +345,12 @@ class CalendarView extends ComponentView {
 
         let content = this._formatterLabel(formatter, params);
 
-        let yearText = new graphic.Text({z2: 30});
-        graphic.setTextStyle(yearText.style, null, yearLabel, {text: content}),
+        let yearText = new graphic.Text({
+            z2: 30,
+            style: graphic.createTextStyle(yearLabel, {
+                text: content
+            })
+        });
         yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
         group.add(yearText);
@@ -441,11 +445,13 @@ class CalendarView extends ComponentView {
 
             let content = this._formatterLabel(formatter, params);
 
-            let monthText = new graphic.Text({z2: 30});
-            zrUtil.extend(
-                graphic.setTextStyle(monthText.style, null, monthLabel, {text: content}),
-                this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
-            );
+            let monthText = new graphic.Text({
+                z2: 30,
+                style: zrUtil.extend(
+                    graphic.createTextStyle(monthLabel, {text: content}),
+                    this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
+                )
+            });
 
             group.add(monthText);
         }
@@ -524,12 +530,14 @@ class CalendarView extends ComponentView {
             let point = coordSys.dataToRect([tmpD.time], false).center;
             let day = i;
             day = Math.abs((i + firstDayOfWeek) % 7);
-            let weekText = new graphic.Text({z2: 30});
+            let weekText = new graphic.Text({
+                z2: 30,
+                style: zrUtil.extend(
+                    graphic.createTextStyle(dayLabel, {text: nameMap[day]}),
+                    this._weekTextPositionControl(point, orient, pos, margin, cellSize)
+                )
+            });
 
-            zrUtil.extend(
-                graphic.setTextStyle(weekText.style, null, dayLabel, {text: nameMap[day]}),
-                this._weekTextPositionControl(point, orient, pos, margin, cellSize)
-            );
             group.add(weekText);
         }
     }

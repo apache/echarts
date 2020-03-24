@@ -410,7 +410,7 @@ class LegendView extends ComponentView {
         }
 
         itemGroup.add(new graphic.Text({
-            style: graphic.setTextStyle({}, null, textStyleModel, {
+            style: graphic.createTextStyle(textStyleModel, {
                 text: content,
                 x: textX,
                 y: itemHeight / 2,

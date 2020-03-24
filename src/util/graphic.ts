@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import * as pathTool from 'zrender/src/tool/path';
 import * as colorTool from 'zrender/src/tool/color';
 import * as matrix from 'zrender/src/core/matrix';
@@ -47,7 +46,7 @@ import LRU from 'zrender/src/core/LRU';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
-import Element, { ElementEvent } from 'zrender/src/Element';
+import Element, { ElementEvent, ElementTextConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
     AnimationOptionMixin,
@@ -63,6 +62,7 @@ import {
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
+import { isFunction, retrieve2, extend, keys, trim, isArrayLike, map, defaults } from 'zrender/src/core/util';
 
 
 const mathMax = Math.max;
@@ -70,7 +70,7 @@ const mathMin = Math.min;
 
 const EMPTY_OBJ = {};
 
-export const Z2_EMPHASIS_LIFT = 1;
+export const Z2_EMPHASIS_LIFT = 10;
 
 // key: label model property nane, value: style property name.
 export const CACHED_LABEL_STYLE_PROPERTIES = {
@@ -384,10 +384,9 @@ function singleEnterEmphasis(el: Displayable) {
         el.style.stroke = liftColor(currentStroke);
     }
 
-    // TODO default lift fill/stroke. z2
-    // TODO hover layer
+    el.z2 += Z2_EMPHASIS_LIFT;
 
-    // applyDefaultTextStyle(targetStyle);
+    // TODO hover layer
 }
 
 
@@ -581,11 +580,19 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     labelDataIndex?: LDI,
     labelDimIndex?: number
 }
+
+
 /**
- * See more info in `setTextStyleCommon`.
+ * Set normal styles and emphasis styles about text on target element
+ * If target is a RichText. It will create a new style object.
+ * If target is other Element. It will create or reuse RichText which is attached on the target.
+ * And create a new style object.
+ *
+ * NOTICE: Because the style on RichText will be replaced with new.
+ * So please use the style on RichText after use this method.
  */
 export function setLabelStyle<LDI>(
-    hostEl: Element,
+    targetEl: Element,
     normalModel: Model,
     emphasisModel: Model,
     opt?: SetLabelStyleOpt<LDI>,
@@ -594,7 +601,7 @@ export function setLabelStyle<LDI>(
     // TODO specified position?
 ) {
     opt = opt || EMPTY_OBJ;
-    const isSetOnRichText = hostEl instanceof RichText;
+    const isSetOnRichText = targetEl instanceof RichText;
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
     const labelDimIndex = opt.labelDimIndex;
@@ -614,12 +621,12 @@ export function setLabelStyle<LDI>(
             baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex);
         }
         if (baseText == null) {
-            baseText = zrUtil.isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
+            baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
         }
     }
     let normalStyleText = showNormal ? baseText : null;
     let emphasisStyleText = showEmphasis
-        ? zrUtil.retrieve2(
+        ? retrieve2(
             labelFetcher
                 ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
                 : null,
@@ -627,46 +634,34 @@ export function setLabelStyle<LDI>(
         )
         : null;
 
-    let richText = isSetOnRichText ? hostEl as RichText : null;
+    let richText = isSetOnRichText ? targetEl as RichText : null;
     // Optimize: If style.text is null, text will not be drawn.
     if (normalStyleText != null || emphasisStyleText != null) {
         if (!isSetOnRichText) {
             // Reuse the previous
-            richText = hostEl.getTextContent();
+            richText = targetEl.getTextContent();
             if (!richText) {
                 richText = new RichText();
-                hostEl.setTextContent(richText);
+                targetEl.setTextContent(richText);
             }
             richText.ignore = !normalStyleText;
         }
-        const emphasisStyle: RichTextStyleProps = {};
 
         const emphasisState = richText.ensureState('emphasis');
-        emphasisState.style = emphasisStyle;
         emphasisState.ignore = !emphasisStyleText;
 
-        let textConfig: Element['textConfig'];
-        let emphasisTextLayout: Element['textConfig'];
-        if (!isSetOnRichText) {
-            textConfig = {};
-            emphasisTextLayout = emphasisState.textConfig = {};
-        }
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.
         // If we set default values on `emphasisStyle`, consider case:
         // Firstly, `setOption(... label: {normal: {text: null}, emphasis: {show: true}} ...);`
         // Secondly, `setOption(... label: {noraml: {show: true, text: 'abc', color: 'red'} ...);`
         // Then the 'red' will not work on emphasis.
-        setTextStyle(
-            richText.style,
-            textConfig,
+        const normalStyle = createTextStyle(
             normalModel,
             normalSpecified,
             opt
         );
-        setTextStyle(
-            emphasisStyle,
-            emphasisTextLayout,
+        emphasisState.style = createTextStyle(
             emphasisModel,
             emphasisSpecified,
             opt,
@@ -674,11 +669,24 @@ export function setLabelStyle<LDI>(
         );
 
         if (!isSetOnRichText) {
-            hostEl.setTextConfig(textConfig);
+            // Always create new
+            targetEl.setTextConfig(createTextConfig(
+                normalStyle,
+                normalModel,
+                opt
+            ));
+            emphasisState.textConfig = createTextConfig(
+                emphasisState.style,
+                emphasisModel,
+                opt
+            );
         }
 
-        richText.style.text = normalStyleText;
-        richText.states.emphasis.style.text = emphasisStyleText;
+        normalStyle.text = normalStyleText;
+        emphasisState.style.text = emphasisStyleText;
+
+        // Always create new style.
+        richText.useStyle(normalStyle);
 
         richText.dirty();
     }
@@ -687,26 +695,79 @@ export function setLabelStyle<LDI>(
         richText.ignore = true;
     }
 
-    hostEl.dirty();
+    targetEl.dirty();
 }
 
 /**
  * Set basic textStyle properties.
  * See more info in `setTextStyleCommon`.
  */
-export function setTextStyle(
-    textStyle: RichTextStyleProps,
-    textConfig: Element['textConfig'],  // If textContent is attached on RichText.
+export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: RichTextStyleProps,    // Can be overrided by settings in model.
     opt?: TextCommonParams,
     isEmphasis?: boolean
 ) {
-    setTextStyleCommon(textStyle, textConfig, textStyleModel, opt, isEmphasis);
-    specifiedTextStyle && zrUtil.extend(textStyle, specifiedTextStyle);
+    const textStyle: RichTextStyleProps = {};
+    setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis);
+    specifiedTextStyle && extend(textStyle, specifiedTextStyle);
     // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
     return textStyle;
+}
+
+export function createTextConfig(
+    textStyle: RichTextStyleProps,
+    textStyleModel: Model,
+    opt?: TextCommonParams,
+    isEmphasis?: boolean
+) {
+    const textConfig: ElementTextConfig = {};
+    let labelPosition;
+    let labelRotate = textStyleModel.getShallow('rotate');
+    const labelDistance = retrieve2(
+        textStyleModel.getShallow('distance'), isEmphasis ? null : 5
+    );
+    const labelOffset = textStyleModel.getShallow('offset');
+
+    if (opt.getTextPosition) {
+        labelPosition = opt.getTextPosition(textStyleModel, isEmphasis);
+    }
+    else {
+        labelPosition = textStyleModel.getShallow('position')
+            || (isEmphasis ? null : 'inside');
+        // 'outside' is not a valid zr textPostion value, but used
+        // in bar series, and magric type should be considered.
+        labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
+    }
+
+    if (labelPosition != null) {
+        textConfig.position = labelPosition;
+    }
+    if (labelOffset != null) {
+        textConfig.offset = labelOffset;
+    }
+    if (labelRotate != null) {
+        labelRotate *= Math.PI / 180;
+        textConfig.rotation = labelRotate;
+    }
+    if (labelDistance != null) {
+        textConfig.distance = labelDistance;
+    }
+
+    // fill and auto is determined by the color of path fill if it's not specified by developers.
+    if (!textStyle.fill) {
+        textConfig.insideFill = 'auto';
+    }
+    if (!textStyle.stroke) {
+        textConfig.insideStroke = 'auto';
+    }
+    else if (opt.autoColor) {
+        // TODO: stroke set to autoColor. if label is inside?
+        textConfig.insideStroke = opt.autoColor;
+    }
+
+    return textConfig;
 }
 
 
@@ -718,17 +779,9 @@ export function setTextStyle(
  * properties will be set. (Consider the states of normal and emphasis and
  * default value can be adopted, merge would make the logic too complicated
  * to manage.)
- *
- * The `textStyle` object can either be the style of normal or emphasis.
- * After this mothod called, the `textStyle` object can then be used in
- * `el.setStyle(textStyle)` or `el.hoverStyle = textStyle`.
- *
- * Default value will be adopted and `insideRollbackOpt` will be created.
- * See `applyDefaultTextStyle` `rollbackDefaultTextStyle` for more details.
  */
 function setTextStyleCommon(
     textStyle: RichTextStyleProps,
-    textConfig: Element['textConfig'],  // If textContent is attached on RichText.
     textStyleModel: Model,
     opt?: TextCommonParams,
     isEmphasis?: boolean
@@ -770,39 +823,16 @@ function setTextStyleCommon(
             }
         }
     }
-    textStyle.rich = richResult;
-    textStyle.overflow = textStyleModel.get('overflow');
 
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, true);
-
-    if (textConfig) {
-        let textPosition;
-        if (opt.getTextPosition) {
-            textPosition = opt.getTextPosition(textStyleModel, isEmphasis);
-        }
-        else {
-            textPosition = textStyleModel.getShallow('position')
-                || (isEmphasis ? null : 'inside');
-            // 'outside' is not a valid zr textPostion value, but used
-            // in bar series, and magric type should be considered.
-            textPosition === 'outside' && (textPosition = opt.defaultOutsidePosition || 'top');
-        }
-
-        textConfig.position = textPosition;
-        textConfig.offset = textStyleModel.getShallow('offset');
-        let labelRotate = textStyleModel.getShallow('rotate');
-        labelRotate != null && (labelRotate *= Math.PI / 180);
-        textConfig.rotation = labelRotate;
-        textConfig.distance = zrUtil.retrieve2(
-            textStyleModel.getShallow('distance'), isEmphasis ? null : 5
-        );
-
-        // fill and auto is determined by the color of path fill if it's not specified by developers.
-        textConfig.insideFill = textStyle.fill ? 'auto' : null;
-        // TODO: stroke set to autoColor. if label is inside?
-        textConfig.insideStroke = textStyle.stroke ? 'auto' : (opt.autoColor || null);
+    if (richResult) {
+        textStyle.rich = richResult;
+    }
+    const overflow = textStyleModel.get('overflow');
+    if (overflow) {
+        textStyle.overflow = overflow;
     }
 
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, true);
 
     // TODO
     if (opt.forceRich && !opt.textStyle) {
@@ -832,7 +862,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
         let rich = (textStyleModel.option || EMPTY_OBJ as LabelOption).rich;
         if (rich) {
             richItemNameMap = richItemNameMap || {};
-            const richKeys = zrUtil.keys(rich);
+            const richKeys = keys(rich);
             for (let i = 0; i < richKeys.length; i++) {
                 const richKey = richKeys[i];
                 richItemNameMap[richKey] = 1;
@@ -842,6 +872,21 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
     }
     return richItemNameMap;
 }
+
+const TEXT_PROPS_WITH_GLOBAL = [
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
+    'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
+] as const;
+
+const TEXT_PROPS_SELF = [
+    'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'
+] as const;
+
+const TEXT_PROPS_BOX = [
+    'padding', 'borderWidth', 'borderRadius',
+    'backgroundColor', 'borderColor',
+    'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
+] as const;
 
 function setTokenTextStyle(
     textStyle: RichTextStyleProps['rich'][string],
@@ -854,18 +899,36 @@ function setTokenTextStyle(
     // In merge mode, default value should not be given.
     globalTextStyle = !isEmphasis && globalTextStyle || EMPTY_OBJ;
 
-    textStyle.fill = getAutoColor(textStyleModel.getShallow('color'), opt)
-        || globalTextStyle.color;
-    textStyle.stroke = getAutoColor(textStyleModel.getShallow('textBorderColor'), opt)
-        || globalTextStyle.textBorderColor;
-    textStyle.lineWidth = zrUtil.retrieve2(
+    const autoColor = opt && opt.autoColor;
+    let fillColor = textStyleModel.getShallow('color');
+    let strokeColor = textStyleModel.getShallow('textBorderColor');
+    if (fillColor === 'auto' && autoColor) {
+        fillColor = autoColor;
+    }
+    if (strokeColor === 'auto' && autoColor) {
+        strokeColor = autoColor;
+    }
+    fillColor = fillColor || globalTextStyle.color;
+    strokeColor = strokeColor || globalTextStyle.textBorderColor;
+    if (fillColor != null) {
+        textStyle.fill = fillColor;
+    }
+    if (strokeColor != null) {
+        textStyle.stroke = strokeColor;
+    }
+
+    const lineWidth = retrieve2(
         textStyleModel.getShallow('textBorderWidth'),
         globalTextStyle.textBorderWidth
     );
+    if (lineWidth != null) {
+        textStyle.lineWidth = lineWidth;
+    }
+
 
     if (!isEmphasis) {
         // Set default finally.
-        if (textStyle.fill == null) {
+        if (textStyle.fill == null && opt.autoColor) {
             textStyle.fill = opt.autoColor;
         }
     }
@@ -873,52 +936,51 @@ function setTokenTextStyle(
     // Do not use `getFont` here, because merge should be supported, where
     // part of these properties may be changed in emphasis style, and the
     // others should remain their original value got from normal style.
-    textStyle.fontStyle = textStyleModel.getShallow('fontStyle') || globalTextStyle.fontStyle;
-    textStyle.fontWeight = textStyleModel.getShallow('fontWeight') || globalTextStyle.fontWeight;
-    textStyle.fontSize = textStyleModel.getShallow('fontSize') || globalTextStyle.fontSize;
-    textStyle.fontFamily = textStyleModel.getShallow('fontFamily') || globalTextStyle.fontFamily;
-
-    textStyle.align = textStyleModel.getShallow('align');
-    textStyle.verticalAlign = textStyleModel.getShallow('verticalAlign')
-        || textStyleModel.getShallow('baseline');
-
-    textStyle.lineHeight = textStyleModel.getShallow('lineHeight');
-    textStyle.width = textStyleModel.getShallow('width');
-    textStyle.height = textStyleModel.getShallow('height');
-    textStyle.textTag = textStyleModel.getShallow('tag');
-
-    if (!isBlock || !opt.disableBox) {
-        textStyle.backgroundColor = getAutoColor(textStyleModel.getShallow('backgroundColor') as string, opt);
-        textStyle.padding = textStyleModel.getShallow('padding');
-        textStyle.borderColor = getAutoColor(textStyleModel.getShallow('borderColor'), opt);
-        textStyle.borderWidth = textStyleModel.getShallow('borderWidth');
-        textStyle.borderRadius = textStyleModel.getShallow('borderRadius');
-
-        textStyle.boxShadowColor = textStyleModel.getShallow('shadowColor');
-        textStyle.boxShadowBlur = textStyleModel.getShallow('shadowBlur');
-        textStyle.boxShadowOffsetX = textStyleModel.getShallow('shadowOffsetX');
-        textStyle.boxShadowOffsetY = textStyleModel.getShallow('shadowOffsetY');
+    for (let i = 0; i < TEXT_PROPS_WITH_GLOBAL.length; i++) {
+        const key = TEXT_PROPS_WITH_GLOBAL[i];
+        const val = retrieve2(textStyleModel.getShallow(key), globalTextStyle[key]);
+        if (val != null) {
+            (textStyle as any)[key] = val;
+        }
     }
 
-    textStyle.textShadowColor = textStyleModel.getShallow('textShadowColor')
-        || globalTextStyle.textShadowColor;
-    textStyle.textShadowBlur = textStyleModel.getShallow('textShadowBlur')
-        || globalTextStyle.textShadowBlur;
-    textStyle.textShadowOffsetX = textStyleModel.getShallow('textShadowOffsetX')
-        || globalTextStyle.textShadowOffsetX;
-    textStyle.textShadowOffsetY = textStyleModel.getShallow('textShadowOffsetY')
-        || globalTextStyle.textShadowOffsetY;
-}
+    for (let i = 0; i < TEXT_PROPS_SELF.length; i++) {
+        const key = TEXT_PROPS_SELF[i];
+        const val = textStyleModel.getShallow(key);
+        if (val != null) {
+            (textStyle as any)[key] = val;
+        }
+    }
 
-function getAutoColor(color: ColorString, opt?: {
-    autoColor?: ColorString
-}): ColorString {
-    return color !== 'auto' ? color : (opt && opt.autoColor) ? opt.autoColor : null;
+    if (textStyle.verticalAlign == null) {
+        const baseline = textStyleModel.getShallow('baseline');
+        if (baseline != null) {
+            textStyle.verticalAlign = baseline;
+        }
+    }
+
+
+    if (!isBlock || !opt.disableBox) {
+        if (textStyle.backgroundColor === 'auto' && autoColor) {
+            textStyle.backgroundColor = autoColor;
+        }
+        if (textStyle.borderColor === 'auto' && autoColor) {
+            textStyle.borderColor = autoColor;
+        }
+
+        for (let i = 0; i < TEXT_PROPS_BOX.length; i++) {
+            const key = TEXT_PROPS_BOX[i];
+            const val = textStyleModel.getShallow(key);
+            if (val != null) {
+                (textStyle as any)[key] = val;
+            }
+        }
+    }
 }
 
 export function getFont(opt: LabelOption, ecModel: GlobalModel) {
     let gTextStyleModel = ecModel && ecModel.getModel('textStyle');
-    return zrUtil.trim([
+    return trim([
         // FIXME in node-canvas fontWeight is before fontStyle
         opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',
         opt.fontWeight || gTextStyleModel && gTextStyleModel.getShallow('fontWeight') || '',
@@ -1058,7 +1120,7 @@ export function applyTransform(
     transform: Transformable | matrix.MatrixArray,
     invert?: boolean
 ): number[] {
-    if (transform && !zrUtil.isArrayLike(transform)) {
+    if (transform && !isArrayLike(transform)) {
         transform = Transformable.getLocalTransform(transform);
     }
 
@@ -1132,7 +1194,7 @@ export function groupTransition(
             rotation: el.rotation
         };
         if (isPath(el)) {
-            obj.shape = zrUtil.extend({}, el.shape);
+            obj.shape = extend({}, el.shape);
         }
         return obj;
     }
@@ -1153,7 +1215,7 @@ export function groupTransition(
 export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike): number[][] {
     // FIXME: this way migth be incorrect when grpahic clipped by a corner.
     // and when element have border.
-    return zrUtil.map(points, function (point) {
+    return map(points, function (point) {
         let x = point[0];
         x = mathMax(x, rect.x);
         x = mathMin(x, rect.x + rect.width);
@@ -1190,7 +1252,7 @@ export function createIcon(
     opt?: Omit<DisplayableProps, 'style'>,
     rect?: ZRRectLike
 ): SVGPath | ZImage {
-    const innerOpts: DisplayableProps = zrUtil.extend({rectHover: true}, opt);
+    const innerOpts: DisplayableProps = extend({rectHover: true}, opt);
     const style: ZRStyleProps = innerOpts.style = {strokeNoScale: true};
     rect = rect || {x: -1, y: -1, width: 2, height: 2};
 
@@ -1198,7 +1260,7 @@ export function createIcon(
         return iconStr.indexOf('image://') === 0
             ? (
                 (style as ImageStyleProps).image = iconStr.slice(8),
-                zrUtil.defaults(style, rect),
+                defaults(style, rect),
                 new ZImage(innerOpts)
             )
             : (

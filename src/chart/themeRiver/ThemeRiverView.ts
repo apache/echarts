@@ -95,6 +95,14 @@ class ThemeRiverView extends ChartView {
             let textLayout = data.getItemLayout(indices[0]);
             let labelModel = seriesModel.getModel('label');
             let margin = labelModel.get('margin');
+
+            const commonTextStyle = graphic.createTextStyle(labelModel, {
+                text: labelModel.get('show')
+                    ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
+                        || data.getName(indices[j - 1])
+                    : null,
+                verticalAlign: 'middle'
+            });
             if (status === 'add') {
                 const layerGroup = newLayersGroups[idx] = new graphic.Group();
                 polygon = new ECPolygon({
@@ -108,10 +116,10 @@ class ThemeRiverView extends ChartView {
                     z2: 0
                 });
                 text = new graphic.Text({
-                    style: {
+                    style: extend({
                         x: textLayout.x - margin,
                         y: textLayout.y0 + textLayout.y / 2
-                    }
+                    }, commonTextStyle)
                 });
                 layerGroup.add(polygon);
                 layerGroup.add(text);
@@ -137,23 +145,16 @@ class ThemeRiverView extends ChartView {
                 }, seriesModel);
 
                 graphic.updateProps(text, {
-                    style: {
+                    style: extend({
                         x: textLayout.x - margin,
                         y: textLayout.y0 + textLayout.y / 2
-                    }
+                    }, commonTextStyle)
                 }, seriesModel);
             }
 
             let hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
             let itemStyleModel = seriesModel.getModel('itemStyle');
 
-            graphic.setTextStyle(text.style, null, labelModel, {
-                text: labelModel.get('show')
-                    ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
-                        || data.getName(indices[j - 1])
-                    : null,
-                verticalAlign: 'middle'
-            });
 
             polygon.setStyle(extend({
                 fill: color

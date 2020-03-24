@@ -131,10 +131,10 @@ export function buildLabelElOption(
             borderColor: labelModel.get('borderColor') || 'transparent',
             borderRadius: labelModel.get('borderRadius'),
             borderWidth: labelModel.get('borderWidth') || 0,
-            boxShadowBlur: labelModel.get('shadowBlur'),
-            boxShadowColor: labelModel.get('shadowColor'),
-            boxShadowOffsetX: labelModel.get('shadowOffsetX'),
-            boxShadowOffsetY: labelModel.get('shadowOffsetY')
+            shadowBlur: labelModel.get('shadowBlur'),
+            shadowColor: labelModel.get('shadowColor'),
+            shadowOffsetX: labelModel.get('shadowOffsetX'),
+            shadowOffsetY: labelModel.get('shadowOffsetY')
         },
         // Lable should be over axisPointer.
         z2: 10

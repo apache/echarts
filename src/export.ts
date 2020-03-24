@@ -66,7 +66,7 @@ export {ecUtil as util};
 const GRAPHIC_KEYS = [
     'extendShape', 'extendPath', 'makePath', 'makeImage',
     'mergePath', 'resizePath', 'createIcon',
-    'setHoverStyle', 'setLabelStyle', 'setTextStyle', 'setText',
+    'setHoverStyle', 'setLabelStyle', 'createTextStyle',
     'getFont', 'updateProps', 'initProps', 'getTransform',
     'clipPointsByRect', 'clipRectByRect',
     'registerShape', 'getShapeClass',

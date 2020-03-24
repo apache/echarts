@@ -250,34 +250,6 @@ class PiePiece extends graphic.Group {
                 [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
             ]
         };
-        let targetTextStyle = {
-            x: labelLayout.x,
-            y: labelLayout.y
-        };
-        if (withAnimation) {
-            graphic.updateProps(labelLine, {
-                shape: targetLineShape
-            }, seriesModel, idx);
-
-            graphic.updateProps(labelText, {
-                style: targetTextStyle
-            }, seriesModel, idx);
-        }
-        else {
-            labelLine.attr({
-                shape: targetLineShape
-            });
-            labelText.attr({
-                style: targetTextStyle
-            });
-        }
-
-        labelText.attr({
-            rotation: labelLayout.rotation,
-            origin: [labelLayout.x, labelLayout.y],
-            z2: 10
-        });
-
         let labelModel = itemModel.getModel('label');
         let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
         let labelLineModel = itemModel.getModel('labelLine');
@@ -301,6 +273,36 @@ class PiePiece extends graphic.Group {
                 opacity: data.getItemVisual(idx, 'opacity')
             }
         );
+
+        let targetTextStyle = {
+            x: labelLayout.x,
+            y: labelLayout.y
+        };
+        if (withAnimation) {
+            graphic.updateProps(labelLine, {
+                shape: targetLineShape
+            }, seriesModel, idx);
+
+            graphic.updateProps(labelText, {
+                style: targetTextStyle
+            }, seriesModel, idx);
+        }
+        else {
+            labelLine.attr({
+                shape: targetLineShape
+            });
+            // Make sure update style on labelText after setLabelStyle.
+            // Because setLabelStyle will replace a new style on it.
+            labelText.attr({
+                style: targetTextStyle
+            });
+        }
+
+        labelText.attr({
+            rotation: labelLayout.rotation,
+            origin: [labelLayout.x, labelLayout.y],
+            z2: 10
+        });
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
         labelText.hoverIgnore = !labelHoverModel.get('show');

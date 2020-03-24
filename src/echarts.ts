@@ -1670,7 +1670,7 @@ class ECharts extends Eventful {
                     if (chartView.__alive) {
                         chartView.group.traverse(function (el: ECElement) {
                             // Don't switch back.
-                            el.useHoverLayer = true;
+                            // el.useHoverLayer = true;
                         });
                     }
                 });

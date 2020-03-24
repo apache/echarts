@@ -256,7 +256,7 @@ class GaugeView extends ChartView {
                 let autoColor = getColor(i / splitNumber);
 
                 group.add(new graphic.Text({
-                    style: graphic.setTextStyle({}, null, labelModel, {
+                    style: graphic.createTextStyle(labelModel, {
                         text: label,
                         x: unitX * (r - splitLineLen - distance) + cx,
                         y: unitY * (r - splitLineLen - distance) + cy,
@@ -416,7 +416,7 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.setTextStyle({}, null, titleModel, {
+                style: graphic.createTextStyle(titleModel, {
                     x: x,
                     y: y,
                     // FIXME First data name ?
@@ -452,7 +452,7 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.setTextStyle({}, null, detailModel, {
+                style: graphic.createTextStyle(detailModel, {
                     x: x,
                     y: y,
                     text: formatLabel(

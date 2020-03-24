@@ -258,18 +258,18 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
             }
 
             let textEl = new graphic.Text({
-                silent: AxisBuilder.isLabelSilent(angleAxisModel)
+                silent: AxisBuilder.isLabelSilent(angleAxisModel),
+                style: graphic.createTextStyle(labelModel, {
+                    x: p[0],
+                    y: p[1],
+                    fill: labelModel.getTextColor()
+                        || angleAxisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
+                    text: labelItem.formattedLabel,
+                    align: labelTextAlign,
+                    verticalAlign: labelTextVerticalAlign
+                })
             });
             group.add(textEl);
-            graphic.setTextStyle(textEl.style, null, labelModel, {
-                x: p[0],
-                y: p[1],
-                fill: labelModel.getTextColor()
-                    || angleAxisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
-                text: labelItem.formattedLabel,
-                align: labelTextAlign,
-                verticalAlign: labelTextVerticalAlign
-            });
 
             // Pack data for mouse event
             if (triggerEvent) {
