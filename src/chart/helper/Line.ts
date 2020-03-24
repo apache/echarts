@@ -257,19 +257,17 @@ class Line extends graphic.Group {
             )
             : null;
 
-        let labelStyle = label.style;
-
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.
         if (normalText != null || emphasisText != null) {
-            graphic.setTextStyle(label.style, null, labelModel, {
+            label.useStyle(graphic.createTextStyle(labelModel, {
                 text: normalText as string
             }, {
                 autoColor: defaultLabelColor
-            });
+            }));
 
-            label.__align = labelStyle.align;
-            label.__verticalAlign = labelStyle.verticalAlign;
+            label.__align = label.style.align;
+            label.__verticalAlign = label.style.verticalAlign;
             // 'start', 'middle', 'end'
             label.__position = labelModel.get('position') || 'middle';
 

@@ -1711,6 +1711,14 @@ class ECharts extends Eventful {
                 if (el.type !== 'group') {
                     z != null && (el.z = z);
                     zlevel != null && (el.zlevel = zlevel);
+
+                    const textContent = el.getTextContent();
+                    if (textContent) {
+                        textContent.z = z;
+                        textContent.zlevel = zlevel;
+                        // lift z2 of text content
+                        textContent.z2 = el.z2 + 1;
+                    }
                 }
             });
         };

@@ -385,6 +385,10 @@ function singleEnterEmphasis(el: Displayable) {
     }
 
     el.z2 += Z2_EMPHASIS_LIFT;
+    const textContent = el.getTextContent();
+    if (textContent) {
+        textContent.z2 += Z2_EMPHASIS_LIFT;
+    }
 
     // TODO hover layer
 }
@@ -659,13 +663,16 @@ export function setLabelStyle<LDI>(
         const normalStyle = createTextStyle(
             normalModel,
             normalSpecified,
-            opt
+            opt,
+            false,
+            !isSetOnRichText
         );
         emphasisState.style = createTextStyle(
             emphasisModel,
             emphasisSpecified,
             opt,
-            true
+            true,
+            !isSetOnRichText
         );
 
         if (!isSetOnRichText) {
@@ -706,10 +713,11 @@ export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: RichTextStyleProps,    // Can be overrided by settings in model.
     opt?: TextCommonParams,
-    isEmphasis?: boolean
+    isEmphasis?: boolean,
+    isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
     const textStyle: RichTextStyleProps = {};
-    setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis);
+    setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis, isAttached);
     specifiedTextStyle && extend(textStyle, specifiedTextStyle);
     // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
@@ -758,6 +766,7 @@ export function createTextConfig(
     // fill and auto is determined by the color of path fill if it's not specified by developers.
     if (!textStyle.fill) {
         textConfig.insideFill = 'auto';
+        textConfig.outsideFill = opt.autoColor || null;
     }
     if (!textStyle.stroke) {
         textConfig.insideStroke = 'auto';
@@ -784,7 +793,8 @@ function setTextStyleCommon(
     textStyle: RichTextStyleProps,
     textStyleModel: Model,
     opt?: TextCommonParams,
-    isEmphasis?: boolean
+    isEmphasis?: boolean,
+    isAttached?: boolean
 ) {
     // Consider there will be abnormal when merge hover style to normal style if given default value.
     opt = opt || EMPTY_OBJ;
@@ -819,7 +829,7 @@ function setTextStyleCommon(
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
-                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isEmphasis);
+                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isEmphasis, isAttached);
             }
         }
     }
@@ -832,7 +842,7 @@ function setTextStyleCommon(
         textStyle.overflow = overflow;
     }
 
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, true);
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, isAttached, true);
 
     // TODO
     if (opt.forceRich && !opt.textStyle) {
@@ -894,6 +904,7 @@ function setTokenTextStyle(
     globalTextStyle: LabelOption,
     opt?: TextCommonParams,
     isEmphasis?: boolean,
+    isAttached?: boolean,
     isBlock?: boolean
 ) {
     // In merge mode, default value should not be given.
@@ -925,8 +936,8 @@ function setTokenTextStyle(
         textStyle.lineWidth = lineWidth;
     }
 
-
-    if (!isEmphasis) {
+    // TODO
+    if (!isEmphasis && !isAttached) {
         // Set default finally.
         if (textStyle.fill == null && opt.autoColor) {
             textStyle.fill = opt.autoColor;
