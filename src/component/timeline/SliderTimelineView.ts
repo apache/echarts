@@ -799,8 +799,10 @@ function pointerMoveTo(
         pointer.stopAnimation(true);
         pointer.animateTo(
             { position: [toCoord, 0] },
-            pointerModel.get('animationDuration', true),
-            pointerModel.get('animationEasing', true)
+            {
+                duration: pointerModel.get('animationDuration', true),
+                easing: pointerModel.get('animationEasing', true)
+            }
         );
     }
 }

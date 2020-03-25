@@ -358,12 +358,12 @@ function highDownOnUpdate(this: ECSymbol, fromState: DisplayState, toState: Disp
         // modify it after support stop specified animation.
         // toState === fromState
         //     ? (this.stopAnimation(), this.attr(emphasisOpt))
-        this.animateTo(emphasisOpt, 400, 'elasticOut');
+        this.animateTo(emphasisOpt, { duration: 400, easing: 'elasticOut' });
     }
     else if (toState === 'normal') {
         this.animateTo({
             scale: this.__symbolOriginalScale
-        }, 400, 'elasticOut');
+        }, { duration: 400, easing: 'elasticOut' });
     }
 }
 

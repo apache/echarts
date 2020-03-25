@@ -1042,7 +1042,13 @@ function animateOrSetProps<Props>(
         }
 
         duration > 0
-            ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb, !!cb)
+            ? el.animateTo(props, {
+                duration,
+                delay: animationDelay || 0,
+                easing: animationEasing,
+                done: cb,
+                force: !!cb
+            })
             : (el.stopAnimation(), el.attr(props), cb && cb());
     }
     else {

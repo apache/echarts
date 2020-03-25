@@ -207,7 +207,7 @@ class PiePiece extends graphic.Group {
                         shape: {
                             r: layout.r + seriesModel.get('hoverOffset')
                         }
-                    }, 300, 'elasticOut');
+                    }, { duration: 300, easing: 'elasticOut' });
                 }
                 else {
                     labelLine.ignore = labelLine.normalIgnore;
@@ -218,7 +218,7 @@ class PiePiece extends graphic.Group {
                         shape: {
                             r: layout.r
                         }
-                    }, 300, 'elasticOut');
+                    }, { duration: 300, easing: 'elasticOut' });
                 }
             }
             : null;

@@ -95,7 +95,12 @@ export function createWrap() {
 
             for (let i = 0, len = storage.length; i < len; i++) {
                 let item = storage[i];
-                item.el.animateTo(item.target, item.time, item.delay, item.easing, done);
+                item.el.animateTo(item.target, {
+                    duration: item.time,
+                    delay: item.delay,
+                    easing: item.easing,
+                    done
+                });
             }
 
             return this;
