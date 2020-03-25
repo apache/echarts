@@ -1200,7 +1200,7 @@ export function groupTransition(
         let elMap: Dictionary<Displayable> = {};
         g.traverse(function (el: Element) {
             if (isNotGroup(el) && el.anid) {
-                elMap[el.anid];
+                elMap[el.anid] = el;
             }
         });
         return elMap;
