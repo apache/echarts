@@ -137,10 +137,10 @@ export default echarts.extendChartView({
         data.diff(oldData)
             .add(function (dataIndex) {
                 var itemModel = data.getItemModel(dataIndex);
-                var layout = getLayout[coord.type](data, dataIndex, itemModel);
+                var layout = getLayout[coord.type](data, dataIndex, itemModel, 'item');
 
                 if (drawBackground) {
-                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, layout);
+                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, getLayout[coord.type](data, dataIndex, backgroundModel, 'background'));
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
                     bgEls[dataIndex] = bgEl;
                 }
@@ -430,7 +430,7 @@ function removeSector(dataIndex, animationModel, el) {
 }
 
 var getLayout = {
-    cartesian2d: function (data, dataIndex, itemModel) {
+    cartesian2d: function (data, dataIndex, itemModel, type) {
         var layout = data.getItemLayout(dataIndex);
         var fixedLineWidth = getLineWidth(itemModel, layout);
 
@@ -440,6 +440,7 @@ var getLayout = {
         return {
             x: layout.x + signX * fixedLineWidth / 2,
             y: layout.y + signY * fixedLineWidth / 2,
+            r: type === 'item' ? layout.r : layout.rb,
             width: layout.width - signX * fixedLineWidth,
             height: layout.height - signY * fixedLineWidth
         };
@@ -673,6 +674,7 @@ function createBackgroundShape(isHorizontalOrRadial, layout, coord) {
         return {
             x: isHorizontalOrRadial ? layout.x : coordLayout.x,
             y: isHorizontalOrRadial ? coordLayout.y : layout.y,
+            r: isHorizontalOrRadial ? layout.r : coordLayout.r,
             width: isHorizontalOrRadial ? layout.width : coordLayout.width,
             height: isHorizontalOrRadial ? coordLayout.height : layout.height
         };
