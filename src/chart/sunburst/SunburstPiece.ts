@@ -52,16 +52,19 @@ class SunburstPiece extends graphic.Group {
         super();
 
         let sector = new graphic.Sector({
-            z2: DEFAULT_SECTOR_Z
+            z2: DEFAULT_SECTOR_Z,
+            textConfig: {
+                inside: true
+            }
         });
+        this.add(sector);
         graphic.getECData(sector).seriesIndex = seriesModel.seriesIndex;
 
         let text = new graphic.Text({
             z2: DEFAULT_TEXT_Z,
             silent: node.getModel<SunburstSeriesNodeOption>().get(['label', 'silent'])
         });
-        this.add(sector);
-        this.add(text);
+        sector.setTextContent(text);
 
         this.updateData(true, node, 'normal', seriesModel, ecModel);
 
@@ -238,16 +241,22 @@ class SunburstPiece extends graphic.Group {
             text = '';
         }
 
-        let label = this.childAt(1) as graphic.Text;
+        let sector = this.childAt(0);
+        let label = sector.getTextContent();
 
         graphic.setLabelStyle(
             label, normalModel, labelHoverModel,
             {
                 defaultText: labelModel.getShallow('show') ? text : null,
-                autoColor: visualColor,
-                useInsideStyle: true
+                autoColor: visualColor
             }
         );
+        sector.setTextConfig({
+            inside: true,
+            insideStroke: visualColor,
+            insideFill: 'auto',
+            outsideFill: visualColor
+        });
 
         let midAngle = (layout.startAngle + layout.endAngle) / 2;
         let dx = Math.cos(midAngle);

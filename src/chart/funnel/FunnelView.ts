@@ -46,7 +46,7 @@ class FunnelPiece extends graphic.Group {
         let text = new graphic.Text();
         this.add(polygon);
         this.add(labelLine);
-        this.add(text);
+        polygon.setTextContent(text);
 
         this.updateData(data, idx, true);
     }
@@ -123,9 +123,9 @@ class FunnelPiece extends graphic.Group {
     }
 
     _updateLabel(data: List, idx: number) {
-
+        let polygon = this.childAt(0);
         let labelLine = this.childAt(1) as graphic.Polyline;
-        let labelText = this.childAt(2) as graphic.Text;
+        let labelText = polygon.getTextContent();
 
         let seriesModel = data.hostModel;
         let itemModel = data.getItemModel<FunnelDataItemOption>(idx);
@@ -144,15 +144,21 @@ class FunnelPiece extends graphic.Group {
             {
                 labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
-                defaultText: data.getName(idx),
-                autoColor: visualColor,
-                useInsideStyle: !!labelLayout.inside
+                defaultText: data.getName(idx)
             },
             {
                 align: labelLayout.textAlign,
                 verticalAlign: labelLayout.verticalAlign
             }
         );
+
+        polygon.setTextConfig({
+            local: true,
+            inside: !!labelLayout.inside,
+            insideStroke: visualColor,
+            insideFill: 'auto',
+            outsideFill: visualColor
+        });
 
         graphic.updateProps(labelLine, {
             shape: {
@@ -168,6 +174,7 @@ class FunnelPiece extends graphic.Group {
                 y: labelLayout.y
             }
         }, seriesModel, idx);
+
         labelText.attr({
             rotation: labelLayout.rotation,
             origin: [labelLayout.x, labelLayout.y],

@@ -114,14 +114,6 @@ type TextCommonParams = {
      * for textFill, textStroke, textBackgroundColor, and textBorderColor. If autoColor specified, it is used as default textFill.
      */
     autoColor?: ColorString
-    /**
-     * `true`: Use inside style (textFill, textStroke, textStrokeWidth)
-     *     if `textFill` is not specified.
-     * `false`: Do not use inside style.
-     * `null/undefined`: use inside style if `isRectText` is true and
-     *     `textFill` is not specified and textPosition contains `'inside'`.
-     */
-    useInsideStyle?: boolean
 
     forceRich?: boolean
 
@@ -592,7 +584,7 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
  * If target is other Element. It will create or reuse RichText which is attached on the target.
  * And create a new style object.
  *
- * NOTICE: Because the style on RichText will be replaced with new.
+ * NOTICE: Because the style on RichText will be replaced with new(only x, y are keeped).
  * So please use the style on RichText after use this method.
  */
 export function setLabelStyle<LDI>(
@@ -691,6 +683,14 @@ export function setLabelStyle<LDI>(
 
         normalStyle.text = normalStyleText;
         emphasisState.style.text = emphasisStyleText;
+
+        // Keep x and y
+        if (richText.style.x != null) {
+            normalStyle.x = richText.style.x;
+        }
+        if (richText.style.y != null) {
+            normalStyle.y = richText.style.y;
+        }
 
         // Always create new style.
         richText.useStyle(normalStyle);

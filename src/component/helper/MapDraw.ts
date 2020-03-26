@@ -274,8 +274,7 @@ class MapDraw {
                     {
                         labelFetcher: labelFetcher,
                         labelDataIndex: query,
-                        defaultText: region.name,
-                        useInsideStyle: false
+                        defaultText: region.name
                     },
                     {
                         align: 'center',

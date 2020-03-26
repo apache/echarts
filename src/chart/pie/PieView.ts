@@ -29,7 +29,6 @@ import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import { Dictionary } from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
-import Displayable from 'zrender/src/graphic/Displayable';
 
 function updateDataSelected(
     this: PiePiece,
@@ -86,11 +85,6 @@ function toggleItemSelected(
         : el.attr('position', position);
 }
 
-interface PieceElementExtension extends Displayable {
-    hoverIgnore?: boolean
-    normalIgnore?: boolean
-};
-
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
@@ -107,15 +101,14 @@ class PiePiece extends graphic.Group {
         let text = new graphic.Text();
         this.add(sector);
         this.add(polyline);
-        this.add(text);
+
+        sector.setTextContent(text);
 
         this.updateData(data, idx, true);
     }
 
     updateData(data: List, idx: number, firstCreate?: boolean): void {
         let sector = this.childAt(0) as graphic.Sector;
-        let labelLine = this.childAt(1) as PieceElementExtension;
-        let labelText = this.childAt(2) as PieceElementExtension;
 
         let seriesModel = data.hostModel as PieSeriesModel;
         let itemModel = data.getItemModel<PieDataItemOption>(idx);
@@ -197,8 +190,6 @@ class PiePiece extends graphic.Group {
         (this as ECElement).highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
             ? function (fromState: DisplayState, toState: DisplayState): void {
                 if (toState === 'emphasis') {
-                    labelLine.ignore = labelLine.hoverIgnore;
-                    labelText.ignore = labelText.hoverIgnore;
 
                     // Sector may has animation of updating data. Force to move to the last frame
                     // Or it may stopped on the wrong shape
@@ -210,9 +201,6 @@ class PiePiece extends graphic.Group {
                     }, { duration: 300, easing: 'elasticOut' });
                 }
                 else {
-                    labelLine.ignore = labelLine.normalIgnore;
-                    labelText.ignore = labelText.normalIgnore;
-
                     sector.stopAnimation(true);
                     sector.animateTo({
                         shape: {
@@ -227,19 +215,22 @@ class PiePiece extends graphic.Group {
     }
 
     private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
+        const sector = this.childAt(0);
+        const labelLine = this.childAt(1) as graphic.Polyline;
+        const labelText = sector.getTextContent() as graphic.Text;
 
-        let labelLine = this.childAt(1) as (PieceElementExtension & graphic.Polyline);
-        let labelText = this.childAt(2) as (PieceElementExtension & graphic.Text);
-
-        let seriesModel = data.hostModel;
-        let itemModel = data.getItemModel<PieDataItemOption>(idx);
-        let layout = data.getItemLayout(idx);
-        let labelLayout = layout.label;
+        const seriesModel = data.hostModel;
+        const itemModel = data.getItemModel<PieDataItemOption>(idx);
+        const layout = data.getItemLayout(idx);
+        const labelLayout = layout.label;
         // let visualColor = data.getItemVisual(idx, 'color');
 
+        const labelTextEmphasisState = labelText.ensureState('emphasis');
+        const labelLineEmphasisState = labelLine.ensureState('emphasis');
+
         if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
-            labelText.ignore = labelText.normalIgnore = labelText.hoverIgnore =
-            labelLine.ignore = labelLine.normalIgnore = labelLine.hoverIgnore = true;
+            labelText.ignore = labelTextEmphasisState.ignore = true;
+            labelLine.ignore = labelLineEmphasisState.ignore = true;
             return;
         }
 
@@ -263,9 +254,7 @@ class PiePiece extends graphic.Group {
             {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
-                defaultText: labelLayout.text,
-                autoColor: visualColor,
-                useInsideStyle: !!labelLayout.inside
+                defaultText: labelLayout.text
             },
             {
                 align: labelLayout.textAlign,
@@ -273,6 +262,15 @@ class PiePiece extends graphic.Group {
                 opacity: data.getItemVisual(idx, 'opacity')
             }
         );
+
+        // Set textConfig on sector.
+        sector.setTextConfig({
+            local: true,
+            inside: !!labelLayout.inside,
+            insideStroke: visualColor,
+            insideFill: 'auto',
+            outsideFill: visualColor
+        });
 
         let targetTextStyle = {
             x: labelLayout.x,
@@ -304,11 +302,11 @@ class PiePiece extends graphic.Group {
             z2: 10
         });
 
-        labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
-        labelText.hoverIgnore = !labelHoverModel.get('show');
+        labelText.ignore = !labelModel.get('show');
+        labelTextEmphasisState.ignore = !labelHoverModel.get('show');
 
-        labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
-        labelLine.hoverIgnore = !labelLineHoverModel.get('show');
+        labelLine.ignore = !labelLineModel.get('show');
+        labelLineEmphasisState.ignore = !labelLineHoverModel.get('show');
 
         // Default use item visual color
         labelLine.setStyle({
