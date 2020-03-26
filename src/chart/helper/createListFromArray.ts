@@ -40,21 +40,21 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
         source = Source.seriesDataToSource(source);
     }
 
-    let coordSysName = seriesModel.get('coordinateSystem');
-    let registeredCoordSys = CoordinateSystem.get(coordSysName);
+    const coordSysName = seriesModel.get('coordinateSystem');
+    const registeredCoordSys = CoordinateSystem.get(coordSysName);
 
-    let coordSysInfo = getCoordSysInfoBySeries(seriesModel);
+    const coordSysInfo = getCoordSysInfoBySeries(seriesModel);
 
     let coordSysDimDefs: DimensionDefinitionLoose[];
 
     if (coordSysInfo) {
         coordSysDimDefs = zrUtil.map(coordSysInfo.coordSysDims, function (dim) {
-            let dimInfo = {
+            const dimInfo = {
                 name: dim
             } as DimensionDefinition;
-            let axisModel = coordSysInfo.axisMap.get(dim);
+            const axisModel = coordSysInfo.axisMap.get(dim);
             if (axisModel) {
-                let axisType = axisModel.get('type');
+                const axisType = axisModel.get('type');
                 dimInfo.type = getDimensionTypeByAxis(axisType);
                 // dimInfo.stackable = isStackable(axisType);
             }
@@ -71,7 +71,7 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
         )) || ['x', 'y'];
     }
 
-    let dimInfoList = createDimensions(source, {
+    const dimInfoList = createDimensions(source, {
         coordDimensions: coordSysDimDefs,
         generateCoord: opt.generateCoord,
         encodeDefaulter: opt.useEncodeDefaulter
@@ -82,8 +82,8 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
     let firstCategoryDimIndex: number;
     let hasNameEncode: boolean;
     coordSysInfo && zrUtil.each(dimInfoList, function (dimInfo, dimIndex) {
-        let coordDim = dimInfo.coordDim;
-        let categoryAxisModel = coordSysInfo.categoryAxisMap.get(coordDim);
+        const coordDim = dimInfo.coordDim;
+        const categoryAxisModel = coordSysInfo.categoryAxisMap.get(coordDim);
         if (categoryAxisModel) {
             if (firstCategoryDimIndex == null) {
                 firstCategoryDimIndex = dimIndex;
@@ -98,13 +98,13 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
         dimInfoList[firstCategoryDimIndex].otherDims.itemName = 0;
     }
 
-    let stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
+    const stackCalculationInfo = enableDataStack(seriesModel, dimInfoList);
 
-    let list = new List(dimInfoList, seriesModel);
+    const list = new List(dimInfoList, seriesModel);
 
     list.setCalculationInfo(stackCalculationInfo);
 
-    let dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
+    const dimValueGetter = (firstCategoryDimIndex != null && isNeedCompleteOrdinalData(source))
         ? function (this: List, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
             // Use dataIndex as ordinal value in categoryAxis
             return dimIndex === firstCategoryDimIndex
@@ -121,7 +121,7 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
 
 function isNeedCompleteOrdinalData(source: Source) {
     if (source.sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        let sampleItem = firstDataNotNull(source.data as ArrayLike<any> || []);
+        const sampleItem = firstDataNotNull(source.data as ArrayLike<any> || []);
         return sampleItem != null
             && !zrUtil.isArray(getDataItemValue(sampleItem));
     }

@@ -166,8 +166,8 @@ class TooltipView extends ComponentView {
             return;
         }
 
-        let tooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
-        let renderMode = tooltipModel.get('renderMode');
+        const tooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
+        const renderMode = tooltipModel.get('renderMode');
         this._renderMode = getTooltipRenderMode(renderMode);
 
         let tooltipContent;
@@ -212,7 +212,7 @@ class TooltipView extends ComponentView {
          */
         this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
-        let tooltipContent = this._tooltipContent;
+        const tooltipContent = this._tooltipContent;
         tooltipContent.update();
         tooltipContent.setEnterable(tooltipModel.get('enterable'));
 
@@ -222,8 +222,8 @@ class TooltipView extends ComponentView {
     }
 
     _initGlobalListener() {
-        let tooltipModel = this._tooltipModel;
-        let triggerOn = tooltipModel.get('triggerOn');
+        const tooltipModel = this._tooltipModel;
+        const triggerOn = tooltipModel.get('triggerOn');
 
         globalListener.register(
             'itemTooltip',
@@ -243,9 +243,9 @@ class TooltipView extends ComponentView {
     }
 
     _keepShow() {
-        let tooltipModel = this._tooltipModel;
-        let ecModel = this._ecModel;
-        let api = this._api;
+        const tooltipModel = this._tooltipModel;
+        const ecModel = this._ecModel;
+        const api = this._api;
 
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null
@@ -255,7 +255,7 @@ class TooltipView extends ComponentView {
             // which is not expected.
             && tooltipModel.get('triggerOn') !== 'none'
         ) {
-            let self = this;
+            const self = this;
             clearTimeout(this._refreshUpdateTimeout);
             this._refreshUpdateTimeout = setTimeout(function () {
                 // Show tip next tick after other charts are rendered
@@ -295,16 +295,16 @@ class TooltipView extends ComponentView {
             return;
         }
 
-        let dispatchAction = makeDispatchAction(payload, api);
+        const dispatchAction = makeDispatchAction(payload, api);
 
         // Reset ticket
         this._ticket = '';
 
         // When triggered from axisPointer.
-        let dataByCoordSys = payload.dataByCoordSys;
+        const dataByCoordSys = payload.dataByCoordSys;
 
         if (payload.tooltip && payload.x != null && payload.y != null) {
-            let el = proxyRect as ECElement;
+            const el = proxyRect as ECElement;
             el.position = [payload.x, payload.y];
             el.update();
             el.tooltip = payload.tooltip;
@@ -330,9 +330,9 @@ class TooltipView extends ComponentView {
                 return;
             }
 
-            let pointInfo = findPointFromSeries(payload, ecModel);
-            let cx = pointInfo.point[0];
-            let cy = pointInfo.point[1];
+            const pointInfo = findPointFromSeries(payload, ecModel);
+            const cx = pointInfo.point[0];
+            const cy = pointInfo.point[1];
             if (cx != null && cy != null) {
                 this._tryShow({
                     offsetX: cx,
@@ -366,7 +366,7 @@ class TooltipView extends ComponentView {
         api: ExtensionAPI,
         payload: HideTipPayload
     ) {
-        let tooltipContent = this._tooltipContent;
+        const tooltipContent = this._tooltipContent;
 
         if (!this._alwaysShowContent && this._tooltipModel) {
             tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
@@ -388,22 +388,22 @@ class TooltipView extends ComponentView {
         api: ExtensionAPI,
         payload: ShowTipPayload
     ) {
-        let seriesIndex = payload.seriesIndex;
-        let dataIndex = payload.dataIndex;
+        const seriesIndex = payload.seriesIndex;
+        const dataIndex = payload.dataIndex;
         // @ts-ignore
-        let coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
+        const coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
 
         if (seriesIndex == null || dataIndex == null || coordSysAxesInfo == null) {
             return;
         }
 
-        let seriesModel = ecModel.getSeriesByIndex(seriesIndex);
+        const seriesModel = ecModel.getSeriesByIndex(seriesIndex);
         if (!seriesModel) {
             return;
         }
 
-        let data = seriesModel.getData();
-        let tooltipCascadedModel = buildTooltipModel([
+        const data = seriesModel.getData();
+        const tooltipCascadedModel = buildTooltipModel([
             data.getItemModel<TooltipableOption>(dataIndex),
             seriesModel,
             (seriesModel.coordinateSystem || {}).model,
@@ -428,8 +428,8 @@ class TooltipView extends ComponentView {
         e: TryShowParams,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        let el = e.target;
-        let tooltipModel = this._tooltipModel;
+        const el = e.target;
+        const tooltipModel = this._tooltipModel;
 
         if (!tooltipModel) {
             return;
@@ -439,7 +439,7 @@ class TooltipView extends ComponentView {
         this._lastX = e.offsetX;
         this._lastY = e.offsetY;
 
-        let dataByCoordSys = e.dataByCoordSys;
+        const dataByCoordSys = e.dataByCoordSys;
         if (dataByCoordSys && dataByCoordSys.length) {
             this._showAxisTooltip(dataByCoordSys, e);
         }
@@ -467,7 +467,7 @@ class TooltipView extends ComponentView {
         // as true. User intent to move mouse into tooltip and click
         // something. `showDelay` makes it easyer to enter the content
         // but tooltip do not move immediately.
-        let delay = tooltipModel.get('showDelay');
+        const delay = tooltipModel.get('showDelay');
         cb = zrUtil.bind(cb, this);
         clearTimeout(this._showTimout);
         delay > 0
@@ -479,22 +479,22 @@ class TooltipView extends ComponentView {
         dataByCoordSys: DataByCoordSys[],
         e: TryShowParams
     ) {
-        let ecModel = this._ecModel;
-        let globalTooltipModel = this._tooltipModel;
+        const ecModel = this._ecModel;
+        const globalTooltipModel = this._tooltipModel;
 
-        let point = [e.offsetX, e.offsetY];
+        const point = [e.offsetX, e.offsetY];
 
-        let singleDefaultHTML: string[] = [];
-        let singleParamsList: TooltipDataParams[] = [];
-        let singleTooltipModel = buildTooltipModel([
+        const singleDefaultHTML: string[] = [];
+        const singleParamsList: TooltipDataParams[] = [];
+        const singleTooltipModel = buildTooltipModel([
             e.tooltipOption,
             globalTooltipModel
         ]);
 
-        let renderMode = this._renderMode;
-        let newLine = this._newLine;
+        const renderMode = this._renderMode;
+        const newLine = this._newLine;
 
-        let markers = {};
+        const markers = {};
 
         each(dataByCoordSys, function (itemCoordSys) {
             // let coordParamList = [];
@@ -509,15 +509,15 @@ class TooltipView extends ComponentView {
             // let paramsList = displayMode === 'single' ? singleParamsList : [];
 
             each(itemCoordSys.dataByAxis, function (item) {
-                let axisModel = ecModel.getComponent(item.axisDim + 'Axis', item.axisIndex) as AxisBaseModel;
-                let axisValue = item.value;
-                let seriesDefaultHTML: string[] = [];
+                const axisModel = ecModel.getComponent(item.axisDim + 'Axis', item.axisIndex) as AxisBaseModel;
+                const axisValue = item.value;
+                const seriesDefaultHTML: string[] = [];
 
                 if (!axisModel || axisValue == null) {
                     return;
                 }
 
-                let valueLabel = axisPointerViewHelper.getValueLabel(
+                const valueLabel = axisPointerViewHelper.getValueLabel(
                     axisValue, axisModel.axis, ecModel,
                     item.seriesDataIndices,
                     // @ts-ignore
@@ -525,9 +525,9 @@ class TooltipView extends ComponentView {
                 );
 
                 zrUtil.each(item.seriesDataIndices, function (idxItem) {
-                    let series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
-                    let dataIndex = idxItem.dataIndexInside;
-                    let dataParams = series && series.getDataParams(dataIndex) as TooltipDataParams;
+                    const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
+                    const dataIndex = idxItem.dataIndexInside;
+                    const dataParams = series && series.getDataParams(dataIndex) as TooltipDataParams;
                     dataParams.axisDim = item.axisDim;
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
@@ -537,14 +537,14 @@ class TooltipView extends ComponentView {
 
                     if (dataParams) {
                         singleParamsList.push(dataParams);
-                        let seriesTooltip = series.formatTooltip(
+                        const seriesTooltip = series.formatTooltip(
                             dataIndex, true, null, renderMode as TooltipRenderMode
                         );
 
                         let html;
                         if (zrUtil.isObject(seriesTooltip)) {
                             html = seriesTooltip.html;
-                            let newMarkers = seriesTooltip.markers;
+                            const newMarkers = seriesTooltip.markers;
                             zrUtil.merge(markers, newMarkers);
                         }
                         else {
@@ -558,7 +558,7 @@ class TooltipView extends ComponentView {
                 // FIXME
                 // (1) shold be the first data which has name?
                 // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
-                let firstLine = valueLabel;
+                const firstLine = valueLabel;
                 if (renderMode !== 'html') {
                     singleDefaultHTML.push(seriesDefaultHTML.join(newLine));
                 }
@@ -575,7 +575,7 @@ class TooltipView extends ComponentView {
         singleDefaultHTML.reverse();
         const singleDefaultHTMLStr = singleDefaultHTML.join(this._newLine + this._newLine);
 
-        let positionExpr = e.position;
+        const positionExpr = e.position;
         this._showOrMove(singleTooltipModel, function (this: TooltipView) {
             if (this._updateContentNotChangedOnAxis(dataByCoordSys)) {
                 this._updatePosition(
@@ -603,34 +603,34 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
-        let ecModel = this._ecModel;
-        let ecData = graphic.getECData(el);
+        const ecModel = this._ecModel;
+        const ecData = graphic.getECData(el);
         // Use dataModel in element if possible
         // Used when mouseover on a element like markPoint or edge
         // In which case, the data is not main data in series.
-        let seriesIndex = ecData.seriesIndex;
-        let seriesModel = ecModel.getSeriesByIndex(seriesIndex);
+        const seriesIndex = ecData.seriesIndex;
+        const seriesModel = ecModel.getSeriesByIndex(seriesIndex);
 
         // For example, graph link.
-        let dataModel = ecData.dataModel || seriesModel;
-        let dataIndex = ecData.dataIndex;
-        let dataType = ecData.dataType;
-        let data = dataModel.getData();
+        const dataModel = ecData.dataModel || seriesModel;
+        const dataIndex = ecData.dataIndex;
+        const dataType = ecData.dataType;
+        const data = dataModel.getData();
 
-        let tooltipModel = buildTooltipModel([
+        const tooltipModel = buildTooltipModel([
             data.getItemModel<TooltipableOption>(dataIndex),
             dataModel,
             seriesModel && (seriesModel.coordinateSystem || {}).model,
             this._tooltipModel
         ]);
 
-        let tooltipTrigger = tooltipModel.get('trigger');
+        const tooltipTrigger = tooltipModel.get('trigger');
         if (tooltipTrigger != null && tooltipTrigger !== 'item') {
             return;
         }
 
-        let params = dataModel.getDataParams(dataIndex, dataType);
-        let seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
+        const params = dataModel.getDataParams(dataIndex, dataType);
+        const seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
         let defaultHtml: string;
         let markers: Dictionary<ColorString>;
         if (zrUtil.isObject(seriesTooltip)) {
@@ -642,7 +642,7 @@ class TooltipView extends ComponentView {
             markers = null;
         }
 
-        let asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
+        const asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 
         this._showOrMove(tooltipModel, function (this: TooltipView) {
             this._showTooltipContent(
@@ -669,16 +669,16 @@ class TooltipView extends ComponentView {
     ) {
         let tooltipOpt = el.tooltip;
         if (typeof tooltipOpt === 'string') {
-            let content = tooltipOpt;
+            const content = tooltipOpt;
             tooltipOpt = {
                 content: content,
                 // Fixed formatter
                 formatter: content
             };
         }
-        let subTooltipModel = new Model(tooltipOpt, this._tooltipModel, this._ecModel);
-        let defaultHtml = subTooltipModel.get('content');
-        let asyncTicket = Math.random() + '';
+        const subTooltipModel = new Model(tooltipOpt, this._tooltipModel, this._ecModel);
+        const defaultHtml = subTooltipModel.get('content');
+        const asyncTicket = Math.random() + '';
 
         // Do not check whether `trigger` is 'none' here, because `trigger`
         // only works on cooridinate system. In fact, we have not found case
@@ -719,9 +719,9 @@ class TooltipView extends ComponentView {
             return;
         }
 
-        let tooltipContent = this._tooltipContent;
+        const tooltipContent = this._tooltipContent;
 
-        let formatter = tooltipModel.get('formatter');
+        const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
         let html = defaultHtml;
 
@@ -729,7 +729,7 @@ class TooltipView extends ComponentView {
             html = formatUtil.formatTpl(formatter, params, true);
         }
         else if (typeof formatter === 'function') {
-            let callback = bind(function (cbTicket: string, html: string) {
+            const callback = bind(function (cbTicket: string, html: string) {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markers, tooltipModel);
                     this._updatePosition(
@@ -758,15 +758,15 @@ class TooltipView extends ComponentView {
         params: TooltipDataParams | TooltipDataParams[],
         el?: Element
     ) {
-        let viewWidth = this._api.getWidth();
-        let viewHeight = this._api.getHeight();
+        const viewWidth = this._api.getWidth();
+        const viewHeight = this._api.getHeight();
 
         positionExpr = positionExpr || tooltipModel.get('position');
 
-        let contentSize = content.getSize();
+        const contentSize = content.getSize();
         let align = tooltipModel.get('align');
         let vAlign = tooltipModel.get('verticalAlign');
-        let rect = el && el.getBoundingRect().clone();
+        const rect = el && el.getBoundingRect().clone();
         el && rect.applyTransform(el.transform);
 
         if (typeof positionExpr === 'function') {
@@ -785,7 +785,7 @@ class TooltipView extends ComponentView {
             const boxLayoutPosition = positionExpr as BoxLayoutOptionMixin;
             boxLayoutPosition.width = contentSize[0];
             boxLayoutPosition.height = contentSize[1];
-            let layoutRect = layoutUtil.getLayoutRect(
+            const layoutRect = layoutUtil.getLayoutRect(
                 boxLayoutPosition, {width: viewWidth, height: viewHeight}
             );
             x = layoutRect.x;
@@ -828,20 +828,20 @@ class TooltipView extends ComponentView {
     // FIXME
     // Should we remove this but leave this to user?
     _updateContentNotChangedOnAxis(dataByCoordSys: DataByCoordSys[]) {
-        let lastCoordSys = this._lastDataByCoordSys;
+        const lastCoordSys = this._lastDataByCoordSys;
         let contentNotChanged = !!lastCoordSys
             && lastCoordSys.length === dataByCoordSys.length;
 
         contentNotChanged && each(lastCoordSys, function (lastItemCoordSys, indexCoordSys) {
-            let lastDataByAxis = lastItemCoordSys.dataByAxis || [] as DataByAxis[];
-            let thisItemCoordSys = dataByCoordSys[indexCoordSys] || {} as DataByCoordSys;
-            let thisDataByAxis = thisItemCoordSys.dataByAxis || [] as DataByAxis[];
+            const lastDataByAxis = lastItemCoordSys.dataByAxis || [] as DataByAxis[];
+            const thisItemCoordSys = dataByCoordSys[indexCoordSys] || {} as DataByCoordSys;
+            const thisDataByAxis = thisItemCoordSys.dataByAxis || [] as DataByAxis[];
             contentNotChanged = contentNotChanged && lastDataByAxis.length === thisDataByAxis.length;
 
             contentNotChanged && each(lastDataByAxis, function (lastItem, indexAxis) {
-                let thisItem = thisDataByAxis[indexAxis] || {} as DataByAxis;
-                let lastIndices = lastItem.seriesDataIndices || [] as DataIndex[];
-                let newIndices = thisItem.seriesDataIndices || [] as DataIndex[];
+                const thisItem = thisDataByAxis[indexAxis] || {} as DataByAxis;
+                const lastIndices = lastItem.seriesDataIndices || [] as DataIndex[];
+                const newIndices = thisItem.seriesDataIndices || [] as DataIndex[];
 
                 contentNotChanged = contentNotChanged
                     && lastItem.value === thisItem.value
@@ -850,7 +850,7 @@ class TooltipView extends ComponentView {
                     && lastIndices.length === newIndices.length;
 
                 contentNotChanged && each(lastIndices, function (lastIdxItem, j) {
-                    let newIdxItem = newIndices[j];
+                    const newIdxItem = newIndices[j];
                     contentNotChanged = contentNotChanged
                         && lastIdxItem.seriesIndex === newIdxItem.seriesIndex
                         && lastIdxItem.dataIndex === newIdxItem.dataIndex;
@@ -926,9 +926,9 @@ function refixTooltipPosition(
     viewWidth: number, viewHeight: number,
     gapH: number, gapV: number
 ) {
-    let size = content.getOuterSize();
-    let width = size.width;
-    let height = size.height;
+    const size = content.getOuterSize();
+    const width = size.width;
+    const height = size.height;
 
     if (gapH != null) {
         if (x + width + gapH > viewWidth) {
@@ -955,9 +955,9 @@ function confineTooltipPosition(
     viewWidth: number,
     viewHeight: number
 ): [number, number] {
-    let size = content.getOuterSize();
-    let width = size.width;
-    let height = size.height;
+    const size = content.getOuterSize();
+    const width = size.width;
+    const height = size.height;
 
     x = Math.min(x + width, viewWidth) - width;
     y = Math.min(y + height, viewHeight) - height;
@@ -972,13 +972,13 @@ function calcTooltipPosition(
     rect: ZRRectLike,
     contentSize: number[]
 ): [number, number] {
-    let domWidth = contentSize[0];
-    let domHeight = contentSize[1];
-    let gap = 5;
+    const domWidth = contentSize[0];
+    const domHeight = contentSize[1];
+    const gap = 5;
     let x = 0;
     let y = 0;
-    let rectWidth = rect.width;
-    let rectHeight = rect.height;
+    const rectWidth = rect.width;
+    const rectHeight = rect.height;
     switch (position) {
         case 'inside':
             x = rect.x + rectWidth / 2 - domWidth / 2;

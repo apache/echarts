@@ -42,28 +42,28 @@ export function getItemAlign(
     api: ExtensionAPI,
     itemSize: number[]
 ): ItemAlign {
-    let modelOption = visualMapModel.option;
-    let itemAlign = modelOption.align;
+    const modelOption = visualMapModel.option;
+    const itemAlign = modelOption.align;
 
     if (itemAlign != null && itemAlign !== 'auto') {
         return itemAlign as ItemAlign;
     }
 
     // Auto decision align.
-    let ecSize = {width: api.getWidth(), height: api.getHeight()};
-    let realIndex = modelOption.orient === 'horizontal' ? 1 : 0;
+    const ecSize = {width: api.getWidth(), height: api.getHeight()};
+    const realIndex = modelOption.orient === 'horizontal' ? 1 : 0;
 
-    let reals = paramsSet[realIndex];
-    let fakeValue = [0, null, 10];
+    const reals = paramsSet[realIndex];
+    const fakeValue = [0, null, 10];
 
-    let layoutInput = {} as Record<ItemAlign, number | string>;
+    const layoutInput = {} as Record<ItemAlign, number | string>;
     for (let i = 0; i < 3; i++) {
         layoutInput[paramsSet[1 - realIndex][i]] = fakeValue[i];
         layoutInput[reals[i]] = i === 2 ? itemSize[0] : modelOption[reals[i]];
     }
 
-    let rParam = ([['x', 'width', 3], ['y', 'height', 0]] as const)[realIndex];
-    let rect = getLayoutRect(layoutInput, ecSize, modelOption.padding);
+    const rParam = ([['x', 'width', 3], ['y', 'height', 0]] as const)[realIndex];
+    const rect = getLayoutRect(layoutInput, ecSize, modelOption.padding);
 
     return reals[
         (rect.margin[rParam[2]] || 0) + rect[rParam[0]] + rect[rParam[1]] * 0.5

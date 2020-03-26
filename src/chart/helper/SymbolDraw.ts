@@ -109,7 +109,7 @@ export interface SymbolDrawSeriesScope {
 }
 
 function makeSeriesScope(data: List): SymbolDrawSeriesScope {
-    let seriesModel = data.hostModel;
+    const seriesModel = data.hostModel;
     return {
         itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
         hoverItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
@@ -143,12 +143,12 @@ class SymbolDraw {
     updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
         opt = normalizeUpdateOpt(opt);
 
-        let group = this.group;
-        let seriesModel = data.hostModel;
-        let oldData = this._data;
-        let SymbolCtor = this._SymbolCtor;
+        const group = this.group;
+        const seriesModel = data.hostModel;
+        const oldData = this._data;
+        const SymbolCtor = this._SymbolCtor;
 
-        let seriesScope = makeSeriesScope(data);
+        const seriesScope = makeSeriesScope(data);
 
         // There is no oldLineData only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
@@ -158,9 +158,9 @@ class SymbolDraw {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                let point = data.getItemLayout(newIdx) as number[];
+                const point = data.getItemLayout(newIdx) as number[];
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
-                    let symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope);
                     symbolEl.attr('position', point);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
@@ -168,7 +168,7 @@ class SymbolDraw {
             })
             .update(function (newIdx, oldIdx) {
                 let symbolEl = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
-                let point = data.getItemLayout(newIdx) as number[];
+                const point = data.getItemLayout(newIdx) as number[];
                 if (!symbolNeedsDraw(data, point, newIdx, opt)) {
                     group.remove(symbolEl);
                     return;
@@ -190,7 +190,7 @@ class SymbolDraw {
                 data.setItemGraphicEl(newIdx, symbolEl);
             })
             .remove(function (oldIdx) {
-                let el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
+                const el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
                 el && el.fadeOut(function () {
                     group.remove(el);
                 });
@@ -205,11 +205,11 @@ class SymbolDraw {
     };
 
     updateLayout() {
-        let data = this._data;
+        const data = this._data;
         if (data) {
             // Not use animation
             data.eachItemGraphicEl(function (el, idx) {
-                let point = data.getItemLayout(idx);
+                const point = data.getItemLayout(idx);
                 el.attr('position', point);
             });
         }
@@ -233,9 +233,9 @@ class SymbolDraw {
             }
         }
         for (let idx = taskParams.start; idx < taskParams.end; idx++) {
-            let point = data.getItemLayout(idx) as number[];
+            const point = data.getItemLayout(idx) as number[];
             if (symbolNeedsDraw(data, point, idx, opt)) {
-                let el = new this._SymbolCtor(data, idx, this._seriesScope);
+                const el = new this._SymbolCtor(data, idx, this._seriesScope);
                 el.traverse(updateIncrementalAndHover);
                 el.attr('position', point);
                 this.group.add(el);
@@ -245,8 +245,8 @@ class SymbolDraw {
     };
 
     remove(enableAnimation?: boolean) {
-        let group = this.group;
-        let data = this._data;
+        const group = this.group;
+        const data = this._data;
         // Incremental model do not have this._data.
         if (data && enableAnimation) {
             data.eachItemGraphicEl(function (el: SymbolLike) {

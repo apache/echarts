@@ -100,7 +100,7 @@ export default {
         }
         else {
             // Backward compatibility.
-            let geoSource = (rawDef as MapInputObject).geoJson
+            const geoSource = (rawDef as MapInputObject).geoJson
                 || (rawDef as MapInputObject).geoJSON;
             if (geoSource && !(rawDef as GeoJSON).features) {
                 rawSpecialAreas = (rawDef as MapInputObject).specialAreas;
@@ -117,7 +117,7 @@ export default {
             let type = record.type;
             (type as any) === 'geoJson' && (type = record.type = 'geoJSON');
 
-            let parse = parsers[type];
+            const parse = parsers[type];
 
             if (__DEV__) {
                 assert(parse, 'Illegal map type: ' + type);
@@ -138,7 +138,7 @@ export default {
 const parsers: Dictionary<(record: MapRecord) => void> = {
 
     geoJSON: function (record: GeoJSONMapRecord): void {
-        let source = record.source;
+        const source = record.source;
         record.geoJSON = !isString(source)
             ? source
             : (typeof JSON !== 'undefined' && JSON.parse)

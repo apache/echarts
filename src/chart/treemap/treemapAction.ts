@@ -66,11 +66,11 @@ echarts.registerAction(
         );
 
         function handleRootToNode(model: TreemapSeriesModel, index: number) {
-            let types = ['treemapZoomToNode', 'treemapRootToNode'];
-            let targetInfo = helper.retrieveTargetInfo(payload, types, model);
+            const types = ['treemapZoomToNode', 'treemapRootToNode'];
+            const targetInfo = helper.retrieveTargetInfo(payload, types, model);
 
             if (targetInfo) {
-                let originViewRoot = model.getViewRoot();
+                const originViewRoot = model.getViewRoot();
                 if (originViewRoot) {
                     payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
                         ? 'rollUp' : 'drillDown';

@@ -32,8 +32,8 @@ export default function (seriesType: string): StageHandler {
     return {
         getTargetSeries: function (ecModel) {
             // Pie and funnel may use diferrent scope
-            let paletteScope = {};
-            let seiresModelMap = createHashMap<SeriesModel>();
+            const paletteScope = {};
+            const seiresModelMap = createHashMap<SeriesModel>();
 
             ecModel.eachSeriesByType(seriesType, function (seriesModel) {
                 (seriesModel as SeriesModelWithPaletteScope).__paletteScope = paletteScope;
@@ -43,23 +43,23 @@ export default function (seriesType: string): StageHandler {
             return seiresModelMap;
         },
         reset: function (seriesModel) {
-            let dataAll = seriesModel.getRawData();
-            let idxMap: {[key: number]: number} = {};
-            let data = seriesModel.getData();
+            const dataAll = seriesModel.getRawData();
+            const idxMap: {[key: number]: number} = {};
+            const data = seriesModel.getData();
 
             data.each(function (idx) {
-                let rawIdx = data.getRawIndex(idx);
+                const rawIdx = data.getRawIndex(idx);
                 idxMap[rawIdx] = idx;
             });
 
             dataAll.each(function (rawIdx) {
-                let filteredIdx = idxMap[rawIdx];
+                const filteredIdx = idxMap[rawIdx];
 
                 // If series.itemStyle.normal.color is a function. itemVisual may be encoded
-                let singleDataColor = filteredIdx != null
+                const singleDataColor = filteredIdx != null
                     && data.getItemVisual(filteredIdx, 'color', true);
 
-                let singleDataBorderColor = filteredIdx != null
+                const singleDataBorderColor = filteredIdx != null
                     && data.getItemVisual(filteredIdx, 'borderColor', true);
 
                 let itemModel;
@@ -69,7 +69,7 @@ export default function (seriesType: string): StageHandler {
                 }
 
                 if (!singleDataColor) {
-                    let color = itemModel.get(['itemStyle', 'color'])
+                    const color = itemModel.get(['itemStyle', 'color'])
                         || seriesModel.getColorFromPalette(
                             dataAll.getName(rawIdx) || (rawIdx + ''),
                             (seriesModel as SeriesModelWithPaletteScope).__paletteScope,
@@ -82,7 +82,7 @@ export default function (seriesType: string): StageHandler {
                 }
 
                 if (!singleDataBorderColor) {
-                    let borderColor = itemModel.get(['itemStyle', 'borderColor']);
+                    const borderColor = itemModel.get(['itemStyle', 'borderColor']);
 
                     // Data is not filtered
                     if (filteredIdx != null) {

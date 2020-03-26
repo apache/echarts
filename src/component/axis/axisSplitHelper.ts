@@ -38,20 +38,20 @@ export function rectCoordAxisBuildSplitArea(
     axisModel: SingleAxisModel | CartesianAxisModel,
     gridModel: GridModel | SingleAxisModel
 ) {
-    let axis = axisModel.axis;
+    const axis = axisModel.axis;
 
     if (axis.scale.isBlank()) {
         return;
     }
 
     // TODO: TYPE
-    let splitAreaModel = (axisModel as CartesianAxisModel).getModel('splitArea');
-    let areaStyleModel = splitAreaModel.getModel('areaStyle');
+    const splitAreaModel = (axisModel as CartesianAxisModel).getModel('splitArea');
+    const areaStyleModel = splitAreaModel.getModel('areaStyle');
     let areaColors = areaStyleModel.get('color');
 
-    let gridRect = gridModel.coordinateSystem.getRect();
+    const gridRect = gridModel.coordinateSystem.getRect();
 
-    let ticksCoords = axis.getTicksCoords({
+    const ticksCoords = axis.getTicksCoords({
         tickModel: splitAreaModel,
         clamp: true
     });
@@ -62,13 +62,13 @@ export function rectCoordAxisBuildSplitArea(
 
     // For Making appropriate splitArea animation, the color and anid
     // should be corresponding to previous one if possible.
-    let areaColorsLen = areaColors.length;
-    let lastSplitAreaColors = inner(axisView).splitAreaColors;
-    let newSplitAreaColors = zrUtil.createHashMap<number>();
+    const areaColorsLen = areaColors.length;
+    const lastSplitAreaColors = inner(axisView).splitAreaColors;
+    const newSplitAreaColors = zrUtil.createHashMap<number>();
     let colorIndex = 0;
     if (lastSplitAreaColors) {
         for (let i = 0; i < ticksCoords.length; i++) {
-            let cIndex = lastSplitAreaColors.get(ticksCoords[i].tickValue);
+            const cIndex = lastSplitAreaColors.get(ticksCoords[i].tickValue);
             if (cIndex != null) {
                 colorIndex = (cIndex + (areaColorsLen - 1) * i) % areaColorsLen;
                 break;
@@ -78,11 +78,11 @@ export function rectCoordAxisBuildSplitArea(
 
     let prev = axis.toGlobalCoord(ticksCoords[0].coord);
 
-    let areaStyle = areaStyleModel.getAreaStyle();
+    const areaStyle = areaStyleModel.getAreaStyle();
     areaColors = zrUtil.isArray(areaColors) ? areaColors : [areaColors];
 
     for (let i = 1; i < ticksCoords.length; i++) {
-        let tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
+        const tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
         let x;
         let y;
@@ -103,7 +103,7 @@ export function rectCoordAxisBuildSplitArea(
             prev = y + height;
         }
 
-        let tickValue = ticksCoords[i - 1].tickValue;
+        const tickValue = ticksCoords[i - 1].tickValue;
         tickValue != null && newSplitAreaColors.set(tickValue, colorIndex);
 
         axisGroup.add(new graphic.Rect({

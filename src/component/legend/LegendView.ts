@@ -91,7 +91,7 @@ class LegendView extends ComponentView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        let isFirstRender = this._isFirstRender;
+        const isFirstRender = this._isFirstRender;
         this._isFirstRender = false;
 
         this.resetInner();
@@ -101,7 +101,7 @@ class LegendView extends ComponentView {
         }
 
         let itemAlign = legendModel.get('align');
-        let orient = legendModel.get('orient');
+        const orient = legendModel.get('orient');
         if (!itemAlign || itemAlign === 'auto') {
             itemAlign = (
                 legendModel.get('left') === 'right'
@@ -110,7 +110,7 @@ class LegendView extends ComponentView {
         }
 
         // selector has been normalized to an array in model
-        let selector = legendModel.get('selector', true) as LegendSelectorButtonOption[];
+        const selector = legendModel.get('selector', true) as LegendSelectorButtonOption[];
         let selectorPosition = legendModel.get('selectorPosition', true);
         if (selector && (!selectorPosition || selectorPosition === 'auto')) {
             selectorPosition = orient === 'horizontal' ? 'end' : 'start';
@@ -119,16 +119,16 @@ class LegendView extends ComponentView {
         this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         // Perform layout.
-        let positionInfo = legendModel.getBoxLayoutParams();
-        let viewportSize = {width: api.getWidth(), height: api.getHeight()};
-        let padding = legendModel.get('padding');
+        const positionInfo = legendModel.getBoxLayoutParams();
+        const viewportSize = {width: api.getWidth(), height: api.getHeight()};
+        const padding = legendModel.get('padding');
 
-        let maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
+        const maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
 
-        let mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
+        const mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
 
         // Place mainGroup, based on the calculated `mainRect`.
-        let layoutRect = layoutUtil.getLayoutRect(
+        const layoutRect = layoutUtil.getLayoutRect(
             zrUtil.defaults({
                 width: mainRect.width,
                 height: mainRect.height
@@ -159,17 +159,17 @@ class LegendView extends ComponentView {
         orient: LegendOption['orient'],
         selectorPosition: LegendOption['selectorPosition']
     ) {
-        let contentGroup = this.getContentGroup();
-        let legendDrawnMap = zrUtil.createHashMap();
-        let selectMode = legendModel.get('selectedMode');
+        const contentGroup = this.getContentGroup();
+        const legendDrawnMap = zrUtil.createHashMap();
+        const selectMode = legendModel.get('selectedMode');
 
-        let excludeSeriesId: string[] = [];
+        const excludeSeriesId: string[] = [];
         ecModel.eachRawSeries(function (seriesModel) {
             !seriesModel.get('legendHoverLink') && excludeSeriesId.push(seriesModel.id);
         });
 
         each(legendModel.getData(), function (itemModel, dataIndex) {
-            let name = itemModel.get('name');
+            const name = itemModel.get('name');
 
             // Use empty string or \n as a newline string
             if (!this.newlineDisabled && (name === '' || name === '\n')) {
@@ -181,7 +181,7 @@ class LegendView extends ComponentView {
             }
 
             // Representitive series.
-            let seriesModel = ecModel.getSeriesByName(name)[0];
+            const seriesModel = ecModel.getSeriesByName(name)[0];
 
             if (legendDrawnMap.get(name)) {
                 // Have been drawed
@@ -190,7 +190,7 @@ class LegendView extends ComponentView {
 
             // Legend to control series.
             if (seriesModel) {
-                let data = seriesModel.getData();
+                const data = seriesModel.getData();
                 let color = data.getVisual('color');
                 let borderColor = data.getVisual('borderColor');
 
@@ -207,10 +207,10 @@ class LegendView extends ComponentView {
                 }
 
                 // Using rect symbol defaultly
-                let legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
-                let symbolType = data.getVisual('symbol');
+                const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
+                const symbolType = data.getVisual('symbol');
 
-                let itemGroup = this._createItem(
+                const itemGroup = this._createItem(
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType,
                     itemAlign, color, borderColor,
@@ -233,19 +233,19 @@ class LegendView extends ComponentView {
                     }
 
                     if (seriesModel.legendVisualProvider) {
-                        let provider = seriesModel.legendVisualProvider;
+                        const provider = seriesModel.legendVisualProvider;
                         if (!provider.containName(name)) {
                             return;
                         }
 
-                        let idx = provider.indexOfName(name);
+                        const idx = provider.indexOfName(name);
 
-                        let color = provider.getItemVisual(idx, 'color');
-                        let borderColor = provider.getItemVisual(idx, 'borderColor');
+                        const color = provider.getItemVisual(idx, 'color');
+                        const borderColor = provider.getItemVisual(idx, 'borderColor');
 
-                        let legendSymbolType = 'roundRect';
+                        const legendSymbolType = 'roundRect';
 
-                        let itemGroup = this._createItem(
+                        const itemGroup = this._createItem(
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null,
                             itemAlign, color, borderColor,
@@ -286,12 +286,12 @@ class LegendView extends ComponentView {
         orient: LegendOption['orient'],
         selectorPosition: LegendOption['selectorPosition']
     ) {
-        let selectorGroup = this.getSelectorGroup();
+        const selectorGroup = this.getSelectorGroup();
 
         each(selector, function createSelectorButton(selectorItem) {
-            let type = selectorItem.type;
+            const type = selectorItem.type;
 
-            let labelText = new graphic.Text({
+            const labelText = new graphic.Text({
                 style: {
                     x: 0,
                     y: 0,
@@ -307,8 +307,8 @@ class LegendView extends ComponentView {
 
             selectorGroup.add(labelText);
 
-            let labelModel = legendModel.getModel('selectorLabel');
-            let emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
+            const labelModel = legendModel.getModel('selectorLabel');
+            const emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
             graphic.setLabelStyle(
                 labelText, labelModel, emphasisLabelModel,
@@ -332,26 +332,26 @@ class LegendView extends ComponentView {
         borderColor: ColorString,
         selectMode: LegendOption['selectedMode']
     ) {
-        let itemWidth = legendModel.get('itemWidth');
-        let itemHeight = legendModel.get('itemHeight');
-        let inactiveColor = legendModel.get('inactiveColor');
-        let inactiveBorderColor = legendModel.get('inactiveBorderColor');
-        let symbolKeepAspect = legendModel.get('symbolKeepAspect');
-        let legendModelItemStyle = legendModel.getModel('itemStyle');
+        const itemWidth = legendModel.get('itemWidth');
+        const itemHeight = legendModel.get('itemHeight');
+        const inactiveColor = legendModel.get('inactiveColor');
+        const inactiveBorderColor = legendModel.get('inactiveBorderColor');
+        const symbolKeepAspect = legendModel.get('symbolKeepAspect');
+        const legendModelItemStyle = legendModel.getModel('itemStyle');
 
-        let isSelected = legendModel.isSelected(name);
-        let itemGroup = new Group();
+        const isSelected = legendModel.isSelected(name);
+        const itemGroup = new Group();
 
-        let textStyleModel = itemModel.getModel('textStyle');
+        const textStyleModel = itemModel.getModel('textStyle');
 
-        let itemIcon = itemModel.get('icon');
+        const itemIcon = itemModel.get('icon');
 
-        let tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
-        let legendGlobalTooltipModel = tooltipModel.parentModel;
+        const tooltipModel = itemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
+        const legendGlobalTooltipModel = tooltipModel.parentModel;
 
         // Use user given icon first
         legendSymbolType = itemIcon || legendSymbolType;
-        let legendSymbol = createSymbol(
+        const legendSymbol = createSymbol(
             legendSymbolType,
             0,
             0,
@@ -374,11 +374,11 @@ class LegendView extends ComponentView {
             // At least show one symbol, can't be all none
             && ((symbolType !== legendSymbolType) || symbolType === 'none')
         ) {
-            let size = itemHeight * 0.8;
+            const size = itemHeight * 0.8;
             if (symbolType === 'none') {
                 symbolType = 'circle';
             }
-            let legendSymbolCenter = createSymbol(
+            const legendSymbolCenter = createSymbol(
                 symbolType,
                 (itemWidth - size) / 2,
                 (itemHeight - size) / 2,
@@ -397,10 +397,10 @@ class LegendView extends ComponentView {
             );
         }
 
-        let textX = itemAlign === 'left' ? itemWidth + 5 : -5;
-        let textAlign = itemAlign as ZRTextAlign;
+        const textX = itemAlign === 'left' ? itemWidth + 5 : -5;
+        const textAlign = itemAlign as ZRTextAlign;
 
-        let formatter = legendModel.get('formatter');
+        const formatter = legendModel.get('formatter');
         let content = name;
         if (typeof formatter === 'string' && formatter) {
             content = formatter.replace('{name}', name != null ? name : '');
@@ -421,7 +421,7 @@ class LegendView extends ComponentView {
         }));
 
         // Add a invisible rect to increase the area of mouse hover
-        let hitRect = new graphic.Rect({
+        const hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
             invisible: true
         });
@@ -468,8 +468,8 @@ class LegendView extends ComponentView {
         selector: LegendOption['selector'],
         selectorPosition: LegendOption['selectorPosition']
     ): ZRRectLike {
-        let contentGroup = this.getContentGroup();
-        let selectorGroup = this.getSelectorGroup();
+        const contentGroup = this.getContentGroup();
+        const selectorGroup = this.getSelectorGroup();
 
         // Place items in contentGroup.
         layoutUtil.box(
@@ -480,8 +480,8 @@ class LegendView extends ComponentView {
             maxSize.height
         );
 
-        let contentRect = contentGroup.getBoundingRect();
-        let contentPos = [-contentRect.x, -contentRect.y];
+        const contentRect = contentGroup.getBoundingRect();
+        const contentPos = [-contentRect.x, -contentRect.y];
 
         if (selector) {
             // Place buttons in selectorGroup
@@ -492,14 +492,14 @@ class LegendView extends ComponentView {
                 legendModel.get('selectorItemGap', true)
             );
 
-            let selectorRect = selectorGroup.getBoundingRect();
-            let selectorPos = [-selectorRect.x, -selectorRect.y];
-            let selectorButtonGap = legendModel.get('selectorButtonGap', true);
+            const selectorRect = selectorGroup.getBoundingRect();
+            const selectorPos = [-selectorRect.x, -selectorRect.y];
+            const selectorButtonGap = legendModel.get('selectorButtonGap', true);
 
-            let orientIdx = legendModel.getOrient().index;
-            let wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
-            let hw: 'width' | 'height' = orientIdx === 0 ? 'height' : 'width';
-            let yx: 'x' | 'y' = orientIdx === 0 ? 'y' : 'x';
+            const orientIdx = legendModel.getOrient().index;
+            const wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
+            const hw: 'width' | 'height' = orientIdx === 0 ? 'height' : 'width';
+            const yx: 'x' | 'y' = orientIdx === 0 ? 'y' : 'x';
 
             if (selectorPosition === 'end') {
                 selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
@@ -513,7 +513,7 @@ class LegendView extends ComponentView {
             selectorGroup.attr('position', selectorPos);
             contentGroup.attr('position', contentPos);
 
-            let mainRect = {x: 0, y: 0} as ZRRectLike;
+            const mainRect = {x: 0, y: 0} as ZRRectLike;
             mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
             mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
             mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
@@ -581,7 +581,7 @@ function dispatchHighlightAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    let el = api.getZr().storage.getDisplayList()[0];
+    const el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'highlight',
@@ -599,7 +599,7 @@ function dispatchDownplayAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    let el = api.getZr().storage.getDisplayList()[0];
+    const el = api.getZr().storage.getDisplayList()[0];
     if (!(el && el.useHoverLayer)) {
         api.dispatchAction({
             type: 'downplay',

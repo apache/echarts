@@ -149,9 +149,9 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     }
 
     private _createSelectableList(): SelectableTarget[] {
-        let data = this.getRawData();
-        let valueDim = data.mapDimension('value');
-        let targetList = [];
+        const data = this.getRawData();
+        const valueDim = data.mapDimension('value');
+        const targetList = [];
         for (let i = 0, len = data.count(); i < len; i++) {
             targetList.push({
                 name: data.getName(i),
@@ -166,11 +166,11 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      * @overwrite
      */
     getDataParams(dataIndex: number): CallbackDataParams {
-        let data = this.getData();
-        let params = super.getDataParams(dataIndex);
+        const data = this.getData();
+        const params = super.getDataParams(dataIndex);
         // FIXME toFixed?
 
-        let valueList: number[] = [];
+        const valueList: number[] = [];
         data.each(data.mapDimension('value'), function (value: number) {
             valueList.push(value);
         });
@@ -189,8 +189,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // Extend labelLine emphasis
         modelUtil.defaultEmphasis(option, 'labelLine', ['show']);
 
-        let labelLineNormalOpt = option.labelLine;
-        let labelLineEmphasisOpt = option.emphasis.labelLine;
+        const labelLineNormalOpt = option.labelLine;
+        const labelLineEmphasisOpt = option.emphasis.labelLine;
         // Not show label line if `label.normal.show = false`
         labelLineNormalOpt.show = labelLineNormalOpt.show
             && option.label.show;

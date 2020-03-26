@@ -41,15 +41,15 @@ export default function (ecModel: GlobalModel) {
             return;
         }
         if (graphSeries.get('layout') === 'force') {
-            let preservedPoints = graphSeries.preservedPoints || {};
-            let graph = graphSeries.getGraph();
-            let nodeData = graph.data;
-            let edgeData = graph.edgeData;
-            let forceModel = graphSeries.getModel('force');
-            let initLayout = forceModel.get('initLayout');
+            const preservedPoints = graphSeries.preservedPoints || {};
+            const graph = graphSeries.getGraph();
+            const nodeData = graph.data;
+            const edgeData = graph.edgeData;
+            const forceModel = graphSeries.getModel('force');
+            const initLayout = forceModel.get('initLayout');
             if (graphSeries.preservedPoints) {
                 nodeData.each(function (idx) {
-                    let id = nodeData.getId(idx);
+                    const id = nodeData.getId(idx);
                     nodeData.setItemLayout(idx, preservedPoints[id] || [NaN, NaN]);
                 });
             }
@@ -60,12 +60,12 @@ export default function (ecModel: GlobalModel) {
                 circularLayout(graphSeries, 'value');
             }
 
-            let nodeDataExtent = nodeData.getDataExtent('value');
-            let edgeDataExtent = edgeData.getDataExtent('value');
+            const nodeDataExtent = nodeData.getDataExtent('value');
+            const edgeDataExtent = edgeData.getDataExtent('value');
             // let edgeDataExtent = edgeData.getDataExtent('value');
-            let repulsion = forceModel.get('repulsion');
-            let edgeLength = forceModel.get('edgeLength');
-            let repulsionArr = zrUtil.isArray(repulsion)
+            const repulsion = forceModel.get('repulsion');
+            const edgeLength = forceModel.get('edgeLength');
+            const repulsionArr = zrUtil.isArray(repulsion)
                 ? repulsion : [repulsion, repulsion];
             let edgeLengthArr = zrUtil.isArray(edgeLength)
                 ? edgeLength : [edgeLength, edgeLength];
@@ -73,8 +73,8 @@ export default function (ecModel: GlobalModel) {
             // Larger value has smaller length
             edgeLengthArr = [edgeLengthArr[1], edgeLengthArr[0]];
 
-            let nodes = nodeData.mapArray('value', function (value: number, idx) {
-                let point = nodeData.getItemLayout(idx) as number[];
+            const nodes = nodeData.mapArray('value', function (value: number, idx) {
+                const point = nodeData.getItemLayout(idx) as number[];
                 let rep = linearMap(value, nodeDataExtent, repulsionArr);
                 if (isNaN(rep)) {
                     rep = (repulsionArr[0] + repulsionArr[1]) / 2;
@@ -86,13 +86,13 @@ export default function (ecModel: GlobalModel) {
                     p: (!point || isNaN(point[0]) || isNaN(point[1])) ? null : point
                 };
             });
-            let edges = edgeData.mapArray('value', function (value: number, idx) {
-                let edge = graph.getEdgeByIndex(idx);
+            const edges = edgeData.mapArray('value', function (value: number, idx) {
+                const edge = graph.getEdgeByIndex(idx);
                 let d = linearMap(value, edgeDataExtent, edgeLengthArr);
                 if (isNaN(d)) {
                     d = (edgeLengthArr[0] + edgeLengthArr[1]) / 2;
                 }
-                let edgeModel = edge.getModel<GraphEdgeItemOption>();
+                const edgeModel = edge.getModel<GraphEdgeItemOption>();
                 return {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
@@ -103,8 +103,8 @@ export default function (ecModel: GlobalModel) {
             });
 
             // let coordSys = graphSeries.coordinateSystem;
-            let rect = coordSys.getBoundingRect();
-            let forceInstance = forceLayout(nodes, edges, {
+            const rect = coordSys.getBoundingRect();
+            const forceInstance = forceLayout(nodes, edges, {
                 rect: rect,
                 gravity: forceModel.get('gravity'),
                 friction: forceModel.get('friction')
@@ -128,10 +128,10 @@ export default function (ecModel: GlobalModel) {
                     preservedPoints[nodeData.getId(i)] = nodes[i].p;
                 }
                 for (let i = 0, l = edges.length; i < l; i++) {
-                    let e = edges[i];
-                    let edge = graph.getEdgeByIndex(i);
-                    let p1 = e.n1.p;
-                    let p2 = e.n2.p;
+                    const e = edges[i];
+                    const edge = graph.getEdgeByIndex(i);
+                    const p1 = e.n1.p;
+                    const p2 = e.n2.p;
                     let points = edge.getLayout() as number[][];
                     points = points ? points.slice() : [];
                     points[0] = points[0] || [];

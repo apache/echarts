@@ -164,13 +164,13 @@ class BrushModel extends ComponentModel<BrushOption> {
 
 
     optionUpdated(newOption: BrushOption, isInit: boolean): void {
-        let thisOption = this.option;
+        const thisOption = this.option;
 
         !isInit && visualSolution.replaceVisualOption(
             thisOption, newOption, ['inBrush', 'outOfBrush']
         );
 
-        let inBrush = thisOption.inBrush = thisOption.inBrush || {};
+        const inBrush = thisOption.inBrush = thisOption.inBrush || {};
         // Always give default visual, consider setOption at the second time.
         thisOption.outOfBrush = thisOption.outOfBrush || {color: DEFAULT_OUT_OF_BRUSH_COLOR};
 

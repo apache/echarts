@@ -46,14 +46,14 @@ export default class PointerPath extends Path<PointerPathProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: PointerShape) {
-        let mathCos = Math.cos;
-        let mathSin = Math.sin;
+        const mathCos = Math.cos;
+        const mathSin = Math.sin;
 
-        let r = shape.r;
-        let width = shape.width;
+        const r = shape.r;
+        const width = shape.width;
         let angle = shape.angle;
-        let x = shape.x - mathCos(angle) * width * (width >= r / 3 ? 1 : 2);
-        let y = shape.y - mathSin(angle) * width * (width >= r / 3 ? 1 : 2);
+        const x = shape.x - mathCos(angle) * width * (width >= r / 3 ? 1 : 2);
+        const y = shape.y - mathSin(angle) * width * (width >= r / 3 ? 1 : 2);
 
         angle = shape.angle - Math.PI / 2;
         ctx.moveTo(x, y);

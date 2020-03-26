@@ -52,23 +52,22 @@ class PolarAxisPointer extends BaseAxisPointer {
         axisPointerModel: Model<CommonAxisPointerOption>,
         api: ExtensionAPI
     ) {
-        let axis = axisModel.axis;
+        const axis = axisModel.axis;
 
         if (axis.dim === 'angle') {
             this.animationThreshold = Math.PI / 18;
         }
 
-        let polar = axis.polar;
-        let otherAxis = polar.getOtherAxis(axis);
-        let otherExtent = otherAxis.getExtent();
+        const polar = axis.polar;
+        const otherAxis = polar.getOtherAxis(axis);
+        const otherExtent = otherAxis.getExtent();
 
-        let coordValue;
-        coordValue = axis.dataToCoord(value);
+        const coordValue = axis.dataToCoord(value);
 
-        let axisPointerType = axisPointerModel.get('type');
+        const axisPointerType = axisPointerModel.get('type');
         if (axisPointerType && axisPointerType !== 'none') {
-            let elStyle = viewHelper.buildElStyle(axisPointerModel);
-            let pointerOption = pointerShapeBuilder[axisPointerType](
+            const elStyle = viewHelper.buildElStyle(axisPointerModel);
+            const pointerOption = pointerShapeBuilder[axisPointerType](
                 axis, polar, coordValue, otherExtent
             );
             pointerOption.style = elStyle;
@@ -76,8 +75,8 @@ class PolarAxisPointer extends BaseAxisPointer {
             elOption.pointer = pointerOption;
         }
 
-        let labelMargin = axisPointerModel.get(['label', 'margin']);
-        let labelPos = getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin);
+        const labelMargin = axisPointerModel.get(['label', 'margin']);
+        const labelPos = getLabelPosition(value, axisModel, axisPointerModel, polar, labelMargin);
         viewHelper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, labelPos);
     }
 
@@ -92,34 +91,34 @@ function getLabelPosition(
     polar: Polar,
     labelMargin: number
 ) {
-    let axis = axisModel.axis;
-    let coord = axis.dataToCoord(value);
+    const axis = axisModel.axis;
+    const coord = axis.dataToCoord(value);
     let axisAngle = polar.getAngleAxis().getExtent()[0];
     axisAngle = axisAngle / 180 * Math.PI;
-    let radiusExtent = polar.getRadiusAxis().getExtent();
+    const radiusExtent = polar.getRadiusAxis().getExtent();
     let position;
     let align: ZRTextAlign;
     let verticalAlign: ZRTextVerticalAlign;
 
     if (axis.dim === 'radius') {
-        let transform = matrix.create();
+        const transform = matrix.create();
         matrix.rotate(transform, transform, axisAngle);
         matrix.translate(transform, transform, [polar.cx, polar.cy]);
         position = graphic.applyTransform([coord, -labelMargin], transform);
 
-        let labelRotation = axisModel.getModel('axisLabel').get('rotate') || 0;
+        const labelRotation = axisModel.getModel('axisLabel').get('rotate') || 0;
         // @ts-ignore
-        let labelLayout = AxisBuilder.innerTextLayout(
+        const labelLayout = AxisBuilder.innerTextLayout(
             axisAngle, labelRotation * Math.PI / 180, -1
         );
         align = labelLayout.textAlign;
         verticalAlign = labelLayout.textVerticalAlign;
     }
     else { // angle axis
-        let r = radiusExtent[1];
+        const r = radiusExtent[1];
         position = polar.coordToPoint([r + labelMargin, coord]);
-        let cx = polar.cx;
-        let cy = polar.cy;
+        const cx = polar.cx;
+        const cy = polar.cy;
         align = Math.abs(position[0] - cx) / r < 0.3
             ? 'center' : (position[0] > cx ? 'left' : 'right');
         verticalAlign = Math.abs(position[1] - cy) / r < 0.3
@@ -166,8 +165,8 @@ const pointerShapeBuilder = {
         coordValue: number,
         otherExtent: number[]
     ): PathProps & { type: 'Sector' } {
-        let bandWidth = Math.max(1, axis.getBandWidth());
-        let radian = Math.PI / 180;
+        const bandWidth = Math.max(1, axis.getBandWidth());
+        const radian = Math.PI / 180;
 
         return axis.dim === 'angle'
             ? {

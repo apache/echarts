@@ -55,13 +55,13 @@ export class ECEventProcessor implements EventProcessor {
     };
 
     normalizeQuery(query: EventQuery): NormalizedEventQuery {
-        let cptQuery: EventQueryItem = {};
-        let dataQuery: EventQueryItem = {};
-        let otherQuery: EventQueryItem = {};
+        const cptQuery: EventQueryItem = {};
+        const dataQuery: EventQueryItem = {};
+        const otherQuery: EventQueryItem = {};
 
         // `query` is `mainType` or `mainType.subType` of component.
         if (zrUtil.isString(query)) {
-            let condCptType = parseClassType(query);
+            const condCptType = parseClassType(query);
             // `.main` and `.sub` may be ''.
             cptQuery.mainType = condCptType.main || null;
             cptQuery.subType = condCptType.sub || null;
@@ -70,15 +70,15 @@ export class ECEventProcessor implements EventProcessor {
         else {
             // `xxxIndex`, `xxxName`, `xxxId`, `name`, `dataIndex`, `dataType` is reserved,
             // can not be used in `compomentModel.filterForExposedEvent`.
-            let suffixes = ['Index', 'Name', 'Id'];
-            let dataKeys = {name: 1, dataIndex: 1, dataType: 1};
+            const suffixes = ['Index', 'Name', 'Id'];
+            const dataKeys = {name: 1, dataIndex: 1, dataType: 1};
             zrUtil.each(query, function (val, key) {
                 let reserved = false;
                 for (let i = 0; i < suffixes.length; i++) {
-                    let propSuffix = suffixes[i];
-                    let suffixPos = key.lastIndexOf(propSuffix);
+                    const propSuffix = suffixes[i];
+                    const suffixPos = key.lastIndexOf(propSuffix);
                     if (suffixPos > 0 && suffixPos === key.length - propSuffix.length) {
-                        let mainType = key.slice(0, suffixPos);
+                        const mainType = key.slice(0, suffixPos);
                         // Consider `dataIndex`.
                         if (mainType !== 'data') {
                             cptQuery.mainType = mainType;
@@ -106,24 +106,24 @@ export class ECEventProcessor implements EventProcessor {
 
     filter(eventType: string, query: NormalizedEventQuery): boolean {
         // They should be assigned before each trigger call.
-        let eventInfo = this.eventInfo;
+        const eventInfo = this.eventInfo;
 
         if (!eventInfo) {
             return true;
         }
 
-        let targetEl = eventInfo.targetEl;
-        let packedEvent = eventInfo.packedEvent;
-        let model = eventInfo.model;
-        let view = eventInfo.view;
+        const targetEl = eventInfo.targetEl;
+        const packedEvent = eventInfo.packedEvent;
+        const model = eventInfo.model;
+        const view = eventInfo.view;
 
         // For event like 'globalout'.
         if (!model || !view) {
             return true;
         }
 
-        let cptQuery = query.cptQuery;
-        let dataQuery = query.dataQuery;
+        const cptQuery = query.cptQuery;
+        const dataQuery = query.dataQuery;
 
         return check(cptQuery, model, 'mainType')
             && check(cptQuery, model, 'subType')

@@ -29,15 +29,15 @@ const linesLayout: StageHandler = {
     plan: createRenderPlanner(),
 
     reset: function (seriesModel: LinesSeriesModel) {
-        let coordSys = seriesModel.coordinateSystem;
-        let isPolyline = seriesModel.get('polyline');
-        let isLarge = seriesModel.pipelineContext.large;
+        const coordSys = seriesModel.coordinateSystem;
+        const isPolyline = seriesModel.get('polyline');
+        const isLarge = seriesModel.pipelineContext.large;
         return {
             progress(params, lineData) {
-                let lineCoords: number[][] = [];
+                const lineCoords: number[][] = [];
                 if (isLarge) {
                     let points;
-                    let segCount = params.end - params.start;
+                    const segCount = params.end - params.start;
                     if (isPolyline) {
                         let totalCoordsCount = 0;
                         for (let i = params.start; i < params.end; i++) {
@@ -52,7 +52,7 @@ const linesLayout: StageHandler = {
                     let offset = 0;
                     let pt: number[] = [];
                     for (let i = params.start; i < params.end; i++) {
-                        let len = seriesModel.getLineCoords(i, lineCoords);
+                        const len = seriesModel.getLineCoords(i, lineCoords);
                         if (isPolyline) {
                             points[offset++] = len;
                         }
@@ -67,10 +67,10 @@ const linesLayout: StageHandler = {
                 }
                 else {
                     for (let i = params.start; i < params.end; i++) {
-                        let itemModel = lineData.getItemModel<LinesDataItemOption>(i);
-                        let len = seriesModel.getLineCoords(i, lineCoords);
+                        const itemModel = lineData.getItemModel<LinesDataItemOption>(i);
+                        const len = seriesModel.getLineCoords(i, lineCoords);
 
-                        let pts = [];
+                        const pts = [];
                         if (isPolyline) {
                             for (let j = 0; j < len; j++) {
                                 pts.push(coordSys.dataToPoint(lineCoords[j]));
@@ -80,7 +80,7 @@ const linesLayout: StageHandler = {
                             pts[0] = coordSys.dataToPoint(lineCoords[0]);
                             pts[1] = coordSys.dataToPoint(lineCoords[1]);
 
-                            let curveness = itemModel.get(['lineStyle', 'curveness']);
+                            const curveness = itemModel.get(['lineStyle', 'curveness']);
                             if (+curveness) {
                                 pts[2] = [
                                     (pts[0][0] + pts[1][0]) / 2 - (pts[0][1] - pts[1][1]) * curveness,

@@ -112,18 +112,18 @@ const handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
     },
 
     mouseup: function (e) {
-        let mouseDownPoint = this._mouseDownPoint;
+        const mouseDownPoint = this._mouseDownPoint;
 
         if (checkTrigger(this, 'click') && mouseDownPoint) {
-            let point = [e.offsetX, e.offsetY];
-            let dist = Math.pow(mouseDownPoint[0] - point[0], 2)
+            const point = [e.offsetX, e.offsetY];
+            const dist = Math.pow(mouseDownPoint[0] - point[0], 2)
                 + Math.pow(mouseDownPoint[1] - point[1], 2);
 
             if (dist > CLICK_THRESHOLD) {
                 return;
             }
 
-            let result = this._model.coordinateSystem.getSlidedAxisExpandWindow(
+            const result = this._model.coordinateSystem.getSlidedAxisExpandWindow(
                 [e.offsetX, e.offsetY]
             );
 
@@ -140,12 +140,12 @@ const handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
         if (this._mouseDownPoint || !checkTrigger(this, 'mousemove')) {
             return;
         }
-        let model = this._model;
-        let result = model.coordinateSystem.getSlidedAxisExpandWindow(
+        const model = this._model;
+        const result = model.coordinateSystem.getSlidedAxisExpandWindow(
             [e.offsetX, e.offsetY]
         );
 
-        let behavior = result.behavior;
+        const behavior = result.behavior;
         behavior === 'jump' && (
             this._throttledDispatchExpand as ParallelView['_throttledDispatchExpand'] & throttleUtil.ThrottleController
         ).debounceNextCall(model.get('axisExpandDebounce'));
@@ -165,7 +165,7 @@ function checkTrigger(
     view: ParallelView,
     triggerOn: ParallelCoordinateSystemOption['axisExpandTriggerOn']
 ): boolean {
-    let model = view._model;
+    const model = view._model;
     return model.get('axisExpandable') && model.get('axisExpandTriggerOn') === triggerOn;
 }
 

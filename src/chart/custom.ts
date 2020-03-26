@@ -118,7 +118,7 @@ SeriesModel.extend({
      * @override
      */
     getDataParams: function (dataIndex, dataType, el) {
-        let params = SeriesModel.prototype.getDataParams.apply(this, arguments);
+        const params = SeriesModel.prototype.getDataParams.apply(this, arguments);
         el && (params.info = el.info);
         return params;
     }
@@ -142,10 +142,10 @@ ChartView.extend({
      * @override
      */
     render: function (customSeries, ecModel, api, payload) {
-        let oldData = this._data;
-        let data = customSeries.getData();
-        let group = this.group;
-        let renderItem = makeRenderItem(customSeries, data, ecModel, api);
+        const oldData = this._data;
+        const data = customSeries.getData();
+        const group = this.group;
+        const renderItem = makeRenderItem(customSeries, data, ecModel, api);
 
         // By default, merge mode is applied. In most cases, custom series is
         // used in the scenario that data amount is not large but graphic elements
@@ -159,19 +159,19 @@ ChartView.extend({
                 );
             })
             .update(function (newIdx, oldIdx) {
-                let el = oldData.getItemGraphicEl(oldIdx);
+                const el = oldData.getItemGraphicEl(oldIdx);
                 createOrUpdate(
                     el, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .remove(function (oldIdx) {
-                let el = oldData.getItemGraphicEl(oldIdx);
+                const el = oldData.getItemGraphicEl(oldIdx);
                 el && group.remove(el);
             })
             .execute();
 
         // Do clipping
-        let clipPath = customSeries.get('clip', true)
+        const clipPath = customSeries.get('clip', true)
             ? createClipPath(customSeries.coordinateSystem, false, customSeries)
             : null;
         if (clipPath) {
@@ -190,8 +190,8 @@ ChartView.extend({
     },
 
     incrementalRender: function (params, customSeries, ecModel, api, payload) {
-        let data = customSeries.getData();
-        let renderItem = makeRenderItem(customSeries, data, ecModel, api);
+        const data = customSeries.getData();
+        const renderItem = makeRenderItem(customSeries, data, ecModel, api);
         function setIncrementalAndHoverLayer(el) {
             if (!el.isGroup) {
                 el.incremental = true;
@@ -199,7 +199,7 @@ ChartView.extend({
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {
-            let el = createOrUpdate(null, idx, renderItem(idx, payload), customSeries, this.group, data);
+            const el = createOrUpdate(null, idx, renderItem(idx, payload), customSeries, this.group, data);
             el.traverse(setIncrementalAndHoverLayer);
         }
     },
@@ -215,7 +215,7 @@ ChartView.extend({
     filterForExposedEvent: function (
         eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
     ): boolean {
-        let elementName = query.element;
+        const elementName = query.element;
         if (elementName == null || targetEl.name === elementName) {
             return true;
         }
@@ -234,15 +234,15 @@ ChartView.extend({
 
 
 function createEl(elOption) {
-    let graphicType = elOption.type;
+    const graphicType = elOption.type;
     let el;
 
     // Those graphic elements are not shapes. They should not be
     // overwritten by users, so do them first.
     if (graphicType === 'path') {
-        let shape = elOption.shape;
+        const shape = elOption.shape;
         // Using pathRect brings convenience to users sacle svg path.
-        let pathRect = (shape.width != null && shape.height != null)
+        const pathRect = (shape.width != null && shape.height != null)
             ? {
                 x: shape.x || 0,
                 y: shape.y || 0,
@@ -250,7 +250,7 @@ function createEl(elOption) {
                 height: shape.height
             }
             : null;
-        let pathData = getPathData(shape);
+        const pathData = getPathData(shape);
         // Path is also used for icon, so layout 'center' by default.
         el = graphicUtil.makePath(pathData, null, pathRect, shape.layout || 'center');
         el.__customPathData = pathData;
@@ -270,7 +270,7 @@ function createEl(elOption) {
         throw new Error('"compoundPath" is not supported yet.');
     }
     else {
-        let Clz = graphicUtil.getShapeClass(graphicType);
+        const Clz = graphicUtil.getShapeClass(graphicType);
 
         if (__DEV__) {
             zrUtil.assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
@@ -286,8 +286,8 @@ function createEl(elOption) {
 }
 
 function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot) {
-    let transitionProps = {};
-    let elOptionStyle = elOption.style || {};
+    const transitionProps = {};
+    const elOptionStyle = elOption.style || {};
 
     elOption.shape && (transitionProps.shape = zrUtil.clone(elOption.shape));
     elOption.position && (transitionProps.position = elOption.position.slice());
@@ -296,14 +296,14 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
     elOption.rotation && (transitionProps.rotation = elOption.rotation);
 
     if (el.type === 'image' && elOption.style) {
-        let targetStyle = transitionProps.style = {};
+        const targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y', 'width', 'height'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });
     }
 
     if (el.type === 'text' && elOption.style) {
-        let targetStyle = transitionProps.style = {};
+        const targetStyle = transitionProps.style = {};
         zrUtil.each(['x', 'y'], function (prop) {
             prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
         });
@@ -349,7 +349,7 @@ function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot
 
     // If `elOption.styleEmphasis` is `false`, remove hover style. The
     // logic is ensured by `graphicUtil.setElementHoverStyle`.
-    let styleEmphasis = elOption.styleEmphasis;
+    const styleEmphasis = elOption.styleEmphasis;
     // hoverStyle should always be set here, because if the hover style
     // may already be changed, where the inner cache should be reset.
     graphicUtil.enableElementHoverEmphasis(el, styleEmphasis);
@@ -366,8 +366,8 @@ function prepareStyleTransition(prop, targetStyle, elOptionStyle, oldElStyle, is
 }
 
 function makeRenderItem(customSeries, data, ecModel, api) {
-    let renderItem = customSeries.get('renderItem');
-    let coordSys = customSeries.coordinateSystem;
+    const renderItem = customSeries.get('renderItem');
+    const coordSys = customSeries.coordinateSystem;
     let prepareResult = {};
 
     if (coordSys) {
@@ -384,7 +384,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             : prepareCustoms[coordSys.type](coordSys);
     }
 
-    let userAPI = zrUtil.defaults({
+    const userAPI = zrUtil.defaults({
         getWidth: api.getWidth,
         getHeight: api.getHeight,
         getZr: api.getZr,
@@ -398,7 +398,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         font: font
     }, prepareResult.api || {});
 
-    let userParams = {
+    const userParams = {
         // The life cycle of context: current round of rendering.
         // The global life cycle is probably not necessary, because
         // user can store global status by themselves.
@@ -471,13 +471,13 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
         updateCache(dataIndexInside);
 
-        let itemStyle = currItemModel.getModel(ITEM_STYLE_NORMAL_PATH).getItemStyle();
+        const itemStyle = currItemModel.getModel(ITEM_STYLE_NORMAL_PATH).getItemStyle();
 
         currVisualColor != null && (itemStyle.fill = currVisualColor);
-        let opacity = data.getItemVisual(dataIndexInside, 'opacity');
+        const opacity = data.getItemVisual(dataIndexInside, 'opacity');
         opacity != null && (itemStyle.opacity = opacity);
 
-        let labelModel = extra
+        const labelModel = extra
             ? applyExtraBefore(extra, currLabelNormalModel)
             : currLabelNormalModel;
 
@@ -510,9 +510,9 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
         updateCache(dataIndexInside);
 
-        let itemStyle = currItemModel.getModel(ITEM_STYLE_EMPHASIS_PATH).getItemStyle();
+        const itemStyle = currItemModel.getModel(ITEM_STYLE_EMPHASIS_PATH).getItemStyle();
 
-        let labelModel = extra
+        const labelModel = extra
             ? applyExtraBefore(extra, currLabelEmphasisModel)
             : currLabelEmphasisModel;
 
@@ -557,7 +557,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
      */
     function barLayout(opt) {
         if (coordSys.getBaseAxis) {
-            let baseAxis = coordSys.getBaseAxis();
+            const baseAxis = coordSys.getBaseAxis();
             return getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt), api);
         }
     }
@@ -585,12 +585,12 @@ function makeRenderItem(customSeries, data, ecModel, api) {
 }
 
 function wrapEncodeDef(data) {
-    let encodeDef = {};
+    const encodeDef = {};
     zrUtil.each(data.dimensions, function (dimName, dataDimIndex) {
-        let dimInfo = data.getDimensionInfo(dimName);
+        const dimInfo = data.getDimensionInfo(dimName);
         if (!dimInfo.isExtraCoord) {
-            let coordDim = dimInfo.coordDim;
-            let dataDims = encodeDef[coordDim] = encodeDef[coordDim] || [];
+            const coordDim = dimInfo.coordDim;
+            const dataDims = encodeDef[coordDim] = encodeDef[coordDim] || [];
             dataDims[dimInfo.coordDimIndex] = dataDimIndex;
         }
     });
@@ -616,11 +616,11 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
     //     regard "return;" as "show nothing element whatever", so make a exception to meet the
     //     most cases.)
 
-    let simplyRemove = !elOption; // `null`/`undefined`/`false`
+    const simplyRemove = !elOption; // `null`/`undefined`/`false`
     elOption = elOption || {};
-    let elOptionType = elOption.type;
-    let elOptionShape = elOption.shape;
-    let elOptionStyle = elOption.style;
+    const elOptionType = elOption.type;
+    const elOptionShape = elOption.shape;
+    const elOptionStyle = elOption.style;
 
     if (el && (
         simplyRemove
@@ -649,7 +649,7 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
         return;
     }
 
-    let isInit = !el;
+    const isInit = !el;
     !el && (el = createEl(elOption));
     updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot);
 
@@ -680,12 +680,12 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
 // User can remove a single child by set its `ignore` as `true` or replace
 // it by another element, where its `$merge` can be set as `true` if necessary.
 function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
-    let newChildren = elOption.children;
-    let newLen = newChildren ? newChildren.length : 0;
-    let mergeChildren = elOption.$mergeChildren;
+    const newChildren = elOption.children;
+    const newLen = newChildren ? newChildren.length : 0;
+    const mergeChildren = elOption.$mergeChildren;
     // `diffChildrenByName` has been deprecated.
-    let byName = mergeChildren === 'byName' || elOption.diffChildrenByName;
-    let notMerge = mergeChildren === false;
+    const byName = mergeChildren === 'byName' || elOption.diffChildrenByName;
+    const notMerge = mergeChildren === false;
 
     // For better performance on roam update, only enter if necessary.
     if (!newLen && !byName && !notMerge) {
@@ -742,14 +742,14 @@ function diffGroupChildren(context) {
 }
 
 function getKey(item, idx) {
-    let name = item && item.name;
+    const name = item && item.name;
     return name != null ? name : GROUP_DIFF_PREFIX + idx;
 }
 
 function processAddUpdate(newIndex, oldIndex) {
-    let context = this.context;
-    let childOption = newIndex != null ? context.newChildren[newIndex] : null;
-    let child = oldIndex != null ? context.oldChildren[oldIndex] : null;
+    const context = this.context;
+    const childOption = newIndex != null ? context.newChildren[newIndex] : null;
+    const child = oldIndex != null ? context.oldChildren[oldIndex] : null;
 
     doCreateOrUpdate(
         child,
@@ -765,7 +765,7 @@ function processAddUpdate(newIndex, oldIndex) {
 // textFill, textStroke, textStrokeWidth.
 // We have to do this trick.
 function applyExtraBefore(extra, model) {
-    let dummyModel = new Model({}, model);
+    const dummyModel = new Model({}, model);
     zrUtil.each(CACHED_LABEL_STYLE_PROPERTIES, function (stylePropName, modelPropName) {
         if (extra.hasOwnProperty(stylePropName)) {
             dummyModel.option[modelPropName] = extra[stylePropName];
@@ -775,7 +775,7 @@ function applyExtraBefore(extra, model) {
 }
 
 function applyExtraAfter(itemStyle, extra) {
-    for (let key in extra) {
+    for (const key in extra) {
         if (extra.hasOwnProperty(key)
             || !CACHED_LABEL_STYLE_PROPERTIES.hasOwnProperty(key)
         ) {
@@ -785,8 +785,8 @@ function applyExtraAfter(itemStyle, extra) {
 }
 
 function processRemove(oldIndex) {
-    let context = this.context;
-    let child = context.oldChildren[oldIndex];
+    const context = this.context;
+    const child = context.oldChildren[oldIndex];
     child && context.group.remove(child);
 }
 

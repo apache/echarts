@@ -127,7 +127,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     __viewId: string;
 
     static protoInitialize = (function () {
-        let proto = ComponentModel.prototype;
+        const proto = ComponentModel.prototype;
         proto.type = 'component';
         proto.id = '';
         proto.name = '';
@@ -147,11 +147,11 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     }
 
     mergeDefaultAndTheme(option: Opt, ecModel: GlobalModel): void {
-        let layoutMode = layout.fetchLayoutMode(this);
-        let inputPositionParams = layoutMode
+        const layoutMode = layout.fetchLayoutMode(this);
+        const inputPositionParams = layoutMode
             ? layout.getLayoutParams(option as BoxLayoutOptionMixin) : {};
 
-        let themeModel = ecModel.getTheme();
+        const themeModel = ecModel.getTheme();
         zrUtil.merge(option, themeModel.get(this.mainType));
         zrUtil.merge(option, this.getDefaultOption());
 
@@ -163,7 +163,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     mergeOption(option: Opt, ecModel: GlobalModel): void {
         zrUtil.merge(this.option, option, true);
 
-        let layoutMode = layout.fetchLayoutMode(this);
+        const layoutMode = layout.fetchLayoutMode(this);
         if (layoutMode) {
             layout.mergeLayoutParam(
                 this.option as BoxLayoutOptionMixin,
@@ -231,7 +231,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      * ```
      */
     getDefaultOption(): Opt {
-        let ctor = this.constructor;
+        const ctor = this.constructor;
 
         // If using class declaration, it is different to travel super class
         // in legacy env and auto merge defaultOption. So if using class
@@ -242,12 +242,12 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         }
 
         // FIXME: remove this approach?
-        let fields = inner(this);
+        const fields = inner(this);
         if (!fields.defaultOption) {
-            let optList = [];
+            const optList = [];
             let clz = ctor as ExtendableConstructor;
             while (clz) {
-                let opt = clz.prototype.defaultOption;
+                const opt = clz.prototype.defaultOption;
                 opt && optList.push(opt);
                 clz = clz.superClass;
             }

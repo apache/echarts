@@ -43,7 +43,7 @@ class HeatmapLayer {
     };
 
     constructor() {
-        let canvas = zrUtil.createCanvas();
+        const canvas = zrUtil.createCanvas();
         this.canvas = canvas;
     }
 
@@ -61,24 +61,24 @@ class HeatmapLayer {
         colorFunc: Record<ColorState, ColorFunc>,
         isInRange?: (grad?: number) => boolean
     ) {
-        let brush = this._getBrush();
-        let gradientInRange = this._getGradient(colorFunc, 'inRange');
-        let gradientOutOfRange = this._getGradient(colorFunc, 'outOfRange');
-        let r = this.pointSize + this.blurSize;
+        const brush = this._getBrush();
+        const gradientInRange = this._getGradient(colorFunc, 'inRange');
+        const gradientOutOfRange = this._getGradient(colorFunc, 'outOfRange');
+        const r = this.pointSize + this.blurSize;
 
-        let canvas = this.canvas;
-        let ctx = canvas.getContext('2d');
-        let len = data.length;
+        const canvas = this.canvas;
+        const ctx = canvas.getContext('2d');
+        const len = data.length;
         canvas.width = width;
         canvas.height = height;
         for (let i = 0; i < len; ++i) {
-            let p = data[i];
-            let x = p[0];
-            let y = p[1];
-            let value = p[2];
+            const p = data[i];
+            const x = p[0];
+            const y = p[1];
+            const value = p[2];
 
             // calculate alpha using value
-            let alpha = normalize(value);
+            const alpha = normalize(value);
 
             // draw with the circle brush with alpha
             ctx.globalAlpha = alpha;
@@ -92,21 +92,21 @@ class HeatmapLayer {
         }
 
         // colorize the canvas using alpha value and set with gradient
-        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-        let pixels = imageData.data;
+        const pixels = imageData.data;
         let offset = 0;
-        let pixelLen = pixels.length;
-        let minOpacity = this.minOpacity;
-        let maxOpacity = this.maxOpacity;
-        let diffOpacity = maxOpacity - minOpacity;
+        const pixelLen = pixels.length;
+        const minOpacity = this.minOpacity;
+        const maxOpacity = this.maxOpacity;
+        const diffOpacity = maxOpacity - minOpacity;
 
         while (offset < pixelLen) {
             let alpha = pixels[offset + 3] / 256;
-            let gradientOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1)) * 4;
+            const gradientOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1)) * 4;
             // Simple optimize to ignore the empty data
             if (alpha > 0) {
-                let gradient = isInRange(alpha) ? gradientInRange : gradientOutOfRange;
+                const gradient = isInRange(alpha) ? gradientInRange : gradientOutOfRange;
                 // Any alpha > 0 will be mapped to [minOpacity, maxOpacity]
                 alpha > 0 && (alpha = alpha * diffOpacity + minOpacity);
                 pixels[offset++] = gradient[gradientOffset];
@@ -127,14 +127,14 @@ class HeatmapLayer {
      * get canvas of a black circle brush used for canvas to draw later
      */
     _getBrush() {
-        let brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
+        const brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
         // set brush size
-        let r = this.pointSize + this.blurSize;
-        let d = r * 2;
+        const r = this.pointSize + this.blurSize;
+        const d = r * 2;
         brushCanvas.width = d;
         brushCanvas.height = d;
 
-        let ctx = brushCanvas.getContext('2d');
+        const ctx = brushCanvas.getContext('2d');
         ctx.clearRect(0, 0, d, d);
 
         // in order to render shadow without the distinct circle,
@@ -159,9 +159,9 @@ class HeatmapLayer {
      * @private
      */
     _getGradient(colorFunc: Record<ColorState, ColorFunc>, state: ColorState) {
-        let gradientPixels = this._gradientPixels;
-        let pixelsSingleState = gradientPixels[state] || (gradientPixels[state] = new Uint8ClampedArray(256 * 4));
-        let color = [0, 0, 0, 0];
+        const gradientPixels = this._gradientPixels;
+        const pixelsSingleState = gradientPixels[state] || (gradientPixels[state] = new Uint8ClampedArray(256 * 4));
+        const color = [0, 0, 0, 0];
         let off = 0;
         for (let i = 0; i < 256; i++) {
             colorFunc[state](i / 255, true, color);

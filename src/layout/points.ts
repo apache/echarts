@@ -32,21 +32,21 @@ export default function (seriesType?: string): StageHandler {
         plan: createRenderPlanner(),
 
         reset: function (seriesModel: SeriesModel) {
-            let data = seriesModel.getData();
-            let coordSys = seriesModel.coordinateSystem;
-            let pipelineContext = seriesModel.pipelineContext;
-            let isLargeRender = pipelineContext.large;
+            const data = seriesModel.getData();
+            const coordSys = seriesModel.coordinateSystem;
+            const pipelineContext = seriesModel.pipelineContext;
+            const isLargeRender = pipelineContext.large;
 
             if (!coordSys) {
                 return;
             }
 
-            let dims = map(coordSys.dimensions, function (dim) {
+            const dims = map(coordSys.dimensions, function (dim) {
                 return data.mapDimension(dim);
             }).slice(0, 2);
-            let dimLen = dims.length;
+            const dimLen = dims.length;
 
-            let stackResultDim = data.getCalculationInfo('stackResultDimension');
+            const stackResultDim = data.getCalculationInfo('stackResultDimension');
             if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) {
                 dims[0] = stackResultDim;
             }
@@ -57,21 +57,21 @@ export default function (seriesType?: string): StageHandler {
 
             return dimLen && {
                 progress(params, data) {
-                    let segCount = params.end - params.start;
-                    let points = isLargeRender && new Float32Array(segCount * dimLen);
+                    const segCount = params.end - params.start;
+                    const points = isLargeRender && new Float32Array(segCount * dimLen);
 
-                    let tmpIn: ParsedValueNumeric[] = [];
-                    let tmpOut: number[] = [];
+                    const tmpIn: ParsedValueNumeric[] = [];
+                    const tmpOut: number[] = [];
                     for (let i = params.start, offset = 0; i < params.end; i++) {
                         let point;
 
                         if (dimLen === 1) {
-                            let x = data.get(dims[0], i) as ParsedValueNumeric;
+                            const x = data.get(dims[0], i) as ParsedValueNumeric;
                             point = !isNaN(x) && coordSys.dataToPoint(x, null, tmpOut);
                         }
                         else {
-                            let x = tmpIn[0] = data.get(dims[0], i) as ParsedValueNumeric;
-                            let y = tmpIn[1] = data.get(dims[1], i) as ParsedValueNumeric;
+                            const x = tmpIn[0] = data.get(dims[0], i) as ParsedValueNumeric;
+                            const y = tmpIn[1] = data.get(dims[1], i) as ParsedValueNumeric;
                             // Also {Array.<number>}, not undefined to avoid if...else... statement
                             point = !isNaN(x) && !isNaN(y) && coordSys.dataToPoint(tmpIn, null, tmpOut);
                         }

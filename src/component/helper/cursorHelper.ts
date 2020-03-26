@@ -32,9 +32,9 @@ const IRRELEVANT_EXCLUDES = {'axisPointer': 1, 'tooltip': 1, 'brush': 1};
 export function onIrrelevantElement(
     e: ElementEvent, api: ExtensionAPI, targetCoordSysModel: CoordinateSystem['model']
 ): boolean {
-    let model = api.getComponentByElement(e.topTarget);
+    const model = api.getComponentByElement(e.topTarget);
     // If model is axisModel, it works only if it is injected with coordinateSystem.
-    let coordSys = model && (model as SeriesModel).coordinateSystem;
+    const coordSys = model && (model as SeriesModel).coordinateSystem;
     return model
         && model !== targetCoordSysModel
         && !IRRELEVANT_EXCLUDES.hasOwnProperty(model.mainType)

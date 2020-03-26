@@ -35,11 +35,11 @@ import * as graphic from '../../util/graphic';
  * @param {module:echarts/ExtensionAPI}
  */
 export function layout(group, componentModel, api) {
-    let boxLayoutParams = componentModel.getBoxLayoutParams();
-    let padding = componentModel.get('padding');
-    let viewportSize = {width: api.getWidth(), height: api.getHeight()};
+    const boxLayoutParams = componentModel.getBoxLayoutParams();
+    const padding = componentModel.get('padding');
+    const viewportSize = {width: api.getWidth(), height: api.getHeight()};
 
-    let rect = getLayoutRect(
+    const rect = getLayoutRect(
         boxLayoutParams,
         viewportSize,
         padding
@@ -62,10 +62,10 @@ export function layout(group, componentModel, api) {
 }
 
 export function makeBackground(rect, componentModel) {
-    let padding = formatUtil.normalizeCssArray(
+    const padding = formatUtil.normalizeCssArray(
         componentModel.get('padding')
     );
-    let style = componentModel.getItemStyle(['color', 'opacity']);
+    const style = componentModel.getItemStyle(['color', 'opacity']);
     style.fill = componentModel.get('backgroundColor');
     rect = new graphic.Rect({
         shape: {

@@ -48,13 +48,13 @@ abstract class MarkerView extends ComponentView {
     }
 
     render(markerModel: MarkerModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let markerGroupMap = this.markerGroupMap;
+        const markerGroupMap = this.markerGroupMap;
         markerGroupMap.each(function (item) {
             inner(item).keep = false;
         });
 
         ecModel.eachSeries(function (seriesModel) {
-            let markerModel = MarkerModel.getMarkerModelFromSeries(
+            const markerModel = MarkerModel.getMarkerModelFromSeries(
                 seriesModel,
                 this.type as 'markPoint' | 'markLine' | 'markArea'
             );

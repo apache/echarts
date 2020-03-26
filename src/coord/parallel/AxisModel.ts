@@ -93,7 +93,7 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
      * @param intervals `interval.length === 0` means set all active.
      */
     setActiveIntervals(intervals: ParallelAxisInterval[]): void {
-        let activeIntervals = this.activeIntervals = zrUtil.clone(intervals);
+        const activeIntervals = this.activeIntervals = zrUtil.clone(intervals);
 
         // Normalize
         if (activeIntervals) {
@@ -108,7 +108,7 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
      *        `value` is not needed to be input.
      */
     getActiveState(value?: ParsedValue): ParallelActiveState {
-        let activeIntervals = this.activeIntervals;
+        const activeIntervals = this.activeIntervals;
 
         if (!activeIntervals.length) {
             return 'normal';
@@ -120,7 +120,7 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
 
         // Simple optimization
         if (activeIntervals.length === 1) {
-            let interval = activeIntervals[0];
+            const interval = activeIntervals[0];
             if (interval[0] <= value && value <= interval[1]) {
                 return 'active';
             }

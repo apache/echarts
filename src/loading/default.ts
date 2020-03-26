@@ -50,14 +50,14 @@ export default function (
         maskColor: 'rgba(255, 255, 255, 0.8)',
         zlevel: 0
     });
-    let mask = new graphic.Rect({
+    const mask = new graphic.Rect({
         style: {
             fill: opts.maskColor
         },
         zlevel: opts.zlevel,
         z: 10000
     });
-    let arc = new graphic.Arc({
+    const arc = new graphic.Arc({
         shape: {
             startAngle: -PI / 2,
             endAngle: -PI / 2 + 0.1,
@@ -71,7 +71,7 @@ export default function (
         zlevel: opts.zlevel,
         z: 10001
     });
-    let labelRect = new graphic.Rect({
+    const labelRect = new graphic.Rect({
         style: {
             fill: 'none'
         },
@@ -101,20 +101,20 @@ export default function (
         .delay(300)
         .start('circularInOut');
 
-    let group = new graphic.Group() as (graphic.Group & LoadingEffect);
+    const group = new graphic.Group() as (graphic.Group & LoadingEffect);
     group.add(arc);
     group.add(labelRect);
     group.add(mask);
 
     // Inject resize
     group.resize = function () {
-        let cx = api.getWidth() / 2;
-        let cy = api.getHeight() / 2;
+        const cx = api.getWidth() / 2;
+        const cy = api.getHeight() / 2;
         arc.setShape({
             cx: cx,
             cy: cy
         });
-        let r = arc.shape.r;
+        const r = arc.shape.r;
         labelRect.setShape({
             x: cx - r,
             y: cy - r,

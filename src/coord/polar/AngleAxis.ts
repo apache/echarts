@@ -56,42 +56,42 @@ class AngleAxis extends Axis {
      * @return {number} Auto interval for cateogry axis tick and label
      */
     calculateCategoryInterval() {
-        let axis = this;
-        let labelModel = axis.getLabelModel();
+        const axis = this;
+        const labelModel = axis.getLabelModel();
 
-        let ordinalScale = axis.scale as OrdinalScale;
-        let ordinalExtent = ordinalScale.getExtent();
+        const ordinalScale = axis.scale as OrdinalScale;
+        const ordinalExtent = ordinalScale.getExtent();
         // Providing this method is for optimization:
         // avoid generating a long array by `getTicks`
         // in large category data case.
-        let tickCount = ordinalScale.count();
+        const tickCount = ordinalScale.count();
 
         if (ordinalExtent[1] - ordinalExtent[0] < 1) {
             return 0;
         }
 
-        let tickValue = ordinalExtent[0];
-        let unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
-        let unitH = Math.abs(unitSpan);
+        const tickValue = ordinalExtent[0];
+        const unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
+        const unitH = Math.abs(unitSpan);
 
         // Not precise, just use height as text width
         // and each distance from axis line yet.
-        let rect = textContain.getBoundingRect(
+        const rect = textContain.getBoundingRect(
             tickValue == null ? '' : tickValue + '',
             labelModel.getFont(),
             'center',
             'top'
         );
-        let maxH = Math.max(rect.height, 7);
+        const maxH = Math.max(rect.height, 7);
 
         let dh = maxH / unitH;
         // 0/0 is NaN, 1/0 is Infinity.
         isNaN(dh) && (dh = Infinity);
         let interval = Math.max(0, Math.floor(dh));
 
-        let cache = inner(axis.model);
-        let lastAutoInterval = cache.lastAutoInterval;
-        let lastTickCount = cache.lastTickCount;
+        const cache = inner(axis.model);
+        const lastAutoInterval = cache.lastAutoInterval;
+        const lastTickCount = cache.lastTickCount;
 
         // Use cache to keep interval stable while moving zoom window,
         // otherwise the calculated interval might jitter when the zoom

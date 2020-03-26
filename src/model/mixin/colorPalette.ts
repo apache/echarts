@@ -30,7 +30,7 @@ const inner = makeInner<{
 function getNearestColorPalette(
     colors: ZRColor[][], requestColorNum: number
 ): ZRColor[] {
-    let paletteNum = colors.length;
+    const paletteNum = colors.length;
     // TODO colors must be in order
     for (let i = 0; i < paletteNum; i++) {
         if (colors[i].length > requestColorNum) {
@@ -64,15 +64,15 @@ class ColorPaletteMixin<T extends ColorPaletteOptionMixin = ColorPaletteOptionMi
         requestColorNum?: number
     ): ZRColor {
         scope = scope || this;
-        let scopeFields = inner(scope);
-        let colorIdx = scopeFields.colorIdx || 0;
-        let colorNameMap = scopeFields.colorNameMap = scopeFields.colorNameMap || {};
+        const scopeFields = inner(scope);
+        const colorIdx = scopeFields.colorIdx || 0;
+        const colorNameMap = scopeFields.colorNameMap = scopeFields.colorNameMap || {};
         // Use `hasOwnProperty` to avoid conflict with Object.prototype.
         if (colorNameMap.hasOwnProperty(name)) {
             return colorNameMap[name];
         }
-        let defaultColorPalette = normalizeToArray(this.get('color', true));
-        let layeredColorPalette = this.get('colorLayer', true);
+        const defaultColorPalette = normalizeToArray(this.get('color', true));
+        const layeredColorPalette = this.get('colorLayer', true);
         let colorPalette = ((requestColorNum == null || !layeredColorPalette)
             ? defaultColorPalette : getNearestColorPalette(layeredColorPalette, requestColorNum));
 
@@ -83,7 +83,7 @@ class ColorPaletteMixin<T extends ColorPaletteOptionMixin = ColorPaletteOptionMi
             return;
         }
 
-        let color = colorPalette[colorIdx];
+        const color = colorPalette[colorIdx];
         if (name) {
             colorNameMap[name] = color;
         }

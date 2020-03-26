@@ -85,8 +85,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Transformed to particular position and size
      */
     transformTo(x: number, y: number, width: number, height: number): void {
-        let rect = this.getBoundingRect();
-        let rawTransform = this._rawTransformable;
+        const rect = this.getBoundingRect();
+        const rawTransform = this._rawTransformable;
 
         rawTransform.transform = rect.calculateTransform(
             new BoundingRect(x, y, width, height)
@@ -112,7 +112,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     setZoom(zoom: number): void {
         zoom = zoom || 1;
 
-        let zoomLimit = this.zoomLimit;
+        const zoomLimit = this.zoomLimit;
         if (zoomLimit) {
             if (zoomLimit.max != null) {
                 zoom = Math.min(zoomLimit.max, zoom);
@@ -131,9 +131,9 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      */
     getDefaultCenter(): number[] {
         // Rect before any transform
-        let rawRect = this.getBoundingRect();
-        let cx = rawRect.x + rawRect.width / 2;
-        let cy = rawRect.y + rawRect.height / 2;
+        const rawRect = this.getBoundingRect();
+        const cx = rawRect.x + rawRect.width / 2;
+        const cy = rawRect.y + rawRect.height / 2;
 
         return [cx, cy];
     }
@@ -155,11 +155,11 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      */
     private _updateCenterAndZoom(): void {
         // Must update after view transform updated
-        let rawTransformMatrix = this._rawTransformable.getLocalTransform();
-        let roamTransform = this._roamTransformable;
+        const rawTransformMatrix = this._rawTransformable.getLocalTransform();
+        const roamTransform = this._roamTransformable;
         let defaultCenter = this.getDefaultCenter();
         let center = this.getCenter();
-        let zoom = this.getZoom();
+        const zoom = this.getZoom();
 
         center = vector.applyTransform([], center, rawTransformMatrix);
         defaultCenter = vector.applyTransform([], defaultCenter, rawTransformMatrix);
@@ -178,8 +178,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Update transform from roam and mapLocation
      */
     protected _updateTransform(): void {
-        let roamTransformable = this._roamTransformable;
-        let rawTransformable = this._rawTransformable;
+        const roamTransformable = this._roamTransformable;
+        const rawTransformable = this._rawTransformable;
 
         rawTransformable.parent = roamTransformable;
         roamTransformable.updateTransform();
@@ -200,8 +200,8 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         rawScale: number[],
         rawPosition: number[]
     } {
-        let roamTransform = this._roamTransformable.transform;
-        let rawTransformable = this._rawTransformable;
+        const roamTransform = this._roamTransformable.transform;
+        const rawTransformable = this._rawTransformable;
         return {
             roamTransform: roamTransform ? zrUtil.slice(roamTransform) : matrix.create(),
             rawScale: zrUtil.slice(rawTransformable.scale),
@@ -217,7 +217,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Get view rect after roam transform
      */
     getViewRectAfterRoam(): BoundingRect {
-        let rect = this.getBoundingRect().clone();
+        const rect = this.getBoundingRect().clone();
         rect.applyTransform(this.transform);
         return rect;
     }
@@ -226,7 +226,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Convert a single (lon, lat) data item to (x, y) point.
      */
     dataToPoint(data: number[], noRoam?: boolean, out?: number[]): number[] {
-        let transform = noRoam ? this._rawTransform : this.transform;
+        const transform = noRoam ? this._rawTransform : this.transform;
         out = out || [];
         return transform
             ? v2ApplyTransform(out, data, transform)
@@ -237,19 +237,19 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * Convert a (x, y) point to (lon, lat) data
      */
     pointToData(point: number[]): number[] {
-        let invTransform = this.invTransform;
+        const invTransform = this.invTransform;
         return invTransform
             ? v2ApplyTransform([], point, invTransform)
             : [point[0], point[1]];
     }
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
-        let coordSys = getCoordSys(finder);
+        const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.dataToPoint(value) : null;
     }
 
     convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
-        let coordSys = getCoordSys(finder);
+        const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }
 
@@ -272,7 +272,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
 }
 
 function getCoordSys(finder: ParsedModelFinder): View {
-    let seriesModel = finder.seriesModel;
+    const seriesModel = finder.seriesModel;
     return seriesModel ? seriesModel.coordinateSystem as View : null; // e.g., graph.
 }
 

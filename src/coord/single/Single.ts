@@ -68,9 +68,9 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      */
     _init(axisModel: SingleAxisModel, ecModel: GlobalModel, api: ExtensionAPI) {
 
-        let dim = this.dimension;
+        const dim = this.dimension;
 
-        let axis = new SingleAxis(
+        const axis = new SingleAxis(
             dim,
             axisHelper.createScaleByModel(axisModel),
             [0, 0],
@@ -78,7 +78,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
             axisModel.get('position')
         );
 
-        let isCategory = axis.type === 'category';
+        const isCategory = axis.type === 'category';
         axis.onBand = isCategory && axisModel.get('boundaryGap');
         axis.inverse = axisModel.get('inverse');
         axis.orient = axisModel.get('orient');
@@ -95,7 +95,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     update(ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.coordinateSystem === this) {
-                let data = seriesModel.getData();
+                const data = seriesModel.getData();
                 each(data.mapDimension(this.dimension, true), function (dim) {
                     this._axis.scale.unionExtentFromData(data, dim);
                 }, this);
@@ -132,12 +132,12 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
     private _adjustAxis() {
 
-        let rect = this._rect;
-        let axis = this._axis;
+        const rect = this._rect;
+        const axis = this._axis;
 
-        let isHorizontal = axis.isHorizontal();
-        let extent = isHorizontal ? [0, rect.width] : [0, rect.height];
-        let idx = axis.reverse ? 1 : 0;
+        const isHorizontal = axis.isHorizontal();
+        const extent = isHorizontal ? [0, rect.width] : [0, rect.height];
+        const idx = axis.reverse ? 1 : 0;
 
         axis.setExtent(extent[idx], extent[1 - idx]);
 
@@ -148,9 +148,9 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
     private _updateAxisTransform(axis: SingleAxis, coordBase: number) {
 
-        let axisExtent = axis.getExtent();
-        let extentSum = axisExtent[0] + axisExtent[1];
-        let isHorizontal = axis.isHorizontal();
+        const axisExtent = axis.getExtent();
+        const extentSum = axisExtent[0] + axisExtent[1];
+        const isHorizontal = axis.isHorizontal();
 
         axis.toGlobalCoord = isHorizontal
             ? function (coord) {
@@ -199,9 +199,9 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      * If contain point.
      */
     containPoint(point: number[]) {
-        let rect = this.getRect();
-        let axis = this.getAxis();
-        let orient = axis.orient;
+        const rect = this.getRect();
+        const axis = this.getAxis();
+        const orient = axis.orient;
         if (orient === 'horizontal') {
             return axis.contain(axis.toLocalCoord(point[0]))
             && (point[1] >= rect.y && point[1] <= (rect.y + rect.height));
@@ -213,7 +213,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     pointToData(point: number[]) {
-        let axis = this.getAxis();
+        const axis = this.getAxis();
         return [axis.coordToData(axis.toLocalCoord(
             point[axis.orient === 'horizontal' ? 0 : 1]
         ))];
@@ -224,10 +224,10 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      * Can be [val] | val
      */
     dataToPoint(val: ScaleDataValue | ScaleDataValue[]) {
-        let axis = this.getAxis();
-        let rect = this.getRect();
-        let pt = [];
-        let idx = axis.orient === 'horizontal' ? 0 : 1;
+        const axis = this.getAxis();
+        const rect = this.getRect();
+        const pt = [];
+        const idx = axis.orient === 'horizontal' ? 0 : 1;
 
         if (val instanceof Array) {
             val = val[0];

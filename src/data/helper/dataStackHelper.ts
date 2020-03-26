@@ -61,10 +61,10 @@ export function enableDataStack(
 ): DataStackResult {
     opt = opt || {};
     let byIndex = opt.byIndex;
-    let stackedCoordDimension = opt.stackedCoordDimension;
+    const stackedCoordDimension = opt.stackedCoordDimension;
 
     // Compatibal: when `stack` is set as '', do not stack.
-    let mayStack = !!(seriesModel && seriesModel.get('stack'));
+    const mayStack = !!(seriesModel && seriesModel.get('stack'));
     let stackedByDimInfo: DataDimensionInfo;
     let stackedDimInfo: DataDimensionInfo;
     let stackResultDimension: string;
@@ -112,8 +112,8 @@ export function enableDataStack(
             stackedByDimInfo.createInvertedIndices = true;
         }
 
-        let stackedDimCoordDim = stackedDimInfo.coordDim;
-        let stackedDimType = stackedDimInfo.type;
+        const stackedDimCoordDim = stackedDimInfo.coordDim;
+        const stackedDimType = stackedDimInfo.type;
         let stackedDimCoordIndex = 0;
 
         each(dimensionInfoList, function (dimensionInfo: DataDimensionInfo) {

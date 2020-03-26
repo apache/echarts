@@ -71,9 +71,9 @@ export interface BrushCommonSelectorsForSeries {
 export function makeBrushCommonSelectorForSeries(
     area: BrushSelectableArea
 ): BrushCommonSelectorsForSeries {
-    let brushType = area.brushType;
+    const brushType = area.brushType;
     // Do not use function binding or curry for performance.
-    let selectors: BrushCommonSelectorsForSeries = {
+    const selectors: BrushCommonSelectorsForSeries = {
         point(itemLayout: number[]) {
             return selector[brushType].point(itemLayout, selectors, area);
         },
@@ -106,17 +106,17 @@ const selector: Record<BrushType, BrushSelectorOnBrushType> = {
                 );
         },
         rect: function (itemLayout, selectors, area) {
-            let points = area.range as BrushDimensionMinMax[];
+            const points = area.range as BrushDimensionMinMax[];
 
             if (!itemLayout || points.length <= 1) {
                 return false;
             }
 
-            let x = itemLayout.x;
-            let y = itemLayout.y;
-            let width = itemLayout.width;
-            let height = itemLayout.height;
-            let p = points[0];
+            const x = itemLayout.x;
+            const y = itemLayout.y;
+            const width = itemLayout.width;
+            const height = itemLayout.height;
+            const p = points[0];
 
             if (polygonContain.contain(points, x, y)
                 || polygonContain.contain(points, x + width, y)
@@ -135,21 +135,21 @@ const selector: Record<BrushType, BrushSelectorOnBrushType> = {
 };
 
 function getLineSelectors(xyIndex: 0 | 1): BrushSelectorOnBrushType {
-    let xy = ['x', 'y'] as const;
-    let wh = ['width', 'height'] as const;
+    const xy = ['x', 'y'] as const;
+    const wh = ['width', 'height'] as const;
 
     return {
         point: function (itemLayout, selectors, area) {
             if (itemLayout) {
-                let range = area.range as BrushDimensionMinMax;
-                let p = itemLayout[xyIndex];
+                const range = area.range as BrushDimensionMinMax;
+                const p = itemLayout[xyIndex];
                 return inLineRange(p, range);
             }
         },
         rect: function (itemLayout, selectors, area) {
             if (itemLayout) {
-                let range = area.range as BrushDimensionMinMax;
-                let layoutRange = [
+                const range = area.range as BrushDimensionMinMax;
+                const layoutRange = [
                     itemLayout[xy[xyIndex]],
                     itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
                 ];

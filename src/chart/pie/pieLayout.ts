@@ -43,9 +43,9 @@ export default function (
     api: ExtensionAPI
 ) {
     ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeriesModel) {
-        let data = seriesModel.getData();
-        let valueDim = data.mapDimension('value');
-        let viewRect = getViewRect(seriesModel, api);
+        const data = seriesModel.getData();
+        const valueDim = data.mapDimension('value');
+        const viewRect = getViewRect(seriesModel, api);
 
         let center = seriesModel.get('center');
         let radius = seriesModel.get('radius');
@@ -57,34 +57,34 @@ export default function (
             center = [center, center];
         }
 
-        let width = parsePercent(viewRect.width, api.getWidth());
-        let height = parsePercent(viewRect.height, api.getHeight());
-        let size = Math.min(width, height);
-        let cx = parsePercent(center[0], width) + viewRect.x;
-        let cy = parsePercent(center[1], height) + viewRect.y;
-        let r0 = parsePercent(radius[0], size / 2);
-        let r = parsePercent(radius[1], size / 2);
+        const width = parsePercent(viewRect.width, api.getWidth());
+        const height = parsePercent(viewRect.height, api.getHeight());
+        const size = Math.min(width, height);
+        const cx = parsePercent(center[0], width) + viewRect.x;
+        const cy = parsePercent(center[1], height) + viewRect.y;
+        const r0 = parsePercent(radius[0], size / 2);
+        const r = parsePercent(radius[1], size / 2);
 
-        let startAngle = -seriesModel.get('startAngle') * RADIAN;
+        const startAngle = -seriesModel.get('startAngle') * RADIAN;
 
-        let minAngle = seriesModel.get('minAngle') * RADIAN;
+        const minAngle = seriesModel.get('minAngle') * RADIAN;
 
         let validDataCount = 0;
         data.each(valueDim, function (value: number) {
             !isNaN(value) && validDataCount++;
         });
 
-        let sum = data.getSum(valueDim);
+        const sum = data.getSum(valueDim);
         // Sum may be 0
         let unitRadian = Math.PI / (sum || validDataCount) * 2;
 
-        let clockwise = seriesModel.get('clockwise');
+        const clockwise = seriesModel.get('clockwise');
 
-        let roseType = seriesModel.get('roseType');
-        let stillShowZeroSum = seriesModel.get('stillShowZeroSum');
+        const roseType = seriesModel.get('roseType');
+        const stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
-        let extent = data.getDataExtent(valueDim);
+        const extent = data.getDataExtent(valueDim);
         extent[0] = 0;
 
         // In the case some sector angle is smaller than minAngle
@@ -92,7 +92,7 @@ export default function (
         let valueSumLargerThanMinAngle = 0;
 
         let currentAngle = startAngle;
-        let dir = clockwise ? 1 : -1;
+        const dir = clockwise ? 1 : -1;
 
         data.each(valueDim, function (value: number, idx: number) {
             let angle;
@@ -130,7 +130,7 @@ export default function (
                 valueSumLargerThanMinAngle += value;
             }
 
-            let endAngle = currentAngle + dir * angle;
+            const endAngle = currentAngle + dir * angle;
             data.setItemLayout(idx, {
                 angle: angle,
                 startAngle: currentAngle,
@@ -154,10 +154,10 @@ export default function (
             // Average the angle if rest angle is not enough after all angles is
             // Constrained by minAngle
             if (restAngle <= 1e-3) {
-                let angle = PI2 / validDataCount;
+                const angle = PI2 / validDataCount;
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
-                        let layout = data.getItemLayout(idx);
+                        const layout = data.getItemLayout(idx);
                         layout.angle = angle;
                         layout.startAngle = startAngle + dir * idx * angle;
                         layout.endAngle = startAngle + dir * (idx + 1) * angle;
@@ -169,8 +169,8 @@ export default function (
                 currentAngle = startAngle;
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
-                        let layout = data.getItemLayout(idx);
-                        let angle = layout.angle === minAngle
+                        const layout = data.getItemLayout(idx);
+                        const angle = layout.angle === minAngle
                             ? minAngle : value * unitRadian;
                         layout.startAngle = currentAngle;
                         layout.endAngle = currentAngle + dir * angle;

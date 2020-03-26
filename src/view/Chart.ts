@@ -118,7 +118,7 @@ class ChartView {
     __id: string;
 
     static protoInitialize = (function () {
-        let proto = ChartView.prototype;
+        const proto = ChartView.prototype;
         proto.type = 'chart';
     })();
 
@@ -205,9 +205,9 @@ function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
 }
 
 function toggleHighlight(data: List, payload: Payload, state: DisplayState) {
-    let dataIndex = modelUtil.queryDataIndex(data, payload);
+    const dataIndex = modelUtil.queryDataIndex(data, payload);
 
-    let highlightDigit = (payload && payload.highlightKey != null)
+    const highlightDigit = (payload && payload.highlightKey != null)
         ? graphicUtil.getHighlightDigit(payload.highlightKey)
         : null;
 
@@ -236,16 +236,16 @@ function renderTaskPlan(context: SeriesTaskContext): StageHandlerPlanReturn {
 }
 
 function renderTaskReset(context: SeriesTaskContext): TaskResetCallbackReturn<SeriesTaskContext> {
-    let seriesModel = context.model;
-    let ecModel = context.ecModel;
-    let api = context.api;
-    let payload = context.payload;
+    const seriesModel = context.model;
+    const ecModel = context.ecModel;
+    const api = context.api;
+    const payload = context.payload;
     // FIXME: remove updateView updateVisual
-    let progressiveRender = seriesModel.pipelineContext.progressiveRender;
-    let view = context.view;
+    const progressiveRender = seriesModel.pipelineContext.progressiveRender;
+    const view = context.view;
 
-    let updateMethod = payload && inner(payload).updateMethod;
-    let methodName: keyof ChartView = progressiveRender
+    const updateMethod = payload && inner(payload).updateMethod;
+    const methodName: keyof ChartView = progressiveRender
         ? 'incrementalPrepareRender'
         : (updateMethod && view[updateMethod])
         ? updateMethod

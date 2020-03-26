@@ -126,8 +126,8 @@ class BaseAxisPointer implements AxisPointer {
      * @implement
      */
     render(axisModel: AxisBaseModel, axisPointerModel: AxisPointerModel, api: ExtensionAPI, forceRender?: boolean) {
-        let value = axisPointerModel.get('value');
-        let status = axisPointerModel.get('status');
+        const value = axisPointerModel.get('value');
+        const status = axisPointerModel.get('status');
 
         // Bind them to `this`, not in closure, otherwise they will not
         // be replaced when user calling setOption in not merge mode.
@@ -148,7 +148,7 @@ class BaseAxisPointer implements AxisPointer {
         this._lastStatus = status;
 
         let group = this._group;
-        let handle = this._handle;
+        const handle = this._handle;
 
         if (!status || status === 'hide') {
             // Do not clear here, for animation better.
@@ -160,17 +160,17 @@ class BaseAxisPointer implements AxisPointer {
         handle && handle.show();
 
         // Otherwise status is 'show'
-        let elOption = {} as AxisPointerElementOptions;
+        const elOption = {} as AxisPointerElementOptions;
         this.makeElOption(elOption, value, axisModel, axisPointerModel, api);
 
         // Enable change axis pointer type.
-        let graphicKey = elOption.graphicKey;
+        const graphicKey = elOption.graphicKey;
         if (graphicKey !== this._lastGraphicKey) {
             this.clear(api);
         }
         this._lastGraphicKey = graphicKey;
 
-        let moveAnimation = this._moveAnimation =
+        const moveAnimation = this._moveAnimation =
             this.determineAnimation(axisModel, axisPointerModel);
 
         if (!group) {
@@ -180,7 +180,7 @@ class BaseAxisPointer implements AxisPointer {
             api.getZr().add(group);
         }
         else {
-            let doUpdateProps = zrUtil.curry(updateProps, axisPointerModel, moveAnimation);
+            const doUpdateProps = zrUtil.curry(updateProps, axisPointerModel, moveAnimation);
             this.updatePointerEl(group, elOption, doUpdateProps);
             this.updateLabelEl(group, elOption, doUpdateProps, axisPointerModel);
         }
@@ -208,10 +208,10 @@ class BaseAxisPointer implements AxisPointer {
      * @protected
      */
     determineAnimation(axisModel: AxisBaseModel, axisPointerModel: AxisPointerModel): boolean {
-        let animation = axisPointerModel.get('animation');
-        let axis = axisModel.axis;
-        let isCategoryAxis = axis.type === 'category';
-        let useSnap = axisPointerModel.get('snap');
+        const animation = axisPointerModel.get('animation');
+        const axis = axisModel.axis;
+        const isCategoryAxis = axis.type === 'category';
+        const useSnap = axisPointerModel.get('snap');
 
         // Value axis without snap always do not snap.
         if (!useSnap && !isCategoryAxis) {
@@ -219,7 +219,7 @@ class BaseAxisPointer implements AxisPointer {
         }
 
         if (animation === 'auto' || animation == null) {
-            let animationThreshold = this.animationThreshold;
+            const animationThreshold = this.animationThreshold;
             if (isCategoryAxis && axis.getBandWidth() > animationThreshold) {
                 return true;
             }
@@ -228,8 +228,8 @@ class BaseAxisPointer implements AxisPointer {
             // a dataZoom, animation will be disabled when too many points exist, while
             // it will be enabled for better visual effect when little points exist.
             if (useSnap) {
-                let seriesDataCount = axisPointerModelHelper.getAxisInfo(axisModel).seriesDataCount;
-                let axisExtent = axis.getExtent();
+                const seriesDataCount = axisPointerModelHelper.getAxisInfo(axisModel).seriesDataCount;
+                const axisExtent = axis.getExtent();
                 // Approximate band width
                 return Math.abs(axisExtent[0] - axisExtent[1]) / seriesDataCount > animationThreshold;
             }
@@ -263,9 +263,9 @@ class BaseAxisPointer implements AxisPointer {
         axisModel: AxisBaseModel,
         axisPointerModel: AxisPointerModel
     ) {
-        let pointerOption = elOption.pointer;
+        const pointerOption = elOption.pointer;
         if (pointerOption) {
-            let pointerEl = inner(group).pointerEl = new graphic[pointerOption.type](
+            const pointerEl = inner(group).pointerEl = new graphic[pointerOption.type](
                 clone(elOption.pointer)
             );
             group.add(pointerEl);
@@ -282,7 +282,7 @@ class BaseAxisPointer implements AxisPointer {
         axisPointerModel: AxisPointerModel
     ) {
         if (elOption.label) {
-            let labelEl = inner(group).labelEl = new graphic.Text(
+            const labelEl = inner(group).labelEl = new graphic.Text(
                 clone(elOption.label)
             );
 
@@ -299,7 +299,7 @@ class BaseAxisPointer implements AxisPointer {
         elOption: AxisPointerElementOptions,
         updateProps: (el: Element, props: PathProps) => void
     ) {
-        let pointerEl = inner(group).pointerEl;
+        const pointerEl = inner(group).pointerEl;
         if (pointerEl && elOption.pointer) {
             pointerEl.setStyle(elOption.pointer.style);
             updateProps(pointerEl, {shape: elOption.pointer.shape});
@@ -315,7 +315,7 @@ class BaseAxisPointer implements AxisPointer {
         updateProps: (el: Element, props: PathProps) => void,
         axisPointerModel: AxisPointerModel
     ) {
-        let labelEl = inner(group).labelEl;
+        const labelEl = inner(group).labelEl;
         if (labelEl) {
             labelEl.setStyle(elOption.label.style);
             updateProps(labelEl, {
@@ -338,12 +338,12 @@ class BaseAxisPointer implements AxisPointer {
             return;
         }
 
-        let axisPointerModel = this._axisPointerModel;
-        let zr = this._api.getZr();
+        const axisPointerModel = this._axisPointerModel;
+        const zr = this._api.getZr();
         let handle = this._handle;
-        let handleModel = axisPointerModel.getModel('handle');
+        const handleModel = axisPointerModel.getModel('handle');
 
-        let status = axisPointerModel.get('status');
+        const status = axisPointerModel.get('status');
         if (!handleModel.get('show') || !status || status === 'hide') {
             handle && zr.remove(handle);
             this._handle = null;
@@ -407,7 +407,7 @@ class BaseAxisPointer implements AxisPointer {
     }
 
     private _onHandleDragMove(dx: number, dy: number) {
-        let handle = this._handle;
+        const handle = this._handle;
         if (!handle) {
             return;
         }
@@ -415,7 +415,7 @@ class BaseAxisPointer implements AxisPointer {
         this._dragging = true;
 
         // Persistent for throttle.
-        let trans = this.updateHandleTransform(
+        const trans = this.updateHandleTransform(
             getHandleTransProps(handle),
             [dx, dy],
             this._axisModel,
@@ -434,13 +434,13 @@ class BaseAxisPointer implements AxisPointer {
      * Throttled method.
      */
     _doDispatchAxisPointer() {
-        let handle = this._handle;
+        const handle = this._handle;
         if (!handle) {
             return;
         }
 
-        let payloadInfo = this._payloadInfo;
-        let axisModel = this._axisModel;
+        const payloadInfo = this._payloadInfo;
+        const axisModel = this._axisModel;
         this._api.dispatchAction({
             type: 'updateAxisPointer',
             x: payloadInfo.cursorPoint[0],
@@ -455,12 +455,12 @@ class BaseAxisPointer implements AxisPointer {
 
     private _onHandleDragEnd() {
         this._dragging = false;
-        let handle = this._handle;
+        const handle = this._handle;
         if (!handle) {
             return;
         }
 
-        let value = this._axisPointerModel.get('value');
+        const value = this._axisPointerModel.get('value');
         // Consider snap or categroy axis, handle may be not consistent with
         // axisPointer. So move handle to align the exact value position when
         // drag ended.
@@ -480,9 +480,9 @@ class BaseAxisPointer implements AxisPointer {
         this._lastValue = null;
         this._lastStatus = null;
 
-        let zr = api.getZr();
-        let group = this._group;
-        let handle = this._handle;
+        const zr = api.getZr();
+        const group = this._group;
+        const handle = this._handle;
         if (zr && group) {
             this._lastGraphicKey = null;
             group && zr.remove(group);
@@ -559,8 +559,8 @@ function updateMandatoryProps(
     axisPointerModel: AxisPointerModel,
     silent?: boolean
 ) {
-    let z = axisPointerModel.get('z');
-    let zlevel = axisPointerModel.get('zlevel');
+    const z = axisPointerModel.get('z');
+    const zlevel = axisPointerModel.get('zlevel');
 
     group && group.traverse(function (el: Displayable) {
         if (el.type !== 'group') {

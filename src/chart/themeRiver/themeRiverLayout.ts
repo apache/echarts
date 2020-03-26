@@ -34,33 +34,33 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
     ecModel.eachSeriesByType('themeRiver', function (seriesModel: ThemeRiverSeriesModel) {
 
-        let data = seriesModel.getData();
+        const data = seriesModel.getData();
 
-        let single = seriesModel.coordinateSystem;
+        const single = seriesModel.coordinateSystem;
 
-        let layoutInfo = {} as ThemeRiverLayoutInfo;
+        const layoutInfo = {} as ThemeRiverLayoutInfo;
 
         // use the axis boundingRect for view
-        let rect = single.getRect();
+        const rect = single.getRect();
 
         layoutInfo.rect = rect;
 
-        let boundaryGap = seriesModel.get('boundaryGap');
+        const boundaryGap = seriesModel.get('boundaryGap');
 
-        let axis = single.getAxis();
+        const axis = single.getAxis();
 
         layoutInfo.boundaryGap = boundaryGap;
 
         if (axis.orient === 'horizontal') {
             boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], rect.height);
             boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], rect.height);
-            let height = rect.height - boundaryGap[0] - boundaryGap[1];
+            const height = rect.height - boundaryGap[0] - boundaryGap[1];
             themeRiverLayout(data, seriesModel, height);
         }
         else {
             boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], rect.width);
             boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], rect.width);
-            let width = rect.width - boundaryGap[0] - boundaryGap[1];
+            const width = rect.width - boundaryGap[0] - boundaryGap[1];
             themeRiverLayout(data, seriesModel, width);
         }
 
@@ -79,28 +79,28 @@ function themeRiverLayout(data: List<ThemeRiverSeriesModel>, seriesModel: ThemeR
     if (!data.count()) {
         return;
     }
-    let coordSys = seriesModel.coordinateSystem;
+    const coordSys = seriesModel.coordinateSystem;
     // the data in each layer are organized into a series.
-    let layerSeries = seriesModel.getLayerSeries();
+    const layerSeries = seriesModel.getLayerSeries();
 
     // the points in each layer.
-    let timeDim = data.mapDimension('single');
-    let valueDim = data.mapDimension('value');
-    let layerPoints = zrUtil.map(layerSeries, function (singleLayer) {
+    const timeDim = data.mapDimension('single');
+    const valueDim = data.mapDimension('value');
+    const layerPoints = zrUtil.map(layerSeries, function (singleLayer) {
         return zrUtil.map(singleLayer.indices, function (idx) {
-            let pt = coordSys.dataToPoint(data.get(timeDim, idx));
+            const pt = coordSys.dataToPoint(data.get(timeDim, idx));
             pt[1] = data.get(valueDim, idx) as number;
             return pt;
         });
     });
 
-    let base = computeBaseline(layerPoints);
-    let baseLine = base.y0;
-    let ky = height / base.max;
+    const base = computeBaseline(layerPoints);
+    const baseLine = base.y0;
+    const ky = height / base.max;
 
     // set layout information for each item.
-    let n = layerSeries.length;
-    let m = layerSeries[0].indices.length;
+    const n = layerSeries.length;
+    const m = layerSeries[0].indices.length;
     let baseY0;
     for (let j = 0; j < m; ++j) {
         baseY0 = baseLine[j] * ky;
@@ -129,10 +129,10 @@ function themeRiverLayout(data: List<ThemeRiverSeriesModel>, seriesModel: ThemeR
  * @param  data  the points in each layer
  */
 function computeBaseline(data: number[][][]) {
-    let layerNum = data.length;
-    let pointNum = data[0].length;
-    let sums = [];
-    let y0 = [];
+    const layerNum = data.length;
+    const pointNum = data[0].length;
+    const sums = [];
+    const y0 = [];
     let max = 0;
 
     for (let i = 0; i < pointNum; ++i) {
@@ -152,7 +152,7 @@ function computeBaseline(data: number[][][]) {
     max = 0;
 
     for (let l = 0; l < pointNum; ++l) {
-        let sum = sums[l] + y0[l];
+        const sum = sums[l] + y0[l];
         if (sum > max) {
             max = sum;
         }

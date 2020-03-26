@@ -60,18 +60,18 @@ class ToolboxView extends ComponentView {
             newTitle?: ToolboxFeatureOption['title']
         }
     ) {
-        let group = this.group;
+        const group = this.group;
         group.removeAll();
 
         if (!toolboxModel.get('show')) {
             return;
         }
 
-        let itemSize = +toolboxModel.get('itemSize');
-        let featureOpts = toolboxModel.get('feature') || {};
-        let features = this._features || (this._features = {});
+        const itemSize = +toolboxModel.get('itemSize');
+        const featureOpts = toolboxModel.get('feature') || {};
+        const features = this._features || (this._features = {});
 
-        let featureNames: string[] = [];
+        const featureNames: string[] = [];
         zrUtil.each(featureOpts, function (opt, name) {
             featureNames.push(name);
         });
@@ -86,10 +86,10 @@ class ToolboxView extends ComponentView {
         this._featureNames = featureNames;
 
         function processFeature(newIndex: number, oldIndex?: number) {
-            let featureName = featureNames[newIndex];
-            let oldName = featureNames[oldIndex];
-            let featureOpt = featureOpts[featureName];
-            let featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel) as ToolboxFeatureModel;
+            const featureName = featureNames[newIndex];
+            const oldName = featureNames[oldIndex];
+            const featureOpt = featureOpts[featureName];
+            const featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel) as ToolboxFeatureModel;
             let feature: ToolboxFeature | UserDefinedToolboxFeature;
 
             // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
@@ -105,7 +105,7 @@ class ToolboxView extends ComponentView {
                     } as UserDefinedToolboxFeature;
                 }
                 else {
-                    let Feature = getFeature(featureName);
+                    const Feature = getFeature(featureName);
                     if (!Feature) {
                         return;
                     }
@@ -139,8 +139,8 @@ class ToolboxView extends ComponentView {
             createIconPaths(featureModel, feature, featureName);
 
             featureModel.setIconStatus = function (this: ToolboxFeatureModel, iconName: string, status: DisplayState) {
-                let option = this.option;
-                let iconPaths = this.iconPaths;
+                const option = this.option;
+                const iconPaths = this.iconPaths;
                 option.iconStatus = option.iconStatus || {};
                 option.iconStatus[iconName] = status;
                 // FIXME
@@ -159,8 +159,8 @@ class ToolboxView extends ComponentView {
             feature: ToolboxFeature | UserDefinedToolboxFeature,
             featureName: string
         ) {
-            let iconStyleModel = featureModel.getModel('iconStyle');
-            let iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']);
+            const iconStyleModel = featureModel.getModel('iconStyle');
+            const iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']);
 
             // If one feature has mutiple icon. they are orginaized as
             // {
@@ -173,9 +173,9 @@ class ToolboxView extends ComponentView {
             //         bar: ''
             //     }
             // }
-            let icons = (feature instanceof ToolboxFeature && feature.getIcons)
+            const icons = (feature instanceof ToolboxFeature && feature.getIcons)
                 ? feature.getIcons() : featureModel.get('icon');
-            let titles = featureModel.get('title') || {};
+            const titles = featureModel.get('title') || {};
             let iconsMap: Dictionary<string>;
             let titlesMap: Dictionary<string>;
             if (typeof icons === 'string') {
@@ -192,9 +192,9 @@ class ToolboxView extends ComponentView {
             else {
                 titlesMap = titles;
             }
-            let iconPaths: ToolboxFeatureModel['iconPaths'] = featureModel.iconPaths = {};
+            const iconPaths: ToolboxFeatureModel['iconPaths'] = featureModel.iconPaths = {};
             zrUtil.each(iconsMap, function (iconStr, iconName) {
-                let path = graphic.createIcon(
+                const path = graphic.createIcon(
                     iconStr,
                     {},
                     {
@@ -222,7 +222,7 @@ class ToolboxView extends ComponentView {
                 });
                 path.setTextContent(textContent);
 
-                let tooltipModel = toolboxModel.getModel('tooltip');
+                const tooltipModel = toolboxModel.getModel('tooltip');
                 if (tooltipModel && tooltipModel.get('show')) {
                     (path as ECElement).tooltip = zrUtil.extend({
                         content: titlesMap[iconName],
@@ -246,8 +246,8 @@ class ToolboxView extends ComponentView {
                     (path as ExtendedPath).__title = titlesMap[iconName];
                     (path as graphic.Path).on('mouseover', function () {
                         // Should not reuse above hoverStyle, which might be modified.
-                        let hoverStyle = iconStyleEmphasisModel.getItemStyle();
-                        let defaultTextPosition = toolboxModel.get('orient') === 'vertical'
+                        const hoverStyle = iconStyleEmphasisModel.getItemStyle();
+                        const defaultTextPosition = toolboxModel.get('orient') === 'vertical'
                             ? (toolboxModel.get('right') == null ? 'right' as const : 'left' as const)
                             : (toolboxModel.get('bottom') == null ? 'bottom' as const : 'top' as const);
                         textContent.setStyle({
@@ -293,18 +293,18 @@ class ToolboxView extends ComponentView {
             // May be background element
             if (emphasisTextState && titleText) {
                 const emphasisTextStyle = emphasisTextState.style || (emphasisTextState.style = {});
-                let rect = textContain.getBoundingRect(
+                const rect = textContain.getBoundingRect(
                     titleText, RichText.makeFont(emphasisTextStyle)
                 );
-                let offsetX = icon.position[0] + group.position[0];
-                let offsetY = icon.position[1] + group.position[1] + itemSize;
+                const offsetX = icon.position[0] + group.position[0];
+                const offsetY = icon.position[1] + group.position[1] + itemSize;
 
                 let needPutOnTop = false;
                 if (offsetY + rect.height > api.getHeight()) {
                     emphasisTextConfig.position = 'top';
                     needPutOnTop = true;
                 }
-                let topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
+                const topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
                 if (offsetX + rect.width / 2 > api.getWidth()) {
                     emphasisTextConfig.position = ['100%', topOffset];
                     emphasisTextStyle.align = 'right';

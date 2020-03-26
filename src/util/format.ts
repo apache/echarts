@@ -46,7 +46,7 @@ export function toCamelCase(str: string, upperCaseFirst?: boolean): string {
     return str;
 }
 
-export let normalizeCssArray = zrUtil.normalizeCssArray;
+export const normalizeCssArray = zrUtil.normalizeCssArray;
 
 
 const replaceReg = /([&<>"'])/g;
@@ -88,19 +88,19 @@ export function formatTpl(
     if (!zrUtil.isArray(paramsList)) {
         paramsList = [paramsList];
     }
-    let seriesLen = paramsList.length;
+    const seriesLen = paramsList.length;
     if (!seriesLen) {
         return '';
     }
 
-    let $vars = paramsList[0].$vars || [];
+    const $vars = paramsList[0].$vars || [];
     for (let i = 0; i < $vars.length; i++) {
-        let alias = TPL_VAR_ALIAS[i];
+        const alias = TPL_VAR_ALIAS[i];
         tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
     }
     for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
         for (let k = 0; k < $vars.length; k++) {
-            let val = paramsList[seriesIdx][$vars[k]];
+            const val = paramsList[seriesIdx][$vars[k]];
             tpl = tpl.replace(
                 wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
                 encode ? encodeHTML(val) : val
@@ -147,15 +147,15 @@ interface GetTooltipMarkerOpt {
 export function getTooltipMarker(color: ColorString, extraCssText?: string): TooltipMarker;
 export function getTooltipMarker(opt: GetTooltipMarkerOpt): TooltipMarker;
 export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extraCssText?: string): TooltipMarker {
-    let opt = zrUtil.isString(inOpt) ? {
+    const opt = zrUtil.isString(inOpt) ? {
         color: inOpt,
         extraCssText: extraCssText
     } : (inOpt || {}) as GetTooltipMarkerOpt;
-    let color = opt.color;
-    let type = opt.type;
+    const color = opt.color;
+    const type = opt.type;
     extraCssText = opt.extraCssText;
-    let renderMode = opt.renderMode || 'html';
-    let markerId = opt.markerId || 'X';
+    const renderMode = opt.renderMode || 'html';
+    const markerId = opt.markerId || 'X';
 
     if (!color) {
         return '';
@@ -208,15 +208,15 @@ export function formatTime(tpl: string, value: number | string | Date, isUTC?: b
         tpl = 'MM-dd\nyyyy';
     }
 
-    let date = numberUtil.parseDate(value);
-    let utc = isUTC ? 'UTC' : '';
-    let y = (date as any)['get' + utc + 'FullYear']();
-    let M = (date as any)['get' + utc + 'Month']() + 1;
-    let d = (date as any)['get' + utc + 'Date']();
-    let h = (date as any)['get' + utc + 'Hours']();
-    let m = (date as any)['get' + utc + 'Minutes']();
-    let s = (date as any)['get' + utc + 'Seconds']();
-    let S = (date as any)['get' + utc + 'Milliseconds']();
+    const date = numberUtil.parseDate(value);
+    const utc = isUTC ? 'UTC' : '';
+    const y = (date as any)['get' + utc + 'FullYear']();
+    const M = (date as any)['get' + utc + 'Month']() + 1;
+    const d = (date as any)['get' + utc + 'Date']();
+    const h = (date as any)['get' + utc + 'Hours']();
+    const m = (date as any)['get' + utc + 'Minutes']();
+    const s = (date as any)['get' + utc + 'Seconds']();
+    const S = (date as any)['get' + utc + 'Milliseconds']();
 
     tpl = tpl.replace('MM', pad(M, 2))
         .replace('M', M)

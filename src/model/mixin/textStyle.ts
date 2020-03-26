@@ -37,7 +37,7 @@ class TextStyleMixin {
      */
     // TODO Callback
     getTextColor(this: Model, isEmphasis?: boolean): ColorString {
-        let ecModel = this.ecModel;
+        const ecModel = this.ecModel;
         return this.getShallow('color')
             || (
                 (!isEmphasis && ecModel) ? ecModel.get(PATH_COLOR) : null

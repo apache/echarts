@@ -73,7 +73,7 @@ echarts.registerLayout(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
 
 export function layoutCovers(ecModel: GlobalModel): void {
     ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
-        let brushTargetManager = brushModel.brushTargetManager = new BrushTargetManager(brushModel.option, ecModel);
+        const brushTargetManager = brushModel.brushTargetManager = new BrushTargetManager(brushModel.option, ecModel);
         brushTargetManager.setInputRanges(brushModel.areas, ecModel);
     });
 }
@@ -83,13 +83,13 @@ export function layoutCovers(ecModel: GlobalModel): void {
  */
 echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
 
-    let brushSelected: BrushSelectedItem[] = [];
+    const brushSelected: BrushSelectedItem[] = [];
     let throttleType;
     let throttleDelay;
 
     ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel, brushIndex) {
 
-        let thisBrushSelected: BrushSelectedItem = {
+        const thisBrushSelected: BrushSelectedItem = {
             brushId: brushModel.id,
             brushIndex: brushIndex,
             brushName: brushModel.name,
@@ -100,11 +100,11 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
         // for user to find by index.
         brushSelected.push(thisBrushSelected);
 
-        let brushOption = brushModel.option;
-        let brushLink = brushOption.brushLink;
-        let linkedSeriesMap: {[seriesIndex: number]: 0 | 1} = [];
-        let selectedDataIndexForLink: {[dataIndex: number]: 0 | 1} = [];
-        let rangeInfoBySeries: {[seriesIndex: number]: BrushSelectableArea[]} = [];
+        const brushOption = brushModel.option;
+        const brushLink = brushOption.brushLink;
+        const linkedSeriesMap: {[seriesIndex: number]: 0 | 1} = [];
+        const selectedDataIndexForLink: {[dataIndex: number]: 0 | 1} = [];
+        const rangeInfoBySeries: {[seriesIndex: number]: BrushSelectableArea[]} = [];
         let hasBrushExists = false;
 
         if (!brushIndex) { // Only the first throttle setting works.
@@ -113,9 +113,9 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
         }
 
         // Add boundingRect and selectors to range.
-        let areas: BrushSelectableArea[] = zrUtil.map(brushModel.areas, function (area) {
-            let builder = boundingRectBuilders[area.brushType];
-            let selectableArea = zrUtil.defaults(
+        const areas: BrushSelectableArea[] = zrUtil.map(brushModel.areas, function (area) {
+            const builder = boundingRectBuilders[area.brushType];
+            const selectableArea = zrUtil.defaults(
                 {boundingRect: builder ? builder(area) : void 0},
                 area
             ) as BrushSelectableArea;
@@ -123,7 +123,7 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
             return selectableArea;
         });
 
-        let visualMappings = visualSolution.createVisualMappings(
+        const visualMappings = visualSolution.createVisualMappings(
             brushModel.option, STATE_LIST, function (mappingOption) {
                 mappingOption.mappingMethod = 'fixed';
             }
@@ -158,7 +158,7 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
 
         // Step A
         ecModel.eachSeries(function (seriesModel, seriesIndex) {
-            let rangeInfoList: BrushSelectableArea[] = rangeInfoBySeries[seriesIndex] = [];
+            const rangeInfoList: BrushSelectableArea[] = rangeInfoBySeries[seriesIndex] = [];
 
             seriesModel.subType === 'parallel'
                 ? stepAParallel(seriesModel as ParallelSeriesModel, seriesIndex)
@@ -166,7 +166,7 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
         });
 
         function stepAParallel(seriesModel: ParallelSeriesModel, seriesIndex: number): void {
-            let coordSys = seriesModel.coordinateSystem;
+            const coordSys = seriesModel.coordinateSystem;
             hasBrushExists = hasBrushExists || coordSys.hasAxisBrushed();
 
             linkOthers(seriesIndex) && coordSys.eachActiveState(
@@ -192,7 +192,7 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
             });
 
             if (linkOthers(seriesIndex) && brushed(rangeInfoList)) {
-                let data = seriesModel.getData();
+                const data = seriesModel.getData();
                 data.each(function (dataIndex) {
                     if (checkInRange(seriesModel, rangeInfoList, data, dataIndex)) {
                         selectedDataIndexForLink[dataIndex] = 1;
@@ -203,7 +203,7 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
 
         // Step B
         ecModel.eachSeries(function (seriesModel, seriesIndex) {
-            let seriesBrushSelected: BrushSelectedItem['selected'][0] = {
+            const seriesBrushSelected: BrushSelectedItem['selected'][0] = {
                 seriesId: seriesModel.id,
                 seriesIndex: seriesIndex,
                 seriesName: seriesModel.name,
@@ -213,10 +213,10 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
             // for user to find series by seriesIndex.
             thisBrushSelected.selected.push(seriesBrushSelected);
 
-            let rangeInfoList = rangeInfoBySeries[seriesIndex];
+            const rangeInfoList = rangeInfoBySeries[seriesIndex];
 
-            let data = seriesModel.getData();
-            let getValueState = linkOthers(seriesIndex)
+            const data = seriesModel.getData();
+            const getValueState = linkOthers(seriesIndex)
                 ? function (dataIndex: number): BrushVisualState {
                     return selectedDataIndexForLink[dataIndex]
                         ? (seriesBrushSelected.dataIndex.push(data.getRawIndex(dataIndex)), 'inBrush')
@@ -259,7 +259,7 @@ function dispatchAction(
         return;
     }
 
-    let zr = api.getZr() as BrushGlobalDispatcher;
+    const zr = api.getZr() as BrushGlobalDispatcher;
     if (zr[DISPATCH_FLAG]) {
         return;
     }
@@ -268,14 +268,14 @@ function dispatchAction(
         zr[DISPATCH_METHOD] = doDispatch;
     }
 
-    let fn = throttleUtil.createOrUpdate(zr, DISPATCH_METHOD, throttleDelay, throttleType);
+    const fn = throttleUtil.createOrUpdate(zr, DISPATCH_METHOD, throttleDelay, throttleType);
 
     fn(api, brushSelected);
 }
 
 function doDispatch(api: ExtensionAPI, brushSelected: BrushSelectedItem[]): void {
     if (!api.isDisposed()) {
-        let zr = api.getZr() as BrushGlobalDispatcher;
+        const zr = api.getZr() as BrushGlobalDispatcher;
         zr[DISPATCH_FLAG] = true;
         api.dispatchAction({
             type: 'brushSelect',
@@ -292,7 +292,7 @@ function checkInRange(
     dataIndex: number
 ) {
     for (let i = 0, len = rangeInfoList.length; i < len; i++) {
-        let area = rangeInfoList[i];
+        const area = rangeInfoList[i];
         if (seriesModel.brushSelector(
             dataIndex, data, area.selectors, area
         )) {
@@ -302,7 +302,7 @@ function checkInRange(
 }
 
 function brushModelNotControll(brushModel: BrushModel, seriesIndex: number): boolean {
-    let seriesIndices = brushModel.option.seriesIndex;
+    const seriesIndices = brushModel.option.seriesIndex;
     return seriesIndices != null
         && seriesIndices !== 'all'
         && (
@@ -321,11 +321,11 @@ const boundingRectBuilders: Partial<Record<BrushType, AreaBoundingRectBuilder>> 
 
     polygon: function (area) {
         let minMax;
-        let range = area.range as BrushDimensionMinMax[];
+        const range = area.range as BrushDimensionMinMax[];
 
         for (let i = 0, len = range.length; i < len; i++) {
             minMax = minMax || [[Infinity, -Infinity], [Infinity, -Infinity]];
-            let rg = range[i];
+            const rg = range[i];
             rg[0] < minMax[0][0] && (minMax[0][0] = rg[0]);
             rg[0] > minMax[0][1] && (minMax[0][1] = rg[0]);
             rg[1] < minMax[1][0] && (minMax[1][0] = rg[1]);

@@ -44,7 +44,7 @@ function getIsInPiecewiseRange(
     pieceList: ReturnType<PiecewiseModel['getPieceList']>,
     selected: Dictionary<boolean>
 ) {
-    let dataSpan = dataExtent[1] - dataExtent[0];
+    const dataSpan = dataExtent[1] - dataExtent[0];
     pieceList = zrUtil.map(pieceList, function (piece) {
         return {
             interval: [
@@ -53,14 +53,14 @@ function getIsInPiecewiseRange(
             ]
         };
     });
-    let len = pieceList.length;
+    const len = pieceList.length;
     let lastIndex = 0;
 
     return function (val: number) {
         let i;
         // Try to find in the location of the last found
         for (i = lastIndex; i < len; i++) {
-            let interval = pieceList[i].interval;
+            const interval = pieceList[i].interval;
             if (interval[0] <= val && val <= interval[1]) {
                 lastIndex = i;
                 break;
@@ -68,7 +68,7 @@ function getIsInPiecewiseRange(
         }
         if (i === len) { // Not found, back interation
             for (i = lastIndex - 1; i >= 0; i--) {
-                let interval = pieceList[i].interval;
+                const interval = pieceList[i].interval;
                 if (interval[0] <= val && val <= interval[1]) {
                     lastIndex = i;
                     break;
@@ -80,7 +80,7 @@ function getIsInPiecewiseRange(
 }
 
 function getIsInContinuousRange(dataExtent: number[], range: number[]) {
-    let dataSpan = dataExtent[1] - dataExtent[0];
+    const dataSpan = dataExtent[1] - dataExtent[0];
     range = [
         (range[0] - dataExtent[0]) / dataSpan,
         (range[1] - dataExtent[0]) / dataSpan
@@ -91,7 +91,7 @@ function getIsInContinuousRange(dataExtent: number[], range: number[]) {
 }
 
 function isGeoCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys {
-    let dimensions = coordSys.dimensions;
+    const dimensions = coordSys.dimensions;
     // Not use coorSys.type === 'geo' because coordSys maybe extended
     return dimensions[0] === 'lng' && dimensions[1] === 'lat';
 }
@@ -125,7 +125,7 @@ class HeatmapView extends ChartView {
 
         this._incrementalDisplayable = null;
 
-        let coordSys = seriesModel.coordinateSystem;
+        const coordSys = seriesModel.coordinateSystem;
         if (coordSys.type === 'cartesian2d' || coordSys.type === 'calendar') {
             this._renderOnCartesianAndCalendar(seriesModel, api, 0, seriesModel.getData().count());
         }
@@ -146,7 +146,7 @@ class HeatmapView extends ChartView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        let coordSys = seriesModel.coordinateSystem;
+        const coordSys = seriesModel.coordinateSystem;
         if (coordSys) {
             this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
         }
@@ -160,13 +160,13 @@ class HeatmapView extends ChartView {
         incremental?: boolean
     ) {
 
-        let coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
+        const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
         let width;
         let height;
 
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-            let xAxis = coordSys.getAxis('x');
-            let yAxis = coordSys.getAxis('y');
+            const xAxis = coordSys.getAxis('x');
+            const yAxis = coordSys.getAxis('y');
 
             if (__DEV__) {
                 if (!(xAxis.type === 'category' && yAxis.type === 'category')) {
@@ -181,15 +181,15 @@ class HeatmapView extends ChartView {
             height = yAxis.getBandWidth();
         }
 
-        let group = this.group;
-        let data = seriesModel.getData();
+        const group = this.group;
+        const data = seriesModel.getData();
 
         let style = seriesModel.getModel('itemStyle').getItemStyle(['color']);
         let hoverStl = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
         let labelModel = seriesModel.getModel('label');
         let hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
 
-        let dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
+        const dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
             ? [
                 data.mapDimension('x'),
                 data.mapDimension('y'),
@@ -209,7 +209,7 @@ class HeatmapView extends ChartView {
                     continue;
                 }
 
-                let point = coordSys.dataToPoint([
+                const point = coordSys.dataToPoint([
                     data.get(dataDims[0], idx),
                     data.get(dataDims[1], idx)
                 ]);
@@ -243,7 +243,7 @@ class HeatmapView extends ChartView {
                 });
             }
 
-            let itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
+            const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
 
             // Optimization for large datset
             if (data.hasItemOption) {
@@ -253,7 +253,7 @@ class HeatmapView extends ChartView {
                 hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
             }
 
-            let rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
+            const rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
             let defaultText = '-';
             if (rawValue && rawValue[2] != null) {
                 defaultText = rawValue[2] + '';
@@ -289,47 +289,47 @@ class HeatmapView extends ChartView {
         visualMapModel: VisualMapModel,
         api: ExtensionAPI
     ) {
-        let inRangeVisuals = visualMapModel.targetVisuals.inRange;
-        let outOfRangeVisuals = visualMapModel.targetVisuals.outOfRange;
+        const inRangeVisuals = visualMapModel.targetVisuals.inRange;
+        const outOfRangeVisuals = visualMapModel.targetVisuals.outOfRange;
         // if (!visualMapping) {
         //     throw new Error('Data range must have color visuals');
         // }
 
-        let data = seriesModel.getData();
-        let hmLayer = this._hmLayer || (this._hmLayer || new HeatmapLayer());
+        const data = seriesModel.getData();
+        const hmLayer = this._hmLayer || (this._hmLayer || new HeatmapLayer());
         hmLayer.blurSize = seriesModel.get('blurSize');
         hmLayer.pointSize = seriesModel.get('pointSize');
         hmLayer.minOpacity = seriesModel.get('minOpacity');
         hmLayer.maxOpacity = seriesModel.get('maxOpacity');
 
-        let rect = geo.getViewRect().clone();
-        let roamTransform = geo.getRoamTransform();
+        const rect = geo.getViewRect().clone();
+        const roamTransform = geo.getRoamTransform();
         rect.applyTransform(roamTransform);
 
         // Clamp on viewport
-        let x = Math.max(rect.x, 0);
-        let y = Math.max(rect.y, 0);
-        let x2 = Math.min(rect.width + rect.x, api.getWidth());
-        let y2 = Math.min(rect.height + rect.y, api.getHeight());
-        let width = x2 - x;
-        let height = y2 - y;
+        const x = Math.max(rect.x, 0);
+        const y = Math.max(rect.y, 0);
+        const x2 = Math.min(rect.width + rect.x, api.getWidth());
+        const y2 = Math.min(rect.height + rect.y, api.getHeight());
+        const width = x2 - x;
+        const height = y2 - y;
 
-        let dims = [
+        const dims = [
             data.mapDimension('lng'),
             data.mapDimension('lat'),
             data.mapDimension('value')
         ];
 
-        let points = data.mapArray(dims, function (lng: number, lat: number, value: number) {
-            let pt = geo.dataToPoint([lng, lat]);
+        const points = data.mapArray(dims, function (lng: number, lat: number, value: number) {
+            const pt = geo.dataToPoint([lng, lat]);
             pt[0] -= x;
             pt[1] -= y;
             pt.push(value);
             return pt;
         });
 
-        let dataExtent = visualMapModel.getExtent();
-        let isInRange = visualMapModel.type === 'visualMap.continuous'
+        const dataExtent = visualMapModel.getExtent();
+        const isInRange = visualMapModel.type === 'visualMap.continuous'
             ? getIsInContinuousRange(dataExtent, (visualMapModel as ContinuousModel).option.range)
             : getIsInPiecewiseRange(
                 dataExtent,
@@ -346,7 +346,7 @@ class HeatmapView extends ChartView {
             },
             isInRange
         );
-        let img = new graphic.Image({
+        const img = new graphic.Image({
             style: {
                 width: width,
                 height: height,

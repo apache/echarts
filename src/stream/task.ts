@@ -136,14 +136,14 @@ export class Task<Ctx extends TaskContext> {
      * @return whether unfinished.
      */
     perform(performArgs?: PerformArgs): boolean {
-        let upTask = this._upstream;
-        let skip = performArgs && performArgs.skip;
+        const upTask = this._upstream;
+        const skip = performArgs && performArgs.skip;
 
         // TODO some refactor.
         // Pull data. Must pull data each time, because context.data
         // may be updated by Series.setData.
         if (this._dirty && upTask) {
-            let context = this.context;
+            const context = this.context;
             context.data = context.outputData = upTask.context.outputData;
         }
 
@@ -158,10 +158,10 @@ export class Task<Ctx extends TaskContext> {
 
         // Support sharding by mod, which changes the render sequence and makes the rendered graphic
         // elements uniformed distributed when progress, especially when moving or zooming.
-        let lastModBy = normalizeModBy(this._modBy);
-        let lastModDataCount = this._modDataCount || 0;
-        let modBy = normalizeModBy(performArgs && performArgs.modBy);
-        let modDataCount = performArgs && performArgs.modDataCount || 0;
+        const lastModBy = normalizeModBy(this._modBy);
+        const lastModDataCount = this._modDataCount || 0;
+        const modBy = normalizeModBy(performArgs && performArgs.modBy);
+        const modDataCount = performArgs && performArgs.modDataCount || 0;
         if (lastModBy !== modBy || lastModDataCount !== modDataCount) {
             planResult = 'reset';
         }
@@ -180,7 +180,7 @@ export class Task<Ctx extends TaskContext> {
         this._modBy = modBy;
         this._modDataCount = modDataCount;
 
-        let step = performArgs && performArgs.step;
+        const step = performArgs && performArgs.step;
 
         if (upTask) {
 
@@ -200,14 +200,14 @@ export class Task<Ctx extends TaskContext> {
         // Note: Stubs, that its host overall task let it has progress, has progress.
         // If no progress, pass index from upstream to downstream each time plan called.
         if (this._progress) {
-            let start = this._dueIndex;
-            let end = Math.min(
+            const start = this._dueIndex;
+            const end = Math.min(
                 step != null ? this._dueIndex + step : Infinity,
                 this._dueEnd
             );
 
             if (!skip && (forceFirstProgress || start < end)) {
-                let progress = this._progress;
+                const progress = this._progress;
                 if (isArray(progress)) {
                     for (let i = 0; i < progress.length; i++) {
                         this._doProgress(progress[i], start, end, modBy, modDataCount);
@@ -221,7 +221,7 @@ export class Task<Ctx extends TaskContext> {
             this._dueIndex = end;
             // If no `outputDueEnd`, assume that output data and
             // input data is the same, so use `dueIndex` as `outputDueEnd`.
-            let outputDueEnd = this._settedOutputEnd != null
+            const outputDueEnd = this._settedOutputEnd != null
                 ? this._settedOutputEnd : end;
 
             if (__DEV__) {
@@ -283,7 +283,7 @@ export class Task<Ctx extends TaskContext> {
         this._progress = progress as TaskProgressCallback<Ctx>;
         this._modBy = this._modDataCount = null;
 
-        let downstream = this._downstream;
+        const downstream = this._downstream;
         downstream && downstream.dirty();
 
         return forceFirstProgress;
@@ -349,7 +349,7 @@ const iterator: TaskDataIterator = (function () {
     let modDataCount: number;
     let winCount: number;
 
-    let it: TaskDataIterator = {
+    const it: TaskDataIterator = {
         reset: function (s: number, e: number, sStep: number, sCount: number): void {
             current = s;
             end = e;
@@ -369,8 +369,8 @@ const iterator: TaskDataIterator = (function () {
     }
 
     function modNext(): number {
-        let dataIndex = (current % winCount) * modBy + Math.ceil(current / winCount);
-        let result = current >= end
+        const dataIndex = (current % winCount) * modBy + Math.ceil(current / winCount);
+        const result = current >= end
             ? null
             : dataIndex < modDataCount
             ? dataIndex

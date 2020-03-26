@@ -203,7 +203,7 @@ export function makePath(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ): SVGPath {
-    let path = pathTool.createFromString(pathData, opts);
+    const path = pathTool.createFromString(pathData, opts);
     if (rect) {
         if (layout === 'center') {
             rect = centerGraphic(rect, path.getBoundingRect());
@@ -225,7 +225,7 @@ export function makeImage(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ) {
-    let path = new ZImage({
+    const path = new ZImage({
         style: {
             image: imageUrl,
             x: rect.x,
@@ -235,7 +235,7 @@ export function makeImage(
         },
         onload(img) {
             if (layout === 'center') {
-                let boundingRect = {
+                const boundingRect = {
                     width: img.width,
                     height: img.height
                 };
@@ -258,7 +258,7 @@ function centerGraphic(rect: ZRRectLike, boundingRect: {
     height: number
 }): ZRRectLike {
     // Set rect to center, keep width / height ratio.
-    let aspect = boundingRect.width / boundingRect.height;
+    const aspect = boundingRect.width / boundingRect.height;
     let width = rect.height * aspect;
     let height;
     if (width <= rect.width) {
@@ -268,8 +268,8 @@ function centerGraphic(rect: ZRRectLike, boundingRect: {
         width = rect.width;
         height = width / aspect;
     }
-    let cx = rect.x + rect.width / 2;
-    let cy = rect.y + rect.height / 2;
+    const cx = rect.x + rect.width / 2;
+    const cy = rect.y + rect.height / 2;
 
     return {
         x: cx - width / 2,
@@ -279,7 +279,7 @@ function centerGraphic(rect: ZRRectLike, boundingRect: {
     };
 }
 
-export let mergePath = pathTool.mergePath;
+export const mergePath = pathTool.mergePath;
 
 /**
  * Resize a path to fit the rect
@@ -291,9 +291,9 @@ export function resizePath(path: SVGPath, rect: ZRRectLike): void {
         return;
     }
 
-    let pathRect = path.getBoundingRect();
+    const pathRect = path.getBoundingRect();
 
-    let m = pathRect.calculateTransform(rect);
+    const m = pathRect.calculateTransform(rect);
 
     path.applyTransform(m);
 }
@@ -336,7 +336,7 @@ export function subPixelOptimizeRect(param: {
  * @param positiveOrNegative Default false (negative).
  * @return Optimized position.
  */
-export let subPixelOptimize = subPixelOptimizeUtil.subPixelOptimize;
+export const subPixelOptimize = subPixelOptimizeUtil.subPixelOptimize;
 
 
 function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) {
@@ -526,7 +526,7 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.
     if (!disable || extendedEl.__highDownDispatcher) {
-        let method: 'on' | 'off' = disable ? 'off' : 'on';
+        const method: 'on' | 'off' = disable ? 'off' : 'on';
 
         // Duplicated function will be auto-ignored, see Eventful.js.
         el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
@@ -620,8 +620,8 @@ export function setLabelStyle<LDI>(
             baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
         }
     }
-    let normalStyleText = showNormal ? baseText : null;
-    let emphasisStyleText = showEmphasis
+    const normalStyleText = showNormal ? baseText : null;
+    const emphasisStyleText = showEmphasis
         ? retrieve2(
             labelFetcher
                 ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
@@ -799,8 +799,8 @@ function setTextStyleCommon(
     // Consider there will be abnormal when merge hover style to normal style if given default value.
     opt = opt || EMPTY_OBJ;
 
-    let ecModel = textStyleModel.ecModel;
-    let globalTextStyle = ecModel && ecModel.option.textStyle;
+    const ecModel = textStyleModel.ecModel;
+    const globalTextStyle = ecModel && ecModel.option.textStyle;
 
     // Consider case:
     // {
@@ -816,14 +816,14 @@ function setTextStyleCommon(
     //         a: { ... }
     //     }
     // }
-    let richItemNames = getRichItemNames(textStyleModel);
+    const richItemNames = getRichItemNames(textStyleModel);
     let richResult: RichTextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
-        for (let name in richItemNames) {
+        for (const name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
-                let richTextStyle = textStyleModel.getModel(['rich', name]);
+                const richTextStyle = textStyleModel.getModel(['rich', name]);
                 // In rich, never `disableBox`.
                 // FIXME: consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
@@ -869,7 +869,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
     // Use object to remove duplicated names.
     let richItemNameMap: Dictionary<number>;
     while (textStyleModel && textStyleModel !== textStyleModel.ecModel) {
-        let rich = (textStyleModel.option || EMPTY_OBJ as LabelOption).rich;
+        const rich = (textStyleModel.option || EMPTY_OBJ as LabelOption).rich;
         if (rich) {
             richItemNameMap = richItemNameMap || {};
             const richKeys = keys(rich);
@@ -990,7 +990,7 @@ function setTokenTextStyle(
 }
 
 export function getFont(opt: LabelOption, ecModel: GlobalModel) {
-    let gTextStyleModel = ecModel && ecModel.getModel('textStyle');
+    const gTextStyleModel = ecModel && ecModel.getModel('textStyle');
     return trim([
         // FIXME in node-canvas fontWeight is before fontStyle
         opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',
@@ -1017,13 +1017,13 @@ function animateOrSetProps<Props>(
     // Do not check 'animation' property directly here. Consider this case:
     // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
     // but its parent model (`seriesModel`) does.
-    let animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
+    const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
     if (animationEnabled) {
         let duration = animatableModel.getShallow(
             isUpdate ? 'animationDurationUpdate' : 'animationDuration'
         );
-        let animationEasing = animatableModel.getShallow(
+        const animationEasing = animatableModel.getShallow(
             isUpdate ? 'animationEasingUpdate' : 'animationEasing'
         );
         let animationDelay = animatableModel.getShallow(
@@ -1113,7 +1113,7 @@ export function initProps<Props>(
  * @param [ancestor]
  */
 export function getTransform(target: Transformable, ancestor?: Transformable): matrix.MatrixArray {
-    let mat = matrix.identity([]);
+    const mat = matrix.identity([]);
 
     while (target && target !== ancestor) {
         matrix.mul(mat, target.getLocalTransform(), mat);
@@ -1160,9 +1160,9 @@ export function transformDirection(
 ): 'left' | 'right' | 'top' | 'bottom' {
 
     // Pick a base, ensure that transform result will not be (0, 0).
-    let hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
+    const hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
         ? 1 : Math.abs(2 * transform[4] / transform[0]);
-    let vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
+    const vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
         ? 1 : Math.abs(2 * transform[4] / transform[2]);
 
     let vertex: vector.VectorArray = [
@@ -1197,7 +1197,7 @@ export function groupTransition(
     }
 
     function getElMap(g: Group) {
-        let elMap: Dictionary<Displayable> = {};
+        const elMap: Dictionary<Displayable> = {};
         g.traverse(function (el: Element) {
             if (isNotGroup(el) && el.anid) {
                 elMap[el.anid] = el;
@@ -1206,7 +1206,7 @@ export function groupTransition(
         return elMap;
     }
     function getAnimatableProps(el: Displayable) {
-        let obj: PathProps = {
+        const obj: PathProps = {
             position: vector.clone(el.position),
             rotation: el.rotation
         };
@@ -1215,13 +1215,13 @@ export function groupTransition(
         }
         return obj;
     }
-    let elMap1 = getElMap(g1);
+    const elMap1 = getElMap(g1);
 
     g2.traverse(function (el) {
         if (isNotGroup(el) && el.anid) {
-            let oldEl = elMap1[el.anid];
+            const oldEl = elMap1[el.anid];
             if (oldEl) {
-                let newProp = getAnimatableProps(el);
+                const newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
                 updateProps(el, newProp, animatableModel, getECData(el).dataIndex);
             }
@@ -1247,10 +1247,10 @@ export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike)
  * Return a new clipped rect. If rect size are negative, return undefined.
  */
 export function clipRectByRect(targetRect: ZRRectLike, rect: ZRRectLike): ZRRectLike {
-    let x = mathMax(targetRect.x, rect.x);
-    let x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
-    let y = mathMax(targetRect.y, rect.y);
-    let y2 = mathMin(targetRect.y + targetRect.height, rect.y + rect.height);
+    const x = mathMax(targetRect.x, rect.x);
+    const x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
+    const y = mathMax(targetRect.y, rect.y);
+    const y2 = mathMin(targetRect.y + targetRect.height, rect.y + rect.height);
 
     // If the total rect is cliped, nothing, including the border,
     // should be painted. So return undefined.
@@ -1302,7 +1302,7 @@ export function linePolygonIntersect(
     points: vector.VectorArray[]
 ): boolean {
     for (let i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
-        let p = points[i];
+        const p = points[i];
         if (lineLineIntersect(a1x, a1y, a2x, a2y, p[0], p[1], p2[0], p2[1])) {
             return true;
         }
@@ -1321,14 +1321,14 @@ export function lineLineIntersect(
     b1x: number, b1y: number, b2x: number, b2y: number
 ): boolean {
     // let `vec_m` to be `vec_a2 - vec_a1` and `vec_n` to be `vec_b2 - vec_b1`.
-    let mx = a2x - a1x;
-    let my = a2y - a1y;
-    let nx = b2x - b1x;
-    let ny = b2y - b1y;
+    const mx = a2x - a1x;
+    const my = a2y - a1y;
+    const nx = b2x - b1x;
+    const ny = b2y - b1y;
 
     // `vec_m` and `vec_n` are parallel iff
     //     exising `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
-    let nmCrossProduct = crossProduct2d(nx, ny, mx, my);
+    const nmCrossProduct = crossProduct2d(nx, ny, mx, my);
     if (nearZero(nmCrossProduct)) {
         return false;
     }
@@ -1337,13 +1337,13 @@ export function lineLineIntersect(
     //     existing `p` and `q` in [0, 1] such that `vec_a1 + p * vec_m = vec_b1 + q * vec_n`,
     //     such that `q = ((vec_a1 - vec_b1) X vec_m) / (vec_n X vec_m)`
     //           and `p = ((vec_a1 - vec_b1) X vec_n) / (vec_n X vec_m)`.
-    let b1a1x = a1x - b1x;
-    let b1a1y = a1y - b1y;
-    let q = crossProduct2d(b1a1x, b1a1y, mx, my) / nmCrossProduct;
+    const b1a1x = a1x - b1x;
+    const b1a1y = a1y - b1y;
+    const q = crossProduct2d(b1a1x, b1a1y, mx, my) / nmCrossProduct;
     if (q < 0 || q > 1) {
         return false;
     }
-    let p = crossProduct2d(b1a1x, b1a1y, nx, ny) / nmCrossProduct;
+    const p = crossProduct2d(b1a1x, b1a1y, nx, ny) / nmCrossProduct;
     if (p < 0 || p > 1) {
         return false;
     }

@@ -30,9 +30,9 @@ class Polyline extends graphic.Group {
 
     private _createPolyline(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
         // let seriesModel = lineData.hostModel;
-        let points = lineData.getItemLayout(idx);
+        const points = lineData.getItemLayout(idx);
 
-        let line = new graphic.Polyline({
+        const line = new graphic.Polyline({
             shape: {
                 points: points
             }
@@ -44,10 +44,10 @@ class Polyline extends graphic.Group {
     };
 
     updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
-        let seriesModel = lineData.hostModel;
+        const seriesModel = lineData.hostModel;
 
-        let line = this.childAt(0) as graphic.Polyline;
-        let target = {
+        const line = this.childAt(0) as graphic.Polyline;
+        const target = {
             shape: {
                 points: lineData.getItemLayout(idx) as number[][]
             }
@@ -58,10 +58,10 @@ class Polyline extends graphic.Group {
     };
 
     _updateCommonStl(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
-        let line = this.childAt(0) as graphic.Polyline;
-        let itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
+        const line = this.childAt(0) as graphic.Polyline;
+        const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
-        let visualColor = lineData.getItemVisual(idx, 'color');
+        const visualColor = lineData.getItemVisual(idx, 'color');
 
         let lineStyle = seriesScope && seriesScope.lineStyle;
         let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
@@ -86,7 +86,7 @@ class Polyline extends graphic.Group {
     };
 
     updateLayout(lineData: List, idx: number) {
-        let polyline = this.childAt(0) as graphic.Polyline;
+        const polyline = this.childAt(0) as graphic.Polyline;
         polyline.setShape('points', lineData.getItemLayout(idx));
     };
 

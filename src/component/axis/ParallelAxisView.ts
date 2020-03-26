@@ -71,7 +71,7 @@ class ParallelAxisView extends ComponentView {
 
         this.group.removeAll();
 
-        let oldAxisGroup = this._axisGroup;
+        const oldAxisGroup = this._axisGroup;
         this._axisGroup = new graphic.Group();
         this.group.add(this._axisGroup);
 
@@ -79,21 +79,21 @@ class ParallelAxisView extends ComponentView {
             return;
         }
 
-        let coordSysModel = getCoordSysModel(axisModel, ecModel);
-        let coordSys = coordSysModel.coordinateSystem;
+        const coordSysModel = getCoordSysModel(axisModel, ecModel);
+        const coordSys = coordSysModel.coordinateSystem;
 
-        let areaSelectStyle = axisModel.getAreaSelectStyle();
-        let areaWidth = areaSelectStyle.width;
+        const areaSelectStyle = axisModel.getAreaSelectStyle();
+        const areaWidth = areaSelectStyle.width;
 
-        let dim = axisModel.axis.dim;
-        let axisLayout = coordSys.getAxisLayout(dim);
+        const dim = axisModel.axis.dim;
+        const axisLayout = coordSys.getAxisLayout(dim);
 
-        let builderOpt = zrUtil.extend(
+        const builderOpt = zrUtil.extend(
             {strokeContainThreshold: areaWidth},
             axisLayout
         );
 
-        let axisBuilder = new AxisBuilder(axisModel, builderOpt);
+        const axisBuilder = new AxisBuilder(axisModel, builderOpt);
 
         zrUtil.each(elementList, axisBuilder.add, axisBuilder);
 
@@ -103,7 +103,7 @@ class ParallelAxisView extends ComponentView {
             builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api
         );
 
-        let animationModel = (payload && payload.animation === false) ? null : axisModel;
+        const animationModel = (payload && payload.animation === false) ? null : axisModel;
         graphic.groupTransition(oldAxisGroup, this._axisGroup, animationModel);
     }
 
@@ -124,13 +124,13 @@ class ParallelAxisView extends ComponentView {
         api: ExtensionAPI
     ): void {
         // After filtering, axis may change, select area needs to be update.
-        let extent = axisModel.axis.getExtent();
-        let extentLen = extent[1] - extent[0];
-        let extra = Math.min(30, Math.abs(extentLen) * 0.1); // Arbitrary value.
+        const extent = axisModel.axis.getExtent();
+        const extentLen = extent[1] - extent[0];
+        const extra = Math.min(30, Math.abs(extentLen) * 0.1); // Arbitrary value.
 
         // width/height might be negative, which will be
         // normalized in BoundingRect.
-        let rect = graphic.BoundingRect.create({
+        const rect = graphic.BoundingRect.create({
             x: extent[0],
             y: -areaWidth / 2,
             width: extentLen,
@@ -160,11 +160,11 @@ class ParallelAxisView extends ComponentView {
     }
 
     _onBrush(eventParam: BrushControllerEvents['brush']): void {
-        let coverInfoList = eventParam.areas;
+        const coverInfoList = eventParam.areas;
         // Do not cache these object, because the mey be changed.
-        let axisModel = this.axisModel;
-        let axis = axisModel.axis;
-        let intervals = zrUtil.map(coverInfoList, function (coverInfo) {
+        const axisModel = this.axisModel;
+        const axis = axisModel.axis;
+        const intervals = zrUtil.map(coverInfoList, function (coverInfo) {
             return [
                 axis.coordToData((coverInfo.range as BrushDimensionMinMax)[0], true),
                 axis.coordToData((coverInfo.range as BrushDimensionMinMax)[1], true)
@@ -201,7 +201,7 @@ function fromAxisAreaSelect(
 }
 
 function getCoverInfoList(axisModel: ParallelAxisModel): BrushCoverConfig[] {
-    let axis = axisModel.axis;
+    const axis = axisModel.axis;
     return zrUtil.map(axisModel.activeIntervals, function (interval) {
         return {
             brushType: 'lineX',

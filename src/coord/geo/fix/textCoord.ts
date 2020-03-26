@@ -33,9 +33,9 @@ const coordsOffsetMap = {
 
 export default function (mapType: string, region: Region) {
     if (mapType === 'china') {
-        let coordFix = coordsOffsetMap[region.name];
+        const coordFix = coordsOffsetMap[region.name];
         if (coordFix) {
-            let cp = region.center;
+            const cp = region.center;
             cp[0] += coordFix[0] / 10.5;
             cp[1] += -coordFix[1] / (10.5 / 0.75);
         }

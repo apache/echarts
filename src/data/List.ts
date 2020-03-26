@@ -238,22 +238,22 @@ class List<HostModel extends Model = Model> {
     constructor(dimensions: Array<string | object | DataDimensionInfo>, hostModel: HostModel) {
         dimensions = dimensions || ['x', 'y'];
 
-        let dimensionInfos: Dictionary<DataDimensionInfo> = {};
-        let dimensionNames = [];
-        let invertedIndicesMap: Dictionary<number[]> = {};
+        const dimensionInfos: Dictionary<DataDimensionInfo> = {};
+        const dimensionNames = [];
+        const invertedIndicesMap: Dictionary<number[]> = {};
 
         for (let i = 0; i < dimensions.length; i++) {
             // Use the original dimensions[i], where other flag props may exists.
-            let dimInfoInput = dimensions[i];
+            const dimInfoInput = dimensions[i];
 
-            let dimensionInfo: DataDimensionInfo =
+            const dimensionInfo: DataDimensionInfo =
                 zrUtil.isString(dimInfoInput)
                 ? new DataDimensionInfo({name: dimInfoInput})
                 : !(dimInfoInput instanceof DataDimensionInfo)
                 ? new DataDimensionInfo(dimInfoInput)
                 : dimInfoInput;
 
-            let dimensionName = dimensionInfo.name;
+            const dimensionName = dimensionInfo.name;
             dimensionInfo.type = dimensionInfo.type || 'float';
             if (!dimensionInfo.coordDim) {
                 dimensionInfo.coordDim = dimensionName;
@@ -344,13 +344,13 @@ class List<HostModel extends Model = Model> {
     mapDimension(coordDim: DimensionName, idx: true): DimensionName[];
     mapDimension(coordDim: DimensionName, idx: number): DimensionName;
     mapDimension(coordDim: DimensionName, idx?: true | number): DimensionName | DimensionName[] {
-        let dimensionsSummary = this._dimensionsSummary;
+        const dimensionsSummary = this._dimensionsSummary;
 
         if (idx == null) {
             return dimensionsSummary.encodeFirstDimNotExtra[coordDim] as any;
         }
 
-        let dims = dimensionsSummary.encode[coordDim];
+        const dims = dimensionsSummary.encode[coordDim];
         return idx === true
             // always return array if idx is `true`
             ? (dims || []).slice()
@@ -372,7 +372,7 @@ class List<HostModel extends Model = Model> {
         dimValueGetter?: DimValueGetter
     ): void {
 
-        let notProvider = data instanceof Source || zrUtil.isArrayLike(data);
+        const notProvider = data instanceof Source || zrUtil.isArrayLike(data);
         if (notProvider) {
             data = new DefaultDataProvider(data, this.dimensions.length);
         }
@@ -432,8 +432,8 @@ class List<HostModel extends Model = Model> {
             zrUtil.assert(!this._indices, 'appendData can only be called on raw data.');
         }
 
-        let rawData = this._rawData;
-        let start = this.count();
+        const rawData = this._rawData;
+        const start = this.count();
         rawData.appendData(data);
         let end = rawData.count();
         if (!rawData.persistent) {
@@ -458,18 +458,18 @@ class List<HostModel extends Model = Model> {
      *        Each item is exaclty cooresponding to a dimension.
      */
     appendValues(values: any[][], names?: string[]): void {
-        let chunkSize = this._chunkSize;
-        let storage = this._storage;
-        let dimensions = this.dimensions;
-        let dimLen = dimensions.length;
-        let rawExtent = this._rawExtent;
+        const chunkSize = this._chunkSize;
+        const storage = this._storage;
+        const dimensions = this.dimensions;
+        const dimLen = dimensions.length;
+        const rawExtent = this._rawExtent;
 
-        let start = this.count();
-        let end = start + Math.max(values.length, names ? names.length : 0);
-        let originalChunkCount = this._chunkCount;
+        const start = this.count();
+        const end = start + Math.max(values.length, names ? names.length : 0);
+        const originalChunkCount = this._chunkCount;
 
         for (let i = 0; i < dimLen; i++) {
-            let dim = dimensions[i];
+            const dim = dimensions[i];
             if (!rawExtent[dim]) {
                 rawExtent[dim] = getInitialExtent();
             }
@@ -480,21 +480,21 @@ class List<HostModel extends Model = Model> {
             this._chunkCount = storage[dim].length;
         }
 
-        let emptyDataItem = new Array(dimLen);
+        const emptyDataItem = new Array(dimLen);
         for (let idx = start; idx < end; idx++) {
-            let sourceIdx = idx - start;
-            let chunkIndex = Math.floor(idx / chunkSize);
-            let chunkOffset = idx % chunkSize;
+            const sourceIdx = idx - start;
+            const chunkIndex = Math.floor(idx / chunkSize);
+            const chunkOffset = idx % chunkSize;
 
             // Store the data by dimensions
             for (let k = 0; k < dimLen; k++) {
-                let dim = dimensions[k];
-                let val = this._dimValueGetterArrayRows(
+                const dim = dimensions[k];
+                const val = this._dimValueGetterArrayRows(
                     values[sourceIdx] || emptyDataItem, dim, sourceIdx, k
                 ) as ParsedValueNumeric;
                 storage[dim][chunkIndex][chunkOffset] = val;
 
-                let dimRawExtent = rawExtent[dim];
+                const dimRawExtent = rawExtent[dim];
                 val < dimRawExtent[0] && (dimRawExtent[0] = val);
                 val > dimRawExtent[1] && (dimRawExtent[1] = val);
             }
@@ -517,26 +517,26 @@ class List<HostModel extends Model = Model> {
             return;
         }
 
-        let chunkSize = this._chunkSize;
-        let rawData = this._rawData;
-        let storage = this._storage;
-        let dimensions = this.dimensions;
-        let dimLen = dimensions.length;
-        let dimensionInfoMap = this._dimensionInfos;
-        let nameList = this._nameList;
-        let idList = this._idList;
-        let rawExtent = this._rawExtent;
-        let nameRepeatCount: NameRepeatCount = this._nameRepeatCount = {};
+        const chunkSize = this._chunkSize;
+        const rawData = this._rawData;
+        const storage = this._storage;
+        const dimensions = this.dimensions;
+        const dimLen = dimensions.length;
+        const dimensionInfoMap = this._dimensionInfos;
+        const nameList = this._nameList;
+        const idList = this._idList;
+        const rawExtent = this._rawExtent;
+        const nameRepeatCount: NameRepeatCount = this._nameRepeatCount = {};
         let nameDimIdx;
 
-        let originalChunkCount = this._chunkCount;
+        const originalChunkCount = this._chunkCount;
         for (let i = 0; i < dimLen; i++) {
-            let dim = dimensions[i];
+            const dim = dimensions[i];
             if (!rawExtent[dim]) {
                 rawExtent[dim] = getInitialExtent();
             }
 
-            let dimInfo = dimensionInfoMap[dim];
+            const dimInfo = dimensionInfoMap[dim];
             if (dimInfo.otherDims.itemName === 0) {
                 nameDimIdx = this._nameDimIdx = i;
             }
@@ -563,18 +563,18 @@ class List<HostModel extends Model = Model> {
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of category
             // Use a tempValue to normalize the value to be a (x, y) value
-            let chunkIndex = Math.floor(idx / chunkSize);
-            let chunkOffset = idx % chunkSize;
+            const chunkIndex = Math.floor(idx / chunkSize);
+            const chunkOffset = idx % chunkSize;
 
             // Store the data by dimensions
             for (let k = 0; k < dimLen; k++) {
-                let dim = dimensions[k];
-                let dimStorage = storage[dim][chunkIndex];
+                const dim = dimensions[k];
+                const dimStorage = storage[dim][chunkIndex];
                 // PENDING NULL is empty or zero
-                let val = this._dimValueGetter(dataItem, dim, idx, k) as ParsedValueNumeric;
+                const val = this._dimValueGetter(dataItem, dim, idx, k) as ParsedValueNumeric;
                 dimStorage[chunkOffset] = val;
 
-                let dimRawExtent = rawExtent[dim];
+                const dimRawExtent = rawExtent[dim];
                 val < dimRawExtent[0] && (dimRawExtent[0] = val);
                 val > dimRawExtent[1] && (dimRawExtent[1] = val);
             }
@@ -593,11 +593,11 @@ class List<HostModel extends Model = Model> {
                         nameList[idx] = name = (dataItem as any).name;
                     }
                     else if (nameDimIdx != null) {
-                        let nameDim = dimensions[nameDimIdx];
-                        let nameDimChunk = storage[nameDim][chunkIndex];
+                        const nameDim = dimensions[nameDimIdx];
+                        const nameDimChunk = storage[nameDim][chunkIndex];
                         if (nameDimChunk) {
                             name = nameDimChunk[chunkOffset];
-                            let ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
+                            const ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
                             if (ordinalMeta && ordinalMeta.categories.length) {
                                 name = ordinalMeta.categories[name];
                             }
@@ -642,10 +642,10 @@ class List<HostModel extends Model = Model> {
     getIndices(): ArrayLike<number> {
         let newIndices;
 
-        let indices = this._indices;
+        const indices = this._indices;
         if (indices) {
-            let Ctor = indices.constructor as DataArrayLikeConstructor;
-            let thisCount = this._count;
+            const Ctor = indices.constructor as DataArrayLikeConstructor;
+            const thisCount = this._count;
             // `new Array(a, b, c)` is different from `new Uint32Array(a, b, c)`.
             if (Ctor === Array) {
                 newIndices = new Ctor(thisCount);
@@ -660,7 +660,7 @@ class List<HostModel extends Model = Model> {
             }
         }
         else {
-            let Ctor = getIndicesCtor(this);
+            const Ctor = getIndicesCtor(this);
             newIndices = new Ctor(this.count());
             for (let i = 0; i < newIndices.length; i++) {
                 newIndices[i] = i;
@@ -678,7 +678,7 @@ class List<HostModel extends Model = Model> {
         if (!(idx >= 0 && idx < this._count)) {
             return NaN;
         }
-        let storage = this._storage;
+        const storage = this._storage;
         if (!storage[dim]) {
             // TODO Warn ?
             return NaN;
@@ -686,11 +686,11 @@ class List<HostModel extends Model = Model> {
 
         idx = this.getRawIndex(idx);
 
-        let chunkIndex = Math.floor(idx / this._chunkSize);
-        let chunkOffset = idx % this._chunkSize;
+        const chunkIndex = Math.floor(idx / this._chunkSize);
+        const chunkOffset = idx % this._chunkSize;
 
-        let chunkStore = storage[dim][chunkIndex];
-        let value = chunkStore[chunkOffset];
+        const chunkStore = storage[dim][chunkIndex];
+        const value = chunkStore[chunkOffset];
         // FIXME ordinal data type is not stackable
         // if (stack) {
         //     let dimensionInfo = this._dimensionInfos[dim];
@@ -720,15 +720,15 @@ class List<HostModel extends Model = Model> {
         if (!(rawIdx >= 0 && rawIdx < this._rawCount)) {
             return NaN;
         }
-        let dimStore = this._storage[dim];
+        const dimStore = this._storage[dim];
         if (!dimStore) {
             // TODO Warn ?
             return NaN;
         }
 
-        let chunkIndex = Math.floor(rawIdx / this._chunkSize);
-        let chunkOffset = rawIdx % this._chunkSize;
-        let chunkStore = dimStore[chunkIndex];
+        const chunkIndex = Math.floor(rawIdx / this._chunkSize);
+        const chunkOffset = rawIdx % this._chunkSize;
+        const chunkStore = dimStore[chunkIndex];
         return chunkStore[chunkOffset];
     }
 
@@ -737,9 +737,9 @@ class List<HostModel extends Model = Model> {
      * Hack a much simpler _getFast
      */
     private _getFast(dim: DimensionName, rawIdx: number): ParsedValue {
-        let chunkIndex = Math.floor(rawIdx / this._chunkSize);
-        let chunkOffset = rawIdx % this._chunkSize;
-        let chunkStore = this._storage[dim][chunkIndex];
+        const chunkIndex = Math.floor(rawIdx / this._chunkSize);
+        const chunkOffset = rawIdx % this._chunkSize;
+        const chunkStore = this._storage[dim][chunkIndex];
         return chunkStore[chunkOffset];
     }
 
@@ -750,7 +750,7 @@ class List<HostModel extends Model = Model> {
     getValues(idx: number): ParsedValue[];
     getValues(dimensions: readonly DimensionName[], idx: number): ParsedValue[];
     getValues(dimensions: readonly DimensionName[] | number, idx?: number): ParsedValue[] {
-        let values = [];
+        const values = [];
 
         if (!zrUtil.isArray(dimensions)) {
             // stack = idx;
@@ -770,7 +770,7 @@ class List<HostModel extends Model = Model> {
      * Only check the coord dimensions.
      */
     hasValue(idx: number): boolean {
-        let dataDimsOnCoord = this._dimensionsSummary.dataDimsOnCoord;
+        const dataDimsOnCoord = this._dimensionsSummary.dataDimsOnCoord;
         for (let i = 0, len = dataDimsOnCoord.length; i < len; i++) {
             // Ordinal type originally can be string or number.
             // But when an ordinal type is used on coord, it can
@@ -788,8 +788,8 @@ class List<HostModel extends Model = Model> {
     getDataExtent(dim: DimensionLoose): [number, number] {
         // Make sure use concrete dim as cache name.
         dim = this.getDimension(dim);
-        let dimData = this._storage[dim];
-        let initialExtent = getInitialExtent();
+        const dimData = this._storage[dim];
+        const initialExtent = getInitialExtent();
 
         // stack = !!((stack || false) && this.getCalculationInfo(dim));
 
@@ -798,14 +798,14 @@ class List<HostModel extends Model = Model> {
         }
 
         // Make more strict checkings to ensure hitting cache.
-        let currEnd = this.count();
+        const currEnd = this.count();
         // let cacheName = [dim, !!stack].join('_');
         // let cacheName = dim;
 
         // Consider the most cases when using data zoom, `getDataExtent`
         // happened before filtering. We cache raw extent, which is not
         // necessary to be cleared and recalculated when restore data.
-        let useRaw = !this._indices; // && !stack;
+        const useRaw = !this._indices; // && !stack;
         let dimExtent: [number, number];
 
         if (useRaw) {
@@ -822,7 +822,7 @@ class List<HostModel extends Model = Model> {
 
         for (let i = 0; i < currEnd; i++) {
             // let value = stack ? this.get(dim, i, true) : this._getFast(dim, this.getRawIndex(i));
-            let value = this._getFast(dim, this.getRawIndex(i)) as ParsedValueNumeric;
+            const value = this._getFast(dim, this.getRawIndex(i)) as ParsedValueNumeric;
             value < min && (min = value);
             value > max && (max = value);
         }
@@ -867,11 +867,11 @@ class List<HostModel extends Model = Model> {
      * Get sum of data in one dimension
      */
     getSum(dim: DimensionName): number {
-        let dimData = this._storage[dim];
+        const dimData = this._storage[dim];
         let sum = 0;
         if (dimData) {
             for (let i = 0, len = this.count(); i < len; i++) {
-                let value = this.get(dim, i) as number;
+                const value = this.get(dim, i) as number;
                 if (!isNaN(value)) {
                     sum += value;
                 }
@@ -884,7 +884,7 @@ class List<HostModel extends Model = Model> {
      * Get median of data in one dimension
      */
     getMedian(dim: DimensionLoose): number {
-        let dimDataArray: ParsedValue[] = [];
+        const dimDataArray: ParsedValue[] = [];
         // map all data of one dimension
         this.each(dim, function (val) {
             if (!isNaN(val as number)) {
@@ -894,10 +894,10 @@ class List<HostModel extends Model = Model> {
 
         // TODO
         // Use quick select?
-        let sortedDimDataArray = dimDataArray.sort(function (a: number, b: number) {
+        const sortedDimDataArray = dimDataArray.sort(function (a: number, b: number) {
             return a - b;
         }) as number[];
-        let len = this.count();
+        const len = this.count();
         // calculate median
         return len === 0
             ? 0
@@ -939,13 +939,13 @@ class List<HostModel extends Model = Model> {
      * @return rawIndex
      */
     rawIndexOf(dim: DimensionName, value: OrdinalNumber): number {
-        let invertedIndices = dim && this._invertedIndicesMap[dim];
+        const invertedIndices = dim && this._invertedIndicesMap[dim];
         if (__DEV__) {
             if (!invertedIndices) {
                 throw new Error('Do not supported yet');
             }
         }
-        let rawIndex = invertedIndices[value];
+        const rawIndex = invertedIndices[value];
         if (rawIndex == null || isNaN(rawIndex)) {
             return INDEX_NOT_FOUND;
         }
@@ -978,10 +978,10 @@ class List<HostModel extends Model = Model> {
         }
 
         // Indices are ascending
-        let indices = this._indices;
+        const indices = this._indices;
 
         // If rawIndex === dataIndex
-        let rawDataIndex = indices[rawIndex];
+        const rawDataIndex = indices[rawIndex];
         if (rawDataIndex != null && rawDataIndex < this._count && rawDataIndex === rawIndex) {
             return rawIndex;
         }
@@ -989,7 +989,7 @@ class List<HostModel extends Model = Model> {
         let left = 0;
         let right = this._count - 1;
         while (left <= right) {
-            let mid = (left + right) / 2 | 0;
+            const mid = (left + right) / 2 | 0;
             if (indices[mid] < rawIndex) {
                 left = mid + 1;
             }
@@ -1014,9 +1014,9 @@ class List<HostModel extends Model = Model> {
     indicesOfNearest(
         dim: DimensionName, value: number, maxDistance?: number
     ): number[] {
-        let storage = this._storage;
-        let dimData = storage[dim];
-        let nearestIndices: number[] = [];
+        const storage = this._storage;
+        const dimData = storage[dim];
+        const nearestIndices: number[] = [];
 
         if (!dimData) {
             return nearestIndices;
@@ -1032,8 +1032,8 @@ class List<HostModel extends Model = Model> {
 
         // Check the test case of `test/ut/spec/data/List.js`.
         for (let i = 0, len = this.count(); i < len; i++) {
-            let diff = value - (this.get(dim, i) as number);
-            let dist = Math.abs(diff);
+            const diff = value - (this.get(dim, i) as number);
+            const dist = Math.abs(diff);
             if (dist <= maxDistance) {
                 // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
                 // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
@@ -1070,9 +1070,9 @@ class List<HostModel extends Model = Model> {
      */
     getRawDataItem(idx: number): OptionDataItem {
         if (!this._rawData.persistent) {
-            let val = [];
+            const val = [];
             for (let i = 0; i < this.dimensions.length; i++) {
-                let dim = this.dimensions[i];
+                const dim = this.dimensions[i];
                 val.push(this.get(dim, idx));
             }
             return val;
@@ -1083,7 +1083,7 @@ class List<HostModel extends Model = Model> {
     }
 
     getName(idx: number): string {
-        let rawIndex = this.getRawIndex(idx);
+        const rawIndex = this.getRawIndex(idx);
         return this._nameList[rawIndex]
             || getRawValueFromStore(this, this._nameDimIdx, rawIndex)
             || '';
@@ -1126,15 +1126,15 @@ class List<HostModel extends Model = Model> {
         }
 
         // ctxCompat just for compat echarts3
-        let fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
+        const fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
 
-        let dimNames = zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
+        const dimNames = zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
 
         if (__DEV__) {
             validateDimensions(this, dimNames);
         }
 
-        let dimSize = dimNames.length;
+        const dimSize = dimNames.length;
 
         for (let i = 0; i < this.count(); i++) {
             // Simple optimization
@@ -1150,7 +1150,7 @@ class List<HostModel extends Model = Model> {
                     break;
                 default:
                     let k = 0;
-                    let value = [];
+                    const value = [];
                     for (; k < dimSize; k++) {
                         value[k] = this.get(dimNames[k], i);
                     }
@@ -1189,9 +1189,9 @@ class List<HostModel extends Model = Model> {
         }
 
         // ctxCompat just for compat echarts3
-        let fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
+        const fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
 
-        let dimNames = zrUtil.map(
+        const dimNames = zrUtil.map(
             normalizeDimensions(dims), this.getDimension, this
         );
 
@@ -1200,24 +1200,24 @@ class List<HostModel extends Model = Model> {
         }
 
 
-        let count = this.count();
-        let Ctor = getIndicesCtor(this);
-        let newIndices = new Ctor(count);
-        let value = [];
-        let dimSize = dimNames.length;
+        const count = this.count();
+        const Ctor = getIndicesCtor(this);
+        const newIndices = new Ctor(count);
+        const value = [];
+        const dimSize = dimNames.length;
 
         let offset = 0;
-        let dim0 = dimNames[0];
+        const dim0 = dimNames[0];
 
         for (let i = 0; i < count; i++) {
             let keep;
-            let rawIdx = this.getRawIndex(i);
+            const rawIdx = this.getRawIndex(i);
             // Simple optimization
             if (dimSize === 0) {
                 keep = (cb as FilterCb0<Ctx>).call(fCtx, i);
             }
             else if (dimSize === 1) {
-                let val = this._getFast(dim0, rawIdx);
+                const val = this._getFast(dim0, rawIdx);
                 keep = (cb as FilterCb1<Ctx>).call(fCtx, val, i);
             }
             else {
@@ -1257,8 +1257,8 @@ class List<HostModel extends Model = Model> {
             return;
         }
 
-        let dimensions = [];
-        for (let dim in range) {
+        const dimensions = [];
+        for (const dim in range) {
             if (range.hasOwnProperty(dim)) {
                 dimensions.push(dim);
             }
@@ -1268,32 +1268,32 @@ class List<HostModel extends Model = Model> {
             validateDimensions(this, dimensions);
         }
 
-        let dimSize = dimensions.length;
+        const dimSize = dimensions.length;
         if (!dimSize) {
             return;
         }
 
-        let originalCount = this.count();
-        let Ctor = getIndicesCtor(this);
-        let newIndices = new Ctor(originalCount);
+        const originalCount = this.count();
+        const Ctor = getIndicesCtor(this);
+        const newIndices = new Ctor(originalCount);
 
         let offset = 0;
-        let dim0 = dimensions[0];
+        const dim0 = dimensions[0];
 
-        let min = range[dim0][0];
-        let max = range[dim0][1];
+        const min = range[dim0][0];
+        const max = range[dim0][1];
 
         let quickFinished = false;
         if (!this._indices) {
             // Extreme optimization for common case. About 2x faster in chrome.
             let idx = 0;
             if (dimSize === 1) {
-                let dimStorage = this._storage[dimensions[0]];
+                const dimStorage = this._storage[dimensions[0]];
                 for (let k = 0; k < this._chunkCount; k++) {
-                    let chunkStorage = dimStorage[k];
-                    let len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+                    const chunkStorage = dimStorage[k];
+                    const len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
                     for (let i = 0; i < len; i++) {
-                        let val = chunkStorage[i];
+                        const val = chunkStorage[i];
                         // NaN will not be filtered. Consider the case, in line chart, empty
                         // value indicates the line should be broken. But for the case like
                         // scatter plot, a data item with empty value will not be rendered,
@@ -1310,17 +1310,17 @@ class List<HostModel extends Model = Model> {
                 quickFinished = true;
             }
             else if (dimSize === 2) {
-                let dimStorage = this._storage[dim0];
-                let dimStorage2 = this._storage[dimensions[1]];
-                let min2 = range[dimensions[1]][0];
-                let max2 = range[dimensions[1]][1];
+                const dimStorage = this._storage[dim0];
+                const dimStorage2 = this._storage[dimensions[1]];
+                const min2 = range[dimensions[1]][0];
+                const max2 = range[dimensions[1]][1];
                 for (let k = 0; k < this._chunkCount; k++) {
-                    let chunkStorage = dimStorage[k];
-                    let chunkStorage2 = dimStorage2[k];
-                    let len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
+                    const chunkStorage = dimStorage[k];
+                    const chunkStorage2 = dimStorage2[k];
+                    const len = Math.min(this._count - k * this._chunkSize, this._chunkSize);
                     for (let i = 0; i < len; i++) {
-                        let val = chunkStorage[i];
-                        let val2 = chunkStorage2[i];
+                        const val = chunkStorage[i];
+                        const val2 = chunkStorage2[i];
                         // Do not filter NaN, see comment above.
                         if ((
                                 (val >= min && val <= max) || isNaN(val as any)
@@ -1340,8 +1340,8 @@ class List<HostModel extends Model = Model> {
         if (!quickFinished) {
             if (dimSize === 1) {
                 for (let i = 0; i < originalCount; i++) {
-                    let rawIndex = this.getRawIndex(i);
-                    let val = this._getFast(dim0, rawIndex);
+                    const rawIndex = this.getRawIndex(i);
+                    const val = this._getFast(dim0, rawIndex);
                     // Do not filter NaN, see comment above.
                     if (
                         (val >= min && val <= max) || isNaN(val as any)
@@ -1353,10 +1353,10 @@ class List<HostModel extends Model = Model> {
             else {
                 for (let i = 0; i < originalCount; i++) {
                     let keep = true;
-                    let rawIndex = this.getRawIndex(i);
+                    const rawIndex = this.getRawIndex(i);
                     for (let k = 0; k < dimSize; k++) {
-                        let dimk = dimensions[k];
-                        let val = this._getFast(dimk, rawIndex);
+                        const dimk = dimensions[k];
+                        const val = this._getFast(dimk, rawIndex);
                         // Do not filter NaN, see comment above.
                         if (val < range[dimk][0] || val > range[dimk][1]) {
                             keep = false;
@@ -1410,7 +1410,7 @@ class List<HostModel extends Model = Model> {
         // ctxCompat just for compat echarts3
         ctx = (ctx || ctxCompat || this) as Ctx;
 
-        let result: any[] = [];
+        const result: any[] = [];
         this.each(dims, function () {
             result.push(cb && (cb as MapArrayCb<Ctx>).apply(this, arguments));
         }, ctx);
@@ -1432,9 +1432,9 @@ class List<HostModel extends Model = Model> {
         'use strict';
 
         // ctxCompat just for compat echarts3
-        let fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
+        const fCtx = (ctx || ctxCompat || this) as CtxOrList<Ctx>;
 
-        let dimNames = zrUtil.map(
+        const dimNames = zrUtil.map(
             normalizeDimensions(dims), this.getDimension, this
         );
 
@@ -1442,21 +1442,21 @@ class List<HostModel extends Model = Model> {
             validateDimensions(this, dimNames);
         }
 
-        let list = cloneListForMapAndSample(this, dimNames);
+        const list = cloneListForMapAndSample(this, dimNames);
 
         // Following properties are all immutable.
         // So we can reference to the same value
         list._indices = this._indices;
         list.getRawIndex = list._indices ? getRawIndexWithIndices : getRawIndexWithoutIndices;
 
-        let storage = list._storage;
+        const storage = list._storage;
 
-        let tmpRetValue = [];
-        let chunkSize = this._chunkSize;
-        let dimSize = dimNames.length;
-        let dataCount = this.count();
-        let values = [];
-        let rawExtent = list._rawExtent;
+        const tmpRetValue = [];
+        const chunkSize = this._chunkSize;
+        const dimSize = dimNames.length;
+        const dataCount = this.count();
+        const values = [];
+        const rawExtent = list._rawExtent;
 
         for (let dataIndex = 0; dataIndex < dataCount; dataIndex++) {
             for (let dimIndex = 0; dimIndex < dimSize; dimIndex++) {
@@ -1472,16 +1472,16 @@ class List<HostModel extends Model = Model> {
                     retValue = tmpRetValue;
                 }
 
-                let rawIndex = this.getRawIndex(dataIndex);
-                let chunkIndex = Math.floor(rawIndex / chunkSize);
-                let chunkOffset = rawIndex % chunkSize;
+                const rawIndex = this.getRawIndex(dataIndex);
+                const chunkIndex = Math.floor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
 
                 for (let i = 0; i < retValue.length; i++) {
-                    let dim = dimNames[i];
-                    let val = retValue[i];
-                    let rawExtentOnDim = rawExtent[dim];
+                    const dim = dimNames[i];
+                    const val = retValue[i];
+                    const rawExtentOnDim = rawExtent[dim];
 
-                    let dimStore = storage[dim];
+                    const dimStore = storage[dim];
                     if (dimStore) {
                         dimStore[chunkIndex][chunkOffset] = val;
                     }
@@ -1509,18 +1509,18 @@ class List<HostModel extends Model = Model> {
         sampleValue: (frameValues: ArrayLike<ParsedValue>) => ParsedValueNumeric,
         sampleIndex: (frameValues: ArrayLike<ParsedValue>, value: ParsedValueNumeric) => number
     ): List<HostModel> {
-        let list = cloneListForMapAndSample(this, [dimension]);
-        let targetStorage = list._storage;
+        const list = cloneListForMapAndSample(this, [dimension]);
+        const targetStorage = list._storage;
 
-        let frameValues = [];
+        const frameValues = [];
         let frameSize = Math.floor(1 / rate);
 
-        let dimStore = targetStorage[dimension];
-        let len = this.count();
-        let chunkSize = this._chunkSize;
-        let rawExtentOnDim = list._rawExtent[dimension];
+        const dimStore = targetStorage[dimension];
+        const len = this.count();
+        const chunkSize = this._chunkSize;
+        const rawExtentOnDim = list._rawExtent[dimension];
 
-        let newIndices = new (getIndicesCtor(this))(len);
+        const newIndices = new (getIndicesCtor(this))(len);
 
         let offset = 0;
         for (let i = 0; i < len; i += frameSize) {
@@ -1530,17 +1530,17 @@ class List<HostModel extends Model = Model> {
                 frameValues.length = frameSize;
             }
             for (let k = 0; k < frameSize; k++) {
-                let dataIdx = this.getRawIndex(i + k);
-                let originalChunkIndex = Math.floor(dataIdx / chunkSize);
-                let originalChunkOffset = dataIdx % chunkSize;
+                const dataIdx = this.getRawIndex(i + k);
+                const originalChunkIndex = Math.floor(dataIdx / chunkSize);
+                const originalChunkOffset = dataIdx % chunkSize;
                 frameValues[k] = dimStore[originalChunkIndex][originalChunkOffset];
             }
-            let value = sampleValue(frameValues);
-            let sampleFrameIdx = this.getRawIndex(
+            const value = sampleValue(frameValues);
+            const sampleFrameIdx = this.getRawIndex(
                 Math.min(i + sampleIndex(frameValues, value) || 0, len - 1)
             );
-            let sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
-            let sampleChunkOffset = sampleFrameIdx % chunkSize;
+            const sampleChunkIndex = Math.floor(sampleFrameIdx / chunkSize);
+            const sampleChunkOffset = sampleFrameIdx % chunkSize;
             // Only write value on the filtered data
             dimStore[sampleChunkIndex][sampleChunkOffset] = value;
 
@@ -1570,8 +1570,8 @@ class List<HostModel extends Model = Model> {
         // Extract item option with value key. FIXME will cause incompatitable issue
         // Extract<HostModel['option']['data'][number], { value?: any }>
     > {
-        let hostModel = this.hostModel;
-        let dataItem = this.getRawDataItem(idx) as ModelOption;
+        const hostModel = this.hostModel;
+        const dataItem = this.getRawDataItem(idx) as ModelOption;
         return new Model(dataItem, hostModel, hostModel && hostModel.ecModel);
     }
 
@@ -1579,7 +1579,7 @@ class List<HostModel extends Model = Model> {
      * Create a data differ
      */
     diff(otherList: List): DataDiffer {
-        let thisList = this;
+        const thisList = this;
 
         return new DataDiffer(
             otherList ? otherList.getIndices() : [],
@@ -1597,7 +1597,7 @@ class List<HostModel extends Model = Model> {
      * Get visual property.
      */
     getVisual(key: string): any {
-        let visual = this._visual;
+        const visual = this._visual;
         return visual && visual[key];
     }
 
@@ -1614,7 +1614,7 @@ class List<HostModel extends Model = Model> {
     setVisual(kvObj: Dictionary<any>): void;
     setVisual(key: string | Dictionary<any>, val?: any): void {
         if (isObject(key)) {
-            for (let name in key) {
+            for (const name in key) {
                 if (key.hasOwnProperty(name)) {
                     this.setVisual(name, key[name]);
                 }
@@ -1632,7 +1632,7 @@ class List<HostModel extends Model = Model> {
     setLayout(kvObj: Dictionary<any>): void;
     setLayout(key: string | Dictionary<any>, val?: any): void {
         if (isObject(key)) {
-            for (let name in key) {
+            for (const name in key) {
                 if (key.hasOwnProperty(name)) {
                     this.setLayout(name, key[name]);
                 }
@@ -1680,8 +1680,8 @@ class List<HostModel extends Model = Model> {
      * Get visual property of single data item
      */
     getItemVisual(idx: number, key: string, ignoreParent?: boolean): any {
-        let itemVisual = this._itemVisuals[idx];
-        let val = itemVisual && itemVisual[key];
+        const itemVisual = this._itemVisuals[idx];
+        const val = itemVisual && itemVisual[key];
         if (val == null && !ignoreParent) {
             // Use global visual property
             return this.getVisual(key);
@@ -1705,12 +1705,12 @@ class List<HostModel extends Model = Model> {
     setItemVisual(idx: number, key: string, value: any): void;
     setItemVisual(idx: number, kvObject: Dictionary<any>): void;
     setItemVisual(idx: number, key: string | Dictionary<any>, value?: any): void {
-        let itemVisual = this._itemVisuals[idx] || {};
-        let hasItemVisual = this.hasItemVisual;
+        const itemVisual = this._itemVisuals[idx] || {};
+        const hasItemVisual = this.hasItemVisual;
         this._itemVisuals[idx] = itemVisual;
 
         if (isObject(key)) {
-            for (let name in key) {
+            for (const name in key) {
                 if (key.hasOwnProperty(name)) {
                     itemVisual[name] = key[name];
                     hasItemVisual[name] = true;
@@ -1735,10 +1735,10 @@ class List<HostModel extends Model = Model> {
      * Set graphic element relative to data. It can be set as null
      */
     setItemGraphicEl(idx: number, el: Element): void {
-        let hostModel = this.hostModel;
+        const hostModel = this.hostModel;
 
         if (el) {
-            let ecData = getECData(el);
+            const ecData = getECData(el);
             // Add data index and series index for indexing the data by element
             // Useful in tooltip
             ecData.dataIndex = idx;
@@ -1773,7 +1773,7 @@ class List<HostModel extends Model = Model> {
      */
     cloneShallow(list?: List<HostModel>): List<HostModel> {
         if (!list) {
-            let dimensionInfoList = zrUtil.map(this.dimensions, this.getDimensionInfo, this);
+            const dimensionInfoList = zrUtil.map(this.dimensions, this.getDimensionInfo, this);
             list = new List(dimensionInfoList, this.hostModel);
         }
 
@@ -1784,9 +1784,9 @@ class List<HostModel extends Model = Model> {
 
         // Clone will not change the data extent and indices
         if (this._indices) {
-            let Ctor = this._indices.constructor as DataArrayLikeConstructor;
+            const Ctor = this._indices.constructor as DataArrayLikeConstructor;
             if (Ctor === Array) {
-                let thisCount = this._indices.length;
+                const thisCount = this._indices.length;
                 list._indices = new Ctor(thisCount);
                 for (let i = 0; i < thisCount; i++) {
                     list._indices[i] = this._indices[i];
@@ -1811,14 +1811,14 @@ class List<HostModel extends Model = Model> {
         methodName: FunctionPropertyNames<List>,
         injectFunction: (...args: any) => any
     ): void {
-        let originalMethod = this[methodName];
+        const originalMethod = this[methodName];
         if (typeof originalMethod !== 'function') {
             return;
         }
         this.__wrappedMethods = this.__wrappedMethods || [];
         this.__wrappedMethods.push(methodName);
         this[methodName] = function () {
-            let res = (originalMethod as any).apply(this, arguments);
+            const res = (originalMethod as any).apply(this, arguments);
             return injectFunction.apply(this, [res].concat(zrUtil.slice(arguments)));
         };
     }
@@ -1848,7 +1848,7 @@ class List<HostModel extends Model = Model> {
                 // If dataItem is an plain object with no value field, the let `value`
                 // will be assigned with the object, but it will be tread correctly
                 // in the `convertDataValue`.
-                let value = dataItem && (dataItem.value == null ? dataItem : dataItem.value);
+                const value = dataItem && (dataItem.value == null ? dataItem : dataItem.value);
 
                 // If any dataItem is like { value: 10 }
                 if (!this._rawData.pure && isDataItemOption(dataItem)) {
@@ -1884,10 +1884,10 @@ class List<HostModel extends Model = Model> {
          */
         function convertDataValue(value: any, dimInfo: DataDimensionInfo): ParsedValue {
             // Performance sensitive.
-            let dimType = dimInfo && dimInfo.type;
+            const dimType = dimInfo && dimInfo.type;
             if (dimType === 'ordinal') {
                 // If given value is a category string
-                let ordinalMeta = dimInfo && dimInfo.ordinalMeta;
+                const ordinalMeta = dimInfo && dimInfo.ordinalMeta;
                 return ordinalMeta
                     ? ordinalMeta.parseAndCollect(value)
                     : value;
@@ -1913,12 +1913,12 @@ class List<HostModel extends Model = Model> {
         };
 
         prepareInvertedIndex = function (list: List): void {
-            let invertedIndicesMap = list._invertedIndicesMap;
+            const invertedIndicesMap = list._invertedIndicesMap;
             zrUtil.each(invertedIndicesMap, function (invertedIndices, dim) {
-                let dimInfo = list._dimensionInfos[dim];
+                const dimInfo = list._dimensionInfos[dim];
 
                 // Currently, only dimensions that has ordinalMeta can create inverted indices.
-                let ordinalMeta = dimInfo.ordinalMeta;
+                const ordinalMeta = dimInfo.ordinalMeta;
                 if (ordinalMeta) {
                     invertedIndices = invertedIndicesMap[dim] = new CtorInt32Array(
                         ordinalMeta.categories.length
@@ -1939,14 +1939,14 @@ class List<HostModel extends Model = Model> {
         getRawValueFromStore = function (list: List, dimIndex: number, rawIndex: number): any {
             let val;
             if (dimIndex != null) {
-                let chunkSize = list._chunkSize;
-                let chunkIndex = Math.floor(rawIndex / chunkSize);
-                let chunkOffset = rawIndex % chunkSize;
-                let dim = list.dimensions[dimIndex];
-                let chunk = list._storage[dim][chunkIndex];
+                const chunkSize = list._chunkSize;
+                const chunkIndex = Math.floor(rawIndex / chunkSize);
+                const chunkOffset = rawIndex % chunkSize;
+                const dim = list.dimensions[dimIndex];
+                const chunk = list._storage[dim][chunkIndex];
                 if (chunk) {
                     val = chunk[chunkOffset];
-                    let ordinalMeta = list._dimensionInfos[dim].ordinalMeta;
+                    const ordinalMeta = list._dimensionInfos[dim].ordinalMeta;
                     if (ordinalMeta && ordinalMeta.categories.length) {
                         val = ordinalMeta.categories[val as OrdinalNumber];
                     }
@@ -1967,12 +1967,12 @@ class List<HostModel extends Model = Model> {
             chunkCount: number,
             end: number
         ): void {
-            let DataCtor = dataCtors[dimInfo.type];
-            let lastChunkIndex = chunkCount - 1;
-            let dim = dimInfo.name;
-            let resizeChunkArray = storage[dim][lastChunkIndex];
+            const DataCtor = dataCtors[dimInfo.type];
+            const lastChunkIndex = chunkCount - 1;
+            const dim = dimInfo.name;
+            const resizeChunkArray = storage[dim][lastChunkIndex];
             if (resizeChunkArray && resizeChunkArray.length < chunkSize) {
-                let newStore = new DataCtor(Math.min(end - lastChunkIndex * chunkSize, chunkSize));
+                const newStore = new DataCtor(Math.min(end - lastChunkIndex * chunkSize, chunkSize));
                 // The cost of the copy is probably inconsiderable
                 // within the initial chunkSize.
                 for (let j = 0; j < resizeChunkArray.length; j++) {
@@ -2033,20 +2033,20 @@ class List<HostModel extends Model = Model> {
         cloneListForMapAndSample = function (
             original: List, excludeDimensions: DimensionName[]
         ): List {
-            let allDimensions = original.dimensions;
-            let list = new List(
+            const allDimensions = original.dimensions;
+            const list = new List(
                 zrUtil.map(allDimensions, original.getDimensionInfo, original),
                 original.hostModel
             );
             // FIXME If needs stackedOn, value may already been stacked
             transferProperties(list, original);
 
-            let storage = list._storage = {} as DataStorage;
-            let originalStorage = original._storage;
+            const storage = list._storage = {} as DataStorage;
+            const originalStorage = original._storage;
 
             // Init storage
             for (let i = 0; i < allDimensions.length; i++) {
-                let dim = allDimensions[i];
+                const dim = allDimensions[i];
                 if (originalStorage[dim]) {
                     // Notice that we do not reset invertedIndicesMap here, becuase
                     // there is no scenario of mapping or sampling ordinal dimension.
@@ -2065,7 +2065,7 @@ class List<HostModel extends Model = Model> {
         };
 
         cloneDimStore = function (originalDimStore: DataValueChunk[]): DataValueChunk[] {
-            let newDimStore = new Array(originalDimStore.length);
+            const newDimStore = new Array(originalDimStore.length);
             for (let j = 0; j < originalDimStore.length; j++) {
                 newDimStore[j] = cloneChunk(originalDimStore[j]);
             }
@@ -2073,7 +2073,7 @@ class List<HostModel extends Model = Model> {
         };
 
         function cloneChunk(originalChunk: DataValueChunk): DataValueChunk {
-            let Ctor = originalChunk.constructor;
+            const Ctor = originalChunk.constructor;
             // Only shallow clone is enough when Array.
             return Ctor === Array
                 ? (originalChunk as Array<ParsedValue>).slice()
@@ -2085,8 +2085,8 @@ class List<HostModel extends Model = Model> {
         };
 
         setItemDataAndSeriesIndex = function (this: Element, child: Element): void {
-            let childECData = getECData(child);
-            let thisECData = getECData(this);
+            const childECData = getECData(child);
+            const thisECData = getECData(this);
             childECData.seriesIndex = thisECData.seriesIndex;
             childECData.dataIndex = thisECData.dataIndex;
             childECData.dataType = thisECData.dataType;

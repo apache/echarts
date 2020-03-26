@@ -50,9 +50,9 @@ type BarItemStyleKeys = 'fill'
 type ItemStyleProps = Pick<PathStyleProps, BarItemStyleKeys>;
 
 export function getBarItemStyle(model: Model, excludes?: BarItemStyleKeys[]): ItemStyleProps {
-    let style = mapStyle(model, excludes);
+    const style = mapStyle(model, excludes);
     if (model.getBorderLineDash) {
-        let lineDash = model.getBorderLineDash();
+        const lineDash = model.getBorderLineDash();
         lineDash && (style.lineDash = lineDash);
     }
     return style;

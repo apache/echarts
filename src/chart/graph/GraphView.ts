@@ -58,7 +58,7 @@ function getItemOpacity(
     item: GraphNode | GraphEdge,
     opacityPath: typeof nodeOpacityPath | typeof lineOpacityPath
 ): number {
-    let opacity = item.getVisual('opacity');
+    const opacity = item.getVisual('opacity');
     return opacity != null
         ? opacity : item.getModel<any>().get(opacityPath);
 }
@@ -68,7 +68,7 @@ function fadeOutItem(
     opacityPath: typeof nodeOpacityPath | typeof lineOpacityPath,
     opacityRatio?: number
 ) {
-    let el = item.getGraphicEl() as Symbol;   // TODO Symbol?
+    const el = item.getGraphicEl() as Symbol;   // TODO Symbol?
     let opacity = getItemOpacity(item, opacityPath);
 
     if (opacityRatio != null) {
@@ -92,8 +92,8 @@ function fadeInItem(
     item: GraphNode | GraphEdge,
     opacityPath: typeof nodeOpacityPath | typeof lineOpacityPath
 ) {
-    let opacity = getItemOpacity(item, opacityPath);
-    let el = item.getGraphicEl() as Symbol;
+    const opacity = getItemOpacity(item, opacityPath);
+    const el = item.getGraphicEl() as Symbol;
     // Should go back to normal opacity first, consider hoverLayer,
     // where current state is copied to elMirror, and support
     // emphasis opacity here.
@@ -124,9 +124,9 @@ class GraphView extends ChartView {
     private _layouting: boolean;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        let symbolDraw = new SymbolDraw();
-        let lineDraw = new LineDraw();
-        let group = this.group;
+        const symbolDraw = new SymbolDraw();
+        const lineDraw = new LineDraw();
+        const group = this.group;
 
         this._controller = new RoamController(api.getZr());
         this._controllerHost = {
@@ -143,18 +143,18 @@ class GraphView extends ChartView {
     }
 
     render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let graphView = this;
-        let coordSys = seriesModel.coordinateSystem;
+        const graphView = this;
+        const coordSys = seriesModel.coordinateSystem;
 
         this._model = seriesModel;
 
-        let symbolDraw = this._symbolDraw;
-        let lineDraw = this._lineDraw;
+        const symbolDraw = this._symbolDraw;
+        const lineDraw = this._lineDraw;
 
-        let group = this.group;
+        const group = this.group;
 
         if (isViewCoordSys(coordSys)) {
-            let groupNewProp = {
+            const groupNewProp = {
                 position: coordSys.position,
                 scale: coordSys.scale
             };
@@ -168,10 +168,10 @@ class GraphView extends ChartView {
         // Fix edge contact point with node
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
-        let data = seriesModel.getData();
+        const data = seriesModel.getData();
         symbolDraw.updateData(data);
 
-        let edgeData = seriesModel.getEdgeData();
+        const edgeData = seriesModel.getEdgeData();
         lineDraw.updateData(edgeData);
 
         this._updateNodeAndLinkScale();
@@ -179,17 +179,17 @@ class GraphView extends ChartView {
         this._updateController(seriesModel, ecModel, api);
 
         clearTimeout(this._layoutTimeout);
-        let forceLayout = seriesModel.forceLayout;
-        let layoutAnimation = seriesModel.get(['force', 'layoutAnimation']);
+        const forceLayout = seriesModel.forceLayout;
+        const layoutAnimation = seriesModel.get(['force', 'layoutAnimation']);
         if (forceLayout) {
             this._startForceLayoutIteration(forceLayout, layoutAnimation);
         }
 
         data.eachItemGraphicEl((el: Symbol, idx) => {
-            let itemModel = data.getItemModel(idx) as Model<GraphNodeItemOption>;
+            const itemModel = data.getItemModel(idx) as Model<GraphNodeItemOption>;
             // Update draggable
             el.off('drag').off('dragend');
-            let draggable = itemModel.get('draggable');
+            const draggable = itemModel.get('draggable');
             if (draggable) {
                 el.on('drag', () => {
                     if (forceLayout) {
@@ -228,7 +228,7 @@ class GraphView extends ChartView {
         });
 
         data.graph.eachEdge(function (edge) {
-            let el = edge.getGraphicEl();
+            const el = edge.getGraphicEl();
 
             (el as any)[FOCUS_ADJACENCY] && el.off('mouseover', (el as any)[FOCUS_ADJACENCY]);
             (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
@@ -248,25 +248,25 @@ class GraphView extends ChartView {
             }
         });
 
-        let circularRotateLabel = seriesModel.get('layout') === 'circular'
+        const circularRotateLabel = seriesModel.get('layout') === 'circular'
             && seriesModel.get(['circular', 'rotateLabel']);
-        let cx = data.getLayout('cx');
-        let cy = data.getLayout('cy');
+        const cx = data.getLayout('cx');
+        const cy = data.getLayout('cy');
         data.eachItemGraphicEl(function (el: Symbol, idx) {
-            let itemModel = data.getItemModel<GraphNodeItemOption>(idx);
+            const itemModel = data.getItemModel<GraphNodeItemOption>(idx);
             let labelRotate = itemModel.get(['label', 'rotate']) || 0;
-            let symbolPath = el.getSymbolPath();
+            const symbolPath = el.getSymbolPath();
             if (circularRotateLabel) {
-                let pos = data.getItemLayout(idx);
+                const pos = data.getItemLayout(idx);
                 let rad = Math.atan2(pos[1] - cy, pos[0] - cx);
                 if (rad < 0) {
                     rad = Math.PI * 2 + rad;
                 }
-                let isLeft = pos[0] < cx;
+                const isLeft = pos[0] < cx;
                 if (isLeft) {
                     rad = rad - Math.PI;
                 }
-                let textPosition = isLeft ? 'left' as const : 'right' as const;
+                const textPosition = isLeft ? 'left' as const : 'right' as const;
 
                 symbolPath.setTextConfig({
                     rotation: -rad,
@@ -295,7 +295,7 @@ class GraphView extends ChartView {
     }
 
     _dispatchUnfocus(api: ExtensionAPI) {
-        let self = this;
+        const self = this;
         this._clearTimer();
         this._unfocusDelayTimer = setTimeout(function () {
             self._unfocusDelayTimer = null;
@@ -320,13 +320,13 @@ class GraphView extends ChartView {
         api: ExtensionAPI,
         payload: FocusNodePayload
     ) {
-        let data = seriesModel.getData();
-        let graph = data.graph;
-        let dataIndex = payload.dataIndex;
-        let edgeDataIndex = payload.edgeDataIndex;
+        const data = seriesModel.getData();
+        const graph = data.graph;
+        const dataIndex = payload.dataIndex;
+        const edgeDataIndex = payload.edgeDataIndex;
 
-        let node = graph.getNodeByIndex(dataIndex);
-        let edge = graph.getEdgeByIndex(edgeDataIndex);
+        const node = graph.getNodeByIndex(dataIndex);
+        const edge = graph.getEdgeByIndex(edgeDataIndex);
 
         if (!node && !edge) {
             return;
@@ -360,7 +360,7 @@ class GraphView extends ChartView {
     unfocusNodeAdjacency(
         seriesModel: GraphSeriesModel
     ) {
-        let graph = seriesModel.getData().graph;
+        const graph = seriesModel.getData().graph;
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);
@@ -374,7 +374,7 @@ class GraphView extends ChartView {
         forceLayout: GraphSeriesModel['forceLayout'],
         layoutAnimation?: boolean
     ) {
-        let self = this;
+        const self = this;
         (function step() {
             forceLayout.step(function (stopped) {
                 self.updateLayout(self._model);
@@ -392,12 +392,12 @@ class GraphView extends ChartView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        let controller = this._controller;
-        let controllerHost = this._controllerHost;
-        let group = this.group;
+        const controller = this._controller;
+        const controllerHost = this._controllerHost;
+        const group = this.group;
 
         controller.setPointerChecker(function (e, x, y) {
-            let rect = group.getBoundingRect();
+            const rect = group.getBoundingRect();
             rect.applyTransform(group.transform);
             return rect.contain(x, y)
                 && !onIrrelevantElement(e, api, seriesModel);
@@ -439,11 +439,11 @@ class GraphView extends ChartView {
     }
 
     _updateNodeAndLinkScale() {
-        let seriesModel = this._model;
-        let data = seriesModel.getData();
+        const seriesModel = this._model;
+        const data = seriesModel.getData();
 
-        let nodeScale = getNodeGlobalScale(seriesModel);
-        let invScale = [nodeScale, nodeScale];
+        const nodeScale = getNodeGlobalScale(seriesModel);
+        const invScale = [nodeScale, nodeScale];
 
         data.eachItemGraphicEl(function (el, idx) {
             el.attr('scale', invScale);

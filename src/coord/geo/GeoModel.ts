@@ -186,8 +186,8 @@ class GeoModel extends ComponentModel<GeoOption> {
     }
 
     optionUpdated(): void {
-        let option = this.option;
-        let self = this;
+        const option = this.option;
+        const self = this;
 
         option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
 
@@ -213,11 +213,11 @@ class GeoModel extends ComponentModel<GeoOption> {
      * @param name Region name
      */
     getFormattedLabel(name: string, status?: DisplayState) {
-        let regionModel = this.getRegionModel(name);
-        let formatter = status === 'normal'
+        const regionModel = this.getRegionModel(name);
+        const formatter = status === 'normal'
             ? regionModel.get(LABEL_FORMATTER_NORMAL)
             : regionModel.get(LABEL_FORMATTER_EMPHASIS);
-        let params = {
+        const params = {
             name: name
         } as GeoLabelFormatterDataParams;
         if (typeof formatter === 'function') {

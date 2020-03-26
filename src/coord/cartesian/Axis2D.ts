@@ -86,7 +86,7 @@ class Axis2D extends Axis {
     getAxesOnZeroOf: () => Axis2D[];
 
     isHorizontal(): boolean {
-        let position = this.position;
+        const position = this.position;
         return position === 'top' || position === 'bottom';
     }
 
@@ -99,7 +99,7 @@ class Axis2D extends Axis {
      * @return {Array.<number>}
      */
     getGlobalExtent(asc?: boolean): [number, number] {
-        let ret = this.getExtent();
+        const ret = this.getExtent();
         ret[0] = this.toGlobalCoord(ret[0]);
         ret[1] = this.toGlobalCoord(ret[1]);
         asc && ret[0] > ret[1] && ret.reverse();

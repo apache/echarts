@@ -51,13 +51,13 @@ export interface SubTypeDefaulterManager {
  * Implements `SubTypeDefaulterManager` for `target`.
  */
 export function enableSubTypeDefaulter(target: SubTypeDefaulterManager & ClassManager): void {
-    let subTypeDefaulters: Dictionary<SubTypeDefaulter> = {};
+    const subTypeDefaulters: Dictionary<SubTypeDefaulter> = {};
 
     target.registerSubTypeDefaulter = function (
         componentType: ComponentFullType,
         defaulter: SubTypeDefaulter
     ): void {
-        let componentTypeInfo = parseClassType(componentType);
+        const componentTypeInfo = parseClassType(componentType);
         subTypeDefaulters[componentTypeInfo.main] = defaulter;
     };
 
@@ -67,7 +67,7 @@ export function enableSubTypeDefaulter(target: SubTypeDefaulterManager & ClassMa
     ): string {
         let type = option.type;
         if (!type) {
-            let componentTypeMain = parseClassType(componentType).main;
+            const componentTypeMain = parseClassType(componentType).main;
             if (target.hasSubTypes(componentType) && subTypeDefaulters[componentTypeMain]) {
                 type = subTypeDefaulters[componentTypeMain](option);
             }
@@ -125,19 +125,19 @@ export function enableTopologicalTravel<T>(
             return;
         }
 
-        let result = makeDepndencyGraph(fullNameList);
-        let graph = result.graph;
-        let stack = result.noEntryList;
+        const result = makeDepndencyGraph(fullNameList);
+        const graph = result.graph;
+        const stack = result.noEntryList;
 
-        let targetNameSet: {[cmtpMainType: string]: boolean} = {};
+        const targetNameSet: {[cmtpMainType: string]: boolean} = {};
         zrUtil.each(targetNameList, function (name) {
             targetNameSet[name] = true;
         });
 
         while (stack.length) {
-            let currComponentType = stack.pop();
-            let currVertex = graph[currComponentType];
-            let isInTargetNameSet = !!targetNameSet[currComponentType];
+            const currComponentType = stack.pop();
+            const currVertex = graph[currComponentType];
+            const isInTargetNameSet = !!targetNameSet[currComponentType];
             if (isInTargetNameSet) {
                 callback.call(context, currComponentType, currVertex.originalDeps.slice());
                 delete targetNameSet[currComponentType];
@@ -172,15 +172,15 @@ export function enableTopologicalTravel<T>(
     };
 
     function makeDepndencyGraph(fullNameList: ComponentMainType[]) {
-        let graph: DepGraph = {};
-        let noEntryList: ComponentMainType[] = [];
+        const graph: DepGraph = {};
+        const noEntryList: ComponentMainType[] = [];
 
         zrUtil.each(fullNameList, function (name: ComponentMainType) {
 
-            let thisItem = createDependencyGraphItem(graph, name);
-            let originalDeps = thisItem.originalDeps = dependencyGetter(name);
+            const thisItem = createDependencyGraphItem(graph, name);
+            const originalDeps = thisItem.originalDeps = dependencyGetter(name);
 
-            let availableDeps = getAvailableDependencies(originalDeps, fullNameList);
+            const availableDeps = getAvailableDependencies(originalDeps, fullNameList);
             thisItem.entryCount = availableDeps.length;
             if (thisItem.entryCount === 0) {
                 noEntryList.push(name);
@@ -190,7 +190,7 @@ export function enableTopologicalTravel<T>(
                 if (zrUtil.indexOf(thisItem.predecessor, dependentName) < 0) {
                     thisItem.predecessor.push(dependentName);
                 }
-                let thatItem = createDependencyGraphItem(graph, dependentName);
+                const thatItem = createDependencyGraphItem(graph, dependentName);
                 if (zrUtil.indexOf(thatItem.successor, dependentName) < 0) {
                     thatItem.successor.push(name);
                 }
@@ -210,7 +210,7 @@ export function enableTopologicalTravel<T>(
     function getAvailableDependencies(
         originalDeps: ComponentMainType[], fullNameList: ComponentMainType[]
     ): ComponentMainType[] {
-        let availableDeps = [] as ComponentMainType[];
+        const availableDeps = [] as ComponentMainType[];
         zrUtil.each(originalDeps, function (dep) {
             zrUtil.indexOf(fullNameList, dep) >= 0 && availableDeps.push(dep);
         });

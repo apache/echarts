@@ -22,14 +22,14 @@ import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './Gr
 import Graph from '../../data/Graph';
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
-    let coordSys = seriesModel.coordinateSystem;
+    const coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
         return;
     }
-    let graph = seriesModel.getGraph();
+    const graph = seriesModel.getGraph();
 
     graph.eachNode(function (node) {
-        let model = node.getModel<GraphNodeItemOption>();
+        const model = node.getModel<GraphNodeItemOption>();
         node.setLayout([+model.get('x'), +model.get('y')]);
     });
 
@@ -38,10 +38,10 @@ export function simpleLayout(seriesModel: GraphSeriesModel) {
 
 export function simpleLayoutEdge(graph: Graph) {
     graph.eachEdge(function (edge, idx) {
-        let curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
-        let p1 = vec2.clone(edge.node1.getLayout());
-        let p2 = vec2.clone(edge.node2.getLayout());
-        let points = [p1, p2];
+        const curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
+        const p1 = vec2.clone(edge.node1.getLayout());
+        const p2 = vec2.clone(edge.node2.getLayout());
+        const points = [p1, p2];
         if (+curveness) {
             points.push([
                 (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,

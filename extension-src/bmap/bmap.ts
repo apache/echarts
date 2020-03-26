@@ -37,10 +37,10 @@ echarts.registerAction({
     update: 'updateLayout'
 }, function (payload, ecModel) {
     ecModel.eachComponent('bmap', function (bMapModel) {
-        let bmap = bMapModel.getBMap();
-        let center = bmap.getCenter();
+        const bmap = bMapModel.getBMap();
+        const center = bmap.getCenter();
         bMapModel.setCenterAndZoom([center.lng, center.lat], bmap.getZoom());
     });
 });
 
-export let version = '1.0.0';
+export const version = '1.0.0';

@@ -35,17 +35,17 @@ export function layout(axisModel: SingleAxisModel, opt?: {
     rotate?: number
 }) {
     opt = opt || {};
-    let single = axisModel.coordinateSystem;
-    let axis = axisModel.axis;
-    let layout = {} as LayoutResult;
+    const single = axisModel.coordinateSystem;
+    const axis = axisModel.axis;
+    const layout = {} as LayoutResult;
 
-    let axisPosition = axis.position;
-    let orient = axis.orient;
+    const axisPosition = axis.position;
+    const orient = axis.orient;
 
-    let rect = single.getRect();
-    let rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
+    const rect = single.getRect();
+    const rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
 
-    let positionMap = {
+    const positionMap = {
         horizontal: {top: rectBound[2], bottom: rectBound[3]},
         vertical: {left: rectBound[0], right: rectBound[1]}
     } as const;
@@ -59,7 +59,7 @@ export function layout(axisModel: SingleAxisModel, opt?: {
             : rectBound[3]
     ] as [number, number];
 
-    let r = {horizontal: 0, vertical: 1};
+    const r = {horizontal: 0, vertical: 1};
     layout.rotation = Math.PI / 2 * r[orient];
 
     const directionMap = {top: -1, bottom: 1, right: 1, left: -1} as const;

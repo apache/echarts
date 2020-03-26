@@ -291,7 +291,7 @@ class BrushController extends Eventful<BrushControllerEvents> {
     }
 
     private _doEnableBrush(brushOption: Partial<BrushCoverCreatorConfig>): void {
-        let zr = this._zr;
+        const zr = this._zr;
 
         // Consider roam, which takes globalPan too.
         if (!this._enableGlobalPan) {
@@ -309,7 +309,7 @@ class BrushController extends Eventful<BrushControllerEvents> {
     }
 
     private _doDisableBrush(): void {
-        let zr = this._zr;
+        const zr = this._zr;
 
         interactionMutex.release(zr, MUTEX_RESOURCE_KEY, this._uid);
 
@@ -325,7 +325,7 @@ class BrushController extends Eventful<BrushControllerEvents> {
      */
     setPanels(panelOpts?: BrushPanelConfig[]): BrushController {
         if (panelOpts && panelOpts.length) {
-            let panels = this._panels = {} as Dictionary<BrushPanelConfig>;
+            const panels = this._panels = {} as Dictionary<BrushPanelConfig>;
             each(panelOpts, function (panelOpts) {
                 panels[panelOpts.panelId] = clone(panelOpts);
             });
@@ -350,7 +350,7 @@ class BrushController extends Eventful<BrushControllerEvents> {
 
         this._enableGlobalPan = opt.enableGlobalPan;
 
-        let thisGroup = this.group;
+        const thisGroup = this.group;
         this._zr.add(thisGroup);
 
         thisGroup.attr({
@@ -381,11 +381,11 @@ class BrushController extends Eventful<BrushControllerEvents> {
             return merge(clone(DEFAULT_BRUSH_OPT), coverConfig, true);
         }) as BrushCoverConfig[];
 
-        let tmpIdPrefix = '\0-brush-index-';
-        let oldCovers = this._covers;
-        let newCovers = this._covers = [] as BrushCover[];
-        let controller = this;
-        let creatingCover = this._creatingCover;
+        const tmpIdPrefix = '\0-brush-index-';
+        const oldCovers = this._covers;
+        const newCovers = this._covers = [] as BrushCover[];
+        const controller = this;
+        const creatingCover = this._creatingCover;
 
         (new DataDiffer(oldCovers, coverConfigList, oldGetKey, getKey))
             .add(addOrUpdate)
@@ -405,14 +405,14 @@ class BrushController extends Eventful<BrushControllerEvents> {
         }
 
         function addOrUpdate(newIndex: number, oldIndex?: number): void {
-            let newBrushInternal = coverConfigList[newIndex];
+            const newBrushInternal = coverConfigList[newIndex];
             // Consider setOption in event listener of brushSelect,
             // where updating cover when creating should be forbiden.
             if (oldIndex != null && oldCovers[oldIndex] === creatingCover) {
                 newCovers[newIndex] = oldCovers[oldIndex];
             }
             else {
-                let cover = newCovers[newIndex] = oldIndex != null
+                const cover = newCovers[newIndex] = oldIndex != null
                     ? (
                         oldCovers[oldIndex].__brushOption = newBrushInternal,
                         oldCovers[oldIndex]
@@ -457,7 +457,7 @@ class BrushController extends Eventful<BrushControllerEvents> {
 
 
 function createCover(controller: BrushController, brushOption: BrushCoverConfig): BrushCover {
-    let cover = coverRenderers[brushOption.brushType].createCover(controller, brushOption);
+    const cover = coverRenderers[brushOption.brushType].createCover(controller, brushOption);
     cover.__brushOption = brushOption;
     updateZ(cover, brushOption);
     controller.group.add(cover);
@@ -465,7 +465,7 @@ function createCover(controller: BrushController, brushOption: BrushCoverConfig)
 }
 
 function endCreating(controller: BrushController, creatingCover: BrushCover): BrushCover {
-    let coverRenderer = getCoverRenderer(creatingCover);
+    const coverRenderer = getCoverRenderer(creatingCover);
     if (coverRenderer.endCreating) {
         coverRenderer.endCreating(controller, creatingCover);
         updateZ(creatingCover, creatingCover.__brushOption);
@@ -474,7 +474,7 @@ function endCreating(controller: BrushController, creatingCover: BrushCover): Br
 }
 
 function updateCoverShape(controller: BrushController, cover: BrushCover): void {
-    let brushOption = cover.__brushOption;
+    const brushOption = cover.__brushOption;
     getCoverRenderer(cover).updateCoverShape(
         controller, cover, brushOption.range, brushOption
     );
@@ -504,12 +504,12 @@ function getPanelByPoint(
     e: ElementEvent,
     localCursorPoint: Point
 ): BrushPanelConfigOrGlobal {
-    let panels = controller._panels;
+    const panels = controller._panels;
     if (!panels) {
         return BRUSH_PANEL_GLOBAL; // Global panel
     }
     let panel;
-    let transform = controller._transform;
+    const transform = controller._transform;
     each(panels, function (pn) {
         pn.isTargetByCursor(e, localCursorPoint, transform) && (panel = pn);
     });
@@ -518,19 +518,19 @@ function getPanelByPoint(
 
 // Return a panel or true
 function getPanelByCover(controller: BrushController, cover: BrushCover): BrushPanelConfigOrGlobal {
-    let panels = controller._panels;
+    const panels = controller._panels;
     if (!panels) {
         return BRUSH_PANEL_GLOBAL; // Global panel
     }
-    let panelId = cover.__brushOption.panelId;
+    const panelId = cover.__brushOption.panelId;
     // User may give cover without coord sys info,
     // which is then treated as global panel.
     return panelId != null ? panels[panelId] : BRUSH_PANEL_GLOBAL;
 }
 
 function clearCovers(controller: BrushController): boolean {
-    let covers = controller._covers;
-    let originalLength = covers.length;
+    const covers = controller._covers;
+    const originalLength = covers.length;
     each(covers, function (cover) {
         controller.group.remove(cover);
     }, controller);
@@ -543,9 +543,9 @@ function trigger(
     controller: BrushController,
     opt: {isEnd?: boolean, removeOnClick?: boolean}
 ): void {
-    let areas = map(controller._covers, function (cover) {
-        let brushOption = cover.__brushOption;
-        let range = clone(brushOption.range);
+    const areas = map(controller._covers, function (cover) {
+        const brushOption = cover.__brushOption;
+        const range = clone(brushOption.range);
         return {
             brushType: brushOption.brushType,
             panelId: brushOption.panelId,
@@ -561,17 +561,17 @@ function trigger(
 }
 
 function shouldShowCover(controller: BrushController): boolean {
-    let track = controller._track;
+    const track = controller._track;
 
     if (!track.length) {
         return false;
     }
 
-    let p2 = track[track.length - 1];
-    let p1 = track[0];
-    let dx = p2[0] - p1[0];
-    let dy = p2[1] - p1[1];
-    let dist = mathPow(dx * dx + dy * dy, 0.5);
+    const p2 = track[track.length - 1];
+    const p1 = track[0];
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    const dist = mathPow(dx * dx + dy * dy, 0.5);
 
     return dist > UNSELECT_THRESHOLD;
 }
@@ -592,7 +592,7 @@ function createBaseRectCover(
     brushOption: BrushCoverConfig,
     edgeNameSequences: DirectionNameSequence[]
 ): BrushCover {
-    let cover = new graphic.Group() as BrushCover;
+    const cover = new graphic.Group() as BrushCover;
 
     cover.add(new graphic.Rect({
         name: 'main',
@@ -628,20 +628,20 @@ function updateBaseRect(
     localRange: BrushDimensionMinMax[],
     brushOption: BrushCoverConfig
 ): void {
-    let lineWidth = brushOption.brushStyle.lineWidth || 0;
-    let handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
-    let x = localRange[0][0];
-    let y = localRange[1][0];
-    let xa = x - lineWidth / 2;
-    let ya = y - lineWidth / 2;
-    let x2 = localRange[0][1];
-    let y2 = localRange[1][1];
-    let x2a = x2 - handleSize + lineWidth / 2;
-    let y2a = y2 - handleSize + lineWidth / 2;
-    let width = x2 - x;
-    let height = y2 - y;
-    let widtha = width + lineWidth;
-    let heighta = height + lineWidth;
+    const lineWidth = brushOption.brushStyle.lineWidth || 0;
+    const handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
+    const x = localRange[0][0];
+    const y = localRange[1][0];
+    const xa = x - lineWidth / 2;
+    const ya = y - lineWidth / 2;
+    const x2 = localRange[0][1];
+    const y2 = localRange[1][1];
+    const x2a = x2 - handleSize + lineWidth / 2;
+    const y2a = y2 - handleSize + lineWidth / 2;
+    const width = x2 - x;
+    const height = y2 - y;
+    const widtha = width + lineWidth;
+    const heighta = height + lineWidth;
 
     updateRectShape(controller, cover, 'main', x, y, width, height);
 
@@ -659,10 +659,10 @@ function updateBaseRect(
 }
 
 function updateCommon(controller: BrushController, cover: BrushCover): void {
-    let brushOption = cover.__brushOption;
-    let transformable = brushOption.transformable;
+    const brushOption = cover.__brushOption;
+    const transformable = brushOption.transformable;
 
-    let mainEl = cover.childAt(0) as Displayable;
+    const mainEl = cover.childAt(0) as Displayable;
     mainEl.useStyle(makeStyle(brushOption));
     mainEl.attr({
         silent: !transformable,
@@ -672,8 +672,8 @@ function updateCommon(controller: BrushController, cover: BrushCover): void {
     each(
         [['w'], ['e'], ['n'], ['s'], ['s', 'e'], ['s', 'w'], ['n', 'e'], ['n', 'w']],
         function (nameSequence: DirectionNameSequence) {
-            let el = cover.childOfName(nameSequence.join('')) as Displayable;
-            let globalDir = nameSequence.length === 1
+            const el = cover.childOfName(nameSequence.join('')) as Displayable;
+            const globalDir = nameSequence.length === 1
                 ? getGlobalDirection1(controller, nameSequence[0])
                 : getGlobalDirection2(controller, nameSequence);
 
@@ -692,7 +692,7 @@ function updateRectShape(
     name: string,
     x: number, y: number, w: number, h: number
 ): void {
-    let el = cover.childOfName(name) as graphic.Rect;
+    const el = cover.childOfName(name) as graphic.Rect;
     el && el.setShape(pointsToRect(
         clipByPanel(controller, cover, [[x, y], [x + w, y + h]])
     ));
@@ -703,8 +703,8 @@ function makeStyle(brushOption: BrushCoverConfig) {
 }
 
 function formatRectRange(x: number, y: number, x2: number, y2: number): BrushDimensionMinMax[] {
-    let min = [mathMin(x, x2), mathMin(y, y2)];
-    let max = [mathMax(x, x2), mathMax(y, y2)];
+    const min = [mathMin(x, x2), mathMin(y, y2)];
+    const max = [mathMax(x, x2), mathMax(y, y2)];
 
     return [
         [min[0], max[0]], // x range
@@ -719,9 +719,9 @@ function getTransform(controller: BrushController): matrix.MatrixArray {
 function getGlobalDirection1(
     controller: BrushController, localDirName: DirectionName
 ): keyof typeof CURSOR_MAP {
-    let map = {w: 'left', e: 'right', n: 'top', s: 'bottom'} as const;
-    let inverseMap = {left: 'w', right: 'e', top: 'n', bottom: 's'} as const;
-    let dir = graphic.transformDirection(
+    const map = {w: 'left', e: 'right', n: 'top', s: 'bottom'} as const;
+    const inverseMap = {left: 'w', right: 'e', top: 'n', bottom: 's'} as const;
+    const dir = graphic.transformDirection(
         map[localDirName], getTransform(controller)
     );
     return inverseMap[dir];
@@ -729,7 +729,7 @@ function getGlobalDirection1(
 function getGlobalDirection2(
     controller: BrushController, localDirNameSeq: DirectionNameSequence
 ): keyof typeof CURSOR_MAP {
-    let globalDir = [
+    const globalDir = [
         getGlobalDirection1(controller, localDirNameSeq[0]),
         getGlobalDirection1(controller, localDirNameSeq[1])
     ];
@@ -745,12 +745,12 @@ function driftRect(
     dx: number,
     dy: number
 ): void {
-    let brushOption = cover.__brushOption;
-    let rectRange = rectRangeConverter.toRectRange(brushOption.range);
-    let localDelta = toLocalDelta(controller, dx, dy);
+    const brushOption = cover.__brushOption;
+    const rectRange = rectRangeConverter.toRectRange(brushOption.range);
+    const localDelta = toLocalDelta(controller, dx, dy);
 
     each(dirNameSequence, function (dirName) {
-        let ind = DIRECTION_MAP[dirName];
+        const ind = DIRECTION_MAP[dirName];
         rectRange[ind[0]][ind[1]] += localDelta[ind[0]];
     });
 
@@ -768,8 +768,8 @@ function driftPolygon(
     dx: number,
     dy: number
 ): void {
-    let range = cover.__brushOption.range as BrushDimensionMinMax[];
-    let localDelta = toLocalDelta(controller, dx, dy);
+    const range = cover.__brushOption.range as BrushDimensionMinMax[];
+    const localDelta = toLocalDelta(controller, dx, dy);
 
     each(range, function (point) {
         point[0] += localDelta[0];
@@ -783,15 +783,15 @@ function driftPolygon(
 function toLocalDelta(
     controller: BrushController, dx: number, dy: number
 ): BrushDimensionMinMax {
-    let thisGroup = controller.group;
-    let localD = thisGroup.transformCoordToLocal(dx, dy);
-    let localZero = thisGroup.transformCoordToLocal(0, 0);
+    const thisGroup = controller.group;
+    const localD = thisGroup.transformCoordToLocal(dx, dy);
+    const localZero = thisGroup.transformCoordToLocal(0, 0);
 
     return [localD[0] - localZero[0], localD[1] - localZero[1]];
 }
 
 function clipByPanel(controller: BrushController, cover: BrushCover, data: Point[]): Point[] {
-    let panel = getPanelByCover(controller, cover);
+    const panel = getPanelByCover(controller, cover);
 
     return (panel && panel !== BRUSH_PANEL_GLOBAL)
         ? panel.clipPath(data, controller._transform)
@@ -799,10 +799,10 @@ function clipByPanel(controller: BrushController, cover: BrushCover, data: Point
 }
 
 function pointsToRect(points: Point[]): graphic.Rect['shape'] {
-    let xmin = mathMin(points[0][0], points[1][0]);
-    let ymin = mathMin(points[0][1], points[1][1]);
-    let xmax = mathMax(points[0][0], points[1][0]);
-    let ymax = mathMax(points[0][1], points[1][1]);
+    const xmin = mathMin(points[0][0], points[1][0]);
+    const ymin = mathMin(points[0][1], points[1][1]);
+    const xmax = mathMax(points[0][0], points[1][0]);
+    const ymax = mathMax(points[0][1], points[1][1]);
 
     return {
         x: xmin,
@@ -826,14 +826,14 @@ function resetCursor(
         return;
     }
 
-    let zr = controller._zr;
-    let covers = controller._covers;
-    let currPanel = getPanelByPoint(controller, e, localCursorPoint);
+    const zr = controller._zr;
+    const covers = controller._covers;
+    const currPanel = getPanelByPoint(controller, e, localCursorPoint);
 
     // Check whether in covers.
     if (!controller._dragging) {
         for (let i = 0; i < covers.length; i++) {
-            let brushOption = covers[i].__brushOption;
+            const brushOption = covers[i].__brushOption;
             if (currPanel
                 && (currPanel === BRUSH_PANEL_GLOBAL || brushOption.panelId === currPanel.panelId)
                 && coverRenderers[brushOption.brushType].contain(
@@ -850,7 +850,7 @@ function resetCursor(
 }
 
 function preventDefault(e: ElementEvent): void {
-    let rawE = e.event;
+    const rawE = e.event;
     rawE.preventDefault && rawE.preventDefault();
 }
 
@@ -868,8 +868,8 @@ function updateCoverByMouse(
     removeOnClick?: boolean
 } {
     let creatingCover = controller._creatingCover;
-    let panel = controller._creatingPanel;
-    let thisBrushOption = controller._brushOption;
+    const panel = controller._creatingPanel;
+    const thisBrushOption = controller._brushOption;
     let eventParams;
 
     controller._track.push(localCursorPoint.slice());
@@ -878,7 +878,7 @@ function updateCoverByMouse(
 
         if (panel && !creatingCover) {
             thisBrushOption.brushMode === 'single' && clearCovers(controller);
-            let brushOption = clone(thisBrushOption) as BrushCoverConfig;
+            const brushOption = clone(thisBrushOption) as BrushCoverConfig;
             brushOption.brushType = determineBrushType(brushOption.brushType, panel as BrushPanelConfig);
             brushOption.panelId = panel === BRUSH_PANEL_GLOBAL ? null : panel.panelId;
             creatingCover = controller._creatingCover = createCover(controller, brushOption);
@@ -886,10 +886,10 @@ function updateCoverByMouse(
         }
 
         if (creatingCover) {
-            let coverRenderer = coverRenderers[
+            const coverRenderer = coverRenderers[
                 determineBrushType(controller._brushType, panel as BrushPanelConfig)
             ];
-            let coverBrushOption = creatingCover.__brushOption;
+            const coverBrushOption = creatingCover.__brushOption;
 
             coverBrushOption.range = coverRenderer.getCreatingRange(
                 clipByPanel(controller, creatingCover, controller._track)
@@ -948,10 +948,10 @@ const pointerHandlers: Dictionary<(this: BrushController, e: ElementEvent) => vo
 
             preventDefault(e);
 
-            let localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
+            const localCursorPoint = this.group.transformCoordToLocal(e.offsetX, e.offsetY);
 
             this._creatingCover = null;
-            let panel = this._creatingPanel = getPanelByPoint(this, e, localCursorPoint);
+            const panel = this._creatingPanel = getPanelByPoint(this, e, localCursorPoint);
 
             if (panel) {
                 this._dragging = true;
@@ -961,16 +961,16 @@ const pointerHandlers: Dictionary<(this: BrushController, e: ElementEvent) => vo
     },
 
     mousemove: function (e) {
-        let x = e.offsetX;
-        let y = e.offsetY;
+        const x = e.offsetX;
+        const y = e.offsetY;
 
-        let localCursorPoint = this.group.transformCoordToLocal(x, y);
+        const localCursorPoint = this.group.transformCoordToLocal(x, y);
 
         resetCursor(this, e, localCursorPoint);
 
         if (this._dragging) {
             preventDefault(e);
-            let eventParams = updateCoverByMouse(this, e, localCursorPoint, false);
+            const eventParams = updateCoverByMouse(this, e, localCursorPoint, false);
             eventParams && trigger(this, eventParams);
         }
     },
@@ -985,11 +985,11 @@ function handleDragEnd(controller: BrushController, e: ElementEvent) {
     if (controller._dragging) {
         preventDefault(e);
 
-        let x = e.offsetX;
-        let y = e.offsetY;
+        const x = e.offsetX;
+        const y = e.offsetY;
 
-        let localCursorPoint = controller.group.transformCoordToLocal(x, y);
-        let eventParams = updateCoverByMouse(controller, e, localCursorPoint, true);
+        const localCursorPoint = controller.group.transformCoordToLocal(x, y);
+        const eventParams = updateCoverByMouse(controller, e, localCursorPoint, true);
 
         controller._dragging = false;
         controller._track = [];
@@ -1001,7 +1001,7 @@ function handleDragEnd(controller: BrushController, e: ElementEvent) {
 }
 
 function isOutsideZrArea(controller: BrushController, x: number, y: number): boolean {
-    let zr = controller._zr;
+    const zr = controller._zr;
     return x < 0 || x > zr.getWidth() || y < 0 || y > zr.getHeight();
 }
 
@@ -1042,7 +1042,7 @@ const coverRenderers: Record<BrushType, CoverRenderer> = {
             );
         },
         getCreatingRange: function (localTrack) {
-            let ends = getTrackEnds(localTrack);
+            const ends = getTrackEnds(localTrack);
             return formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1]);
         },
         updateCoverShape: function (controller, cover, localRange: BrushDimensionMinMax[], brushOption) {
@@ -1054,7 +1054,7 @@ const coverRenderers: Record<BrushType, CoverRenderer> = {
 
     polygon: {
         createCover: function (controller, brushOption) {
-            let cover = new graphic.Group();
+            const cover = new graphic.Group();
 
             // Do not use graphic.Polygon because graphic.Polyline do not close the
             // border of the shape when drawing, which is a better experience for user.
@@ -1095,7 +1095,7 @@ function getLineRenderer(xyIndex: 0 | 1) {
             return createBaseRectCover(
                 {
                     toRectRange: function (range: BrushDimensionMinMax): BrushDimensionMinMax[] {
-                        let rectRange = [range, [0, 100]];
+                        const rectRange = [range, [0, 100]];
                         xyIndex && rectRange.reverse();
                         return rectRange;
                     },
@@ -1109,9 +1109,9 @@ function getLineRenderer(xyIndex: 0 | 1) {
             );
         },
         getCreatingRange: function (localTrack: Point[]): BrushDimensionMinMax {
-            let ends = getTrackEnds(localTrack);
-            let min = mathMin(ends[0][xyIndex], ends[1][xyIndex]);
-            let max = mathMax(ends[0][xyIndex], ends[1][xyIndex]);
+            const ends = getTrackEnds(localTrack);
+            const min = mathMin(ends[0][xyIndex], ends[1][xyIndex]);
+            const max = mathMax(ends[0][xyIndex], ends[1][xyIndex]);
 
             return [min, max];
         },
@@ -1123,15 +1123,15 @@ function getLineRenderer(xyIndex: 0 | 1) {
         ): void {
             let otherExtent;
             // If brushWidth not specified, fit the panel.
-            let panel = getPanelByCover(controller, cover);
+            const panel = getPanelByCover(controller, cover);
             if (panel !== BRUSH_PANEL_GLOBAL && panel.getLinearBrushOtherExtent) {
                 otherExtent = panel.getLinearBrushOtherExtent(xyIndex);
             }
             else {
-                let zr = controller._zr;
+                const zr = controller._zr;
                 otherExtent = [0, [zr.getWidth(), zr.getHeight()][1 - xyIndex]];
             }
-            let rectRange = [localRange, otherExtent];
+            const rectRange = [localRange, otherExtent];
             xyIndex && rectRange.reverse();
 
             updateBaseRect(controller, cover, rectRange, brushOption);

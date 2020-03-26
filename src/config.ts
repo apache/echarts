@@ -38,4 +38,4 @@ if (typeof dev === 'undefined') {
     dev = true;
 }
 
-export let __DEV__ = dev;
+export const __DEV__ = dev;

@@ -88,7 +88,7 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         super.optionUpdated.apply(this, arguments as any);
 
         zrUtil.each(this.option.feature, function (featureOpt, featureName) {
-            let Feature = featureManager.getFeature(featureName);
+            const Feature = featureManager.getFeature(featureName);
             Feature && zrUtil.merge(featureOpt, Feature.defaultOption);
         });
     }

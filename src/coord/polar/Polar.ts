@@ -65,7 +65,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      * If contain coord
      */
     containPoint(point: number[]) {
-        let coord = this.pointToCoord(point);
+        const coord = this.pointToCoord(point);
         return this._radiusAxis.contain(coord[0])
             && this._angleAxis.contain(coord[1]);
     }
@@ -91,9 +91,9 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      * Get axes by type of scale
      */
     getAxesByScale(scaleType: 'ordinal' | 'interval' | 'time' | 'log') {
-        let axes = [];
-        let angleAxis = this._angleAxis;
-        let radiusAxis = this._radiusAxis;
+        const axes = [];
+        const angleAxis = this._angleAxis;
+        const radiusAxis = this._radiusAxis;
         angleAxis.scale.type === scaleType && axes.push(angleAxis);
         radiusAxis.scale.type === scaleType && axes.push(radiusAxis);
 
@@ -109,7 +109,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     getOtherAxis(axis: AngleAxis | RadiusAxis): AngleAxis | RadiusAxis {
-        let angleAxis = this._angleAxis;
+        const angleAxis = this._angleAxis;
         return axis === angleAxis ? this._radiusAxis : angleAxis;
     }
 
@@ -124,7 +124,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     getTooltipAxes(dim: 'radius' | 'angle' | 'auto') {
-        let baseAxis = (dim != null && dim !== 'auto')
+        const baseAxis = (dim != null && dim !== 'auto')
             ? this.getAxis(dim) : this.getBaseAxis();
         return {
             baseAxes: [baseAxis],
@@ -147,7 +147,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      * Convert a (x, y) point to data
      */
     pointToData(point: number[], clamp?: boolean) {
-        let coord = this.pointToCoord(point);
+        const coord = this.pointToCoord(point);
         return [
             this._radiusAxis.radiusToData(coord[0], clamp),
             this._angleAxis.angleToData(coord[1], clamp)
@@ -160,8 +160,8 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
     pointToCoord(point: number[]) {
         let dx = point[0] - this.cx;
         let dy = point[1] - this.cy;
-        let angleAxis = this.getAngleAxis();
-        let extent = angleAxis.getExtent();
+        const angleAxis = this.getAngleAxis();
+        const extent = angleAxis.getExtent();
         let minAngle = Math.min(extent[0], extent[1]);
         let maxAngle = Math.max(extent[0], extent[1]);
         // Fix fixed extent in polarCreator
@@ -170,14 +170,14 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
             ? (minAngle = maxAngle - 360)
             : (maxAngle = minAngle + 360);
 
-        let radius = Math.sqrt(dx * dx + dy * dy);
+        const radius = Math.sqrt(dx * dx + dy * dy);
         dx /= radius;
         dy /= radius;
 
         let radian = Math.atan2(-dy, dx) / Math.PI * 180;
 
         // move to angleExtent
-        let dir = radian < minAngle ? 1 : -1;
+        const dir = radian < minAngle ? 1 : -1;
         while (radian < minAngle || radian > maxAngle) {
             radian += dir * 360;
         }
@@ -189,11 +189,11 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      * Convert a (radius, angle) coord to (x, y) point
      */
     coordToPoint(coord: number[]) {
-        let radius = coord[0];
-        let radian = coord[1] / 180 * Math.PI;
-        let x = Math.cos(radian) * radius + this.cx;
+        const radius = coord[0];
+        const radian = coord[1] / 180 * Math.PI;
+        const x = Math.cos(radian) * radius + this.cx;
         // Inverse the y
-        let y = -Math.sin(radian) * radius + this.cy;
+        const y = -Math.sin(radian) * radius + this.cy;
 
         return [x, y];
     }
@@ -204,14 +204,14 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      */
     getArea(): PolarArea {
 
-        let angleAxis = this.getAngleAxis();
-        let radiusAxis = this.getRadiusAxis();
+        const angleAxis = this.getAngleAxis();
+        const radiusAxis = this.getRadiusAxis();
 
-        let radiusExtent = radiusAxis.getExtent().slice();
+        const radiusExtent = radiusAxis.getExtent().slice();
         radiusExtent[0] > radiusExtent[1] && radiusExtent.reverse();
-        let angleExtent = angleAxis.getExtent();
+        const angleExtent = angleAxis.getExtent();
 
-        let RADIAN = Math.PI / 180;
+        const RADIAN = Math.PI / 180;
 
         return {
             cx: this.cx,
@@ -224,11 +224,11 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
             contain(x: number, y: number) {
                 // It's a ring shape.
                 // Start angle and end angle don't matter
-                let dx = x - this.cx;
-                let dy = y - this.cy;
-                let d2 = dx * dx + dy * dy;
-                let r = this.r;
-                let r0 = this.r0;
+                const dx = x - this.cx;
+                const dy = y - this.cy;
+                const d2 = dx * dx + dy * dy;
+                const r = this.r;
+                const r0 = this.r0;
 
                 return d2 <= r * r && d2 >= r0 * r0;
             }

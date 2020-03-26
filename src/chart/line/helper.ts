@@ -42,22 +42,22 @@ export function prepareDataCoordInfo(
     data: List,
     valueOrigin?: LineSeriesOption['areaStyle']['origin']
 ): CoordInfo {
-    let baseAxis = coordSys.getBaseAxis();
-    let valueAxis = coordSys.getOtherAxis(baseAxis as any);
-    let valueStart = getValueStart(valueAxis, valueOrigin);
+    const baseAxis = coordSys.getBaseAxis();
+    const valueAxis = coordSys.getOtherAxis(baseAxis as any);
+    const valueStart = getValueStart(valueAxis, valueOrigin);
 
-    let baseAxisDim = baseAxis.dim;
-    let valueAxisDim = valueAxis.dim;
-    let valueDim = data.mapDimension(valueAxisDim);
-    let baseDim = data.mapDimension(baseAxisDim);
-    let baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
+    const baseAxisDim = baseAxis.dim;
+    const valueAxisDim = valueAxis.dim;
+    const valueDim = data.mapDimension(valueAxisDim);
+    const baseDim = data.mapDimension(baseAxisDim);
+    const baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
 
-    let dims = map(coordSys.dimensions, function (coordDim) {
+    const dims = map(coordSys.dimensions, function (coordDim) {
         return data.mapDimension(coordDim);
     });
 
     let stacked = false;
-    let stackResultDim = data.getCalculationInfo('stackResultDimension');
+    const stackResultDim = data.getCalculationInfo('stackResultDimension');
     if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
         stacked = true;
         dims[0] = stackResultDim;
@@ -82,7 +82,7 @@ export function prepareDataCoordInfo(
 
 function getValueStart(valueAxis: Axis, valueOrigin: LineSeriesOption['areaStyle']['origin']) {
     let valueStart = 0;
-    let extent = valueAxis.scale.getExtent();
+    const extent = valueAxis.scale.getExtent();
 
     if (valueOrigin === 'start') {
         valueStart = extent[0];
@@ -120,8 +120,8 @@ export function getStackedOnPoint(
         value = dataCoordInfo.valueStart;
     }
 
-    let baseDataOffset = dataCoordInfo.baseDataOffset;
-    let stackedData = [];
+    const baseDataOffset = dataCoordInfo.baseDataOffset;
+    const stackedData = [];
     stackedData[baseDataOffset] = data.get(dataCoordInfo.baseDim, idx);
     stackedData[1 - baseDataOffset] = value;
 

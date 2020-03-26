@@ -79,7 +79,7 @@ interface CollectionResult {
 // Build axisPointerModel, mergin tooltip.axisPointer model for each axis.
 // allAxesInfo should be updated when setOption performed.
 export function collect(ecModel: GlobalModel, api: ExtensionAPI) {
-    let result: CollectionResult = {
+    const result: CollectionResult = {
         /**
          * key: makeKey(axis.model)
          * value: {
@@ -112,11 +112,11 @@ export function collect(ecModel: GlobalModel, api: ExtensionAPI) {
 }
 
 function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: ExtensionAPI) {
-    let globalTooltipModel = ecModel.getComponent('tooltip');
-    let globalAxisPointerModel = ecModel.getComponent('axisPointer') as AxisPointerModel;
+    const globalTooltipModel = ecModel.getComponent('tooltip');
+    const globalAxisPointerModel = ecModel.getComponent('axisPointer') as AxisPointerModel;
     // links can only be set on global.
-    let linksOption = globalAxisPointerModel.get('link', true) || [];
-    let linkGroups: LinkGroup[] = [];
+    const linksOption = globalAxisPointerModel.get('link', true) || [];
+    const linkGroups: LinkGroup[] = [];
 
     // Collect axes info.
     each(api.getCoordinateSystems(), function (coordSys) {
@@ -125,17 +125,17 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
             return;
         }
 
-        let coordSysKey = makeKey(coordSys.model);
-        let axesInfoInCoordSys: CollectionResult['coordSysAxesInfo'][string] =
+        const coordSysKey = makeKey(coordSys.model);
+        const axesInfoInCoordSys: CollectionResult['coordSysAxesInfo'][string] =
             result.coordSysAxesInfo[coordSysKey] = {};
         result.coordSysMap[coordSysKey] = coordSys;
 
         // Set tooltip (like 'cross') is a convienent way to show axisPointer
         // for user. So we enable seting tooltip on coordSys model.
-        let coordSysModel = coordSys.model as ComponentModel<ComponentOption & {
+        const coordSysModel = coordSys.model as ComponentModel<ComponentOption & {
             tooltip: TooltipOption  // TODO: Same with top level tooltip?
         }>;
-        let baseTooltipModel = coordSysModel.getModel('tooltip', globalTooltipModel);
+        const baseTooltipModel = coordSysModel.getModel('tooltip', globalTooltipModel);
 
         each(coordSys.getAxes(), curry(saveTooltipAxisInfo, false, null));
 
@@ -149,9 +149,9 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
         ) {
             // Compatible with previous logic. But series.tooltip.trigger: 'axis'
             // or series.data[n].tooltip.trigger: 'axis' are not support any more.
-            let triggerAxis = baseTooltipModel.get('trigger') === 'axis';
-            let cross = baseTooltipModel.get(['axisPointer', 'type']) === 'cross';
-            let tooltipAxes = coordSys.getTooltipAxes(baseTooltipModel.get(['axisPointer', 'axis']));
+            const triggerAxis = baseTooltipModel.get('trigger') === 'axis';
+            const cross = baseTooltipModel.get(['axisPointer', 'type']) === 'cross';
+            const tooltipAxes = coordSys.getTooltipAxes(baseTooltipModel.get(['axisPointer', 'axis']));
             if (triggerAxis || cross) {
                 each(tooltipAxes.baseAxes, curry(
                     saveTooltipAxisInfo, cross ? 'cross' : true, triggerAxis
@@ -173,7 +173,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
                 'axisPointer', globalAxisPointerModel
             ) as Model<CommonAxisPointerOption>;
 
-            let axisPointerShow = axisPointerModel.get('show');
+            const axisPointerShow = axisPointerModel.get('show');
             if (!axisPointerShow || (
                 axisPointerShow === 'auto'
                 && !fromTooltip
@@ -193,12 +193,12 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
                 )
                 : axisPointerModel;
 
-            let snap = axisPointerModel.get('snap');
-            let axisKey = makeKey(axis.model);
-            let involveSeries = triggerTooltip || snap || axis.type === 'category';
+            const snap = axisPointerModel.get('snap');
+            const axisKey = makeKey(axis.model);
+            const involveSeries = triggerTooltip || snap || axis.type === 'category';
 
             // If result.axesInfo[key] exist, override it (tooltip has higher priority).
-            let axisInfo: AxisInfo = result.axesInfo[axisKey] = {
+            const axisInfo: AxisInfo = result.axesInfo[axisKey] = {
                 key: axisKey,
                 axis: axis,
                 coordSys: coordSys,
@@ -214,9 +214,9 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
             axesInfoInCoordSys[axisKey] = axisInfo;
             result.seriesInvolved = result.seriesInvolved || involveSeries;
 
-            let groupIndex = getLinkGroupIndex(linksOption, axis);
+            const groupIndex = getLinkGroupIndex(linksOption, axis);
             if (groupIndex != null) {
-                let linkGroup: LinkGroup = linkGroups[groupIndex]
+                const linkGroup: LinkGroup = linkGroups[groupIndex]
                     || (linkGroups[groupIndex] = {axesInfo: {}} as LinkGroup);
                 linkGroup.axesInfo[axisKey] = axisInfo;
                 linkGroup.mapper = linksOption[groupIndex].mapper;
@@ -239,7 +239,7 @@ function makeAxisPointerModel(
         'type', 'snap', 'lineStyle', 'shadowStyle', 'label',
         'animation', 'animationDurationUpdate', 'animationEasingUpdate', 'z'
     ] as const;
-    let volatileOption = {} as Pick<AxisPointerOption, typeof fields[number]>;
+    const volatileOption = {} as Pick<AxisPointerOption, typeof fields[number]>;
 
     each(fields, function (field) {
         (volatileOption as any)[field] = clone(tooltipAxisPointerModel.get(field));
@@ -255,18 +255,18 @@ function makeAxisPointerModel(
     if (tooltipAxisPointerModel.get('type') === 'cross') {
         volatileOption.type = 'line';
     }
-    let labelOption = volatileOption.label || (volatileOption.label = {});
+    const labelOption = volatileOption.label || (volatileOption.label = {});
     // Follow the convention, do not show label when triggered by tooltip by default.
     labelOption.show == null && (labelOption.show = false);
 
     if (fromTooltip === 'cross') {
         // When 'cross', both axes show labels.
-        let tooltipAxisPointerLabelShow = tooltipAxisPointerModel.get(['label', 'show']);
+        const tooltipAxisPointerLabelShow = tooltipAxisPointerModel.get(['label', 'show']);
         labelOption.show = tooltipAxisPointerLabelShow != null ? tooltipAxisPointerLabelShow : true;
         // If triggerTooltip, this is a base axis, which should better not use cross style
         // (cross style is dashed by default)
         if (!triggerTooltip) {
-            let crossStyle = volatileOption.lineStyle = tooltipAxisPointerModel.get('crossStyle');
+            const crossStyle = volatileOption.lineStyle = tooltipAxisPointerModel.get('crossStyle');
             crossStyle && defaults(labelOption, crossStyle.textStyle);
         }
     }
@@ -285,9 +285,9 @@ function collectSeriesInfo(result: CollectionResult, ecModel: GlobalModel) {
     }>) {
 
         // Notice this case: this coordSys is `cartesian2D` but not `grid`.
-        let coordSys = seriesModel.coordinateSystem;
-        let seriesTooltipTrigger = seriesModel.get(['tooltip', 'trigger'], true);
-        let seriesTooltipShow = seriesModel.get(['tooltip', 'show'], true);
+        const coordSys = seriesModel.coordinateSystem;
+        const seriesTooltipTrigger = seriesModel.get(['tooltip', 'trigger'], true);
+        const seriesTooltipShow = seriesModel.get(['tooltip', 'show'], true);
         if (!coordSys
             || seriesTooltipTrigger === 'none'
             || seriesTooltipTrigger === false
@@ -299,7 +299,7 @@ function collectSeriesInfo(result: CollectionResult, ecModel: GlobalModel) {
         }
 
         each(result.coordSysAxesInfo[makeKey(coordSys.model)], function (axisInfo) {
-            let axis = axisInfo.axis;
+            const axis = axisInfo.axis;
             if (coordSys.getAxis(axis.dim) === axis) {
                 axisInfo.seriesModels.push(seriesModel);
                 axisInfo.seriesDataCount == null && (axisInfo.seriesDataCount = 0);
@@ -325,10 +325,10 @@ function collectSeriesInfo(result: CollectionResult, ecModel: GlobalModel) {
  * }
  */
 function getLinkGroupIndex(linksOption: AxisPointerOption['link'], axis: Axis): number {
-    let axisModel = axis.model;
-    let dim = axis.dim;
+    const axisModel = axis.model;
+    const dim = axis.dim;
     for (let i = 0; i < linksOption.length; i++) {
-        let linkOption = linksOption[i] || {};
+        const linkOption = linksOption[i] || {};
         if (checkPropInLink(linkOption[dim + 'AxisId' as 'xAxisId'], axisModel.id)
             || checkPropInLink(linkOption[dim + 'AxisIndex' as 'xAxisIndex'], axisModel.componentIndex)
             || checkPropInLink(linkOption[dim + 'AxisName' as 'xAxisName'], axisModel.name)
@@ -345,15 +345,15 @@ function checkPropInLink(linkPropValue: number[] | number | string | string[] | 
 }
 
 export function fixValue(axisModel: AxisBaseModel) {
-    let axisInfo = getAxisInfo(axisModel);
+    const axisInfo = getAxisInfo(axisModel);
     if (!axisInfo) {
         return;
     }
 
-    let axisPointerModel = axisInfo.axisPointerModel;
-    let scale = axisInfo.axis.scale;
-    let option = axisPointerModel.option;
-    let status = axisPointerModel.get('status');
+    const axisPointerModel = axisInfo.axisPointerModel;
+    const scale = axisInfo.axis.scale;
+    const option = axisPointerModel.option;
+    const status = axisPointerModel.get('status');
     let value = axisPointerModel.get('value');
 
     // Parse init value for category and time axis.
@@ -361,14 +361,14 @@ export function fixValue(axisModel: AxisBaseModel) {
         value = scale.parse(value);
     }
 
-    let useHandle = isHandleTrigger(axisPointerModel);
+    const useHandle = isHandleTrigger(axisPointerModel);
     // If `handle` used, `axisPointer` will always be displayed, so value
     // and status should be initialized.
     if (status == null) {
         option.status = useHandle ? 'show' : 'hide';
     }
 
-    let extent = scale.getExtent().slice();
+    const extent = scale.getExtent().slice();
     extent[0] > extent[1] && extent.reverse();
 
     if (// Pick a value on axis when initializing.
@@ -392,13 +392,13 @@ export function fixValue(axisModel: AxisBaseModel) {
 }
 
 export function getAxisInfo(axisModel: AxisBaseModel) {
-    let coordSysAxesInfo = (axisModel.ecModel.getComponent('axisPointer') as AxisPointerModel || {})
+    const coordSysAxesInfo = (axisModel.ecModel.getComponent('axisPointer') as AxisPointerModel || {})
         .coordSysAxesInfo as CollectionResult;
     return coordSysAxesInfo && coordSysAxesInfo.axesInfo[makeKey(axisModel)];
 }
 
 export function getAxisPointerModel(axisModel: AxisBaseModel) {
-    let axisInfo = getAxisInfo(axisModel);
+    const axisInfo = getAxisInfo(axisModel);
     return axisInfo && axisInfo.axisPointerModel;
 }
 

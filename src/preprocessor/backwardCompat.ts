@@ -81,7 +81,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             return;
         }
 
-        let seriesType = seriesOpt.type;
+        const seriesType = seriesOpt.type;
 
         if (seriesType === 'line') {
             // @ts-ignore
@@ -98,7 +98,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             }
         }
         else if (seriesType === 'gauge') {
-            let pointerColor = get(seriesOpt, 'pointer.color');
+            const pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
                 && set(seriesOpt, 'itemStyle.color', pointerColor);
         }

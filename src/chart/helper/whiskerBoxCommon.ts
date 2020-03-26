@@ -62,10 +62,10 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
 
         let ordinalMeta;
 
-        let xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex')) as CartesianAxisModel;
-        let yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex')) as CartesianAxisModel;
-        let xAxisType = xAxisModel.get('type');
-        let yAxisType = yAxisModel.get('type');
+        const xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex')) as CartesianAxisModel;
+        const yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex')) as CartesianAxisModel;
+        const xAxisType = xAxisModel.get('type');
+        const yAxisType = yAxisModel.get('type');
         let addOrdinal;
 
         // FIXME
@@ -85,19 +85,19 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
             option.layout = option.layout || 'horizontal';
         }
 
-        let coordDims = ['x', 'y'];
-        let baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
-        let baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
-        let otherAxisDim = coordDims[1 - baseAxisDimIndex];
-        let axisModels = [xAxisModel, yAxisModel];
-        let baseAxisType = axisModels[baseAxisDimIndex].get('type');
-        let otherAxisType = axisModels[1 - baseAxisDimIndex].get('type');
-        let data = option.data as WhiskerBoxCommonData;
+        const coordDims = ['x', 'y'];
+        const baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
+        const baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
+        const otherAxisDim = coordDims[1 - baseAxisDimIndex];
+        const axisModels = [xAxisModel, yAxisModel];
+        const baseAxisType = axisModels[baseAxisDimIndex].get('type');
+        const otherAxisType = axisModels[1 - baseAxisDimIndex].get('type');
+        const data = option.data as WhiskerBoxCommonData;
 
         // ??? FIXME make a stage to perform data transfrom.
         // MUST create a new data, consider setOption({}) again.
         if (data && addOrdinal) {
-            let newOptionData: WhiskerBoxCommonData = [];
+            const newOptionData: WhiskerBoxCommonData = [];
             zrUtil.each(data, function (item, index) {
                 let newItem;
                 if (zrUtil.isArray(item)) {
@@ -116,8 +116,8 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
             option.data = newOptionData;
         }
 
-        let defaultValueDimensions = this.defaultValueDimensions;
-        let coordDimensions = [{
+        const defaultValueDimensions = this.defaultValueDimensions;
+        const coordDimensions = [{
             name: baseAxisDim,
             type: getDimensionTypeByAxis(baseAxisType),
             ordinalMeta: ordinalMeta,
@@ -149,7 +149,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
      * @override
      */
     getBaseAxis(): Axis2D {
-        let dim = this._baseAxisDim;
+        const dim = this._baseAxisDim;
         return (this.ecModel.getComponent(
             dim + 'Axis', this.get(dim + 'AxisIndex' as 'xAxisIndex' | 'yAxisIndex')
         ) as CartesianAxisModel).axis;

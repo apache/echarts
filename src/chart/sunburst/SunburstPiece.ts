@@ -51,7 +51,7 @@ class SunburstPiece extends graphic.Group {
     constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel) {
         super();
 
-        let sector = new graphic.Sector({
+        const sector = new graphic.Sector({
             z2: DEFAULT_SECTOR_Z,
             textConfig: {
                 inside: true
@@ -60,7 +60,7 @@ class SunburstPiece extends graphic.Group {
         this.add(sector);
         graphic.getECData(sector).seriesIndex = seriesModel.seriesIndex;
 
-        let text = new graphic.Text({
+        const text = new graphic.Text({
             z2: DEFAULT_TEXT_Z,
             silent: node.getModel<SunburstSeriesNodeOption>().get(['label', 'silent'])
         });
@@ -95,28 +95,28 @@ class SunburstPiece extends graphic.Group {
         seriesModel = seriesModel || this._seriesModel;
         ecModel = ecModel || this._ecModel;
 
-        let sector = this.childAt(0) as graphic.Sector;
+        const sector = this.childAt(0) as graphic.Sector;
         graphic.getECData(sector).dataIndex = node.dataIndex;
 
-        let itemModel = node.getModel<SunburstSeriesNodeOption>();
-        let layout = node.getLayout();
+        const itemModel = node.getModel<SunburstSeriesNodeOption>();
+        const layout = node.getLayout();
         // if (!layout) {
         //     console.log(node.getLayout());
         // }
-        let sectorShape = zrUtil.extend({}, layout);
+        const sectorShape = zrUtil.extend({}, layout);
         sectorShape.label = null;
 
-        let visualColor = getNodeColor(node, seriesModel, ecModel);
+        const visualColor = getNodeColor(node, seriesModel, ecModel);
 
         fillDefaultColor(node, seriesModel, visualColor);
 
-        let normalStyle = itemModel.getModel('itemStyle').getItemStyle();
+        const normalStyle = itemModel.getModel('itemStyle').getItemStyle();
         let style;
         if (state === 'normal') {
             style = normalStyle;
         }
         else {
-            let stateStyle = itemModel.getModel([state, 'itemStyle'])
+            const stateStyle = itemModel.getModel([state, 'itemStyle'])
                 .getItemStyle();
             style = zrUtil.merge(stateStyle, normalStyle);
         }
@@ -162,11 +162,11 @@ class SunburstPiece extends graphic.Group {
 
         this._updateLabel(seriesModel, visualColor, state);
 
-        let cursorStyle = itemModel.getShallow('cursor');
+        const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
         if (firstCreate) {
-            let highlightPolicy = seriesModel.getShallow('highlightPolicy');
+            const highlightPolicy = seriesModel.getShallow('highlightPolicy');
             this._initEvents(sector, node, seriesModel, highlightPolicy);
         }
 
@@ -175,7 +175,7 @@ class SunburstPiece extends graphic.Group {
     }
 
     onEmphasis(highlightPolicy: AllPropTypes<typeof NodeHighlightPolicy>) {
-        let that = this;
+        const that = this;
         this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
             if (n.piece) {
                 if (that.node === n) {
@@ -212,12 +212,12 @@ class SunburstPiece extends graphic.Group {
         visualColor: ColorString,
         state: 'emphasis' | 'normal' | 'highlight' | 'downplay'
     ) {
-        let itemModel = this.node.getModel<SunburstSeriesNodeOption>();
-        let normalModel = itemModel.getModel('label');
-        let labelModel = state === 'normal' || state === 'emphasis'
+        const itemModel = this.node.getModel<SunburstSeriesNodeOption>();
+        const normalModel = itemModel.getModel('label');
+        const labelModel = state === 'normal' || state === 'emphasis'
             ? normalModel
             : itemModel.getModel([state, 'label']);
-        let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
 
         let text = zrUtil.retrieve(
             seriesModel.getFormattedLabel(
@@ -229,20 +229,20 @@ class SunburstPiece extends graphic.Group {
             text = '';
         }
 
-        let layout = this.node.getLayout();
+        const layout = this.node.getLayout();
         let labelMinAngle = labelModel.get('minAngle');
         if (labelMinAngle == null) {
             labelMinAngle = normalModel.get('minAngle');
         }
         labelMinAngle = labelMinAngle / 180 * Math.PI;
-        let angle = layout.endAngle - layout.startAngle;
+        const angle = layout.endAngle - layout.startAngle;
         if (labelMinAngle != null && Math.abs(angle) < labelMinAngle) {
             // Not displaying text when angle is too small
             text = '';
         }
 
-        let sector = this.childAt(0);
-        let label = sector.getTextContent();
+        const sector = this.childAt(0);
+        const label = sector.getTextContent();
 
         graphic.setLabelStyle(
             label, normalModel, labelHoverModel,
@@ -258,13 +258,13 @@ class SunburstPiece extends graphic.Group {
             outsideFill: visualColor
         });
 
-        let midAngle = (layout.startAngle + layout.endAngle) / 2;
-        let dx = Math.cos(midAngle);
-        let dy = Math.sin(midAngle);
+        const midAngle = (layout.startAngle + layout.endAngle) / 2;
+        const dx = Math.cos(midAngle);
+        const dy = Math.sin(midAngle);
 
         let r;
-        let labelPosition = getLabelAttr('position');
-        let labelPadding = getLabelAttr('distance') || 0;
+        const labelPosition = getLabelAttr('position');
+        const labelPadding = getLabelAttr('distance') || 0;
         let textAlign = getLabelAttr('align');
         if (labelPosition === 'outside') {
             r = layout.r + labelPadding;
@@ -296,11 +296,11 @@ class SunburstPiece extends graphic.Group {
             opacity: getLabelAttr('opacity')
         });
 
-        let textX = r * dx + layout.cx;
-        let textY = r * dy + layout.cy;
+        const textX = r * dx + layout.cx;
+        const textY = r * dy + layout.cy;
         label.attr('position', [textX, textY]);
 
-        let rotateType = getLabelAttr('rotate');
+        const rotateType = getLabelAttr('rotate');
         let rotate = 0;
         if (rotateType === 'radial') {
             rotate = -midAngle;
@@ -324,7 +324,7 @@ class SunburstPiece extends graphic.Group {
 
         type LabelOption = SunburstSeriesNodeOption['label'];
         function getLabelAttr<T extends keyof LabelOption>(name: T): LabelOption[T] {
-            let stateAttr = labelModel.get(name);
+            const stateAttr = labelModel.get(name);
             if (stateAttr == null) {
                 return normalModel.get(name);
             }
@@ -342,17 +342,17 @@ class SunburstPiece extends graphic.Group {
     ) {
         sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
 
-        let that = this;
-        let onEmphasis = function () {
+        const that = this;
+        const onEmphasis = function () {
             that.onEmphasis(highlightPolicy);
         };
-        let onNormal = function () {
+        const onNormal = function () {
             that.onNormal();
         };
-        let onDownplay = function () {
+        const onDownplay = function () {
             that.onDownplay();
         };
-        let onHighlight = function () {
+        const onHighlight = function () {
             that.onHighlight();
         };
 
@@ -383,7 +383,7 @@ function getNodeColor(
 ) {
     // Color from visualMap
     let visualColor = node.getVisual('color');
-    let visualMetaList = node.getVisual('visualMeta');
+    const visualMetaList = node.getVisual('visualMeta');
     if (!visualMetaList || visualMetaList.length === 0) {
         // Use first-generation color if has no visualMap
         visualColor = null;
@@ -404,7 +404,7 @@ function getNodeColor(
     }
     else {
         // First-generation color
-        let length = ecModel.option.color.length;
+        const length = ecModel.option.color.length;
         color = ecModel.option.color[getRootId(node) % length];
     }
     return color;
@@ -422,7 +422,7 @@ function getRootId(node: TreeNode) {
         ancestor = ancestor.parentNode;
     }
 
-    let virtualRoot = node.getAncestors()[0];
+    const virtualRoot = node.getAncestors()[0];
     return zrUtil.indexOf(virtualRoot.children, ancestor);
 }
 
@@ -447,6 +447,6 @@ function isNodeHighlighted(
 
 // Fix tooltip callback function params.color incorrect when pick a default color
 function fillDefaultColor(node: TreeNode, seriesModel: SunburstSeriesModel, color: ZRColor) {
-    let data = seriesModel.getData();
+    const data = seriesModel.getData();
     data.setItemVisual(node.dataIndex, 'color', color);
 }

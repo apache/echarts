@@ -227,7 +227,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     init(option: GraphSeriesOption) {
         super.init.apply(this, arguments as any);
 
-        let self = this;
+        const self = this;
         function getCategoriesData() {
             return self._categoriesData;
         }
@@ -255,9 +255,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     getInitialData(option: GraphSeriesOption, ecModel: GlobalModel) {
-        let edges = option.edges || option.links || [];
-        let nodes = option.data || option.nodes || [];
-        let self = this;
+        const edges = option.edges || option.links || [];
+        const nodes = option.data || option.nodes || [];
+        const self = this;
 
         if (nodes && edges) {
             return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
@@ -266,9 +266,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         function beforeLink(nodeData: List, edgeData: List) {
             // Overwrite nodeData.getItemModel to
             nodeData.wrapMethod('getItemModel', function (model) {
-                let categoriesModels = self._categoriesModels;
-                let categoryIdx = model.getShallow('category');
-                let categoryModel = categoriesModels[categoryIdx];
+                const categoriesModels = self._categoriesModels;
+                const categoryIdx = model.getShallow('category');
+                const categoryModel = categoriesModels[categoryIdx];
                 if (categoryModel) {
                     categoryModel.parentModel = model.parentModel;
                     model.parentModel = categoryModel;
@@ -276,15 +276,15 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
                 return model;
             });
 
-            let edgeLabelModel = self.getModel('edgeLabel');
+            const edgeLabelModel = self.getModel('edgeLabel');
             // For option `edgeLabel` can be found by label.xxx.xxx on item mode.
-            let fakeSeriesModel = new Model(
+            const fakeSeriesModel = new Model(
                 {label: edgeLabelModel.option},
                 edgeLabelModel.parentModel,
                 ecModel
             );
-            let emphasisEdgeLabelModel = self.getModel(['emphasis', 'edgeLabel']);
-            let emphasisFakeSeriesModel = new Model(
+            const emphasisEdgeLabelModel = self.getModel(['emphasis', 'edgeLabel']);
+            const emphasisFakeSeriesModel = new Model(
                 {emphasis: {label: emphasisEdgeLabelModel.option}},
                 emphasisEdgeLabelModel.parentModel,
                 ecModel
@@ -323,13 +323,13 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
      */
     formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: string) {
         if (dataType === 'edge') {
-            let nodeData = this.getData();
-            let params = this.getDataParams(dataIndex, dataType);
-            let edge = nodeData.graph.getEdgeByIndex(dataIndex);
-            let sourceName = nodeData.getName(edge.node1.dataIndex);
-            let targetName = nodeData.getName(edge.node2.dataIndex);
+            const nodeData = this.getData();
+            const params = this.getDataParams(dataIndex, dataType);
+            const edge = nodeData.graph.getEdgeByIndex(dataIndex);
+            const sourceName = nodeData.getName(edge.node1.dataIndex);
+            const targetName = nodeData.getName(edge.node2.dataIndex);
 
-            let html = [];
+            const html = [];
             sourceName != null && html.push(sourceName);
             targetName != null && html.push(targetName);
             let htmlStr = encodeHTML(html.join(' > '));
@@ -345,13 +345,13 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     _updateCategoriesData() {
-        let categories = zrUtil.map(this.option.categories || [], function (category) {
+        const categories = zrUtil.map(this.option.categories || [], function (category) {
             // Data must has value
             return category.value != null ? category : zrUtil.extend({
                 value: 0
             }, category);
         });
-        let categoriesData = new List(['value'], this);
+        const categoriesData = new List(['value'], this);
         categoriesData.initData(categories);
 
         this._categoriesData = categoriesData;

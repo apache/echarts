@@ -33,19 +33,19 @@ function intersectCurveCircle(
     center: number[],
     radius: number
 ) {
-    let p0 = curvePoints[0];
-    let p1 = curvePoints[1];
-    let p2 = curvePoints[2];
+    const p0 = curvePoints[0];
+    const p1 = curvePoints[1];
+    const p2 = curvePoints[2];
 
     let d = Infinity;
     let t;
-    let radiusSquare = radius * radius;
+    const radiusSquare = radius * radius;
     let interval = 0.1;
 
     for (let _t = 0.1; _t <= 0.9; _t += 0.1) {
         v1[0] = quadraticAt(p0[0], p1[0], p2[0], _t);
         v1[1] = quadraticAt(p0[1], p1[1], p2[1], _t);
-        let diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
+        const diff = mathAbs(v2DistSquare(v1, center) - radiusSquare);
         if (diff < d) {
             d = diff;
             t = _t;
@@ -56,7 +56,7 @@ function intersectCurveCircle(
     // At most 32 iteration
     for (let i = 0; i < 32; i++) {
         // let prev = t - interval;
-        let next = t + interval;
+        const next = t + interval;
         // v1[0] = quadraticAt(p0[0], p1[0], p2[0], prev);
         // v1[1] = quadraticAt(p0[1], p1[1], p2[1], prev);
         v2[0] = quadraticAt(p0[0], p1[0], p2[0], t);
@@ -64,13 +64,13 @@ function intersectCurveCircle(
         v3[0] = quadraticAt(p0[0], p1[0], p2[0], next);
         v3[1] = quadraticAt(p0[1], p1[1], p2[1], next);
 
-        let diff = v2DistSquare(v2, center) - radiusSquare;
+        const diff = v2DistSquare(v2, center) - radiusSquare;
         if (mathAbs(diff) < 1e-2) {
             break;
         }
 
         // let prevDiff = v2DistSquare(v1, center) - radiusSquare;
-        let nextDiff = v2DistSquare(v3, center) - radiusSquare;
+        const nextDiff = v2DistSquare(v3, center) - radiusSquare;
 
         interval /= 2;
         if (diff < 0) {
@@ -96,17 +96,17 @@ function intersectCurveCircle(
 
 // Adjust edge to avoid
 export default function (graph: Graph, scale: number) {
-    let tmp0: number[] = [];
-    let quadraticSubdivide = curveTool.quadraticSubdivide;
-    let pts: number[][] = [[], [], []];
-    let pts2: number[][] = [[], []];
-    let v: number[] = [];
+    const tmp0: number[] = [];
+    const quadraticSubdivide = curveTool.quadraticSubdivide;
+    const pts: number[][] = [[], [], []];
+    const pts2: number[][] = [[], []];
+    const v: number[] = [];
     scale /= 2;
 
     graph.eachEdge(function (edge, idx) {
-        let linePoints = edge.getLayout();
-        let fromSymbol = edge.getVisual('fromSymbol');
-        let toSymbol = edge.getVisual('toSymbol');
+        const linePoints = edge.getLayout();
+        const fromSymbol = edge.getVisual('fromSymbol');
+        const toSymbol = edge.getVisual('toSymbol');
 
         if (!linePoints.__original) {
             linePoints.__original = [
@@ -117,16 +117,16 @@ export default function (graph: Graph, scale: number) {
                 linePoints.__original.push(vec2.clone(linePoints[2]));
             }
         }
-        let originalPoints = linePoints.__original;
+        const originalPoints = linePoints.__original;
         // Quadratic curve
         if (linePoints[2] != null) {
             vec2.copy(pts[0], originalPoints[0]);
             vec2.copy(pts[1], originalPoints[2]);
             vec2.copy(pts[2], originalPoints[1]);
             if (fromSymbol && fromSymbol !== 'none') {
-                let symbolSize = getSymbolSize(edge.node1);
+                const symbolSize = getSymbolSize(edge.node1);
 
-                let t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
+                const t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
                 // Subdivide and get the second
                 quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                 pts[0][0] = tmp0[3];
@@ -136,9 +136,9 @@ export default function (graph: Graph, scale: number) {
                 pts[1][1] = tmp0[4];
             }
             if (toSymbol && toSymbol !== 'none') {
-                let symbolSize = getSymbolSize(edge.node2);
+                const symbolSize = getSymbolSize(edge.node2);
 
-                let t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
+                const t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
                 // Subdivide and get the first
                 quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                 pts[1][0] = tmp0[1];
@@ -161,12 +161,12 @@ export default function (graph: Graph, scale: number) {
             vec2.normalize(v, v);
             if (fromSymbol && fromSymbol !== 'none') {
 
-                let symbolSize = getSymbolSize(edge.node1);
+                const symbolSize = getSymbolSize(edge.node1);
 
                 vec2.scaleAndAdd(pts2[0], pts2[0], v, symbolSize * scale);
             }
             if (toSymbol && toSymbol !== 'none') {
-                let symbolSize = getSymbolSize(edge.node2);
+                const symbolSize = getSymbolSize(edge.node2);
 
                 vec2.scaleAndAdd(pts2[1], pts2[1], v, -symbolSize * scale);
             }

@@ -168,7 +168,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
         if (currentIndex == null) {
             currentIndex = this.option.currentIndex;
         }
-        let count = this._data.count();
+        const count = this._data.count();
 
         if (this.option.loop) {
             currentIndex = (currentIndex % count + count) % count;
@@ -213,10 +213,10 @@ class TimelineModel extends ComponentModel<TimelineOption> {
      * @private
      */
     _initData() {
-        let thisOption = this.option;
-        let dataArr = thisOption.data || [];
-        let axisType = thisOption.axisType;
-        let names: string[] = this._names = [];
+        const thisOption = this.option;
+        const dataArr = thisOption.data || [];
+        const axisType = thisOption.axisType;
+        const names: string[] = this._names = [];
 
         let processedDataArr: TimelineOption['data'];
         if (axisType === 'category') {
@@ -246,13 +246,13 @@ class TimelineModel extends ComponentModel<TimelineOption> {
             processedDataArr = dataArr;
         }
 
-        let dimType = ({
+        const dimType = ({
             category: 'ordinal',
             time: 'time',
             value: 'number'
         })[axisType] || 'number';
 
-        let data = this._data = new List([{
+        const data = this._data = new List([{
             name: 'value', type: dimType
         }], this);
 

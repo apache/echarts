@@ -59,9 +59,9 @@ function getAxisKey(polar: Polar, axis: PolarAxis) {
 
 function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: ExtensionAPI) {
 
-    let lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
+    const lastStackCoords: Dictionary<{p: number, n: number}[]> = {};
 
-    let barWidthAndOffset = calRadialBar(
+    const barWidthAndOffset = calRadialBar(
         zrUtil.filter(
             ecModel.getSeriesByType(seriesType) as BarSeriesModel[],
             function (seriesModel) {
@@ -79,38 +79,38 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
             return;
         }
 
-        let data = seriesModel.getData();
-        let polar = seriesModel.coordinateSystem as Polar;
-        let baseAxis = polar.getBaseAxis();
-        let axisKey = getAxisKey(polar, baseAxis);
+        const data = seriesModel.getData();
+        const polar = seriesModel.coordinateSystem as Polar;
+        const baseAxis = polar.getBaseAxis();
+        const axisKey = getAxisKey(polar, baseAxis);
 
-        let stackId = getSeriesStackId(seriesModel);
-        let columnLayoutInfo = barWidthAndOffset[axisKey][stackId];
-        let columnOffset = columnLayoutInfo.offset;
-        let columnWidth = columnLayoutInfo.width;
-        let valueAxis = polar.getOtherAxis(baseAxis);
+        const stackId = getSeriesStackId(seriesModel);
+        const columnLayoutInfo = barWidthAndOffset[axisKey][stackId];
+        const columnOffset = columnLayoutInfo.offset;
+        const columnWidth = columnLayoutInfo.width;
+        const valueAxis = polar.getOtherAxis(baseAxis);
 
-        let cx = seriesModel.coordinateSystem.cx;
-        let cy = seriesModel.coordinateSystem.cy;
+        const cx = seriesModel.coordinateSystem.cx;
+        const cy = seriesModel.coordinateSystem.cy;
 
-        let barMinHeight = seriesModel.get('barMinHeight') || 0;
-        let barMinAngle = seriesModel.get('barMinAngle') || 0;
+        const barMinHeight = seriesModel.get('barMinHeight') || 0;
+        const barMinAngle = seriesModel.get('barMinAngle') || 0;
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
-        let valueDim = data.mapDimension(valueAxis.dim);
-        let baseDim = data.mapDimension(baseAxis.dim);
-        let stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
-        let clampLayout = baseAxis.dim !== 'radius'
+        const valueDim = data.mapDimension(valueAxis.dim);
+        const baseDim = data.mapDimension(baseAxis.dim);
+        const stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        const clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        let valueAxisStart = valueAxis.getExtent()[0];
+        const valueAxisStart = valueAxis.getExtent()[0];
 
         for (let idx = 0, len = data.count(); idx < len; idx++) {
-            let value = data.get(valueDim, idx);
-            let baseValue = data.get(baseDim, idx) as number;
+            const value = data.get(valueDim, idx);
+            const baseValue = data.get(baseDim, idx) as number;
 
-            let sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
+            const sign = value >= 0 ? 'p' : 'n' as 'p' | 'n';
             let baseCoord = valueAxisStart;
 
             // Because of the barMinHeight, we can not use the value in
@@ -135,7 +135,7 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
             // radial sector
             if (valueAxis.dim === 'radius') {
                 let radiusSpan = valueAxis.dataToCoord(value) - valueAxisStart;
-                let angle = baseAxis.dataToCoord(baseValue);
+                const angle = baseAxis.dataToCoord(baseValue);
 
                 if (Math.abs(radiusSpan) < barMinHeight) {
                     radiusSpan = (radiusSpan < 0 ? -1 : 1) * barMinHeight;
@@ -151,7 +151,7 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
             // tangential sector
             else {
                 let angleSpan = valueAxis.dataToCoord(value, clampLayout) - valueAxisStart;
-                let radius = baseAxis.dataToCoord(baseValue);
+                const radius = baseAxis.dataToCoord(baseValue);
 
                 if (Math.abs(angleSpan) < barMinAngle) {
                     angleSpan = (angleSpan < 0 ? -1 : 1) * barMinAngle;
@@ -197,21 +197,21 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
  */
 function calRadialBar(barSeries: BarSeriesModel[]) {
     // Columns info on each category axis. Key is polar name
-    let columnsMap: Dictionary<LayoutColumnInfo> = {};
+    const columnsMap: Dictionary<LayoutColumnInfo> = {};
 
     zrUtil.each(barSeries, function (seriesModel, idx) {
-        let data = seriesModel.getData();
-        let polar = seriesModel.coordinateSystem as Polar;
+        const data = seriesModel.getData();
+        const polar = seriesModel.coordinateSystem as Polar;
 
-        let baseAxis = polar.getBaseAxis();
-        let axisKey = getAxisKey(polar, baseAxis);
+        const baseAxis = polar.getBaseAxis();
+        const axisKey = getAxisKey(polar, baseAxis);
 
-        let axisExtent = baseAxis.getExtent();
-        let bandWidth = baseAxis.type === 'category'
+        const axisExtent = baseAxis.getExtent();
+        const bandWidth = baseAxis.type === 'category'
             ? baseAxis.getBandWidth()
             : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
 
-        let columnsOnAxis = columnsMap[axisKey] || {
+        const columnsOnAxis = columnsMap[axisKey] || {
             bandWidth: bandWidth,
             remainedWidth: bandWidth,
             autoWidthCount: 0,
@@ -219,10 +219,10 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
             gap: '30%',
             stacks: {}
         };
-        let stacks = columnsOnAxis.stacks;
+        const stacks = columnsOnAxis.stacks;
         columnsMap[axisKey] = columnsOnAxis;
 
-        let stackId = getSeriesStackId(seriesModel);
+        const stackId = getSeriesStackId(seriesModel);
 
         if (!stacks[stackId]) {
             columnsOnAxis.autoWidthCount++;
@@ -236,12 +236,12 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
             seriesModel.get('barWidth'),
             bandWidth
         );
-        let barMaxWidth = parsePercent(
+        const barMaxWidth = parsePercent(
             seriesModel.get('barMaxWidth'),
             bandWidth
         );
-        let barGap = seriesModel.get('barGap');
-        let barCategoryGap = seriesModel.get('barCategoryGap');
+        const barGap = seriesModel.get('barGap');
+        const barCategoryGap = seriesModel.get('barCategoryGap');
 
         if (barWidth && !stacks[stackId].width) {
             barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
@@ -255,16 +255,16 @@ function calRadialBar(barSeries: BarSeriesModel[]) {
     });
 
 
-    let result: Dictionary<Dictionary<BarWidthAndOffset>> = {};
+    const result: Dictionary<Dictionary<BarWidthAndOffset>> = {};
 
     zrUtil.each(columnsMap, function (columnsOnAxis, coordSysName) {
 
         result[coordSysName] = {};
 
-        let stacks = columnsOnAxis.stacks;
-        let bandWidth = columnsOnAxis.bandWidth;
-        let categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
-        let barGapPercent = parsePercent(columnsOnAxis.gap, 1);
+        const stacks = columnsOnAxis.stacks;
+        const bandWidth = columnsOnAxis.bandWidth;
+        const categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
+        const barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
         let remainedWidth = columnsOnAxis.remainedWidth;
         let autoWidthCount = columnsOnAxis.autoWidthCount;

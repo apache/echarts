@@ -23,7 +23,7 @@ import LegendModel from './LegendModel';
 
 export default function (ecModel: GlobalModel) {
 
-    let legendModels = ecModel.findComponents({
+    const legendModels = ecModel.findComponents({
         mainType: 'legend'
     }) as LegendModel[];
     if (legendModels && legendModels.length) {

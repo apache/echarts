@@ -259,7 +259,7 @@ export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = ListDimensionType;
 
-export let VISUAL_DIMENSIONS = createHashMap([
+export const VISUAL_DIMENSIONS = createHashMap([
     'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
@@ -281,12 +281,12 @@ export type DimensionDefinition = {
 };
 export type DimensionDefinitionLoose = DimensionDefinition['type'] | DimensionDefinition;
 
-export let SOURCE_FORMAT_ORIGINAL = 'original' as const;
-export let SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows' as const;
-export let SOURCE_FORMAT_OBJECT_ROWS = 'objectRows' as const;
-export let SOURCE_FORMAT_KEYED_COLUMNS = 'keyedColumns' as const;
-export let SOURCE_FORMAT_TYPED_ARRAY = 'typedArray' as const;
-export let SOURCE_FORMAT_UNKNOWN = 'unknown' as const;
+export const SOURCE_FORMAT_ORIGINAL = 'original' as const;
+export const SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows' as const;
+export const SOURCE_FORMAT_OBJECT_ROWS = 'objectRows' as const;
+export const SOURCE_FORMAT_KEYED_COLUMNS = 'keyedColumns' as const;
+export const SOURCE_FORMAT_TYPED_ARRAY = 'typedArray' as const;
+export const SOURCE_FORMAT_UNKNOWN = 'unknown' as const;
 
 export type SourceFormat =
     typeof SOURCE_FORMAT_ORIGINAL
@@ -296,8 +296,8 @@ export type SourceFormat =
     | typeof SOURCE_FORMAT_TYPED_ARRAY
     | typeof SOURCE_FORMAT_UNKNOWN;
 
-export let SERIES_LAYOUT_BY_COLUMN = 'column' as const;
-export let SERIES_LAYOUT_BY_ROW = 'row' as const;
+export const SERIES_LAYOUT_BY_COLUMN = 'column' as const;
+export const SERIES_LAYOUT_BY_ROW = 'row' as const;
 
 export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYOUT_BY_ROW;
 

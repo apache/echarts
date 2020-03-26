@@ -60,14 +60,14 @@ class EffectLine extends graphic.Group {
     }
 
     _updateEffectSymbol(lineData: List, idx: number) {
-        let itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
-        let effectModel = itemModel.getModel('effect');
+        const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
+        const effectModel = itemModel.getModel('effect');
         let size = effectModel.get('symbolSize');
-        let symbolType = effectModel.get('symbol');
+        const symbolType = effectModel.get('symbol');
         if (!zrUtil.isArray(size)) {
             size = [size, size];
         }
-        let color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
+        const color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
         let symbol = this.childAt(1) as ECSymbolOnEffectLine;
 
         if (this._symbolType !== symbolType) {
@@ -109,19 +109,19 @@ class EffectLine extends graphic.Group {
         idx: number
     ) {
 
-        let symbol = this.childAt(1) as ECSymbolOnEffectLine;
+        const symbol = this.childAt(1) as ECSymbolOnEffectLine;
         if (!symbol) {
             return;
         }
 
-        let self = this;
+        const self = this;
 
-        let points = lineData.getItemLayout(idx);
+        const points = lineData.getItemLayout(idx);
 
         let period = effectModel.get('period') * 1000;
-        let loop = effectModel.get('loop');
-        let constantSpeed = effectModel.get('constantSpeed');
-        let delayExpr = zrUtil.retrieve(effectModel.get('delay'), function (idx) {
+        const loop = effectModel.get('loop');
+        const constantSpeed = effectModel.get('constantSpeed');
+        const delayExpr = zrUtil.retrieve(effectModel.get('delay'), function (idx) {
             return idx / lineData.count() * period / 3;
         });
 
@@ -149,7 +149,7 @@ class EffectLine extends graphic.Group {
                 delayNum = -period * symbol.__t;
             }
             symbol.__t = 0;
-            let animator = symbol.animate('', loop)
+            const animator = symbol.animate('', loop)
                 .when(period, {
                     __t: 1
                 })
@@ -190,26 +190,26 @@ class EffectLine extends graphic.Group {
     }
 
     updateSymbolPosition(symbol: ECSymbolOnEffectLine) {
-        let p1 = symbol.__p1;
-        let p2 = symbol.__p2;
-        let cp1 = symbol.__cp1;
-        let t = symbol.__t;
-        let pos = symbol.position;
-        let lastPos = [pos[0], pos[1]];
-        let quadraticAt = curveUtil.quadraticAt;
-        let quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
+        const p1 = symbol.__p1;
+        const p2 = symbol.__p2;
+        const cp1 = symbol.__cp1;
+        const t = symbol.__t;
+        const pos = symbol.position;
+        const lastPos = [pos[0], pos[1]];
+        const quadraticAt = curveUtil.quadraticAt;
+        const quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
         pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
         pos[1] = quadraticAt(p1[1], cp1[1], p2[1], t);
 
         // Tangent
-        let tx = quadraticDerivativeAt(p1[0], cp1[0], p2[0], t);
-        let ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
+        const tx = quadraticDerivativeAt(p1[0], cp1[0], p2[0], t);
+        const ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
 
         symbol.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
         // enable continuity trail for 'line', 'rect', 'roundRect' symbolType
         if (this._symbolType === 'line' || this._symbolType === 'rect' || this._symbolType === 'roundRect') {
             if (symbol.__lastT !== undefined && symbol.__lastT < symbol.__t) {
-                let scaleY = vec2.dist(lastPos, pos) * 1.05;
+                const scaleY = vec2.dist(lastPos, pos) * 1.05;
                 symbol.attr('scale', [symbol.scale[0], scaleY]);
                 // make sure the last segment render within endPoint
                 if (t === 1) {
@@ -219,7 +219,7 @@ class EffectLine extends graphic.Group {
             }
             else if (symbol.__lastT === 1) {
                 // After first loop, symbol.__t does NOT start with 0, so connect p1 to pos directly.
-                let scaleY = 2 * vec2.dist(p1, pos);
+                const scaleY = 2 * vec2.dist(p1, pos);
                 symbol.attr('scale', [symbol.scale[0], scaleY ]);
             }
             else {
@@ -234,7 +234,7 @@ class EffectLine extends graphic.Group {
     updateLayout(lineData: List, idx: number) {
         (this.childAt(0) as Line).updateLayout(lineData, idx);
 
-        let effectModel = lineData.getItemModel<LineDrawModelOption>(idx).getModel('effect');
+        const effectModel = lineData.getItemModel<LineDrawModelOption>(idx).getModel('effect');
         this._updateEffectAnimation(lineData, effectModel, idx);
     }
 }

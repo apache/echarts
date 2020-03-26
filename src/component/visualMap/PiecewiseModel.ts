@@ -136,14 +136,14 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
 
         this.resetExtent();
 
-        let mode = this._mode = this._determineMode();
+        const mode = this._mode = this._determineMode();
 
         this._pieceList = [];
         resetMethods[this._mode].call(this, this._pieceList);
 
         this._resetSelected(newOption, isInit);
 
-        let categories = this.option.categories;
+        const categories = this.option.categories;
 
         this.resetVisual(function (mappingOption, state) {
             if (mode === 'categories') {
@@ -179,10 +179,10 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         // default inRange/outOfRange for this case, otherwise visuals that only
         // appear in `pieces` will not be taken into account in visual encoding.
 
-        let option = this.option;
-        let visualTypesInPieces: {[key in BuiltinVisualProperty]?: 0 | 1} = {};
-        let visualTypes = VisualMapping.listVisualTypes();
-        let isCategory = this.isCategory();
+        const option = this.option;
+        const visualTypesInPieces: {[key in BuiltinVisualProperty]?: 0 | 1} = {};
+        const visualTypes = VisualMapping.listVisualTypes();
+        const isCategory = this.isCategory();
 
         zrUtil.each(option.pieces, function (piece) {
             zrUtil.each(visualTypes, function (visualType) {
@@ -214,16 +214,16 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     }
 
     private _resetSelected(newOption: PiecewiseVisualMapOption, isInit?: boolean) {
-        let thisOption = this.option;
-        let pieceList = this._pieceList;
+        const thisOption = this.option;
+        const pieceList = this._pieceList;
 
         // Selected do not merge but all override.
-        let selected = (isInit ? thisOption : newOption).selected || {};
+        const selected = (isInit ? thisOption : newOption).selected || {};
         thisOption.selected = selected;
 
         // Consider 'not specified' means true.
         zrUtil.each(pieceList, function (piece, index) {
-            let key = this.getSelectedMapKey(piece);
+            const key = this.getSelectedMapKey(piece);
             if (!selected.hasOwnProperty(key)) {
                 selected[key] = true;
             }
@@ -234,7 +234,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             let hasSel = false;
 
             zrUtil.each(pieceList, function (piece, index) {
-                let key = this.getSelectedMapKey(piece);
+                const key = this.getSelectedMapKey(piece);
                 if (selected[key]) {
                     hasSel
                         ? (selected[key] = false)
@@ -264,7 +264,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
      * @return {string}
      */
     private _determineMode() {
-        let option = this.option;
+        const option = this.option;
 
         return option.pieces && option.pieces.length > 0
             ? 'pieces'
@@ -284,7 +284,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
      * @override
      */
     getValueState(value: number): VisualState {
-        let index = VisualMapping.findPieceIndex(value, this._pieceList);
+        const index = VisualMapping.findPieceIndex(value, this._pieceList);
 
         return index != null
             ? (this.option.selected[this.getSelectedMapKey(this._pieceList[index])]
@@ -307,12 +307,12 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         const pieceList = this._pieceList;
 
         this.eachTargetSeries(function (seriesModel) {
-            let dataIndices: number[] = [];
-            let data = seriesModel.getData();
+            const dataIndices: number[] = [];
+            const data = seriesModel.getData();
 
             data.each(this.getDataDimension(data), function (value: number, dataIndex: number) {
                 // Should always base on model pieceList, because it is order sensitive.
-                let pIdx = VisualMapping.findPieceIndex(value, pieceList);
+                const pIdx = VisualMapping.findPieceIndex(value, pieceList);
                 pIdx === pieceIndex && dataIndices.push(dataIndex);
             }, this);
 
@@ -337,7 +337,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
                 representValue = piece.value;
             }
             else {
-                let pieceInterval = piece.interval || [];
+                const pieceInterval = piece.interval || [];
                 representValue = (pieceInterval[0] === -Infinity && pieceInterval[1] === Infinity)
                     ? 0
                     : (pieceInterval[0] + pieceInterval[1]) / 2;
@@ -355,18 +355,18 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             return;
         }
 
-        let stops: VisualMeta['stops'] = [];
-        let outerColors: VisualMeta['outerColors'] = ['', ''];
-        let visualMapModel = this;
+        const stops: VisualMeta['stops'] = [];
+        const outerColors: VisualMeta['outerColors'] = ['', ''];
+        const visualMapModel = this;
 
         function setStop(interval: [number, number], valueState?: VisualState) {
-            let representValue = visualMapModel.getRepresentValue({
+            const representValue = visualMapModel.getRepresentValue({
                 interval: interval
             }) as number;// Not category
             if (!valueState) {
                 valueState = visualMapModel.getValueState(representValue);
             }
-            let color = getColorVisual(representValue, valueState);
+            const color = getColorVisual(representValue, valueState);
             if (interval[0] === -Infinity) {
                 outerColors[0] = color;
             }
@@ -382,7 +382,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         }
 
         // Suplement
-        let pieceList = this._pieceList.slice();
+        const pieceList = this._pieceList.slice();
         if (!pieceList.length) {
             pieceList.push({interval: [-Infinity, Infinity]});
         }
@@ -395,7 +395,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
 
         let curr = -Infinity;
         zrUtil.each(pieceList, function (piece) {
-            let interval = piece.interval;
+            const interval = piece.interval;
             if (interval) {
                 // Fulfill gap.
                 interval[0] > curr && setStop([curr, interval[0]], 'outOfRange');
@@ -438,9 +438,9 @@ type ResetMethod = (outPieceList: InnerVisualPiece[]) => void;
 const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 
     splitNumber(outPieceList) {
-        let thisOption = this.option;
+        const thisOption = this.option;
         let precision = Math.min(thisOption.precision, 20);
-        let dataExtent = this.getExtent();
+        const dataExtent = this.getExtent();
         let splitNumber = thisOption.splitNumber;
         splitNumber = Math.max(parseInt(splitNumber as unknown as string, 10), 1);
         thisOption.splitNumber = splitNumber;
@@ -468,7 +468,7 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
             index < len;
             curr += splitStep
         ) {
-            let max = index === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
+            const max = index === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
 
             outPieceList.push({
                 index: index++,
@@ -493,7 +493,7 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
     },
 
     categories(outPieceList) {
-        let thisOption = this.option;
+        const thisOption = this.option;
         zrUtil.each(thisOption.categories, function (cate) {
             // FIXME category模式也使用pieceList，但在visualMapping中不是使用pieceList。
             // 是否改一致。
@@ -508,7 +508,7 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
     },
 
     pieces(outPieceList) {
-        let thisOption = this.option;
+        const thisOption = this.option;
 
         zrUtil.each(thisOption.pieces, function (pieceListItem, index) {
 
@@ -516,29 +516,29 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
                 pieceListItem = {value: pieceListItem};
             }
 
-            let item: InnerVisualPiece = {text: '', index: index};
+            const item: InnerVisualPiece = {text: '', index: index};
 
             if (pieceListItem.label != null) {
                 item.text = pieceListItem.label;
             }
 
             if (pieceListItem.hasOwnProperty('value')) {
-                let value = item.value = pieceListItem.value;
+                const value = item.value = pieceListItem.value;
                 item.interval = [value, value];
                 item.close = [1, 1];
             }
             else {
                 // `min` `max` is legacy option.
                 // `lt` `gt` `lte` `gte` is recommanded.
-                let interval = item.interval = [] as unknown as [number, number];
-                let close: typeof item.close = item.close = [0, 0];
+                const interval = item.interval = [] as unknown as [number, number];
+                const close: typeof item.close = item.close = [0, 0];
 
-                let closeList = [1, 0, 1] as const;
-                let infinityList = [-Infinity, Infinity];
+                const closeList = [1, 0, 1] as const;
+                const infinityList = [-Infinity, Infinity];
 
-                let useMinMax = [];
+                const useMinMax = [];
                 for (let lg = 0; lg < 2; lg++) {
-                    let names = ([['gte', 'gt', 'min'], ['lte', 'lt', 'max']] as const)[lg];
+                    const names = ([['gte', 'gt', 'min'], ['lte', 'lt', 'max']] as const)[lg];
                     for (let i = 0; i < 3 && interval[lg] == null; i++) {
                         interval[lg] = pieceListItem[names[i]];
                         close[lg] = closeList[i];
@@ -577,8 +577,8 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
         reformIntervals(outPieceList as Required<InnerVisualPiece>[]);
 
         zrUtil.each(outPieceList, function (piece) {
-            let close = piece.close;
-            let edgeSymbols = [['<', '≤'][close[1]], ['>', '≥'][close[0]]];
+            const close = piece.close;
+            const edgeSymbols = [['<', '≤'][close[1]], ['>', '≥'][close[0]]];
             piece.text = piece.text || this.formatValueText(
                 piece.value != null ? piece.value : piece.interval,
                 false,
@@ -589,7 +589,7 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 };
 
 function normalizeReverse(thisOption: PiecewiseVisualMapOption, pieceList: InnerVisualPiece[]) {
-    let inverse = thisOption.inverse;
+    const inverse = thisOption.inverse;
     if (thisOption.orient === 'vertical' ? !inverse : inverse) {
             pieceList.reverse();
     }

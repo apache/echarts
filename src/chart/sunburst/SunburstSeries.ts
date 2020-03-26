@@ -154,15 +154,15 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
-        let root = { name: option.name, children: option.data };
+        const root = { name: option.name, children: option.data };
 
         completeTreeValue(root);
 
-        let levels = option.levels || [];
+        const levels = option.levels || [];
 
         // levels = option.levels = setDefault(levels, ecModel);
 
-        let treeOption = {
+        const treeOption = {
             levels: levels
         };
 
@@ -180,9 +180,9 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
      * @override
      */
     getDataParams(dataIndex: number) {
-        let params = super.getDataParams.apply(this, arguments as any) as SunburstDataParams;
+        const params = super.getDataParams.apply(this, arguments as any) as SunburstDataParams;
 
-        let node = this.getData().tree.getNodeByDataIndex(dataIndex);
+        const node = this.getData().tree.getNodeByDataIndex(dataIndex);
         params.treePathInfo = wrapTreePathInfo<SunburstSeriesNodeOption['value']>(node, this);
 
         return params;
@@ -280,7 +280,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
             ? (this._viewRoot = viewRoot)
             : (viewRoot = this._viewRoot);
 
-        let root = this.getRawData().tree.root;
+        const root = this.getRawData().tree.root;
 
         if (!viewRoot
             || (viewRoot !== root && !root.contains(viewRoot))

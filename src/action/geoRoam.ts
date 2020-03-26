@@ -38,17 +38,17 @@ echarts.registerAction({
     event: 'geoRoam',
     update: 'updateTransform'
 }, function (payload, ecModel) {
-    let componentType = payload.componentType || 'series';
+    const componentType = payload.componentType || 'series';
 
     ecModel.eachComponent(
         { mainType: componentType, query: payload },
         function (componentModel) {
-            let geo = componentModel.coordinateSystem;
+            const geo = componentModel.coordinateSystem;
             if (geo.type !== 'geo') {
                 return;
             }
 
-            let res = updateCenterAndZoom(
+            const res = updateCenterAndZoom(
                 geo, payload, componentModel.get('scaleLimit')
             );
 

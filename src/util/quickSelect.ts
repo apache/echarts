@@ -29,7 +29,7 @@ function defaultCompareFunc(a: any, b: any): any {
 }
 
 function swapElement<T>(arr: T[], idx0: number, idx1: number) {
-    let tmp = arr[idx0];
+    const tmp = arr[idx0];
     arr[idx0] = arr[idx1];
     arr[idx1] = tmp;
 }

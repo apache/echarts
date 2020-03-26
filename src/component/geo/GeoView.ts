@@ -33,7 +33,7 @@ class GeoView extends ComponentView {
     private _mapDraw: MapDraw;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        let mapDraw = new MapDraw(api, true);
+        const mapDraw = new MapDraw(api, true);
         this._mapDraw = mapDraw;
 
         this.group.add(mapDraw.group);
@@ -49,7 +49,7 @@ class GeoView extends ComponentView {
             return;
         }
 
-        let mapDraw = this._mapDraw;
+        const mapDraw = this._mapDraw;
         if (geoModel.get('show')) {
             mapDraw.draw(geoModel, ecModel, api, this, payload);
         }

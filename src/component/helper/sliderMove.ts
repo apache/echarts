@@ -48,7 +48,7 @@ export default function (
 
     delta = delta || 0;
 
-    let extentSpan = extent[1] - extent[0];
+    const extentSpan = extent[1] - extent[0];
 
     // Notice maxSpan and minSpan can be null/undefined.
     if (minSpan != null) {
@@ -67,13 +67,13 @@ export default function (
     handleEnds[0] = restrict(handleEnds[0], extent);
     handleEnds[1] = restrict(handleEnds[1], extent);
 
-    let originalDistSign = getSpanSign(handleEnds, handleIndex);
+    const originalDistSign = getSpanSign(handleEnds, handleIndex);
 
     handleEnds[handleIndex] += delta;
 
     // Restrict in extent.
-    let extentMinSpan = minSpan || 0;
-    let realExtent = extent.slice();
+    const extentMinSpan = minSpan || 0;
+    const realExtent = extent.slice();
     originalDistSign.sign < 0 ? (realExtent[0] += extentMinSpan) : (realExtent[1] -= extentMinSpan);
     handleEnds[handleIndex] = restrict(handleEnds[handleIndex], realExtent);
 
@@ -97,7 +97,7 @@ export default function (
 }
 
 function getSpanSign(handleEnds: number[], handleIndex: 0 | 1) {
-    let dist = handleEnds[handleIndex] - handleEnds[1 - handleIndex];
+    const dist = handleEnds[handleIndex] - handleEnds[1 - handleIndex];
     // If `handleEnds[0] === handleEnds[1]`, always believe that handleEnd[0]
     // is at left of handleEnds[1] for non-cross case.
     return {span: Math.abs(dist), sign: dist > 0 ? -1 : dist < 0 ? 1 : handleIndex ? -1 : 1};

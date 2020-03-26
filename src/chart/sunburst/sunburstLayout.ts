@@ -43,22 +43,22 @@ export default function (
             center = [center, center];
         }
 
-        let width = api.getWidth();
-        let height = api.getHeight();
-        let size = Math.min(width, height);
-        let cx = parsePercent(center[0], width);
-        let cy = parsePercent(center[1], height);
-        let r0 = parsePercent(radius[0], size / 2);
-        let r = parsePercent(radius[1], size / 2);
+        const width = api.getWidth();
+        const height = api.getHeight();
+        const size = Math.min(width, height);
+        const cx = parsePercent(center[0], width);
+        const cy = parsePercent(center[1], height);
+        const r0 = parsePercent(radius[0], size / 2);
+        const r = parsePercent(radius[1], size / 2);
 
-        let startAngle = -seriesModel.get('startAngle') * RADIAN;
-        let minAngle = seriesModel.get('minAngle') * RADIAN;
+        const startAngle = -seriesModel.get('startAngle') * RADIAN;
+        const minAngle = seriesModel.get('minAngle') * RADIAN;
 
-        let virtualRoot = seriesModel.getData().tree.root;
-        let treeRoot = seriesModel.getViewRoot();
-        let rootDepth = treeRoot.depth;
+        const virtualRoot = seriesModel.getData().tree.root;
+        const treeRoot = seriesModel.getViewRoot();
+        const rootDepth = treeRoot.depth;
 
-        let sort = seriesModel.get('sort');
+        const sort = seriesModel.get('sort');
         if (sort != null) {
             initChildren(treeRoot, sort);
         }
@@ -68,29 +68,29 @@ export default function (
             !isNaN(child.getValue() as number) && validDataCount++;
         });
 
-        let sum = treeRoot.getValue() as number;
+        const sum = treeRoot.getValue() as number;
         // Sum may be 0
-        let unitRadian = Math.PI / (sum || validDataCount) * 2;
+        const unitRadian = Math.PI / (sum || validDataCount) * 2;
 
-        let renderRollupNode = treeRoot.depth > 0;
-        let levels = treeRoot.height - (renderRollupNode ? -1 : 1);
-        let rPerLevel = (r - r0) / (levels || 1);
+        const renderRollupNode = treeRoot.depth > 0;
+        const levels = treeRoot.height - (renderRollupNode ? -1 : 1);
+        const rPerLevel = (r - r0) / (levels || 1);
 
-        let clockwise = seriesModel.get('clockwise');
+        const clockwise = seriesModel.get('clockwise');
 
-        let stillShowZeroSum = seriesModel.get('stillShowZeroSum');
+        const stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // In the case some sector angle is smaller than minAngle
         // let restAngle = PI2;
         // let valueSumLargerThanMinAngle = 0;
 
-        let dir = clockwise ? 1 : -1;
+        const dir = clockwise ? 1 : -1;
 
         /**
          * Render a tree
          * @return increased angle
          */
-        let renderNode = function (node: TreeNode, startAngle: number) {
+        const renderNode = function (node: TreeNode, startAngle: number) {
             if (!node) {
                 return;
             }
@@ -100,7 +100,7 @@ export default function (
             // Render self
             if (node !== virtualRoot) {
                 // Tree node is virtual, so it doesn't need to be drawn
-                let value = node.getValue() as number;
+                const value = node.getValue() as number;
 
                 let angle = (sum === 0 && stillShowZeroSum)
                     ? unitRadian : (value * unitRadian);
@@ -114,12 +114,12 @@ export default function (
 
                 endAngle = startAngle + dir * angle;
 
-                let depth = node.depth - rootDepth
+                const depth = node.depth - rootDepth
                     - (renderRollupNode ? -1 : 1);
                 let rStart = r0 + rPerLevel * depth;
                 let rEnd = r0 + rPerLevel * (depth + 1);
 
-                let itemModel = node.getModel<SunburstSeriesNodeOption>();
+                const itemModel = node.getModel<SunburstSeriesNodeOption>();
                 // @ts-ignore. TODO this is not provided to developer yet. Rename it.
                 if (itemModel.get('r0') != null) {
                     // @ts-ignore
@@ -157,10 +157,10 @@ export default function (
 
         // Virtual root node for roll up
         if (renderRollupNode) {
-            let rStart = r0;
-            let rEnd = r0 + rPerLevel;
+            const rStart = r0;
+            const rEnd = r0 + rPerLevel;
 
-            let angle = Math.PI * 2;
+            const angle = Math.PI * 2;
             virtualRoot.setLayout({
                 angle: angle,
                 startAngle: startAngle,
@@ -181,7 +181,7 @@ export default function (
  * Init node children by order and update visual
  */
 function initChildren(node: TreeNode, sortOrder?: SunburstSeriesOption['sort']) {
-    let children = node.children || [];
+    const children = node.children || [];
 
     node.children = sort(children, sortOrder);
 
@@ -205,9 +205,9 @@ function sort(children: TreeNode[], sortOrder: SunburstSeriesOption['sort']) {
         return children.sort(sortOrder);
     }
     else {
-        let isAsc = sortOrder === 'asc';
+        const isAsc = sortOrder === 'asc';
         return children.sort(function (a, b) {
-            let diff = ((a.getValue() as number) - (b.getValue() as number)) * (isAsc ? 1 : -1);
+            const diff = ((a.getValue() as number) - (b.getValue() as number)) * (isAsc ? 1 : -1);
             return diff === 0
                 ? (a.dataIndex - b.dataIndex) * (isAsc ? -1 : 1)
                 : diff;

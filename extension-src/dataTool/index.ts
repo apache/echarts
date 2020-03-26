@@ -22,7 +22,7 @@ import * as echarts from 'echarts';
 import * as gexf from './gexf';
 import prepareBoxplotData from './prepareBoxplotData';
 
-export let version = '1.0.0';
+export const version = '1.0.0';
 
 export {gexf};
 

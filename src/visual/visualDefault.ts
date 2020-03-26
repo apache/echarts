@@ -28,7 +28,7 @@ const visualDefault = {
      * @public
      */
     get: function (visualType: string, key: 'active' | 'inactive', isCategory?: boolean) {
-        let value = zrUtil.clone(
+        const value = zrUtil.clone(
             (defaultOption[visualType] || {})[key]
         );
 

@@ -35,7 +35,7 @@ import { ZREasing } from './types';
  */
 export function createWrap() {
 
-    let storage = [];
+    const storage = [];
     let elExistsMap = {};
     let doneCallback;
 
@@ -94,7 +94,7 @@ export function createWrap() {
             let count = storage.length;
 
             for (let i = 0, len = storage.length; i < len; i++) {
-                let item = storage[i];
+                const item = storage[i];
                 item.el.animateTo(item.target, {
                     duration: item.time,
                     delay: item.delay,

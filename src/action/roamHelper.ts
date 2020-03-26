@@ -36,11 +36,11 @@ export function updateCenterAndZoom(
         max?: number
     }
 ) {
-    let previousZoom = view.getZoom();
-    let center = view.getCenter();
+    const previousZoom = view.getZoom();
+    const center = view.getCenter();
     let zoom = payload.zoom;
 
-    let point = view.dataToPoint(center);
+    const point = view.dataToPoint(center);
 
     if (payload.dx != null && payload.dy != null) {
         point[0] -= payload.dx;
@@ -50,8 +50,8 @@ export function updateCenterAndZoom(
     }
     if (zoom != null) {
         if (zoomLimit) {
-            let zoomMin = zoomLimit.min || 0;
-            let zoomMax = zoomLimit.max || Infinity;
+            const zoomMin = zoomLimit.min || 0;
+            const zoomMax = zoomLimit.max || Infinity;
             zoom = Math.max(
                 Math.min(previousZoom * zoom, zoomMax),
                 zoomMin
@@ -61,9 +61,9 @@ export function updateCenterAndZoom(
         // Zoom on given point(originX, originY)
         view.scale[0] *= zoom;
         view.scale[1] *= zoom;
-        let position = view.position;
-        let fixX = (payload.originX - position[0]) * (zoom - 1);
-        let fixY = (payload.originY - position[1]) * (zoom - 1);
+        const position = view.position;
+        const fixX = (payload.originX - position[0]) * (zoom - 1);
+        const fixY = (payload.originY - position[1]) * (zoom - 1);
 
         position[0] -= fixX;
         position[1] -= fixY;

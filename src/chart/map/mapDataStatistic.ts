@@ -25,12 +25,12 @@ import GlobalModel from '../../model/Global';
 
 // FIXME 公用？
 function dataStatistics(datas: List[], statisticType: MapValueCalculationType): List {
-    let dataNameMap = {} as {[mapKey: string]: number[]};
+    const dataNameMap = {} as {[mapKey: string]: number[]};
 
     zrUtil.each(datas, function (data) {
         data.each(data.mapDimension('value'), function (value: number, idx) {
             // Add prefix to avoid conflict with Object.prototype.
-            let mapKey = 'ec-' + data.getName(idx);
+            const mapKey = 'ec-' + data.getName(idx);
             dataNameMap[mapKey] = dataNameMap[mapKey] || [];
             if (!isNaN(value)) {
                 dataNameMap[mapKey].push(value);
@@ -39,11 +39,11 @@ function dataStatistics(datas: List[], statisticType: MapValueCalculationType): 
     });
 
     return datas[0].map(datas[0].mapDimension('value'), function (value, idx) {
-        let mapKey = 'ec-' + datas[0].getName(idx);
+        const mapKey = 'ec-' + datas[0].getName(idx);
         let sum = 0;
         let min = Infinity;
         let max = -Infinity;
-        let len = dataNameMap[mapKey].length;
+        const len = dataNameMap[mapKey].length;
         for (let i = 0; i < len; i++) {
             min = Math.min(min, dataNameMap[mapKey][i]);
             max = Math.max(max, dataNameMap[mapKey][i]);
@@ -67,15 +67,15 @@ function dataStatistics(datas: List[], statisticType: MapValueCalculationType): 
 }
 
 export default function (ecModel: GlobalModel): void {
-    let seriesGroups = {} as {[key: string]: MapSeries[]};
+    const seriesGroups = {} as {[key: string]: MapSeries[]};
     ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
-        let hostGeoModel = seriesModel.getHostGeoModel();
-        let key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
+        const hostGeoModel = seriesModel.getHostGeoModel();
+        const key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
         (seriesGroups[key] = seriesGroups[key] || []).push(seriesModel);
     });
 
     zrUtil.each(seriesGroups, function (seriesList, key) {
-        let data = dataStatistics(
+        const data = dataStatistics(
             zrUtil.map(seriesList, function (seriesModel) {
                 return seriesModel.getData();
             }),

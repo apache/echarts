@@ -26,8 +26,8 @@
  * @param {module:zrender/Element} controllerHost.target
  */
 export function updateViewOnPan(controllerHost, dx, dy) {
-    let target = controllerHost.target;
-    let pos = target.position;
+    const target = controllerHost.target;
+    const pos = target.position;
     pos[0] += dx;
     pos[1] += dy;
     target.dirty();
@@ -42,22 +42,22 @@ export function updateViewOnPan(controllerHost, dx, dy) {
  * @param {number} controllerHost.zoomLimit like: {min: 1, max: 2}
  */
 export function updateViewOnZoom(controllerHost, zoomDelta, zoomX, zoomY) {
-    let target = controllerHost.target;
-    let zoomLimit = controllerHost.zoomLimit;
-    let pos = target.position;
-    let scale = target.scale;
+    const target = controllerHost.target;
+    const zoomLimit = controllerHost.zoomLimit;
+    const pos = target.position;
+    const scale = target.scale;
 
     let newZoom = controllerHost.zoom = controllerHost.zoom || 1;
     newZoom *= zoomDelta;
     if (zoomLimit) {
-        let zoomMin = zoomLimit.min || 0;
-        let zoomMax = zoomLimit.max || Infinity;
+        const zoomMin = zoomLimit.min || 0;
+        const zoomMax = zoomLimit.max || Infinity;
         newZoom = Math.max(
             Math.min(zoomMax, newZoom),
             zoomMin
         );
     }
-    let zoomScale = newZoom / controllerHost.zoom;
+    const zoomScale = newZoom / controllerHost.zoom;
     controllerHost.zoom = newZoom;
     // Keep the mouse center when scaling
     pos[0] -= (zoomX - pos[0]) * (zoomScale - 1);

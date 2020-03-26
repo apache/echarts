@@ -40,14 +40,14 @@ class LegendVisualProvider {
     }
 
     getAllNames(): string[] {
-        let rawData = this._getRawData();
+        const rawData = this._getRawData();
         // We find the name from the raw data. In case it's filtered by the legend component.
         // Normally, the name can be found in rawData, but can't be found in filtered data will display as gray.
         return rawData.mapArray(rawData.getName);
     }
 
     containName(name: string): boolean {
-        let rawData = this._getRawData();
+        const rawData = this._getRawData();
         return rawData.indexOfName(name) >= 0;
     }
 
@@ -55,13 +55,13 @@ class LegendVisualProvider {
         // Only get data when necessary.
         // Because LegendVisualProvider constructor may be new in the stage that data is not prepared yet.
         // Invoking Series#getData immediately will throw an error.
-        let dataWithEncodedVisual = this._getDataWithEncodedVisual();
+        const dataWithEncodedVisual = this._getDataWithEncodedVisual();
         return dataWithEncodedVisual.indexOfName(name);
     }
 
     getItemVisual(dataIndex: number, key: string): any {
         // Get encoded visual properties from final filtered data.
-        let dataWithEncodedVisual = this._getDataWithEncodedVisual();
+        const dataWithEncodedVisual = this._getDataWithEncodedVisual();
         return dataWithEncodedVisual.getItemVisual(dataIndex, key);
     }
 }

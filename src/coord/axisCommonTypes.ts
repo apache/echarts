@@ -24,7 +24,7 @@ import {
 } from '../util/types';
 
 
-export let AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
+export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
 export type OptionAxisType = keyof typeof AXIS_TYPES;
 
 

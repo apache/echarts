@@ -58,12 +58,12 @@ function getClipArea(coord: CoordSysOfBar, data: List) {
     let coordSysClipArea;
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         coordSysClipArea = coord.getArea && coord.getArea();
-        let baseAxis = coord.getBaseAxis();
+        const baseAxis = coord.getBaseAxis();
         // When boundaryGap is false or using time axis. bar may exceed the grid.
         // We should not clip this part.
         // See test/bar2.html
         if (baseAxis.type !== 'category' || !baseAxis.onBand) {
-            let expandWidth = data.getLayout('bandWidth');
+            const expandWidth = data.getLayout('bandWidth');
             if (baseAxis.isHorizontal()) {
                 coordSysClipArea.x -= expandWidth;
                 coordSysClipArea.width += expandWidth * 2;
@@ -94,7 +94,7 @@ class BarView extends ChartView {
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._updateDrawMode(seriesModel);
 
-        let coordinateSystemType = seriesModel.get('coordinateSystem');
+        const coordinateSystemType = seriesModel.get('coordinateSystem');
 
         if (coordinateSystemType === 'cartesian2d'
             || coordinateSystemType === 'polar'
@@ -122,7 +122,7 @@ class BarView extends ChartView {
     }
 
     _updateDrawMode(seriesModel: BarSeriesModel) {
-        let isLargeDraw = seriesModel.pipelineContext.large;
+        const isLargeDraw = seriesModel.pipelineContext.large;
         if (this._isLargeDraw == null || isLargeDraw !== this._isLargeDraw) {
             this._isLargeDraw = isLargeDraw;
             this._clear();
@@ -130,12 +130,12 @@ class BarView extends ChartView {
     }
 
     _renderNormal(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let group = this.group;
-        let data = seriesModel.getData();
-        let oldData = this._data;
+        const group = this.group;
+        const data = seriesModel.getData();
+        const oldData = this._data;
 
-        let coord = seriesModel.coordinateSystem;
-        let baseAxis = coord.getBaseAxis();
+        const coord = seriesModel.coordinateSystem;
+        const baseAxis = coord.getBaseAxis();
         let isHorizontalOrRadial: boolean;
 
         if (coord.type === 'cartesian2d') {
@@ -145,30 +145,30 @@ class BarView extends ChartView {
             isHorizontalOrRadial = baseAxis.dim === 'angle';
         }
 
-        let animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
+        const animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
 
-        let needsClip = seriesModel.get('clip', true);
-        let coordSysClipArea = getClipArea(coord, data);
+        const needsClip = seriesModel.get('clip', true);
+        const coordSysClipArea = getClipArea(coord, data);
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
 
-        let roundCap = seriesModel.get('roundCap', true);
+        const roundCap = seriesModel.get('roundCap', true);
 
-        let drawBackground = seriesModel.get('showBackground', true);
-        let backgroundModel = seriesModel.getModel('backgroundStyle');
+        const drawBackground = seriesModel.get('showBackground', true);
+        const backgroundModel = seriesModel.getModel('backgroundStyle');
 
-        let bgEls: BarView['_backgroundEls'] = [];
-        let oldBgEls = this._backgroundEls;
+        const bgEls: BarView['_backgroundEls'] = [];
+        const oldBgEls = this._backgroundEls;
 
         data.diff(oldData)
             .add(function (dataIndex) {
-                let itemModel = data.getItemModel(dataIndex);
-                let layout = getLayout[coord.type](data, dataIndex, itemModel);
+                const itemModel = data.getItemModel(dataIndex);
+                const layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    let bgEl = createBackgroundEl(
+                    const bgEl = createBackgroundEl(
                         coord, isHorizontalOrRadial, layout
                     );
                     bgEl.useStyle(getBarItemStyle(backgroundModel));
@@ -183,14 +183,14 @@ class BarView extends ChartView {
                 if (needsClip) {
                     // Clip will modify the layout params.
                     // And return a boolean to determine if the shape are fully clipped.
-                    let isClipped = clip[coord.type](coordSysClipArea, layout);
+                    const isClipped = clip[coord.type](coordSysClipArea, layout);
                     if (isClipped) {
                         // group.remove(el);
                         return;
                     }
                 }
 
-                let el = elementCreator[coord.type](
+                const el = elementCreator[coord.type](
                     dataIndex, layout, isHorizontalOrRadial, animationModel, false, roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
@@ -202,15 +202,15 @@ class BarView extends ChartView {
                 );
             })
             .update(function (newIndex, oldIndex) {
-                let itemModel = data.getItemModel(newIndex);
-                let layout = getLayout[coord.type](data, newIndex, itemModel);
+                const itemModel = data.getItemModel(newIndex);
+                const layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (drawBackground) {
-                    let bgEl = oldBgEls[oldIndex];
+                    const bgEl = oldBgEls[oldIndex];
                     bgEl.useStyle(getBarItemStyle(backgroundModel));
                     bgEls[newIndex] = bgEl;
 
-                    let shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
+                    const shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
                     updateProps(
                         bgEl as Path, { shape: shape }, animationModel, newIndex
                     );
@@ -223,7 +223,7 @@ class BarView extends ChartView {
                 }
 
                 if (needsClip) {
-                    let isClipped = clip[coord.type](coordSysClipArea, layout);
+                    const isClipped = clip[coord.type](coordSysClipArea, layout);
                     if (isClipped) {
                         group.remove(el);
                         return;
@@ -251,7 +251,7 @@ class BarView extends ChartView {
                 );
             })
             .remove(function (dataIndex) {
-                let el = oldData.getItemGraphicEl(dataIndex);
+                const el = oldData.getItemGraphicEl(dataIndex);
                 if (coord.type === 'cartesian2d') {
                     el && removeRect(dataIndex, animationModel, el as Rect);
                 }
@@ -261,7 +261,7 @@ class BarView extends ChartView {
             })
             .execute();
 
-        let bgGroup = this._backgroundGroup || (this._backgroundGroup = new Group());
+        const bgGroup = this._backgroundGroup || (this._backgroundGroup = new Group());
         bgGroup.removeAll();
 
         for (let i = 0; i < bgEls.length; ++i) {
@@ -278,7 +278,7 @@ class BarView extends ChartView {
         createLarge(seriesModel, this.group);
 
         // Use clipPath in large mode.
-        let clipPath = seriesModel.get('clip', true)
+        const clipPath = seriesModel.get('clip', true)
             ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
             : null;
         if (clipPath) {
@@ -299,8 +299,8 @@ class BarView extends ChartView {
     }
 
     _clear(ecModel?: GlobalModel) {
-        let group = this.group;
-        let data = this._data;
+        const group = this.group;
+        const data = this._data;
         if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
             this._removeBackground();
             this._backgroundEls = [];
@@ -333,8 +333,8 @@ const clip: {
     [key in 'cartesian2d' | 'polar']: Clipper
 } = {
     cartesian2d(coordSysBoundingRect: RectLike, layout: Rect['shape']) {
-        let signWidth = layout.width < 0 ? -1 : 1;
-        let signHeight = layout.height < 0 ? -1 : 1;
+        const signWidth = layout.width < 0 ? -1 : 1;
+        const signHeight = layout.height < 0 ? -1 : 1;
         // Needs positive width and height
         if (signWidth < 0) {
             layout.x += layout.width;
@@ -345,17 +345,17 @@ const clip: {
             layout.height = -layout.height;
         }
 
-        let x = mathMax(layout.x, coordSysBoundingRect.x);
-        let x2 = mathMin(layout.x + layout.width, coordSysBoundingRect.x + coordSysBoundingRect.width);
-        let y = mathMax(layout.y, coordSysBoundingRect.y);
-        let y2 = mathMin(layout.y + layout.height, coordSysBoundingRect.y + coordSysBoundingRect.height);
+        const x = mathMax(layout.x, coordSysBoundingRect.x);
+        const x2 = mathMin(layout.x + layout.width, coordSysBoundingRect.x + coordSysBoundingRect.width);
+        const y = mathMax(layout.y, coordSysBoundingRect.y);
+        const y2 = mathMin(layout.y + layout.height, coordSysBoundingRect.y + coordSysBoundingRect.height);
 
         layout.x = x;
         layout.y = y;
         layout.width = x2 - x;
         layout.height = y2 - y;
 
-        let clipped = layout.width < 0 || layout.height < 0;
+        const clipped = layout.width < 0 || layout.height < 0;
 
         // Reverse back
         if (signWidth < 0) {
@@ -390,7 +390,7 @@ const elementCreator: {
         dataIndex, layout: RectLayout, isHorizontal,
         animationModel, isUpdate
     ) {
-        let rect = new Rect({
+        const rect = new Rect({
             shape: zrUtil.extend({}, layout),
             z2: 1
         });
@@ -399,9 +399,9 @@ const elementCreator: {
 
         // Animation
         if (animationModel) {
-            let rectShape = rect.shape;
-            let animateProperty = isHorizontal ? 'height' : 'width' as 'width' | 'height';
-            let animateTarget = {} as RectShape;
+            const rectShape = rect.shape;
+            const animateProperty = isHorizontal ? 'height' : 'width' as 'width' | 'height';
+            const animateTarget = {} as RectShape;
             rectShape[animateProperty] = 0;
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(rect, {
@@ -420,11 +420,11 @@ const elementCreator: {
         // direction. Notice that if clockwise is true (by default), the sector
         // will always draw clockwisely, no matter whether endAngle is greater
         // or less than startAngle.
-        let clockwise = layout.startAngle < layout.endAngle;
+        const clockwise = layout.startAngle < layout.endAngle;
 
-        let ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
+        const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
 
-        let sector = new ShapeClass({
+        const sector = new ShapeClass({
             shape: zrUtil.defaults({clockwise: clockwise}, layout),
             z2: 1
         });
@@ -433,9 +433,9 @@ const elementCreator: {
 
         // Animation
         if (animationModel) {
-            let sectorShape = sector.shape;
-            let animateProperty = isRadial ? 'r' : 'endAngle' as 'r' | 'endAngle';
-            let animateTarget = {} as SectorShape;
+            const sectorShape = sector.shape;
+            const animateProperty = isRadial ? 'r' : 'endAngle' as 'r' | 'endAngle';
+            const animateTarget = {} as SectorShape;
             sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(sector, {
@@ -486,12 +486,12 @@ const getLayout: {
     [key in 'cartesian2d' | 'polar']: GetLayout
 } = {
     cartesian2d(data, dataIndex, itemModel): RectLayout {
-        let layout = data.getItemLayout(dataIndex) as RectLayout;
-        let fixedLineWidth = getLineWidth(itemModel, layout);
+        const layout = data.getItemLayout(dataIndex) as RectLayout;
+        const fixedLineWidth = getLineWidth(itemModel, layout);
 
         // fix layout with lineWidth
-        let signX = layout.width > 0 ? 1 : -1;
-        let signY = layout.height > 0 ? 1 : -1;
+        const signX = layout.width > 0 ? 1 : -1;
+        const signY = layout.height > 0 ? 1 : -1;
         return {
             x: layout.x + signX * fixedLineWidth / 2,
             y: layout.y + signY * fixedLineWidth / 2,
@@ -501,7 +501,7 @@ const getLayout: {
     },
 
     polar(data, dataIndex, itemModel): SectorLayout {
-        let layout = data.getItemLayout(dataIndex);
+        const layout = data.getItemLayout(dataIndex);
         return {
             cx: layout.cx,
             cy: layout.cy,
@@ -528,11 +528,11 @@ function updateStyle(
     isHorizontal: boolean,
     isPolar: boolean
 ) {
-    let color = data.getItemVisual(dataIndex, 'color');
-    let opacity = data.getItemVisual(dataIndex, 'opacity');
-    let stroke = data.getVisual('borderColor');
-    let itemStyleModel = itemModel.getModel('itemStyle');
-    let hoverStyle = getBarItemStyle(itemModel.getModel(['emphasis', 'itemStyle']));
+    const color = data.getItemVisual(dataIndex, 'color');
+    const opacity = data.getItemVisual(dataIndex, 'opacity');
+    const stroke = data.getVisual('borderColor');
+    const itemStyleModel = itemModel.getModel('itemStyle');
+    const hoverStyle = getBarItemStyle(itemModel.getModel(['emphasis', 'itemStyle']));
 
     if (!isPolar) {
         (el as Rect).setShape('r', itemStyleModel.get('barBorderRadius') || 0);
@@ -547,16 +547,16 @@ function updateStyle(
         getBarItemStyle(itemStyleModel)
     ));
 
-    let cursorStyle = itemModel.getShallow('cursor');
+    const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
 
     if (!isPolar) {
-        let labelPositionOutside = isHorizontal
+        const labelPositionOutside = isHorizontal
             ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
             : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
 
-        let labelModel = itemModel.getModel('label');
-        let hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+        const labelModel = itemModel.getModel('label');
+        const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
         setLabelStyle(
             el, labelModel, hoverLabelModel,
             {
@@ -579,10 +579,10 @@ function getLineWidth(
     itemModel: Model<BarSeriesOption>,
     rawLayout: RectLayout
 ) {
-    let lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
+    const lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
     // width or height may be NaN for empty data
-    let width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
-    let height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);
+    const width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
+    const height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);
     return Math.min(lineWidth, width, height);
 }
 
@@ -631,16 +631,16 @@ function createLarge(
     incremental?: boolean
 ) {
     // TODO support polar
-    let data = seriesModel.getData();
-    let startPoint = [];
-    let baseDimIdx = data.getLayout('valueAxisHorizontal') ? 1 : 0;
+    const data = seriesModel.getData();
+    const startPoint = [];
+    const baseDimIdx = data.getLayout('valueAxisHorizontal') ? 1 : 0;
     startPoint[1 - baseDimIdx] = data.getLayout('valueAxisStart');
 
-    let largeDataIndices = data.getLayout('largeDataIndices');
-    let barWidth = data.getLayout('barWidth');
+    const largeDataIndices = data.getLayout('largeDataIndices');
+    const barWidth = data.getLayout('barWidth');
 
-    let backgroundModel = seriesModel.getModel('backgroundStyle');
-    let drawBackground = seriesModel.get('showBackground', true);
+    const backgroundModel = seriesModel.getModel('backgroundStyle');
+    const drawBackground = seriesModel.get('showBackground', true);
 
     if (drawBackground) {
         const points = data.getLayout('largeBackgroundPoints');
@@ -661,7 +661,7 @@ function createLarge(
         group.add(bgEl);
     }
 
-    let el = new LargePath({
+    const el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
         incremental: !!incremental
     });
@@ -683,30 +683,30 @@ function createLarge(
 
 // Use throttle to avoid frequently traverse to find dataIndex.
 const largePathUpdateDataIndex = throttle(function (this: LargePath, event: ZRElementEvent) {
-    let largePath = this;
-    let dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
+    const largePath = this;
+    const dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
     getECData(largePath).dataIndex = dataIndex >= 0 ? dataIndex : null;
 }, 30, false);
 
 function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
-    let baseDimIdx = largePath.__baseDimIdx;
-    let valueDimIdx = 1 - baseDimIdx;
-    let points = largePath.shape.points;
-    let largeDataIndices = largePath.__largeDataIndices;
-    let barWidthHalf = Math.abs(largePath.__barWidth / 2);
-    let startValueVal = largePath.__startPoint[valueDimIdx];
+    const baseDimIdx = largePath.__baseDimIdx;
+    const valueDimIdx = 1 - baseDimIdx;
+    const points = largePath.shape.points;
+    const largeDataIndices = largePath.__largeDataIndices;
+    const barWidthHalf = Math.abs(largePath.__barWidth / 2);
+    const startValueVal = largePath.__startPoint[valueDimIdx];
 
     _eventPos[0] = x;
     _eventPos[1] = y;
-    let pointerBaseVal = _eventPos[baseDimIdx];
-    let pointerValueVal = _eventPos[1 - baseDimIdx];
-    let baseLowerBound = pointerBaseVal - barWidthHalf;
-    let baseUpperBound = pointerBaseVal + barWidthHalf;
+    const pointerBaseVal = _eventPos[baseDimIdx];
+    const pointerValueVal = _eventPos[1 - baseDimIdx];
+    const baseLowerBound = pointerBaseVal - barWidthHalf;
+    const baseUpperBound = pointerBaseVal + barWidthHalf;
 
     for (let i = 0, len = points.length / 2; i < len; i++) {
-        let ii = i * 2;
-        let barBaseVal = points[ii + baseDimIdx];
-        let barValueVal = points[ii + valueDimIdx];
+        const ii = i * 2;
+        const barBaseVal = points[ii + baseDimIdx];
+        const barValueVal = points[ii + valueDimIdx];
         if (
             barBaseVal >= baseLowerBound && barBaseVal <= baseUpperBound
             && (
@@ -727,8 +727,8 @@ function setLargeStyle(
     seriesModel: BarSeriesModel,
     data: List
 ) {
-    let borderColor = data.getVisual('borderColor') || data.getVisual('color');
-    let itemStyle = seriesModel.getModel('itemStyle').getItemStyle(['color', 'borderColor']);
+    const borderColor = data.getVisual('borderColor') || data.getVisual('color');
+    const itemStyle = seriesModel.getModel('itemStyle').getItemStyle(['color', 'borderColor']);
 
     el.useStyle(itemStyle);
     el.style.fill = null;
@@ -741,8 +741,8 @@ function setLargeBackgroundStyle(
     backgroundModel: Model<BarSeriesOption['backgroundStyle']>,
     data: List
 ) {
-    let borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
-    let itemStyle = backgroundModel.getItemStyle(['color', 'borderColor']);
+    const borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
+    const itemStyle = backgroundModel.getItemStyle(['color', 'borderColor']);
 
     el.useStyle(itemStyle);
     el.style.fill = null;
@@ -784,7 +784,7 @@ function createBackgroundEl(
     isHorizontalOrRadial: boolean,
     layout: SectorLayout | RectLayout
 ): Rect | Sector {
-    let ElementClz = coord.type === 'polar' ? Sector : Rect;
+    const ElementClz = coord.type === 'polar' ? Sector : Rect;
     return new ElementClz({
         shape: createBackgroundShape(isHorizontalOrRadial, layout, coord) as any,
         silent: true,

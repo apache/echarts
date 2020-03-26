@@ -49,7 +49,7 @@ export {getLayoutRect};
 
 export {default as createDimensions} from './data/helper/createDimensions';
 
-export let dataStack = {
+export const dataStack = {
     isDimensionStacked: isDimensionStacked,
     enableDataStack: enableDataStack,
     getStackedDimension: getStackedDimension
@@ -86,7 +86,7 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
         // zrUtil.mixin(axisModel, AxisModelCommonMixin);
     }
 
-    let scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
+    const scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
     scale.setExtent(dataExtent[0], dataExtent[1]);
 
     axisHelper.niceScaleExtent(scale, axisModel as AxisBaseModel);

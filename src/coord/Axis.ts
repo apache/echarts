@@ -76,9 +76,9 @@ class Axis {
      * If axis extent contain given coord
      */
     contain(coord: number): boolean {
-        let extent = this._extent;
-        let min = Math.min(extent[0], extent[1]);
-        let max = Math.max(extent[0], extent[1]);
+        const extent = this._extent;
+        const min = Math.min(extent[0], extent[1]);
+        const max = Math.max(extent[0], extent[1]);
         return coord >= min && coord <= max;
     }
 
@@ -110,7 +110,7 @@ class Axis {
      * Set coord extent
      */
     setExtent(start: number, end: number): void {
-        let extent = this._extent;
+        const extent = this._extent;
         extent[0] = start;
         extent[1] = end;
     }
@@ -120,7 +120,7 @@ class Axis {
      */
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
         let extent = this._extent;
-        let scale = this.scale;
+        const scale = this.scale;
         data = scale.normalize(data);
 
         if (this.onBand && scale.type === 'ordinal') {
@@ -136,14 +136,14 @@ class Axis {
      */
     coordToData(coord: number, clamp?: boolean): number {
         let extent = this._extent;
-        let scale = this.scale;
+        const scale = this.scale;
 
         if (this.onBand && scale.type === 'ordinal') {
             extent = extent.slice() as [number, number];
             fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
-        let t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
+        const t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
 
         return this.scale.scale(t);
     }
@@ -171,18 +171,18 @@ class Axis {
     }): TickCoord[] {
         opt = opt || {};
 
-        let tickModel = opt.tickModel || this.getTickModel();
-        let result = createAxisTicks(this, tickModel);
-        let ticks = result.ticks;
+        const tickModel = opt.tickModel || this.getTickModel();
+        const result = createAxisTicks(this, tickModel);
+        const ticks = result.ticks;
 
-        let ticksCoords = map(ticks, function (tickValue) {
+        const ticksCoords = map(ticks, function (tickValue) {
             return {
                 coord: this.dataToCoord(tickValue),
                 tickValue: tickValue
             };
         }, this);
 
-        let alignWithLabel = tickModel.get('alignWithLabel');
+        const alignWithLabel = tickModel.get('alignWithLabel');
 
         fixOnBandTicksCoords(
             this, ticksCoords, alignWithLabel, opt.clamp
@@ -197,14 +197,14 @@ class Axis {
             return [];
         }
 
-        let minorTickModel = this.model.getModel('minorTick');
+        const minorTickModel = this.model.getModel('minorTick');
         let splitNumber = minorTickModel.get('splitNumber');
         // Protection.
         if (!(splitNumber > 0 && splitNumber < 100)) {
             splitNumber = 5;
         }
-        let minorTicks = this.scale.getMinorTicks(splitNumber);
-        let minorTicksCoords = map(minorTicks, function (minorTicksGroup) {
+        const minorTicks = this.scale.getMinorTicks(splitNumber);
+        const minorTicksCoords = map(minorTicks, function (minorTicksGroup) {
             return map(minorTicksGroup, function (minorTick) {
                 return {
                     coord: this.dataToCoord(minorTick),
@@ -238,14 +238,14 @@ class Axis {
      * Get width of band
      */
     getBandWidth(): number {
-        let axisExtent = this._extent;
-        let dataExtent = this.scale.getExtent();
+        const axisExtent = this._extent;
+        const dataExtent = this.scale.getExtent();
 
         let len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
         // Fix #2728, avoid NaN when only one data.
         len === 0 && (len = 1);
 
-        let size = Math.abs(axisExtent[1] - axisExtent[0]);
+        const size = Math.abs(axisExtent[1] - axisExtent[0]);
 
         return Math.abs(size) / len;
     }
@@ -267,9 +267,9 @@ class Axis {
 }
 
 function fixExtentWithBands(extent: [number, number], nTick: number): void {
-    let size = extent[1] - extent[0];
-    let len = nTick;
-    let margin = size / len / 2;
+    const size = extent[1] - extent[0];
+    const len = nTick;
+    const margin = size / len / 2;
     extent[0] += margin;
     extent[1] -= margin;
 }
@@ -286,13 +286,13 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 function fixOnBandTicksCoords(
     axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, clamp: boolean
 ) {
-    let ticksLen = ticksCoords.length;
+    const ticksLen = ticksCoords.length;
 
     if (!axis.onBand || alignWithLabel || !ticksLen) {
         return;
     }
 
-    let axisExtent = axis.getExtent();
+    const axisExtent = axis.getExtent();
     let last;
     let diffSize;
     if (ticksLen === 1) {
@@ -300,14 +300,14 @@ function fixOnBandTicksCoords(
         last = ticksCoords[1] = {coord: axisExtent[0]};
     }
     else {
-        let crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
-        let shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
+        const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
+        const shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
 
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
         });
 
-        let dataExtent = axis.scale.getExtent();
+        const dataExtent = axis.scale.getExtent();
         diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
 
         last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
@@ -315,7 +315,7 @@ function fixOnBandTicksCoords(
         ticksCoords.push(last);
     }
 
-    let inverse = axisExtent[0] > axisExtent[1];
+    const inverse = axisExtent[0] > axisExtent[1];
 
     // Handling clamp.
     if (littleThan(ticksCoords[0].coord, axisExtent[0])) {

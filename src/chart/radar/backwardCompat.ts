@@ -28,7 +28,7 @@ export default function (option) {
         if (!zrUtil.isArray(polarOptArr)) {
             polarOptArr = [polarOptArr];
         }
-        let polarNotRadar = [];
+        const polarNotRadar = [];
         zrUtil.each(polarOptArr, function (polarOpt, idx) {
             if (polarOpt.indicator) {
                 if (polarOpt.type && !polarOpt.shape) {

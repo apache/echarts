@@ -60,7 +60,7 @@ class Geo extends View {
 
         this.map = map;
 
-        let source = geoSourceManager.load(map, nameMap);
+        const source = geoSourceManager.load(map, nameMap);
 
         this._nameCoordMap = source.nameCoordMap;
         this._regionsMap = source.regionsMap;
@@ -73,7 +73,7 @@ class Geo extends View {
      * Whether contain the given [lng, lat] coord.
      */
     containCoord(coord: number[]) {
-        let regions = this.regions;
+        const regions = this.regions;
         for (let i = 0; i < regions.length; i++) {
             if (regions[i].contain(coord)) {
                 return true;
@@ -84,7 +84,7 @@ class Geo extends View {
 
     transformTo(x: number, y: number, width: number, height: number): void {
         let rect = this.getBoundingRect();
-        let invertLongitute = this._invertLongitute;
+        const invertLongitute = this._invertLongitute;
 
         rect = rect.clone();
 
@@ -93,7 +93,7 @@ class Geo extends View {
             rect.y = -rect.y - rect.height;
         }
 
-        let rawTransformable = this._rawTransformable;
+        const rawTransformable = this._rawTransformable;
 
         rawTransformable.transform = rect.calculateTransform(
             new BoundingRect(x, y, width, height)
@@ -102,7 +102,7 @@ class Geo extends View {
         rawTransformable.decomposeTransform();
 
         if (invertLongitute) {
-            let scale = rawTransformable.scale;
+            const scale = rawTransformable.scale;
             scale[1] = -scale[1];
         }
 
@@ -116,7 +116,7 @@ class Geo extends View {
     }
 
     getRegionByCoord(coord: number[]): Region {
-        let regions = this.regions;
+        const regions = this.regions;
         for (let i = 0; i < regions.length; i++) {
             if (regions[i].contain(coord)) {
                 return regions[i];
@@ -153,12 +153,12 @@ class Geo extends View {
     }
 
     convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
-        let coordSys = getCoordSys(finder);
+        const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.dataToPoint(value) : null;
     }
 
     convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
-        let coordSys = getCoordSys(finder);
+        const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }
 
@@ -167,8 +167,8 @@ class Geo extends View {
 zrUtil.mixin(Geo, View);
 
 function getCoordSys(finder: ParsedModelFinder): Geo {
-    let geoModel = finder.geoModel as GeoModel;
-    let seriesModel = finder.seriesModel;
+    const geoModel = finder.geoModel as GeoModel;
+    const seriesModel = finder.seriesModel;
     return geoModel
         ? geoModel.coordinateSystem
         : seriesModel

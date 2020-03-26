@@ -93,7 +93,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
     resetItemSize() {
         super.resetItemSize.apply(this, arguments as any);
 
-        let itemSize = this.itemSize;
+        const itemSize = this.itemSize;
 
         (itemSize[0] == null || isNaN(itemSize[0])) && (itemSize[0] = DEFAULT_BAR_BOUND[0]);
         (itemSize[1] == null || isNaN(itemSize[1])) && (itemSize[1] = DEFAULT_BAR_BOUND[1]);
@@ -103,8 +103,8 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
      * @private
      */
     _resetRange() {
-        let dataExtent = this.getExtent();
-        let range = this.option.range;
+        const dataExtent = this.getExtent();
+        const range = this.option.range;
 
         if (!range || (range as RangeWithAuto).auto) {
             // `range` should always be array (so we dont use other
@@ -129,7 +129,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         super.completeVisualOption.apply(this, arguments as any);
 
         zrUtil.each(this.stateList, function (state: VisualState) {
-            let symbolSize = this.option.controller[state].symbolSize;
+            const symbolSize = this.option.controller[state].symbolSize;
             if (symbolSize && symbolSize[0] !== symbolSize[1]) {
                 symbolSize[0] = 0; // For good looking.
             }
@@ -148,9 +148,9 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
      * @public
      */
     getSelected(): [number, number] {
-        let dataExtent = this.getExtent();
+        const dataExtent = this.getExtent();
 
-        let dataInterval = numberUtil.asc(
+        const dataInterval = numberUtil.asc(
             (this.get('range') || []).slice()
         ) as [number, number];
 
@@ -167,8 +167,8 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
      * @override
      */
     getValueState(value: number): VisualState {
-        let range = this.option.range;
-        let dataExtent = this.getExtent();
+        const range = this.option.range;
+        const dataExtent = this.getExtent();
 
         // When range[0] === dataExtent[0], any value larger than dataExtent[0] maps to 'inRange'.
         // range[1] is processed likewise.
@@ -183,11 +183,11 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
             seriesId: string
             dataIndex: number[]
         };
-        let result: DataIndices[] = [];
+        const result: DataIndices[] = [];
 
         this.eachTargetSeries(function (seriesModel) {
-            let dataIndices: number[] = [];
-            let data = seriesModel.getData();
+            const dataIndices: number[] = [];
+            const data = seriesModel.getData();
 
             data.each(this.getDataDimension(data), function (value, dataIndex) {
                 range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
@@ -209,9 +209,9 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         getColorVisual: (value: number, valueState: VisualState) => string
     ) {
         type ColorStop = VisualMeta['stops'][number];
-        let oVals = getColorStopValues(this, 'outOfRange', this.getExtent());
-        let iVals = getColorStopValues(this, 'inRange', this.option.range.slice());
-        let stops: ColorStop[] = [];
+        const oVals = getColorStopValues(this, 'outOfRange', this.getExtent());
+        const iVals = getColorStopValues(this, 'inRange', this.option.range.slice());
+        const stops: ColorStop[] = [];
 
         function setStop(value: number, valueState: VisualState) {
             stops.push({
@@ -223,8 +223,8 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         // Format to: outOfRange -- inRange -- outOfRange.
         let iIdx = 0;
         let oIdx = 0;
-        let iLen = iVals.length;
-        let oLen = oVals.length;
+        const iLen = iVals.length;
+        const oLen = oVals.length;
 
         for (; oIdx < oLen && (!iVals.length || oVals[oIdx] <= iVals[0]); oIdx++) {
             // If oVal[oIdx] === iVals[iIdx], oVal[oIdx] should be ignored.
@@ -249,7 +249,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
             }
         }
 
-        let stopsLen = stops.length;
+        const stopsLen = stops.length;
 
         return {
             stops: stops,
@@ -281,11 +281,11 @@ function getColorStopValues(
     // Moreover, canvas gradient seems not to be accurate linear.
     // FIXME
     // Should be arbitrary value 100? or based on pixel size?
-    let count = 200;
-    let step = (dataExtent[1] - dataExtent[0]) / count;
+    const count = 200;
+    const step = (dataExtent[1] - dataExtent[0]) / count;
 
     let value = dataExtent[0];
-    let stopValues = [];
+    const stopValues = [];
     for (let i = 0; i <= count && value < dataExtent[1]; i++) {
         stopValues.push(value);
         value += step;

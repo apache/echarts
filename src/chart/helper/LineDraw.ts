@@ -102,10 +102,10 @@ class LineDraw {
     };
 
     updateData(lineData: ListForLineDraw) {
-        let lineDraw = this;
-        let group = lineDraw.group;
+        const lineDraw = this;
+        const group = lineDraw.group;
 
-        let oldLineData = lineDraw._lineData;
+        const oldLineData = lineDraw._lineData;
         lineDraw._lineData = lineData;
 
         // There is no oldLineData only when first rendering or switching from
@@ -114,7 +114,7 @@ class LineDraw {
             group.removeAll();
         }
 
-        let seriesScope = makeSeriesScope(lineData);
+        const seriesScope = makeSeriesScope(lineData);
 
         lineData.diff(oldLineData)
             .add((idx) => {
@@ -130,7 +130,7 @@ class LineDraw {
     };
 
     updateLayout() {
-        let lineData = this._lineData;
+        const lineData = this._lineData;
 
         // Do not support update layout in incremental mode.
         if (!lineData) {
@@ -156,10 +156,10 @@ class LineDraw {
         }
 
         for (let idx = taskParams.start; idx < taskParams.end; idx++) {
-            let itemLayout = lineData.getItemLayout(idx);
+            const itemLayout = lineData.getItemLayout(idx);
 
             if (lineNeedsDraw(itemLayout)) {
-                let el = new this._LineCtor(lineData, idx, this._seriesScope);
+                const el = new this._LineCtor(lineData, idx, this._seriesScope);
                 el.traverse(updateIncrementalAndHover);
 
                 this.group.add(el);
@@ -177,13 +177,13 @@ class LineDraw {
         idx: number,
         seriesScope: LineDrawSeriesScope
     ) {
-        let itemLayout = lineData.getItemLayout(idx);
+        const itemLayout = lineData.getItemLayout(idx);
 
         if (!lineNeedsDraw(itemLayout)) {
             return;
         }
 
-        let el = new this._LineCtor(lineData, idx, seriesScope);
+        const el = new this._LineCtor(lineData, idx, seriesScope);
         lineData.setItemGraphicEl(idx, el);
         this.group.add(el);
     }
@@ -215,7 +215,7 @@ class LineDraw {
 }
 
 function makeSeriesScope(lineData: ListForLineDraw) {
-    let hostModel = lineData.hostModel;
+    const hostModel = lineData.hostModel;
     return {
         lineStyle: hostModel.getModel('lineStyle').getLineStyle(),
         hoverLineStyle: hostModel.getModel(['emphasis', 'lineStyle']).getLineStyle(),

@@ -21,7 +21,6 @@ import MarkerModel, { MarkerOption, MarkerPositionOption } from './MarkerModel';
 import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 import { SymbolOptionMixin, ItemStyleOption, LabelOption, CallbackDataParams } from '../../util/types';
-import List from '../../data/List';
 
 // interface MarkPointCallbackDataParams extends CallbackDataParams {
 //     componentType: 'markPoint'

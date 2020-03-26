@@ -112,10 +112,10 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         let rawDataLength = data.length;
 
         // grouped data by name
-        let groupResult = groupData(data, function (item) {
+        const groupResult = groupData(data, function (item) {
             return item[2];
         });
-        let layData: {
+        const layData: {
             name: string,
             dataList: ThemeRiverSeriesOption['data']
         }[] = [];
@@ -126,11 +126,11 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             });
         });
 
-        let layerNum = layData.length;
+        const layerNum = layData.length;
         let largestLayer = -1;
         let index = -1;
         for (let i = 0; i < layerNum; ++i) {
-            let len = layData[i].dataList.length;
+            const len = layData[i].dataList.length;
             if (len > largestLayer) {
                 largestLayer = len;
                 index = i;
@@ -141,13 +141,13 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             if (k === index) {
                 continue;
             }
-            let name = layData[k].name;
+            const name = layData[k].name;
             for (let j = 0; j < largestLayer; ++j) {
-                let timeValue = layData[index].dataList[j][0];
-                let length = layData[k].dataList.length;
+                const timeValue = layData[index].dataList[j][0];
+                const length = layData[k].dataList.length;
                 let keyIndex = -1;
                 for (let l = 0; l < length; ++l) {
-                    let value = layData[k].dataList[l][0];
+                    const value = layData[k].dataList[l][0];
                     if (value === timeValue) {
                         keyIndex = l;
                         break;
@@ -170,23 +170,23 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      */
     getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): List {
 
-        let singleAxisModel = ecModel.queryComponents({
+        const singleAxisModel = ecModel.queryComponents({
             mainType: 'singleAxis',
             index: this.get('singleAxisIndex'),
             id: this.get('singleAxisId')
         })[0];
 
-        let axisType = singleAxisModel.get('type');
+        const axisType = singleAxisModel.get('type');
 
         // filter the data item with the value of label is undefined
-        let filterData = zrUtil.filter(option.data, function (dataItem) {
+        const filterData = zrUtil.filter(option.data, function (dataItem) {
             return dataItem[2] !== undefined;
         });
 
         // ??? TODO design a stage to transfer data for themeRiver and lines?
-        let data = this.fixData(filterData || []);
-        let nameList = [];
-        let nameMap = this.nameMap = zrUtil.createHashMap();
+        const data = this.fixData(filterData || []);
+        const nameList = [];
+        const nameMap = this.nameMap = zrUtil.createHashMap();
         let count = 0;
 
         for (let i = 0; i < data.length; ++i) {
@@ -197,7 +197,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         }
 
-        let dimensionsInfo = createDimensions(data, {
+        const dimensionsInfo = createDimensions(data, {
             coordDimensions: ['single'],
             dimensionsDefine: [
                 {
@@ -220,7 +220,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             }
         });
 
-        let list = new List(dimensionsInfo, this);
+        const list = new List(dimensionsInfo, this);
         list.initData(data);
 
         return list;
@@ -231,21 +231,21 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      *     has same name.
      */
     getLayerSeries() {
-        let data = this.getData();
-        let lenCount = data.count();
-        let indexArr = [];
+        const data = this.getData();
+        const lenCount = data.count();
+        const indexArr = [];
 
         for (let i = 0; i < lenCount; ++i) {
             indexArr[i] = i;
         }
 
-        let timeDim = data.mapDimension('single');
+        const timeDim = data.mapDimension('single');
 
         // data group by name
-        let groupResult = groupData(indexArr, function (index) {
+        const groupResult = groupData(indexArr, function (index) {
             return data.get('name', index) as string;
         });
-        let layerSeries: {
+        const layerSeries: {
             name: string
             indices: number[]
         }[] = [];
@@ -270,19 +270,19 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             dim = dim ? [dim] : [];
         }
 
-        let data = this.getData();
-        let layerSeries = this.getLayerSeries();
-        let indices = [];
-        let layerNum = layerSeries.length;
+        const data = this.getData();
+        const layerSeries = this.getLayerSeries();
+        const indices = [];
+        const layerNum = layerSeries.length;
         let nestestValue;
 
         for (let i = 0; i < layerNum; ++i) {
             let minDist = Number.MAX_VALUE;
             let nearestIdx = -1;
-            let pointNum = layerSeries[i].indices.length;
+            const pointNum = layerSeries[i].indices.length;
             for (let j = 0; j < pointNum; ++j) {
-                let theValue = data.get(dim[0], layerSeries[i].indices[j]) as number;
-                let dist = Math.abs(theValue - value);
+                const theValue = data.get(dim[0], layerSeries[i].indices[j]) as number;
+                const dist = Math.abs(theValue - value);
                 if (dist <= minDist) {
                     nestestValue = theValue;
                     minDist = dist;
@@ -300,8 +300,8 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      * @param {number} dataIndex  index of data
      */
     formatTooltip(dataIndex: number): string {
-        let data = this.getData();
-        let htmlName = data.getName(dataIndex);
+        const data = this.getData();
+        const htmlName = data.getName(dataIndex);
         let htmlValue = data.get(data.mapDimension('value'), dataIndex);
         if (isNaN(htmlValue as number) || htmlValue == null) {
             htmlValue = '-';

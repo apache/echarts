@@ -116,9 +116,9 @@ function adjustSingleSide(
                 continue;
             }
 
-            let deltaY = Math.abs(list[i].y - cy);
-            let length = list[i].len;
-            let length2 = list[i].len2;
+            const deltaY = Math.abs(list[i].y - cy);
+            const length = list[i].len;
+            const length2 = list[i].len2;
             let deltaX = (deltaY < r + length)
                 ? Math.sqrt(
                         (r + length + length2) * (r + length + length2)
@@ -141,12 +141,12 @@ function adjustSingleSide(
 
     let lastY = 0;
     let delta;
-    let len = list.length;
-    let upList = [];
-    let downList = [];
+    const len = list.length;
+    const upList = [];
+    const downList = [];
     for (let i = 0; i < len; i++) {
         if (list[i].position === 'outer' && list[i].labelAlignTo === 'labelLine') {
-            let dx = list[i].x - farthestX;
+            const dx = list[i].x - farthestX;
             list[i].linePoints[1][0] += dx;
             list[i].x = farthestX;
         }
@@ -182,8 +182,8 @@ function avoidOverlap(
     viewLeft: number,
     viewTop: number
 ) {
-    let leftList = [];
-    let rightList = [];
+    const leftList = [];
+    const rightList = [];
     let leftmostX = Number.MAX_VALUE;
     let rightmostX = -Number.MAX_VALUE;
     for (let i = 0; i < labelLayoutList.length; i++) {
@@ -204,14 +204,14 @@ function avoidOverlap(
     adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight, viewLeft, viewTop, leftmostX);
 
     for (let i = 0; i < labelLayoutList.length; i++) {
-        let layout = labelLayoutList[i];
+        const layout = labelLayoutList[i];
         if (isPositionCenter(layout)) {
             continue;
         }
 
-        let linePoints = layout.linePoints;
+        const linePoints = layout.linePoints;
         if (linePoints) {
-            let isAlignToEdge = layout.labelAlignTo === 'edge';
+            const isAlignToEdge = layout.labelAlignTo === 'edge';
 
             let realTextWidth = layout.textRect.width;
             let targetTextWidth;
@@ -241,7 +241,7 @@ function avoidOverlap(
                 }
             }
 
-            let dist = linePoints[1][0] - linePoints[2][0];
+            const dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
                 if (layout.x < cx) {
                     linePoints[2][0] = viewLeft + layout.labelMargin + realTextWidth + layout.labelDistance;
@@ -278,27 +278,27 @@ export default function (
     viewLeft: number,
     viewTop: number
 ) {
-    let data = seriesModel.getData();
-    let labelLayoutList: LabelLayout[] = [];
+    const data = seriesModel.getData();
+    const labelLayoutList: LabelLayout[] = [];
     let cx;
     let cy;
     let hasLabelRotate = false;
-    let minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
+    const minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
 
     data.each(function (idx) {
-        let layout = data.getItemLayout(idx);
+        const layout = data.getItemLayout(idx);
 
-        let itemModel = data.getItemModel<PieDataItemOption>(idx);
-        let labelModel = itemModel.getModel('label');
+        const itemModel = data.getItemModel<PieDataItemOption>(idx);
+        const labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis
-        let labelPosition = labelModel.get('position') || itemModel.get(['emphasis', 'label', 'position']);
-        let labelDistance = labelModel.get('distanceToLabelLine');
-        let labelAlignTo = labelModel.get('alignTo');
-        let labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
-        let bleedMargin = labelModel.get('bleedMargin');
-        let font = labelModel.getFont();
+        const labelPosition = labelModel.get('position') || itemModel.get(['emphasis', 'label', 'position']);
+        const labelDistance = labelModel.get('distanceToLabelLine');
+        const labelAlignTo = labelModel.get('alignTo');
+        const labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
+        const bleedMargin = labelModel.get('bleedMargin');
+        const font = labelModel.getFont();
 
-        let labelLineModel = itemModel.getModel('labelLine');
+        const labelLineModel = itemModel.getModel('labelLine');
         let labelLineLen = labelLineModel.get('length');
         labelLineLen = parsePercent(labelLineLen, viewWidth);
         let labelLineLen2 = labelLineModel.get('length2');
@@ -308,9 +308,9 @@ export default function (
             return;
         }
 
-        let midAngle = (layout.startAngle + layout.endAngle) / 2;
-        let dx = Math.cos(midAngle);
-        let dy = Math.sin(midAngle);
+        const midAngle = (layout.startAngle + layout.endAngle) / 2;
+        const dx = Math.cos(midAngle);
+        const dy = Math.sin(midAngle);
 
         let textX;
         let textY;
@@ -320,29 +320,29 @@ export default function (
         cx = layout.cx;
         cy = layout.cy;
 
-        let text = seriesModel.getFormattedLabel(idx, 'normal')
+        const text = seriesModel.getFormattedLabel(idx, 'normal')
                 || data.getName(idx);
-        let textRect = textContain.getBoundingRect(text, font, textAlign, 'top');
+        const textRect = textContain.getBoundingRect(text, font, textAlign, 'top');
 
-        let isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
+        const isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         if (labelPosition === 'center') {
             textX = layout.cx;
             textY = layout.cy;
             textAlign = 'center';
         }
         else {
-            let x1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dx : layout.r * dx) + cx;
-            let y1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dy : layout.r * dy) + cy;
+            const x1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dx : layout.r * dx) + cx;
+            const y1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dy : layout.r * dy) + cy;
 
             textX = x1 + dx * 3;
             textY = y1 + dy * 3;
 
             if (!isLabelInside) {
                 // For roseType
-                let x2 = x1 + dx * (labelLineLen + r - layout.r);
-                let y2 = y1 + dy * (labelLineLen + r - layout.r);
-                let x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
-                let y3 = y2;
+                const x2 = x1 + dx * (labelLineLen + r - layout.r);
+                const y2 = y1 + dy * (labelLineLen + r - layout.r);
+                const x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
+                const y3 = y2;
 
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
@@ -365,7 +365,7 @@ export default function (
         }
 
         let labelRotate;
-        let rotate = labelModel.get('rotate');
+        const rotate = labelModel.get('rotate');
         if (typeof rotate === 'number') {
             labelRotate = rotate * (Math.PI / 180);
         }

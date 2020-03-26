@@ -97,8 +97,8 @@ class OptionManager {
         // If some property is set in timeline options or media option but
         // not set in baseOption, a warning should be given.
 
-        let oldOptionBackup = this._optionBackup;
-        let newParsedOption = parseRawOption(
+        const oldOptionBackup = this._optionBackup;
+        const newParsedOption = parseRawOption(
             rawOption, optionPreprocessorFuncs, !oldOptionBackup
         );
         this._newBaseOption = newParsedOption.baseOption;
@@ -127,7 +127,7 @@ class OptionManager {
     }
 
     mountOption(isRecreate: boolean): ECUnitOption {
-        let optionBackup = this._optionBackup;
+        const optionBackup = this._optionBackup;
 
         this._timelineOptions = map(optionBackup.timelineOptions, clone);
         this._mediaList = map(optionBackup.mediaList, clone);
@@ -146,12 +146,12 @@ class OptionManager {
 
     getTimelineOption(ecModel: GlobalModel): ECUnitOption {
         let option;
-        let timelineOptions = this._timelineOptions;
+        const timelineOptions = this._timelineOptions;
 
         if (timelineOptions.length) {
             // getTimelineOption can only be called after ecModel inited,
             // so we can get currentIndex from timelineModel.
-            let timelineModel = ecModel.getComponent('timeline');
+            const timelineModel = ecModel.getComponent('timeline');
             if (timelineModel) {
                 option = clone(
                     // FIXME:TS as TimelineModel or quivlant interface
@@ -164,10 +164,10 @@ class OptionManager {
     }
 
     getMediaOption(ecModel: GlobalModel): ECUnitOption[] {
-        let ecWidth = this._api.getWidth();
-        let ecHeight = this._api.getHeight();
-        let mediaList = this._mediaList;
-        let mediaDefault = this._mediaDefault;
+        const ecWidth = this._api.getWidth();
+        const ecHeight = this._api.getHeight();
+        const mediaList = this._mediaList;
+        const mediaDefault = this._mediaDefault;
         let indices = [];
         let result: ECUnitOption[] = [];
 
@@ -211,12 +211,12 @@ function parseRawOption(
     isNew: boolean
 ): ParsedRawOption {
     let timelineOptions: ECUnitOption[] = [];
-    let mediaList: MediaUnit[] = [];
+    const mediaList: MediaUnit[] = [];
     let mediaDefault: MediaUnit;
     let baseOption: ECUnitOption;
 
     // Compatible with ec2.
-    let timelineOpt = rawOption.timeline;
+    const timelineOpt = rawOption.timeline;
 
     if (rawOption.baseOption) {
         baseOption = rawOption.baseOption;
@@ -231,7 +231,7 @@ function parseRawOption(
     // For media query
     if (rawOption.media) {
         baseOption = baseOption || {} as ECUnitOption;
-        let media = rawOption.media;
+        const media = rawOption.media;
         each(media, function (singleMedia) {
             if (singleMedia && singleMedia.option) {
                 if (singleMedia.query) {
@@ -282,7 +282,7 @@ function parseRawOption(
  * Can use max or min as prefix.
  */
 function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): boolean {
-    let realMap = {
+    const realMap = {
         width: ecWidth,
         height: ecHeight,
         aspectratio: ecWidth / ecHeight // lowser case for convenientce.
@@ -291,14 +291,14 @@ function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): 
     let applicatable = true;
 
     zrUtil.each(query, function (value: number, attr) {
-        let matched = attr.match(QUERY_REG);
+        const matched = attr.match(QUERY_REG);
 
         if (!matched || !matched[1] || !matched[2]) {
             return;
         }
 
-        let operator = matched[1];
-        let realAttr = matched[2].toLowerCase();
+        const operator = matched[1];
+        const realAttr = matched[2].toLowerCase();
 
         if (!compare(realMap[realAttr as keyof typeof realMap], value, operator)) {
             applicatable = false;
@@ -363,7 +363,7 @@ function mergeOption(oldOption: ECUnitOption, newOption: ECUnitOption): void {
             newCptOpt = modelUtil.normalizeToArray(newCptOpt);
             oldCptOpt = modelUtil.normalizeToArray(oldCptOpt);
 
-            let mapResult = modelUtil.mappingToExists(oldCptOpt, newCptOpt);
+            const mapResult = modelUtil.mappingToExists(oldCptOpt, newCptOpt);
 
             oldOption[mainType] = map(mapResult, function (item) {
                 return (item.option && item.exist)

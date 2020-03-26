@@ -25,10 +25,10 @@ import GraphSeriesModel from './GraphSeries';
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
-        let layout = seriesModel.get('layout');
-        let coordSys = seriesModel.coordinateSystem;
+        const layout = seriesModel.get('layout');
+        const coordSys = seriesModel.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {
-            let data = seriesModel.getData();
+            const data = seriesModel.getData();
 
             let dimensions: string[] = [];
             each(coordSys.dimensions, function (coordDim) {
@@ -36,10 +36,10 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
             });
 
             for (let dataIndex = 0; dataIndex < data.count(); dataIndex++) {
-                let value = [];
+                const value = [];
                 let hasValue = false;
                 for (let i = 0; i < dimensions.length; i++) {
-                    let val = data.get(dimensions[i], dataIndex) as number;
+                    const val = data.get(dimensions[i], dataIndex) as number;
                     if (!isNaN(val)) {
                         hasValue = true;
                     }

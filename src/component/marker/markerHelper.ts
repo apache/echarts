@@ -74,19 +74,19 @@ function markerTypeCalculatorWithExtent(
     otherCoordIndex: number,
     targetCoordIndex: number
 ): [ParsedValue[], ParsedValue] {
-    let coordArr: ParsedValue[] = [];
+    const coordArr: ParsedValue[] = [];
 
-    let stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
-    let calcDataDim = stacked
+    const stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
+    const calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
 
-    let value = numCalculate(data, calcDataDim, markerType);
+    const value = numCalculate(data, calcDataDim, markerType);
 
-    let dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
+    const dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
     coordArr[targetCoordIndex] = data.get(calcDataDim, dataIndex);
-    let coordArrValue = data.get(targetDataDim, dataIndex);
+    const coordArrValue = data.get(targetDataDim, dataIndex);
     // Make it simple, do not visit all stacked value to count precision.
     let precision = numberUtil.getPrecision(data.get(targetDataDim, dataIndex));
     precision = Math.min(precision, 20);
@@ -118,8 +118,8 @@ export function dataTransform(
     seriesModel: SeriesModel,
     item: MarkerPositionOption
 ) {
-    let data = seriesModel.getData();
-    let coordSys = seriesModel.coordinateSystem;
+    const data = seriesModel.getData();
+    const coordSys = seriesModel.coordinateSystem;
 
     // 1. If not specify the position with pixel directly
     // 2. If `coord` is not a data array. Which uses `xAxis`,
@@ -127,8 +127,8 @@ export function dataTransform(
 
     // parseFloat first because item.x and item.y can be percent string like '20%'
     if (item && !hasXAndY(item) && !isArray(item.coord) && coordSys) {
-        let dims = coordSys.dimensions;
-        let axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
+        const dims = coordSys.dimensions;
+        const axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
 
         // Clone the option
         // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
@@ -138,10 +138,10 @@ export function dataTransform(
             && markerTypeCalculator[item.type]
             && axisInfo.baseAxis && axisInfo.valueAxis
         ) {
-            let otherCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
-            let targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
+            const otherCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
+            const targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
 
-            let coordInfo = markerTypeCalculator[item.type](
+            const coordInfo = markerTypeCalculator[item.type](
                 data, axisInfo.baseDataDim, axisInfo.valueDataDim,
                 otherCoordIndex, targetCoordIndex
             );
@@ -153,7 +153,7 @@ export function dataTransform(
         }
         else {
             // FIXME Only has one of xAxis and yAxis.
-            let coord = [
+            const coord = [
                 item.xAxis != null ? item.xAxis : item.radiusAxis,
                 item.yAxis != null ? item.yAxis : item.angleAxis
             ];
@@ -175,7 +175,7 @@ export function getAxisInfo(
     coordSys: CoordinateSystem,
     seriesModel: SeriesModel
 ) {
-    let ret = {} as MarkerAxisInfo;
+    const ret = {} as MarkerAxisInfo;
 
     if (item.valueIndex != null || item.valueDim != null) {
         ret.valueDataDim = item.valueIndex != null
@@ -195,11 +195,11 @@ export function getAxisInfo(
 }
 
 function dataDimToCoordDim(seriesModel: SeriesModel, dataDim: string) {
-    let data = seriesModel.getData();
-    let dimensions = data.dimensions;
+    const data = seriesModel.getData();
+    const dimensions = data.dimensions;
     dataDim = data.getDimension(dataDim);
     for (let i = 0; i < dimensions.length; i++) {
-        let dimItem = data.getDimensionInfo(dimensions[i]);
+        const dimItem = data.getDimensionInfo(dimensions[i]);
         if (dimItem.name === dataDim) {
             return dimItem.coordDim;
         }

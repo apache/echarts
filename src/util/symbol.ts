@@ -220,7 +220,7 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
     },
 
     square: function (x, y, w, h, shape: graphic.Rect['shape']) {
-        let size = Math.min(w, h);
+        const size = Math.min(w, h);
         shape.x = x;
         shape.y = y;
         shape.width = size;
@@ -281,8 +281,8 @@ const SymbolClz = graphic.Path.extend({
     },
 
     calculateTextPosition(out, config, rect) {
-        let res = calculateTextPosition(out, config, rect);
-        let shape = this.shape;
+        const res = calculateTextPosition(out, config, rect);
+        const shape = this.shape;
         if (shape && shape.symbolType === 'pin' && config.position === 'inside') {
             res.y = rect.y + rect.height * 0.4;
         }
@@ -309,8 +309,8 @@ const SymbolClz = graphic.Path.extend({
 // Provide setColor helper method to avoid determine if set the fill or stroke outside
 function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string) {
     if (this.type !== 'image') {
-        let symbolStyle = this.style;
-        let symbolShape = this.shape;
+        const symbolStyle = this.style;
+        const symbolShape = this.shape;
         if (symbolShape && symbolShape.symbolType === 'line') {
             symbolStyle.stroke = color;
         }
@@ -342,7 +342,7 @@ export function createSymbol(
 ) {
     // TODO Support image object, DynamicImage.
 
-    let isEmpty = symbolType.indexOf('empty') === 0;
+    const isEmpty = symbolType.indexOf('empty') === 0;
     if (isEmpty) {
         symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
     }

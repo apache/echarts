@@ -45,7 +45,7 @@ type VisualMappingCollection<VisualState extends string>
 
 function hasKeys(obj: Dictionary<any>) {
     if (obj) {
-        for (let name in obj) {
+        for (const name in obj) {
             if (obj.hasOwnProperty(name)) {
                 return true;
             }
@@ -61,10 +61,10 @@ export function createVisualMappings<VisualState extends string>(
     stateList: readonly VisualState[],
     supplementVisualOption: (mappingOption: VisualMappingOption, state: string) => void
 ) {
-    let visualMappings: VisualMappingCollection<VisualState> = {};
+    const visualMappings: VisualMappingCollection<VisualState> = {};
 
     each(stateList, function (state) {
-        let mappings = visualMappings[state] = createMappings();
+        const mappings = visualMappings[state] = createMappings();
 
         each(option[state], function (visualData: VisualOption, visualType: BuiltinVisualProperty) {
             if (!VisualMapping.isValidType(visualType)) {
@@ -90,11 +90,11 @@ export function createVisualMappings<VisualState extends string>(
     return visualMappings;
 
     function createMappings() {
-        let Creater = function () {};
+        const Creater = function () {};
         // Make sure hidden fields will not be visited by
         // object iteration (with hasOwnProperty checking).
         Creater.prototype.__hidden = Creater.prototype;
-        let obj = new (Creater as any)();
+        const obj = new (Creater as any)();
         return obj;
     }
 }
@@ -139,9 +139,9 @@ export function applyVisual<VisualState extends string, Scope>(
     scope?: Scope,
     dimension?: DimensionLoose
 ) {
-    let visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
+    const visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
     zrUtil.each(stateList, function (state) {
-        let visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
+        const visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
     });
 
@@ -167,19 +167,19 @@ export function applyVisual<VisualState extends string, Scope>(
             ? valueOrIndex as number    // First argument is index
             : index;
 
-        let rawDataItem = data.getRawDataItem(dataIndex);
+        const rawDataItem = data.getRawDataItem(dataIndex);
         // Consider performance
         // @ts-ignore
         if (rawDataItem && rawDataItem.visualMap === false) {
             return;
         }
 
-        let valueState = getValueState.call(scope, valueOrIndex);
-        let mappings = visualMappings[valueState];
-        let visualTypes = visualTypesMap[valueState];
+        const valueState = getValueState.call(scope, valueOrIndex);
+        const mappings = visualMappings[valueState];
+        const visualTypes = visualTypesMap[valueState];
 
         for (let i = 0, len = visualTypes.length; i < len; i++) {
-            let type = visualTypes[i];
+            const type = visualTypes[i];
             mappings[type] && mappings[type].applyVisual(
                 valueOrIndex, getVisual, setVisual
             );
@@ -200,9 +200,9 @@ export function incrementalApplyVisual<VisualState extends string>(
     getValueState: (valueOrIndex: ParsedValue | number) => VisualState,
     dim?: DimensionLoose
 ): StageHandlerProgressExecutor {
-    let visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
+    const visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
     zrUtil.each(stateList, function (state) {
-        let visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
+        const visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
         visualTypesMap[state] = visualTypes;
     });
 
@@ -223,7 +223,7 @@ export function incrementalApplyVisual<VisualState extends string>(
 
             let dataIndex: number;
             while ((dataIndex = params.next()) != null) {
-                let rawDataItem = data.getRawDataItem(dataIndex);
+                const rawDataItem = data.getRawDataItem(dataIndex);
 
                 // Consider performance
                 // @ts-ignore
@@ -231,16 +231,16 @@ export function incrementalApplyVisual<VisualState extends string>(
                     continue;
                 }
 
-                let value = dim != null
+                const value = dim != null
                     ? data.get(dimName, dataIndex)
                     : dataIndex;
 
-                let valueState = getValueState(value);
-                let mappings = visualMappings[valueState];
-                let visualTypes = visualTypesMap[valueState];
+                const valueState = getValueState(value);
+                const mappings = visualMappings[valueState];
+                const visualTypes = visualTypesMap[valueState];
 
                 for (let i = 0, len = visualTypes.length; i < len; i++) {
-                    let type = visualTypes[i];
+                    const type = visualTypes[i];
                     mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
                 }
             }

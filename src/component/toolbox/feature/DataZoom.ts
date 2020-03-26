@@ -110,16 +110,16 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
     }
 
     private _onBrush(eventParam: BrushControllerEvents['brush']): void {
-        let areas = eventParam.areas;
+        const areas = eventParam.areas;
         if (!eventParam.isEnd || !areas.length) {
             return;
         }
-        let snapshot: history.DataZoomStoreSnapshot = {};
-        let ecModel = this.ecModel;
+        const snapshot: history.DataZoomStoreSnapshot = {};
+        const ecModel = this.ecModel;
 
         this.brushController.updateCovers([]); // remove cover
 
-        let brushTargetManager = new BrushTargetManager(
+        const brushTargetManager = new BrushTargetManager(
             retrieveAxisSetting(this.model.option), ecModel, {include: ['grid']}
         );
         brushTargetManager.matchOutputRanges(areas, ecModel, function (area, coordRange, coordSys: Cartesian2D) {
@@ -127,7 +127,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
                 return;
             }
 
-            let brushType = area.brushType;
+            const brushType = area.brushType;
             if (brushType === 'rect') {
                 setBatch('x', coordSys, (coordRange as BrushDimensionMinMax[])[0]);
                 setBatch('y', coordSys, (coordRange as BrushDimensionMinMax[])[1]);
@@ -146,12 +146,12 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         this._dispatchZoomAction(snapshot);
 
         function setBatch(dimName: string, coordSys: Cartesian2D, minMax: number[]) {
-            let axis = coordSys.getAxis(dimName);
-            let axisModel = axis.model;
-            let dataZoomModel = findDataZoom(dimName, axisModel, ecModel);
+            const axis = coordSys.getAxis(dimName);
+            const axisModel = axis.model;
+            const dataZoomModel = findDataZoom(dimName, axisModel, ecModel);
 
             // Restrict range.
-            let minMaxSpan = dataZoomModel.findRepresentativeAxisProxy(axisModel).getMinMaxSpan();
+            const minMaxSpan = dataZoomModel.findRepresentativeAxisProxy(axisModel).getMinMaxSpan();
             if (minMaxSpan.minValueSpan != null || minMaxSpan.maxValueSpan != null) {
                 minMax = sliderMove(
                     0, minMax.slice(), axis.scale.getExtent(), 0,
@@ -169,7 +169,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         function findDataZoom(dimName: string, axisModel: CartesianAxisModel, ecModel: GlobalModel): DataZoomModel {
             let found;
             ecModel.eachComponent({mainType: 'dataZoom', subType: 'select'}, function (dzModel: DataZoomModel) {
-                let has = dzModel.getAxisModel(dimName, axisModel.componentIndex);
+                const has = dzModel.getAxisModel(dimName, axisModel.componentIndex);
                 has && (found = dzModel);
             });
             return found;
@@ -180,7 +180,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
      * @internal
      */
     _dispatchZoomAction(snapshot: history.DataZoomStoreSnapshot): void {
-        let batch: DataZoomPayloadBatchItem[] = [];
+        const batch: DataZoomPayloadBatchItem[] = [];
 
         // Convert from hash map to array.
         each(snapshot, function (batchItem, dataZoomId) {
@@ -209,7 +209,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
 const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {
     zoom: function () {
-        let nextActive = !this.isZoomActive;
+        const nextActive = !this.isZoomActive;
 
         this.api.dispatchAction({
             type: 'takeGlobalCursor',
@@ -225,7 +225,7 @@ const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {
 
 
 function retrieveAxisSetting(option: ToolboxDataZoomFeatureOption): ModelFinderObject {
-    let setting = {} as ModelFinderObject;
+    const setting = {} as ModelFinderObject;
     // Compatible with previous setting: null => all axis, false => no axis.
     zrUtil.each(['xAxisIndex', 'yAxisIndex'] as const, function (name) {
         let val = option[name];
@@ -264,7 +264,7 @@ function updateZoomBtnStatus(
 
     featureModel.setIconStatus('zoom', zoomActive ? 'emphasis' : 'normal');
 
-    let brushTargetManager = new BrushTargetManager(
+    const brushTargetManager = new BrushTargetManager(
         retrieveAxisSetting(featureModel.option), ecModel, {include: ['grid']}
     );
 
@@ -314,7 +314,7 @@ echarts.registerPreprocessor(function (option: ECUnitOption) {
         }
 
         if (toolboxOpt && toolboxOpt.feature) {
-            let dataZoomOpt = toolboxOpt.feature.dataZoom as ToolboxDataZoomFeatureOption;
+            const dataZoomOpt = toolboxOpt.feature.dataZoom as ToolboxDataZoomFeatureOption;
             // FIXME: If add dataZoom when setOption in merge mode,
             // no axis info to be added. See `test/dataZoom-extreme.html`
             addForAxis('xAxis', dataZoomOpt);
@@ -328,7 +328,7 @@ echarts.registerPreprocessor(function (option: ECUnitOption) {
         }
 
         // Try not to modify model, because it is not merged yet.
-        let axisIndicesName = axisName + 'Index' as 'xAxisIndex' | 'yAxisIndex';
+        const axisIndicesName = axisName + 'Index' as 'xAxisIndex' | 'yAxisIndex';
         let givenAxisIndices = dataZoomOpt[axisIndicesName];
         if (givenAxisIndices != null
             && givenAxisIndices !== 'all'
@@ -344,7 +344,7 @@ echarts.registerPreprocessor(function (option: ECUnitOption) {
             ) {
                 return;
             }
-            let newOpt = {
+            const newOpt = {
                 type: 'select',
                 $fromToolbox: true,
                 // Default to be filter

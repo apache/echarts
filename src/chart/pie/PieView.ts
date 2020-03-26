@@ -37,10 +37,10 @@ function updateDataSelected(
     hasAnimation: boolean,
     api: ExtensionAPI
 ): void {
-    let data = seriesModel.getData();
-    let dataIndex = graphic.getECData(this).dataIndex;
-    let name = data.getName(dataIndex);
-    let selectedOffset = seriesModel.get('selectedOffset');
+    const data = seriesModel.getData();
+    const dataIndex = graphic.getECData(this).dataIndex;
+    const name = data.getName(dataIndex);
+    const selectedOffset = seriesModel.get('selectedOffset');
 
     api.dispatchAction({
         type: 'pieToggleSelect',
@@ -67,13 +67,13 @@ function toggleItemSelected(
     selectedOffset: number,
     hasAnimation: boolean
 ): void {
-    let midAngle = (layout.startAngle + layout.endAngle) / 2;
+    const midAngle = (layout.startAngle + layout.endAngle) / 2;
 
-    let dx = Math.cos(midAngle);
-    let dy = Math.sin(midAngle);
+    const dx = Math.cos(midAngle);
+    const dy = Math.sin(midAngle);
 
-    let offset = isSelected ? selectedOffset : 0;
-    let position = [dx * offset, dy * offset];
+    const offset = isSelected ? selectedOffset : 0;
+    const position = [dx * offset, dy * offset];
 
     hasAnimation
         // animateTo will stop revious animation like update transition
@@ -93,12 +93,12 @@ class PiePiece extends graphic.Group {
     constructor(data: List, idx: number) {
         super();
 
-        let sector = new graphic.Sector({
+        const sector = new graphic.Sector({
             z2: 2
         });
 
-        let polyline = new graphic.Polyline();
-        let text = new graphic.Text();
+        const polyline = new graphic.Polyline();
+        const text = new graphic.Text();
         this.add(sector);
         this.add(polyline);
 
@@ -108,22 +108,22 @@ class PiePiece extends graphic.Group {
     }
 
     updateData(data: List, idx: number, firstCreate?: boolean): void {
-        let sector = this.childAt(0) as graphic.Sector;
+        const sector = this.childAt(0) as graphic.Sector;
 
-        let seriesModel = data.hostModel as PieSeriesModel;
-        let itemModel = data.getItemModel<PieDataItemOption>(idx);
-        let layout = data.getItemLayout(idx);
-        let sectorShape = zrUtil.extend({}, layout);
+        const seriesModel = data.hostModel as PieSeriesModel;
+        const itemModel = data.getItemModel<PieDataItemOption>(idx);
+        const layout = data.getItemLayout(idx);
+        const sectorShape = zrUtil.extend({}, layout);
         // Not animate label
         sectorShape.label = null;
         sectorShape.viewRect = null;
 
-        let animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
+        const animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
 
         if (firstCreate) {
             sector.setShape(sectorShape);
 
-            let animationType = seriesModel.getShallow('animationType');
+            const animationType = seriesModel.getShallow('animationType');
             if (animationType === 'scale') {
                 sector.shape.r = layout.r0;
                 graphic.initProps(sector, {
@@ -157,7 +157,7 @@ class PiePiece extends graphic.Group {
         }
 
         // Update common style
-        let visualColor = data.getItemVisual(idx, 'color');
+        const visualColor = data.getItemVisual(idx, 'color');
 
         sector.useStyle(
             zrUtil.defaults(
@@ -171,7 +171,7 @@ class PiePiece extends graphic.Group {
         const sectorEmphasisState = sector.ensureState('emphasis');
         sectorEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
-        let cursorStyle = itemModel.getShallow('cursor');
+        const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
         // Toggle selected
@@ -184,7 +184,7 @@ class PiePiece extends graphic.Group {
         );
 
         // Label and text animation should be applied only for transition type animation when update
-        let withAnimation = !firstCreate && animationTypeUpdate === 'transition';
+        const withAnimation = !firstCreate && animationTypeUpdate === 'transition';
         this._updateLabel(data, idx, withAnimation);
 
         (this as ECElement).highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
@@ -234,18 +234,18 @@ class PiePiece extends graphic.Group {
             return;
         }
 
-        let targetLineShape: {
+        const targetLineShape: {
             points: number[][]
         } = {
             points: labelLayout.linePoints || [
                 [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
             ]
         };
-        let labelModel = itemModel.getModel('label');
-        let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-        let labelLineModel = itemModel.getModel('labelLine');
-        let labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
-        let visualColor = data.getItemVisual(idx, 'color');
+        const labelModel = itemModel.getModel('label');
+        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+        const labelLineModel = itemModel.getModel('labelLine');
+        const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
+        const visualColor = data.getItemVisual(idx, 'color');
 
         graphic.setLabelStyle(
             labelText,
@@ -272,7 +272,7 @@ class PiePiece extends graphic.Group {
             outsideFill: visualColor
         });
 
-        let targetTextStyle = {
+        const targetTextStyle = {
             x: labelLayout.x,
             y: labelLayout.y
         };
@@ -338,7 +338,7 @@ class PieView extends ChartView {
     private _data: List;
 
     init(): void {
-        let sectorGroup = new graphic.Group();
+        const sectorGroup = new graphic.Group();
         this._sectorGroup = sectorGroup;
     }
 
@@ -347,23 +347,23 @@ class PieView extends ChartView {
             return;
         }
 
-        let data = seriesModel.getData();
-        let oldData = this._data;
-        let group = this.group;
+        const data = seriesModel.getData();
+        const oldData = this._data;
+        const group = this.group;
 
-        let hasAnimation = ecModel.get('animation');
-        let isFirstRender = !oldData;
-        let animationType = seriesModel.get('animationType');
-        let animationTypeUpdate = seriesModel.get('animationTypeUpdate');
+        const hasAnimation = ecModel.get('animation');
+        const isFirstRender = !oldData;
+        const animationType = seriesModel.get('animationType');
+        const animationTypeUpdate = seriesModel.get('animationTypeUpdate');
 
-        let onSectorClick = zrUtil.curry(
+        const onSectorClick = zrUtil.curry(
             updateDataSelected, this.uid, seriesModel, hasAnimation, api
         );
 
-        let selectedMode = seriesModel.get('selectedMode');
+        const selectedMode = seriesModel.get('selectedMode');
         data.diff(oldData)
             .add(function (idx) {
-                let piePiece = new PiePiece(data, idx);
+                const piePiece = new PiePiece(data, idx);
                 // Default expansion animation
                 if (isFirstRender && animationType !== 'scale') {
                     piePiece.eachChild(function (child) {
@@ -378,7 +378,7 @@ class PieView extends ChartView {
                 group.add(piePiece);
             })
             .update(function (newIdx, oldIdx) {
-                let piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
+                const piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
 
                 if (!isFirstRender && animationTypeUpdate !== 'transition') {
                     piePiece.eachChild(function (child) {
@@ -394,7 +394,7 @@ class PieView extends ChartView {
                 data.setItemGraphicEl(newIdx, piePiece);
             })
             .remove(function (idx) {
-                let piePiece = oldData.getItemGraphicEl(idx);
+                const piePiece = oldData.getItemGraphicEl(idx);
                 group.remove(piePiece);
             })
             .execute();
@@ -408,9 +408,9 @@ class PieView extends ChartView {
                 shape = data.getItemLayout(s);
             }
 
-            let r = Math.max(api.getWidth(), api.getHeight()) / 2;
+            const r = Math.max(api.getWidth(), api.getHeight()) / 2;
 
-            let removeClipPath = zrUtil.bind(group.removeClipPath, group);
+            const removeClipPath = zrUtil.bind(group.removeClipPath, group);
             group.setClipPath(this._createClipPath(
                 shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel, isFirstRender
             ));
@@ -432,7 +432,7 @@ class PieView extends ChartView {
         cb,
         seriesModel: PieSeriesModel, isFirstRender: boolean
     ): graphic.Sector {
-        let clipPath = new graphic.Sector({
+        const clipPath = new graphic.Sector({
             shape: {
                 cx: cx,
                 cy: cy,
@@ -444,7 +444,7 @@ class PieView extends ChartView {
             }
         });
 
-        let initOrUpdate = isFirstRender ? graphic.initProps : graphic.updateProps;
+        const initOrUpdate = isFirstRender ? graphic.initProps : graphic.updateProps;
         initOrUpdate(clipPath, {
             shape: {
                 endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
@@ -455,12 +455,12 @@ class PieView extends ChartView {
     }
 
     containPoint(point: number[], seriesModel: PieSeriesModel): boolean {
-        let data = seriesModel.getData();
-        let itemLayout = data.getItemLayout(0);
+        const data = seriesModel.getData();
+        const itemLayout = data.getItemLayout(0);
         if (itemLayout) {
-            let dx = point[0] - itemLayout.cx;
-            let dy = point[1] - itemLayout.cy;
-            let radius = Math.sqrt(dx * dx + dy * dy);
+            const dx = point[0] - itemLayout.cx;
+            const dy = point[1] - itemLayout.cy;
+            const radius = Math.sqrt(dx * dx + dy * dy);
             return radius <= itemLayout.r && radius >= itemLayout.r0;
         }
     }

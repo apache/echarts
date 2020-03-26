@@ -30,7 +30,7 @@ interface DiffItem {
 }
 
 function diffData(oldData: List, newData: List) {
-    let diffResult: DiffItem[] = [];
+    const diffResult: DiffItem[] = [];
 
     newData.diff(oldData)
         .add(function (idx) {
@@ -54,7 +54,7 @@ export default function (
     oldValueOrigin: LineSeriesOption['areaStyle']['origin'],
     newValueOrigin: LineSeriesOption['areaStyle']['origin']
 ) {
-    let diff = diffData(oldData, newData);
+    const diff = diffData(oldData, newData);
 
     // let newIdList = newData.mapArray(newData.getId);
     // let oldIdList = oldData.mapArray(oldData.getId);
@@ -64,21 +64,21 @@ export default function (
     // // FIXME One data ?
     // diff = arrayDiff(oldIdList, newIdList);
 
-    let currPoints: number[][] = [];
-    let nextPoints: number[][] = [];
+    const currPoints: number[][] = [];
+    const nextPoints: number[][] = [];
     // Points for stacking base line
-    let currStackedPoints: number[][] = [];
-    let nextStackedPoints: number[][] = [];
+    const currStackedPoints: number[][] = [];
+    const nextStackedPoints: number[][] = [];
 
-    let status = [];
-    let sortedIndices: number[] = [];
-    let rawIndices: number[] = [];
+    const status = [];
+    const sortedIndices: number[] = [];
+    const rawIndices: number[] = [];
 
-    let newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
-    let oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
+    const newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
+    const oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
 
     for (let i = 0; i < diff.length; i++) {
-        let diffItem = diff[i];
+        const diffItem = diff[i];
         let pointAdded = true;
 
         // FIXME, animation is not so perfect when dataZoom window moves fast
@@ -86,7 +86,7 @@ export default function (
         switch (diffItem.cmd) {
             case '=':
                 let currentPt = oldData.getItemLayout(diffItem.idx) as number[];
-                let nextPt = newData.getItemLayout(diffItem.idx1) as number[];
+                const nextPt = newData.getItemLayout(diffItem.idx1) as number[];
                 // If previous data is NaN, use next point directly
                 if (isNaN(currentPt[0]) || isNaN(currentPt[1])) {
                     currentPt = nextPt.slice();
@@ -100,7 +100,7 @@ export default function (
                 rawIndices.push(newData.getRawIndex(diffItem.idx1));
                 break;
             case '+':
-                let idxAdd = diffItem.idx;
+                const idxAdd = diffItem.idx;
                 currPoints.push(
                     oldCoordSys.dataToPoint([
                         newData.get(newDataOldCoordInfo.dataDimsForPoint[0], idxAdd),
@@ -118,8 +118,8 @@ export default function (
                 rawIndices.push(newData.getRawIndex(idxAdd));
                 break;
             case '-':
-                let idxMinus = diffItem.idx;
-                let rawIndex = oldData.getRawIndex(idxMinus);
+                const idxMinus = diffItem.idx;
+                const rawIndex = oldData.getRawIndex(idxMinus);
                 // Data is replaced. In the case of dynamic data queue
                 // FIXME FIXME FIXME
                 if (rawIndex !== idxMinus) {
@@ -154,15 +154,15 @@ export default function (
         return rawIndices[a] - rawIndices[b];
     });
 
-    let sortedCurrPoints = [];
-    let sortedNextPoints = [];
+    const sortedCurrPoints = [];
+    const sortedNextPoints = [];
 
-    let sortedCurrStackedPoints = [];
-    let sortedNextStackedPoints = [];
+    const sortedCurrStackedPoints = [];
+    const sortedNextStackedPoints = [];
 
-    let sortedStatus = [];
+    const sortedStatus = [];
     for (let i = 0; i < sortedIndices.length; i++) {
-        let idx = sortedIndices[i];
+        const idx = sortedIndices[i];
         sortedCurrPoints[i] = currPoints[idx];
         sortedNextPoints[i] = nextPoints[idx];
 

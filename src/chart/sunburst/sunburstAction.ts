@@ -41,11 +41,11 @@ echarts.registerAction(
         );
 
         function handleRootToNode(model: SunburstSeriesModel, index: number) {
-            let targetInfo = helper
+            const targetInfo = helper
                 .retrieveTargetInfo(payload, [ROOT_TO_NODE_ACTION], model);
 
             if (targetInfo) {
-                let originViewRoot = model.getViewRoot();
+                const originViewRoot = model.getViewRoot();
                 if (originViewRoot) {
                     payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
                         ? 'rollUp' : 'drillDown';
@@ -70,7 +70,7 @@ echarts.registerAction(
         );
 
         function handleHighlight(model: SunburstSeriesModel, index: number) {
-            let targetInfo = helper
+            const targetInfo = helper
                 .retrieveTargetInfo(payload, [HIGHLIGHT_ACTION], model);
 
             if (targetInfo) {

@@ -41,9 +41,9 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 }
 
 function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
-    let layoutInfo = getViewRect(seriesModel, api);
+    const layoutInfo = getViewRect(seriesModel, api);
     seriesModel.layoutInfo = layoutInfo;
-    let layout = seriesModel.get('layout');
+    const layout = seriesModel.get('layout');
     let width = 0;
     let height = 0;
     let separation = null;
@@ -61,8 +61,8 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         separation = sep();
     }
 
-    let virtualRoot = seriesModel.getData().tree.root as TreeLayoutNode;
-    let realRoot = virtualRoot.children[0];
+    const virtualRoot = seriesModel.getData().tree.root as TreeLayoutNode;
+    const realRoot = virtualRoot.children[0];
 
     if (realRoot) {
         init(virtualRoot);
@@ -74,7 +74,7 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         let right = realRoot;
         let bottom = realRoot;
         eachBefore(realRoot, function (node: TreeLayoutNode) {
-            let x = node.getLayout().x;
+            const x = node.getLayout().x;
             if (x < left.getLayout().x) {
                 left = node;
             }
@@ -86,8 +86,8 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
             }
         });
 
-        let delta = left === right ? 1 : separation(left, right) / 2;
-        let tx = delta - left.getLayout().x;
+        const delta = left === right ? 1 : separation(left, right) / 2;
+        const tx = delta - left.getLayout().x;
         let kx = 0;
         let ky = 0;
         let coorX = 0;
@@ -99,12 +99,12 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
             eachBefore(realRoot, function (node) {
                 coorX = (node.getLayout().x + tx) * kx;
                 coorY = (node.depth - 1) * ky;
-                let finalCoor = radialCoordinate(coorX, coorY);
+                const finalCoor = radialCoordinate(coorX, coorY);
                 node.setLayout({x: finalCoor.x, y: finalCoor.y, rawX: coorX, rawY: coorY}, true);
             });
         }
         else {
-            let orient = seriesModel.getOrient();
+            const orient = seriesModel.getOrient();
             if (orient === 'RL' || orient === 'LR') {
                 ky = height / (right.getLayout().x + delta + tx);
                 kx = width / ((bottom.depth - 1) || 1);

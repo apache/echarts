@@ -51,20 +51,20 @@ export function circularLayout(
     seriesModel: GraphSeriesModel,
     basedOn: 'value' | 'symbolSize'
 ) {
-    let coordSys = seriesModel.coordinateSystem;
+    const coordSys = seriesModel.coordinateSystem;
     if (coordSys && coordSys.type !== 'view') {
         return;
     }
 
-    let rect = coordSys.getBoundingRect();
+    const rect = coordSys.getBoundingRect();
 
-    let nodeData = seriesModel.getData();
-    let graph = nodeData.graph;
+    const nodeData = seriesModel.getData();
+    const graph = nodeData.graph;
 
-    let cx = rect.width / 2 + rect.x;
-    let cy = rect.height / 2 + rect.y;
-    let r = Math.min(rect.width, rect.height) / 2;
-    let count = nodeData.count();
+    const cx = rect.width / 2 + rect.x;
+    const cy = rect.height / 2 + rect.y;
+    const r = Math.min(rect.width, rect.height) / 2;
+    const count = nodeData.count();
 
     nodeData.setLayout({
         cx: cx,
@@ -79,11 +79,11 @@ export function circularLayout(
 
     graph.eachEdge(function (edge) {
         let curveness = edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']) || 0;
-        let p1 = vec2.clone(edge.node1.getLayout());
-        let p2 = vec2.clone(edge.node2.getLayout());
+        const p1 = vec2.clone(edge.node1.getLayout());
+        const p2 = vec2.clone(edge.node2.getLayout());
         let cp1;
-        let x12 = (p1[0] + p2[0]) / 2;
-        let y12 = (p1[1] + p2[1]) / 2;
+        const x12 = (p1[0] + p2[0]) / 2;
+        const y12 = (p1[1] + p2[1]) / 2;
         if (+curveness) {
             curveness *= 3;
             cp1 = [
@@ -111,12 +111,12 @@ const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
 
     value(seriesModel, graph, nodeData, r, cx, cy, count) {
         let angle = 0;
-        let sum = nodeData.getSum('value');
-        let unitAngle = Math.PI * 2 / (sum || count);
+        const sum = nodeData.getSum('value');
+        const unitAngle = Math.PI * 2 / (sum || count);
 
         graph.eachNode(function (node) {
-            let value = node.getValue('value') as number;
-            let radianHalf = unitAngle * (sum ? value : 1) / 2;
+            const value = node.getValue('value') as number;
+            const radianHalf = unitAngle * (sum ? value : 1) / 2;
 
             angle += radianHalf;
             node.setLayout([
@@ -131,7 +131,7 @@ const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
         let sumRadian = 0;
         _symbolRadiansHalf.length = count;
 
-        let nodeScale = getNodeGlobalScale(seriesModel);
+        const nodeScale = getNodeGlobalScale(seriesModel);
 
         graph.eachNode(function (node) {
             let symbolSize = getSymbolSize(node);
@@ -150,11 +150,11 @@ const _layoutNodesBasedOn: Record<'value' | 'symbolSize', LayoutNode> = {
             sumRadian += symbolRadianHalf * 2;
         });
 
-        let halfRemainRadian = (2 * PI - sumRadian) / count / 2;
+        const halfRemainRadian = (2 * PI - sumRadian) / count / 2;
 
         let angle = 0;
         graph.eachNode(function (node) {
-            let radianHalf = halfRemainRadian + _symbolRadiansHalf[node.dataIndex];
+            const radianHalf = halfRemainRadian + _symbolRadiansHalf[node.dataIndex];
 
             angle += radianHalf;
             node.setLayout([

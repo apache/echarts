@@ -90,11 +90,11 @@ export default {
     ) {
         // Layout result in each node:
         // {x, y, width, height, area, borderWidth}
-        let ecWidth = api.getWidth();
-        let ecHeight = api.getHeight();
-        let seriesOption = seriesModel.option;
+        const ecWidth = api.getWidth();
+        const ecHeight = api.getHeight();
+        const seriesOption = seriesModel.option;
 
-        let layoutInfo = layout.getLayoutRect(
+        const layoutInfo = layout.getLayoutRect(
             seriesModel.getBoxLayoutParams(),
             {
                 width: api.getWidth(),
@@ -102,28 +102,28 @@ export default {
             }
         );
 
-        let size = seriesOption.size || []; // Compatible with ec2.
-        let containerWidth = parsePercent(
+        const size = seriesOption.size || []; // Compatible with ec2.
+        const containerWidth = parsePercent(
             retrieveValue(layoutInfo.width, size[0]),
             ecWidth
         );
-        let containerHeight = parsePercent(
+        const containerHeight = parsePercent(
             retrieveValue(layoutInfo.height, size[1]),
             ecHeight
         );
 
         // Fetch payload info.
-        let payloadType = payload && payload.type;
-        let types = ['treemapZoomToNode', 'treemapRootToNode'];
-        let targetInfo = helper
+        const payloadType = payload && payload.type;
+        const types = ['treemapZoomToNode', 'treemapRootToNode'];
+        const targetInfo = helper
             .retrieveTargetInfo(payload, types, seriesModel);
-        let rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
+        const rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
             ? payload.rootRect : null;
-        let viewRoot = seriesModel.getViewRoot();
-        let viewAbovePath = helper.getPathToRoot(viewRoot) as TreemapLayoutNode[];
+        const viewRoot = seriesModel.getViewRoot();
+        const viewAbovePath = helper.getPathToRoot(viewRoot) as TreemapLayoutNode[];
 
         if (payloadType !== 'treemapMove') {
-            let rootSize = payloadType === 'treemapZoomToNode'
+            const rootSize = payloadType === 'treemapZoomToNode'
                 ? estimateRootSize(
                     seriesModel, targetInfo, viewRoot, containerWidth, containerHeight
                 )
@@ -136,7 +136,7 @@ export default {
                 // Default to be desc order.
                 sort = 'desc';
             }
-            let options = {
+            const options = {
                 squareRatio: seriesOption.squareRatio,
                 sort: sort,
                 leafDepth: seriesOption.leafDepth
@@ -163,7 +163,7 @@ export default {
             // Supplement layout.
             viewRootLayout = viewRoot.getLayout();
             each(viewAbovePath, function (node, index) {
-                let childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
+                const childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
                 node.setLayout(zrUtil.extend(
                     {
                         dataExtent: [childValue, childValue],
@@ -175,7 +175,7 @@ export default {
             });
         }
 
-        let treeRoot = seriesModel.getData().tree.root;
+        const treeRoot = seriesModel.getData().tree.root;
 
         treeRoot.setLayout(
             calculateRootPosition(layoutInfo, rootRect, targetInfo),
@@ -232,18 +232,18 @@ function squarify(
         return;
     }
 
-    let thisLayout = node.getLayout();
+    const thisLayout = node.getLayout();
     width = thisLayout.width;
     height = thisLayout.height;
 
     // Considering border and gap
-    let nodeModel = node.getModel<TreemapSeriesNodeItemOption>();
-    let borderWidth = nodeModel.get(PATH_BORDER_WIDTH);
-    let halfGapWidth = nodeModel.get(PATH_GAP_WIDTH) / 2;
-    let upperLabelHeight = getUpperLabelHeight(nodeModel);
-    let upperHeight = Math.max(borderWidth, upperLabelHeight);
-    let layoutOffset = borderWidth - halfGapWidth;
-    let layoutOffsetUpper = upperHeight - halfGapWidth;
+    const nodeModel = node.getModel<TreemapSeriesNodeItemOption>();
+    const borderWidth = nodeModel.get(PATH_BORDER_WIDTH);
+    const halfGapWidth = nodeModel.get(PATH_GAP_WIDTH) / 2;
+    const upperLabelHeight = getUpperLabelHeight(nodeModel);
+    const upperHeight = Math.max(borderWidth, upperLabelHeight);
+    const layoutOffset = borderWidth - halfGapWidth;
+    const layoutOffsetUpper = upperHeight - halfGapWidth;
 
     node.setLayout({
         borderWidth: borderWidth,
@@ -254,8 +254,8 @@ function squarify(
     width = mathMax(width - 2 * layoutOffset, 0);
     height = mathMax(height - layoutOffset - layoutOffsetUpper, 0);
 
-    let totalArea = width * height;
-    let viewChildren = initChildren(
+    const totalArea = width * height;
+    const viewChildren = initChildren(
         node, nodeModel, totalArea, options, hideChildren, depth
     );
 
@@ -263,18 +263,18 @@ function squarify(
         return;
     }
 
-    let rect = {x: layoutOffset, y: layoutOffsetUpper, width: width, height: height};
+    const rect = {x: layoutOffset, y: layoutOffsetUpper, width: width, height: height};
     let rowFixedLength = mathMin(width, height);
     let best = Infinity; // the best row score so far
-    let row = [] as LayoutRow;
+    const row = [] as LayoutRow;
     row.area = 0;
 
     for (let i = 0, len = viewChildren.length; i < len;) {
-        let child = viewChildren[i];
+        const child = viewChildren[i];
 
         row.push(child);
         row.area += child.getLayout().area;
-        let score = worst(row, rowFixedLength, options.squareRatio);
+        const score = worst(row, rowFixedLength, options.squareRatio);
 
         // continue with this orientation
         if (score <= best) {
@@ -296,7 +296,7 @@ function squarify(
     }
 
     if (!hideChildren) {
-        let childrenVisibleMin = nodeModel.get('childrenVisibleMin');
+        const childrenVisibleMin = nodeModel.get('childrenVisibleMin');
         if (childrenVisibleMin != null && totalArea < childrenVisibleMin) {
             hideChildren = true;
         }
@@ -325,7 +325,7 @@ function initChildren(
     let orderBy = options.sort;
     orderBy !== 'asc' && orderBy !== 'desc' && (orderBy = null);
 
-    let overLeafDepth = options.leafDepth != null && options.leafDepth <= depth;
+    const overLeafDepth = options.leafDepth != null && options.leafDepth <= depth;
 
     // leafDepth has higher priority.
     if (hideChildren && !overLeafDepth) {
@@ -339,7 +339,7 @@ function initChildren(
 
     sort(viewChildren, orderBy);
 
-    let info = statistic(nodeModel, viewChildren, orderBy);
+    const info = statistic(nodeModel, viewChildren, orderBy);
 
     if (info.sum === 0) {
         return (node.viewChildren = []);
@@ -353,7 +353,7 @@ function initChildren(
 
     // Set area to each child.
     for (let i = 0, len = viewChildren.length; i < len; i++) {
-        let area = viewChildren[i].getValue() as number / info.sum * totalArea;
+        const area = viewChildren[i].getValue() as number / info.sum * totalArea;
         // Do not use setLayout({...}, true), because it is needed to clear last layout.
         viewChildren[i].setLayout({
             area: area
@@ -391,13 +391,13 @@ function filterByThreshold(
         return sum;
     }
 
-    let visibleMin = nodeModel.get('visibleMin');
-    let len = orderedChildren.length;
+    const visibleMin = nodeModel.get('visibleMin');
+    const len = orderedChildren.length;
     let deletePoint = len;
 
     // Always travel from little value to big value.
     for (let i = len - 1; i >= 0; i--) {
-        let value = orderedChildren[
+        const value = orderedChildren[
             orderBy === 'asc' ? len - i - 1 : i
         ].getValue() as number;
 
@@ -423,7 +423,7 @@ function sort(
 ) {
     if (orderBy) {
         viewChildren.sort(function (a, b) {
-            let diff = orderBy === 'asc'
+            const diff = orderBy === 'asc'
                 ? a.getValue() as number - (b.getValue() as number)
                 : b.getValue() as number - (a.getValue() as number);
             return diff === 0
@@ -455,7 +455,7 @@ function statistic(
     // but not filtered view children, otherwise visual mapping will not
     // be stable when zoom (where children is filtered by visibleMin).
 
-    let dimension = nodeModel.get('visualDimension');
+    const dimension = nodeModel.get('visualDimension');
     let dataExtent: number[];
 
     // The same as area dimension.
@@ -473,7 +473,7 @@ function statistic(
     else {
         dataExtent = [Infinity, -Infinity];
         each(children, function (child) {
-            let value = child.getValue(dimension) as number;
+            const value = child.getValue(dimension) as number;
             value < dataExtent[0] && (dataExtent[0] = value);
             value > dataExtent[1] && (dataExtent[1] = value);
         });
@@ -498,8 +498,8 @@ function worst(row: LayoutRow, rowFixedLength: number, ratio: number) {
         }
     }
 
-    let squareArea = row.area * row.area;
-    let f = rowFixedLength * rowFixedLength * ratio;
+    const squareArea = row.area * row.area;
+    const f = rowFixedLength * rowFixedLength * ratio;
 
     return squareArea
         ? mathMax(
@@ -528,10 +528,10 @@ function position(
     // wh[idx0WhenH] means: when horizontal,
     //      wh[idx0WhenH] => wh[0] => 'width'.
     //      xy[idx1WhenH] => xy[1] => 'y'.
-    let idx0WhenH = rowFixedLength === rect.width ? 0 : 1;
-    let idx1WhenH = 1 - idx0WhenH;
-    let xy = ['x', 'y'] as const;
-    let wh = ['width', 'height'] as const;
+    const idx0WhenH = rowFixedLength === rect.width ? 0 : 1;
+    const idx1WhenH = 1 - idx0WhenH;
+    const xy = ['x', 'y'] as const;
+    const wh = ['width', 'height'] as const;
 
     let last = rect[xy[idx0WhenH]];
     let rowOtherLength = rowFixedLength
@@ -541,17 +541,17 @@ function position(
         rowOtherLength = rect[wh[idx1WhenH]]; // over+underflow
     }
     for (let i = 0, rowLen = row.length; i < rowLen; i++) {
-        let node = row[i];
-        let nodeLayout = {} as TreemapItemLayout;
-        let step = rowOtherLength
+        const node = row[i];
+        const nodeLayout = {} as TreemapItemLayout;
+        const step = rowOtherLength
             ? node.getLayout().area / rowOtherLength : 0;
 
-        let wh1 = nodeLayout[wh[idx1WhenH]] = mathMax(rowOtherLength - 2 * halfGapWidth, 0);
+        const wh1 = nodeLayout[wh[idx1WhenH]] = mathMax(rowOtherLength - 2 * halfGapWidth, 0);
 
         // We use Math.max/min to avoid negative width/height when considering gap width.
-        let remain = rect[xy[idx0WhenH]] + rect[wh[idx0WhenH]] - last;
-        let modWH = (i === rowLen - 1 || remain < step) ? remain : step;
-        let wh0 = nodeLayout[wh[idx0WhenH]] = mathMax(modWH - 2 * halfGapWidth, 0);
+        const remain = rect[xy[idx0WhenH]] + rect[wh[idx0WhenH]] - last;
+        const modWH = (i === rowLen - 1 || remain < step) ? remain : step;
+        const wh0 = nodeLayout[wh[idx0WhenH]] = mathMax(modWH - 2 * halfGapWidth, 0);
 
         nodeLayout[xy[idx1WhenH]] = rect[xy[idx1WhenH]] + mathMin(halfGapWidth, wh1 / 2);
         nodeLayout[xy[idx0WhenH]] = last + mathMin(halfGapWidth, wh0 / 2);
@@ -575,33 +575,33 @@ function estimateRootSize(
     // If targetInfo.node exists, we zoom to the node,
     // so estimate whold width and heigth by target node.
     let currNode = (targetInfo || {}).node;
-    let defaultSize = [containerWidth, containerHeight];
+    const defaultSize = [containerWidth, containerHeight];
 
     if (!currNode || currNode === viewRoot) {
         return defaultSize;
     }
 
     let parent;
-    let viewArea = containerWidth * containerHeight;
+    const viewArea = containerWidth * containerHeight;
     let area = viewArea * seriesModel.option.zoomToNodeRatio;
 
     while (parent = currNode.parentNode) { // jshint ignore:line
         let sum = 0;
-        let siblings = parent.children;
+        const siblings = parent.children;
 
         for (let i = 0, len = siblings.length; i < len; i++) {
             sum += siblings[i].getValue() as number;
         }
-        let currNodeValue = currNode.getValue() as number;
+        const currNodeValue = currNode.getValue() as number;
         if (currNodeValue === 0) {
             return defaultSize;
         }
         area *= sum / currNodeValue;
 
         // Considering border, suppose aspect ratio is 1.
-        let parentModel = parent.getModel<TreemapSeriesNodeItemOption>();
-        let borderWidth = parentModel.get(PATH_BORDER_WIDTH);
-        let upperHeight = Math.max(borderWidth, getUpperLabelHeight(parentModel));
+        const parentModel = parent.getModel<TreemapSeriesNodeItemOption>();
+        const borderWidth = parentModel.get(PATH_BORDER_WIDTH);
+        const upperHeight = Math.max(borderWidth, getUpperLabelHeight(parentModel));
         area += 4 * borderWidth * borderWidth
             + (3 * borderWidth + upperHeight) * Math.pow(area, 0.5);
 
@@ -611,7 +611,7 @@ function estimateRootSize(
     }
 
     area < viewArea && (area = viewArea);
-    let scale = Math.pow(area / viewArea, 0.5);
+    const scale = Math.pow(area / viewArea, 0.5);
 
     return [containerWidth * scale, containerHeight * scale];
 }
@@ -626,7 +626,7 @@ function calculateRootPosition(
         return {x: rootRect.x, y: rootRect.y};
     }
 
-    let defaultPosition = {x: 0, y: 0};
+    const defaultPosition = {x: 0, y: 0};
     if (!targetInfo) {
         return defaultPosition;
     }
@@ -635,18 +635,18 @@ function calculateRootPosition(
     // old tree and new tree are the same tree,
     // so the node still exists and we can visit it.
 
-    let targetNode = targetInfo.node;
-    let layout = targetNode.getLayout();
+    const targetNode = targetInfo.node;
+    const layout = targetNode.getLayout();
 
     if (!layout) {
         return defaultPosition;
     }
 
     // Transform coord from local to container.
-    let targetCenter = [layout.width / 2, layout.height / 2];
+    const targetCenter = [layout.width / 2, layout.height / 2];
     let node = targetNode;
     while (node) {
-        let nodeLayout = node.getLayout();
+        const nodeLayout = node.getLayout();
         targetCenter[0] += nodeLayout.x;
         targetCenter[1] += nodeLayout.y;
         node = node.parentNode;
@@ -667,9 +667,9 @@ function prunning(
     viewRoot: TreemapLayoutNode,
     depth: number
 ) {
-    let nodeLayout = node.getLayout();
-    let nodeInViewAbovePath = viewAbovePath[depth];
-    let isAboveViewRoot = nodeInViewAbovePath && nodeInViewAbovePath === node;
+    const nodeLayout = node.getLayout();
+    const nodeInViewAbovePath = viewAbovePath[depth];
+    const isAboveViewRoot = nodeInViewAbovePath && nodeInViewAbovePath === node;
 
     if (
         (nodeInViewAbovePath && !isAboveViewRoot)
@@ -688,7 +688,7 @@ function prunning(
     }, true);
 
     // Transform to child coordinate.
-    let childClipRect = new BoundingRect(
+    const childClipRect = new BoundingRect(
         clipRect.x - nodeLayout.x,
         clipRect.y - nodeLayout.y,
         clipRect.width,

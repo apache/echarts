@@ -76,21 +76,21 @@ function completeDimensions(sysDims, source, opt) {
 
     opt = opt || {};
     sysDims = (sysDims || []).slice();
-    let dimsDef = (opt.dimsDef || []).slice();
-    let dataDimNameMap = createHashMap();
-    let coordDimNameMap = createHashMap();
+    const dimsDef = (opt.dimsDef || []).slice();
+    const dataDimNameMap = createHashMap();
+    const coordDimNameMap = createHashMap();
     // let valueCandidate;
-    let result = [];
+    const result = [];
 
-    let dimCount = getDimCount(source, sysDims, dimsDef, opt.dimCount);
+    const dimCount = getDimCount(source, sysDims, dimsDef, opt.dimCount);
 
     // Apply user defined dims (`name` and `type`) and init result.
     for (let i = 0; i < dimCount; i++) {
-        let dimDefItem = dimsDef[i] = extend(
+        const dimDefItem = dimsDef[i] = extend(
             {}, isObject(dimsDef[i]) ? dimsDef[i] : {name: dimsDef[i]}
         );
-        let userDimName = dimDefItem.name;
-        let resultItem = result[i] = new DataDimensionInfo();
+        const userDimName = dimDefItem.name;
+        const resultItem = result[i] = new DataDimensionInfo();
         // Name will be applied later for avoiding duplication.
         if (userDimName != null && dataDimNameMap.get(userDimName) == null) {
             // Only if `series.dimensions` is defined in option
@@ -121,7 +121,7 @@ function completeDimensions(sysDims, source, opt) {
             return;
         }
 
-        let validDataDims = encodeDef.set(coordDim, []);
+        const validDataDims = encodeDef.set(coordDim, []);
         each(dataDims, function (resultDimIdx, idx) {
             // The input resultDimIdx can be dim name or index.
             isString(resultDimIdx) && (resultDimIdx = dataDimNameMap.get(resultDimIdx));
@@ -144,7 +144,7 @@ function completeDimensions(sysDims, source, opt) {
         }
         else {
             coordDim = sysDimItem.name;
-            let ordinalMeta = sysDimItem.ordinalMeta;
+            const ordinalMeta = sysDimItem.ordinalMeta;
             sysDimItem.ordinalMeta = null;
             sysDimItem = clone(sysDimItem);
             sysDimItem.ordinalMeta = ordinalMeta;
@@ -176,7 +176,7 @@ function completeDimensions(sysDims, source, opt) {
 
         // Apply templates.
         each(dataDims, function (resultDimIdx, coordDimIndex) {
-            let resultItem = result[resultDimIdx];
+            const resultItem = result[resultDimIdx];
             applyDim(defaults(resultItem, sysDimItem), coordDim, coordDimIndex);
             if (resultItem.name == null && sysDimItemDimsDef) {
                 let sysDimItemDimsDefItem = sysDimItemDimsDef[coordDimIndex];
@@ -201,16 +201,16 @@ function completeDimensions(sysDims, source, opt) {
     }
 
     // Make sure the first extra dim is 'value'.
-    let generateCoord = opt.generateCoord;
+    const generateCoord = opt.generateCoord;
     let generateCoordCount = opt.generateCoordCount;
-    let fromZero = generateCoordCount != null;
+    const fromZero = generateCoordCount != null;
     generateCoordCount = generateCoord ? (generateCoordCount || 1) : 0;
-    let extra = generateCoord || 'value';
+    const extra = generateCoord || 'value';
 
     // Set dim `name` and other `coordDim` and other props.
     for (let resultDimIdx = 0; resultDimIdx < dimCount; resultDimIdx++) {
-        let resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
-        let coordDim = resultItem.coordDim;
+        const resultItem = result[resultDimIdx] = result[resultDimIdx] || new DataDimensionInfo();
+        const coordDim = resultItem.coordDim;
 
         if (coordDim == null) {
             resultItem.coordDim = genName(
@@ -277,7 +277,7 @@ function getDimCount(source, sysDims, dimsDef, optDimCount) {
         optDimCount || 0
     );
     each(sysDims, function (sysDimItem) {
-        let sysDimItemDimsDef = sysDimItem.dimsDef;
+        const sysDimItemDimsDef = sysDimItem.dimsDef;
         sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
     });
     return dimCount;

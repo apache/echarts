@@ -82,8 +82,8 @@ class OrdinalScale extends Scale {
     }
 
     getTicks(): OrdinalNumber[] {
-        let ticks = [];
-        let extent = this._extent;
+        const ticks = [];
+        const extent = this._extent;
         let rank = extent[0];
 
         while (rank <= extent[1]) {

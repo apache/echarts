@@ -49,7 +49,7 @@ const MAIN_DATA = '\0__link_mainData';
  *                 designation: struct[datasAttr[dataType]] = list;
  */
 function linkList(opt) {
-    let mainData = opt.mainData;
+    const mainData = opt.mainData;
     let datas = opt.datas;
 
     if (!datas) {
@@ -84,7 +84,7 @@ function linkList(opt) {
 function transferInjection(opt, res) {
     if (isMainData(this)) {
         // Transfer datas to new main data.
-        let datas = zrUtil.extend({}, this[DATAS]);
+        const datas = zrUtil.extend({}, this[DATAS]);
         datas[this.dataType] = res;
         linkAll(res, datas, opt);
     }
@@ -119,7 +119,7 @@ function cloneShallowInjection(opt, res) {
  * @return {module:echarts/data/List}
  */
 function getLinkedData(dataType) {
-    let mainData = this[MAIN_DATA];
+    const mainData = this[MAIN_DATA];
     return (dataType == null || mainData == null)
         ? mainData
         : mainData[DATAS][dataType];

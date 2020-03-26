@@ -57,12 +57,12 @@ class InsideZoomView extends DataZoomView {
         // Reset controllers.
         each(this.getTargetCoordInfo(), function (coordInfoList, coordSysName: SupportedCoordSysName) {
 
-            let allCoordIds = map(coordInfoList, function (coordInfo) {
+            const allCoordIds = map(coordInfoList, function (coordInfo) {
                 return roams.generateCoordId(coordInfo.model);
             });
 
             each(coordInfoList, function (coordInfo) {
-                let coordModel = coordInfo.model;
+                const coordModel = coordInfo.model;
 
                 roams.register(
                     api,
@@ -112,30 +112,30 @@ const roamHandlers: {
 } & ThisType<InsideZoomView> = {
 
     zoom(coordInfo, coordSysName, controller, e: RoamEventParams['zoom']) {
-        let lastRange = this.range;
-        let range = lastRange.slice() as [number, number];
+        const lastRange = this.range;
+        const range = lastRange.slice() as [number, number];
 
         // Calculate transform by the first axis.
-        let axisModel = coordInfo.axisModels[0];
+        const axisModel = coordInfo.axisModels[0];
         if (!axisModel) {
             return;
         }
 
-        let directionInfo = getDirectionInfo[coordSysName](
+        const directionInfo = getDirectionInfo[coordSysName](
             null, [e.originX, e.originY], axisModel, controller, coordInfo
         );
-        let percentPoint = (
+        const percentPoint = (
             directionInfo.signal > 0
                 ? (directionInfo.pixelStart + directionInfo.pixelLength - directionInfo.pixel)
                 : (directionInfo.pixel - directionInfo.pixelStart)
             ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
-        let scale = Math.max(1 / e.scale, 0);
+        const scale = Math.max(1 / e.scale, 0);
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
         // Restrict range.
-        let minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+        const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
 
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
@@ -147,7 +147,7 @@ const roamHandlers: {
     },
 
     pan: makeMover(function (range, axisModel, coordInfo, coordSysName, controller, e: RoamEventParams['pan']) {
-        let directionInfo = getDirectionInfo[coordSysName](
+        const directionInfo = getDirectionInfo[coordSysName](
             [e.oldX, e.oldY], [e.newX, e.newY], axisModel, controller, coordInfo
         );
 
@@ -159,7 +159,7 @@ const roamHandlers: {
     scrollMove: makeMover(
         function (range, axisModel, coordInfo, coordSysName, controller, e: RoamEventParams['scrollMove']
     ) {
-        let directionInfo = getDirectionInfo[coordSysName](
+        const directionInfo = getDirectionInfo[coordSysName](
             [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordInfo
         );
         return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
@@ -183,16 +183,16 @@ function makeMover(
         controller: RoamController,
         e: RoamEventParams['scrollMove']| RoamEventParams['pan']
     ): [number, number] {
-        let lastRange = this.range;
-        let range = lastRange.slice() as [number, number];
+        const lastRange = this.range;
+        const range = lastRange.slice() as [number, number];
 
         // Calculate transform by the first axis.
-        let axisModel = coordInfo.axisModels[0];
+        const axisModel = coordInfo.axisModels[0];
         if (!axisModel) {
             return;
         }
 
-        let percentDelta = getPercentDelta(
+        const percentDelta = getPercentDelta(
             range, axisModel, coordInfo, coordSysName, controller, e
         );
 
@@ -225,9 +225,9 @@ interface GetDirectionInfo {
 const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo> = {
 
     grid(oldPoint, newPoint, axisModel, controller, coordInfo) {
-        let axis = axisModel.axis;
-        let ret = {} as DirectionInfo;
-        let rect = coordInfo.model.coordinateSystem.getRect();
+        const axis = axisModel.axis;
+        const ret = {} as DirectionInfo;
+        const rect = coordInfo.model.coordinateSystem.getRect();
         oldPoint = oldPoint || [0, 0];
 
         if (axis.dim === 'x') {
@@ -247,11 +247,11 @@ const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo
     },
 
     polar(oldPoint, newPoint, axisModel, controller, coordInfo) {
-        let axis = axisModel.axis;
-        let ret = {} as DirectionInfo;
-        let polar = coordInfo.model.coordinateSystem as Polar;
-        let radiusExtent = polar.getRadiusAxis().getExtent();
-        let angleExtent = polar.getAngleAxis().getExtent();
+        const axis = axisModel.axis;
+        const ret = {} as DirectionInfo;
+        const polar = coordInfo.model.coordinateSystem as Polar;
+        const radiusExtent = polar.getRadiusAxis().getExtent();
+        const angleExtent = polar.getAngleAxis().getExtent();
 
         oldPoint = oldPoint ? polar.pointToCoord(oldPoint) : [0, 0];
         newPoint = polar.pointToCoord(newPoint);
@@ -277,9 +277,9 @@ const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo
     },
 
     singleAxis(oldPoint, newPoint, axisModel, controller, coordInfo) {
-        let axis = axisModel.axis as SingleAxis;
-        let rect = coordInfo.model.coordinateSystem.getRect();
-        let ret = {} as DirectionInfo;
+        const axis = axisModel.axis as SingleAxis;
+        const rect = coordInfo.model.coordinateSystem.getRect();
+        const ret = {} as DirectionInfo;
 
         oldPoint = oldPoint || [0, 0];
 

@@ -37,42 +37,42 @@ class PiecewiseVisualMapView extends VisualMapView {
     visualMapModel: PiecewiseModel;
 
     protected doRender() {
-        let thisGroup = this.group;
+        const thisGroup = this.group;
 
         thisGroup.removeAll();
 
-        let visualMapModel = this.visualMapModel;
-        let textGap = visualMapModel.get('textGap');
-        let textStyleModel = visualMapModel.textStyleModel;
-        let textFont = textStyleModel.getFont();
-        let textFill = textStyleModel.getTextColor();
-        let itemAlign = this._getItemAlign();
-        let itemSize = visualMapModel.itemSize;
-        let viewData = this._getViewData();
-        let endsText = viewData.endsText;
-        let showLabel = zrUtil.retrieve(visualMapModel.get('showLabel', true), !endsText);
+        const visualMapModel = this.visualMapModel;
+        const textGap = visualMapModel.get('textGap');
+        const textStyleModel = visualMapModel.textStyleModel;
+        const textFont = textStyleModel.getFont();
+        const textFill = textStyleModel.getTextColor();
+        const itemAlign = this._getItemAlign();
+        const itemSize = visualMapModel.itemSize;
+        const viewData = this._getViewData();
+        const endsText = viewData.endsText;
+        const showLabel = zrUtil.retrieve(visualMapModel.get('showLabel', true), !endsText);
 
         endsText && this._renderEndsText(
             thisGroup, endsText[0], itemSize, showLabel, itemAlign
         );
 
         zrUtil.each(viewData.viewPieceList, function (item: typeof viewData.viewPieceList[number]) {
-            let piece = item.piece;
+            const piece = item.piece;
 
-            let itemGroup = new graphic.Group();
+            const itemGroup = new graphic.Group();
             itemGroup.onclick = zrUtil.bind(this._onItemClick, this, piece);
 
             this._enableHoverLink(itemGroup, item.indexInModelPieceList);
 
             // TODO Category
-            let representValue = visualMapModel.getRepresentValue(piece) as number;
+            const representValue = visualMapModel.getRepresentValue(piece) as number;
 
             this._createItemSymbol(
                 itemGroup, representValue, [0, 0, itemSize[0], itemSize[1]]
             );
 
             if (showLabel) {
-                let visualState = this.visualMapModel.getValueState(representValue);
+                const visualState = this.visualMapModel.getValueState(representValue);
 
                 itemGroup.add(new graphic.Text({
                     style: {
@@ -112,7 +112,7 @@ class PiecewiseVisualMapView extends VisualMapView {
             .on('mouseout', () => onHoverLink('downplay'));
 
         const onHoverLink = (method?: 'highlight' | 'downplay') => {
-            let visualMapModel = this.visualMapModel;
+            const visualMapModel = this.visualMapModel;
 
             // TODO: TYPE More detailed action types
             visualMapModel.option.hoverLink && this.api.dispatchAction({
@@ -126,8 +126,8 @@ class PiecewiseVisualMapView extends VisualMapView {
     }
 
     private _getItemAlign(): helper.ItemAlign {
-        let visualMapModel = this.visualMapModel;
-        let modelOption = visualMapModel.option;
+        const visualMapModel = this.visualMapModel;
+        const modelOption = visualMapModel.option;
 
         if (modelOption.orient === 'vertical') {
             return helper.getItemAlign(
@@ -154,8 +154,8 @@ class PiecewiseVisualMapView extends VisualMapView {
             return;
         }
 
-        let itemGroup = new graphic.Group();
-        let textStyleModel = this.visualMapModel.textStyleModel;
+        const itemGroup = new graphic.Group();
+        const textStyleModel = this.visualMapModel.textStyleModel;
 
         itemGroup.add(new graphic.Text({
             style: {
@@ -177,16 +177,16 @@ class PiecewiseVisualMapView extends VisualMapView {
      * @return {Object} {peiceList, endsText} The order is the same as screen pixel order.
      */
     private _getViewData() {
-        let visualMapModel = this.visualMapModel;
+        const visualMapModel = this.visualMapModel;
 
-        let viewPieceList = zrUtil.map(visualMapModel.getPieceList(), function (piece, index) {
+        const viewPieceList = zrUtil.map(visualMapModel.getPieceList(), function (piece, index) {
             return {piece: piece, indexInModelPieceList: index};
         });
         let endsText = visualMapModel.get('text');
 
         // Consider orient and inverse.
-        let orient = visualMapModel.get('orient');
-        let inverse = visualMapModel.get('inverse');
+        const orient = visualMapModel.get('orient');
+        const inverse = visualMapModel.get('inverse');
 
         // Order of model pieceList is always [low, ..., high]
         if (orient === 'horizontal' ? inverse : !inverse) {
@@ -217,10 +217,10 @@ class PiecewiseVisualMapView extends VisualMapView {
     private _onItemClick(
         piece: VisualMappingOption['pieceList'][number]
     ) {
-        let visualMapModel = this.visualMapModel;
-        let option = visualMapModel.option;
-        let selected = zrUtil.clone(option.selected);
-        let newKey = visualMapModel.getSelectedMapKey(piece);
+        const visualMapModel = this.visualMapModel;
+        const option = visualMapModel.option;
+        const selected = zrUtil.clone(option.selected);
+        const newKey = visualMapModel.getSelectedMapKey(piece);
 
         if (option.selectedMode === 'single') {
             selected[newKey] = true;

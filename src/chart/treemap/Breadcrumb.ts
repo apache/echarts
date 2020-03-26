@@ -68,8 +68,8 @@ class Breadcrumb {
         targetNode: TreeNode,
         onSelect: OnSelectCallback
     ) {
-        let model = seriesModel.getModel('breadcrumb');
-        let thisGroup = this.group;
+        const model = seriesModel.getModel('breadcrumb');
+        const thisGroup = this.group;
 
         thisGroup.removeAll();
 
@@ -77,11 +77,11 @@ class Breadcrumb {
             return;
         }
 
-        let normalStyleModel = model.getModel('itemStyle');
+        const normalStyleModel = model.getModel('itemStyle');
         // let emphasisStyleModel = model.getModel('emphasis.itemStyle');
-        let textStyleModel = normalStyleModel.getModel('textStyle');
+        const textStyleModel = normalStyleModel.getModel('textStyle');
 
-        let layoutParam: LayoutParam = {
+        const layoutParam: LayoutParam = {
             pos: {
                 left: model.get('left'),
                 right: model.get('right'),
@@ -109,9 +109,9 @@ class Breadcrumb {
      */
     _prepare(targetNode: TreeNode, layoutParam: LayoutParam, textStyleModel: BreadcrumbTextStyleModel) {
         for (let node = targetNode; node; node = node.parentNode) {
-            let text = node.getModel<TreemapSeriesNodeItemOption>().get('name');
-            let textRect = textStyleModel.getTextRect(text);
-            let itemWidth = Math.max(
+            const text = node.getModel<TreemapSeriesNodeItemOption>().get('name');
+            const textRect = textStyleModel.getTextRect(text);
+            const itemWidth = Math.max(
                 textRect.width + TEXT_PADDING * 2,
                 layoutParam.emptyItemWidth
             );
@@ -136,15 +136,15 @@ class Breadcrumb {
     ) {
         // Start rendering.
         let lastX = 0;
-        let emptyItemWidth = layoutParam.emptyItemWidth;
-        let height = seriesModel.get(['breadcrumb', 'height']);
-        let availableSize = layout.getAvailableSize(layoutParam.pos, layoutParam.box);
+        const emptyItemWidth = layoutParam.emptyItemWidth;
+        const height = seriesModel.get(['breadcrumb', 'height']);
+        const availableSize = layout.getAvailableSize(layoutParam.pos, layoutParam.box);
         let totalWidth = layoutParam.totalWidth;
-        let renderList = layoutParam.renderList;
+        const renderList = layoutParam.renderList;
 
         for (let i = renderList.length - 1; i >= 0; i--) {
-            let item = renderList[i];
-            let itemNode = item.node;
+            const item = renderList[i];
+            const itemNode = item.node;
             let itemWidth = item.width;
             let text = item.text;
 
@@ -155,7 +155,7 @@ class Breadcrumb {
                 text = null;
             }
 
-            let el = new graphic.Polygon({
+            const el = new graphic.Polygon({
                 shape: {
                     points: makeItemPoints(
                         lastX, 0, itemWidth, height,
@@ -188,7 +188,7 @@ class Breadcrumb {
 }
 
 function makeItemPoints(x: number, y: number, itemWidth: number, itemHeight: number, head: boolean, tail: boolean) {
-    let points = [
+    const points = [
         [head ? x : x - ARRAY_LENGTH, y],
         [x + itemWidth, y],
         [x + itemWidth, y + itemHeight],

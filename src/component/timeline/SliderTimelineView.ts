@@ -108,11 +108,11 @@ class SliderTimelineView extends TimelineView {
 
         if (timelineModel.get('show', true)) {
 
-            let layoutInfo = this._layout(timelineModel, api);
-            let mainGroup = this._createGroup('_mainGroup');
-            let labelGroup = this._createGroup('_labelGroup');
+            const layoutInfo = this._layout(timelineModel, api);
+            const mainGroup = this._createGroup('_mainGroup');
+            const labelGroup = this._createGroup('_labelGroup');
 
-            let axis = this._axis = this._createAxis(layoutInfo, timelineModel);
+            const axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
             timelineModel.formatTooltip = function (dataIndex: number) {
                 return encodeHTML(axis.scale.getLabel(dataIndex));
@@ -149,9 +149,9 @@ class SliderTimelineView extends TimelineView {
     }
 
     _layout(timelineModel: SliderTimelineModel, api: ExtensionAPI): LayoutInfo {
-        let labelPosOpt = timelineModel.get(['label', 'position']);
-        let orient = timelineModel.get('orient');
-        let viewRect = getViewRect(timelineModel, api);
+        const labelPosOpt = timelineModel.get(['label', 'position']);
+        const orient = timelineModel.get('orient');
+        const viewRect = getViewRect(timelineModel, api);
         let parsedLabelPos: number | '+' | '-';
         // Auto label offset.
         if (labelPosOpt == null || labelPosOpt === 'auto') {
@@ -170,28 +170,28 @@ class SliderTimelineView extends TimelineView {
             parsedLabelPos = labelPosOpt;
         }
 
-        let labelAlignMap = {
+        const labelAlignMap = {
             horizontal: 'center',
             vertical: (parsedLabelPos >= 0 || parsedLabelPos === '+') ? 'left' : 'right'
         };
 
-        let labelBaselineMap = {
+        const labelBaselineMap = {
             horizontal: (parsedLabelPos >= 0 || parsedLabelPos === '+') ? 'top' : 'bottom',
             vertical: 'middle'
         };
-        let rotationMap = {
+        const rotationMap = {
             horizontal: 0,
             vertical: PI / 2
         };
 
         // Position
-        let mainLength = orient === 'vertical' ? viewRect.height : viewRect.width;
+        const mainLength = orient === 'vertical' ? viewRect.height : viewRect.width;
 
-        let controlModel = timelineModel.getModel('controlStyle');
-        let showControl = controlModel.get('show', true);
-        let controlSize = showControl ? controlModel.get('itemSize') : 0;
-        let controlGap = showControl ? controlModel.get('itemGap') : 0;
-        let sizePlusGap = controlSize + controlGap;
+        const controlModel = timelineModel.getModel('controlStyle');
+        const showControl = controlModel.get('show', true);
+        const controlSize = showControl ? controlModel.get('itemSize') : 0;
+        const controlGap = showControl ? controlModel.get('itemGap') : 0;
+        const sizePlusGap = controlSize + controlGap;
 
         // Special label rotate.
         let labelRotation = timelineModel.get(['label', 'rotate']) || 0;
@@ -200,11 +200,10 @@ class SliderTimelineView extends TimelineView {
         let playPosition: number[];
         let prevBtnPosition: number[];
         let nextBtnPosition: number[];
-        let axisExtent: number[];
-        let controlPosition = controlModel.get('position', true);
-        let showPlayBtn = showControl && controlModel.get('showPlayBtn', true);
-        let showPrevBtn = showControl && controlModel.get('showPrevBtn', true);
-        let showNextBtn = showControl && controlModel.get('showNextBtn', true);
+        const controlPosition = controlModel.get('position', true);
+        const showPlayBtn = showControl && controlModel.get('showPlayBtn', true);
+        const showPrevBtn = showControl && controlModel.get('showPrevBtn', true);
+        const showNextBtn = showControl && controlModel.get('showNextBtn', true);
         let xLeft = 0;
         let xRight = mainLength;
 
@@ -219,7 +218,7 @@ class SliderTimelineView extends TimelineView {
             showPrevBtn && (prevBtnPosition = [0, 0], xLeft += sizePlusGap);
             showNextBtn && (nextBtnPosition = [xRight - controlSize, 0], xRight -= sizePlusGap);
         }
-        axisExtent = [xLeft, xRight];
+        const axisExtent = [xLeft, xRight];
 
         if (timelineModel.get('inverse')) {
             axisExtent.reverse();
@@ -257,15 +256,15 @@ class SliderTimelineView extends TimelineView {
         // as a number, because it is more appropriate that label aligns at
         // 'offset' but not the other edge defined by viewRect.
 
-        let mainGroup = this._mainGroup;
-        let labelGroup = this._labelGroup;
+        const mainGroup = this._mainGroup;
+        const labelGroup = this._labelGroup;
 
         let viewRect = layoutInfo.viewRect;
         if (layoutInfo.orient === 'vertical') {
             // transform to horizontal, inverse rotate by left-top point.
-            let m = matrix.create();
-            let rotateOriginX = viewRect.x;
-            let rotateOriginY = viewRect.y + viewRect.height;
+            const m = matrix.create();
+            const rotateOriginX = viewRect.x;
+            const rotateOriginY = viewRect.y + viewRect.height;
             matrix.translate(m, m, [-rotateOriginX, -rotateOriginY]);
             matrix.rotate(m, m, -PI / 2);
             matrix.translate(m, m, [rotateOriginX, rotateOriginY]);
@@ -273,24 +272,24 @@ class SliderTimelineView extends TimelineView {
             viewRect.applyTransform(m);
         }
 
-        let viewBound = getBound(viewRect);
-        let mainBound = getBound(mainGroup.getBoundingRect());
-        let labelBound = getBound(labelGroup.getBoundingRect());
+        const viewBound = getBound(viewRect);
+        const mainBound = getBound(mainGroup.getBoundingRect());
+        const labelBound = getBound(labelGroup.getBoundingRect());
 
-        let mainPosition = mainGroup.position;
-        let labelsPosition = labelGroup.position;
+        const mainPosition = mainGroup.position;
+        const labelsPosition = labelGroup.position;
 
         labelsPosition[0] = mainPosition[0] = viewBound[0][0];
 
-        let labelPosOpt = layoutInfo.labelPosOpt;
+        const labelPosOpt = layoutInfo.labelPosOpt;
 
         if (labelPosOpt == null || isString(labelPosOpt)) { // '+' or '-'
-            let mainBoundIdx = labelPosOpt === '+' ? 0 : 1;
+            const mainBoundIdx = labelPosOpt === '+' ? 0 : 1;
             toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
             toBound(labelsPosition, labelBound, viewBound, 1, 1 - mainBoundIdx);
         }
         else {
-            let mainBoundIdx = labelPosOpt >= 0 ? 0 : 1;
+            const mainBoundIdx = labelPosOpt >= 0 ? 0 : 1;
             toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
             labelsPosition[1] = mainPosition[1] + labelPosOpt;
         }
@@ -303,7 +302,7 @@ class SliderTimelineView extends TimelineView {
         setOrigin(labelGroup);
 
         function setOrigin(targetGroup: graphic.Group) {
-            let pos = targetGroup.position;
+            const pos = targetGroup.position;
             targetGroup.origin = [
                 viewBound[0][0] - pos[0],
                 viewBound[1][0] - pos[1]
@@ -324,10 +323,10 @@ class SliderTimelineView extends TimelineView {
     }
 
     _createAxis(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
-        let data = timelineModel.getData();
-        let axisType = timelineModel.get('axisType');
+        const data = timelineModel.getData();
+        const axisType = timelineModel.get('axisType');
 
-        let scale = createScaleByModel(timelineModel, axisType);
+        const scale = createScaleByModel(timelineModel, axisType);
 
         // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {
@@ -336,18 +335,18 @@ class SliderTimelineView extends TimelineView {
             });
         };
 
-        let dataExtent = data.getDataExtent('value');
+        const dataExtent = data.getDataExtent('value');
         scale.setExtent(dataExtent[0], dataExtent[1]);
         scale.niceTicks();
 
-        let axis = new TimelineAxis('value', scale, layoutInfo.axisExtent as [number, number], axisType);
+        const axis = new TimelineAxis('value', scale, layoutInfo.axisExtent as [number, number], axisType);
         axis.model = timelineModel;
 
         return axis;
     }
 
     _createGroup(key: '_mainGroup' | '_labelGroup') {
-        let newGroup = this[key] = new graphic.Group();
+        const newGroup = this[key] = new graphic.Group();
         this.group.add(newGroup);
         return newGroup;
     }
@@ -358,7 +357,7 @@ class SliderTimelineView extends TimelineView {
         axis: TimelineAxis,
         timelineModel: SliderTimelineModel
     ) {
-        let axisExtent = axis.getExtent();
+        const axisExtent = axis.getExtent();
 
         if (!timelineModel.get(['lineStyle', 'show'])) {
             return;
@@ -387,24 +386,24 @@ class SliderTimelineView extends TimelineView {
         axis: TimelineAxis,
         timelineModel: SliderTimelineModel
     ) {
-        let data = timelineModel.getData();
+        const data = timelineModel.getData();
         // Show all ticks, despite ignoring strategy.
-        let ticks = axis.scale.getTicks();
+        const ticks = axis.scale.getTicks();
 
         // The value is dataIndex, see the costomized scale.
         each(ticks, function (value) {
-            let tickCoord = axis.dataToCoord(value);
-            let itemModel = data.getItemModel<TimelineDataItemOption>(value);
-            let itemStyleModel = itemModel.getModel('itemStyle');
-            let hoverStyleModel = itemModel.getModel(['emphasis', 'itemStyle']);
-            let symbolOpt = {
+            const tickCoord = axis.dataToCoord(value);
+            const itemModel = data.getItemModel<TimelineDataItemOption>(value);
+            const itemStyleModel = itemModel.getModel('itemStyle');
+            const hoverStyleModel = itemModel.getModel(['emphasis', 'itemStyle']);
+            const symbolOpt = {
                 position: [tickCoord, 0],
                 onclick: bind(this._changeTimeline, this, value)
             };
-            let el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
+            const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
             graphic.enableHoverEmphasis(el, hoverStyleModel.getItemStyle());
 
-            let ecData = graphic.getECData(el);
+            const ecData = graphic.getECData(el);
             if (itemModel.get('tooltip')) {
                 ecData.dataIndex = value;
                 ecData.dataModel = timelineModel;
@@ -425,24 +424,24 @@ class SliderTimelineView extends TimelineView {
         axis: TimelineAxis,
         timelineModel: SliderTimelineModel
     ) {
-        let labelModel = axis.getLabelModel();
+        const labelModel = axis.getLabelModel();
 
         if (!labelModel.get('show')) {
             return;
         }
 
-        let data = timelineModel.getData();
-        let labels = axis.getViewLabels();
+        const data = timelineModel.getData();
+        const labels = axis.getViewLabels();
 
         each(labels, function (labelItem) {
             // The tickValue is dataIndex, see the costomized scale.
-            let dataIndex = labelItem.tickValue;
+            const dataIndex = labelItem.tickValue;
 
-            let itemModel = data.getItemModel<TimelineDataItemOption>(dataIndex);
-            let normalLabelModel = itemModel.getModel('label');
-            let hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
-            let tickCoord = axis.dataToCoord(labelItem.tickValue);
-            let textEl = new graphic.Text({
+            const itemModel = data.getItemModel<TimelineDataItemOption>(dataIndex);
+            const normalLabelModel = itemModel.getModel('label');
+            const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+            const tickCoord = axis.dataToCoord(labelItem.tickValue);
+            const textEl = new graphic.Text({
                 position: [tickCoord, 0],
                 rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                 onclick: bind(this._changeTimeline, this, dataIndex),
@@ -471,14 +470,14 @@ class SliderTimelineView extends TimelineView {
         axis: TimelineAxis,
         timelineModel: SliderTimelineModel
     ) {
-        let controlSize = layoutInfo.controlSize;
-        let rotation = layoutInfo.rotation;
+        const controlSize = layoutInfo.controlSize;
+        const rotation = layoutInfo.rotation;
 
-        let itemStyle = timelineModel.getModel('controlStyle').getItemStyle();
-        let hoverStyle = timelineModel.getModel(['emphasis', 'controlStyle']).getItemStyle();
-        let rect = [0, -controlSize / 2, controlSize, controlSize];
-        let playState = timelineModel.getPlayState();
-        let inverse = timelineModel.get('inverse', true);
+        const itemStyle = timelineModel.getModel('controlStyle').getItemStyle();
+        const hoverStyle = timelineModel.getModel(['emphasis', 'controlStyle']).getItemStyle();
+        const rect = [0, -controlSize / 2, controlSize, controlSize];
+        const playState = timelineModel.getPlayState();
+        const inverse = timelineModel.get('inverse', true);
 
         makeBtn(
             layoutInfo.nextBtnPosition,
@@ -506,7 +505,7 @@ class SliderTimelineView extends TimelineView {
             if (!position) {
                 return;
             }
-            let opt = {
+            const opt = {
                 position: position,
                 origin: [controlSize / 2, 0],
                 rotation: willRotate ? -rotation : 0,
@@ -514,7 +513,7 @@ class SliderTimelineView extends TimelineView {
                 style: itemStyle,
                 onclick: onclick
             };
-            let btn = makeControlIcon(timelineModel, iconPath, rect, opt);
+            const btn = makeControlIcon(timelineModel, iconPath, rect, opt);
             group.add(btn);
             graphic.enableHoverEmphasis(btn, hoverStyle);
         }
@@ -526,13 +525,13 @@ class SliderTimelineView extends TimelineView {
         axis: TimelineAxis,
         timelineModel: SliderTimelineModel
     ) {
-        let data = timelineModel.getData();
-        let currentIndex = timelineModel.getCurrentIndex();
-        let pointerModel = data.getItemModel<TimelineDataItemOption>(currentIndex)
+        const data = timelineModel.getData();
+        const currentIndex = timelineModel.getCurrentIndex();
+        const pointerModel = data.getItemModel<TimelineDataItemOption>(currentIndex)
             .getModel('checkpointStyle');
-        let me = this;
+        const me = this;
 
-        let callback = {
+        const callback = {
             onCreate(pointer: TimelineSymbol) {
                 pointer.draggable = true;
                 pointer.drift = bind(me._handlePointerDrag, me);
@@ -571,8 +570,8 @@ class SliderTimelineView extends TimelineView {
     _pointerChangeTimeline(mousePos: number[], trigger?: boolean) {
         let toCoord = this._toAxisCoord(mousePos)[0];
 
-        let axis = this._axis;
-        let axisExtent = numberUtil.asc(axis.getExtent().slice());
+        const axis = this._axis;
+        const axisExtent = numberUtil.asc(axis.getExtent().slice());
 
         toCoord > axisExtent[1] && (toCoord = axisExtent[1]);
         toCoord < axisExtent[0] && (toCoord = axisExtent[0]);
@@ -580,8 +579,8 @@ class SliderTimelineView extends TimelineView {
         this._currentPointer.position[0] = toCoord;
         this._currentPointer.dirty();
 
-        let targetDataIndex = this._findNearestTick(toCoord);
-        let timelineModel = this.model;
+        const targetDataIndex = this._findNearestTick(toCoord);
+        const timelineModel = this.model;
 
         if (trigger || (
             targetDataIndex !== timelineModel.getCurrentIndex()
@@ -598,7 +597,7 @@ class SliderTimelineView extends TimelineView {
             this._timer = setTimeout(
                 () => {
                     // Do not cache
-                    let timelineModel = this.model;
+                    const timelineModel = this.model;
                     this._changeTimeline(
                         timelineModel.getCurrentIndex()
                         + (timelineModel.get('rewind', true) ? -1 : 1)
@@ -610,19 +609,19 @@ class SliderTimelineView extends TimelineView {
     }
 
     _toAxisCoord(vertex: number[]) {
-        let trans = this._mainGroup.getLocalTransform();
+        const trans = this._mainGroup.getLocalTransform();
         return graphic.applyTransform(vertex, trans, true);
     }
 
     _findNearestTick(axisCoord: number) {
-        let data = this.model.getData();
+        const data = this.model.getData();
         let dist = Infinity;
         let targetDataIndex;
-        let axis = this._axis;
+        const axis = this._axis;
 
         data.each(['value'], function (value, dataIndex) {
-            let coord = axis.dataToCoord(value);
-            let d = Math.abs(coord - axisCoord);
+            const coord = axis.dataToCoord(value);
+            const d = Math.abs(coord - axisCoord);
             if (d < dist) {
                 dist = d;
                 targetDataIndex = dataIndex;
@@ -640,7 +639,7 @@ class SliderTimelineView extends TimelineView {
     }
 
     _changeTimeline(nextIndex: number | '+' | '-') {
-        let currentIndex = this.model.getCurrentIndex();
+        const currentIndex = this.model.getCurrentIndex();
 
         if (nextIndex === '+') {
             nextIndex = currentIndex + 1;
@@ -697,7 +696,7 @@ function makeControlIcon(
     rect: number[],
     opts: PathProps
 ) {
-    let icon = graphic.makePath(
+    const icon = graphic.makePath(
         timelineModel.get(['controlStyle', objPath]).replace(/^path:\/\//, ''),
         clone(opts || {}),
         new BoundingRect(rect[0], rect[1], rect[2], rect[3]),
@@ -722,10 +721,10 @@ function giveSymbol(
         onUpdate?: (symbol: TimelineSymbol) => void
     }
 ) {
-    let color = itemStyleModel.get('color');
+    const color = itemStyleModel.get('color');
 
     if (!symbol) {
-        let symbolType = hostModel.get('symbol');
+        const symbolType = hostModel.get('symbol');
         symbol = createSymbol(symbolType, -1, -1, 2, 2, color);
         symbol.setStyle('strokeNoScale', true);
         group.add(symbol);
@@ -738,7 +737,7 @@ function giveSymbol(
     }
 
     // Style
-    let itemStyle = itemStyleModel.getItemStyle(['color']);
+    const itemStyle = itemStyleModel.getItemStyle(['color']);
     symbol.setStyle(itemStyle);
 
     // Transform and events.
@@ -755,14 +754,14 @@ function giveSymbol(
     symbolSize[1] /= 2;
     opt.scale = symbolSize;
 
-    let symbolOffset = hostModel.get('symbolOffset');
+    const symbolOffset = hostModel.get('symbolOffset');
     if (symbolOffset) {
-        let pos = opt.position = opt.position || [0, 0];
+        const pos = opt.position = opt.position || [0, 0];
         pos[0] += numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
         pos[1] += numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
     }
 
-    let symbolRotate = hostModel.get('symbolRotate');
+    const symbolRotate = hostModel.get('symbolRotate');
     opt.rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
 
     symbol.attr(opt);
@@ -789,8 +788,8 @@ function pointerMoveTo(
         return;
     }
 
-    let pointerModel = timelineModel.getModel('checkpointStyle');
-    let toCoord = axis.dataToCoord(timelineModel.getData().get('value', dataIndex));
+    const pointerModel = timelineModel.getModel('checkpointStyle');
+    const toCoord = axis.dataToCoord(timelineModel.getData().get('value', dataIndex));
 
     if (noAnimation || !pointerModel.get('animation', true)) {
         pointer.attr({position: [toCoord, 0]});

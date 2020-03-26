@@ -54,8 +54,8 @@ interface LayoutInfo {
 type AxisPointerModel = Model<CommonAxisPointerOption>;
 
 export function buildElStyle(axisPointerModel: AxisPointerModel) {
-    let axisPointerType = axisPointerModel.get('type');
-    let styleModel = axisPointerModel.getModel(axisPointerType + 'Style' as 'lineStyle' | 'shadowStyle');
+    const axisPointerType = axisPointerModel.get('type');
+    const styleModel = axisPointerModel.getModel(axisPointerType + 'Style' as 'lineStyle' | 'shadowStyle');
     let style: PathStyleProps;
     if (axisPointerType === 'line') {
         style = styleModel.getLineStyle();
@@ -82,8 +82,8 @@ export function buildLabelElOption(
         position: number[]
     }
 ) {
-    let value = axisPointerModel.get('value');
-    let text = getValueLabel(
+    const value = axisPointerModel.get('value');
+    const text = getValueLabel(
         value, axisModel.axis, axisModel.ecModel,
         axisPointerModel.get('seriesDataIndices'),
         {
@@ -91,21 +91,21 @@ export function buildLabelElOption(
             formatter: axisPointerModel.get(['label', 'formatter'])
         }
     );
-    let labelModel = axisPointerModel.getModel('label');
-    let paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
+    const labelModel = axisPointerModel.getModel('label');
+    const paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
-    let font = labelModel.getFont();
-    let textRect = textContain.getBoundingRect(text, font);
+    const font = labelModel.getFont();
+    const textRect = textContain.getBoundingRect(text, font);
 
-    let position = labelPos.position;
-    let width = textRect.width + paddings[1] + paddings[3];
-    let height = textRect.height + paddings[0] + paddings[2];
+    const position = labelPos.position;
+    const width = textRect.width + paddings[1] + paddings[3];
+    const height = textRect.height + paddings[0] + paddings[2];
 
     // Adjust by align.
-    let align = labelPos.align;
+    const align = labelPos.align;
     align === 'right' && (position[0] -= width);
     align === 'center' && (position[0] -= width / 2);
-    let verticalAlign = labelPos.verticalAlign;
+    const verticalAlign = labelPos.verticalAlign;
     verticalAlign === 'bottom' && (position[1] -= height);
     verticalAlign === 'middle' && (position[1] -= height / 2);
 
@@ -143,8 +143,8 @@ export function buildLabelElOption(
 
 // Do not overflow ec container
 function confineInContainer(position: number[], width: number, height: number, api: ExtensionAPI) {
-    let viewWidth = api.getWidth();
-    let viewHeight = api.getHeight();
+    const viewWidth = api.getWidth();
+    const viewHeight = api.getHeight();
     position[0] = Math.min(position[0] + width, viewWidth) - width;
     position[1] = Math.min(position[1] + height, viewHeight) - height;
     position[0] = Math.max(position[0], 0);
@@ -169,19 +169,19 @@ export function getValueLabel(
             precision: opt.precision
         }
     );
-    let formatter = opt.formatter;
+    const formatter = opt.formatter;
 
     if (formatter) {
-        let params = {
+        const params = {
             value: axisHelper.getAxisRawValue(axis, value),
             axisDimension: axis.dim,
             axisIndex: (axis as Axis2D).index,  // Only Carteian Axis has index
             seriesData: [] as CallbackDataParams[]
         };
         zrUtil.each(seriesDataIndices, function (idxItem) {
-            let series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
-            let dataIndex = idxItem.dataIndexInside;
-            let dataParams = series && series.getDataParams(dataIndex);
+            const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
+            const dataIndex = idxItem.dataIndexInside;
+            const dataParams = series && series.getDataParams(dataIndex);
             dataParams && params.seriesData.push(dataParams);
         });
 
@@ -201,7 +201,7 @@ export function getTransformedPosition(
     value: ScaleDataValue,
     layoutInfo: LayoutInfo
 ): number[] {
-    let transform = matrix.create();
+    const transform = matrix.create();
     matrix.rotate(transform, transform, layoutInfo.rotation);
     matrix.translate(transform, transform, layoutInfo.position);
 
@@ -221,7 +221,7 @@ export function buildCartesianSingleLabelElOption(
     api: ExtensionAPI
 ) {
     // @ts-ignore
-    let textLayout = AxisBuilder.innerTextLayout(
+    const textLayout = AxisBuilder.innerTextLayout(
         layoutInfo.rotation, 0, layoutInfo.labelDirection
     );
     layoutInfo.labelMargin = axisPointerModel.get(['label', 'margin']);

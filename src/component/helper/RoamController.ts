@@ -177,8 +177,8 @@ class RoamController extends Eventful<RoamEventParams> {
             return;
         }
 
-        let x = e.offsetX;
-        let y = e.offsetY;
+        const x = e.offsetX;
+        const y = e.offsetY;
 
         // Only check on mosedown, but not mousemove.
         // Mouse can be out of target when mouse moving.
@@ -198,14 +198,14 @@ class RoamController extends Eventful<RoamEventParams> {
             return;
         }
 
-        let x = e.offsetX;
-        let y = e.offsetY;
+        const x = e.offsetX;
+        const y = e.offsetY;
 
-        let oldX = this._x;
-        let oldY = this._y;
+        const oldX = this._x;
+        const oldY = this._y;
 
-        let dx = x - oldX;
-        let dy = y - oldY;
+        const dx = x - oldX;
+        const dy = y - oldY;
 
         this._x = x;
         this._y = y;
@@ -224,12 +224,12 @@ class RoamController extends Eventful<RoamEventParams> {
     }
 
     private _mousewheelHandler(e: ZRElementEvent) {
-        let shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
-        let shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
-        let wheelDelta = e.wheelDelta;
-        let absWheelDeltaDelta = Math.abs(wheelDelta);
-        let originX = e.offsetX;
-        let originY = e.offsetY;
+        const shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
+        const shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
+        const wheelDelta = e.wheelDelta;
+        const absWheelDeltaDelta = Math.abs(wheelDelta);
+        const originX = e.offsetX;
+        const originY = e.offsetY;
 
         // wheelDelta maybe -0 in chrome mac.
         if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
@@ -250,8 +250,8 @@ class RoamController extends Eventful<RoamEventParams> {
             // (https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel),
             // although it has been normallized by zrender.
             // wheelDelta of mouse wheel is bigger than touch pad.
-            let factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
-            let scale = wheelDelta > 0 ? factor : 1 / factor;
+            const factor = absWheelDeltaDelta > 3 ? 1.4 : absWheelDeltaDelta > 1 ? 1.2 : 1.1;
+            const scale = wheelDelta > 0 ? factor : 1 / factor;
             checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
                 scale: scale, originX: originX, originY: originY, isAvailableBehavior: null
             });
@@ -259,9 +259,9 @@ class RoamController extends Eventful<RoamEventParams> {
 
         if (shouldMove) {
             // FIXME: Should do more test in different environment.
-            let absDelta = Math.abs(wheelDelta);
+            const absDelta = Math.abs(wheelDelta);
             // wheelDelta of mouse wheel is bigger than touch pad.
-            let scrollDelta = (wheelDelta > 0 ? 1 : -1) * (absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05);
+            const scrollDelta = (wheelDelta > 0 ? 1 : -1) * (absDelta > 3 ? 0.4 : absDelta > 1 ? 0.15 : 0.05);
             checkPointerAndTrigger(this, 'scrollMove', 'moveOnMouseWheel', e, {
                 scrollDelta: scrollDelta, originX: originX, originY: originY, isAvailableBehavior: null
             });
@@ -272,7 +272,7 @@ class RoamController extends Eventful<RoamEventParams> {
         if (interactionMutex.isTaken(this._zr, 'globalPan')) {
             return;
         }
-        let scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
+        const scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
         checkPointerAndTrigger(this, 'zoom', null, e, {
             scale: scale, originX: e.pinchX, originY: e.pinchY, isAvailableBehavior: null
         });
@@ -323,7 +323,7 @@ function isAvailableBehavior(
     e: ZRElementEvent,
     settings: Pick<RoamOption, RoamBehavior>
 ) {
-    let setting = settings[behaviorToCheck];
+    const setting = settings[behaviorToCheck];
     return !behaviorToCheck || (
         setting && (!isString(setting) || e.event[setting + 'Key' as 'shiftKey' | 'ctrlKey' | 'altKey'])
     );

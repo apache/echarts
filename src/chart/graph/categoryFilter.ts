@@ -22,21 +22,21 @@ import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import type LegendModel from '../../component/legend/LegendModel';
 
 export default function (ecModel: GlobalModel) {
-    let legendModels = ecModel.findComponents({
+    const legendModels = ecModel.findComponents({
         mainType: 'legend'
     }) as LegendModel[];
     if (!legendModels || !legendModels.length) {
         return;
     }
     ecModel.eachSeriesByType('graph', function (graphSeries: GraphSeriesModel) {
-        let categoriesData = graphSeries.getCategoriesData();
-        let graph = graphSeries.getGraph();
-        let data = graph.data;
+        const categoriesData = graphSeries.getCategoriesData();
+        const graph = graphSeries.getGraph();
+        const data = graph.data;
 
-        let categoryNames = categoriesData.mapArray(categoriesData.getName);
+        const categoryNames = categoriesData.mapArray(categoriesData.getName);
 
         data.filterSelf(function (idx) {
-            let model = data.getItemModel<GraphNodeItemOption>(idx);
+            const model = data.getItemModel<GraphNodeItemOption>(idx);
             let category = model.getShallow('category');
             if (category != null) {
                 if (typeof category === 'number') {

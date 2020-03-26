@@ -28,11 +28,11 @@ echarts.registerProcessor({
     // there is a line series and a pie series, it is better not to update the
     // line series if only pie series is needed to be updated.
     getTargetSeries: function (ecModel) {
-        let seriesModelMap = createHashMap<SeriesModel>();
+        const seriesModelMap = createHashMap<SeriesModel>();
 
         ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
-                let axisProxy = dataZoomModel.getAxisProxy(dimNames.name, axisIndex);
+                const axisProxy = dataZoomModel.getAxisProxy(dimNames.name, axisIndex);
                 each(axisProxy.getTargetSeriesModels(), function (seriesModel) {
                     seriesModelMap.set(seriesModel.uid, seriesModel);
                 });
@@ -80,9 +80,9 @@ echarts.registerProcessor({
         ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
             // Fullfill all of the range props so that user
             // is able to get them from chart.getOption().
-            let axisProxy = dataZoomModel.findRepresentativeAxisProxy();
-            let percentRange = axisProxy.getDataPercentWindow();
-            let valueRange = axisProxy.getDataValueWindow();
+            const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
+            const percentRange = axisProxy.getDataPercentWindow();
+            const valueRange = axisProxy.getDataValueWindow();
 
             dataZoomModel.setCalculatedRange({
                 start: percentRange[0],

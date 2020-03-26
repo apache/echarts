@@ -23,22 +23,22 @@ import ThemeRiverSeriesModel from './ThemeRiverSeries';
 
 export default function (ecModel: GlobalModel) {
     ecModel.eachSeriesByType('themeRiver', function (seriesModel: ThemeRiverSeriesModel) {
-        let data = seriesModel.getData();
-        let rawData = seriesModel.getRawData();
-        let colorList = seriesModel.get('color');
-        let idxMap = createHashMap<number>();
+        const data = seriesModel.getData();
+        const rawData = seriesModel.getRawData();
+        const colorList = seriesModel.get('color');
+        const idxMap = createHashMap<number>();
 
         data.each(function (idx) {
             idxMap.set(data.getRawIndex(idx), idx);
         });
 
         rawData.each(function (rawIndex) {
-            let name = rawData.getName(rawIndex);
-            let color = colorList[(seriesModel.nameMap.get(name) - 1) % colorList.length];
+            const name = rawData.getName(rawIndex);
+            const color = colorList[(seriesModel.nameMap.get(name) - 1) % colorList.length];
 
             rawData.setItemVisual(rawIndex, 'color', color);
 
-            let idx = idxMap.get(rawIndex);
+            const idx = idxMap.get(rawIndex);
 
             if (idx != null) {
                 data.setItemVisual(idx, 'color', color);

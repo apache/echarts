@@ -106,7 +106,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     getProgressiveThreshold() {
         // Do not support progressive in normal mode.
         let progressiveThreshold = this.get('progressiveThreshold');
-        let largeThreshold = this.get('largeThreshold');
+        const largeThreshold = this.get('largeThreshold');
         if (largeThreshold > progressiveThreshold) {
             progressiveThreshold = largeThreshold;
         }

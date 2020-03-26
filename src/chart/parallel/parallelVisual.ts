@@ -31,20 +31,20 @@ const parallelVisual: StageHandler = {
     reset: function (seriesModel: ParallelSeriesModel, ecModel) {
 
         // let itemStyleModel = seriesModel.getModel('itemStyle');
-        let lineStyleModel = seriesModel.getModel('lineStyle');
-        let globalColors = ecModel.get('color');
+        const lineStyleModel = seriesModel.getModel('lineStyle');
+        const globalColors = ecModel.get('color');
 
-        let color = lineStyleModel.get('color')
+        const color = lineStyleModel.get('color')
             // || itemStyleModel.get('color')
             || globalColors[seriesModel.seriesIndex % globalColors.length];
-        let inactiveOpacity = seriesModel.get('inactiveOpacity');
-        let activeOpacity = seriesModel.get('activeOpacity');
-        let lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
+        const inactiveOpacity = seriesModel.get('inactiveOpacity');
+        const activeOpacity = seriesModel.get('activeOpacity');
+        const lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
 
-        let coordSys = seriesModel.coordinateSystem;
-        let data = seriesModel.getData();
+        const coordSys = seriesModel.coordinateSystem;
+        const data = seriesModel.getData();
 
-        let opacityMap = {
+        const opacityMap = {
             normal: lineStyle.opacity,
             active: activeOpacity,
             inactive: inactiveOpacity
@@ -57,7 +57,7 @@ const parallelVisual: StageHandler = {
                 coordSys.eachActiveState(data, function (activeState, dataIndex) {
                     let opacity = opacityMap[activeState];
                     if (activeState === 'normal' && data.hasItemOption) {
-                        let itemOpacity = data.getItemModel<ParallelSeriesOption>(dataIndex).get(
+                        const itemOpacity = data.getItemModel<ParallelSeriesOption>(dataIndex).get(
                             opacityAccessPath, true
                         );
                         itemOpacity != null && (opacity = itemOpacity);

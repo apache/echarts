@@ -59,7 +59,7 @@ class Cartesian<AxisT extends Axis> {
     }
 
     addAxis(axis: AxisT): void {
-        let dim = axis.dim;
+        const dim = axis.dim;
 
         this._axes[dim] = axis;
 

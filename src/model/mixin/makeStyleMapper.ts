@@ -31,15 +31,15 @@ export default function (properties: readonly string[][]) {
         }
     }
     return function (model: Model, excludes?: readonly string[], includes?: readonly string[]) {
-        let style: Dictionary<any> = {};
+        const style: Dictionary<any> = {};
         for (let i = 0; i < properties.length; i++) {
-            let propName = properties[i][1];
+            const propName = properties[i][1];
             if ((excludes && zrUtil.indexOf(excludes, propName) >= 0)
                 || (includes && zrUtil.indexOf(includes, propName) < 0)
             ) {
                 continue;
             }
-            let val = model.getShallow(propName);
+            const val = model.getShallow(propName);
             if (val != null) {
                 style[properties[i][0]] = val;
             }

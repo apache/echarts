@@ -92,7 +92,7 @@ export function defaultEmphasis(
 
         // Default emphasis option from normal
         for (let i = 0, len = subOpts.length; i < len; i++) {
-            let subOptName = subOpts[i];
+            const subOptName = subOpts[i];
             if (!opt.emphasis[key].hasOwnProperty(subOptName)
                 && opt[key].hasOwnProperty(subOptName)
             ) {
@@ -102,7 +102,7 @@ export function defaultEmphasis(
     }
 }
 
-export let TEXT_STYLE_OPTIONS = [
+export const TEXT_STYLE_OPTIONS = [
     'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
     'rich', 'tag', 'color', 'textBorderColor', 'textBorderWidth',
     'width', 'height', 'lineHeight', 'align', 'verticalAlign', 'baseline',
@@ -176,7 +176,7 @@ export function mappingToExists<T extends MappingExistItem>(
     // update partial option but not be expected to change order.
     newCptOptions = (newCptOptions || []).slice();
 
-    let result: MappingResultItem<T>[] = map(exists || [], function (obj, index) {
+    const result: MappingResultItem<T>[] = map(exists || [], function (obj, index) {
         return {exist: obj};
     });
 
@@ -199,7 +199,7 @@ export function mappingToExists<T extends MappingExistItem>(
         }
 
         for (let i = 0; i < result.length; i++) {
-            let exist = result[i].exist;
+            const exist = result[i].exist;
             if (!result[i].option // Consider name: two map to one.
                 // Can not match when both ids exist but different.
                 && (exist.id == null || cptOption.id == null)
@@ -223,7 +223,7 @@ export function mappingToExists<T extends MappingExistItem>(
 
         let i = 0;
         for (; i < result.length; i++) {
-            let exist = result[i].exist;
+            const exist = result[i].exist;
             if (!result[i].option
                 // Existing model that already has id should be able to
                 // mapped to (because after mapping performed model may
@@ -269,15 +269,15 @@ export function makeIdAndName(
     // to specify multi components (like series) by one name.
 
     // Ensure that each id is distinct.
-    let idMap = createHashMap();
+    const idMap = createHashMap();
 
     each(mapResult, function (item, index) {
-        let existCpt = item.exist;
+        const existCpt = item.exist;
         existCpt && idMap.set(existCpt.id, item);
     });
 
     each(mapResult, function (item, index) {
-        let opt = item.option;
+        const opt = item.option;
 
         assert(
             !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
@@ -290,9 +290,9 @@ export function makeIdAndName(
 
     // Make name and id.
     each(mapResult, function (item, index) {
-        let existCpt = item.exist;
-        let opt = item.option;
-        let keyInfo = item.keyInfo;
+        const existCpt = item.exist;
+        const opt = item.option;
+        const keyInfo = item.keyInfo;
 
         if (!isObject<ComponentOption>(opt)) {
             return;
@@ -334,7 +334,7 @@ export function makeIdAndName(
 }
 
 export function isNameSpecified(componentModel: ComponentModel): boolean {
-    let name = componentModel.name;
+    const name = componentModel.name;
     // Is specified when `indexOf` get -1 or > 0.
     return !!(name && name.indexOf(DUMMY_COMPONENT_NAME_PREFIX));
 }
@@ -372,8 +372,8 @@ export function compressBatches(
             [dataIndex: string]: 1
         }
     };
-    let mapA = {} as InnerMap;
-    let mapB = {} as InnerMap;
+    const mapA = {} as InnerMap;
+    const mapB = {} as InnerMap;
 
     makeMap(batchA || [], mapA);
     makeMap(batchB || [], mapB, mapA);
@@ -382,12 +382,12 @@ export function compressBatches(
 
     function makeMap(sourceBatch: BatchItem[], map: InnerMap, otherMap?: InnerMap): void {
         for (let i = 0, len = sourceBatch.length; i < len; i++) {
-            let seriesId = sourceBatch[i].seriesId;
-            let dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
-            let otherDataIndices = otherMap && otherMap[seriesId];
+            const seriesId = sourceBatch[i].seriesId;
+            const dataIndices = normalizeToArray(sourceBatch[i].dataIndex);
+            const otherDataIndices = otherMap && otherMap[seriesId];
 
             for (let j = 0, lenj = dataIndices.length; j < lenj; j++) {
-                let dataIndex = dataIndices[j];
+                const dataIndex = dataIndices[j];
 
                 if (otherDataIndices && otherDataIndices[dataIndex]) {
                     otherDataIndices[dataIndex] = null;
@@ -400,14 +400,14 @@ export function compressBatches(
     }
 
     function mapToArray(map: Dictionary<any>, isData?: boolean): any[] {
-        let result = [];
-        for (let i in map) {
+        const result = [];
+        for (const i in map) {
             if (map.hasOwnProperty(i) && map[i] != null) {
                 if (isData) {
                     result.push(+i);
                 }
                 else {
-                    let dataIndices = mapToArray(map[i], true);
+                    const dataIndices = mapToArray(map[i], true);
                     dataIndices.length && result.push({seriesId: i, dataIndex: dataIndices});
                 }
             }
@@ -466,7 +466,7 @@ export function queryDataIndex(data: List, payload: Payload & {
  * @return {Function}
  */
 export function makeInner<T, Host extends object>() {
-    let key = '__ec_inner_' + innerUniqueIndex++;
+    const key = '__ec_inner_' + innerUniqueIndex++;
     return function (hostObj: Host): T {
         return (hostObj as any)[key] || ((hostObj as any)[key] = {});
     };
@@ -541,7 +541,7 @@ export function parseFinder(
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
     if (isString(finderInput)) {
-        let obj = {};
+        const obj = {};
         (obj as any)[finderInput + 'Index'] = 0;
         finder = obj;
     }
@@ -549,7 +549,7 @@ export function parseFinder(
         finder = finderInput;
     }
 
-    let defaultMainType = opt && opt.defaultMainType;
+    const defaultMainType = opt && opt.defaultMainType;
     if (defaultMainType
         && !has(finder, defaultMainType + 'Index')
         && !has(finder, defaultMainType + 'Id')
@@ -558,7 +558,7 @@ export function parseFinder(
         finder[defaultMainType + 'Index'] = 0;
     }
 
-    let result = {} as ParsedModelFinder;
+    const result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
         // Exclude 'dataIndex' and other illgal keys.
@@ -567,9 +567,9 @@ export function parseFinder(
             return;
         }
 
-        let parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
-        let mainType = parsedKey[1];
-        let queryType = (parsedKey[2] || '').toLowerCase() as ('id' | 'index' | 'name');
+        const parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
+        const mainType = parsedKey[1];
+        const queryType = (parsedKey[2] || '').toLowerCase() as ('id' | 'index' | 'name');
 
         if (!mainType
             || !queryType
@@ -580,12 +580,12 @@ export function parseFinder(
             return;
         }
 
-        let queryParam = {mainType: mainType} as QueryConditionKindB;
+        const queryParam = {mainType: mainType} as QueryConditionKindB;
         if (queryType !== 'index' || value !== 'all') {
             queryParam[queryType] = value as any;
         }
 
-        let models = ecModel.queryComponents(queryParam);
+        const models = ecModel.queryComponents(queryParam);
         result[mainType + 'Models'] = models;
         result[mainType + 'Model'] = models[0];
     });
@@ -629,11 +629,11 @@ export function groupData<T, R extends string | number>(
     keys: R[],
     buckets: HashMap<T[]> // hasmap key: the key returned by `getKey`.
 } {
-    let buckets = createHashMap<T[]>();
-    let keys: R[] = [];
+    const buckets = createHashMap<T[]>();
+    const keys: R[] = [];
 
     each(array, function (item) {
-        let key = getKey(item);
+        const key = getKey(item);
         (buckets.get(key)
             || (keys.push(key), buckets.set(key, []))
         ).push(item);

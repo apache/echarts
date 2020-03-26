@@ -63,14 +63,14 @@ type Store = Dictionary<Record>;
 const inner = makeInner<Store, ExtensionAPI>();
 
 export function register(api: ExtensionAPI, dataZoomInfo: DataZoomInfo) {
-    let store = inner(api);
-    let theDataZoomId = dataZoomInfo.dataZoomId;
-    let theCoordId = dataZoomInfo.coordId;
+    const store = inner(api);
+    const theDataZoomId = dataZoomInfo.dataZoomId;
+    const theCoordId = dataZoomInfo.coordId;
 
     // Do clean when a dataZoom changes its target coordnate system.
     // Avoid memory leak, dispose all not-used-registered.
     each(store, function (record, coordId) {
-        let dataZoomInfos = record.dataZoomInfos;
+        const dataZoomInfos = record.dataZoomInfos;
         if (dataZoomInfos[theDataZoomId]
             && indexOf(dataZoomInfo.allCoordIds, theCoordId) < 0
         ) {
@@ -98,7 +98,7 @@ export function register(api: ExtensionAPI, dataZoomInfo: DataZoomInfo) {
     !(record.dataZoomInfos[theDataZoomId]) && record.count++;
     record.dataZoomInfos[theDataZoomId] = dataZoomInfo;
 
-    let controllerParams = mergeControllerParams(record.dataZoomInfos);
+    const controllerParams = mergeControllerParams(record.dataZoomInfos);
     record.controller.enable(controllerParams.controlType, controllerParams.opt);
 
     // Consider resize, area should be always updated.
@@ -114,11 +114,11 @@ export function register(api: ExtensionAPI, dataZoomInfo: DataZoomInfo) {
 }
 
 export function unregister(api: ExtensionAPI, dataZoomId: string) {
-    let store = inner(api);
+    const store = inner(api);
 
     each(store, function (record) {
         record.controller.dispose();
-        let dataZoomInfos = record.dataZoomInfos;
+        const dataZoomInfos = record.dataZoomInfos;
         if (dataZoomInfos[dataZoomId]) {
             delete dataZoomInfos[dataZoomId];
             record.count--;
@@ -136,11 +136,11 @@ export function generateCoordId(coordModel: ComponentModel) {
 }
 
 function createController(api: ExtensionAPI, newRecord: Record) {
-    let controller = new RoamController(api.getZr());
+    const controller = new RoamController(api.getZr());
 
     each(['pan', 'zoom', 'scrollMove'] as const, function (eventName) {
         controller.on(eventName, function (event) {
-            let batch: DataZoomPayloadBatchItem[] = [];
+            const batch: DataZoomPayloadBatchItem[] = [];
 
             each(newRecord.dataZoomInfos, function (info) {
                 // Check whether the behaviors (zoomOnMouseWheel, moveOnMouseMove,
@@ -149,8 +149,8 @@ function createController(api: ExtensionAPI, newRecord: Record) {
                     return;
                 }
 
-                let method = (info.getRange || {} as DataZoomInfo['getRange'])[eventName];
-                let range = method && method(newRecord.controller, event as any);
+                const method = (info.getRange || {} as DataZoomInfo['getRange'])[eventName];
+                const range = method && method(newRecord.controller, event as any);
 
                 !(info.dataZoomModel as InsideZoomModel).get('disabled', true) && range && batch.push({
                     dataZoomId: info.dataZoomId,
@@ -192,8 +192,8 @@ function mergeControllerParams(dataZoomInfos: Dictionary<DataZoomInfo>) {
     let controlType: RoamType;
     // DO NOT use reserved word (true, false, undefined) as key literally. Even if encapsulated
     // as string, it is probably revert to reserved word by compress tool. See #7411.
-    let prefix = 'type_';
-    let typePriority: Dictionary<number> = {
+    const prefix = 'type_';
+    const typePriority: Dictionary<number> = {
         'type_true': 2,
         'type_move': 1,
         'type_false': 0,
@@ -202,8 +202,8 @@ function mergeControllerParams(dataZoomInfos: Dictionary<DataZoomInfo>) {
     let preventDefaultMouseMove = true;
 
     each(dataZoomInfos, function (dataZoomInfo) {
-        let dataZoomModel = dataZoomInfo.dataZoomModel as InsideZoomModel;
-        let oneType = dataZoomModel.get('disabled', true)
+        const dataZoomModel = dataZoomInfo.dataZoomModel as InsideZoomModel;
+        const oneType = dataZoomModel.get('disabled', true)
             ? false
             : dataZoomModel.get('zoomLock', true)
             ? 'move' as const

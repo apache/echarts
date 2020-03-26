@@ -48,10 +48,10 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI) {
 
-        let model = this.model;
-        let title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
-        let type = model.get('type', true) || 'png';
-        let url = api.getConnectedDataURL({
+        const model = this.model;
+        const title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
+        const type = model.get('type', true) || 'png';
+        const url = api.getConnectedDataURL({
             type: type,
             backgroundColor: model.get('backgroundColor', true)
                 || ecModel.get('backgroundColor') || '#fff',
@@ -61,11 +61,11 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         });
         // Chrome and Firefox
         if (typeof MouseEvent === 'function' && !env.browser.ie && !env.browser.edge) {
-            let $a = document.createElement('a');
+            const $a = document.createElement('a');
             $a.download = title + '.' + type;
             $a.target = '_blank';
             $a.href = url;
-            let evt = new MouseEvent('click', {
+            const evt = new MouseEvent('click', {
                 view: window,
                 bubbles: true,
                 cancelable: false
@@ -75,22 +75,22 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         // IE
         else {
             if (window.navigator.msSaveOrOpenBlob) {
-                let bstr = atob(url.split(',')[1]);
+                const bstr = atob(url.split(',')[1]);
                 let n = bstr.length;
-                let u8arr = new Uint8Array(n);
+                const u8arr = new Uint8Array(n);
                 while (n--) {
                     u8arr[n] = bstr.charCodeAt(n);
                 }
-                let blob = new Blob([u8arr]);
+                const blob = new Blob([u8arr]);
                 window.navigator.msSaveOrOpenBlob(blob, title + '.' + type);
             }
             else {
-                let lang = model.get('lang');
-                let html = ''
+                const lang = model.get('lang');
+                const html = ''
                     + '<body style="margin:0;">'
                     + '<img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />'
                     + '</body>';
-                let tab = window.open();
+                const tab = window.open();
                 tab.document.write(html);
             }
         }

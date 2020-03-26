@@ -38,9 +38,9 @@ export default function (option) {
 }
 
 function compatibleEC2(opt) {
-    let type = opt.type;
+    const type = opt.type;
 
-    let ec2Types = {'number': 'value', 'time': 'time'};
+    const ec2Types = {'number': 'value', 'time': 'time'};
 
     // Compatible with ec2
     if (ec2Types[type]) {
@@ -51,7 +51,7 @@ function compatibleEC2(opt) {
     transferItem(opt);
 
     if (has(opt, 'controlPosition')) {
-        let controlStyle = opt.controlStyle || (opt.controlStyle = {});
+        const controlStyle = opt.controlStyle || (opt.controlStyle = {});
         if (!has(controlStyle, 'position')) {
             controlStyle.position = opt.controlPosition;
         }
@@ -74,14 +74,14 @@ function compatibleEC2(opt) {
 }
 
 function transferItem(opt) {
-    let itemStyle = opt.itemStyle || (opt.itemStyle = {});
+    const itemStyle = opt.itemStyle || (opt.itemStyle = {});
 
-    let itemStyleEmphasis = itemStyle.emphasis || (itemStyle.emphasis = {});
+    const itemStyleEmphasis = itemStyle.emphasis || (itemStyle.emphasis = {});
 
     // Transfer label out
-    let label = opt.label || (opt.label || {});
-    let labelNormal = label.normal || (label.normal = {});
-    let excludeLabelAttr = {normal: 1, emphasis: 1};
+    const label = opt.label || (opt.label || {});
+    const labelNormal = label.normal || (label.normal = {});
+    const excludeLabelAttr = {normal: 1, emphasis: 1};
 
     zrUtil.each(label, function (value, name) {
         if (!excludeLabelAttr[name] && !has(labelNormal, name)) {

@@ -95,20 +95,20 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
     private _indicatorModels: AxisBaseModel<InnerIndicatorAxisOption>[];
 
     optionUpdated() {
-        let boundaryGap = this.get('boundaryGap');
-        let splitNumber = this.get('splitNumber');
-        let scale = this.get('scale');
-        let axisLine = this.get('axisLine');
-        let axisTick = this.get('axisTick');
+        const boundaryGap = this.get('boundaryGap');
+        const splitNumber = this.get('splitNumber');
+        const scale = this.get('scale');
+        const axisLine = this.get('axisLine');
+        const axisTick = this.get('axisTick');
         // let axisType = this.get('axisType');
-        let axisLabel = this.get('axisLabel');
-        let nameTextStyle = this.get('axisName');
-        let showName = this.get(['axisName', 'show']);
-        let nameFormatter = this.get(['axisName', 'formatter']);
-        let nameGap = this.get('axisNameGap');
-        let triggerEvent = this.get('triggerEvent');
+        const axisLabel = this.get('axisLabel');
+        const nameTextStyle = this.get('axisName');
+        const showName = this.get(['axisName', 'show']);
+        const nameFormatter = this.get(['axisName', 'formatter']);
+        const nameGap = this.get('axisNameGap');
+        const triggerEvent = this.get('triggerEvent');
 
-        let indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
+        const indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
             // PENDING
             if (indicatorOpt.max != null && indicatorOpt.max > 0 && !indicatorOpt.min) {
                 indicatorOpt.min = 0;
@@ -143,7 +143,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 innerIndicatorOpt.name = '';
             }
             if (typeof nameFormatter === 'string') {
-                let indName = innerIndicatorOpt.name;
+                const indName = innerIndicatorOpt.name;
                 innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
             }
             else if (typeof nameFormatter === 'function') {
@@ -151,7 +151,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                     innerIndicatorOpt.name, innerIndicatorOpt
                 );
             }
-            let model = zrUtil.extend(
+            const model = zrUtil.extend(
                 new Model(innerIndicatorOpt, null, this.ecModel),
                 AxisModelCommonMixin.prototype
             ) as AxisBaseModel<InnerIndicatorAxisOption>;

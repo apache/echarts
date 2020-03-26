@@ -70,15 +70,15 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
     setColor: ECSymbol['setColor'];
 
     buildPath(path: PathProxy | CanvasRenderingContext2D, shape: LargeSymbolPathShape) {
-        let points = shape.points;
-        let size = shape.size;
+        const points = shape.points;
+        const size = shape.size;
 
-        let symbolProxy = this.symbolProxy;
-        let symbolProxyShape = symbolProxy.shape;
-        let ctx = (path as PathProxy).getContext
+        const symbolProxy = this.symbolProxy;
+        const symbolProxyShape = symbolProxy.shape;
+        const ctx = (path as PathProxy).getContext
             ? (path as PathProxy).getContext()
             : path as CanvasRenderingContext2D;
-        let canBoost = ctx && size[0] < BOOST_SIZE_THRESHOLD;
+        const canBoost = ctx && size[0] < BOOST_SIZE_THRESHOLD;
 
         // Do draw in afterBrush.
         if (canBoost) {
@@ -89,8 +89,8 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
         this._ctx = null;
 
         for (let i = 0; i < points.length;) {
-            let x = points[i++];
-            let y = points[i++];
+            const x = points[i++];
+            const y = points[i++];
 
             if (isNaN(x) || isNaN(y)) {
                 continue;
@@ -109,10 +109,10 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
     }
 
     afterBrush() {
-        let shape = this.shape;
-        let points = shape.points;
-        let size = shape.size;
-        let ctx = this._ctx;
+        const shape = this.shape;
+        const points = shape.points;
+        const size = shape.size;
+        const ctx = this._ctx;
 
         if (!ctx) {
             return;
@@ -120,8 +120,8 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 
         // PENDING If style or other canvas status changed?
         for (let i = 0; i < points.length;) {
-            let x = points[i++];
-            let y = points[i++];
+            const x = points[i++];
+            const y = points[i++];
             if (isNaN(x) || isNaN(y)) {
                 continue;
             }
@@ -141,20 +141,20 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
         // TODO ???
         // Consider transform
 
-        let shape = this.shape;
-        let points = shape.points;
-        let size = shape.size;
+        const shape = this.shape;
+        const points = shape.points;
+        const size = shape.size;
 
-        let w = Math.max(size[0], 4);
-        let h = Math.max(size[1], 4);
+        const w = Math.max(size[0], 4);
+        const h = Math.max(size[1], 4);
 
         // Not consider transform
         // Treat each element as a rect
         // top down traverse
         for (let idx = points.length / 2 - 1; idx >= 0; idx--) {
-            let i = idx * 2;
-            let x0 = points[i] - w / 2;
-            let y0 = points[i + 1] - h / 2;
+            const i = idx * 2;
+            const x0 = points[i] - w / 2;
+            const y0 = points[i + 1] - h / 2;
             if (x >= x0 && y >= y0 && x <= x0 + w && y <= y0 + h) {
                 return idx;
             }
@@ -183,7 +183,7 @@ class LargeSymbolDraw {
      */
     updateData(data: List, opt?: UpdateOpt) {
         this.group.removeAll();
-        let symbolEl = new LargeSymbolPath({
+        const symbolEl = new LargeSymbolPath({
             rectHover: true,
             cursor: 'default'
         });
@@ -205,8 +205,8 @@ class LargeSymbolDraw {
         let points = data.getLayout('symbolPoints');
         this.group.eachChild(function (child: LargeSymbolPath) {
             if (child.startIndex != null) {
-                let len = (child.endIndex - child.startIndex) * 2;
-                let byteOffset = child.startIndex * 4 * 2;
+                const len = (child.endIndex - child.startIndex) * 2;
+                const byteOffset = child.startIndex * 4 * 2;
                 points = new Float32Array(points.buffer, byteOffset, len);
             }
             child.setShape('points', points);
@@ -261,7 +261,7 @@ class LargeSymbolDraw {
         isIncremental: boolean,
         opt: UpdateOpt
     ) {
-        let hostModel = data.hostModel;
+        const hostModel = data.hostModel;
 
         opt = opt || {};
         // TODO
@@ -275,7 +275,7 @@ class LargeSymbolDraw {
         //     ));
         // }
         // else {
-        let size = data.getVisual('symbolSize');
+        const size = data.getVisual('symbolSize');
         symbolEl.setShape('size', (size instanceof Array) ? size : [size, size]);
         // }
 
@@ -287,7 +287,7 @@ class LargeSymbolDraw {
         // Use symbolProxy setColor method
         symbolEl.setColor = symbolEl.symbolProxy.setColor;
 
-        let extrudeShadow = symbolEl.shape.size[0] < BOOST_SIZE_THRESHOLD;
+        const extrudeShadow = symbolEl.shape.size[0] < BOOST_SIZE_THRESHOLD;
         symbolEl.useStyle(
             // Draw shadow when doing fillRect is extremely slow.
             hostModel.getModel('itemStyle').getItemStyle(
@@ -295,19 +295,19 @@ class LargeSymbolDraw {
             )
         );
 
-        let visualColor = data.getVisual('color');
+        const visualColor = data.getVisual('color');
         if (visualColor) {
             symbolEl.setColor(visualColor);
         }
 
         if (!isIncremental) {
-            let ecData = graphic.getECData(symbolEl);
+            const ecData = graphic.getECData(symbolEl);
             // Enable tooltip
             // PENDING May have performance issue when path is extremely large
             ecData.seriesIndex = (hostModel as SeriesModel).seriesIndex;
             symbolEl.on('mousemove', function (e) {
                 ecData.dataIndex = null;
-                let dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
+                const dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
                 if (dataIndex >= 0) {
                     // Provide dataIndex for tooltip
                     ecData.dataIndex = dataIndex + (symbolEl.startIndex || 0);
@@ -323,7 +323,7 @@ class LargeSymbolDraw {
     }
 
     _clearIncremental() {
-        let incremental = this._incremental;
+        const incremental = this._incremental;
         if (incremental) {
             incremental.clearDisplaybles();
         }

@@ -37,12 +37,12 @@ function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
 }
 
 function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
-    let valueDim = data.mapDimension('value');
-    let valueArr = data.mapArray(valueDim, function (val: number) {
+    const valueDim = data.mapDimension('value');
+    const valueArr = data.mapArray(valueDim, function (val: number) {
         return val;
     });
-    let indices: number[] = [];
-    let isAscending = sort === 'ascending';
+    const indices: number[] = [];
+    const isAscending = sort === 'ascending';
     for (let i = 0, len = data.count(); i < len; i++) {
         indices[i] = i;
     }
@@ -63,16 +63,16 @@ function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
 
 function labelLayout(data: List) {
     data.each(function (idx) {
-        let itemModel = data.getItemModel(idx) as Model<FunnelDataItem>;
-        let labelModel = itemModel.getModel('label');
-        let labelPosition = labelModel.get('position');
+        const itemModel = data.getItemModel(idx) as Model<FunnelDataItem>;
+        const labelModel = itemModel.getModel('label');
+        const labelPosition = labelModel.get('position');
 
-        let labelLineModel = itemModel.getModel('labelLine');
+        const labelLineModel = itemModel.getModel('labelLine');
 
-        let layout = data.getItemLayout(idx);
-        let points = layout.points;
+        const layout = data.getItemLayout(idx);
+        const points = layout.points;
 
-        let isLabelInside = labelPosition === 'inner'
+        const isLabelInside = labelPosition === 'inner'
             || labelPosition === 'inside' || labelPosition === 'center'
             || labelPosition === 'insideLeft' || labelPosition === 'insideRight';
 
@@ -105,7 +105,7 @@ function labelLayout(data: List) {
             let x1;
             let y1;
             let x2;
-            let labelLineLen = labelLineModel.get('length');
+            const labelLineLen = labelLineModel.get('length');
             if (labelPosition === 'left') {
                 // Left side
                 x1 = (points[3][0] + points[0][0]) / 2;
@@ -162,7 +162,7 @@ function labelLayout(data: List) {
                 textX = x2 + 5;
                 textAlign = 'left';
             }
-            let y2 = y1;
+            const y2 = y1;
 
             linePoints = [[x1, y1], [x2, y2]];
             textY = y2;
@@ -181,17 +181,17 @@ function labelLayout(data: List) {
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
-        let data = seriesModel.getData();
-        let valueDim = data.mapDimension('value');
-        let sort = seriesModel.get('sort');
-        let viewRect = getViewRect(seriesModel, api);
+        const data = seriesModel.getData();
+        const valueDim = data.mapDimension('value');
+        const sort = seriesModel.get('sort');
+        const viewRect = getViewRect(seriesModel, api);
         let indices = getSortedIndices(data, sort);
 
-        let sizeExtent = [
+        const sizeExtent = [
             parsePercent(seriesModel.get('minSize'), viewRect.width),
             parsePercent(seriesModel.get('maxSize'), viewRect.width)
         ];
-        let dataExtent = data.getDataExtent(valueDim);
+        const dataExtent = data.getDataExtent(valueDim);
         let min = seriesModel.get('min');
         let max = seriesModel.get('max');
         if (min == null) {
@@ -201,16 +201,16 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
             max = dataExtent[1];
         }
 
-        let funnelAlign = seriesModel.get('funnelAlign');
+        const funnelAlign = seriesModel.get('funnelAlign');
         let gap = seriesModel.get('gap');
         let itemHeight = (viewRect.height - gap * (data.count() - 1)) / data.count();
 
         let y = viewRect.y;
 
-        let getLinePoints = function (idx: number, offY: number) {
+        const getLinePoints = function (idx: number, offY: number) {
             // End point index is data.count() and we assign it 0
-            let val = data.get(valueDim, idx) as number || 0;
-            let itemWidth = linearMap(val, [min, max], sizeExtent, true);
+            const val = data.get(valueDim, idx) as number || 0;
+            const itemWidth = linearMap(val, [min, max], sizeExtent, true);
             let x0;
             switch (funnelAlign) {
                 case 'left':
@@ -238,10 +238,10 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         }
 
         for (let i = 0; i < indices.length; i++) {
-            let idx = indices[i];
-            let nextIdx = indices[i + 1];
+            const idx = indices[i];
+            const nextIdx = indices[i + 1];
 
-            let itemModel = data.getItemModel<FunnelDataItem>(idx);
+            const itemModel = data.getItemModel<FunnelDataItem>(idx);
             let height = itemModel.get(['itemStyle', 'height']);
             if (height == null) {
                 height = itemHeight;
@@ -253,8 +253,8 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
                 }
             }
 
-            let start = getLinePoints(idx, y);
-            let end = getLinePoints(nextIdx, y + height);
+            const start = getLinePoints(idx, y);
+            const end = getLinePoints(nextIdx, y + height);
 
             y += height + gap;
 

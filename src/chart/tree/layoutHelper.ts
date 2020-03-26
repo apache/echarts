@@ -70,16 +70,16 @@ export function init(inRoot: TreeNode) {
         thread: null
     };
 
-    let nodes = [root];
+    const nodes = [root];
     let node;
     let children;
 
     while (node = nodes.pop()) { // jshint ignore:line
         children = node.children;
         if (node.isExpand && children.length) {
-            let n = children.length;
+            const n = children.length;
             for (let i = n - 1; i >= 0; i--) {
-                let child = children[i];
+                const child = children[i];
                 child.hierNode = {
                     defaultAncestor: null,
                     ancestor: child,
@@ -108,12 +108,12 @@ export function init(inRoot: TreeNode) {
  * node is placed to the midpoint of its outermost children.
  */
 export function firstWalk(node: TreeLayoutNode, separation: SeparationFunc) {
-    let children = node.isExpand ? node.children : [];
-    let siblings = node.parentNode.children;
-    let subtreeW = node.hierNode.i ? siblings[node.hierNode.i - 1] : null;
+    const children = node.isExpand ? node.children : [];
+    const siblings = node.parentNode.children;
+    const subtreeW = node.hierNode.i ? siblings[node.hierNode.i - 1] : null;
     if (children.length) {
         executeShifts(node);
-        let midPoint = (children[0].hierNode.prelim + children[children.length - 1].hierNode.prelim) / 2;
+        const midPoint = (children[0].hierNode.prelim + children[children.length - 1].hierNode.prelim) / 2;
         if (subtreeW) {
             node.hierNode.prelim = subtreeW.hierNode.prelim + separation(node, subtreeW);
             node.hierNode.modifier = node.hierNode.prelim - midPoint;
@@ -143,7 +143,7 @@ export function firstWalk(node: TreeLayoutNode, separation: SeparationFunc) {
  * Computes all real x-coordinates by summing up the modifiers recursively.
  */
 export function secondWalk(node: TreeLayoutNode) {
-    let nodeX = node.hierNode.prelim + node.parentNode.hierNode.modifier;
+    const nodeX = node.hierNode.prelim + node.parentNode.hierNode.modifier;
     node.setLayout({x: nodeX}, true);
     node.hierNode.modifier += node.parentNode.hierNode.modifier;
 }
@@ -186,12 +186,12 @@ export function getViewRect(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
  * See the license statement at the head of this file.
  */
 function executeShifts(node: TreeLayoutNode) {
-    let children = node.children;
+    const children = node.children;
     let n = children.length;
     let shift = 0;
     let change = 0;
     while (--n >= 0) {
-        let child = children[n];
+        const child = children[n];
         child.hierNode.prelim += shift;
         child.hierNode.modifier += shift;
         change += child.hierNode.change;
@@ -235,7 +235,7 @@ function apportion(
             nodeOutRight = nextRight(nodeOutRight);
             nodeOutLeft = nextLeft(nodeOutLeft);
             nodeOutRight.hierNode.ancestor = subtreeV;
-            let shift = nodeInLeft.hierNode.prelim + sumInLeft - nodeInRight.hierNode.prelim
+            const shift = nodeInLeft.hierNode.prelim + sumInLeft - nodeInRight.hierNode.prelim
                     - sumInRight + separation(nodeInLeft, nodeInRight);
             if (shift > 0) {
                 moveSubtree(nextAncestor(nodeInLeft, subtreeV, ancestor), subtreeV, shift);
@@ -267,7 +267,7 @@ function apportion(
  * returns null if and only if node is on the highest depth of its subtree.
  */
 function nextRight(node: TreeLayoutNode): TreeLayoutNode {
-    let children = node.children;
+    const children = node.children;
     return children.length && node.isExpand ? children[children.length - 1] : node.hierNode.thread;
 }
 
@@ -277,7 +277,7 @@ function nextRight(node: TreeLayoutNode): TreeLayoutNode {
  * returns null if and only if node is on the highest depth of its subtree.
  */
 function nextLeft(node: TreeLayoutNode) {
-    let children = node.children;
+    const children = node.children;
     return children.length && node.isExpand ? children[0] : node.hierNode.thread;
 }
 
@@ -308,7 +308,7 @@ function moveSubtree(
     wr: TreeLayoutNode,
     shift: number
 ) {
-    let change = shift / (wr.hierNode.i - wl.hierNode.i);
+    const change = shift / (wr.hierNode.i - wl.hierNode.i);
     wr.hierNode.change -= change;
     wr.hierNode.shift += shift;
     wr.hierNode.modifier += shift;

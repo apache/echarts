@@ -53,33 +53,33 @@ class SunburstView extends ChartView {
         // @ts-ignore
         payload
     ) {
-        let self = this;
+        const self = this;
 
         this.seriesModel = seriesModel;
         this.api = api;
         this.ecModel = ecModel;
 
-        let data = seriesModel.getData();
-        let virtualRoot = data.tree.root as DrawTreeNode;
+        const data = seriesModel.getData();
+        const virtualRoot = data.tree.root as DrawTreeNode;
 
-        let newRoot = seriesModel.getViewRoot() as DrawTreeNode;
+        const newRoot = seriesModel.getViewRoot() as DrawTreeNode;
 
-        let group = this.group;
+        const group = this.group;
 
-        let renderLabelForZeroData = seriesModel.get('renderLabelForZeroData');
+        const renderLabelForZeroData = seriesModel.get('renderLabelForZeroData');
 
-        let newChildren: DrawTreeNode[] = [];
+        const newChildren: DrawTreeNode[] = [];
         newRoot.eachNode(function (node: DrawTreeNode) {
             newChildren.push(node);
         });
-        let oldChildren = this._oldChildren || [];
+        const oldChildren = this._oldChildren || [];
 
         dualTravel(newChildren, oldChildren);
 
         renderRollUp(virtualRoot, newRoot);
 
         if (payload && payload.highlight && payload.highlight.piece) {
-            let highlightPolicy = seriesModel.getShallow('highlightPolicy');
+            const highlightPolicy = seriesModel.getShallow('highlightPolicy');
             payload.highlight.piece.onEmphasis(highlightPolicy);
         }
         else if (payload && payload.unhighlight) {
@@ -112,8 +112,8 @@ class SunburstView extends ChartView {
             }
 
             function processNode(newIdx: number, oldIdx?: number) {
-                let newNode = newIdx == null ? null : newChildren[newIdx];
-                let oldNode = oldIdx == null ? null : oldChildren[oldIdx];
+                const newNode = newIdx == null ? null : newChildren[newIdx];
+                const oldNode = oldIdx == null ? null : oldChildren[oldIdx];
 
                 doRenderNode(newNode, oldNode);
             }
@@ -142,7 +142,7 @@ class SunburstView extends ChartView {
                 }
                 else if (newNode) {
                     // Add
-                    let piece = new SunburstPiece(
+                    const piece = new SunburstPiece(
                         newNode,
                         seriesModel,
                         ecModel
@@ -205,20 +205,20 @@ class SunburstView extends ChartView {
         this.group.off('click');
         this.group.on('click', (e) => {
             let targetFound = false;
-            let viewRoot = this.seriesModel.getViewRoot();
+            const viewRoot = this.seriesModel.getViewRoot();
             viewRoot.eachNode((node: DrawTreeNode) => {
                 if (!targetFound
                     && node.piece && node.piece.childAt(0) === e.target
                 ) {
-                    let nodeClick = node.getModel<SunburstSeriesNodeOption>().get('nodeClick');
+                    const nodeClick = node.getModel<SunburstSeriesNodeOption>().get('nodeClick');
                     if (nodeClick === 'rootToNode') {
                         this._rootToNode(node);
                     }
                     else if (nodeClick === 'link') {
-                        let itemModel = node.getModel<SunburstSeriesNodeOption>();
-                        let link = itemModel.get('link');
+                        const itemModel = node.getModel<SunburstSeriesNodeOption>();
+                        const link = itemModel.get('link');
                         if (link) {
-                            let linkTarget = itemModel.get('target', true)
+                            const linkTarget = itemModel.get('target', true)
                                 || '_blank';
                             window.open(link, linkTarget);
                         }
@@ -247,12 +247,12 @@ class SunburstView extends ChartView {
      * @implement
      */
     containPoint(point: number[], seriesModel: SunburstSeriesModel) {
-        let treeRoot = seriesModel.getData();
-        let itemLayout = treeRoot.getItemLayout(0);
+        const treeRoot = seriesModel.getData();
+        const itemLayout = treeRoot.getItemLayout(0);
         if (itemLayout) {
-            let dx = point[0] - itemLayout.cx;
-            let dy = point[1] - itemLayout.cy;
-            let radius = Math.sqrt(dx * dx + dy * dy);
+            const dx = point[0] - itemLayout.cx;
+            const dy = point[1] - itemLayout.cy;
+            const radius = Math.sqrt(dx * dx + dy * dy);
             return radius <= itemLayout.r && radius >= itemLayout.r0;
         }
     }

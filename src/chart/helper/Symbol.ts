@@ -61,7 +61,7 @@ class Symbol extends graphic.Group {
         // Remove paths created before
         this.removeAll();
 
-        let color = data.getItemVisual(idx, 'color');
+        const color = data.getItemVisual(idx, 'color');
 
         // let symbolPath = createSymbol(
         //     symbolType, -0.5, -0.5, 1, 1, color
@@ -69,7 +69,7 @@ class Symbol extends graphic.Group {
         // If width/height are set too small (e.g., set to 1) on ios10
         // and macOS Sierra, a circle stroke become a rect, no matter what
         // the scale is set. So we set width/height as 2. See #4150.
-        let symbolPath = createSymbol(
+        const symbolPath = createSymbol(
             symbolType, -1, -1, 2, 2, color, keepAspect
         );
 
@@ -134,13 +134,13 @@ class Symbol extends graphic.Group {
      * @param {number} z
      */
     setZ(zlevel: number, z: number) {
-        let symbolPath = this.childAt(0) as ECSymbol;
+        const symbolPath = this.childAt(0) as ECSymbol;
         symbolPath.zlevel = zlevel;
         symbolPath.z = z;
     }
 
     setDraggable(draggable: boolean) {
-        let symbolPath = this.childAt(0) as ECSymbol;
+        const symbolPath = this.childAt(0) as ECSymbol;
         symbolPath.draggable = draggable;
         symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
     }
@@ -151,13 +151,13 @@ class Symbol extends graphic.Group {
     updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
         this.silent = false;
 
-        let symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
-        let seriesModel = data.hostModel as SeriesModel;
-        let symbolSize = Symbol.getSymbolSize(data, idx);
-        let isInit = symbolType !== this._symbolType;
+        const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
+        const seriesModel = data.hostModel as SeriesModel;
+        const symbolSize = Symbol.getSymbolSize(data, idx);
+        const isInit = symbolType !== this._symbolType;
 
         if (isInit) {
-            let keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
+            const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
             this._createSymbol(symbolType, data, idx, symbolSize, keepAspect);
         }
         else {
@@ -172,9 +172,9 @@ class Symbol extends graphic.Group {
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
-            let fadeIn = seriesScope && seriesScope.fadeIn;
+            const fadeIn = seriesScope && seriesScope.fadeIn;
 
-            let target: PathProps = {
+            const target: PathProps = {
                 scale: symbolPath.scale.slice()
             };
             fadeIn && (target.style = {
@@ -196,9 +196,9 @@ class Symbol extends graphic.Group {
         symbolSize: number[],
         seriesScope?: SymbolDrawSeriesScope
     ) {
-        let symbolPath = this.childAt(0) as ECSymbol;
-        let seriesModel = data.hostModel as SeriesModel;
-        let color = data.getItemVisual(idx, 'color');
+        const symbolPath = this.childAt(0) as ECSymbol;
+        const seriesModel = data.hostModel as SeriesModel;
+        const color = data.getItemVisual(idx, 'color');
 
         // Reset style
         if (symbolPath.type !== 'image') {
@@ -226,7 +226,7 @@ class Symbol extends graphic.Group {
         let cursorStyle = seriesScope && seriesScope.cursorStyle;
 
         if (!seriesScope || data.hasItemOption) {
-            let itemModel = (seriesScope && seriesScope.itemModel)
+            const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
 
             // Color must be excluded.
@@ -246,7 +246,7 @@ class Symbol extends graphic.Group {
             hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
         }
 
-        let elStyle = symbolPath.style;
+        const elStyle = symbolPath.style;
 
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
@@ -264,13 +264,13 @@ class Symbol extends graphic.Group {
 
         symbolPath.setStyle(itemStyle);
 
-        let opacity = data.getItemVisual(idx, 'opacity');
+        const opacity = data.getItemVisual(idx, 'opacity');
         if (opacity != null) {
             elStyle.opacity = opacity;
         }
 
-        let liftZ = data.getItemVisual(idx, 'liftZ');
-        let z2Origin = symbolPath.__z2Origin;
+        const liftZ = data.getItemVisual(idx, 'liftZ');
+        const z2Origin = symbolPath.__z2Origin;
         if (liftZ != null) {
             if (z2Origin == null) {
                 symbolPath.__z2Origin = symbolPath.z2;
@@ -282,7 +282,7 @@ class Symbol extends graphic.Group {
             symbolPath.__z2Origin = null;
         }
 
-        let useNameLabel = seriesScope && seriesScope.useNameLabel;
+        const useNameLabel = seriesScope && seriesScope.useNameLabel;
 
         graphic.setLabelStyle(
             symbolPath, labelModel, hoverLabelModel,
@@ -310,7 +310,7 @@ class Symbol extends graphic.Group {
     fadeOut(cb: () => void, opt?: {
         keepLabel: boolean
     }) {
-        let symbolPath = this.childAt(0) as ECSymbol;
+        const symbolPath = this.childAt(0) as ECSymbol;
         // Avoid mistaken hover when fading out
         this.silent = symbolPath.silent = true;
         // Not show text when animating
@@ -331,7 +331,7 @@ class Symbol extends graphic.Group {
     }
 
     static getSymbolSize(data: List, idx: number) {
-        let symbolSize = data.getItemVisual(idx, 'symbolSize');
+        const symbolSize = data.getItemVisual(idx, 'symbolSize');
         return symbolSize instanceof Array
             ? symbolSize.slice()
             : [+symbolSize, +symbolSize];
@@ -346,9 +346,9 @@ function highDownOnUpdate(this: ECSymbol, fromState: DisplayState, toState: Disp
     }
 
     if (toState === 'emphasis') {
-        let scale = this.__symbolOriginalScale;
-        let ratio = scale[1] / scale[0];
-        let emphasisOpt = {
+        const scale = this.__symbolOriginalScale;
+        const ratio = scale[1] / scale[0];
+        const emphasisOpt = {
             scale: [
                 Math.max(scale[0] * 1.1, scale[0] + 3),
                 Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)

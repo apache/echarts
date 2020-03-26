@@ -59,12 +59,12 @@ class ParallelView extends ChartView {
             animation?: boolean
         }
     ) {
-        let dataGroup = this._dataGroup;
-        let data = seriesModel.getData();
-        let oldData = this._data;
-        let coordSys = seriesModel.coordinateSystem;
-        let dimensions = coordSys.dimensions;
-        let seriesScope = makeSeriesScope(seriesModel);
+        const dataGroup = this._dataGroup;
+        const data = seriesModel.getData();
+        const oldData = this._data;
+        const coordSys = seriesModel.coordinateSystem;
+        const dimensions = coordSys.dimensions;
+        const seriesScope = makeSeriesScope(seriesModel);
 
         data.diff(oldData)
             .add(add)
@@ -73,29 +73,29 @@ class ParallelView extends ChartView {
             .execute();
 
         function add(newDataIndex: number) {
-            let line = addEl(data, dataGroup, newDataIndex, dimensions, coordSys);
+            const line = addEl(data, dataGroup, newDataIndex, dimensions, coordSys);
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
 
         function update(newDataIndex: number, oldDataIndex: number) {
-            let line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
-            let points = createLinePoints(data, newDataIndex, dimensions, coordSys);
+            const line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
+            const points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);
-            let animationModel = (payload && payload.animation === false) ? null : seriesModel;
+            const animationModel = (payload && payload.animation === false) ? null : seriesModel;
             graphic.updateProps(line, {shape: {points: points}}, animationModel, newDataIndex);
 
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
 
         function remove(oldDataIndex: number) {
-            let line = oldData.getItemGraphicEl(oldDataIndex);
+            const line = oldData.getItemGraphicEl(oldDataIndex);
             dataGroup.remove(line);
         }
 
         // First create
         if (!this._initialized) {
             this._initialized = true;
-            let clipPath = createGridClipShape(
+            const clipPath = createGridClipShape(
                 coordSys, seriesModel, function () {
                     // Callback will be invoked immediately if there is no animation
                     setTimeout(function () {
@@ -116,13 +116,13 @@ class ParallelView extends ChartView {
     }
 
     incrementalRender(taskParams: StageHandlerProgressParams, seriesModel: ParallelSeriesModel, ecModel: GlobalModel) {
-        let data = seriesModel.getData();
-        let coordSys = seriesModel.coordinateSystem;
-        let dimensions = coordSys.dimensions;
-        let seriesScope = makeSeriesScope(seriesModel);
+        const data = seriesModel.getData();
+        const coordSys = seriesModel.coordinateSystem;
+        const dimensions = coordSys.dimensions;
+        const seriesScope = makeSeriesScope(seriesModel);
 
         for (let dataIndex = taskParams.start; dataIndex < taskParams.end; dataIndex++) {
-            let line = addEl(data, this._dataGroup, dataIndex, dimensions, coordSys);
+            const line = addEl(data, this._dataGroup, dataIndex, dimensions, coordSys);
             line.incremental = true;
             updateElCommon(line, data, dataIndex, seriesScope);
         }
@@ -138,9 +138,9 @@ class ParallelView extends ChartView {
 }
 
 function createGridClipShape(coordSys: Parallel, seriesModel: ParallelSeriesModel, cb: () => void) {
-    let parallelModel = coordSys.model;
-    let rect = coordSys.getRect();
-    let rectEl = new graphic.Rect({
+    const parallelModel = coordSys.model;
+    const rect = coordSys.getRect();
+    const rectEl = new graphic.Rect({
         shape: {
             x: rect.x,
             y: rect.y,
@@ -149,7 +149,7 @@ function createGridClipShape(coordSys: Parallel, seriesModel: ParallelSeriesMode
         }
     });
 
-    let dim = parallelModel.get('layout') === 'horizontal' ? 'width' as const : 'height' as const;
+    const dim = parallelModel.get('layout') === 'horizontal' ? 'width' as const : 'height' as const;
     rectEl.setShape(dim, 0);
     graphic.initProps(rectEl, {
         shape: {
@@ -161,10 +161,10 @@ function createGridClipShape(coordSys: Parallel, seriesModel: ParallelSeriesMode
 }
 
 function createLinePoints(data: List, dataIndex: number, dimensions: string[], coordSys: Parallel) {
-    let points = [];
+    const points = [];
     for (let i = 0; i < dimensions.length; i++) {
-        let dimName = dimensions[i];
-        let value = data.get(data.mapDimension(dimName), dataIndex);
+        const dimName = dimensions[i];
+        const value = data.get(data.mapDimension(dimName), dataIndex);
         if (!isEmptyValue(value, coordSys.getAxis(dimName).type)) {
             points.push(coordSys.dataToPoint(value, dimName));
         }
@@ -173,8 +173,8 @@ function createLinePoints(data: List, dataIndex: number, dimensions: string[], c
 }
 
 function addEl(data: List, dataGroup: graphic.Group, dataIndex: number, dimensions: string[], coordSys: Parallel) {
-    let points = createLinePoints(data, dataIndex, dimensions, coordSys);
-    let line = new graphic.Polyline({
+    const points = createLinePoints(data, dataIndex, dimensions, coordSys);
+    const line = new graphic.Polyline({
         shape: {points: points},
         silent: true,
         z2: 10
@@ -203,14 +203,14 @@ function updateElCommon(
     let lineStyle = seriesScope.lineStyle;
 
     if (data.hasItemOption) {
-        let lineStyleModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex)
+        const lineStyleModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex)
             .getModel('lineStyle');
         lineStyle = lineStyleModel.getLineStyle();
     }
 
     el.useStyle(lineStyle);
 
-    let elStyle = el.style;
+    const elStyle = el.style;
     elStyle.fill = null;
     // lineStyle.color have been set to itemVisual in module:echarts/visual/seriesColor.
     elStyle.stroke = data.getItemVisual(dataIndex, 'color');

@@ -209,7 +209,7 @@ class VisualMapping<VisualOption
     }
 
     mapValueToVisual(value: RawValue): VisualValue {
-        let normalized = this._normalizeData(value);
+        const normalized = this._normalizeData(value);
         return this._normalizedToVisual(normalized, value);
     }
 
@@ -221,7 +221,7 @@ class VisualMapping<VisualOption
         color: {
             applyVisual: makeApplyVisual('color'),
             getColorMapper: function () {
-                let thisOption = this.option;
+                const thisOption = this.option;
 
                 return zrUtil.bind(
                     thisOption.mappingMethod === 'category'
@@ -241,7 +241,7 @@ class VisualMapping<VisualOption
                         ): number[] | string {
                             // If output rgb array
                             // which will be much faster and useful in pixel manipulation
-                            let returnRGBArray = !!out;
+                            const returnRGBArray = !!out;
                             !isNormalized && (value = this._normalizeData(value));
                             out = zrColor.fastLerp(value as NormalizedValue, thisOption.parsedVisual, out);
                             return returnRGBArray ? out : zrColor.stringify(out, 'rgba');
@@ -305,7 +305,7 @@ class VisualMapping<VisualOption
 
         symbol: {
             applyVisual: function (value, getter, setter) {
-                let symbolCfg = this.mapValueToVisual(value);
+                const symbolCfg = this.mapValueToVisual(value);
                 setter('symbol', symbolCfg as string);
             },
             _normalizedToVisual: {
@@ -390,7 +390,7 @@ class VisualMapping<VisualOption
             : (isPrimary = true, null);
 
         VisualMapping.eachVisual(visual, function (v, key) {
-            let newVal = callback.call(context, v, key);
+            const newVal = callback.call(context, v, key);
             isPrimary ? (newVisual = newVal) : ((newVisual as Dictionary<T>)[key as string] = newVal as T);
         });
         return newVisual;
@@ -400,7 +400,7 @@ class VisualMapping<VisualOption
      * Retrieve visual properties from given object.
      */
     static retrieveVisuals(obj: Dictionary<any>): VisualOptionPiecewise {
-        let ret: VisualOptionPiecewise = {};
+        const ret: VisualOptionPiecewise = {};
         let hasVisual: boolean;
 
         obj && each(VisualMapping.visualHandlers, function (h, visualType: BuiltinVisualProperty) {
@@ -428,7 +428,7 @@ class VisualMapping<VisualOption
             visualTypes = visualTypes.slice();
         }
         else if (isObject(visualTypes)) {
-            let types: BuiltinVisualProperty[] = [];
+            const types: BuiltinVisualProperty[] = [];
             each(visualTypes, function (item: unknown, type: BuiltinVisualProperty) {
                 types.push(type);
             });
@@ -471,7 +471,7 @@ class VisualMapping<VisualOption
 
         // value has the higher priority.
         for (let i = 0, len = pieceList.length; i < len; i++) {
-            let pieceValue = pieceList[i].value;
+            const pieceValue = pieceList[i].value;
             if (pieceValue != null) {
                 if (pieceValue === value
                     // FIXME
@@ -488,9 +488,9 @@ class VisualMapping<VisualOption
         }
 
         for (let i = 0, len = pieceList.length; i < len; i++) {
-            let piece = pieceList[i];
-            let interval = piece.interval;
-            let close = piece.close;
+            const piece = pieceList[i];
+            const interval = piece.interval;
+            const close = piece.close;
 
             if (interval) {
                 if (interval[0] === -Infinity) {
@@ -523,7 +523,7 @@ class VisualMapping<VisualOption
         }
 
         function updatePossible(val: number, index: number) {
-            let newAbs = Math.abs(val - value);
+            const newAbs = Math.abs(val - value);
             if (newAbs < abs) {
                 abs = newAbs;
                 possibleI = index;
@@ -534,7 +534,7 @@ class VisualMapping<VisualOption
 }
 
 function preprocessForPiecewise(thisOption: VisualMappingInnerOption) {
-    let pieceList = thisOption.pieceList;
+    const pieceList = thisOption.pieceList;
     thisOption.hasSpecialVisual = false;
 
     zrUtil.each(pieceList, function (piece, index) {
@@ -559,11 +559,11 @@ function preprocessForSpecifiedCategory(thisOption: VisualMappingInnerOption) {
 
     // Process visual map input.
     if (!zrUtil.isArray(visual)) {
-        let visualArr: VisualValue[] = [];
+        const visualArr: VisualValue[] = [];
 
         if (zrUtil.isObject(visual)) {
             each(visual, function (v, cate) {
-                let index = categoryMap[cate];
+                const index = categoryMap[cate];
                 visualArr[index != null ? index : CATEGORY_DEFAULT_VISUAL_INDEX] = v;
             });
         }
@@ -585,8 +585,8 @@ function preprocessForSpecifiedCategory(thisOption: VisualMappingInnerOption) {
 }
 
 function normalizeVisualRange(thisOption: VisualMappingInnerOption, isCategory?: boolean) {
-    let visual = thisOption.visual;
-    let visualArr: VisualValue[] = [];
+    const visual = thisOption.visual;
+    const visualArr: VisualValue[] = [];
 
     if (zrUtil.isObject(visual)) {
         each(visual, function (v) {
@@ -597,7 +597,7 @@ function normalizeVisualRange(thisOption: VisualMappingInnerOption, isCategory?:
         visualArr.push(visual);
     }
 
-    let doNotNeedPair = {color: 1, symbol: 1};
+    const doNotNeedPair = {color: 1, symbol: 1};
 
     if (!isCategory
         && visualArr.length === 1
@@ -625,7 +625,7 @@ function makePartialColorVisualHandler(
 }
 
 function doMapToArray(this: VisualMapping<VisualOptionLinear>, normalized: NormalizedValue): VisualValue {
-    let visual = this.option.visual as VisualValue[];
+    const visual = this.option.visual as VisualValue[];
     return visual[
         Math.round(linearMap(normalized, [0, 1], [0, visual.length - 1], true))
     ] || {} as any;    // TODO {}?
@@ -638,7 +638,7 @@ function makeApplyVisual(visualType: string): VisualHandler['applyVisual'] {
 }
 
 function doMapCategory(this: VisualMapping<VisualOptionCategory>, normalized: NormalizedValue): VisualValue {
-    let visual = this.option.visual as Dictionary<any>;
+    const visual = this.option.visual as Dictionary<any>;
     return visual[
         (this.option.loop && normalized !== CATEGORY_DEFAULT_VISUAL_INDEX)
             ? normalized % visual.length
@@ -672,11 +672,11 @@ function createNormalizedToNumericVisual(sourceExtent: [number, number]): Visual
 }
 
 function getSpecifiedVisual(this: VisualMapping, value: number) {
-    let thisOption = this.option;
-    let pieceList = thisOption.pieceList;
+    const thisOption = this.option;
+    const pieceList = thisOption.pieceList;
     if (thisOption.hasSpecialVisual) {
-        let pieceIndex = VisualMapping.findPieceIndex(value, pieceList);
-        let piece = pieceList[pieceIndex];
+        const pieceIndex = VisualMapping.findPieceIndex(value, pieceList);
+        const piece = pieceList[pieceIndex];
         if (piece && piece.visual) {
             return piece.visual[this.type];
         }
@@ -703,8 +703,8 @@ const normalizers: { [key in MappingMethod]: Normalizer } = {
     },
 
     piecewise: function (value: RawValue): NormalizedValue {
-        let pieceList = this.option.pieceList;
-        let pieceIndex = VisualMapping.findPieceIndex(value as number, pieceList, true);
+        const pieceList = this.option.pieceList;
+        const pieceIndex = VisualMapping.findPieceIndex(value as number, pieceList, true);
         if (pieceIndex != null) {
             return linearMap(pieceIndex, [0, pieceList.length - 1], [0, 1], true);
         }

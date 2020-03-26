@@ -38,7 +38,7 @@ echarts.registerAction(
 
     function (payload: TimelineChangePayload, ecModel: GlobalModel) {
 
-        let timelineModel = ecModel.getComponent('timeline') as TimelineModel;
+        const timelineModel = ecModel.getComponent('timeline') as TimelineModel;
         if (timelineModel && payload.currentIndex != null) {
             timelineModel.setCurrentIndex(payload.currentIndex);
 
@@ -61,7 +61,7 @@ echarts.registerAction(
     {type: 'timelinePlayChange', event: 'timelinePlayChanged', update: 'update'},
 
     function (payload: TimelinePlayChangePayload, ecModel: GlobalModel) {
-        let timelineModel = ecModel.getComponent('timeline') as TimelineModel;
+        const timelineModel = ecModel.getComponent('timeline') as TimelineModel;
         if (timelineModel && payload.playState != null) {
             timelineModel.setPlayState(payload.playState);
         }

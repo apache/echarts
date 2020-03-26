@@ -116,8 +116,8 @@ class ContinuousView extends VisualMapView {
     private _buildView() {
         this.group.removeAll();
 
-        let visualMapModel = this.visualMapModel;
-        let thisGroup = this.group;
+        const visualMapModel = this.visualMapModel;
+        const thisGroup = this.group;
 
         this._orient = visualMapModel.get('orient');
         this._useHandle = visualMapModel.get('calculable');
@@ -126,7 +126,7 @@ class ContinuousView extends VisualMapView {
 
         this._renderBar(thisGroup);
 
-        let dataRangeText = visualMapModel.get('text');
+        const dataRangeText = visualMapModel.get('text');
         this._renderEndsText(thisGroup, dataRangeText, 0);
         this._renderEndsText(thisGroup, dataRangeText, 1);
 
@@ -155,24 +155,24 @@ class ContinuousView extends VisualMapView {
         let text = dataRangeText[1 - endsIndex];
         text = text != null ? text + '' : '';
 
-        let visualMapModel = this.visualMapModel;
-        let textGap = visualMapModel.get('textGap');
-        let itemSize = visualMapModel.itemSize;
+        const visualMapModel = this.visualMapModel;
+        const textGap = visualMapModel.get('textGap');
+        const itemSize = visualMapModel.itemSize;
 
-        let barGroup = this._shapes.barGroup;
-        let position = this._applyTransform(
+        const barGroup = this._shapes.barGroup;
+        const position = this._applyTransform(
             [
                 itemSize[0] / 2,
                 endsIndex === 0 ? -textGap : itemSize[1] + textGap
             ],
             barGroup
         ) as number[];
-        let align = this._applyTransform(
+        const align = this._applyTransform(
             endsIndex === 0 ? 'bottom' : 'top',
             barGroup
         );
-        let orient = this._orient;
-        let textStyleModel = this.visualMapModel.textStyleModel;
+        const orient = this._orient;
+        const textStyleModel = this.visualMapModel.textStyleModel;
 
         this.group.add(new graphic.Text({
             style: {
@@ -271,7 +271,7 @@ class ContinuousView extends VisualMapView {
                 : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
         ];
 
-        let shapes = this._shapes;
+        const shapes = this._shapes;
         shapes.handleThumbs[handleIndex] = handleThumb;
         shapes.handleLabelPoints[handleIndex] = handleLabelPoint;
         shapes.handleLabels[handleIndex] = handleLabel;
@@ -326,7 +326,7 @@ class ContinuousView extends VisualMapView {
 
         if (!isEnd) {
             // Transform dx, dy to bar coordination.
-            let vertex = this._applyTransform([dx as number, dy], this._shapes.barGroup, true) as number[];
+            const vertex = this._applyTransform([dx as number, dy], this._shapes.barGroup, true) as number[];
             this._updateInterval(handleIndex, vertex[1]);
 
             // Considering realtime, update view should be executed
@@ -353,11 +353,11 @@ class ContinuousView extends VisualMapView {
     }
 
     private _resetInterval() {
-        let visualMapModel = this.visualMapModel;
+        const visualMapModel = this.visualMapModel;
 
-        let dataInterval = this._dataInterval = visualMapModel.getSelected();
-        let dataExtent = visualMapModel.getExtent();
-        let sizeExtent = [0, visualMapModel.itemSize[1]];
+        const dataInterval = this._dataInterval = visualMapModel.getSelected();
+        const dataExtent = visualMapModel.getExtent();
+        const sizeExtent = [0, visualMapModel.itemSize[1]];
 
         this._handleEnds = [
             linearMap(dataInterval[0], dataExtent, sizeExtent, true),
@@ -373,9 +373,9 @@ class ContinuousView extends VisualMapView {
      */
     private _updateInterval(handleIndex: 0 | 1 | 'all', delta: number) {
         delta = delta || 0;
-        let visualMapModel = this.visualMapModel;
-        let handleEnds = this._handleEnds;
-        let sizeExtent = [0, visualMapModel.itemSize[1]];
+        const visualMapModel = this.visualMapModel;
+        const handleEnds = this._handleEnds;
+        const sizeExtent = [0, visualMapModel.itemSize[1]];
 
         sliderMove(
             delta,
@@ -386,7 +386,7 @@ class ContinuousView extends VisualMapView {
             0
         );
 
-        let dataExtent = visualMapModel.getExtent();
+        const dataExtent = visualMapModel.getExtent();
         // Update data interval.
         this._dataInterval = [
             linearMap(handleEnds[0], sizeExtent, dataExtent, true),
@@ -463,9 +463,9 @@ class ContinuousView extends VisualMapView {
         // Considering colorHue, which is not linear, so we have to sample
         // to calculate gradient color stops, but not only caculate head
         // and tail.
-        let sampleNumber = 100; // Arbitrary value.
-        let colorStops: LinearGradientObject['colorStops'] = [];
-        let step = (dataInterval[1] - dataInterval[0]) / sampleNumber;
+        const sampleNumber = 100; // Arbitrary value.
+        const colorStops: LinearGradientObject['colorStops'] = [];
+        const step = (dataInterval[1] - dataInterval[0]) / sampleNumber;
 
         colorStops.push({
             color: this.getControllerVisual(dataInterval[0], 'color', opts) as ColorString,
@@ -473,7 +473,7 @@ class ContinuousView extends VisualMapView {
         });
 
         for (let i = 1; i < sampleNumber; i++) {
-            let currValue = dataInterval[0] + step * i;
+            const currValue = dataInterval[0] + step * i;
             if (currValue > dataInterval[1]) {
                 break;
             }
@@ -492,7 +492,7 @@ class ContinuousView extends VisualMapView {
     }
 
     private _createBarPoints(handleEnds: number[], symbolSizes: number[]) {
-        let itemSize = this.visualMapModel.itemSize;
+        const itemSize = this.visualMapModel.itemSize;
 
         return [
             [itemSize[0] - symbolSizes[0], handleEnds[0]],
@@ -503,8 +503,8 @@ class ContinuousView extends VisualMapView {
     }
 
     private _createBarGroup(itemAlign: helper.ItemAlign) {
-        let orient = this._orient;
-        let inverse = this.visualMapModel.get('inverse');
+        const orient = this._orient;
+        const inverse = this.visualMapModel.get('inverse');
 
         return new graphic.Group(
             (orient === 'horizontal' && !inverse)
@@ -522,18 +522,18 @@ class ContinuousView extends VisualMapView {
             return;
         }
 
-        let shapes = this._shapes;
-        let visualMapModel = this.visualMapModel;
-        let handleThumbs = shapes.handleThumbs;
-        let handleLabels = shapes.handleLabels;
+        const shapes = this._shapes;
+        const visualMapModel = this.visualMapModel;
+        const handleThumbs = shapes.handleThumbs;
+        const handleLabels = shapes.handleLabels;
 
         each([0, 1], function (handleIndex) {
-            let handleThumb = handleThumbs[handleIndex];
+            const handleThumb = handleThumbs[handleIndex];
             handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
             handleThumb.position[1] = handleEnds[handleIndex];
 
             // Update handle label position.
-            let textPoint = graphic.applyTransform(
+            const textPoint = graphic.applyTransform(
                 shapes.handleLabelPoints[handleIndex],
                 graphic.getTransform(handleThumb, this.group)
             );
@@ -558,14 +558,14 @@ class ContinuousView extends VisualMapView {
         rangeSymbol?: string,
         halfHoverLinkSize?: number
     ) {
-        let visualMapModel = this.visualMapModel;
-        let dataExtent = visualMapModel.getExtent();
-        let itemSize = visualMapModel.itemSize;
-        let sizeExtent = [0, itemSize[1]];
-        let pos = linearMap(cursorValue, dataExtent, sizeExtent, true);
+        const visualMapModel = this.visualMapModel;
+        const dataExtent = visualMapModel.getExtent();
+        const itemSize = visualMapModel.itemSize;
+        const sizeExtent = [0, itemSize[1]];
+        const pos = linearMap(cursorValue, dataExtent, sizeExtent, true);
 
-        let shapes = this._shapes;
-        let indicator = shapes.indicator;
+        const shapes = this._shapes;
+        const indicator = shapes.indicator;
         if (!indicator) {
             return;
         }
@@ -576,12 +576,12 @@ class ContinuousView extends VisualMapView {
             !!rangeSymbol, halfHoverLinkSize, pos, itemSize[1]
         ));
 
-        let opts = {convertOpacityToAlpha: true};
-        let color = this.getControllerVisual(cursorValue, 'color', opts) as ColorString;
+        const opts = {convertOpacityToAlpha: true};
+        const color = this.getControllerVisual(cursorValue, 'color', opts) as ColorString;
         indicator.setStyle('fill', color);
 
         // Update handle label position.
-        let textPoint = graphic.applyTransform(
+        const textPoint = graphic.applyTransform(
             shapes.indicatorLabelPoint,
             graphic.getTransform(indicator, this.group)
         );
@@ -601,15 +601,15 @@ class ContinuousView extends VisualMapView {
     }
 
     private _enableHoverLinkToSeries() {
-        let self = this;
+        const self = this;
         this._shapes.barGroup
 
             .on('mousemove', function (e) {
                 self._hovering = true;
 
                 if (!self._dragging) {
-                    let itemSize = self.visualMapModel.itemSize;
-                    let pos = self._applyTransform(
+                    const itemSize = self.visualMapModel.itemSize;
+                    const pos = self._applyTransform(
                         [e.offsetX, e.offsetY], self._shapes.barGroup, true, true
                     );
                     // For hover link show when hover handle, which might be
@@ -631,7 +631,7 @@ class ContinuousView extends VisualMapView {
     }
 
     private _enableHoverLinkFromSeries() {
-        let zr = this.api.getZr();
+        const zr = this.api.getZr();
 
         if (this.visualMapModel.option.hoverLink) {
             zr.on('mouseover', this._hoverLinkFromSeriesMouseOver, this);
@@ -643,23 +643,23 @@ class ContinuousView extends VisualMapView {
     }
 
     private _doHoverLinkToSeries(cursorPos: number, hoverOnBar?: boolean) {
-        let visualMapModel = this.visualMapModel;
-        let itemSize = visualMapModel.itemSize;
+        const visualMapModel = this.visualMapModel;
+        const itemSize = visualMapModel.itemSize;
 
         if (!visualMapModel.option.hoverLink) {
             return;
         }
 
-        let sizeExtent = [0, itemSize[1]];
-        let dataExtent = visualMapModel.getExtent();
+        const sizeExtent = [0, itemSize[1]];
+        const dataExtent = visualMapModel.getExtent();
 
         // For hover link show when hover handle, which might be below or upper than sizeExtent.
         cursorPos = mathMin(mathMax(sizeExtent[0], cursorPos), sizeExtent[1]);
 
-        let halfHoverLinkSize = getHalfHoverLinkSize(visualMapModel, dataExtent, sizeExtent);
-        let hoverRange = [cursorPos - halfHoverLinkSize, cursorPos + halfHoverLinkSize];
-        let cursorValue = linearMap(cursorPos, sizeExtent, dataExtent, true);
-        let valueRange = [
+        const halfHoverLinkSize = getHalfHoverLinkSize(visualMapModel, dataExtent, sizeExtent);
+        const hoverRange = [cursorPos - halfHoverLinkSize, cursorPos + halfHoverLinkSize];
+        const cursorValue = linearMap(cursorPos, sizeExtent, dataExtent, true);
+        const valueRange = [
             linearMap(hoverRange[0], sizeExtent, dataExtent, true),
             linearMap(hoverRange[1], sizeExtent, dataExtent, true)
         ];
@@ -688,35 +688,35 @@ class ContinuousView extends VisualMapView {
         // When realtime is set as true, highlight will not show when hover
         // handle, because the label on handle, which displays a exact value
         // but not range, might mislead users.
-        let oldBatch = this._hoverLinkDataIndices;
+        const oldBatch = this._hoverLinkDataIndices;
         let newBatch: TargetDataIndices = [];
         if (hoverOnBar || useHoverLinkOnHandle(visualMapModel)) {
             newBatch = this._hoverLinkDataIndices = visualMapModel.findTargetDataIndices(valueRange);
         }
 
-        let resultBatches = modelUtil.compressBatches(oldBatch, newBatch);
+        const resultBatches = modelUtil.compressBatches(oldBatch, newBatch);
 
         this._dispatchHighDown('downplay', helper.makeHighDownBatch(resultBatches[0], visualMapModel));
         this._dispatchHighDown('highlight', helper.makeHighDownBatch(resultBatches[1], visualMapModel));
     }
 
     private _hoverLinkFromSeriesMouseOver(e: ElementEvent) {
-        let el = e.target;
-        let visualMapModel = this.visualMapModel;
+        const el = e.target;
+        const visualMapModel = this.visualMapModel;
 
         if (!el || getECData(el).dataIndex == null) {
             return;
         }
-        let ecData = getECData(el);
+        const ecData = getECData(el);
 
-        let dataModel = this.ecModel.getSeriesByIndex(ecData.seriesIndex);
+        const dataModel = this.ecModel.getSeriesByIndex(ecData.seriesIndex);
 
         if (!visualMapModel.isTargetSeries(dataModel)) {
             return;
         }
 
-        let data = dataModel.getData(ecData.dataType);
-        let value = data.get(visualMapModel.getDataDimension(data), ecData.dataIndex) as number;
+        const data = dataModel.getData(ecData.dataType);
+        const value = data.get(visualMapModel.getDataDimension(data), ecData.dataIndex) as number;
 
         if (!isNaN(value)) {
             this._showIndicator(value, value);
@@ -724,7 +724,7 @@ class ContinuousView extends VisualMapView {
     }
 
     private _hideIndicator() {
-        let shapes = this._shapes;
+        const shapes = this._shapes;
         shapes.indicator && shapes.indicator.attr('invisible', true);
         shapes.indicatorLabel && shapes.indicatorLabel.attr('invisible', true);
     }
@@ -732,7 +732,7 @@ class ContinuousView extends VisualMapView {
     private _clearHoverLinkToSeries() {
         this._hideIndicator();
 
-        let indices = this._hoverLinkDataIndices;
+        const indices = this._hoverLinkDataIndices;
         this._dispatchHighDown('downplay', helper.makeHighDownBatch(indices, this.visualMapModel));
 
         indices.length = 0;
@@ -741,7 +741,7 @@ class ContinuousView extends VisualMapView {
     private _clearHoverLinkFromSeries() {
         this._hideIndicator();
 
-        let zr = this.api.getZr();
+        const zr = this.api.getZr();
         zr.off('mouseover', this._hoverLinkFromSeriesMouseOver);
         zr.off('mouseout', this._hideIndicator);
     }
@@ -753,7 +753,7 @@ class ContinuousView extends VisualMapView {
         inverse?: boolean,
         global?: boolean
     ) {
-        let transform = graphic.getTransform(element, global ? null : this.group);
+        const transform = graphic.getTransform(element, global ? null : this.group);
 
         return zrUtil.isArray(vertex)
             ? graphic.applyTransform(vertex, transform, inverse)
@@ -825,7 +825,7 @@ function createIndicatorPoints(isRange: boolean, halfHoverLinkSize: number, pos:
 
 function getHalfHoverLinkSize(visualMapModel: ContinuousModel, dataExtent: number[], sizeExtent: number[]) {
     let halfHoverLinkSize = HOVER_LINK_SIZE / 2;
-    let hoverLinkDataSize = visualMapModel.get('hoverLinkDataSize');
+    const hoverLinkDataSize = visualMapModel.get('hoverLinkDataSize');
     if (hoverLinkDataSize) {
         halfHoverLinkSize = linearMap(hoverLinkDataSize, dataExtent, sizeExtent, true) / 2;
     }
@@ -833,7 +833,7 @@ function getHalfHoverLinkSize(visualMapModel: ContinuousModel, dataExtent: numbe
 }
 
 function useHoverLinkOnHandle(visualMapModel: ContinuousModel) {
-    let hoverLinkOnHandle = visualMapModel.get('hoverLinkOnHandle');
+    const hoverLinkOnHandle = visualMapModel.get('hoverLinkOnHandle');
     return !!(hoverLinkOnHandle == null ? visualMapModel.get('realtime') : hoverLinkOnHandle);
 }
 

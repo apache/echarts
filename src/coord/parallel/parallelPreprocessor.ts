@@ -54,15 +54,15 @@ function createParallelIfNeeded(option: ECUnitOption): void {
  * @inner
  */
 function mergeAxisOptionFromParallel(option: ECUnitOption): void {
-    let axes = modelUtil.normalizeToArray(option.parallelAxis);
+    const axes = modelUtil.normalizeToArray(option.parallelAxis);
 
     zrUtil.each(axes, function (axisOption) {
         if (!zrUtil.isObject(axisOption)) {
             return;
         }
 
-        let parallelIndex = axisOption.parallelIndex || 0;
-        let parallelOption = modelUtil.normalizeToArray(option.parallel)[parallelIndex];
+        const parallelIndex = axisOption.parallelIndex || 0;
+        const parallelOption = modelUtil.normalizeToArray(option.parallel)[parallelIndex];
 
         if (parallelOption && parallelOption.parallelAxisDefault) {
             zrUtil.merge(axisOption, parallelOption.parallelAxisDefault, false);

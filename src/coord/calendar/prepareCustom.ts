@@ -21,8 +21,8 @@ import Calendar from './Calendar';
 import { OptionDataValueDate } from '../../util/types';
 
 export default function (coordSys: Calendar) {
-    let rect = coordSys.getRect();
-    let rangeInfo = coordSys.getRangeInfo();
+    const rect = coordSys.getRect();
+    const rangeInfo = coordSys.getRangeInfo();
 
     return {
         coordSys: {

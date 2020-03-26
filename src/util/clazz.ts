@@ -31,9 +31,9 @@ const IS_EXTENDED_CLASS = '___EC__EXTENDED_CLASS___' as const;
  * @public
  */
 export function parseClassType(componentType: ComponentFullType): ComponentTypeInfo {
-    let ret = {main: '', sub: ''};
+    const ret = {main: '', sub: ''};
     if (componentType) {
-        let typeArr = componentType.split(TYPE_DELIMITER);
+        const typeArr = componentType.split(TYPE_DELIMITER);
         ret.main = typeArr[0] || '';
         ret.sub = typeArr[1] || '';
     }
@@ -91,7 +91,7 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
             });
         }
 
-        let superClass = this;
+        const superClass = this;
         // For backward compat, we both support ts class inheritance and this
         // "extend" approach.
         // The constructor should keep the same behavior as ts class inheritance:
@@ -99,7 +99,7 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         // constructor.
         // If this constructor/$constructor is declared, it is responsible for
         // calling the super constructor.
-        let ExtendedClass = (class {
+        const ExtendedClass = (class {
             constructor() {
                 if (!proto.$constructor) {
                     superClass.apply(this, arguments);
@@ -164,7 +164,7 @@ let classBase = Math.round(Math.random() * 10);
  * ```
  */
 export function enableClassCheck(target: CheckableConstructor): void {
-    let classAttr = ['__\0is_clz', classBase++].join('_');
+    const classAttr = ['__\0is_clz', classBase++].join('_');
     target.prototype[classAttr] = true;
 
     if (__DEV__) {
@@ -228,7 +228,7 @@ export function enableClassManagement(
      *     componentClass, when componentType is 'xxx'
      *     or Object.<subKey, componentClass>, when componentType is 'xxx.yy'
      */
-    let storage: {
+    const storage: {
         [componentMainType: string]: (Constructor | SubclassContainer)
     } = {};
 
@@ -241,7 +241,7 @@ export function enableClassManagement(
         // otherwise users have to mount `type` on prototype manually.
         // For backward compat and enable instance visit type via `this.type`,
         // we stil support fetch `type` from prototype.
-        let componentFullType = (clz as any).type || clz.prototype.type;
+        const componentFullType = (clz as any).type || clz.prototype.type;
 
         if (componentFullType) {
             checkClassType(componentFullType);
@@ -249,7 +249,7 @@ export function enableClassManagement(
             // If only static type declared, we assign it to prototype mandatorily.
             clz.prototype.type = componentFullType;
 
-            let componentTypeInfo = parseClassType(componentFullType);
+            const componentTypeInfo = parseClassType(componentFullType);
 
             if (!componentTypeInfo.sub) {
                 if (__DEV__) {
@@ -260,7 +260,7 @@ export function enableClassManagement(
                 storage[componentTypeInfo.main] = clz;
             }
             else if (componentTypeInfo.sub !== IS_CONTAINER) {
-                let container = makeContainer(componentTypeInfo);
+                const container = makeContainer(componentTypeInfo);
                 container[componentTypeInfo.sub] = clz;
             }
         }
@@ -290,10 +290,10 @@ export function enableClassManagement(
     };
 
     target.getClassesByMainType = function (componentType: ComponentFullType): Constructor[] {
-        let componentTypeInfo = parseClassType(componentType);
+        const componentTypeInfo = parseClassType(componentType);
 
-        let result: Constructor[] = [];
-        let obj = storage[componentTypeInfo.main];
+        const result: Constructor[] = [];
+        const obj = storage[componentTypeInfo.main];
 
         if (obj && (obj as SubclassContainer)[IS_CONTAINER]) {
             zrUtil.each(obj as SubclassContainer, function (o, type) {
@@ -309,7 +309,7 @@ export function enableClassManagement(
 
     target.hasClass = function (componentType: ComponentFullType): boolean {
         // Just consider componentType.main.
-        let componentTypeInfo = parseClassType(componentType);
+        const componentTypeInfo = parseClassType(componentType);
         return !!storage[componentTypeInfo.main];
     };
 
@@ -317,7 +317,7 @@ export function enableClassManagement(
      * @return Like ['aa', 'bb'], but can not be ['aa.xx']
      */
     target.getAllClassMainTypes = function (): ComponentMainType[] {
-        let types: string[] = [];
+        const types: string[] = [];
         zrUtil.each(storage, function (obj, type) {
             types.push(type);
         });
@@ -328,8 +328,8 @@ export function enableClassManagement(
      * If a main type is container and has sub types
      */
     target.hasSubTypes = function (componentType: ComponentFullType): boolean {
-        let componentTypeInfo = parseClassType(componentType);
-        let obj = storage[componentTypeInfo.main];
+        const componentTypeInfo = parseClassType(componentType);
+        const obj = storage[componentTypeInfo.main];
         return obj && (obj as SubclassContainer)[IS_CONTAINER];
     };
 
@@ -344,10 +344,10 @@ export function enableClassManagement(
 
     // FIXME:TS remove `registerWhenExtend` finally when ts migration completed?
     if (options.registerWhenExtend) {
-        let originalExtend = (target as any).extend;
+        const originalExtend = (target as any).extend;
         if (originalExtend) {
             (target as any).extend = function (proto: any) {
-                let ExtendedClass = originalExtend.call(this, proto);
+                const ExtendedClass = originalExtend.call(this, proto);
                 return target.registerClass(ExtendedClass);
             };
         }

@@ -73,15 +73,15 @@ function boxLayout(
     let currentLineMaxSize = 0;
 
     group.eachChild(function (child, idx) {
-        let position = child.position;
-        let rect = child.getBoundingRect();
-        let nextChild = group.childAt(idx + 1);
-        let nextChildRect = nextChild && nextChild.getBoundingRect();
+        const position = child.position;
+        const rect = child.getBoundingRect();
+        const nextChild = group.childAt(idx + 1);
+        const nextChildRect = nextChild && nextChild.getBoundingRect();
         let nextX: number;
         let nextY: number;
 
         if (orient === 'horizontal') {
-            let moveX = rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);
+            const moveX = rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);
             nextX = x + moveX;
             // Wrap when width exceeds maxWidth or meet a `newline` group
             // FIXME compare before adding gap?
@@ -97,7 +97,7 @@ function boxLayout(
             }
         }
         else {
-            let moveY = rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
+            const moveY = rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
             nextY = y + moveY;
             // Wrap when width exceeds maxHeight or meet a `newline` group
             if (nextY > maxHeight || (child as NewlineElement).newline) {
@@ -132,7 +132,7 @@ function boxLayout(
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
  */
-export let box = boxLayout;
+export const box = boxLayout;
 
 /**
  * VBox layouting
@@ -141,7 +141,7 @@ export let box = boxLayout;
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
  */
-export let vbox = zrUtil.curry(boxLayout, 'vertical');
+export const vbox = zrUtil.curry(boxLayout, 'vertical');
 
 /**
  * HBox layouting
@@ -150,7 +150,7 @@ export let vbox = zrUtil.curry(boxLayout, 'vertical');
  * @param {number} [width=Infinity]
  * @param {number} [height=Infinity]
  */
-export let hbox = zrUtil.curry(boxLayout, 'horizontal');
+export const hbox = zrUtil.curry(boxLayout, 'horizontal');
 
 /**
  * If x or x2 is not specified or 'center' 'left' 'right',
@@ -168,8 +168,8 @@ export function getAvailableSize(
     containerRect: { width: number, height: number },
     margin?: number[] | number
 ) {
-    let containerWidth = containerRect.width;
-    let containerHeight = containerRect.height;
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
 
     let x = parsePercent(positionInfo.left, containerWidth);
     let y = parsePercent(positionInfo.top, containerHeight);
@@ -201,19 +201,19 @@ export function getLayoutRect(
 ): LayoutRect {
     margin = formatUtil.normalizeCssArray(margin || 0);
 
-    let containerWidth = containerRect.width;
-    let containerHeight = containerRect.height;
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
 
     let left = parsePercent(positionInfo.left, containerWidth);
     let top = parsePercent(positionInfo.top, containerHeight);
-    let right = parsePercent(positionInfo.right, containerWidth);
-    let bottom = parsePercent(positionInfo.bottom, containerHeight);
+    const right = parsePercent(positionInfo.right, containerWidth);
+    const bottom = parsePercent(positionInfo.bottom, containerHeight);
     let width = parsePercent(positionInfo.width, containerWidth);
     let height = parsePercent(positionInfo.height, containerHeight);
 
-    let verticalMargin = margin[2] + margin[0];
-    let horizontalMargin = margin[1] + margin[3];
-    let aspect = positionInfo.aspect;
+    const verticalMargin = margin[2] + margin[0];
+    const horizontalMargin = margin[1] + margin[3];
+    const aspect = positionInfo.aspect;
 
     // If width is not specified, calculate width from left and right
     if (isNaN(width)) {
@@ -287,7 +287,7 @@ export function getLayoutRect(
         height = containerHeight - verticalMargin - top - (bottom || 0);
     }
 
-    let rect = new BoundingRect(left + margin[3], top + margin[0], width, height) as LayoutRect;
+    const rect = new BoundingRect(left + margin[3], top + margin[0], width, height) as LayoutRect;
     rect.margin = margin;
     return rect;
 }
@@ -343,7 +343,7 @@ export function positionElement(
 ) {
     const h = !opt || !opt.hv || opt.hv[0];
     const v = !opt || !opt.hv || opt.hv[1];
-    let boundingMode = opt && opt.boundingMode || 'all';
+    const boundingMode = opt && opt.boundingMode || 'all';
 
     if (!h && !v) {
         return;
@@ -358,7 +358,7 @@ export function positionElement(
     else {
         rect = el.getBoundingRect();
         if (el.needLocalTransform()) {
-            let transform = el.getLocalTransform();
+            const transform = el.getLocalTransform();
             // Notice: raw rect may be inner object of el,
             // which should not be modified.
             rect = rect.clone();
@@ -379,9 +379,9 @@ export function positionElement(
     // Because 'tranlate' is the last step in transform
     // (see zrender/core/Transformable#getLocalTransform),
     // we can just only modify el.position to get final result.
-    let elPos = el.position;
-    let dx = h ? layoutRect.x - rect.x : 0;
-    let dy = v ? layoutRect.y - rect.y : 0;
+    const elPos = el.position;
+    const dx = h ? layoutRect.x - rect.x : 0;
+    const dy = v ? layoutRect.y - rect.y : 0;
 
     el.attr('position', boundingMode === 'raw' ? [dx, dy] : [elPos[0] + dx, elPos[1] + dy]);
 }
@@ -396,7 +396,7 @@ export function sizeCalculable(option: BoxLayoutOptionMixin, hvIdx: number): boo
 }
 
 export function fetchLayoutMode(ins: any): ComponentLayoutMode {
-    let layoutMode = ins.layoutMode || ins.constructor.layoutMode;
+    const layoutMode = ins.layoutMode || ins.constructor.layoutMode;
     return zrUtil.isObject(layoutMode)
         ? layoutMode
         : layoutMode
@@ -435,18 +435,18 @@ export function mergeLayoutParam<T extends BoxLayoutOptionMixin>(
     let ignoreSize = opt && opt.ignoreSize;
     !zrUtil.isArray(ignoreSize) && (ignoreSize = [ignoreSize, ignoreSize]);
 
-    let hResult = merge(HV_NAMES[0], 0);
-    let vResult = merge(HV_NAMES[1], 1);
+    const hResult = merge(HV_NAMES[0], 0);
+    const vResult = merge(HV_NAMES[1], 1);
 
     copy(HV_NAMES[0], targetOption, hResult);
     copy(HV_NAMES[1], targetOption, vResult);
 
     function merge(names: typeof HV_NAMES[number], hvIdx: number) {
-        let newParams: BoxLayoutOptionMixin = {};
+        const newParams: BoxLayoutOptionMixin = {};
         let newValueCount = 0;
-        let merged: BoxLayoutOptionMixin = {};
+        const merged: BoxLayoutOptionMixin = {};
         let mergedValueCount = 0;
-        let enoughParamNumber = 2;
+        const enoughParamNumber = 2;
 
         each(names, function (name: BoxLayoutKeys) {
             merged[name] = targetOption[name];
@@ -486,7 +486,7 @@ export function mergeLayoutParam<T extends BoxLayoutOptionMixin>(
         else {
             // Chose another param from targetOption by priority.
             for (let i = 0; i < names.length; i++) {
-                let name = names[i];
+                const name = names[i];
                 if (!hasProp(newParams, name) && hasProp(targetOption, name)) {
                     newParams[name] = targetOption[name];
                     break;

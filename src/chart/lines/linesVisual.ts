@@ -36,9 +36,9 @@ const opacityQuery = ['lineStyle', 'opacity'] as const;
 const linesVisual: StageHandler = {
     seriesType: 'lines',
     reset(seriesModel: LinesSeriesModel) {
-        let symbolType = normalize(seriesModel.get('symbol'));
-        let symbolSize = normalize(seriesModel.get('symbolSize'));
-        let data = seriesModel.getData();
+        const symbolType = normalize(seriesModel.get('symbol'));
+        const symbolSize = normalize(seriesModel.get('symbolSize'));
+        const data = seriesModel.getData();
 
         data.setVisual('fromSymbol', symbolType && symbolType[0]);
         data.setVisual('toSymbol', symbolType && symbolType[1]);
@@ -47,10 +47,10 @@ const linesVisual: StageHandler = {
         data.setVisual('opacity', seriesModel.get(opacityQuery));
 
         function dataEach(data: List<LinesSeriesModel>, idx: number): void {
-            let itemModel = data.getItemModel(idx) as Model<LinesDataItemOption>;
-            let symbolType = normalize(itemModel.getShallow('symbol', true));
-            let symbolSize = normalize(itemModel.getShallow('symbolSize', true));
-            let opacity = itemModel.get(opacityQuery);
+            const itemModel = data.getItemModel(idx) as Model<LinesDataItemOption>;
+            const symbolType = normalize(itemModel.getShallow('symbol', true));
+            const symbolSize = normalize(itemModel.getShallow('symbolSize', true));
+            const opacity = itemModel.get(opacityQuery);
 
             symbolType[0] && data.setItemVisual(idx, 'fromSymbol', symbolType[0]);
             symbolType[1] && data.setItemVisual(idx, 'toSymbol', symbolType[1]);

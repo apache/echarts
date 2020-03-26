@@ -81,7 +81,7 @@ class AxisView extends ComponentView {
      * @override
      */
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
-        let axisPointer = this._axisPointer;
+        const axisPointer = this._axisPointer;
         axisPointer && axisPointer.remove(api);
     }
 
@@ -94,11 +94,11 @@ class AxisView extends ComponentView {
     }
 
     private _doUpdateAxisPointerClass(axisModel: AxisBaseModel, api: ExtensionAPI, forceRender?: boolean) {
-        let Clazz = AxisView.getAxisPointerClass(this.axisPointerClass);
+        const Clazz = AxisView.getAxisPointerClass(this.axisPointerClass);
         if (!Clazz) {
             return;
         }
-        let axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
+        const axisPointerModel = axisPointerModelHelper.getAxisPointerModel(axisModel);
         axisPointerModel
             ? (this._axisPointer || (this._axisPointer = new Clazz()))
                 .render(axisModel, axisPointerModel, api, forceRender)

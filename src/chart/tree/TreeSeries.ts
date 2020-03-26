@@ -145,21 +145,21 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     getInitialData(option: TreeSeriesOption): List {
 
         //create an virtual root
-        let root: TreeSeriesNodeItemOption = {
+        const root: TreeSeriesNodeItemOption = {
             name: option.name,
             children: option.data
         };
 
-        let leaves = option.leaves || {};
+        const leaves = option.leaves || {};
 
-        let tree = Tree.createTree(root, this, {
+        const tree = Tree.createTree(root, this, {
             leaves: leaves
         }, beforeLink);
 
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
-                let node = tree.getNodeByDataIndex(idx);
-                let leavesModel = node.getLeavesModel();
+                const node = tree.getNodeByDataIndex(idx);
+                const leavesModel = node.getLeavesModel();
                 if (!node.children.length || !node.isExpand) {
                     model.parentModel = leavesModel;
                 }
@@ -175,12 +175,12 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
             }
         });
 
-        let expandAndCollapse = option.expandAndCollapse;
-        let expandTreeDepth = (expandAndCollapse && option.initialTreeDepth >= 0)
+        const expandAndCollapse = option.expandAndCollapse;
+        const expandTreeDepth = (expandAndCollapse && option.initialTreeDepth >= 0)
             ? option.initialTreeDepth : treeDepth;
 
         tree.root.eachNode('preorder', function (node) {
-            let item = node.hostTree.data.getRawDataItem(node.dataIndex) as TreeSeriesNodeItemOption;
+            const item = node.hostTree.data.getRawDataItem(node.dataIndex) as TreeSeriesNodeItemOption;
             // Add item.collapsed != null, because users can collapse node original in the series.data.
             node.isExpand = (item && item.collapsed != null)
                 ? !item.collapsed
@@ -217,10 +217,10 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
      * @override
      */
     formatTooltip(dataIndex: number): string {
-        let tree = this.getData().tree;
-        let realRoot = tree.root.children[0];
+        const tree = this.getData().tree;
+        const realRoot = tree.root.children[0];
         let node = tree.getNodeByDataIndex(dataIndex);
-        let value = node.getValue();
+        const value = node.getValue();
         let name = node.name;
         while (node && (node !== realRoot)) {
             name = node.parentNode.name + '.' + name;

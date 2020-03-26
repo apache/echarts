@@ -40,7 +40,7 @@ export default function (option) {
             delete opt.splitList;
         }
 
-        let pieces = opt.pieces;
+        const pieces = opt.pieces;
         if (pieces && zrUtil.isArray(pieces)) {
             each(pieces, function (piece) {
                 if (zrUtil.isObject(piece)) {

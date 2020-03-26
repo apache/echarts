@@ -71,7 +71,7 @@ class CandlestickView extends ChartView {
     }
 
     _updateDrawMode(seriesModel: CandlestickSeriesModel) {
-        let isLargeDraw = seriesModel.pipelineContext.large;
+        const isLargeDraw = seriesModel.pipelineContext.large;
         if (this._isLargeDraw == null || isLargeDraw !== this._isLargeDraw) {
             this._isLargeDraw = isLargeDraw;
             this._clear();
@@ -79,14 +79,14 @@ class CandlestickView extends ChartView {
     }
 
     _renderNormal(seriesModel: CandlestickSeriesModel) {
-        let data = seriesModel.getData();
-        let oldData = this._data;
-        let group = this.group;
-        let isSimpleBox = data.getLayout('isSimpleBox');
+        const data = seriesModel.getData();
+        const oldData = this._data;
+        const group = this.group;
+        const isSimpleBox = data.getLayout('isSimpleBox');
 
-        let needsClip = seriesModel.get('clip', true);
-        let coord = seriesModel.coordinateSystem;
-        let clipArea = coord.getArea && coord.getArea();
+        const needsClip = seriesModel.get('clip', true);
+        const coord = seriesModel.coordinateSystem;
+        const clipArea = coord.getArea && coord.getArea();
 
         // There is no old data only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
@@ -97,15 +97,13 @@ class CandlestickView extends ChartView {
         data.diff(oldData)
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
-                    let el;
-
-                    let itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
+                    const itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
 
                     if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
                         return;
                     }
 
-                    el = createNormalBox(itemLayout, newIdx, true);
+                    const el = createNormalBox(itemLayout, newIdx, true);
                     graphic.initProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
 
                     setBoxCommon(el, data, newIdx, isSimpleBox);
@@ -124,7 +122,7 @@ class CandlestickView extends ChartView {
                     return;
                 }
 
-                let itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
+                const itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
                 if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
                     group.remove(el);
                     return;
@@ -147,7 +145,7 @@ class CandlestickView extends ChartView {
                 data.setItemGraphicEl(newIdx, el);
             })
             .remove(function (oldIdx) {
-                let el = oldData.getItemGraphicEl(oldIdx);
+                const el = oldData.getItemGraphicEl(oldIdx);
                 el && group.remove(el);
             })
             .execute();
@@ -160,7 +158,7 @@ class CandlestickView extends ChartView {
 
         createLarge(seriesModel, this.group);
 
-        let clipPath = seriesModel.get('clip', true)
+        const clipPath = seriesModel.get('clip', true)
             ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
             : null;
         if (clipPath) {
@@ -173,15 +171,13 @@ class CandlestickView extends ChartView {
     }
 
     _incrementalRenderNormal(params: StageHandlerProgressParams, seriesModel: CandlestickSeriesModel) {
-        let data = seriesModel.getData();
-        let isSimpleBox = data.getLayout('isSimpleBox');
+        const data = seriesModel.getData();
+        const isSimpleBox = data.getLayout('isSimpleBox');
 
         let dataIndex;
         while ((dataIndex = params.next()) != null) {
-            let el;
-
-            let itemLayout = data.getItemLayout(dataIndex) as CandlestickItemLayout;
-            el = createNormalBox(itemLayout, dataIndex);
+            const itemLayout = data.getItemLayout(dataIndex) as CandlestickItemLayout;
+            const el = createNormalBox(itemLayout, dataIndex);
             setBoxCommon(el, data, dataIndex, isSimpleBox);
 
             el.incremental = true;
@@ -230,7 +226,7 @@ class NormalBoxPath extends Path<NormalBoxPathProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: NormalBoxPathShape) {
-        let ends = shape.points;
+        const ends = shape.points;
 
         if (this.__simpleBox) {
             ctx.moveTo(ends[4][0], ends[4][1]);
@@ -253,7 +249,7 @@ class NormalBoxPath extends Path<NormalBoxPathProps> {
 
 
 function createNormalBox(itemLayout: CandlestickItemLayout, dataIndex: number, isInit?: boolean) {
-    let ends = itemLayout.ends;
+    const ends = itemLayout.ends;
     return new NormalBoxPath({
         shape: {
             points: isInit
@@ -277,14 +273,14 @@ function isNormalBoxClipped(clipArea: CoordinateSystemClipArea, itemLayout: Cand
 }
 
 function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimpleBox?: boolean) {
-    let itemModel = data.getItemModel(dataIndex) as Model<CandlestickDataItemOption>;
-    let normalItemStyleModel = itemModel.getModel('itemStyle');
-    let color = data.getItemVisual(dataIndex, 'color');
-    let borderColor = data.getItemVisual(dataIndex, 'borderColor') || color;
+    const itemModel = data.getItemModel(dataIndex) as Model<CandlestickDataItemOption>;
+    const normalItemStyleModel = itemModel.getModel('itemStyle');
+    const color = data.getItemVisual(dataIndex, 'color');
+    const borderColor = data.getItemVisual(dataIndex, 'borderColor') || color;
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    let itemStyle = normalItemStyleModel.getItemStyle(SKIP_PROPS);
+    const itemStyle = normalItemStyleModel.getItemStyle(SKIP_PROPS);
 
     el.useStyle(itemStyle);
     el.style.strokeNoScale = true;
@@ -293,7 +289,7 @@ function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimple
 
     el.__simpleBox = isSimpleBox;
 
-    let hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
+    const hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
     graphic.enableHoverEmphasis(el, hoverStyle);
 }
 
@@ -334,10 +330,10 @@ class LargeBoxPath extends Path {
     buildPath(ctx: CanvasRenderingContext2D, shape: LargeBoxPathShape) {
         // Drawing lines is more efficient than drawing
         // a whole line or drawing rects.
-        let points = shape.points;
+        const points = shape.points;
         for (let i = 0; i < points.length;) {
             if (this.__sign === points[i++]) {
-                let x = points[i++];
+                const x = points[i++];
                 ctx.moveTo(x, points[i++]);
                 ctx.lineTo(x, points[i++]);
             }
@@ -349,15 +345,15 @@ class LargeBoxPath extends Path {
 }
 
 function createLarge(seriesModel: CandlestickSeriesModel, group: graphic.Group, incremental?: boolean) {
-    let data = seriesModel.getData();
-    let largePoints = data.getLayout('largePoints');
+    const data = seriesModel.getData();
+    const largePoints = data.getLayout('largePoints');
 
-    let elP = new LargeBoxPath({
+    const elP = new LargeBoxPath({
         shape: {points: largePoints},
         __sign: 1
     });
     group.add(elP);
-    let elN = new LargeBoxPath({
+    const elN = new LargeBoxPath({
         shape: {points: largePoints},
         __sign: -1
     });
@@ -373,13 +369,13 @@ function createLarge(seriesModel: CandlestickSeriesModel, group: graphic.Group, 
 }
 
 function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickSeriesModel, data: List) {
-    let suffix = sign > 0 ? 'P' : 'N';
-    let borderColor = data.getVisual('borderColor' + suffix)
+    const suffix = sign > 0 ? 'P' : 'N';
+    const borderColor = data.getVisual('borderColor' + suffix)
         || data.getVisual('color' + suffix);
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    let itemStyle = seriesModel.getModel('itemStyle').getItemStyle(SKIP_PROPS);
+    const itemStyle = seriesModel.getModel('itemStyle').getItemStyle(SKIP_PROPS);
 
     el.useStyle(itemStyle);
     el.style.fill = null;

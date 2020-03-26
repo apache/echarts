@@ -87,9 +87,9 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
     }
 
     getIcons() {
-        let model = this.model;
-        let availableIcons = model.get('icon', true);
-        let icons: ToolboxBrushFeatureOption['icon'] = {};
+        const model = this.model;
+        const availableIcons = model.get('icon', true);
+        const icons: ToolboxBrushFeatureOption['icon'] = {};
         zrUtil.each(model.get('type', true), function (type) {
             if (availableIcons[type]) {
                 icons[type] = availableIcons[type];
@@ -99,8 +99,8 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
     };
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI, type: IconType) {
-        let brushType = this._brushType;
-        let brushMode = this._brushMode;
+        const brushType = this._brushType;
+        const brushMode = this._brushMode;
 
         if (type === 'clear') {
             // Trigger parallel action firstly

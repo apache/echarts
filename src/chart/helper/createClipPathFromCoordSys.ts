@@ -32,22 +32,22 @@ function createGridClipPath(
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth
 ) {
-    let rect = cartesian.getArea();
-    let isHorizontal = cartesian.getBaseAxis().isHorizontal();
+    const rect = cartesian.getArea();
+    const isHorizontal = cartesian.getBaseAxis().isHorizontal();
 
     let x = rect.x;
     let y = rect.y;
     let width = rect.width;
     let height = rect.height;
 
-    let lineWidth = seriesModel.get(['lineStyle', 'width']) || 2;
+    const lineWidth = seriesModel.get(['lineStyle', 'width']) || 2;
     // Expand the clip path a bit to avoid the border is clipped and looks thinner
     x -= lineWidth / 2;
     y -= lineWidth / 2;
     width += lineWidth;
     height += lineWidth;
 
-    let clipPath = new graphic.Rect({
+    const clipPath = new graphic.Rect({
         shape: {
             x: x,
             y: y,
@@ -74,10 +74,10 @@ function createPolarClipPath(
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth
 ) {
-    let sectorArea = polar.getArea();
+    const sectorArea = polar.getArea();
     // Avoid float number rounding error for symbol on the edge of axis extent.
 
-    let clipPath = new graphic.Sector({
+    const clipPath = new graphic.Sector({
         shape: {
             cx: round(polar.cx, 1),
             cy: round(polar.cy, 1),

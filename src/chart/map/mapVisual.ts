@@ -24,11 +24,11 @@ import { ZRColor } from '../../util/types';
 
 export default function (ecModel: GlobalModel) {
     ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
-        let colorList = seriesModel.get('color') as ZRColor[];
-        let itemStyleModel = seriesModel.getModel('itemStyle');
+        const colorList = seriesModel.get('color') as ZRColor[];
+        const itemStyleModel = seriesModel.getModel('itemStyle');
 
-        let areaColor = itemStyleModel.get('areaColor');
-        let color = itemStyleModel.get('color')
+        const areaColor = itemStyleModel.get('areaColor');
+        const color = itemStyleModel.get('color')
             || colorList[seriesModel.seriesIndex % colorList.length];
 
         seriesModel.getData().setVisual({

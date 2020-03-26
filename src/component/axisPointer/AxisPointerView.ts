@@ -29,8 +29,8 @@ class AxisPointerView extends ComponentView {
     type = AxisPointerView.type;
 
     render(globalAxisPointerModel: AxisPointerModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let globalTooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
-        let triggerOn = globalAxisPointerModel.get('triggerOn')
+        const globalTooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
+        const triggerOn = globalAxisPointerModel.get('triggerOn')
             || (globalTooltipModel && globalTooltipModel.get('triggerOn') || 'mousemove|click');
 
         // Register global listener in AxisPointerView to enable

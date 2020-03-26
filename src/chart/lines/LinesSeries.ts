@@ -43,17 +43,17 @@ const Uint32Arr = typeof Uint32Array === 'undefined' ? Array : Uint32Array;
 const Float64Arr = typeof Float64Array === 'undefined' ? Array : Float64Array;
 
 function compatEc2(seriesOpt: LinesSeriesOption) {
-    let data = seriesOpt.data;
+    const data = seriesOpt.data;
     if (data && data[0] && (data as LegacyDataItemOption[][])[0][0] && (data as LegacyDataItemOption[][])[0][0].coord) {
         if (__DEV__) {
             console.warn('Lines data configuration has been changed to'
                 + ' { coords:[[1,2],[2,3]] }');
         }
         seriesOpt.data = map(data as LegacyDataItemOption[][], function (itemOpt) {
-            let coords = [
+            const coords = [
                 itemOpt[0].coord, itemOpt[1].coord
             ];
-            let target: LinesDataItemOption = {
+            const target: LinesDataItemOption = {
                 coords: coords
             };
             if (itemOpt[0].name) {
@@ -161,7 +161,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         // Not using preprocessor because mergeOption may not have series.type
         compatEc2(option);
 
-        let result = this._processFlatCoordsArray(option.data);
+        const result = this._processFlatCoordsArray(option.data);
         this._flatCoords = result.flatCoords;
         this._flatCoordsOffset = result.flatCoordsOffset;
         if (result.flatCoords) {
@@ -179,7 +179,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
 
         if (option.data) {
             // Only update when have option data to merge.
-            let result = this._processFlatCoordsArray(option.data);
+            const result = this._processFlatCoordsArray(option.data);
             this._flatCoords = result.flatCoords;
             this._flatCoordsOffset = result.flatCoordsOffset;
             if (result.flatCoords) {
@@ -191,7 +191,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     }
 
     appendData(params: Pick<LinesSeriesOption, 'data'>) {
-        let result = this._processFlatCoordsArray(params.data);
+        const result = this._processFlatCoordsArray(params.data);
         if (result.flatCoords) {
             if (!this._flatCoords) {
                 this._flatCoords = result.flatCoords;
@@ -208,8 +208,8 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     }
 
     _getCoordsFromItemModel(idx: number) {
-        let itemModel = this.getData().getItemModel<LinesDataItemOption>(idx);
-        let coords = (itemModel.option instanceof Array)
+        const itemModel = this.getData().getItemModel<LinesDataItemOption>(idx);
+        const coords = (itemModel.option instanceof Array)
             ? itemModel.option : itemModel.getShallow('coords');
 
         if (__DEV__) {
@@ -233,8 +233,8 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
 
     getLineCoords(idx: number, out: number[][]) {
         if (this._flatCoordsOffset) {
-            let offset = this._flatCoordsOffset[idx * 2];
-            let len = this._flatCoordsOffset[idx * 2 + 1];
+            const offset = this._flatCoordsOffset[idx * 2];
+            const len = this._flatCoordsOffset[idx * 2 + 1];
             for (let i = 0; i < len; i++) {
                 out[i] = out[i] || [];
                 out[i][0] = this._flatCoords[offset + i * 2];
@@ -243,7 +243,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
             return len;
         }
         else {
-            let coords = this._getCoordsFromItemModel(idx);
+            const coords = this._getCoordsFromItemModel(idx);
             for (let i = 0; i < coords.length; i++) {
                 out[i] = out[i] || [];
                 out[i][0] = coords[i][0];
@@ -261,23 +261,23 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         // Stored as a typed array. In format
         // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
         if (typeof data[0] === 'number') {
-            let len = data.length;
+            const len = data.length;
             // Store offset and len of each segment
-            let coordsOffsetAndLenStorage = new Uint32Arr(len) as Uint32Array;
-            let coordsStorage = new Float64Arr(len) as Float64Array;
+            const coordsOffsetAndLenStorage = new Uint32Arr(len) as Uint32Array;
+            const coordsStorage = new Float64Arr(len) as Float64Array;
             let coordsCursor = 0;
             let offsetCursor = 0;
             let dataCount = 0;
             for (let i = 0; i < len;) {
                 dataCount++;
-                let count = data[i++] as number;
+                const count = data[i++] as number;
                 // Offset
                 coordsOffsetAndLenStorage[offsetCursor++] = coordsCursor + startOffset;
                 // Len
                 coordsOffsetAndLenStorage[offsetCursor++] = count;
                 for (let k = 0; k < count; k++) {
-                    let x = data[i++] as number;
-                    let y = data[i++] as number;
+                    const x = data[i++] as number;
+                    const y = data[i++] as number;
                     coordsStorage[coordsCursor++] = x;
                     coordsStorage[coordsCursor++] = y;
 
@@ -305,13 +305,13 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
 
     getInitialData(option: LinesSeriesOption, ecModel: GlobalModel) {
         if (__DEV__) {
-            let CoordSys = CoordinateSystem.get(option.coordinateSystem);
+            const CoordSys = CoordinateSystem.get(option.coordinateSystem);
             if (!CoordSys) {
                 throw new Error('Unkown coordinate system ' + option.coordinateSystem);
             }
         }
 
-        let lineData = new List(['value'], this);
+        const lineData = new List(['value'], this);
         lineData.hasItemOption = false;
 
         lineData.initData(option.data, [], function (dataItem, dimName, dataIndex, dimIndex) {
@@ -321,7 +321,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
             }
             else {
                 lineData.hasItemOption = true;
-                let value = dataItem.value;
+                const value = dataItem.value;
                 if (value != null) {
                     return value instanceof Array ? value[dimIndex] : value;
                 }
@@ -332,15 +332,15 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     }
 
     formatTooltip(dataIndex: number) {
-        let data = this.getData();
-        let itemModel = data.getItemModel<LinesDataItemOption>(dataIndex);
-        let name = itemModel.get('name');
+        const data = this.getData();
+        const itemModel = data.getItemModel<LinesDataItemOption>(dataIndex);
+        const name = itemModel.get('name');
         if (name) {
             return name;
         }
-        let fromName = itemModel.get('fromName');
-        let toName = itemModel.get('toName');
-        let html = [];
+        const fromName = itemModel.get('fromName');
+        const toName = itemModel.get('toName');
+        const html = [];
         fromName != null && html.push(fromName);
         toName != null && html.push(toName);
 
@@ -352,7 +352,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     }
 
     getProgressive() {
-        let progressive = this.option.progressive;
+        const progressive = this.option.progressive;
         if (progressive == null) {
             return this.option.large ? 1e4 : this.get('progressive');
         }
@@ -360,7 +360,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
     }
 
     getProgressiveThreshold() {
-        let progressiveThreshold = this.option.progressiveThreshold;
+        const progressiveThreshold = this.option.progressiveThreshold;
         if (progressiveThreshold == null) {
             return this.option.large ? 2e4 : this.get('progressiveThreshold');
         }

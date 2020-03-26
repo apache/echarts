@@ -50,18 +50,18 @@ const candlestickLayout: StageHandler = {
 
     reset: function (seriesModel: CandlestickSeriesModel) {
 
-        let coordSys = seriesModel.coordinateSystem;
-        let data = seriesModel.getData();
-        let candleWidth = calculateCandleWidth(seriesModel, data);
-        let cDimIdx = 0;
-        let vDimIdx = 1;
-        let coordDims = ['x', 'y'];
-        let cDim = data.mapDimension(coordDims[cDimIdx]);
-        let vDims = data.mapDimension(coordDims[vDimIdx], true);
-        let openDim = vDims[0];
-        let closeDim = vDims[1];
-        let lowestDim = vDims[2];
-        let highestDim = vDims[3];
+        const coordSys = seriesModel.coordinateSystem;
+        const data = seriesModel.getData();
+        const candleWidth = calculateCandleWidth(seriesModel, data);
+        const cDimIdx = 0;
+        const vDimIdx = 1;
+        const coordDims = ['x', 'y'];
+        const cDim = data.mapDimension(coordDims[cDimIdx]);
+        const vDims = data.mapDimension(coordDims[vDimIdx], true);
+        const openDim = vDims[0];
+        const closeDim = vDims[1];
+        const lowestDim = vDims[2];
+        const highestDim = vDims[3];
 
         data.setLayout({
             candleWidth: candleWidth,
@@ -82,21 +82,21 @@ const candlestickLayout: StageHandler = {
             let dataIndex;
             while ((dataIndex = params.next()) != null) {
 
-                let axisDimVal = data.get(cDim, dataIndex) as number;
-                let openVal = data.get(openDim, dataIndex) as number;
-                let closeVal = data.get(closeDim, dataIndex) as number;
-                let lowestVal = data.get(lowestDim, dataIndex) as number;
-                let highestVal = data.get(highestDim, dataIndex) as number;
+                const axisDimVal = data.get(cDim, dataIndex) as number;
+                const openVal = data.get(openDim, dataIndex) as number;
+                const closeVal = data.get(closeDim, dataIndex) as number;
+                const lowestVal = data.get(lowestDim, dataIndex) as number;
+                const highestVal = data.get(highestDim, dataIndex) as number;
 
-                let ocLow = Math.min(openVal, closeVal);
-                let ocHigh = Math.max(openVal, closeVal);
+                const ocLow = Math.min(openVal, closeVal);
+                const ocHigh = Math.max(openVal, closeVal);
 
-                let ocLowPoint = getPoint(ocLow, axisDimVal);
-                let ocHighPoint = getPoint(ocHigh, axisDimVal);
-                let lowestPoint = getPoint(lowestVal, axisDimVal);
-                let highestPoint = getPoint(highestVal, axisDimVal);
+                const ocLowPoint = getPoint(ocLow, axisDimVal);
+                const ocHighPoint = getPoint(ocHigh, axisDimVal);
+                const lowestPoint = getPoint(lowestVal, axisDimVal);
+                const highestPoint = getPoint(highestVal, axisDimVal);
 
-                let ends: number[][] = [];
+                const ends: number[][] = [];
                 addBodyEnd(ends, ocHighPoint, 0);
                 addBodyEnd(ends, ocLowPoint, 1);
 
@@ -117,7 +117,7 @@ const candlestickLayout: StageHandler = {
             }
 
             function getPoint(val: number, axisDimVal: number) {
-                let p = [];
+                const p = [];
                 p[cDimIdx] = axisDimVal;
                 p[vDimIdx] = val;
                 return (isNaN(axisDimVal) || isNaN(val))
@@ -126,8 +126,8 @@ const candlestickLayout: StageHandler = {
             }
 
             function addBodyEnd(ends: number[][], point: number[], start: number) {
-                let point1 = point.slice();
-                let point2 = point.slice();
+                const point1 = point.slice();
+                const point2 = point.slice();
 
                 point1[cDimIdx] = subPixelOptimize(
                     point1[cDimIdx] + candleWidth / 2, 1, false
@@ -142,8 +142,8 @@ const candlestickLayout: StageHandler = {
             }
 
             function makeBrushRect(lowestVal: number, highestVal: number, axisDimVal: number) {
-                let pmin = getPoint(lowestVal, axisDimVal);
-                let pmax = getPoint(highestVal, axisDimVal);
+                const pmin = getPoint(lowestVal, axisDimVal);
+                const pmax = getPoint(highestVal, axisDimVal);
 
                 pmin[cDimIdx] -= candleWidth / 2;
                 pmax[cDimIdx] -= candleWidth / 2;
@@ -164,19 +164,19 @@ const candlestickLayout: StageHandler = {
 
         function largeProgress(params: StageHandlerProgressParams, data: List) {
             // Structure: [sign, x, yhigh, ylow, sign, x, yhigh, ylow, ...]
-            let points = new LargeArr(params.count * 4);
+            const points = new LargeArr(params.count * 4);
             let offset = 0;
             let point;
-            let tmpIn: number[] = [];
-            let tmpOut: number[] = [];
+            const tmpIn: number[] = [];
+            const tmpOut: number[] = [];
             let dataIndex;
 
             while ((dataIndex = params.next()) != null) {
-                let axisDimVal = data.get(cDim, dataIndex) as number;
-                let openVal = data.get(openDim, dataIndex) as number;
-                let closeVal = data.get(closeDim, dataIndex) as number;
-                let lowestVal = data.get(lowestDim, dataIndex) as number;
-                let highestVal = data.get(highestDim, dataIndex) as number;
+                const axisDimVal = data.get(cDim, dataIndex) as number;
+                const openVal = data.get(openDim, dataIndex) as number;
+                const closeVal = data.get(closeDim, dataIndex) as number;
+                const lowestVal = data.get(lowestDim, dataIndex) as number;
+                const highestVal = data.get(highestDim, dataIndex) as number;
 
                 if (isNaN(axisDimVal) || isNaN(lowestVal) || isNaN(highestVal)) {
                     points[offset++] = NaN;
@@ -222,25 +222,25 @@ function getSign(data: List, dataIndex: number, openVal: number, closeVal: numbe
 }
 
 function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: List) {
-    let baseAxis = seriesModel.getBaseAxis();
+    const baseAxis = seriesModel.getBaseAxis();
     let extent;
 
-    let bandWidth = baseAxis.type === 'category'
+    const bandWidth = baseAxis.type === 'category'
         ? baseAxis.getBandWidth()
         : (
             extent = baseAxis.getExtent(),
             Math.abs(extent[1] - extent[0]) / data.count()
         );
 
-    let barMaxWidth = parsePercent(
+    const barMaxWidth = parsePercent(
         retrieve2(seriesModel.get('barMaxWidth'), bandWidth),
         bandWidth
     );
-    let barMinWidth = parsePercent(
+    const barMinWidth = parsePercent(
         retrieve2(seriesModel.get('barMinWidth'), 1),
         bandWidth
     );
-    let barWidth = seriesModel.get('barWidth');
+    const barWidth = seriesModel.get('barWidth');
 
     return barWidth != null
         ? parsePercent(barWidth, bandWidth)

@@ -62,7 +62,7 @@ function fadeOutItem(
     opacityPath: readonly string[],
     opacityRatio?: number
 ) {
-    let el = item.getGraphicEl() as SankeyEl;
+    const el = item.getGraphicEl() as SankeyEl;
     let opacity = getItemOpacity(item, opacityPath);
 
     if (opacityRatio != null) {
@@ -83,8 +83,8 @@ function fadeInItem(
     item: GraphNode | GraphEdge,
     opacityPath: readonly string[]
 ) {
-    let opacity = getItemOpacity(item, opacityPath);
-    let el = item.getGraphicEl() as SankeyEl;
+    const opacity = getItemOpacity(item, opacityPath);
+    const el = item.getGraphicEl() as SankeyEl;
 
     // Support emphasis here.
     el.highlight && el.highlight();
@@ -129,7 +129,7 @@ class SankeyPath extends graphic.Path<SankeyPathProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: SankeyPathShape) {
-        let extent = shape.extent;
+        const extent = shape.extent;
         ctx.moveTo(shape.x1, shape.y1);
         ctx.bezierCurveTo(
             shape.cpx1, shape.cpy1,
@@ -178,17 +178,17 @@ class SankeyView extends ChartView {
     private _unfocusDelayTimer: number;
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let sankeyView = this;
-        let graph = seriesModel.getGraph();
-        let group = this.group;
-        let layoutInfo = seriesModel.layoutInfo;
+        const sankeyView = this;
+        const graph = seriesModel.getGraph();
+        const group = this.group;
+        const layoutInfo = seriesModel.layoutInfo;
         // view width
-        let width = layoutInfo.width;
+        const width = layoutInfo.width;
         // view height
-        let height = layoutInfo.height;
-        let nodeData = seriesModel.getData();
-        let edgeData = seriesModel.getData('edge');
-        let orient = seriesModel.get('orient');
+        const height = layoutInfo.height;
+        const nodeData = seriesModel.getData();
+        const edgeData = seriesModel.getData('edge');
+        const orient = seriesModel.get('orient');
 
         this._model = seriesModel;
 
@@ -198,8 +198,8 @@ class SankeyView extends ChartView {
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
-            let curve = new SankeyPath();
-            let ecData = graphic.getECData(curve);
+            const curve = new SankeyPath();
+            const ecData = graphic.getECData(curve);
             ecData.dataIndex = edge.dataIndex;
             ecData.seriesIndex = seriesModel.seriesIndex;
             ecData.dataType = 'edge';
@@ -282,14 +282,14 @@ class SankeyView extends ChartView {
 
         // Generate a rect for each node
         graph.eachNode(function (node) {
-            let layout = node.getLayout();
-            let itemModel = node.getModel<SankeyNodeItemOption>();
-            let dragX = itemModel.get('localX');
-            let dragY = itemModel.get('localY');
-            let labelModel = itemModel.getModel('label');
-            let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+            const layout = node.getLayout();
+            const itemModel = node.getModel<SankeyNodeItemOption>();
+            const dragX = itemModel.get('localX');
+            const dragY = itemModel.get('localY');
+            const labelModel = itemModel.getModel('label');
+            const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
 
-            let rect = new graphic.Rect({
+            const rect = new graphic.Rect({
                 shape: {
                     x: dragX != null ? dragX * width : layout.x,
                     y: dragY != null ? dragY * height : layout.y,
@@ -299,7 +299,7 @@ class SankeyView extends ChartView {
                 style: itemModel.getModel('itemStyle').getItemStyle()
             });
 
-            let hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+            const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
             graphic.setLabelStyle(
                 rect, labelModel, labelHoverModel,
@@ -322,7 +322,7 @@ class SankeyView extends ChartView {
         });
 
         nodeData.eachItemGraphicEl(function (el: graphic.Rect & SankeyEl, dataIndex: number) {
-            let itemModel = nodeData.getItemModel<SankeyNodeItemOption>(dataIndex);
+            const itemModel = nodeData.getItemModel<SankeyNodeItemOption>(dataIndex);
             if (itemModel.get('draggable')) {
                 el.drift = function (this: typeof el, dx, dy) {
                     sankeyView._focusAdjacencyDisabled = true;
@@ -376,7 +376,7 @@ class SankeyView extends ChartView {
         });
 
         edgeData.eachItemGraphicEl(function (el: SankeyPath & SankeyEl, dataIndex) {
-            let edgeModel = edgeData.getItemModel<GraphEdgeItemOption>(dataIndex);
+            const edgeModel = edgeData.getItemModel<GraphEdgeItemOption>(dataIndex);
 
             el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);
             el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
@@ -415,7 +415,7 @@ class SankeyView extends ChartView {
     }
 
     _dispatchUnfocus(api: ExtensionAPI) {
-        let self = this;
+        const self = this;
         this._clearTimer();
         this._unfocusDelayTimer = setTimeout(function () {
             self._unfocusDelayTimer = null;
@@ -439,17 +439,17 @@ class SankeyView extends ChartView {
         api: ExtensionAPI,
         payload: FocusNodeAdjacencyPayload
     ) {
-        let data = seriesModel.getData();
-        let graph = data.graph;
-        let dataIndex = payload.dataIndex;
-        let itemModel = data.getItemModel<SankeyNodeItemOption>(dataIndex);
-        let edgeDataIndex = payload.edgeDataIndex;
+        const data = seriesModel.getData();
+        const graph = data.graph;
+        const dataIndex = payload.dataIndex;
+        const itemModel = data.getItemModel<SankeyNodeItemOption>(dataIndex);
+        const edgeDataIndex = payload.edgeDataIndex;
 
         if (dataIndex == null && edgeDataIndex == null) {
             return;
         }
-        let node = graph.getNodeByIndex(dataIndex);
-        let edge = graph.getEdgeByIndex(edgeDataIndex);
+        const node = graph.getNodeByIndex(dataIndex);
+        const edge = graph.getEdgeByIndex(edgeDataIndex);
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath, 0.1);
@@ -460,7 +460,7 @@ class SankeyView extends ChartView {
 
         if (node) {
             fadeInItem(node, hoverNodeOpacityPath);
-            let focusNodeAdj = itemModel.get('focusNodeAdjacency');
+            const focusNodeAdj = itemModel.get('focusNodeAdjacency');
             if (focusNodeAdj === 'outEdges') {
                 zrUtil.each(node.outEdges, function (edge) {
                     if (edge.dataIndex < 0) {
@@ -500,7 +500,7 @@ class SankeyView extends ChartView {
     unfocusNodeAdjacency(
         seriesModel: SankeySeriesModel
     ) {
-        let graph = seriesModel.getGraph();
+        const graph = seriesModel.getGraph();
 
         graph.eachNode(function (node) {
             fadeOutItem(node, nodeOpacityPath);
@@ -513,7 +513,7 @@ class SankeyView extends ChartView {
 
 // Add animation to the view
 function createGridClipShape(rect: RectLike, seriesModel: SankeySeriesModel, cb: () => void) {
-    let rectEl = new graphic.Rect({
+    const rectEl = new graphic.Rect({
         shape: {
             x: rect.x - 10,
             y: rect.y - 10,

@@ -41,9 +41,9 @@ class FunnelPiece extends graphic.Group {
     constructor(data: List, idx: number) {
         super();
 
-        let polygon = new graphic.Polygon();
-        let labelLine = new graphic.Polyline();
-        let text = new graphic.Text();
+        const polygon = new graphic.Polygon();
+        const labelLine = new graphic.Polyline();
+        const text = new graphic.Text();
         this.add(polygon);
         this.add(labelLine);
         polygon.setTextContent(text);
@@ -53,8 +53,8 @@ class FunnelPiece extends graphic.Group {
 
     highDownOnUpdate(fromState: DisplayState, toState: DisplayState) {
 
-        let labelLine = this.childAt(1) as graphic.Polyline;
-        let text = this.childAt(2) as graphic.Text;
+        const labelLine = this.childAt(1) as graphic.Polyline;
+        const text = this.childAt(2) as graphic.Text;
 
         if (toState === 'emphasis') {
             labelLine.ignore = (labelLine as FunnelLabelEl).hoverIgnore;
@@ -68,11 +68,11 @@ class FunnelPiece extends graphic.Group {
 
     updateData(data: List, idx: number, firstCreate?: boolean) {
 
-        let polygon = this.childAt(0) as graphic.Polygon;
+        const polygon = this.childAt(0) as graphic.Polygon;
 
-        let seriesModel = data.hostModel;
-        let itemModel = data.getItemModel<FunnelDataItemOption>(idx);
-        let layout = data.getItemLayout(idx);
+        const seriesModel = data.hostModel;
+        const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
+        const layout = data.getItemLayout(idx);
         let opacity = itemModel.get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
 
@@ -102,8 +102,8 @@ class FunnelPiece extends graphic.Group {
         }
 
         // Update common style
-        let itemStyleModel = itemModel.getModel('itemStyle');
-        let visualColor = data.getItemVisual(idx, 'color');
+        const itemStyleModel = itemModel.getModel('itemStyle');
+        const visualColor = data.getItemVisual(idx, 'color');
 
         polygon.setStyle(
             zrUtil.defaults(
@@ -123,21 +123,21 @@ class FunnelPiece extends graphic.Group {
     }
 
     _updateLabel(data: List, idx: number) {
-        let polygon = this.childAt(0);
-        let labelLine = this.childAt(1) as graphic.Polyline;
-        let labelText = polygon.getTextContent();
+        const polygon = this.childAt(0);
+        const labelLine = this.childAt(1) as graphic.Polyline;
+        const labelText = polygon.getTextContent();
 
-        let seriesModel = data.hostModel;
-        let itemModel = data.getItemModel<FunnelDataItemOption>(idx);
-        let layout = data.getItemLayout(idx);
-        let labelLayout = layout.label;
+        const seriesModel = data.hostModel;
+        const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
+        const layout = data.getItemLayout(idx);
+        const labelLayout = layout.label;
         // let visualColor = data.getItemVisual(idx, 'color');
 
-        let labelModel = itemModel.getModel('label');
-        let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-        let labelLineModel = itemModel.getModel('labelLine');
-        let labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
-        let visualColor = data.getItemVisual(idx, 'color');
+        const labelModel = itemModel.getModel('label');
+        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+        const labelLineModel = itemModel.getModel('labelLine');
+        const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
+        const visualColor = data.getItemVisual(idx, 'color');
 
         graphic.setLabelStyle(
             labelText, labelModel, labelHoverModel,
@@ -205,21 +205,21 @@ class FunnelView extends ChartView {
     private _data: List;
 
     render(seriesModel: FunnelSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let data = seriesModel.getData();
-        let oldData = this._data;
+        const data = seriesModel.getData();
+        const oldData = this._data;
 
-        let group = this.group;
+        const group = this.group;
 
         data.diff(oldData)
             .add(function (idx) {
-                let funnelPiece = new FunnelPiece(data, idx);
+                const funnelPiece = new FunnelPiece(data, idx);
 
                 data.setItemGraphicEl(idx, funnelPiece);
 
                 group.add(funnelPiece);
             })
             .update(function (newIdx, oldIdx) {
-                let piece = oldData.getItemGraphicEl(oldIdx) as FunnelPiece;
+                const piece = oldData.getItemGraphicEl(oldIdx) as FunnelPiece;
 
                 piece.updateData(data, newIdx);
 
@@ -227,7 +227,7 @@ class FunnelView extends ChartView {
                 data.setItemGraphicEl(newIdx, piece);
             })
             .remove(function (idx) {
-                let piece = oldData.getItemGraphicEl(idx);
+                const piece = oldData.getItemGraphicEl(idx);
                 group.remove(piece);
             })
             .execute();

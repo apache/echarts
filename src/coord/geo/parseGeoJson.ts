@@ -30,20 +30,20 @@ function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
     if (!(json as GeoJSONCompressed).UTF8Encoding) {
         return json as GeoJSON;
     }
-    let jsonCompressed = json as GeoJSONCompressed;
+    const jsonCompressed = json as GeoJSONCompressed;
     let encodeScale = jsonCompressed.UTF8Scale;
     if (encodeScale == null) {
         encodeScale = 1024;
     }
 
-    let features = jsonCompressed.features;
+    const features = jsonCompressed.features;
 
     for (let f = 0; f < features.length; f++) {
-        let feature = features[f];
-        let geometry = feature.geometry;
+        const feature = features[f];
+        const geometry = feature.geometry;
 
         if (geometry.type === 'Polygon') {
-            let coordinates = geometry.coordinates;
+            const coordinates = geometry.coordinates;
             for (let c = 0; c < coordinates.length; c++) {
                 coordinates[c] = decodePolygon(
                     coordinates[c],
@@ -53,9 +53,9 @@ function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
             }
         }
         else if (geometry.type === 'MultiPolygon') {
-            let coordinates = geometry.coordinates;
+            const coordinates = geometry.coordinates;
             for (let c = 0; c < coordinates.length; c++) {
-                let coordinate = coordinates[c];
+                const coordinate = coordinates[c];
                 for (let c2 = 0; c2 < coordinate.length; c2++) {
                     coordinate[c2] = decodePolygon(
                         coordinate[c2],
@@ -77,7 +77,7 @@ function decodePolygon(
     encodeOffsets: number[],
     encodeScale: number
 ): number[][] {
-    let result = [];
+    const result = [];
     let prevX = encodeOffsets[0];
     let prevY = encodeOffsets[1];
 
@@ -110,12 +110,12 @@ export default function (geoJson: GeoJSON | GeoJSONCompressed): Region[] {
             && featureObj.properties
             && featureObj.geometry.coordinates.length > 0;
     }), function (featureObj) {
-        let properties = featureObj.properties;
-        let geo = featureObj.geometry;
+        const properties = featureObj.properties;
+        const geo = featureObj.geometry;
 
-        let geometries = [] as Region['geometries'];
+        const geometries = [] as Region['geometries'];
         if (geo.type === 'Polygon') {
-            let coordinates = geo.coordinates;
+            const coordinates = geo.coordinates;
             geometries.push({
                 type: 'polygon',
                 // According to the GeoJSON specification.
@@ -125,7 +125,7 @@ export default function (geoJson: GeoJSON | GeoJSONCompressed): Region[] {
             });
         }
         if (geo.type === 'MultiPolygon') {
-            let coordinates = geo.coordinates;
+            const coordinates = geo.coordinates;
             zrUtil.each(coordinates, function (item) {
                 if (item[0]) {
                     geometries.push({
@@ -137,7 +137,7 @@ export default function (geoJson: GeoJSON | GeoJSONCompressed): Region[] {
             });
         }
 
-        let region = new Region(
+        const region = new Region(
             properties.name,
             geometries,
             properties.cp

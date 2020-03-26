@@ -156,11 +156,11 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
      * @return {module:echarts/data/List} storage initial data
      */
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
-        let links = option.edges || option.links;
-        let nodes = option.data || option.nodes;
-        let levels = option.levels;
+        const links = option.edges || option.links;
+        const nodes = option.data || option.nodes;
+        const levels = option.levels;
         this.levelModels = [];
-        let levelModels = this.levelModels;
+        const levelModels = this.levelModels;
 
         for (let i = 0; i < levels.length; i++) {
             if (levels[i].depth != null && levels[i].depth >= 0) {
@@ -173,15 +173,15 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             }
         }
         if (nodes && links) {
-            let graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
+            const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
             return graph.data;
         }
         function beforeLink(nodeData: List, edgeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 model.customizeGetParent(function (this: Model, path: string | string[]) {
-                    let parentModel = this.parentModel as SankeySeriesModel;
-                    let nodeDepth = parentModel.getData().getItemLayout(idx).depth;
-                    let levelModel = parentModel.levelModels[nodeDepth];
+                    const parentModel = this.parentModel as SankeySeriesModel;
+                    const nodeDepth = parentModel.getData().getItemLayout(idx).depth;
+                    const levelModel = parentModel.levelModels[nodeDepth];
                     return levelModel || this.parentModel;
                 });
                 return model;
@@ -189,10 +189,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
             edgeData.wrapMethod('getItemModel', function (model, idx) {
                 model.customizeGetParent(function (this: Model, path: string | string[]) {
-                    let parentModel = this.parentModel as SankeySeriesModel;
-                    let edge = parentModel.getGraph().getEdgeByIndex(idx);
-                    let depth = edge.node1.getLayout().depth;
-                    let levelModel = parentModel.levelModels[depth];
+                    const parentModel = this.parentModel as SankeySeriesModel;
+                    const edge = parentModel.getGraph().getEdgeByIndex(idx);
+                    const depth = edge.node1.getLayout().depth;
+                    const levelModel = parentModel.levelModels[depth];
                     return levelModel || this.parentModel;
                 });
                 return model;
@@ -201,7 +201,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     }
 
     setNodePosition(dataIndex: number, localPosition: number[]) {
-        let dataItem = this.option.data[dataIndex];
+        const dataItem = this.option.data[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
     }
@@ -230,8 +230,8 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: 'node' | 'edge') {
         // dataType === 'node' or empty do not show tooltip by default
         if (dataType === 'edge') {
-            let params = this.getDataParams(dataIndex, dataType);
-            let rawDataOpt = params.data;
+            const params = this.getDataParams(dataIndex, dataType);
+            const rawDataOpt = params.data;
             let html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
             if (params.value) {
                 html += ' : ' + params.value;
@@ -239,17 +239,17 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             return encodeHTML(html);
         }
         else if (dataType === 'node') {
-            let node = this.getGraph().getNodeByIndex(dataIndex);
-            let value = node.getLayout().value;
-            let name = this.getDataParams(dataIndex, dataType).data.name;
-            let html = value ? name + ' : ' + value : '';
+            const node = this.getGraph().getNodeByIndex(dataIndex);
+            const value = node.getLayout().value;
+            const name = this.getDataParams(dataIndex, dataType).data.name;
+            const html = value ? name + ' : ' + value : '';
             return encodeHTML(html);
         }
         return super.formatTooltip(dataIndex, multipleSeries);
     }
 
     optionUpdated() {
-        let option = this.option;
+        const option = this.option;
         if (option.focusNodeAdjacency === true) {
             option.focusNodeAdjacency = 'allEdges';
         }
@@ -257,10 +257,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
     // Override Series.getDataParams()
     getDataParams(dataIndex: number, dataType: 'node' | 'edge') {
-        let params = super.getDataParams(dataIndex, dataType);
+        const params = super.getDataParams(dataIndex, dataType);
         if (params.value == null && dataType === 'node') {
-            let node = this.getGraph().getNodeByIndex(dataIndex);
-            let nodeValue = node.getLayout().value;
+            const node = this.getGraph().getNodeByIndex(dataIndex);
+            const nodeValue = node.getLayout().value;
             params.value = nodeValue;
         }
         return params;

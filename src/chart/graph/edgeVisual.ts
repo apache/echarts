@@ -29,13 +29,13 @@ function normalize(a: string | number | (string | number)[]): (string | number)[
 
 export default function (ecModel: GlobalModel) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
-        let graph = seriesModel.getGraph();
-        let edgeData = seriesModel.getEdgeData();
-        let symbolType = normalize(seriesModel.get('edgeSymbol'));
-        let symbolSize = normalize(seriesModel.get('edgeSymbolSize'));
+        const graph = seriesModel.getGraph();
+        const edgeData = seriesModel.getEdgeData();
+        const symbolType = normalize(seriesModel.get('edgeSymbol'));
+        const symbolSize = normalize(seriesModel.get('edgeSymbolSize'));
 
-        let colorQuery = ['lineStyle', 'color'] as const;
-        let opacityQuery = ['lineStyle', 'opacity'] as const;
+        const colorQuery = ['lineStyle', 'color'] as const;
+        const opacityQuery = ['lineStyle', 'opacity'] as const;
 
         edgeData.setVisual('fromSymbol', symbolType && symbolType[0]);
         edgeData.setVisual('toSymbol', symbolType && symbolType[1]);
@@ -45,13 +45,13 @@ export default function (ecModel: GlobalModel) {
         edgeData.setVisual('opacity', seriesModel.get(opacityQuery));
 
         edgeData.each(function (idx) {
-            let itemModel = edgeData.getItemModel<GraphEdgeItemOption>(idx);
-            let edge = graph.getEdgeByIndex(idx);
-            let symbolType = normalize(itemModel.getShallow('symbol', true));
-            let symbolSize = normalize(itemModel.getShallow('symbolSize', true));
+            const itemModel = edgeData.getItemModel<GraphEdgeItemOption>(idx);
+            const edge = graph.getEdgeByIndex(idx);
+            const symbolType = normalize(itemModel.getShallow('symbol', true));
+            const symbolSize = normalize(itemModel.getShallow('symbolSize', true));
             // Edge visual must after node visual
             let color = itemModel.get(colorQuery);
-            let opacity = itemModel.get(opacityQuery);
+            const opacity = itemModel.get(opacityQuery);
             switch (color) {
                 case 'source':
                     color = edge.node1.getVisual('color');

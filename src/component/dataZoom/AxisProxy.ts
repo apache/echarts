@@ -103,13 +103,13 @@ class AxisProxy {
     }
 
     getTargetSeriesModels() {
-        let seriesModels: SeriesModel[] = [];
-        let ecModel = this.ecModel;
+        const seriesModels: SeriesModel[] = [];
+        const ecModel = this.ecModel;
 
         ecModel.eachSeries(function (seriesModel) {
             if (helper.isCoordSupported(seriesModel.get('coordinateSystem'))) {
-                let dimName = this._dimName;
-                let axisModel = ecModel.queryComponents({
+                const dimName = this._dimName;
+                const axisModel = ecModel.queryComponents({
                     mainType: dimName + 'Axis',
                     index: seriesModel.get(dimName + 'AxisIndex' as any),
                     id: seriesModel.get(dimName + 'AxisId' as any)
@@ -128,10 +128,10 @@ class AxisProxy {
     }
 
     getOtherAxisModel() {
-        let axisDim = this._dimName;
-        let ecModel = this.ecModel;
-        let axisModel = this.getAxisModel();
-        let isCartesian = axisDim === 'x' || axisDim === 'y';
+        const axisDim = this._dimName;
+        const ecModel = this.ecModel;
+        const axisModel = this.getAxisModel();
+        const isCartesian = axisDim === 'x' || axisDim === 'y';
         let otherAxisDim: 'x' | 'y' | 'radius' | 'angle';
         let coordSysIndexName: 'gridIndex' | 'polarIndex';
         if (isCartesian) {
@@ -166,13 +166,13 @@ class AxisProxy {
         startValue?: number
         endValue?: number
     }) {
-        let dataExtent = this._dataExtent;
-        let axisModel = this.getAxisModel();
-        let scale = axisModel.axis.scale;
-        let rangePropMode = this._dataZoomModel.getRangePropMode();
-        let percentExtent = [0, 100];
-        let percentWindow = [] as unknown as [number, number];
-        let valueWindow = [] as unknown as [number, number];
+        const dataExtent = this._dataExtent;
+        const axisModel = this.getAxisModel();
+        const scale = axisModel.axis.scale;
+        const rangePropMode = this._dataZoomModel.getRangePropMode();
+        const percentExtent = [0, 100];
+        const percentWindow = [] as unknown as [number, number];
+        const valueWindow = [] as unknown as [number, number];
         let hasPropModeValue;
 
         each(['start', 'end'] as const, function (prop, idx) {
@@ -225,7 +225,7 @@ class AxisProxy {
         // by `zoomLock` here, because we see `zoomLock` just as a interaction constraint,
         // where API is able to initialize/modify the window size even though `zoomLock`
         // specified.
-        let spans = this._minMaxSpan;
+        const spans = this._minMaxSpan;
         hasPropModeValue
             ? restrictSet(valueWindow, percentWindow, dataExtent, percentExtent, false)
             : restrictSet(percentWindow, valueWindow, percentExtent, dataExtent, true);
@@ -237,7 +237,7 @@ class AxisProxy {
             toExtent: number[],
             toValue: boolean
         ) {
-            let suffix = toValue ? 'Span' : 'ValueSpan';
+            const suffix = toValue ? 'Span' : 'ValueSpan';
             sliderMove(
                 0, fromWindow, fromExtent, 'all',
                 spans['min' + suffix as 'minSpan' | 'minValueSpan'],
@@ -265,7 +265,7 @@ class AxisProxy {
             return;
         }
 
-        let targetSeries = this.getTargetSeriesModels();
+        const targetSeries = this.getTargetSeriesModels();
         // Culculate data window and data extent, and record them.
         this._dataExtent = calculateDataExtent(this, this._dimName, targetSeries);
 
@@ -282,7 +282,7 @@ class AxisProxy {
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
 
-        let dataWindow = this.calculateDataWindow(dataZoomModel.settledOption);
+        const dataWindow = this.calculateDataWindow(dataZoomModel.settledOption);
 
         this._valueWindow = dataWindow.valueWindow;
         this._percentWindow = dataWindow.percentWindow;
@@ -305,10 +305,10 @@ class AxisProxy {
             return;
         }
 
-        let axisDim = this._dimName;
-        let seriesModels = this.getTargetSeriesModels();
-        let filterMode = dataZoomModel.get('filterMode');
-        let valueWindow = this._valueWindow;
+        const axisDim = this._dimName;
+        const seriesModels = this.getTargetSeriesModels();
+        const filterMode = dataZoomModel.get('filterMode');
+        const valueWindow = this._valueWindow;
 
         if (filterMode === 'none') {
             return;
@@ -337,7 +337,7 @@ class AxisProxy {
 
         each(seriesModels, function (seriesModel) {
             let seriesData = seriesModel.getData();
-            let dataDims = seriesData.mapDimension(axisDim, true);
+            const dataDims = seriesData.mapDimension(axisDim, true);
 
             if (!dataDims.length) {
                 return;
@@ -349,10 +349,10 @@ class AxisProxy {
                     let rightOut;
                     let hasValue;
                     for (let i = 0; i < dataDims.length; i++) {
-                        let value = seriesData.get(dataDims[i], dataIndex) as number;
-                        let thisHasValue = !isNaN(value);
-                        let thisLeftOut = value < valueWindow[0];
-                        let thisRightOut = value > valueWindow[1];
+                        const value = seriesData.get(dataDims[i], dataIndex) as number;
+                        const thisHasValue = !isNaN(value);
+                        const thisLeftOut = value < valueWindow[0];
+                        const thisRightOut = value > valueWindow[1];
                         if (thisHasValue && !thisLeftOut && !thisRightOut) {
                             return true;
                         }
@@ -374,7 +374,7 @@ class AxisProxy {
                         );
                     }
                     else {
-                        let range: Dictionary<[number, number]> = {};
+                        const range: Dictionary<[number, number]> = {};
                         range[dim] = valueWindow;
 
                         // console.time('select');
@@ -395,9 +395,9 @@ class AxisProxy {
     }
 
     private _updateMinMaxSpan() {
-        let minMaxSpan = this._minMaxSpan = {} as MinMaxSpan;
-        let dataZoomModel = this._dataZoomModel;
-        let dataExtent = this._dataExtent;
+        const minMaxSpan = this._minMaxSpan = {} as MinMaxSpan;
+        const dataZoomModel = this._dataZoomModel;
+        const dataExtent = this._dataExtent;
 
         each(['min', 'max'], function (minMax) {
             let percentSpan = dataZoomModel.get(minMax + 'Span' as 'minSpan' | 'maxSpan');
@@ -423,10 +423,10 @@ class AxisProxy {
 
     private _setAxisModel(isRestore?: boolean) {
 
-        let axisModel = this.getAxisModel();
+        const axisModel = this.getAxisModel();
 
-        let percentWindow = this._percentWindow;
-        let valueWindow = this._valueWindow;
+        const percentWindow = this._percentWindow;
+        const valueWindow = this._valueWindow;
 
         if (!percentWindow) {
             return;
@@ -436,7 +436,7 @@ class AxisProxy {
         let precision = numberUtil.getPixelPrecision(valueWindow, [0, 500]);
         precision = Math.min(precision, 20);
         // isRestore or isFull
-        let useOrigin = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
+        const useOrigin = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
 
         axisModel.setRange(
             useOrigin ? null : +valueWindow[0].toFixed(precision),
@@ -449,10 +449,10 @@ function calculateDataExtent(axisProxy: AxisProxy, axisDim: string, seriesModels
     let dataExtent = [Infinity, -Infinity];
 
     each(seriesModels, function (seriesModel) {
-        let seriesData = seriesModel.getData();
+        const seriesData = seriesModel.getData();
         if (seriesData) {
             each(seriesData.mapDimension(axisDim, true), function (dim) {
-                let seriesExtent = seriesData.getApproximateExtent(dim);
+                const seriesExtent = seriesData.getApproximateExtent(dim);
                 seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                 seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
             });
@@ -478,13 +478,13 @@ function calculateDataExtent(axisProxy: AxisProxy, axisDim: string, seriesModels
 }
 
 function fixExtentByAxis(axisProxy: AxisProxy, dataExtent: number[]) {
-    let axisModel = axisProxy.getAxisModel() as CartesianAxisModel;
-    let min = axisModel.getMin(true);
+    const axisModel = axisProxy.getAxisModel() as CartesianAxisModel;
+    const min = axisModel.getMin(true);
 
     // For category axis, if min/max/scale are not set, extent is determined
     // by axis.data by default.
-    let isCategoryAxis = axisModel.get('type') === 'category';
-    let axisDataLen = isCategoryAxis && axisModel.getCategories().length;
+    const isCategoryAxis = axisModel.get('type') === 'category';
+    const axisDataLen = isCategoryAxis && axisModel.getCategories().length;
 
     if (min != null && min !== 'dataMin' && typeof min !== 'function') {
         dataExtent[0] = min;
@@ -493,7 +493,7 @@ function fixExtentByAxis(axisProxy: AxisProxy, dataExtent: number[]) {
         dataExtent[0] = axisDataLen > 0 ? 0 : NaN;
     }
 
-    let max = axisModel.getMax(true);
+    const max = axisModel.getMax(true);
     if (max != null && max !== 'dataMax' && typeof max !== 'function') {
         dataExtent[1] = max;
     }

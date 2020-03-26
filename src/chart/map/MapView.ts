@@ -69,7 +69,7 @@ class MapView extends ChartView {
             return;
         }
 
-        let group = this.group;
+        const group = this.group;
         group.removeAll();
 
         if (mapModel.getHostGeoModel()) {
@@ -83,7 +83,7 @@ class MapView extends ChartView {
             )
         ) {
             if (mapModel.needsDrawMap) {
-                let mapDraw = this._mapDraw || new MapDraw(api, true);
+                const mapDraw = this._mapDraw || new MapDraw(api, true);
                 group.add(mapDraw.group);
 
                 mapDraw.draw(mapModel, ecModel, api, this, payload);
@@ -97,7 +97,7 @@ class MapView extends ChartView {
             }
         }
         else {
-            let mapDraw = this._mapDraw;
+            const mapDraw = this._mapDraw;
             mapDraw && group.add(mapDraw.group);
         }
 
@@ -117,25 +117,25 @@ class MapView extends ChartView {
     }
 
     private _renderSymbols(mapModel: MapSeries, ecModel: GlobalModel, api: ExtensionAPI): void {
-        let originalData = mapModel.originalData;
-        let group = this.group;
+        const originalData = mapModel.originalData;
+        const group = this.group;
 
         originalData.each(originalData.mapDimension('value'), function (value, originalDataIndex) {
             if (isNaN(value as number)) {
                 return;
             }
 
-            let layout = originalData.getItemLayout(originalDataIndex);
+            const layout = originalData.getItemLayout(originalDataIndex);
 
             if (!layout || !layout.point) {
                 // Not exists in map
                 return;
             }
 
-            let point = layout.point;
-            let offset = layout.offset;
+            const point = layout.point;
+            const offset = layout.offset;
 
-            let circle = new graphic.Circle({
+            const circle = new graphic.Circle({
                 style: {
                     // Because the special of map draw.
                     // Which needs statistic of multiple series and draw on one map.
@@ -165,16 +165,16 @@ class MapView extends ChartView {
             // settings on series `X` but render label `C` by the settings on series `Y`.
             if (!offset) {
 
-                let fullData = mapModel.mainSeries.getData();
-                let name = originalData.getName(originalDataIndex);
+                const fullData = mapModel.mainSeries.getData();
+                const name = originalData.getName(originalDataIndex);
 
-                let fullIndex = fullData.indexOfName(name);
+                const fullIndex = fullData.indexOfName(name);
 
-                let itemModel = originalData.getItemModel<MapDataItemOption>(originalDataIndex);
-                let labelModel = itemModel.getModel('label');
-                let hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+                const itemModel = originalData.getItemModel<MapDataItemOption>(originalDataIndex);
+                const labelModel = itemModel.getModel('label');
+                const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
-                let regionGroup = fullData.getItemGraphicEl(fullIndex) as RegionGroupExtend;
+                const regionGroup = fullData.getItemGraphicEl(fullIndex) as RegionGroupExtend;
 
                 // `getFormattedLabel` needs to use `getData` inside. Here
                 // `mapModel.getData()` is shallow cloned from `mainSeries.getData()`.
@@ -183,17 +183,17 @@ class MapView extends ChartView {
                 // set on original data item will never get. But it has been working
                 // like that from the begining, and this scenario is rarely encountered.
                 // So it won't be fixed until have to.
-                let normalText = zrUtil.retrieve2(
+                const normalText = zrUtil.retrieve2(
                     mapModel.getFormattedLabel(fullIndex, 'normal'),
                     name
                 );
-                let emphasisText = zrUtil.retrieve2(
+                const emphasisText = zrUtil.retrieve2(
                     mapModel.getFormattedLabel(fullIndex, 'emphasis'),
                     normalText
                 );
 
                 let highDownRecord = regionGroup[HIGH_DOWN_PROP];
-                let recordVersion = Math.random();
+                const recordVersion = Math.random();
 
                 // Prevent from register listeners duplicatedly when roaming.
                 if (!highDownRecord) {

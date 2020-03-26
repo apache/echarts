@@ -24,13 +24,13 @@ import SankeySeriesModel, { SankeyNodeItemOption } from './SankeySeries';
 
 export default function (ecModel: GlobalModel) {
     ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
-        let graph = seriesModel.getGraph();
-        let nodes = graph.nodes;
+        const graph = seriesModel.getGraph();
+        const nodes = graph.nodes;
         if (nodes.length) {
             let minValue = Infinity;
             let maxValue = -Infinity;
             zrUtil.each(nodes, function (node) {
-                let nodeValue = node.getLayout().value;
+                const nodeValue = node.getLayout().value;
                 if (nodeValue < minValue) {
                     minValue = nodeValue;
                 }
@@ -40,15 +40,15 @@ export default function (ecModel: GlobalModel) {
             });
 
             zrUtil.each(nodes, function (node) {
-                let mapping = new VisualMapping({
+                const mapping = new VisualMapping({
                     type: 'color',
                     mappingMethod: 'linear',
                     dataExtent: [minValue, maxValue],
                     visual: seriesModel.get('color')
                 });
 
-                let mapValueToColor = mapping.mapValueToVisual(node.getLayout().value);
-                let customColor = node.getModel<SankeyNodeItemOption>().get(['itemStyle', 'color']);
+                const mapValueToColor = mapping.mapValueToVisual(node.getLayout().value);
+                const customColor = node.getModel<SankeyNodeItemOption>().get(['itemStyle', 'color']);
                 customColor != null
                     ? node.setVisual('color', customColor)
                     : node.setVisual('color', mapValueToColor);

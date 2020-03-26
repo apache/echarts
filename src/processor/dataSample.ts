@@ -80,17 +80,17 @@ export default function (seriesType: string): StageHandler {
         // modifyOutputEnd: true,
 
         reset: function (seriesModel: SeriesModel<SeriesOption & SeriesSamplingOptionMixin>, ecModel, api) {
-            let data = seriesModel.getData();
-            let sampling = seriesModel.get('sampling');
-            let coordSys = seriesModel.coordinateSystem;
+            const data = seriesModel.getData();
+            const sampling = seriesModel.get('sampling');
+            const coordSys = seriesModel.coordinateSystem;
             // Only cartesian2d support down sampling
             if (coordSys.type === 'cartesian2d' && sampling) {
-                let baseAxis = coordSys.getBaseAxis();
-                let valueAxis = coordSys.getOtherAxis(baseAxis);
-                let extent = baseAxis.getExtent();
+                const baseAxis = coordSys.getBaseAxis();
+                const valueAxis = coordSys.getOtherAxis(baseAxis);
+                const extent = baseAxis.getExtent();
                 // Coordinste system has been resized
-                let size = extent[1] - extent[0];
-                let rate = Math.round(data.count() / size);
+                const size = extent[1] - extent[0];
+                const rate = Math.round(data.count() / size);
                 if (rate > 1) {
                     let sampler;
                     if (typeof sampling === 'string') {

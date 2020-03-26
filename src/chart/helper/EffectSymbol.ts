@@ -50,7 +50,7 @@ function normalizeSymbolSize(symbolSize: number | number[]): number[] {
 }
 
 function updateRipplePath(rippleGroup: Group, effectCfg: RippleEffectCfg) {
-    let color = effectCfg.rippleEffectColor || effectCfg.color;
+    const color = effectCfg.rippleEffectColor || effectCfg.color;
     rippleGroup.eachChild(function (ripplePath: Displayable) {
         ripplePath.attr({
             z: effectCfg.z,
@@ -70,8 +70,8 @@ class EffectSymbol extends Group {
     constructor(data: List, idx: number) {
         super();
 
-        let symbol = new SymbolClz(data, idx);
-        let rippleGroup = new Group();
+        const symbol = new SymbolClz(data, idx);
+        const rippleGroup = new Group();
         this.add(symbol);
         this.add(rippleGroup);
 
@@ -84,15 +84,15 @@ class EffectSymbol extends Group {
     }
 
     startEffectAnimation(effectCfg: RippleEffectCfg) {
-        let symbolType = effectCfg.symbolType;
-        let color = effectCfg.color;
-        let rippleGroup = this.childAt(1) as Group;
+        const symbolType = effectCfg.symbolType;
+        const color = effectCfg.color;
+        const rippleGroup = this.childAt(1) as Group;
 
         for (let i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
             // If width/height are set too small (e.g., set to 1) on ios10
             // and macOS Sierra, a circle stroke become a rect, no matter what
             // the scale is set. So we set width/height as 2. See #4136.
-            let ripplePath = createSymbol(
+            const ripplePath = createSymbol(
                 symbolType, -1, -1, 2, 2, color
             );
             ripplePath.attr({
@@ -104,7 +104,7 @@ class EffectSymbol extends Group {
                 scale: [0.5, 0.5]
             });
 
-            let delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
+            const delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
             // TODO Configurable effectCfg.period
             ripplePath.animate('', true)
                 .when(effectCfg.period, {
@@ -129,13 +129,13 @@ class EffectSymbol extends Group {
      * Update effect symbol
      */
     updateEffectAnimation(effectCfg: RippleEffectCfg) {
-        let oldEffectCfg = this._effectCfg;
-        let rippleGroup = this.childAt(1) as Group;
+        const oldEffectCfg = this._effectCfg;
+        const rippleGroup = this.childAt(1) as Group;
 
         // Must reinitialize effect if following configuration changed
-        let DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'] as const;
+        const DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'] as const;
         for (let i = 0; i < DIFFICULT_PROPS.length; i++) {
-            let propName = DIFFICULT_PROPS[i];
+            const propName = DIFFICULT_PROPS[i];
             if (oldEffectCfg[propName] !== effectCfg[propName]) {
                 this.stopEffectAnimation();
                 this.startEffectAnimation(effectCfg);
@@ -164,15 +164,15 @@ class EffectSymbol extends Group {
      * Update symbol properties
      */
     updateData(data: List, idx: number) {
-        let seriesModel = data.hostModel;
+        const seriesModel = data.hostModel;
 
         (this.childAt(0) as SymbolClz).updateData(data, idx);
 
-        let rippleGroup = this.childAt(1);
-        let itemModel = data.getItemModel<SymbolDrawItemModelOption>(idx);
-        let symbolType = data.getItemVisual(idx, 'symbol');
-        let symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-        let color = data.getItemVisual(idx, 'color');
+        const rippleGroup = this.childAt(1);
+        const itemModel = data.getItemModel<SymbolDrawItemModelOption>(idx);
+        const symbolType = data.getItemVisual(idx, 'symbol');
+        const symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+        const color = data.getItemVisual(idx, 'color');
 
         rippleGroup.attr('scale', symbolSize);
 
@@ -180,15 +180,15 @@ class EffectSymbol extends Group {
             ripplePath.setStyle('fill', color);
         });
 
-        let symbolOffset = itemModel.getShallow('symbolOffset');
+        const symbolOffset = itemModel.getShallow('symbolOffset');
         if (symbolOffset) {
-            let pos = rippleGroup.position;
+            const pos = rippleGroup.position;
             pos[0] = parsePercent(symbolOffset[0], symbolSize[0]);
             pos[1] = parsePercent(symbolOffset[1], symbolSize[1]);
         }
         rippleGroup.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
 
-        let effectCfg: RippleEffectCfg = {};
+        const effectCfg: RippleEffectCfg = {};
 
         effectCfg.showEffectOn = seriesModel.get('showEffectOn');
         effectCfg.rippleScale = itemModel.get(['rippleEffect', 'scale']);
@@ -215,14 +215,14 @@ class EffectSymbol extends Group {
             this._effectCfg = null;
 
             this.stopEffectAnimation();
-            let symbol = this.childAt(0) as SymbolClz;
-            let onEmphasis = function (this: EffectSymbol) {
+            const symbol = this.childAt(0) as SymbolClz;
+            const onEmphasis = function (this: EffectSymbol) {
                 symbol.highlight();
                 if (effectCfg.showEffectOn !== 'render') {
                     this.startEffectAnimation(effectCfg);
                 }
             };
-            let onNormal = function (this: EffectSymbol) {
+            const onNormal = function (this: EffectSymbol) {
                 symbol.downplay();
                 if (effectCfg.showEffectOn !== 'render') {
                     this.stopEffectAnimation();

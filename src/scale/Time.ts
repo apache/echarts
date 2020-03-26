@@ -60,7 +60,7 @@ const bisect = function (
     hi: number
 ): number {
     while (lo < hi) {
-        let mid = lo + hi >>> 1;
+        const mid = lo + hi >>> 1;
         if (a[mid][1] < x) {
             lo = mid + 1;
         }
@@ -80,9 +80,9 @@ class TimeScale extends IntervalScale {
     private _stepLvl: [string, number];
 
     getLabel(val: number): string {
-        let stepLvl = this._stepLvl;
+        const stepLvl = this._stepLvl;
 
-        let date = new Date(val);
+        const date = new Date(val);
 
         return formatUtil.formatTime(stepLvl[0], date, this.getSetting('useUTC'));
     }
@@ -96,7 +96,7 @@ class TimeScale extends IntervalScale {
             maxInterval?: number
         }
     ): void {
-        let extent = this._extent;
+        const extent = this._extent;
         // If extent start and end are same, expand them
         if (extent[0] === extent[1]) {
             // Expand extent
@@ -105,7 +105,7 @@ class TimeScale extends IntervalScale {
         }
         // If there are no data and extent are [Infinity, -Infinity]
         if (extent[1] === -Infinity && extent[0] === Infinity) {
-            let d = new Date();
+            const d = new Date();
             extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
             extent[0] = extent[1] - ONE_DAY;
         }
@@ -113,7 +113,7 @@ class TimeScale extends IntervalScale {
         this.niceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
 
         // let extent = this._extent;
-        let interval = this._interval;
+        const interval = this._interval;
 
         if (!opt.fixMin) {
             extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
@@ -126,8 +126,8 @@ class TimeScale extends IntervalScale {
     niceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
         approxTickNum = approxTickNum || 10;
 
-        let extent = this._extent;
-        let span = extent[1] - extent[0];
+        const extent = this._extent;
+        const span = extent[1] - extent[0];
         let approxInterval = span / approxTickNum;
 
         if (minInterval != null && approxInterval < minInterval) {
@@ -137,25 +137,25 @@ class TimeScale extends IntervalScale {
             approxInterval = maxInterval;
         }
 
-        let scaleLevelsLen = scaleLevels.length;
-        let idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
+        const scaleLevelsLen = scaleLevels.length;
+        const idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
 
-        let level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
+        const level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
         let interval = level[1];
         // Same with interval scale if span is much larger than 1 year
         if (level[0] === 'year') {
-            let yearSpan = span / interval;
+            const yearSpan = span / interval;
 
             // From "Nice Numbers for Graph Labels" of Graphic Gems
             // let niceYearSpan = numberUtil.nice(yearSpan, false);
-            let yearStep = numberUtil.nice(yearSpan / approxTickNum, true);
+            const yearStep = numberUtil.nice(yearSpan / approxTickNum, true);
 
             interval *= yearStep;
         }
 
-        let timezoneOffset = this.getSetting('useUTC')
+        const timezoneOffset = this.getSetting('useUTC')
             ? 0 : (new Date(+extent[0] || +extent[1])).getTimezoneOffset() * 60 * 1000;
-        let niceExtent = [
+        const niceExtent = [
             Math.round(mathCeil((extent[0] - timezoneOffset) / interval) * interval + timezoneOffset),
             Math.round(mathFloor((extent[1] - timezoneOffset) / interval) * interval + timezoneOffset)
         ] as [number, number];

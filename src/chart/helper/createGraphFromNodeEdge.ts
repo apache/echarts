@@ -30,7 +30,7 @@ import createListFromArray from './createListFromArray';
 export default function (nodes, edges, seriesModel, directed, beforeLink) {
     // ??? TODO
     // support dataset?
-    let graph = new Graph(directed);
+    const graph = new Graph(directed);
     for (let i = 0; i < nodes.length; i++) {
         graph.addNode(zrUtil.retrieve(
             // Id, name, dataIndex
@@ -38,13 +38,13 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
         ), i);
     }
 
-    let linkNameList = [];
-    let validEdges = [];
+    const linkNameList = [];
+    const validEdges = [];
     let linkCount = 0;
     for (let i = 0; i < edges.length; i++) {
-        let link = edges[i];
-        let source = link.source;
-        let target = link.target;
+        const link = edges[i];
+        const source = link.source;
+        const target = link.target;
         // addEdge may fail when source or target not exists
         if (graph.addEdge(source, target, linkCount)) {
             validEdges.push(link);
@@ -53,14 +53,14 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
         }
     }
 
-    let coordSys = seriesModel.get('coordinateSystem');
+    const coordSys = seriesModel.get('coordinateSystem');
     let nodeData;
     if (coordSys === 'cartesian2d' || coordSys === 'polar') {
         nodeData = createListFromArray(nodes, seriesModel);
     }
     else {
-        let coordSysCtor = CoordinateSystem.get(coordSys);
-        let coordDimensions = (coordSysCtor && coordSysCtor.type !== 'view')
+        const coordSysCtor = CoordinateSystem.get(coordSys);
+        const coordDimensions = (coordSysCtor && coordSysCtor.type !== 'view')
             ? (coordSysCtor.dimensions || []) : [];
         // FIXME: Some geo do not need `value` dimenson, whereas `calendar` needs
         // `value` dimension, but graph need `value` dimension. It's better to
@@ -69,14 +69,14 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
             coordDimensions.concat(['value']);
         }
 
-        let dimensionNames = createDimensions(nodes, {
+        const dimensionNames = createDimensions(nodes, {
             coordDimensions: coordDimensions
         });
         nodeData = new List(dimensionNames, seriesModel);
         nodeData.initData(nodes);
     }
 
-    let edgeData = new List(['value'], seriesModel);
+    const edgeData = new List(['value'], seriesModel);
     edgeData.initData(validEdges, linkNameList);
 
     beforeLink && beforeLink(nodeData, edgeData);

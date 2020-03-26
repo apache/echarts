@@ -76,14 +76,14 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
     inEdges: E[],
     opts: LayoutCfg
 ) {
-    let nodes = inNodes as LayoutNode[];
-    let edges = inEdges as LayoutEdge[];
-    let rect = opts.rect;
-    let width = rect.width;
-    let height = rect.height;
-    let center = [rect.x + width / 2, rect.y + height / 2];
+    const nodes = inNodes as LayoutNode[];
+    const edges = inEdges as LayoutEdge[];
+    const rect = opts.rect;
+    const width = rect.width;
+    const height = rect.height;
+    const center = [rect.x + width / 2, rect.y + height / 2];
     // let scale = opts.scale || 1;
-    let gravity = opts.gravity == null ? 0.1 : opts.gravity;
+    const gravity = opts.gravity == null ? 0.1 : opts.gravity;
 
     // for (let i = 0; i < edges.length; i++) {
     //     let e = edges[i];
@@ -96,7 +96,7 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
     // }
     // Init position
     for (let i = 0; i < nodes.length; i++) {
-        let n = nodes[i] as LayoutNode;
+        const n = nodes[i] as LayoutNode;
         if (!n.p) {
             n.p = vec2.create(
                 width * (Math.random() - 0.5) + center[0],
@@ -111,7 +111,7 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
     // let k = scale * Math.sqrt(width * height / nodes.length);
     // let k2 = k * k;
 
-    let initialFriction = opts.friction == null ? 0.6 : opts.friction;
+    const initialFriction = opts.friction == null ? 0.6 : opts.friction;
     let friction = initialFriction;
 
     let beforeStepCallback: (nodes: N[], edges: E[]) => void;
@@ -152,18 +152,18 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
         step: function (cb?: (finished: boolean) => void) {
             beforeStepCallback && beforeStepCallback(nodes as N[], edges as E[]);
 
-            let v12: number[] = [];
-            let nLen = nodes.length;
+            const v12: number[] = [];
+            const nLen = nodes.length;
             for (let i = 0; i < edges.length; i++) {
-                let e = edges[i];
+                const e = edges[i];
                 if (e.ignoreForceLayout) {
                     continue;
                 }
-                let n1 = e.n1;
-                let n2 = e.n2;
+                const n1 = e.n1;
+                const n2 = e.n2;
 
                 vec2.sub(v12, n2.p, n1.p);
-                let d = vec2.len(v12) - e.d;
+                const d = vec2.len(v12) - e.d;
                 let w = n2.w / (n1.w + n2.w);
 
                 if (isNaN(w)) {
@@ -177,7 +177,7 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
             }
             // Gravity
             for (let i = 0; i < nLen; i++) {
-                let n = nodes[i];
+                const n = nodes[i];
                 if (!n.fixed) {
                     vec2.sub(v12, center, n.p);
                     // let d = vec2.len(v12);
@@ -190,9 +190,9 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
             // Repulsive
             // PENDING
             for (let i = 0; i < nLen; i++) {
-                let n1 = nodes[i];
+                const n1 = nodes[i];
                 for (let j = i + 1; j < nLen; j++) {
-                    let n2 = nodes[j];
+                    const n2 = nodes[j];
                     vec2.sub(v12, n2.p, n1.p);
                     let d = vec2.len(v12);
                     if (d === 0) {
@@ -200,14 +200,14 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
                         vec2.set(v12, Math.random() - 0.5, Math.random() - 0.5);
                         d = 1;
                     }
-                    let repFact = (n1.rep + n2.rep) / d / d;
+                    const repFact = (n1.rep + n2.rep) / d / d;
                     !n1.fixed && scaleAndAdd(n1.pp, n1.pp, v12, repFact);
                     !n2.fixed && scaleAndAdd(n2.pp, n2.pp, v12, -repFact);
                 }
             }
-            let v: number[] = [];
+            const v: number[] = [];
             for (let i = 0; i < nLen; i++) {
-                let n = nodes[i];
+                const n = nodes[i];
                 if (!n.fixed) {
                     vec2.sub(v, n.p, n.pp);
                     scaleAndAdd(n.p, n.p, v, friction);

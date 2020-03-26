@@ -70,7 +70,7 @@ class ScrollableLegendModel extends LegendModel<ScrollableLegendOption> {
         parentModel: Model,
         ecModel: GlobalModel
     ) {
-        let inputPositionParams = getLayoutParams(option);
+        const inputPositionParams = getLayoutParams(option);
 
         super.init(option, parentModel, ecModel);
 
@@ -113,8 +113,8 @@ function mergeAndNormalizeLayoutParams(
     target: ScrollableLegendOption,
     raw: ScrollableLegendOption
 ) {
-    let orient = legendModel.getOrient();
-    let ignoreSize = [1, 1];
+    const orient = legendModel.getOrient();
+    const ignoreSize = [1, 1];
     ignoreSize[orient.index] = 0;
     mergeLayoutParam(target, raw, {
         type: 'box', ignoreSize: !!ignoreSize

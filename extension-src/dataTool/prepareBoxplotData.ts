@@ -48,37 +48,37 @@ import * as numberUtil from '../../src/util/number';
  */
 export default function (rawData, opt) {
     opt = opt || [];
-    let boxData = [];
-    let outliers = [];
-    let axisData = [];
-    let boundIQR = opt.boundIQR;
-    let useExtreme = boundIQR === 'none' || boundIQR === 0;
+    const boxData = [];
+    const outliers = [];
+    const axisData = [];
+    const boundIQR = opt.boundIQR;
+    const useExtreme = boundIQR === 'none' || boundIQR === 0;
 
     for (let i = 0; i < rawData.length; i++) {
         axisData.push(i + '');
-        let ascList = numberUtil.asc(rawData[i].slice());
+        const ascList = numberUtil.asc(rawData[i].slice());
 
-        let Q1 = numberUtil.quantile(ascList, 0.25);
-        let Q2 = numberUtil.quantile(ascList, 0.5);
-        let Q3 = numberUtil.quantile(ascList, 0.75);
-        let min = ascList[0];
-        let max = ascList[ascList.length - 1];
+        const Q1 = numberUtil.quantile(ascList, 0.25);
+        const Q2 = numberUtil.quantile(ascList, 0.5);
+        const Q3 = numberUtil.quantile(ascList, 0.75);
+        const min = ascList[0];
+        const max = ascList[ascList.length - 1];
 
-        let bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
+        const bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
 
-        let low = useExtreme
+        const low = useExtreme
             ? min
             : Math.max(min, Q1 - bound);
-        let high = useExtreme
+        const high = useExtreme
             ? max
             : Math.min(max, Q3 + bound);
 
         boxData.push([low, Q1, Q2, Q3, high]);
 
         for (let j = 0; j < ascList.length; j++) {
-            let dataItem = ascList[j];
+            const dataItem = ascList[j];
             if (dataItem < low || dataItem > high) {
-                let outlier = [i, dataItem];
+                const outlier = [i, dataItem];
                 opt.layout === 'vertical' && outlier.reverse();
                 outliers.push(outlier);
             }

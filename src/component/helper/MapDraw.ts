@@ -41,8 +41,8 @@ interface RegionsGroup extends graphic.Group {
 }
 
 function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
-    let itemStyle = model.getItemStyle();
-    let areaColor = model.get('areaColor');
+    const itemStyle = model.getItemStyle();
+    const areaColor = model.get('areaColor');
 
     // If user want the color not to be changed when hover,
     // they should both set areaColor and color to be null.
@@ -96,7 +96,7 @@ class MapDraw {
 
 
     constructor(api: ExtensionAPI, updateGroup: boolean) {
-        let group = new graphic.Group();
+        const group = new graphic.Group();
         this.uid = getUID('ec_map_draw');
         // @ts-ignore FIXME:TS
         this._controller = new RoamController(api.getZr());
@@ -116,7 +116,7 @@ class MapDraw {
         payload: Payload
     ): void {
 
-        let isGeo = mapOrGeoModel.mainType === 'geo';
+        const isGeo = mapOrGeoModel.mainType === 'geo';
 
         // Map series has data. GEO model that controlled by map series
         // will be assigned with map data. Other GEO model has no data.
@@ -127,28 +127,28 @@ class MapDraw {
             }
         });
 
-        let geo = mapOrGeoModel.coordinateSystem;
+        const geo = mapOrGeoModel.coordinateSystem;
 
         this._updateBackground(geo);
 
-        let regionsGroup = this._regionsGroup;
-        let group = this.group;
+        const regionsGroup = this._regionsGroup;
+        const group = this.group;
 
-        let transformInfo = geo.getTransformInfo();
+        const transformInfo = geo.getTransformInfo();
         group.transform = transformInfo.roamTransform;
         group.decomposeTransform();
         group.dirty();
 
-        let scale = transformInfo.rawScale;
-        let position = transformInfo.rawPosition;
+        const scale = transformInfo.rawScale;
+        const position = transformInfo.rawPosition;
 
         regionsGroup.removeAll();
 
-        let itemStyleAccessPath = ['itemStyle'] as const;
-        let hoverItemStyleAccessPath = ['emphasis', 'itemStyle'] as const;
-        let labelAccessPath = ['label'] as const;
-        let hoverLabelAccessPath = ['emphasis', 'label'] as const;
-        let nameMap = zrUtil.createHashMap<RegionsGroup>();
+        const itemStyleAccessPath = ['itemStyle'] as const;
+        const hoverItemStyleAccessPath = ['emphasis', 'itemStyle'] as const;
+        const labelAccessPath = ['label'] as const;
+        const hoverLabelAccessPath = ['emphasis', 'label'] as const;
+        const nameMap = zrUtil.createHashMap<RegionsGroup>();
 
         zrUtil.each(geo.regions, function (region) {
             // Consider in GeoJson properties.name may be duplicated, for example,
@@ -156,10 +156,10 @@ class MapDraw {
             // colonies). And it is not appropriate to merge them in geo, which
             // will make them share the same label and bring trouble in label
             // location calculation.
-            let regionGroup = nameMap.get(region.name)
+            const regionGroup = nameMap.get(region.name)
                 || nameMap.set(region.name, new graphic.Group() as RegionsGroup);
 
-            let compoundPath = new graphic.CompoundPath({
+            const compoundPath = new graphic.CompoundPath({
                 segmentIgnoreThreshold: 1,
                 shape: {
                     paths: []
@@ -170,16 +170,16 @@ class MapDraw {
             const regionModel = mapOrGeoModel.getRegionModel(region.name) || mapOrGeoModel;
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            let itemStyleModel = regionModel.getModel(itemStyleAccessPath);
+            const itemStyleModel = regionModel.getModel(itemStyleAccessPath);
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            let hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
-            let itemStyle = getFixedItemStyle(itemStyleModel);
-            let hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
+            const hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
+            const itemStyle = getFixedItemStyle(itemStyleModel);
+            const hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            let labelModel = regionModel.getModel(labelAccessPath);
+            const labelModel = regionModel.getModel(labelAccessPath);
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            let hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
+            const hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
 
             let dataIdx;
             // Use the itemStyle in data if has data
@@ -189,13 +189,13 @@ class MapDraw {
                 // But visual color of series is used in symbol drawing
                 //
                 // Visual color for each series is for the symbol draw
-                let visualColor = data.getItemVisual(dataIdx, 'color', true);
+                const visualColor = data.getItemVisual(dataIdx, 'color', true);
                 if (visualColor) {
                     itemStyle.fill = visualColor;
                 }
             }
 
-            let transformPoint = function (point: number[]): number[] {
+            const transformPoint = function (point: number[]): number[] {
                 return [
                     point[0] * scale[0] + position[0],
                     point[1] * scale[1] + position[1]
@@ -206,7 +206,7 @@ class MapDraw {
                 if (geometry.type !== 'polygon') {
                     return;
                 }
-                let points = [];
+                const points = [];
                 for (let i = 0; i < geometry.exterior.length; ++i) {
                     points.push(transformPoint(geometry.exterior[i]));
                 }
@@ -218,8 +218,8 @@ class MapDraw {
                 }));
 
                 for (let i = 0; i < (geometry.interiors ? geometry.interiors.length : 0); ++i) {
-                    let interior = geometry.interiors[i];
-                    let points = [];
+                    const interior = geometry.interiors[i];
+                    const points = [];
                     for (let j = 0; j < interior.length; ++j) {
                         points.push(transformPoint(interior[j]));
                     }
@@ -237,11 +237,11 @@ class MapDraw {
             compoundPath.culling = true;
 
             // Label
-            let showLabel = labelModel.get('show');
-            let hoverShowLabel = hoverLabelModel.get('show');
+            const showLabel = labelModel.get('show');
+            const hoverShowLabel = hoverLabelModel.get('show');
 
-            let isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
-            let itemLayout = data && data.getItemLayout(dataIdx);
+            const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
+            const itemLayout = data && data.getItemLayout(dataIdx);
             // In the following cases label will be drawn
             // 1. In map series and data value is NaN
             // 2. In geo component
@@ -250,7 +250,7 @@ class MapDraw {
                 (isGeo || isDataNaN && (showLabel || hoverShowLabel))
                 || (itemLayout && itemLayout.showLabel)
             ) {
-                let query = !isGeo ? dataIdx : region.name;
+                const query = !isGeo ? dataIdx : region.name;
                 let labelFetcher;
 
                 // Consider dataIdx not found.
@@ -258,7 +258,7 @@ class MapDraw {
                     labelFetcher = mapOrGeoModel;
                 }
 
-                let textEl = new graphic.Text({
+                const textEl = new graphic.Text({
                     position: transformPoint(region.center.slice()),
                     // FIXME
                     // label rotation is not support yet in geo or regions of series-map
@@ -302,7 +302,7 @@ class MapDraw {
                 };
             }
 
-            let groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
+            const groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
             groupRegions.push(region);
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
@@ -329,7 +329,7 @@ class MapDraw {
     }
 
     private _updateBackground(geo: Geo): void {
-        let mapName = geo.map;
+        const mapName = geo.map;
 
         if (this._mapName !== mapName) {
             zrUtil.each(geoSourceManager.makeGraphic(mapName, this.uid), function (root) {
@@ -343,9 +343,9 @@ class MapDraw {
     private _updateController(
         mapOrGeoModel: GeoModel | MapSeries, ecModel: GlobalModel, api: ExtensionAPI
     ): void {
-        let geo = mapOrGeoModel.coordinateSystem;
-        let controller = this._controller;
-        let controllerHost = this._controllerHost;
+        const geo = mapOrGeoModel.coordinateSystem;
+        const controller = this._controller;
+        const controllerHost = this._controllerHost;
 
         // @ts-ignore FIXME:TS
         controllerHost.zoomLimit = mapOrGeoModel.get('scaleLimit');
@@ -354,10 +354,10 @@ class MapDraw {
         // roamType is will be set default true if it is null
         // @ts-ignore FIXME:TS
         controller.enable(mapOrGeoModel.get('roam') || false);
-        let mainType = mapOrGeoModel.mainType;
+        const mainType = mapOrGeoModel.mainType;
 
         function makeActionBase(): Payload {
-            let action = {
+            const action = {
                 type: 'geoRoam',
                 componentType: mainType
             } as Payload;
@@ -390,7 +390,7 @@ class MapDraw {
             }));
 
             if (this._updateGroup) {
-                let scale = this.group.scale;
+                const scale = this.group.scale;
                 this._regionsGroup.traverse(function (el) {
                     if (el.type === 'text') {
                         el.attr('scale', [1 / scale[0], 1 / scale[1]]);
@@ -412,7 +412,7 @@ class MapDraw {
         api: ExtensionAPI,
         fromView: MapView | GeoView
     ): void {
-        let mapDraw = this;
+        const mapDraw = this;
 
         regionsGroup.off('click');
         regionsGroup.off('mousedown');
@@ -438,7 +438,7 @@ class MapDraw {
                     return;
                 }
 
-                let action = {
+                const action = {
                     type: (mapOrGeoModel.mainType === 'geo' ? 'geo' : 'map') + 'ToggleSelect',
                     batch: zrUtil.map((el as RegionsGroup).__regions, function (region) {
                         return {

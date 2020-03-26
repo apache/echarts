@@ -41,26 +41,26 @@ export function layout(
     gridModel: GridModel, axisModel: CartesianAxisModel, opt?: {labelInside?: boolean}
 ): CartesianAxisLayout {
     opt = opt || {};
-    let grid = gridModel.coordinateSystem;
-    let axis = axisModel.axis;
-    let layout = {} as CartesianAxisLayout;
-    let otherAxisOnZeroOf = axis.getAxesOnZeroOf()[0];
+    const grid = gridModel.coordinateSystem;
+    const axis = axisModel.axis;
+    const layout = {} as CartesianAxisLayout;
+    const otherAxisOnZeroOf = axis.getAxesOnZeroOf()[0];
 
-    let rawAxisPosition = axis.position;
-    let axisPosition: 'onZero' | typeof axis.position = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
-    let axisDim = axis.dim;
+    const rawAxisPosition = axis.position;
+    const axisPosition: 'onZero' | typeof axis.position = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
+    const axisDim = axis.dim;
 
-    let rect = grid.getRect();
-    let rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
-    let idx = {left: 0, right: 1, top: 0, bottom: 1, onZero: 2};
-    let axisOffset = axisModel.get('offset') || 0;
+    const rect = grid.getRect();
+    const rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
+    const idx = {left: 0, right: 1, top: 0, bottom: 1, onZero: 2};
+    const axisOffset = axisModel.get('offset') || 0;
 
-    let posBound = axisDim === 'x'
+    const posBound = axisDim === 'x'
         ? [rectBound[2] - axisOffset, rectBound[3] + axisOffset]
         : [rectBound[0] - axisOffset, rectBound[1] + axisOffset];
 
     if (otherAxisOnZeroOf) {
-        let onZeroCoord = otherAxisOnZeroOf.toGlobalCoord(otherAxisOnZeroOf.dataToCoord(0));
+        const onZeroCoord = otherAxisOnZeroOf.toGlobalCoord(otherAxisOnZeroOf.dataToCoord(0));
         posBound[idx.onZero] = Math.max(Math.min(onZeroCoord, posBound[1]), posBound[0]);
     }
 
@@ -74,7 +74,7 @@ export function layout(
     layout.rotation = Math.PI / 2 * (axisDim === 'x' ? 0 : 1);
 
     // Tick and label direction, x y is axisDim
-    let dirMap = {top: -1, bottom: 1, left: -1, right: 1} as const;
+    const dirMap = {top: -1, bottom: 1, left: -1, right: 1} as const;
 
     layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
     layout.labelOffset = otherAxisOnZeroOf ? posBound[idx[rawAxisPosition]] - posBound[idx.onZero] : 0;
@@ -87,7 +87,7 @@ export function layout(
     }
 
     // Special label rotation
-    let labelRotate = axisModel.get(['axisLabel', 'rotate']);
+    const labelRotate = axisModel.get(['axisLabel', 'rotate']);
     layout.labelRotate = axisPosition === 'top' ? -labelRotate : labelRotate;
 
     // Over splitLine and splitArea

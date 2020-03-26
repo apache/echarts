@@ -48,7 +48,7 @@ export {colorTool as color};
 export {default as env} from 'zrender/src/core/env';
 
 export {parseGeoJSON};
-export let parseGeoJson = parseGeoJSON;
+export const parseGeoJson = parseGeoJSON;
 
 const ecUtil = {};
 zrUtil.each(

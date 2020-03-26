@@ -22,16 +22,16 @@ import Single from './Single';
 
 function dataToCoordSize(this: Single, dataSize: number | number[], dataItem: number | number[]) {
     // dataItem is necessary in log axis.
-    let axis = this.getAxis();
-    let val = dataItem instanceof Array ? dataItem[0] : dataItem;
-    let halfSize = (dataSize instanceof Array ? dataSize[0] : dataSize) / 2;
+    const axis = this.getAxis();
+    const val = dataItem instanceof Array ? dataItem[0] : dataItem;
+    const halfSize = (dataSize instanceof Array ? dataSize[0] : dataSize) / 2;
     return axis.type === 'category'
         ? axis.getBandWidth()
         : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 }
 
 export default function (coordSys: Single) {
-    let rect = coordSys.getRect();
+    const rect = coordSys.getRect();
 
     return {
         coordSys: {

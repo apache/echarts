@@ -80,9 +80,9 @@ type Fetcher = (
 ) => void;
 
 export function getCoordSysInfoBySeries(seriesModel: SeriesModel) {
-    let coordSysName = seriesModel.get('coordinateSystem') as SupportedCoordSys;
-    let result = new CoordSysInfo(coordSysName);
-    let fetch = fetchers[coordSysName];
+    const coordSysName = seriesModel.get('coordinateSystem') as SupportedCoordSys;
+    const result = new CoordSysInfo(coordSysName);
+    const fetch = fetchers[coordSysName];
     if (fetch) {
         fetch(seriesModel, result, result.axisMap, result.categoryAxisMap);
         return result;
@@ -94,8 +94,8 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     cartesian2d: function (
         seriesModel: SeriesModel<SeriesOption & SeriesOnCartesianOptionMixin>, result, axisMap, categoryAxisMap
     ) {
-        let xAxisModel = seriesModel.getReferringComponents('xAxis')[0] as AxisBaseModel;
-        let yAxisModel = seriesModel.getReferringComponents('yAxis')[0] as AxisBaseModel;
+        const xAxisModel = seriesModel.getReferringComponents('xAxis')[0] as AxisBaseModel;
+        const yAxisModel = seriesModel.getReferringComponents('yAxis')[0] as AxisBaseModel;
 
         if (__DEV__) {
             if (!xAxisModel) {
@@ -129,7 +129,7 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     },
 
     singleAxis: function (seriesModel, result, axisMap, categoryAxisMap) {
-        let singleAxisModel = seriesModel.getReferringComponents('singleAxis')[0] as AxisBaseModel;
+        const singleAxisModel = seriesModel.getReferringComponents('singleAxis')[0] as AxisBaseModel;
 
         if (__DEV__) {
             if (!singleAxisModel) {
@@ -147,9 +147,9 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     },
 
     polar: function (seriesModel, result, axisMap, categoryAxisMap) {
-        let polarModel = seriesModel.getReferringComponents('polar')[0] as PolarModel;
-        let radiusAxisModel = polarModel.findAxisModel('radiusAxis');
-        let angleAxisModel = polarModel.findAxisModel('angleAxis');
+        const polarModel = seriesModel.getReferringComponents('polar')[0] as PolarModel;
+        const radiusAxisModel = polarModel.findAxisModel('radiusAxis');
+        const angleAxisModel = polarModel.findAxisModel('angleAxis');
 
         if (__DEV__) {
             if (!angleAxisModel) {
@@ -179,19 +179,19 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     },
 
     parallel: function (seriesModel, result, axisMap, categoryAxisMap) {
-        let ecModel = seriesModel.ecModel;
-        let parallelModel = ecModel.getComponent(
+        const ecModel = seriesModel.ecModel;
+        const parallelModel = ecModel.getComponent(
             // @ts-ignore
             'parallel', seriesModel.get('parallelIndex')
         );
         // @ts-ignore
-        let coordSysDims = result.coordSysDims = parallelModel.dimensions.slice();
+        const coordSysDims = result.coordSysDims = parallelModel.dimensions.slice();
 
             // @ts-ignore
         each(parallelModel.parallelAxisIndex, function (axisIndex, index) {
             // @ts-ignore
-            let axisModel = ecModel.getComponent('parallelAxis', axisIndex);
-            let axisDim = coordSysDims[index];
+            const axisModel = ecModel.getComponent('parallelAxis', axisIndex);
+            const axisDim = coordSysDims[index];
             // @ts-ignore
             axisMap.set(axisDim, axisModel);
 

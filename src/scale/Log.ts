@@ -61,11 +61,11 @@ class LogScale extends Scale {
      * @param Whether expand the ticks to niced extent.
      */
     getTicks(expandToNicedExtent: boolean): number[] {
-        let originalScale = this._originalScale;
-        let extent = this._extent;
-        let originalExtent = originalScale.getExtent();
+        const originalScale = this._originalScale;
+        const extent = this._extent;
+        const originalExtent = originalScale.getExtent();
 
-        let ticks = intervalScaleProto.getTicks.call(this, expandToNicedExtent);
+        const ticks = intervalScaleProto.getTicks.call(this, expandToNicedExtent);
 
         return zrUtil.map(ticks, function (val) {
             let powVal = numberUtil.round(mathPow(this.base, val));
@@ -83,7 +83,7 @@ class LogScale extends Scale {
     }
 
     setExtent(start: number, end: number): void {
-        let base = this.base;
+        const base = this.base;
         start = mathLog(start) / mathLog(base);
         end = mathLog(end) / mathLog(base);
         intervalScaleProto.setExtent.call(this, start, end);
@@ -93,14 +93,14 @@ class LogScale extends Scale {
      * @return {number} end
      */
     getExtent() {
-        let base = this.base;
-        let extent = scaleProto.getExtent.call(this);
+        const base = this.base;
+        const extent = scaleProto.getExtent.call(this);
         extent[0] = mathPow(base, extent[0]);
         extent[1] = mathPow(base, extent[1]);
 
         // Fix #4158
-        let originalScale = this._originalScale;
-        let originalExtent = originalScale.getExtent();
+        const originalScale = this._originalScale;
+        const originalExtent = originalScale.getExtent();
         this._fixMin && (extent[0] = fixRoundingError(extent[0], originalExtent[0]));
         this._fixMax && (extent[1] = fixRoundingError(extent[1], originalExtent[1]));
 
@@ -110,7 +110,7 @@ class LogScale extends Scale {
     unionExtent(extent: [number, number]): void {
         this._originalScale.unionExtent(extent);
 
-        let base = this.base;
+        const base = this.base;
         extent[0] = mathLog(extent[0]) / mathLog(base);
         extent[1] = mathLog(extent[1]) / mathLog(base);
         scaleProto.unionExtent.call(this, extent);
@@ -128,14 +128,14 @@ class LogScale extends Scale {
      */
     niceTicks(approxTickNum: number): void {
         approxTickNum = approxTickNum || 10;
-        let extent = this._extent;
-        let span = extent[1] - extent[0];
+        const extent = this._extent;
+        const span = extent[1] - extent[0];
         if (span === Infinity || span <= 0) {
             return;
         }
 
         let interval = numberUtil.quantity(span);
-        let err = approxTickNum / span * interval;
+        const err = approxTickNum / span * interval;
 
         // Filter ticks to get closer to the desired count.
         if (err <= 0.5) {
@@ -147,7 +147,7 @@ class LogScale extends Scale {
             interval *= 10;
         }
 
-        let niceExtent = [
+        const niceExtent = [
             numberUtil.round(mathCeil(extent[0] / interval) * interval),
             numberUtil.round(mathFloor(extent[1] / interval) * interval)
         ] as [number, number];

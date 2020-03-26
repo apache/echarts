@@ -87,7 +87,7 @@ class Grid implements CoordinateSystemMaster {
 
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
 
-        let axesMap = this._axesMap;
+        const axesMap = this._axesMap;
 
         this._updateScale(ecModel, this.model);
 
@@ -99,7 +99,7 @@ class Grid implements CoordinateSystemMaster {
         });
 
         // Key: axisDim_axisIndex, value: boolean, whether onZero target.
-        let onZeroRecords = {} as Dictionary<boolean>;
+        const onZeroRecords = {} as Dictionary<boolean>;
 
         each(axesMap.x, function (xAxis) {
             fixAxisOnZero(axesMap, 'y', xAxis, onZeroRecords);
@@ -118,7 +118,7 @@ class Grid implements CoordinateSystemMaster {
      */
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
 
-        let gridRect = getLayoutRect(
+        const gridRect = getLayoutRect(
             gridModel.getBoxLayoutParams(), {
                 width: api.getWidth(),
                 height: api.getHeight()
@@ -126,7 +126,7 @@ class Grid implements CoordinateSystemMaster {
 
         this._rect = gridRect;
 
-        let axesList = this._axesList;
+        const axesList = this._axesList;
 
         adjustAxes();
 
@@ -134,10 +134,10 @@ class Grid implements CoordinateSystemMaster {
         if (!ignoreContainLabel && gridModel.get('containLabel')) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
-                    let labelUnionRect = estimateLabelUnionRect(axis);
+                    const labelUnionRect = estimateLabelUnionRect(axis);
                     if (labelUnionRect) {
-                        let dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
-                        let margin = axis.model.get(['axisLabel', 'margin']);
+                        const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
+                        const margin = axis.model.get(['axisLabel', 'margin']);
                         gridRect[dim] -= labelUnionRect[dim] + margin;
                         if (axis.position === 'top') {
                             gridRect.y += labelUnionRect.height + margin;
@@ -154,9 +154,9 @@ class Grid implements CoordinateSystemMaster {
 
         function adjustAxes() {
             each(axesList, function (axis) {
-                let isHorizontal = axis.isHorizontal();
-                let extent = isHorizontal ? [0, gridRect.width] : [0, gridRect.height];
-                let idx = axis.inverse ? 1 : 0;
+                const isHorizontal = axis.isHorizontal();
+                const extent = isHorizontal ? [0, gridRect.width] : [0, gridRect.height];
+                const idx = axis.inverse ? 1 : 0;
                 axis.setExtent(extent[idx], extent[1 - idx]);
                 updateAxisTransform(axis, isHorizontal ? gridRect.x : gridRect.y);
             });
@@ -164,7 +164,7 @@ class Grid implements CoordinateSystemMaster {
     }
 
     getAxis(dim: Cartesian2DDimensionName, axisIndex?: number): Axis2D {
-        let axesMapOnDim = this._axesMap[dim];
+        const axesMapOnDim = this._axesMap[dim];
         if (axesMapOnDim != null) {
             return axesMapOnDim[axisIndex || 0];
             // if (axisIndex == null) {
@@ -196,7 +196,7 @@ class Grid implements CoordinateSystemMaster {
     getCartesian(xAxisIndex?: number, yAxisIndex?: number): Cartesian2D;
     getCartesian(xAxisIndex?: number | FinderAxisIndex, yAxisIndex?: number) {
         if (xAxisIndex != null && yAxisIndex != null) {
-            let key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+            const key = 'x' + xAxisIndex + 'y' + yAxisIndex;
             return this._coordsMap[key];
         }
 
@@ -223,7 +223,7 @@ class Grid implements CoordinateSystemMaster {
     convertToPixel(
         ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
     ): number | number[] {
-        let target = this._findConvertTarget(finder);
+        const target = this._findConvertTarget(finder);
 
         return target.cartesian
             ? target.cartesian.dataToPoint(value as ScaleDataValue[])
@@ -238,7 +238,7 @@ class Grid implements CoordinateSystemMaster {
     convertFromPixel(
         ecModel: GlobalModel, finder: ParsedModelFinder, value: number | number[]
     ): number | number[] {
-        let target = this._findConvertTarget(finder);
+        const target = this._findConvertTarget(finder);
 
         return target.cartesian
             ? target.cartesian.pointToData(value as number[])
@@ -251,13 +251,13 @@ class Grid implements CoordinateSystemMaster {
         cartesian: Cartesian2D,
         axis: Axis2D
     } {
-        let seriesModel = finder.seriesModel;
-        let xAxisModel = finder.xAxisModel
+        const seriesModel = finder.seriesModel;
+        const xAxisModel = finder.xAxisModel
             || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
-        let yAxisModel = finder.yAxisModel
+        const yAxisModel = finder.yAxisModel
             || (seriesModel && seriesModel.getReferringComponents('yAxis')[0]);
-        let gridModel = finder.gridModel;
-        let coordsList = this._coordsList;
+        const gridModel = finder.gridModel;
+        const coordsList = this._coordsList;
         let cartesian: Cartesian2D;
         let axis;
 
@@ -276,7 +276,7 @@ class Grid implements CoordinateSystemMaster {
         }
         // Lowest priority.
         else if (gridModel) {
-            let grid = gridModel.coordinateSystem;
+            const grid = gridModel.coordinateSystem;
             if (grid === this) {
                 cartesian = this._coordsList[0];
             }
@@ -289,7 +289,7 @@ class Grid implements CoordinateSystemMaster {
      * @implements
      */
     containPoint(point: number[]): boolean {
-        let coord = this._coordsList[0];
+        const coord = this._coordsList[0];
         if (coord) {
             return coord.containPoint(point);
         }
@@ -301,19 +301,19 @@ class Grid implements CoordinateSystemMaster {
     private _initCartesian(
         gridModel: GridModel, ecModel: GlobalModel, api: ExtensionAPI
     ): void {
-        let grid = this;
-        let axisPositionUsed = {
+        const grid = this;
+        const axisPositionUsed = {
             left: false,
             right: false,
             top: false,
             bottom: false
         };
 
-        let axesMap = {
+        const axesMap = {
             x: {},
             y: {}
         } as AxesMap;
-        let axesCount = {
+        const axesCount = {
             x: 0,
             y: 0
         };
@@ -334,8 +334,8 @@ class Grid implements CoordinateSystemMaster {
         /// Create cartesian2d
         each(axesMap.x, function (xAxis, xAxisIndex) {
             each(axesMap.y, function (yAxis, yAxisIndex) {
-                let key = 'x' + xAxisIndex + 'y' + yAxisIndex;
-                let cartesian = new Cartesian2D(key);
+                const key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+                const cartesian = new Cartesian2D(key);
 
                 cartesian.grid = this;
                 cartesian.model = gridModel;
@@ -371,7 +371,7 @@ class Grid implements CoordinateSystemMaster {
                 }
                 axisPositionUsed[axisPosition] = true;
 
-                let axis = new Axis2D(
+                const axis = new Axis2D(
                     dimName,
                     createScaleByModel(axisModel),
                     [0, 0],
@@ -379,7 +379,7 @@ class Grid implements CoordinateSystemMaster {
                     axisPosition
                 );
 
-                let isCategory = axis.type === 'category';
+                const isCategory = axis.type === 'category';
                 axis.onBand = isCategory && axisModel.get('boundaryGap');
                 axis.inverse = axisModel.get('inverse');
 
@@ -413,9 +413,9 @@ class Grid implements CoordinateSystemMaster {
         });
         ecModel.eachSeries(function (seriesModel) {
             if (isCartesian2D(seriesModel)) {
-                let axesModels = findAxesModels(seriesModel);
-                let xAxisModel = axesModels[0];
-                let yAxisModel = axesModels[1];
+                const axesModels = findAxesModels(seriesModel);
+                const xAxisModel = axesModels[0];
+                const yAxisModel = axesModels[1];
 
                 if (!isAxisUsedInTheGrid(xAxisModel, gridModel)
                     || !isAxisUsedInTheGrid(yAxisModel, gridModel)
@@ -423,12 +423,12 @@ class Grid implements CoordinateSystemMaster {
                     return;
                 }
 
-                let cartesian = this.getCartesian(
+                const cartesian = this.getCartesian(
                     xAxisModel.componentIndex, yAxisModel.componentIndex
                 );
-                let data = seriesModel.getData();
-                let xAxis = cartesian.getAxis('x');
-                let yAxis = cartesian.getAxis('y');
+                const data = seriesModel.getData();
+                const xAxis = cartesian.getAxis('x');
+                const yAxis = cartesian.getAxis('y');
 
                 if (data.type === 'list') {
                     unionExtent(data, xAxis);
@@ -455,13 +455,13 @@ class Grid implements CoordinateSystemMaster {
     getTooltipAxes(dim: Cartesian2DDimensionName | 'auto'): {
         baseAxes: Axis2D[], otherAxes: Axis2D[]
     } {
-        let baseAxes = [] as Axis2D[];
-        let otherAxes = [] as Axis2D[];
+        const baseAxes = [] as Axis2D[];
+        const otherAxes = [] as Axis2D[];
 
         each(this.getCartesians(), function (cartesian) {
-            let baseAxis = (dim != null && dim !== 'auto')
+            const baseAxis = (dim != null && dim !== 'auto')
                 ? cartesian.getAxis(dim) : cartesian.getBaseAxis();
-            let otherAxis = cartesian.getOtherAxis(baseAxis);
+            const otherAxis = cartesian.getOtherAxis(baseAxis);
             indexOf(baseAxes, baseAxis) < 0 && baseAxes.push(baseAxis);
             indexOf(otherAxes, otherAxis) < 0 && otherAxes.push(otherAxis);
         });
@@ -471,9 +471,9 @@ class Grid implements CoordinateSystemMaster {
 
 
     static create(ecModel: GlobalModel, api: ExtensionAPI): Grid[] {
-        let grids = [] as Grid[];
+        const grids = [] as Grid[];
         ecModel.eachComponent('grid', function (gridModel: GridModel, idx) {
-            let grid = new Grid(gridModel, ecModel, api);
+            const grid = new Grid(gridModel, ecModel, api);
             grid.name = 'grid_' + idx;
             // dataSampling requires axis extent, so resize
             // should be performed in create stage.
@@ -490,11 +490,11 @@ class Grid implements CoordinateSystemMaster {
                 return;
             }
 
-            let axesModels = findAxesModels(seriesModel);
-            let xAxisModel = axesModels[0];
-            let yAxisModel = axesModels[1];
+            const axesModels = findAxesModels(seriesModel);
+            const xAxisModel = axesModels[0];
+            const yAxisModel = axesModels[1];
 
-            let gridModel = xAxisModel.getCoordSysModel();
+            const gridModel = xAxisModel.getCoordSysModel();
 
             if (__DEV__) {
                 if (!gridModel) {
@@ -511,7 +511,7 @@ class Grid implements CoordinateSystemMaster {
                 }
             }
 
-            let grid = gridModel.coordinateSystem as Grid;
+            const grid = gridModel.coordinateSystem as Grid;
 
             seriesModel.coordinateSystem = grid.getCartesian(
                 xAxisModel.componentIndex, yAxisModel.componentIndex
@@ -546,12 +546,12 @@ function fixAxisOnZero(
     // onZero can not be enabled in these two situations:
     // 1. When any other axis is a category axis.
     // 2. When no axis is cross 0 point.
-    let otherAxes = axesMap[otherAxisDim];
+    const otherAxes = axesMap[otherAxisDim];
 
     let otherAxisOnZeroOf: Axis2D;
-    let axisModel = axis.model;
-    let onZero = axisModel.get(['axisLine', 'onZero']);
-    let onZeroAxisIndex = axisModel.get(['axisLine', 'onZeroAxisIndex']);
+    const axisModel = axis.model;
+    const onZero = axisModel.get(['axisLine', 'onZero']);
+    const onZeroAxisIndex = axisModel.get(['axisLine', 'onZeroAxisIndex']);
 
     if (!onZero) {
         return;
@@ -565,7 +565,7 @@ function fixAxisOnZero(
     }
     else {
         // Find the first available other axis.
-        for (let idx in otherAxes) {
+        for (const idx in otherAxes) {
             if (otherAxes.hasOwnProperty(idx)
                 && canOnZeroToAxis(otherAxes[idx])
                 // Consider that two Y axes on one value axis,
@@ -592,8 +592,8 @@ function canOnZeroToAxis(axis: Axis2D): boolean {
 }
 
 function updateAxisTransform(axis: Axis2D, coordBase: number) {
-    let axisExtent = axis.getExtent();
-    let axisExtentSum = axisExtent[0] + axisExtent[1];
+    const axisExtent = axis.getExtent();
+    const axisExtentSum = axisExtent[0] + axisExtent[1];
 
     // Fast transform
     axis.toGlobalCoord = axis.dim === 'x'
@@ -615,7 +615,7 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
 const axesTypes = ['xAxis', 'yAxis'];
 function findAxesModels(seriesModel: SeriesModel): CartesianAxisModel[] {
     return map(axesTypes, function (axisType) {
-        let axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
+        const axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
 
         if (__DEV__) {
             if (!axisModel) {

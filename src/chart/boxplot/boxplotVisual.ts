@@ -25,12 +25,12 @@ const borderColorQuery = ['itemStyle', 'borderColor'] as const;
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
-    let globalColors = ecModel.get('color');
+    const globalColors = ecModel.get('color');
 
     ecModel.eachRawSeriesByType('boxplot', function (seriesModel: BoxplotSeriesModel) {
 
-        let defaulColor = globalColors[seriesModel.seriesIndex % globalColors.length];
-        let data = seriesModel.getData();
+        const defaulColor = globalColors[seriesModel.seriesIndex % globalColors.length];
+        const data = seriesModel.getData();
 
         data.setVisual({
             legendSymbol: 'roundRect',
@@ -42,7 +42,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel)) {
             data.each(function (idx) {
-                let itemModel = data.getItemModel<BoxplotDataItemOption>(idx);
+                const itemModel = data.getItemModel<BoxplotDataItemOption>(idx);
                 data.setItemVisual(
                     idx,
                     {color: itemModel.get(borderColorQuery, true)}

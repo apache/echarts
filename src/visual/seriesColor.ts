@@ -25,12 +25,12 @@ const seriesColorTask: StageHandler = {
     createOnAllSeries: true,
     performRawSeries: true,
     reset: function (seriesModel, ecModel) {
-        let data = seriesModel.getData();
-        let colorAccessPath = seriesModel.visualColorAccessPath
+        const data = seriesModel.getData();
+        const colorAccessPath = seriesModel.visualColorAccessPath
             || ['itemStyle', 'color'];
         // Set in itemStyle
         let color = seriesModel.get(colorAccessPath as any);
-        let colorCallback = (isFunction(color) && !(color instanceof Gradient))
+        const colorCallback = (isFunction(color) && !(color instanceof Gradient))
             ? color : null;
         // Default color
         if (!color || colorCallback) {
@@ -42,8 +42,8 @@ const seriesColorTask: StageHandler = {
 
         data.setVisual('color', color);
 
-        let borderColorAccessPath = seriesModel.visualBorderColorAccessPath || ['itemStyle', 'borderColor'];
-        let borderColor = seriesModel.get(borderColorAccessPath as any);
+        const borderColorAccessPath = seriesModel.visualBorderColorAccessPath || ['itemStyle', 'borderColor'];
+        const borderColor = seriesModel.get(borderColorAccessPath as any);
         data.setVisual('borderColor', borderColor);
 
         // Only visible series has each data be visual encoded
@@ -58,9 +58,9 @@ const seriesColorTask: StageHandler = {
 
             return {
                 dataEach: data.hasItemOption ? function (data, idx) {
-                    let itemModel = data.getItemModel(idx);
-                    let color = itemModel.get(colorAccessPath as any, true);
-                    let borderColor = itemModel.get(borderColorAccessPath as any, true);
+                    const itemModel = data.getItemModel(idx);
+                    const color = itemModel.get(colorAccessPath as any, true);
+                    const borderColor = itemModel.get(borderColorAccessPath as any, true);
                     if (color != null) {
                         data.setItemVisual(idx, 'color', color);
                     }

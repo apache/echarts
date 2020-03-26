@@ -22,18 +22,18 @@ import View from '../../coord/View';
 import { GraphNode } from '../../data/Graph';
 
 export function getNodeGlobalScale(seriesModel: GraphSeriesModel) {
-    let coordSys = seriesModel.coordinateSystem as View;
+    const coordSys = seriesModel.coordinateSystem as View;
     if (coordSys.type !== 'view') {
         return 1;
     }
 
-    let nodeScaleRatio = seriesModel.option.nodeScaleRatio;
+    const nodeScaleRatio = seriesModel.option.nodeScaleRatio;
 
-    let groupScale = coordSys.scale;
-    let groupZoom = (groupScale && groupScale[0]) || 1;
+    const groupScale = coordSys.scale;
+    const groupZoom = (groupScale && groupScale[0]) || 1;
     // Scale node when zoom changes
-    let roamZoom = coordSys.getZoom();
-    let nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
+    const roamZoom = coordSys.getZoom();
+    const nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
 
     return nodeScale / groupZoom;
 }

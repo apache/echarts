@@ -47,16 +47,16 @@ class RadiusAxisView extends AxisView {
         if (!radiusAxisModel.get('show')) {
             return;
         }
-        let radiusAxis = radiusAxisModel.axis;
-        let polar = radiusAxis.polar;
-        let angleAxis = polar.getAngleAxis();
-        let ticksCoords = radiusAxis.getTicksCoords();
-        let minorTicksCoords = radiusAxis.getMinorTicksCoords();
-        let axisAngle = angleAxis.getExtent()[0];
-        let radiusExtent = radiusAxis.getExtent();
+        const radiusAxis = radiusAxisModel.axis;
+        const polar = radiusAxis.polar;
+        const angleAxis = polar.getAngleAxis();
+        const ticksCoords = radiusAxis.getTicksCoords();
+        const minorTicksCoords = radiusAxis.getMinorTicksCoords();
+        const axisAngle = angleAxis.getExtent()[0];
+        const radiusExtent = radiusAxis.getExtent();
 
-        let layout = layoutAxis(polar, radiusAxisModel, axisAngle);
-        let axisBuilder = new AxisBuilder(radiusAxisModel, layout);
+        const layout = layoutAxis(polar, radiusAxisModel, axisAngle);
+        const axisBuilder = new AxisBuilder(radiusAxisModel, layout);
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
         this.group.add(axisBuilder.getGroup());
 
@@ -91,17 +91,17 @@ interface AxisElementBuilder {
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
     splitLine(group, radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
-        let splitLineModel = radiusAxisModel.getModel('splitLine');
-        let lineStyleModel = splitLineModel.getModel('lineStyle');
+        const splitLineModel = radiusAxisModel.getModel('splitLine');
+        const lineStyleModel = splitLineModel.getModel('lineStyle');
         let lineColors = lineStyleModel.get('color');
         let lineCount = 0;
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
-        let splitLines: graphic.Circle[][] = [];
+        const splitLines: graphic.Circle[][] = [];
 
         for (let i = 0; i < ticksCoords.length; i++) {
-            let colorIndex = (lineCount++) % lineColors.length;
+            const colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Circle({
                 shape: {
@@ -130,10 +130,10 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             return;
         }
 
-        let minorSplitLineModel = radiusAxisModel.getModel('minorSplitLine');
-        let lineStyleModel = minorSplitLineModel.getModel('lineStyle');
+        const minorSplitLineModel = radiusAxisModel.getModel('minorSplitLine');
+        const lineStyleModel = minorSplitLineModel.getModel('lineStyle');
 
-        let lines: graphic.Circle[] = [];
+        const lines: graphic.Circle[] = [];
 
         for (let i = 0; i < minorTicksCoords.length; i++) {
             for (let k = 0; k < minorTicksCoords[i].length; k++) {
@@ -160,18 +160,18 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             return;
         }
 
-        let splitAreaModel = radiusAxisModel.getModel('splitArea');
-        let areaStyleModel = splitAreaModel.getModel('areaStyle');
+        const splitAreaModel = radiusAxisModel.getModel('splitArea');
+        const areaStyleModel = splitAreaModel.getModel('areaStyle');
         let areaColors = areaStyleModel.get('color');
         let lineCount = 0;
 
         areaColors = areaColors instanceof Array ? areaColors : [areaColors];
 
-        let splitAreas: graphic.Sector[][] = [];
+        const splitAreas: graphic.Sector[][] = [];
 
         let prevRadius = ticksCoords[0].coord;
         for (let i = 1; i < ticksCoords.length; i++) {
-            let colorIndex = (lineCount++) % areaColors.length;
+            const colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
             splitAreas[colorIndex].push(new graphic.Sector({
                 shape: {

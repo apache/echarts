@@ -62,12 +62,12 @@ export function throttle<T extends ThrottleFunction>(
         fn.apply(scope, args || []);
     }
 
-    let cb = function (this: unknown, ...cbArgs: unknown[]): void {
+    const cb = function (this: unknown, ...cbArgs: unknown[]): void {
         currCall = (new Date()).getTime();
         scope = this;
         args = cbArgs;
-        let thisDelay = debounceNextCall || delay;
-        let thisDebounce = debounceNextCall || debounce;
+        const thisDelay = debounceNextCall || delay;
+        const thisDebounce = debounceNextCall || debounce;
         debounceNextCall = null;
         diff = currCall - (thisDebounce ? lastCall : lastExec) - thisDelay;
 
@@ -150,9 +150,9 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
         return;
     }
 
-    let originFn = (fn as any)[ORIGIN_METHOD] || fn;
-    let lastThrottleType = (fn as any)[THROTTLE_TYPE];
-    let lastRate = (fn as any)[RATE];
+    const originFn = (fn as any)[ORIGIN_METHOD] || fn;
+    const lastThrottleType = (fn as any)[THROTTLE_TYPE];
+    const lastRate = (fn as any)[RATE];
 
     if (lastRate !== rate || lastThrottleType !== throttleType) {
         if (rate == null || !throttleType) {
@@ -174,7 +174,7 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
  * Clear throttle. Example see throttle.createOrUpdate.
  */
 export function clear<T, S extends keyof T>(obj: T, fnAttr: S): void {
-    let fn = obj[fnAttr];
+    const fn = obj[fnAttr];
     if (fn && (fn as any)[ORIGIN_METHOD]) {
         obj[fnAttr] = (fn as any)[ORIGIN_METHOD];
     }

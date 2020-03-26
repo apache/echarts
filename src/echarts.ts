@@ -77,9 +77,9 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 
-export let version = '4.6.0';
+export const version = '4.6.0';
 
-export let dependencies = {
+export const dependencies = {
     zrender: '4.2.0'
 };
 
@@ -100,7 +100,7 @@ const PRIORITY_VISUAL_COMPONENT = 4000;
 // necessary?
 const PRIORITY_VISUAL_BRUSH = 5000;
 
-export let PRIORITY = {
+export const PRIORITY = {
     PROCESSOR: {
         FILTER: PRIORITY_PROCESSOR_FILTER,
         SERIES_FILTER: PRIORITY_PROCESSOR_SERIES_FILTER,
@@ -252,7 +252,7 @@ class ECharts extends Eventful {
             ) as any).__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
         }
 
-        let zr = this._zr = zrender.init(dom, {
+        const zr = this._zr = zrender.init(dom, {
             renderer: opts.renderer || defaultRenderer,
             devicePixelRatio: opts.devicePixelRatio,
             width: opts.width,
@@ -269,7 +269,7 @@ class ECharts extends Eventful {
 
         this._coordSysMgr = new CoordinateSystemManager();
 
-        let api = this._api = createExtensionAPI(this);
+        const api = this._api = createExtensionAPI(this);
 
         // Sort on demand
         function prioritySortFunc(a: StageHandlerInternal, b: StageHandlerInternal): number {
@@ -301,11 +301,11 @@ class ECharts extends Eventful {
             return;
         }
 
-        let scheduler = this._scheduler;
+        const scheduler = this._scheduler;
 
         // Lazy update
         if (this[OPTION_UPDATED]) {
-            let silent = (this[OPTION_UPDATED] as any).silent;
+            const silent = (this[OPTION_UPDATED] as any).silent;
 
             this[IN_MAIN_PROCESS] = true;
 
@@ -324,11 +324,11 @@ class ECharts extends Eventful {
         else if (scheduler.unfinished) {
             // Stream progress.
             let remainTime = TEST_FRAME_REMAIN_TIME;
-            let ecModel = this._model;
-            let api = this._api;
+            const ecModel = this._model;
+            const api = this._api;
             scheduler.unfinished = +false;
             do {
-                let startTime = +new Date();
+                const startTime = +new Date();
 
                 scheduler.performSeriesTasks(ecModel);
 
@@ -408,9 +408,9 @@ class ECharts extends Eventful {
         this[IN_MAIN_PROCESS] = true;
 
         if (!this._model || notMerge) {
-            let optionManager = new OptionManager(this._api);
-            let theme = this._theme;
-            let ecModel = this._model = new GlobalModel();
+            const optionManager = new OptionManager(this._api);
+            const theme = this._theme;
+            const ecModel = this._model = new GlobalModel();
             ecModel.scheduler = this._scheduler;
             ecModel.init(null, null, null, theme, optionManager);
         }
@@ -479,7 +479,7 @@ class ECharts extends Eventful {
         opts.pixelRatio = opts.pixelRatio || 1;
         opts.backgroundColor = opts.backgroundColor
             || this._model.get('backgroundColor');
-        let zr = this._zr;
+        const zr = this._zr;
         // let list = zr.storage.getDisplayList();
         // Stop animations
         // Never works before in init animation, so remove it.
@@ -497,8 +497,8 @@ class ECharts extends Eventful {
             return;
         }
 
-        let zr = this._zr;
-        let list = zr.storage.getDisplayList();
+        const zr = this._zr;
+        const list = zr.storage.getDisplayList();
         // Stop animations
         zrUtil.each(list, function (el: Element) {
             el.stopAnimation(true);
@@ -521,16 +521,16 @@ class ECharts extends Eventful {
         }
 
         opts = opts || {};
-        let excludeComponents = opts.excludeComponents;
-        let ecModel = this._model;
-        let excludesComponentViews: ComponentView[] = [];
-        let self = this;
+        const excludeComponents = opts.excludeComponents;
+        const ecModel = this._model;
+        const excludesComponentViews: ComponentView[] = [];
+        const self = this;
 
         each(excludeComponents, function (componentType) {
             ecModel.eachComponent({
                 mainType: componentType
             }, function (component) {
-                let view = self._componentsMap[component.__viewId];
+                const view = self._componentsMap[component.__viewId];
                 if (!view.group.ignore) {
                     excludesComponentViews.push(view);
                     view.group.ignore = true;
@@ -538,7 +538,7 @@ class ECharts extends Eventful {
             });
         });
 
-        let url = this._zr.painter.getType() === 'svg'
+        const url = this._zr.painter.getType() === 'svg'
             ? this.getSvgDataUrl()
             : this.getRenderedCanvas(opts).toDataURL(
                 'image/' + (opts && opts.type || 'png')
@@ -567,24 +567,24 @@ class ECharts extends Eventful {
         if (!env.canvasSupported) {
             return;
         }
-        let groupId = this.group;
-        let mathMin = Math.min;
-        let mathMax = Math.max;
-        let MAX_NUMBER = Infinity;
+        const groupId = this.group;
+        const mathMin = Math.min;
+        const mathMax = Math.max;
+        const MAX_NUMBER = Infinity;
         if (connectedGroups[groupId]) {
             let left = MAX_NUMBER;
             let top = MAX_NUMBER;
             let right = -MAX_NUMBER;
             let bottom = -MAX_NUMBER;
-            let canvasList: {dom: HTMLCanvasElement, left: number, top: number}[] = [];
-            let dpr = (opts && opts.pixelRatio) || 1;
+            const canvasList: {dom: HTMLCanvasElement, left: number, top: number}[] = [];
+            const dpr = (opts && opts.pixelRatio) || 1;
 
             zrUtil.each(instances, function (chart, id) {
                 if (chart.group === groupId) {
-                    let canvas = chart.getRenderedCanvas(
+                    const canvas = chart.getRenderedCanvas(
                         zrUtil.clone(opts)
                     );
-                    let boundingRect = chart.getDom().getBoundingClientRect();
+                    const boundingRect = chart.getDom().getBoundingClientRect();
                     left = mathMin(boundingRect.left, left);
                     top = mathMin(boundingRect.top, top);
                     right = mathMax(boundingRect.right, right);
@@ -601,12 +601,12 @@ class ECharts extends Eventful {
             top *= dpr;
             right *= dpr;
             bottom *= dpr;
-            let width = right - left;
-            let height = bottom - top;
-            let targetCanvas = zrUtil.createCanvas();
+            const width = right - left;
+            const height = bottom - top;
+            const targetCanvas = zrUtil.createCanvas();
             targetCanvas.width = width;
             targetCanvas.height = height;
-            let zr = zrender.init(targetCanvas);
+            const zr = zrender.init(targetCanvas);
 
             // Background between the charts
             if (opts.connectedBackgroundColor) {
@@ -624,7 +624,7 @@ class ECharts extends Eventful {
             }
 
             each(canvasList, function (item) {
-                let img = new graphic.Image({
+                const img = new graphic.Image({
                     style: {
                         x: item.left * dpr - left,
                         y: item.top * dpr - top,
@@ -669,19 +669,19 @@ class ECharts extends Eventful {
             return;
         }
 
-        let ecModel = this._model;
+        const ecModel = this._model;
         let result: boolean;
 
-        let findResult = modelUtil.parseFinder(ecModel, finder);
+        const findResult = modelUtil.parseFinder(ecModel, finder);
 
         zrUtil.each(findResult, function (models, key) {
             key.indexOf('Models') >= 0 && zrUtil.each(models as ComponentModel[], function (model) {
-                let coordSys = (model as CoordinateSystemHostModel).coordinateSystem;
+                const coordSys = (model as CoordinateSystemHostModel).coordinateSystem;
                 if (coordSys && coordSys.containPoint) {
                     result = result || !!coordSys.containPoint(value);
                 }
                 else if (key === 'seriesModels') {
-                    let view = this._chartsMap[model.__viewId];
+                    const view = this._chartsMap[model.__viewId];
                     if (view && view.containPoint) {
                         result = result || view.containPoint(value, model as SeriesModel);
                     }
@@ -721,13 +721,13 @@ class ECharts extends Eventful {
      * @param visualType 'color', 'symbol', 'symbolSize'
      */
     getVisual(finder: ModelFinder, visualType: string) {
-        let ecModel = this._model;
+        const ecModel = this._model;
 
-        let parsedFinder = modelUtil.parseFinder(ecModel, finder, {
+        const parsedFinder = modelUtil.parseFinder(ecModel, finder, {
             defaultMainType: 'series'
         });
 
-        let seriesModel = parsedFinder.seriesModel;
+        const seriesModel = parsedFinder.seriesModel;
 
         if (__DEV__) {
             if (!seriesModel) {
@@ -735,9 +735,9 @@ class ECharts extends Eventful {
             }
         }
 
-        let data = seriesModel.getData();
+        const data = seriesModel.getData();
 
-        let dataIndexInside = parsedFinder.hasOwnProperty('dataIndexInside')
+        const dataIndexInside = parsedFinder.hasOwnProperty('dataIndexInside')
             ? parsedFinder.dataIndexInside
             : parsedFinder.hasOwnProperty('dataIndex')
             ? data.indexOfRawIndex(parsedFinder.dataIndex)
@@ -765,17 +765,17 @@ class ECharts extends Eventful {
     private _initEvents(): void {
         each(MOUSE_EVENT_NAMES, function (eveName) {
             const handler = (e: ElementEvent) => {
-                let ecModel = this.getModel();
-                let el = e.target;
+                const ecModel = this.getModel();
+                const el = e.target;
                 let params: ECEvent;
-                let isGlobalOut = eveName === 'globalout';
-                let ecData = el && graphic.getECData(el);
+                const isGlobalOut = eveName === 'globalout';
+                const ecData = el && graphic.getECData(el);
                 // no e.target when 'globalout'.
                 if (isGlobalOut) {
                     params = {} as ECEvent;
                 }
                 else if (ecData && ecData.dataIndex != null) {
-                    let dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
+                    const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                     params = (
                         dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
                     ) as ECEvent;
@@ -808,9 +808,9 @@ class ECharts extends Eventful {
                         componentType = 'series';
                         componentIndex = params.seriesIndex;
                     }
-                    let model = componentType && componentIndex != null
+                    const model = componentType && componentIndex != null
                         && ecModel.getComponent(componentType, componentIndex);
-                    let view = model && this[
+                    const view = model && this[
                         model.mainType === 'series' ? '_chartsMap' : '_componentsMap'
                     ][model.__viewId];
 
@@ -873,8 +873,8 @@ class ECharts extends Eventful {
 
         modelUtil.setAttribute(this.getDom(), DOM_ATTRIBUTE_KEY, '');
 
-        let api = this._api;
-        let ecModel = this._model;
+        const api = this._api;
+        const ecModel = this._model;
 
         each(this._componentsViews, function (component) {
             component.dispose(ecModel, api);
@@ -907,7 +907,7 @@ class ECharts extends Eventful {
 
         this._zr.resize(opts);
 
-        let ecModel = this._model;
+        const ecModel = this._model;
 
         // Resize loading effect
         this._loadingFX && this._loadingFX.resize();
@@ -916,9 +916,9 @@ class ECharts extends Eventful {
             return;
         }
 
-        let optionChanged = ecModel.resetOption('media');
+        const optionChanged = ecModel.resetOption('media');
 
-        let silent = opts && opts.silent;
+        const silent = opts && opts.silent;
 
         this[IN_MAIN_PROCESS] = true;
 
@@ -958,8 +958,8 @@ class ECharts extends Eventful {
             }
             return;
         }
-        let el = loadingEffects[name](this._api, cfg);
-        let zr = this._zr;
+        const el = loadingEffects[name](this._api, cfg);
+        const zr = this._zr;
         this._loadingFX = el;
 
         zr.add(el);
@@ -979,7 +979,7 @@ class ECharts extends Eventful {
     }
 
     makeActionFromEvent(eventObj: ECEvent): Payload {
-        let payload = zrUtil.extend({}, eventObj) as Payload;
+        const payload = zrUtil.extend({}, eventObj) as Payload;
         payload.type = eventActionMap[eventObj.type];
         return payload;
     }
@@ -1024,10 +1024,10 @@ class ECharts extends Eventful {
             return;
         }
 
-        let silent = opt.silent;
+        const silent = opt.silent;
         doDispatchAction.call(this, payload, silent);
 
-        let flush = opt.flush;
+        const flush = opt.flush;
         if (flush) {
             this._zr.flush();
         }
@@ -1054,9 +1054,9 @@ class ECharts extends Eventful {
             return;
         }
 
-        let seriesIndex = params.seriesIndex;
-        let ecModel = this.getModel();
-        let seriesModel = ecModel.getSeriesByIndex(seriesIndex) as SeriesModel;
+        const seriesIndex = params.seriesIndex;
+        const ecModel = this.getModel();
+        const seriesModel = ecModel.getSeriesByIndex(seriesIndex) as SeriesModel;
 
         if (__DEV__) {
             assert(params.data && seriesModel);
@@ -1081,7 +1081,7 @@ class ECharts extends Eventful {
     private static internalField = (function () {
 
         prepare = function (ecIns: ECharts): void {
-            let scheduler = ecIns._scheduler;
+            const scheduler = ecIns._scheduler;
 
             scheduler.restorePipelines(ecIns._model);
             scheduler.prepareStageTasks();
@@ -1096,12 +1096,12 @@ class ECharts extends Eventful {
          * Prepare view instances of charts and components
          */
         prepareView = function (ecIns: ECharts, isComponent: boolean): void {
-            let ecModel = ecIns._model;
-            let scheduler = ecIns._scheduler;
-            let viewList = isComponent ? ecIns._componentsViews : ecIns._chartsViews;
-            let viewMap = isComponent ? ecIns._componentsMap : ecIns._chartsMap;
-            let zr = ecIns._zr;
-            let api = ecIns._api;
+            const ecModel = ecIns._model;
+            const scheduler = ecIns._scheduler;
+            const viewList = isComponent ? ecIns._componentsViews : ecIns._chartsViews;
+            const viewMap = isComponent ? ecIns._componentsMap : ecIns._chartsMap;
+            const zr = ecIns._zr;
+            const api = ecIns._api;
 
             for (let i = 0; i < viewList.length; i++) {
                 viewList[i].__alive = false;
@@ -1115,11 +1115,11 @@ class ECharts extends Eventful {
 
             function doPrepare(model: ComponentModel): void {
                 // Consider: id same and type changed.
-                let viewId = '_ec_' + model.id + '_' + model.type;
+                const viewId = '_ec_' + model.id + '_' + model.type;
                 let view = viewMap[viewId];
                 if (!view) {
-                    let classType = parseClassType(model.type);
-                    let Clazz = isComponent
+                    const classType = parseClassType(model.type);
+                    const Clazz = isComponent
                         ? (ComponentView as ComponentViewConstructor).getClass(classType.main, classType.sub)
                         : (
                             // FIXME:TS
@@ -1155,7 +1155,7 @@ class ECharts extends Eventful {
             }
 
             for (let i = 0; i < viewList.length;) {
-                let view = viewList[i];
+                const view = viewList[i];
                 if (!view.__alive) {
                     !isComponent && (view as ChartView).renderTask.dispose();
                     zr.remove(view.group);
@@ -1177,7 +1177,7 @@ class ECharts extends Eventful {
             mainType: ComponentMainType,
             subType?: ComponentSubType
         ): void {
-            let ecModel = ecIns._model;
+            const ecModel = ecIns._model;
 
             // broadcast
             if (!mainType) {
@@ -1188,15 +1188,15 @@ class ECharts extends Eventful {
                 return;
             }
 
-            let query: QueryConditionKindA['query'] = {};
+            const query: QueryConditionKindA['query'] = {};
             query[mainType + 'Id'] = payload[mainType + 'Id'];
             query[mainType + 'Index'] = payload[mainType + 'Index'];
             query[mainType + 'Name'] = payload[mainType + 'Name'];
 
-            let condition = {mainType: mainType, query: query} as QueryConditionKindA;
+            const condition = {mainType: mainType, query: query} as QueryConditionKindA;
             subType && (condition.subType = subType); // subType may be '' by parseClassType;
 
-            let excludeSeriesId = payload.excludeSeriesId;
+            const excludeSeriesId = payload.excludeSeriesId;
             let excludeSeriesIdMap: zrUtil.HashMap<string[]>;
             if (excludeSeriesId != null) {
                 excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
@@ -1228,11 +1228,11 @@ class ECharts extends Eventful {
             update: function (this: ECharts, payload: Payload): void {
                 // console.profile && console.profile('update');
 
-                let ecModel = this._model;
-                let api = this._api;
-                let zr = this._zr;
-                let coordSysMgr = this._coordSysMgr;
-                let scheduler = this._scheduler;
+                const ecModel = this._model;
+                const api = this._api;
+                const zr = this._zr;
+                const coordSysMgr = this._coordSysMgr;
+                const scheduler = this._scheduler;
 
                 // update before setOption
                 if (!ecModel) {
@@ -1274,7 +1274,7 @@ class ECharts extends Eventful {
 
                 // In IE8
                 if (!env.canvasSupported) {
-                    let colorArr = colorTool.parse(backgroundColor);
+                    const colorArr = colorTool.parse(backgroundColor);
                     backgroundColor = colorTool.stringify(colorArr, 'rgb');
                     if (colorArr[3] === 0) {
                         backgroundColor = 'transparent';
@@ -1290,9 +1290,9 @@ class ECharts extends Eventful {
             },
 
             updateTransform: function (this: ECharts, payload: Payload): void {
-                let ecModel = this._model;
-                let ecIns = this;
-                let api = this._api;
+                const ecModel = this._model;
+                const ecIns = this;
+                const api = this._api;
 
                 // update before setOption
                 if (!ecModel) {
@@ -1301,12 +1301,12 @@ class ECharts extends Eventful {
 
                 // ChartView.markUpdateMethod(payload, 'updateTransform');
 
-                let componentDirtyList = [];
+                const componentDirtyList = [];
                 ecModel.eachComponent(function (componentType, componentModel) {
-                    let componentView = ecIns.getViewOfComponentModel(componentModel);
+                    const componentView = ecIns.getViewOfComponentModel(componentModel);
                     if (componentView && componentView.__alive) {
                         if (componentView.updateTransform) {
-                            let result = componentView.updateTransform(componentModel, ecModel, api, payload);
+                            const result = componentView.updateTransform(componentModel, ecModel, api, payload);
                             result && result.update && componentDirtyList.push(componentView);
                         }
                         else {
@@ -1315,11 +1315,11 @@ class ECharts extends Eventful {
                     }
                 });
 
-                let seriesDirtyMap = zrUtil.createHashMap();
+                const seriesDirtyMap = zrUtil.createHashMap();
                 ecModel.eachSeries(function (seriesModel) {
-                    let chartView = ecIns._chartsMap[seriesModel.__viewId];
+                    const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.updateTransform) {
-                        let result = chartView.updateTransform(seriesModel, ecModel, api, payload);
+                        const result = chartView.updateTransform(seriesModel, ecModel, api, payload);
                         result && result.update && seriesDirtyMap.set(seriesModel.uid, 1);
                     }
                     else {
@@ -1342,7 +1342,7 @@ class ECharts extends Eventful {
             },
 
             updateView: function (this: ECharts, payload: Payload): void {
-                let ecModel = this._model;
+                const ecModel = this._model;
 
                 // update before setOption
                 if (!ecModel) {
@@ -1415,14 +1415,14 @@ class ECharts extends Eventful {
                 disposedWarning(ecIns.id);
                 return;
             }
-            let ecModel = ecIns._model;
-            let coordSysList = ecIns._coordSysMgr.getCoordinateSystems();
+            const ecModel = ecIns._model;
+            const coordSysList = ecIns._coordSysMgr.getCoordinateSystems();
             let result;
 
-            let parsedFinder = modelUtil.parseFinder(ecModel, finder);
+            const parsedFinder = modelUtil.parseFinder(ecModel, finder);
 
             for (let i = 0; i < coordSysList.length; i++) {
-                let coordSys = coordSysList[i];
+                const coordSys = coordSysList[i];
                 if (coordSys[methodName]
                     && (result = coordSys[methodName](ecModel, parsedFinder, value)) != null
                 ) {
@@ -1438,22 +1438,22 @@ class ECharts extends Eventful {
         };
 
         updateStreamModes = function (ecIns: ECharts, ecModel: GlobalModel): void {
-            let chartsMap = ecIns._chartsMap;
-            let scheduler = ecIns._scheduler;
+            const chartsMap = ecIns._chartsMap;
+            const scheduler = ecIns._scheduler;
             ecModel.eachSeries(function (seriesModel) {
                 scheduler.updateStreamModes(seriesModel, chartsMap[seriesModel.__viewId]);
             });
         };
 
         doDispatchAction = function (this: ECharts, payload: Payload, silent: boolean): void {
-            let payloadType = payload.type;
-            let escapeConnect = payload.escapeConnect;
-            let actionWrap = actions[payloadType];
-            let actionInfo = actionWrap.actionInfo;
+            const payloadType = payload.type;
+            const escapeConnect = payload.escapeConnect;
+            const actionWrap = actions[payloadType];
+            const actionInfo = actionWrap.actionInfo;
 
-            let cptTypeTmp = (actionInfo.update || 'update').split(':');
-            let updateMethod = cptTypeTmp.pop();
-            let cptType = cptTypeTmp[0] != null && parseClassType(cptTypeTmp[0]);
+            const cptTypeTmp = (actionInfo.update || 'update').split(':');
+            const updateMethod = cptTypeTmp.pop();
+            const cptType = cptTypeTmp[0] != null && parseClassType(cptTypeTmp[0]);
 
             this[IN_MAIN_PROCESS] = true;
 
@@ -1469,9 +1469,9 @@ class ECharts extends Eventful {
                 });
             }
 
-            let eventObjBatch: ECEventData[] = [];
+            const eventObjBatch: ECEventData[] = [];
             let eventObj: ECEvent;
-            let isHighDown = payloadType === 'highlight' || payloadType === 'downplay';
+            const isHighDown = payloadType === 'highlight' || payloadType === 'downplay';
 
             each(payloads, function (batchItem) {
                 // Action can specify the event by return it.
@@ -1523,9 +1523,9 @@ class ECharts extends Eventful {
         };
 
         flushPendingActions = function (this: ECharts, silent: boolean): void {
-            let pendingActions = this._pendingActions;
+            const pendingActions = this._pendingActions;
             while (pendingActions.length) {
-                let payload = pendingActions.shift();
+                const payload = pendingActions.shift();
                 doDispatchAction.call(this, payload, silent);
             }
         };
@@ -1598,7 +1598,7 @@ class ECharts extends Eventful {
             ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, dirtyList?: ComponentView[]
         ): void {
             each(dirtyList || ecIns._componentsViews, function (componentView: ComponentView) {
-                let componentModel = componentView.__model;
+                const componentModel = componentView.__model;
                 componentView.render(componentModel, ecModel, api, payload);
 
                 updateZ(componentModel, componentView);
@@ -1616,13 +1616,13 @@ class ECharts extends Eventful {
             dirtyMap?: {[uid: string]: any}
         ): void {
             // Render all charts
-            let scheduler = ecIns._scheduler;
+            const scheduler = ecIns._scheduler;
             let unfinished: number;
             ecModel.eachSeries(function (seriesModel) {
-                let chartView = ecIns._chartsMap[seriesModel.__viewId];
+                const chartView = ecIns._chartsMap[seriesModel.__viewId];
                 chartView.__alive = true;
 
-                let renderTask = chartView.renderTask;
+                const renderTask = chartView.renderTask;
                 scheduler.updatePayload(renderTask, payload);
 
                 if (dirtyMap && dirtyMap.get(seriesModel.uid)) {
@@ -1653,8 +1653,8 @@ class ECharts extends Eventful {
         };
 
         updateHoverLayerStatus = function (ecIns: ECharts, ecModel: GlobalModel): void {
-            let zr = ecIns._zr;
-            let storage = zr.storage;
+            const zr = ecIns._zr;
+            const storage = zr.storage;
             let elCount = 0;
 
             storage.traverse(function (el) {
@@ -1666,7 +1666,7 @@ class ECharts extends Eventful {
                     if (seriesModel.preventUsingHoverLayer) {
                         return;
                     }
-                    let chartView = ecIns._chartsMap[seriesModel.__viewId];
+                    const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.__alive) {
                         chartView.group.traverse(function (el: ECElement) {
                             // Don't switch back.
@@ -1681,7 +1681,7 @@ class ECharts extends Eventful {
          * Update chart progressive and blend.
          */
         updateBlend = function (seriesModel: SeriesModel, chartView: ChartView): void {
-            let blendMode = seriesModel.get('blendMode') || null;
+            const blendMode = seriesModel.get('blendMode') || null;
             if (__DEV__) {
                 if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
                     console.warn('Only canvas support blendMode');
@@ -1704,8 +1704,8 @@ class ECharts extends Eventful {
         };
 
         updateZ = function (model: ComponentModel, view: ComponentView | ChartView): void {
-            let z = model.get('z');
-            let zlevel = model.get('zlevel');
+            const z = model.get('z');
+            const zlevel = model.get('zlevel');
             // Set z and zlevel
             view.group.traverse(function (el: Displayable) {
                 if (el.type !== 'group') {
@@ -1730,7 +1730,7 @@ class ECharts extends Eventful {
                 }
                 getComponentByElement(el: Element) {
                     while (el) {
-                        let modelInfo = (el as ViewRootGroup).__ecComponentInfo;
+                        const modelInfo = (el as ViewRootGroup).__ecComponentInfo;
                         if (modelInfo != null) {
                             return ecIns._model.getComponent(modelInfo.mainType, modelInfo.index);
                         }
@@ -1744,7 +1744,7 @@ class ECharts extends Eventful {
 
             function updateConnectedChartsStatus(charts: ECharts[], status: ConnectStatus) {
                 for (let i = 0; i < charts.length; i++) {
-                    let otherChart = charts[i];
+                    const otherChart = charts[i];
                     otherChart[CONNECT_STATUS_KEY] = status;
                 }
             }
@@ -1756,8 +1756,8 @@ class ECharts extends Eventful {
                             return;
                         }
 
-                        let action = chart.makeActionFromEvent(event);
-                        let otherCharts: ECharts[] = [];
+                        const action = chart.makeActionFromEvent(event);
+                        const otherCharts: ECharts[] = [];
 
                         each(instances, function (otherChart) {
                             if (otherChart !== chart && otherChart.group === chart.group) {
@@ -1931,7 +1931,7 @@ export function init(
         }
     }
 
-    let existInstance = getInstanceByDom(dom);
+    const existInstance = getInstanceByDom(dom);
     if (existInstance) {
         if (__DEV__) {
             console.warn('There is a chart instance already initialized on the dom.');
@@ -1954,7 +1954,7 @@ export function init(
         }
     }
 
-    let chart = new ECharts(dom, theme, opts);
+    const chart = new ECharts(dom, theme, opts);
     chart.id = 'ec_' + idBase++;
     instances[chart.id] = chart;
 
@@ -1985,7 +1985,7 @@ export function init(
 export function connect(groupId: string | ECharts[]): string {
     // Is array of charts
     if (zrUtil.isArray(groupId)) {
-        let charts = groupId;
+        const charts = groupId;
         groupId = null;
         // If any chart has group
         each(charts, function (chart) {
@@ -2012,7 +2012,7 @@ export function disConnect(groupId: string): void {
 /**
  * Alias and backword compat
  */
-export let disconnect = disConnect;
+export const disconnect = disConnect;
 
 /**
  * Dispose a chart instance
@@ -2095,7 +2095,7 @@ export function registerAction(
         action = eventName;
         eventName = '';
     }
-    let actionType = isObject(actionInfo)
+    const actionType = isObject(actionInfo)
         ? (actionInfo as ActionInfo).type
         : ([actionInfo, actionInfo = {
             event: eventName
@@ -2129,7 +2129,7 @@ export function registerCoordinateSystem(
  * @return {Array.<string|Object>}
  */
 export function getCoordinateSystemDimensions(type: string): DimensionDefinitionLoose[] {
-    let coordSysCreator = CoordinateSystemManager.get(type);
+    const coordSysCreator = CoordinateSystemManager.get(type);
     if (coordSysCreator) {
         return coordSysCreator.getDimensionsInfo
             ? coordSysCreator.getDimensionsInfo()
@@ -2184,7 +2184,7 @@ function normalizeRegister(
         });
     }
 
-    let stageHandler = Scheduler.wrapStageHandler(fn, visualType);
+    const stageHandler = Scheduler.wrapStageHandler(fn, visualType);
 
     stageHandler.__prio = priority;
     stageHandler.__raw = fn;
@@ -2269,7 +2269,7 @@ export function registerMap(
 
 export function getMap(mapName: string) {
     // For backward compatibility, only return the first one.
-    let records = mapDataStorage.retrieveMap(mapName);
+    const records = mapDataStorage.retrieveMap(mapName);
     // FIXME support SVG, where return not only records[0].
     return records && records[0] && {
         // @ts-ignore
@@ -2319,6 +2319,6 @@ registerTheme('dark', darkTheme);
 
 // For backward compatibility, where the namespace `dataTool` will
 // be mounted on `echarts` is the extension `dataTool` is imported.
-export let dataTool = {};
+export const dataTool = {};
 
 export interface EChartsType extends ECharts {}

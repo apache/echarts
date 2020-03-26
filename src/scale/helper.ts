@@ -38,9 +38,9 @@ export function intervalScaleNiceTicks(
     maxInterval?: number
 ): intervalScaleNiceTicksResult {
 
-    let result = {} as intervalScaleNiceTicksResult;
+    const result = {} as intervalScaleNiceTicksResult;
 
-    let span = extent[1] - extent[0];
+    const span = extent[1] - extent[0];
     let interval = result.interval = numberUtil.nice(span / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
@@ -49,9 +49,9 @@ export function intervalScaleNiceTicks(
         interval = result.interval = maxInterval;
     }
     // Tow more digital for tick.
-    let precision = result.intervalPrecision = getIntervalPrecision(interval);
+    const precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
-    let niceTickExtent = result.niceTickExtent = [
+    const niceTickExtent = result.niceTickExtent = [
         roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
         roundNumber(Math.floor(extent[1] / interval) * interval, precision)
     ];

@@ -38,15 +38,15 @@ interface StackInfo {
 // (2) Only register once when import repeatly.
 //     Should be executed after series filtered and before stack calculation.
 export default function (ecModel: GlobalModel) {
-    let stackInfoMap = createHashMap<StackInfo[]>();
+    const stackInfoMap = createHashMap<StackInfo[]>();
     ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>) {
-        let stack = seriesModel.get('stack');
+        const stack = seriesModel.get('stack');
         // Compatibal: when `stack` is set as '', do not stack.
         if (stack) {
-            let stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
-            let data = seriesModel.getData();
+            const stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
+            const data = seriesModel.getData();
 
-            let stackInfo: StackInfo = {
+            const stackInfo: StackInfo = {
                 // Used for calculate axis extent automatically.
                 // TODO: Type getCalculationInfo return more specific type?
                 stackResultDimension: data.getCalculationInfo('stackResultDimension'),
@@ -78,15 +78,15 @@ export default function (ecModel: GlobalModel) {
 
 function calculateStack(stackInfoList: StackInfo[]) {
     each(stackInfoList, function (targetStackInfo, idxInStack) {
-        let resultVal: number[] = [];
-        let resultNaN = [NaN, NaN];
-        let dims: [string, string] = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
-        let targetData = targetStackInfo.data;
-        let isStackedByIndex = targetStackInfo.isStackedByIndex;
+        const resultVal: number[] = [];
+        const resultNaN = [NaN, NaN];
+        const dims: [string, string] = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
+        const targetData = targetStackInfo.data;
+        const isStackedByIndex = targetStackInfo.isStackedByIndex;
 
         // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
-        let newData = targetData.map(dims, function (v0, v1, dataIndex) {
+        const newData = targetData.map(dims, function (v0, v1, dataIndex) {
             let sum = targetData.get(targetStackInfo.stackedDimension, dataIndex) as number;
 
             // Consider `connectNulls` of line area, if value is NaN, stackedOver
@@ -109,7 +109,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
             let stackedOver = NaN;
 
             for (let j = idxInStack - 1; j >= 0; j--) {
-                let stackInfo = stackInfoList[j];
+                const stackInfo = stackInfoList[j];
 
                 // Has been optimized by inverted indices on `stackedByDimension`.
                 if (!isStackedByIndex) {
@@ -117,7 +117,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
                 }
 
                 if (stackedDataRawIndex >= 0) {
-                    let val = stackInfo.data.getByRawIndex(
+                    const val = stackInfo.data.getByRawIndex(
                         stackInfo.stackResultDimension, stackedDataRawIndex
                     ) as number;
 

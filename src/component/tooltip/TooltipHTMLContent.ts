@@ -39,8 +39,8 @@ const vendors = ['', '-webkit-', '-moz-', '-o-'];
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
 function assembleTransition(duration: number): string {
-    let transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
-    let transitionText = 'left ' + duration + 's ' + transitionCurve + ','
+    const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
+    const transitionText = 'left ' + duration + 's ' + transitionCurve + ','
                         + 'top ' + duration + 's ' + transitionCurve;
     return zrUtil.map(vendors, function (vendorPrefix) {
         return vendorPrefix + 'transition:' + transitionText;
@@ -53,10 +53,10 @@ function assembleTransition(duration: number): string {
  * @inner
  */
 function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string {
-    let cssText = [];
+    const cssText = [];
 
-    let fontSize = textStyleModel.get('fontSize');
-    let color = textStyleModel.getTextColor();
+    const fontSize = textStyleModel.get('fontSize');
+    const color = textStyleModel.getTextColor();
 
     color && cssText.push('color:' + color);
 
@@ -66,7 +66,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
         && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
 
     each(['decoration', 'align'] as const, function (name) {
-        let val = textStyleModel.get(name);
+        const val = textStyleModel.get(name);
         val && cssText.push('text-' + name + ':' + val);
     });
 
@@ -75,12 +75,12 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
 
 function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
-    let cssText = [];
+    const cssText = [];
 
-    let transitionDuration = tooltipModel.get('transitionDuration');
-    let backgroundColor = tooltipModel.get('backgroundColor');
-    let textStyleModel = tooltipModel.getModel('textStyle');
-    let padding = tooltipModel.get('padding');
+    const transitionDuration = tooltipModel.get('transitionDuration');
+    const backgroundColor = tooltipModel.get('backgroundColor');
+    const textStyleModel = tooltipModel.getModel('textStyle');
+    const padding = tooltipModel.get('padding');
 
     // Animation transition. Do not animate when transitionDuration is 0.
     transitionDuration
@@ -101,9 +101,9 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
     // Border style
     each(['width', 'color', 'radius'] as const, function (name) {
-        let borderName = 'border-' + name;
-        let camelCase = toCamelCase(borderName) as 'borderWidth' | 'borderColor' | 'borderRadius';
-        let val = tooltipModel.get(camelCase);
+        const borderName = 'border-' + name;
+        const camelCase = toCamelCase(borderName) as 'borderWidth' | 'borderColor' | 'borderRadius';
+        const val = tooltipModel.get(camelCase);
         val != null
             && cssText.push(borderName + ':' + val + (name === 'color' ? '' : 'px'));
     });
@@ -121,10 +121,10 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
 // If not able to make, do not modify the input `out`.
 function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, zrX: number, zrY: number) {
-    let zrPainter = zr && zr.painter;
+    const zrPainter = zr && zr.painter;
 
     if (appendToBody) {
-        let zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
+        const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
             domUtil.transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
@@ -136,7 +136,7 @@ function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, z
         // xy should be based on canvas root. But tooltipContent is
         // the sibling of canvas root. So padding of ec container
         // should be considered here.
-        let viewportRootOffset = zrPainter && (zrPainter as CanvasPainter | SVGPainter).getViewportRootOffset();
+        const viewportRootOffset = zrPainter && (zrPainter as CanvasPainter | SVGPainter).getViewportRootOffset();
         if (viewportRootOffset) {
             out[0] += viewportRootOffset.offsetLeft;
             out[1] += viewportRootOffset.offsetTop;
@@ -185,12 +185,12 @@ class TooltipHTMLContent {
             return null;
         }
 
-        let el = document.createElement('div');
+        const el = document.createElement('div');
         // TODO: TYPE
         (el as any).domBelongToZr = true;
         this.el = el;
-        let zr = this._zr = api.getZr();
-        let appendToBody = this._appendToBody = opt && opt.appendToBody;
+        const zr = this._zr = api.getZr();
+        const appendToBody = this._appendToBody = opt && opt.appendToBody;
 
         makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
 
@@ -207,7 +207,7 @@ class TooltipHTMLContent {
         // Is it needed to trigger zr event manually if
         // the browser do not support `pointer-events: none`.
 
-        let self = this;
+        const self = this;
         el.onmouseenter = function () {
             // clear the timeout in hideLater and keep showing tooltip
             if (self._enterable) {
@@ -225,8 +225,8 @@ class TooltipHTMLContent {
                 // support `pointer-events`, we need to do this:
                 // Try trigger zrender event to avoid mouse
                 // in and out shape too frequently
-                let handler = zr.handler;
-                let zrViewportRoot = zr.painter.getViewportRoot();
+                const handler = zr.handler;
+                const zrViewportRoot = zr.painter.getViewportRoot();
                 eventUtil.normalizeEvent(zrViewportRoot, e as ZRRawEvent, true);
                 handler.dispatch('mousemove', e);
             }
@@ -247,10 +247,10 @@ class TooltipHTMLContent {
     update() {
         // FIXME
         // Move this logic to ec main?
-        let container = this._container;
-        let stl = (container as any).currentStyle
+        const container = this._container;
+        const stl = (container as any).currentStyle
             || document.defaultView.getComputedStyle(container);
-        let domStyle = container.style;
+        const domStyle = container.style;
         if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
             domStyle.position = 'relative';
         }
@@ -261,8 +261,8 @@ class TooltipHTMLContent {
 
     show(tooltipModel: Model<TooltipOption>) {
         clearTimeout(this._hideTimeout);
-        let el = this.el;
-        let styleCoord = this._styleCoord;
+        const el = this.el;
+        const styleCoord = this._styleCoord;
 
         el.style.cssText = gCssText + assembleCssText(tooltipModel)
             // Because of the reason described in:
@@ -292,15 +292,15 @@ class TooltipHTMLContent {
     }
 
     getSize() {
-        let el = this.el;
+        const el = this.el;
         return [el.clientWidth, el.clientHeight];
     }
 
     moveTo(zrX: number, zrY: number) {
-        let styleCoord = this._styleCoord;
+        const styleCoord = this._styleCoord;
         makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
 
-        let style = this.el.style;
+        const style = this.el.style;
         style.left = styleCoord[0] + 'px';
         style.top = styleCoord[1] + 'px';
     }
@@ -339,7 +339,7 @@ class TooltipHTMLContent {
         // Consider browser compatibility.
         // IE8 does not support getComputedStyle.
         if (document.defaultView && document.defaultView.getComputedStyle) {
-            let stl = document.defaultView.getComputedStyle(this.el);
+            const stl = document.defaultView.getComputedStyle(this.el);
             if (stl) {
                 width += parseInt(stl.borderLeftWidth, 10) + parseInt(stl.borderRightWidth, 10);
                 height += parseInt(stl.borderTopWidth, 10) + parseInt(stl.borderBottomWidth, 10);

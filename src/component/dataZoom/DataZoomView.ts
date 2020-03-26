@@ -64,14 +64,14 @@ class DataZoomView extends ComponentView {
      *                   ]
      */
     getTargetCoordInfo() {
-        let dataZoomModel = this.dataZoomModel;
-        let ecModel = this.ecModel;
-        let coordSysLists: Dictionary<CoordInfo[]> = {};
+        const dataZoomModel = this.dataZoomModel;
+        const ecModel = this.ecModel;
+        const coordSysLists: Dictionary<CoordInfo[]> = {};
 
         dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-            let axisModel = ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel;
+            const axisModel = ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel;
             if (axisModel) {
-                let coordModel = axisModel.getCoordSysModel();
+                const coordModel = axisModel.getCoordSysModel();
                 coordModel && save(
                     coordModel,
                     axisModel,

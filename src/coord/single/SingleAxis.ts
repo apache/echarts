@@ -66,7 +66,7 @@ class SingleAxis extends Axis {
      * Judge the orient of the axis.
      */
     isHorizontal() {
-        let position = this.position;
+        const position = this.position;
         return position === 'top' || position === 'bottom';
     }
 

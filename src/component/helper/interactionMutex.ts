@@ -24,13 +24,13 @@ import * as echarts from '../../echarts';
 const ATTR = '\0_ec_interaction_mutex';
 
 export function take(zr, resourceKey, userKey) {
-    let store = getStore(zr);
+    const store = getStore(zr);
     store[resourceKey] = userKey;
 }
 
 export function release(zr, resourceKey, userKey) {
-    let store = getStore(zr);
-    let uKey = store[resourceKey];
+    const store = getStore(zr);
+    const uKey = store[resourceKey];
 
     if (uKey === userKey) {
         store[resourceKey] = null;

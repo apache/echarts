@@ -115,8 +115,8 @@ export class TreeNode {
             options = {order: options};
         }
 
-        let order = (options as TreeTraverseOption).order || 'preorder';
-        let children = this[(options as TreeTraverseOption).attr || 'children'];
+        const order = (options as TreeTraverseOption).order || 'preorder';
+        const children = this[(options as TreeTraverseOption).attr || 'children'];
 
         let suppressVisitSub;
         order === 'preorder' && (suppressVisitSub = (cb as TreeTraverseCallback<Ctx>).call(context as Ctx, this));
@@ -139,7 +139,7 @@ export class TreeNode {
         let height = 0;
         this.depth = depth;
         for (let i = 0; i < this.children.length; i++) {
-            let child = this.children[i];
+            const child = this.children[i];
             child.updateDepthAndHeight(depth + 1);
             if (child.height > height) {
                 height = child.height;
@@ -153,7 +153,7 @@ export class TreeNode {
             return this;
         }
         for (let i = 0, children = this.children, len = children.length; i < len; i++) {
-            let res = children[i].getNodeById(id);
+            const res = children[i].getNodeById(id);
             if (res) {
                 return res;
             }
@@ -165,7 +165,7 @@ export class TreeNode {
             return true;
         }
         for (let i = 0, children = this.children, len = children.length; i < len; i++) {
-            let res = children[i].contains(node);
+            const res = children[i].contains(node);
             if (res) {
                 return res;
             }
@@ -177,7 +177,7 @@ export class TreeNode {
      * @return order: [root, child, grandchild, ...]
      */
     getAncestors(includeSelf?: boolean): TreeNode[] {
-        let ancestors = [];
+        const ancestors = [];
         let node = includeSelf ? this : this.parentNode;
         while (node) {
             ancestors.push(node);
@@ -188,7 +188,7 @@ export class TreeNode {
     }
 
     getValue(dimension?: DimensionLoose): ParsedValue {
-        let data = this.hostTree.data;
+        const data = this.hostTree.data;
         return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
     }
 
@@ -211,9 +211,9 @@ export class TreeNode {
         if (this.dataIndex < 0) {
             return;
         }
-        let hostTree = this.hostTree;
-        let itemModel = hostTree.data.getItemModel(this.dataIndex);
-        let levelModel = this.getLevelModel();
+        const hostTree = this.hostTree;
+        const itemModel = hostTree.data.getItemModel(this.dataIndex);
+        const levelModel = this.getLevelModel();
         let leavesModel;
         if (!levelModel && (this.children.length === 0 || (this.children.length !== 0 && this.isExpand === false))) {
             leavesModel = this.getLeavesModel();
@@ -348,7 +348,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
     }
 
     getNodeByDataIndex(dataIndex: number): TreeNode {
-        let rawIndex = this.data.getRawIndex(dataIndex);
+        const rawIndex = this.data.getRawIndex(dataIndex);
         return this._nodes[rawIndex];
     }
 
@@ -361,8 +361,8 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
      * when list has been performed options like 'filterSelf' or 'map'.
      */
     update() {
-        let data = this.data;
-        let nodes = this._nodes;
+        const data = this.data;
+        const nodes = this._nodes;
 
         for (let i = 0, len = nodes.length; i < len; i++) {
             nodes[i].dataIndex = -1;
@@ -406,26 +406,26 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
         beforeLink?: (data: List) => void
     ) {
 
-        let tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
-        let listData: TreeNodeData[] = [];
+        const tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
+        const listData: TreeNodeData[] = [];
         let dimMax = 1;
 
         buildHierarchy(dataRoot);
 
         function buildHierarchy(dataNode: TreeNodeData, parentNode?: TreeNode) {
-            let value = dataNode.value;
+            const value = dataNode.value;
             dimMax = Math.max(dimMax, zrUtil.isArray(value) ? value.length : 1);
 
             listData.push(dataNode);
 
-            let node = new TreeNode(dataNode.name, tree);
+            const node = new TreeNode(dataNode.name, tree);
             parentNode
                 ? addChild(node, parentNode)
                 : (tree.root = node);
 
             tree._nodes.push(node);
 
-            let children = dataNode.children;
+            const children = dataNode.children;
             if (children) {
                 for (let i = 0; i < children.length; i++) {
                     buildHierarchy(children[i], node);
@@ -435,12 +435,12 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
 
         tree.root.updateDepthAndHeight(0);
 
-        let dimensionsInfo = createDimensions(listData, {
+        const dimensionsInfo = createDimensions(listData, {
             coordDimensions: ['value'],
             dimensionsCount: dimMax
         });
 
-        let list = new List(dimensionsInfo, hostModel);
+        const list = new List(dimensionsInfo, hostModel);
         list.initData(listData);
 
         linkList({
@@ -463,7 +463,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
  * so this function is not ready and not necessary to be public.
  */
 function addChild(child: TreeNode, node: TreeNode) {
-    let children = node.children;
+    const children = node.children;
     if (child.parentNode === node) {
         return;
     }

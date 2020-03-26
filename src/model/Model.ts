@@ -129,11 +129,11 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     getShallow<R extends keyof Opt>(
         key: R, ignoreParent?: boolean
     ): Opt[R] {
-        let option = this.option;
+        const option = this.option;
 
         let val = option == null ? option : option[key];
         if (val == null) {
-            let parentModel = !ignoreParent && getParent(this, key as string);
+            const parentModel = !ignoreParent && getParent(this, key as string);
             if (parentModel) {
                 // FIXME:TS do not know how to make it works
                 val = parentModel.getShallow(key);
@@ -159,9 +159,9 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     // getModel(path: string | string[], parentModel?: Model): Model;
     // TODO 'xxx.yyy.zzz' is deprecated
     getModel(path: string | readonly string[], parentModel?: Model): Model<any> {
-        let hasPath = path != null;
-        let pathFinal = hasPath ? this.parsePath(path) : null;
-        let obj = hasPath
+        const hasPath = path != null;
+        const pathFinal = hasPath ? this.parsePath(path) : null;
+        const obj = hasPath
             ? doGet(this.option, pathFinal)
             : this.option;
 
@@ -185,7 +185,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
 
     // Pending
     clone(): Model<Opt> {
-        let Ctor = this.constructor;
+        const Ctor = this.constructor;
         return new (Ctor as any)(zrUtil.clone(this.option));
     }
 
@@ -242,7 +242,7 @@ function doGet(obj: ModelOption, pathArr: readonly string[], parentModel?: Model
 
 // `path` can be null/undefined
 function getParent(model: Model, path: string | readonly string[]): Model {
-    let getParentMethod = inner(model).getParent;
+    const getParentMethod = inner(model).getParent;
     return getParentMethod ? getParentMethod.call(model, path) : model.parentModel;
 }
 

@@ -16,11 +16,11 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-import { Dictionary, DisplayState, ZRElementEvent, ItemStyleOption, ColorString, LabelOption } from '../../util/types';
+import { Dictionary, DisplayState, ZRElementEvent, ItemStyleOption, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import * as graphic from '../../util/graphic';
+// import * as graphic from '../../util/graphic';
 import Displayable from 'zrender/src/graphic/Displayable';
 
 // type IconPath = ReturnType<typeof graphic.createIcon>;

@@ -37,7 +37,7 @@ class PolarModel extends ComponentModel<PolarOption> {
     findAxisModel(axisType: 'radiusAxis'): RadiusAxisModel
     findAxisModel(axisType: 'angleAxis' | 'radiusAxis'): AngleAxisModel | RadiusAxisModel {
         let foundAxisModel;
-        let ecModel = this.ecModel;
+        const ecModel = this.ecModel;
 
         ecModel.eachComponent(axisType, function (this: PolarModel, axisModel: AngleAxisModel | RadiusAxisModel) {
             if (axisModel.getCoordSysModel() === this) {

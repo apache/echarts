@@ -217,14 +217,14 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     optionUpdated() {
         this._updateData(this.ecModel);
 
-        let legendData = this._data;
+        const legendData = this._data;
 
         // If selectedMode is single, try to select one
         if (legendData[0] && this.get('selectedMode') === 'single') {
             let hasSelected = false;
             // If has any selected in option.selected
             for (let i = 0; i < legendData.length; i++) {
-                let name = legendData[i].get('name');
+                const name = legendData[i].get('name');
                 if (this.isSelected(name)) {
                     // Force to unselect others
                     this.select(name);
@@ -242,13 +242,13 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         let availableNames: string[] = [];
 
         ecModel.eachRawSeries(function (seriesModel) {
-            let seriesName = seriesModel.name;
+            const seriesName = seriesModel.name;
             availableNames.push(seriesName);
             let isPotential;
 
             if (seriesModel.legendVisualProvider) {
-                let provider = seriesModel.legendVisualProvider;
-                let names = provider.getAllNames();
+                const provider = seriesModel.legendVisualProvider;
+                const names = provider.getAllNames();
 
                 if (!ecModel.isSeriesFiltered(seriesModel)) {
                     availableNames = availableNames.concat(names);
@@ -278,9 +278,9 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
         // If legend.data not specified in option, use availableNames as data,
         // which is convinient for user preparing option.
-        let rawData = this.get('data') || potentialData;
+        const rawData = this.get('data') || potentialData;
 
-        let legendData = zrUtil.map(rawData, function (dataItem) {
+        const legendData = zrUtil.map(rawData, function (dataItem) {
             // Can be string or number
             if (typeof dataItem === 'string' || typeof dataItem === 'number') {
                 dataItem = {
@@ -302,10 +302,10 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     select(name: string) {
-        let selected = this.option.selected;
-        let selectedMode = this.get('selectedMode');
+        const selected = this.option.selected;
+        const selectedMode = this.get('selectedMode');
         if (selectedMode === 'single') {
-            let data = this._data;
+            const data = this._data;
             zrUtil.each(data, function (dataItem) {
                 selected[dataItem.get('name')] = false;
             });
@@ -320,7 +320,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     toggleSelected(name: string) {
-        let selected = this.option.selected;
+        const selected = this.option.selected;
         // Default is true
         if (!selected.hasOwnProperty(name)) {
             selected[name] = true;
@@ -329,18 +329,18 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     allSelect() {
-        let data = this._data;
-        let selected = this.option.selected;
+        const data = this._data;
+        const selected = this.option.selected;
         zrUtil.each(data, function (dataItem) {
             selected[dataItem.get('name', true)] = true;
         });
     }
 
     inverseSelect() {
-        let data = this._data;
-        let selected = this.option.selected;
+        const data = this._data;
+        const selected = this.option.selected;
         zrUtil.each(data, function (dataItem) {
-            let name = dataItem.get('name', true);
+            const name = dataItem.get('name', true);
             // Initially, default value is true
             if (!selected.hasOwnProperty(name)) {
                 selected[name] = true;
@@ -350,7 +350,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     isSelected(name: string) {
-        let selected = this.option.selected;
+        const selected = this.option.selected;
         return !(selected.hasOwnProperty(name) && !selected[name])
             && zrUtil.indexOf(this._availableNames, name) >= 0;
     }

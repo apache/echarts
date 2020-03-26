@@ -74,7 +74,7 @@ export class DefaultDataProvider implements DataProvider {
     static protoInitialize = (function () {
         // PENDING: To avoid potential incompat (e.g., prototype
         // is visited somewhere), still init them on prototype.
-        let proto = DefaultDataProvider.prototype;
+        const proto = DefaultDataProvider.prototype;
         proto.pure = false;
         proto.persistent = true;
     })();
@@ -82,15 +82,15 @@ export class DefaultDataProvider implements DataProvider {
 
     constructor(sourceParam: Source | OptionSourceData, dimSize?: number) {
         // let source: Source;
-        let source: Source = !(sourceParam instanceof Source)
+        const source: Source = !(sourceParam instanceof Source)
             ? Source.seriesDataToSource(sourceParam as OptionSourceData)
             : sourceParam as Source;
 
         // declare source is Source;
         this._source = source;
 
-        let data = this._data = source.data;
-        let sourceFormat = source.sourceFormat;
+        const data = this._data = source.data;
+        const sourceFormat = source.sourceFormat;
 
         // Typed array. TODO IE10+?
         if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
@@ -104,7 +104,7 @@ export class DefaultDataProvider implements DataProvider {
             this._data = data;
         }
 
-        let methods = providerMethods[
+        const methods = providerMethods[
             sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
             ? sourceFormat + '_' + source.seriesLayoutBy
             : sourceFormat
@@ -153,15 +153,15 @@ export class DefaultDataProvider implements DataProvider {
             [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: {
                 pure: true,
                 count: function (this: DefaultDataProvider): number {
-                    let row = (this._data as OptionDataValue[][])[0];
+                    const row = (this._data as OptionDataValue[][])[0];
                     return row ? Math.max(0, row.length - this._source.startIndex) : 0;
                 },
                 getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
                     idx += this._source.startIndex;
-                    let item = [];
-                    let data = this._data as OptionDataValue[][];
+                    const item = [];
+                    const data = this._data as OptionDataValue[][];
                     for (let i = 0; i < data.length; i++) {
-                        let row = data[i];
+                        const row = data[i];
                         item.push(row ? row[idx] : null);
                     }
                     return item;
@@ -181,23 +181,23 @@ export class DefaultDataProvider implements DataProvider {
             [SOURCE_FORMAT_KEYED_COLUMNS]: {
                 pure: true,
                 count: function (this: DefaultDataProvider): number {
-                    let dimName = this._source.dimensionsDefine[0].name;
-                    let col = (this._data as Dictionary<OptionDataValue[]>)[dimName];
+                    const dimName = this._source.dimensionsDefine[0].name;
+                    const col = (this._data as Dictionary<OptionDataValue[]>)[dimName];
                     return col ? col.length : 0;
                 },
                 getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
-                    let item = [];
-                    let dims = this._source.dimensionsDefine;
+                    const item = [];
+                    const dims = this._source.dimensionsDefine;
                     for (let i = 0; i < dims.length; i++) {
-                        let col = (this._data as Dictionary<OptionDataValue[]>)[dims[i].name];
+                        const col = (this._data as Dictionary<OptionDataValue[]>)[dims[i].name];
                         item.push(col ? col[idx] : null);
                     }
                     return item;
                 },
                 appendData: function (this: DefaultDataProvider, newData: Dictionary<OptionDataValue[]>) {
-                    let data = this._data as Dictionary<OptionDataValue[]>;
+                    const data = this._data as Dictionary<OptionDataValue[]>;
                     each(newData, function (newCol, key) {
-                        let oldCol = data[key] || (data[key] = []);
+                        const oldCol = data[key] || (data[key] = []);
                         for (let i = 0; i < (newCol || []).length; i++) {
                             oldCol.push(newCol[i]);
                         }
@@ -220,7 +220,7 @@ export class DefaultDataProvider implements DataProvider {
                 getItem: function (this: DefaultDataProvider, idx: number, out: ArrayLike<number>): ArrayLike<number> {
                     idx = idx - this._offset;
                     out = out || [];
-                    let offset = this._dimSize * idx;
+                    const offset = this._dimSize * idx;
                     for (let i = 0; i < this._dimSize; i++) {
                         out[i] = (this._data as ArrayLike<number>)[offset + i];
                     }
@@ -291,7 +291,7 @@ const rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
     ): OptionDataValue | OptionDataItem {
         // FIXME: In some case (markpoint in geo (geo-map.html)),
         // dataItem is {coord: [...]}
-        let value = getDataItemValue(dataItem);
+        const value = getDataItemValue(dataItem);
         return (dimIndex == null || !(value instanceof Array))
             ? value
             : value[dimIndex];
@@ -321,17 +321,17 @@ export function retrieveRawValue(
     }
 
     // Consider data may be not persistent.
-    let dataItem = data.getRawDataItem(dataIndex);
+    const dataItem = data.getRawDataItem(dataIndex);
 
     if (dataItem == null) {
         return;
     }
 
-    let sourceFormat = data.getProvider().getSource().sourceFormat;
+    const sourceFormat = data.getProvider().getSource().sourceFormat;
     let dimName;
     let dimIndex;
 
-    let dimInfo = data.getDimensionInfo(dim);
+    const dimInfo = data.getDimensionInfo(dim);
     if (dimInfo) {
         dimName = dimInfo.name;
         dimIndex = dimInfo.index;
@@ -357,7 +357,7 @@ export function retrieveRawAttr(data: List, dataIndex: number, attr: string): an
         return;
     }
 
-    let sourceFormat = data.getProvider().getSource().sourceFormat;
+    const sourceFormat = data.getProvider().getSource().sourceFormat;
 
     if (sourceFormat !== SOURCE_FORMAT_ORIGINAL
         && sourceFormat !== SOURCE_FORMAT_OBJECT_ROWS

@@ -24,7 +24,7 @@ import lang from '../lang';
 import { retrieveRawValue } from '../data/helper/dataProvider';
 
 export default function (dom, ecModel) {
-    let ariaModel = ecModel.getModel('aria');
+    const ariaModel = ecModel.getModel('aria');
     if (!ariaModel.get('show')) {
         return;
     }
@@ -38,9 +38,9 @@ export default function (dom, ecModel) {
         ++seriesCnt;
     }, this);
 
-    let maxDataCnt = ariaModel.get('data.maxCount') || 10;
-    let maxSeriesCnt = ariaModel.get('series.maxCount') || 10;
-    let displaySeriesCnt = Math.min(seriesCnt, maxSeriesCnt);
+    const maxDataCnt = ariaModel.get('data.maxCount') || 10;
+    const maxSeriesCnt = ariaModel.get('series.maxCount') || 10;
+    const displaySeriesCnt = Math.min(seriesCnt, maxSeriesCnt);
 
     let ariaLabel;
     if (seriesCnt < 1) {
@@ -48,7 +48,7 @@ export default function (dom, ecModel) {
         return;
     }
     else {
-        let title = getTitle();
+        const title = getTitle();
         if (title) {
             ariaLabel = replace(getConfig('general.withTitle'), {
                 title: title
@@ -58,8 +58,8 @@ export default function (dom, ecModel) {
             ariaLabel = getConfig('general.withoutTitle');
         }
 
-        let seriesLabels = [];
-        let prefix = seriesCnt > 1
+        const seriesLabels = [];
+        const prefix = seriesCnt > 1
             ? 'series.multiple.prefix'
             : 'series.single.prefix';
         ariaLabel += replace(getConfig(prefix), { seriesCount: seriesCnt });
@@ -68,8 +68,8 @@ export default function (dom, ecModel) {
             if (idx < displaySeriesCnt) {
                 let seriesLabel;
 
-                let seriesName = seriesModel.get('name');
-                let seriesTpl = 'series.'
+                const seriesName = seriesModel.get('name');
+                const seriesTpl = 'series.'
                     + (seriesCnt > 1 ? 'multiple' : 'single') + '.';
                 seriesLabel = getConfig(seriesName
                     ? seriesTpl + 'withName'
@@ -81,7 +81,7 @@ export default function (dom, ecModel) {
                     seriesType: getSeriesTypeName(seriesModel.subType)
                 });
 
-                let data = seriesModel.getData();
+                const data = seriesModel.getData();
                 window.data = data;
                 if (data.count() > maxDataCnt) {
                     // Show part of data
@@ -93,11 +93,11 @@ export default function (dom, ecModel) {
                     seriesLabel += getConfig('data.allData');
                 }
 
-                let dataLabels = [];
+                const dataLabels = [];
                 for (let i = 0; i < data.count(); i++) {
                     if (i < maxDataCnt) {
-                        let name = data.getName(i);
-                        let value = retrieveRawValue(data, i);
+                        const name = data.getName(i);
+                        const value = retrieveRawValue(data, i);
                         dataLabels.push(
                             replace(
                                 name
@@ -142,9 +142,9 @@ export default function (dom, ecModel) {
     }
 
     function getConfig(path) {
-        let userConfig = ariaModel.get(path);
+        const userConfig = ariaModel.get(path);
         if (userConfig == null) {
-            let pathArr = path.split('.');
+            const pathArr = path.split('.');
             let result = lang.aria;
             for (let i = 0; i < pathArr.length; ++i) {
                 result = result[pathArr[i]];

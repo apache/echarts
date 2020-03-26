@@ -37,7 +37,7 @@ export default function (option: ECUnitOption, isNew: boolean): void {
     let brushComponentSpecifiedBtns = [] as string[];
 
     zrUtil.each(brushComponents, function (brushOpt: BrushOption) {
-        let tbs = brushOpt.hasOwnProperty('toolbox')
+        const tbs = brushOpt.hasOwnProperty('toolbox')
             ? brushOpt.toolbox : [];
 
         if (tbs instanceof Array) {
@@ -55,9 +55,9 @@ export default function (option: ECUnitOption, isNew: boolean): void {
         option.toolbox = [toolbox];
     }
 
-    let toolboxFeature = (toolbox.feature || (toolbox.feature = {}));
-    let toolboxBrush = toolboxFeature.brush || (toolboxFeature.brush = {});
-    let brushTypes = toolboxBrush.type || (toolboxBrush.type = []);
+    const toolboxFeature = (toolbox.feature || (toolbox.feature = {}));
+    const toolboxBrush = toolboxFeature.brush || (toolboxFeature.brush = {});
+    const brushTypes = toolboxBrush.type || (toolboxBrush.type = []);
 
     brushTypes.push.apply(brushTypes, brushComponentSpecifiedBtns);
 
@@ -69,7 +69,7 @@ export default function (option: ECUnitOption, isNew: boolean): void {
 }
 
 function removeDuplicate(arr: string[]): void {
-    let map = {} as Dictionary<number>;
+    const map = {} as Dictionary<number>;
     zrUtil.each(arr, function (val) {
         map[val] = 1;
     });

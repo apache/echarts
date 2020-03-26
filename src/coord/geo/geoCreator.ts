@@ -44,10 +44,10 @@ export type resizeGeoType = typeof resizeGeo;
  */
 function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOption>, api: ExtensionAPI): void {
 
-    let boundingCoords = geoModel.get('boundingCoords');
+    const boundingCoords = geoModel.get('boundingCoords');
     if (boundingCoords != null) {
-        let leftTop = boundingCoords[0];
-        let rightBottom = boundingCoords[1];
+        const leftTop = boundingCoords[0];
+        const rightBottom = boundingCoords[1];
         if (isNaN(leftTop[0]) || isNaN(leftTop[1]) || isNaN(rightBottom[0]) || isNaN(rightBottom[1])) {
             if (__DEV__) {
                 console.error('Invalid boundingCoords');
@@ -58,15 +58,15 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
         }
     }
 
-    let rect = this.getBoundingRect();
+    const rect = this.getBoundingRect();
 
     let center = geoModel.get('layoutCenter');
     let size = geoModel.get('layoutSize');
 
-    let viewWidth = api.getWidth();
-    let viewHeight = api.getHeight();
+    const viewWidth = api.getWidth();
+    const viewHeight = api.getHeight();
 
-    let aspect = rect.width / rect.height * this.aspectScale;
+    const aspect = rect.width / rect.height * this.aspectScale;
 
     let useCenterAndSize = false;
 
@@ -104,7 +104,7 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
     }
     else {
         // Use left/top/width/height
-        let boxLayoutOption = geoModel.getBoxLayoutParams() as Parameters<typeof layout.getLayoutRect>[0];
+        const boxLayoutOption = geoModel.getBoxLayoutParams() as Parameters<typeof layout.getLayoutRect>[0];
 
         // 0.75 rate
         boxLayoutOption.aspect = aspect;
@@ -135,15 +135,15 @@ class GeoCreator implements CoordinateSystemCreator {
     dimensions = Geo.prototype.dimensions;
 
     create(ecModel: GlobalModel, api: ExtensionAPI): Geo[] {
-        let geoList = [] as Geo[];
+        const geoList = [] as Geo[];
 
         // FIXME Create each time may be slow
         ecModel.eachComponent('geo', function (geoModel: GeoModel, idx) {
-            let name = geoModel.get('map');
+            const name = geoModel.get('map');
 
             let aspectScale = geoModel.get('aspectScale');
             let invertLongitute = true;
-            let mapRecords = mapDataStorage.retrieveMap(name);
+            const mapRecords = mapDataStorage.retrieveMap(name);
             if (mapRecords && mapRecords[0] && mapRecords[0].type === 'svg') {
                 aspectScale == null && (aspectScale = 1);
                 invertLongitute = false;
@@ -152,7 +152,7 @@ class GeoCreator implements CoordinateSystemCreator {
                 aspectScale == null && (aspectScale = 0.75);
             }
 
-            let geo = new Geo(name + idx, name, geoModel.get('nameMap'), invertLongitute);
+            const geo = new Geo(name + idx, name, geoModel.get('nameMap'), invertLongitute);
 
             geo.aspectScale = aspectScale;
             geo.zoomLimit = geoModel.get('scaleLimit');
@@ -170,9 +170,9 @@ class GeoCreator implements CoordinateSystemCreator {
         });
 
         ecModel.eachSeries(function (seriesModel) {
-            let coordSys = seriesModel.get('coordinateSystem');
+            const coordSys = seriesModel.get('coordinateSystem');
             if (coordSys === 'geo') {
-                let geoIndex = (
+                const geoIndex = (
                     seriesModel as SeriesModel<SeriesOption & SeriesOnGeoOptionMixin>
                 ).get('geoIndex') || 0;
                 seriesModel.coordinateSystem = geoList[geoIndex];
@@ -180,21 +180,21 @@ class GeoCreator implements CoordinateSystemCreator {
         });
 
         // If has map series
-        let mapModelGroupBySeries = {} as Dictionary<MapSeries[]>;
+        const mapModelGroupBySeries = {} as Dictionary<MapSeries[]>;
 
         ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
             if (!seriesModel.getHostGeoModel()) {
-                let mapType = seriesModel.getMapType();
+                const mapType = seriesModel.getMapType();
                 mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
                 mapModelGroupBySeries[mapType].push(seriesModel);
             }
         });
 
         zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
-            let nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
+            const nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('nameMap');
             });
-            let geo = new Geo(mapType, mapType, zrUtil.mergeAll(nameMapList));
+            const geo = new Geo(mapType, mapType, zrUtil.mergeAll(nameMapList));
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('scaleLimit');
@@ -224,16 +224,16 @@ class GeoCreator implements CoordinateSystemCreator {
         originRegionArr: RegoinOption[], mapName: string, nameMap?: NameMap
     ): RegoinOption[] {
         // Not use the original
-        let regionsArr = (originRegionArr || []).slice();
+        const regionsArr = (originRegionArr || []).slice();
 
-        let dataNameMap = zrUtil.createHashMap();
+        const dataNameMap = zrUtil.createHashMap();
         for (let i = 0; i < regionsArr.length; i++) {
             dataNameMap.set(regionsArr[i].name, regionsArr[i]);
         }
 
-        let source = geoSourceManager.load(mapName, nameMap);
+        const source = geoSourceManager.load(mapName, nameMap);
         zrUtil.each(source.regions, function (region) {
-            let name = region.name;
+            const name = region.name;
             !dataNameMap.get(name) && regionsArr.push({name: name});
         });
 

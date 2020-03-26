@@ -37,9 +37,9 @@ class BoxplotView extends ChartView {
     private _data: List;
 
     render(seriesModel: BoxplotSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let data = seriesModel.getData();
-        let group = this.group;
-        let oldData = this._data;
+        const data = seriesModel.getData();
+        const group = this.group;
+        const oldData = this._data;
 
         // There is no old data only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
@@ -47,13 +47,13 @@ class BoxplotView extends ChartView {
             group.removeAll();
         }
 
-        let constDim = seriesModel.get('layout') === 'horizontal' ? 1 : 0;
+        const constDim = seriesModel.get('layout') === 'horizontal' ? 1 : 0;
 
         data.diff(oldData)
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
-                    let itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
-                    let symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
+                    const itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
+                    const symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
@@ -67,7 +67,7 @@ class BoxplotView extends ChartView {
                     return;
                 }
 
-                let itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
+                const itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
                 if (!symbolEl) {
                     symbolEl = createNormalBox(itemLayout, data, newIdx, constDim);
                 }
@@ -80,7 +80,7 @@ class BoxplotView extends ChartView {
                 data.setItemGraphicEl(newIdx, symbolEl);
             })
             .remove(function (oldIdx) {
-                let el = oldData.getItemGraphicEl(oldIdx);
+                const el = oldData.getItemGraphicEl(oldIdx);
                 el && group.remove(el);
             })
             .execute();
@@ -89,8 +89,8 @@ class BoxplotView extends ChartView {
     }
 
     remove(ecModel: GlobalModel) {
-        let group = this.group;
-        let data = this._data;
+        const group = this.group;
+        const data = this._data;
         this._data = null;
         data && data.eachItemGraphicEl(function (el) {
             el && group.remove(el);
@@ -120,7 +120,7 @@ class BoxPath extends Path<BoxPathProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: BoxPathShape) {
-        let ends = shape.points;
+        const ends = shape.points;
 
         let i = 0;
         ctx.moveTo(ends[i][0], ends[i][1]);
@@ -146,9 +146,9 @@ function createNormalBox(
     constDim: number,
     isInit?: boolean
 ) {
-    let ends = itemLayout.ends;
+    const ends = itemLayout.ends;
 
-    let el = new BoxPath({
+    const el = new BoxPath({
         shape: {
             points: isInit
                 ? transInit(ends, constDim, itemLayout)
@@ -168,8 +168,8 @@ function updateNormalBoxData(
     dataIndex: number,
     isInit?: boolean
 ) {
-    let seriesModel = data.hostModel;
-    let updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
+    const seriesModel = data.hostModel;
+    const updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
 
     updateMethod(
         el,
@@ -178,19 +178,19 @@ function updateNormalBoxData(
         dataIndex
     );
 
-    let itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
-    let normalItemStyleModel = itemModel.getModel('itemStyle');
-    let borderColor = data.getItemVisual(dataIndex, 'color');
+    const itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
+    const normalItemStyleModel = itemModel.getModel('itemStyle');
+    const borderColor = data.getItemVisual(dataIndex, 'color');
 
     // Exclude borderColor.
-    let itemStyle = normalItemStyleModel.getItemStyle(['borderColor']) as PathStyleProps;
+    const itemStyle = normalItemStyleModel.getItemStyle(['borderColor']) as PathStyleProps;
     itemStyle.stroke = borderColor;
     itemStyle.strokeNoScale = true;
     el.useStyle(itemStyle);
 
     el.z2 = 100;
 
-    let hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
+    const hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
     graphic.enableHoverEmphasis(el, hoverStyle);
 }
 

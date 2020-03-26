@@ -55,7 +55,7 @@ BMapCoordSys.prototype.getBMap = function () {
 };
 
 BMapCoordSys.prototype.dataToPoint = function (data) {
-    let point = new BMap.Point(data[0], data[1]);
+    const point = new BMap.Point(data[0], data[1]);
     // TODO mercator projection is toooooooo slow
     // let mercatorPoint = this._projection.lngLatToPoint(point);
 
@@ -66,13 +66,13 @@ BMapCoordSys.prototype.dataToPoint = function (data) {
     //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
     //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
     // ];
-    let px = this._bmap.pointToOverlayPixel(point);
-    let mapOffset = this._mapOffset;
+    const px = this._bmap.pointToOverlayPixel(point);
+    const mapOffset = this._mapOffset;
     return [px.x - mapOffset[0], px.y - mapOffset[1]];
 };
 
 BMapCoordSys.prototype.pointToData = function (pt) {
-    let mapOffset = this._mapOffset;
+    const mapOffset = this._mapOffset;
     pt = this._bmap.overlayPixelToPoint({
         x: pt[0] + mapOffset[0],
         y: pt[1] + mapOffset[1]
@@ -81,7 +81,7 @@ BMapCoordSys.prototype.pointToData = function (pt) {
 };
 
 BMapCoordSys.prototype.getViewRect = function () {
-    let api = this._api;
+    const api = this._api;
     return new graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
 };
 
@@ -90,7 +90,7 @@ BMapCoordSys.prototype.getRoamTransform = function () {
 };
 
 BMapCoordSys.prototype.prepareCustoms = function (data) {
-    let rect = this.getViewRect();
+    const rect = this.getViewRect();
     return {
         coordSys: {
             // The name exposed to user is always 'cartesian2d' but not 'grid'.
@@ -110,10 +110,10 @@ BMapCoordSys.prototype.prepareCustoms = function (data) {
 function dataToCoordSize(dataSize, dataItem) {
     dataItem = dataItem || [0, 0];
     return zrUtil.map([0, 1], function (dimIdx) {
-        let val = dataItem[dimIdx];
-        let halfSize = dataSize[dimIdx] / 2;
-        let p1 = [];
-        let p2 = [];
+        const val = dataItem[dimIdx];
+        const halfSize = dataSize[dimIdx] / 2;
+        const p1 = [];
+        const p2 = [];
         p1[dimIdx] = val - halfSize;
         p2[dimIdx] = val + halfSize;
         p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
@@ -121,7 +121,7 @@ function dataToCoordSize(dataSize, dataItem) {
     }, this);
 }
 
-var Overlay;
+let Overlay;
 
 // For deciding which dimensions to use when creating list data
 BMapCoordSys.dimensions = BMapCoordSys.prototype.dimensions;
@@ -152,12 +152,12 @@ function createOverlayCtor() {
 
 BMapCoordSys.create = function (ecModel, api) {
     let bmapCoordSys;
-    let root = api.getDom();
+    const root = api.getDom();
 
     // TODO Dispose
     ecModel.eachComponent('bmap', function (bmapModel) {
-        let painter = api.getZr().painter;
-        let viewportRoot = painter.getViewportRoot();
+        const painter = api.getZr().painter;
+        const viewportRoot = painter.getViewportRoot();
         if (typeof BMap === 'undefined') {
             throw new Error('BMap api is not loaded');
         }
@@ -183,7 +183,7 @@ BMapCoordSys.create = function (ecModel, api) {
             root.appendChild(bmapRoot);
             bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
 
-            let overlay = new Overlay(viewportRoot);
+            const overlay = new Overlay(viewportRoot);
             bmap.addOverlay(overlay);
 
             // Override
@@ -195,10 +195,10 @@ BMapCoordSys.create = function (ecModel, api) {
 
         // Set bmap options
         // centerAndZoom before layout and render
-        let center = bmapModel.get('center');
-        let zoom = bmapModel.get('zoom');
+        const center = bmapModel.get('center');
+        const zoom = bmapModel.get('zoom');
         if (center && zoom) {
-            let pt = new BMap.Point(center[0], center[1]);
+            const pt = new BMap.Point(center[0], center[1]);
             bmap.centerAndZoom(pt, zoom);
         }
 

@@ -25,23 +25,23 @@ import { Dictionary } from '../../util/types';
 
 export default function (ecModel: GlobalModel) {
 
-    let processedMapType = {} as {[mapType: string]: boolean};
+    const processedMapType = {} as {[mapType: string]: boolean};
 
     ecModel.eachSeriesByType('map', function (mapSeries: MapSeries) {
-        let mapType = mapSeries.getMapType();
+        const mapType = mapSeries.getMapType();
         if (mapSeries.getHostGeoModel() || processedMapType[mapType]) {
             return;
         }
 
-        let mapSymbolOffsets = {} as Dictionary<number>;
+        const mapSymbolOffsets = {} as Dictionary<number>;
 
         zrUtil.each(mapSeries.seriesGroup, function (subMapSeries) {
-            let geo = subMapSeries.coordinateSystem;
-            let data = subMapSeries.originalData;
+            const geo = subMapSeries.coordinateSystem;
+            const data = subMapSeries.originalData;
             if (subMapSeries.get('showLegendSymbol') && ecModel.getComponent('legend')) {
                 data.each(data.mapDimension('value'), function (value, idx) {
-                    let name = data.getName(idx);
-                    let region = geo.getRegion(name);
+                    const name = data.getName(idx);
+                    const region = geo.getRegion(name);
 
                     // If input series.data is [11, 22, '-'/null/undefined, 44],
                     // it will be filled with NaN: [11, 22, NaN, 44] and NaN will
@@ -50,9 +50,9 @@ export default function (ecModel: GlobalModel) {
                         return;
                     }
 
-                    let offset = mapSymbolOffsets[name] || 0;
+                    const offset = mapSymbolOffsets[name] || 0;
 
-                    let point = geo.dataToPoint(region.center);
+                    const point = geo.dataToPoint(region.center);
 
                     mapSymbolOffsets[name] = offset + 1;
 
@@ -65,10 +65,10 @@ export default function (ecModel: GlobalModel) {
         });
 
         // Show label of those region not has legendSymbol(which is offset 0)
-        let data = mapSeries.getData();
+        const data = mapSeries.getData();
         data.each(function (idx) {
-            let name = data.getName(idx);
-            let layout = data.getItemLayout(idx) || {};
+            const name = data.getName(idx);
+            const layout = data.getItemLayout(idx) || {};
             layout.showLabel = !mapSymbolOffsets[name];
             data.setItemLayout(idx, layout);
         });

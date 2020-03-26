@@ -71,9 +71,9 @@ class VisualMapView extends ComponentView {
      * @protected
      */
     renderBackground(group: Group) {
-        let visualMapModel = this.visualMapModel;
-        let padding = formatUtil.normalizeCssArray(visualMapModel.get('padding') || 0);
-        let rect = group.getBoundingRect();
+        const visualMapModel = this.visualMapModel;
+        const padding = formatUtil.normalizeCssArray(visualMapModel.get('padding') || 0);
+        const rect = group.getBoundingRect();
 
         group.add(new Rect({
             z2: -1, // Lay background rect on the lowest layer.
@@ -112,16 +112,16 @@ class VisualMapView extends ComponentView {
 
         opts = opts || {};
 
-        let forceState = opts.forceState;
-        let visualMapModel = this.visualMapModel;
-        let visualObj: {[key in typeof visualCluster]?: VisualOptionUnit[key]} = {};
+        const forceState = opts.forceState;
+        const visualMapModel = this.visualMapModel;
+        const visualObj: {[key in typeof visualCluster]?: VisualOptionUnit[key]} = {};
 
         // Default values.
         if (visualCluster === 'symbol') {
             visualObj.symbol = (visualMapModel as PiecewiseModel).get('itemSymbol');
         }
         if (visualCluster === 'color') {
-            let defaultColor = visualMapModel.get('contentColor');
+            const defaultColor = visualMapModel.get('contentColor');
             visualObj.color = defaultColor as ColorString;
         }
 
@@ -133,10 +133,10 @@ class VisualMapView extends ComponentView {
             (visualObj as any)[key] = value;
         }
 
-        let mappings = visualMapModel.controllerVisuals[
+        const mappings = visualMapModel.controllerVisuals[
             forceState || visualMapModel.getValueState(targetValue)
         ];
-        let visualTypes = VisualMapping.prepareVisualTypes(mappings);
+        const visualTypes = VisualMapping.prepareVisualTypes(mappings);
 
         zrUtil.each(visualTypes, function (type) {
             let visualMapping = mappings[type];
@@ -155,8 +155,8 @@ class VisualMapView extends ComponentView {
     }
 
     protected positionGroup(group: Group) {
-        let model = this.visualMapModel;
-        let api = this.api;
+        const model = this.visualMapModel;
+        const api = this.api;
 
         layout.positionElement(
             group,

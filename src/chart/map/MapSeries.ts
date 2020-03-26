@@ -122,17 +122,17 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
 
     getInitialData(option: MapSeriesOption): List {
-        let data = createListSimply(this, {
+        const data = createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-        let valueDim = data.mapDimension('value');
-        let dataNameMap = zrUtil.createHashMap();
-        let selectTargetList = [];
-        let toAppendNames = [] as string[];
+        const valueDim = data.mapDimension('value');
+        const dataNameMap = zrUtil.createHashMap();
+        const selectTargetList = [];
+        const toAppendNames = [] as string[];
 
         for (let i = 0, len = data.count(); i < len; i++) {
-            let name = data.getName(i);
+            const name = data.getName(i);
             dataNameMap.set(name, true);
             selectTargetList.push({
                 name: name,
@@ -141,9 +141,9 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             });
         }
 
-        let geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap);
+        const geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap);
         zrUtil.each(geoSource.regions, function (region) {
-            let name = region.name;
+            const name = region.name;
             if (!dataNameMap.get(name)) {
                 selectTargetList.push({name: name});
                 toAppendNames.push(name);
@@ -165,7 +165,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
      * inner exclusive geo model.
      */
     getHostGeoModel(): GeoModel {
-        let geoIndex = this.option.geoIndex;
+        const geoIndex = this.option.geoIndex;
         return geoIndex != null
             ? this.dependentModels.geo[geoIndex] as GeoModel
             : null;
@@ -187,7 +187,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     getRawValue(dataIndex: number): ParsedValue {
         // Use value stored in data instead because it is calculated from multiple series
         // FIXME Provide all value of multiple series ?
-        let data = this.getData();
+        const data = this.getData();
         return data.get(data.mapDimension('value'), dataIndex);
     }
 
@@ -195,7 +195,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
      * Get model of region
      */
     getRegionModel(regionName: string): Model<MapDataItemOption> {
-        let data = this.getData();
+        const data = this.getData();
         return data.getItemModel(data.indexOfName(regionName));
     }
 
@@ -204,15 +204,15 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
      */
     formatTooltip(dataIndex: number): string {
         // FIXME orignalData and data is a bit confusing
-        let data = this.getData();
-        let formattedValue = addCommas(this.getRawValue(dataIndex));
-        let name = data.getName(dataIndex);
+        const data = this.getData();
+        const formattedValue = addCommas(this.getRawValue(dataIndex));
+        const name = data.getName(dataIndex);
 
-        let seriesGroup = this.seriesGroup;
-        let seriesNames = [];
+        const seriesGroup = this.seriesGroup;
+        const seriesNames = [];
         for (let i = 0; i < seriesGroup.length; i++) {
-            let otherIndex = seriesGroup[i].originalData.indexOfName(name);
-            let valueDim = data.mapDimension('value');
+            const otherIndex = seriesGroup[i].originalData.indexOfName(name);
+            const valueDim = data.mapDimension('value');
             if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex) as number)) {
                 seriesNames.push(
                     encodeHTML(seriesGroup[i].name)
@@ -226,9 +226,9 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     getTooltipPosition = function (this: MapSeries, dataIndex: number): number[] {
         if (dataIndex != null) {
-            let name = this.getData().getName(dataIndex);
-            let geo = this.coordinateSystem;
-            let region = geo.getRegion(name);
+            const name = this.getData().getName(dataIndex);
+            const geo = this.coordinateSystem;
+            const region = geo.getRegion(name);
 
             return region && geo.dataToPoint(region.center);
         }

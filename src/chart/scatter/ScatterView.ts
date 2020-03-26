@@ -40,9 +40,9 @@ class ScatterView extends ChartView {
     _symbolDraw: SymbolDraw | LargeSymbolDraw;
 
     render(seriesModel: ScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let data = seriesModel.getData();
+        const data = seriesModel.getData();
 
-        let symbolDraw = this._updateSymbolDraw(data, seriesModel);
+        const symbolDraw = this._updateSymbolDraw(data, seriesModel);
 
         symbolDraw.updateData(data, {
             // TODO
@@ -56,8 +56,8 @@ class ScatterView extends ChartView {
     }
 
     incrementalPrepareRender(seriesModel: ScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let data = seriesModel.getData();
-        let symbolDraw = this._updateSymbolDraw(data, seriesModel);
+        const data = seriesModel.getData();
+        const symbolDraw = this._updateSymbolDraw(data, seriesModel);
 
         symbolDraw.incrementalPrepareUpdate(data);
 
@@ -73,7 +73,7 @@ class ScatterView extends ChartView {
     }
 
     updateTransform(seriesModel: ScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void | { update: true } {
-        let data = seriesModel.getData();
+        const data = seriesModel.getData();
         // Must mark group dirty and make sure the incremental layer will be cleared
         // PENDING
         this.group.dirty();
@@ -84,7 +84,7 @@ class ScatterView extends ChartView {
             };
         }
         else {
-            let res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
+            const res = pointsLayout().reset(seriesModel, ecModel, api) as StageHandlerProgressExecutor;
             if (res.progress) {
                 res.progress({ start: 0, end: data.count(), count: data.count() }, data);
             }
@@ -94,15 +94,15 @@ class ScatterView extends ChartView {
     }
 
     _getClipShape(seriesModel: ScatterSeriesModel) {
-        let coordSys = seriesModel.coordinateSystem;
-        let clipArea = coordSys && coordSys.getArea && coordSys.getArea();
+        const coordSys = seriesModel.coordinateSystem;
+        const clipArea = coordSys && coordSys.getArea && coordSys.getArea();
         return seriesModel.get('clip', true) ? clipArea : null;
     }
 
     _updateSymbolDraw(data: List, seriesModel: ScatterSeriesModel) {
         let symbolDraw = this._symbolDraw;
-        let pipelineContext = seriesModel.pipelineContext;
-        let isLargeDraw = pipelineContext.large;
+        const pipelineContext = seriesModel.pipelineContext;
+        const isLargeDraw = pipelineContext.large;
 
         if (!symbolDraw || isLargeDraw !== this._isLargeDraw) {
             symbolDraw && symbolDraw.remove();

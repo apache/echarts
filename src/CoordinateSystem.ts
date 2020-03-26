@@ -31,7 +31,7 @@ class CoordinateSystemManager {
     create(ecModel: GlobalModel, api: ExtensionAPI): void {
         let coordinateSystems: CoordinateSystemMaster[] = [];
         zrUtil.each(coordinateSystemCreators, function (creater, type) {
-            let list = creater.create(ecModel, api);
+            const list = creater.create(ecModel, api);
             coordinateSystems = coordinateSystems.concat(list || []);
         });
 

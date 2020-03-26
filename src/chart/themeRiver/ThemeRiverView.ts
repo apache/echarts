@@ -38,28 +38,28 @@ class ThemeRiverView extends ChartView {
     private _layers: graphic.Group[] = [];
 
     render(seriesModel: ThemeRiverSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let data = seriesModel.getData();
-        let self = this;
+        const data = seriesModel.getData();
+        const self = this;
 
-        let group = this.group;
+        const group = this.group;
 
-        let layersSeries = seriesModel.getLayerSeries();
+        const layersSeries = seriesModel.getLayerSeries();
 
-        let layoutInfo = data.getLayout('layoutInfo');
-        let rect = layoutInfo.rect;
-        let boundaryGap = layoutInfo.boundaryGap;
+        const layoutInfo = data.getLayout('layoutInfo');
+        const rect = layoutInfo.rect;
+        const boundaryGap = layoutInfo.boundaryGap;
 
         group.attr('position', [0, rect.y + boundaryGap[0]]);
 
         function keyGetter(item: LayerSeries[number]) {
             return item.name;
         }
-        let dataDiffer = new DataDiffer(
+        const dataDiffer = new DataDiffer(
             this._layersSeries || [], layersSeries,
             keyGetter, keyGetter
         );
 
-        let newLayersGroups: graphic.Group[] = [];
+        const newLayersGroups: graphic.Group[] = [];
 
         dataDiffer
             .add(bind(process, this, 'add'))
@@ -68,21 +68,21 @@ class ThemeRiverView extends ChartView {
             .execute();
 
         function process(status: 'add' | 'update' | 'remove', idx: number, oldIdx?: number) {
-            let oldLayersGroups = self._layers;
+            const oldLayersGroups = self._layers;
             if (status === 'remove') {
                 group.remove(oldLayersGroups[idx]);
                 return;
             }
-            let points0 = [];
-            let points1 = [];
+            const points0 = [];
+            const points1 = [];
             let color;
-            let indices = layersSeries[idx].indices;
+            const indices = layersSeries[idx].indices;
             let j = 0;
             for (; j < indices.length; j++) {
-                let layout = data.getItemLayout(indices[j]);
-                let x = layout.x;
-                let y0 = layout.y0;
-                let y = layout.y;
+                const layout = data.getItemLayout(indices[j]);
+                const x = layout.x;
+                const y0 = layout.y0;
+                const y = layout.y;
 
                 points0.push([x, y0]);
                 points1.push([x, y0 + y]);
@@ -92,9 +92,9 @@ class ThemeRiverView extends ChartView {
 
             let polygon: ECPolygon;
             let text: graphic.Text;
-            let textLayout = data.getItemLayout(indices[0]);
-            let labelModel = seriesModel.getModel('label');
-            let margin = labelModel.get('margin');
+            const textLayout = data.getItemLayout(indices[0]);
+            const labelModel = seriesModel.getModel('label');
+            const margin = labelModel.get('margin');
 
             const commonTextStyle = graphic.createTextStyle(labelModel, {
                 text: labelModel.get('show')
@@ -152,8 +152,8 @@ class ThemeRiverView extends ChartView {
                 }, seriesModel);
             }
 
-            let hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
-            let itemStyleModel = seriesModel.getModel('itemStyle');
+            const hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
+            const itemStyleModel = seriesModel.getModel('itemStyle');
 
 
             polygon.setStyle(extend({
@@ -170,7 +170,7 @@ class ThemeRiverView extends ChartView {
 
 // add animation to the view
 function createGridClipShape(rect: RectLike, seriesModel: ThemeRiverSeriesModel, cb: () => void) {
-    let rectEl = new graphic.Rect({
+    const rectEl = new graphic.Rect({
         shape: {
             x: rect.x - 10,
             y: rect.y - 10,

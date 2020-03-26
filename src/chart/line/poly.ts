@@ -122,7 +122,7 @@ function drawMono(
     let idx = start;
     let k = 0;
     for (; k < segLen; k++) {
-        let p = points[idx];
+        const p = points[idx];
         if (idx >= allLen || idx < 0) {
             break;
         }
@@ -139,11 +139,11 @@ function drawMono(
         }
         else {
             if (smooth > 0) {
-                let prevP = points[prevIdx];
-                let dim = smoothMonotone === 'y' ? 1 : 0;
+                const prevP = points[prevIdx];
+                const dim = smoothMonotone === 'y' ? 1 : 0;
 
                 // Length of control point to p, either in x or y, but not both
-                let ctrlLen = (p[dim] - prevP[dim]) * smooth;
+                const ctrlLen = (p[dim] - prevP[dim]) * smooth;
 
                 v2Copy(cp0, prevP);
                 cp0[dim] = prevP[dim] + ctrlLen;
@@ -191,7 +191,7 @@ function drawNonMono(
     let idx = start;
     let k = 0;
     for (; k < segLen; k++) {
-        let p = points[idx];
+        const p = points[idx];
         if (idx >= allLen || idx < 0) {
             break;
         }
@@ -220,7 +220,7 @@ function drawNonMono(
                 }
 
                 let ratioNextSeg = 0.5;
-                let prevP = points[prevIdx];
+                const prevP = points[prevIdx];
                 nextP = points[nextIdx];
                 // Last point
                 if (!nextP || isPointNull(nextP)) {
@@ -237,7 +237,7 @@ function drawNonMono(
                     let lenPrevSeg;
                     let lenNextSeg;
                     if (smoothMonotone === 'x' || smoothMonotone === 'y') {
-                        let dim = smoothMonotone === 'x' ? 0 : 1;
+                        const dim = smoothMonotone === 'x' ? 0 : 1;
                         lenPrevSeg = Math.abs(p[dim] - prevP[dim]);
                         lenNextSeg = Math.abs(p[dim] - nextP[dim]);
                     }
@@ -278,11 +278,11 @@ function drawNonMono(
 }
 
 function getBoundingBox(points: number[][], smoothConstraint?: boolean) {
-    let ptMin = [Infinity, Infinity];
-    let ptMax = [-Infinity, -Infinity];
+    const ptMin = [Infinity, Infinity];
+    const ptMax = [-Infinity, -Infinity];
     if (smoothConstraint) {
         for (let i = 0; i < points.length; i++) {
-            let pt = points[i];
+            const pt = points[i];
             if (pt[0] < ptMin[0]) {
                 ptMin[0] = pt[0];
             }
@@ -337,12 +337,12 @@ export class ECPolyline extends Path<ECPolylineProps> {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: ECPolylineShape) {
-        let points = shape.points;
+        const points = shape.points;
 
         let i = 0;
         let len = points.length;
 
-        let result = getBoundingBox(points, shape.smoothConstraint);
+        const result = getBoundingBox(points, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
@@ -390,14 +390,14 @@ export class ECPolygon extends Path {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: ECPolygonShape) {
-        let points = shape.points;
-        let stackedOnPoints = shape.stackedOnPoints;
+        const points = shape.points;
+        const stackedOnPoints = shape.stackedOnPoints;
 
         let i = 0;
         let len = points.length;
-        let smoothMonotone = shape.smoothMonotone;
-        let bbox = getBoundingBox(points, shape.smoothConstraint);
-        let stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
+        const smoothMonotone = shape.smoothMonotone;
+        const bbox = getBoundingBox(points, shape.smoothConstraint);
+        const stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
 
         if (shape.connectNulls) {
             // Must remove first and last null values avoid draw error in polygon
@@ -413,7 +413,7 @@ export class ECPolygon extends Path {
             }
         }
         while (i < len) {
-            let k = drawSegment(
+            const k = drawSegment(
                 ctx, points, i, len, len,
                 1, bbox.min, bbox.max, shape.smooth,
                 smoothMonotone, shape.connectNulls

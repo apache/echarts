@@ -113,11 +113,11 @@ export default function (
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
-    let currTrigger = payload.currTrigger;
+    const currTrigger = payload.currTrigger;
     let point = [payload.x, payload.y];
-    let finder = payload;
-    let dispatchAction = payload.dispatchAction || bind(api.dispatchAction, api);
-    let coordSysAxesInfo = (ecModel.getComponent('axisPointer') as AxisPointerModel)
+    const finder = payload;
+    const dispatchAction = payload.dispatchAction || bind(api.dispatchAction, api);
+    const coordSysAxesInfo = (ecModel.getComponent('axisPointer') as AxisPointerModel)
         .coordSysAxesInfo as CollectedCoordInfo;
 
     // Pending
@@ -136,24 +136,24 @@ export default function (
             dataIndex: finder.dataIndex
         }, ecModel).point;
     }
-    let isIllegalPoint = illegalPoint(point);
+    const isIllegalPoint = illegalPoint(point);
 
     // Axis and value can be specified when calling dispatchAction({type: 'updateAxisPointer'}).
     // Notice: In this case, it is difficult to get the `point` (which is necessary to show
     // tooltip, so if point is not given, we just use the point found by sample seriesIndex
     // and dataIndex.
-    let inputAxesInfo = finder.axesInfo;
+    const inputAxesInfo = finder.axesInfo;
 
-    let axesInfo = coordSysAxesInfo.axesInfo;
-    let shouldHide = currTrigger === 'leave' || illegalPoint(point);
-    let outputPayload = {} as AxisTriggerPayload;
+    const axesInfo = coordSysAxesInfo.axesInfo;
+    const shouldHide = currTrigger === 'leave' || illegalPoint(point);
+    const outputPayload = {} as AxisTriggerPayload;
 
-    let showValueMap: ShowValueMap = {};
-    let dataByCoordSys: DataByCoordSysCollection = {
+    const showValueMap: ShowValueMap = {};
+    const dataByCoordSys: DataByCoordSysCollection = {
         list: [],
         map: {}
     };
-    let updaters = {
+    const updaters = {
         showPointer: curry(showPointer, showValueMap),
         showTooltip: curry(showTooltip, dataByCoordSys)
     };
@@ -161,11 +161,11 @@ export default function (
     // Process for triggered axes.
     each(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
         // If a point given, it must be contained by the coordinate system.
-        let coordSysContainsPoint = isIllegalPoint || coordSys.containPoint(point);
+        const coordSysContainsPoint = isIllegalPoint || coordSys.containPoint(point);
 
         each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
-            let axis = axisInfo.axis;
-            let inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
+            const axis = axisInfo.axis;
+            const inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
             // If no inputAxesInfo, no axis is restricted.
             if (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
                 let val = inputAxisInfo && inputAxisInfo.value;
@@ -178,14 +178,14 @@ export default function (
     });
 
     // Process for linked axes.
-    let linkTriggers: Dictionary<AxisValue> = {};
+    const linkTriggers: Dictionary<AxisValue> = {};
     each(axesInfo, function (tarAxisInfo, tarKey) {
-        let linkGroup = tarAxisInfo.linkGroup;
+        const linkGroup = tarAxisInfo.linkGroup;
 
         // If axis has been triggered in the previous stage, it should not be triggered by link.
         if (linkGroup && !showValueMap[tarKey]) {
             each(linkGroup.axesInfo, function (srcAxisInfo, srcKey) {
-                let srcValItem = showValueMap[srcKey];
+                const srcValItem = showValueMap[srcKey];
                 // If srcValItem exist, source axis is triggered, so link to target axis.
                 if (srcAxisInfo !== tarAxisInfo && srcValItem) {
                     let val = srcValItem.value;
@@ -218,7 +218,7 @@ function processOnAxis(
     noSnap: boolean,
     outputFinder: ModelFinderObject
 ) {
-    let axis = axisInfo.axis;
+    const axis = axisInfo.axis;
 
     if (axis.scale.isBlank() || !axis.containData(newValue)) {
         return;
@@ -230,9 +230,9 @@ function processOnAxis(
     }
 
     // Heavy calculation. So put it after axis.containData checking.
-    let payloadInfo = buildPayloadsBySeries(newValue, axisInfo);
-    let payloadBatch = payloadInfo.payloadBatch;
-    let snapToValue = payloadInfo.snapToValue;
+    const payloadInfo = buildPayloadsBySeries(newValue, axisInfo);
+    const payloadBatch = payloadInfo.payloadBatch;
+    const snapToValue = payloadInfo.snapToValue;
 
     // Fill content of event obj for echarts.connect.
     // By defualt use the first involved series data as a sample to connect.
@@ -255,20 +255,20 @@ function processOnAxis(
 }
 
 function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
-    let axis = axisInfo.axis;
-    let dim = axis.dim;
+    const axis = axisInfo.axis;
+    const dim = axis.dim;
     let snapToValue = value;
-    let payloadBatch: BatchItem[] = [];
+    const payloadBatch: BatchItem[] = [];
     let minDist = Number.MAX_VALUE;
     let minDiff = -1;
 
     each(axisInfo.seriesModels, function (series, idx) {
-        let dataDim = series.getData().mapDimension(dim, true);
+        const dataDim = series.getData().mapDimension(dim, true);
         let seriesNestestValue;
         let dataIndices;
 
         if (series.getAxisTooltipData) {
-            let result = series.getAxisTooltipData(dataDim, value, axis);
+            const result = series.getAxisTooltipData(dataDim, value, axis);
             dataIndices = result.dataIndices;
             seriesNestestValue = result.nestestValue;
         }
@@ -291,8 +291,8 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
             return;
         }
 
-        let diff = value as number - seriesNestestValue;
-        let dist = Math.abs(diff);
+        const diff = value as number - seriesNestestValue;
+        const dist = Math.abs(diff);
         // Consider category case
         if (dist <= minDist) {
             if (dist < minDist || (diff >= 0 && minDiff < 0)) {
@@ -335,10 +335,10 @@ function showTooltip(
     payloadInfo: { payloadBatch: BatchItem[] },
     value: AxisValue
 ) {
-    let payloadBatch = payloadInfo.payloadBatch;
-    let axis = axisInfo.axis;
-    let axisModel = axis.model;
-    let axisPointerModel = axisInfo.axisPointerModel;
+    const payloadBatch = payloadInfo.payloadBatch;
+    const axis = axisInfo.axis;
+    const axisModel = axis.model;
+    const axisPointerModel = axisInfo.axisPointerModel;
 
     // If no data, do not create anything in dataByCoordSys,
     // whose length will be used to judge whether dispatch action.
@@ -346,8 +346,8 @@ function showTooltip(
         return;
     }
 
-    let coordSysModel = axisInfo.coordSys.model;
-    let coordSysKey = modelHelper.makeKey(coordSysModel);
+    const coordSysModel = axisInfo.coordSys.model;
+    const coordSysKey = modelHelper.makeKey(coordSysModel);
     let coordSysItem = dataByCoordSys.map[coordSysKey];
     if (!coordSysItem) {
         coordSysItem = dataByCoordSys.map[coordSysKey] = {
@@ -383,11 +383,11 @@ function updateModelActually(
     axesInfo: Dictionary<CollectedAxisInfo>,
     outputPayload: AxisTriggerPayload
 ) {
-    let outputAxesInfo: AxisTriggerPayload['axesInfo'] = outputPayload.axesInfo = [];
+    const outputAxesInfo: AxisTriggerPayload['axesInfo'] = outputPayload.axesInfo = [];
     // Basic logic: If no 'show' required, 'hide' this axisPointer.
     each(axesInfo, function (axisInfo, key) {
-        let option = axisInfo.axisPointerModel.option;
-        let valItem = showValueMap[key];
+        const option = axisInfo.axisPointerModel.option;
+        const valItem = showValueMap[key];
 
         if (valItem) {
             !axisInfo.useHandle && (option.status = 'show');
@@ -428,7 +428,7 @@ function dispatchTooltipActually(
     // convinient to fetch payload.seriesIndex and payload.dataIndex
     // dirtectly. So put the first seriesIndex and dataIndex of the first
     // axis on the payload.
-    let sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {} as DataIndex;
+    const sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {} as DataIndex;
 
     dispatchAction({
         type: 'showTip',
@@ -453,24 +453,24 @@ function dispatchHighDownActually(
     // highlight status modification shoule be a stage of main process?
     // (Consider confilct (e.g., legend and axisPointer) and setOption)
 
-    let zr = api.getZr();
-    let highDownKey = 'axisPointerLastHighlights' as const;
-    let lastHighlights = inner(zr)[highDownKey] || {};
-    let newHighlights: Dictionary<BatchItem> = inner(zr)[highDownKey] = {};
+    const zr = api.getZr();
+    const highDownKey = 'axisPointerLastHighlights' as const;
+    const lastHighlights = inner(zr)[highDownKey] || {};
+    const newHighlights: Dictionary<BatchItem> = inner(zr)[highDownKey] = {};
 
     // Update highlight/downplay status according to axisPointer model.
     // Build hash map and remove duplicate incidentally.
     each(axesInfo, function (axisInfo, key) {
-        let option = axisInfo.axisPointerModel.option;
+        const option = axisInfo.axisPointerModel.option;
         option.status === 'show' && each(option.seriesDataIndices, function (batchItem) {
-            let key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
+            const key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
             newHighlights[key] = batchItem;
         });
     });
 
     // Diff.
-    let toHighlight: BatchItem[] = [];
-    let toDownplay: BatchItem[] = [];
+    const toHighlight: BatchItem[] = [];
+    const toDownplay: BatchItem[] = [];
     each(lastHighlights, function (batchItem, key) {
         !newHighlights[key] && toDownplay.push(batchItem);
     });
@@ -491,7 +491,7 @@ function findInputAxisInfo(
     axisInfo: CollectedAxisInfo
 ) {
     for (let i = 0; i < (inputAxesInfo || []).length; i++) {
-        let inputAxisInfo = inputAxesInfo[i];
+        const inputAxisInfo = inputAxesInfo[i];
         if (axisInfo.axis.dim === inputAxisInfo.axisDim
             && axisInfo.axis.model.componentIndex === inputAxisInfo.axisIndex
         ) {
@@ -501,15 +501,15 @@ function findInputAxisInfo(
 }
 
 function makeMapperParam(axisInfo: CollectedAxisInfo) {
-    let axisModel = axisInfo.axis.model;
-    let item = {} as {
+    const axisModel = axisInfo.axis.model;
+    const item = {} as {
         axisDim: string
         axisIndex: number
         axisId: string
         axisName: string
         // TODO `dim`AxisIndex, `dim`AxisName, `dim`AxisId?
     };
-    let dim = item.axisDim = axisInfo.axis.dim;
+    const dim = item.axisDim = axisInfo.axis.dim;
     item.axisIndex = (item as any)[dim + 'AxisIndex'] = axisModel.componentIndex;
     item.axisName = (item as any)[dim + 'AxisName'] = axisModel.name;
     item.axisId = (item as any)[dim + 'AxisId'] = axisModel.id;

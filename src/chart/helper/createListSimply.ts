@@ -39,11 +39,11 @@ export default function (
 ): List {
     opt = isArray(opt) && {coordDimensions: opt} || extend({}, opt);
 
-    let source = seriesModel.getSource();
+    const source = seriesModel.getSource();
 
-    let dimensionsInfo = createDimensions(source, opt as CreateDimensionsParams);
+    const dimensionsInfo = createDimensions(source, opt as CreateDimensionsParams);
 
-    let list = new List(dimensionsInfo, seriesModel);
+    const list = new List(dimensionsInfo, seriesModel);
     list.initData(source, nameList);
 
     return list;

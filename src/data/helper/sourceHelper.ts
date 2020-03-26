@@ -46,7 +46,7 @@ import {
 } from '../../util/types';
 
 // The result of `guessOrdinal`.
-export let BE_ORDINAL = {
+export const BE_ORDINAL = {
     Must: 1, // Encounter string but not '-' and not number-like.
     Might: 2, // Encounter string but number-like.
     Not: 3 // Other cases
@@ -60,7 +60,7 @@ const inner = makeInner();
  * @return {string} sourceFormat
  */
 export function detectSourceFormat(datasetModel) {
-    let data = datasetModel.option.source;
+    const data = datasetModel.option.source;
     let sourceFormat = SOURCE_FORMAT_UNKNOWN;
 
     if (isTypedArray(data)) {
@@ -73,7 +73,7 @@ export function detectSourceFormat(datasetModel) {
         }
 
         for (let i = 0, len = data.length; i < len; i++) {
-            let item = data[i];
+            const item = data[i];
 
             if (item == null) {
                 continue;
@@ -89,7 +89,7 @@ export function detectSourceFormat(datasetModel) {
         }
     }
     else if (isObject(data)) {
-        for (let key in data) {
+        for (const key in data) {
             if (data.hasOwnProperty(key) && isArrayLike(data[key])) {
                 sourceFormat = SOURCE_FORMAT_KEYED_COLUMNS;
                 break;
@@ -156,7 +156,7 @@ export function resetSourceDefaulter(ecModel) {
  * @param {module:echarts/model/Series} seriesModel
  */
 export function prepareSource(seriesModel) {
-    let seriesOption = seriesModel.option;
+    const seriesOption = seriesModel.option;
 
     let data = seriesOption.data;
     let sourceFormat = isTypedArray(data)
@@ -167,9 +167,9 @@ export function prepareSource(seriesModel) {
     let sourceHeader = seriesOption.sourceHeader;
     let dimensionsDefine = seriesOption.dimensions;
 
-    let datasetModel = getDatasetModel(seriesModel);
+    const datasetModel = getDatasetModel(seriesModel);
     if (datasetModel) {
-        let datasetOption = datasetModel.option;
+        const datasetOption = datasetModel.option;
 
         data = datasetOption.source;
         sourceFormat = inner(datasetModel).sourceFormat;
@@ -181,7 +181,7 @@ export function prepareSource(seriesModel) {
         dimensionsDefine = dimensionsDefine || datasetOption.dimensions;
     }
 
-    let completeResult = completeBySourceData(
+    const completeResult = completeBySourceData(
         data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine
     );
 
@@ -259,7 +259,7 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        let value0 = getDataItemValue(data[0]);
+        const value0 = getDataItemValue(data[0]);
         dimensionsDetectCount = isArray(value0) && value0.length || 1;
     }
     else if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
@@ -283,7 +283,7 @@ function normalizeDimensionsDefine(dimensionsDefine) {
         // The meaning of null/undefined is different from empty array.
         return;
     }
-    let nameMap = createHashMap();
+    const nameMap = createHashMap();
     return map(dimensionsDefine, function (item, index) {
         item = extend({}, isObject(item) ? item : {name: item});
 
@@ -305,7 +305,7 @@ function normalizeDimensionsDefine(dimensionsDefine) {
             item.displayName = item.name;
         }
 
-        let exist = nameMap.get(item.name);
+        const exist = nameMap.get(item.name);
         if (!exist) {
             nameMap.set(item.name, {count: 1});
         }
@@ -325,7 +325,7 @@ function arrayRowsTravelFirst(cb, seriesLayoutBy, data, maxLoop) {
         }
     }
     else {
-        let value0 = data[0] || [];
+        const value0 = data[0] || [];
         for (let i = 0; i < value0.length && i < maxLoop; i++) {
             cb(value0[i], i);
         }
@@ -337,7 +337,7 @@ function objectRowsCollectDimensions(data) {
     let obj;
     while (firstIndex < data.length && !(obj = data[firstIndex++])) {} // jshint ignore: line
     if (obj) {
-        let dimensions = [];
+        const dimensions = [];
         each(obj, function (value, key) {
             dimensions.push(key);
         });
@@ -364,20 +364,20 @@ function objectRowsCollectDimensions(data) {
  * @return {Object} encode Never be `null/undefined`.
  */
 export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, source) {
-    let encode = {};
+    const encode = {};
 
-    let datasetModel = getDatasetModel(seriesModel);
+    const datasetModel = getDatasetModel(seriesModel);
     // Currently only make default when using dataset, util more reqirements occur.
     if (!datasetModel || !coordDimensions) {
         return encode;
     }
 
-    let encodeItemName = [];
-    let encodeSeriesName = [];
+    const encodeItemName = [];
+    const encodeSeriesName = [];
 
-    let ecModel = seriesModel.ecModel;
-    let datasetMap = inner(ecModel).datasetMap;
-    let key = datasetModel.uid + '_' + source.seriesLayoutBy;
+    const ecModel = seriesModel.ecModel;
+    const datasetMap = inner(ecModel).datasetMap;
+    const key = datasetModel.uid + '_' + source.seriesLayoutBy;
 
     let baseCategoryDimIndex;
     let categoryWayValueDimStart;
@@ -391,18 +391,18 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
         encode[coordDimInfo.name] = [];
     });
 
-    let datasetRecord = datasetMap.get(key)
+    const datasetRecord = datasetMap.get(key)
         || datasetMap.set(key, {categoryWayDim: categoryWayValueDimStart, valueWayDim: 0});
 
     // TODO
     // Auto detect first time axis and do arrangement.
     each(coordDimensions, function (coordDimInfo, coordDimIdx) {
-        let coordDimName = coordDimInfo.name;
-        let count = getDataDimCountOnCoordDim(coordDimInfo);
+        const coordDimName = coordDimInfo.name;
+        const count = getDataDimCountOnCoordDim(coordDimInfo);
 
         // In value way.
         if (baseCategoryDimIndex == null) {
-            let start = datasetRecord.valueWayDim;
+            const start = datasetRecord.valueWayDim;
             pushDim(encode[coordDimName], start, count);
             pushDim(encodeSeriesName, start, count);
             datasetRecord.valueWayDim += count;
@@ -421,7 +421,7 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
         }
         // In category way, the other axis.
         else {
-            let start = datasetRecord.categoryWayDim;
+            const start = datasetRecord.categoryWayDim;
             pushDim(encode[coordDimName], start, count);
             pushDim(encodeSeriesName, start, count);
             datasetRecord.categoryWayDim += count;
@@ -435,7 +435,7 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
     }
 
     function getDataDimCountOnCoordDim(coordDimInfo) {
-        let dimsDef = coordDimInfo.dimsDef;
+        const dimsDef = coordDimInfo.dimsDef;
         return dimsDef ? dimsDef.length : 1;
     }
 
@@ -453,16 +453,16 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
  * @return {Object} encode Never be `null/undefined`.
  */
 export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
-    let encode = {};
+    const encode = {};
 
-    let datasetModel = getDatasetModel(seriesModel);
+    const datasetModel = getDatasetModel(seriesModel);
     // Currently only make default when using dataset, util more reqirements occur.
     if (!datasetModel) {
         return encode;
     }
 
-    let sourceFormat = source.sourceFormat;
-    let dimensionsDefine = source.dimensionsDefine;
+    const sourceFormat = source.sourceFormat;
+    const dimensionsDefine = source.dimensionsDefine;
 
     let potentialNameDimIndex;
     if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS || sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
@@ -474,20 +474,20 @@ export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
     }
 
     // idxResult: {v, n}.
-    let idxResult = (function () {
+    const idxResult = (function () {
 
-        let idxRes0 = {};
-        let idxRes1 = {};
-        let guessRecords = [];
+        const idxRes0 = {};
+        const idxRes1 = {};
+        const guessRecords = [];
 
         // 5 is an experience value.
         for (let i = 0, len = Math.min(5, dimCount); i < len; i++) {
-            let guessResult = doGuessOrdinal(
+            const guessResult = doGuessOrdinal(
                 source.data, sourceFormat, source.seriesLayoutBy,
                 dimensionsDefine, source.startIndex, i
             );
             guessRecords.push(guessResult);
-            let isPureNumber = guessResult === BE_ORDINAL.Not;
+            const isPureNumber = guessResult === BE_ORDINAL.Not;
 
             // [Strategy of idxRes0]: find the first BE_ORDINAL.Not as the value dim,
             // and then find a name dim with the priority:
@@ -531,7 +531,7 @@ export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
     if (idxResult) {
         encode.value = idxResult.v;
         // `potentialNameDimIndex` has highest priority.
-        let nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n;
+        const nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n;
         // By default, label use itemName in charts.
         // So we dont set encodeLabel here.
         encode.itemName = [nameDimIndex];
@@ -545,13 +545,13 @@ export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
  * If return null/undefined, indicate that should not use datasetModel.
  */
 function getDatasetModel(seriesModel) {
-    let option = seriesModel.option;
+    const option = seriesModel.option;
     // Caution: consider the scenario:
     // A dataset is declared and a series is not expected to use the dataset,
     // and at the beginning `setOption({series: { noData })` (just prepare other
     // option but no data), then `setOption({series: {data: [...]}); In this case,
     // the user should set an empty array to avoid that dataset is used by default.
-    let thisData = option.data;
+    const thisData = option.data;
     if (!thisData) {
         return seriesModel.ecModel.getComponent('dataset', option.datasetIndex || 0);
     }
@@ -584,7 +584,7 @@ function doGuessOrdinal(
 ) {
     let result;
     // Experience value.
-    let maxLoop = 5;
+    const maxLoop = 5;
 
     if (isTypedArray(data)) {
         return BE_ORDINAL.Not;
@@ -595,7 +595,7 @@ function doGuessOrdinal(
     let dimName;
     let dimType;
     if (dimensionsDefine) {
-        let dimDefItem = dimensionsDefine[dimIndex];
+        const dimDefItem = dimensionsDefine[dimIndex];
         if (isObject(dimDefItem)) {
             dimName = dimDefItem.name;
             dimType = dimDefItem.type;
@@ -611,7 +611,7 @@ function doGuessOrdinal(
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
         if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
-            let sample = data[dimIndex];
+            const sample = data[dimIndex];
             for (let i = 0; i < (sample || []).length && i < maxLoop; i++) {
                 if ((result = detectValue(sample[startIndex + i])) != null) {
                     return result;
@@ -620,7 +620,7 @@ function doGuessOrdinal(
         }
         else {
             for (let i = 0; i < data.length && i < maxLoop; i++) {
-                let row = data[startIndex + i];
+                const row = data[startIndex + i];
                 if (row && (result = detectValue(row[dimIndex])) != null) {
                     return result;
                 }
@@ -632,7 +632,7 @@ function doGuessOrdinal(
             return BE_ORDINAL.Not;
         }
         for (let i = 0; i < data.length && i < maxLoop; i++) {
-            let item = data[i];
+            const item = data[i];
             if (item && (result = detectValue(item[dimName])) != null) {
                 return result;
             }
@@ -642,7 +642,7 @@ function doGuessOrdinal(
         if (!dimName) {
             return BE_ORDINAL.Not;
         }
-        let sample = data[dimName];
+        const sample = data[dimName];
         if (!sample || isTypedArray(sample)) {
             return BE_ORDINAL.Not;
         }
@@ -654,8 +654,8 @@ function doGuessOrdinal(
     }
     else if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
         for (let i = 0; i < data.length && i < maxLoop; i++) {
-            let item = data[i];
-            let val = getDataItemValue(item);
+            const item = data[i];
+            const val = getDataItemValue(item);
             if (!isArray(val)) {
                 return BE_ORDINAL.Not;
             }
@@ -666,7 +666,7 @@ function doGuessOrdinal(
     }
 
     function detectValue(val) {
-        let beStr = isString(val);
+        const beStr = isString(val);
         // Consider usage convenience, '1', '2' will be treated as "number".
         // `isFinit('')` get `true`.
         if (val != null && isFinite(val) && val !== '') {

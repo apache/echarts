@@ -47,8 +47,8 @@ export function linearMap(
     range: number[],
     clamp?: boolean
 ): number {
-    let subDomain = domain[1] - domain[0];
-    let subRange = range[1] - range[0];
+    const subDomain = domain[1] - domain[0];
+    const subRange = range[1] - range[0];
 
     if (subDomain === 0) {
         return subRange === 0
@@ -174,16 +174,16 @@ export function getPrecision(val: string | number): number {
  * Get precision with slow but safe method
  */
 export function getPrecisionSafe(val: string | number): number {
-    let str = val.toString();
+    const str = val.toString();
 
     // Consider scientific notation: '3.4e-12' '3.4e+12'
-    let eIndex = str.indexOf('e');
+    const eIndex = str.indexOf('e');
     if (eIndex > 0) {
-        let precision = +str.slice(eIndex + 1);
+        const precision = +str.slice(eIndex + 1);
         return precision < 0 ? -precision : 0;
     }
     else {
-        let dotIndex = str.indexOf('.');
+        const dotIndex = str.indexOf('.');
         return dotIndex < 0 ? 0 : str.length - 1 - dotIndex;
     }
 }
@@ -192,12 +192,12 @@ export function getPrecisionSafe(val: string | number): number {
  * Minimal dicernible data precisioin according to a single pixel.
  */
 export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [number, number]): number {
-    let log = Math.log;
-    let LN10 = Math.LN10;
-    let dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
-    let sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
+    const log = Math.log;
+    const LN10 = Math.LN10;
+    const dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
+    const sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
     // toFixed() digits argument must be between 0 and 20.
-    let precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
+    const precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
     return !isFinite(precision) ? 20 : precision;
 }
 
@@ -217,20 +217,20 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
         return 0;
     }
 
-    let sum = zrUtil.reduce(valueList, function (acc, val) {
+    const sum = zrUtil.reduce(valueList, function (acc, val) {
         return acc + (isNaN(val) ? 0 : val);
     }, 0);
     if (sum === 0) {
         return 0;
     }
 
-    let digits = Math.pow(10, precision);
-    let votesPerQuota = zrUtil.map(valueList, function (val) {
+    const digits = Math.pow(10, precision);
+    const votesPerQuota = zrUtil.map(valueList, function (val) {
         return (isNaN(val) ? 0 : val) / sum * digits * 100;
     });
-    let targetSeats = digits * 100;
+    const targetSeats = digits * 100;
 
-    let seats = zrUtil.map(votesPerQuota, function (votes) {
+    const seats = zrUtil.map(votesPerQuota, function (votes) {
         // Assign automatic seats.
         return Math.floor(votes);
     });
@@ -238,7 +238,7 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
         return acc + val;
     }, 0);
 
-    let remainder = zrUtil.map(votesPerQuota, function (votes, idx) {
+    const remainder = zrUtil.map(votesPerQuota, function (votes, idx) {
         return votes - seats[idx];
     });
 
@@ -264,13 +264,13 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
 }
 
 // Number.MAX_SAFE_INTEGER, ie do not support.
-export let MAX_SAFE_INTEGER = 9007199254740991;
+export const MAX_SAFE_INTEGER = 9007199254740991;
 
 /**
  * To 0 - 2 * PI, considering negative radian.
  */
 export function remRadian(radian: number): number {
-    let pi2 = Math.PI * 2;
+    const pi2 = Math.PI * 2;
     return (radian % pi2 + pi2) % pi2;
 }
 
@@ -310,7 +310,7 @@ export function parseDate(value: number | string | Date): Date {
         // new Date('1970-01-01') is UTC,
         // new Date('1970/01/01') and new Date('1970-1-01') is local.
         // See issue #3623
-        let match = TIME_REG.exec(value);
+        const match = TIME_REG.exec(value);
 
         if (!match) {
             // return Invalid Date.
@@ -407,9 +407,9 @@ export function quantityExponent(val: number): number {
  * @return Niced number
  */
 export function nice(val: number, round?: boolean): number {
-    let exponent = quantityExponent(val);
-    let exp10 = Math.pow(10, exponent);
-    let f = val / exp10; // 1 <= f < 10
+    const exponent = quantityExponent(val);
+    const exp10 = Math.pow(10, exponent);
+    const f = val / exp10; // 1 <= f < 10
     let nf;
     if (round) {
         if (f < 1.5) {
@@ -459,10 +459,10 @@ export function nice(val: number, round?: boolean): number {
  * @param ascArr
  */
 export function quantile(ascArr: number[], p: number): number {
-    let H = (ascArr.length - 1) * p + 1;
-    let h = Math.floor(H);
-    let v = +ascArr[h - 1];
-    let e = H - h;
+    const H = (ascArr.length - 1) * p + 1;
+    const h = Math.floor(H);
+    const v = +ascArr[h - 1];
+    const e = H - h;
     return e ? v + e * (ascArr[h] - v) : v;
 }
 
@@ -500,8 +500,8 @@ export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
     let curr = -Infinity;
     let currClose = 1;
     for (let i = 0; i < list.length;) {
-        let interval = list[i].interval;
-        let close = list[i].close;
+        const interval = list[i].interval;
+        const close = list[i].close;
 
         for (let lg = 0; lg < 2; lg++) {
             if (interval[lg] <= curr) {

@@ -65,7 +65,7 @@ function createNameEach<T extends string>(names: readonly T[]) {
         context?: Ctx
     ) {
         zrUtil.each(names, function (name, index) {
-            let nameObj = {
+            const nameObj = {
                 name: name,
                 capital: capitalNames[index]
             } as NameObj;
@@ -93,7 +93,7 @@ function createNameEach<T extends string>(names: readonly T[]) {
  *                            }
  * @param context
  */
-export let eachAxisDim = createNameEach(AXIS_DIMS);
+export const eachAxisDim = createNameEach(AXIS_DIMS);
 
 /**
  * If tow dataZoomModels has the same axis controlled, we say that they are 'linked'.
@@ -119,7 +119,7 @@ export function createLinkedNodesFinder<N, E extends {name: string}>(
     };
 
     return function (sourceNode: N) {
-        let result: Result = {
+        const result: Result = {
             nodes: [],
             records: {}
         };

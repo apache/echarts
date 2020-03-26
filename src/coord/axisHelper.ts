@@ -45,13 +45,13 @@ type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
  * Item of returned array can only be number (including Infinity and NaN).
  */
 export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
-    let scaleType = scale.type;
+    const scaleType = scale.type;
 
     let min = model.getMin();
     let max = model.getMax();
-    let fixMin = min != null;
-    let fixMax = max != null;
-    let originalExtent = scale.getExtent();
+    const fixMin = min != null;
+    const fixMax = max != null;
+    const originalExtent = scale.getExtent();
 
     let axisDataLen;
     let boundaryGapInner: number[];
@@ -60,8 +60,8 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
         axisDataLen = model.getCategories().length;
     }
     else {
-        let boundaryGap = model.get('boundaryGap');
-        let boundaryGapArr = zrUtil.isArray(boundaryGap)
+        const boundaryGap = model.get('boundaryGap');
+        const boundaryGapArr = zrUtil.isArray(boundaryGap)
             ? boundaryGap : [boundaryGap || 0, boundaryGap || 0];
 
         if (typeof boundaryGapArr[0] === 'boolean' || typeof boundaryGapArr[1] === 'boolean') {
@@ -159,9 +159,9 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
     // (3) Fix that might overlap when using dataZoom.
     // (4) Consider other chart types using `barGrid`?
     // See #6728, #4862, `test/bar-overflow-time-plot.html`
-    let ecModel = model.ecModel;
+    const ecModel = model.ecModel;
     if (ecModel && (scaleType === 'time' /*|| scaleType === 'interval' */)) {
-        let barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
+        const barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
         let isBaseAxisAndHasBarSeries = false;
 
         zrUtil.each(barSeriesModels, function (seriesModel) {
@@ -171,10 +171,10 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
         if (isBaseAxisAndHasBarSeries) {
             // Calculate placement of bars on axis. TODO should be decoupled
             // with barLayout
-            let barWidthAndOffset = makeColumnLayout(barSeriesModels);
+            const barWidthAndOffset = makeColumnLayout(barSeriesModels);
 
             // Adjust axis min and max to account for overflow
-            let adjustedScale = adjustScaleForOverflow(min, max, model as CartesianAxisModel, barWidthAndOffset);
+            const adjustedScale = adjustScaleForOverflow(min, max, model as CartesianAxisModel, barWidthAndOffset);
             min = adjustedScale.min;
             max = adjustedScale.max;
         }
@@ -191,11 +191,11 @@ function adjustScaleForOverflow(
 ) {
 
     // Get Axis Length
-    let axisExtent = model.axis.getExtent();
-    let axisLength = axisExtent[1] - axisExtent[0];
+    const axisExtent = model.axis.getExtent();
+    const axisLength = axisExtent[1] - axisExtent[0];
 
     // Get bars on current base axis and calculate min and max overflow
-    let barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
+    const barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
     if (barsOnCurrentAxis === undefined) {
         return {min: min, max: max};
     }
@@ -210,12 +210,12 @@ function adjustScaleForOverflow(
     });
     minOverflow = Math.abs(minOverflow);
     maxOverflow = Math.abs(maxOverflow);
-    let totalOverFlow = minOverflow + maxOverflow;
+    const totalOverFlow = minOverflow + maxOverflow;
 
     // Calulate required buffer based on old range and overflow
-    let oldRange = max - min;
-    let oldRangePercentOfNew = (1 - (minOverflow + maxOverflow) / axisLength);
-    let overflowBuffer = ((oldRange / oldRangePercentOfNew) - oldRange);
+    const oldRange = max - min;
+    const oldRangePercentOfNew = (1 - (minOverflow + maxOverflow) / axisLength);
+    const overflowBuffer = ((oldRange / oldRangePercentOfNew) - oldRange);
 
     max += overflowBuffer * (maxOverflow / totalOverFlow);
     min -= overflowBuffer * (minOverflow / totalOverFlow);
@@ -224,16 +224,16 @@ function adjustScaleForOverflow(
 }
 
 export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
-    let extent = getScaleExtent(scale, model);
-    let fixMin = model.getMin() != null;
-    let fixMax = model.getMax() != null;
-    let splitNumber = model.get('splitNumber');
+    const extent = getScaleExtent(scale, model);
+    const fixMin = model.getMin() != null;
+    const fixMax = model.getMax() != null;
+    const splitNumber = model.get('splitNumber');
 
     if (scale instanceof LogScale) {
         scale.base = model.get('logBase');
     }
 
-    let scaleType = scale.type;
+    const scaleType = scale.type;
     scale.setExtent(extent[0], extent[1]);
     scale.niceExtent({
         splitNumber: splitNumber,
@@ -250,7 +250,7 @@ export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
     // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
     // to be 60.
     // FIXME
-    let interval = model.get('interval');
+    const interval = model.get('interval');
     if (interval != null) {
         (scale as IntervalScale).setInterval && (scale as IntervalScale).setInterval(interval);
     }
@@ -286,9 +286,9 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
  * Check if the axis corss 0
  */
 export function ifAxisCrossZero(axis: Axis) {
-    let dataExtent = axis.scale.getExtent();
-    let min = dataExtent[0];
-    let max = dataExtent[1];
+    const dataExtent = axis.scale.getExtent();
+    const min = dataExtent[0];
+    const max = dataExtent[1];
     return !((min > 0 && max > 0) || (min < 0 && max < 0));
 }
 
@@ -301,8 +301,8 @@ export function ifAxisCrossZero(axis: Axis) {
  *         return: {string} label string.
  */
 export function makeLabelFormatter(axis: Axis) {
-    let labelFormatter = axis.getLabelModel().get('formatter');
-    let categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
+    const labelFormatter = axis.getLabelModel().get('formatter');
+    const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
     if (typeof labelFormatter === 'string') {
         return (function (tpl) {
@@ -349,8 +349,8 @@ export function getAxisRawValue(axis: Axis, value: number | string): number | st
  * @return Be null/undefined if no labels.
  */
 export function estimateLabelUnionRect(axis: Axis) {
-    let axisModel = axis.model;
-    let scale = axis.scale;
+    const axisModel = axis.model;
+    const scale = axis.scale;
 
     if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
         return;
@@ -358,7 +358,7 @@ export function estimateLabelUnionRect(axis: Axis) {
 
     let realNumberScaleTicks;
     let tickCount;
-    let categoryScaleExtent = scale.getExtent();
+    const categoryScaleExtent = scale.getExtent();
 
     // Optimize for large category data, avoid call `getTicks()`.
     if (scale instanceof OrdinalScale) {
@@ -369,8 +369,8 @@ export function estimateLabelUnionRect(axis: Axis) {
         tickCount = realNumberScaleTicks.length;
     }
 
-    let axisLabelModel = axis.getLabelModel();
-    let labelFormatter = makeLabelFormatter(axis);
+    const axisLabelModel = axis.getLabelModel();
+    const labelFormatter = makeLabelFormatter(axis);
 
     let rect;
     let step = 1;
@@ -379,10 +379,10 @@ export function estimateLabelUnionRect(axis: Axis) {
         step = Math.ceil(tickCount / 40);
     }
     for (let i = 0; i < tickCount; i += step) {
-        let tickValue = realNumberScaleTicks ? realNumberScaleTicks[i] : categoryScaleExtent[0] + i;
-        let label = labelFormatter(tickValue, i);
-        let unrotatedSingleRect = axisLabelModel.getTextRect(label);
-        let singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
+        const tickValue = realNumberScaleTicks ? realNumberScaleTicks[i] : categoryScaleExtent[0] + i;
+        const label = labelFormatter(tickValue, i);
+        const unrotatedSingleRect = axisLabelModel.getTextRect(label);
+        const singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
 
         rect ? rect.union(singleRect) : (rect = singleRect);
     }
@@ -391,12 +391,12 @@ export function estimateLabelUnionRect(axis: Axis) {
 }
 
 function rotateTextRect(textRect: RectLike, rotate: number) {
-    let rotateRadians = rotate * Math.PI / 180;
-    let beforeWidth = textRect.width;
-    let beforeHeight = textRect.height;
-    let afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
-    let afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
-    let rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
+    const rotateRadians = rotate * Math.PI / 180;
+    const beforeWidth = textRect.width;
+    const beforeHeight = textRect.height;
+    const afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
+    const afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+    const rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
 
     return rotatedRect;
 }
@@ -406,7 +406,7 @@ function rotateTextRect(textRect: RectLike, rotate: number) {
  * @return {number|String} Can be null|'auto'|number|function
  */
 export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel']>) {
-    let interval = model.get('interval');
+    const interval = model.get('interval');
     return interval == null ? 'auto' : interval;
 }
 

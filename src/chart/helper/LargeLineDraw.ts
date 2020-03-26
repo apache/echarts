@@ -73,12 +73,12 @@ class LargeLinesPath extends graphic.Path {
     }
 
     buildPath(ctx: CanvasRenderingContext2D, shape: LargeLinesPathShape) {
-        let segs = shape.segs;
-        let curveness = shape.curveness;
+        const segs = shape.segs;
+        const curveness = shape.curveness;
 
         if (shape.polyline) {
             for (let i = 0; i < segs.length;) {
-                let count = segs[i++];
+                const count = segs[i++];
                 if (count > 0) {
                     ctx.moveTo(segs[i++], segs[i++]);
                     for (let k = 1; k < count; k++) {
@@ -89,14 +89,14 @@ class LargeLinesPath extends graphic.Path {
         }
         else {
             for (let i = 0; i < segs.length;) {
-                let x0 = segs[i++];
-                let y0 = segs[i++];
-                let x1 = segs[i++];
-                let y1 = segs[i++];
+                const x0 = segs[i++];
+                const y0 = segs[i++];
+                const x1 = segs[i++];
+                const y1 = segs[i++];
                 ctx.moveTo(x0, y0);
                 if (curveness > 0) {
-                    let x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
-                    let y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
+                    const x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
+                    const y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
                     ctx.quadraticCurveTo(x2, y2, x1, y1);
                 }
                 else {
@@ -108,21 +108,21 @@ class LargeLinesPath extends graphic.Path {
 
     findDataIndex(x: number, y: number) {
 
-        let shape = this.shape;
-        let segs = shape.segs;
-        let curveness = shape.curveness;
-        let lineWidth = this.style.lineWidth;
+        const shape = this.shape;
+        const segs = shape.segs;
+        const curveness = shape.curveness;
+        const lineWidth = this.style.lineWidth;
 
         if (shape.polyline) {
             let dataIndex = 0;
             for (let i = 0; i < segs.length;) {
-                let count = segs[i++];
+                const count = segs[i++];
                 if (count > 0) {
-                    let x0 = segs[i++];
-                    let y0 = segs[i++];
+                    const x0 = segs[i++];
+                    const y0 = segs[i++];
                     for (let k = 1; k < count; k++) {
-                        let x1 = segs[i++];
-                        let y1 = segs[i++];
+                        const x1 = segs[i++];
+                        const y1 = segs[i++];
                         if (lineContain.containStroke(x0, y0, x1, y1, lineWidth, x, y)) {
                             return dataIndex;
                         }
@@ -135,13 +135,13 @@ class LargeLinesPath extends graphic.Path {
         else {
             let dataIndex = 0;
             for (let i = 0; i < segs.length;) {
-                let x0 = segs[i++];
-                let y0 = segs[i++];
-                let x1 = segs[i++];
-                let y1 = segs[i++];
+                const x0 = segs[i++];
+                const y0 = segs[i++];
+                const x1 = segs[i++];
+                const y1 = segs[i++];
                 if (curveness > 0) {
-                    let x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
-                    let y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
+                    const x2 = (x0 + x1) / 2 - (y0 - y1) * curveness;
+                    const y2 = (y0 + y1) / 2 - (x1 - x0) * curveness;
 
                     if (quadraticContain.containStroke(
                         x0, y0, x2, y2, x1, y1, lineWidth, x, y
@@ -180,7 +180,7 @@ class LargeLineDraw {
     updateData(data: LargeLinesData) {
         this.group.removeAll();
 
-        let lineEl = new LargeLinesPath({
+        const lineEl = new LargeLinesPath({
             rectHover: true,
             cursor: 'default'
         });
@@ -221,7 +221,7 @@ class LargeLineDraw {
      * @override
      */
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: LargeLinesData) {
-        let lineEl = new LargeLinesPath();
+        const lineEl = new LargeLinesPath();
         lineEl.setShape({
             segs: data.getLayout('linesPoints')
         });
@@ -249,7 +249,7 @@ class LargeLineDraw {
     };
 
     _setCommon(lineEl: LargeLinesPath, data: LargeLinesData, isIncremental?: boolean) {
-        let hostModel = data.hostModel;
+        const hostModel = data.hostModel;
 
         lineEl.setShape({
             polyline: hostModel.get('polyline'),
@@ -261,20 +261,20 @@ class LargeLineDraw {
         );
         lineEl.style.strokeNoScale = true;
 
-        let visualColor = data.getVisual('color');
+        const visualColor = data.getVisual('color');
         if (visualColor) {
             lineEl.setStyle('stroke', visualColor);
         }
         lineEl.setStyle('fill', null);
 
         if (!isIncremental) {
-            let ecData = graphic.getECData(lineEl);
+            const ecData = graphic.getECData(lineEl);
             // Enable tooltip
             // PENDING May have performance issue when path is extremely large
             ecData.seriesIndex = hostModel.seriesIndex;
             lineEl.on('mousemove', function (e) {
                 ecData.dataIndex = null;
-                let dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
+                const dataIndex = lineEl.findDataIndex(e.offsetX, e.offsetY);
                 if (dataIndex > 0) {
                     // Provide dataIndex for tooltip
                     ecData.dataIndex = dataIndex + lineEl.__startIndex;
@@ -284,7 +284,7 @@ class LargeLineDraw {
     };
 
     _clearIncremental() {
-        let incremental = this._incremental;
+        const incremental = this._incremental;
         if (incremental) {
             incremental.clearDisplaybles();
         }

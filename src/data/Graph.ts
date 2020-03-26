@@ -71,7 +71,7 @@ class Graph {
     addNode(id: string, dataIndex?: number): GraphNode {
         id = id == null ? ('' + dataIndex) : ('' + id);
 
-        let nodesMap = this._nodesMap;
+        const nodesMap = this._nodesMap;
 
         if (nodesMap[generateNodeKey(id)]) {
             if (__DEV__) {
@@ -80,7 +80,7 @@ class Graph {
             return;
         }
 
-        let node = new GraphNode(id, dataIndex);
+        const node = new GraphNode(id, dataIndex);
         node.hostGraph = this;
 
         this.nodes.push(node);
@@ -93,7 +93,7 @@ class Graph {
      * Get node by data index
      */
     getNodeByIndex(dataIndex: number): GraphNode {
-        let rawIdx = this.data.getRawIndex(dataIndex);
+        const rawIdx = this.data.getRawIndex(dataIndex);
         return this.nodes[rawIdx];
     };
     /**
@@ -107,8 +107,8 @@ class Graph {
      * Add a new edge
      */
     addEdge(n1: GraphNode | number | string, n2: GraphNode | number | string, dataIndex?: number) {
-        let nodesMap = this._nodesMap;
-        let edgesMap = this._edgesMap;
+        const nodesMap = this._nodesMap;
+        const edgesMap = this._edgesMap;
 
         // PNEDING
         if (typeof n1 === 'number') {
@@ -128,13 +128,13 @@ class Graph {
             return;
         }
 
-        let key = n1.id + '-' + n2.id;
+        const key = n1.id + '-' + n2.id;
         // PENDING
         if (edgesMap[key]) {
             return;
         }
 
-        let edge = new GraphEdge(n1, n2, dataIndex);
+        const edge = new GraphEdge(n1, n2, dataIndex);
         edge.hostGraph = this;
 
         if (this._directed) {
@@ -156,7 +156,7 @@ class Graph {
      * Get edge by data index
      */
     getEdgeByIndex(dataIndex: number): GraphEdge {
-        let rawIdx = this.edgeData.getRawIndex(dataIndex);
+        const rawIdx = this.edgeData.getRawIndex(dataIndex);
         return this.edges[rawIdx];
     };
     /**
@@ -170,7 +170,7 @@ class Graph {
             n2 = n2.id;
         }
 
-        let edgesMap = this._edgesMap;
+        const edgesMap = this._edgesMap;
 
         if (this._directed) {
             return edgesMap[n1 + '-' + n2];
@@ -188,8 +188,8 @@ class Graph {
         cb: (this: Ctx, node: GraphNode, idx: number) => void,
         context?: Ctx
     ) {
-        let nodes = this.nodes;
-        let len = nodes.length;
+        const nodes = this.nodes;
+        const len = nodes.length;
         for (let i = 0; i < len; i++) {
             if (nodes[i].dataIndex >= 0) {
                 cb.call(context, nodes[i], i);
@@ -204,8 +204,8 @@ class Graph {
         cb: (this: Ctx, edge: GraphEdge, idx: number) => void,
         context?: Ctx
     ) {
-        let edges = this.edges;
-        let len = edges.length;
+        const edges = this.edges;
+        const len = edges.length;
         for (let i = 0; i < len; i++) {
             if (edges[i].dataIndex >= 0
                 && edges[i].node1.dataIndex >= 0
@@ -233,7 +233,7 @@ class Graph {
             return;
         }
 
-        let edgeType: 'inEdges' | 'outEdges' | 'edges' = direction === 'out'
+        const edgeType: 'inEdges' | 'outEdges' | 'edges' = direction === 'out'
             ? 'outEdges' : (direction === 'in' ? 'inEdges' : 'edges');
 
         for (let i = 0; i < this.nodes.length; i++) {
@@ -244,14 +244,14 @@ class Graph {
             return;
         }
 
-        let queue = [startNode];
+        const queue = [startNode];
         while (queue.length) {
-            let currentNode = queue.shift();
-            let edges = currentNode[edgeType];
+            const currentNode = queue.shift();
+            const edges = currentNode[edgeType];
 
             for (let i = 0; i < edges.length; i++) {
-                let e = edges[i];
-                let otherNode = e.node1 === currentNode
+                const e = edges[i];
+                const otherNode = e.node1 === currentNode
                     ? e.node2 : e.node1;
                 if (!otherNode.__visited) {
                     if (cb.call(context, otherNode, currentNode)) {
@@ -274,10 +274,10 @@ class Graph {
 
     // Filter update
     update() {
-        let data = this.data;
-        let edgeData = this.edgeData;
-        let nodes = this.nodes;
-        let edges = this.edges;
+        const data = this.data;
+        const edgeData = this.edgeData;
+        const nodes = this.nodes;
+        const edges = this.edges;
 
         for (let i = 0, len = nodes.length; i < len; i++) {
             nodes[i].dataIndex = -1;
@@ -287,7 +287,7 @@ class Graph {
         }
 
         edgeData.filterSelf(function (idx) {
-            let edge = edges[edgeData.getRawIndex(idx)];
+            const edge = edges[edgeData.getRawIndex(idx)];
             return edge.node1.dataIndex >= 0 && edge.node2.dataIndex >= 0;
         });
 
@@ -304,14 +304,14 @@ class Graph {
      * @return {module:echarts/data/Graph}
      */
     clone() {
-        let graph = new Graph(this._directed);
-        let nodes = this.nodes;
-        let edges = this.edges;
+        const graph = new Graph(this._directed);
+        const nodes = this.nodes;
+        const edges = this.edges;
         for (let i = 0; i < nodes.length; i++) {
             graph.addNode(nodes[i].id, nodes[i].dataIndex);
         }
         for (let i = 0; i < edges.length; i++) {
-            let e = edges[i];
+            const e = edges[i];
             graph.addEdge(e.node1.id, e.node2.id, e.dataIndex);
         }
         return graph;
@@ -371,8 +371,8 @@ class GraphNode {
         if (this.dataIndex < 0) {
             return;
         }
-        let graph = this.hostGraph;
-        let itemModel = graph.data.getItemModel<T>(this.dataIndex);
+        const graph = this.hostGraph;
+        const itemModel = graph.data.getItemModel<T>(this.dataIndex);
 
         return itemModel.getModel(path as any);
     }
@@ -405,8 +405,8 @@ class GraphEdge {
         if (this.dataIndex < 0) {
             return;
         }
-        let graph = this.hostGraph;
-        let itemModel = graph.edgeData.getItemModel(this.dataIndex);
+        const graph = this.hostGraph;
+        const itemModel = graph.edgeData.getItemModel(this.dataIndex);
 
         return itemModel.getModel(path as any);
     }
@@ -423,7 +423,7 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
          * @param Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
          */
         getValue: function (this: Host, dimension?: DimensionLoose): ParsedValue {
-            let data = this[hostName][dataName];
+            const data = this[hostName][dataName];
             return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
         },
 

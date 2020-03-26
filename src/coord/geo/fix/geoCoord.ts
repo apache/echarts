@@ -28,9 +28,9 @@ const geoCoordMap = {
 
 export default function (mapType: string, region: Region) {
     if (mapType === 'world') {
-        let geoCoord = geoCoordMap[region.name];
+        const geoCoord = geoCoordMap[region.name];
         if (geoCoord) {
-            let cp = region.center;
+            const cp = region.center;
             cp[0] = geoCoord[0];
             cp[1] = geoCoord[1];
         }

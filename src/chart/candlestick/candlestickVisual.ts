@@ -50,7 +50,7 @@ const candlestickVisual: StageHandler = {
             );
         }
 
-        let data = seriesModel.getData();
+        const data = seriesModel.getData();
 
         data.setVisual({
             legendSymbol: 'roundRect',
@@ -65,13 +65,13 @@ const candlestickVisual: StageHandler = {
             return;
         }
 
-        let isLargeRender = seriesModel.pipelineContext.large;
+        const isLargeRender = seriesModel.pipelineContext.large;
         return !isLargeRender && {
             progress(params, data) {
                 let dataIndex;
                 while ((dataIndex = params.next()) != null) {
-                    let itemModel = data.getItemModel(dataIndex);
-                    let sign = data.getItemLayout(dataIndex).sign;
+                    const itemModel = data.getItemModel(dataIndex);
+                    const sign = data.getItemLayout(dataIndex).sign;
 
                     data.setItemVisual(
                         dataIndex,

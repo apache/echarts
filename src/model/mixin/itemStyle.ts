@@ -51,14 +51,14 @@ class ItemStyleMixin {
         excludes?: readonly (keyof ItemStyleOption)[],
         includes?: readonly (keyof ItemStyleOption)[]
     ): ItemStyleProps {
-        let style = getItemStyle(this, excludes, includes);
-        let lineDash = this.getBorderLineDash();
+        const style = getItemStyle(this, excludes, includes);
+        const lineDash = this.getBorderLineDash();
         lineDash && ((style as any).lineDash = lineDash);
         return style;
     }
 
     getBorderLineDash(this: Model): number[] {
-        let lineType = this.get('borderType');
+        const lineType = this.get('borderType');
         return (lineType === 'solid' || lineType == null) ? null
             : (lineType === 'dashed' ? [5, 5] : [1, 1]);
     }

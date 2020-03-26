@@ -193,7 +193,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     init(option: Opts, parentModel: Model, ecModel: GlobalModel) {
 
-        let inputRawOption = retrieveRawOption(option);
+        const inputRawOption = retrieveRawOption(option);
 
         /**
          * Suppose a "main process" start at the point that model prepared (that is,
@@ -229,7 +229,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      * @override
      */
     mergeOption(newOption: Opts) {
-        let inputRawOption = retrieveRawOption(newOption);
+        const inputRawOption = retrieveRawOption(newOption);
 
         //FIX #2591
         zrUtil.merge(this.option, newOption, true);
@@ -242,7 +242,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      * @protected
      */
     doInit(inputRawOption: Opts) {
-        let thisOption = this.option;
+        const thisOption = this.option;
 
         // Disable realtime view update if canvas is not supported.
         if (!env.canvasSupported) {
@@ -253,7 +253,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
         this._updateRangeUse(inputRawOption);
 
-        let settledOption = this.settledOption;
+        const settledOption = this.settledOption;
         each([['start', 'startValue'], ['end', 'endValue']] as const, function (names, index) {
             // start/end has higher priority over startValue/endValue if they
             // both set, but we should make chart.setOption({endValue: 1000})
@@ -272,13 +272,13 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     }
 
     private _giveAxisProxies() {
-        let axisProxies = this._axisProxies;
+        const axisProxies = this._axisProxies;
 
         this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-            let axisModel = this.dependentModels[dimNames.axis][axisIndex];
+            const axisModel = this.dependentModels[dimNames.axis][axisIndex];
 
             // If exists, share axisProxy with other dataZoomModels.
-            let axisProxy = (axisModel as ExtendedAxisBaseModel).__dzAxisProxy || (
+            const axisProxy = (axisModel as ExtendedAxisBaseModel).__dzAxisProxy || (
                 // Use the first dataZoomModel as the main model of axisProxy.
                 (axisModel as ExtendedAxisBaseModel).__dzAxisProxy = new AxisProxy(
                     dimNames.name, axisIndex, this, ecModel
@@ -292,12 +292,12 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     }
 
     private _resetTarget() {
-        let thisOption = this.option;
+        const thisOption = this.option;
 
-        let autoMode = this._judgeAutoMode();
+        const autoMode = this._judgeAutoMode();
 
         eachAxisDim(function (dimNames) {
-            let axisIndexName = dimNames.axisIndex;
+            const axisIndexName = dimNames.axisIndex;
             thisOption[axisIndexName] = modelUtil.normalizeToArray(
                 thisOption[axisIndexName]
             );
@@ -315,7 +315,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         // Auto set only works for setOption at the first time.
         // The following is user's reponsibility. So using merged
         // option is OK.
-        let thisOption = this.option;
+        const thisOption = this.option;
 
         let hasIndexSpecified = false;
         eachAxisDim(function (dimNames) {
@@ -327,7 +327,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             }
         }, this);
 
-        let orient = thisOption.orient;
+        const orient = thisOption.orient;
 
         if (orient == null && hasIndexSpecified) {
             return 'orient';
@@ -342,13 +342,13 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     private _autoSetAxisIndex() {
         let autoAxisIndex = true;
-        let orient = this.get('orient', true);
-        let thisOption = this.option;
-        let dependentModels = this.dependentModels;
+        const orient = this.get('orient', true);
+        const thisOption = this.option;
+        const dependentModels = this.dependentModels;
 
         if (autoAxisIndex) {
             // Find axis that parallel to dataZoom as default.
-            let dimName = orient === 'vertical' ? 'y' : 'x';
+            const dimName = orient === 'vertical' ? 'y' : 'x';
 
             if (dependentModels[dimName + 'Axis'].length) {
                 thisOption[dimName + 'AxisIndex' as 'xAxisIndex' | 'yAxisIndex'] = [0];
@@ -372,8 +372,8 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
                 if (!autoAxisIndex) {
                     return;
                 }
-                let axisIndices = [];
-                let axisModels = this.dependentModels[dimNames.axis];
+                const axisIndices = [];
+                const axisModels = this.dependentModels[dimNames.axis];
                 if (axisModels.length && !axisIndices.length) {
                     for (let i = 0, len = axisModels.length; i < len; i++) {
                         if (axisModels[i].get('type') === 'category') {
@@ -399,12 +399,12 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             this.ecModel.eachSeries(function (seriesModel: SeriesModelOnAxis) {
                 if (this._isSeriesHasAllAxesTypeOf(seriesModel, 'value')) {
                     eachAxisDim(function (dimNames) {
-                        let axisIndices = thisOption[dimNames.axisIndex] as number[]; // Has been normalized to array
+                        const axisIndices = thisOption[dimNames.axisIndex] as number[]; // Has been normalized to array
 
                         let axisIndex = seriesModel.get(dimNames.axisIndex);
-                        let axisId = seriesModel.get(dimNames.axisId);
+                        const axisId = seriesModel.get(dimNames.axisId);
 
-                        let axisModel = seriesModel.ecModel.queryComponents({
+                        const axisModel = seriesModel.ecModel.queryComponents({
                             mainType: dimNames.axis,
                             index: axisIndex,
                             id: axisId
@@ -450,8 +450,8 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
         let is = true;
         eachAxisDim(function (dimNames) {
-            let seriesAxisIndex = seriesModel.get(dimNames.axisIndex);
-            let axisModel = this.dependentModels[dimNames.axis][seriesAxisIndex];
+            const seriesAxisIndex = seriesModel.get(dimNames.axisIndex);
+            const axisModel = this.dependentModels[dimNames.axis][seriesAxisIndex];
 
             if (!axisModel || axisModel.get('type') !== axisType) {
                 is = false;
@@ -466,7 +466,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             this._autoThrottle = false;
         }
         if (this._autoThrottle) {
-            let globalOption = this.ecModel.option;
+            const globalOption = this.ecModel.option;
             this.option.throttle = (
                 globalOption.animation && globalOption.animationDurationUpdate > 0
             ) ? 100 : 20;
@@ -474,12 +474,12 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     }
 
     private _updateRangeUse(inputRawOption: RangeOption) {
-        let rangePropMode = this._rangePropMode;
-        let rangeModeInOption = this.get('rangeMode');
+        const rangePropMode = this._rangePropMode;
+        const rangeModeInOption = this.get('rangeMode');
 
         each([['start', 'startValue'], ['end', 'endValue']] as const, function (names, index) {
-            let percentSpecified = inputRawOption[names[0]] != null;
-            let valueSpecified = inputRawOption[names[1]] != null;
+            const percentSpecified = inputRawOption[names[0]] != null;
+            const valueSpecified = inputRawOption[names[1]] != null;
             if (percentSpecified && !valueSpecified) {
                 rangePropMode[index] = 'percent';
             }
@@ -503,7 +503,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         let firstAxisModel: AxisBaseModel;
         eachAxisDim(function (dimNames) {
             if (firstAxisModel == null) {
-                let indices = this.get(dimNames.axisIndex) as number[]; // Has been normalized to array
+                const indices = this.get(dimNames.axisIndex) as number[]; // Has been normalized to array
                 if (indices.length) {
                     firstAxisModel = this.dependentModels[dimNames.axis][indices[0]] as AxisBaseModel;
                 }
@@ -527,7 +527,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         ) => void,
         context?: Ctx
     ) {
-        let ecModel = this.ecModel;
+        const ecModel = this.ecModel;
         eachAxisDim(function (dimNames) {
             each(
                 this.get(dimNames.axisIndex) as number[],   // Has been normalized to array
@@ -550,7 +550,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      * @return If not found, return null/undefined.
      */
     getAxisModel(dimName: string, axisIndex: number): AxisBaseModel {
-        let axisProxy = this.getAxisProxy(dimName, axisIndex);
+        const axisProxy = this.getAxisProxy(dimName, axisIndex);
         return axisProxy && axisProxy.getAxisModel();
     }
 
@@ -558,8 +558,8 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      * If not specified, set to undefined.
      */
     setRawRange(opt: RangeOption) {
-        let thisOption = this.option;
-        let settledOption = this.settledOption;
+        const thisOption = this.option;
+        const settledOption = this.settledOption;
         each([['start', 'startValue'], ['end', 'endValue']] as const, function (names) {
             // Consider the pair <start, startValue>:
             // If one has value and the other one is `null/undefined`, we both set them
@@ -580,7 +580,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     }
 
     setCalculatedRange(opt: RangeOption) {
-        let option = this.option;
+        const option = this.option;
         each(['start', 'startValue', 'end', 'endValue'] as const, function (name) {
             option[name] = opt[name];
         });
@@ -591,7 +591,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      * @return {Array.<number>} [startPercent, endPercent]
      */
     getPercentRange() {
-        let axisProxy = this.findRepresentativeAxisProxy();
+        const axisProxy = this.findRepresentativeAxisProxy();
         if (axisProxy) {
             return axisProxy.getDataPercentWindow();
         }
@@ -605,7 +605,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      */
     getValueRange(axisDimName: string, axisIndex: number): [number, number] {
         if (axisDimName == null && axisIndex == null) {
-            let axisProxy = this.findRepresentativeAxisProxy();
+            const axisProxy = this.findRepresentativeAxisProxy();
             if (axisProxy) {
                 return axisProxy.getDataValueWindow();
             }
@@ -626,8 +626,8 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         }
 
         // Find the first hosted axisProxy
-        let axisProxies = this._axisProxies;
-        for (let key in axisProxies) {
+        const axisProxies = this._axisProxies;
+        for (const key in axisProxies) {
             if (axisProxies.hasOwnProperty(key) && axisProxies[key].hostedBy(this)) {
                 return axisProxies[key];
             }
@@ -638,7 +638,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         // and the option.start or option.end settings are different. The percentRange
         // should follow axisProxy.
         // (We encounter this problem in toolbox data zoom.)
-        for (let key in axisProxies) {
+        for (const key in axisProxies) {
             if (axisProxies.hasOwnProperty(key) && !axisProxies[key].hostedBy(this)) {
                 return axisProxies[key];
             }
@@ -659,7 +659,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
  * process.
  */
 function retrieveRawOption<T extends DataZoomOption>(option: T) {
-    let ret = {} as T;
+    const ret = {} as T;
     each(
         ['start', 'end', 'startValue', 'endValue', 'throttle'] as const,
         function (name) {

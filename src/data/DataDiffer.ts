@@ -88,27 +88,27 @@ class DataDiffer {
     }
 
     execute(): void {
-        let oldArr = this._old;
-        let newArr = this._new;
+        const oldArr = this._old;
+        const newArr = this._new;
 
-        let oldDataIndexMap: DataIndexMap = {};
-        let newDataIndexMap: DataIndexMap = {};
-        let oldDataKeyArr: string[] = [];
-        let newDataKeyArr: string[] = [];
+        const oldDataIndexMap: DataIndexMap = {};
+        const newDataIndexMap: DataIndexMap = {};
+        const oldDataKeyArr: string[] = [];
+        const newDataKeyArr: string[] = [];
         let i;
 
         this._initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, '_oldKeyGetter');
         this._initIndexMap(newArr, newDataIndexMap, newDataKeyArr, '_newKeyGetter');
 
         for (i = 0; i < oldArr.length; i++) {
-            let key = oldDataKeyArr[i];
+            const key = oldDataKeyArr[i];
             let idx = newDataIndexMap[key];
 
             // idx can never be empty array here. see 'set null' logic below.
             if (idx != null) {
                 // Consider there is duplicate key (for example, use dataItem.name as key).
                 // We should make sure every item in newArr and oldArr can be visited.
-                let len = (idx as number[]).length;
+                const len = (idx as number[]).length;
                 if (len) {
                     len === 1 && (newDataIndexMap[key] = null);
                     idx = (idx as number[]).shift();
@@ -124,9 +124,9 @@ class DataDiffer {
         }
 
         for (i = 0; i < newDataKeyArr.length; i++) {
-            let key = newDataKeyArr[i];
+            const key = newDataKeyArr[i];
             if (newDataIndexMap.hasOwnProperty(key)) {
-                let idx = newDataIndexMap[key];
+                const idx = newDataIndexMap[key];
                 if (idx == null) {
                     continue;
                 }
@@ -151,7 +151,7 @@ class DataDiffer {
     ): void {
         for (let i = 0; i < arr.length; i++) {
             // Add prefix to avoid conflict with Object.prototype.
-            let key = '_ec_' + this[keyGetterName](arr[i], i);
+            const key = '_ec_' + this[keyGetterName](arr[i], i);
             let existence = map[key];
             if (existence == null) {
                 keyArr.push(key);

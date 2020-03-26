@@ -134,7 +134,7 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
             return false;
         }
 
-        let hostSeries = this.__hostSeries;
+        const hostSeries = this.__hostSeries;
         return this.getShallow('animation') && hostSeries && hostSeries.isAnimationEnabled();
     }
 
@@ -146,12 +146,12 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
     }
 
     _mergeOption(newOpt: Opts, ecModel: GlobalModel, createdBySelf?: boolean, isInit?: boolean) {
-        let componentType = this.mainType;
+        const componentType = this.mainType;
         if (!createdBySelf) {
             ecModel.eachSeries(function (seriesModel) {
 
                 // mainType can be markPoint, markLine, markArea
-                let markerOpt = seriesModel.get(
+                const markerOpt = seriesModel.get(
                     this.mainType as any, true
                 ) as Opts;
 
@@ -202,11 +202,11 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
     }
 
     formatTooltip(dataIndex: number) {
-        let data = this.getData();
-        let value = this.getRawValue(dataIndex);
-        let formattedValue = zrUtil.isArray(value)
+        const data = this.getData();
+        const value = this.getRawValue(dataIndex);
+        const formattedValue = zrUtil.isArray(value)
             ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
-        let name = data.getName(dataIndex);
+        const name = data.getName(dataIndex);
         let html = encodeHTML(this.name);
         if (value != null || name) {
             html += '<br />';

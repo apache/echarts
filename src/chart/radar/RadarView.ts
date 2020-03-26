@@ -46,22 +46,22 @@ class RadarView extends ChartView {
     private _data: List<RadarSeriesModel>;
 
     render(seriesModel: RadarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        let polar = seriesModel.coordinateSystem;
-        let group = this.group;
+        const polar = seriesModel.coordinateSystem;
+        const group = this.group;
 
-        let data = seriesModel.getData();
-        let oldData = this._data;
+        const data = seriesModel.getData();
+        const oldData = this._data;
 
         function createSymbol(data: List<RadarSeriesModel>, idx: number) {
-            let symbolType = data.getItemVisual(idx, 'symbol') as string || 'circle';
-            let color = data.getItemVisual(idx, 'color') as ZRColor;
+            const symbolType = data.getItemVisual(idx, 'symbol') as string || 'circle';
+            const color = data.getItemVisual(idx, 'color') as ZRColor;
             if (symbolType === 'none') {
                 return;
             }
-            let symbolSize = normalizeSymbolSize(
+            const symbolSize = normalizeSymbolSize(
                 data.getItemVisual(idx, 'symbolSize')
             );
-            let symbolPath = symbolUtil.createSymbol(
+            const symbolPath = symbolUtil.createSymbol(
                 symbolType, -1, -1, 2, 2, color
             );
             symbolPath.attr({
@@ -85,7 +85,7 @@ class RadarView extends ChartView {
             // Simply rerender all
             symbolGroup.removeAll();
             for (let i = 0; i < newPoints.length - 1; i++) {
-                let symbolPath = createSymbol(data, idx);
+                const symbolPath = createSymbol(data, idx);
                 if (symbolPath) {
                     symbolPath.__dimIdx = i;
                     if (oldPoints[i]) {
@@ -111,13 +111,13 @@ class RadarView extends ChartView {
         }
         data.diff(oldData)
             .add(function (idx) {
-                let points = data.getItemLayout(idx);
+                const points = data.getItemLayout(idx);
                 if (!points) {
                     return;
                 }
-                let polygon = new graphic.Polygon();
-                let polyline = new graphic.Polyline();
-                let target = {
+                const polygon = new graphic.Polygon();
+                const polyline = new graphic.Polyline();
+                const target = {
                     shape: {
                         points: points
                     }
@@ -128,8 +128,8 @@ class RadarView extends ChartView {
                 graphic.initProps(polygon, target, seriesModel, idx);
                 graphic.initProps(polyline, target, seriesModel, idx);
 
-                let itemGroup = new graphic.Group();
-                let symbolGroup = new graphic.Group();
+                const itemGroup = new graphic.Group();
+                const symbolGroup = new graphic.Group();
                 itemGroup.add(polyline);
                 itemGroup.add(polygon);
                 itemGroup.add(symbolGroup);
@@ -141,11 +141,11 @@ class RadarView extends ChartView {
                 data.setItemGraphicEl(idx, itemGroup);
             })
             .update(function (newIdx, oldIdx) {
-                let itemGroup = oldData.getItemGraphicEl(oldIdx) as graphic.Group;
-                let polyline = itemGroup.childAt(0) as graphic.Polyline;
-                let polygon = itemGroup.childAt(1) as graphic.Polygon;
-                let symbolGroup = itemGroup.childAt(2) as graphic.Group;
-                let target = {
+                const itemGroup = oldData.getItemGraphicEl(oldIdx) as graphic.Group;
+                const polyline = itemGroup.childAt(0) as graphic.Polyline;
+                const polygon = itemGroup.childAt(1) as graphic.Polygon;
+                const symbolGroup = itemGroup.childAt(2) as graphic.Group;
+                const target = {
                     shape: {
                         points: data.getItemLayout(newIdx)
                     }
@@ -174,11 +174,11 @@ class RadarView extends ChartView {
             .execute();
 
         data.eachItemGraphicEl(function (itemGroup: graphic.Group, idx) {
-            let itemModel = data.getItemModel<RadarSeriesDataItemOption>(idx);
-            let polyline = itemGroup.childAt(0) as graphic.Polyline;
-            let polygon = itemGroup.childAt(1) as graphic.Polygon;
-            let symbolGroup = itemGroup.childAt(2) as graphic.Group;
-            let color = data.getItemVisual(idx, 'color');
+            const itemModel = data.getItemModel<RadarSeriesDataItemOption>(idx);
+            const polyline = itemGroup.childAt(0) as graphic.Polyline;
+            const polygon = itemGroup.childAt(1) as graphic.Polygon;
+            const symbolGroup = itemGroup.childAt(2) as graphic.Group;
+            const color = data.getItemVisual(idx, 'color');
 
             group.add(itemGroup);
 
@@ -194,9 +194,9 @@ class RadarView extends ChartView {
             const polylineEmphasisState = polyline.ensureState('emphasis');
             polylineEmphasisState.style = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
 
-            let areaStyleModel = itemModel.getModel('areaStyle');
-            let hoverAreaStyleModel = itemModel.getModel(['emphasis', 'areaStyle']);
-            let polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
+            const areaStyleModel = itemModel.getModel('areaStyle');
+            const hoverAreaStyleModel = itemModel.getModel(['emphasis', 'areaStyle']);
+            const polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
             let hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
 
             hoverPolygonIgnore = hoverPolygonIgnore && polygonIgnore;
@@ -214,10 +214,10 @@ class RadarView extends ChartView {
             const polygonEmphasisState = polygon.ensureState('emphasis');
             polygonEmphasisState.style = hoverAreaStyleModel.getAreaStyle();
 
-            let itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
-            let itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
-            let labelModel = itemModel.getModel('label');
-            let labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+            const itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
+            const itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+            const labelModel = itemModel.getModel('label');
+            const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
                 symbolPath.setStyle(itemStyle);
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
