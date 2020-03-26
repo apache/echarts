@@ -26,6 +26,7 @@ under the License.
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="data/pie-texture.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
@@ -43,6 +44,7 @@ under the License.
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
+        <div id="main4"></div>
 
 
         <script>
@@ -310,6 +312,138 @@ under the License.
             });
 
         </script>
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            // Pencil sketch texture
+            var patternSrc = window.pieTexture;
+            var img = new Image();
+            img.src = patternSrc;
+
+            option = {
+                title: [{
+                    left: '25%',
+                    top: 10,
+                    text: 'Lable text should be white\n and bordered with each sector color',
+                    textAlign: 'center'
+                }, {
+                    left: '75%',
+                    top: 10,
+                    text: 'Lable text should be white\n and bordered with black',
+                    textAlign: 'center'
+                }],
+                series: [{
+                    type: 'pie',
+                    label: {
+                        position: 'inside'
+                    },
+                    center: ['25%', 150],
+                    radius: [30, 60],
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzz',
+                        value: 110
+                    }]
+                }, {
+                    type: 'funnel',
+                    label: {
+                        position: 'inside'
+                    },
+                    top: null,
+                    bottom: 30,
+                    height: 100,
+                    width: 50,
+                    left: '25%',
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzzzzz',
+                        value: 110
+                    }]
+                }, {
+                    type: 'pie',
+                    label: {
+                        position: 'inside'
+                    },
+                    center: ['75%', 150],
+                    radius: [30, 60],
+                    itemStyle: {
+                        color: {
+                            image: img,
+                            repeat: 'repeat'
+                        },
+                        borderWidth: 3,
+                        borderColor: '#111'
+                    },
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzzzzz',
+                        value: 110
+                    }]
+                }, {
+                    type: 'funnel',
+                    label: {
+                        position: 'inside'
+                    },
+                    top: null,
+                    bottom: 30,
+                    height: 100,
+                    width: 50,
+                    left: null,
+                    right: '25%',
+                    itemStyle: {
+                        color: {
+                            image: img,
+                            repeat: 'repeat'
+                        },
+                        borderWidth: 3,
+                        borderColor: '#111'
+                    },
+                    data: [{
+                        name: 'xxxxxxxxxxxx',
+                        value: 100
+                    }, {
+                        name: 'yyyyyyyyyyyyy',
+                        value: 120
+                    }, {
+                        name: 'zzzzzzzzzzzz',
+                        value: 110
+                    }]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
+                title: [
+                    'label.position: "inside". And half inside half outside.'
+                ],
+                option: option,
+                height: 400,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
 
 
     </body>
