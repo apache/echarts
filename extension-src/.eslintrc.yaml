@@ -24,10 +24,7 @@ rules:
     no-constant-condition: 0
     comma-dangle: 2
     no-debugger: 2
-    prefer-const:
-        - 1
-        -
-            ignoreReadBeforeAssign: true
+    prefer-const: 1
     no-dupe-keys: 2
     no-empty-character-class: 2
     no-ex-assign: 2

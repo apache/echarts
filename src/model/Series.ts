@@ -452,8 +452,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             };
         }
 
-        let data = this.getData();
-        let tooltipDims = data.mapDimension('defaultedTooltip', true);
+        const data = this.getData();
+        const tooltipDims = data.mapDimension('defaultedTooltip', true);
         const tooltipDimLen = tooltipDims.length;
         const value = this.getRawValue(dataIndex) as any;
         const isValueArr = zrUtil.isArray(value);

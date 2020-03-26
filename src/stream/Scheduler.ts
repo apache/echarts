@@ -651,8 +651,8 @@ function detectSeriseType(legacyFunc: StageHandlerOverallReset): string {
     return seriesType;
 }
 
-let ecModelMock: GlobalModel = {} as GlobalModel;
-let apiMock: ExtensionAPI = {} as ExtensionAPI;
+const ecModelMock: GlobalModel = {} as GlobalModel;
+const apiMock: ExtensionAPI = {} as ExtensionAPI;
 let seriesType;
 
 mockMethods(ecModelMock, GlobalModel);

@@ -33,10 +33,7 @@ rules:
             allow:
                 - "warn"
                 - "error"
-    prefer-const:
-        - 1
-        -
-            ignoreReadBeforeAssign: true
+    prefer-const: 1
     no-constant-condition: 0
     comma-dangle: 2
     no-debugger: 2
