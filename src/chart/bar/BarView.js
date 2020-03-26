@@ -137,10 +137,11 @@ export default echarts.extendChartView({
         data.diff(oldData)
             .add(function (dataIndex) {
                 var itemModel = data.getItemModel(dataIndex);
-                var layout = getLayout[coord.type](data, dataIndex, itemModel, 'item');
+                var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, getLayout[coord.type](data, dataIndex, backgroundModel, 'background'));
+                    var bgLayout = getLayout[coord.type](data, dataIndex, backgroundModel);
+                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
                     bgEls[dataIndex] = bgEl;
                 }
@@ -430,7 +431,7 @@ function removeSector(dataIndex, animationModel, el) {
 }
 
 var getLayout = {
-    cartesian2d: function (data, dataIndex, itemModel, type) {
+    cartesian2d: function (data, dataIndex, itemModel) {
         var layout = data.getItemLayout(dataIndex);
         var fixedLineWidth = getLineWidth(itemModel, layout);
 
@@ -440,7 +441,7 @@ var getLayout = {
         return {
             x: layout.x + signX * fixedLineWidth / 2,
             y: layout.y + signY * fixedLineWidth / 2,
-            r: type === 'item' ? layout.r : layout.rb,
+            r: layout.rb,
             width: layout.width - signX * fixedLineWidth,
             height: layout.height - signY * fixedLineWidth
         };

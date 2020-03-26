@@ -479,7 +479,6 @@ export function layout(seriesType, ecModel) {
                 y: y,
                 width: width,
                 height: height,
-                r: seriesModel.get('barBorderRadius'),
                 rb: seriesModel.get('backgroundStyle.barBorderRadius')
             });
         }
