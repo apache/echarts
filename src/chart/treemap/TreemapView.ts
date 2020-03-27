@@ -966,6 +966,11 @@ function renderNode(
             }
         );
 
+        const textEl = rectEl.getTextContent();
+        textEl.style.overflow = 'truncate';
+        textEl.style.truncateMinChar = 2;
+        textEl.style.width = width;
+
         // TODOTODO
         // upperLabelRect && (normalStyle.textRect = clone(upperLabelRect));
 

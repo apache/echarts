@@ -165,15 +165,23 @@ class Breadcrumb {
                 style: defaults(
                     normalStyleModel.getItemStyle(),
                     {
-                        lineJoin: 'bevel',
-                        text: text,
-                        textFill: textStyleModel.getTextColor(),
-                        textFont: textStyleModel.getFont()
+                        lineJoin: 'bevel'
                     }
                 ),
+                textContent: new graphic.Text({
+                    style: {
+                        text,
+                        fill: textStyleModel.getTextColor(),
+                        font: textStyleModel.getFont()
+                    }
+                }),
+                textConfig: {
+                    position: 'inside'
+                },
                 z: 10,
                 onclick: curry(onSelect, itemNode)
             });
+
             this.group.add(el);
 
             packEventData(el, seriesModel, itemNode);
