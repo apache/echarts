@@ -1714,8 +1714,8 @@ class ECharts extends Eventful {
 
                     const textContent = el.getTextContent();
                     if (textContent) {
-                        textContent.z = z;
-                        textContent.zlevel = zlevel;
+                        textContent.z = el.z;
+                        textContent.zlevel = el.zlevel;
                         // lift z2 of text content
                         textContent.z2 = el.z2 + 1;
                     }
