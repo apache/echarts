@@ -143,6 +143,7 @@ export default echarts.extendChartView({
                     var bgLayout = getLayout[coord.type](data, dataIndex, backgroundModel);
                     var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
+                    bgEl.setShape('r', backgroundModel.get('barBorderRadius'));
                     bgEls[dataIndex] = bgEl;
                 }
 
@@ -441,7 +442,6 @@ var getLayout = {
         return {
             x: layout.x + signX * fixedLineWidth / 2,
             y: layout.y + signY * fixedLineWidth / 2,
-            r: layout.rb,
             width: layout.width - signX * fixedLineWidth,
             height: layout.height - signY * fixedLineWidth
         };
@@ -675,7 +675,6 @@ function createBackgroundShape(isHorizontalOrRadial, layout, coord) {
         return {
             x: isHorizontalOrRadial ? layout.x : coordLayout.x,
             y: isHorizontalOrRadial ? coordLayout.y : layout.y,
-            r: isHorizontalOrRadial ? layout.r : coordLayout.r,
             width: isHorizontalOrRadial ? layout.width : coordLayout.width,
             height: isHorizontalOrRadial ? coordLayout.height : layout.height
         };
