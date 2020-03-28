@@ -137,8 +137,9 @@ function buildGraphic(
         const elRoot = root;
         root = new Group();
         root.add(elRoot);
-        elRoot.scale = viewBoxTransform.scale;
-        elRoot.position = viewBoxTransform.position;
+        elRoot.scaleX = elRoot.scaleY = viewBoxTransform.scale;
+        elRoot.x = viewBoxTransform.x;
+        elRoot.y = viewBoxTransform.y;
     }
 
     root.setClipPath(new Rect({

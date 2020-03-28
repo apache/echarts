@@ -73,16 +73,17 @@ function toggleItemSelected(
     const dy = Math.sin(midAngle);
 
     const offset = isSelected ? selectedOffset : 0;
-    const position = [dx * offset, dy * offset];
+    const obj = {
+        x: dx * offset,
+        y: dy * offset
+    };
 
     hasAnimation
         // animateTo will stop revious animation like update transition
         ? el.animate()
-            .when(200, {
-                position: position
-            })
+            .when(200, obj)
             .start('bounceOut')
-        : el.attr('position', position);
+        : el.attr(obj);
 }
 
 /**
@@ -298,7 +299,8 @@ class PiePiece extends graphic.Group {
 
         labelText.attr({
             rotation: labelLayout.rotation,
-            origin: [labelLayout.x, labelLayout.y],
+            originX: labelLayout.x,
+            originY: labelLayout.y,
             z2: 10
         });
 

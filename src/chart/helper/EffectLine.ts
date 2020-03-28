@@ -92,10 +92,10 @@ class EffectLine extends graphic.Group {
         symbol.setStyle('shadowColor', color);
         symbol.setStyle(effectModel.getItemStyle(['color']));
 
-        symbol.attr('scale', size);
+        symbol.scaleX = size[0];
+        symbol.scaleY = size[1];
 
         symbol.setColor(color);
-        symbol.attr('scale', size);
 
         this._symbolType = symbolType;
         this._symbolScale = size;
@@ -194,8 +194,8 @@ class EffectLine extends graphic.Group {
         const p2 = symbol.__p2;
         const cp1 = symbol.__cp1;
         const t = symbol.__t;
-        const pos = symbol.position;
-        const lastPos = [pos[0], pos[1]];
+        const pos = [symbol.x, symbol.y];
+        const lastPos = pos.slice();
         const quadraticAt = curveUtil.quadraticAt;
         const quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
         pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
@@ -209,8 +209,7 @@ class EffectLine extends graphic.Group {
         // enable continuity trail for 'line', 'rect', 'roundRect' symbolType
         if (this._symbolType === 'line' || this._symbolType === 'rect' || this._symbolType === 'roundRect') {
             if (symbol.__lastT !== undefined && symbol.__lastT < symbol.__t) {
-                const scaleY = vec2.dist(lastPos, pos) * 1.05;
-                symbol.attr('scale', [symbol.scale[0], scaleY]);
+                symbol.scaleY = vec2.dist(lastPos, pos) * 1.05;
                 // make sure the last segment render within endPoint
                 if (t === 1) {
                     pos[0] = lastPos[0] + (pos[0] - lastPos[0]) / 2;
@@ -219,15 +218,16 @@ class EffectLine extends graphic.Group {
             }
             else if (symbol.__lastT === 1) {
                 // After first loop, symbol.__t does NOT start with 0, so connect p1 to pos directly.
-                const scaleY = 2 * vec2.dist(p1, pos);
-                symbol.attr('scale', [symbol.scale[0], scaleY ]);
+                symbol.scaleY = 2 * vec2.dist(p1, pos);
             }
             else {
-                symbol.attr('scale', this._symbolScale);
+                symbol.scaleY = this._symbolScale[1];
             }
         }
         symbol.__lastT = symbol.__t;
         symbol.ignore = false;
+        symbol.x = pos[0];
+        symbol.y = pos[1];
     }
 
 

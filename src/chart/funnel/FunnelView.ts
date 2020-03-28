@@ -177,7 +177,8 @@ class FunnelPiece extends graphic.Group {
 
         labelText.attr({
             rotation: labelLayout.rotation,
-            origin: [labelLayout.x, labelLayout.y],
+            originX: labelLayout.x,
+            originY: labelLayout.y,
             z2: 10
         });
 

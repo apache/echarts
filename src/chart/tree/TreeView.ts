@@ -184,10 +184,12 @@ class TreeView extends ChartView {
         const layout = seriesModel.get('layout');
 
         if (layout === 'radial') {
-            group.attr('position', [layoutInfo.x + layoutInfo.width / 2, layoutInfo.y + layoutInfo.height / 2]);
+            group.x = layoutInfo.x + layoutInfo.width / 2;
+            group.y = layoutInfo.y + layoutInfo.height / 2;
         }
         else {
-            group.attr('position', [layoutInfo.x, layoutInfo.y]);
+            group.x = layoutInfo.x;
+            group.y = layoutInfo.y;
         }
 
         this._updateViewCoordSys(seriesModel);
@@ -294,8 +296,10 @@ class TreeView extends ChartView {
 
         // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group
         this.group.attr({
-            position: viewCoordSys.position,
-            scale: viewCoordSys.scale
+            x: viewCoordSys.x,
+            y: viewCoordSys.y,
+            scaleX: viewCoordSys.scaleX,
+            scaleY: viewCoordSys.scaleY
         });
 
         this._viewCoordSys = viewCoordSys;
@@ -351,10 +355,9 @@ class TreeView extends ChartView {
         const data = seriesModel.getData();
 
         const nodeScale = this._getNodeGlobalScale(seriesModel);
-        const invScale = [nodeScale, nodeScale];
 
         data.eachItemGraphicEl(function (el, idx) {
-            el.attr('scale', invScale);
+            el.scaleX = el.scaleY = nodeScale;
         });
     }
 
@@ -366,8 +369,7 @@ class TreeView extends ChartView {
 
         const nodeScaleRatio = this._nodeScaleRatio;
 
-        const groupScale = coordSys.scale;
-        const groupZoom = (groupScale && groupScale[0]) || 1;
+        const groupZoom = coordSys.scaleX || 1;
         // Scale node when zoom changes
         const roamZoom = coordSys.getZoom();
         const nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
@@ -435,8 +437,8 @@ function updateNode(
     const sourceLayout = source.getLayout() as TreeNodeLayout;
     const sourceOldLayout = sourceSymbolEl
         ? {
-            x: sourceSymbolEl.position[0],
-            y: sourceSymbolEl.position[1],
+            x: sourceSymbolEl.x,
+            y: sourceSymbolEl.y,
             rawX: sourceSymbolEl.__radialOldRawX,
             rawY: sourceSymbolEl.__radialOldRawY
         }
@@ -445,7 +447,8 @@ function updateNode(
 
     if (isInit) {
         symbolEl = new SymbolClz(data, dataIndex, seriesScope) as TreeSymbol;
-        symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
+        symbolEl.x = sourceOldLayout.x;
+        symbolEl.y = sourceOldLayout.y;
     }
     else {
         symbolEl.updateData(data, dataIndex, seriesScope);
@@ -459,7 +462,8 @@ function updateNode(
     group.add(symbolEl);
     data.setItemGraphicEl(dataIndex, symbolEl);
     graphic.updateProps(symbolEl, {
-        position: [targetLayout.x, targetLayout.y]
+        x: targetLayout.x,
+        y: targetLayout.y
     }, seriesModel);
 
     const symbolPath = symbolEl.getSymbolPath();
@@ -616,7 +620,8 @@ function removeNode(
     }
 
     graphic.updateProps(symbolEl, {
-        position: [sourceLayout.x + 1, sourceLayout.y + 1]
+        x: sourceLayout.x + 1,
+        y: sourceLayout.y + 1
     }, seriesModel, function () {
         group.remove(symbolEl);
         data.setItemGraphicEl(dataIndex, null);
@@ -686,14 +691,14 @@ function getEdgeShape(seriesScope: TreeSeriesScope, sourceLayout: TreeNodeLayout
         const radialCoor4 = radialCoordinate(x2, y2);
 
         return {
-            x1: radialCoor1.x,
-            y1: radialCoor1.y,
-            x2: radialCoor4.x,
-            y2: radialCoor4.y,
-            cpx1: radialCoor2.x,
-            cpy1: radialCoor2.y,
-            cpx2: radialCoor3.x,
-            cpy2: radialCoor3.y
+            x1: radialCoor1.x || 0,
+            y1: radialCoor1.y || 0,
+            x2: radialCoor4.x || 0,
+            y2: radialCoor4.y || 0,
+            cpx1: radialCoor2.x || 0,
+            cpy1: radialCoor2.y || 0,
+            cpx2: radialCoor3.x || 0,
+            cpy2: radialCoor3.y || 0
         };
     }
     else {

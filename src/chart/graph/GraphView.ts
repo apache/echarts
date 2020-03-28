@@ -155,8 +155,8 @@ class GraphView extends ChartView {
 
         if (isViewCoordSys(coordSys)) {
             const groupNewProp = {
-                position: coordSys.position,
-                scale: coordSys.scale
+                x: coordSys.x, y: coordSys.y,
+                scaleX: coordSys.scaleX, scaleY: coordSys.scaleY
             };
             if (this._firstRender) {
                 group.attr(groupNewProp);
@@ -198,7 +198,7 @@ class GraphView extends ChartView {
                             && this._startForceLayoutIteration(forceLayout, layoutAnimation);
                         forceLayout.setFixed(idx);
                         // Write position back to layout
-                        data.setItemLayout(idx, el.position);
+                        data.setItemLayout(idx, [el.x, el.y]);
                     }
                 }).on('dragend', () => {
                     if (forceLayout) {
@@ -443,10 +443,9 @@ class GraphView extends ChartView {
         const data = seriesModel.getData();
 
         const nodeScale = getNodeGlobalScale(seriesModel);
-        const invScale = [nodeScale, nodeScale];
 
         data.eachItemGraphicEl(function (el, idx) {
-            el.attr('scale', invScale);
+            el.scaleX = el.scaleY = nodeScale;
         });
     }
 

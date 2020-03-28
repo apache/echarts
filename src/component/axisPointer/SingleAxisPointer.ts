@@ -27,7 +27,6 @@ import { PathProps } from 'zrender/src/graphic/Path';
 import { ScaleDataValue, VerticalAlign, CommonAxisPointerOption } from '../../util/types';
 import ExtensionAPI from '../../ExtensionAPI';
 import SingleAxisModel from '../../coord/single/AxisModel';
-import { VectorArray } from 'zrender/src/core/vector';
 import Model from '../../model/Model';
 
 const XY = ['x', 'y'] as const;
@@ -83,8 +82,10 @@ class SingleAxisPointer extends BaseAxisPointer {
         const layoutInfo = singleAxisHelper.layout(axisModel, {labelInside: false});
         // @ts-ignore
         layoutInfo.labelMargin = axisPointerModel.get(['handle', 'margin']);
+        const position = viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo);
         return {
-            position: viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo),
+            x: position[0],
+            y: position[1],
             rotation: layoutInfo.rotation + (layoutInfo.labelDirection < 0 ? Math.PI : 0)
         };
     }
@@ -94,7 +95,8 @@ class SingleAxisPointer extends BaseAxisPointer {
      */
     updateHandleTransform(
         transform: {
-            position: VectorArray,
+            x: number,
+            y: number,
             rotation: number
         },
         delta: number[],
@@ -105,7 +107,7 @@ class SingleAxisPointer extends BaseAxisPointer {
         const coordSys = axis.coordinateSystem;
         const dimIndex = getPointDimIndex(axis);
         const axisExtent = getGlobalExtent(coordSys, dimIndex);
-        const currPosition = transform.position;
+        const currPosition = [transform.x, transform.y];
         currPosition[dimIndex] += delta[dimIndex];
         currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
         currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
@@ -115,7 +117,8 @@ class SingleAxisPointer extends BaseAxisPointer {
         cursorPoint[dimIndex] = currPosition[dimIndex];
 
         return {
-            position: currPosition,
+            x: currPosition[0],
+            y: currPosition[1],
             rotation: transform.rotation,
             cursorPoint: cursorPoint,
             tooltipOption: {

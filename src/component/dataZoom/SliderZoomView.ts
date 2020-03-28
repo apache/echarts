@@ -238,18 +238,19 @@ class SliderZoomView extends DataZoomView {
         // Transform barGroup.
         barGroup.attr(
             (orient === HORIZONTAL && !inverse)
-            ? {scale: otherAxisInverse ? [1, 1] : [1, -1]}
+            ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: 1 }
             : (orient === HORIZONTAL && inverse)
-            ? {scale: otherAxisInverse ? [-1, 1] : [-1, -1]}
+            ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: -1 }
             : (orient === VERTICAL && !inverse)
-            ? {scale: otherAxisInverse ? [1, -1] : [1, 1], rotation: Math.PI / 2}
+            ? {scaleY: otherAxisInverse ? -1 : 1, scaleX: 1, rotation: Math.PI / 2}
             // Dont use Math.PI, considering shadow direction.
-            : {scale: otherAxisInverse ? [-1, -1] : [-1, 1], rotation: Math.PI / 2}
+            : {scaleY: otherAxisInverse ? -1 : 1, scaleX: -1, rotation: Math.PI / 2}
         );
 
         // Position barGroup
         const rect = thisGroup.getBoundingRect([barGroup]);
-        thisGroup.attr('position', [location.x - rect.x, location.y - rect.y]);
+        thisGroup.x = location.x - rect.x;
+        thisGroup.y = location.y - rect.y;
     }
 
     /**
@@ -569,8 +570,10 @@ class SliderZoomView extends DataZoomView {
             const handle = displaybles.handles[handleIndex];
             const handleHeight = this._handleHeight;
             (handle as graphic.Path).attr({
-                scale: [handleHeight / 2, handleHeight / 2],
-                position: [handleEnds[handleIndex], size[1] / 2 - handleHeight / 2]
+                scaleX: handleHeight / 2,
+                scaleY: handleHeight / 2,
+                x: handleEnds[handleIndex],
+                y: size[1] / 2 - handleHeight / 2
             });
         }, this);
 

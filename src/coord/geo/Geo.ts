@@ -102,8 +102,7 @@ class Geo extends View {
         rawTransformable.decomposeTransform();
 
         if (invertLongitute) {
-            const scale = rawTransformable.scale;
-            scale[1] = -scale[1];
+            rawTransformable.scaleY = -rawTransformable.scaleY;
         }
 
         rawTransformable.updateTransform();

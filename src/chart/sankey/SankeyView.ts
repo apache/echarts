@@ -194,7 +194,8 @@ class SankeyView extends ChartView {
 
         group.removeAll();
 
-        group.attr('position', [layoutInfo.x, layoutInfo.y]);
+        group.x = layoutInfo.x;
+        group.y = layoutInfo.y;
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {

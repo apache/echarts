@@ -119,7 +119,8 @@ export function buildLabelElOption(
 
     elOption.label = {
         // shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
-        position: position.slice(),
+        x: position[0],
+        y: position[1],
         // TODO: rich
         style: {
             text: text,

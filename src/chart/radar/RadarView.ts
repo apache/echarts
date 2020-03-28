@@ -69,7 +69,8 @@ class RadarView extends ChartView {
                     strokeNoScale: true
                 },
                 z2: 100,
-                scale: [symbolSize[0] / 2, symbolSize[1] / 2]
+                scaleX: symbolSize[0] / 2,
+                scaleY: symbolSize[1] / 2
             });
             return symbolPath as RadarSymbol;
         }
@@ -89,15 +90,16 @@ class RadarView extends ChartView {
                 if (symbolPath) {
                     symbolPath.__dimIdx = i;
                     if (oldPoints[i]) {
-                        symbolPath.attr('position', oldPoints[i]);
+                        symbolPath.setPosition(oldPoints[i]);
                         graphic[isInit ? 'initProps' : 'updateProps'](
                             symbolPath, {
-                                position: newPoints[i]
+                                x: newPoints[i][0],
+                                y: newPoints[i][1]
                             }, seriesModel, idx
                         );
                     }
                     else {
-                        symbolPath.attr('position', newPoints[i]);
+                        symbolPath.setPosition(newPoints[i]);
                     }
                     symbolGroup.add(symbolPath);
                 }

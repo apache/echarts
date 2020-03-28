@@ -33,6 +33,7 @@ import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
+import { PathProps } from 'zrender/src/graphic/Path';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -403,7 +404,8 @@ function prepareLineWidth(
 
     if (valueLineWidth) {
         pathForLineWidth.attr({
-            scale: symbolScale.slice(),
+            scaleX: symbolScale[0],
+            scaleY: symbolScale[1],
             rotation: rotation
         });
         pathForLineWidth.updateTransform();
@@ -554,7 +556,7 @@ function createOrUpdateRepeatSymbols(
             updateAttr(path, null, makeTarget(index), symbolMeta, isUpdate);
         }
         else {
-            updateAttr(path, null, {scale: [0, 0]}, symbolMeta, isUpdate, function () {
+            updateAttr(path, null, { scaleX: 0, scaleY: 0 }, symbolMeta, isUpdate, function () {
                 bundle.remove(path);
             });
         }
@@ -575,11 +577,14 @@ function createOrUpdateRepeatSymbols(
         updateAttr(
             path,
             {
-                position: target.position,
-                scale: [0, 0]
+                x: target.x,
+                y: target.y,
+                scaleX: 0,
+                scaleY: 0
             },
             {
-                scale: target.scale,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
                 rotation: target.rotation
             },
             symbolMeta,
@@ -606,8 +611,10 @@ function createOrUpdateRepeatSymbols(
         position[valueDim.index] = unit * (i - repeatTimes / 2 + 0.5) + pathPosition[valueDim.index];
 
         return {
-            position: position,
-            scale: symbolMeta.symbolScale.slice(),
+            x: position[0],
+            y: position[1],
+            scaleX: symbolMeta.symbolScale[0],
+            scaleY: symbolMeta.symbolScale[1],
             rotation: symbolMeta.rotation
         };
     }
@@ -641,12 +648,15 @@ function createOrUpdateSingleSymbol(
         updateAttr(
             mainPath,
             {
-                position: symbolMeta.pathPosition.slice(),
-                scale: [0, 0],
+                x: symbolMeta.pathPosition[0],
+                y: symbolMeta.pathPosition[1],
+                scaleX: 0,
+                scaleY: 0,
                 rotation: symbolMeta.rotation
             },
             {
-                scale: symbolMeta.symbolScale.slice()
+                scaleX: symbolMeta.symbolScale[0],
+                scaleY: symbolMeta.symbolScale[1]
             },
             symbolMeta,
             isUpdate
@@ -661,8 +671,10 @@ function createOrUpdateSingleSymbol(
             mainPath,
             null,
             {
-                position: symbolMeta.pathPosition.slice(),
-                scale: symbolMeta.symbolScale.slice(),
+                x: symbolMeta.pathPosition[0],
+                y: symbolMeta.pathPosition[1],
+                scaleX: symbolMeta.symbolScale[0],
+                scaleY: symbolMeta.symbolScale[1],
                 rotation: symbolMeta.rotation
             },
             symbolMeta,
@@ -767,17 +779,19 @@ function isAnimationEnabled(this: ItemModel) {
 function updateHoverAnimation(path: PictorialSymbol, symbolMeta: SymbolMeta) {
     path.off('emphasis').off('normal');
 
-    const scale = symbolMeta.symbolScale.slice();
+    const scale = symbolMeta.symbolScale;
 
     symbolMeta.hoverAnimation && path
         .on('emphasis', function () {
             this.animateTo({
-                scale: [scale[0] * 1.1, scale[1] * 1.1]
+                scaleX: scale[0] * 1.1,
+                scaleY: scale[1] * 1.1
             }, { duration: 400, easing: 'elasticOut' });
         })
         .on('normal', function () {
             this.animateTo({
-                scale: scale.slice()
+                scaleX: scale[0],
+                scaleY: scale[1]
             }, { duration: 400, easing: 'elasticOut' });
         });
 
@@ -790,7 +804,9 @@ function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate
     const bundle = new graphic.Group();
     bar.add(bundle);
     bar.__pictorialBundle = bundle;
-    bundle.attr('position', symbolMeta.bundlePosition.slice());
+
+    bundle.x = symbolMeta.bundlePosition[0];
+    bundle.y = symbolMeta.bundlePosition[1];
 
     if (symbolMeta.symbolRepeat) {
         createOrUpdateRepeatSymbols(bar, opt, symbolMeta);
@@ -815,7 +831,10 @@ function updateBar(bar: PictorialBarElement, opt: CreateOpts, symbolMeta: Symbol
     const bundle = bar.__pictorialBundle;
 
     graphic.updateProps(
-        bundle, {position: symbolMeta.bundlePosition.slice()}, animationModel, dataIndex
+        bundle, {
+            x: symbolMeta.bundlePosition[0],
+            y: symbolMeta.bundlePosition[1]
+        }, animationModel, dataIndex
     );
 
     if (symbolMeta.symbolRepeat) {
@@ -848,7 +867,7 @@ function removeBar(
 
     zrUtil.each(pathes, function (path) {
         graphic.updateProps(
-            path, {scale: [0, 0]}, animationModel, dataIndex,
+            path, { scaleX: 0, scaleY: 0 }, animationModel, dataIndex,
             function () {
                 bar.parent && bar.parent.remove(bar);
             }
@@ -879,8 +898,8 @@ function eachPath<Ctx>(
 
 function updateAttr<T extends Element>(
     el: T,
-    immediateAttrs: any,
-    animationAttrs: any,
+    immediateAttrs: PathProps,
+    animationAttrs: PathProps,
     symbolMeta: SymbolMeta,
     isUpdate?: boolean,
     cb?: () => void

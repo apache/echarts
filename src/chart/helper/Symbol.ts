@@ -35,8 +35,6 @@ const normalLabelAccessPath = ['label'] as const;
 const emphasisLabelAccessPath = ['emphasis', 'label'] as const;
 
 type ECSymbol = ReturnType<typeof createSymbol> & {
-    __symbolOriginalScale: number[]
-    __z2Origin: number
     highDownOnUpdate(fromState: DisplayState, toState: DisplayState): void
 };
 
@@ -45,6 +43,14 @@ class Symbol extends graphic.Group {
     private _seriesModel: SeriesModel;
 
     private _symbolType: string;
+
+    /**
+     * Original scale
+     */
+    private _scaleX: number;
+    private _scaleY: number;
+
+    private _z2: number;
 
     constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
         super();
@@ -76,7 +82,8 @@ class Symbol extends graphic.Group {
         symbolPath.attr({
             z2: 100,
             culling: true,
-            scale: getScale(symbolSize)
+            scaleX: symbolSize[0] / 2,
+            scaleY: symbolSize[1] / 2
         });
         // Rewrite drift method
         symbolPath.drift = driftSymbol;
@@ -112,7 +119,12 @@ class Symbol extends graphic.Group {
      * Including the change caused by animation
      */
     getScale() {
-        return this.childAt(0).scale;
+        const symbolPath = this.childAt(0);
+        return [symbolPath.scaleX, symbolPath.scaleY];
+    }
+
+    getOriginalScale() {
+        return [this._scaleX, this._scaleY];
     }
 
     /**
@@ -164,7 +176,8 @@ class Symbol extends graphic.Group {
             const symbolPath = this.childAt(0) as ECSymbol;
             symbolPath.silent = false;
             graphic.updateProps(symbolPath, {
-                scale: getScale(symbolSize)
+                scaleX: symbolSize[0] / 2,
+                scaleY: symbolSize[1] / 2
             }, seriesModel, idx);
         }
 
@@ -175,13 +188,14 @@ class Symbol extends graphic.Group {
             const fadeIn = seriesScope && seriesScope.fadeIn;
 
             const target: PathProps = {
-                scale: symbolPath.scale.slice()
+                scaleX: symbolPath.scaleX,
+                scaleY: symbolPath.scaleY
             };
             fadeIn && (target.style = {
                 opacity: symbolPath.style.opacity
             });
 
-            symbolPath.scale = [0, 0];
+            symbolPath.scaleX = symbolPath.scaleY = 0;
             fadeIn && (symbolPath.style.opacity = 0);
 
             graphic.initProps(symbolPath, target, seriesModel, idx);
@@ -251,10 +265,8 @@ class Symbol extends graphic.Group {
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
         if (symbolOffset) {
-            symbolPath.attr('position', [
-                parsePercent(symbolOffset[0], symbolSize[0]),
-                parsePercent(symbolOffset[1], symbolSize[1])
-            ]);
+            symbolPath.x = parsePercent(symbolOffset[0], symbolSize[0]);
+            symbolPath.y = parsePercent(symbolOffset[1], symbolSize[1]);
         }
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
@@ -270,16 +282,16 @@ class Symbol extends graphic.Group {
         }
 
         const liftZ = data.getItemVisual(idx, 'liftZ');
-        const z2Origin = symbolPath.__z2Origin;
+        const z2Origin = this._z2;
         if (liftZ != null) {
             if (z2Origin == null) {
-                symbolPath.__z2Origin = symbolPath.z2;
+                this._z2 = symbolPath.z2;
                 symbolPath.z2 += liftZ;
             }
         }
         else if (z2Origin != null) {
             symbolPath.z2 = z2Origin;
-            symbolPath.__z2Origin = null;
+            this._z2 = null;
         }
 
         const useNameLabel = seriesScope && seriesScope.useNameLabel;
@@ -299,7 +311,8 @@ class Symbol extends graphic.Group {
             return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
         }
 
-        symbolPath.__symbolOriginalScale = getScale(symbolSize);
+        this._scaleX = symbolSize[0] / 2;
+        this._scaleY = symbolSize[1] / 2;
         symbolPath.highDownOnUpdate = (
             hoverAnimation && seriesModel.isAnimationEnabled()
         ) ? highDownOnUpdate : null;
@@ -322,7 +335,8 @@ class Symbol extends graphic.Group {
                 style: {
                     opacity: 0
                 },
-                scale: [0, 0]
+                scaleX: 0,
+                scaleY: 0
             },
             this._seriesModel,
             graphic.getECData(this).dataIndex,
@@ -345,14 +359,12 @@ function highDownOnUpdate(this: ECSymbol, fromState: DisplayState, toState: Disp
         return;
     }
 
+    const scale = (this.parent as Symbol).getOriginalScale();
     if (toState === 'emphasis') {
-        const scale = this.__symbolOriginalScale;
         const ratio = scale[1] / scale[0];
         const emphasisOpt = {
-            scale: [
-                Math.max(scale[0] * 1.1, scale[0] + 3),
-                Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-            ]
+            x: Math.max(scale[0] * 1.1, scale[0] + 3),
+            y: Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
         };
         // FIXME
         // modify it after support stop specified animation.
@@ -362,13 +374,10 @@ function highDownOnUpdate(this: ECSymbol, fromState: DisplayState, toState: Disp
     }
     else if (toState === 'normal') {
         this.animateTo({
-            scale: this.__symbolOriginalScale
+            scaleX: scale[0],
+            scaleY: scale[1]
         }, { duration: 400, easing: 'elasticOut' });
     }
-}
-
-function getScale(symbolSize: number[]) {
-    return [symbolSize[0] / 2, symbolSize[1] / 2];
 }
 
 function driftSymbol(this: ECSymbol, dx: number, dy: number) {

@@ -101,7 +101,8 @@ class EffectSymbol extends Group {
                 },
                 z2: 99,
                 silent: true,
-                scale: [0.5, 0.5]
+                scaleX: 0.5,
+                scaleY: 0.5
             });
 
             const delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
@@ -174,7 +175,7 @@ class EffectSymbol extends Group {
         const symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
         const color = data.getItemVisual(idx, 'color');
 
-        rippleGroup.attr('scale', symbolSize);
+        rippleGroup.setScale(symbolSize);
 
         rippleGroup.traverse(function (ripplePath: Path) {
             ripplePath.setStyle('fill', color);
@@ -182,9 +183,8 @@ class EffectSymbol extends Group {
 
         const symbolOffset = itemModel.getShallow('symbolOffset');
         if (symbolOffset) {
-            const pos = rippleGroup.position;
-            pos[0] = parsePercent(symbolOffset[0], symbolSize[0]);
-            pos[1] = parsePercent(symbolOffset[1], symbolSize[1]);
+            rippleGroup.x = parsePercent(symbolOffset[0], symbolSize[0]);
+            rippleGroup.y = parsePercent(symbolOffset[1], symbolSize[1]);
         }
         rippleGroup.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
 

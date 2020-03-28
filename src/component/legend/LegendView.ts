@@ -136,7 +136,8 @@ class LegendView extends ComponentView {
             viewportSize,
             padding
         );
-        this.group.attr('position', [layoutRect.x - mainRect.x, layoutRect.y - mainRect.y]);
+        this.group.x = layoutRect.x - mainRect.x;
+        this.group.y = layoutRect.y - mainRect.y;
 
         // Render background after group is layout.
         this.group.add(
@@ -483,6 +484,9 @@ class LegendView extends ComponentView {
         const contentRect = contentGroup.getBoundingRect();
         const contentPos = [-contentRect.x, -contentRect.y];
 
+        selectorGroup.markRedraw();
+        contentGroup.markRedraw();
+
         if (selector) {
             // Place buttons in selectorGroup
             layoutUtil.box(
@@ -510,8 +514,10 @@ class LegendView extends ComponentView {
 
             //Always align selector to content as 'middle'
             selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
-            selectorGroup.attr('position', selectorPos);
-            contentGroup.attr('position', contentPos);
+            selectorGroup.x = selectorPos[0];
+            selectorGroup.y = selectorPos[1];
+            contentGroup.x = contentPos[0];
+            contentGroup.y = contentPos[1];
 
             const mainRect = {x: 0, y: 0} as ZRRectLike;
             mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
@@ -520,7 +526,8 @@ class LegendView extends ComponentView {
             return mainRect;
         }
         else {
-            contentGroup.attr('position', contentPos);
+            contentGroup.x = contentPos[0];
+            contentGroup.y = contentPos[1];
             return this.group.getBoundingRect();
         }
     }

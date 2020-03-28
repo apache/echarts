@@ -241,7 +241,8 @@ class TitleView extends ComponentView {
             textVerticalAlign = textVerticalAlign || 'top';
         }
 
-        group.attr('position', [layoutRect.x, layoutRect.y]);
+        group.x = layoutRect.x;
+        group.y = layoutRect.y;
         const alignStyle = {
             align: textAlign,
             verticalAlign: textVerticalAlign

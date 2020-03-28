@@ -161,7 +161,7 @@ class SymbolDraw {
                 const point = data.getItemLayout(newIdx) as number[];
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
                     const symbolEl = new SymbolCtor(data, newIdx, seriesScope);
-                    symbolEl.attr('position', point);
+                    symbolEl.setPosition(point);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
@@ -175,12 +175,13 @@ class SymbolDraw {
                 }
                 if (!symbolEl) {
                     symbolEl = new SymbolCtor(data, newIdx);
-                    symbolEl.attr('position', point);
+                    symbolEl.setPosition(point);
                 }
                 else {
                     symbolEl.updateData(data, newIdx, seriesScope);
                     graphic.updateProps(symbolEl, {
-                        position: point
+                        x: point[0],
+                        y: point[1]
                     }, seriesModel);
                 }
 
@@ -210,7 +211,8 @@ class SymbolDraw {
             // Not use animation
             data.eachItemGraphicEl(function (el, idx) {
                 const point = data.getItemLayout(idx);
-                el.attr('position', point);
+                el.setPosition(point);
+                el.markRedraw();
             });
         }
     };
@@ -237,7 +239,7 @@ class SymbolDraw {
             if (symbolNeedsDraw(data, point, idx, opt)) {
                 const el = new this._SymbolCtor(data, idx, this._seriesScope);
                 el.traverse(updateIncrementalAndHover);
-                el.attr('position', point);
+                el.setPosition(point);
                 this.group.add(el);
                 data.setItemGraphicEl(idx, el);
             }

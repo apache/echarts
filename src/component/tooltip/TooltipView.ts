@@ -305,7 +305,8 @@ class TooltipView extends ComponentView {
 
         if (payload.tooltip && payload.x != null && payload.y != null) {
             const el = proxyRect as ECElement;
-            el.position = [payload.x, payload.y];
+            el.x = payload.x;
+            el.y = payload.y;
             el.update();
             el.tooltip = payload.tooltip;
             // Manually show tooltip while view is not using zrender elements.

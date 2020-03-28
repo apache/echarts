@@ -49,7 +49,8 @@ class ThemeRiverView extends ChartView {
         const rect = layoutInfo.rect;
         const boundaryGap = layoutInfo.boundaryGap;
 
-        group.attr('position', [0, rect.y + boundaryGap[0]]);
+        group.x = 0;
+        group.y = rect.y + boundaryGap[0];
 
         function keyGetter(item: LayerSeries[number]) {
             return item.name;

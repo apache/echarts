@@ -152,8 +152,11 @@ class TooltipRichContent {
     }
 
     moveTo(x: number, y: number) {
-        if (this.el) {
-            this.el.attr('position', [x, y]);
+        const el = this.el;
+        if (el) {
+            el.x = x;
+            el.y = y;
+            el.markRedraw();
         }
     }
 

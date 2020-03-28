@@ -59,14 +59,13 @@ export function updateCenterAndZoom(
         }
 
         // Zoom on given point(originX, originY)
-        view.scale[0] *= zoom;
-        view.scale[1] *= zoom;
-        const position = view.position;
-        const fixX = (payload.originX - position[0]) * (zoom - 1);
-        const fixY = (payload.originY - position[1]) * (zoom - 1);
+        view.scaleX *= zoom;
+        view.scaleY *= zoom;
+        const fixX = (payload.originX - view.x) * (zoom - 1);
+        const fixY = (payload.originY - view.y) * (zoom - 1);
 
-        position[0] -= fixX;
-        position[1] -= fixY;
+        view.x -= fixX;
+        view.y -= fixY;
 
         view.updateTransform();
         // Get the new center

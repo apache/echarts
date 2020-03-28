@@ -29,8 +29,7 @@ export function getNodeGlobalScale(seriesModel: GraphSeriesModel) {
 
     const nodeScaleRatio = seriesModel.option.nodeScaleRatio;
 
-    const groupScale = coordSys.scale;
-    const groupZoom = (groupScale && groupScale[0]) || 1;
+    const groupZoom = coordSys.scaleX;
     // Scale node when zoom changes
     const roamZoom = coordSys.getZoom();
     const nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;

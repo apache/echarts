@@ -338,9 +338,11 @@ class BrushController extends Eventful<BrushControllerEvents> {
 
     mount(opt?: {
         enableGlobalPan?: boolean;
-        position?: number[];
+        x?: number;
+        y?: number;
         rotation?: number;
-        scale?: number[];
+        scaleX?: number;
+        scaleY?: number
     }): BrushController {
         opt = opt || {};
 
@@ -354,9 +356,11 @@ class BrushController extends Eventful<BrushControllerEvents> {
         this._zr.add(thisGroup);
 
         thisGroup.attr({
-            position: opt.position || [0, 0],
+            x: opt.x || 0,
+            y: opt.y || 0,
             rotation: opt.rotation || 0,
-            scale: opt.scale || [1, 1]
+            scaleX: opt.scaleX || 1,
+            scaleY: opt.scaleY || 1
         });
         this._transform = thisGroup.getLocalTransform();
 

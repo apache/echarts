@@ -27,7 +27,6 @@ import { ScaleDataValue, VerticalAlign, HorizontalAlign, CommonAxisPointerOption
 import Grid from '../../coord/cartesian/Grid';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { PathProps } from 'zrender/src/graphic/Path';
-import { VectorArray } from 'zrender/src/core/vector';
 import Model from '../../model/Model';
 
 // Not use top level axisPointer model
@@ -81,9 +80,10 @@ class CartesianAxisPointer extends BaseAxisPointer {
         });
         // @ts-ignore
         layoutInfo.labelMargin = axisPointerModel.get(['handle', 'margin']);
+        const pos = viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo);
         return {
-            // @ts-ignore
-            position: viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo),
+            x: pos[0],
+            y: pos[1],
             rotation: layoutInfo.rotation + (layoutInfo.labelDirection < 0 ? Math.PI : 0)
         };
     }
@@ -93,7 +93,7 @@ class CartesianAxisPointer extends BaseAxisPointer {
      */
     updateHandleTransform(
         transform: {
-            position: VectorArray,
+            x: number, y: number,
             rotation: number
         },
         delta: number[],
@@ -106,7 +106,7 @@ class CartesianAxisPointer extends BaseAxisPointer {
         const otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
         const dimIndex = axis.dim === 'x' ? 0 : 1;
 
-        const currPosition = transform.position;
+        const currPosition = [transform.x, transform.y];
         currPosition[dimIndex] += delta[dimIndex];
         currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
         currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
@@ -125,7 +125,8 @@ class CartesianAxisPointer extends BaseAxisPointer {
         ];
 
         return {
-            position: currPosition,
+            x: currPosition[0],
+            y: currPosition[1],
             rotation: transform.rotation,
             cursorPoint: cursorPoint,
             tooltipOption: tooltipOptions[dimIndex]

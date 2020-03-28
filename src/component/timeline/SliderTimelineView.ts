@@ -276,8 +276,8 @@ class SliderTimelineView extends TimelineView {
         const mainBound = getBound(mainGroup.getBoundingRect());
         const labelBound = getBound(labelGroup.getBoundingRect());
 
-        const mainPosition = mainGroup.position;
-        const labelsPosition = labelGroup.position;
+        const mainPosition = [mainGroup.x, mainGroup.y];
+        const labelsPosition = [labelGroup.x, labelGroup.y];
 
         labelsPosition[0] = mainPosition[0] = viewBound[0][0];
 
@@ -294,19 +294,16 @@ class SliderTimelineView extends TimelineView {
             labelsPosition[1] = mainPosition[1] + labelPosOpt;
         }
 
-        mainGroup.attr('position', mainPosition);
-        labelGroup.attr('position', labelsPosition);
+        mainGroup.setPosition(mainPosition);
+        labelGroup.setPosition(labelsPosition);
         mainGroup.rotation = labelGroup.rotation = layoutInfo.rotation;
 
         setOrigin(mainGroup);
         setOrigin(labelGroup);
 
         function setOrigin(targetGroup: graphic.Group) {
-            const pos = targetGroup.position;
-            targetGroup.origin = [
-                viewBound[0][0] - pos[0],
-                viewBound[1][0] - pos[1]
-            ];
+            targetGroup.originX = viewBound[0][0] - targetGroup.x;
+            targetGroup.originY = viewBound[1][0] - targetGroup.y;
         }
 
         function getBound(rect: RectLike) {
@@ -442,7 +439,8 @@ class SliderTimelineView extends TimelineView {
             const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
             const tickCoord = axis.dataToCoord(labelItem.tickValue);
             const textEl = new graphic.Text({
-                position: [tickCoord, 0],
+                x: tickCoord,
+                y: 0,
                 rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                 onclick: bind(this._changeTimeline, this, dataIndex),
                 silent: false,
@@ -576,8 +574,8 @@ class SliderTimelineView extends TimelineView {
         toCoord > axisExtent[1] && (toCoord = axisExtent[1]);
         toCoord < axisExtent[0] && (toCoord = axisExtent[0]);
 
-        this._currentPointer.position[0] = toCoord;
-        this._currentPointer.dirty();
+        this._currentPointer.x = toCoord;
+        this._currentPointer.markRedraw();
 
         const targetDataIndex = this._findNearestTick(toCoord);
         const timelineModel = this.model;
@@ -750,15 +748,16 @@ function giveSymbol(
     symbolSize = symbolSize instanceof Array
         ? symbolSize.slice()
         : [+symbolSize, +symbolSize];
-    symbolSize[0] /= 2;
-    symbolSize[1] /= 2;
-    opt.scale = symbolSize;
+
+    opt.scaleX = symbolSize[0] / 2;
+    opt.scaleY = symbolSize[1] / 2;
 
     const symbolOffset = hostModel.get('symbolOffset');
     if (symbolOffset) {
-        const pos = opt.position = opt.position || [0, 0];
-        pos[0] += numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
-        pos[1] += numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
+        opt.x = opt.x || 0;
+        opt.y = opt.y || 0;
+        opt.x += numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
+        opt.y += numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
     }
 
     const symbolRotate = hostModel.get('symbolRotate');
@@ -792,18 +791,20 @@ function pointerMoveTo(
     const toCoord = axis.dataToCoord(timelineModel.getData().get('value', dataIndex));
 
     if (noAnimation || !pointerModel.get('animation', true)) {
-        pointer.attr({position: [toCoord, 0]});
+        pointer.x = toCoord;
+        pointer.y = 0;
     }
     else {
         pointer.stopAnimation(true);
-        pointer.animateTo(
-            { position: [toCoord, 0] },
-            {
+        pointer.animateTo({
+            x: toCoord,
+            y: 0
+        }, {
                 duration: pointerModel.get('animationDuration', true),
                 easing: pointerModel.get('animationEasing', true)
-            }
-        );
+        });
     }
+    pointer.markRedraw();
 }
 
 

@@ -263,22 +263,23 @@ class CalendarView extends ComponentView {
         margin: number
     ): RichTextProps {
 
-        point = point.slice();
+        let x = point[0];
+        let y = point[1];
         let aligns: [ZRTextAlign, ZRTextVerticalAlign] = ['center', 'bottom'];
 
         if (position === 'bottom') {
-            point[1] += margin;
+            y += margin;
             aligns = ['center', 'top'];
         }
         else if (position === 'left') {
-            point[0] -= margin;
+            x -= margin;
         }
         else if (position === 'right') {
-            point[0] += margin;
+            x += margin;
             aligns = ['center', 'top'];
         }
         else { // top
-            point[1] -= margin;
+            y -= margin;
         }
 
         let rotate = 0;
@@ -288,7 +289,8 @@ class CalendarView extends ComponentView {
 
         return {
             rotation: rotate,
-            position: point,
+            x,
+            y,
             style: {
                 align: aligns[0],
                 verticalAlign: aligns[1]

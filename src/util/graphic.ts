@@ -364,8 +364,8 @@ function singleEnterEmphasis(el: Displayable) {
     }
 
     const emphasisStyle = el.states.emphasis.style;
-    const currentFill = el.style.fill;
-    const currentStroke = el.style.stroke;
+    const currentFill = el.style && el.style.fill;
+    const currentStroke = el.style && el.style.stroke;
 
     el.useState('emphasis');
 
@@ -520,8 +520,12 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     const extendedEl = el as ExtendedElement;
     // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
     // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
-    extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
-    extendedEl.__highDownOnUpdate = (el as ECElement).highDownOnUpdate;
+    if ((el as ECElement).highDownSilentOnTouch) {
+        extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
+    }
+    if ((el as ECElement).highDownOnUpdate) {
+        extendedEl.__highDownOnUpdate = (el as ECElement).highDownOnUpdate;
+    }
 
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.
@@ -1207,7 +1211,8 @@ export function groupTransition(
     }
     function getAnimatableProps(el: Displayable) {
         const obj: PathProps = {
-            position: vector.clone(el.position),
+            x: el.x,
+            y: el.y,
             rotation: el.rotation
         };
         if (isPath(el)) {

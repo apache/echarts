@@ -590,7 +590,7 @@ class LineView extends ChartView {
                     return;
                 }
                 symbol = new SymbolClz(data, dataIndex);
-                symbol.position = pt;
+                symbol.setPosition(pt);
                 symbol.setZ(
                     seriesModel.get('zlevel'),
                     seriesModel.get('z')
@@ -721,12 +721,19 @@ class LineView extends ChartView {
             next = turnPointsIntoStep(diff.next, coordSys, step);
             stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
         }
+
+        // if (next.length < polyline.shape.points.length) {
+        //     debugger
+        // }
+
         // `diff.current` is subset of `current` (which should be ensured by
         // turnPointsIntoStep), so points in `__points` can be updated when
         // points in `current` are update during animation.
         (polyline.shape as any).__points = diff.current;
         polyline.shape.points = current;
 
+        // Stop previous animation.
+        polyline.stopAnimation();
         graphic.updateProps(polyline, {
             shape: {
                 points: next
@@ -738,6 +745,7 @@ class LineView extends ChartView {
                 points: current,
                 stackedOnPoints: stackedOnCurrent
             });
+            polygon.stopAnimation();
             graphic.updateProps(polygon, {
                 shape: {
                     points: next,
@@ -769,7 +777,8 @@ class LineView extends ChartView {
             polyline.animators[0].during(function () {
                 for (let i = 0; i < updatedDataInfo.length; i++) {
                     const el = updatedDataInfo[i].el;
-                    el.attr('position', (polyline.shape as any).__points[updatedDataInfo[i].ptIdx]);
+                    el.setPosition((polyline.shape as any).__points[updatedDataInfo[i].ptIdx]);
+                    el.markRedraw();
                 }
             });
         }

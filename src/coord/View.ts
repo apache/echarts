@@ -164,12 +164,11 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         center = vector.applyTransform([], center, rawTransformMatrix);
         defaultCenter = vector.applyTransform([], defaultCenter, rawTransformMatrix);
 
-        roamTransform.origin = center;
-        roamTransform.position = [
-            defaultCenter[0] - center[0],
-            defaultCenter[1] - center[1]
-        ];
-        roamTransform.scale = [zoom, zoom];
+        roamTransform.originX = center[0];
+        roamTransform.originY = center[1];
+        roamTransform.x = defaultCenter[0] - center[0];
+        roamTransform.y = defaultCenter[1] - center[1];
+        roamTransform.scaleX = roamTransform.scaleY = zoom;
 
         this._updateTransform();
     }
@@ -195,17 +194,15 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         this.decomposeTransform();
     }
 
-    getTransformInfo(): {
-        roamTransform: matrix.MatrixArray,
-        rawScale: number[],
-        rawPosition: number[]
-    } {
+    getTransformInfo() {
         const roamTransform = this._roamTransformable.transform;
         const rawTransformable = this._rawTransformable;
         return {
             roamTransform: roamTransform ? zrUtil.slice(roamTransform) : matrix.create(),
-            rawScale: zrUtil.slice(rawTransformable.scale),
-            rawPosition: zrUtil.slice(rawTransformable.position)
+            rawScaleX: rawTransformable.scaleX,
+            rawScaleY: rawTransformable.scaleY,
+            rawX: rawTransformable.x,
+            rawY: rawTransformable.y
         };
     }
 

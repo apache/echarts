@@ -238,7 +238,7 @@ class ContinuousView extends VisualMapView {
             onDrift,
             onDragEnd
         );
-        handleThumb.position[0] = itemSize[0];
+        handleThumb.x = itemSize[0];
         barGroup.add(handleThumb);
 
         // Text is always horizontal layout but should not be effected by
@@ -284,7 +284,7 @@ class ContinuousView extends VisualMapView {
         orient: Orient
     ) {
         const indicator = createPolygon([[0, 0]], 'move');
-        indicator.position[0] = itemSize[0];
+        indicator.x = itemSize[0];
         indicator.attr({invisible: true, silent: true});
         barGroup.add(indicator);
 
@@ -508,12 +508,12 @@ class ContinuousView extends VisualMapView {
 
         return new graphic.Group(
             (orient === 'horizontal' && !inverse)
-            ? {scale: itemAlign === 'bottom' ? [1, 1] : [-1, 1], rotation: Math.PI / 2}
+            ? {scaleX: itemAlign === 'bottom' ? 1 : -1, rotation: Math.PI / 2}
             : (orient === 'horizontal' && inverse)
-            ? {scale: itemAlign === 'bottom' ? [-1, 1] : [1, 1], rotation: -Math.PI / 2}
+            ? {scaleX: itemAlign === 'bottom' ? -1 : 1, rotation: -Math.PI / 2}
             : (orient === 'vertical' && !inverse)
-            ? {scale: itemAlign === 'left' ? [1, -1] : [-1, -1]}
-            : {scale: itemAlign === 'left' ? [1, 1] : [-1, 1]}
+            ? {scaleX: itemAlign === 'left' ? 1 : -1, scaleY: -1}
+            : {scaleX: itemAlign === 'left' ? 1 : -1}
         );
     }
 
@@ -530,7 +530,7 @@ class ContinuousView extends VisualMapView {
         each([0, 1], function (handleIndex) {
             const handleThumb = handleThumbs[handleIndex];
             handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
-            handleThumb.position[1] = handleEnds[handleIndex];
+            handleThumb.y = handleEnds[handleIndex];
 
             // Update handle label position.
             const textPoint = graphic.applyTransform(
@@ -570,7 +570,7 @@ class ContinuousView extends VisualMapView {
             return;
         }
 
-        indicator.position[1] = pos;
+        indicator.y = pos;
         indicator.attr('invisible', false);
         indicator.setShape('points', createIndicatorPoints(
             !!rangeSymbol, halfHoverLinkSize, pos, itemSize[1]

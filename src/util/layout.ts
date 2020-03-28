@@ -73,7 +73,6 @@ function boxLayout(
     let currentLineMaxSize = 0;
 
     group.eachChild(function (child, idx) {
-        const position = child.position;
         const rect = child.getBoundingRect();
         const nextChild = group.childAt(idx + 1);
         const nextChildRect = nextChild && nextChild.getBoundingRect();
@@ -115,8 +114,8 @@ function boxLayout(
             return;
         }
 
-        position[0] = x;
-        position[1] = y;
+        child.x = x;
+        child.y = y;
 
         orient === 'horizontal'
             ? (x = nextX + gap)
@@ -379,11 +378,18 @@ export function positionElement(
     // Because 'tranlate' is the last step in transform
     // (see zrender/core/Transformable#getLocalTransform),
     // we can just only modify el.position to get final result.
-    const elPos = el.position;
     const dx = h ? layoutRect.x - rect.x : 0;
     const dy = v ? layoutRect.y - rect.y : 0;
 
-    el.attr('position', boundingMode === 'raw' ? [dx, dy] : [elPos[0] + dx, elPos[1] + dy]);
+    if (boundingMode === 'raw') {
+        el.x = dx;
+        el.y = dy;
+    }
+    else {
+        el.x += dx;
+        el.y += dy;
+    }
+    el.markRedraw();
 }
 
 /**

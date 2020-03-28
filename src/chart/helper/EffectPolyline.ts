@@ -100,13 +100,14 @@ class EffectPolyline extends EffectLine {
             frame = Math.min(frame - 1, len - 2);
         }
 
-        vec2.lerp(
-            symbol.position, points[frame], points[frame + 1],
-            (t - offsets[frame]) / (offsets[frame + 1] - offsets[frame])
-        );
+        const p = (t - offsets[frame]) / (offsets[frame + 1] - offsets[frame]);
+        const p0 = points[frame];
+        const p1 = points[frame + 1];
+        symbol.x = p0[0] * (1 - p) + p * p1[0];
+        symbol.y = p0[1] * (1 - p) + p * p1[1];
 
-        const tx = points[frame + 1][0] - points[frame][0];
-        const ty = points[frame + 1][1] - points[frame][1];
+        const tx = p1[0] - p0[0];
+        const ty = p1[1] - p0[1];
         symbol.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
 
         this._lastFrame = frame;

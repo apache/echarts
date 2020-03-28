@@ -296,8 +296,8 @@ class ToolboxView extends ComponentView {
                 const rect = textContain.getBoundingRect(
                     titleText, RichText.makeFont(emphasisTextStyle)
                 );
-                const offsetX = icon.position[0] + group.position[0];
-                const offsetY = icon.position[1] + group.position[1] + itemSize;
+                const offsetX = icon.x + group.x;
+                const offsetY = icon.y + group.y + itemSize;
 
                 let needPutOnTop = false;
                 if (offsetY + rect.height > api.getHeight()) {

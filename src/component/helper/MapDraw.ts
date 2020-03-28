@@ -139,9 +139,6 @@ class MapDraw {
         group.decomposeTransform();
         group.dirty();
 
-        const scale = transformInfo.rawScale;
-        const position = transformInfo.rawPosition;
-
         regionsGroup.removeAll();
 
         const itemStyleAccessPath = ['itemStyle'] as const;
@@ -195,10 +192,14 @@ class MapDraw {
                 }
             }
 
+            const sx = transformInfo.rawScaleX;
+            const sy = transformInfo.rawScaleY;
+            const offsetX = transformInfo.rawX;
+            const offsetY = transformInfo.rawY;
             const transformPoint = function (point: number[]): number[] {
                 return [
-                    point[0] * scale[0] + position[0],
-                    point[1] * scale[1] + position[1]
+                    point[0] * sx + offsetX,
+                    point[1] * sy + offsetY
                 ];
             };
 
@@ -258,13 +259,16 @@ class MapDraw {
                     labelFetcher = mapOrGeoModel;
                 }
 
+                const centerPt = transformPoint(region.center);
                 const textEl = new graphic.Text({
-                    position: transformPoint(region.center.slice()),
+                    x: centerPt[0],
+                    y: centerPt[1],
                     // FIXME
                     // label rotation is not support yet in geo or regions of series-map
                     // that has no data. The rotation will be effected by this `scale`.
                     // So needed to change to RectText?
-                    scale: [1 / group.scale[0], 1 / group.scale[1]],
+                    scaleX: 1 / group.scaleX,
+                    scaleY: 1 / group.scaleY,
                     z2: 10,
                     silent: true
                 });
@@ -390,10 +394,11 @@ class MapDraw {
             }));
 
             if (this._updateGroup) {
-                const scale = this.group.scale;
+                const group = this.group;
                 this._regionsGroup.traverse(function (el) {
                     if (el.type === 'text') {
-                        el.attr('scale', [1 / scale[0], 1 / scale[1]]);
+                        el.scaleX = 1 / group.scaleX;
+                        el.scaleY = 1 / group.scaleY;
                     }
                 });
             }

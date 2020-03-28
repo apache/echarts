@@ -154,7 +154,8 @@ class AxisBuilder {
 
         // FIXME Not use a seperate text group?
         const transformGroup = new graphic.Group({
-            position: opt.position.slice(),
+            x: opt.position[0],
+            y: opt.position[1],
             rotation: opt.rotation
         });
 
@@ -325,14 +326,11 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
                     // Calculate arrow position with offset
                     const r = point.r + point.offset;
-                    const pos = [
-                        pt1[0] + r * Math.cos(opt.rotation),
-                        pt1[1] - r * Math.sin(opt.rotation)
-                    ];
 
                     symbol.attr({
                         rotation: point.rotate,
-                        position: pos,
+                        x: pt1[0] + r * Math.cos(opt.rotation),
+                        y: pt1[1] - r * Math.sin(opt.rotation),
                         silent: true,
                         z2: 11
                     });
@@ -425,7 +423,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         formatterParams[mainType + 'Index' as AxisIndexKey] = axisModel.componentIndex;
 
         const textEl = new graphic.Text({
-            position: pos,
+            x: pos[0],
+            y: pos[1],
             rotation: labelLayout.rotation,
             silent: AxisBuilder.isLabelSilent(axisModel),
             style: graphic.createTextStyle(textStyleModel, {
@@ -767,13 +766,10 @@ function buildAxisLabel(
             || axisModel.get(['axisLine', 'lineStyle', 'color']);
 
         const tickCoord = axis.dataToCoord(tickValue);
-        const pos = [
-            tickCoord,
-            opt.labelOffset + opt.labelDirection * labelMargin
-        ];
 
         const textEl = new graphic.Text({
-            position: pos,
+            x: tickCoord,
+            y: opt.labelOffset + opt.labelDirection * labelMargin,
             rotation: labelLayout.rotation,
             silent: silent,
             z2: 10,

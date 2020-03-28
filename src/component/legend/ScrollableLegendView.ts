@@ -223,7 +223,9 @@ class ScrollableLegendView extends LegendView {
             mainRect[hw] = Math.max(mainRect[hw], selectorRect[hw]);
             mainRect[yx] = Math.min(mainRect[yx], selectorRect[yx] + selectorPos[1 - orientIdx]);
 
-            selectorGroup.attr('position', selectorPos);
+            selectorGroup.x = selectorPos[0];
+            selectorGroup.y = selectorPos[1];
+            selectorGroup.markRedraw();
         }
 
         return mainRect;
@@ -267,7 +269,7 @@ class ScrollableLegendView extends LegendView {
         // If first rendering, `contentGroup.position` is [0, 0], which
         // does not make sense and may cause unexepcted animation if adopted.
         if (!isFirstRender) {
-            contentPos[orientIdx] = contentGroup.position[orientIdx];
+            contentPos[orientIdx] = contentGroup[yx];
         }
 
         // Layout container group based on 0.
@@ -293,9 +295,9 @@ class ScrollableLegendView extends LegendView {
         // Always align controller to content as 'middle'.
         controllerPos[1 - orientIdx] += contentRect[hw] / 2 - controllerRect[hw] / 2;
 
-        contentGroup.attr('position', contentPos);
-        containerGroup.attr('position', containerPos);
-        controllerGroup.attr('position', controllerPos);
+        contentGroup.setPosition(contentPos);
+        containerGroup.setPosition(containerPos);
+        controllerGroup.setPosition(controllerPos);
 
         // Calculate `mainRect` and set `clipPath`.
         // mainRect should not be calculated by `this.group.getBoundingRect()`
@@ -333,7 +335,7 @@ class ScrollableLegendView extends LegendView {
         const pageInfo = this._getPageInfo(legendModel);
         pageInfo.pageIndex != null && graphic.updateProps(
             contentGroup,
-            {position: pageInfo.contentPosition},
+            { x: pageInfo.contentPosition[0], y: pageInfo.contentPosition[1] },
             // When switch from "show controller" to "not show controller", view should be
             // updated immediately without animation, otherwise causes weird effect.
             showController ? legendModel : null
@@ -417,7 +419,7 @@ class ScrollableLegendView extends LegendView {
         const pCount = !itemCount ? 0 : 1;
 
         const result: PageInfo = {
-            contentPosition: zrUtil.slice(contentGroup.position),
+            contentPosition: [contentGroup.x, contentGroup.y],
             pageCount: pCount,
             pageIndex: pCount - 1,
             pagePrevDataIndex: null,
@@ -504,7 +506,7 @@ class ScrollableLegendView extends LegendView {
         function getItemInfo(el: Element): ItemInfo {
             if (el) {
                 const itemRect = el.getBoundingRect();
-                const start = itemRect[xy] + el.position[orientIdx];
+                const start = itemRect[xy] + el[xy];
                 return {
                     s: start,
                     e: start + itemRect[wh],

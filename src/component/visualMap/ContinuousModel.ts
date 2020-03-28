@@ -263,7 +263,8 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
     static defaultOption = inheritDefaultOption(VisualMapModel.defaultOption, {
         align: 'auto',           // 'auto', 'left', 'right', 'top', 'bottom'
         calculable: false,
-        hoverLink: true
+        hoverLink: true,
+        realtime: true
     }) as ContinousVisualMapOption;
 }
 

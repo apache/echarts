@@ -296,9 +296,8 @@ class SunburstPiece extends graphic.Group {
             opacity: getLabelAttr('opacity')
         });
 
-        const textX = r * dx + layout.cx;
-        const textY = r * dy + layout.cy;
-        label.attr('position', [textX, textY]);
+        label.x = r * dx + layout.cx;
+        label.y = r * dy + layout.cy;
 
         const rotateType = getLabelAttr('rotate');
         let rotate = 0;

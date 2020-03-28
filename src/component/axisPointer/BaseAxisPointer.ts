@@ -26,7 +26,6 @@ import * as throttleUtil from '../../util/throttle';
 import {makeInner} from '../../util/model';
 import { AxisPointer } from './AxisPointer';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { VectorArray } from 'zrender/src/core/vector';
 import ExtensionAPI from '../../ExtensionAPI';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Element from 'zrender/src/Element';
@@ -45,7 +44,8 @@ const bind = zrUtil.bind;
 
 type Icon = ReturnType<typeof graphic.createIcon>;
 interface Transform {
-    position: VectorArray,
+    x: number,
+    y: number,
     rotation: number
 }
 
@@ -323,7 +323,8 @@ class BaseAxisPointer implements AxisPointer {
                 // be used on shape, otherwise the effect will be weird.
                 // TODOTODO
                 // shape: elOption.label.shape,
-                position: elOption.label.position
+                x: elOption.label.x,
+                y: elOption.label.y
             });
 
             updateLabelShowHide(labelEl, axisPointerModel);
@@ -383,7 +384,8 @@ class BaseAxisPointer implements AxisPointer {
         if (!zrUtil.isArray(handleSize)) {
             handleSize = [handleSize, handleSize];
         }
-        (handle as graphic.Path).attr('scale', [handleSize[0] / 2, handleSize[1] / 2]);
+        handle.scaleX = handleSize[0] / 2;
+        handle.scaleY = handleSize[1] / 2;
 
         throttleUtil.createOrUpdate(
             this,
@@ -549,7 +551,8 @@ function updateLabelShowHide(labelEl: Element, axisPointerModel: AxisPointerMode
 
 function getHandleTransProps(trans: Transform): Transform {
     return {
-        position: trans.position.slice(),
+        x: trans.x || 0,
+        y: trans.y || 0,
         rotation: trans.rotation || 0
     };
 }

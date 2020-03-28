@@ -121,7 +121,8 @@ interface ReRoot {
 }
 
 interface LastCfg {
-    oldPos?: graphic.Group['position']
+    oldX?: number
+    oldY?: number
     oldShape?: graphic.Rect['shape']
     fadein: boolean
 }
@@ -218,7 +219,8 @@ class TreemapView extends ChartView {
             this._initEvents(containerGroup);
             this.group.add(containerGroup);
         }
-        containerGroup.attr('position', [layoutInfo.x, layoutInfo.y]);
+        containerGroup.x = layoutInfo.x;
+        containerGroup.y = layoutInfo.y;
 
         return containerGroup;
     }
@@ -403,7 +405,7 @@ class TreemapView extends ChartView {
                     }
 
                     target = storageName === 'nodeGroup'
-                        ? {position: [targetX, targetY], style: {opacity: 0}}
+                        ? {x: targetX, y: targetY, style: {opacity: 0}}
                         : {
                             shape: {x: targetX, y: targetY, width: 0, height: 0},
                             style: {opacity: 0}
@@ -425,9 +427,11 @@ class TreemapView extends ChartView {
                 }
 
                 if (el instanceof graphic.Group) {
-                    if (last.oldPos) {
-                        target.position = el.position.slice();
-                        el.attr('position', last.oldPos);
+                    if (last.oldX != null) {
+                        target.x = el.x;
+                        target.y = el.y;
+                        el.x = last.oldX;
+                        el.y = last.oldY;
                     }
                 }
                 else {
@@ -799,7 +803,8 @@ function renderNode(
 
     parentGroup.add(group);
     // x,y are not set when el is above view root.
-    group.attr('position', [thisLayout.x || 0, thisLayout.y || 0]);
+    group.x = thisLayout.x || 0;
+    group.y = thisLayout.y || 0;
     inner(group).nodeWidth = thisWidth;
     inner(group).nodeHeight = thisHeight;
 
@@ -1013,7 +1018,8 @@ function renderNode(
     function prepareAnimationWhenHasOld(lasts: LastCfg[], element: graphic.Group | graphic.Rect) {
         const lastCfg = lasts[thisRawIndex] = {} as LastCfg;
         if (element instanceof Group) {
-            lastCfg.oldPos = element.position.slice();
+            lastCfg.oldX = element.x;
+            lastCfg.oldY = element.y;
         }
         else {
             lastCfg.oldShape = extend({}, element.shape);
@@ -1042,7 +1048,8 @@ function renderNode(
             // When no parent old shape found, its parent is new too,
             // so we can just use {x:0, y:0}.
             if (isGroup) {
-                lastCfg.oldPos = [0, parentOldY];
+                lastCfg.oldX = 0;
+                lastCfg.oldY = parentOldY;
             }
             else {
                 lastCfg.oldShape = {x: parentOldX, y: parentOldY, width: 0, height: 0};

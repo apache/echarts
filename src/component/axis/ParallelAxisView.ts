@@ -143,7 +143,8 @@ class ParallelAxisView extends ComponentView {
             .mount({
                 enableGlobalPan: true,
                 rotation: builderOpt.rotation,
-                position: builderOpt.position
+                x: builderOpt.position[0],
+                y: builderOpt.position[1]
             })
             .setPanels([{
                 panelId: 'pl',
