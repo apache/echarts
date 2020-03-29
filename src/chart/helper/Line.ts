@@ -303,11 +303,11 @@ class Line extends graphic.Group {
     }
 
     highlight() {
-        this.trigger('emphasis');
+        graphic.enterEmphasis(this);
     }
 
     downplay() {
-        this.trigger('normal');
+        graphic.leaveEmphasis(this);
     }
 
     updateLayout(lineData: List, idx: number) {

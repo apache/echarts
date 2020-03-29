@@ -358,36 +358,43 @@ function liftColor(color: string): string {
     return liftedColor;
 }
 
-function singleEnterEmphasis(el: Displayable) {
+function singleEnterEmphasis(el: Element) {
+
+    (el as ExtendedElement).__highlighted = true;
+
+    // el may be an array.
     if (!el.states.emphasis) {
         return;
     }
-
-    const emphasisStyle = el.states.emphasis.style;
-    const currentFill = el.style && el.style.fill;
-    const currentStroke = el.style && el.style.stroke;
+    const disp = el as Displayable;
+    const emphasisStyle = disp.states.emphasis.style;
+    const currentFill = disp.style && disp.style.fill;
+    const currentStroke = disp.style && disp.style.stroke;
 
     el.useState('emphasis');
 
-    if (emphasisStyle && !hasFillOrStroke(emphasisStyle.fill)) {
-        el.style.fill = liftColor(currentFill);
-    }
-    if (emphasisStyle && !hasFillOrStroke(emphasisStyle.stroke)) {
-        el.style.stroke = liftColor(currentStroke);
+    if (disp.style) { // Is not group
+        if (emphasisStyle && !hasFillOrStroke(emphasisStyle.fill)) {
+            disp.style.fill = liftColor(currentFill);
+        }
+        if (emphasisStyle && !hasFillOrStroke(emphasisStyle.stroke)) {
+            disp.style.stroke = liftColor(currentStroke);
+        }
+        disp.z2 += Z2_EMPHASIS_LIFT;
     }
 
-    el.z2 += Z2_EMPHASIS_LIFT;
     const textContent = el.getTextContent();
     if (textContent) {
         textContent.z2 += Z2_EMPHASIS_LIFT;
     }
-
     // TODO hover layer
 }
 
 
-function singleEnterNormal(el: Displayable) {
+function singleEnterNormal(el: Element) {
     el.clearStates();
+
+    (el as ExtendedElement).__highlighted = false;
 }
 
 function traverseUpdate<T>(
@@ -433,32 +440,32 @@ export function enableElementHoverEmphasis(el: Displayable, hoverStl?: ZRStylePr
     }
 }
 
-function onElementMouseOver(this: ExtendedDisplayable, e: ElementEvent) {
-    !shouldSilent(this, e)
+export function enterEmphasisWhenMouseOver(el: Element, e: ElementEvent) {
+    !shouldSilent(el, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
-        && !this.__highByOuter
-        && traverseUpdate(this, singleEnterEmphasis);
+        && !(el as ExtendedElement).__highByOuter
+        && traverseUpdate((el as ExtendedElement), singleEnterEmphasis);
 }
 
-function onElementMouseOut(this: ExtendedDisplayable, e: ElementEvent) {
-    !shouldSilent(this, e)
+export function leaveEmphasisWhenMouseOut(el: Element, e: ElementEvent) {
+    !shouldSilent(el, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
-        && !this.__highByOuter
-        && traverseUpdate(this, singleEnterNormal);
+        && !(el as ExtendedElement).__highByOuter
+        && traverseUpdate((el as ExtendedElement), singleEnterNormal);
 }
 
-function onElementEmphasisEvent(this: ExtendedDisplayable, highlightDigit: number) {
-    this.__highByOuter |= 1 << (highlightDigit || 0);
-    traverseUpdate(this, singleEnterEmphasis);
+export function enterEmphasis(el: Element, highlightDigit?: number) {
+    (el as ExtendedElement).__highByOuter |= 1 << (highlightDigit || 0);
+    traverseUpdate((el as ExtendedElement), singleEnterEmphasis);
 }
 
-function onElementNormalEvent(this: ExtendedDisplayable, highlightDigit: number) {
-    !(this.__highByOuter &= ~(1 << (highlightDigit || 0)))
-        && traverseUpdate(this, singleEnterNormal);
+export function leaveEmphasis(el: Element, highlightDigit?: number) {
+    !((el as ExtendedElement).__highByOuter &= ~(1 << (highlightDigit || 0)))
+        && traverseUpdate((el as ExtendedElement), singleEnterNormal);
 }
 
-function shouldSilent(el: ExtendedDisplayable, e: ElementEvent) {
-    return el.__highDownSilentOnTouch && e.zrByTouch;
+function shouldSilent(el: Element, e: ElementEvent) {
+    return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
 }
 
 /**
@@ -471,10 +478,10 @@ function shouldSilent(el: ExtendedDisplayable, e: ElementEvent) {
  * (1)
  * Call the method for a "root" element once. Do not call it for each descendants.
  * If the descendants elemenets of a group has itself hover style different from the
- * root group, we can simply mount the style on `el.hoverStyle` for them, but should
+ * root group, we can simply mount the style on `el.states.emphasis` for them, but should
  * not call this method for them.
  *
- * (2) These input parameters can be set directly on `el`:
+ * (2) The given hover style will replace the style in emphasis state already exists.
  */
 export function enableHoverEmphasis(el: Element, hoverStyle?: ZRStyleProps) {
     setAsHighDownDispatcher(el, true);
@@ -530,12 +537,9 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.
     if (!disable || extendedEl.__highDownDispatcher) {
-        const method: 'on' | 'off' = disable ? 'off' : 'on';
 
-        // Duplicated function will be auto-ignored, see Eventful.js.
-        el[method]('mouseover', onElementMouseOver)[method]('mouseout', onElementMouseOut);
         // Emphasis, normal can be triggered manually by API or other components like hover link.
-        el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
+        // el[method]('emphasis', onElementEmphasisEvent)[method]('normal', onElementNormalEvent);
         // Also keep previous record.
         extendedEl.__highByOuter = extendedEl.__highByOuter || 0;
 
@@ -624,19 +628,17 @@ export function setLabelStyle<LDI>(
             baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
         }
     }
-    const normalStyleText = showNormal ? baseText : null;
-    const emphasisStyleText = showEmphasis
-        ? retrieve2(
-            labelFetcher
-                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
-                : null,
-            baseText
-        )
-        : null;
+    const normalStyleText = baseText;
+    const emphasisStyleText = retrieve2(
+        labelFetcher
+            ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
+            : null,
+        baseText
+    );
 
     let richText = isSetOnRichText ? targetEl as RichText : null;
     // Optimize: If style.text is null, text will not be drawn.
-    if (normalStyleText != null || emphasisStyleText != null) {
+    if (showNormal || showEmphasis) {
         if (!isSetOnRichText) {
             // Reuse the previous
             richText = targetEl.getTextContent();
@@ -644,11 +646,11 @@ export function setLabelStyle<LDI>(
                 richText = new RichText();
                 targetEl.setTextContent(richText);
             }
-            richText.ignore = !normalStyleText;
         }
+        richText.ignore = !showNormal;
 
         const emphasisState = richText.ensureState('emphasis');
-        emphasisState.ignore = !emphasisStyleText;
+        emphasisState.ignore = !showEmphasis;
 
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.

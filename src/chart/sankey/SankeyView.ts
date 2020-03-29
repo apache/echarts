@@ -156,11 +156,11 @@ class SankeyPath extends graphic.Path<SankeyPathProps> {
     }
 
     highlight() {
-        this.trigger('emphasis');
+        graphic.enterEmphasis(this);
     }
 
     downplay() {
-        this.trigger('normal');
+        graphic.leaveEmphasis(this);
     }
 }
 
@@ -346,11 +346,11 @@ class SankeyView extends ChartView {
             }
 
             el.highlight = function () {
-                this.trigger('emphasis');
+                graphic.enterEmphasis(this);
             };
 
             el.downplay = function () {
-                this.trigger('normal');
+                graphic.leaveEmphasis(this);
             };
 
             el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);

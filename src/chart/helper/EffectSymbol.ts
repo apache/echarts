@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
-import {Group, Path} from '../../util/graphic';
+import {Group, Path, enterEmphasis, leaveEmphasis} from '../../util/graphic';
 import {parsePercent} from '../../util/number';
 import SymbolClz from './Symbol';
 import List from '../../data/List';
@@ -151,14 +151,14 @@ class EffectSymbol extends Group {
      * Highlight symbol
      */
     highlight() {
-        this.trigger('emphasis');
+        enterEmphasis(this);
     }
 
     /**
      * Downplay symbol
      */
     downplay() {
-        this.trigger('normal');
+        leaveEmphasis(this);
     }
 
     /**

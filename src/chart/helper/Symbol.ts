@@ -131,14 +131,14 @@ class Symbol extends graphic.Group {
      * Highlight symbol
      */
     highlight() {
-        this.childAt(0).trigger('emphasis');
+        graphic.enterEmphasis(this.childAt(0));
     }
 
     /**
      * Downplay symbol
      */
     downplay() {
-        this.childAt(0).trigger('normal');
+        graphic.leaveEmphasis(this.childAt(0));
     }
 
     /**
@@ -363,8 +363,8 @@ function highDownOnUpdate(this: ECSymbol, fromState: DisplayState, toState: Disp
     if (toState === 'emphasis') {
         const ratio = scale[1] / scale[0];
         const emphasisOpt = {
-            x: Math.max(scale[0] * 1.1, scale[0] + 3),
-            y: Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
+            scaleX: Math.max(scale[0] * 1.1, scale[0] + 3),
+            scaleY: Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
         };
         // FIXME
         // modify it after support stop specified animation.

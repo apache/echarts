@@ -621,13 +621,13 @@ function createOrUpdateRepeatSymbols(
 
     function onMouseOver() {
         eachPath(bar, function (path) {
-            path.trigger('emphasis');
+            graphic.enterEmphasis(path);
         });
     }
 
     function onMouseOut() {
         eachPath(bar, function (path) {
-            path.trigger('normal');
+            graphic.leaveEmphasis(path);
         });
     }
 }
@@ -685,11 +685,11 @@ function createOrUpdateSingleSymbol(
     updateHoverAnimation(mainPath, symbolMeta);
 
     function onMouseOver(this: typeof mainPath) {
-        this.trigger('emphasis');
+        graphic.enterEmphasis(this);
     }
 
     function onMouseOut(this: typeof mainPath) {
-        this.trigger('normal');
+        graphic.leaveEmphasis(this);
     }
 }
 

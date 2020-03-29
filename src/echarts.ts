@@ -61,7 +61,8 @@ import {
     ECUnitOption,
     ZRColor,
     ComponentMainType,
-    ComponentSubType
+    ComponentSubType,
+    ZRElementEvent
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -1602,6 +1603,7 @@ class ECharts extends Eventful {
                 componentView.render(componentModel, ecModel, api, payload);
 
                 updateZ(componentModel, componentView);
+                updateHoverEmphasisHandler(componentView);
             });
         };
 
@@ -1636,6 +1638,8 @@ class ECharts extends Eventful {
                 updateZ(seriesModel, chartView);
 
                 updateBlend(seriesModel, chartView);
+
+                updateHoverEmphasisHandler(chartView);
             });
             scheduler.unfinished |= unfinished;
 
@@ -1712,6 +1716,7 @@ class ECharts extends Eventful {
                     z != null && (el.z = z);
                     zlevel != null && (el.zlevel = zlevel);
 
+                    // TODO if textContent is on group.
                     const textContent = el.getTextContent();
                     if (textContent) {
                         textContent.z = el.z;
@@ -1721,6 +1726,29 @@ class ECharts extends Eventful {
                     }
                 }
             });
+        };
+
+        function getHighDownDispatcher(target: Element) {
+            while (target && !graphic.isHighDownDispatcher(target)) {
+                target = target.parent;
+            }
+            return target;
+        }
+        function onMouseOver(e: ZRElementEvent) {
+            const dispatcher = getHighDownDispatcher(e.target);
+            if (dispatcher) {
+                graphic.enterEmphasisWhenMouseOver(dispatcher, e);
+            }
+        }
+        function onMouseOut(e: ZRElementEvent) {
+            const dispatcher = getHighDownDispatcher(e.target);
+            if (dispatcher) {
+                graphic.leaveEmphasisWhenMouseOut(dispatcher, e);
+            }
+        }
+        updateHoverEmphasisHandler = function (view: ComponentView | ChartView): void {
+            view.group.on('mouseover', onMouseOver)
+                .on('mouseout', onMouseOut);
         };
 
         createExtensionAPI = function (ecIns: ECharts): ExtensionAPI {
@@ -1820,6 +1848,7 @@ let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
 let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
 let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
+let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (chart: ECharts) => void;
 

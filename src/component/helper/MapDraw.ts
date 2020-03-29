@@ -237,6 +237,9 @@ class MapDraw {
             compoundPath.style.strokeNoScale = true;
             compoundPath.culling = true;
 
+            const compoundPathEmphasisState = compoundPath.ensureState('emphasis');
+            compoundPathEmphasisState.style = hoverItemStyle;
+
             // Label
             const showLabel = labelModel.get('show');
             const hoverShowLabel = hoverLabelModel.get('show');
@@ -311,7 +314,7 @@ class MapDraw {
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
-            graphic.enableHoverEmphasis(regionGroup, hoverItemStyle);
+            graphic.enableHoverEmphasis(regionGroup);
 
             regionsGroup.add(regionGroup);
         });
