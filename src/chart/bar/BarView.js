@@ -140,8 +140,10 @@ export default echarts.extendChartView({
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, layout);
+                    var bgLayout = getLayout[coord.type](data, dataIndex, backgroundModel);
+                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
+                    bgEl.setShape('r', backgroundModel.get('barBorderRadius'));
                     bgEls[dataIndex] = bgEl;
                 }
 
