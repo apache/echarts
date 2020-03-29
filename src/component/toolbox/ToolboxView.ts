@@ -36,8 +36,8 @@ import {
     UserDefinedToolboxFeature
 } from './featureManager';
 import { getUID } from '../../util/component';
-import { RichText } from 'zrender/src/export';
 import Displayable from 'zrender/src/graphic/Displayable';
+import RichText from 'zrender/src/graphic/RichText';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 

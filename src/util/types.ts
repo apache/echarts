@@ -42,7 +42,7 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
+import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import RichText, { RichTextStyleProps } from 'zrender/src/graphic/RichText';
@@ -78,7 +78,7 @@ export type ZRElementEvent = ElementEvent;
 
 export type ZRRectLike = RectLike;
 
-export type ZRStyleProps = PathStyleProps | ImageStyleProps | TextStyleProps | RichTextStyleProps;
+export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | RichTextStyleProps;
 
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.

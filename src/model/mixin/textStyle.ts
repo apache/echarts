@@ -20,7 +20,7 @@
 import * as graphicUtil from '../../util/graphic';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
-import { RichText } from 'zrender/src/export';
+import RichText from 'zrender/src/graphic/RichText';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 

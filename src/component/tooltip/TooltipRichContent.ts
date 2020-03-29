@@ -18,8 +18,6 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-// import Group from 'zrender/src/graphic/Group';
-import Text from 'zrender/src/graphic/Text';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
