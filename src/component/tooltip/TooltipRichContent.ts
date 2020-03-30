@@ -25,7 +25,7 @@ import * as graphic from '../../util/graphic';
 import { Dictionary } from 'zrender/src/core/types';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
-import RichText, { RichTextStyleProps } from 'zrender/src/graphic/RichText';
+import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 
 class TooltipRichContent {
 
@@ -75,7 +75,7 @@ class TooltipRichContent {
             this._zr.remove(this.el);
         }
 
-        const markers: RichTextStyleProps['rich'] = {};
+        const markers: TextStyleProps['rich'] = {};
         let text = content;
         const prefix = '{marker';
         const suffix = '|}';
@@ -107,7 +107,7 @@ class TooltipRichContent {
             startId = text.indexOf('{marker');
         }
 
-        this.el = new RichText({
+        this.el = new ZRText({
             style: {
                 rich: markers,
                 text: content,

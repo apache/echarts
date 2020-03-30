@@ -37,7 +37,7 @@ import {
 } from './featureManager';
 import { getUID } from '../../util/component';
 import Displayable from 'zrender/src/graphic/Displayable';
-import RichText from 'zrender/src/graphic/RichText';
+import ZRText from 'zrender/src/graphic/Text';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -210,7 +210,7 @@ class ToolboxView extends ComponentView {
                 pathEmphasisState.style = iconStyleEmphasisModel.getItemStyle();
 
                 // Text position calculation
-                const textContent = new RichText({
+                const textContent = new ZRText({
                     style: {
                         text: titlesMap[iconName],
                         align: iconStyleEmphasisModel.get('textAlign'),
@@ -294,7 +294,7 @@ class ToolboxView extends ComponentView {
             if (emphasisTextState && titleText) {
                 const emphasisTextStyle = emphasisTextState.style || (emphasisTextState.style = {});
                 const rect = textContain.getBoundingRect(
-                    titleText, RichText.makeFont(emphasisTextStyle)
+                    titleText, ZRText.makeFont(emphasisTextStyle)
                 );
                 const offsetX = icon.x + group.x;
                 const offsetY = icon.y + group.y + itemSize;

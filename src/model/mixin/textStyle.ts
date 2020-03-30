@@ -20,7 +20,7 @@
 import * as graphicUtil from '../../util/graphic';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
-import RichText from 'zrender/src/graphic/RichText';
+import ZRText from 'zrender/src/graphic/Text';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 
@@ -30,7 +30,7 @@ type LabelRectRelatedOption = Pick<LabelOption,
 > & LabelFontOption;
 
 // TODO Performance improvement?
-const tmpRichText = new RichText();
+const tmpRichText = new ZRText();
 class TextStyleMixin {
     /**
      * Get color property or get color from option.textStyle.color

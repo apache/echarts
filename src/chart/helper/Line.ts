@@ -27,7 +27,7 @@ import List from '../../data/List';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
-import { RichTextStyleProps } from 'zrender/src/graphic/RichText';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
@@ -38,8 +38,8 @@ export interface LineLabel extends graphic.Text {
 }
 
 interface InnerLineLabel extends LineLabel {
-    __align: RichTextStyleProps['align']
-    __verticalAlign: RichTextStyleProps['verticalAlign']
+    __align: TextStyleProps['align']
+    __verticalAlign: TextStyleProps['verticalAlign']
     __position: LineLabelOption['position']
     __labelDistance: number[]
 }

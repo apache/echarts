@@ -45,7 +45,7 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
-import RichText, { RichTextStyleProps } from 'zrender/src/graphic/RichText';
+import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 
@@ -78,7 +78,7 @@ export type ZRElementEvent = ElementEvent;
 
 export type ZRRectLike = RectLike;
 
-export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | RichTextStyleProps;
+export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | TextStyleProps;
 
 // ComponentFullType can be:
 //     'xxx.yyy': means ComponentMainType.ComponentSubType.
@@ -758,7 +758,7 @@ export interface LabelOption extends TextCommonOption {
     rotate?: number
     offset?: number[]
 
-    overflow?: RichTextStyleProps['overflow']
+    overflow?: TextStyleProps['overflow']
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)
@@ -829,7 +829,7 @@ interface PositionCallback {
          * Will be HTMLDivElement when renderMode is html
          * Otherwise it's graphic.Text
          */
-        el: HTMLDivElement | RichText | null,
+        el: HTMLDivElement | ZRText | null,
         /**
          * Rect of hover elements. Will be null if not hovered
          */

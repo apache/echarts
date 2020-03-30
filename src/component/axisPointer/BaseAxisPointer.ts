@@ -32,7 +32,7 @@ import Element from 'zrender/src/Element';
 import { VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
-import { RichTextProps } from 'zrender/src/graphic/RichText';
+import { TextProps } from 'zrender/src/graphic/Text';
 
 const inner = makeInner<{
     lastProp?: DisplayableProps
@@ -86,7 +86,7 @@ export interface AxisPointerElementOptions {
         type: 'Line' | 'Rect' | 'Circle' | 'Sector'
     }
 
-    label: RichTextProps
+    label: TextProps
 }
 /**
  * Base axis pointer class in 2D.

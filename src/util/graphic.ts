@@ -23,9 +23,9 @@ import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Transformable from 'zrender/src/core/Transformable';
-import ZImage, { ImageStyleProps } from 'zrender/src/graphic/Image';
+import ZRImage, { ImageStyleProps } from 'zrender/src/graphic/Image';
 import Group from 'zrender/src/graphic/Group';
-import RichText, { RichTextStyleProps } from 'zrender/src/graphic/RichText';
+import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import Circle from 'zrender/src/graphic/shape/Circle';
 import Sector from 'zrender/src/graphic/shape/Sector';
 import Ring from 'zrender/src/graphic/shape/Ring';
@@ -225,7 +225,7 @@ export function makeImage(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ) {
-    const path = new ZImage({
+    const path = new ZRImage({
         style: {
             image: imageUrl,
             x: rect.x,
@@ -588,24 +588,24 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
 
 /**
  * Set normal styles and emphasis styles about text on target element
- * If target is a RichText. It will create a new style object.
- * If target is other Element. It will create or reuse RichText which is attached on the target.
+ * If target is a ZRText. It will create a new style object.
+ * If target is other Element. It will create or reuse ZRText which is attached on the target.
  * And create a new style object.
  *
- * NOTICE: Because the style on RichText will be replaced with new(only x, y are keeped).
- * So please use the style on RichText after use this method.
+ * NOTICE: Because the style on ZRText will be replaced with new(only x, y are keeped).
+ * So please use the style on ZRText after use this method.
  */
 export function setLabelStyle<LDI>(
     targetEl: Element,
     normalModel: Model,
     emphasisModel: Model,
     opt?: SetLabelStyleOpt<LDI>,
-    normalSpecified?: RichTextStyleProps,
-    emphasisSpecified?: RichTextStyleProps
+    normalSpecified?: TextStyleProps,
+    emphasisSpecified?: TextStyleProps
     // TODO specified position?
 ) {
     opt = opt || EMPTY_OBJ;
-    const isSetOnRichText = targetEl instanceof RichText;
+    const isSetOnText = targetEl instanceof ZRText;
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
     const labelDimIndex = opt.labelDimIndex;
@@ -636,14 +636,14 @@ export function setLabelStyle<LDI>(
         baseText
     );
 
-    let richText = isSetOnRichText ? targetEl as RichText : null;
+    let richText = isSetOnText ? targetEl as ZRText : null;
     // Optimize: If style.text is null, text will not be drawn.
     if (showNormal || showEmphasis) {
-        if (!isSetOnRichText) {
+        if (!isSetOnText) {
             // Reuse the previous
             richText = targetEl.getTextContent();
             if (!richText) {
-                richText = new RichText();
+                richText = new ZRText();
                 targetEl.setTextContent(richText);
             }
         }
@@ -663,17 +663,17 @@ export function setLabelStyle<LDI>(
             normalSpecified,
             opt,
             false,
-            !isSetOnRichText
+            !isSetOnText
         );
         emphasisState.style = createTextStyle(
             emphasisModel,
             emphasisSpecified,
             opt,
             true,
-            !isSetOnRichText
+            !isSetOnText
         );
 
-        if (!isSetOnRichText) {
+        if (!isSetOnText) {
             // Always create new
             targetEl.setTextConfig(createTextConfig(
                 normalStyle,
@@ -717,12 +717,12 @@ export function setLabelStyle<LDI>(
  */
 export function createTextStyle(
     textStyleModel: Model,
-    specifiedTextStyle?: RichTextStyleProps,    // Can be overrided by settings in model.
+    specifiedTextStyle?: TextStyleProps,    // Can be overrided by settings in model.
     opt?: TextCommonParams,
     isEmphasis?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
-    const textStyle: RichTextStyleProps = {};
+    const textStyle: TextStyleProps = {};
     setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis, isAttached);
     specifiedTextStyle && extend(textStyle, specifiedTextStyle);
     // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
@@ -731,7 +731,7 @@ export function createTextStyle(
 }
 
 export function createTextConfig(
-    textStyle: RichTextStyleProps,
+    textStyle: TextStyleProps,
     textStyleModel: Model,
     opt?: TextCommonParams,
     isEmphasis?: boolean
@@ -796,7 +796,7 @@ export function createTextConfig(
  * to manage.)
  */
 function setTextStyleCommon(
-    textStyle: RichTextStyleProps,
+    textStyle: TextStyleProps,
     textStyleModel: Model,
     opt?: TextCommonParams,
     isEmphasis?: boolean,
@@ -823,7 +823,7 @@ function setTextStyleCommon(
     //     }
     // }
     const richItemNames = getRichItemNames(textStyleModel);
-    let richResult: RichTextStyleProps['rich'];
+    let richResult: TextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
         for (const name in richItemNames) {
@@ -905,7 +905,7 @@ const TEXT_PROPS_BOX = [
 ] as const;
 
 function setTokenTextStyle(
-    textStyle: RichTextStyleProps['rich'][string],
+    textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
     opt?: TextCommonParams,
@@ -1275,7 +1275,7 @@ export function createIcon(
     iconStr: string,    // Support 'image://' or 'path://' or direct svg path.
     opt?: Omit<DisplayableProps, 'style'>,
     rect?: ZRRectLike
-): SVGPath | ZImage {
+): SVGPath | ZRImage {
     const innerOpts: DisplayableProps = extend({rectHover: true}, opt);
     const style: ZRStyleProps = innerOpts.style = {strokeNoScale: true};
     rect = rect || {x: -1, y: -1, width: 2, height: 2};
@@ -1285,7 +1285,7 @@ export function createIcon(
             ? (
                 (style as ImageStyleProps).image = iconStr.slice(8),
                 defaults(style, rect),
-                new ZImage(innerOpts)
+                new ZRImage(innerOpts)
             )
             : (
                 makePath(
@@ -1397,8 +1397,8 @@ registerShape('arc', Arc);
 
 export {
     Group,
-    ZImage as Image,
-    RichText as Text,
+    ZRImage as Image,
+    ZRText as Text,
     Circle,
     Sector,
     Ring,

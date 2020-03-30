@@ -28,7 +28,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { LayoutOrient, OptionDataValueDate, ZRTextAlign, ZRTextVerticalAlign } from '../../util/types';
 import ComponentView from '../../view/Component';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
-import { RichTextStyleProps, RichTextProps } from 'zrender/src/graphic/RichText';
+import { TextStyleProps, TextProps } from 'zrender/src/graphic/Text';
 
 const MONTH_TEXT = {
     EN: [
@@ -261,7 +261,7 @@ class CalendarView extends ComponentView {
         orient: LayoutOrient,
         position: 'left' | 'right' | 'top' | 'bottom',
         margin: number
-    ): RichTextProps {
+    ): TextProps {
 
         let x = point[0];
         let y = point[1];
@@ -364,7 +364,7 @@ class CalendarView extends ComponentView {
         orient: LayoutOrient,
         position: 'start' | 'end',
         margin: number
-    ): RichTextStyleProps {
+    ): TextStyleProps {
         let align: ZRTextAlign = 'left';
         let vAlign: ZRTextVerticalAlign = 'top';
         let x = point[0];
@@ -465,7 +465,7 @@ class CalendarView extends ComponentView {
         position: 'start' | 'end',
         margin: number,
         cellSize: number[]
-    ): RichTextStyleProps {
+    ): TextStyleProps {
         let align: ZRTextAlign = 'center';
         let vAlign: ZRTextVerticalAlign = 'middle';
         let x = point[0];
