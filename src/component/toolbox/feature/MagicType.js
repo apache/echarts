@@ -174,7 +174,7 @@ proto.onclick = function (ecModel, api, type) {
         newTitle = isStack
             ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
             : zrUtil.clone(magicTypeLang.title);
-        // Change type to `tiled` if series is not stack
+        // Change type to `tiled` if series is not stack, fix #12359.
         if (!isStack) {
             type = 'tiled';
         }
