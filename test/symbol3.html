@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="https://api.map.baidu.com/api?v=3.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu&__ec_v__=20200330"></script>
+        <!-- <script src="https://www.echartsjs.com/examples/vendors/echarts/extension/bmap.js?_ec_v__=20200330"></script> -->
+    </head>
+    <body>
+        <div id="main0"></div>
+
+        <script>
+            require([
+                'echarts', 'extension/bmap'
+            ], function (echarts) {
+                var symbolIcon = 'data:image/png;base64,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';
+                var option = {
+                    bmap: {
+                        center: [116, 31],
+                        zoom: 7,
+                        roam: true
+                    },
+                    series: [{
+                        coordinateSystem: 'bmap',
+                        symbol: 'image://' + symbolIcon,
+                        symbolSize: [15, 30],
+                        symbolRotate: function(value, params) {
+                            return -value[2]
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            distance: 15,
+                            formatter: function(params) {
+                                return params.name + '(' + params.value[2] + 'deg)'
+                            },
+                            verticalAlign: 'middle',
+                            align: 'center',
+                            borderWidth: 1.25,
+                            borderRadius: 2,
+                            borderColor: '#14c4ba',
+                            backgroundColor: '#fff',
+                            padding: [5, 8, 3, 8],
+                            color: '#000'
+                        },
+                        data: [
+                            {
+                                name: 'car1',
+                                value: [121.15, 31.89, 30]
+                            },
+                            {
+                                name: 'car2',
+                                value: [117.781327, 32.608266, 120]
+                            },
+                            {
+                                name: 'car3',
+                                value: [117.5, 30.608266, 90]
+                            },
+                            {
+                                name: 'car4',
+                                value: [115.5, 30.2, 180]
+                            }
+                        ],
+                        encode: {
+                            value: 2
+                        },
+                        type: 'scatter'
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: 'Rotates the symbol as we need',
+                    option: option
+                });
+            });
+        </script>
+
+    </body>
+</html>
