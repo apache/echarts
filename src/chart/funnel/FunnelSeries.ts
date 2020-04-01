@@ -96,7 +96,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     static type = 'series.funnel' as const;
     type = FunnelSeriesModel.type;
 
-    useColorPaletteOnData: true;
+    useColorPaletteOnData = true;
 
     init(option: FunnelSeriesOption) {
         super.init.apply(this, arguments as any);

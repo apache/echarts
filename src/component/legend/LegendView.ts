@@ -578,6 +578,7 @@ function dispatchSelectAction(
         name: seriesName != null ? seriesName : dataName
     });
     // highlight after select
+    // TODO higlight immediately may cause animation loss.
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 

@@ -18,21 +18,15 @@
 */
 
 import * as graphic from '../../util/graphic';
-import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { DisplayState, ColorString } from '../../util/types';
-import Displayable from 'zrender/src/graphic/Displayable';
+import { ColorString } from '../../util/types';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
-type FunnelLabelEl = Displayable & {
-    hoverIgnore?: boolean
-    normalIgnore?: boolean
-};
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
@@ -51,21 +45,6 @@ class FunnelPiece extends graphic.Group {
         this.updateData(data, idx, true);
     }
 
-    onStateChange(fromState: DisplayState, toState: DisplayState) {
-
-        const labelLine = this.childAt(1) as graphic.Polyline;
-        const text = this.childAt(2) as graphic.Text;
-
-        if (toState === 'emphasis') {
-            labelLine.ignore = (labelLine as FunnelLabelEl).hoverIgnore;
-            text.ignore = (text as FunnelLabelEl).hoverIgnore;
-        }
-        else {
-            labelLine.ignore = (labelLine as FunnelLabelEl).normalIgnore;
-            text.ignore = (text as FunnelLabelEl).normalIgnore;
-        }
-    }
-
     updateData(data: List, idx: number, firstCreate?: boolean) {
 
         const polygon = this.childAt(0) as graphic.Polygon;
@@ -76,14 +55,16 @@ class FunnelPiece extends graphic.Group {
         let opacity = itemModel.get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
 
-        // Reset style
-        polygon.useStyle({});
+
+        // Update common style
+        polygon.useStyle(data.getItemVisual(idx, 'style'));
+        polygon.style.lineJoin = 'round';
 
         if (firstCreate) {
             polygon.setShape({
                 points: layout.points
             });
-            polygon.setStyle({opacity: 0});
+            polygon.style.opacity = 0;
             graphic.initProps(polygon, {
                 style: {
                     opacity: opacity
@@ -100,10 +81,6 @@ class FunnelPiece extends graphic.Group {
                 }
             }, seriesModel, idx);
         }
-
-        // Update common style
-        polygon.useStyle(data.getItemVisual(idx, 'style'));
-        polygon.style.lineJoin = 'round';
 
         const polygonEmphasisState = polygon.ensureState('emphasis');
         polygonEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
@@ -129,7 +106,7 @@ class FunnelPiece extends graphic.Group {
         const labelLineModel = itemModel.getModel('labelLine');
         const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
 
-        const visualColor = data.getItemVisual(idx, 'style').stroke as ColorString;
+        const visualColor = data.getItemVisual(idx, 'style').fill as ColorString;
 
         graphic.setLabelStyle(
             labelText, labelModel, labelHoverModel,
@@ -174,11 +151,13 @@ class FunnelPiece extends graphic.Group {
             z2: 10
         });
 
-        labelText.ignore = (labelText as FunnelLabelEl).normalIgnore = !labelModel.get('show');
-        (labelText as FunnelLabelEl).hoverIgnore = !labelHoverModel.get('show');
+        labelText.ignore = !labelModel.get('show');
+        const labelTextEmphasisState = labelText.ensureState('emphasis');
+        labelTextEmphasisState.ignore = !labelHoverModel.get('show');
 
-        labelLine.ignore = (labelLine as FunnelLabelEl).normalIgnore = !labelLineModel.get('show');
-        (labelLine as FunnelLabelEl).hoverIgnore = !labelLineHoverModel.get('show');
+        labelLine.ignore = !labelLineModel.get('show');
+        const labelLineEmphasisState = labelLine.ensureState('emphasis');
+        labelLineEmphasisState.ignore = !labelLineHoverModel.get('show');
 
         // Default use item visual color
         labelLine.setStyle({

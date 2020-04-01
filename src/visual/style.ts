@@ -84,7 +84,7 @@ const seriesStyleTask: StageHandler = {
         // TODO style callback
         const colorCallback = isFunction(color) ? color as unknown as ColorCallback : null;
         // Default
-        if (!globalStyle[colorKey] || colorCallback) {  // TODO Better handling on callback
+        if ((!globalStyle[colorKey] || colorCallback) && !seriesModel.useColorPaletteOnData) {
             globalStyle[colorKey] = seriesModel.getColorFromPalette(
                 // TODO series count changed.
                 seriesModel.name, null, ecModel.getSeriesCount()
@@ -96,17 +96,21 @@ const seriesStyleTask: StageHandler = {
 
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel)) {
-            if (colorCallback) {
-                return {
-                    dataEach(data, idx) {
-                        data.each(function (idx) {
-                            const dataParams = seriesModel.getDataParams(idx);
-                            const itemStyle = extend({}, globalStyle);
+            // if (colorCallback) {
+            return {
+                dataEach(data, idx) {
+                    data.each(function (idx) {
+                        const dataParams = seriesModel.getDataParams(idx);
+                        const itemStyle = extend({}, globalStyle);
+                        // FIXME share style may affect other elements when one changes it's style(for example in animation)
+                        if (colorCallback) {
                             itemStyle[colorKey] = colorCallback(dataParams);
-                        });
-                    }
-                };
-            }
+                        }
+                        data.setItemVisual(idx, 'style', itemStyle);
+                    });
+                }
+            };
+            // }
         }
     }
 };

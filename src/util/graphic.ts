@@ -377,15 +377,9 @@ function singleEnterEmphasis(el: Element) {
     }
     const disp = el as Displayable;
 
-    let emphasisStyle;
-    let currentFill;
-    let currentStroke;
-    // state may be a function
-    if (!(typeof disp.states.emphasis === 'function')) {
-        emphasisStyle = disp.states.emphasis.style;
-        currentFill = disp.style && disp.style.fill;
-        currentStroke = disp.style && disp.style.stroke;
-    }
+    const emphasisStyle = disp.states.emphasis.style;
+    const currentFill = disp.style && disp.style.fill;
+    const currentStroke = disp.style && disp.style.stroke;
 
     el.useState('emphasis');
 
