@@ -205,6 +205,7 @@ class Line extends graphic.Group {
         const visualColor = lineStyle.stroke;
 
         line.useStyle(lineStyle);
+        line.style.fill = null;
         line.style.strokeNoScale = true;
 
         const lineEmphasisState = line.ensureState('emphasis');

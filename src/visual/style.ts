@@ -99,15 +99,13 @@ const seriesStyleTask: StageHandler = {
             // if (colorCallback) {
             return {
                 dataEach(data, idx) {
-                    data.each(function (idx) {
-                        const dataParams = seriesModel.getDataParams(idx);
-                        const itemStyle = extend({}, globalStyle);
-                        // FIXME share style may affect other elements when one changes it's style(for example in animation)
-                        if (colorCallback) {
-                            itemStyle[colorKey] = colorCallback(dataParams);
-                        }
-                        data.setItemVisual(idx, 'style', itemStyle);
-                    });
+                    const dataParams = seriesModel.getDataParams(idx);
+                    const itemStyle = extend({}, globalStyle);
+                    // FIXME share style may affect other elements when one changes it's style(for example in animation)
+                    if (colorCallback) {
+                        itemStyle[colorKey] = colorCallback(dataParams);
+                    }
+                    data.setItemVisual(idx, 'style', itemStyle);
                 }
             };
             // }
