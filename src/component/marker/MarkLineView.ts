@@ -25,7 +25,7 @@ import MarkerView from './MarkerView';
 import {getStackedDimension} from '../../data/helper/dataStackHelper';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkLineModel, { MarkLine2DDataItemOption, MarkLineOption } from './MarkLineModel';
-import { ScaleDataValue } from '../../util/types';
+import { ScaleDataValue, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { __DEV__ } from '../../config';
 import { getECData } from '../../util/graphic';
@@ -48,6 +48,8 @@ import {
 } from 'zrender/src/core/util';
 import ComponentView from '../../view/Component';
 import { makeInner } from '../../util/model';
+import { LineDataVisual } from '../../visual/commonVisualTypes';
+import { getItemVisualFromData, getVisualFromData } from '../../visual/helper';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
@@ -308,7 +310,7 @@ class MarkLineView extends MarkerView {
 
         const fromData = mlData.from;
         const toData = mlData.to;
-        const lineData = mlData.line;
+        const lineData = mlData.line as List<MarkLineModel, LineDataVisual>;
 
         inner(mlModel).from = fromData;
         inner(mlModel).to = toData;
@@ -332,20 +334,26 @@ class MarkLineView extends MarkerView {
 
         // Update visual and layout of line
         lineData.each(function (idx) {
-            const lineColor = lineData.getItemModel<MarkLineMergedItemOption>(idx).get(['lineStyle', 'color']);
-            lineData.setItemVisual(idx, {
-                color: lineColor || fromData.getItemVisual(idx, 'color')
-            });
+            const lineStyle = lineData.getItemModel<MarkLineMergedItemOption>(idx)
+                .getModel('lineStyle').getLineStyle();
+            // lineData.setItemVisual(idx, {
+            //     color: lineColor || fromData.getItemVisual(idx, 'color')
+            // });
             lineData.setItemLayout(idx, [
                 fromData.getItemLayout(idx),
                 toData.getItemLayout(idx)
             ]);
 
+            if (lineStyle.stroke == null) {
+                lineStyle.stroke = getItemVisualFromData(fromData, idx, 'color') as ColorString;
+            }
+
             lineData.setItemVisual(idx, {
-                'fromSymbolSize': fromData.getItemVisual(idx, 'symbolSize'),
-                'fromSymbol': fromData.getItemVisual(idx, 'symbol'),
-                'toSymbolSize': toData.getItemVisual(idx, 'symbolSize'),
-                'toSymbol': toData.getItemVisual(idx, 'symbol')
+                fromSymbolSize: fromData.getItemVisual(idx, 'symbolSize') as number,
+                fromSymbol: fromData.getItemVisual(idx, 'symbol'),
+                toSymbolSize: toData.getItemVisual(idx, 'symbolSize') as number,
+                toSymbol: toData.getItemVisual(idx, 'symbol'),
+                style: lineStyle
             });
         });
 
@@ -370,10 +378,15 @@ class MarkLineView extends MarkerView {
                 data, idx, isFrom, seriesModel, api
             );
 
+            const style = itemModel.getModel('itemStyle').getItemStyle();
+            if (style.fill == null) {
+                style.fill = getVisualFromData(seriesData, 'color') as ColorString;
+            }
+
             data.setItemVisual(idx, {
                 symbolSize: itemModel.get('symbolSize') || (symbolSize as number[])[isFrom ? 0 : 1],
                 symbol: itemModel.get('symbol', true) || (symbolType as string[])[isFrom ? 0 : 1],
-                color: itemModel.get(['itemStyle', 'color']) || seriesData.getVisual('color')
+                style
             });
         }
 

@@ -30,79 +30,111 @@ import List from '../data/List';
 import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
 
-export default function (seriesType: string, defaultSymbolType: string, legendSymbol?: string): StageHandler {
-    // Encoding visual for all series include which is filtered for legend drawing
-    return {
-        seriesType: seriesType,
+// Encoding visual for all series include which is filtered for legend drawing
+const seriesSymbolTask: StageHandler = {
 
-        // For legend.
-        performRawSeries: true,
+    createOnAllSeries: true,
 
-        reset: function (
-            seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin<CallbackDataParams>>,
-            ecModel: GlobalModel
-        ) {
-            const data = seriesModel.getData();
+    // For legend.
+    performRawSeries: true,
 
-            const symbolType = seriesModel.get('symbol');
-            const symbolSize = seriesModel.get('symbolSize');
-            const keepAspect = seriesModel.get('symbolKeepAspect');
+    reset: function (
+        seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin<CallbackDataParams>>,
+        ecModel: GlobalModel
+    ) {
+        const data = seriesModel.getData();
 
-            const hasSymbolTypeCallback = isFunction(symbolType);
-            const hasSymbolSizeCallback = isFunction(symbolSize);
-            const hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
-            const seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : defaultSymbolType;
-            const seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
-
-            data.setVisual({
-                legendSymbol: legendSymbol || seriesSymbol,
-                // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
-                // to bring trouble, we do not pick a reuslt from one of its calling on data item here,
-                // but just use the default value. Callback on `symbol` or `symbolSize` is convenient in
-                // some cases but generally it is not recommanded.
-                symbol: seriesSymbol,
-                symbolSize: seriesSymbolSize,
-                symbolKeepAspect: keepAspect
-            });
-
-            // Only visible series has each data be visual encoded
-            if (ecModel.isSeriesFiltered(seriesModel)) {
-                return;
-            }
-
-            function dataEach(data: List, idx: number) {
-                if (hasCallback) {
-                    const rawValue = seriesModel.getRawValue(idx);
-                    const params = seriesModel.getDataParams(idx);
-                    hasSymbolTypeCallback && data.setItemVisual(
-                        idx, 'symbol', (symbolType as SymbolCallback<CallbackDataParams>)(rawValue, params)
-                    );
-                    hasSymbolSizeCallback && data.setItemVisual(
-                        idx, 'symbolSize', (symbolSize as SymbolSizeCallback<CallbackDataParams>)(rawValue, params)
-                    );
-                }
-
-                if (data.hasItemOption) {
-                    const itemModel = data.getItemModel<SymbolOptionMixin>(idx);
-                    const itemSymbolType = itemModel.getShallow('symbol', true);
-                    const itemSymbolSize = itemModel.getShallow('symbolSize', true);
-                    const itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
-
-                    // If has item symbol
-                    if (itemSymbolType != null) {
-                        data.setItemVisual(idx, 'symbol', itemSymbolType);
-                    }
-                    if (itemSymbolSize != null) {
-                        // PENDING Transform symbolSize ?
-                        data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
-                    }
-                    if (itemSymbolKeepAspect != null) {
-                        data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
-                    }
-                }
-            }
-
-            return { dataEach: (data.hasItemOption || hasCallback) ? dataEach : null };
+        if (seriesModel.legendSymbol) {
+            data.setVisual('legendSymbol', seriesModel.legendSymbol);
         }
-    };
-}
+
+        if (!seriesModel.hasSymbolVisual) {
+            return;
+        }
+
+        const symbolType = seriesModel.get('symbol');
+        const symbolSize = seriesModel.get('symbolSize');
+        const keepAspect = seriesModel.get('symbolKeepAspect');
+
+        const hasSymbolTypeCallback = isFunction(symbolType);
+        const hasSymbolSizeCallback = isFunction(symbolSize);
+        const hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
+        const seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : seriesModel.defaultSymbol;
+        const seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
+
+        data.setVisual({
+            legendSymbol: seriesModel.legendSymbol || seriesSymbol as string,
+            // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
+            // to bring trouble, we do not pick a reuslt from one of its calling on data item here,
+            // but just use the default value. Callback on `symbol` or `symbolSize` is convenient in
+            // some cases but generally it is not recommanded.
+            symbol: seriesSymbol as string,
+            symbolSize: seriesSymbolSize as number | number[],
+            symbolKeepAspect: keepAspect
+        });
+
+        // Only visible series has each data be visual encoded
+        if (ecModel.isSeriesFiltered(seriesModel)) {
+            return;
+        }
+
+        function dataEach(data: List, idx: number) {
+            const rawValue = seriesModel.getRawValue(idx);
+            const params = seriesModel.getDataParams(idx);
+            hasSymbolTypeCallback && data.setItemVisual(
+                idx, 'symbol', (symbolType as SymbolCallback<CallbackDataParams>)(rawValue, params)
+            );
+            hasSymbolSizeCallback && data.setItemVisual(
+                idx, 'symbolSize', (symbolSize as SymbolSizeCallback<CallbackDataParams>)(rawValue, params)
+            );
+        }
+
+        return { dataEach: hasCallback ? dataEach : null };
+    }
+};
+
+const dataSymbolTask: StageHandler = {
+
+    createOnAllSeries: true,
+
+    // For legend.
+    performRawSeries: true,
+
+    reset: function (
+        seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin<CallbackDataParams>>,
+        ecModel: GlobalModel
+    ) {
+        if (!seriesModel.hasSymbolVisual) {
+            return;
+        }
+        // Only visible series has each data be visual encoded
+        if (ecModel.isSeriesFiltered(seriesModel)) {
+            return;
+        }
+
+        const data = seriesModel.getData();
+
+        function dataEach(data: List, idx: number) {
+            const itemModel = data.getItemModel<SymbolOptionMixin>(idx);
+            const itemSymbolType = itemModel.getShallow('symbol', true);
+            const itemSymbolSize = itemModel.getShallow('symbolSize', true);
+            const itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
+
+            // If has item symbol
+            if (itemSymbolType != null) {
+                data.setItemVisual(idx, 'symbol', itemSymbolType);
+            }
+            if (itemSymbolSize != null) {
+                // PENDING Transform symbolSize ?
+                data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+            }
+            if (itemSymbolKeepAspect != null) {
+                data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
+            }
+        }
+
+        return { dataEach: data.hasItemOption ? dataEach : null };
+    }
+};
+
+export {seriesSymbolTask, dataSymbolTask};

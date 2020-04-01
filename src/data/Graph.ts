@@ -422,34 +422,34 @@ function createGraphDataProxyMixin<Host extends GraphEdge | GraphNode>(
         /**
          * @param Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
          */
-        getValue: function (this: Host, dimension?: DimensionLoose): ParsedValue {
+        getValue(this: Host, dimension?: DimensionLoose): ParsedValue {
             const data = this[hostName][dataName];
             return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
         },
-
-        setVisual: function (this: Host, key: string | Dictionary<any>, value?: any) {
+        // TODO: TYPE stricter type.
+        setVisual(this: Host, key: string | Dictionary<any>, value?: any) {
             this.dataIndex >= 0
-                && this[hostName][dataName].setItemVisual(this.dataIndex, key as string, value);
+                && this[hostName][dataName].setItemVisual(this.dataIndex, key as any, value);
         },
 
-        getVisual: function (this: Host, key: string, ignoreParent?: boolean) {
-            return this[hostName][dataName].getItemVisual(this.dataIndex, key, ignoreParent);
+        getVisual(this: Host, key: string) {
+            return this[hostName][dataName].getItemVisual(this.dataIndex, key as any);
         },
 
-        setLayout: function (this: Host, layout: any, merge?: boolean) {
+        setLayout(this: Host, layout: any, merge?: boolean) {
             this.dataIndex >= 0
                 && this[hostName][dataName].setItemLayout(this.dataIndex, layout, merge);
         },
 
-        getLayout: function (this: Host) {
+        getLayout(this: Host) {
             return this[hostName][dataName].getItemLayout(this.dataIndex);
         },
 
-        getGraphicEl: function (this: Host): Element {
+        getGraphicEl(this: Host): Element {
             return this[hostName][dataName].getItemGraphicEl(this.dataIndex);
         },
 
-        getRawIndex: function (this: Host) {
+        getRawIndex(this: Host) {
             return this[hostName][dataName].getRawIndex(this.dataIndex);
         }
     };

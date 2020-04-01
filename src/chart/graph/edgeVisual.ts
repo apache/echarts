@@ -19,12 +19,23 @@
 
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
+import { DefaultDataVisual } from '../../data/List';
+import { extend } from 'zrender/src/core/util';
 
+function normalize(a: string | string[]): string[];
+function normalize(a: number | number[]): number[];
 function normalize(a: string | number | (string | number)[]): (string | number)[] {
     if (!(a instanceof Array)) {
         a = [a, a];
     }
     return a;
+}
+
+interface EdgeLineDataVisual extends DefaultDataVisual {
+    fromSymbol: string
+    toSymbol: string
+    fromSymbolSize: number
+    toSymbolSize: number
 }
 
 export default function (ecModel: GlobalModel) {
@@ -34,15 +45,15 @@ export default function (ecModel: GlobalModel) {
         const symbolType = normalize(seriesModel.get('edgeSymbol'));
         const symbolSize = normalize(seriesModel.get('edgeSymbolSize'));
 
-        const colorQuery = ['lineStyle', 'color'] as const;
-        const opacityQuery = ['lineStyle', 'opacity'] as const;
+        // const colorQuery = ['lineStyle', 'color'] as const;
+        // const opacityQuery = ['lineStyle', 'opacity'] as const;
 
         edgeData.setVisual('fromSymbol', symbolType && symbolType[0]);
         edgeData.setVisual('toSymbol', symbolType && symbolType[1]);
         edgeData.setVisual('fromSymbolSize', symbolSize && symbolSize[0]);
         edgeData.setVisual('toSymbolSize', symbolSize && symbolSize[1]);
-        edgeData.setVisual('color', seriesModel.get(colorQuery));
-        edgeData.setVisual('opacity', seriesModel.get(opacityQuery));
+
+        edgeData.setVisual('style', seriesModel.getModel('itemStyle').getItemStyle());
 
         edgeData.each(function (idx) {
             const itemModel = edgeData.getItemModel<GraphEdgeItemOption>(idx);
@@ -50,24 +61,28 @@ export default function (ecModel: GlobalModel) {
             const symbolType = normalize(itemModel.getShallow('symbol', true));
             const symbolSize = normalize(itemModel.getShallow('symbolSize', true));
             // Edge visual must after node visual
-            let color = itemModel.get(colorQuery);
-            const opacity = itemModel.get(opacityQuery);
-            switch (color) {
-                case 'source':
-                    color = edge.node1.getVisual('color');
+            const style = itemModel.getModel('lineStyle').getLineStyle();
+
+            const existsStyle = edgeData.ensureUniqueItemVisual(idx, 'style');
+            extend(existsStyle, style);
+
+            switch (existsStyle.stroke) {
+                case 'source': {
+                    const nodeStyle = edge.node1.getVisual('style');
+                    existsStyle.stroke = nodeStyle && nodeStyle.fill;
                     break;
-                case 'target':
-                    color = edge.node2.getVisual('color');
+                }
+                case 'target': {
+                    const nodeStyle = edge.node2.getVisual('style');
+                    existsStyle.stroke = nodeStyle && nodeStyle.fill;
                     break;
+                }
             }
 
             symbolType[0] && edge.setVisual('fromSymbol', symbolType[0]);
             symbolType[1] && edge.setVisual('toSymbol', symbolType[1]);
             symbolSize[0] && edge.setVisual('fromSymbolSize', symbolSize[0]);
             symbolSize[1] && edge.setVisual('toSymbolSize', symbolSize[1]);
-
-            edge.setVisual('color', color);
-            edge.setVisual('opacity', opacity);
         });
     });
 }

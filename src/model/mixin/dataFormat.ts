@@ -20,7 +20,7 @@
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {getTooltipMarker, formatTpl} from '../../util/format';
 import { getTooltipRenderMode } from '../../util/model';
-import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams } from '../../util/types';
+import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString } from '../../util/types';
 import GlobalModel from '../Global';
 import Element from 'zrender/src/Element';
 
@@ -52,8 +52,9 @@ class DataFormatMixin {
         const rawDataIndex = data.getRawIndex(dataIndex);
         const name = data.getName(dataIndex);
         const itemOpt = data.getRawDataItem(dataIndex);
-        const color = data.getItemVisual(dataIndex, 'color');
-        const borderColor = data.getItemVisual(dataIndex, 'borderColor');
+        const style = data.getItemVisual(dataIndex, 'style');
+        const color = style && style.fill as ColorString;
+        const borderColor = style && style.stroke as ColorString;
         const tooltipModel = this.ecModel.getComponent('tooltip');
         // @ts-ignore FIXME:TooltipModel
         const renderModeOption = tooltipModel && tooltipModel.get('renderMode');

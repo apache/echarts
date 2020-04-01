@@ -21,6 +21,7 @@ import { StageHandler } from '../../util/types';
 import List from '../../data/List';
 import LinesSeriesModel, { LinesDataItemOption } from './LinesSeries';
 import Model from '../../model/Model';
+import { LineDataVisual } from '../../visual/commonVisualTypes';
 
 function normalize(a: string | string[]): string[];
 function normalize(a: number | number[]): number[];
@@ -31,33 +32,30 @@ function normalize(a: string | number | (string | number)[]): (string | number)[
     return a;
 }
 
-const opacityQuery = ['lineStyle', 'opacity'] as const;
-
 const linesVisual: StageHandler = {
     seriesType: 'lines',
     reset(seriesModel: LinesSeriesModel) {
         const symbolType = normalize(seriesModel.get('symbol'));
         const symbolSize = normalize(seriesModel.get('symbolSize'));
-        const data = seriesModel.getData();
+        const data = seriesModel.getData() as List<LinesSeriesModel, LineDataVisual>;
 
         data.setVisual('fromSymbol', symbolType && symbolType[0]);
         data.setVisual('toSymbol', symbolType && symbolType[1]);
         data.setVisual('fromSymbolSize', symbolSize && symbolSize[0]);
         data.setVisual('toSymbolSize', symbolSize && symbolSize[1]);
-        data.setVisual('opacity', seriesModel.get(opacityQuery));
 
-        function dataEach(data: List<LinesSeriesModel>, idx: number): void {
+        function dataEach(
+            data: List<LinesSeriesModel, LineDataVisual>,
+            idx: number
+        ): void {
             const itemModel = data.getItemModel(idx) as Model<LinesDataItemOption>;
             const symbolType = normalize(itemModel.getShallow('symbol', true));
             const symbolSize = normalize(itemModel.getShallow('symbolSize', true));
-            const opacity = itemModel.get(opacityQuery);
 
             symbolType[0] && data.setItemVisual(idx, 'fromSymbol', symbolType[0]);
             symbolType[1] && data.setItemVisual(idx, 'toSymbol', symbolType[1]);
             symbolSize[0] && data.setItemVisual(idx, 'fromSymbolSize', symbolSize[0]);
             symbolSize[1] && data.setItemVisual(idx, 'toSymbolSize', symbolSize[1]);
-
-            data.setItemVisual(idx, 'opacity', opacity);
         }
 
         return {

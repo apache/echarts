@@ -25,7 +25,6 @@ import './bar/PictorialBarSeries';
 import './bar/PictorialBarView';
 
 import { layout } from '../layout/barGrid';
-import visualSymbol from '../visual/symbol';
 
 // In case developer forget to include grid component
 import '../component/gridSimple';
@@ -33,4 +32,3 @@ import '../component/gridSimple';
 echarts.registerLayout(zrUtil.curry(
     layout, 'pictorialBar'
 ));
-echarts.registerVisual(visualSymbol('pictorialBar', 'roundRect'));

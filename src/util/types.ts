@@ -105,7 +105,7 @@ export interface ECElement extends Element {
         formatterParams?: unknown;
     };
     highDownSilentOnTouch?: boolean;
-    highDownOnUpdate?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+    onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
 }
 
 export interface DataHost {

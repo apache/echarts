@@ -24,7 +24,6 @@ import './graph/GraphView';
 import './graph/graphAction';
 
 import categoryFilter from './graph/categoryFilter';
-import visualSymbol from '../visual/symbol';
 import categoryVisual from './graph/categoryVisual';
 import edgeVisual from './graph/edgeVisual';
 import simpleLayout from './graph/simpleLayout';
@@ -35,7 +34,6 @@ import View from '../coord/View';
 
 echarts.registerProcessor(categoryFilter);
 
-echarts.registerVisual(visualSymbol('graph', 'circle', null));
 echarts.registerVisual(categoryVisual);
 echarts.registerVisual(edgeVisual);
 

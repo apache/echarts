@@ -20,19 +20,17 @@
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import List from '../../data/List';
-import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
+import ParallelSeriesModel from './ParallelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
 import Parallel from '../../coord/parallel/Parallel';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 const DEFAULT_SMOOTH = 0.3;
 
 interface ParallelDrawSeriesScope {
     smooth: number
-    lineStyle: PathStyleProps
 }
 class ParallelView extends ChartView {
     static type = 'parallel';
@@ -79,6 +77,8 @@ class ParallelView extends ChartView {
 
         function update(newDataIndex: number, oldDataIndex: number) {
             const line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
+            graphic.clearStates(line);
+
             const points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);
             const animationModel = (payload && payload.animation === false) ? null : seriesModel;
@@ -189,7 +189,6 @@ function makeSeriesScope(seriesModel: ParallelSeriesModel): ParallelDrawSeriesSc
     smooth === true && (smooth = DEFAULT_SMOOTH);
 
     return {
-        lineStyle: seriesModel.getModel('lineStyle').getLineStyle(),
         smooth: smooth != null ? +smooth : DEFAULT_SMOOTH
     };
 }
@@ -200,23 +199,7 @@ function updateElCommon(
     dataIndex: number,
     seriesScope: ParallelDrawSeriesScope
 ) {
-    let lineStyle = seriesScope.lineStyle;
-
-    if (data.hasItemOption) {
-        const lineStyleModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex)
-            .getModel('lineStyle');
-        lineStyle = lineStyleModel.getLineStyle();
-    }
-
-    el.useStyle(lineStyle);
-
-    const elStyle = el.style;
-    elStyle.fill = null;
-    // lineStyle.color have been set to itemVisual in module:echarts/visual/seriesColor.
-    elStyle.stroke = data.getItemVisual(dataIndex, 'color');
-    // lineStyle.opacity have been set to itemVisual in parallelVisual.
-    elStyle.opacity = data.getItemVisual(dataIndex, 'opacity');
-
+    el.useStyle(data.getItemVisual(dataIndex, 'style'));
     seriesScope.smooth && (el.shape.smooth = seriesScope.smooth);
 }
 

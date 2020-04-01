@@ -17,32 +17,21 @@
 * under the License.
 */
 
-import {createHashMap} from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import ThemeRiverSeriesModel from './ThemeRiverSeries';
+import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
+import { extend } from 'zrender/src/core/util';
 
 export default function (ecModel: GlobalModel) {
-    ecModel.eachSeriesByType('themeRiver', function (seriesModel: ThemeRiverSeriesModel) {
+
+    ecModel.eachSeriesByType('graph', function (seriesModel: SunburstSeriesModel) {
         const data = seriesModel.getData();
-        const rawData = seriesModel.getRawData();
-        const colorList = seriesModel.get('color');
-        const idxMap = createHashMap<number>();
-
-        data.each(function (idx) {
-            idxMap.set(data.getRawIndex(idx), idx);
-        });
-
-        rawData.each(function (rawIndex) {
-            const name = rawData.getName(rawIndex);
-            const color = colorList[(seriesModel.nameMap.get(name) - 1) % colorList.length];
-
-            rawData.setItemVisual(rawIndex, 'color', color);
-
-            const idx = idxMap.get(rawIndex);
-
-            if (idx != null) {
-                data.setItemVisual(idx, 'color', color);
-            }
+        const tree = data.tree;
+        tree.eachNode(function (node) {
+            const model = node.getModel<SunburstSeriesNodeItemOption>();
+            // TODO Optimize
+            const style = model.getModel('itemStyle').getItemStyle();
+            const existsStyle = data.ensureUniqueItemVisual(node.dataIndex, 'style');
+            extend(existsStyle, style);
         });
     });
 }

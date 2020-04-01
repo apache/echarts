@@ -40,7 +40,7 @@ import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
-import seriesColor from './visual/seriesColor';
+import {seriesStyleTask, dataStyleTask} from './visual/style';
 import aria from './visual/aria';
 import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
@@ -69,6 +69,8 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
+import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
+import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -97,6 +99,7 @@ const PRIORITY_VISUAL_GLOBAL = 2000;
 const PRIORITY_VISUAL_CHART = 3000;
 const PRIORITY_VISUAL_POST_CHART_LAYOUT = 3500;
 const PRIORITY_VISUAL_COMPONENT = 4000;
+const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;    // visual property in data
 // FIXME
 // necessary?
 const PRIORITY_VISUAL_BRUSH = 5000;
@@ -114,7 +117,8 @@ export const PRIORITY = {
         CHART: PRIORITY_VISUAL_CHART,
         POST_CHART_LAYOUT: PRIORITY_VISUAL_POST_CHART_LAYOUT,
         COMPONENT: PRIORITY_VISUAL_COMPONENT,
-        BRUSH: PRIORITY_VISUAL_BRUSH
+        BRUSH: PRIORITY_VISUAL_BRUSH,
+        CHART_ITEM: PRIORITY_VISUAL_CHART_DATA_CUSTOM
     }
 };
 
@@ -745,8 +749,8 @@ class ECharts extends Eventful {
             : null;
 
         return dataIndexInside != null
-            ? data.getItemVisual(dataIndexInside, visualType)
-            : data.getVisual(visualType);
+            ? getItemVisualFromData(data, dataIndexInside, visualType)
+            : getVisualFromData(data, visualType);
     }
 
     /**
@@ -1292,7 +1296,6 @@ class ECharts extends Eventful {
 
             updateTransform: function (this: ECharts, payload: Payload): void {
                 const ecModel = this._model;
-                const ecIns = this;
                 const api = this._api;
 
                 // update before setOption
@@ -1303,8 +1306,8 @@ class ECharts extends Eventful {
                 // ChartView.markUpdateMethod(payload, 'updateTransform');
 
                 const componentDirtyList = [];
-                ecModel.eachComponent(function (componentType, componentModel) {
-                    const componentView = ecIns.getViewOfComponentModel(componentModel);
+                ecModel.eachComponent((componentType, componentModel) => {
+                    const componentView = this.getViewOfComponentModel(componentModel);
                     if (componentView && componentView.__alive) {
                         if (componentView.updateTransform) {
                             const result = componentView.updateTransform(componentModel, ecModel, api, payload);
@@ -1317,8 +1320,8 @@ class ECharts extends Eventful {
                 });
 
                 const seriesDirtyMap = zrUtil.createHashMap();
-                ecModel.eachSeries(function (seriesModel) {
-                    const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                ecModel.eachSeries((seriesModel) => {
+                    const chartView = this._chartsMap[seriesModel.__viewId];
                     if (chartView.updateTransform) {
                         const result = chartView.updateTransform(seriesModel, ecModel, api, payload);
                         result && result.update && seriesDirtyMap.set(seriesModel.uid, 1);
@@ -1337,7 +1340,7 @@ class ECharts extends Eventful {
 
                 // Currently, not call render of components. Geo render cost a lot.
                 // renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
-                renderSeries(ecIns, ecModel, api, payload, seriesDirtyMap);
+                renderSeries(this, ecModel, api, payload, seriesDirtyMap);
 
                 performPostUpdateFuncs(ecModel, this._api);
             },
@@ -1363,25 +1366,40 @@ class ECharts extends Eventful {
             },
 
             updateVisual: function (this: ECharts, payload: Payload): void {
-                updateMethods.update.call(this, payload);
+                // updateMethods.update.call(this, payload);
 
-                // let ecModel = this._model;
+                const ecModel = this._model;
 
-                // // update before setOption
-                // if (!ecModel) {
-                //     return;
-                // }
+                // update before setOption
+                if (!ecModel) {
+                    return;
+                }
 
-                // ChartView.markUpdateMethod(payload, 'updateVisual');
+                // clear all visual
+                ecModel.eachSeries(function (seriesModel) {
+                    seriesModel.getData().clearAllVisual();
+                });
 
-                // clearColorPalette(ecModel);
+                // Perform visual
+                ChartView.markUpdateMethod(payload, 'updateVisual');
 
-                // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-                // this._scheduler.performVisualTasks(ecModel, payload, {visualType: 'visual', setDirty: true});
+                clearColorPalette(ecModel);
 
-                // render(this, this._model, this._api, payload);
+                // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
+                this._scheduler.performVisualTasks(ecModel, payload, {visualType: 'visual', setDirty: true});
 
-                // performPostUpdateFuncs(ecModel, this._api);
+                ecModel.eachComponent((componentType, componentModel) => {  // TODO componentType may be series.
+                    const componentView = this.getViewOfComponentModel(componentModel);
+                    componentView && componentView.__alive
+                        && componentView.updateVisual(componentModel, ecModel, this._api, payload);
+                });
+
+                ecModel.eachSeries((seriesModel) => {
+                    const chartView = this._chartsMap[seriesModel.__viewId];
+                    chartView.updateVisual(seriesModel, ecModel, this._api, payload);
+                });
+
+                performPostUpdateFuncs(ecModel, this._api);
             },
 
             updateLayout: function (this: ECharts, payload: Payload): void {
@@ -2323,7 +2341,13 @@ export function getMap(mapName: string) {
 
 
 
-registerVisual(PRIORITY_VISUAL_GLOBAL, seriesColor);
+// Buitlin global visual
+registerVisual(PRIORITY_VISUAL_GLOBAL, seriesStyleTask);
+registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataStyleTask);
+
+registerVisual(PRIORITY_VISUAL_GLOBAL, seriesSymbolTask);
+registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataSymbolTask);
+
 registerPreprocessor(backwardCompat);
 registerProcessor(PRIORITY_PROCESSOR_DATASTACK, dataStack);
 registerLoading('default', loadingDefault);

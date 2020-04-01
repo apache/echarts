@@ -22,7 +22,7 @@ import Model from '../Model';
 import { LineStyleOption } from '../../util/types';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 
-const getLineStyle = makeStyleMapper([
+export const LINE_STYLE_KEY_MAP = [
     ['lineWidth', 'width'],
     ['stroke', 'color'],
     ['opacity'],
@@ -30,7 +30,9 @@ const getLineStyle = makeStyleMapper([
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['shadowColor']
-]);
+];
+
+const getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);
 
 type LineStyleKeys = 'lineWidth'
     | 'stroke'

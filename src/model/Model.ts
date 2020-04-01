@@ -132,8 +132,8 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
         const option = this.option;
 
         let val = option == null ? option : option[key];
-        if (val == null) {
-            const parentModel = !ignoreParent && getParent(this, key as string);
+        if (val == null && !ignoreParent) {
+            const parentModel = getParent(this, key as string);
             if (parentModel) {
                 // FIXME:TS do not know how to make it works
                 val = parentModel.getShallow(key);

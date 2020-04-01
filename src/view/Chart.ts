@@ -35,7 +35,6 @@ import {
 } from '../util/types';
 import { SeriesTaskContext, SeriesTask } from '../stream/Scheduler';
 import List from '../data/List';
-import { graphic } from '../export';
 
 const inner = modelUtil.makeInner<{
     updateMethod: keyof ChartView
@@ -195,15 +194,6 @@ function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
     if (el) {
         state === 'emphasis' ? graphicUtil.enterEmphasis(el, highlightDigit)
             : graphicUtil.leaveEmphasis(el, highlightDigit);
-
-        if (el.isGroup
-            // Simple optimize.
-            && !graphicUtil.isHighDownDispatcher(el)
-        ) {
-            for (let i = 0, len = (el as Group).childCount(); i < len; i++) {
-                elSetState((el as Group).childAt(i), state, highlightDigit);
-            }
-        }
     }
 }
 

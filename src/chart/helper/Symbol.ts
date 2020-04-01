@@ -17,25 +17,24 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { DisplayState } from '../../util/types';
+import { DisplayState, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
+import { extend } from 'zrender/src/core/util';
 
 // Update common properties
-const normalStyleAccessPath = ['itemStyle'] as const;
 const emphasisStyleAccessPath = ['emphasis', 'itemStyle'] as const;
 const normalLabelAccessPath = ['label'] as const;
 const emphasisLabelAccessPath = ['emphasis', 'label'] as const;
 
 type ECSymbol = ReturnType<typeof createSymbol> & {
-    highDownOnUpdate(fromState: DisplayState, toState: DisplayState): void
+    onStateChange(fromState: DisplayState, toState: DisplayState): void
 };
 
 class Symbol extends graphic.Group {
@@ -67,8 +66,6 @@ class Symbol extends graphic.Group {
         // Remove paths created before
         this.removeAll();
 
-        const color = data.getItemVisual(idx, 'color');
-
         // let symbolPath = createSymbol(
         //     symbolType, -0.5, -0.5, 1, 1, color
         // );
@@ -76,7 +73,7 @@ class Symbol extends graphic.Group {
         // and macOS Sierra, a circle stroke become a rect, no matter what
         // the scale is set. So we set width/height as 2. See #4150.
         const symbolPath = createSymbol(
-            symbolType, -1, -1, 2, 2, color, keepAspect
+            symbolType, -1, -1, 2, 2, null, keepAspect
         );
 
         symbolPath.attr({
@@ -170,7 +167,7 @@ class Symbol extends graphic.Group {
 
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
-            this._createSymbol(symbolType, data, idx, symbolSize, keepAspect);
+            this._createSymbol(symbolType as string, data, idx, symbolSize, keepAspect);
         }
         else {
             const symbolPath = this.childAt(0) as ECSymbol;
@@ -185,11 +182,13 @@ class Symbol extends graphic.Group {
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
-            const fadeIn = seriesScope && seriesScope.fadeIn;
+            // Always fadeIn. Because it has fadeOut animation when symbol is removed..
+            // const fadeIn = seriesScope && seriesScope.fadeIn;
+            const fadeIn = true;
 
             const target: PathProps = {
-                scaleX: symbolPath.scaleX,
-                scaleY: symbolPath.scaleY
+                scaleX: this._scaleX,
+                scaleY: this._scaleY
             };
             fadeIn && (target.style = {
                 opacity: symbolPath.style.opacity
@@ -212,25 +211,7 @@ class Symbol extends graphic.Group {
     ) {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
-        const color = data.getItemVisual(idx, 'color');
 
-        // Reset style
-        if (symbolPath.type !== 'image') {
-            symbolPath.useStyle({
-                strokeNoScale: true
-            });
-        }
-        else {
-            symbolPath.setStyle({
-                opacity: null,
-                shadowBlur: null,
-                shadowOffsetX: null,
-                shadowOffsetY: null,
-                shadowColor: null
-            });
-        }
-
-        let itemStyle = seriesScope && seriesScope.itemStyle;
         let hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
         let symbolRotate = seriesScope && seriesScope.symbolRotate;
         let symbolOffset = seriesScope && seriesScope.symbolOffset;
@@ -243,9 +224,6 @@ class Symbol extends graphic.Group {
             const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
 
-            // Color must be excluded.
-            // Because symbol provide setColor individually to set fill and stroke
-            itemStyle = itemModel.getModel(normalStyleAccessPath).getItemStyle(['color']);
             hoverItemStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
             symbolRotate = itemModel.getShallow('symbolRotate');
@@ -256,11 +234,6 @@ class Symbol extends graphic.Group {
             hoverAnimation = itemModel.getShallow('hoverAnimation');
             cursorStyle = itemModel.getShallow('cursor');
         }
-        else {
-            hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
-        }
-
-        const elStyle = symbolPath.style;
 
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
@@ -272,14 +245,19 @@ class Symbol extends graphic.Group {
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
         // PENDING setColor before setStyle!!!
-        symbolPath.setColor(color, seriesScope && seriesScope.symbolInnerColor);
-
-        symbolPath.setStyle(itemStyle);
-
-        const opacity = data.getItemVisual(idx, 'opacity');
-        if (opacity != null) {
-            elStyle.opacity = opacity;
+        const symbolStyle = data.getItemVisual(idx, 'style');
+        const visualColor = symbolStyle.fill;
+        if (symbolPath.__isEmptyBrush) {
+            // fill and stroke will be swapped if it's empty.
+            // So we cloned a new style to avoid it affecting the original style in visual storage.
+            // TODO Better implementation. No empty logic!
+            symbolPath.useStyle(extend({}, symbolStyle));
         }
+        else {
+            symbolPath.useStyle(symbolStyle);
+        }
+        symbolPath.setColor(visualColor, seriesScope && seriesScope.symbolInnerColor);
+        symbolPath.style.strokeNoScale = true;
 
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;
@@ -302,7 +280,7 @@ class Symbol extends graphic.Group {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
-                autoColor: color
+                autoColor: visualColor as ColorString
             }
         );
 
@@ -313,9 +291,9 @@ class Symbol extends graphic.Group {
 
         this._scaleX = symbolSize[0] / 2;
         this._scaleY = symbolSize[1] / 2;
-        symbolPath.highDownOnUpdate = (
+        symbolPath.onStateChange = (
             hoverAnimation && seriesModel.isAnimationEnabled()
-        ) ? highDownOnUpdate : null;
+        ) ? onStateChange : null;
 
         graphic.enableHoverEmphasis(symbolPath, hoverItemStyle);
     }
@@ -352,7 +330,7 @@ class Symbol extends graphic.Group {
     }
 }
 
-function highDownOnUpdate(this: ECSymbol, fromState: DisplayState, toState: DisplayState) {
+function onStateChange(this: ECSymbol, fromState: DisplayState, toState: DisplayState) {
     // Do not support this hover animation util some scenario required.
     // Animation can only be supported in hover layer when using `el.incremetal`.
     if (this.incremental || this.useHoverLayer) {

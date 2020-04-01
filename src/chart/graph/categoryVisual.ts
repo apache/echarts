@@ -20,6 +20,7 @@
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import { Dictionary, ColorString } from '../../util/types';
+import { extend } from 'zrender/src/core/util';
 
 export default function (ecModel: GlobalModel) {
 
@@ -36,14 +37,12 @@ export default function (ecModel: GlobalModel) {
             categoryNameIdxMap['ec-' + name] = idx;
             const itemModel = categoriesData.getItemModel<GraphNodeItemOption>(idx);
 
-            const color = itemModel.get(['itemStyle', 'color'])
-                || seriesModel.getColorFromPalette(name, paletteScope);
-            categoriesData.setItemVisual(idx, 'color', color);
-
-            const opacity = itemModel.get(['itemStyle', 'opacity']);
-            if (opacity != null) {
-                categoriesData.setItemVisual(idx, 'opacity', opacity);
+            const style = itemModel.getItemStyle();
+            if (!style.fill) {
+                // Get color from palette.
+                style.fill = seriesModel.getColorFromPalette(name, paletteScope);
             }
+            categoriesData.setItemVisual(idx, 'style', style);
 
             const symbolVisualList = ['symbol', 'symbolSize', 'symbolKeepAspect'] as const;
 
@@ -59,21 +58,23 @@ export default function (ecModel: GlobalModel) {
         if (categoriesData.count()) {
             data.each(function (idx) {
                 const model = data.getItemModel<GraphNodeItemOption>(idx);
-                let category = model.getShallow('category');
-                if (category != null) {
-                    if (typeof category === 'string') {
-                        category = categoryNameIdxMap['ec-' + category];
+                let categoryIdx = model.getShallow('category');
+                if (categoryIdx != null) {
+                    if (typeof categoryIdx === 'string') {
+                        categoryIdx = categoryNameIdxMap['ec-' + categoryIdx];
                     }
 
-                    const visualList = ['color', 'opacity', 'symbol', 'symbolSize', 'symbolKeepAspect'] as const;
+                    const categoryStyle = categoriesData.getItemVisual(categoryIdx, 'style');
+                    const style = data.ensureUniqueItemVisual(idx, 'style');
+                    extend(style, categoryStyle);
+
+                    const visualList = ['symbol', 'symbolSize', 'symbolKeepAspect'] as const;
 
                     for (let i = 0; i < visualList.length; i++) {
-                        if (data.getItemVisual(idx, visualList[i], true) == null) {
-                            data.setItemVisual(
-                                idx, visualList[i],
-                                categoriesData.getItemVisual(category, visualList[i])
-                            );
-                        }
+                        data.setItemVisual(
+                            idx, visualList[i],
+                            categoriesData.getItemVisual(categoryIdx, visualList[i])
+                        );
                     }
                 }
             });

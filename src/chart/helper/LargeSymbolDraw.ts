@@ -264,20 +264,9 @@ class LargeSymbolDraw {
         const hostModel = data.hostModel;
 
         opt = opt || {};
-        // TODO
-        // if (data.hasItemVisual.symbolSize) {
-        //     // TODO typed array?
-        //     symbolEl.setShape('sizes', data.mapArray(
-        //         function (idx) {
-        //             let size = data.getItemVisual(idx, 'symbolSize');
-        //             return (size instanceof Array) ? size : [size, size];
-        //         }
-        //     ));
-        // }
-        // else {
+
         const size = data.getVisual('symbolSize');
         symbolEl.setShape('size', (size instanceof Array) ? size : [size, size]);
-        // }
 
         symbolEl.softClipShape = opt.clipShape || null;
         // Create symbolProxy to build path for each data
@@ -295,7 +284,8 @@ class LargeSymbolDraw {
             )
         );
 
-        const visualColor = data.getVisual('color');
+        const globalStyle = data.getVisual('style');
+        const visualColor = globalStyle && globalStyle.fill;
         if (visualColor) {
             symbolEl.setColor(visualColor);
         }

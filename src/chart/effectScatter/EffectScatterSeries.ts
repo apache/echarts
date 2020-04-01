@@ -81,6 +81,7 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
     static readonly dependencies = ['grid', 'polar'];
 
+    hasSymbolVisual = true;
 
     getInitialData(option: EffectScatterSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {useEncodeDefaulter: true});

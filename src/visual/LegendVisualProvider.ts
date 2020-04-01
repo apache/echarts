@@ -62,7 +62,7 @@ class LegendVisualProvider {
     getItemVisual(dataIndex: number, key: string): any {
         // Get encoded visual properties from final filtered data.
         const dataWithEncodedVisual = this._getDataWithEncodedVisual();
-        return dataWithEncodedVisual.getItemVisual(dataIndex, key);
+        return dataWithEncodedVisual.getItemVisual(dataIndex, key as any);
     }
 }
 

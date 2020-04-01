@@ -82,6 +82,10 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
     coordinateSystem: Radar;
 
+    useColorPaletteOnData = true;
+
+    hasSymbolVisual = true;
+
     // Overwrite
     init(option: RadarSeriesOption) {
         super.init.apply(this, arguments as any);

@@ -24,7 +24,7 @@ import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Payload, DisplayState, ECElement } from '../../util/types';
+import { Payload, DisplayState, ECElement, ColorString } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import { Dictionary } from 'zrender/src/core/types';
@@ -157,18 +157,7 @@ class PiePiece extends graphic.Group {
             }
         }
 
-        // Update common style
-        const visualColor = data.getItemVisual(idx, 'color');
-
-        sector.useStyle(
-            zrUtil.defaults(
-                {
-                    lineJoin: 'bevel',
-                    fill: visualColor
-                },
-                itemModel.getModel('itemStyle').getItemStyle()
-            )
-        );
+        sector.useStyle(data.getItemVisual(idx, 'style'));
         const sectorEmphasisState = sector.ensureState('emphasis');
         sectorEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
@@ -188,7 +177,7 @@ class PiePiece extends graphic.Group {
         const withAnimation = !firstCreate && animationTypeUpdate === 'transition';
         this._updateLabel(data, idx, withAnimation);
 
-        (this as ECElement).highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+        (this as ECElement).onStateChange = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
             ? function (fromState: DisplayState, toState: DisplayState): void {
                 if (toState === 'emphasis') {
 
@@ -246,7 +235,9 @@ class PiePiece extends graphic.Group {
         const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
         const labelLineModel = itemModel.getModel('labelLine');
         const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
-        const visualColor = data.getItemVisual(idx, 'color');
+
+        const style = data.getItemVisual(idx, 'style');
+        const visualColor = style && style.fill as ColorString;
 
         graphic.setLabelStyle(
             labelText,
@@ -260,7 +251,7 @@ class PiePiece extends graphic.Group {
             {
                 align: labelLayout.textAlign,
                 verticalAlign: labelLayout.verticalAlign,
-                opacity: data.getItemVisual(idx, 'opacity')
+                opacity: style && style.opacity
             }
         );
 
@@ -313,7 +304,7 @@ class PiePiece extends graphic.Group {
         // Default use item visual color
         labelLine.setStyle({
             stroke: visualColor,
-            opacity: data.getItemVisual(idx, 'opacity')
+            opacity: style && style.opacity
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
@@ -381,6 +372,8 @@ class PieView extends ChartView {
             })
             .update(function (newIdx, oldIdx) {
                 const piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
+
+                graphic.clearStates(piePiece);
 
                 if (!isFirstRender && animationTypeUpdate !== 'transition') {
                     piePiece.eachChild(function (child) {

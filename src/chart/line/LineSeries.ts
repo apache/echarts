@@ -103,6 +103,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
     coordinateSystem: Cartesian2D | Polar;
 
+    hasSymbolVisual = true;
+    legendSymbol = 'line';
+
     getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
             const coordSys = option.coordinateSystem;

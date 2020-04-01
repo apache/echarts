@@ -38,6 +38,7 @@ import Symbol from '../helper/Symbol';
 import Model from '../../model/Model';
 import { Payload } from '../../util/types';
 import { LineLabel } from '../helper/Line';
+import List from '../../data/List';
 
 const FOCUS_ADJACENCY = '__focusNodeAdjacency';
 const UNFOCUS_ADJACENCY = '__unfocusNodeAdjacency';
@@ -172,7 +173,8 @@ class GraphView extends ChartView {
         symbolDraw.updateData(data);
 
         const edgeData = seriesModel.getEdgeData();
-        lineDraw.updateData(edgeData);
+        // TODO: TYPE
+        lineDraw.updateData(edgeData as List);
 
         this._updateNodeAndLinkScale();
 

@@ -24,14 +24,18 @@ import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
 import {round} from '../../util/number';
 import List from '../../data/List';
-import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption } from '../../util/types';
+import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
+
 import { TextStyleProps } from 'zrender/src/graphic/Text';
+import { LineDataVisual } from '../../visual/commonVisualTypes';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
 type ECSymbol = ReturnType<typeof createSymbol>;
+
+type LineList = List<SeriesModel, LineDataVisual>;
 
 export interface LineLabel extends graphic.Text {
     lineLabelOriginalOpacity: number
@@ -44,28 +48,29 @@ interface InnerLineLabel extends LineLabel {
     __labelDistance: number[]
 }
 
-function makeSymbolTypeKey(symbolCategory: string) {
+function makeSymbolTypeKey(symbolCategory: 'fromSymbol' | 'toSymbol') {
     return '_' + symbolCategory + 'Type' as '_fromSymbolType' | '_toSymbolType';
 }
 
 /**
  * @inner
  */
-function createSymbol(name: string, lineData: List, idx: number) {
-    const color = lineData.getItemVisual(idx, 'color');
+function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: number) {
     const symbolType = lineData.getItemVisual(idx, name);
-    let symbolSize = lineData.getItemVisual(idx, name + 'Size');
+    const symbolSize = lineData.getItemVisual(
+        idx,
+        name + 'Size' as 'fromSymbolSize' | 'toSymbolSize'
+    );
 
     if (!symbolType || symbolType === 'none') {
         return;
     }
 
-    if (!zrUtil.isArray(symbolSize)) {
-        symbolSize = [symbolSize, symbolSize];
-    }
+    const symbolSizeArr = zrUtil.isArray(symbolSize)
+        ? symbolSize : [symbolSize, symbolSize];
     const symbolPath = symbolUtil.createSymbol(
-        symbolType, -symbolSize[0] / 2, -symbolSize[1] / 2,
-        symbolSize[0], symbolSize[1], color
+        symbolType, -symbolSizeArr[0] / 2, -symbolSizeArr[1] / 2,
+        symbolSizeArr[0], symbolSizeArr[1]
     );
 
     symbolPath.name = name;
@@ -105,7 +110,6 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     }
 }
 
-
 class Line extends graphic.Group {
 
     private _fromSymbolType: string;
@@ -113,10 +117,10 @@ class Line extends graphic.Group {
 
     constructor(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
         super();
-        this._createLine(lineData, idx, seriesScope);
+        this._createLine(lineData as LineList, idx, seriesScope);
     }
 
-    _createLine(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
+    _createLine(lineData: LineList, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
         const linePoints = lineData.getItemLayout(idx);
         const line = createLine(linePoints);
@@ -150,6 +154,7 @@ class Line extends graphic.Group {
         this._updateCommonStl(lineData, idx, seriesScope);
     }
 
+    // TODO More strict on the List type in parameters?
     updateData(lineData: List, idx: number, seriesScope: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
 
@@ -163,12 +168,12 @@ class Line extends graphic.Group {
         graphic.updateProps(line, target, seriesModel, idx);
 
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
-            const symbolType = lineData.getItemVisual(idx, symbolCategory);
+            const symbolType = (lineData as LineList).getItemVisual(idx, symbolCategory);
             const key = makeSymbolTypeKey(symbolCategory);
             // Symbol changed
             if (this[key] !== symbolType) {
                 this.remove(this.childOfName(symbolCategory));
-                const symbol = createSymbol(symbolCategory, lineData, idx);
+                const symbol = createSymbol(symbolCategory, lineData as LineList, idx);
                 this.add(symbol);
             }
             this[key] = symbolType;
@@ -182,7 +187,6 @@ class Line extends graphic.Group {
 
         const line = this.childOfName('line') as ECLinePath;
 
-        let lineStyle = seriesScope && seriesScope.lineStyle;
         let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
         let labelModel = seriesScope && seriesScope.labelModel;
         let hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
@@ -191,29 +195,18 @@ class Line extends graphic.Group {
         if (!seriesScope || lineData.hasItemOption) {
             const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
-            lineStyle = itemModel.getModel('lineStyle').getLineStyle();
             hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
 
             labelModel = itemModel.getModel('label');
             hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
         }
 
-        const visualColor = lineData.getItemVisual(idx, 'color');
-        const visualOpacity = zrUtil.retrieve3(
-            lineData.getItemVisual(idx, 'opacity'),
-            lineStyle.opacity,
-            1
-        );
+        const lineStyle = lineData.getItemVisual(idx, 'style');
+        const visualColor = lineStyle.stroke;
 
-        line.useStyle(zrUtil.defaults(
-            {
-                strokeNoScale: true,
-                fill: 'none',
-                stroke: visualColor,
-                opacity: visualOpacity
-            },
-            lineStyle
-        ));
+        line.useStyle(lineStyle);
+        line.style.strokeNoScale = true;
+
         const lineEmphasisState = line.ensureState('emphasis');
         lineEmphasisState.style = hoverLineStyle;
 
@@ -222,9 +215,8 @@ class Line extends graphic.Group {
             const symbol = this.childOfName(symbolCategory) as ECSymbol;
             if (symbol) {
                 symbol.setColor(visualColor);
-                symbol.setStyle({
-                    opacity: visualOpacity
-                });
+                symbol.style.opacity = lineStyle.opacity;
+                symbol.markRedraw();
             }
         }, this);
 
@@ -237,7 +229,7 @@ class Line extends graphic.Group {
 
         // FIXME: the logic below probably should be merged to `graphic.setLabelStyle`.
         if (showLabel || hoverShowLabel) {
-            defaultLabelColor = visualColor || '#000';
+            defaultLabelColor = visualColor as ColorString || '#000';
 
             baseText = seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType);
             if (baseText == null) {

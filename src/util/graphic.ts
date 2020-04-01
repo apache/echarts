@@ -62,7 +62,16 @@ import {
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
-import { isFunction, retrieve2, extend, keys, trim, isArrayLike, map, defaults } from 'zrender/src/core/util';
+import {
+    isFunction,
+    retrieve2,
+    extend,
+    keys,
+    trim,
+    isArrayLike,
+    map,
+    defaults
+} from 'zrender/src/core/util';
 
 
 const mathMax = Math.max;
@@ -97,7 +106,7 @@ type ExtendedProps = {
     __highByOuter: number
 
     __highDownSilentOnTouch: boolean
-    __highDownOnUpdate: (fromState: DisplayState, toState: DisplayState) => void
+    __onStateChange: (fromState: DisplayState, toState: DisplayState) => void
 
     __highDownDispatcher: boolean
 };
@@ -367,17 +376,24 @@ function singleEnterEmphasis(el: Element) {
         return;
     }
     const disp = el as Displayable;
-    const emphasisStyle = disp.states.emphasis.style;
-    const currentFill = disp.style && disp.style.fill;
-    const currentStroke = disp.style && disp.style.stroke;
+
+    let emphasisStyle;
+    let currentFill;
+    let currentStroke;
+    // state may be a function
+    if (!(typeof disp.states.emphasis === 'function')) {
+        emphasisStyle = disp.states.emphasis.style;
+        currentFill = disp.style && disp.style.fill;
+        currentStroke = disp.style && disp.style.stroke;
+    }
 
     el.useState('emphasis');
 
-    if (disp.style) { // Is not group
-        if (emphasisStyle && !hasFillOrStroke(emphasisStyle.fill)) {
+    if (emphasisStyle && (currentFill || currentStroke)) {
+        if (!hasFillOrStroke(emphasisStyle.fill)) {
             disp.style.fill = liftColor(currentFill);
         }
-        if (emphasisStyle && !hasFillOrStroke(emphasisStyle.stroke)) {
+        if (!hasFillOrStroke(emphasisStyle.stroke)) {
             disp.style.stroke = liftColor(currentStroke);
         }
         disp.z2 += Z2_EMPHASIS_LIFT;
@@ -393,29 +409,51 @@ function singleEnterEmphasis(el: Element) {
 
 function singleEnterNormal(el: Element) {
     el.clearStates();
-
     (el as ExtendedElement).__highlighted = false;
 }
 
-function traverseUpdate<T>(
+function updateElementState<T>(
     el: ExtendedElement,
     updater: (this: void, el: Element, commonParam?: T) => void,
     commonParam?: T
 ) {
-    // If root is group, also enter updater for `highDownOnUpdate`.
+    // If root is group, also enter updater for `onStateChange`.
     let fromState: DisplayState = NORMAL;
     let toState: DisplayState = NORMAL;
     let trigger;
-    // See the rule of `highDownOnUpdate` on `graphic.setAsHighDownDispatcher`.
+    // See the rule of `onStateChange` on `graphic.setAsHighDownDispatcher`.
     el.__highlighted && (fromState = EMPHASIS, trigger = true);
     updater(el, commonParam);
     el.__highlighted && (toState = EMPHASIS, trigger = true);
+    trigger && el.__onStateChange && el.__onStateChange(fromState, toState);
+}
 
-    el.isGroup && el.traverse(function (child) {
-        !child.isGroup && updater(child, commonParam);
+function traverseUpdateState<T>(
+    el: ExtendedElement,
+    updater: (this: void, el: Element, commonParam?: T) => void,
+    commonParam?: T
+) {
+    updateElementState(el, updater, commonParam);
+    el.isGroup && el.traverse(function (child: ExtendedElement) {
+        updateElementState(child, updater, commonParam);
     });
 
-    trigger && el.__highDownOnUpdate && el.__highDownOnUpdate(fromState, toState);
+}
+
+/**
+ * If we reuse elements when rerender.
+ * DONT forget to clearStates before we update the style and shape.
+ * Or we may update on the wrong state instead of normal state.
+ */
+export function clearStates(el: Element) {
+    if (el.isGroup) {
+        el.traverse(function (child) {
+            child.clearStates();
+        });
+    }
+    else {
+        el.clearStates();
+    }
 }
 
 /**
@@ -444,24 +482,24 @@ export function enterEmphasisWhenMouseOver(el: Element, e: ElementEvent) {
     !shouldSilent(el, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
         && !(el as ExtendedElement).__highByOuter
-        && traverseUpdate((el as ExtendedElement), singleEnterEmphasis);
+        && traverseUpdateState((el as ExtendedElement), singleEnterEmphasis);
 }
 
 export function leaveEmphasisWhenMouseOut(el: Element, e: ElementEvent) {
     !shouldSilent(el, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
         && !(el as ExtendedElement).__highByOuter
-        && traverseUpdate((el as ExtendedElement), singleEnterNormal);
+        && traverseUpdateState((el as ExtendedElement), singleEnterNormal);
 }
 
 export function enterEmphasis(el: Element, highlightDigit?: number) {
     (el as ExtendedElement).__highByOuter |= 1 << (highlightDigit || 0);
-    traverseUpdate((el as ExtendedElement), singleEnterEmphasis);
+    traverseUpdateState((el as ExtendedElement), singleEnterEmphasis);
 }
 
 export function leaveEmphasis(el: Element, highlightDigit?: number) {
     !((el as ExtendedElement).__highByOuter &= ~(1 << (highlightDigit || 0)))
-        && traverseUpdate((el as ExtendedElement), singleEnterNormal);
+        && traverseUpdateState((el as ExtendedElement), singleEnterNormal);
 }
 
 function shouldSilent(el: Element, e: ElementEvent) {
@@ -485,14 +523,14 @@ function shouldSilent(el: Element, e: ElementEvent) {
  */
 export function enableHoverEmphasis(el: Element, hoverStyle?: ZRStyleProps) {
     setAsHighDownDispatcher(el, true);
-    traverseUpdate(el as ExtendedElement, enableElementHoverEmphasis, hoverStyle);
+    traverseUpdateState(el as ExtendedElement, enableElementHoverEmphasis, hoverStyle);
 }
 
 /**
  * @param {module:zrender/Element} el
- * @param {Function} [el.highDownOnUpdate] Called when state updated.
+ * @param {Function} [el.onStateChange] Called when state updated.
  *        Since `setHoverStyle` has the constraint that it must be called after
- *        all of the normal style updated, `highDownOnUpdate` is not needed to
+ *        all of the normal style updated, `onStateChange` is not needed to
  *        trigger if both `fromState` and `toState` is 'normal', and needed to
  *        trigger if both `fromState` and `toState` is 'emphasis', which enables
  *        to sync outside style settings to "emphasis" state.
@@ -504,7 +542,7 @@ export function enableHoverEmphasis(el: Element, hoverStyle?: ZRStyleProps) {
  *        @param {string} toState Can be "normal" or "emphasis".
  *
  *        FIXME
- *        CAUTION: Do not expose `highDownOnUpdate` outside echarts.
+ *        CAUTION: Do not expose `onStateChange` outside echarts.
  *        Because it is not a complete solution. The update
  *        listener should not have been mount in element,
  *        and the normal/emphasis state should not have
@@ -525,13 +563,13 @@ export function enableHoverEmphasis(el: Element, hoverStyle?: ZRStyleProps) {
 export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     const disable = asDispatcher === false;
     const extendedEl = el as ExtendedElement;
-    // Make `highDownSilentOnTouch` and `highDownOnUpdate` only work after
+    // Make `highDownSilentOnTouch` and `onStateChange` only work after
     // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
     if ((el as ECElement).highDownSilentOnTouch) {
         extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
     }
-    if ((el as ECElement).highDownOnUpdate) {
-        extendedEl.__highDownOnUpdate = (el as ECElement).highDownOnUpdate;
+    if ((el as ECElement).onStateChange) {
+        extendedEl.__onStateChange = (el as ECElement).onStateChange;
     }
 
     // Simple optimize, since this method might be
@@ -606,10 +644,6 @@ export function setLabelStyle<LDI>(
 ) {
     opt = opt || EMPTY_OBJ;
     const isSetOnText = targetEl instanceof ZRText;
-    const labelFetcher = opt.labelFetcher;
-    const labelDataIndex = opt.labelDataIndex;
-    const labelDimIndex = opt.labelDimIndex;
-
     // This scenario, `label.normal.show = true; label.emphasis.show = false`,
     // is not supported util someone requests.
 
@@ -619,26 +653,27 @@ export function setLabelStyle<LDI>(
     // Consider performance, only fetch label when necessary.
     // If `normal.show` is `false` and `emphasis.show` is `true` and `emphasis.formatter` is not set,
     // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
-    let baseText;
+    let richText = isSetOnText ? targetEl as ZRText : null;
     if (showNormal || showEmphasis) {
+        const labelFetcher = opt.labelFetcher;
+        const labelDataIndex = opt.labelDataIndex;
+        const labelDimIndex = opt.labelDimIndex;
+
+        let baseText;
         if (labelFetcher) {
             baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex);
         }
         if (baseText == null) {
             baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
         }
-    }
-    const normalStyleText = baseText;
-    const emphasisStyleText = retrieve2(
-        labelFetcher
-            ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
-            : null,
-        baseText
-    );
+        const normalStyleText = baseText;
+        const emphasisStyleText = retrieve2(
+            labelFetcher
+                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
+                : null,
+            baseText
+        );
 
-    let richText = isSetOnText ? targetEl as ZRText : null;
-    // Optimize: If style.text is null, text will not be drawn.
-    if (showNormal || showEmphasis) {
         if (!isSetOnText) {
             // Reuse the previous
             richText = targetEl.getTextContent();

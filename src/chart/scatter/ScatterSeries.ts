@@ -86,6 +86,8 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
     static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
+    hasSymbolVisual = true;
+
     getInitialData(option: ScatterSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this, {
             useEncodeDefaulter: true

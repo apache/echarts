@@ -26,7 +26,7 @@ import * as graphic from '../../util/graphic';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
-import { ScaleDataValue, ParsedValue } from '../../util/types';
+import { ScaleDataValue, ParsedValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
 import SeriesModel from '../../model/Series';
@@ -37,6 +37,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import MarkerModel from './MarkerModel';
 import { makeInner } from '../../util/model';
+import { getVisualFromData } from '../../visual/helper';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -244,10 +245,19 @@ class MarkAreaView extends MarkerView {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
             }));
 
+            const style = areaData.getItemModel<MarkAreaMergedItemOption>(idx).getModel('itemStyle').getItemStyle();
+            const color = getVisualFromData(seriesData, 'color') as ZRColor;
+            if (!style.fill) {
+                style.fill = color;
+                if (typeof style.fill === 'string') {
+                    style.fill = colorUtil.modifyAlpha(style.fill, 0.4);
+                }
+            }
+            if (!style.stroke) {
+                style.stroke = color;
+            }
             // Visual
-            areaData.setItemVisual(idx, {
-                color: seriesData.getVisual('color')
-            });
+            areaData.setItemVisual(idx, 'style', style);
         });
 
 
@@ -263,6 +273,7 @@ class MarkAreaView extends MarkerView {
             })
             .update(function (newIdx, oldIdx) {
                 const polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
+                graphic.clearStates(polygon);
                 graphic.updateProps(polygon, {
                     shape: {
                         points: areaData.getItemLayout(newIdx)
@@ -281,16 +292,8 @@ class MarkAreaView extends MarkerView {
             const itemModel = areaData.getItemModel<MarkAreaMergedItemOption>(idx);
             const labelModel = itemModel.getModel('label');
             const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-            const color = areaData.getItemVisual(idx, 'color');
-            polygon.useStyle(
-                defaults(
-                    itemModel.getModel('itemStyle').getItemStyle(),
-                    {
-                        fill: colorUtil.modifyAlpha(color, 0.4),
-                        stroke: color
-                    }
-                )
-            );
+            const style = areaData.getItemVisual(idx, 'style');
+            polygon.useStyle(areaData.getItemVisual(idx, 'style'));
 
             graphic.setLabelStyle(
                 polygon, labelModel, labelHoverModel,
@@ -298,7 +301,8 @@ class MarkAreaView extends MarkerView {
                     labelFetcher: maModel,
                     labelDataIndex: idx,
                     defaultText: areaData.getName(idx) || '',
-                    autoColor: color
+                    autoColor: typeof style.fill === 'string'
+                        ? colorUtil.modifyAlpha(style.fill, 1) : '#000'
                 }
             );
 

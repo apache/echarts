@@ -291,7 +291,7 @@ class ToolboxView extends ComponentView {
             const textContent = icon.getTextContent();
             const emphasisTextState = textContent && textContent.states.emphasis;
             // May be background element
-            if (emphasisTextState && titleText) {
+            if (emphasisTextState && !zrUtil.isFunction(emphasisTextState) && titleText) {
                 const emphasisTextStyle = emphasisTextState.style || (emphasisTextState.style = {});
                 const rect = textContain.getBoundingRect(
                     titleText, ZRText.makeFont(emphasisTextStyle)

@@ -33,7 +33,7 @@ import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
-import { PathProps } from 'zrender/src/graphic/Path';
+import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -90,7 +90,7 @@ interface SymbolMeta {
     valueLineWidth: number
 
     opacity: number
-    color: ColorString
+    style: PathStyleProps
     z2: number
 
     itemModel: ItemModel
@@ -190,6 +190,7 @@ class PictorialBarView extends ChartView {
                 }
 
                 if (bar) {
+                    bar.clearStates();
                     updateBar(bar, opt, symbolMeta);
                 }
                 else {
@@ -253,7 +254,7 @@ function getSymbolMeta(
         layout: layout,
         itemModel: itemModel,
         symbolType: data.getItemVisual(dataIndex, 'symbol') || 'circle',
-        color: data.getItemVisual(dataIndex, 'color'),
+        style: data.getItemVisual(dataIndex, 'style'),
         symbolClip: symbolClip,
         symbolRepeat: symbolRepeat,
         symbolRepeatDirection: itemModel.get('symbolRepeatDirection'),
@@ -354,15 +355,19 @@ function prepareSymbolSize(
     const categoryDim = opt.categoryDim;
     const categorySize = Math.abs(layout[categoryDim.wh]);
 
-    let symbolSize = data.getItemVisual(dataIndex, 'symbolSize');
+    const symbolSize = data.getItemVisual(dataIndex, 'symbolSize');
+    let parsedSymbolSize: number[];
     if (zrUtil.isArray(symbolSize)) {
-        symbolSize = symbolSize.slice();
+        parsedSymbolSize = symbolSize.slice();
     }
     else {
         if (symbolSize == null) {
-            symbolSize = '100%';
+            // will parse to number below
+            parsedSymbolSize = ['100%', '100%'] as unknown as number[];
         }
-        symbolSize = [symbolSize, symbolSize];
+        else {
+            parsedSymbolSize = [symbolSize, symbolSize];
+        }
     }
 
     // Note: percentage symbolSize (like '100%') do not consider lineWidth, because it is
@@ -370,21 +375,21 @@ function prepareSymbolSize(
     // So the actual size will bigger than layout size if lineWidth is bigger than zero,
     // which can be tolerated in pictorial chart.
 
-    symbolSize[categoryDim.index] = parsePercent(
-        symbolSize[categoryDim.index],
+    parsedSymbolSize[categoryDim.index] = parsePercent(
+        parsedSymbolSize[categoryDim.index],
         categorySize
     );
-    symbolSize[valueDim.index] = parsePercent(
-        symbolSize[valueDim.index],
+    parsedSymbolSize[valueDim.index] = parsePercent(
+        parsedSymbolSize[valueDim.index],
         symbolRepeat ? categorySize : Math.abs(boundingLength)
     );
 
-    outputSymbolMeta.symbolSize = symbolSize;
+    outputSymbolMeta.symbolSize = parsedSymbolSize;
 
     // If x or y is less than zero, show reversed shape.
     const symbolScale = outputSymbolMeta.symbolScale = [
-        symbolSize[0] / symbolPatternSize,
-        symbolSize[1] / symbolPatternSize
+        parsedSymbolSize[0] / symbolPatternSize,
+        parsedSymbolSize[1] / symbolPatternSize
     ];
     // Follow convention, 'right' and 'top' is the normal scale.
     symbolScale[valueDim.index] *= (opt.isHorizontal ? -1 : 1) * pxSign;
@@ -523,8 +528,7 @@ function createPath(symbolMeta: SymbolMeta) {
         -symbolPatternSize / 2,
         -symbolPatternSize / 2,
         symbolPatternSize,
-        symbolPatternSize,
-        symbolMeta.color
+        symbolPatternSize
     );
     (path as Displayable).attr({
         culling: true
@@ -921,25 +925,15 @@ function updateCommon(
     opt: CreateOpts,
     symbolMeta: SymbolMeta
 ) {
-    const color = symbolMeta.color;
     const dataIndex = symbolMeta.dataIndex;
     const itemModel = symbolMeta.itemModel;
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    const normalStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
     const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
     const cursorStyle = itemModel.getShallow('cursor');
 
     eachPath(bar, function (path) {
-        // PENDING setColor should be before setStyle!!!
-        path.setColor(color);
-        path.setStyle(zrUtil.defaults(
-            {
-                fill: color,
-                opacity: symbolMeta.opacity
-            },
-            normalStyle
-        ));
+        path.useStyle(symbolMeta.style);
         graphic.enableHoverEmphasis(path, hoverStyle);
 
         cursorStyle && (path.cursor = cursorStyle);
@@ -959,7 +953,7 @@ function updateCommon(
             labelFetcher: opt.seriesModel,
             labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
-            autoColor: color,
+            autoColor: symbolMeta.style.fill as ColorString,
             defaultOutsidePosition: barPositionOutside
         }
     );

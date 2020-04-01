@@ -24,7 +24,6 @@ import './pie/PieSeries';
 import './pie/PieView';
 
 import createDataSelectAction from '../action/createDataSelectAction';
-import dataColor from '../visual/dataColor';
 import pieLayout from './pie/pieLayout';
 import dataFilter from '../processor/dataFilter';
 
@@ -44,6 +43,5 @@ createDataSelectAction('pie', [{
 
 // type PieLayoutParameters = Parameters<typeof pieLayout>;
 
-echarts.registerVisual(dataColor('pie'));
 echarts.registerLayout(zrUtil.curry(pieLayout, 'pie'));
 echarts.registerProcessor(dataFilter('pie'));

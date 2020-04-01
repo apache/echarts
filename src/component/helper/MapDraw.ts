@@ -141,9 +141,9 @@ class MapDraw {
 
         regionsGroup.removeAll();
 
-        const itemStyleAccessPath = ['itemStyle'] as const;
+        const itemStyleAccessPath = 'itemStyle';
         const hoverItemStyleAccessPath = ['emphasis', 'itemStyle'] as const;
-        const labelAccessPath = ['label'] as const;
+        const labelAccessPath = 'label';
         const hoverLabelAccessPath = ['emphasis', 'label'] as const;
         const nameMap = zrUtil.createHashMap<RegionsGroup>();
 
@@ -170,6 +170,9 @@ class MapDraw {
             const itemStyleModel = regionModel.getModel(itemStyleAccessPath);
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             const hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
+
+            // NOTE: DONT use 'style' in visual when drawing map.
+            // This component is used for drawing underlying map for both geo component and map series.
             const itemStyle = getFixedItemStyle(itemStyleModel);
             const hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
 
@@ -186,9 +189,10 @@ class MapDraw {
                 // But visual color of series is used in symbol drawing
                 //
                 // Visual color for each series is for the symbol draw
-                const visualColor = data.getItemVisual(dataIdx, 'color', true);
-                if (visualColor) {
-                    itemStyle.fill = visualColor;
+                const style = data.getItemVisual(dataIdx, 'style');
+                const globalStyle = data.getVisual('style');
+                if (style !== globalStyle) {
+                    itemStyle.fill = style.fill;
                 }
             }
 

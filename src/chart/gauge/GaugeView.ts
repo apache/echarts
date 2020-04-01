@@ -347,6 +347,7 @@ class GaugeView extends ChartView {
             })
             .update(function (newIdx, oldIdx) {
                 const pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
+                graphic.clearStates(pointer);
 
                 graphic.updateProps(pointer, {
                     shape: {

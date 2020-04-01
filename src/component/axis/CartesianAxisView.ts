@@ -141,6 +141,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             axisGroup.add(new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 subPixelOptimize: true,
+                autoBatch: true,
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -194,6 +195,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 axisGroup.add(new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
                     subPixelOptimize: true,
+                    autoBatch: true,
                     shape: {
                         x1: p1[0],
                         y1: p1[1],

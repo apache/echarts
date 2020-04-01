@@ -24,6 +24,7 @@ import VisualMapping from '../../visual/VisualMapping';
 import VisualMapModel, { VisualMeta } from './VisualMapModel';
 import { StageHandlerProgressExecutor, BuiltinVisualProperty, ParsedValue } from '../../util/types';
 import SeriesModel from '../../model/Series';
+import { getVisualFromData } from '../../visual/helper';
 
 const VISUAL_PRIORITY = echarts.PRIORITY.VISUAL.COMPONENT;
 
@@ -94,7 +95,7 @@ function getColorVisual(
     const mappings = visualMapModel.targetVisuals[valueState];
     const visualTypes = VisualMapping.prepareVisualTypes(mappings);
     const resultVisual: Partial<Record<BuiltinVisualProperty, any>> = {
-        color: seriesModel.getData().getVisual('color') // default color.
+        color: getVisualFromData(seriesModel.getData(), 'color') // default color.
     };
 
     for (let i = 0, len = visualTypes.length; i < len; i++) {

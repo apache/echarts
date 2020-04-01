@@ -87,6 +87,8 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
     coordinateSystem: Single;
 
+    useColorPaletteOnData = true;
+
     /**
      * @override
      */

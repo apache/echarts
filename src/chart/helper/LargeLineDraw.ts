@@ -261,9 +261,9 @@ class LargeLineDraw {
         );
         lineEl.style.strokeNoScale = true;
 
-        const visualColor = data.getVisual('color');
-        if (visualColor) {
-            lineEl.setStyle('stroke', visualColor);
+        const style = data.getVisual('style');
+        if (style && style.stroke) {
+            lineEl.setStyle('stroke', style.stroke);
         }
         lineEl.setStyle('fill', null);
 

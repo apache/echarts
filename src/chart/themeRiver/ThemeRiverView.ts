@@ -76,7 +76,7 @@ class ThemeRiverView extends ChartView {
             }
             const points0 = [];
             const points1 = [];
-            let color;
+            let style;
             const indices = layersSeries[idx].indices;
             let j = 0;
             for (; j < indices.length; j++) {
@@ -88,7 +88,7 @@ class ThemeRiverView extends ChartView {
                 points0.push([x, y0]);
                 points1.push([x, y0 + y]);
 
-                color = data.getItemVisual(indices[j], 'color');
+                style = data.getItemVisual(indices[j], 'style');
             }
 
             let polygon: ECPolygon;
@@ -154,12 +154,7 @@ class ThemeRiverView extends ChartView {
             }
 
             const hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
-            const itemStyleModel = seriesModel.getModel('itemStyle');
-
-
-            polygon.setStyle(extend({
-                fill: color
-            }, itemStyleModel.getItemStyle(['color'])));
+            polygon.setStyle(style);
 
             graphic.enableHoverEmphasis(polygon, hoverItemStyleModel.getItemStyle());
         }

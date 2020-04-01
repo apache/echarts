@@ -19,36 +19,11 @@
 
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
-
-const borderColorQuery = ['itemStyle', 'borderColor'] as const;
+import BoxplotSeriesModel from './BoxplotSeries';
 
 export default function (ecModel: GlobalModel, api: ExtensionAPI) {
-
-    const globalColors = ecModel.get('color');
-
     ecModel.eachRawSeriesByType('boxplot', function (seriesModel: BoxplotSeriesModel) {
-
-        const defaulColor = globalColors[seriesModel.seriesIndex % globalColors.length];
-        const data = seriesModel.getData();
-
-        data.setVisual({
-            legendSymbol: 'roundRect',
-            // Use name 'color' but not 'borderColor' for legend usage and
-            // visual coding from other component like dataRange.
-            color: seriesModel.get(borderColorQuery) || defaulColor
-        });
-
-        // Only visible series has each data be visual encoded
-        if (!ecModel.isSeriesFiltered(seriesModel)) {
-            data.each(function (idx) {
-                const itemModel = data.getItemModel<BoxplotDataItemOption>(idx);
-                data.setItemVisual(
-                    idx,
-                    {color: itemModel.get(borderColorQuery, true)}
-                );
-            });
-        }
+        seriesModel.getData().setVisual('legendSymbol', 'roundRect');
     });
 
 }

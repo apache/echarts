@@ -239,18 +239,19 @@ export class TreeNode {
      *      'color': color
      *  });
      */
+    // TODO: TYPE
     setVisual(key: string, value: any): void
     setVisual(obj: Dictionary<any>): void
     setVisual(key: string | Dictionary<any>, value?: any) {
         this.dataIndex >= 0
-            && this.hostTree.data.setItemVisual(this.dataIndex, key as string, value);
+            && this.hostTree.data.setItemVisual(this.dataIndex, key as any, value);
     }
 
     /**
      * Get item visual
      */
-    getVisual(key: string, ignoreParent?: boolean): any {
-        return this.hostTree.data.getItemVisual(this.dataIndex, key, ignoreParent);
+    getVisual(key: string): any {
+        return this.hostTree.data.getItemVisual(this.dataIndex, key as any);
     }
 
     getRawIndex(): number {

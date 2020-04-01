@@ -149,7 +149,8 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
 
     static readonly dependencies = ['grid', 'polar', 'geo', 'calendar'];
 
-    visualColorAccessPath = ['lineStyle', 'color'];
+    visualStyleAccessPath = 'lineStyle';
+    visualColorBrushType = 'stroke' as const;
 
     private _flatCoords: ArrayLike<number>;
     private _flatCoordsOffset: ArrayLike<number>;

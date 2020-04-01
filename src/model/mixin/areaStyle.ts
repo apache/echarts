@@ -22,14 +22,15 @@ import Model from '../Model';
 import { AreaStyleOption } from '../../util/types';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 
-const getAreaStyle = makeStyleMapper([
+export const AREA_STYLE_KEY_MAP = [
     ['fill', 'color'],
     ['shadowBlur'],
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['opacity'],
     ['shadowColor']
-]);
+];
+const getAreaStyle = makeStyleMapper(AREA_STYLE_KEY_MAP);
 
 type AreaStyleProps = Pick<PathStyleProps,
     'fill'

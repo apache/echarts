@@ -137,6 +137,11 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
     layoutInfo: LayoutRect;
 
+    hasSymbolVisual = true;
+
+    // Do it self.
+    ignoreStyleOnData = true;
+
     /**
      * Init a tree data structure from data in option series
      * @param  option  the object used to config echarts view

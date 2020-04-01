@@ -18,7 +18,6 @@
 */
 
 import * as graphic from '../../util/graphic';
-import * as zrUtil from 'zrender/src/core/util';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import type List from '../../data/List';
 
@@ -61,23 +60,14 @@ class Polyline extends graphic.Group {
         const line = this.childAt(0) as graphic.Polyline;
         const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
-        const visualColor = lineData.getItemVisual(idx, 'color');
 
-        let lineStyle = seriesScope && seriesScope.lineStyle;
         let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
 
         if (!seriesScope || lineData.hasItemOption) {
-            lineStyle = itemModel.getModel('lineStyle').getLineStyle();
             hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
         }
-        line.useStyle(zrUtil.defaults(
-            {
-                strokeNoScale: true,
-                fill: 'none',
-                stroke: visualColor
-            },
-            lineStyle
-        ));
+        line.useStyle(lineData.getItemVisual(idx, 'style'));
+        line.style.strokeNoScale = true;
 
         const lineEmphasisState = line.ensureState('emphasis');
         lineEmphasisState.style = hoverLineStyle;

@@ -17,11 +17,21 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
+import GlobalModel from '../../model/Global';
+import TreeSeriesModel, { TreeSeriesNodeItemOption } from './TreeSeries';
+import { extend } from 'zrender/src/core/util';
 
-import './effectScatter/EffectScatterSeries';
-import './effectScatter/EffectScatterView';
+export default function (ecModel: GlobalModel) {
 
-import layoutPoints from '../layout/points';
-
-echarts.registerLayout(layoutPoints('effectScatter'));
+    ecModel.eachSeriesByType('tree', function (seriesModel: TreeSeriesModel) {
+        const data = seriesModel.getData();
+        const tree = data.tree;
+        tree.eachNode(function (node) {
+            const model = node.getModel<TreeSeriesNodeItemOption>();
+            // TODO Optimize
+            const style = model.getModel('itemStyle').getItemStyle();
+            const existsStyle = data.ensureUniqueItemVisual(node.dataIndex, 'style');
+            extend(existsStyle, style);
+        });
+    });
+}

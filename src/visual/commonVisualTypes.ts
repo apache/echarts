@@ -1,7 +1,3 @@
-import GlobalModel from '../../model/Global';
-import MapSeries from './MapSeries';
-import { ZRColor } from '../../util/types';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -21,19 +17,12 @@ import { ZRColor } from '../../util/types';
 * under the License.
 */
 
+import { DefaultDataVisual } from '../data/List';
 
-export default function (ecModel: GlobalModel) {
-    ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
-        const colorList = seriesModel.get('color') as ZRColor[];
-        const itemStyleModel = seriesModel.getModel('itemStyle');
-
-        const areaColor = itemStyleModel.get('areaColor');
-        const color = itemStyleModel.get('color')
-            || colorList[seriesModel.seriesIndex % colorList.length];
-
-        seriesModel.getData().setVisual({
-            'areaColor': areaColor,
-            'color': color
-        });
-    });
+export interface LineDataVisual extends DefaultDataVisual {
+    fromSymbol: string
+    toSymbol: string
+    fromSymbolSize: number
+    toSymbolSize: number
 }
+

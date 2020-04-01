@@ -142,7 +142,8 @@ class MapView extends ChartView {
                     // And each series also need a symbol with legend color
                     //
                     // Layout and visual are put one the different data
-                    fill: mapModel.getData().getVisual('color')
+                    // TODO
+                    fill: mapModel.getData().getVisual('style').fill
                 },
                 shape: {
                     cx: point[0] + offset * 9,

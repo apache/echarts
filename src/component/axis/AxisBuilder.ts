@@ -635,6 +635,7 @@ function createTicks(
             },
             style: tickLineStyle,
             z2: 2,
+            autoBatch: true,
             silent: true
         });
         tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;

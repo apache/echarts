@@ -39,9 +39,11 @@ import {
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
+import { getECData } from '../util/graphic';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';
-import { getECData } from '../util/graphic';
+import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 
 
 const isObject = zrUtil.isObject;
@@ -75,7 +77,6 @@ const CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
 type DataTypedArray = Uint32Array | Int32Array | Uint16Array | Float64Array;
 type DataTypedArrayConstructor = typeof Uint32Array | typeof Int32Array | typeof Uint16Array | typeof Float64Array;
 type DataArrayLikeConstructor = typeof Array | DataTypedArrayConstructor;
-
 
 
 type DimValueGetter = (
@@ -112,7 +113,6 @@ type MapCb2<Ctx> = (this: CtxOrList<Ctx>, x: ParsedValue, y: ParsedValue, idx: n
 type MapCb<Ctx> = (this: CtxOrList<Ctx>, ...args: any) => ParsedValue | ParsedValue[];
 
 
-
 const TRANSFERABLE_PROPERTIES = [
     'hasItemOption', '_nameList', '_idList', '_invertedIndicesMap',
     '_rawData', '_chunkSize', '_chunkCount', '_dimValueGetter',
@@ -122,8 +122,29 @@ const CLONE_PROPERTIES = [
     '_extent', '_approximateExtent', '_rawExtent'
 ];
 
+export interface DefaultDataVisual {
+    style: PathStyleProps
+    // Brush type determined which prop should be set with encoded color.
+    // It's only available on the global visual. Use getVisual('brushType') to access it.
+    // It will be set in visual/style.ts module in the first priority.
+    brushType: 'fill' | 'stroke'
 
-class List<HostModel extends Model = Model> {
+    symbol?: string
+    symbolSize?: number | number[]
+    symbolKeepAspect?: boolean
+
+    liftZ?: number
+    // For legend.
+    legendSymbol?: string
+
+    // visualMap will inject visualMeta data
+    visualMeta?: VisualMeta[]
+}
+
+class List<
+    HostModel extends Model = Model,
+    Visual extends DefaultDataVisual = DefaultDataVisual
+> {
 
     readonly type = 'list';
 
@@ -167,10 +188,6 @@ class List<HostModel extends Model = Model> {
 
     // Item visual properties after visual coding
     private _itemVisuals: Dictionary<any>[] = [];
-
-    // Key: visual type, Value: boolean
-    // @readonly
-    hasItemVisual: Dictionary<boolean> = {};
 
     // Item layout properties after layout
     private _itemLayouts: any[] = [];
@@ -1596,8 +1613,8 @@ class List<HostModel extends Model = Model> {
     /**
      * Get visual property.
      */
-    getVisual(key: string): any {
-        const visual = this._visual;
+    getVisual<K extends keyof Visual>(key: K): Visual[K] {
+        const visual = this._visual as Visual;
         return visual && visual[key];
     }
 
@@ -1610,19 +1627,94 @@ class List<HostModel extends Model = Model> {
      *      'color': color
      *  });
      */
-    setVisual(key: string, val: any): void;
-    setVisual(kvObj: Dictionary<any>): void;
-    setVisual(key: string | Dictionary<any>, val?: any): void {
-        if (isObject(key)) {
-            for (const name in key) {
-                if (key.hasOwnProperty(name)) {
-                    this.setVisual(name, key[name]);
-                }
-            }
-            return;
-        }
+    setVisual<K extends keyof Visual>(key: K, val: Visual[K]): void;
+    setVisual(kvObj: Partial<Visual>): void;
+    setVisual(kvObj: string | Partial<Visual>, val?: any): void {
         this._visual = this._visual || {};
-        this._visual[key] = val;
+        if (isObject(kvObj)) {
+            zrUtil.extend(this._visual, kvObj);
+        }
+        else {
+            this._visual[kvObj as string] = val;
+        }
+    }
+
+    /**
+     * Get visual property of single data item
+     */
+    // eslint-disable-next-line
+    getItemVisual<K extends keyof Visual>(idx: number, key: K): Visual[K] {
+        const itemVisual = this._itemVisuals[idx] as Visual;
+        const val = itemVisual && itemVisual[key];
+        if (val == null) {
+            // Use global visual property
+            return this.getVisual(key);
+        }
+        return val;
+    }
+
+    /**
+     * Make sure itemVisual property is unique
+     */
+    // TODO: use key to save visual to reduce memory.
+    // eslint-disable-next-line
+    ensureUniqueItemVisual<K extends keyof Visual>(idx: number, key: K): Visual[K] {
+        const itemVisuals = this._itemVisuals;
+        let itemVisual = itemVisuals[idx] as Visual;
+        if (!itemVisual) {
+            itemVisual = itemVisuals[idx] = {} as Visual;
+        }
+        let val = itemVisual[key];
+        if (!val) {
+            val = this.getVisual(key);
+
+            // TODO Performance?
+            if (zrUtil.isArray(val)) {
+                val = val.slice() as unknown as Visual[K];
+            }
+            else if (isObject(val)) {
+                val = zrUtil.extend({}, val);
+            }
+
+            itemVisual[key] = val;
+        }
+        return val;
+    }
+    /**
+     * Set visual property of single data item
+     *
+     * @param {number} idx
+     * @param {string|Object} key
+     * @param {*} [value]
+     *
+     * @example
+     *  setItemVisual(0, 'color', color);
+     *  setItemVisual(0, {
+     *      'color': color
+     *  });
+     */
+    // eslint-disable-next-line
+    setItemVisual<K extends keyof Visual>(idx: number, key: K, value: Visual[K]): void;
+    setItemVisual(idx: number, kvObject: Partial<Visual>): void;
+    // eslint-disable-next-line
+    setItemVisual<K extends keyof Visual>(idx: number, key: K | Partial<Visual>, value?: Visual[K]): void {
+        const itemVisual = this._itemVisuals[idx] || {};
+        this._itemVisuals[idx] = itemVisual;
+
+        if (isObject(key)) {
+            zrUtil.extend(itemVisual, key);
+        }
+        else {
+            itemVisual[key as string] = value;
+        }
+    }
+
+    /**
+     * Clear itemVisuals and list visual.
+     */
+    clearAllVisual(): void {
+        this._visual = {};
+        this._itemVisuals = [];
     }
 
     /**
@@ -1674,61 +1766,6 @@ class List<HostModel extends Model = Model> {
      */
     clearItemLayouts(): void {
         this._itemLayouts.length = 0;
-    }
-
-    /**
-     * Get visual property of single data item
-     */
-    getItemVisual(idx: number, key: string, ignoreParent?: boolean): any {
-        const itemVisual = this._itemVisuals[idx];
-        const val = itemVisual && itemVisual[key];
-        if (val == null && !ignoreParent) {
-            // Use global visual property
-            return this.getVisual(key);
-        }
-        return val;
-    }
-
-    /**
-     * Set visual property of single data item
-     *
-     * @param {number} idx
-     * @param {string|Object} key
-     * @param {*} [value]
-     *
-     * @example
-     *  setItemVisual(0, 'color', color);
-     *  setItemVisual(0, {
-     *      'color': color
-     *  });
-     */
-    setItemVisual(idx: number, key: string, value: any): void;
-    setItemVisual(idx: number, kvObject: Dictionary<any>): void;
-    setItemVisual(idx: number, key: string | Dictionary<any>, value?: any): void {
-        const itemVisual = this._itemVisuals[idx] || {};
-        const hasItemVisual = this.hasItemVisual;
-        this._itemVisuals[idx] = itemVisual;
-
-        if (isObject(key)) {
-            for (const name in key) {
-                if (key.hasOwnProperty(name)) {
-                    itemVisual[name] = key[name];
-                    hasItemVisual[name] = true;
-                }
-            }
-            return;
-        }
-        itemVisual[key] = value;
-        hasItemVisual[key] = true;
-    }
-
-    /**
-     * Clear itemVisuals and list visual.
-     */
-    clearAllVisual(): void {
-        this._visual = {};
-        this._itemVisuals = [];
-        this.hasItemVisual = {};
     }
 
     /**

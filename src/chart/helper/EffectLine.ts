@@ -30,6 +30,7 @@ import * as curveUtil from 'zrender/src/core/curve';
 import type List from '../../data/List';
 import { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import Model from '../../model/Model';
+import { ColorString } from '../../util/types';
 
 export type ECSymbolOnEffectLine = ReturnType<typeof createSymbol> & {
     __t: number
@@ -67,7 +68,9 @@ class EffectLine extends graphic.Group {
         if (!zrUtil.isArray(size)) {
             size = [size, size];
         }
-        const color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
+
+        const lineStyle = lineData.getItemVisual(idx, 'style');
+        const color = effectModel.get('color') || (lineStyle && lineStyle.stroke);
         let symbol = this.childAt(1) as ECSymbolOnEffectLine;
 
         if (this._symbolType !== symbolType) {
@@ -89,7 +92,7 @@ class EffectLine extends graphic.Group {
         }
 
         // Shadow color is same with color in default
-        symbol.setStyle('shadowColor', color);
+        symbol.setStyle('shadowColor', color as ColorString);
         symbol.setStyle(effectModel.getItemStyle(['color']));
 
         symbol.scaleX = size[0];

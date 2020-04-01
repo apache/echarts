@@ -22,14 +22,18 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../Model';
 import { Dictionary } from 'zrender/src/core/types';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
-export default function (properties: readonly string[][]) {
+export default function (properties: readonly string[][], ignoreParent?: boolean) {
     // Normalize
     for (let i = 0; i < properties.length; i++) {
         if (!properties[i][1]) {
             properties[i][1] = properties[i][0];
         }
     }
+
+    ignoreParent = ignoreParent || false;
+
     return function (model: Model, excludes?: readonly string[], includes?: readonly string[]) {
         const style: Dictionary<any> = {};
         for (let i = 0; i < properties.length; i++) {
@@ -39,11 +43,12 @@ export default function (properties: readonly string[][]) {
             ) {
                 continue;
             }
-            const val = model.getShallow(propName);
+            const val = model.getShallow(propName, ignoreParent);
             if (val != null) {
                 style[properties[i][0]] = val;
             }
         }
-        return style;
+        // TODO Text or image?
+        return style as PathStyleProps;
     };
 }

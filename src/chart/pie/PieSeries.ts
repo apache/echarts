@@ -112,6 +112,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
     static type = 'series.pie' as const;
 
+    useColorPaletteOnData = true;
+
     /**
      * @overwrite
      */

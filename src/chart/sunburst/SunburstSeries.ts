@@ -42,11 +42,11 @@ interface SunburstDataParams extends CallbackDataParams {
     treePathInfo: {
         name: string,
         dataIndex: number
-        value: SunburstSeriesNodeOption['value']
+        value: SunburstSeriesNodeItemOption['value']
     }[]
 }
 
-export interface SunburstSeriesNodeOption {
+export interface SunburstSeriesNodeItemOption {
     name?: string
 
     nodeClick?: 'rootToNode' | 'link'
@@ -71,7 +71,7 @@ export interface SunburstSeriesNodeOption {
 
     value?: OptionDataValue | OptionDataValue[]
 
-    children?: SunburstSeriesNodeOption[]
+    children?: SunburstSeriesNodeItemOption[]
 
     collapsed?: boolean
 
@@ -152,6 +152,8 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
     private _viewRoot: TreeNode;
 
+    useColorPaletteOnData = true;
+
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
         const root = { name: option.name, children: option.data };
@@ -183,7 +185,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         const params = super.getDataParams.apply(this, arguments as any) as SunburstDataParams;
 
         const node = this.getData().tree.getNodeByDataIndex(dataIndex);
-        params.treePathInfo = wrapTreePathInfo<SunburstSeriesNodeOption['value']>(node, this);
+        params.treePathInfo = wrapTreePathInfo<SunburstSeriesNodeItemOption['value']>(node, this);
 
         return params;
     }
@@ -292,7 +294,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
 
 
-function completeTreeValue(dataNode: SunburstSeriesNodeOption) {
+function completeTreeValue(dataNode: SunburstSeriesNodeItemOption) {
     // Postorder travel tree.
     // If value of none-leaf node is not set,
     // calculate it by suming up the value of all children.

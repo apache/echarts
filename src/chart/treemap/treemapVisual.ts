@@ -79,6 +79,7 @@ function travelTree(
 ) {
     const nodeModel = node.getModel<TreemapSeriesNodeItemOption>();
     const nodeLayout = node.getLayout();
+    const data = node.hostTree.data;
 
     // Optimize
     if (!nodeLayout || nodeLayout.invisible || !nodeLayout.isInView) {
@@ -91,6 +92,7 @@ function travelTree(
         nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
     );
 
+    const existsStyle = data.ensureUniqueItemVisual(node.dataIndex, 'style');
     // calculate border color
     let borderColor = nodeItemStyleModel.get('borderColor');
     const borderColorSaturation = nodeItemStyleModel.get('borderColorSaturation');
@@ -100,13 +102,13 @@ function travelTree(
         thisNodeColor = calculateColor(visuals);
         borderColor = calculateBorderColor(borderColorSaturation, thisNodeColor);
     }
-    node.setVisual('borderColor', borderColor);
+    existsStyle.stroke = borderColor;
 
     const viewChildren = node.viewChildren;
     if (!viewChildren || !viewChildren.length) {
         thisNodeColor = calculateColor(visuals);
         // Apply visual to this node.
-        node.setVisual('color', thisNodeColor);
+        existsStyle.fill = thisNodeColor;
     }
     else {
         const mapping = buildVisualMapping(

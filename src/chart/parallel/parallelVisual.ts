@@ -30,27 +30,13 @@ const parallelVisual: StageHandler = {
 
     reset: function (seriesModel: ParallelSeriesModel, ecModel) {
 
-        // let itemStyleModel = seriesModel.getModel('itemStyle');
-        const lineStyleModel = seriesModel.getModel('lineStyle');
-        const globalColors = ecModel.get('color');
-
-        const color = lineStyleModel.get('color')
-            // || itemStyleModel.get('color')
-            || globalColors[seriesModel.seriesIndex % globalColors.length];
-        const inactiveOpacity = seriesModel.get('inactiveOpacity');
-        const activeOpacity = seriesModel.get('activeOpacity');
-        const lineStyle = seriesModel.getModel('lineStyle').getLineStyle();
-
         const coordSys = seriesModel.coordinateSystem;
-        const data = seriesModel.getData();
 
         const opacityMap = {
-            normal: lineStyle.opacity,
-            active: activeOpacity,
-            inactive: inactiveOpacity
+            normal: seriesModel.get(['lineStyle', 'opacity']),
+            active: seriesModel.get('activeOpacity'),
+            inactive: seriesModel.get('inactiveOpacity')
         };
-
-        data.setVisual('color', color);
 
         return {
             progress(params, data) {
@@ -62,7 +48,8 @@ const parallelVisual: StageHandler = {
                         );
                         itemOpacity != null && (opacity = itemOpacity);
                     }
-                    data.setItemVisual(dataIndex, 'opacity', opacity);
+                    const existsStyle = data.ensureUniqueItemVisual(dataIndex, 'style');
+                    existsStyle.opacity = opacity;
                 }, params.start, params.end);
             }
         };

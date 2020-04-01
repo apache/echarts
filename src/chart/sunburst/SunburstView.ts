@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import SunburstPiece from './SunburstPiece';
 import DataDiffer from '../../data/DataDiffer';
-import SunburstSeriesModel, { SunburstSeriesNodeOption } from './SunburstSeries';
+import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
@@ -210,12 +210,12 @@ class SunburstView extends ChartView {
                 if (!targetFound
                     && node.piece && node.piece.childAt(0) === e.target
                 ) {
-                    const nodeClick = node.getModel<SunburstSeriesNodeOption>().get('nodeClick');
+                    const nodeClick = node.getModel<SunburstSeriesNodeItemOption>().get('nodeClick');
                     if (nodeClick === 'rootToNode') {
                         this._rootToNode(node);
                     }
                     else if (nodeClick === 'link') {
-                        const itemModel = node.getModel<SunburstSeriesNodeOption>();
+                        const itemModel = node.getModel<SunburstSeriesNodeItemOption>();
                         const link = itemModel.get('link');
                         if (link) {
                             const linkTarget = itemModel.get('target', true)

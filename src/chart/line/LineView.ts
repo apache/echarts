@@ -37,7 +37,6 @@ import type ExtensionAPI from '../../ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
 import type List from '../../data/List';
-import type { VisualMeta } from '../../component/visualMap/VisualMapModel';
 import type { Payload, Dictionary, ColorString } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -135,7 +134,7 @@ function getVisualGradient(
     data: List,
     coordSys: Cartesian2D | Polar
 ) {
-    const visualMetaList = data.getVisual('visualMeta') as VisualMeta[];
+    const visualMetaList = data.getVisual('visualMeta');
     if (!visualMetaList || !visualMetaList.length || !data.count()) {
         // When data.count() is 0, gradient range can not be calculated.
         return;
@@ -513,7 +512,8 @@ class LineView extends ChartView {
             }
         }
 
-        const visualColor = getVisualGradient(data, coordSys) || data.getVisual('color');
+        const visualColor = getVisualGradient(data, coordSys)
+            || data.getVisual('style')[data.getVisual('brushType')];
 
         polyline.useStyle(zrUtil.defaults(
             // Use color in lineStyle first

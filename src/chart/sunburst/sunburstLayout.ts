@@ -21,7 +21,7 @@ import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import SunburstSeriesModel, { SunburstSeriesNodeOption, SunburstSeriesOption } from './SunburstSeries';
+import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import { TreeNode } from '../../data/Tree';
 
 // let PI2 = Math.PI * 2;
@@ -119,7 +119,7 @@ export default function (
                 let rStart = r0 + rPerLevel * depth;
                 let rEnd = r0 + rPerLevel * (depth + 1);
 
-                const itemModel = node.getModel<SunburstSeriesNodeOption>();
+                const itemModel = node.getModel<SunburstSeriesNodeItemOption>();
                 // @ts-ignore. TODO this is not provided to developer yet. Rename it.
                 if (itemModel.get('r0') != null) {
                     // @ts-ignore

@@ -47,6 +47,7 @@ import Graph from '../../data/Graph';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { ForceLayoutInstance } from './forceLayout';
+import { LineDataVisual } from '../../visual/commonVisualTypes';
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
 
@@ -224,6 +225,8 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
     forceLayout?: ForceLayoutInstance;
 
+    hasSymbolVisual = true;
+
     init(option: GraphSeriesOption) {
         super.init.apply(this, arguments as any);
 
@@ -310,8 +313,8 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         return this.getData().graph;
     }
 
-    getEdgeData(): List {
-        return this.getGraph().edgeData;
+    getEdgeData() {
+        return this.getGraph().edgeData as List<GraphSeriesModel, LineDataVisual>;
     }
 
     getCategoriesData(): List {

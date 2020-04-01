@@ -132,6 +132,7 @@ class CandlestickView extends ChartView {
                     el = createNormalBox(itemLayout, newIdx);
                 }
                 else {
+                    graphic.clearStates(el);
                     graphic.updateProps(el, {
                         shape: {
                             points: itemLayout.ends
@@ -274,18 +275,9 @@ function isNormalBoxClipped(clipArea: CoordinateSystemClipArea, itemLayout: Cand
 
 function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimpleBox?: boolean) {
     const itemModel = data.getItemModel(dataIndex) as Model<CandlestickDataItemOption>;
-    const normalItemStyleModel = itemModel.getModel('itemStyle');
-    const color = data.getItemVisual(dataIndex, 'color');
-    const borderColor = data.getItemVisual(dataIndex, 'borderColor') || color;
 
-    // Color must be excluded.
-    // Because symbol provide setColor individually to set fill and stroke
-    const itemStyle = normalItemStyleModel.getItemStyle(SKIP_PROPS);
-
-    el.useStyle(itemStyle);
+    el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.strokeNoScale = true;
-    el.style.fill = color;
-    el.style.stroke = borderColor;
 
     el.__simpleBox = isSimpleBox;
 
@@ -369,9 +361,9 @@ function createLarge(seriesModel: CandlestickSeriesModel, group: graphic.Group, 
 }
 
 function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickSeriesModel, data: List) {
-    const suffix = sign > 0 ? 'P' : 'N';
-    const borderColor = data.getVisual('borderColor' + suffix)
-        || data.getVisual('color' + suffix);
+    // TODO put in visual?
+    const borderColor = seriesModel.get(['itemStyle', sign > 0 ? 'borderColor' : 'borderColor0'])
+        || seriesModel.get(['itemStyle', sign > 0 ? 'color' : 'color0']);
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
@@ -380,8 +372,6 @@ function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickS
     el.useStyle(itemStyle);
     el.style.fill = null;
     el.style.stroke = borderColor;
-    // No different
-    // el.style.lineWidth = .5;
 }
 
 

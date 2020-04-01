@@ -57,6 +57,7 @@ import Source from '../data/Source';
 import Axis from '../coord/Axis';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
+import makeStyleMapper from './mixin/makeStyleMapper';
 
 const inner = modelUtil.makeInner<{
     data: List
@@ -131,14 +132,30 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Injected outside
     pipelineContext: PipelineContext;
 
+
+    // ---------------------------------------
+    // Props to tell echarts about how to do visual encoding.
+    // ---------------------------------------
     // legend visual provider to the legend component
     legendVisualProvider: LegendVisualProvider;
 
-    // Access path of color for visual
-    visualColorAccessPath: string[];
-
-    // Access path of borderColor for visual
-    visualBorderColorAccessPath: string[];
+    // Access path of style for visual
+    visualStyleAccessPath: string;
+    // Which property is treated as main color. Which can get from the palette.
+    visualColorBrushType: 'fill' | 'stroke';
+    // Style mapping rules.
+    visualStyleMapper: ReturnType<typeof makeStyleMapper>;
+    // If ignore style on data. It's only for global visual/style.ts
+    // Perhaps series it self will handle it.
+    ignoreStyleOnData: boolean;
+    // If use palette on each data.
+    useColorPaletteOnData: boolean;
+    // If do symbol visual encoding
+    hasSymbolVisual: boolean;
+    // Default symbol type.
+    defaultSymbol: string;
+    // Symbol provide to legend.
+    legendSymbol: string;
 
     readonly preventUsingHoverLayer: boolean;
 
@@ -146,8 +163,13 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const proto = SeriesModel.prototype;
         proto.type = 'series.__base__';
         proto.seriesIndex = 0;
-        proto.visualColorAccessPath = ['itemStyle', 'color'];
-        proto.visualBorderColorAccessPath = ['itemStyle', 'borderColor'];
+        proto.useColorPaletteOnData = false;
+        proto.ignoreStyleOnData = false;
+        proto.hasSymbolVisual = false;
+        proto.defaultSymbol = 'circle';
+        // Make sure the values can be accessed!
+        proto.visualStyleAccessPath = 'itemStyle';
+        proto.visualColorBrushType = 'fill';
     })();
 
 
@@ -458,7 +480,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const value = this.getRawValue(dataIndex) as any;
         const isValueArr = zrUtil.isArray(value);
 
-        const color = data.getItemVisual(dataIndex, 'color') as ZRColor;
+        const style = data.getItemVisual(dataIndex, 'style');
+        const color = style[this.visualColorBrushType];
         let colorStr: ColorString;
         if (zrUtil.isString(color)) {
             colorStr = color;
@@ -562,7 +585,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     getProgressiveThreshold(): number {
         return this.get('progressiveThreshold');
     }
-
 
     // /**
     //  * @see {module:echarts/stream/Scheduler}

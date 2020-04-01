@@ -28,7 +28,7 @@ interface BrushPayload extends Payload {
 }
 
 echarts.registerAction(
-    {type: 'brush', event: 'brush' /*, update: 'updateView' */},
+    {type: 'brush', event: 'brush', update: 'updateVisual' },
     function (payload: BrushPayload, ecModel: GlobalModel) {
         ecModel.eachComponent(
             {mainType: 'brush', query: payload},

@@ -29,6 +29,7 @@ import { ZRColor } from './types';
 type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
     setColor: (color: ZRColor, innerColor?: string) => void
+    getColor: () => ZRColor
 };
 type SymbolCtor = { new(): ECSymbol };
 type SymbolShapeMaker = (x: number, y: number, w: number, h: number, shape: Dictionary<any>) => void;
@@ -171,10 +172,11 @@ const Arrow = graphic.Path.extend({
 /**
  * Map of path contructors
  */
+// TODO Use function to build symbol path.
 const symbolCtors: Dictionary<SymbolCtor> = {
-
-    // TODO
-    line: graphic.Line as unknown as SymbolCtor,
+    // Use small height rect to simulate line.
+    // Avoid using stroke.
+    line: graphic.Rect as unknown as SymbolCtor,
 
     rect: graphic.Rect as unknown as SymbolCtor,
 
@@ -194,14 +196,16 @@ const symbolCtors: Dictionary<SymbolCtor> = {
 };
 
 
+// NOTICE Only use fill. No line!
 const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
 
-    line: function (x, y, w, h, shape: graphic.Line['shape']) {
-        // FIXME
-        shape.x1 = x;
-        shape.y1 = y + h / 2;
-        shape.x2 = x + w;
-        shape.y2 = y + h / 2;
+    line: function (x, y, w, h, shape: graphic.Rect['shape']) {
+        const thickness = 2;
+        // A thin line
+        shape.x = x;
+        shape.y = y + h / 2 - thickness / 2;
+        shape.width = w;
+        shape.height = thickness;
     },
 
     rect: function (x, y, w, h, shape: graphic.Rect['shape']) {
@@ -310,18 +314,14 @@ const SymbolClz = graphic.Path.extend({
 function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: string) {
     if (this.type !== 'image') {
         const symbolStyle = this.style;
-        const symbolShape = this.shape;
-        if (symbolShape && symbolShape.symbolType === 'line') {
-            symbolStyle.stroke = color;
-        }
-        else if (this.__isEmptyBrush) {
+        if (this.__isEmptyBrush) {
             symbolStyle.stroke = color;
             symbolStyle.fill = innerColor || '#fff';
+            // TODO Same width with lineStyle in LineView.
+            symbolStyle.lineWidth = 2;
         }
         else {
-            // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
-            symbolStyle.fill && (symbolStyle.fill = color);
-            symbolStyle.stroke && (symbolStyle.stroke = color);
+            symbolStyle.fill = color;
         }
         this.markRedraw();
     }
@@ -377,9 +377,12 @@ export function createSymbol(
 
     (symbolPath as ECSymbol).__isEmptyBrush = isEmpty;
 
+    // TODO Should deprecate setColor
     (symbolPath as ECSymbol).setColor = symbolPathSetColor;
 
-    (symbolPath as ECSymbol).setColor(color);
+    if (color) {
+        (symbolPath as ECSymbol).setColor(color);
+    }
 
     return symbolPath as ECSymbol;
 }

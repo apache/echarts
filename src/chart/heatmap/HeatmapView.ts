@@ -184,7 +184,6 @@ class HeatmapView extends ChartView {
         const group = this.group;
         const data = seriesModel.getData();
 
-        let style = seriesModel.getModel('itemStyle').getItemStyle(['color']);
         let hoverStl = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
         let labelModel = seriesModel.getModel('label');
         let hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
@@ -221,10 +220,7 @@ class HeatmapView extends ChartView {
                         width: Math.ceil(width),
                         height: Math.ceil(height)
                     },
-                    style: {
-                        fill: data.getItemVisual(idx, 'color'),
-                        opacity: data.getItemVisual(idx, 'opacity')
-                    }
+                    style: data.getItemVisual(idx, 'style')
                 });
             }
             else {
@@ -236,10 +232,7 @@ class HeatmapView extends ChartView {
                 rect = new graphic.Rect({
                     z2: 1,
                     shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
-                    style: {
-                        fill: data.getItemVisual(idx, 'color'),
-                        opacity: data.getItemVisual(idx, 'opacity')
-                    }
+                    style: data.getItemVisual(idx, 'style')
                 });
             }
 
@@ -247,7 +240,6 @@ class HeatmapView extends ChartView {
 
             // Optimization for large datset
             if (data.hasItemOption) {
-                style = itemModel.getModel('itemStyle').getItemStyle(['color']);
                 hoverStl = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
                 labelModel = itemModel.getModel('label');
                 hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
@@ -268,7 +260,6 @@ class HeatmapView extends ChartView {
                 }
             );
 
-            rect.setStyle(style);
             graphic.enableHoverEmphasis(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
 
             rect.incremental = incremental;

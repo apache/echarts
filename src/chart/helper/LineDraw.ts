@@ -77,7 +77,6 @@ export interface LineDrawModelOption {
 type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>;
 
 export interface LineDrawSeriesScope {
-    lineStyle?: ZRStyleProps
     hoverLineStyle?: ZRStyleProps
 
     labelModel?: Model<LineLabelOption>
@@ -205,6 +204,7 @@ class LineDraw {
             itemEl = new this._LineCtor(newLineData, newIdx, seriesScope);
         }
         else {
+            graphic.clearStates(itemEl);
             itemEl.updateData(newLineData, newIdx, seriesScope);
         }
 

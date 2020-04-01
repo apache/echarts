@@ -94,7 +94,6 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object> {
 }
 
 export interface SymbolDrawSeriesScope {
-    itemStyle?: ZRStyleProps
     hoverItemStyle?: ZRStyleProps
     symbolRotate?: number
     symbolOffset?: number[]
@@ -111,7 +110,6 @@ export interface SymbolDrawSeriesScope {
 function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     const seriesModel = data.hostModel;
     return {
-        itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
         hoverItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
         symbolRotate: seriesModel.get('symbolRotate'),
         symbolOffset: seriesModel.get('symbolOffset'),
@@ -168,6 +166,7 @@ class SymbolDraw {
             })
             .update(function (newIdx, oldIdx) {
                 let symbolEl = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
+
                 const point = data.getItemLayout(newIdx) as number[];
                 if (!symbolNeedsDraw(data, point, newIdx, opt)) {
                     group.remove(symbolEl);
@@ -178,6 +177,8 @@ class SymbolDraw {
                     symbolEl.setPosition(point);
                 }
                 else {
+                    graphic.clearStates(symbolEl);
+
                     symbolEl.updateData(data, newIdx, seriesScope);
                     graphic.updateProps(symbolEl, {
                         x: point[0],

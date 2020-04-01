@@ -19,8 +19,7 @@
 
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
-import {Rect, Sector, getECData, updateProps, initProps, enableHoverEmphasis, setLabelStyle} from '../../util/graphic';
-import {getBarItemStyle} from './barItemStyle';
+import {Rect, Sector, getECData, updateProps, initProps, enableHoverEmphasis, setLabelStyle, clearStates} from '../../util/graphic';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {throttle} from '../../util/throttle';
@@ -30,7 +29,7 @@ import ChartView from '../../view/Chart';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { StageHandlerProgressParams, ZRElementEvent } from '../../util/types';
+import { StageHandlerProgressParams, ZRElementEvent, ColorString } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -171,7 +170,7 @@ class BarView extends ChartView {
                     const bgEl = createBackgroundEl(
                         coord, isHorizontalOrRadial, layout
                     );
-                    bgEl.useStyle(getBarItemStyle(backgroundModel));
+                    bgEl.useStyle(backgroundModel.getItemStyle());
                     bgEls[dataIndex] = bgEl;
                 }
 
@@ -207,7 +206,7 @@ class BarView extends ChartView {
 
                 if (drawBackground) {
                     const bgEl = oldBgEls[oldIndex];
-                    bgEl.useStyle(getBarItemStyle(backgroundModel));
+                    bgEl.useStyle(backgroundModel.getItemStyle());
                     bgEls[newIndex] = bgEl;
 
                     const shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
@@ -231,6 +230,7 @@ class BarView extends ChartView {
                 }
 
                 if (el) {
+                    clearStates(el);
                     updateProps(el as Path, {
                         shape: layout
                     }, animationModel, newIndex);
@@ -394,6 +394,7 @@ const elementCreator: {
             shape: zrUtil.extend({}, layout),
             z2: 1
         });
+        // rect.autoBatch = true;
 
         rect.name = 'item';
 
@@ -528,24 +529,16 @@ function updateStyle(
     isHorizontal: boolean,
     isPolar: boolean
 ) {
-    const color = data.getItemVisual(dataIndex, 'color');
-    const opacity = data.getItemVisual(dataIndex, 'opacity');
-    const stroke = data.getVisual('borderColor');
-    const itemStyleModel = itemModel.getModel('itemStyle');
-    const hoverStyle = getBarItemStyle(itemModel.getModel(['emphasis', 'itemStyle']));
+    const style = data.getItemVisual(dataIndex, 'style');
+    const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemStyleModel.get('barBorderRadius') || 0);
+        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'barBorderRadius']) || 0);
     }
 
-    el.useStyle(zrUtil.defaults(
-        {
-            stroke: isZeroOnPolar(layout as SectorLayout) ? 'none' : stroke,
-            fill: isZeroOnPolar(layout as SectorLayout) ? 'none' : color,
-            opacity: opacity
-        },
-        getBarItemStyle(itemStyleModel)
-    ));
+    el.useStyle(style);
+
+    el.ignore = isZeroOnPolar(layout as SectorLayout);
 
     const cursorStyle = itemModel.getShallow('cursor');
     cursorStyle && (el as Path).attr('cursor', cursorStyle);
@@ -563,7 +556,7 @@ function updateStyle(
                 labelFetcher: seriesModel,
                 labelDataIndex: dataIndex,
                 defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                autoColor: color,
+                autoColor: style.fill as ColorString,
                 defaultOutsidePosition: labelPositionOutside
             }
         );
@@ -727,12 +720,12 @@ function setLargeStyle(
     seriesModel: BarSeriesModel,
     data: List
 ) {
-    const borderColor = data.getVisual('borderColor') || data.getVisual('color');
-    const itemStyle = seriesModel.getModel('itemStyle').getItemStyle(['color', 'borderColor']);
+    const globalStyle = data.getVisual('style');
 
-    el.useStyle(itemStyle);
+    el.useStyle(zrUtil.extend({}, globalStyle));
+    // Use stroke instead of fill.
     el.style.fill = null;
-    el.style.stroke = borderColor;
+    el.style.stroke = globalStyle.fill;
     el.style.lineWidth = data.getLayout('barWidth');
 }
 

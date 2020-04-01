@@ -28,16 +28,18 @@ import LegendModel, { LegendOption, LegendSelectorButtonOption, LegendTooltipFor
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import {
-    ColorString,
     ZRTextAlign,
     ZRColor,
     ItemStyleOption,
     ZRRectLike,
     ECElement,
-    CommonTooltipOption
+    CommonTooltipOption,
+    ColorString
 } from '../../util/types';
 import Model from '../../model/Model';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { parse, stringify } from 'zrender/src/tool/color';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -192,20 +194,9 @@ class LegendView extends ComponentView {
             // Legend to control series.
             if (seriesModel) {
                 const data = seriesModel.getData();
-                let color = data.getVisual('color');
-                let borderColor = data.getVisual('borderColor');
-
-                // If color is a callback function
-                if (typeof color === 'function') {
-                    // Use the first data
-                    color = color(seriesModel.getDataParams(0));
-                }
-
-                 // If borderColor is a callback function
-                if (typeof borderColor === 'function') {
-                    // Use the first data
-                    borderColor = borderColor(seriesModel.getDataParams(0));
-                }
+                const style = data.getVisual('style');
+                const color = style.fill;
+                const borderColor = style.stroke;
 
                 // Using rect symbol defaultly
                 const legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
@@ -241,8 +232,17 @@ class LegendView extends ComponentView {
 
                         const idx = provider.indexOfName(name);
 
-                        const color = provider.getItemVisual(idx, 'color');
-                        const borderColor = provider.getItemVisual(idx, 'borderColor');
+                        const style = provider.getItemVisual(idx, 'style') as PathStyleProps;
+                        const borderColor = style.stroke;
+                        let color = style.fill;
+                        const colorArr = parse(style.fill as ColorString);
+                        // Color may be set to transparent in visualMap when data is out of range.
+                        // Do not show nothing.
+                        if (colorArr && colorArr[3] === 0) {
+                            colorArr[3] = 0.2;
+                            // TODO color is set to 0, 0, 0, 0. Should show correct RGBA
+                            color = stringify(colorArr, 'rgba');
+                        }
 
                         const legendSymbolType = 'roundRect';
 
@@ -329,8 +329,8 @@ class LegendView extends ComponentView {
         legendSymbolType: string,
         symbolType: string,
         itemAlign: LegendOption['align'],
-        color: ColorString,
-        borderColor: ColorString,
+        color: ZRColor,
+        borderColor: ZRColor,
         selectMode: LegendOption['selectedMode']
     ) {
         const itemWidth = legendModel.get('itemWidth');

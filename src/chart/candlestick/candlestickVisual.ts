@@ -52,13 +52,7 @@ const candlestickVisual: StageHandler = {
 
         const data = seriesModel.getData();
 
-        data.setVisual({
-            legendSymbol: 'roundRect',
-            colorP: getColor(1, seriesModel),
-            colorN: getColor(-1, seriesModel),
-            borderColorP: getBorderColor(1, seriesModel),
-            borderColorN: getBorderColor(-1, seriesModel)
-        });
+        data.setVisual('legendSymbol', 'roundRect');
 
         // Only visible series has each data be visual encoded
         if (ecModel.isSeriesFiltered(seriesModel)) {
@@ -73,13 +67,9 @@ const candlestickVisual: StageHandler = {
                     const itemModel = data.getItemModel(dataIndex);
                     const sign = data.getItemLayout(dataIndex).sign;
 
-                    data.setItemVisual(
-                        dataIndex,
-                        {
-                            color: getColor(sign, itemModel),
-                            borderColor: getBorderColor(sign, itemModel)
-                        }
-                    );
+                    const style = itemModel.getItemStyle(['color', 'borderColor']);
+                    style.fill = getColor(sign, itemModel);
+                    style.stroke = getBorderColor(sign, itemModel) || style.fill;
                 }
             }
         };

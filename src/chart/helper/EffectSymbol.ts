@@ -173,7 +173,9 @@ class EffectSymbol extends Group {
         const itemModel = data.getItemModel<SymbolDrawItemModelOption>(idx);
         const symbolType = data.getItemVisual(idx, 'symbol');
         const symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-        const color = data.getItemVisual(idx, 'color');
+
+        const symbolStyle = data.getItemVisual(idx, 'style');
+        const color = symbolStyle && symbolStyle.fill;
 
         rippleGroup.setScale(symbolSize);
 

@@ -124,6 +124,10 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
 
     coordinateSystem: Cartesian2D;
 
+
+    hasSymbolVisual = true;
+    defaultSymbol = 'roundRect';
+
     static defaultOption: PictorialBarSeriesOption = inheritDefaultOption(BaseBarSeriesModel.defaultOption, {
 
         symbol: 'circle',     // Customized bar shape

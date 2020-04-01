@@ -163,7 +163,6 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 silent: true
             });
         }
-        shape.style.fill = null;
         group.add(shape);
     },
 

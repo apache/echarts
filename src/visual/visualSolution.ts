@@ -31,6 +31,7 @@ import {
     StageHandlerProgressExecutor
 } from '../util/types';
 import List from '../data/List';
+import { getItemVisualFromData, setItemVisualFromData } from './helper';
 
 const each = zrUtil.each;
 
@@ -148,11 +149,11 @@ export function applyVisual<VisualState extends string, Scope>(
     let dataIndex: number;
 
     function getVisual(key: string) {
-        return data.getItemVisual(dataIndex, key);
+        return getItemVisualFromData(data, dataIndex, key) as string | number;
     }
 
     function setVisual(key: string, value: any) {
-        data.setItemVisual(dataIndex, key, value);
+        setItemVisualFromData(data, dataIndex, key, value);
     }
 
     if (dimension == null) {
@@ -214,11 +215,11 @@ export function incrementalApplyVisual<VisualState extends string>(
             }
 
             function getVisual(key: string) {
-                return data.getItemVisual(dataIndex, key);
+                return getItemVisualFromData(data, dataIndex, key) as string | number;
             }
 
             function setVisual(key: string, value: any) {
-                data.setItemVisual(dataIndex, key, value);
+                setItemVisualFromData(data, dataIndex, key, value);
             }
 
             let dataIndex: number;

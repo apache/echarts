@@ -117,6 +117,7 @@ export function rectCoordAxisBuildSplitArea(
             style: zrUtil.defaults({
                 fill: areaColors[colorIndex]
             }, areaStyle),
+            autoBatch: true,
             silent: true
         }));
 

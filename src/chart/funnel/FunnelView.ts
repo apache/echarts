@@ -24,7 +24,7 @@ import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { DisplayState } from '../../util/types';
+import { DisplayState, ColorString } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
@@ -51,7 +51,7 @@ class FunnelPiece extends graphic.Group {
         this.updateData(data, idx, true);
     }
 
-    highDownOnUpdate(fromState: DisplayState, toState: DisplayState) {
+    onStateChange(fromState: DisplayState, toState: DisplayState) {
 
         const labelLine = this.childAt(1) as graphic.Polyline;
         const text = this.childAt(2) as graphic.Text;
@@ -102,18 +102,9 @@ class FunnelPiece extends graphic.Group {
         }
 
         // Update common style
-        const itemStyleModel = itemModel.getModel('itemStyle');
-        const visualColor = data.getItemVisual(idx, 'color');
+        polygon.useStyle(data.getItemVisual(idx, 'style'));
+        polygon.style.lineJoin = 'round';
 
-        polygon.setStyle(
-            zrUtil.defaults(
-                {
-                    lineJoin: 'round',
-                    fill: visualColor
-                },
-                itemStyleModel.getItemStyle(['opacity'])
-            )
-        );
         const polygonEmphasisState = polygon.ensureState('emphasis');
         polygonEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
@@ -137,7 +128,8 @@ class FunnelPiece extends graphic.Group {
         const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
         const labelLineModel = itemModel.getModel('labelLine');
         const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
-        const visualColor = data.getItemVisual(idx, 'color');
+
+        const visualColor = data.getItemVisual(idx, 'style').stroke as ColorString;
 
         graphic.setLabelStyle(
             labelText, labelModel, labelHoverModel,
@@ -221,6 +213,7 @@ class FunnelView extends ChartView {
             })
             .update(function (newIdx, oldIdx) {
                 const piece = oldData.getItemGraphicEl(oldIdx) as FunnelPiece;
+                graphic.clearStates(piece);
 
                 piece.updateData(data, newIdx);
 

@@ -22,7 +22,7 @@ import Model from '../Model';
 import { ItemStyleOption } from '../../util/types';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 
-const getItemStyle = makeStyleMapper([
+export const ITEM_STYLE_KEY_MAP = [
     ['fill', 'color'],
     ['stroke', 'borderColor'],
     ['lineWidth', 'borderWidth'],
@@ -31,7 +31,9 @@ const getItemStyle = makeStyleMapper([
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['shadowColor']
-]);
+];
+
+const getItemStyle = makeStyleMapper(ITEM_STYLE_KEY_MAP);
 
 type ItemStyleKeys = 'fill'
     | 'stroke'

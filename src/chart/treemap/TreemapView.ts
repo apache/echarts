@@ -864,7 +864,7 @@ function renderNode(
         }
         else {
             bg.invisible = false;
-            const visualBorderColor = thisNode.getVisual('borderColor', true);
+            const visualBorderColor = thisNode.getVisual('style').stroke;
             const emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
@@ -916,7 +916,8 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            const visualColor = thisNode.getVisual('color', true);
+            // TODO. Optimize.
+            const visualColor = thisNode.getVisual('style').fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
             const emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);

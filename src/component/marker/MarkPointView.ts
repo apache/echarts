@@ -32,6 +32,8 @@ import MarkerModel from './MarkerModel';
 import ExtensionAPI from '../../ExtensionAPI';
 import { HashMap, isFunction, map, defaults, filter, curry } from 'zrender/src/core/util';
 import { getECData } from '../../util/graphic';
+import { getVisualFromData } from '../../visual/helper';
+import { ZRColor } from '../../util/types';
 
 function updateMarkerLayout(
     mpData: List<MarkPointModel>,
@@ -131,11 +133,16 @@ class MarkPointView extends MarkerView {
                 }
             }
 
+            const style = itemModel.getModel('itemStyle').getItemStyle();
+            const color = getVisualFromData(seriesData, 'color') as ZRColor;
+            if (!style.fill) {
+                style.fill = color;
+            }
+
             mpData.setItemVisual(idx, {
                 symbol: symbol,
                 symbolSize: symbolSize,
-                color: itemModel.get(['itemStyle', 'color'])
-                    || seriesData.getVisual('color')
+                style
             });
         });
 

@@ -24,7 +24,7 @@ import ChartView from '../../view/Chart';
 import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { ZRColor, DisplayState, ECElement } from '../../util/types';
+import { DisplayState, ECElement, ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 
@@ -54,7 +54,6 @@ class RadarView extends ChartView {
 
         function createSymbol(data: List<RadarSeriesModel>, idx: number) {
             const symbolType = data.getItemVisual(idx, 'symbol') as string || 'circle';
-            const color = data.getItemVisual(idx, 'color') as ZRColor;
             if (symbolType === 'none') {
                 return;
             }
@@ -62,7 +61,7 @@ class RadarView extends ChartView {
                 data.getItemVisual(idx, 'symbolSize')
             );
             const symbolPath = symbolUtil.createSymbol(
-                symbolType, -1, -1, 2, 2, color
+                symbolType, -1, -1, 2, 2
             );
             symbolPath.attr({
                 style: {
@@ -144,6 +143,9 @@ class RadarView extends ChartView {
             })
             .update(function (newIdx, oldIdx) {
                 const itemGroup = oldData.getItemGraphicEl(oldIdx) as graphic.Group;
+
+                graphic.clearStates(itemGroup);
+
                 const polyline = itemGroup.childAt(0) as graphic.Polyline;
                 const polygon = itemGroup.childAt(1) as graphic.Polygon;
                 const symbolGroup = itemGroup.childAt(2) as graphic.Group;
@@ -180,7 +182,9 @@ class RadarView extends ChartView {
             const polyline = itemGroup.childAt(0) as graphic.Polyline;
             const polygon = itemGroup.childAt(1) as graphic.Polygon;
             const symbolGroup = itemGroup.childAt(2) as graphic.Group;
-            const color = data.getItemVisual(idx, 'color');
+            // Radar uses the visual encoded from itemStyle.
+            const itemStyle = data.getItemVisual(idx, 'style');
+            const color = itemStyle.fill;
 
             group.add(itemGroup);
 
@@ -216,12 +220,13 @@ class RadarView extends ChartView {
             const polygonEmphasisState = polygon.ensureState('emphasis');
             polygonEmphasisState.style = hoverAreaStyleModel.getAreaStyle();
 
-            const itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
             const itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
             const labelModel = itemModel.getModel('label');
             const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
-                symbolPath.setStyle(itemStyle);
+                symbolPath.useStyle(itemStyle);
+                symbolPath.setColor(color);
+
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
                 pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
                 let defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
@@ -234,12 +239,12 @@ class RadarView extends ChartView {
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
                         defaultText: defaultText as string,
-                        autoColor: color
+                        autoColor: color as ColorString
                     }
                 );
             });
 
-            (itemGroup as ECElement).highDownOnUpdate = function (fromState: DisplayState, toState: DisplayState) {
+            (itemGroup as ECElement).onStateChange = function (fromState: DisplayState, toState: DisplayState) {
                 polygon.attr('ignore', toState === 'emphasis' ? hoverPolygonIgnore : polygonIgnore);
             };
             graphic.enableHoverEmphasis(itemGroup);
