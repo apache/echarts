@@ -27,4 +27,4 @@ import treeLayout from './tree/treeLayout';
 import treeVisual from './tree/treeVisual';
 
 echarts.registerLayout(treeLayout);
-echarts.registerLayout(treeVisual);
+echarts.registerVisual(treeVisual);

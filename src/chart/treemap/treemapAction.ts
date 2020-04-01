@@ -23,6 +23,7 @@ import * as helper from '../helper/treeHelper';
 import { Payload } from '../../util/types';
 import TreemapSeriesModel from './TreemapSeries';
 import { TreeNode } from '../../data/Tree';
+import { RectLike } from 'zrender/src/core/BoundingRect';
 
 const noop = function () {};
 
@@ -36,10 +37,12 @@ export interface TreemapZoomToNodePayload extends Payload {
     type: 'treemapZoomToNode'
 }
 export interface TreemapRenderPayload extends Payload {
-    type: 'treemapRender'
+    type: 'treemapRender',
+    rootRect?: RectLike
 }
 export interface TreemapMovePayload extends Payload {
-    type: 'treemapMove'
+    type: 'treemapMove',
+    rootRect?: RectLike
 }
 export interface TreemapRootToNodePayload extends Payload {
     type: 'treemapRootToNode'

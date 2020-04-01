@@ -525,7 +525,7 @@ class TreemapView extends ChartView {
                     x: rootLayout.x + e.dx, y: rootLayout.y + e.dy,
                     width: rootLayout.width, height: rootLayout.height
                 }
-            });
+            } as TreemapMovePayload);
         }
     }
 
@@ -575,7 +575,7 @@ class TreemapView extends ChartView {
                     x: rect.x, y: rect.y,
                     width: rect.width, height: rect.height
                 }
-            });
+            } as TreemapRenderPayload);
         }
     }
 
@@ -805,6 +805,7 @@ function renderNode(
     // x,y are not set when el is above view root.
     group.x = thisLayout.x || 0;
     group.y = thisLayout.y || 0;
+    group.markRedraw();
     inner(group).nodeWidth = thisWidth;
     inner(group).nodeHeight = thisHeight;
 
