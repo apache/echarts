@@ -53,7 +53,7 @@ export default function (ecModel: GlobalModel) {
         edgeData.setVisual('fromSymbolSize', symbolSize && symbolSize[0]);
         edgeData.setVisual('toSymbolSize', symbolSize && symbolSize[1]);
 
-        edgeData.setVisual('style', seriesModel.getModel('itemStyle').getItemStyle());
+        edgeData.setVisual('style', seriesModel.getModel('lineStyle').getLineStyle());
 
         edgeData.each(function (idx) {
             const itemModel = edgeData.getItemModel<GraphEdgeItemOption>(idx);

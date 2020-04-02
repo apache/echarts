@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor } from '../util/types';
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary } from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
@@ -127,41 +127,59 @@ const dataStyleTask: StageHandler = {
             || 'itemStyle';
         // Set in itemStyle
         const getStyle = getStyleMapper(seriesModel, stylePath);
-        const colorKey = getDefaultColorKey(seriesModel, stylePath);
-
-        const idxMap: {[key: number]: number} = {};
-        data.each(function (idx) {
-            const rawIdx = data.getRawIndex(idx);
-            idxMap[idx] = rawIdx;
-        });
 
         return {
-            dataEach: data.hasItemOption ? function (data, idx) {
+            dataEach: (data.hasItemOption || seriesModel.useColorPaletteOnData) ? function (data, idx) {
                 // Not use getItemModel for performance considuration
-                const rawItem = data.getRawDataItem(idx) as any;
-                if (rawItem && rawItem[stylePath]) {
-                    sharedModel.option = rawItem[stylePath];
-                    const style = getStyle(sharedModel);
+                if (data.hasItemOption) {
+                    const rawItem = data.getRawDataItem(idx) as any;
+                    if (rawItem && rawItem[stylePath]) {
+                        sharedModel.option = rawItem[stylePath];
+                        const style = getStyle(sharedModel);
 
-                    const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
-                    extend(existsStyle, style);
-                }
-
-                if (seriesModel.useColorPaletteOnData) {
-                    const dataAll = seriesModel.getRawData();
-                    const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
-                    const rawIdx = idxMap[idx];
-                    if (!existsStyle[colorKey]) {
-                        // Get color from palette.
-                        existsStyle[colorKey] = seriesModel.getColorFromPalette(
-                            dataAll.getName(rawIdx) || (rawIdx + ''),
-                            (seriesModel as SeriesModelWithPaletteScope).__paletteScope,
-                            dataAll.count()
-                        );
+                        const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
+                        extend(existsStyle, style);
                     }
                 }
             } : null
         };
     }
 };
-export {seriesStyleTask, dataStyleTask};
+
+const dataColorPaletteTask: StageHandler = {
+    createOnAllSeries: true,
+    performRawSeries: true,
+    reset(seriesModel, ecModel) {
+        if (seriesModel.ignoreStyleOnData) {
+            return;
+        }
+
+        const dataAll = seriesModel.getRawData();
+        const idxMap: Dictionary<number> = {};
+        const data = seriesModel.getData();
+
+        const stylePath = seriesModel.visualStyleAccessPath
+            || 'itemStyle';
+        const colorKey = getDefaultColorKey(seriesModel, stylePath);
+
+        data.each(function (idx) {
+            const rawIdx = data.getRawIndex(idx);
+            idxMap[rawIdx] = idx;
+        });
+
+        dataAll.each(function (rawIdx) {
+            const idx = idxMap[rawIdx];
+            const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
+            if (!existsStyle[colorKey]) {
+                // Get color from palette.
+                existsStyle[colorKey] = seriesModel.getColorFromPalette(
+                    dataAll.getName(rawIdx) || (rawIdx + ''),
+                    (seriesModel as SeriesModelWithPaletteScope).__paletteScope,
+                    dataAll.count()
+                );
+            }
+        });
+    }
+};
+
+export {seriesStyleTask, dataStyleTask, dataColorPaletteTask};

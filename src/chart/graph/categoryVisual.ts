@@ -37,7 +37,7 @@ export default function (ecModel: GlobalModel) {
             categoryNameIdxMap['ec-' + name] = idx;
             const itemModel = categoriesData.getItemModel<GraphNodeItemOption>(idx);
 
-            const style = itemModel.getItemStyle();
+            const style = itemModel.getModel('itemStyle').getItemStyle();
             if (!style.fill) {
                 // Get color from palette.
                 style.fill = seriesModel.getColorFromPalette(name, paletteScope);

@@ -147,6 +147,9 @@ class MapDraw {
         const hoverLabelAccessPath = ['emphasis', 'label'] as const;
         const nameMap = zrUtil.createHashMap<RegionsGroup>();
 
+
+        const isVisualEncodedByVisualMap = data.getVisual('visualMeta') && data.getVisual('visualMeta').length > 0;
+
         zrUtil.each(geo.regions, function (region) {
             // Consider in GeoJson properties.name may be duplicated, for example,
             // there is multiple region named "United Kindom" or "France" (so many
@@ -185,13 +188,12 @@ class MapDraw {
             // Use the itemStyle in data if has data
             if (data) {
                 dataIdx = data.indexOfName(region.name);
-                // Only visual color of each item will be used. It can be encoded by dataRange
+                // Only visual color of each item will be used. It can be encoded by visualMap
                 // But visual color of series is used in symbol drawing
                 //
                 // Visual color for each series is for the symbol draw
                 const style = data.getItemVisual(dataIdx, 'style');
-                const globalStyle = data.getVisual('style');
-                if (style !== globalStyle) {
+                if (isVisualEncodedByVisualMap && style.fill) {
                     itemStyle.fill = style.fill;
                 }
             }

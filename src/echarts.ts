@@ -40,7 +40,7 @@ import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
-import {seriesStyleTask, dataStyleTask} from './visual/style';
+import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from './visual/style';
 import aria from './visual/aria';
 import loadingDefault from './loading/default';
 import Scheduler from './stream/Scheduler';
@@ -2344,6 +2344,7 @@ export function getMap(mapName: string) {
 // Buitlin global visual
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesStyleTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataStyleTask);
+registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataColorPaletteTask);
 
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesSymbolTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataSymbolTask);
