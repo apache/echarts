@@ -376,9 +376,8 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
         symbolEl = new SymbolClz(data, dataIndex, seriesScope);
         symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
     }
-    else {
-        symbolEl.updateData(data, dataIndex, seriesScope);
-    }
+
+    symbolEl.updateData(data, dataIndex, seriesScope);
 
     symbolEl.__radialOldRawX = symbolEl.__radialRawX;
     symbolEl.__radialOldRawY = symbolEl.__radialRawY;
