@@ -533,6 +533,10 @@ under the License.
                     series: [{
                         data: [110, 120, 150, 250, 350, 400, 500, 600],
                         type: 'bar',
+                        itemStyle: {
+                            barBorderWidth: 20,
+                            barBorderColor: 'rgba(50,50,50,0.3)'
+                        },
                         showBackground: true,
                         backgroundStyle: {
                             color: 'green',
@@ -545,7 +549,19 @@ under the License.
                     option: option,
                     title: [
                         'background barBorderRadius'
-                    ]
+                    ],
+                    buttons: [{
+                        text: 'update barBorderRadius to [30, 40, 0, 60]',
+                        onclick: function () {
+                            chart.setOption({
+                                series: {
+                                    backgroundStyle: {
+                                        barBorderRadius: [30, 40, 0, 60]
+                                    }
+                                }
+                            });
+                        }
+                    }]
                 });
             });
         </script>
