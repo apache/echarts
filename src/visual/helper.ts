@@ -32,7 +32,7 @@ export function getItemVisualFromData(data: List, dataIndex: number, key: string
     switch (key) {
         case 'color':
             const style = data.getItemVisual(dataIndex, 'style');
-            return style[data.getVisual('brushType')];
+            return style[data.getVisual('drawType')];
         case 'opacity':
             return data.getItemVisual(dataIndex, 'style').opacity;
         case 'symbol':
@@ -50,7 +50,7 @@ export function getVisualFromData(data: List, key: string) {
     switch (key) {
         case 'color':
             const style = data.getVisual('style');
-            return style[data.getVisual('brushType')];
+            return style[data.getVisual('drawType')];
         case 'opacity':
             return data.getVisual('style').opacity;
         case 'symbol':
@@ -69,7 +69,7 @@ export function setItemVisualFromData(data: List, dataIndex: number, key: string
         case 'color':
             // Make sure not sharing style object.
             const style = data.ensureUniqueItemVisual(dataIndex, 'style');
-            style[data.getVisual('brushType')] = value;
+            style[data.getVisual('drawType')] = value;
             break;
         case 'opacity':
             data.ensureUniqueItemVisual(dataIndex, 'style').opacity = value;

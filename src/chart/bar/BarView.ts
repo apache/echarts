@@ -19,7 +19,16 @@
 
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
-import {Rect, Sector, getECData, updateProps, initProps, enableHoverEmphasis, setLabelStyle, clearStates} from '../../util/graphic';
+import {
+    Rect,
+    Sector,
+    getECData,
+    updateProps,
+    initProps,
+    enableHoverEmphasis,
+    setLabelStyle,
+    clearStates
+} from '../../util/graphic';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {throttle} from '../../util/throttle';

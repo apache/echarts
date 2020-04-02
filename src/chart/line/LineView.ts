@@ -513,7 +513,7 @@ class LineView extends ChartView {
         }
 
         const visualColor = getVisualGradient(data, coordSys)
-            || data.getVisual('style')[data.getVisual('brushType')];
+            || data.getVisual('style')[data.getVisual('drawType')];
 
         polyline.useStyle(zrUtil.defaults(
             // Use color in lineStyle first

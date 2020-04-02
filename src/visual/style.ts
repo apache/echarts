@@ -51,7 +51,7 @@ function getStyleMapper(seriesModel: SeriesModel, stylePath: string) {
 
 function getDefaultColorKey(seriesModel: SeriesModel, stylePath: string): 'stroke' | 'fill' {
     // return defaultColorKey[stylePath] ||
-    const colorKey = seriesModel.visualColorBrushType
+    const colorKey = seriesModel.visualDrawType
         || defaultColorKey[stylePath as 'itemStyle' | 'lineStyle'];
 
     if (!colorKey) {
@@ -92,7 +92,7 @@ const seriesStyleTask: StageHandler = {
         }
 
         data.setVisual('style', globalStyle);
-        data.setVisual('brushType', colorKey);
+        data.setVisual('drawType', colorKey);
 
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel)) {

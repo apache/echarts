@@ -97,7 +97,7 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
 
     dimensions: string[];
 
-    visualColorBrushType = 'stroke' as const;
+    visualDrawType = 'stroke' as const;
 
     static defaultOption: BoxplotSeriesOption = {
         zlevel: 0,

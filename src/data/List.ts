@@ -124,10 +124,10 @@ const CLONE_PROPERTIES = [
 
 export interface DefaultDataVisual {
     style: PathStyleProps
-    // Brush type determined which prop should be set with encoded color.
-    // It's only available on the global visual. Use getVisual('brushType') to access it.
+    // Draw type determined which prop should be set with encoded color.
+    // It's only available on the global visual. Use getVisual('drawType') to access it.
     // It will be set in visual/style.ts module in the first priority.
-    brushType: 'fill' | 'stroke'
+    drawType: 'fill' | 'stroke'
 
     symbol?: string
     symbolSize?: number | number[]

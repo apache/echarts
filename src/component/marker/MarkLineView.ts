@@ -49,7 +49,7 @@ import {
 import ComponentView from '../../view/Component';
 import { makeInner } from '../../util/model';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
-import { getItemVisualFromData, getVisualFromData } from '../../visual/helper';
+import { getVisualFromData } from '../../visual/helper';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
@@ -345,7 +345,7 @@ class MarkLineView extends MarkerView {
             ]);
 
             if (lineStyle.stroke == null) {
-                lineStyle.stroke = getItemVisualFromData(fromData, idx, 'color') as ColorString;
+                lineStyle.stroke = fromData.getItemVisual(idx, 'style').fill;
             }
 
             lineData.setItemVisual(idx, {

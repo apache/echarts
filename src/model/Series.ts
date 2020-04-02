@@ -142,7 +142,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Access path of style for visual
     visualStyleAccessPath: string;
     // Which property is treated as main color. Which can get from the palette.
-    visualColorBrushType: 'fill' | 'stroke';
+    visualDrawType: 'fill' | 'stroke';
     // Style mapping rules.
     visualStyleMapper: ReturnType<typeof makeStyleMapper>;
     // If ignore style on data. It's only for global visual/style.ts
@@ -169,7 +169,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         proto.defaultSymbol = 'circle';
         // Make sure the values can be accessed!
         proto.visualStyleAccessPath = 'itemStyle';
-        proto.visualColorBrushType = 'fill';
+        proto.visualDrawType = 'fill';
     })();
 
 
@@ -481,7 +481,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const isValueArr = zrUtil.isArray(value);
 
         const style = data.getItemVisual(dataIndex, 'style');
-        const color = style[this.visualColorBrushType];
+        const color = style[this.visualDrawType];
         let colorStr: ColorString;
         if (zrUtil.isString(color)) {
             colorStr = color;

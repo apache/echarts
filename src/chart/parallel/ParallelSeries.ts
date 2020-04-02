@@ -86,7 +86,7 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
     static dependencies = ['parallel'];
 
     visualStyleAccessPath = 'lineStyle';
-    visualColorBrushType = 'stroke' as const;
+    visualDrawType = 'stroke' as const;
 
     coordinateSystem: Parallel;
 
