@@ -17,6 +17,7 @@
   "axis-style": 2,
   "axisPosition": 2,
   "bar": 2,
+  "bar-background": 3,
   "bar-label-rotation": 2,
   "bar-large": 2,
   "bar-overflow-time-plot": 3,
