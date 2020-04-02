@@ -375,9 +375,17 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     if (isInit) {
         symbolEl = new SymbolClz(data, dataIndex, seriesScope);
         symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
-    }
 
-    symbolEl.updateData(data, dataIndex, seriesScope);
+        // Fix #12279.
+        // if the type of symbol is image,
+        // update symbol's data immediately but not wait until the next update rendering.
+        var symbolType = symbolEl._symbolType;
+        symbolType.indexOf('image://') === 0 
+            && symbolEl.updateData(data, dataIndex, seriesScope);
+    }
+    else {
+        symbolEl.updateData(data, dataIndex, seriesScope);
+    }
 
     symbolEl.__radialOldRawX = symbolEl.__radialRawX;
     symbolEl.__radialOldRawY = symbolEl.__radialRawY;
