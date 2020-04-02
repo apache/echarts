@@ -148,7 +148,9 @@ class MapDraw {
         const nameMap = zrUtil.createHashMap<RegionsGroup>();
 
 
-        const isVisualEncodedByVisualMap = data.getVisual('visualMeta') && data.getVisual('visualMeta').length > 0;
+        const isVisualEncodedByVisualMap = data
+            && data.getVisual('visualMeta')
+            && data.getVisual('visualMeta').length > 0;
 
         zrUtil.each(geo.regions, function (region) {
             // Consider in GeoJson properties.name may be duplicated, for example,
