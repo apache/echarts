@@ -42,8 +42,6 @@ export function getScaleExtent(scale, model) {
 
     var min = model.getMin();
     var max = model.getMax();
-    var fixMin = min != null;
-    var fixMax = max != null;
     var originalExtent = scale.getExtent();
 
     var axisDataLen;
@@ -107,6 +105,9 @@ export function getScaleExtent(scale, model) {
         });
     }
 
+    var fixMin = min != null;
+    var fixMax = max != null;
+
     if (min == null) {
         min = scaleType === 'ordinal'
             ? (axisDataLen ? 0 : NaN)
@@ -168,7 +169,13 @@ export function getScaleExtent(scale, model) {
         }
     }
 
-    return [min, max];
+    return {
+        extent: [min, max],
+        // "fix" means "fixed", the value should not be
+        // changed in the subsequent steps.
+        fixMin: fixMin,
+        fixMax: fixMax
+    };
 }
 
 function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
@@ -207,24 +214,8 @@ function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
 }
 
 export function niceScaleExtent(scale, model) {
-    var extent = getScaleExtent(scale, model);
-    var min = model.getMin();
-    var max = model.getMax();
-    var originalExtent = scale.getExtent();
-
-    if (typeof min === 'function') {
-        min = min({
-            min: originalExtent[0],
-            max: originalExtent[1]
-        });
-    }
-
-    if (typeof max === 'function') {
-        max = max({
-            min: originalExtent[0],
-            max: originalExtent[1]
-        });
-    }
+    var extentInfo = getScaleExtent(scale, model);
+    var extent = extentInfo.extent;
 
     var splitNumber = model.get('splitNumber');
 
@@ -236,8 +227,8 @@ export function niceScaleExtent(scale, model) {
     scale.setExtent(extent[0], extent[1]);
     scale.niceExtent({
         splitNumber: splitNumber,
-        fixMin: min != null,
-        fixMax: max != null,
+        fixMin: extentInfo.fixMin,
+        fixMax: extentInfo.fixMin,
         minInterval: (scaleType === 'interval' || scaleType === 'time')
             ? model.get('minInterval') : null,
         maxInterval: (scaleType === 'interval' || scaleType === 'time')
