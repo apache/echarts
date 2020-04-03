@@ -17,17 +17,16 @@
 * under the License.
 */
 
-import { isFunction, extend } from 'zrender/src/core/util';
+import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
 import { StageHandler, CallbackDataParams, ZRColor, Dictionary } from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
 import SeriesModel from '../model/Series';
 import Model from '../model/Model';
+import { makeInner } from '../util/model';
 
-interface SeriesModelWithPaletteScope extends SeriesModel {
-    __paletteScope: any
-}
+const inner = makeInner<{scope: object}, SeriesModel>();
 
 const defaultStyleMappers = {
     itemStyle: makeStyleMapper(ITEM_STYLE_KEY_MAP, true),
@@ -118,7 +117,7 @@ const dataStyleTask: StageHandler = {
     createOnAllSeries: true,
     performRawSeries: true,
     reset(seriesModel, ecModel) {
-        if (seriesModel.ignoreStyleOnData) {
+        if (seriesModel.ignoreStyleOnData || ecModel.isSeriesFiltered(seriesModel)) {
             return;
         }
 
@@ -129,17 +128,15 @@ const dataStyleTask: StageHandler = {
         const getStyle = getStyleMapper(seriesModel, stylePath);
 
         return {
-            dataEach: (data.hasItemOption || seriesModel.useColorPaletteOnData) ? function (data, idx) {
+            dataEach: data.hasItemOption ? function (data, idx) {
                 // Not use getItemModel for performance considuration
-                if (data.hasItemOption) {
-                    const rawItem = data.getRawDataItem(idx) as any;
-                    if (rawItem && rawItem[stylePath]) {
-                        sharedModel.option = rawItem[stylePath];
-                        const style = getStyle(sharedModel);
+                const rawItem = data.getRawDataItem(idx) as any;
+                if (rawItem && rawItem[stylePath]) {
+                    sharedModel.option = rawItem[stylePath];
+                    const style = getStyle(sharedModel);
 
-                        const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
-                        extend(existsStyle, style);
-                    }
+                    const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
+                    extend(existsStyle, style);
                 }
             } : null
         };
@@ -149,35 +146,56 @@ const dataStyleTask: StageHandler = {
 const dataColorPaletteTask: StageHandler = {
     createOnAllSeries: true,
     performRawSeries: true,
-    reset(seriesModel, ecModel) {
-        if (seriesModel.ignoreStyleOnData) {
-            return;
-        }
-
-        const dataAll = seriesModel.getRawData();
-        const idxMap: Dictionary<number> = {};
-        const data = seriesModel.getData();
-
-        const stylePath = seriesModel.visualStyleAccessPath
-            || 'itemStyle';
-        const colorKey = getDefaultColorKey(seriesModel, stylePath);
-
-        data.each(function (idx) {
-            const rawIdx = data.getRawIndex(idx);
-            idxMap[rawIdx] = idx;
+    overallReset(ecModel) {
+        // Each type of series use one scope.
+        // Pie and funnel are using diferrent scopes
+        const paletteScopeGroupByType = createHashMap<object>();
+        ecModel.eachSeries(function (seriesModel) {
+            if (!seriesModel.useColorPaletteOnData) {
+                return;
+            }
+            let colorScope = paletteScopeGroupByType.get(seriesModel.type);
+            if (!colorScope) {
+                colorScope = {};
+                paletteScopeGroupByType.set(seriesModel.type, colorScope);
+            }
+            inner(seriesModel).scope = colorScope;
         });
 
-        dataAll.each(function (rawIdx) {
-            const idx = idxMap[rawIdx];
-            const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
-            if (!existsStyle[colorKey]) {
-                // Get color from palette.
-                existsStyle[colorKey] = seriesModel.getColorFromPalette(
-                    dataAll.getName(rawIdx) || (rawIdx + ''),
-                    (seriesModel as SeriesModelWithPaletteScope).__paletteScope,
-                    dataAll.count()
-                );
+
+        ecModel.eachSeries(function (seriesModel) {
+            if (!seriesModel.useColorPaletteOnData || ecModel.isSeriesFiltered(seriesModel)) {
+                return;
             }
+
+            const dataAll = seriesModel.getRawData();
+            const idxMap: Dictionary<number> = {};
+            const data = seriesModel.getData();
+            const colorScope = inner(seriesModel).scope;
+
+            const stylePath = seriesModel.visualStyleAccessPath
+                || 'itemStyle';
+            const colorKey = getDefaultColorKey(seriesModel, stylePath);
+
+            data.each(function (idx) {
+                const rawIdx = data.getRawIndex(idx);
+                idxMap[rawIdx] = idx;
+            });
+
+            // Iterate on dat before filtered. To make sure color from palette can be
+            // Consistent when toggling legend.
+            dataAll.each(function (rawIdx) {
+                const idx = idxMap[rawIdx];
+                const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
+                if (!existsStyle[colorKey]) {
+                    // Get color from palette.
+                    existsStyle[colorKey] = seriesModel.getColorFromPalette(
+                        dataAll.getName(rawIdx) || (rawIdx + ''),
+                        colorScope,
+                        dataAll.count()
+                    );
+                }
+            });
         });
     }
 };

@@ -21,6 +21,7 @@ import createRenderPlanner from '../helper/createRenderPlanner';
 import { StageHandler } from '../../util/types';
 import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
 import Model from '../../model/Model';
+import { extend } from 'zrender/src/core/util';
 
 const positiveBorderColorQuery = ['itemStyle', 'borderColor'] as const;
 const negativeBorderColorQuery = ['itemStyle', 'borderColor0'] as const;
@@ -67,9 +68,12 @@ const candlestickVisual: StageHandler = {
                     const itemModel = data.getItemModel(dataIndex);
                     const sign = data.getItemLayout(dataIndex).sign;
 
-                    const style = itemModel.getItemStyle(['color', 'borderColor']);
+                    const style = itemModel.getItemStyle();
                     style.fill = getColor(sign, itemModel);
                     style.stroke = getBorderColor(sign, itemModel) || style.fill;
+
+                    const existsStyle = data.ensureUniqueItemVisual(dataIndex, 'style');
+                    extend(existsStyle, style);
                 }
             }
         };
