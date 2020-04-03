@@ -126,9 +126,11 @@ class ThemeRiverView extends ChartView {
                 layerGroup.add(text);
                 group.add(layerGroup);
 
-                polygon.setClipPath(createGridClipShape(polygon.getBoundingRect(), seriesModel, function () {
-                    polygon.removeClipPath();
-                }));
+                if (seriesModel.isAnimationEnabled()) {
+                    polygon.setClipPath(createGridClipShape(polygon.getBoundingRect(), seriesModel, function () {
+                        polygon.removeClipPath();
+                    }));
+                }
             }
             else {
                 const layerGroup = oldLayersGroups[oldIdx];
@@ -154,7 +156,7 @@ class ThemeRiverView extends ChartView {
             }
 
             const hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
-            polygon.setStyle(style);
+            polygon.useStyle(style);
 
             graphic.enableHoverEmphasis(polygon, hoverItemStyleModel.getItemStyle());
         }
