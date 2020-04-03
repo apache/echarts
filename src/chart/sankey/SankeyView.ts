@@ -402,7 +402,7 @@ class SankeyView extends ChartView {
             }
         });
 
-        if (!this._data && seriesModel.get('animation')) {
+        if (!this._data && seriesModel.isAnimationEnabled()) {
             group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
                 group.removeClipPath();
             }));

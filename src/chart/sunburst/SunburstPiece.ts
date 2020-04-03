@@ -242,19 +242,6 @@ class SunburstPiece extends graphic.Group {
         const sector = this.childAt(0);
         const label = sector.getTextContent();
 
-        graphic.setLabelStyle(
-            label, normalModel, labelHoverModel,
-            {
-                defaultText: labelModel.getShallow('show') ? text : null,
-                autoColor: visualColor
-            }
-        );
-        sector.setTextConfig({
-            inside: true,
-            insideStroke: visualColor,
-            insideFill: 'auto',
-            outsideFill: visualColor
-        });
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
         const dx = Math.cos(midAngle);
@@ -286,6 +273,19 @@ class SunburstPiece extends graphic.Group {
                 }
             }
         }
+
+        graphic.setLabelStyle(
+            label, normalModel, labelHoverModel,
+            {
+                defaultText: labelModel.getShallow('show') ? text : null
+            }
+        );
+        sector.setTextConfig({
+            inside: labelPosition !== 'outside',
+            insideStroke: visualColor,
+            insideFill: 'auto',
+            outsideFill: visualColor
+        });
 
         label.attr('style', {
             text: text,
