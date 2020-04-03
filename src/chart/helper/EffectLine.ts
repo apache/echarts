@@ -60,7 +60,7 @@ class EffectLine extends graphic.Group {
         return new Line(lineData, idx, seriesScope);
     }
 
-    _updateEffectSymbol(lineData: List, idx: number) {
+    private _updateEffectSymbol(lineData: List, idx: number) {
         const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
         const effectModel = itemModel.getModel('effect');
         let size = effectModel.get('symbolSize');
@@ -106,7 +106,7 @@ class EffectLine extends graphic.Group {
         this._updateEffectAnimation(lineData, effectModel, idx);
     }
 
-    _updateEffectAnimation(
+    private _updateEffectAnimation(
         lineData: List,
         effectModel: Model<LineDrawModelOption['effect']>,
         idx: number
@@ -131,7 +131,7 @@ class EffectLine extends graphic.Group {
         // Ignore when updating
         symbol.ignore = true;
 
-        this.updateAnimationPoints(symbol, points);
+        this._updateAnimationPoints(symbol, points);
 
         if (constantSpeed > 0) {
             period = this._getLineLength(symbol) / constantSpeed * 1000;
@@ -141,44 +141,46 @@ class EffectLine extends graphic.Group {
 
             symbol.stopAnimation();
 
-            let delayNum: number;
-            if (typeof delayExpr === 'function') {
-                delayNum = delayExpr(idx);
+            if (period > 0) {
+                let delayNum: number;
+                if (typeof delayExpr === 'function') {
+                    delayNum = delayExpr(idx);
+                }
+                else {
+                    delayNum = delayExpr;
+                }
+                if (symbol.__t > 0) {
+                    delayNum = -period * symbol.__t;
+                }
+                symbol.__t = 0;
+                const animator = symbol.animate('', loop)
+                    .when(period, {
+                        __t: 1
+                    })
+                    .delay(delayNum)
+                    .during(function () {
+                        self._updateSymbolPosition(symbol);
+                    });
+                if (!loop) {
+                    animator.done(function () {
+                        self.remove(symbol);
+                    });
+                }
+                animator.start();
             }
-            else {
-                delayNum = delayExpr;
-            }
-            if (symbol.__t > 0) {
-                delayNum = -period * symbol.__t;
-            }
-            symbol.__t = 0;
-            const animator = symbol.animate('', loop)
-                .when(period, {
-                    __t: 1
-                })
-                .delay(delayNum)
-                .during(function () {
-                    self.updateSymbolPosition(symbol);
-                });
-            if (!loop) {
-                animator.done(function () {
-                    self.remove(symbol);
-                });
-            }
-            animator.start();
         }
 
         this._period = period;
         this._loop = loop;
     }
 
-    private _getLineLength(symbol: ECSymbolOnEffectLine) {
+    protected _getLineLength(symbol: ECSymbolOnEffectLine) {
         // Not so accurate
         return (vec2.dist(symbol.__p1, symbol.__cp1)
             + vec2.dist(symbol.__cp1, symbol.__p2));
     }
 
-    protected updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
+    protected _updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
         symbol.__p1 = points[0];
         symbol.__p2 = points[1];
         symbol.__cp1 = points[2] || [
@@ -192,7 +194,7 @@ class EffectLine extends graphic.Group {
         this._updateEffectSymbol(lineData, idx);
     }
 
-    updateSymbolPosition(symbol: ECSymbolOnEffectLine) {
+    protected _updateSymbolPosition(symbol: ECSymbolOnEffectLine) {
         const p1 = symbol.__p1;
         const p2 = symbol.__p2;
         const cp1 = symbol.__cp1;

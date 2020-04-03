@@ -59,18 +59,6 @@ interface BrushSelectedItem {
     }[]
 };
 
-/**
- * Layout for visual, the priority higher than other layout, and before brush visual.
- */
-echarts.registerLayout(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
-    ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
-        payload && payload.type === 'takeGlobalCursor' && brushModel.setBrushOption(
-            payload.key === 'brush' ? payload.brushOption : {brushType: false}
-        );
-    });
-    layoutCovers(ecModel);
-});
-
 export function layoutCovers(ecModel: GlobalModel): void {
     ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
         const brushTargetManager = brushModel.brushTargetManager = new BrushTargetManager(brushModel.option, ecModel);
@@ -86,6 +74,15 @@ echarts.registerVisual(PRIORITY_BRUSH, function (ecModel: GlobalModel, api: Exte
     const brushSelected: BrushSelectedItem[] = [];
     let throttleType;
     let throttleDelay;
+
+    ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
+        payload && payload.type === 'takeGlobalCursor' && brushModel.setBrushOption(
+            payload.key === 'brush' ? payload.brushOption : {brushType: false}
+        );
+    });
+
+    layoutCovers(ecModel);
+
 
     ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel, brushIndex) {
 

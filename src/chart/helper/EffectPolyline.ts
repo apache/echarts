@@ -38,7 +38,7 @@ class EffectPolyline extends EffectLine {
     };
 
     // Override
-    protected updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
+    protected _updateAnimationPoints(symbol: ECSymbolOnEffectLine, points: number[][]) {
         this._points = points;
         const accLenArr = [0];
         let len = 0;
@@ -49,6 +49,7 @@ class EffectPolyline extends EffectLine {
             accLenArr.push(len);
         }
         if (len === 0) {
+            this._length = 0;
             return;
         }
 
@@ -60,12 +61,12 @@ class EffectPolyline extends EffectLine {
     };
 
     // Override
-    getLineLength() {
+    protected _getLineLength() {
         return this._length;
     };
 
     // Override
-    updateSymbolPosition(symbol: ECSymbolOnEffectLine) {
+    protected _updateSymbolPosition(symbol: ECSymbolOnEffectLine) {
         const t = symbol.__t;
         const points = this._points;
         const offsets = this._offsets;

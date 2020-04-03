@@ -61,6 +61,10 @@ class BrushView extends ComponentView {
         this._updateController(brushModel, ecModel, api, payload);
     }
 
+    updateVisual(brushModel: BrushModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+        this.updateTransform(brushModel, ecModel, api, payload);
+    }
+
     updateView(brushModel: BrushModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
         this._updateController(brushModel, ecModel, api, payload);
     }
