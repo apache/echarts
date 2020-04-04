@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as echarts from '../echarts';
 import * as graphic from '../util/graphic';
 import {getLayoutRect} from '../util/layout';
+import {windowOpen} from '../util/format';
 
 // Model
 echarts.extendComponentModel({
@@ -144,27 +145,13 @@ echarts.extendComponentView({
         if (link) {
             textEl.on('click', function () {
                 var target = titleModel.get('target');
-                if (target === 'blank' || target === '_blank') {
-                    var blank = window.open();
-                    blank.opener = null;
-                    blank.location = link;
-                }
-                else {
-                    window.open(link, '_' + titleModel.get('target'));
-                }
+                windowOpen(link, target);
             });
         }
         if (sublink) {
             subTextEl.on('click', function () {
                 var subTarget = titleModel.get('subtarget');
-                if (subTarget === 'blank' || subTarget === '_blank') {
-                    var blank = window.open();
-                    blank.opener = null;
-                    blank.location = link;
-                }
-                else {
-                    window.open(link, '_' + titleModel.get('subtarget'));
-                }
+                windowOpen(link, subTarget);
             });
         }
 

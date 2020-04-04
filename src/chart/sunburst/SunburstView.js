@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import SunburstPiece from './SunburstPiece';
 import DataDiffer from '../../data/DataDiffer';
+import {windowOpen} from '../../util/format';
 
 var ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
@@ -207,14 +208,7 @@ var SunburstView = ChartView.extend({
                             var linkTarget = itemModel.get('target', true)
                                 || '_blank';
 
-                            if (linkTarget === '_blank' || linkTarget === 'blank') {
-                                var blank = window.open();
-                                blank.opener = null;
-                                blank.location = link;
-                            }
-                            else {
-                                window.open(link, linkTarget);
-                            }
+                            windowOpen(link, linkTarget);
                         }
                     }
                     targetFound = true;
