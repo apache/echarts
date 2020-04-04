@@ -144,14 +144,12 @@ echarts.extendComponentView({
 
         if (link) {
             textEl.on('click', function () {
-                var target = titleModel.get('target');
-                windowOpen(link, target);
+                windowOpen(link, '_' + titleModel.get('target'));
             });
         }
         if (sublink) {
             subTextEl.on('click', function () {
-                var subTarget = titleModel.get('subtarget');
-                windowOpen(link, subTarget);
+                windowOpen(link, '_' + titleModel.get('subtarget'));
             });
         }
 

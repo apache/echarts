@@ -207,7 +207,6 @@ var SunburstView = ChartView.extend({
                         if (link) {
                             var linkTarget = itemModel.get('target', true)
                                 || '_blank';
-
                             windowOpen(link, linkTarget);
                         }
                     }
