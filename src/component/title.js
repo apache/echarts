@@ -143,12 +143,28 @@ echarts.extendComponentView({
 
         if (link) {
             textEl.on('click', function () {
-                window.open(link, '_' + titleModel.get('target'));
+                var target = titleModel.get('target');
+                if (target === 'blank' || target === '_blank') {
+                    var blank = window.open();
+                    blank.opener = null;
+                    blank.location = link;
+                }
+                else {
+                    window.open(link, '_' + titleModel.get('target'));
+                }
             });
         }
         if (sublink) {
             subTextEl.on('click', function () {
-                window.open(sublink, '_' + titleModel.get('subtarget'));
+                var subTarget = titleModel.get('subtarget');
+                if (subTarget === 'blank' || subTarget === '_blank') {
+                    var blank = window.open();
+                    blank.opener = null;
+                    blank.location = link;
+                }
+                else {
+                    window.open(link, '_' + titleModel.get('subtarget'));
+                }
             });
         }
 

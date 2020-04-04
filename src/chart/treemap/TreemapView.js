@@ -544,7 +544,14 @@ export default echarts.extendChartView({
                     var itemModel = node.hostTree.data.getItemModel(node.dataIndex);
                     var link = itemModel.get('link', true);
                     var linkTarget = itemModel.get('target', true) || 'blank';
-                    link && window.open(link, linkTarget);
+                    if (link && (linkTarget === 'blank' || linkTarget === '_blank')) {
+                        var blank = window.open();
+                        blank.opener = null;
+                        blank.location = link;
+                    }
+                    else if (link) {
+                        window.open(link, linkTarget);
+                    }
                 }
             }
 
