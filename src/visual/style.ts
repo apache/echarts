@@ -94,20 +94,15 @@ const seriesStyleTask: StageHandler = {
         data.setVisual('drawType', colorKey);
 
         // Only visible series has each data be visual encoded
-        if (!ecModel.isSeriesFiltered(seriesModel)) {
-            // if (colorCallback) {
+        if (!ecModel.isSeriesFiltered(seriesModel) && colorCallback) {
             return {
                 dataEach(data, idx) {
                     const dataParams = seriesModel.getDataParams(idx);
                     const itemStyle = extend({}, globalStyle);
-                    // FIXME share style may affect other elements when one changes it's style(for example in animation)
-                    if (colorCallback) {
-                        itemStyle[colorKey] = colorCallback(dataParams);
-                    }
+                    itemStyle[colorKey] = colorCallback(dataParams);
                     data.setItemVisual(idx, 'style', itemStyle);
                 }
             };
-            // }
         }
     }
 };
