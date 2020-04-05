@@ -110,9 +110,11 @@ TooltipRichContent.prototype = {
             style: {
                 rich: markers,
                 text: content,
-                textLineHeight: 20,
+                textLineHeight: tooltipModel.get('textStyle.lineHeight'),
                 textBackgroundColor: tooltipModel.get('backgroundColor'),
                 textBorderRadius: tooltipModel.get('borderRadius'),
+                textBorderWidth: tooltipModel.get('borderWidth'),
+                textBorderColor: tooltipModel.get('borderColor'),
                 textFill: tooltipModel.get('textStyle.color'),
                 textPadding: tooltipModel.get('padding')
             },
