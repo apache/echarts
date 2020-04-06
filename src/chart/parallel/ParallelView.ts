@@ -200,6 +200,7 @@ function updateElCommon(
     seriesScope: ParallelDrawSeriesScope
 ) {
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
+    el.style.fill = null;
     seriesScope.smooth && (el.shape.smooth = seriesScope.smooth);
 }
 

@@ -243,3 +243,6 @@ export function formatTime(tpl: string, value: number | string | Date, isUTC?: b
 export function capitalFirst(str: string): string {
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
 }
+
+
+export {truncateText} from 'zrender/src/graphic/helper/parseText';
