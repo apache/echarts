@@ -65,6 +65,32 @@ export default {
             lang: ['Right Click to Save Image']
         }
     },
+    series: {
+        typeNames: {
+            pie: 'Pie chart',
+            bar: 'Bar chart',
+            line: 'Line chart',
+            scatter: 'Scatter plot',
+            effectScatter: 'Ripple scatter plot',
+            radar: 'Radar chart',
+            tree: 'Tree',
+            treemap: 'Treemap',
+            boxplot: 'Boxplot',
+            candlestick: 'Candlestick',
+            k: 'K line chart',
+            heatmap: 'Heat map',
+            map: 'Map',
+            parallel: 'Parallel coordinate map',
+            lines: 'Line graph',
+            graph: 'Relationship graph',
+            sankey: 'Sankey diagram',
+            funnel: 'Funnel chart',
+            gauge: 'Guage',
+            pictorialBar: 'Pictorial bar',
+            themeRiver: 'Theme River Map',
+            sunburst: 'Sunburst'
+        }
+    },
     aria: {
         general: {
             withTitle: 'This is a chart about "{title}"',
