@@ -28,6 +28,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as animationUtil from '../../util/animation';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
+import {windowOpen} from '../../util/format';
 
 var bind = zrUtil.bind;
 var Group = graphic.Group;
@@ -544,7 +545,7 @@ export default echarts.extendChartView({
                     var itemModel = node.hostTree.data.getItemModel(node.dataIndex);
                     var link = itemModel.get('link', true);
                     var linkTarget = itemModel.get('target', true) || 'blank';
-                    link && window.open(link, linkTarget);
+                    link && windowOpen(link, linkTarget);
                 }
             }
 
