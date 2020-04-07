@@ -130,6 +130,7 @@ export default echarts.extendChartView({
 
         var drawBackground = seriesModel.get('showBackground', true);
         var backgroundModel = seriesModel.getModel('backgroundStyle');
+        var barBorderRadius = backgroundModel.get('barBorderRadius') || 0;
 
         var bgEls = [];
         var oldBgEls = this._backgroundEls || [];
@@ -140,10 +141,10 @@ export default echarts.extendChartView({
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgLayout = getLayout[coord.type](data, dataIndex, backgroundModel);
+                    var bgLayout = getLayout[coord.type](data, dataIndex);
                     var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    bgEl.setShape('r', backgroundModel.get('barBorderRadius'));
+                    bgEl.setShape('r', barBorderRadius);
                     bgEls[dataIndex] = bgEl;
                 }
 
@@ -180,9 +181,11 @@ export default echarts.extendChartView({
                 if (drawBackground) {
                     var bgEl = oldBgEls[oldIndex];
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
+                    bgEl.setShape('r', barBorderRadius);
                     bgEls[newIndex] = bgEl;
 
-                    var shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
+                    var bgLayout = getLayout[coord.type](data, newIndex);
+                    var shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
                     graphic.updateProps(bgEl, { shape: shape }, animationModel, newIndex);
                 }
 
@@ -432,9 +435,11 @@ function removeSector(dataIndex, animationModel, el) {
 }
 
 var getLayout = {
+    // itemModel is only used to get borderWidth, which is not needed
+    // when calculating bar background layout.
     cartesian2d: function (data, dataIndex, itemModel) {
         var layout = data.getItemLayout(dataIndex);
-        var fixedLineWidth = getLineWidth(itemModel, layout);
+        var fixedLineWidth = itemModel ? getLineWidth(itemModel, layout) : 0;
 
         // fix layout with lineWidth
         var signX = layout.width > 0 ? 1 : -1;

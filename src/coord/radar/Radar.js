@@ -186,7 +186,7 @@ Radar.prototype.update = function (ecModel, api) {
     }
     // Force all the axis fixing the maxSplitNumber.
     zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-        var rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
+        var rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model).extent;
         niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
 
         var axisModel = indicatorAxis.model;
