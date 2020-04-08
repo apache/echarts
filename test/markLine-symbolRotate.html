@@ -116,10 +116,12 @@ under the License.
                             }),
                             markLine: {
                                 silent: true,
+                                // symbol: 'triangle',
                                 data: [
                                 {
                                     yAxis: 50,
-                                    symbolRotate: 60,
+                                    // symbolRotate: 0,
+                                    // symbolRotate: null,
                                     symbol: 'triangle',
                                     symbolSize: 20
                                 },{
@@ -153,7 +155,8 @@ under the License.
                                     symbolRotate: 180,
                                     label: {
                                         position: 'start',
-                                        formatter: 'Average'
+                                        formatter: 'Average',
+                                        distance: 10
                                     },
                                     type: 'average',
                                     lineStyle: {
