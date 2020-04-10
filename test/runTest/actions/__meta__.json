@@ -92,6 +92,7 @@
   "legend-visualMapColor": 2,
   "line": 1,
   "line-animation": 1,
+  "line-crash": 1,
   "map": 3,
   "map-contour": 2,
   "map-default": 1,
