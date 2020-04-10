@@ -38,9 +38,9 @@ export default function (api, opts) {
         textColor: '#000',
         fontSize: '12px',
         maskColor: 'rgba(255, 255, 255, 0.8)',
-        showAnimation: true,
+        showSpinner: true,
         color: '#c23531',
-        arcRadius: 10,
+        spinnerRadius: 10,
         lineWidth: 5,
         zlevel: 0
     });
@@ -67,12 +67,12 @@ export default function (api, opts) {
         z: 10001
     });
     group.add(labelRect);
-    if (opts.showAnimation) {
+    if (opts.showSpinner) {
         var arc = new graphic.Arc({
             shape: {
                 startAngle: -PI / 2,
                 endAngle: -PI / 2 + 0.1,
-                r: opts.arcRadius
+                r: opts.spinnerRadius
             },
             style: {
                 stroke: opts.color,
@@ -98,14 +98,14 @@ export default function (api, opts) {
     // Inject resize
     group.resize = function () {
         var textWidth = textContain.getWidth(opts.text, font);
-        var r = opts.showAnimation ? arc.shape.r : 0;
+        var r = opts.showSpinner ? arc.shape.r : 0;
         // cx = (containerWidth - (arcDiameter + labelRectWidth) - textDistance - textWidth) / 2
         // textDistance needs to be calculated when both animation and text exist
-        var cx = (api.getWidth() - r * 4 - (opts.showAnimation && textWidth ? 10 : 0) - textWidth) / 2
+        var cx = (api.getWidth() - r * 4 - (opts.showSpinner && textWidth ? 10 : 0) - textWidth) / 2
                // only show the text
-               - (opts.showAnimation ? 0 : textWidth / 2);
+               - (opts.showSpinner ? 0 : textWidth / 2);
         var cy = api.getHeight() / 2;
-        opts.showAnimation && arc.setShape({
+        opts.showSpinner && arc.setShape({
             cx: cx,
             cy: cy
         });
