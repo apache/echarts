@@ -110,6 +110,7 @@
   "pie": 1,
   "pie-action": 1,
   "pie-alignTo": 4,
+  "pie-animation": 1,
   "pie-calculable": 1,
   "polar-rounded": 3,
   "polarLine": 1,

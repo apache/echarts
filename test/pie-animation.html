@@ -31,7 +31,8 @@ under the License.
         html,
         body,
         #main1,
-        #main2 {
+        #main2,
+        #main3 {
             width: 100%;
             height: 250px;
             margin: 0;
@@ -56,6 +57,9 @@ under the License.
     <div class="test-title">Animation: Transition all over again, in 10 seconds after clicking Go</div>
     <button id="btn2">Go</button>
     <div id="main2"></div>
+
+    <div class="test-title">Should display labels on emphasis if no animation</div>
+    <div id="main3"></div>
 
     <script>
 
@@ -161,6 +165,47 @@ under the License.
                 option.series[0].data = data2;
                 chart.setOption(option, true);
             });
+        });
+
+    </script>
+
+
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+            var chart = echarts.init(
+                document.getElementById('main3'),
+                null,
+                {
+                    renderer: 'svg'
+                }
+            );
+
+            var option = {
+                "series": [
+                    {
+                        "type": "pie",
+                        "radius": ["40%", "70%"],
+                        "animation": false,
+                        "label": {
+                            "show": false,
+                            "emphasis": {
+                                "show": true,
+                                "textStyle": {
+                                    "fontSize": "50"
+                                }
+                            }
+                        },
+                        "data": [
+                            {"value": 335, "name": "A"}
+                        ]
+                    }
+                ]
+            };
+            chart.setOption(option);
         });
 
     </script>
