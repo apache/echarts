@@ -132,11 +132,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
             // radial sector
             if (valueAxis.dim === 'radius') {
-                var radiusSpan;
-                radiusSpan = valueAxis.dataToRadius(value) - valueAxis.dataToRadius(valueAxis.getExtent()[0]);
-                if (idx === 0) {
-                    radiusSpan = valueAxis.dataToRadius(value) - valueAxis.dataToRadius(initStackValue)
-                }
+                var radiusSpan = valueAxis.dataToRadius(value) - valueAxis.dataToRadius(valueAxis.getExtent()[0])
                 var angle = baseAxis.dataToAngle(baseValue);
 
                 if (Math.abs(radiusSpan) < barMinHeight) {
