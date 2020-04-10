@@ -681,8 +681,8 @@ export default ChartView.extend({
         // Don't apply animation if diff is large.
         // For better result and avoid memory explosion problems like
         // https://github.com/apache/incubator-echarts/issues/12229
-        if (getBoundingDiff(current, next) > 5000
-            || (polygon && getBoundingDiff(stackedOnCurrent, stackedOnNext) > 5000)
+        if (getBoundingDiff(current, next) > 3000
+            || (polygon && getBoundingDiff(stackedOnCurrent, stackedOnNext) > 3000)
         ) {
             polyline.setShape({
                 points: next
