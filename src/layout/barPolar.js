@@ -83,6 +83,19 @@ function barLayoutPolar(seriesType, ecModel, api) {
             || !seriesModel.get('roundCap', true);
 
         var valueAxisStart = valueAxis.getExtent()[0];
+        var initStackValue;
+        if (valueAxis.dim === 'radius') {
+            initStackValue = valueAxis.model.option.min || valueAxis.getExtent()[0];
+            if (valueAxis.model.option.min && valueAxis.model.option.min < 0) {
+                if (!valueAxis.model.option.max
+                    || valueAxis.model.option.max && valueAxis.model.option.max > 0) {
+                    initStackValue = valueAxis.getExtent()[0];
+                } else if (valueAxis.model.option.max && valueAxis.model.option.max < 0) {
+                    initStackValue = valueAxis.model.option.max;
+                }
+            }
+        }
+
 
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
@@ -95,11 +108,18 @@ function barLayoutPolar(seriesType, ecModel, api) {
             // stackResultDimension directly.
             // Only ordinal axis can be stacked.
             if (stacked) {
+
                 if (!lastStackCoords[stackId][baseValue]) {
                     lastStackCoords[stackId][baseValue] = {
                         p: valueAxisStart, // Positive stack
                         n: valueAxisStart  // Negative stack
                     };
+                    if (valueAxis.dim === 'radius') {
+                        lastStackCoords[stackId][baseValue] = {
+                            p: valueAxis.dataToRadius(initStackValue), // Positive stack
+                            n: valueAxis.dataToRadius(initStackValue)  // Negative stack
+                        };
+                    }
                 }
                 // Should also consider #4243
                 baseCoord = lastStackCoords[stackId][baseValue][sign];
@@ -112,7 +132,11 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
             // radial sector
             if (valueAxis.dim === 'radius') {
-                var radiusSpan = valueAxis.dataToRadius(value) - valueAxisStart;
+                var radiusSpan;
+                radiusSpan = valueAxis.dataToRadius(value) - valueAxis.dataToRadius(valueAxis.getExtent()[0]);
+                if (idx === 0) {
+                    radiusSpan = valueAxis.dataToRadius(value) - valueAxis.dataToRadius(initStackValue)
+                }
                 var angle = baseAxis.dataToAngle(baseValue);
 
                 if (Math.abs(radiusSpan) < barMinHeight) {
