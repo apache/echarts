@@ -21,6 +21,7 @@
 
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
+import {fromPoints} from 'zrender/src/core/bbox';
 import SymbolDraw from '../helper/SymbolDraw';
 import SymbolClz from '../helper/Symbol';
 import lineAnimationDiff from './lineAnimationDiff';
@@ -43,6 +44,26 @@ function isPointsSame(points1, points2) {
         }
     }
     return true;
+}
+
+function getBoundingDiff(points1, points2) {
+    var min1 = [];
+    var max1 = [];
+
+    var min2 = [];
+    var max2 = [];
+
+    fromPoints(points1, min1, max1);
+    fromPoints(points2, min2, max2);
+
+    // Get a max value from each corner of two boundings.
+    return Math.max(
+        Math.abs(min1[0] - min2[0]),
+        Math.abs(min1[1] - min2[1]),
+
+        Math.abs(max1[0] - max2[0]),
+        Math.abs(max1[1] - max2[1])
+    );
 }
 
 function getSmooth(smooth) {
@@ -657,6 +678,24 @@ export default ChartView.extend({
             next = turnPointsIntoStep(diff.next, coordSys, step);
             stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
         }
+        // Don't apply animation if diff is large.
+        // For better result and avoid memory explosion problems like
+        // https://github.com/apache/incubator-echarts/issues/12229
+        if (getBoundingDiff(current, next) > 3000
+            || (polygon && getBoundingDiff(stackedOnCurrent, stackedOnNext) > 3000)
+        ) {
+            polyline.setShape({
+                points: next
+            });
+            if (polygon) {
+                polygon.setShape({
+                    points: next,
+                    stackedOnPoints: stackedOnNext
+                });
+            }
+            return;
+        }
+
         // `diff.current` is subset of `current` (which should be ensured by
         // turnPointsIntoStep), so points in `__points` can be updated when
         // points in `current` are update during animation.

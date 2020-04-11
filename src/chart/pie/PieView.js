@@ -180,31 +180,36 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     var withAnimation = !firstCreate && animationTypeUpdate === 'transition';
     this._updateLabel(data, idx, withAnimation);
 
-    this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+    this.highDownOnUpdate = !seriesModel.get('silent')
         ? function (fromState, toState) {
+            const hasAnimation = seriesModel.isAnimationEnabled() && itemModel.get('hoverAnimation');
             if (toState === 'emphasis') {
                 labelLine.ignore = labelLine.hoverIgnore;
                 labelText.ignore = labelText.hoverIgnore;
 
                 // Sector may has animation of updating data. Force to move to the last frame
                 // Or it may stopped on the wrong shape
-                sector.stopAnimation(true);
-                sector.animateTo({
-                    shape: {
-                        r: layout.r + seriesModel.get('hoverOffset')
-                    }
-                }, 300, 'elasticOut');
+                if (hasAnimation) {
+                    sector.stopAnimation(true);
+                    sector.animateTo({
+                        shape: {
+                            r: layout.r + seriesModel.get('hoverOffset')
+                        }
+                    }, 300, 'elasticOut');
+                }
             }
             else {
                 labelLine.ignore = labelLine.normalIgnore;
                 labelText.ignore = labelText.normalIgnore;
 
-                sector.stopAnimation(true);
-                sector.animateTo({
-                    shape: {
-                        r: layout.r
-                    }
-                }, 300, 'elasticOut');
+                if (hasAnimation) {
+                    sector.stopAnimation(true);
+                    sector.animateTo({
+                        shape: {
+                            r: layout.r
+                        }
+                    }, 300, 'elasticOut');
+                }
             }
         }
         : null;
