@@ -83,15 +83,15 @@ function barLayoutPolar(seriesType, ecModel, api) {
             || !seriesModel.get('roundCap', true);
 
         var valueAxisStart = valueAxis.getExtent()[0];
-        var initStackValue;
+        var radiusValueAxisStart;
         if (valueAxis.dim === 'radius') {
-            initStackValue = valueAxis.model.option.min || valueAxis.getExtent()[0];
+            radiusValueAxisStart = valueAxis.model.option.min || valueAxis.getExtent()[0];
             if (valueAxis.model.option.min && valueAxis.model.option.min < 0) {
                 if (!valueAxis.model.option.max
                     || valueAxis.model.option.max && valueAxis.model.option.max > 0) {
-                    initStackValue = valueAxis.getExtent()[0];
+                    radiusValueAxisStart = valueAxis.getExtent()[0];
                 } else if (valueAxis.model.option.max && valueAxis.model.option.max < 0) {
-                    initStackValue = valueAxis.model.option.max;
+                    radiusValueAxisStart = valueAxis.model.option.max;
                 }
             }
         }
@@ -116,8 +116,8 @@ function barLayoutPolar(seriesType, ecModel, api) {
                     };
                     if (valueAxis.dim === 'radius') {
                         lastStackCoords[stackId][baseValue] = {
-                            p: valueAxis.dataToRadius(initStackValue), // Positive stack
-                            n: valueAxis.dataToRadius(initStackValue)  // Negative stack
+                            p: valueAxis.dataToRadius(radiusValueAxisStart), // Positive stack
+                            n: valueAxis.dataToRadius(radiusValueAxisStart)  // Negative stack
                         };
                     }
                 }
