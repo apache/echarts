@@ -99,9 +99,9 @@ export default function (api, opts) {
     group.resize = function () {
         var textWidth = textContain.getWidth(opts.text, font);
         var r = opts.showSpinner ? opts.spinnerRadius : 0;
-        // cx = (containerWidth - (arcDiameter + labelRectWidth) - textDistance - textWidth) / 2
+        // cx = (containerWidth - arcDiameter - textDistance - textWidth) / 2
         // textDistance needs to be calculated when both animation and text exist
-        var cx = (api.getWidth() - r * 4 - (opts.showSpinner && textWidth ? 10 : 0) - textWidth) / 2
+        var cx = (api.getWidth() - r * 2 - (opts.showSpinner && textWidth ? 10 : 0) - textWidth) / 2
                // only show the text
                - (opts.showSpinner ? 0 : textWidth / 2);
         var cy = api.getHeight() / 2;
