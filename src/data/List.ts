@@ -139,6 +139,9 @@ export interface DefaultDataVisual {
 
     // visualMap will inject visualMeta data
     visualMeta?: VisualMeta[]
+
+    // If color is encoded from palette
+    colorFromPalette?: boolean
 }
 
 class List<
