@@ -131,6 +131,7 @@ type TooltipDataParams = CallbackDataParams & {
     // TODO: TYPE Value type
     axisValue?: string | number
     axisValueLabel?: string
+    marker?: formatUtil.TooltipMarker
 };
 class TooltipView extends ComponentView {
     static type = 'tooltip' as const;
@@ -535,6 +536,10 @@ class TooltipView extends ComponentView {
                     dataParams.axisId = item.axisId;
                     dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
                     dataParams.axisValueLabel = valueLabel;
+                    dataParams.marker = formatUtil.getTooltipMarker({
+                        color: dataParams.color as ColorString,
+                        renderMode
+                    });
 
                     if (dataParams) {
                         singleParamsList.push(dataParams);
@@ -631,6 +636,11 @@ class TooltipView extends ComponentView {
         }
 
         const params = dataModel.getDataParams(dataIndex, dataType);
+        params.marker = formatUtil.getTooltipMarker({
+            color: params.color as ColorString,
+            renderMode: this._renderMode
+        });
+
         const seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
         let defaultHtml: string;
         let markers: Dictionary<ColorString>;

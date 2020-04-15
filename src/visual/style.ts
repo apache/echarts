@@ -209,4 +209,8 @@ const dataColorPaletteTask: StageHandler = {
     }
 };
 
-export {seriesStyleTask, dataStyleTask, dataColorPaletteTask};
+export {
+    seriesStyleTask,
+    dataStyleTask,
+    dataColorPaletteTask
+};

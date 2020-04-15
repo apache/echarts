@@ -86,12 +86,12 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     ecModel.eachSeries(function (seriesModel) {
         if (seriesModel.coordinateSystem === polar) {
             const data = seriesModel.getData();
-            zrUtil.each(data.mapDimension('radius', true), function (dim) {
+            zrUtil.each(data.mapDimensionsAll('radius'), function (dim) {
                 radiusAxis.scale.unionExtentFromData(
                     data, getStackedDimension(data, dim)
                 );
             });
-            zrUtil.each(data.mapDimension('angle', true), function (dim) {
+            zrUtil.each(data.mapDimensionsAll('angle'), function (dim) {
                 angleAxis.scale.unionExtentFromData(
                     data, getStackedDimension(data, dim)
                 );

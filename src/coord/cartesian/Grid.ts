@@ -438,7 +438,7 @@ class Grid implements CoordinateSystemMaster {
         }, this);
 
         function unionExtent(data: List, axis: Axis2D): void {
-            each(data.mapDimension(axis.dim, true), function (dim) {
+            each(data.mapDimensionsAll(axis.dim), function (dim) {
                 axis.scale.unionExtentFromData(
                     // For example, the extent of the orginal dimension
                     // is [0.1, 0.5], the extent of the `stackResultDimension`

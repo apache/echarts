@@ -263,7 +263,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
     let minDiff = -1;
 
     each(axisInfo.seriesModels, function (series, idx) {
-        const dataDim = series.getData().mapDimension(dim, true);
+        const dataDim = series.getData().mapDimensionsAll(dim);
         let seriesNestestValue;
         let dataIndices;
 

@@ -443,7 +443,6 @@ class SankeyView extends ChartView {
         const data = seriesModel.getData();
         const graph = data.graph;
         const dataIndex = payload.dataIndex;
-        const itemModel = data.getItemModel<SankeyNodeItemOption>(dataIndex);
         const edgeDataIndex = payload.edgeDataIndex;
 
         if (dataIndex == null && edgeDataIndex == null) {
@@ -460,6 +459,7 @@ class SankeyView extends ChartView {
         });
 
         if (node) {
+            const itemModel = data.getItemModel<SankeyNodeItemOption>(dataIndex);
             fadeInItem(node, hoverNodeOpacityPath);
             const focusNodeAdj = itemModel.get('focusNodeAdjacency');
             if (focusNodeAdj === 'outEdges') {

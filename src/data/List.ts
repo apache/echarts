@@ -354,16 +354,12 @@ class List<
     /**
      * @param coordDim
      * @param idx A coordDim may map to more than one data dim.
-     *        If idx is `true`, return a array of all mapped dims.
-     *        If idx is not specified, return the first dim not extra.
-     * @return concrete data dim.
-     *        If idx is number, and not found, return null/undefined.
-     *        If idx is `true`, and not found, return empty array (always return array).
+     *        If not specified, return the first dim not extra.
+     * @return concrete data dim. If not found, return null/undefined
      */
     mapDimension(coordDim: DimensionName): DimensionName;
-    mapDimension(coordDim: DimensionName, idx: true): DimensionName[];
     mapDimension(coordDim: DimensionName, idx: number): DimensionName;
-    mapDimension(coordDim: DimensionName, idx?: true | number): DimensionName | DimensionName[] {
+    mapDimension(coordDim: DimensionName, idx?: number): DimensionName {
         const dimensionsSummary = this._dimensionsSummary;
 
         if (idx == null) {

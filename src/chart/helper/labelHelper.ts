@@ -25,7 +25,7 @@ import List from '../../data/List';
  * @return label string. Not null/undefined
  */
 export function getDefaultLabel(data: List, dataIndex: number): string {
-    const labelDims = data.mapDimension('defaultedLabel', true);
+    const labelDims = data.mapDimensionsAll('defaultedLabel');
     const len = labelDims.length;
 
     // Simple optimization (in lots of cases, label dims length is 1)
