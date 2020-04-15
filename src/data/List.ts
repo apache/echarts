@@ -367,10 +367,13 @@ class List<
         }
 
         const dims = dimensionsSummary.encode[coordDim];
-        return idx === true
-            // always return array if idx is `true`
-            ? (dims || []).slice()
-            : (dims ? dims[idx as number] as any : null);
+        return dims ? dims[idx as number] as any : null;
+    }
+
+    mapDimensionsAll(coordDim: DimensionName): DimensionName[] {
+        const dimensionsSummary = this._dimensionsSummary;
+        const dims = dimensionsSummary.encode[coordDim];
+        return (dims || []).slice();
     }
 
     /**
