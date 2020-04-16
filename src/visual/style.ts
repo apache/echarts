@@ -18,7 +18,7 @@
 */
 
 import { isFunction, extend, createHashMap } from 'zrender/src/core/util';
-import { StageHandler, CallbackDataParams, ZRColor, Dictionary } from '../util/types';
+import { StageHandler, CallbackDataParams, ZRColor, Dictionary, SeriesOption, SymbolOptionMixin } from '../util/types';
 import makeStyleMapper from '../model/mixin/makeStyleMapper';
 import { ITEM_STYLE_KEY_MAP } from '../model/mixin/itemStyle';
 import { LINE_STYLE_KEY_MAP } from '../model/mixin/lineStyle';
@@ -83,11 +83,15 @@ const seriesStyleTask: StageHandler = {
         // TODO style callback
         const colorCallback = isFunction(color) ? color as unknown as ColorCallback : null;
         // Default
-        if ((!globalStyle[colorKey] || colorCallback) && !seriesModel.useColorPaletteOnData) {
-            globalStyle[colorKey] = seriesModel.getColorFromPalette(
+        if ((!globalStyle[colorKey] || colorCallback || globalStyle.fill === 'auto' || globalStyle.stroke)
+            && !seriesModel.useColorPaletteOnData
+        ) {
+            var colorPalette = seriesModel.getColorFromPalette(
                 // TODO series count changed.
                 seriesModel.name, null, ecModel.getSeriesCount()
             );
+            globalStyle.fill = globalStyle.fill === 'auto' ? colorPalette : globalStyle.fill;
+            globalStyle.stroke = globalStyle.stroke === 'auto' ? colorPalette : globalStyle.stroke;
         }
 
         data.setVisual('style', globalStyle);

@@ -36,6 +36,9 @@ import {
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
+import makeStyleMapper from '../../model/mixin/makeStyleMapper';
+import {ITEM_STYLE_KEY_MAP} from '../../model/mixin/itemStyle';
+import {LINE_STYLE_KEY_MAP} from '../../model/mixin/lineStyle';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -106,6 +109,8 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
     hasSymbolVisual = true;
     legendSymbol = 'line';
 
+    visualDrawType = 'stroke' as const;
+
     getInitialData(option: LineSeriesOption): List {
         if (__DEV__) {
             const coordSys = option.coordinateSystem;
@@ -132,6 +137,12 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             position: 'top'
         },
 
+        itemStyle: {
+            color: 'white',
+            borderColor: 'auto',
+            borderWidth: 1
+        },
+
         lineStyle: {
             width: 2,
             type: 'solid'
@@ -149,7 +160,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         // Disabled if step is true
         smooth: false,
         smoothMonotone: null,
-        symbol: 'emptyCircle',
+        symbol: 'circle',
         symbolSize: 4,
         symbolRotate: null,
 

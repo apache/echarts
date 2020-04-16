@@ -35,7 +35,7 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
-    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
+    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption, ItemStyleOption, LineStyleOption
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -136,6 +136,7 @@ export interface DefaultDataVisual {
     liftZ?: number
     // For legend.
     legendSymbol?: string
+    legendSymbolStyle?: ItemStyleOption
 
     // visualMap will inject visualMeta data
     visualMeta?: VisualMeta[]

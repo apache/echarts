@@ -27,8 +27,24 @@ import dataSample from '../processor/dataSample';
 
 // In case developer forget to include grid component
 import '../component/gridSimple';
+import LineSeriesModel from './line/LineSeries';
 
 echarts.registerLayout(layoutPoints('line'));
+
+echarts.registerVisual({
+    seriesType: 'line',
+    reset: function (seriesModel: LineSeriesModel) {
+        // Visual coding for legend
+        const lineStyle = seriesModel.getModel('lineStyle');
+        console.log(lineStyle.get('color'), lineStyle.get('width'))
+        if (lineStyle) {
+            seriesModel.getData().setVisual('legendSymbolStyle', {
+                color: lineStyle.get('color'),
+                borderWidth: lineStyle.get('width')
+            });
+        }
+    }
+});
 
 // Down sample after filter
 echarts.registerProcessor(
