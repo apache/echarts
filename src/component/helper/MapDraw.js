@@ -24,6 +24,7 @@ import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
+import Transformable from 'zrender/src/mixin/Transformable';
 
 function getFixedItemStyle(model) {
     var itemStyle = model.getItemStyle();
@@ -182,9 +183,25 @@ MapDraw.prototype = {
         var group = this.group;
 
         var transformInfo = geo.getTransformInfo();
-        group.transform = transformInfo.roamTransform;
-        group.decomposeTransform();
-        group.dirty();
+        // No animation when first draw or in action
+        var isFirstDraw = !regionsGroup.childAt(0) || payload;
+        var targetScale;
+        if (isFirstDraw) {
+            group.transform = transformInfo.roamTransform;
+            group.decomposeTransform();
+            group.dirty();
+        }
+        else {
+            var target = new Transformable();
+            target.transform = transformInfo.roamTransform;
+            target.decomposeTransform();
+            var props = {
+                scale: target.scale,
+                position: target.position
+            };
+            targetScale = target.scale;
+            graphic.updateProps(group, props, mapOrGeoModel);
+        }
 
         var scale = transformInfo.rawScale;
         var position = transformInfo.rawPosition;
@@ -325,6 +342,12 @@ MapDraw.prototype = {
                         textVerticalAlign: 'middle'
                     }
                 );
+
+                if (!isFirstDraw) {
+                    // Text animation
+                    var textScale = [1 / targetScale[0], 1 / targetScale[1]];
+                    graphic.updateProps(textEl, { scale: textScale }, mapOrGeoModel);
+                }
 
                 regionGroup.add(textEl);
             }

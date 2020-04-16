@@ -105,8 +105,7 @@ export default SeriesModel.extend({
             align: 'center',
             position: 'inside',
             distance: 5,
-            silent: true,
-            emphasis: {}
+            silent: true
         },
         itemStyle: {
             borderWidth: 1,
@@ -116,13 +115,19 @@ export default SeriesModel.extend({
             shadowColor: 'rgba(0, 0, 0, 0.2)',
             shadowOffsetX: 0,
             shadowOffsetY: 0,
-            opacity: 1,
-            emphasis: {},
-            highlight: {
+            opacity: 1
+        },
+        highlight: {
+            itemStyle: {
                 opacity: 1
+            }
+        },
+        downplay: {
+            itemStyle: {
+                opacity: 0.5
             },
-            downplay: {
-                opacity: 0.9
+            label: {
+                opacity: 0.6
             }
         },
 

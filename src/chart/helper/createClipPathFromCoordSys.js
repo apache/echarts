@@ -35,6 +35,10 @@ function createGridClipPath(cartesian, hasAnimation, seriesModel) {
     width += lineWidth;
     height += lineWidth;
 
+    // fix: https://github.com/apache/incubator-echarts/issues/11369
+    x = Math.floor(x);
+    width = Math.round(width);
+
     var clipPath = new graphic.Rect({
         shape: {
             x: x,

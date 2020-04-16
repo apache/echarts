@@ -28,6 +28,7 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as animationUtil from '../../util/animation';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
+import {windowOpen} from '../../util/format';
 
 var bind = zrUtil.bind;
 var Group = graphic.Group;
@@ -544,7 +545,7 @@ export default echarts.extendChartView({
                     var itemModel = node.hostTree.data.getItemModel(node.dataIndex);
                     var link = itemModel.get('link', true);
                     var linkTarget = itemModel.get('target', true) || 'blank';
-                    link && window.open(link, linkTarget);
+                    link && windowOpen(link, linkTarget);
                 }
             }
 
@@ -779,9 +780,10 @@ function renderNode(
             // If invisible, do not set visual, otherwise the element will
             // change immediately before animation. We think it is OK to
             // remain its origin color when moving out of the view window.
-            processInvisible(content);
+            processInvisible(bg);
         }
         else {
+            bg.invisible = false;
             var visualBorderColor = thisNode.getVisual('borderColor', true);
             var emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
             var normalStyle = getItemStyleNormal(itemStyleNormalModel);
@@ -832,6 +834,7 @@ function renderNode(
             processInvisible(content);
         }
         else {
+            content.invisible = false;
             var visualColor = thisNode.getVisual('color', true);
             var normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;

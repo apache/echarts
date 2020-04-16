@@ -51,10 +51,10 @@ var isFunction = zrUtil.isFunction;
 var isObject = zrUtil.isObject;
 var parseClassType = ComponentModel.parseClassType;
 
-export var version = '4.6.0';
+export var version = '4.7.0';
 
 export var dependencies = {
-    zrender: '4.2.0'
+    zrender: '4.3.0'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -601,7 +601,7 @@ echartsProto.getConnectedDataURL = function (opts) {
             each(canvasList, function (item) {
                 var x = item.left - left;
                 var y = item.top - top;
-                content += '<g transform="translate(' + x + ","
+                content += '<g transform="translate(' + x + ','
                     + y + ')">' + item.dom + '</g>';
             });
             zr.painter.getSvgRoot().innerHTML = content;

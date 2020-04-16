@@ -186,7 +186,7 @@ Radar.prototype.update = function (ecModel, api) {
     }
     // Force all the axis fixing the maxSplitNumber.
     zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-        var rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
+        var rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model).extent;
         niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
 
         var axisModel = indicatorAxis.model;
@@ -194,6 +194,7 @@ Radar.prototype.update = function (ecModel, api) {
         var fixedMin = axisModel.getMin();
         var fixedMax = axisModel.getMax();
         var interval = scale.getInterval();
+
 
         if (fixedMin != null && fixedMax != null) {
             // User set min, max, divide to get new interval
@@ -230,13 +231,10 @@ Radar.prototype.update = function (ecModel, api) {
             if (nicedSplitNumber > splitNumber) {
                 interval = increaseInterval(interval);
             }
-            // PENDING
-            var center = Math.ceil((rawExtent[0] + rawExtent[1]) / 2 / interval) * interval;
-            var halfSplitNumber = Math.round(splitNumber / 2);
-            scale.setExtent(
-                numberUtil.round(center - halfSplitNumber * interval),
-                numberUtil.round(center + (splitNumber - halfSplitNumber) * interval)
-            );
+            // TODO
+            var max = Math.ceil(rawExtent[1] / interval) * interval;
+            var min = numberUtil.round(max - interval * splitNumber);
+            scale.setExtent(min, max);
             scale.setInterval(interval);
         }
     });
