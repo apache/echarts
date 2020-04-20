@@ -38,6 +38,7 @@ function getAxisKey(polar, axis) {
 function barLayoutPolar(seriesType, ecModel, api) {
 
     var lastStackCoords = {};
+    var lastStackSum = {};
 
     var barWidthAndOffset = calRadialBar(
         zrUtil.filter(
@@ -75,6 +76,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var barMinAngle = seriesModel.get('barMinAngle') || 0;
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+        lastStackSum[stackId] = lastStackSum[stackId] || [];
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
@@ -82,21 +84,18 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        var valueAxisStart = valueAxis.getExtent()[0];
+        // valueAxisStart may not always be 0 consider of scale extent min and max
         var radiusValueAxisStart;
-        if (valueAxis.dim === 'radius') {
-            radiusValueAxisStart = valueAxis.model.option.min || valueAxis.getExtent()[0];
-            if (valueAxis.model.option.min && valueAxis.model.option.min < 0) {
-                if (!valueAxis.model.option.max
-                    || valueAxis.model.option.max && valueAxis.model.option.max > 0) {
-                    radiusValueAxisStart = valueAxis.getExtent()[0];
-                } else if (valueAxis.model.option.max && valueAxis.model.option.max < 0) {
-                    radiusValueAxisStart = valueAxis.model.option.max;
-                }
-            }
+        if(valueAxis.scale.getExtent()[1] < 0) {
+            radiusValueAxisStart = valueAxis.scale.getExtent()[1];
+        } else if (valueAxis.scale.getExtent()[0] > 0) {
+            radiusValueAxisStart = valueAxis.scale.getExtent()[0];
+        } else {
+            radiusValueAxisStart = valueAxis.getExtent()[0]
         }
-
-
+        var valueAxisStart = valueAxis.dim === 'radius'
+            ? valueAxis.dataToRadius(radiusValueAxisStart)
+            : valueAxis.dataToAngle(0);
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
@@ -114,12 +113,6 @@ function barLayoutPolar(seriesType, ecModel, api) {
                         p: valueAxisStart, // Positive stack
                         n: valueAxisStart  // Negative stack
                     };
-                    if (valueAxis.dim === 'radius') {
-                        lastStackCoords[stackId][baseValue] = {
-                            p: valueAxis.dataToRadius(radiusValueAxisStart), // Positive stack
-                            n: valueAxis.dataToRadius(radiusValueAxisStart)  // Negative stack
-                        };
-                    }
                 }
                 // Should also consider #4243
                 baseCoord = lastStackCoords[stackId][baseValue][sign];
@@ -132,7 +125,22 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
             // radial sector
             if (valueAxis.dim === 'radius') {
-                var radiusSpan = valueAxis.dataToRadius(value) - valueAxis.dataToRadius(valueAxis.getExtent()[0])
+                // record stack values sum
+                if (!lastStackSum[stackId][baseValue]) {
+                    lastStackSum[stackId][baseValue] = {
+                        p: radiusValueAxisStart > 0 ? radiusValueAxisStart : 0, // Positive stack
+                        n: radiusValueAxisStart < 0 ? radiusValueAxisStart : 0 // Negative stack
+                    }
+                }
+                lastStackSum[stackId][baseValue][sign] += value;
+                // negative overflowed value will not render
+                var overflowedValue = (sign === 'p' && valueAxis.scale.getExtent()[1] < 0)
+                    ? value : lastStackSum[stackId][baseValue][sign] - valueAxis.scale.getExtent()[1];
+                if (sign === 'p' && (overflowedValue > 0)) {
+                    value = value - overflowedValue;
+                    lastStackSum[stackId][baseValue][sign] = valueAxis.scale.getExtent()[1];
+                }
+                var radiusSpan = valueAxis.dataToRadius(value) - valueAxis.dataToRadius(0)
                 var angle = baseAxis.dataToAngle(baseValue);
 
                 if (Math.abs(radiusSpan) < barMinHeight) {
