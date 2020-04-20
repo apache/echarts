@@ -391,7 +391,6 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         inactiveBorderColor: '#ccc',
 
         itemStyle: {
-            // borderWidth: 0
         },
 
         textStyle: {

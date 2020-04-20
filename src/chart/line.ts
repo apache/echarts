@@ -36,7 +36,6 @@ echarts.registerVisual({
     reset: function (seriesModel: LineSeriesModel) {
         // Visual coding for legend
         const lineStyle = seriesModel.getModel('lineStyle');
-        console.log(lineStyle.get('color'), lineStyle.get('width'))
         if (lineStyle) {
             seriesModel.getData().setVisual('legendSymbolStyle', {
                 color: lineStyle.get('color'),
