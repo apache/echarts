@@ -42,6 +42,8 @@ under the License.
             }
         </style>
         <div id="main"></div>
+        <h1>polar negative</h1>
+        <div id="polar-negative" class="test-chart"></div>
         <h1>polar min negative</h1>
         <div id="polar-min-negative" class="test-chart"></div>
         <h1>polar max negative</h1>
@@ -101,6 +103,55 @@ under the License.
 
                 window.onresize = chart.resize;
             });
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('polar-negative'), null, {});
+
+                var data = [];
+
+                chart.setOption({
+                    angleAxis: {
+                    type: 'category',
+                    data: ['S1', 'S2', 'S3']
+                },
+                radiusAxis: {
+                    min:-1,
+                    max: 3
+                },
+                polar: {
+                },
+                series: [{
+                    type: 'bar',
+                    data: [1, 1, 1],
+                    coordinateSystem: 'polar',
+                    itemStyle:{
+                        color:"blue"
+                    },
+                    name: 'A',
+                    stack: 'a'
+                }, {
+                    type: 'bar',
+                    data: [1, 1, 1],
+                    coordinateSystem: 'polar',
+                    name: 'B',
+                    stack: 'a'
+                }, {
+                    type: 'bar',
+                    data: [1, 1, 1],
+                    coordinateSystem: 'polar',
+                    name: 'C',
+                    stack: 'a'
+                }],
+                legend: {
+                    show: true,
+                    data: ['A', 'B', 'C']
+                }
+                });
+            })
         </script>
         <script>
             require([
