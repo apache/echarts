@@ -125,7 +125,7 @@ class FunnelPiece extends graphic.Group {
             local: true,
             inside: !!labelLayout.inside,
             insideStroke: visualColor,
-            insideFill: 'auto',
+            // insideFill: 'auto',
             outsideFill: visualColor
         });
 
