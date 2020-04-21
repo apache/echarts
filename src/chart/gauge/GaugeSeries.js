@@ -92,9 +92,6 @@ var GaugeSeries = SeriesModel.extend({
             length: '80%',
             width: 8
         },
-        itemStyle: {
-            color: 'auto'
-        },
         title: {
             show: true,
             // x, y，单位px
