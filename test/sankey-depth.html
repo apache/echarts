@@ -83,7 +83,7 @@ under the License.
                         {
                             source: 'a',
                             target: 'b1',
-                            value: 3
+                            value: 0
                         },
                         {
                             source: 'b1',
@@ -93,15 +93,23 @@ under the License.
                         {
                             source: 'b1',
                             target: 'c',
-                            value: 2
+                            value: 3
                         },
                         {
                             source: 'b',
                             target: 'c',
-                            value: 1
+                            value: 3
                         }
                     ]
                 };
+
+                for (var i = 0; i < testData.nodes.length; i++) {
+                    testData.nodes[i].tooltip = {
+                        formatter: function () {
+                            return 'hello';
+                        }
+                    }
+                }
 
                 chart.setOption({
                     color: ['#67001f', '#b2182b', '#d6604d', '#f4a582', '#fddbc7', '#d1e5f0', '#92c5de', '#4393c3', '#2166ac', '#053061'],
