@@ -881,7 +881,8 @@ function renderNode(
             {
                 defaultText: isShow ? text : null,
                 autoColor: visualColor,
-                isRectText: true
+                isRectText: true,
+                labelFetcher: seriesModel
             }
         );
 
