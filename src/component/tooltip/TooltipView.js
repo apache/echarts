@@ -478,7 +478,7 @@ export default echarts.extendComponentView({
         var dataModel = el.dataModel || seriesModel;
         var dataIndex = el.dataIndex;
         var dataType = el.dataType;
-        var data = dataModel.getData();
+        var data = dataModel.getData(dataType);
 
         var tooltipModel = buildTooltipModel([
             data.getItemModel(dataIndex),
