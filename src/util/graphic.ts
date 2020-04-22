@@ -801,6 +801,9 @@ export function createTextConfig(
     // fill and auto is determined by the color of path fill if it's not specified by developers.
     textConfig.outsideFill = opt.autoColor || null;
     textConfig.insideStroke = opt.autoColor || null;
+    // Set default stroke, which is useful when label is over other
+    // messy graphics (like lines) in background.
+    textConfig.outsideStroke = 'rgba(255, 255, 255, 0.7)';
     // if (!textStyle.fill) {
     //     textConfig.insideFill = 'auto';
     //     textConfig.outsideFill = opt.autoColor || null;
