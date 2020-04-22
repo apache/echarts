@@ -248,11 +248,14 @@ TreeNode.prototype = {
         var hostTree = this.hostTree;
         var itemModel = hostTree.data.getItemModel(this.dataIndex);
         var levelModel = this.getLevelModel();
-        var leavesModel;
-        if (!levelModel && (this.children.length === 0 || (this.children.length !== 0 && this.isExpand === false))) {
-            leavesModel = this.getLeavesModel();
+
+        // FIXME: refactor levelModel to "beforeLink", and remove levelModel here.
+        if (levelModel) {
+            return itemModel.getModel(path, levelModel.getModel(path));
         }
-        return itemModel.getModel(path, (levelModel || leavesModel || hostTree.hostModel).getModel(path));
+        else {
+            return itemModel.getModel(path);
+        }
     },
 
     /**
@@ -260,13 +263,6 @@ TreeNode.prototype = {
      */
     getLevelModel: function () {
         return (this.hostTree.levelModels || [])[this.depth];
-    },
-
-    /**
-     * @return {module:echarts/model/Model}
-     */
-    getLeavesModel: function () {
-        return this.hostTree.leavesModel;
     },
 
     /**
@@ -339,9 +335,8 @@ TreeNode.prototype = {
  * @alias module:echarts/data/Tree
  * @param {module:echarts/model/Model} hostModel
  * @param {Array.<Object>} levelOptions
- * @param {Object} leavesOption
  */
-function Tree(hostModel, levelOptions, leavesOption) {
+function Tree(hostModel, levelOptions) {
     /**
      * @type {module:echarts/data/Tree~TreeNode}
      * @readOnly
@@ -377,7 +372,6 @@ function Tree(hostModel, levelOptions, leavesOption) {
         return new Model(levelDefine, hostModel, hostModel.ecModel);
     });
 
-    this.leavesModel = new Model(leavesOption || {}, hostModel, hostModel.ecModel);
 }
 
 Tree.prototype = {
@@ -469,12 +463,11 @@ Tree.prototype = {
  * @param {module:echarts/model/Model} hostModel
  * @param {Object} treeOptions
  * @param {Array.<Object>} treeOptions.levels
- * @param {Array.<Object>} treeOptions.leaves
  * @return module:echarts/data/Tree
  */
 Tree.createTree = function (dataRoot, hostModel, treeOptions, beforeLink) {
 
-    var tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
+    var tree = new Tree(hostModel, treeOptions && treeOptions.levels);
     var listData = [];
     var dimMax = 1;
 
@@ -511,6 +504,8 @@ Tree.createTree = function (dataRoot, hostModel, treeOptions, beforeLink) {
     var list = new List(dimensionsInfo, hostModel);
     list.initData(listData);
 
+    beforeLink && beforeLink(list);
+
     linkList({
         mainData: list,
         struct: tree,
@@ -518,8 +513,6 @@ Tree.createTree = function (dataRoot, hostModel, treeOptions, beforeLink) {
     });
 
     tree.update();
-
-    beforeLink && beforeLink(list);
 
     return tree;
 };

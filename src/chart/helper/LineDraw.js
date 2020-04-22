@@ -123,9 +123,13 @@ lineDrawProto.incrementalPrepareUpdate = function (lineData) {
     this.group.removeAll();
 };
 
+function isEffectObject(el) {
+    return el.animators && el.animators.length > 0;
+}
+
 lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
     function updateIncrementalAndHover(el) {
-        if (!el.isGroup) {
+        if (!el.isGroup && !isEffectObject(el)) {
             el.incremental = el.useHoverLayer = true;
         }
     }

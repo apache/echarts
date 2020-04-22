@@ -23,7 +23,7 @@ import * as numberUtil from './number';
 // import Text from 'zrender/src/graphic/Text';
 
 /**
- * 每三位默认加,格式化
+ * add commas after every three numbers
  * @param {string|number} x
  * @return {string}
  */
@@ -274,4 +274,20 @@ export function getTextRect(
     return textContain.getBoundingRect(
         text, font, textAlign, textVerticalAlign, textPadding, textLineHeight, rich, truncate
     );
+}
+
+/**
+ * open new tab
+ * @param {string} link url
+ * @param {string} target blank or self
+ */
+export function windowOpen(link, target) {
+    if (target === '_blank' || target === 'blank') {
+        var blank = window.open();
+        blank.opener = null;
+        blank.location = link;
+    }
+    else {
+        window.open(link, target);
+    }
 }

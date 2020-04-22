@@ -400,7 +400,13 @@ function relaxRightToLeft(nodesByBreadth, alpha, orient) {
         zrUtil.each(nodes, function (node) {
             if (node.outEdges.length) {
                 var y = sum(node.outEdges, weightedTarget, orient)
-                        / sum(node.outEdges, getEdgeValue, orient);
+                    / sum(node.outEdges, getEdgeValue, orient);
+
+                if (isNaN(y)) {
+                    var len = node.outEdges.length;
+                    y = len ? sum(node.outEdges, centerTarget, orient) / len : 0;
+                }
+
                 if (orient === 'vertical') {
                     var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
@@ -417,9 +423,15 @@ function relaxRightToLeft(nodesByBreadth, alpha, orient) {
 function weightedTarget(edge, orient) {
     return center(edge.node2, orient) * edge.getValue();
 }
+function centerTarget(edge, orient) {
+    return center(edge.node2, orient);
+}
 
 function weightedSource(edge, orient) {
     return center(edge.node1, orient) * edge.getValue();
+}
+function centerSource(edge, orient) {
+    return center(edge.node1, orient);
 }
 
 function center(node, orient) {
@@ -456,8 +468,15 @@ function relaxLeftToRight(nodesByBreadth, alpha, orient) {
     zrUtil.each(nodesByBreadth, function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.inEdges.length) {
+
                 var y = sum(node.inEdges, weightedSource, orient)
-                        / sum(node.inEdges, getEdgeValue, orient);
+                    / sum(node.inEdges, getEdgeValue, orient);
+
+                if (isNaN(y)) {
+                    var len = node.inEdges.length;
+                    y = len ? sum(node.inEdges, centerSource, orient) / len : 0;
+                }
+
                 if (orient === 'vertical') {
                     var nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
