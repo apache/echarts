@@ -351,6 +351,8 @@ class TreeView extends ChartView {
                     originY: e.originY
                 });
                 this._updateNodeAndLinkScale(seriesModel);
+                // Only update label layout on zoom
+                api.updateLabelLayout();
             });
     }
 

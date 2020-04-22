@@ -39,6 +39,8 @@ import CompoundPath from 'zrender/src/graphic/CompoundPath';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect from 'zrender/src/core/BoundingRect';
+import OrientedBoundingRect from 'zrender/src/core/OrientedBoundingRect';
+import Point from 'zrender/src/core/Point';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Dictionary } from 'zrender/src/core/types';
@@ -605,19 +607,61 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     ),
     // Fetch text by `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
     labelFetcher?: {
-        getFormattedLabel?: (
+        getFormattedLabel: (
             // In MapDraw case it can be string (region name)
             labelDataIndex: LDI,
-            state: DisplayState,
-            dataType: string,
-            labelDimIndex: number
+            status: DisplayState,
+            dataType?: string,
+            labelDimIndex?: number,
+            formatter?: string | ((params: object) => string)
         ) => string
+        // getDataParams: (labelDataIndex: LDI, dataType?: string) => object
     },
     labelDataIndex?: LDI,
     labelDimIndex?: number
 }
 
 
+// function handleSquashCallback<LDI>(
+//     func: Function,
+//     labelDataIndex: LDI,
+//     labelFetcher: SetLabelStyleOpt<LDI>['labelFetcher'],
+//     rect: RectLike,
+//     status: DisplayState
+// ) {
+//     let params: {
+//         status?: DisplayState
+//         rect?: RectLike
+//     };
+//     if (labelFetcher && labelFetcher.getDataParams) {
+//         params = labelFetcher.getDataParams(labelDataIndex);
+//     }
+//     else {
+//         params = {};
+//     }
+//     params.status = status;
+//     params.rect = rect;
+//     return func(params);
+// }
+
+// function getGlobalBoundingRect(el: Element) {
+//     const rect = el.getBoundingRect().clone();
+//     const transform = el.getComputedTransform();
+//     if (transform) {
+//         rect.applyTransform(transform);
+//     }
+//     return rect;
+// }
+
+type LabelModel = Model<LabelOption & {
+    formatter?: string | ((params: any) => string)
+}>;
+type LabelModelForText = Model<Omit<
+    // Remove
+    LabelOption, 'position' | 'rotate'
+> & {
+    formatter?: string | ((params: any) => string)
+}>;
 /**
  * Set normal styles and emphasis styles about text on target element
  * If target is a ZRText. It will create a new style object.
@@ -627,10 +671,14 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
  * NOTICE: Because the style on ZRText will be replaced with new(only x, y are keeped).
  * So please use the style on ZRText after use this method.
  */
-export function setLabelStyle<LDI>(
+// eslint-disable-next-line
+function setLabelStyle<LDI>(targetEl: ZRText, normalModel: LabelModelForText, emphasisModel: LabelModelForText, opt?: SetLabelStyleOpt<LDI>, normalSpecified?: TextStyleProps, emphasisSpecified?: TextStyleProps): void;
+// eslint-disable-next-line
+function setLabelStyle<LDI>(targetEl: Element, normalModel: LabelModel, emphasisModel: LabelModel, opt?: SetLabelStyleOpt<LDI>, normalSpecified?: TextStyleProps, emphasisSpecified?: TextStyleProps): void;
+function setLabelStyle<LDI>(
     targetEl: Element,
-    normalModel: Model,
-    emphasisModel: Model,
+    normalModel: LabelModel,
+    emphasisModel: LabelModel,
     opt?: SetLabelStyleOpt<LDI>,
     normalSpecified?: TextStyleProps,
     emphasisSpecified?: TextStyleProps
@@ -638,6 +686,31 @@ export function setLabelStyle<LDI>(
 ) {
     opt = opt || EMPTY_OBJ;
     const isSetOnText = targetEl instanceof ZRText;
+
+    const labelFetcher = opt.labelFetcher;
+    const labelDataIndex = opt.labelDataIndex;
+    const labelDimIndex = opt.labelDimIndex;
+
+    // TODO Performance optimization
+    // normalModel.squash(false, function (func: Function) {
+    //     return handleSquashCallback(
+    //         func,
+    //         labelDataIndex,
+    //         labelFetcher,
+    //         isSetOnText ? null : getGlobalBoundingRect(targetEl),
+    //         'normal'
+    //     );
+    // });
+
+    // emphasisModel.squash(false, function (func: Function) {
+    //     return handleSquashCallback(
+    //         func,
+    //         labelDataIndex,
+    //         labelFetcher,
+    //         isSetOnText ? null : getGlobalBoundingRect(targetEl),
+    //         'emphasis'
+    //     );
+    // });
 
     const showNormal = normalModel.getShallow('show');
     const showEmphasis = emphasisModel.getShallow('show');
@@ -647,13 +720,12 @@ export function setLabelStyle<LDI>(
     // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
     let richText = isSetOnText ? targetEl as ZRText : null;
     if (showNormal || showEmphasis) {
-        const labelFetcher = opt.labelFetcher;
-        const labelDataIndex = opt.labelDataIndex;
-        const labelDimIndex = opt.labelDimIndex;
-
         let baseText;
         if (labelFetcher) {
-            baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex);
+            baseText = labelFetcher.getFormattedLabel(
+                labelDataIndex, 'normal', null, labelDimIndex,
+                normalModel.get('formatter')
+            );
         }
         if (baseText == null) {
             baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
@@ -661,7 +733,10 @@ export function setLabelStyle<LDI>(
         const normalStyleText = baseText;
         const emphasisStyleText = retrieve2(
             labelFetcher
-                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
+                ? labelFetcher.getFormattedLabel(
+                    labelDataIndex, 'emphasis', null, labelDimIndex,
+                    emphasisModel.get('formatter')
+                )
                 : null,
             baseText
         );
@@ -738,6 +813,7 @@ export function setLabelStyle<LDI>(
     targetEl.dirty();
 }
 
+export {setLabelStyle};
 /**
  * Set basic textStyle properties.
  */
@@ -802,7 +878,7 @@ export function createTextConfig(
     }
     if (!textStyle.stroke) {
         textConfig.insideStroke = 'auto';
-        // textConfig.outsideStroke = 'auto';
+        textConfig.outsideStroke = 'auto';
     }
     else if (opt.autoColor) {
         // TODO: stroke set to autoColor. if label is inside?
@@ -1080,6 +1156,7 @@ function animateOrSetProps<Props>(
                 delay: animationDelay || 0,
                 easing: animationEasing,
                 done: cb,
+                setToFinal: true,
                 force: !!cb
             })
             : (el.stopAnimation(), el.attr(props), cb && cb());
@@ -1440,5 +1517,7 @@ export {
     LinearGradient,
     RadialGradient,
     BoundingRect,
+    OrientedBoundingRect,
+    Point,
     Path
 };

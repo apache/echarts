@@ -798,6 +798,48 @@ export interface LabelGuideLineOption {
     lineStyle?: LineStyleOption
 }
 
+
+export interface LabelLayoutOptionCallbackParams {
+    dataIndex: number,
+    seriesIndex: number,
+    text: string
+    align: ZRTextAlign
+    verticalAlign: ZRTextVerticalAlign
+    rect: RectLike
+    labelRect: RectLike
+    x: number
+    y: number
+};
+
+export interface LabelLayoutOption {
+    overlap?: 'visible' | 'hidden' | 'blur'
+    /**
+     * Minimal margin between two labels which will be considered as overlapped.
+     */
+    overlapMargin?: number
+    /**
+     * Can be absolute px number or percent string.
+     */
+    x?: number | string
+    y?: number | string
+    /**
+     * offset on x based on the original position.
+     */
+    dx?: number
+    /**
+     * offset on y based on the original position.
+     */
+    dy?: number
+    rotation?: number
+    align?: ZRTextAlign
+    verticalAlign?: ZRTextVerticalAlign
+    width?: number
+    height?: number
+}
+
+export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
+
+
 interface TooltipFormatterCallback<T> {
     /**
      * For sync callback
@@ -871,7 +913,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Support to be a callback
      */
-    position?: number[] | string[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+    position?: (number | string)[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
 
     confine?: boolean
 
@@ -1075,6 +1117,11 @@ export interface SeriesOption extends
      * @default 'column'
      */
     seriesLayoutBy?: 'column' | 'row'
+
+    /**
+     * Global label layout option in label layout stage.
+     */
+    labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
 }
 
 export interface SeriesOnCartesianOptionMixin {

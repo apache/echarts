@@ -139,10 +139,7 @@ export interface SunburstSeriesOption extends SeriesOption, CircleLayoutOptionMi
 interface SunburstSeriesModel {
     getFormattedLabel(
         dataIndex: number,
-        state?: 'emphasis' | 'normal' | 'highlight' | 'downplay',
-        dataType?: string,
-        dimIndex?: number,
-        labelProp?: string
+        state?: 'emphasis' | 'normal' | 'highlight' | 'downplay'
     ): string
 }
 class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {

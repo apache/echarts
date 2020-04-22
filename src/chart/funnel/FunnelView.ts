@@ -23,7 +23,8 @@ import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { ColorString } from '../../util/types';
+import { ColorString, LabelOption } from '../../util/types';
+import Model from '../../model/Model';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -109,7 +110,8 @@ class FunnelPiece extends graphic.Group {
         const visualColor = data.getItemVisual(idx, 'style').fill as ColorString;
 
         graphic.setLabelStyle(
-            labelText, labelModel, labelHoverModel,
+            // position will not be used in setLabelStyle
+            labelText, labelModel as Model<LabelOption>, labelHoverModel as Model<LabelOption>,
             {
                 labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
@@ -150,10 +152,6 @@ class FunnelPiece extends graphic.Group {
             originY: labelLayout.y,
             z2: 10
         });
-
-        labelText.ignore = !labelModel.get('show');
-        const labelTextEmphasisState = labelText.ensureState('emphasis');
-        labelTextEmphasisState.ignore = !labelHoverModel.get('show');
 
         labelLine.ignore = !labelLineModel.get('show');
         const labelLineEmphasisState = labelLine.ensureState('emphasis');

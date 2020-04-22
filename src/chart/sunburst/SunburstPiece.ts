@@ -218,9 +218,7 @@ class SunburstPiece extends graphic.Group {
         const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
 
         let text = zrUtil.retrieve(
-            seriesModel.getFormattedLabel(
-                this.node.dataIndex, state, null, null, 'label'
-            ),
+            seriesModel.getFormattedLabel(this.node.dataIndex, state),
             this.node.name
         );
         if (getLabelAttr('show') === false) {

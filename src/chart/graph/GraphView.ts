@@ -437,6 +437,8 @@ class GraphView extends ChartView {
                 this._updateNodeAndLinkScale();
                 adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
                 this._lineDraw.updateLayout();
+                // Only update label layout on zoom
+                api.updateLabelLayout();
             });
     }
 

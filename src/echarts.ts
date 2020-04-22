@@ -71,6 +71,7 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import 'zrender/src/canvas/canvas';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
+import LabelManager from './util/LabelManager';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -223,6 +224,8 @@ class ECharts extends Eventful {
 
     private _loadingFX: LoadingEffect;
 
+    private _labelManager: LabelManager;
+
     private [OPTION_UPDATED]: boolean | {silent: boolean};
     private [IN_MAIN_PROCESS]: boolean;
     private [CONNECT_STATUS_KEY]: ConnectStatus;
@@ -287,6 +290,8 @@ class ECharts extends Eventful {
 
         this._messageCenter = new MessageCenter();
 
+        this._labelManager = new LabelManager();
+
         // Init mouse events
         this._initEvents();
 
@@ -331,7 +336,7 @@ class ECharts extends Eventful {
             let remainTime = TEST_FRAME_REMAIN_TIME;
             const ecModel = this._model;
             const api = this._api;
-            scheduler.unfinished = +false;
+            scheduler.unfinished = false;
             do {
                 const startTime = +new Date();
 
@@ -1050,6 +1055,12 @@ class ECharts extends Eventful {
         triggerUpdatedEvent.call(this, silent);
     }
 
+    updateLabelLayout() {
+        const labelManager = this._labelManager;
+        labelManager.updateLayoutConfig(this._api);
+        labelManager.layout();
+    }
+
     appendData(params: {
         seriesIndex: number,
         data: any
@@ -1077,7 +1088,7 @@ class ECharts extends Eventful {
         // graphic elements have to be changed, which make the usage of
         // `appendData` meaningless.
 
-        this._scheduler.unfinished = +true;
+        this._scheduler.unfinished = true;
     }
 
 
@@ -1637,7 +1648,11 @@ class ECharts extends Eventful {
         ): void {
             // Render all charts
             const scheduler = ecIns._scheduler;
-            let unfinished: number;
+            const labelManager = ecIns._labelManager;
+
+            labelManager.clearLabels();
+
+            let unfinished: boolean;
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
                 chartView.__alive = true;
@@ -1649,7 +1664,7 @@ class ECharts extends Eventful {
                     renderTask.dirty();
                 }
 
-                unfinished |= +renderTask.perform(scheduler.getPerformArgs(renderTask));
+                unfinished = renderTask.perform(scheduler.getPerformArgs(renderTask)) || unfinished;
 
                 chartView.group.silent = !!seriesModel.get('silent');
 
@@ -1658,8 +1673,15 @@ class ECharts extends Eventful {
                 updateBlend(seriesModel, chartView);
 
                 updateHoverEmphasisHandler(chartView);
+
+                // Add albels.
+                labelManager.addLabelsOfSeries(chartView);
             });
-            scheduler.unfinished |= unfinished;
+
+            scheduler.unfinished = unfinished || scheduler.unfinished;
+
+            labelManager.updateLayoutConfig(api);
+            labelManager.layout();
 
             // If use hover layer
             updateHoverLayerStatus(ecIns, ecModel);
