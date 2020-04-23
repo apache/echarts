@@ -169,7 +169,7 @@
                     var stack = ctx.stack();
                     for (var i = 0; i < stack.length; i++) {
                         var line = stack[i];
-                        content.push(JSON.stringify(line), '\n');
+                        content.push(JSON.stringify(line), ',\n');
                     }
                 });
                 contentAraa.style.display = 'block';
@@ -600,6 +600,44 @@
     testHelper.printElements = function (chart, opt) {
         var elsStr = testHelper.stringifyElements(chart, opt);
         console.log(elsStr);
+    };
+
+    // opt: {record: JSON, width: number, height: number}
+    testHelper.reproduceCanteen = function (opt) {
+        var canvas = document.createElement('canvas');
+        canvas.style.width = opt.width + 'px';
+        canvas.style.height = opt.height + 'px';
+        var dpr = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = opt.width * dpr;
+        canvas.height = opt.height * dpr;
+
+        var ctx = canvas.getContext('2d');
+        var record = opt.record;
+
+        for (var i = 0; i < record.length; i++) {
+            var line = record[i];
+            if (line.attr) {
+                if (!line.hasOwnProperty('val')) {
+                    alertIllegal(line);
+                }
+                ctx[line.attr] = line.val;
+            }
+            else if (line.method) {
+                if (!line.hasOwnProperty('arguments')) {
+                    alertIllegal(line);
+                }
+                ctx[line.method].apply(ctx, line.arguments);
+            }
+            else {
+                alertIllegal(line);
+            }
+        }
+
+        function alertIllegal(line) {
+            throw new Error('Illegal line: ' + JSON.stringify(line));
+        }
+
+        document.body.appendChild(canvas);
     };
 
     function createDataTableHTML(data, opt) {
