@@ -28,8 +28,10 @@ import {
     LabelLayoutOptionCallbackParams
 } from './types';
 import { parsePercent } from './number';
-import SeriesModel from '../model/Series';
 import ChartView from '../view/Chart';
+import { ElementTextConfig } from 'zrender/src/Element';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import Transformable from 'zrender/src/core/Transformable';
 
 interface DisplayedLabelItem {
     label: ZRText
@@ -40,58 +42,49 @@ interface DisplayedLabelItem {
     transform: MatrixArray
 }
 
-interface LabelItem {
+interface LabelLayoutDesc {
     label: ZRText
     seriesIndex: number
     dataIndex: number
     layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
-}
 
-interface LabelLayoutInnerConfig {
     overlap: LabelLayoutOption['overlap']
     overlapMargin: LabelLayoutOption['overlapMargin']
+
+    hostRect: RectLike
+    priority: number
+
+    defaultAttr: SavedLabelAttr
 }
 
 interface SavedLabelAttr {
-    x?: number
-    y?: number
-    rotation?: number
-    align?: ZRTextAlign
-    verticalAlign?: ZRTextVerticalAlign
-    width?: number
-    height?: number
+    x: number
+    y: number
+    rotation: number
+
+    align: ZRTextAlign
+    verticalAlign: ZRTextVerticalAlign
+    width: number
+    height: number
+
+    // Configuration in attached element
+    attachedPos: ElementTextConfig['position']
+    attachedRot: ElementTextConfig['rotation']
+
+    rect: RectLike
 }
 
-function prepareLayoutCallbackParams(
-    label: ZRText,
-    dataIndex: number,
-    seriesIndex: number
-): LabelLayoutOptionCallbackParams {
-    const host = label.__hostTarget;
-    const labelTransform = label.getComputedTransform();
-    const labelRect = label.getBoundingRect().plain();
-    BoundingRect.applyTransform(labelRect, labelRect, labelTransform);
-    let x = 0;
-    let y = 0;
-    if (labelTransform) {
-        x = labelTransform[4];
-        y = labelTransform[5];
-    }
-
-    let hostRect;
-    if (host) {
-        hostRect = host.getBoundingRect().plain();
-        const transform = host.getComputedTransform();
-        BoundingRect.applyTransform(hostRect, hostRect, transform);
-    }
-
+function prepareLayoutCallbackParams(labelItem: LabelLayoutDesc): LabelLayoutOptionCallbackParams {
+    const labelAttr = labelItem.defaultAttr;
+    const label = labelItem.label;
     return {
-        dataIndex,
-        seriesIndex,
-        text: label.style.text,
-        rect: hostRect,
-        labelRect: labelRect,
-        x, y,
+        dataIndex: labelItem.dataIndex,
+        seriesIndex: labelItem.seriesIndex,
+        text: labelItem.label.style.text,
+        rect: labelItem.hostRect,
+        labelRect: labelAttr.rect,
+        x: labelAttr.x,
+        y: labelAttr.y,
         align: label.style.align,
         verticalAlign: label.style.verticalAlign
     };
@@ -99,20 +92,16 @@ function prepareLayoutCallbackParams(
 
 const LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height'] as const;
 
+const dummyTransformable = new Transformable();
+
 class LabelManager {
 
-    private _labelList: LabelItem[] = [];
-    private _labelLayoutConfig: LabelLayoutInnerConfig[] = [];
-
-    // Save default label attributes.
-    // For restore if developers want get back to default value in callback.
-    private _defaultLabelAttr: SavedLabelAttr[] = [];
+    private _labelList: LabelLayoutDesc[] = [];
 
     constructor() {}
 
     clearLabels() {
         this._labelList = [];
-        this._labelLayoutConfig = [];
     }
 
     /**
@@ -122,26 +111,59 @@ class LabelManager {
      * @param label
      * @param layoutOption
      */
-    addLabel(dataIndex: number, seriesIndex: number, label: ZRText, layoutOption: LabelItem['layoutOption']) {
+    addLabel(dataIndex: number, seriesIndex: number, label: ZRText, layoutOption: LabelLayoutDesc['layoutOption']) {
+        const labelStyle = label.style;
+        const hostEl = label.__hostTarget;
+        const textConfig = hostEl.textConfig || {};
+
+        const labelTransform = label.getComputedTransform();
+        const labelRect = label.getBoundingRect().plain();
+        BoundingRect.applyTransform(labelRect, labelRect, labelTransform);
+
+        dummyTransformable.setLocalTransform(labelTransform);
+
+        const host = label.__hostTarget;
+        let hostRect;
+        if (host) {
+            hostRect = host.getBoundingRect().plain();
+            const transform = host.getComputedTransform();
+            BoundingRect.applyTransform(hostRect, hostRect, transform);
+        }
+
         this._labelList.push({
             seriesIndex,
             dataIndex,
             label,
-            layoutOption
-        });
-        // Push an empty config. Will be updated in updateLayoutConfig
-        this._labelLayoutConfig.push({} as LabelLayoutInnerConfig);
+            layoutOption,
 
-        const labelStyle = label.style;
-        this._defaultLabelAttr.push({
-            x: label.x,
-            y: label.y,
-            rotation: label.rotation,
-            align: labelStyle.align,
-            verticalAlign: labelStyle.verticalAlign,
-            width: labelStyle.width,
-            height: labelStyle.height
+            hostRect,
+
+            overlap: 'hidden',
+            overlapMargin: 0,
+
+            // Label with lower priority will be hidden when overlapped
+            // Use rect size as default priority
+            priority: hostRect ? hostRect.width * hostRect.height : 0,
+
+            // Save default label attributes.
+            // For restore if developers want get back to default value in callback.
+            defaultAttr: {
+                x: dummyTransformable.x,
+                y: dummyTransformable.y,
+                rotation: dummyTransformable.rotation,
+
+                rect: labelRect,
+
+                align: labelStyle.align,
+                verticalAlign: labelStyle.verticalAlign,
+                width: labelStyle.width,
+                height: labelStyle.height,
+
+                attachedPos: textConfig.position,
+                attachedRot: textConfig.rotation
+            }
         });
+
     }
 
     addLabelsOfSeries(chartView: ChartView) {
@@ -168,12 +190,11 @@ class LabelManager {
             const labelItem = this._labelList[i];
             const label = labelItem.label;
             const hostEl = label.__hostTarget;
-            const layoutConfig = this._labelLayoutConfig[i];
-            const defaultLabelAttr = this._defaultLabelAttr[i];
+            const defaultLabelAttr = labelItem.defaultAttr;
             let layoutOption;
             if (typeof labelItem.layoutOption === 'function') {
                 layoutOption = labelItem.layoutOption(
-                    prepareLayoutCallbackParams(label, labelItem.dataIndex, labelItem.seriesIndex)
+                    prepareLayoutCallbackParams(labelItem)
                 );
             }
             else {
@@ -181,48 +202,51 @@ class LabelManager {
             }
 
             layoutOption = layoutOption || {};
-            // if (hostEl) {
-            //         // Ignore position and rotation config on the host el.
-            //     hostEl.setTextConfig({
-            //         position: null,
-            //         rotation: null
-            //     });
-            // }
-            // label.x = layoutOption.x != null
-            //     ? parsePercent(layoutOption.x, width)
-            //     // Restore to default value if developers don't given a value.
-            //     : defaultLabelAttr.x;
+            if (hostEl) {
+                hostEl.setTextConfig({
+                    // Ignore position and rotation config on the host el if x or y is changed.
+                    position: (layoutOption.x != null || layoutOption.y != null)
+                        ? null : defaultLabelAttr.attachedPos,
+                    // Ignore rotation config on the host el if rotation is changed.
+                    rotation: layoutOption.rotation != null ? null : defaultLabelAttr.attachedRot,
+                    offset: [layoutOption.dx || 0, layoutOption.dy || 0]
+                });
+            }
+            label.x = layoutOption.x != null
+                ? parsePercent(layoutOption.x, width)
+                // Restore to default value if developers don't given a value.
+                : defaultLabelAttr.x;
 
-            // label.y = layoutOption.y != null
-            //     ? parsePercent(layoutOption.y, height)
-            //     : defaultLabelAttr.y;
+            label.y = layoutOption.y != null
+                ? parsePercent(layoutOption.y, height)
+                : defaultLabelAttr.y;
 
-            // label.rotation = layoutOption.rotation != null
-            //     ? layoutOption.rotation : defaultLabelAttr.rotation;
+            label.rotation = layoutOption.rotation != null
+                ? layoutOption.rotation : defaultLabelAttr.rotation;
 
-            // label.x += layoutOption.dx || 0;
-            // label.y += layoutOption.dy || 0;
+            for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
+                const key = LABEL_OPTION_TO_STYLE_KEYS[k];
+                label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr[key]);
+            }
 
-            // for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
-            //     const key = LABEL_OPTION_TO_STYLE_KEYS[k];
-            //     label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr[key]);
-            // }
-
-            layoutConfig.overlap = layoutOption.overlap;
-            layoutConfig.overlapMargin = layoutOption.overlapMargin;
+            labelItem.overlap = layoutOption.overlap;
+            labelItem.overlapMargin = layoutOption.overlapMargin;
         }
     }
 
     layout() {
-        // TODO: sort by priority
+        // TODO: sort by priority(area)
         const labelList = this._labelList;
 
         const displayedLabels: DisplayedLabelItem[] = [];
         const mvt = new Point();
 
+        labelList.sort(function (a, b) {
+            return b.priority - a.priority;
+        });
+
         for (let i = 0; i < labelList.length; i++) {
             const labelItem = labelList[i];
-            const layoutConfig = this._labelLayoutConfig[i];
             const label = labelItem.label;
             const transform = label.getComputedTransform();
             // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
@@ -234,7 +258,7 @@ class LabelManager {
 
             let obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
             let overlapped = false;
-            const overlapMargin = layoutConfig.overlapMargin || 0;
+            const overlapMargin = labelItem.overlapMargin || 0;
             const marginSqr = overlapMargin * overlapMargin;
             for (let j = 0; j < displayedLabels.length; j++) {
                 const existsTextCfg = displayedLabels[j];
@@ -262,11 +286,18 @@ class LabelManager {
                 }
             }
 
+            // TODO Callback to determine if this overlap should be handled?
             if (overlapped) {
-                label.hide();
+                // label.setStyle({ opacity: 0.1 });
+                // label.z = 0;
+                // Use invisible instead of ignore because ignored label won't be updated in the host.
+                label.attr('invisible', true);
             }
             else {
-                label.show();
+                // TODO Restore z
+                // label.setStyle({ opacity: 1 });
+                label.attr('invisible', false);
+
                 displayedLabels.push({
                     label,
                     rect: globalRect,
