@@ -735,7 +735,7 @@ function renderNode(
 
     // Background
     var bg = giveGraphic('background', Rect, depth, Z_BG);
-    bg && renderBackground(group, bg, isParent && thisLayout.upperHeight);
+    bg && renderBackground(group, bg, isParent && thisLayout.upperLabelHeight);
 
     // No children, render content.
     if (isParent) {
@@ -856,16 +856,7 @@ function renderNode(
     }
 
     function prepareText(normalStyle, emphasisStyle, visualColor, width, height, upperLabelRect) {
-        var text = zrUtil.retrieve(
-            seriesModel.getFormattedLabel(
-                thisNode.dataIndex, 'normal', null, null, upperLabelRect ? 'upperLabel' : 'label'
-            ),
-            nodeModel.get('name')
-        );
-        if (!upperLabelRect && thisLayout.isLeafRoot) {
-            var iconChar = seriesModel.get('drillDownIcon', true);
-            text = iconChar ? iconChar + ' ' + text : text;
-        }
+        var defaultText = nodeModel.get('name');
 
         var normalLabelModel = nodeModel.getModel(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
@@ -879,11 +870,17 @@ function renderNode(
         graphic.setLabelStyle(
             normalStyle, emphasisStyle, normalLabelModel, emphasisLabelModel,
             {
-                defaultText: isShow ? text : null,
+                defaultText: isShow ? defaultText : null,
                 autoColor: visualColor,
-                isRectText: true
+                isRectText: true,
+                labelFetcher: seriesModel,
+                labelDataIndex: thisNode.dataIndex,
+                labelProp: upperLabelRect ? 'upperLabel' : 'label'
             }
         );
+
+        addDrillDownIcon(normalStyle, upperLabelRect, thisLayout);
+        addDrillDownIcon(emphasisStyle, upperLabelRect, thisLayout);
 
         upperLabelRect && (normalStyle.textRect = zrUtil.clone(upperLabelRect));
 
@@ -894,6 +891,14 @@ function renderNode(
                 minChar: 2
             }
             : null;
+    }
+
+    function addDrillDownIcon(style, upperLabelRect, thisLayout) {
+        var text = style.text;
+        if (!upperLabelRect && thisLayout.isLeafRoot && text != null) {
+            var iconChar = seriesModel.get('drillDownIcon', true);
+            style.text = iconChar ? iconChar + ' ' + text : text;
+        }
     }
 
     function giveGraphic(storageName, Ctor, depth, z) {
