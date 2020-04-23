@@ -56,7 +56,7 @@
      * @param {boolean} [opt.autoResize=true]
      * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
-     * @param {boolean} [opt.recordCanvas] 'ut/lib/canteen.js' is required.
+     * @param {boolean} [opt.recordCanvas] 'test/lib/canteen.js' is required.
      */
     testHelper.create = function (echarts, domOrId, opt) {
         var dom = getDom(domOrId);
@@ -163,7 +163,7 @@
                 eachCtx(function (zlevel, ctx) {
                     content.push('Layer zlevel: ' + zlevel, '\n\n');
                     if (typeof ctx.stack !== 'function') {
-                        alert('Missing: <script src="ut/lib/canteen.js"></script>');
+                        alert('Missing: <script src="test/lib/canteen.js"></script>');
                         return;
                     }
                     var stack = ctx.stack();
@@ -475,7 +475,8 @@
                     str = preStr + obj + '';
                     break;
                 case 'string':
-                    str = preStr + quotationMark + obj + quotationMark;
+                    str = JSON.stringify(obj); // escapse \n\r or others.
+                    str = preStr + quotationMark + str.slice(1, str.length - 1) + quotationMark;
                     break;
                 default:
                     str = preStr + obj + '';
@@ -488,7 +489,118 @@
         }
     };
 
+    /**
+     * Usage:
+     * ```js
+     * // Print all elements that has `style.text`:
+     * var str = testHelper.stringifyElements(chart, {
+     *     attr: ['z', 'z2', 'style.text', 'style.fill', 'style.stroke'],
+     *     filter: el => el.style && el.style.text
+     * });
+     * ```
+     *
+     * @param {EChart} chart
+     * @param {Object} [opt]
+     * @param {string|Array.<string>} [opt.attr] Only print the given attrName;
+     *        For example: 'z2' or ['z2', 'style.fill', 'style.stroke']
+     * @param {function} [opt.filter] print a subtree only if any satisfied node exists.
+     *        param: el, return: boolean
+     * @param {boolean} [opt.preventPrint]
+     */
+    testHelper.stringifyElements = function (chart, opt) {
+        if (!chart) {
+            return;
+        }
+        opt = opt || {};
+        var attrNameList = opt.attr;
+        if (getType(attrNameList) !== 'array') {
+            attrNameList = attrNameList ? [attrNameList] : [];
+        }
 
+        var zr = chart.getZr();
+        var roots = zr.storage.getRoots();
+        var plainRoots = [];
+
+        retrieve(roots, plainRoots);
+
+        var elsStr = printObject(plainRoots, {indent: 2});
+
+        return elsStr;
+
+        // Only retrieve the value of the given attrName.
+        function retrieve(elList, plainNodes) {
+            var anySatisfied = false;
+            for (var i = 0; i < elList.length; i++) {
+                var el = elList[i];
+
+                var thisElSatisfied = !opt.filter || opt.filter(el);
+
+                var plainNode = {};
+
+                copyElment(plainNode, el);
+
+                var textContent = el.getTextContent();
+                if (textContent) {
+                    plainNode.textContent = {};
+                    copyElment(plainNode.textContent, textContent);
+                }
+
+                var thisSubAnySatisfied = false;
+                if (el.isGroup) {
+                    plainNode.children = [];
+                    thisSubAnySatisfied = retrieve(el.childrenRef(), plainNode.children);
+                }
+
+                if (thisElSatisfied || thisSubAnySatisfied) {
+                    plainNodes.push(plainNode);
+                    anySatisfied = true;
+                }
+            }
+
+            return anySatisfied;
+        }
+
+        function copyElment(plainNode, el) {
+            for (var i = 0; i < attrNameList.length; i++) {
+                var attrName = attrNameList[i];
+                var attrParts = attrName.split('.');
+                var partsLen = attrParts.length;
+                if (!partsLen) {
+                    continue;
+                }
+                var elInner = el;
+                var plainInner = plainNode;
+                for (var j = 0; j < partsLen - 1 && elInner; j++) {
+                    var attr = attrParts[j];
+                    elInner = el[attr];
+                    if (elInner) {
+                        plainInner = plainInner[attr] || (plainInner[attr] = {});
+                    }
+                }
+                var attr = attrParts[partsLen - 1];
+                if (elInner && elInner.hasOwnProperty(attr)) {
+                    plainInner[attr] = elInner[attr];
+                }
+            }
+        }
+    };
+
+    /**
+     * Usage:
+     * ```js
+     * // Print all elements that has `style.text`:
+     * testHelper.printElements(chart, {
+     *     attr: ['z', 'z2', 'style.text', 'style.fill', 'style.stroke'],
+     *     filter: el => el.style && el.style.text
+     * });
+     * ```
+     *
+     * @see `stringifyElements`.
+     */
+    testHelper.printElements = function (chart, opt) {
+        var elsStr = testHelper.stringifyElements(chart, opt);
+        console.log(elsStr);
+    };
 
     function createDataTableHTML(data, opt) {
         var sourceFormat = detectSourceFormat(data);
