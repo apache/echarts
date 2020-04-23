@@ -48,6 +48,7 @@ import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
 import List from '../../data/List';
 import SeriesModel from '../../model/Series';
+import OrdinalScale from '../../scale/Ordinal';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -411,6 +412,9 @@ class Grid implements CoordinateSystemMaster {
         each(this._axesList, function (axis) {
             axis.scale.setExtent(Infinity, -Infinity);
         });
+        const sortedDataValue: number[] = [];
+        const sortedDataIndex: number[] = [];
+
         ecModel.eachSeries(function (seriesModel) {
             if (isCartesian2D(seriesModel)) {
                 const axesModels = findAxesModels(seriesModel);
@@ -433,6 +437,11 @@ class Grid implements CoordinateSystemMaster {
                 if (data.type === 'list') {
                     unionExtent(data, xAxis);
                     unionExtent(data, yAxis);
+                    if (!sortedDataIndex.length) {
+                        // Only sort by the first series
+                        sortCategory(data, xAxis, xAxisModel, yAxis);
+                        sortCategory(data, yAxis, yAxisModel, xAxis);
+                    }
                 }
             }
         }, this);
@@ -446,6 +455,38 @@ class Grid implements CoordinateSystemMaster {
                     data, getStackedDimension(data, dim)
                 );
             });
+        }
+
+        function sortCategory(
+            data: List,
+            axis: Axis2D,
+            axisModel: CartesianAxisModel,
+            otherAxis: Axis2D
+        ): void {
+            const sort = axisModel.get('sort');
+            if (axis.type === 'category' && sort) {
+                data.each(otherAxis.dim, value => {
+                    for (let i = 0, len = sortedDataValue.length; i < len; ++i) {
+                        if (value > sortedDataValue[i]) {
+                            sortedDataValue.splice(i, 0, value as number);
+
+                            for (let j = 0; j <= len; ++j) {
+                                if (sortedDataIndex[j] >= i) {
+                                    ++sortedDataIndex[j];
+                                }
+                            }
+                            sortedDataIndex.push(i);
+                            console.log(sortedDataValue, sortedDataIndex);
+                            return;
+                        }
+                    }
+                    // Smallest for now, insert at the end
+                    sortedDataValue.push(value as number);
+                    sortedDataIndex.push(sortedDataIndex.length);
+                });
+                console.log(sortedDataValue, sortedDataIndex);
+                (axis.scale as OrdinalScale).setSortedDataIndices(sortedDataIndex);
+            }
         }
     }
 

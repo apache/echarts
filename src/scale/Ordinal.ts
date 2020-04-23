@@ -39,6 +39,7 @@ class OrdinalScale extends Scale {
     readonly type = 'ordinal';
 
     private _ordinalMeta: OrdinalMeta;
+    private _sortedDataIndices: number[];
 
 
     constructor(setting?: {
@@ -54,6 +55,7 @@ class OrdinalScale extends Scale {
             ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
         }
         this._ordinalMeta = ordinalMeta;
+        this._sortedDataIndices = [];
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }
 
@@ -74,10 +76,12 @@ class OrdinalScale extends Scale {
      * Normalize given rank or name to linear [0, 1]
      */
     normalize(val: OrdinalRawValue | OrdinalNumber): number {
-        return scaleHelper.normalize(this.parse(val), this._extent);
+        val = this.getSortedDataIndex(this.parse(val));
+        return scaleHelper.normalize(val, this._extent);
     }
 
     scale(val: number): OrdinalNumber {
+        val = this.getSortedDataIndex(val);
         return Math.round(scaleHelper.scale(val, this._extent));
     }
 
@@ -99,6 +103,15 @@ class OrdinalScale extends Scale {
         return;
     }
 
+    getSortedDataIndex(n: OrdinalNumber): OrdinalNumber {
+        if (this._sortedDataIndices.length) {
+            return this._sortedDataIndices[n];
+        }
+        else {
+            return n;
+        }
+    }
+
     /**
      * Get item on rank n
      */
@@ -109,6 +122,10 @@ class OrdinalScale extends Scale {
             // Return empty if it's not exist.
             return cateogry == null ? '' : cateogry + '';
         }
+    }
+
+    setSortedDataIndices(index: number[]): void {
+        this._sortedDataIndices = index;
     }
 
     count(): number {

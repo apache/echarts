@@ -35,6 +35,7 @@ interface CartesianAxisOption extends AxisBaseOption {
     position?: CartesianAxisPosition;
     // Offset is for multiple axis on the same position.
     offset?: number;
+    sort?: boolean;
 }
 
 class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
@@ -76,7 +77,8 @@ zrUtil.mixin(CartesianAxisModel, AxisModelCommonMixin);
 const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
-    offset: 0
+    offset: 0,
+    sort: false
 };
 
 axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('x', CartesianAxisModel, extraOption);
