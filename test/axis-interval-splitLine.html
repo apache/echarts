@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+<style>
+</style>
+
+
+
+<div id="main0"></div>
+<div id="main1"></div>
+<div id="main2"></div>
+
+
+
+
+<script>
+    require(['echarts'/*, 'map/js/china' */], function (echarts) {
+        var dis = [38, 88, 144, 215, 309, 418, 552, 712, 878, 1068, 1283, 1524, 1817, 2116, 2429, 2743, 3091, 3462, 3859, 4268, 4683, 5137];
+        var name = ['TOC', 'UKMIS', 'AVLUV', 'IGMUD', 'BUVMA', 'OVNUG', 'P149 ', 'PANKI', 'GUSIR', 'YQG', 'DALIM', 'ABTUB', 'P86', 'P60', 'P58', 'UDINO', 'DPX', 'OMUDI', 'IDKOT', 'P496 ', 'HUN', 'TOD'];
+        var min = Math.min.apply(null, dis);
+
+        var max = Math.max.apply(null, dis);
+
+        var dist = [
+            [38, 207],
+
+            [88, 207],
+
+            [144, 207],
+
+            [215, 207],
+
+            [309, 207],
+
+            [418, 207],
+
+            [552, 207],
+
+            [712, 207],
+
+            [878, 207],
+
+            [1068, 207],
+
+            [1283, 207],
+
+            [1524, 226],
+
+            [1817, 226],
+
+            [2116, 226],
+
+            [2429, 226],
+
+            [2743, 226],
+
+            [3091, 148],
+
+            [3462, 148],
+
+            [3859, 148],
+
+            [4268, 148],
+
+            [4683, 148],
+
+            [5137, 148],
+
+        ];
+        var option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    lineStyle: {
+                        color: '#000',
+                        type: 'dashed',
+                        width: 2
+                    }
+                }
+            },
+            grid: {
+                left: '20px',
+                right: '20px',
+                bottom: '20px',
+                top: '10px',
+                containLabel: true,
+                show: true,
+                borderColor: '#fff',
+            },
+
+            xAxis: {
+                min: min,
+                max: max,
+                type: 'value',
+                interval: 1,
+                offset:2,
+                boundaryGap: false,
+                triggerEvent: true,
+                inverse: true,
+                axisLabel: {
+                    rotate: -45,
+                    fontSize: 10,
+                    formatter: function(value, index) {
+                        var i = dis.indexOf(value);
+                        if (i != -1) {
+                            return name[i];
+                        }
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: true,
+                    // config here
+                    showAsAxis: true,
+                    lineStyle: {
+                        type: 'dot',
+                        color: 'red'
+                    }
+                },
+                axisLine: {
+                    show: true,
+                    onZero: false,
+                    lineStyle: {
+                        color: '#696969'
+                    }
+                }
+            },
+            yAxis: [{
+                type: 'value',
+                min: 0,
+                max: 530,
+                interval: 40,
+                position: 'right',
+                axisTick: {
+                    show: true,
+                    inside: false,
+                    lineStyle: {
+                        color: '#000',
+                        length: 5
+                    }
+
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        type: 'dot',
+                        color: '#000'
+                    }
+                }
+
+            }],
+
+            series: [{
+
+                name: '',
+
+                type: 'line',
+
+                symbol: "triangle",
+
+                symbolSize: 8,
+
+                lineStyle: {
+                    width: 1,
+                    color: '#a320ac'
+                },
+                itemStyle: {
+                    color: '#000'
+                },
+                data: dist
+            },
+
+            ],
+
+            dataZoom: [
+
+                {
+
+                    type: 'inside',
+
+                    start: 0,
+
+                    end: 100
+
+                },
+
+            ],
+        };
+
+        var chart = testHelper.create(echarts, 'main0', {
+            title: [
+                'the xAsix.splitLine.showAsAsix is set as true, the splitLine show as res',
+                'Case from issue #12456'
+            ],
+            option: option
+        });
+    });
+</script>
+
+
+<script>
+    require(['echarts'/*, 'map/js/china' */], function (echarts) {
+        var dis = [38, 88, 144, 215, 309, 418, 552, 712, 878, 1068, 1283, 1524, 1817, 2116, 2429, 2743, 3091, 3462, 3859, 4268, 4683, 5137];
+        var name = ['TOC', 'UKMIS', 'AVLUV', 'IGMUD', 'BUVMA', 'OVNUG', 'P149 ', 'PANKI', 'GUSIR', 'YQG', 'DALIM', 'ABTUB', 'P86', 'P60', 'P58', 'UDINO', 'DPX', 'OMUDI', 'IDKOT', 'P496 ', 'HUN', 'TOD'];
+        var min = Math.min.apply(null, dis);
+
+        var max = Math.max.apply(null, dis);
+
+        var dist = [
+            [38, 207],
+
+            [88, 207],
+
+            [144, 207],
+
+            [215, 207],
+
+            [309, 207],
+
+            [418, 207],
+
+            [552, 207],
+
+            [712, 207],
+
+            [878, 207],
+
+            [1068, 207],
+
+            [1283, 207],
+
+            [1524, 226],
+
+            [1817, 226],
+
+            [2116, 226],
+
+            [2429, 226],
+
+            [2743, 226],
+
+            [3091, 148],
+
+            [3462, 148],
+
+            [3859, 148],
+
+            [4268, 148],
+
+            [4683, 148],
+
+            [5137, 148],
+
+        ];
+        var option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    lineStyle: {
+                        color: '#000',
+                        type: 'dashed',
+                        width: 2
+                    }
+                }
+            },
+            grid: {
+                left: '20px',
+                right: '20px',
+                bottom: '20px',
+                top: '10px',
+                containLabel: true,
+                show: true,
+                borderColor: '#fff',
+            },
+
+            xAxis: {
+                min: min,
+                max: max,
+                type: 'value',
+                interval: 1,
+                offset:2,
+                boundaryGap: false,
+                triggerEvent: true,
+                inverse: true,
+                axisLabel: {
+                    rotate: -45,
+                    fontSize: 10,
+                    formatter: function(value, index) {
+                        var i = dis.indexOf(value);
+                        if (i != -1) {
+                            return name[i];
+                        }
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        type: 'dot',
+                        color: 'red'
+                    }
+                },
+                axisLine: {
+                    show: true,
+                    onZero: false,
+                    lineStyle: {
+                        color: '#696969'
+                    }
+                }
+            },
+            yAxis: [{
+                type: 'value',
+                min: 0,
+                max: 530,
+                interval: 40,
+                position: 'right',
+                axisTick: {
+                    show: true,
+                    inside: false,
+                    lineStyle: {
+                        color: '#000',
+                        length: 5
+                    }
+
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        type: 'dot',
+                        color: '#000'
+                    }
+                }
+
+            }],
+
+            series: [{
+
+                name: '',
+
+                type: 'line',
+
+                symbol: "triangle",
+
+                symbolSize: 8,
+
+                lineStyle: {
+                    width: 1,
+                    color: '#a320ac'
+                },
+                itemStyle: {
+                    color: '#000'
+                },
+                data: dist
+            },
+
+            ],
+
+            dataZoom: [
+
+                {
+
+                    type: 'inside',
+
+                    start: 0,
+
+                    end: 100
+
+                },
+
+            ],
+
+        };
+
+        var chart = testHelper.create(echarts, 'main1', {
+            title: [
+                'the xAsix.splitLine.showAsAsix is no set the line show as res',
+                'Case from issue #12456'
+            ],
+            option: option
+        });
+    });
+</script>
+
+</body>
+</html>
+
