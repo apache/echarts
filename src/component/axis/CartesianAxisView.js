@@ -114,6 +114,9 @@ var CartesianAxisView = AxisView.extend({
         var viewLabels = showAsAxis && axis.getViewLabels();
 
         for (var i = 0; i < ticksCoords.length; i++) {
+            if(viewLabels && viewLabels[i] && !viewLabels[i].formattedLabel) {
+                continue;
+            }
             var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
             if (isHorizontal) {
@@ -142,7 +145,7 @@ var CartesianAxisView = AxisView.extend({
                     y2: p2[1]
                 },
                 style: zrUtil.defaults({
-                    stroke: (viewLabels && viewLabels[i] && !viewLabels[i].formattedLabel ? 'transparent' : lineColors[colorIndex])
+                    stroke: lineColors[colorIndex]
                 }, lineStyle),
                 silent: true
             }));
