@@ -58,6 +58,8 @@ interface LabelLayoutDesc {
 }
 
 interface SavedLabelAttr {
+    ignore: boolean
+
     x: number
     y: number
     rotation: number
@@ -111,7 +113,12 @@ class LabelManager {
      * @param label
      * @param layoutOption
      */
-    addLabel(dataIndex: number, seriesIndex: number, label: ZRText, layoutOption: LabelLayoutDesc['layoutOption']) {
+    addLabel(
+        dataIndex: number,
+        seriesIndex: number,
+        label: ZRText,
+        layoutOption: LabelLayoutDesc['layoutOption']
+    ) {
         const labelStyle = label.style;
         const hostEl = label.__hostTarget;
         const textConfig = hostEl.textConfig || {};
@@ -148,6 +155,8 @@ class LabelManager {
             // Save default label attributes.
             // For restore if developers want get back to default value in callback.
             defaultAttr: {
+                ignore: label.ignore,
+
                 x: dummyTransformable.x,
                 y: dummyTransformable.y,
                 rotation: dummyTransformable.rotation,
@@ -290,13 +299,12 @@ class LabelManager {
             if (overlapped) {
                 // label.setStyle({ opacity: 0.1 });
                 // label.z = 0;
-                // Use invisible instead of ignore because ignored label won't be updated in the host.
-                label.attr('invisible', true);
+                label.hide();
             }
             else {
                 // TODO Restore z
                 // label.setStyle({ opacity: 1 });
-                label.attr('invisible', false);
+                label.attr('ignore', labelItem.defaultAttr.ignore);
 
                 displayedLabels.push({
                     label,
