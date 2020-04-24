@@ -64,10 +64,15 @@ interface SavedLabelAttr {
     y: number
     rotation: number
 
-    align: ZRTextAlign
-    verticalAlign: ZRTextVerticalAlign
-    width: number
-    height: number
+    style: {
+        align: ZRTextAlign
+        verticalAlign: ZRTextVerticalAlign
+        width: number
+        height: number
+
+        x: number
+        y: number
+    }
 
     // Configuration in attached element
     attachedPos: ElementTextConfig['position']
@@ -85,8 +90,8 @@ function prepareLayoutCallbackParams(labelItem: LabelLayoutDesc): LabelLayoutOpt
         text: labelItem.label.style.text,
         rect: labelItem.hostRect,
         labelRect: labelAttr.rect,
-        x: labelAttr.x,
-        y: labelAttr.y,
+        // x: labelAttr.x,
+        // y: labelAttr.y,
         align: label.style.align,
         verticalAlign: label.style.verticalAlign
     };
@@ -163,10 +168,15 @@ class LabelManager {
 
                 rect: labelRect,
 
-                align: labelStyle.align,
-                verticalAlign: labelStyle.verticalAlign,
-                width: labelStyle.width,
-                height: labelStyle.height,
+                style: {
+                    x: labelStyle.x,
+                    y: labelStyle.y,
+
+                    align: labelStyle.align,
+                    verticalAlign: labelStyle.verticalAlign,
+                    width: labelStyle.width,
+                    height: labelStyle.height
+                },
 
                 attachedPos: textConfig.position,
                 attachedRot: textConfig.rotation
@@ -201,6 +211,7 @@ class LabelManager {
             const hostEl = label.__hostTarget;
             const defaultLabelAttr = labelItem.defaultAttr;
             let layoutOption;
+            // TODO A global layout option?
             if (typeof labelItem.layoutOption === 'function') {
                 layoutOption = labelItem.layoutOption(
                     prepareLayoutCallbackParams(labelItem)
@@ -221,21 +232,35 @@ class LabelManager {
                     offset: [layoutOption.dx || 0, layoutOption.dy || 0]
                 });
             }
-            label.x = layoutOption.x != null
-                ? parsePercent(layoutOption.x, width)
-                // Restore to default value if developers don't given a value.
-                : defaultLabelAttr.x;
+            if (layoutOption.x != null) {
+                // TODO width of chart view.
+                label.x = parsePercent(layoutOption.x, width);
+                label.setStyle('x', 0);  // Ignore movement in style.
+            }
+            else {
+                label.x = defaultLabelAttr.x;
+                label.setStyle('x', defaultLabelAttr.style.x);
+            }
 
-            label.y = layoutOption.y != null
-                ? parsePercent(layoutOption.y, height)
-                : defaultLabelAttr.y;
+            if (layoutOption.y != null) {
+                // TODO height of chart view.
+                label.y = parsePercent(layoutOption.y, height);
+                label.setStyle('y', 0);  // Ignore movement in style.
+            }
+            else {
+                label.y = defaultLabelAttr.y;
+                label.setStyle('y', defaultLabelAttr.style.y);
+            }
 
             label.rotation = layoutOption.rotation != null
                 ? layoutOption.rotation : defaultLabelAttr.rotation;
 
             for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
                 const key = LABEL_OPTION_TO_STYLE_KEYS[k];
-                label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr[key]);
+                label.setStyle(
+                    key,
+                    layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]
+                );
             }
 
             labelItem.overlap = layoutOption.overlap;
@@ -250,12 +275,17 @@ class LabelManager {
         const displayedLabels: DisplayedLabelItem[] = [];
         const mvt = new Point();
 
+        // TODO, render overflow visible first, put in the displayedLabels.
         labelList.sort(function (a, b) {
             return b.priority - a.priority;
         });
 
         for (let i = 0; i < labelList.length; i++) {
             const labelItem = labelList[i];
+            if (labelItem.defaultAttr.ignore) {
+                continue;
+            }
+
             const label = labelItem.label;
             const transform = label.getComputedTransform();
             // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.

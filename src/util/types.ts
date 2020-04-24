@@ -807,8 +807,8 @@ export interface LabelLayoutOptionCallbackParams {
     verticalAlign: ZRTextVerticalAlign
     rect: RectLike
     labelRect: RectLike
-    x: number
-    y: number
+    // x: number
+    // y: number
 };
 
 export interface LabelLayoutOption {

@@ -39,10 +39,13 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
         <!-- TODO: Tree, Sankey, Map  -->
-        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
 
 
 
@@ -126,6 +129,69 @@ under the License.
         </script>
 
 
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                var option;
+                var base = +new Date(1968, 9, 3);
+                var oneDay = 24 * 3600 * 1000;
+                var date = [];
+
+                var data = [Math.round(Math.random() * 300)];
+
+                for (var i = 1; i < 200; i++) {
+                    var now = new Date(base += oneDay);
+                    date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'));
+                    data.push(Math.round((Math.random() - 0.5) * 20 + data[i - 1]));
+                }
+                option = {
+                    grid: {
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: date
+                    },
+                    yAxis: {
+                        type: 'value',
+                        boundaryGap: [0, '100%']
+                    },
+                    series: [
+                        {
+                            name:'large area',
+                            type:'line',
+                            smooth:true,
+                            label: {
+                                show: true,
+                                position: 'top'
+                            },
+                            itemStyle: {
+                                color: 'rgb(255, 70, 131)'
+                            },
+                            areaStyle: {
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                    offset: 0,
+                                    color: 'rgb(255, 158, 68)'
+                                }, {
+                                    offset: 1,
+                                    color: 'rgb(255, 70, 131)'
+                                }])
+                            },
+                            data: data
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Overlap of line.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
 
         <script>
             require(['echarts',  'extension/dataTool'], function (echarts, dataTool) {
@@ -167,12 +233,6 @@ under the License.
                                     position: 'right'
                                 },
 
-                                // labelLayout: function (params) {
-                                //     return {
-                                //         show: params.rect.width > 10,
-                                //         overlap: 'hidden'
-                                //     }
-                                // },
                                 emphasis: {
                                     label: {
                                         show: true
@@ -191,7 +251,7 @@ under the License.
                         ]
                     };
 
-                    var chart = testHelper.create(echarts, 'main1', {
+                    var chart = testHelper.create(echarts, 'main2', {
                         title: [
                             'Hide overlap in graph zooming.'
                         ],
@@ -200,7 +260,66 @@ under the License.
                     });
                 });
             });
-            </script>
+        </script>
+
+
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c} ({d}%)'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 10,
+                        data: ['直接访问', '邮件营销', '联盟广告', '视频广告', '搜索引擎']
+                    },
+                    series: [
+                        {
+                            name: '访问来源',
+                            type: 'pie',
+                            radius: ['50%', '70%'],
+                            label: {
+                                show: false
+                            },
+                            emphasis: {
+                                label: {
+                                    show: true,
+                                    fontSize: '30',
+                                    fontWeight: 'bold'
+                                }
+                            },
+                            labelLayout: {
+                                x: '50%',
+                                y: '50%',
+                                align: 'center',
+                                verticalAlign: 'center'
+                            },
+                            labelLine: {
+                                show: false
+                            },
+                            data: [
+                                {value: 335, name: '直接访问'},
+                                {value: 310, name: '邮件营销'},
+                                {value: 234, name: '联盟广告'},
+                                {value: 135, name: '视频广告'},
+                                {value: 1548, name: '搜索引擎'}
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Overlap of line.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
 
     </body>
 </html>
