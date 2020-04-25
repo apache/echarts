@@ -18,9 +18,8 @@
 */
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
-import {getTooltipMarker, formatTpl} from '../../util/format';
-import { getTooltipRenderMode } from '../../util/model';
-import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString } from '../../util/types';
+import {formatTpl} from '../../util/format';
+import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor } from '../../util/types';
 import GlobalModel from '../Global';
 import Element from 'zrender/src/Element';
 
@@ -53,12 +52,8 @@ class DataFormatMixin {
         const name = data.getName(dataIndex);
         const itemOpt = data.getRawDataItem(dataIndex);
         const style = data.getItemVisual(dataIndex, 'style');
-        const color = style && style.fill as ColorString;
+        const color = style && style[data.getItemVisual(dataIndex, 'drawType') || 'fill'] as ZRColor;
         const borderColor = style && style.stroke as ColorString;
-        const tooltipModel = this.ecModel.getComponent('tooltip');
-        // @ts-ignore FIXME:TooltipModel
-        const renderModeOption = tooltipModel && tooltipModel.get('renderMode');
-        const renderMode = getTooltipRenderMode(renderModeOption);
         const mainType = this.mainType;
         const isSeries = mainType === 'series';
         const userOutput = data.userOutput;
@@ -80,10 +75,6 @@ class DataFormatMixin {
             borderColor: borderColor,
             dimensionNames: userOutput ? userOutput.dimensionNames : null,
             encode: userOutput ? userOutput.encode : null,
-            marker: getTooltipMarker({
-                color: color,
-                renderMode: renderMode
-            }),
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
             $vars: ['seriesName', 'name', 'value']

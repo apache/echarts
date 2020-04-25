@@ -638,8 +638,6 @@ export function setLabelStyle<LDI>(
 ) {
     opt = opt || EMPTY_OBJ;
     const isSetOnText = targetEl instanceof ZRText;
-    // This scenario, `label.normal.show = true; label.emphasis.show = false`,
-    // is not supported util someone requests.
 
     const showNormal = normalModel.getShallow('show');
     const showEmphasis = emphasisModel.getShallow('show');
@@ -742,7 +740,6 @@ export function setLabelStyle<LDI>(
 
 /**
  * Set basic textStyle properties.
- * See more info in `setTextStyleCommon`.
  */
 export function createTextStyle(
     textStyleModel: Model,

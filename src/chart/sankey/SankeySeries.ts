@@ -177,24 +177,30 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             return graph.data;
         }
         function beforeLink(nodeData: List, edgeData: List) {
-            nodeData.wrapMethod('getItemModel', function (model, idx) {
-                model.customizeGetParent(function (this: Model, path: string | string[]) {
-                    const parentModel = this.parentModel as SankeySeriesModel;
-                    const nodeDepth = parentModel.getData().getItemLayout(idx).depth;
-                    const levelModel = parentModel.levelModels[nodeDepth];
-                    return levelModel || this.parentModel;
-                });
+            nodeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
+                const seriesModel = model.parentModel as SankeySeriesModel;
+                const layout = seriesModel.getData().getItemLayout(idx);
+                if (layout) {
+                    const nodeDepth = layout.depth;
+                    const levelModel = seriesModel.levelModels[nodeDepth];
+                    if (levelModel) {
+                        model.parentModel = levelModel;
+                    }
+                }
                 return model;
             });
 
-            edgeData.wrapMethod('getItemModel', function (model, idx) {
-                model.customizeGetParent(function (this: Model, path: string | string[]) {
-                    const parentModel = this.parentModel as SankeySeriesModel;
-                    const edge = parentModel.getGraph().getEdgeByIndex(idx);
-                    const depth = edge.node1.getLayout().depth;
-                    const levelModel = parentModel.levelModels[depth];
-                    return levelModel || this.parentModel;
-                });
+            edgeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
+                const seriesModel = model.parentModel as SankeySeriesModel;
+                const edge = seriesModel.getGraph().getEdgeByIndex(idx);
+                const layout = edge.node1.getLayout();
+                if (layout) {
+                    const depth = layout.depth;
+                    const levelModel = seriesModel.levelModels[depth];
+                    if (levelModel) {
+                        model.parentModel = levelModel;
+                    }
+                }
                 return model;
             });
         }

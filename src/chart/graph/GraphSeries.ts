@@ -279,32 +279,32 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
                 return model;
             });
 
-            const edgeLabelModel = self.getModel('edgeLabel');
-            // For option `edgeLabel` can be found by label.xxx.xxx on item mode.
-            const fakeSeriesModel = new Model(
-                {label: edgeLabelModel.option},
-                edgeLabelModel.parentModel,
-                ecModel
-            );
-            const emphasisEdgeLabelModel = self.getModel(['emphasis', 'edgeLabel']);
-            const emphasisFakeSeriesModel = new Model(
-                {emphasis: {label: emphasisEdgeLabelModel.option}},
-                emphasisEdgeLabelModel.parentModel,
-                ecModel
-            );
+            // TODO Inherit resolveParentPath by default in Model#getModel?
+            const oldGetModel = Model.prototype.getModel;
+            function newGetModel(this: Model, path: any, parentModel?: Model) {
+                const model = oldGetModel.call(this, path, parentModel);
+                model.resolveParentPath = resolveParentPath;
+                return model;
+            }
 
-            edgeData.wrapMethod('getItemModel', function (model) {
-                model.customizeGetParent(edgeGetParent);
+            edgeData.wrapMethod('getItemModel', function (model: Model) {
+                model.resolveParentPath = resolveParentPath;
+                model.getModel = newGetModel;
                 return model;
             });
 
-            function edgeGetParent(this: Model, path: string | string[]) {
-                const pathArr = this.parsePath(path);
-                return (pathArr && pathArr[0] === 'label')
-                    ? fakeSeriesModel
-                    : (pathArr && pathArr[0] === 'emphasis' && pathArr[1] === 'label')
-                    ? emphasisFakeSeriesModel
-                    : this.parentModel;
+            function resolveParentPath(this: Model, pathArr: readonly string[]): string[] {
+                if (pathArr && (pathArr[0] === 'label' || pathArr[1] === 'label')) {
+                    const newPathArr = pathArr.slice();
+                    if (pathArr[0] === 'label') {
+                        newPathArr[0] = 'edgeLabel';
+                    }
+                    else if (pathArr[1] === 'label') {
+                        newPathArr[1] = 'edgeLabel';
+                    }
+                    return newPathArr;
+                }
+                return pathArr as string[];
             }
         }
     }

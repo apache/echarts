@@ -70,6 +70,8 @@ export function setItemVisualFromData(data: List, dataIndex: number, key: string
             // Make sure not sharing style object.
             const style = data.ensureUniqueItemVisual(dataIndex, 'style');
             style[data.getVisual('drawType')] = value;
+            // Mark the color has been changed, not from palette anymore
+            data.setItemVisual(dataIndex, 'colorFromPalette', false);
             break;
         case 'opacity':
             data.ensureUniqueItemVisual(dataIndex, 'style').opacity = value;

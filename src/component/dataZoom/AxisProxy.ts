@@ -337,7 +337,7 @@ class AxisProxy {
 
         each(seriesModels, function (seriesModel) {
             let seriesData = seriesModel.getData();
-            const dataDims = seriesData.mapDimension(axisDim, true);
+            const dataDims = seriesData.mapDimensionsAll(axisDim);
 
             if (!dataDims.length) {
                 return;
@@ -451,7 +451,7 @@ function calculateDataExtent(axisProxy: AxisProxy, axisDim: string, seriesModels
     each(seriesModels, function (seriesModel) {
         const seriesData = seriesModel.getData();
         if (seriesData) {
-            each(seriesData.mapDimension(axisDim, true), function (dim) {
+            each(seriesData.mapDimensionsAll(axisDim), function (dim) {
                 const seriesExtent = seriesData.getApproximateExtent(dim);
                 seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                 seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);

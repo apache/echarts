@@ -475,7 +475,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
 
         const data = this.getData();
-        const tooltipDims = data.mapDimension('defaultedTooltip', true);
+        const tooltipDims = data.mapDimensionsAll('defaultedTooltip');
         const tooltipDimLen = tooltipDims.length;
         const value = this.getRawValue(dataIndex) as any;
         const isValueArr = zrUtil.isArray(value);
@@ -565,11 +565,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     /**
-     * Use `data.mapDimension(coordDim, true)` instead.
+     * Use `data.mapDimensionsAll(coordDim)` instead.
      * @deprecated
      */
     coordDimToDataDim(coordDim: DimensionName): DimensionName[] {
-        return this.getRawData().mapDimension(coordDim, true);
+        return this.getRawData().mapDimensionsAll(coordDim);
     }
 
     /**
@@ -628,7 +628,7 @@ function autoSeriesName(seriesModel: SeriesModel): void {
 
 function getSeriesAutoName(seriesModel: SeriesModel): string {
     const data = seriesModel.getRawData();
-    const dataDims = data.mapDimension('seriesName', true);
+    const dataDims = data.mapDimensionsAll('seriesName');
     const nameArr: string[] = [];
     zrUtil.each(dataDims, function (dataDim) {
         const dimInfo = data.getDimensionInfo(dataDim);

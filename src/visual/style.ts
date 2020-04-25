@@ -82,12 +82,13 @@ const seriesStyleTask: StageHandler = {
 
         // TODO style callback
         const colorCallback = isFunction(color) ? color as unknown as ColorCallback : null;
-        // Default
-        if ((!globalStyle[colorKey] || colorCallback) && !seriesModel.useColorPaletteOnData) {
+        // Get from color palette by default.
+        if (!globalStyle[colorKey] || colorCallback) {
             globalStyle[colorKey] = seriesModel.getColorFromPalette(
                 // TODO series count changed.
                 seriesModel.name, null, ecModel.getSeriesCount()
             );
+            data.setVisual('colorFromPalette', true);
         }
 
         data.setVisual('style', globalStyle);
@@ -95,6 +96,8 @@ const seriesStyleTask: StageHandler = {
 
         // Only visible series has each data be visual encoded
         if (!ecModel.isSeriesFiltered(seriesModel) && colorCallback) {
+            data.setVisual('colorFromPalette', false);
+
             return {
                 dataEach(data, idx) {
                     const dataParams = seriesModel.getDataParams(idx);
@@ -122,6 +125,8 @@ const dataStyleTask: StageHandler = {
         // Set in itemStyle
         const getStyle = getStyleMapper(seriesModel, stylePath);
 
+        const colorKey = data.getVisual('drawType');
+
         return {
             dataEach: data.hasItemOption ? function (data, idx) {
                 // Not use getItemModel for performance considuration
@@ -132,12 +137,17 @@ const dataStyleTask: StageHandler = {
 
                     const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
                     extend(existsStyle, style);
+
+                    if (colorKey in style) {
+                        data.setItemVisual(idx, 'colorFromPalette', false);
+                    }
                 }
             } : null
         };
     }
 };
 
+// Pick color from palette for the data which has not been set with color yet.
 const dataColorPaletteTask: StageHandler = {
     createOnAllSeries: true,
     performRawSeries: true,
@@ -181,10 +191,14 @@ const dataColorPaletteTask: StageHandler = {
             // Consistent when toggling legend.
             dataAll.each(function (rawIdx) {
                 const idx = idxMap[rawIdx];
-                const existsStyle = data.ensureUniqueItemVisual(idx, 'style');
-                if (!existsStyle[colorKey]) {
-                    // Get color from palette.
-                    existsStyle[colorKey] = seriesModel.getColorFromPalette(
+                const fromPalette = data.getItemVisual(idx, 'colorFromPalette');
+                // Get color from palette for each data only when the color is inherited from series color, which is
+                // also picked from color palette. So following situation is not in the case:
+                // 1. series.itemStyle.color is set
+                // 2. color is encoded by visualMap
+                if (fromPalette) {
+                    const itemStyle = data.ensureUniqueItemVisual(idx, 'style');
+                    itemStyle[colorKey] = seriesModel.getColorFromPalette(
                         dataAll.getName(rawIdx) || (rawIdx + ''),
                         colorScope,
                         dataAll.count()
@@ -195,4 +209,8 @@ const dataColorPaletteTask: StageHandler = {
     }
 };
 
-export {seriesStyleTask, dataStyleTask, dataColorPaletteTask};
+export {
+    seriesStyleTask,
+    dataStyleTask,
+    dataColorPaletteTask
+};
