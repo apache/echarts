@@ -282,6 +282,17 @@ class BarView extends ChartView {
     private _renderLarge(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void {
         this._clear();
         createLarge(seriesModel, this.group);
+        this._updateLargeClip(seriesModel);
+    }
+
+    private _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
+        this._removeBackground();
+        createLarge(seriesModel, this.group, true);
+        // incremental also need to clip, otherwise might be overlow.
+        this._updateLargeClip(seriesModel);
+    }
+
+    private _updateLargeClip(seriesModel: BarSeriesModel): void {
         // Use clipPath in large mode.
         const clipPath = seriesModel.get('clip', true)
             ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
@@ -292,11 +303,6 @@ class BarView extends ChartView {
         else {
             this.group.removeClipPath();
         }
-    }
-
-    private _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
-        this._removeBackground();
-        createLarge(seriesModel, this.group, true);
     }
 
     remove(ecModel?: GlobalModel): void {
