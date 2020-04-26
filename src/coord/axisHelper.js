@@ -228,7 +228,7 @@ export function niceScaleExtent(scale, model) {
     scale.niceExtent({
         splitNumber: splitNumber,
         fixMin: extentInfo.fixMin,
-        fixMax: extentInfo.fixMin,
+        fixMax: extentInfo.fixMax,
         minInterval: (scaleType === 'interval' || scaleType === 'time')
             ? model.get('minInterval') : null,
         maxInterval: (scaleType === 'interval' || scaleType === 'time')
