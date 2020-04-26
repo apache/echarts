@@ -200,9 +200,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     static type = 'series.treemap';
     type = TreemapSeriesModel.type;
 
-    layoutMode = 'box';
-
-    dependencies = ['grid', 'polar'];
+    static layoutMode = 'box' as const;
 
     preventUsingHoverLayer = true;
 

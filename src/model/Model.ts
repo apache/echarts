@@ -147,6 +147,9 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     getModel<R extends keyof Opt, S extends keyof Opt[R]>(
         path: readonly [R, S], parentModel?: Model
     ): Model<Opt[R][S]>;
+    getModel<Ra extends keyof Opt, Rb extends keyof Opt, S extends keyof Opt[Rb]>(
+        path: readonly [Ra] | readonly [Rb, S], parentModel?: Model
+    ): Model<Opt[Ra]> | Model<Opt[Rb][S]>;
     getModel<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
         path: readonly [R, S, T], parentModel?: Model
     ): Model<Opt[R][S][T]>;

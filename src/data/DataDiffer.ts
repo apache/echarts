@@ -20,38 +20,38 @@
 import {ArrayLike} from 'zrender/src/core/types';
 
 // return key.
-export type DiffKeyGetter = (this: DataDiffer, value: any, index: number) => string;
+export type DiffKeyGetter = (this: DataDiffer, value: unknown, index: number) => string;
 export type DiffCallbackAdd = (newIndex: number) => void;
 export type DiffCallbackUpdate = (newIndex: number, oldIndex: number) => void;
 export type DiffCallbackRemove = (oldIndex: number) => void;
 
 type DataIndexMap = {[key: string]: number | number[]};
 
-function defaultKeyGetter<T>(item: T): T {
+function defaultKeyGetter(item: string): string {
     return item;
 }
 
-class DataDiffer {
+class DataDiffer<Ctx = unknown> {
 
-    private _old: ArrayLike<any>;
-    private _new: ArrayLike<any>;
+    private _old: ArrayLike<unknown>;
+    private _new: ArrayLike<unknown>;
     private _oldKeyGetter: DiffKeyGetter;
     private _newKeyGetter: DiffKeyGetter;
     private _add: DiffCallbackAdd;
     private _update: DiffCallbackUpdate;
     private _remove: DiffCallbackRemove;
 
-    readonly context: any;
+    readonly context: Ctx;
 
     /**
      * @param context Can be visited by this.context in callback.
      */
     constructor(
-        oldArr: ArrayLike<any>,
-        newArr: ArrayLike<any>,
+        oldArr: ArrayLike<unknown>,
+        newArr: ArrayLike<unknown>,
         oldKeyGetter?: DiffKeyGetter,
         newKeyGetter?: DiffKeyGetter,
-        context?: any
+        context?: Ctx
     ) {
         this._old = oldArr;
         this._new = newArr;
@@ -144,7 +144,7 @@ class DataDiffer {
     }
 
     private _initIndexMap(
-        arr: ArrayLike<any>,
+        arr: ArrayLike<unknown>,
         map: DataIndexMap,
         keyArr: string[],
         keyGetterName: '_oldKeyGetter' | '_newKeyGetter'
