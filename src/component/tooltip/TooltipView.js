@@ -558,14 +558,16 @@ export default echarts.extendComponentView({
     },
 
 
-    _getTooltipCache: function(key) {
+    _getTooltipCache: function (key) {
         return this._toolTipFormatterCache && this._toolTipFormatterCache[key];
     },
 
-    _setTooltipCache: function(key, value) {
-        if(!key) return;
+    _setTooltipCache: function (key, value) {
+        if (!key) {
+            return;
+        }
 
-        this._toolTipFormatterCache = this._toolTipFormatterCache || {}
+        this._toolTipFormatterCache = this._toolTipFormatterCache || {};
         this._toolTipFormatterCache[key] = value;
     },
 
@@ -590,13 +592,13 @@ export default echarts.extendComponentView({
         }
         else if (typeof formatter === 'function') {
             // formatter cache
-            var cacheHtml = null
-            var key = null
+            var cacheHtml = null;
+            var key = null;
             var enableCache = tooltipModel.get('triggerOnce');
-            if(enableCache && params && params[0]) {
-                var p = params[0]
+            if (enableCache && params && params[0]) {
+                var p = params[0];
                 key = [p.componentIndex, p.seriesId, p.seriesName, p.dataIndex].join('_');
-                var cacheHtml = this._getTooltipCache(key);
+                cacheHtml = this._getTooltipCache(key);
             }
 
             var callback = bind(function (cbTicket, html) {
