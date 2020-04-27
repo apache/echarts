@@ -281,7 +281,7 @@ class SunburstPiece extends graphic.Group {
         sector.setTextConfig({
             inside: labelPosition !== 'outside',
             insideStroke: visualColor,
-            insideFill: 'auto',
+            // insideFill: 'auto',
             outsideFill: visualColor
         });
 
