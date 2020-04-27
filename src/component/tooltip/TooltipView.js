@@ -559,14 +559,14 @@ export default echarts.extendComponentView({
 
 
     _getTooltipCache: function(key) {
-        return this._toopTipFormatterCache && this._toopTipFormatterCache[key];
+        return this._toolTipFormatterCache && this._toolTipFormatterCache[key];
     },
 
     _setTooltipCache: function(key, value) {
         if(!key) return;
 
-        this._toopTipFormatterCache = this._toopTipFormatterCache || {}
-        this._toopTipFormatterCache[key] = value;
+        this._toolTipFormatterCache = this._toolTipFormatterCache || {}
+        this._toolTipFormatterCache[key] = value;
     },
 
     _showTooltipContent: function (
@@ -752,6 +752,7 @@ export default echarts.extendComponentView({
         if (env.node) {
             return;
         }
+        delete this._toolTipFormatterCache;
         this._tooltipContent.dispose();
         globalListener.unregister('itemTooltip', api);
     }
