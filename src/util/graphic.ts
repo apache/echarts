@@ -715,6 +715,11 @@ export function setLabelStyle<LDI>(
             );
         }
 
+        // PENDING: if there is many requirements that emphasis position
+        // need to be different from normal position, we might consider
+        // auto slient is those cases.
+        richText.silent = !!normalModel.getShallow('silent');
+
         normalStyle.text = normalStyleText;
         emphasisState.style.text = emphasisStyleText;
 

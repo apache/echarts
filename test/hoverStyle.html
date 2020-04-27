@@ -392,7 +392,8 @@ under the License.
                         symbolSize: 40,
                         label: {
                             show: true,
-                            formatter: 'label inside\n{c}'
+                            formatter: 'label inside\n{c}',
+                            silent: true
                         },
                         emphasis: {
                             label: {
@@ -667,8 +668,10 @@ under the License.
                     series: [{
                         type: 'scatter',
                         symbolSize: 30,
+                        // silent: true,
                         label: {
-                            show: true
+                            show: true,
+                            silent: true,
                         },
                         itemStyle: {
                             color: 'green',
@@ -679,7 +682,7 @@ under the License.
                                 position: 'top'
                             }
                         },
-                        data: [[12, 331221], [20, 331221], [55, 331221]]
+                        data: [[12, 3312212121], [20, 3311212221], [55, 3311212221]]
                     }]
                 };
 
@@ -715,7 +718,8 @@ under the License.
                         type: 'scatter',
                         symbolSize: 30,
                         label: {
-                            show: true
+                            show: true,
+                            silent: true
                         },
                         itemStyle: {
                             color: 'green',
@@ -788,7 +792,8 @@ under the License.
                         id: 's',
                         symbolSize: 30,
                         label: {
-                            show: true
+                            show: true,
+                            silent: true
                         },
                         itemStyle: {
                             color: 'green',

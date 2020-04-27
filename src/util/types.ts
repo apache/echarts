@@ -759,6 +759,7 @@ export interface LabelOption extends TextCommonOption {
     offset?: number[]
 
     overflow?: TextStyleProps['overflow']
+    silent?: boolean
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)
