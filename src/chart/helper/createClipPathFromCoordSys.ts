@@ -23,6 +23,7 @@ import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
+import { CoordinateSystem } from '../../coord/CoordinateSystem';
 
 type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
     lineStyle?: { width?: number }
@@ -101,7 +102,7 @@ function createPolarClipPath(
 }
 
 function createClipPath(
-    coordSys: Polar | Cartesian2D,
+    coordSys: CoordinateSystem,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth
 ) {
@@ -109,10 +110,10 @@ function createClipPath(
         return null;
     }
     else if (coordSys.type === 'polar') {
-        return createPolarClipPath(coordSys, hasAnimation, seriesModel);
+        return createPolarClipPath(coordSys as Polar, hasAnimation, seriesModel);
     }
     else if (coordSys.type === 'cartesian2d') {
-        return createGridClipPath(coordSys, hasAnimation, seriesModel);
+        return createGridClipPath(coordSys as Cartesian2D, hasAnimation, seriesModel);
     }
     return null;
 }

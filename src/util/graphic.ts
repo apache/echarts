@@ -782,7 +782,8 @@ function setLabelStyle<LDI>(
                 normalModel,
                 opt
             ));
-            emphasisState.textConfig = createTextConfig(
+            const targetElEmphasisState = targetEl.ensureState('emphasis');
+            targetElEmphasisState.textConfig = createTextConfig(
                 emphasisState.style,
                 emphasisModel,
                 opt

@@ -314,7 +314,6 @@ async function build(configs) {
  */
 function watch(singleConfig) {
 
-    // FIXME:TS call `ensureZRenderCode`
     let watcher = rollup.watch(singleConfig);
 
     watcher.on('event', function (event) {
@@ -338,12 +337,6 @@ function watch(singleConfig) {
         if (event.code === 'BUNDLE_END') {
             printWatchResult(event);
         }
-        // if (event.code === 'START') {
-        //     ensureZRenderCode.prepare();
-        // }
-        // if (event.code === 'END' || event.code === 'ERROR' || event.code === 'FATAL') {
-        //     ensureZRenderCode.clear();
-        // }
     });
 }
 

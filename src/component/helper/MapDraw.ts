@@ -356,7 +356,7 @@ class MapDraw {
     }
 
     private _updateController(
-        mapOrGeoModel: GeoModel | MapSeries, ecModel: GlobalModel, api: ExtensionAPI
+        this: MapDraw, mapOrGeoModel: GeoModel | MapSeries, ecModel: GlobalModel, api: ExtensionAPI
     ): void {
         const geo = mapOrGeoModel.coordinateSystem;
         const controller = this._controller;
@@ -380,8 +380,7 @@ class MapDraw {
             return action;
         }
 
-        // @ts-ignore FIXME:TS
-        controller.off('pan').on('pan', function (this: MapDraw, e) {
+        controller.off('pan').on('pan', function (e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
@@ -392,8 +391,7 @@ class MapDraw {
             }));
         }, this);
 
-        // @ts-ignore FIXME:TS
-        controller.off('zoom').on('zoom', function (this: MapDraw, e) {
+        controller.off('zoom').on('zoom', function (e) {
             this._mouseDownFlag = false;
 
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -415,7 +413,6 @@ class MapDraw {
             }
         }, this);
 
-        // @ts-ignore FIXME:TS
         controller.setPointerChecker(function (e, x, y) {
             return geo.getViewRectAfterRoam().contain(x, y)
                 && !onIrrelevantElement(e, api, mapOrGeoModel);

@@ -34,12 +34,6 @@ function preparePlugins(
     {include, exclude}
 ) {
     assert(include);
-    // In case node_modules/zrender is a symlink
-    const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
-    const zrRealPath = fs.realpathSync(zrNodeModulePath);
-    if (zrRealPath !== zrNodeModulePath) {
-        include.push(zrRealPath + '/**/*.ts');
-    }
 
     if (clean) {
         console.log('Built in clean mode without cache.');
@@ -140,14 +134,20 @@ exports.createECharts = function (opt = {}) {
         output = nodePath.resolve(ecDir, `dist/echarts${postfixLang}${postfixType}${postfixMin}.js`);
     }
 
+    const include = [
+        nodePath.resolve(ecDir, 'src/**/*.ts'),
+        nodePath.resolve(ecDir, 'echarts*.ts')
+    ];
+    // In case node_modules/zrender is a symlink
+    const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
+    const zrRealPath = fs.realpathSync(zrNodeModulePath);
+    if (zrRealPath !== zrNodeModulePath) {
+        include.push(zrRealPath + '/**/*.ts');
+    }
+
     return {
         plugins: preparePlugins(opt, {
-            include: [
-                nodePath.resolve(ecDir, 'src/**/*.ts'),
-                nodePath.resolve(ecDir, 'echarts*.ts')
-                // nodePath.resolve(ecDir, '/Users/s/sushuangwork/met/act/tigall/echarts/zrender/src/**/*.ts')
-                // nodePath.resolve(ecDir, '../zrender/src/**/*.ts')
-            ]
+            include
         }),
 
         // external: ['zrender'],
@@ -177,13 +177,7 @@ exports.createECharts = function (opt = {}) {
             file: output
         },
         watch: {
-            include: [
-                nodePath.resolve(ecDir, 'src/**'),
-                nodePath.resolve(ecDir, 'echarts*.ts'),
-                // FIXME
-                // zrender code watch is broken until "ensure zr code" can be removed.
-                // nodePath.resolve(ecDir, '../zrender/src/**/*.ts')
-            ]
+            include
         }
     };
 };
