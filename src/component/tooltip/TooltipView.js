@@ -557,6 +557,18 @@ export default echarts.extendComponentView({
         });
     },
 
+
+    _getTooltipCache: function(key) {
+        return this._toopTipFormatterCache && this._toopTipFormatterCache[key];
+    },
+
+    _setTooltipCache: function(key, value) {
+        if(!key) return;
+
+        this._toopTipFormatterCache = this._toopTipFormatterCache || {}
+        this._toopTipFormatterCache[key] = value;
+    },
+
     _showTooltipContent: function (
         tooltipModel, defaultHtml, params, asyncTicket, x, y, positionExpr, el, markers
     ) {
@@ -577,6 +589,16 @@ export default echarts.extendComponentView({
             html = formatUtil.formatTpl(formatter, params, true);
         }
         else if (typeof formatter === 'function') {
+            // formatter cache
+            var cacheHtml = null
+            var key = null
+            var enableCache = tooltipModel.get('triggerOnce');
+            if(enableCache && params && params[0]) {
+                var p = params[0]
+                key = [p.componentIndex, p.seriesId, p.seriesName, p.dataIndex].join('_');
+                var cacheHtml = this._getTooltipCache(key);
+            }
+
             var callback = bind(function (cbTicket, html) {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markers, tooltipModel);
@@ -586,7 +608,8 @@ export default echarts.extendComponentView({
                 }
             }, this);
             this._ticket = asyncTicket;
-            html = formatter(params, asyncTicket, callback);
+            html = cacheHtml || formatter(params, asyncTicket, callback);
+            this._setTooltipCache(key, html);
         }
 
         tooltipContent.setContent(html, markers, tooltipModel);
