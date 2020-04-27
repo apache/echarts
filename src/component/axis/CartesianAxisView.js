@@ -114,7 +114,7 @@ var CartesianAxisView = AxisView.extend({
         var viewLabels = showAsAxis && axis.getViewLabels();
 
         for (var i = 0; i < ticksCoords.length; i++) {
-            if(viewLabels && viewLabels[i] && !viewLabels[i].formattedLabel) {
+            if (viewLabels && viewLabels[i] && !viewLabels[i].formattedLabel) {
                 continue;
             }
             var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
