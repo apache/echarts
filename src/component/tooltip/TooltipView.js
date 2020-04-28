@@ -611,7 +611,9 @@ export default echarts.extendComponentView({
             }, this);
             this._ticket = asyncTicket;
             html = cacheHtml || formatter(params, asyncTicket, callback);
-            this._setTooltipCache(key, html);
+            if (enableCache) {
+                this._setTooltipCache(key, html);
+            }
         }
 
         tooltipContent.setContent(html, markers, tooltipModel);
