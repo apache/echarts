@@ -26,7 +26,6 @@ import { BoundingRect } from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import ComponentModel from '../model/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PrepareCustomInfo } from '../chart/custom';
 
 
 export interface CoordinateSystemCreator {
@@ -152,8 +151,6 @@ export interface CoordinateSystem {
     // Currently only Cartesian2D implements it.
     // But if other coordinate systems implement it, should follow this signature.
     getAxesByScale?: (scaleType: string) => Axis[];
-
-    prepareCustoms?: PrepareCustomInfo;
 }
 
 /**
