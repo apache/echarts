@@ -17,7 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
@@ -30,24 +29,261 @@ import SeriesModel from '../model/Series';
 import Model from '../model/Model';
 import ChartView from '../view/Chart';
 import {createClipPath} from './helper/createClipPathFromCoordSys';
-import {EventQueryItem, ECEvent} from '../util/types';
-import Element from 'zrender/src/Element';
-
+import {
+    EventQueryItem, ECEvent, SeriesOption, SeriesOnCartesianOptionMixin,
+    SeriesOnPolarOptionMixin, SeriesOnSingleOptionMixin, SeriesOnGeoOptionMixin,
+    SeriesOnCalendarOptionMixin, ItemStyleOption, SeriesEncodeOptionMixin,
+    SeriesTooltipOption,
+    DimensionLoose,
+    ParsedValue,
+    Dictionary,
+    CallbackDataParams,
+    Payload,
+    StageHandlerProgressParams,
+    LabelOption,
+    ViewRootGroup,
+    OptionDataValue,
+    ZRStyleProps,
+    DisplayState,
+    ECElement,
+    DisplayStateNonNormal
+} from '../util/types';
+import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
 import prepareGeo from '../coord/geo/prepareCustom';
 import prepareSingleAxis from '../coord/single/prepareCustom';
 import preparePolar from '../coord/polar/prepareCustom';
 import prepareCalendar from '../coord/calendar/prepareCustom';
+import ComponentModel from '../model/Component';
+import List, { DefaultDataVisual } from '../data/List';
+import GlobalModel from '../model/Global';
+import { makeInner } from '../util/model';
+import ExtensionAPI from '../ExtensionAPI';
+import Displayable from 'zrender/src/graphic/Displayable';
+import Axis2D from '../coord/cartesian/Axis2D';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import { PathProps } from 'zrender/src/graphic/Path';
+import { ImageStyleProps } from 'zrender/src/graphic/Image';
+import { CoordinateSystem } from '../coord/CoordinateSystem';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
+import {
+    convertToEC4StyleForCustomSerise,
+    isEC4CompatibleStyle,
+    convertFromEC4CompatibleStyle,
+    LegacyStyleProps,
+    warnDeprecated
+} from '../util/styleCompat';
+import Transformable from 'zrender/src/core/Transformable';
+import { ItemStyleProps } from '../model/mixin/itemStyle';
 
-const CACHED_LABEL_STYLE_PROPERTIES = graphicUtil.CACHED_LABEL_STYLE_PROPERTIES;
-const ITEM_STYLE_NORMAL_PATH = ['itemStyle'];
-const ITEM_STYLE_EMPHASIS_PATH = ['emphasis', 'itemStyle'];
-const LABEL_NORMAL = ['label'];
-const LABEL_EMPHASIS = ['emphasis', 'label'];
+
+const inner = makeInner<{
+    info: CustomExtraElementInfo;
+    customPathData: string;
+    customGraphicType: string;
+    customImagePath: CustomImageOption['style']['image'];
+    customText: string;
+    txConZ2Set: number;
+}, Element>();
+
+type CustomExtraElementInfo = Dictionary<unknown>;
+type TransformPropsX = 'x' | 'scaleX' | 'originX';
+type TransformPropsY = 'y' | 'scaleY' | 'originY';
+type TransformProps = TransformPropsX | TransformPropsY | 'rotation';
+
+
+interface CustomBaseElementOption extends Partial<Pick<
+    Element, TransformProps | 'silent' | 'ignore' | 'textConfig'
+>> {
+    // element type, mandatory.
+    type: string;
+    id?: string;
+    // For animation diff.
+    name?: string;
+    info?: CustomExtraElementInfo;
+    // `false` means remove the textContent.
+    textContent?: CustomTextOption | false;
+};
+interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
+    Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
+>> {
+    style?: ZRStyleProps;
+    // `false` means remove emphasis trigger.
+    styleEmphasis?: ZRStyleProps | false;
+    emphasis?: CustomDisplayableOptionOnState;
+}
+interface CustomDisplayableOptionOnState extends Partial<Pick<
+    Displayable, TransformProps | 'textConfig' | 'z2'
+>> {
+    // `false` means remove emphasis trigger.
+    style?: ZRStyleProps | false;
+}
+interface CustomGroupOption extends CustomBaseElementOption {
+    type: 'group';
+    width?: number;
+    height?: number;
+    diffChildrenByName?: boolean;
+    children: CustomElementOption[];
+    $mergeChildren: false | 'byName' | 'byIndex';
+}
+interface CustomZRPathOption extends CustomDisplayableOption, Pick<PathProps, 'shape'> {
+}
+interface CustomSVGPathOption extends CustomDisplayableOption {
+    type: 'path';
+    shape?: {
+        // SVG Path, like 'M0,0 L0,-20 L70,-1 L70,0 Z'
+        pathData?: string;
+        // "d" is the alias of `pathData` follows the SVG convention.
+        d?: string;
+        layout?: 'center' | 'cover';
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+    };
+}
+interface CustomImageOption extends CustomDisplayableOption {
+    type: 'image';
+    style?: ImageStyleProps;
+    emphasis?: CustomImageOptionOnState;
+}
+interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
+    style?: ImageStyleProps;
+}
+interface CustomTextOption extends CustomDisplayableOption {
+    type: 'text';
+}
+type CustomElementOption = CustomZRPathOption | CustomSVGPathOption | CustomImageOption | CustomTextOption;
+type CustomElementOptionOnState = CustomDisplayableOptionOnState | CustomImageOptionOnState;
+type StyleOption = ZRStyleProps | ImageStyleProps | false;
+
+
+interface CustomSeriesRenderItemAPI extends
+        CustomSeriesRenderItemCoordinateSystemAPI,
+        Pick<ExtensionAPI, 'getWidth' | 'getHeight' | 'getZr' | 'getDevicePixelRatio'> {
+    value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
+    style(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    styleEmphasis(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    visual(visualType: string, dataIndexInside?: number): ReturnType<List['getItemVisual']>;
+    barLayout(opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>): ReturnType<typeof getLayoutOnAxis>;
+    currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']>;
+    font(opt: Parameters<typeof graphicUtil.getFont>[0]): ReturnType<typeof graphicUtil.getFont>;
+}
+interface CustomSeriesRenderItemParamsCoordSys {
+    type: string;
+    // And extra params for each coordinate systems.
+}
+interface CustomSeriesRenderItemCoordinateSystemAPI {
+    coord(
+        data: OptionDataValue | OptionDataValue[],
+        clamp?: boolean
+    ): number[];
+    size?(
+        dataSize: OptionDataValue | OptionDataValue[],
+        dataItem: OptionDataValue | OptionDataValue[]
+    ): number | number[];
+}
+interface CustomSeriesRenderItemParams {
+    context: {};
+    seriesId: string;
+    seriesName: string;
+    seriesIndex: number;
+    coordSys: CustomSeriesRenderItemParamsCoordSys;
+    dataInsideLength: number;
+    encode: ReturnType<typeof wrapEncodeDef>
+}
+type CustomSeriesRenderItem = (
+    params: CustomSeriesRenderItemParams,
+    api: CustomSeriesRenderItemAPI
+) => CustomElementOption;
+
+
+interface CustomSeriesOption extends
+    SeriesOption,
+    SeriesEncodeOptionMixin,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnPolarOptionMixin,
+    SeriesOnSingleOptionMixin,
+    SeriesOnGeoOptionMixin,
+    SeriesOnCalendarOptionMixin {
+
+    // If set as 'none', do not depends on coord sys.
+    coordinateSystem?: string | 'none';
+
+    renderItem?: CustomSeriesRenderItem;
+
+    // Only works on polar and cartesian2d coordinate system.
+    clip?: boolean;
+
+    // FIXME needed?
+    tooltip?: SeriesTooltipOption;
+
+    itemStyle?: ItemStyleOption;
+    label?: LabelOption;
+    emphasis?: {
+        itemStyle?: ItemStyleOption;
+        label?: LabelOption;
+    };
+}
+
+// Also compat with ec4, where
+// `visual('color') visual('borderColor')` is supported.
+const STYLE_VISUAL_TYPE = {
+    color: 'fill',
+    borderColor: 'stroke'
+} as const;
+
+const VISUAL_PROPS = {
+    symbol: 1,
+    symbolSize: 1,
+    symbolKeepAspect: 1,
+    legendSymbol: 1,
+    visualMeta: 1,
+    liftZ: 1
+} as const;
+
+const EMPHASIS = 'emphasis' as const;
+const NORMAL = 'normal' as const;
+const PATH_ITEM_STYLE = {
+    normal: ['itemStyle'],
+    emphasis: [EMPHASIS, 'itemStyle']
+} as const;
+const PATH_LABEL = {
+    normal: ['label'],
+    emphasis: [EMPHASIS, 'label']
+} as const;
 // Use prefix to avoid index to be the same as el.name,
-// which will cause weird udpate animation.
+// which will cause weird update animation.
 const GROUP_DIFF_PREFIX = 'e\0\0';
 
+type AttachedTxInfo = {
+    isLegacy: boolean;
+    normal: {
+        cfg: ElementTextConfig;
+        conOpt: CustomElementOption | false;
+    };
+    emphasis: {
+        cfg: ElementTextConfig;
+        conOpt: CustomElementOptionOnState;
+    };
+};
+const attachedTxInfoTmp = {
+    normal: {},
+    emphasis: {}
+} as AttachedTxInfo;
+
+const Z2_SPECIFIED_BIT = {
+    normal: 0,
+    emphasis: 1
+} as const;
+
+
+
+
+export type PrepareCustomInfo = (coordSys: CoordinateSystem) => {
+    coordSys: CustomSeriesRenderItemParamsCoordSys;
+    api: CustomSeriesRenderItemCoordinateSystemAPI
+};
 
 /**
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
@@ -60,7 +296,7 @@ const GROUP_DIFF_PREFIX = 'e\0\0';
  *         size: function (dataSize, dataItem) {} // return size of each axis in coordSys.
  *     }}
  */
-const prepareCustoms = {
+const prepareCustoms: Dictionary<PrepareCustomInfo> = {
     cartesian2d: prepareCartesian2d,
     geo: prepareGeo,
     singleAxis: prepareSingleAxis,
@@ -68,29 +304,27 @@ const prepareCustoms = {
     calendar: prepareCalendar
 };
 
+class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
 
-// ------
-// Model
-// ------
+    static type = 'series.custom';
+    readonly type = CustomSeriesModel.type;
 
-SeriesModel.extend({
+    static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
-    type: 'series.custom',
+    preventAutoZ = true;
 
-    dependencies: ['grid', 'polar', 'geo', 'singleAxis', 'calendar'],
+    currentZLevel: number;
+    currentZ: number;
 
-    defaultOption: {
+    static defaultOption: CustomSeriesOption = {
         coordinateSystem: 'cartesian2d', // Can be set as 'none'
         zlevel: 0,
         z: 2,
         legendHoverLink: true,
 
-        useTransform: true,
-
         // Custom series will not clip by default.
         // Some case will use custom series to draw label
         // For example https://echarts.apache.org/examples/en/editor.html?c=custom-gantt-flight
-        // Only works on polar and cartesian2d coordinate system.
         clip: false
 
         // Cartesian coordinate system
@@ -105,43 +339,44 @@ SeriesModel.extend({
 
         // label: {}
         // itemStyle: {}
-    },
+    };
 
-    /**
-     * @override
-     */
-    getInitialData: function (option, ecModel) {
+    optionUpdated() {
+        this.currentZLevel = this.get('zlevel', true);
+        this.currentZ = this.get('z', true);
+    }
+
+    getInitialData(option: CustomSeriesOption, ecModel: GlobalModel): List {
         return createListFromArray(this.getSource(), this);
-    },
+    }
 
-    /**
-     * @override
-     */
-    getDataParams: function (dataIndex, dataType, el) {
-        const params = SeriesModel.prototype.getDataParams.apply(this, arguments);
-        el && (params.info = el.info);
+    getDataParams(dataIndex: number, dataType: string, el: Element): CallbackDataParams & {
+        info: CustomExtraElementInfo
+    } {
+        const params = super.getDataParams(dataIndex, dataType, el) as ReturnType<CustomSeriesModel['getDataParams']>;
+        el && (params.info = inner(el).info);
         return params;
     }
-});
+}
 
-// -----
-// View
-// -----
+ComponentModel.registerClass(CustomSeriesModel);
 
-ChartView.extend({
 
-    type: 'custom',
 
-    /**
-     * @private
-     * @type {module:echarts/data/List}
-     */
-    _data: null,
+class CustomSeriesView extends ChartView {
 
-    /**
-     * @override
-     */
-    render: function (customSeries, ecModel, api, payload) {
+    static type = 'custom';
+    readonly type = CustomSeriesView.type;
+
+    private _data: List;
+
+
+    render(
+        customSeries: CustomSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ): void {
         const oldData = this._data;
         const data = customSeries.getData();
         const group = this.group;
@@ -182,17 +417,27 @@ ChartView.extend({
         }
 
         this._data = data;
-    },
+    }
 
-    incrementalPrepareRender: function (customSeries, ecModel, api) {
+    incrementalPrepareRender(
+        customSeries: CustomSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ): void {
         this.group.removeAll();
         this._data = null;
-    },
+    }
 
-    incrementalRender: function (params, customSeries, ecModel, api, payload) {
+    incrementalRender(
+        params: StageHandlerProgressParams,
+        customSeries: CustomSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ): void {
         const data = customSeries.getData();
         const renderItem = makeRenderItem(customSeries, data, ecModel, api);
-        function setIncrementalAndHoverLayer(el) {
+        function setIncrementalAndHoverLayer(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = true;
                 el.useHoverLayer = true;
@@ -202,17 +447,9 @@ ChartView.extend({
             const el = createOrUpdate(null, idx, renderItem(idx, payload), customSeries, this.group, data);
             el.traverse(setIncrementalAndHoverLayer);
         }
-    },
+    }
 
-    /**
-     * @override
-     */
-    dispose: zrUtil.noop,
-
-    /**
-     * @override
-     */
-    filterForExposedEvent: function (
+    filterForExposedEvent(
         eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECEvent
     ): boolean {
         const elementName = query.element;
@@ -230,17 +467,19 @@ ChartView.extend({
 
         return false;
     }
-});
+}
+
+ChartView.registerClass(CustomSeriesView);
 
 
-function createEl(elOption) {
+function createEl(elOption: CustomElementOption): Element {
     const graphicType = elOption.type;
     let el;
 
     // Those graphic elements are not shapes. They should not be
     // overwritten by users, so do them first.
     if (graphicType === 'path') {
-        const shape = elOption.shape;
+        const shape = (elOption as CustomSVGPathOption).shape;
         // Using pathRect brings convenience to users sacle svg path.
         const pathRect = (shape.width != null && shape.height != null)
             ? {
@@ -248,20 +487,20 @@ function createEl(elOption) {
                 y: shape.y || 0,
                 width: shape.width,
                 height: shape.height
-            }
+            } as RectLike
             : null;
         const pathData = getPathData(shape);
         // Path is also used for icon, so layout 'center' by default.
         el = graphicUtil.makePath(pathData, null, pathRect, shape.layout || 'center');
-        el.__customPathData = pathData;
+        inner(el).customPathData = pathData;
     }
     else if (graphicType === 'image') {
         el = new graphicUtil.Image({});
-        el.__customImagePath = elOption.style.image;
+        inner(el).customImagePath = (elOption as CustomImageOption).style.image;
     }
     else if (graphicType === 'text') {
         el = new graphicUtil.Text({});
-        el.__customText = elOption.style.text;
+        inner(el).customText = (elOption.style as TextStyleProps).text;
     }
     else if (graphicType === 'group') {
         el = new graphicUtil.Group();
@@ -279,96 +518,305 @@ function createEl(elOption) {
         el = new Clz();
     }
 
-    el.__customGraphicType = graphicType;
+    inner(el).customGraphicType = graphicType;
     el.name = elOption.name;
+
+    // Compat ec4: the default z2 lift is 1. If changing the number,
+    // some cases probably be broken: hierarchy layout along z, like circle packing,
+    // where emphasis only intending to modify color/border rather than lift z2.
+    (el as ECElement).z2EmphasisLift = 1;
 
     return el;
 }
 
-function updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot) {
-    const transitionProps = {};
-    const elOptionStyle = elOption.style || {};
+/**
+ * [STRATEGY] Merge properties or erase all properties:
+ *
+ * Based on the fact that the existing zr element probably be reused, we discuss whether
+ * merge or erase all properties to the exsiting elements.
+ * + "Merge" means that if a certain props is not specified, do not assign to the existing element.
+ * + "Erase all" means that assign all of the available props whatever it specified by users.
+ *
+ * "Merge" might bring some unexpected state retaining for users and "erase all" seams to be
+ * more safe. But "erase all" force users to specify all of the props each time, which
+ * theoretically disables the chance of performance optimization (e.g., just generete shape
+ * and style at the first time rather than always do that). And "force user set all of the props"
+ * might bring trouble to specify which props need to perform "transition animation".
+ * So we still use "merge" rather than "erase all". If users need "erase all", they can
+ * simple always set all of the props each time.
+ * Some "object-like" config like `textConfig`, `textContent`, `style` which are not needed for
+ * every elment, so we replace them only when user specify them. And the that is a total replace.
+ *
+ * [STRATEGY] `hasOwnProperty` or `== null`:
+ *
+ * Ditinguishing "own property" probably bring little trouble to user when make el options.
+ * So we  trade a {xx: null} or {xx: undefined} as "not specified" if possible rather than
+ * "set them to null/undefined". In most cases, props can not be cleared. Some typicall
+ * clearable props like `style`/`textConfig`/`textContent` we enable `false` to means
+ * "clear". In some othere special cases that the prop is able to set as null/undefined,
+ * but not suitable to use `false`, `hasOwnProperty` is checked.
+ */
+function updateElNormal(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    styleOpt: StyleOption,
+    attachedTxInfo: AttachedTxInfo,
+    seriesModel: CustomSeriesModel,
+    isInit: boolean,
+    isTextContent: boolean
+): void {
+    const transitionProps = {} as ElementProps;
+    const elDisplayable = el.isGroup ? null : el as Displayable;
 
-    elOption.shape && (transitionProps.shape = zrUtil.clone(elOption.shape));
-    elOption.position && (transitionProps.position = elOption.position.slice());
-    elOption.scale && (transitionProps.scale = elOption.scale.slice());
-    elOption.origin && (transitionProps.origin = elOption.origin.slice());
-    elOption.rotation && (transitionProps.rotation = elOption.rotation);
+    (elOption as CustomZRPathOption).shape && (
+        (transitionProps as PathProps).shape = zrUtil.clone((elOption as CustomZRPathOption).shape)
+    );
+    setLagecyProp(elOption, transitionProps, 'position', 'x', 'y');
+    setLagecyProp(elOption, transitionProps, 'scale', 'scaleX', 'scaleY');
+    setLagecyProp(elOption, transitionProps, 'origin', 'originX', 'originY');
+    setTransProp(elOption, transitionProps, 'x');
+    setTransProp(elOption, transitionProps, 'y');
+    setTransProp(elOption, transitionProps, 'scaleX');
+    setTransProp(elOption, transitionProps, 'scaleY');
+    setTransProp(elOption, transitionProps, 'originX');
+    setTransProp(elOption, transitionProps, 'originY');
+    setTransProp(elOption, transitionProps, 'rotation');
 
-    if (el.type === 'image' && elOption.style) {
-        const targetStyle = transitionProps.style = {};
-        zrUtil.each(['x', 'y', 'width', 'height'], function (prop) {
-            prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
-        });
+    const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
+    if (txCfgOpt) {
+        // PENDING: whether use user object directly rather than clone?
+        // TODO:5.0 textConfig transition animation?
+        el.setTextConfig(txCfgOpt);
     }
 
-    if (el.type === 'text' && elOption.style) {
-        const targetStyle = transitionProps.style = {};
-        zrUtil.each(['x', 'y'], function (prop) {
-            prepareStyleTransition(prop, targetStyle, elOptionStyle, el.style, isInit);
-        });
-        // Compatible with previous: both support
-        // textFill and fill, textStroke and stroke in 'text' element.
-        !elOptionStyle.hasOwnProperty('textFill') && elOptionStyle.fill && (
-            elOptionStyle.textFill = elOptionStyle.fill
+    if (el.type === 'image' && styleOpt) {
+        const targetStyle = (transitionProps as Displayable).style = {};
+        const imgStyle = (el as graphicUtil.Image).style;
+        prepareStyleTransition('x', targetStyle, styleOpt, imgStyle, isInit);
+        prepareStyleTransition('y', targetStyle, styleOpt, imgStyle, isInit);
+        prepareStyleTransition('width', targetStyle, styleOpt, imgStyle, isInit);
+        prepareStyleTransition('height', targetStyle, styleOpt, imgStyle, isInit);
+    }
+
+    if (el.type === 'text' && styleOpt) {
+        const textOptionStyle = styleOpt as TextStyleProps;
+        const targetStyle = (transitionProps as Displayable).style = {};
+        const textStyle = (el as graphicUtil.Text).style;
+        prepareStyleTransition('x', targetStyle, textOptionStyle, textStyle, isInit);
+        prepareStyleTransition('y', targetStyle, textOptionStyle, textStyle, isInit);
+        // Compatible with ec4: if `textFill` or `textStroke` exists use them.
+        zrUtil.hasOwn(textOptionStyle, 'textFill') && (
+            textOptionStyle.fill = (textOptionStyle as any).textFill
         );
-        !elOptionStyle.hasOwnProperty('textStroke') && elOptionStyle.stroke && (
-            elOptionStyle.textStroke = elOptionStyle.stroke
+        zrUtil.hasOwn(textOptionStyle, 'textStroke') && (
+            textOptionStyle.stroke = (textOptionStyle as any).textStroke
         );
     }
 
-    if (el.type !== 'group') {
-        el.useStyle(elOptionStyle);
+    if (elDisplayable) {
+        // PENDING: here the input style object is used directly.
+        // Good for performance but bad for compatibility control.
+        styleOpt && elDisplayable.useStyle(styleOpt);
 
         // Init animation.
         if (isInit) {
-            el.style.opacity = 0;
-            let targetOpacity = elOptionStyle.opacity;
-            targetOpacity == null && (targetOpacity = 1);
-            graphicUtil.initProps(el, {style: {opacity: targetOpacity}}, animatableModel, dataIndex);
+            elDisplayable.style.opacity = 0;
+            const targetOpacity = (styleOpt && styleOpt.opacity != null) ? styleOpt.opacity : 1;
+            graphicUtil.initProps(elDisplayable, {style: {opacity: targetOpacity}}, seriesModel, dataIndex);
         }
+
+        zrUtil.hasOwn(elOption, 'invisible') && (elDisplayable.invisible = elOption.invisible);
     }
 
     if (isInit) {
         el.attr(transitionProps);
     }
     else {
-        graphicUtil.updateProps(el, transitionProps, animatableModel, dataIndex);
+        graphicUtil.updateProps(el, transitionProps, seriesModel, dataIndex);
     }
 
     // Merge by default.
-    // z2 must not be null/undefined, otherwise sort error may occur.
-    elOption.hasOwnProperty('z2') && el.attr('z2', elOption.z2 || 0);
-    elOption.hasOwnProperty('silent') && el.attr('silent', elOption.silent);
-    elOption.hasOwnProperty('invisible') && el.attr('invisible', elOption.invisible);
-    elOption.hasOwnProperty('ignore') && el.attr('ignore', elOption.ignore);
-    // `elOption.info` enables user to mount some info on
-    // elements and use them in event handlers.
-    // Update them only when user specified, otherwise, remain.
-    elOption.hasOwnProperty('info') && el.attr('info', elOption.info);
+    zrUtil.hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
+    zrUtil.hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
 
-    // If `elOption.styleEmphasis` is `false`, remove hover style. The
-    // logic is ensured by `graphicUtil.setElementHoverStyle`.
-    const styleEmphasis = elOption.styleEmphasis;
-    // hoverStyle should always be set here, because if the hover style
-    // may already be changed, where the inner cache should be reset.
-    graphicUtil.enableElementHoverEmphasis(el, styleEmphasis);
+    if (!isTextContent) {
+        // `elOption.info` enables user to mount some info on
+        // elements and use them in event handlers.
+        // Update them only when user specified, otherwise, remain.
+        zrUtil.hasOwn(elOption, 'info') && (inner(el).info = elOption.info);
+    }
+
+    el.markRedraw();
+}
+
+function updateElOnState(
+    state: DisplayStateNonNormal,
+    el: Element,
+    elStateOpt: CustomElementOptionOnState,
+    styleOpt: StyleOption,
+    attachedTxInfo: AttachedTxInfo,
+    isRoot: boolean,
+    isTextContent: boolean
+): void {
+    const elDisplayable = el.isGroup ? null : el as Displayable;
+    const txCfgOpt = attachedTxInfo && attachedTxInfo[state].cfg;
+
+    // PENDING:5.0 support customize scale change and transition animation?
+
+    if (elDisplayable) {
+        // By default support auto lift color when hover whether `emphasis` specified.
+        const stateObj = elDisplayable.ensureState(state);
+        if (styleOpt === false) {
+            const existingEmphasisState = elDisplayable.getState(state);
+            if (existingEmphasisState) {
+                existingEmphasisState.style = null;
+            }
+        }
+        else {
+            // style is needed to enable defaut emphasis.
+            stateObj.style = styleOpt || {};
+        }
+        // If `elOption.styleEmphasis` or `elOption.emphasis.style` is `false`,
+        // remove hover style.
+        // If `elOption.textConfig` or `elOption.emphasis.textConfig` is null/undefined, it does not
+        // make sense. So for simplicity, we do not ditinguish `hasOwnProperty` and null/undefined.
+        if (txCfgOpt) {
+            stateObj.textConfig = txCfgOpt;
+        }
+
+        graphicUtil.enableElementHoverEmphasis(elDisplayable);
+    }
+
     if (isRoot) {
-        graphicUtil.setAsHighDownDispatcher(el, styleEmphasis !== false);
+        graphicUtil.setAsHighDownDispatcher(el, styleOpt !== false);
     }
 }
 
-function prepareStyleTransition(prop, targetStyle, elOptionStyle, oldElStyle, isInit) {
+function updateZ(
+    el: Element,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    attachedTxInfo: AttachedTxInfo
+): void {
+    // Group not support textContent and not support z yet.
+    if (el.isGroup) {
+        return;
+    }
+
+    const elDisplayable = el as Displayable;
+    const currentZ = seriesModel.currentZ;
+    const currentZLevel = seriesModel.currentZLevel;
+    // Always erase.
+    elDisplayable.z = currentZ;
+    elDisplayable.zlevel = currentZLevel;
+    // z2 must not be null/undefined, otherwise sort error may occur.
+    const optZ2 = elOption.z2;
+    optZ2 != null && (elDisplayable.z2 = optZ2 || 0);
+
+    const textContent = elDisplayable.getTextContent();
+    if (textContent) {
+        textContent.z = currentZ;
+        textContent.zlevel = currentZLevel;
+    }
+
+    updateZForEachState(elDisplayable, textContent, elOption, attachedTxInfo, NORMAL);
+    updateZForEachState(elDisplayable, textContent, elOption, attachedTxInfo, EMPHASIS);
+}
+
+function updateZForEachState(
+    elDisplayable: Displayable,
+    textContent: Displayable,
+    elOption: CustomDisplayableOption,
+    attachedTxInfo: AttachedTxInfo,
+    state: DisplayState
+): void {
+    const isNormal = state === NORMAL;
+    const elStateOpt = isNormal ? elOption : retrieveStateOption(elOption, state as DisplayStateNonNormal);
+    const optZ2 = elStateOpt ? elStateOpt.z2 : null;
+    let stateObj;
+    if (optZ2 != null) {
+        // Do not `ensureState` until required.
+        stateObj = isNormal ? elDisplayable : elDisplayable.ensureState(state);
+        stateObj.z2 = optZ2 || 0;
+    }
+
+    const txConOpt = attachedTxInfo[state].conOpt;
+    if (textContent) {
+        const innerEl = inner(elDisplayable);
+        const txConZ2Set = innerEl.txConZ2Set || 0;
+        const txOptZ2 = txConOpt ? txConOpt.z2 : null;
+        const z2SetMask = 1 << Z2_SPECIFIED_BIT[state];
+
+        // Set textContent z2 as hostEl.z2 + 1 only if
+        // textContent z2 is not specified.
+        if (txOptZ2 != null) {
+            // Do not `ensureState` until required.
+            (isNormal ? textContent : textContent.ensureState(state)).z2 = txOptZ2;
+            innerEl.txConZ2Set = txConZ2Set | z2SetMask;
+        }
+        // If stateObj exists, that means stateObj.z2 has been updated, where the textContent z2
+        // should be followed, no matter textContent or textContent.emphasis is specified in elOption.
+        else if (stateObj && (txConZ2Set & z2SetMask) === 0) {
+            (isNormal ? textContent : textContent.ensureState(state)).z2 = stateObj.z2 + 1;
+        }
+    }
+}
+
+function setLagecyProp(
+    elOption: CustomElementOption,
+    transitionProps: Partial<Pick<Transformable, TransformProps>>,
+    legacyName: 'position' | 'scale' | 'origin',
+    xName: TransformPropsX,
+    yName: TransformPropsY
+): void {
+    const legacyArr = (elOption as any)[legacyName];
+    legacyArr && (transitionProps[xName] = legacyArr[0], transitionProps[yName] = legacyArr[1]);
+}
+function setTransProp(
+    elOption: CustomElementOption,
+    transitionProps: Partial<Pick<Transformable, TransformProps>>,
+    name: TransformProps
+): void {
+    elOption[name] != null && (transitionProps[name] = elOption[name]);
+}
+
+function prepareStyleTransition(
+    prop: 'x' | 'y',
+    targetStyle: CustomTextOption['style'],
+    elOptionStyle: CustomTextOption['style'],
+    oldElStyle: graphicUtil.Text['style'],
+    isInit: boolean
+): void;
+function prepareStyleTransition(
+    prop: 'x' | 'y' | 'width' | 'height',
+    targetStyle: CustomImageOption['style'],
+    elOptionStyle: CustomImageOption['style'],
+    oldElStyle: graphicUtil.Image['style'],
+    isInit: boolean
+): void;
+function prepareStyleTransition(
+    prop: string,
+    targetStyle: any,
+    elOptionStyle: any,
+    oldElStyle: any,
+    isInit: boolean
+): void {
     if (elOptionStyle[prop] != null && !isInit) {
         targetStyle[prop] = elOptionStyle[prop];
         elOptionStyle[prop] = oldElStyle[prop];
     }
 }
 
-function makeRenderItem(customSeries, data, ecModel, api) {
+function makeRenderItem(
+    customSeries: CustomSeriesModel,
+    data: List<CustomSeriesModel>,
+    ecModel: GlobalModel,
+    api: ExtensionAPI
+) {
     const renderItem = customSeries.get('renderItem');
     const coordSys = customSeries.coordinateSystem;
-    let prepareResult = {};
+    let prepareResult = {} as ReturnType<PrepareCustomInfo>;
 
     if (coordSys) {
         if (__DEV__) {
@@ -379,8 +827,9 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             );
         }
 
+        // `coordSys.prepareCustoms` is used for external coord sys like bmap.
         prepareResult = coordSys.prepareCustoms
-            ? coordSys.prepareCustoms()
+            ? coordSys.prepareCustoms(coordSys)
             : prepareCustoms[coordSys.type](coordSys);
     }
 
@@ -396,9 +845,9 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         barLayout: barLayout,
         currentSeriesIndices: currentSeriesIndices,
         font: font
-    }, prepareResult.api || {});
+    }, prepareResult.api || {}) as CustomSeriesRenderItemAPI;
 
-    const userParams = {
+    const userParams: CustomSeriesRenderItemParams = {
         // The life cycle of context: current round of rendering.
         // The global life cycle is probably not necessary, because
         // user can store global status by themselves.
@@ -411,17 +860,54 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         encode: wrapEncodeDef(customSeries.getData())
     };
 
-    // Do not support call `api` asynchronously without dataIndexInside input.
-    let currDataIndexInside;
-    let currDirty = true;
-    let currItemModel;
-    let currLabelNormalModel;
-    let currLabelEmphasisModel;
-    let currVisualColor;
+    // If someday intending to refactor them to a class, should consider do not
+    // break change: currently these attribute member are encapsulated in a closure
+    // so that do not need to force user to call these method with a scope.
 
-    return function (dataIndexInside, payload) {
+    // Do not support call `api` asynchronously without dataIndexInside input.
+    let currDataIndexInside: number;
+    let currItemModel: Model<CustomSeriesOption>;
+    let currItemStyleModels: Partial<Record<DisplayState, Model<CustomSeriesOption['itemStyle']>>> = {};
+    let currLabelModels: Partial<Record<DisplayState, Model<CustomSeriesOption['label']>>> = {};
+
+    const seriesItemStyleModels = {
+        normal: customSeries.getModel(PATH_ITEM_STYLE.normal),
+        emphasis: customSeries.getModel(PATH_ITEM_STYLE.emphasis)
+    } as Record<DisplayState, Model<CustomSeriesOption['label']>>;
+    const seriesLabelModels = {
+        normal: customSeries.getModel(PATH_LABEL.normal),
+        emphasis: customSeries.getModel(PATH_LABEL.emphasis)
+    } as Record<DisplayState, Model<CustomSeriesOption['label']>>;
+
+    function getItemModel(dataIndexInside: number): Model<CustomSeriesOption> {
+        return dataIndexInside === currDataIndexInside
+            ? (currItemModel || (currItemModel = data.getItemModel(dataIndexInside)))
+            : data.getItemModel(dataIndexInside);
+    }
+    function getItemStyleModel(dataIndexInside: number, state: DisplayState) {
+        return !data.hasItemOption
+            ? seriesItemStyleModels[state]
+            : dataIndexInside === currDataIndexInside
+            ? (currItemStyleModels[state] || (
+                currItemStyleModels[state] = getItemModel(dataIndexInside).getModel(PATH_ITEM_STYLE[state])
+            ))
+            : getItemModel(dataIndexInside).getModel(PATH_ITEM_STYLE[state]);
+    }
+    function getLabelModel(dataIndexInside: number, state: DisplayState) {
+        return !data.hasItemOption
+            ? seriesLabelModels[state]
+            : dataIndexInside === currDataIndexInside
+            ? (currLabelModels[state] || (
+                currLabelModels[state] = getItemModel(dataIndexInside).getModel(PATH_LABEL[state])
+            ))
+            : getItemModel(dataIndexInside).getModel(PATH_LABEL[state]);
+    }
+
+    return function (dataIndexInside: number, payload: Payload): CustomElementOption {
         currDataIndexInside = dataIndexInside;
-        currDirty = true;
+        currItemModel = null;
+        currItemStyleModels = {};
+        currLabelModels = {};
 
         return renderItem && renderItem(
             zrUtil.defaults({
@@ -434,158 +920,172 @@ function makeRenderItem(customSeries, data, ecModel, api) {
         );
     };
 
-    // Do not update cache until api called.
-    function updateCache(dataIndexInside) {
-        dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        if (currDirty) {
-            currItemModel = data.getItemModel(dataIndexInside);
-            currLabelNormalModel = currItemModel.getModel(LABEL_NORMAL);
-            currLabelEmphasisModel = currItemModel.getModel(LABEL_EMPHASIS);
-            currVisualColor = data.getItemVisual(dataIndexInside, 'color');
-
-            currDirty = false;
-        }
-    }
-
     /**
      * @public
-     * @param {number|string} dim
-     * @param {number} [dataIndexInside=currDataIndexInside]
-     * @return {number|string} value
+     * @param dim by default 0.
+     * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function value(dim, dataIndexInside) {
+    function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
         return data.get(data.getDimension(dim || 0), dataIndexInside);
     }
 
     /**
+     * @deprecated The orgininal intention of `api.style` is enable to set itemStyle
+     * like other series. But it not necessary and not easy to give a strict definition
+     * of what it return. And since echarts5 it needs to be make compat work. So
+     * deprecates it since echarts5.
+     *
      * By default, `visual` is applied to style (to support visualMap).
      * `visual.color` is applied at `fill`. If user want apply visual.color on `stroke`,
      * it can be implemented as:
      * `api.style({stroke: api.visual('color'), fill: null})`;
+     *
+     * [Compat]: since ec5, RectText has been separated from its hosts el.
+     * so `api.style()` will only return the style from `itemStyle` but not handle `label`
+     * any more. But `series.label` config is never published in doc.
+     * We still compat it in `api.style()`. But not encourage to use it and will still not
+     * to pulish it to doc.
      * @public
-     * @param {Object} [extra]
-     * @param {number} [dataIndexInside=currDataIndexInside]
+     * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function style(extra, dataIndexInside) {
+    function style(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
+        if (__DEV__) {
+            warnDeprecated('api.style', 'Please write literal style directly instead.');
+        }
+
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        updateCache(dataIndexInside);
 
-        const itemStyle = currItemModel.getModel(ITEM_STYLE_NORMAL_PATH).getItemStyle();
+        const style = data.getItemVisual(dataIndexInside, 'style');
+        const visualColor = style && style.fill;
+        const opacity = style && style.opacity;
 
-        currVisualColor != null && (itemStyle.fill = currVisualColor);
-        const opacity = data.getItemVisual(dataIndexInside, 'opacity');
+        let itemStyle = getItemStyleModel(dataIndexInside, NORMAL).getItemStyle();
+        visualColor != null && (itemStyle.fill = visualColor);
         opacity != null && (itemStyle.opacity = opacity);
 
-        const labelModel = extra
-            ? applyExtraBefore(extra, currLabelNormalModel)
-            : currLabelNormalModel;
-
-        const textStyle = graphicUtil.createTextStyle(labelModel, null, {
-            autoColor: currVisualColor,
-            isRectText: true
-        });
-
-        // TODO
-        zrUtil.extend(itemStyle, textStyle);
-
-        itemStyle.text = labelModel.getShallow('show')
+        const opt = {autoColor: zrUtil.isString(visualColor) ? visualColor : '#000'};
+        const labelModel = getLabelModel(dataIndexInside, NORMAL);
+        // Now that the feture of "auto adjust text fill/stroke" has been migrated to zrender
+        // since ec5, we should set `isAttached` as `false` here and make compat in
+        // `convertToEC4StyleForCustomSerise`.
+        const textStyle = graphicUtil.createTextStyle(labelModel, null, opt, false, true);
+        textStyle.text = labelModel.getShallow('show')
             ? zrUtil.retrieve2(
-                customSeries.getFormattedLabel(dataIndexInside, 'normal'),
+                customSeries.getFormattedLabel(dataIndexInside, NORMAL),
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
+        const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, opt, false);
+
+        preFetchFromExtra(extra, itemStyle);
+        itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
 
         extra && applyExtraAfter(itemStyle, extra);
+        (itemStyle as LegacyStyleProps).legacy = true;
 
         return itemStyle;
     }
 
     /**
+     * @deprecated The reason see `api.style()`
      * @public
-     * @param {Object} [extra]
-     * @param {number} [dataIndexInside=currDataIndexInside]
+     * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function styleEmphasis(extra, dataIndexInside) {
+    function styleEmphasis(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
+        if (__DEV__) {
+            warnDeprecated('api.styleEmphasis', 'Please write literal style directly instead.');
+        }
+
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        updateCache(dataIndexInside);
 
-        const itemStyle = currItemModel.getModel(ITEM_STYLE_EMPHASIS_PATH).getItemStyle();
-
-        const labelModel = extra
-            ? applyExtraBefore(extra, currLabelEmphasisModel)
-            : currLabelEmphasisModel;
-
-        const textStyle = graphicUtil.createTextStyle(labelModel, null, {
-            isRectText: true
-        }, true);
-        zrUtil.extend(itemStyle, textStyle);
-
-
-        itemStyle.text = labelModel.getShallow('show')
+        let itemStyle = getItemStyleModel(dataIndexInside, EMPHASIS).getItemStyle();
+        const labelModel = getLabelModel(dataIndexInside, EMPHASIS);
+        const textStyle = graphicUtil.createTextStyle(labelModel, null, null, true, true);
+        textStyle.text = labelModel.getShallow('show')
             ? zrUtil.retrieve3(
-                customSeries.getFormattedLabel(dataIndexInside, 'emphasis'),
-                customSeries.getFormattedLabel(dataIndexInside, 'normal'),
+                customSeries.getFormattedLabel(dataIndexInside, EMPHASIS),
+                customSeries.getFormattedLabel(dataIndexInside, NORMAL),
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
+        const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, null, true);
+
+        preFetchFromExtra(extra, itemStyle);
+        itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
 
         extra && applyExtraAfter(itemStyle, extra);
+        (itemStyle as LegacyStyleProps).legacy = true;
 
         return itemStyle;
     }
 
-    /**
-     * @public
-     * @param {string} visualType
-     * @param {number} [dataIndexInside=currDataIndexInside]
-     */
-    function visual(visualType, dataIndexInside) {
-        dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        return data.getItemVisual(dataIndexInside, visualType);
-    }
-
-    /**
-     * @public
-     * @param {number} opt.count Positive interger.
-     * @param {number} [opt.barWidth]
-     * @param {number} [opt.barMaxWidth]
-     * @param {number} [opt.barMinWidth]
-     * @param {number} [opt.barGap]
-     * @param {number} [opt.barCategoryGap]
-     * @return {Object} {width, offset, offsetCenter} is not support, return undefined.
-     */
-    function barLayout(opt) {
-        if (coordSys.getBaseAxis) {
-            const baseAxis = coordSys.getBaseAxis();
-            return getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt), api);
+    function preFetchFromExtra(extra: ZRStyleProps, itemStyle: ItemStyleProps): void {
+        // A trick to retrieve those props firstly, which are used to
+        // apply auto inside fill/stroke in `convertToEC4StyleForCustomSerise`.
+        // (It's not reasonable but only for a degree of compat)
+        if (extra) {
+            (extra as any).textFill && ((itemStyle as any).textFill = (extra as any).textFill);
+            (extra as any).textPosition && ((itemStyle as any).textPosition = (extra as any).textPosition);
         }
     }
 
     /**
      * @public
-     * @return {Array.<number>}
+     * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function currentSeriesIndices() {
+    function visual(
+        visualType: keyof DefaultDataVisual,
+        dataIndexInside?: number
+    ): ReturnType<List['getItemVisual']> {
+        dataIndexInside == null && (dataIndexInside = currDataIndexInside);
+
+        if (zrUtil.hasOwn(STYLE_VISUAL_TYPE, visualType)) {
+            const style = data.getItemVisual(dataIndexInside, 'style');
+            return style
+                ? style[STYLE_VISUAL_TYPE[visualType as keyof typeof STYLE_VISUAL_TYPE]] as any
+                : null;
+        }
+        // Only support these visuals. Other visual might be inner tricky
+        // for performance (like `style`), do not expose to users.
+        if (zrUtil.hasOwn(VISUAL_PROPS, visualType)) {
+            return data.getItemVisual(dataIndexInside, visualType);
+        }
+    }
+
+    /**
+     * @public
+     * @return If not support, return undefined.
+     */
+    function barLayout(
+        opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>
+    ): ReturnType<typeof getLayoutOnAxis> {
+        if (coordSys.type === 'cartesian2d') {
+            const baseAxis = coordSys.getBaseAxis() as Axis2D;
+            return getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt));
+        }
+    }
+
+    /**
+     * @public
+     */
+    function currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']> {
         return ecModel.getCurrentSeriesIndices();
     }
 
     /**
      * @public
-     * @param {Object} opt
-     * @param {string} [opt.fontStyle]
-     * @param {number} [opt.fontWeight]
-     * @param {number} [opt.fontSize]
-     * @param {string} [opt.fontFamily]
-     * @return {string} font string
+     * @return font string
      */
-    function font(opt) {
+    function font(
+        opt: Parameters<typeof graphicUtil.getFont>[0]
+    ): ReturnType<typeof graphicUtil.getFont> {
         return graphicUtil.getFont(opt, ecModel);
     }
 }
 
-function wrapEncodeDef(data) {
-    const encodeDef = {};
+function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
+    const encodeDef = {} as Dictionary<number[]>;
     zrUtil.each(data.dimensions, function (dimName, dataDimIndex) {
         const dimInfo = data.getDimensionInfo(dimName);
         if (!dimInfo.isExtraCoord) {
@@ -597,14 +1097,29 @@ function wrapEncodeDef(data) {
     return encodeDef;
 }
 
-function createOrUpdate(el, dataIndex, elOption, animatableModel, group, data) {
-    el = doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data, true);
+function createOrUpdate(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    group: ViewRootGroup,
+    data: List<CustomSeriesModel>
+): Element {
+    el = doCreateOrUpdate(el, dataIndex, elOption, seriesModel, group, data, true);
     el && data.setItemGraphicEl(dataIndex, el);
 
     return el;
 }
 
-function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data, isRoot) {
+function doCreateOrUpdate(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    group: ViewRootGroup,
+    data: List<CustomSeriesModel>,
+    isRoot: boolean
+): Element {
 
     // [Rule]
     // By default, follow merge mode.
@@ -616,45 +1131,75 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
     //     regard "return;" as "show nothing element whatever", so make a exception to meet the
     //     most cases.)
 
-    const simplyRemove = !elOption; // `null`/`undefined`/`false`
-    elOption = elOption || {};
-    const elOptionType = elOption.type;
-    const elOptionShape = elOption.shape;
-    const elOptionStyle = elOption.style;
-
-    if (el && (
-        simplyRemove
-        // || elOption.$merge === false
-        // If `elOptionType` is `null`, follow the merge principle.
-        || (elOptionType != null
-            && elOptionType !== el.__customGraphicType
-        )
-        || (elOptionType === 'path'
-            && hasOwnPathData(elOptionShape) && getPathData(elOptionShape) !== el.__customPathData
-        )
-        || (elOptionType === 'image'
-            && hasOwn(elOptionStyle, 'image') && elOptionStyle.image !== el.__customImagePath
-        )
-        // FIXME test and remove this restriction?
-        || (elOptionType === 'text'
-            && hasOwn(elOptionShape, 'text') && elOptionStyle.text !== el.__customText
-        )
-    )) {
-        group.remove(el);
-        el = null;
-    }
-
-    // `elOption.type` is undefined when `renderItem` returns nothing.
-    if (simplyRemove) {
+    // If `elOption` is `null`/`undefined`/`false` (when `renderItem` returns nothing).
+    if (!elOption) {
+        el && group.remove(el);
         return;
     }
 
+    elOption = elOption || {} as CustomElementOption;
+    const elOptionType = elOption.type;
+    const elOptionShape = (elOption as CustomZRPathOption).shape;
+    const elOptionStyle = elOption.style;
+
+    if (el) {
+        const elInner = inner(el);
+        if (
+            // || elOption.$merge === false
+            // If `elOptionType` is `null`, follow the merge principle.
+            (elOptionType != null
+                && elOptionType !== elInner.customGraphicType
+            )
+            || (elOptionType === 'path'
+                && hasOwnPathData(elOptionShape)
+                && getPathData(elOptionShape) !== elInner.customPathData
+            )
+            || (elOptionType === 'image'
+                && zrUtil.hasOwn(elOptionStyle, 'image')
+                && (elOptionStyle as CustomImageOption['style']).image !== elInner.customImagePath
+            )
+            // FIXME test and remove this restriction?
+            || (elOptionType === 'text'
+                && zrUtil.hasOwn(elOptionStyle, 'text')
+                && (elOptionStyle as TextStyleProps).text !== elInner.customText
+            )
+        ) {
+            group.remove(el);
+            el = null;
+        }
+    }
+
     const isInit = !el;
-    !el && (el = createEl(elOption));
-    updateEl(el, dataIndex, elOption, animatableModel, data, isInit, isRoot);
+
+    if (!el) {
+        el = createEl(elOption);
+    }
+    else {
+        // If in some case the performance issue arised, consider
+        // do not clearState but update cached normal state directly.
+        el.clearStates();
+    }
+
+    attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
+        attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt = null;
+    attachedTxInfoTmp.isLegacy = false;
+
+    doCreateOrUpdateAttachedTx(
+        el, dataIndex, elOption, seriesModel, isInit, attachedTxInfoTmp
+    );
+
+    const stateOptEmphasis = retrieveStateOption(elOption, EMPHASIS);
+    const styleOptEmphasis = retrieveStyleOptionOnState(elOption, stateOptEmphasis, EMPHASIS);
+
+    updateElNormal(el, dataIndex, elOption, elOption.style, attachedTxInfoTmp, seriesModel, isInit, false);
+    updateElOnState(EMPHASIS, el, stateOptEmphasis, styleOptEmphasis, attachedTxInfoTmp, isRoot, false);
+
+    updateZ(el, elOption, seriesModel, attachedTxInfoTmp);
 
     if (elOptionType === 'group') {
-        mergeChildren(el, dataIndex, elOption, animatableModel, data);
+        mergeChildren(
+            el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel, data
+        );
     }
 
     // Always add whatever already added to ensure sequence.
@@ -662,6 +1207,137 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
 
     return el;
 }
+
+function doCreateOrUpdateAttachedTx(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    isInit: boolean,
+    attachedTxInfo: AttachedTxInfo
+): void {
+    // group do not support textContent temporarily untill necessary.
+    if (el.isGroup) {
+        return;
+    }
+
+    // Normal must be called before emphasis, for `isLegacy` detection.
+    processTxInfo(elOption, null, attachedTxInfo);
+    processTxInfo(elOption, EMPHASIS, attachedTxInfo);
+
+    // If `elOption.textConfig` or `elOption.textContent` is null/undefined, it does not make sence.
+    // So for simplicity, if "elOption hasOwnProperty of them but be null/undefined", we do not
+    // trade them as set to null to el.
+    // Especially:
+    // `elOption.textContent: false` means remove textContent.
+    // `elOption.textContent.emphasis.style: false` means remove the style from emphasis state.
+    let txConOptNormal = attachedTxInfo.normal.conOpt as CustomElementOption | false;
+    const txConOptEmphasis = attachedTxInfo.emphasis.conOpt as CustomElementOptionOnState;
+
+    if (txConOptEmphasis != null) {
+        // If textContent has emphasis state, el should auto has emphasis
+        // state, otherwise it can not be triggered.
+        el.ensureState(EMPHASIS);
+    }
+
+    if (txConOptNormal != null || txConOptEmphasis != null) {
+        let textContent = el.getTextContent();
+        if (txConOptNormal === false) {
+            textContent && el.removeTextContent();
+        }
+        else {
+            txConOptNormal = attachedTxInfo.normal.conOpt = txConOptNormal || {type: 'text'};
+            if (!textContent) {
+                textContent = createEl(txConOptNormal) as graphicUtil.Text;
+                el.setTextContent(textContent);
+            }
+            else {
+                // If in some case the performance issue arised, consider
+                // do not clearState but update cached normal state directly.
+                textContent.clearStates();
+            }
+            const txConStlOptNormal = txConOptNormal && txConOptNormal.style;
+
+            updateElNormal(
+                textContent, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
+            );
+            const txConStlOptEmphasis = retrieveStyleOptionOnState(txConOptNormal, txConOptEmphasis, EMPHASIS);
+            updateElOnState(EMPHASIS, textContent, txConOptEmphasis, txConStlOptEmphasis, null, false, true);
+
+            textContent.markRedraw();
+        }
+    }
+}
+
+function processTxInfo(
+    elOption: CustomElementOption,
+    state: DisplayStateNonNormal,
+    attachedTxInfo: AttachedTxInfo
+): void {
+    const stateOpt = !state ? elOption : retrieveStateOption(elOption, state);
+    const styleOpt = !state ? elOption.style : retrieveStyleOptionOnState(elOption, stateOpt, EMPHASIS);
+
+    const elType = elOption.type;
+    let txCfg = stateOpt ? stateOpt.textConfig : null;
+    const txConOptNormal = elOption.textContent;
+    let txConOpt: CustomElementOption | CustomElementOptionOnState =
+        !txConOptNormal ? null : !state ? txConOptNormal : retrieveStateOption(txConOptNormal, state);
+
+    if (styleOpt && (
+        // Because emphasis style has little info to detect legacy,
+        // if normal is legacy, emphasis is trade as legacy.
+        attachedTxInfo.isLegacy
+        || isEC4CompatibleStyle(styleOpt, elType, !!txCfg, !!txConOpt)
+    )) {
+        attachedTxInfo.isLegacy = true;
+        const convertResult = convertFromEC4CompatibleStyle(styleOpt, elType, !state);
+        // Explicitly specified `textConfig` and `textContent` has higher priority than
+        // the ones generated by legacy style. Otherwise if users use them and `api.style`
+        // at the same time, they not both work and hardly to known why.
+        if (!txCfg && convertResult.textConfig) {
+            txCfg = convertResult.textConfig;
+        }
+        if (!txConOpt && convertResult.textContent) {
+            txConOpt = convertResult.textContent;
+        }
+    }
+
+    if (!state && txConOpt) {
+        const txConOptNormal = txConOpt as CustomElementOption;
+        // `textContent: {type: 'text'}`, the "type" is easy to be missing. So we tolerate it.
+        !txConOptNormal.type && (txConOptNormal.type = 'text');
+        if (__DEV__) {
+            // Do not tolerate incorret type for forward compat.
+            txConOptNormal.type !== 'text' && zrUtil.assert(
+                txConOptNormal.type === 'text',
+                'textContent.type must be "text"'
+            );
+        }
+    }
+
+    const info = !state ? attachedTxInfo.normal : attachedTxInfo[state];
+    info.cfg = txCfg;
+    info.conOpt = txConOpt;
+}
+
+function retrieveStateOption(
+    elOption: CustomElementOption, state: DisplayStateNonNormal
+): CustomElementOptionOnState {
+    return !state ? elOption : elOption ? elOption[state] : null;
+}
+
+function retrieveStyleOptionOnState(
+    stateOptionNormal: CustomElementOption,
+    stateOption: CustomElementOptionOnState,
+    state: DisplayStateNonNormal
+): StyleOption {
+    let style = stateOption && stateOption.style;
+    if (style == null && state === EMPHASIS && stateOptionNormal) {
+        style = stateOptionNormal.styleEmphasis;
+    }
+    return style;
+}
+
 
 // Usage:
 // (1) By default, `elOption.$mergeChildren` is `'byIndex'`, which indicates that
@@ -679,7 +1355,14 @@ function doCreateOrUpdate(el, dataIndex, elOption, animatableModel, group, data,
 // child (otherwise the total indicies of the children array have to be modified).
 // User can remove a single child by set its `ignore` as `true` or replace
 // it by another element, where its `$merge` can be set as `true` if necessary.
-function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
+function mergeChildren(
+    el: graphicUtil.Group,
+    dataIndex: number,
+    elOption: CustomGroupOption,
+    seriesModel: CustomSeriesModel,
+    data: List<CustomSeriesModel>
+): void {
+
     const newChildren = elOption.children;
     const newLen = newChildren ? newChildren.length : 0;
     const mergeChildren = elOption.$mergeChildren;
@@ -697,7 +1380,7 @@ function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
             oldChildren: el.children() || [],
             newChildren: newChildren || [],
             dataIndex: dataIndex,
-            animatableModel: animatableModel,
+            seriesModel: seriesModel,
             group: el,
             data: data
         });
@@ -714,9 +1397,10 @@ function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
             el.childAt(index),
             dataIndex,
             newChildren[index],
-            animatableModel,
+            seriesModel,
             el,
-            data
+            data,
+            false
         );
     }
     if (__DEV__) {
@@ -727,7 +1411,15 @@ function mergeChildren(el, dataIndex, elOption, animatableModel, data) {
     }
 }
 
-function diffGroupChildren(context) {
+type DiffGroupContext = {
+    oldChildren: Element[],
+    newChildren: CustomElementOption[],
+    dataIndex: number,
+    seriesModel: CustomSeriesModel,
+    group: graphicUtil.Group,
+    data: List<CustomSeriesModel>
+};
+function diffGroupChildren(context: DiffGroupContext) {
     (new DataDiffer(
         context.oldChildren,
         context.newChildren,
@@ -741,12 +1433,16 @@ function diffGroupChildren(context) {
         .execute();
 }
 
-function getKey(item, idx) {
+function getKey(item: Element, idx: number): string {
     const name = item && item.name;
     return name != null ? name : GROUP_DIFF_PREFIX + idx;
 }
 
-function processAddUpdate(newIndex, oldIndex) {
+function processAddUpdate(
+    this: DataDiffer<DiffGroupContext>,
+    newIndex: number,
+    oldIndex?: number
+): void {
     const context = this.context;
     const childOption = newIndex != null ? context.newChildren[newIndex] : null;
     const child = oldIndex != null ? context.oldChildren[oldIndex] : null;
@@ -755,50 +1451,36 @@ function processAddUpdate(newIndex, oldIndex) {
         child,
         context.dataIndex,
         childOption,
-        context.animatableModel,
+        context.seriesModel,
         context.group,
-        context.data
+        context.data,
+        false
     );
 }
 
-// `graphic#applyDefaultTextStyle` will cache
-// textFill, textStroke, textStrokeWidth.
-// We have to do this trick.
-function applyExtraBefore(extra, model) {
-    const dummyModel = new Model({}, model);
-    zrUtil.each(CACHED_LABEL_STYLE_PROPERTIES, function (stylePropName, modelPropName) {
-        if (extra.hasOwnProperty(stylePropName)) {
-            dummyModel.option[modelPropName] = extra[stylePropName];
-        }
-    });
-    return dummyModel;
-}
-
-function applyExtraAfter(itemStyle, extra) {
+function applyExtraAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
     for (const key in extra) {
-        if (extra.hasOwnProperty(key)
-            || !CACHED_LABEL_STYLE_PROPERTIES.hasOwnProperty(key)
-        ) {
-            itemStyle[key] = extra[key];
+        if (zrUtil.hasOwn(extra, key)) {
+            (itemStyle as any)[key] = (extra as any)[key];
         }
     }
 }
 
-function processRemove(oldIndex) {
+function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): void {
     const context = this.context;
     const child = context.oldChildren[oldIndex];
     child && context.group.remove(child);
 }
 
-function getPathData(shape) {
+/**
+ * @return SVG Path data.
+ */
+function getPathData(shape: CustomSVGPathOption['shape']): string {
     // "d" follows the SVG convention.
     return shape && (shape.pathData || shape.d);
 }
 
-function hasOwnPathData(shape) {
-    return shape && (shape.hasOwnProperty('pathData') || shape.hasOwnProperty('d'));
+function hasOwnPathData(shape: CustomSVGPathOption['shape']): boolean {
+    return shape && (zrUtil.hasOwn(shape, 'pathData') || zrUtil.hasOwn(shape, 'd'));
 }
 
-function hasOwn(host, prop) {
-    return host && host.hasOwnProperty(prop);
-}

@@ -58,7 +58,8 @@ import {
     ColorString,
     DataModel,
     ECEventData,
-    ZRStyleProps
+    ZRStyleProps,
+    TextCommonOption
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
@@ -80,13 +81,6 @@ const mathMin = Math.min;
 const EMPTY_OBJ = {};
 
 export const Z2_EMPHASIS_LIFT = 10;
-
-// key: label model property nane, value: style property name.
-export const CACHED_LABEL_STYLE_PROPERTIES = {
-    color: 'textFill',
-    textBorderColor: 'textStroke',
-    textBorderWidth: 'textStrokeWidth'
-};
 
 const EMPHASIS = 'emphasis';
 const NORMAL = 'normal';
@@ -125,8 +119,6 @@ type TextCommonParams = {
     autoColor?: ColorString
 
     forceRich?: boolean
-
-    getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
     defaultOutsidePosition?: LabelOption['position']
 
@@ -390,12 +382,14 @@ function singleEnterEmphasis(el: Element) {
         if (!hasFillOrStroke(emphasisStyle.stroke)) {
             disp.style.stroke = liftColor(currentStroke);
         }
-        disp.z2 += Z2_EMPHASIS_LIFT;
+        const z2EmphasisLift = (disp as ECElement).z2EmphasisLift;
+        disp.z2 += z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
     }
 
     const textContent = el.getTextContent();
     if (textContent) {
-        textContent.z2 += Z2_EMPHASIS_LIFT;
+        const z2EmphasisLift = (textContent as ECElement).z2EmphasisLift;
+        textContent.z2 += z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
     }
     // TODO hover layer
 }
@@ -770,6 +764,7 @@ export function createTextConfig(
     opt: TextCommonParams,
     isEmphasis: boolean
 ) {
+    opt = opt || {};
     const textConfig: ElementTextConfig = {};
     let labelPosition;
     let labelRotate = textStyleModel.getShallow('rotate');
@@ -778,16 +773,11 @@ export function createTextConfig(
     );
     const labelOffset = textStyleModel.getShallow('offset');
 
-    if (opt.getTextPosition) {
-        labelPosition = opt.getTextPosition(textStyleModel, isEmphasis);
-    }
-    else {
-        labelPosition = textStyleModel.getShallow('position')
-            || (isEmphasis ? null : 'inside');
-        // 'outside' is not a valid zr textPostion value, but used
-        // in bar series, and magric type should be considered.
-        labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
-    }
+    labelPosition = textStyleModel.getShallow('position')
+        || (isEmphasis ? null : 'inside');
+    // 'outside' is not a valid zr textPostion value, but used
+    // in bar series, and magric type should be considered.
+    labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
 
     if (labelPosition != null) {
         textConfig.position = labelPosition;
@@ -1031,7 +1021,10 @@ function setTokenTextStyle(
     }
 }
 
-export function getFont(opt: LabelOption, ecModel: GlobalModel) {
+export function getFont(
+    opt: Pick<TextCommonOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>,
+    ecModel: GlobalModel
+) {
     const gTextStyleModel = ecModel && ecModel.getModel('textStyle');
     return trim([
         // FIXME in node-canvas fontWeight is before fontStyle

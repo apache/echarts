@@ -1729,6 +1729,9 @@ class ECharts extends Eventful {
         };
 
         updateZ = function (model: ComponentModel, view: ComponentView | ChartView): void {
+            if (model.preventAutoZ) {
+                return;
+            }
             const z = model.get('z');
             const zlevel = model.get('zlevel');
             // Set z and zlevel
@@ -1743,6 +1746,7 @@ class ECharts extends Eventful {
                         textContent.z = el.z;
                         textContent.zlevel = el.zlevel;
                         // lift z2 of text content
+                        // TODO if el.emphasis.z2 is spcefied, what about textContent.
                         textContent.z2 = el.z2 + 1;
                     }
                 }
