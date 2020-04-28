@@ -368,7 +368,16 @@ under the License.
                         type: 'scatter',
                         symbolSize: 30,
                         data: [
-                            [12, 331], [55, 131], [55, 531]
+                            {
+                                value: [12, 331],
+                                label: {
+                                    show: true,
+                                    formatter: 'position top\neven hoverred',
+                                    fontSize: 20,
+                                    position: 'top'
+                                }
+                            },
+                            [55, 131], [55, 531]
                         ]
                     }, {
                         type: 'scatter',

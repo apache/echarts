@@ -705,13 +705,15 @@ export function setLabelStyle<LDI>(
             targetEl.setTextConfig(createTextConfig(
                 normalStyle,
                 normalModel,
-                opt
+                opt,
+                false
             ));
             const targetElEmphasisState = targetEl.ensureState('emphasis');
             targetElEmphasisState.textConfig = createTextConfig(
                 emphasisState.style,
                 emphasisModel,
-                opt
+                opt,
+                true
             );
         }
 
@@ -765,8 +767,8 @@ export function createTextStyle(
 export function createTextConfig(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: TextCommonParams,
-    isEmphasis?: boolean
+    opt: TextCommonParams,
+    isEmphasis: boolean
 ) {
     const textConfig: ElementTextConfig = {};
     let labelPosition;
