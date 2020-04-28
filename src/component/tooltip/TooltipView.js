@@ -592,8 +592,8 @@ export default echarts.extendComponentView({
         }
         else if (typeof formatter === 'function') {
             // formatter cache
-            var cacheHtml = null;
-            var key = null;
+            var cacheHtml;
+            var key;
             var enableCache = tooltipModel.get('triggerOnce');
             if (enableCache && params && params[0]) {
                 var p = params[0];
