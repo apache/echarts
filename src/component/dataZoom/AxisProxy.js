@@ -473,6 +473,14 @@ function fixExtentByAxis(axisProxy, dataExtent) {
         dataExtent[1] = axisDataLen > 0 ? axisDataLen - 1 : NaN;
     }
 
+    // Fix #12507 exec max/min function here
+    if (typeof max === 'function') {
+        dataExtent[1] = max({max: dataExtent[1]});
+    }
+    if (typeof min === 'function') {
+        dataExtent[0] = min({min: dataExtent[0]});
+    }
+
     if (!axisModel.get('scale', true)) {
         dataExtent[0] > 0 && (dataExtent[0] = 0);
         dataExtent[1] < 0 && (dataExtent[1] = 0);

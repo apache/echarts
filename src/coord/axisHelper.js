@@ -89,20 +89,30 @@ export function getScaleExtent(scale, model) {
         min = originalExtent[0];
     }
     else if (typeof min === 'function') {
-        min = min({
-            min: originalExtent[0],
-            max: originalExtent[1]
-        });
+        // Fix #12507 not exec max/min function here, because the dataZoom will handle the function
+        if(!model.__dzAxisProxy) {
+            min = min({
+                min: originalExtent[0],
+                max: originalExtent[1]
+            });
+        } else {
+            min = originalExtent[0];
+        }
     }
 
     if (max === 'dataMax') {
         max = originalExtent[1];
     }
     else if (typeof max === 'function') {
-        max = max({
-            min: originalExtent[0],
-            max: originalExtent[1]
-        });
+        // Fix #12507 not exec max/min function here, because the dataZoom will handle the function
+        if(!model.__dzAxisProxy) {
+            max = max({
+                min: originalExtent[0],
+                max: originalExtent[1]
+            });
+        } else {
+            max = originalExtent[1];
+        }
     }
 
     var fixMin = min != null;
