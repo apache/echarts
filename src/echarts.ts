@@ -1654,7 +1654,9 @@ class ECharts extends Eventful {
                 unfinished |= +renderTask.perform(scheduler.getPerformArgs(renderTask));
 
                 chartView.group.silent = !!seriesModel.get('silent');
-                chartView.group.markRedraw();
+                // Should not call markRedraw on group, because it will disable zrender
+                // increamental render (alway render from the __startIndex each frame)
+                // chartView.group.markRedraw();
 
                 updateZ(seriesModel, chartView);
 
