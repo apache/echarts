@@ -54,6 +54,7 @@
         name: 'stream-cases',
         whiteList: [
             'stream-basic1.html',
+            'stream-basic2.html',
             'lines-ny-appendData.html',
             'scatter-stream-large.html',
             'scatter-stream-not-large.html',

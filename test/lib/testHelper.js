@@ -285,12 +285,16 @@
         var _frameNumber = 0;
         var _mounted = false;
 
+        function getRunBtnText() {
+            return _running ? 'pause' : 'run';
+        }
+
         var buttons = [{
-            text: 'run',
-            onclick: run
-        }, {
-            text: 'pause',
-            onclick: pause
+            text: getRunBtnText(),
+            onclick: function () {
+                buttons[0].el.innerHTML = getRunBtnText();
+                _running ? pause() : run();
+            }
         }, {
             text: 'next frame',
             onclick: nextFrame
@@ -304,7 +308,7 @@
         document.body.appendChild(btnPanel);
         for (var i = 0; i < buttons.length; i++) {
             var button = buttons[i];
-            var btnEl = document.createElement('button');
+            var btnEl = button.el = document.createElement('button');
             btnEl.innerHTML = button.text;
             btnEl.addEventListener('click', button.onclick);
             btnPanel.appendChild(btnEl);
@@ -335,11 +339,12 @@
         function nextFrame() {
             opt.onFrame && opt.onFrame(_frameNumber);
 
-            infoEl.innerHTML = 'current frame: ' + _frameNumber;
             if (pauseAt != null && _frameNumber === pauseAt) {
                 _running = false;
                 pauseAt = null;
             }
+            infoEl.innerHTML = 'Frame: ' + _frameNumber + ' ( ' + (_running ? 'Running' : 'Paused') + ' )';
+            buttons[0].el.innerHTML = getRunBtnText();
 
             _mounted = false;
             var pending = _pendingCbList;

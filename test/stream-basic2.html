@@ -50,6 +50,7 @@ under the License.
             }
         });
 
+
         require(['echarts'], function (echarts) {
             var option;
 
@@ -59,29 +60,36 @@ under the License.
             var data = [];
             var yCurr = 5;
             for (var i = 0; i < count; i++) {
-                var mod = i % lineCount;
-                if (mod === 0) {
-                    yCurr += 5;
-                }
-                data.push([mod, yCurr]);
+                // var mod = i % lineCount;
+                // if (mod === 0) {
+                //     yCurr += 5;
+                // }
+                // data.push([mod, yCurr]);
+                data.push([i, 5]);
             }
 
             option = {
                 color: ['red'],
-                grid: {top: 20, bottom: 30},
+                grid: {top: 20, bottom: 80},
                 xAxis: {
                     type: 'category',
-                    axisLabel: {fontSize: 9, interval: 0, rotate: 90, margin: 20},
+                    // axisLabel: {fontSize: 9, interval: 0, rotate: 90, margin: 20},
                     boundaryGap: false
                 },
                 yAxis: {
-                    type: 'category',
+                    // type: 'category',
                     axisLabel: {fontSize: 9, interval: 0},
                     boundaryGap: false
                 },
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
                 series: {
-                    type: 'scatter',
-                    symbolSize: 2,
+                    type: 'bar',
+                    progressiveChunkMode: 'sequential',
+                    large: true,
                     progressive: progressive,
                     progressiveThreshold: 1,
                     largeThreshold: 1,
