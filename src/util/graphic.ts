@@ -811,7 +811,8 @@ function setLabelStyle<LDI>(
             targetElEmphasisState.textConfig = createTextConfig(
                 emphasisState.style,
                 emphasisModel,
-                opt
+                opt,
+                true
             );
         }
 
