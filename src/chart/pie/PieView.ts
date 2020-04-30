@@ -153,8 +153,8 @@ class PiePiece extends graphic.Sector {
 
         const emphasisState = sector.ensureState('emphasis');
         emphasisState.shape = {
-            r: layout.r + itemModel.get('hoverAnimation') // TODO: Change a name.
-                ? seriesModel.get('hoverOffset') : 0
+            r: layout.r + (itemModel.get('hoverAnimation') // TODO: Change a name.
+                ? seriesModel.get('hoverOffset') : 0)
         };
 
         const labelLine = sector.getTextGuideLine();
