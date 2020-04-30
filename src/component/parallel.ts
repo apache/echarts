@@ -25,6 +25,9 @@ import parallelPreprocessor from '../coord/parallel/parallelPreprocessor';
 import '../coord/parallel/parallelCreator';
 import './parallelAxis';
 import GlobalModel from '../model/Global';
+
+// NOTE: DONT Remove this import, or GeoModel will be treeshaked.
+import '../coord/parallel/ParallelModel';
 import ParallelModel, { ParallelCoordinateSystemOption } from '../coord/parallel/ParallelModel';
 import ExtensionAPI from '../ExtensionAPI';
 import ComponentView from '../view/Component';
