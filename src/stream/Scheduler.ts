@@ -301,7 +301,7 @@ class Scheduler {
         opt?: PerformStageTaskOpt
     ): void {
         opt = opt || {};
-        let unfinished: boolean;
+        let unfinished: boolean = false;
         const scheduler = this;
 
         each(stageHandlers, function (stageHandler, idx) {
@@ -332,7 +332,9 @@ class Scheduler {
                 agentStubMap.each(function (stub) {
                     stub.perform(performArgs);
                 });
-                unfinished = unfinished || overallTask.perform(performArgs);
+                if (overallTask.perform(performArgs)) {
+                    unfinished = true;
+                }
             }
             else if (seriesTaskMap) {
                 seriesTaskMap.each(function (task, pipelineId) {
@@ -351,7 +353,10 @@ class Scheduler {
                     performArgs.skip = !stageHandler.performRawSeries
                         && ecModel.isSeriesFiltered(task.context.model);
                     scheduler.updatePayload(task, payload);
-                    unfinished = unfinished || task.perform(performArgs);
+
+                    if (task.perform(performArgs)) {
+                        unfinished = true;
+                    }
                 });
             }
         });

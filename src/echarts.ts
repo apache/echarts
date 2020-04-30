@@ -1631,8 +1631,6 @@ class ECharts extends Eventful {
                 const componentModel = componentView.__model;
                 componentView.render(componentModel, ecModel, api, payload);
 
-                componentView.group.markRedraw();
-
                 updateZ(componentModel, componentView);
                 updateHoverEmphasisHandler(componentView);
             });
@@ -1654,7 +1652,7 @@ class ECharts extends Eventful {
 
             labelManager.clearLabels();
 
-            let unfinished: boolean;
+            let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
                 chartView.__alive = true;
@@ -1665,11 +1663,11 @@ class ECharts extends Eventful {
                 if (dirtyMap && dirtyMap.get(seriesModel.uid)) {
                     renderTask.dirty();
                 }
-
-                unfinished = renderTask.perform(scheduler.getPerformArgs(renderTask)) || unfinished;
+                if (renderTask.perform(scheduler.getPerformArgs(renderTask))) {
+                    unfinished = true;
+                }
 
                 chartView.group.silent = !!seriesModel.get('silent');
-                chartView.group.markRedraw();
 
                 updateZ(seriesModel, chartView);
 

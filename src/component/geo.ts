@@ -21,7 +21,6 @@
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 
-import '../coord/geo/GeoModel';
 import '../coord/geo/geoCreator';
 import './geo/GeoView';
 import '../action/geoRoam';
