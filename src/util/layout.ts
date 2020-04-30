@@ -116,6 +116,7 @@ function boxLayout(
 
         child.x = x;
         child.y = y;
+        child.markRedraw();
 
         orient === 'horizontal'
             ? (x = nextX + gap)

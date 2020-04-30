@@ -222,7 +222,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // 选中时扇区偏移量
         selectedOffset: 10,
         // 高亮扇区偏移量
-        hoverOffset: 10,
+        hoverOffset: 5,
 
         // If use strategy to avoid label overlapping
         avoidLabelOverlap: true,

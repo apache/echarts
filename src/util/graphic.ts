@@ -45,7 +45,7 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Dictionary } from 'zrender/src/core/types';
 import LRU from 'zrender/src/core/LRU';
-import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
+import Displayable, { DisplayableProps, DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent, ElementTextConfig } from 'zrender/src/Element';
@@ -377,23 +377,12 @@ function singleEnterEmphasis(el: Element) {
     if (!el.states.emphasis) {
         return;
     }
-    const disp = el as Displayable;
 
-    const emphasisStyle = disp.states.emphasis.style;
-    const currentFill = disp.style && disp.style.fill;
-    const currentStroke = disp.style && disp.style.stroke;
-
-    el.useState('emphasis');
-
-    if (emphasisStyle && (currentFill || currentStroke)) {
-        if (!hasFillOrStroke(emphasisStyle.fill)) {
-            disp.style.fill = liftColor(currentFill);
-        }
-        if (!hasFillOrStroke(emphasisStyle.stroke)) {
-            disp.style.stroke = liftColor(currentStroke);
-        }
-        disp.z2 += Z2_EMPHASIS_LIFT;
-    }
+    el.useState('emphasis', true, {
+        duration: 300,
+        // TODO Configuration
+        easing: 'cubicOut'
+    });
 
     const textContent = el.getTextContent();
     if (textContent) {
@@ -403,8 +392,10 @@ function singleEnterEmphasis(el: Element) {
 }
 
 
-function singleEnterNormal(el: Element) {
-    el.clearStates();
+function singleLeaveEmphasis(el: Element) {
+    el.removeState('emphasis', {
+        duration: 300
+    });
     (el as ExtendedElement).__highlighted = false;
 }
 
@@ -452,6 +443,38 @@ export function clearStates(el: Element) {
     }
 }
 
+function elementStateProxy(this: Displayable, stateName: string): DisplayableState {
+    let state = this.states[stateName];
+    if (stateName === 'emphasis' && this.style) {
+        const currentFill = this.style.fill;
+        const currentStroke = this.style.stroke;
+        if (currentFill || currentStroke) {
+            state = state || {};
+            // Apply default color lift
+            let emphasisStyle = state.style || {};
+            let cloned = false;
+            if (!hasFillOrStroke(emphasisStyle.fill)) {
+                cloned = true;
+                // Not modify the original value.
+                state = extend({}, state);
+                emphasisStyle = extend({}, emphasisStyle);
+                emphasisStyle.fill = liftColor(currentFill);
+            }
+            if (!hasFillOrStroke(emphasisStyle.stroke)) {
+                if (!cloned) {
+                    state = extend({}, state);
+                    emphasisStyle = extend({}, emphasisStyle);
+                }
+                emphasisStyle.stroke = liftColor(currentStroke);
+            }
+
+            state.style = emphasisStyle;
+        }
+    }
+
+    return state;
+}
+
 /**
  * Set hover style (namely "emphasis style") of element.
  * @param el Should not be `zrender/graphic/Group`.
@@ -462,6 +485,8 @@ export function enableElementHoverEmphasis(el: Displayable, hoverStl?: ZRStylePr
         emphasisState.style = hoverStl;
     }
 
+    el.stateProxy = elementStateProxy;
+
     // FIXME
     // It is not completely right to save "normal"/"emphasis" flag on elements.
     // It probably should be saved on `data` of series. Consider the cases:
@@ -469,7 +494,7 @@ export function enableElementHoverEmphasis(el: Displayable, hoverStl?: ZRStylePr
     // again by dataZoom.
     // (2) call `setOption` and replace elements totally when they are highlighted.
     if ((el as ExtendedDisplayable).__highlighted) {
-        singleEnterNormal(el);
+        // singleLeaveEmphasis(el);
         singleEnterEmphasis(el);
     }
 }
@@ -485,7 +510,7 @@ export function leaveEmphasisWhenMouseOut(el: Element, e: ElementEvent) {
     !shouldSilent(el, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
         && !(el as ExtendedElement).__highByOuter
-        && traverseUpdateState((el as ExtendedElement), singleEnterNormal);
+        && traverseUpdateState((el as ExtendedElement), singleLeaveEmphasis);
 }
 
 export function enterEmphasis(el: Element, highlightDigit?: number) {
@@ -495,7 +520,7 @@ export function enterEmphasis(el: Element, highlightDigit?: number) {
 
 export function leaveEmphasis(el: Element, highlightDigit?: number) {
     !((el as ExtendedElement).__highByOuter &= ~(1 << (highlightDigit || 0)))
-        && traverseUpdateState((el as ExtendedElement), singleEnterNormal);
+        && traverseUpdateState((el as ExtendedElement), singleLeaveEmphasis);
 }
 
 function shouldSilent(el: Element, e: ElementEvent) {

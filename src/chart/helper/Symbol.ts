@@ -112,19 +112,6 @@ class Symbol extends graphic.Group {
     }
 
     /**
-     * Get scale(aka, current symbol size).
-     * Including the change caused by animation
-     */
-    getScale() {
-        const symbolPath = this.childAt(0);
-        return [symbolPath.scaleX, symbolPath.scaleY];
-    }
-
-    getOriginalScale() {
-        return [this._scaleX, this._scaleY];
-    }
-
-    /**
      * Highlight symbol
      */
     highlight() {
@@ -291,11 +278,20 @@ class Symbol extends graphic.Group {
 
         this._scaleX = symbolSize[0] / 2;
         this._scaleY = symbolSize[1] / 2;
-        symbolPath.onStateChange = (
-            hoverAnimation && seriesModel.isAnimationEnabled()
-        ) ? onStateChange : null;
 
-        graphic.enableHoverEmphasis(symbolPath, hoverItemStyle);
+        symbolPath.ensureState('emphasis').style = hoverItemStyle;
+
+        if (hoverAnimation && seriesModel.isAnimationEnabled()) {
+            const scaleEmphasisState = this.ensureState('emphasis');
+            const scale = Math.max(1.1, 3 / this._scaleY + 1);
+            scaleEmphasisState.scaleX = scale;
+            scaleEmphasisState.scaleY = scale;
+        }
+        else {
+            this.states.emphasis = null;
+        }
+
+        graphic.enableHoverEmphasis(this);
     }
 
     fadeOut(cb: () => void, opt?: {
@@ -330,33 +326,6 @@ class Symbol extends graphic.Group {
     }
 }
 
-function onStateChange(this: ECSymbol, fromState: DisplayState, toState: DisplayState) {
-    // Do not support this hover animation util some scenario required.
-    // Animation can only be supported in hover layer when using `el.incremetal`.
-    if (this.incremental || this.useHoverLayer) {
-        return;
-    }
-
-    const scale = (this.parent as Symbol).getOriginalScale();
-    if (toState === 'emphasis') {
-        const ratio = scale[1] / scale[0];
-        const emphasisOpt = {
-            scaleX: Math.max(scale[0] * 1.1, scale[0] + 3),
-            scaleY: Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-        };
-        // FIXME
-        // modify it after support stop specified animation.
-        // toState === fromState
-        //     ? (this.stopAnimation(), this.attr(emphasisOpt))
-        this.animateTo(emphasisOpt, { duration: 400, easing: 'elasticOut' });
-    }
-    else if (toState === 'normal') {
-        this.animateTo({
-            scaleX: scale[0],
-            scaleY: scale[1]
-        }, { duration: 400, easing: 'elasticOut' });
-    }
-}
 
 function driftSymbol(this: ECSymbol, dx: number, dy: number) {
     this.parent.drift(dx, dy);

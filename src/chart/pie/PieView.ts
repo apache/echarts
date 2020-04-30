@@ -24,11 +24,10 @@ import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Payload, DisplayState, ECElement, ColorString } from '../../util/types';
+import { Payload, ColorString } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
-import { Dictionary } from 'zrender/src/core/types';
-import Element from 'zrender/src/Element';
+import { ElementAnimateConfig } from 'zrender/src/Element';
 
 function updateDataSelected(
     this: PiePiece,
@@ -40,7 +39,6 @@ function updateDataSelected(
     const data = seriesModel.getData();
     const dataIndex = graphic.getECData(this).dataIndex;
     const name = data.getName(dataIndex);
-    const selectedOffset = seriesModel.get('selectedOffset');
 
     api.dispatchAction({
         type: 'pieToggleSelect',
@@ -49,67 +47,38 @@ function updateDataSelected(
         seriesId: seriesModel.id
     });
 
-    data.each(function (idx) {
-        toggleItemSelected(
-            data.getItemGraphicEl(idx),
-            data.getItemLayout(idx),
-            seriesModel.isSelected(data.getName(idx)),
-            selectedOffset,
-            hasAnimation
-        );
-    });
-}
-
-function toggleItemSelected(
-    el: Element,
-    layout: Dictionary<any>, // FIXME:TS make a type.
-    isSelected: boolean,
-    selectedOffset: number,
-    hasAnimation: boolean
-): void {
-    const midAngle = (layout.startAngle + layout.endAngle) / 2;
-
-    const dx = Math.cos(midAngle);
-    const dy = Math.sin(midAngle);
-
-    const offset = isSelected ? selectedOffset : 0;
-    const obj = {
-        x: dx * offset,
-        y: dy * offset
+    const animationCfg: ElementAnimateConfig = {
+        duration: seriesModel.get('animation') ? 200 : 0,
+        easing: 'cubicOut'
     };
-
-    hasAnimation
-        // animateTo will stop revious animation like update transition
-        ? el.animate()
-            .when(200, obj)
-            .start('bounceOut')
-        : el.attr(obj);
+    data.each(function (idx) {
+        const el = data.getItemGraphicEl(idx);
+        el.toggleState('select', seriesModel.isSelected(data.getName(idx)), animationCfg);
+    });
 }
 
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
-class PiePiece extends graphic.Group {
+class PiePiece extends graphic.Sector {
 
     constructor(data: List, idx: number) {
         super();
 
-        const sector = new graphic.Sector({
-            z2: 2
-        });
+        this.z2 = 2;
 
         const polyline = new graphic.Polyline();
         const text = new graphic.Text();
-        this.add(sector);
-        this.add(polyline);
 
-        sector.setTextContent(text);
+        this.setTextGuideLine(polyline);
+
+        this.setTextContent(text);
 
         this.updateData(data, idx, true);
     }
 
     updateData(data: List, idx: number, firstCreate?: boolean): void {
-        const sector = this.childAt(0) as graphic.Sector;
+        const sector = this;
 
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
@@ -161,53 +130,50 @@ class PiePiece extends graphic.Group {
         const sectorEmphasisState = sector.ensureState('emphasis');
         sectorEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
+        const sectorSelectState = sector.ensureState('select');
+        const midAngle = (layout.startAngle + layout.endAngle) / 2;
+        const offset = seriesModel.get('selectedOffset');
+        const dx = Math.cos(midAngle) * offset;
+        const dy = Math.sin(midAngle) * offset;
+        sectorSelectState.x = dx;
+        sectorSelectState.y = dy;
+
+
+        sector.toggleState('select', seriesModel.isSelected(data.getName(idx)), {
+            duration: seriesModel.get('animation') ? 200 : 0,
+            easing: 'cubicOut'
+        });
+
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
-
-        // Toggle selected
-        toggleItemSelected(
-            this,
-            data.getItemLayout(idx),
-            seriesModel.isSelected(data.getName(idx)),
-            seriesModel.get('selectedOffset'),
-            seriesModel.get('animation')
-        );
 
         // Label and text animation should be applied only for transition type animation when update
         const withAnimation = !firstCreate && animationTypeUpdate === 'transition';
         this._updateLabel(data, idx, withAnimation);
 
-        (this as ECElement).onStateChange = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
-            ? function (fromState: DisplayState, toState: DisplayState): void {
-                if (toState === 'emphasis') {
+        const emphasisState = sector.ensureState('emphasis');
+        emphasisState.shape = {
+            r: layout.r + itemModel.get('hoverAnimation') // TODO: Change a name.
+                ? seriesModel.get('hoverOffset') : 0
+        };
 
-                    // Sector may has animation of updating data. Force to move to the last frame
-                    // Or it may stopped on the wrong shape
-                    sector.stopAnimation(true);
-                    sector.animateTo({
-                        shape: {
-                            r: layout.r + seriesModel.get('hoverOffset')
-                        }
-                    }, { duration: 300, easing: 'elasticOut' });
-                }
-                else {
-                    sector.stopAnimation(true);
-                    sector.animateTo({
-                        shape: {
-                            r: layout.r
-                        }
-                    }, { duration: 300, easing: 'elasticOut' });
-                }
-            }
-            : null;
+        const labelLine = sector.getTextGuideLine();
+        const labelText = sector.getTextContent();
+
+        const labelLineSelectState = labelLine.ensureState('select');
+        const labelTextSelectState = labelText.ensureState('select');
+        labelLineSelectState.x = dx;
+        labelLineSelectState.y = dy;
+        labelTextSelectState.x = dx;
+        labelTextSelectState.y = dy;
 
         graphic.enableHoverEmphasis(this);
     }
 
     private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
-        const sector = this.childAt(0);
-        const labelLine = this.childAt(1) as graphic.Polyline;
-        const labelText = sector.getTextContent() as graphic.Text;
+        const sector = this;
+        const labelLine = sector.getTextGuideLine();
+        const labelText = sector.getTextContent();
 
         const seriesModel = data.hostModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
@@ -358,11 +324,9 @@ class PieView extends ChartView {
             .add(function (idx) {
                 const piePiece = new PiePiece(data, idx);
                 // Default expansion animation
-                if (isFirstRender && animationType !== 'scale') {
-                    piePiece.eachChild(function (child) {
-                        child.stopAnimation(true);
-                    });
-                }
+                // if (isFirstRender && animationType !== 'scale') {
+                //     piePiece.stopAnimation(true);
+                // }
 
                 selectedMode && piePiece.on('click', onSectorClick);
 
@@ -375,11 +339,9 @@ class PieView extends ChartView {
 
                 graphic.clearStates(piePiece);
 
-                if (!isFirstRender && animationTypeUpdate !== 'transition') {
-                    piePiece.eachChild(function (child) {
-                        child.stopAnimation(true);
-                    });
-                }
+                // if (!isFirstRender && animationTypeUpdate !== 'transition') {
+                //     piePiece.stopAnimation(true);
+                // }
 
                 piePiece.updateData(data, newIdx);
 

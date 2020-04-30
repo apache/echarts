@@ -128,11 +128,20 @@ class LabelManager {
         const hostEl = label.__hostTarget;
         const textConfig = hostEl.textConfig || {};
 
+        // TODO: If label is in other state.
         const labelTransform = label.getComputedTransform();
         const labelRect = label.getBoundingRect().plain();
         BoundingRect.applyTransform(labelRect, labelRect, labelTransform);
 
-        dummyTransformable.setLocalTransform(labelTransform);
+        if (labelTransform) {
+            dummyTransformable.setLocalTransform(labelTransform);
+        }
+        else {
+            // Identity transform.
+            dummyTransformable.x = dummyTransformable.y = dummyTransformable.rotation =
+                dummyTransformable.originX = dummyTransformable.originY = 0;
+            dummyTransformable.scaleX = dummyTransformable.scaleY = 1;
+        }
 
         const host = label.__hostTarget;
         let hostRect;
@@ -224,6 +233,8 @@ class LabelManager {
             layoutOption = layoutOption || {};
             if (hostEl) {
                 hostEl.setTextConfig({
+                    // Force to set local false.
+                    local: false,
                     // Ignore position and rotation config on the host el if x or y is changed.
                     position: (layoutOption.x != null || layoutOption.y != null)
                         ? null : defaultLabelAttr.attachedPos,
@@ -346,6 +357,10 @@ class LabelManager {
                 });
             }
         }
+    }
+
+    updateLabelGuidLine() {
+
     }
 }
 
