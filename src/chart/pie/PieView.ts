@@ -62,7 +62,7 @@ function updateDataSelected(
  */
 class PiePiece extends graphic.Sector {
 
-    constructor(data: List, idx: number) {
+    constructor(data: List, idx: number, startAngle: number) {
         super();
 
         this.z2 = 2;
@@ -74,10 +74,10 @@ class PiePiece extends graphic.Sector {
 
         this.setTextContent(text);
 
-        this.updateData(data, idx, true);
+        this.updateData(data, idx, startAngle, true);
     }
 
-    updateData(data: List, idx: number, firstCreate?: boolean): void {
+    updateData(data: List, idx: number, startAngle?: number, firstCreate?: boolean): void {
         const sector = this;
 
         const seriesModel = data.hostModel as PieSeriesModel;
@@ -104,26 +104,31 @@ class PiePiece extends graphic.Sector {
             }
             // Expansion
             else {
-                sector.shape.endAngle = layout.startAngle;
-                graphic.updateProps(sector, {
-                    shape: {
-                        endAngle: layout.endAngle
-                    }
-                }, seriesModel, idx);
+                if (startAngle != null) {
+                    sector.setShape({ startAngle, endAngle: startAngle });
+                    graphic.initProps(sector, {
+                        shape: {
+                            startAngle: layout.startAngle,
+                            endAngle: layout.endAngle
+                        }
+                    }, seriesModel, idx);
+                }
+                else {
+                    sector.shape.endAngle = layout.startAngle;
+                    graphic.updateProps(sector, {
+                        shape: {
+                            endAngle: layout.endAngle
+                        }
+                    }, seriesModel, idx);
+                }
             }
 
         }
         else {
-            if (animationTypeUpdate === 'expansion') {
-                // Sectors are set to be target shape and an overlaying clipPath is used for animation
-                sector.setShape(sectorShape);
-            }
-            else {
-                // Transition animation from the old shape
-                graphic.updateProps(sector, {
-                    shape: sectorShape
-                }, seriesModel, idx);
-            }
+            // Transition animation from the old shape
+            graphic.updateProps(sector, {
+                shape: sectorShape
+            }, seriesModel, idx);
         }
 
         sector.useStyle(data.getItemVisual(idx, 'style'));
@@ -311,22 +316,28 @@ class PieView extends ChartView {
         const group = this.group;
 
         const hasAnimation = ecModel.get('animation');
-        const isFirstRender = !oldData;
-        const animationType = seriesModel.get('animationType');
-        const animationTypeUpdate = seriesModel.get('animationTypeUpdate');
 
         const onSectorClick = zrUtil.curry(
             updateDataSelected, this.uid, seriesModel, hasAnimation, api
         );
 
         const selectedMode = seriesModel.get('selectedMode');
+
+        let startAngle: number;
+        // First render
+        if (!oldData) {
+            let shape = data.getItemLayout(0) as graphic.Sector['shape'];
+            for (let s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
+                shape = data.getItemLayout(s);
+            }
+            if (shape) {
+                startAngle = shape.startAngle;
+            }
+        }
+
         data.diff(oldData)
             .add(function (idx) {
-                const piePiece = new PiePiece(data, idx);
-                // Default expansion animation
-                // if (isFirstRender && animationType !== 'scale') {
-                //     piePiece.stopAnimation(true);
-                // }
+                const piePiece = new PiePiece(data, idx, startAngle);
 
                 selectedMode && piePiece.on('click', onSectorClick);
 
@@ -339,11 +350,7 @@ class PieView extends ChartView {
 
                 graphic.clearStates(piePiece);
 
-                // if (!isFirstRender && animationTypeUpdate !== 'transition') {
-                //     piePiece.stopAnimation(true);
-                // }
-
-                piePiece.updateData(data, newIdx);
+                piePiece.updateData(data, newIdx, startAngle);
 
                 piePiece.off('click');
                 selectedMode && piePiece.on('click', onSectorClick);
@@ -356,60 +363,13 @@ class PieView extends ChartView {
             })
             .execute();
 
-        if (
-            hasAnimation && data.count() > 0
-            && (isFirstRender ? animationType !== 'scale' : animationTypeUpdate !== 'transition')
-        ) {
-            let shape = data.getItemLayout(0);
-            for (let s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
-                shape = data.getItemLayout(s);
-            }
-
-            const r = Math.max(api.getWidth(), api.getHeight()) / 2;
-
-            const removeClipPath = zrUtil.bind(group.removeClipPath, group);
-            group.setClipPath(this._createClipPath(
-                shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel, isFirstRender
-            ));
+        // Always use initial animation.
+        if (seriesModel.get('animationTypeUpdate') !== 'expansion') {
+            this._data = data;
         }
-        else {
-            // clipPath is used in first-time animation, so remove it when otherwise. See: #8994
-            group.removeClipPath();
-        }
-
-        this._data = data;
     }
 
     dispose() {}
-
-    _createClipPath(
-        cx: number, cy: number, r: number,
-        startAngle: number, clockwise: boolean,
-        // @ts-ignore FIXME:TS make type in util.grpahic
-        cb,
-        seriesModel: PieSeriesModel, isFirstRender: boolean
-    ): graphic.Sector {
-        const clipPath = new graphic.Sector({
-            shape: {
-                cx: cx,
-                cy: cy,
-                r0: 0,
-                r: r,
-                startAngle: startAngle,
-                endAngle: startAngle,
-                clockwise: clockwise
-            }
-        });
-
-        const initOrUpdate = isFirstRender ? graphic.initProps : graphic.updateProps;
-        initOrUpdate(clipPath, {
-            shape: {
-                endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
-            }
-        }, seriesModel, cb);
-
-        return clipPath;
-    }
 
     containPoint(point: number[], seriesModel: PieSeriesModel): boolean {
         const data = seriesModel.getData();
