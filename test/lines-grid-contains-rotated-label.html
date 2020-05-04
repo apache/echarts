@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="lib/reset.css">
+</head>
+
+<body>
+    <style>
+        #main {
+            height: 500px;
+        }
+    </style>
+    <div id="main"></div>
+    <script>
+
+        var echarts;
+        var colorTool;
+        var chart;
+        var myChart;
+        var groupCategories = [];
+        var groupColors = [];
+
+        require([
+            'echarts'
+            // 'zrender/tool/color',
+            // 'echarts/chart/lines',
+            // 'echarts/chart/line',
+            // 'echarts/component/grid',
+            // 'echarts/component/legend',
+            // 'echarts/component/tooltip',
+            // 'echarts/component/toolbox',
+            // 'echarts/component/visualMap'
+        ], function (ec, ct) {
+            echarts = ec;
+            colorTool = echarts.color;
+            chart = myChart = echarts.init(document.getElementById('main'));
+
+
+
+            var zrUtil = echarts.util;
+            var zrVector = echarts.vector;
+            var zrMatrix = echarts.matrix;
+            var zrNumber = echarts.number;
+            var zrFormat = echarts.format;
+            var zrGraphic = echarts.graphic;
+
+            data = [["2000-06-05", 116], ["2000-06-06", 129], ["2000-06-07", 135], ["2000-06-08", 86], ["2000-06-09", 73], ["2000-06-10", 85]];
+
+            var dateList = data.map(function (item) {
+                return item[0];
+            });
+            var valueList = data.map(function (item) {
+                return item[1];
+            });
+
+            option = {
+                title: {
+                    text: '在grid.containLabel模式下xAxis的rotate修正',
+                    subtext: '修正后，两根x轴上的label与grid底部相切'
+                },
+                xAxis: [{
+                    data: dateList,
+                    axisLabel: {
+                        rotate: 30,
+                    },
+                }, {
+                    data: dateList,
+                    gridIndex: 1,
+                    axisLabel: {
+                        rotate: -30,
+                    },
+                }],
+                yAxis: [{
+                    splitLine: { show: false }
+                }, {
+                    splitLine: { show: false },
+                    gridIndex: 1
+                }],
+                grid: [{
+                    left: 0,
+                    bottom: 0,
+                    width: '50%',
+                    containLabel: true
+                }, {
+                    left: '50%',
+                    bottom: 0,
+                    width: '50%',
+                    containLabel: true
+                }],
+                series: [{
+                    type: 'line',
+                    data: valueList
+                }, {
+                    type: 'line',
+                    data: valueList,
+                    xAxisIndex: 1,
+                    yAxisIndex: 1
+                }]
+            };
+
+            chart.setOption(option);
+        });
+
+    </script>
+</body>
+
+</html>
