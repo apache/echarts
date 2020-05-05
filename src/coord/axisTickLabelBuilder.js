@@ -351,15 +351,21 @@ function makeLabelsByNumericCategoryInterval(axis, categoryInterval, onlyTick) {
 }
 
 // When interval is function, the result `false` means ignore the tick.
+// Fix #12142: Add judgement on showMinLabel and showMaxLabel beside interval function
 // It is time consuming for large category data.
 function makeLabelsByCustomizedCategoryInterval(axis, categoryInterval, onlyTick) {
     var ordinalScale = axis.scale;
     var labelFormatter = makeLabelFormatter(axis);
     var result = [];
+    var includeMinLabel = axis.getLabelModel().get('showMinLabel');
+    var includeMaxLabel = axis.getLabelModel().get('showMaxLabel');
+    var maxTick=ordinalScale.getTicks().length-1;
 
     zrUtil.each(ordinalScale.getTicks(), function (tickValue) {
         var rawLabel = ordinalScale.getLabel(tickValue);
-        if (categoryInterval(tickValue, rawLabel)) {
+        if (categoryInterval(tickValue, rawLabel) || 
+            (tickValue === 0 && includeMinLabel) || 
+            (tickValue === maxTick && includeMaxLabel)) {
             result.push(onlyTick
                 ? tickValue
                 : {
