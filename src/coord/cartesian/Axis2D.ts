@@ -18,11 +18,13 @@
 */
 
 import Axis from '../Axis';
-import { DimensionName } from '../../util/types';
+import { DimensionName, OrdinalNumber } from '../../util/types';
 import Scale from '../../scale/Scale';
 import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
 import { OptionAxisType } from '../axisCommonTypes';
+import {isEqualArray} from 'zrender/src/core/util';
+import OrdinalScale from '../../scale/Ordinal';
 
 
 interface Axis2D {
@@ -110,6 +112,23 @@ class Axis2D extends Axis {
         return this.coordToData(this.toLocalCoord(point[this.dim === 'x' ? 0 : 1]), clamp);
     }
 
+    /**
+     * Set categoryIndices and return if has order changed
+     * @param newIndices new categoryIndices
+     * @return if the order has changed
+     */
+    setCategoryIndices(newIndices: OrdinalNumber[], force?: boolean): boolean {
+        if (this.type !== 'category') {
+            return false;
+        }
+
+        const isOrderChanged = force || !isEqualArray(this.model.option.categoryIndices, newIndices);
+        if (isOrderChanged) {
+            this.model.option.categoryIndices = newIndices;
+            (this.scale as OrdinalScale).setCategoryIndices(newIndices);
+        }
+        return isOrderChanged;
+    }
 
 }
 

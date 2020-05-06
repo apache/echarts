@@ -1,0 +1,157 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 600px;
+            }
+        </style>
+
+        <button id='btn-1'>A++</button>
+        <button id='btn-2'>B++</button>
+        <button id='btn-3'>C++</button>
+        <button id='btn-4'>D++</button>
+
+        <div id="main" class="chart"></div>
+        <script>
+
+        require(
+            (testHelper.hasURLParam('en')
+                ? [
+                    'echarts',
+                    // 'echarts/lang/en',
+                ]
+                : [
+                    'echarts'
+                ]
+            ).concat(
+                [
+                    // 'echarts/chart/bar',
+                    // 'echarts/chart/line',
+                    // 'echarts/component/legend',
+                    // 'echarts/component/graphic',
+                    // 'echarts/component/grid',
+                    // 'echarts/component/tooltip',
+                    // 'echarts/component/brush',
+                    // 'echarts/component/toolbox',
+                    // 'echarts/component/title',
+                    // 'zrender/vml/vml'
+                ]
+            ),
+            function (echarts) {
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    // renderer: 'svg'
+                });
+
+                var option = {
+                    xAxis: {
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['A', 'B', 'C', 'D'],
+                        sort: true,
+                        realtimeSort: true,
+                        inverse: true,
+                        axisLabel: {
+                            formatter: function (label, id) {
+                                return label + '-' + id;
+                            }
+                        },
+                        animationDuration: 300,
+                        animationDurationUpdate: 300
+                    },
+                    series: [{
+                        name: 'X',
+                        type: 'bar',
+                        data: [120, 200, 90, 40],
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}元'
+                        }
+                    // }, {
+                        // name: 'Y',
+                        // type: 'bar',
+                        // data: [20, 200, 40, 90],
+                        // label: {
+                        //     show: true,
+                        //     position: 'right',
+                        //     formatter: '{a}'
+                        // }
+                    // }, {
+                    //     name: 'Z',
+                    //     type: 'bar',
+                    //     data: [100, 20, 70, 80],
+                    //     label: {
+                    //         show: true,
+                    //         position: 'right',
+                    //         formatter: '{a}'
+                    //     }
+                    }],
+                    legend: {
+                        show: true
+                    },
+                    animationDurationUpdate: 10000
+                };
+
+                chart.setOption(option);
+
+                for (var x = 0; x < 4; ++x) {
+                    (function (x) {
+                        var btn = document.getElementById('btn-' + (x + 1));
+                        btn.onclick = function () {
+                            var data = option.series[0].data;
+                            data[x] += Math.round(100 * Math.random());
+                            chart.setOption(option);
+                        };
+                    })(x);
+                }
+
+
+                // setTimeout(function () {
+                //     console.log('go')
+                //     chart.setOption({});
+                // }, 5000);
+            }
+
+        );
+        </script>
+    </body>
+</html>

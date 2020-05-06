@@ -1041,9 +1041,11 @@ function animateOrSetProps<Props>(
         getAnimationDelayParams?: (el: Element<Props>, dataIndex: number) => AnimationDelayCallbackParam
     },
     dataIndex?: number | (() => void),
-    cb?: () => void
+    cb?: () => void,
+    during?: () => void
 ) {
     if (typeof dataIndex === 'function') {
+        during = cb;
         cb = dataIndex;
         dataIndex = null;
     }
@@ -1080,7 +1082,8 @@ function animateOrSetProps<Props>(
                 delay: animationDelay || 0,
                 easing: animationEasing,
                 done: cb,
-                force: !!cb
+                force: !!cb || !!during,
+                during: during
             })
             : (el.stopAnimation(), el.attr(props), cb && cb());
     }
@@ -1113,9 +1116,10 @@ function updateProps<Props>(
     // TODO: TYPE AnimatableModel
     animatableModel?: Model<AnimationOptionMixin>,
     dataIndex?: number | (() => void),
-    cb?: () => void
+    cb?: () => void,
+    during?: () => void
 ) {
-    animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
+    animateOrSetProps(true, el, props, animatableModel, dataIndex, cb, during);
 }
 
 export {updateProps};
@@ -1133,9 +1137,10 @@ export function initProps<Props>(
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
     dataIndex?: number | (() => void),
-    cb?: () => void
+    cb?: () => void,
+    during?: () => void
 ) {
-    animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
+    animateOrSetProps(false, el, props, animatableModel, dataIndex, cb, during);
 }
 
 /**

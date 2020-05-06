@@ -408,12 +408,21 @@ class Grid implements CoordinateSystemMaster {
      * Update cartesian properties from series.
      */
     private _updateScale(ecModel: GlobalModel, gridModel: GridModel): void {
+        const sortedDataValue: number[] = [];
+        const sortedDataIndex: number[] = [];
+        let hasCategoryIndices = false;
+
         // Reset scale
         each(this._axesList, function (axis) {
             axis.scale.setExtent(Infinity, -Infinity);
+            if (axis.type === 'category') {
+                const categoryIndices = axis.model.get('categoryIndices');
+                if (categoryIndices && categoryIndices.length > 0) {
+                    hasCategoryIndices = true;
+                    (axis.scale as OrdinalScale).setCategoryIndices(categoryIndices);
+                }
+            }
         });
-        const sortedDataValue: number[] = [];
-        const sortedDataIndex: number[] = [];
 
         ecModel.eachSeries(function (seriesModel) {
             if (isCartesian2D(seriesModel)) {
@@ -437,11 +446,11 @@ class Grid implements CoordinateSystemMaster {
                 if (data.type === 'list') {
                     unionExtent(data, xAxis);
                     unionExtent(data, yAxis);
-                    if (!sortedDataIndex.length) {
-                        // Only sort by the first series
-                        sortCategory(data, xAxis, xAxisModel, yAxis);
-                        sortCategory(data, yAxis, yAxisModel, xAxis);
-                    }
+                    // if (!hasCategoryIndices && !sortedDataIndex.length) {
+                    //     // Only sort by the first series
+                    //     sortCategory(data, xAxis, xAxisModel, yAxis);
+                    //     sortCategory(data, yAxis, yAxisModel, xAxis);
+                    // }
                 }
             }
         }, this);
@@ -476,7 +485,6 @@ class Grid implements CoordinateSystemMaster {
                                 }
                             }
                             sortedDataIndex.push(i);
-                            console.log(sortedDataValue, sortedDataIndex);
                             return;
                         }
                     }
@@ -484,8 +492,7 @@ class Grid implements CoordinateSystemMaster {
                     sortedDataValue.push(value as number);
                     sortedDataIndex.push(sortedDataIndex.length);
                 });
-                console.log(sortedDataValue, sortedDataIndex);
-                (axis.scale as OrdinalScale).setSortedDataIndices(sortedDataIndex);
+                (axis.scale as OrdinalScale).setCategoryIndices(sortedDataIndex);
             }
         }
     }

@@ -35,10 +35,10 @@ import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import Sausage from '../../util/shape/sausage';
 import ChartView from '../../view/Chart';
-import List from '../../data/List';
+import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { StageHandlerProgressParams, ZRElementEvent, ColorString } from '../../util/types';
+import { StageHandlerProgressParams, ZRElementEvent, ColorString, OrdinalNumber, Payload } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -46,6 +46,7 @@ import type { RectLike } from 'zrender/src/core/BoundingRect';
 import type Model from '../../model/Model';
 import { isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { getDefaultLabel } from '../helper/labelHelper';
+import OrdinalScale from '../../scale/Ordinal';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 const _eventPos = [0, 0];
@@ -138,22 +139,31 @@ class BarView extends ChartView {
     }
 
     _renderNormal(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
+        const that = this;
         const group = this.group;
         const data = seriesModel.getData();
         const oldData = this._data;
 
         const coord = seriesModel.coordinateSystem;
         const baseAxis = coord.getBaseAxis();
+        let valueAxis: Axis2D;
         let isHorizontalOrRadial: boolean;
 
         if (coord.type === 'cartesian2d') {
             isHorizontalOrRadial = (baseAxis as Axis2D).isHorizontal();
+            valueAxis = coord.getOtherAxis(baseAxis as Axis2D);
         }
         else if (coord.type === 'polar') {
             isHorizontalOrRadial = baseAxis.dim === 'angle';
         }
 
         const animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
+        const axisAnimationModel = baseAxis.model;
+
+        const axis2DModel = (baseAxis as Axis2D).model;
+        const realtimeSort = coord.type === 'cartesian2d'
+            && axis2DModel.get('sort') && axis2DModel.get('realtimeSort');
+        let isFirstSortData = true;
 
         const needsClip = seriesModel.get('clip', true);
         const coordSysClipArea = getClipArea(coord, data);
@@ -169,6 +179,30 @@ class BarView extends ChartView {
 
         const bgEls: BarView['_backgroundEls'] = [];
         const oldBgEls = this._backgroundEls;
+
+        let during: () => void = null;
+        if (coord.type === 'cartesian2d' && realtimeSort && isFirstSortData) {
+            const oldOrder = (baseAxis as Axis2D).model.option.categoryIndices;
+
+            const orderMap = (idx: number) => {
+                return data.get(valueAxis.dim, idx) as number;
+            };
+            const newOrder = this._dataSort(data, orderMap);
+            const orderChanged = !zrUtil.isEqualArray(oldOrder, newOrder);
+
+            during = orderChanged
+                ? () => {
+                    that._updateSort(
+                        data,
+                        baseAxis as Axis2D,
+                        isHorizontalOrRadial,
+                        ecModel,
+                        api
+                    );
+                }
+                : null;
+        }
+
 
         data.diff(oldData)
             .add(function (dataIndex) {
@@ -198,8 +232,10 @@ class BarView extends ChartView {
                     }
                 }
 
+                isFirstSortData = false;
+
                 const el = elementCreator[coord.type](
-                    dataIndex, layout, isHorizontalOrRadial, animationModel, false, roundCap
+                    dataIndex, layout, isHorizontalOrRadial, animationModel, false, during, roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -238,15 +274,49 @@ class BarView extends ChartView {
                     }
                 }
 
+                isFirstSortData = false;
+
                 if (el) {
                     clearStates(el);
-                    updateProps(el as Path, {
-                        shape: layout
-                    }, animationModel, newIndex);
+
+                    if (coord.type === 'cartesian2d'
+                        && baseAxis.type === 'category' && (baseAxis as Axis2D).model.get('realtimeSort')
+                    ) {
+                        const rect = layout as RectShape;
+                        let seriesShape, axisShape;
+                        if (baseAxis.dim === 'x') {
+                            axisShape = {
+                                x: rect.x
+                            };
+                            seriesShape = {
+                                y: rect.y,
+                                width: rect.width,
+                                height: rect.height
+                            };
+                        }
+                        else {
+                            axisShape = {
+                                y: rect.y
+                            };
+                            seriesShape = {
+                                x: rect.x,
+                                width: rect.width,
+                                height: rect.height
+                            };
+                        }
+
+                        updateProps(el as Path, { shape: seriesShape }, animationModel, newIndex, null, during);
+                        updateProps(el as Path, { shape: axisShape }, axisAnimationModel, newIndex, null);
+                    }
+                    else {
+                        updateProps(el as Path, {
+                            shape: layout
+                        }, animationModel, newIndex, null);
+                    }
                 }
                 else {
                     el = elementCreator[coord.type](
-                        newIndex, layout, isHorizontalOrRadial, animationModel, true, roundCap
+                        newIndex, layout, isHorizontalOrRadial, animationModel, true, during, roundCap
                     );
                 }
 
@@ -301,6 +371,56 @@ class BarView extends ChartView {
     _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel) {
         this._removeBackground();
         createLarge(seriesModel, this.group, true);
+    }
+
+    _dataSort(
+        data: List<BarSeriesModel, DefaultDataVisual>,
+        map: ((idx: number) => number)
+    ): OrdinalNumber[] {
+        const dataValues: number[] = [];
+        const order: OrdinalNumber[] = [];
+        data.each(idx => {
+            const value = map(idx);
+            for (let i = 0, len = dataValues.length; i < len; ++i) {
+                if (dataValues[i] < value) {
+                    dataValues.splice(i, 0, value);
+                    for (let j = 0; j < len; ++j) {
+                        if (order[j] >= i) {
+                            ++order[j];
+                        }
+                    }
+                    order.push(i);
+                    return;
+                }
+            }
+            dataValues.push(value);
+            order.push(order.length);
+        });
+        return order;
+    }
+
+    _updateSort(
+        data: List<BarSeriesModel, DefaultDataVisual>,
+        baseAxis: Axis2D,
+        isHorizontal: boolean,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
+        const orderMap = (idx: number) => {
+            const shape = (data.getItemGraphicEl(idx) as Rect).shape;
+            return isHorizontal ? shape.y + shape.height : shape.x + shape.width;
+        }
+        const newOrder = this._dataSort(data, orderMap);
+
+        const hasOrderChanged = baseAxis.setCategoryIndices(newOrder);
+        if (hasOrderChanged) {
+            const action = {
+                type: 'axisOrderChanged',
+                componentType: baseAxis.dim + 'Axis',
+                axisId: baseAxis.index
+            } as Payload;
+            api.dispatchAction(action);
+        }
     }
 
     remove(ecModel?: GlobalModel) {
@@ -387,7 +507,8 @@ const clip: {
 interface ElementCreator {
     (
         dataIndex: number, layout: RectLayout | SectorLayout, isHorizontalOrRadial: boolean,
-        animationModel: BarSeriesModel, isUpdate: boolean, roundCap?: boolean
+        animationModel: BarSeriesModel, isUpdate: boolean, during: () => void,
+        roundCap?: boolean
     ): BarPossiblePath
 }
 
@@ -397,7 +518,7 @@ const elementCreator: {
 
     cartesian2d(
         dataIndex, layout: RectLayout, isHorizontal,
-        animationModel, isUpdate
+        animationModel, isUpdate, during
     ) {
         const rect = new Rect({
             shape: zrUtil.extend({}, layout),
@@ -416,7 +537,7 @@ const elementCreator: {
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(rect, {
                 shape: animateTarget
-            }, animationModel, dataIndex);
+            }, animationModel, dataIndex, null, during);
         }
 
         return rect;

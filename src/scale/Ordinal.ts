@@ -39,7 +39,7 @@ class OrdinalScale extends Scale {
     readonly type = 'ordinal';
 
     private _ordinalMeta: OrdinalMeta;
-    private _sortedDataIndices: number[];
+    private _categoryIndices: OrdinalNumber[];
 
 
     constructor(setting?: {
@@ -55,7 +55,7 @@ class OrdinalScale extends Scale {
             ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
         }
         this._ordinalMeta = ordinalMeta;
-        this._sortedDataIndices = [];
+        this._categoryIndices = [];
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }
 
@@ -76,12 +76,12 @@ class OrdinalScale extends Scale {
      * Normalize given rank or name to linear [0, 1]
      */
     normalize(val: OrdinalRawValue | OrdinalNumber): number {
-        val = this.getSortedDataIndex(this.parse(val));
+        val = this.getCategoryIndices(this.parse(val));
         return scaleHelper.normalize(val, this._extent);
     }
 
     scale(val: number): OrdinalNumber {
-        val = this.getSortedDataIndex(val);
+        val = this.getCategoryIndices(val);
         return Math.round(scaleHelper.scale(val, this._extent));
     }
 
@@ -103,9 +103,13 @@ class OrdinalScale extends Scale {
         return;
     }
 
-    getSortedDataIndex(n: OrdinalNumber): OrdinalNumber {
-        if (this._sortedDataIndices.length) {
-            return this._sortedDataIndices[n];
+    setCategoryIndices(indices: OrdinalNumber[]): void {
+        this._categoryIndices = indices;
+    }
+
+    getCategoryIndices(n: OrdinalNumber): OrdinalNumber {
+        if (this._categoryIndices.length) {
+            return this._categoryIndices[n];
         }
         else {
             return n;
@@ -122,10 +126,6 @@ class OrdinalScale extends Scale {
             // Return empty if it's not exist.
             return cateogry == null ? '' : cateogry + '';
         }
-    }
-
-    setSortedDataIndices(index: number[]): void {
-        this._sortedDataIndices = index;
     }
 
     count(): number {

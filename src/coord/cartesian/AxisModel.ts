@@ -25,6 +25,7 @@ import Axis2D from './Axis2D';
 import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
 import { AxisBaseModel } from '../AxisBaseModel';
+import {OrdinalNumber} from '../../util/types';
 
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -36,6 +37,8 @@ interface CartesianAxisOption extends AxisBaseOption {
     // Offset is for multiple axis on the same position.
     offset?: number;
     sort?: boolean;
+    realtimeSort?: boolean;
+    categoryIndices?: OrdinalNumber[];
 }
 
 class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
@@ -78,7 +81,9 @@ const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
     offset: 0,
-    sort: false
+    sort: false,
+    realtimeSort: false,
+    categoryIndices: []
 };
 
 axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('x', CartesianAxisModel, extraOption);
