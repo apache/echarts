@@ -44,6 +44,8 @@ under the License.
         <div class="chart" id="main2"></div>
         <div class="chart" id="main3"></div>
         <div class="chart" id="main4"></div>
+        <div class="chart" id="main5"></div>
+        <div class="chart" id="main6"></div>
 
 
 
@@ -372,6 +374,86 @@ under the License.
                     title: 'Label of yAxis should be RED, but 0 label does not display',
                     option: option,
                     recordCanvas: true
+                });
+            });
+
+        </script>
+
+        <script>
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                option={
+                    backgroundColor: '#eee',
+                    xAxis: {
+                        type: 'category',
+                        axisLabel: {
+                            interval: i => !((i + 1) % 4),
+                            showMinLabel: true,
+                            showMaxLabel: true,
+                        }
+                    },
+                    yAxis: { type: 'value' },
+                    series: [
+                        {
+                            type: 'bar',
+                            data: [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1]]
+                        }
+                    ]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main5', {
+                    title: 'First and last label should show when showMinLabel and showMaxLabel configred as true though interval function retun false',
+                    option: option,
+                    info: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option={
+                    backgroundColor: '#eee',
+                    xAxis: {
+                        type: 'category',
+                        axisLabel: {
+                            interval: i => !((i + 1) % 4)
+                        }
+                    },
+                    yAxis: { type: 'value' },
+                    series: [
+                        {
+                            type: 'bar',
+                            data: [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1]]
+                        }
+                    ]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main6', {
+                    title: 'First and last label are hidden when showMinLabel/showMaxLabel not configred, without break the rendering',
+                    option: option,
+                    info: option
                 });
             });
 
