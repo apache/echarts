@@ -432,17 +432,18 @@ function tryMergeDataOption(newData, originalData) {
     return zrUtil.map(newData, function (newVal, idx) {
         var original = originalData && originalData[idx];
         if (zrUtil.isObject(original) && !zrUtil.isArray(original)) {
-            var _newVal;
-            if (zrUtil.isArray(newVal) || zrUtil.isObject(newVal)) {
-                _newVal = newVal;
-            }
-            else {
-                _newVal = {
+            var newValIsObject = zrUtil.isObject(newVal) && !zrUtil.isArray(newVal);
+            if (!newValIsObject) {
+                newVal = {
                     value: newVal
                 };
             }
+            // original data has name but new data has no name
+            if (original.name != null && newVal.name == null) {
+                delete original.name;
+            }
             // Original data has option
-            return zrUtil.defaults(_newVal, original);
+            return zrUtil.defaults(newVal, original);
         }
         else {
             return newVal;
