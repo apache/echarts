@@ -51,6 +51,9 @@ export default echarts.extendComponentModel({
 
         mapStyleV2: {},
 
+        // See http://lbsyun.baidu.com/cms/jsapi/reference/jsapi_reference_3_0.html#a0b1
+        mapOptions: {},
+
         roam: false
     }
 });
