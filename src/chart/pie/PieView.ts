@@ -235,7 +235,7 @@ class PiePiece extends graphic.Sector {
             outsideFill: visualColor
         });
 
-        const targetTextStyle = {
+        const targetTextPos = {
             x: labelLayout.x,
             y: labelLayout.y
         };
@@ -244,9 +244,7 @@ class PiePiece extends graphic.Sector {
                 shape: targetLineShape
             }, seriesModel, idx);
 
-            graphic.updateProps(labelText, {
-                style: targetTextStyle
-            }, seriesModel, idx);
+            graphic.updateProps(labelText, targetTextPos, seriesModel, idx);
         }
         else {
             labelLine.attr({
@@ -254,15 +252,11 @@ class PiePiece extends graphic.Sector {
             });
             // Make sure update style on labelText after setLabelStyle.
             // Because setLabelStyle will replace a new style on it.
-            labelText.attr({
-                style: targetTextStyle
-            });
+            labelText.attr(targetTextPos);
         }
 
         labelText.attr({
             rotation: labelLayout.rotation,
-            originX: labelLayout.x,
-            originY: labelLayout.y,
             z2: 10
         });
 

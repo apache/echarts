@@ -17,7 +17,16 @@
 * under the License.
 */
 
-import { OrientedBoundingRect, Text as ZRText, Point, BoundingRect, getECData } from './graphic';
+// TODO: move labels out of viewport.
+
+import {
+    OrientedBoundingRect,
+    Text as ZRText,
+    Point,
+    BoundingRect,
+    getECData,
+    Polyline
+} from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import ExtensionAPI from '../ExtensionAPI';
 import {
@@ -26,12 +35,13 @@ import {
     LabelLayoutOption,
     LabelLayoutOptionCallback,
     LabelLayoutOptionCallbackParams
-} from './types';
-import { parsePercent } from './number';
+} from '../util/types';
+import { parsePercent } from '../util/number';
 import ChartView from '../view/Chart';
-import { ElementTextConfig } from 'zrender/src/Element';
+import { ElementTextConfig, ElementTextGuideLineConfig } from 'zrender/src/Element';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Transformable from 'zrender/src/core/Transformable';
+import { updateLabelGuideLine } from './labelGuideHelper';
 
 interface DisplayedLabelItem {
     label: ZRText
@@ -44,8 +54,11 @@ interface DisplayedLabelItem {
 
 interface LabelLayoutDesc {
     label: ZRText
+    labelGuide: Polyline
+
     seriesIndex: number
     dataIndex: number
+
     layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
 
     overlap: LabelLayoutOption['overlap']
@@ -59,6 +72,7 @@ interface LabelLayoutDesc {
 
 interface SavedLabelAttr {
     ignore: boolean
+    labelGuideIgnore: boolean
 
     x: number
     y: number
@@ -151,10 +165,15 @@ class LabelManager {
             BoundingRect.applyTransform(hostRect, hostRect, transform);
         }
 
+        const labelGuide = hostRect && host.getTextGuideLine();
+
         this._labelList.push({
+            label,
+            labelGuide: labelGuide,
+
             seriesIndex,
             dataIndex,
-            label,
+
             layoutOption,
 
             hostRect,
@@ -170,6 +189,7 @@ class LabelManager {
             // For restore if developers want get back to default value in callback.
             defaultAttr: {
                 ignore: label.ignore,
+                labelGuideIgnore: labelGuide && labelGuide.ignore,
 
                 x: dummyTransformable.x,
                 y: dummyTransformable.y,
@@ -246,7 +266,7 @@ class LabelManager {
             if (layoutOption.x != null) {
                 // TODO width of chart view.
                 label.x = parsePercent(layoutOption.x, width);
-                label.setStyle('x', 0);  // Ignore movement in style.
+                label.setStyle('x', 0);  // Ignore movement in style. TODO: origin.
             }
             else {
                 label.x = defaultLabelAttr.x;
@@ -336,16 +356,19 @@ class LabelManager {
                 }
             }
 
+            const labelGuide = labelItem.labelGuide;
             // TODO Callback to determine if this overlap should be handled?
             if (overlapped) {
                 // label.setStyle({ opacity: 0.1 });
                 // label.z = 0;
                 label.hide();
+                labelGuide && labelGuide.hide();
             }
             else {
                 // TODO Restore z
                 // label.setStyle({ opacity: 1 });
                 label.attr('ignore', labelItem.defaultAttr.ignore);
+                labelGuide && labelGuide.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
 
                 displayedLabels.push({
                     label,
@@ -356,11 +379,14 @@ class LabelManager {
                     transform
                 });
             }
+
+            updateLabelGuideLine(
+                label,
+                globalRect,
+                label.__hostTarget,
+                labelItem.hostRect
+            );
         }
-    }
-
-    updateLabelGuidLine() {
-
     }
 }
 

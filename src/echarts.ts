@@ -71,7 +71,7 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import 'zrender/src/canvas/canvas';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
-import LabelManager from './util/LabelManager';
+import LabelManager from './label/LabelManager';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
