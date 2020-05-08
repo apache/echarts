@@ -1,0 +1,244 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <meta name="viewport" content="user-scalable=no,width=device-width,height=device-height">
+</head>
+<body>
+<style>
+    html, body, .main {
+        width: 100%;
+        height: 600px;
+        margin: 0;
+    }
+</style>
+<div id="main0" class="main"></div>
+<div id="main1" class="main"></div>
+<div id="main2" class="main"></div>
+<div id="main3" class="main"></div>
+<div id="main4" class="main"></div>
+<div id="main5" class="main"></div>
+<div id="main6" class="main"></div>
+
+<script>
+    window.createLinks = function (length) {
+        var res = []
+        for(var i = 0; i < length; i++) {
+            var x = Math.round((Math.random() * 10)) % 2
+            res.push({
+                source: x ? 'node1' : 'node3',
+                target: x ? 'node3' : 'node1',
+                label: {
+                    show: true
+                },
+            })
+        }
+
+        res.push({
+            source: 'node1',
+            target: 'node2'
+        })
+
+        return res;
+    }
+</script>
+<script>
+    require([
+        'echarts'
+    ], function (echarts) {
+        var container = document.getElementById('main6');
+
+        var option = {
+            title: {
+                text: 'autoCurveness函数测试'
+            },
+            tooltip: {},
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [
+                {
+                    type: 'graph',
+                    layout: 'none',
+                    symbolSize: 50,
+                    roam: true,
+                    label: {
+                        show: true
+                    },
+                    edgeSymbol: ['circle', 'arrow'],
+                    edgeSymbolSize: [4, 10],
+                    edgeLabel: {
+                        fontSize: 12
+                    },
+                    data: [{
+                        name: 'node1',
+                        x: 300,
+                        y: 300
+                    }, {
+                        name: 'node2',
+                        x: 800,
+                        y: 300
+                    }, {
+                        name: 'node3',
+                        x: 550,
+                        y: 100
+                    }],
+                    links: createLinks(14),
+                    autoCurveness: function() {
+                        return [0.2, -0.2, 0.4, -0.4, 0.6, -0.6, 0.8, -0.8, 1, -1, 0.1, -0.1, 0.3, -0.3, 0.5, -0.5, 0.7, -0.7, 0.9, -0.9];
+                    },
+                    lineStyle: {
+                        opacity: 0.9,
+                        width: 2,
+                        curveness: 0
+                    }
+                }
+            ]
+        }
+
+        var chart = echarts.init(container, '', {renderer: 'svg'});
+        chart.setOption(option)
+    })
+</script>
+
+<script>
+    require([
+        'echarts'
+    ], function (echarts) {
+        var container = document.getElementById('main5');
+
+        var option = {
+            title: {
+                text: 'autoCurveness 不传入测试'
+            },
+            tooltip: {},
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [
+                {
+                    type: 'graph',
+                    layout: 'none',
+                    symbolSize: 50,
+                    roam: true,
+                    label: {
+                        show: true
+                    },
+                    edgeSymbol: ['circle', 'arrow'],
+                    edgeSymbolSize: [4, 10],
+                    edgeLabel: {
+                        fontSize: 12
+                    },
+                    data: [{
+                        name: 'node1',
+                        x: 300,
+                        y: 300
+                    }, {
+                        name: 'node2',
+                        x: 800,
+                        y: 300
+                    }, {
+                        name: 'node3',
+                        x: 550,
+                        y: 100
+                    }],
+                    links: createLinks(14),
+                    lineStyle: {
+                        opacity: 0.9,
+                        width: 2,
+                        curveness: 0
+                    }
+                }
+            ]
+        }
+
+        var chart = echarts.init(container, '', {renderer: 'svg'});
+        chart.setOption(option)
+    })
+</script>
+
+<script>
+    var getLayout= function(i) {
+        if(i % 3 === 0) return 'none';
+        if(i % 3 == 1) return 'circular';
+        if(i % 3 == 2) return 'force';
+        // return 'force'
+    }
+    require([
+        'echarts'
+    ], function (echarts) {
+        for(var i = 0; i < 5; i++) {
+            var container = document.getElementById('main' + i);
+            var times = 8;
+
+            var option = {
+                title: {
+                    text: 'Graph 简单示例, 边数：' + (i * times + 1) + '布局：' + getLayout(i)
+                },
+                tooltip: {},
+                animationDurationUpdate: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series: [
+                    {
+                        type: 'graph',
+                        layout: getLayout(i),
+                        symbolSize: 50,
+                        label: {
+                            show: true
+                        },
+                        roam: true,
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 10],
+                        edgeLabel: {
+                            fontSize: 12
+                        },
+                        data: [{
+                            name: 'node1',
+                            x: 300,
+                            y: 300
+                        }, {
+                            name: 'node2',
+                            x: 800,
+                            y: 300
+                        }, {
+                            name: 'node3',
+                            x: 550,
+                            y: 100
+                        }],
+                        links: createLinks(i * times + 1),
+                        autoCurveness: i * times + 1,
+                        lineStyle: {
+                            opacity: 0.9,
+                            width: 2,
+                            curveness: 0
+                        }
+                    }
+                ]
+            }
+
+            var chart = echarts.init(container, '', {renderer: 'svg'});
+            chart.setOption(option)
+        }
+    })
+</script>
+</body>
+</html>

@@ -24,6 +24,7 @@ import linkList from '../../data/helper/linkList';
 import createDimensions from '../../data/helper/createDimensions';
 import CoordinateSystem from '../../CoordinateSystem';
 import createListFromArray from './createListFromArray';
+import {calculateMutilEdges, setCurvenessForLink} from './multipleGraphEdgeHelper';
 
 export default function (nodes, edges, seriesModel, directed, beforeLink) {
     // ??? TODO
@@ -39,10 +40,15 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
     var linkNameList = [];
     var validEdges = [];
     var linkCount = 0;
+
+    // auto curveness
+    calculateMutilEdges(edges, seriesModel, graph);
     for (var i = 0; i < edges.length; i++) {
         var link = edges[i];
         var source = link.source;
         var target = link.target;
+
+        setCurvenessForLink(link, seriesModel, i, graph);
         // addEdge may fail when source or target not exists
         if (graph.addEdge(source, target, linkCount)) {
             validEdges.push(link);
@@ -89,6 +95,5 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
 
     // Update dataIndex of nodes and edges because invalid edge may be removed
     graph.update();
-
     return graph;
 }
