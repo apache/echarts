@@ -37,7 +37,6 @@ var getAutoCurvenessParams = function (seriesModel) {
 
 /**
  * Generate a list of edge curvatures, 20 is the default
- * 生成边曲度优先使用列表, 20为默认值
  * @param seriesModel
  * @param addLength append length
  * @return  20 => [0, -0.2, 0.2, -0.4, 0.4, -0.6, 0.6, -0.8, 0.8, -1, 1, -1.2, 1.2, -1.4, 1.4, -1.6, 1.6, -1.8, 1.8, -2]
@@ -76,7 +75,6 @@ var createCurveness = function (seriesModel, addLength) {
 
 /**
  * Create different cache key data in the positive and negative directions, in order to set the curvature later
- * 正反方向创建不同的缓存key数据，为了后期设置曲率考虑
  * @param link
  * @param seriesModel
  * @returns {string}
@@ -148,8 +146,7 @@ var getLinkMapLengthWithKey = function (key) {
 };
 
 /**
- * step1：Count the number of edges between the same two points, used to obtain the curvature table and the parity of the edge
- * 统计相同两点间的边数量，用于获取曲率表和边的奇偶
+ * Count the number of edges between the same two points, used to obtain the curvature table and the parity of the edge
  * @param edges
  * @param seriesModel
  * @param graph
@@ -179,7 +176,6 @@ export function calculateMutilEdges(edges, seriesModel, graph) {
 
 /**
  * Set curvature for link
- * 为link设置曲率
  * @param link
  * @param seriesModel
  * @param index
