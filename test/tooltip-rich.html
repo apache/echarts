@@ -35,7 +35,14 @@ under the License.
             #main {
                 background: #fff;
             }
+            #btn-dispose {
+                position: absolute;
+                left: 10px;
+                top: 10px;
+                z-index: 1;
+            }
         </style>
+        <button type="button" id="btn-dispose">Dispose chart</button>
         <div id="main"></div>
         <script>
 
@@ -86,6 +93,11 @@ under the License.
                 });
 
                 window.onresize = chart.resize;
+
+                // fix #12607: to dispose the rich tooltip
+                document.getElementById('btn-dispose').addEventListener('click', function () {
+                    chart.dispose();
+                });
             });
         </script>
     </body>
