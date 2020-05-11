@@ -38,7 +38,7 @@ import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { StageHandlerProgressParams, ZRElementEvent, ColorString, OrdinalNumber, Payload } from '../../util/types';
+import { StageHandlerProgressParams, ZRElementEvent, ColorString, OrdinalSortInfo, Payload, OrdinalNumber } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -161,9 +161,9 @@ class BarView extends ChartView {
         const axisAnimationModel = baseAxis.model;
 
         const axis2DModel = (baseAxis as Axis2D).model;
-        const realtimeSort = coord.type === 'cartesian2d'
-            && axis2DModel.get('sort') && axis2DModel.get('realtimeSort');
-        let isFirstSortData = true;
+        const axisSort = coord.type === 'cartesian2d' && axis2DModel.get('sort')
+            && axis2DModel.get('sortSeriesIndex') === seriesModel.seriesIndex;
+        const realtimeSort = axisSort && axis2DModel.get('realtimeSort');
 
         const needsClip = seriesModel.get('clip', true);
         const coordSysClipArea = getClipArea(coord, data);
@@ -181,26 +181,30 @@ class BarView extends ChartView {
         const oldBgEls = this._backgroundEls;
 
         let during: () => void = null;
-        if (coord.type === 'cartesian2d' && realtimeSort && isFirstSortData) {
-            const oldOrder = (baseAxis as Axis2D).model.option.categoryIndices;
-
+        if (coord.type === 'cartesian2d') {
+            const oldOrder = (baseAxis.scale as OrdinalScale).getCategorySortInfo();
             const orderMap = (idx: number) => {
                 return data.get(valueAxis.dim, idx) as number;
             };
-            const newOrder = this._dataSort(data, orderMap);
-            const orderChanged = !zrUtil.isEqualArray(oldOrder, newOrder);
 
-            during = orderChanged
-                ? () => {
-                    that._updateSort(
-                        data,
-                        baseAxis as Axis2D,
-                        isHorizontalOrRadial,
-                        ecModel,
-                        api
-                    );
-                }
-                : null;
+            if (realtimeSort) {
+                // Sort in animation during
+                const isOrderChanged = this._isDataOrderChanged(data, orderMap, oldOrder);
+                during = isOrderChanged
+                    ? () => {
+                        const orderMap = (idx: number) => {
+                            const shape = (data.getItemGraphicEl(idx) as Rect).shape;
+                            return isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width;
+                        };
+                        that._updateSort(data, orderMap, baseAxis as Axis2D, api);
+                    }
+                    : null;
+
+            }
+            else if (axisSort) {
+                // Sort now in the first frame
+                this._updateSort(data, orderMap, baseAxis as Axis2D, api);
+            }
         }
 
 
@@ -231,8 +235,6 @@ class BarView extends ChartView {
                         return;
                     }
                 }
-
-                isFirstSortData = false;
 
                 const el = elementCreator[coord.type](
                     dataIndex, layout, isHorizontalOrRadial, animationModel, false, during, roundCap
@@ -274,13 +276,11 @@ class BarView extends ChartView {
                     }
                 }
 
-                isFirstSortData = false;
-
                 if (el) {
                     clearStates(el);
 
                     if (coord.type === 'cartesian2d'
-                        && baseAxis.type === 'category' && (baseAxis as Axis2D).model.get('realtimeSort')
+                        && baseAxis.type === 'category' && (baseAxis as Axis2D).model.get('sort')
                     ) {
                         const rect = layout as RectShape;
                         let seriesShape, axisShape;
@@ -376,46 +376,73 @@ class BarView extends ChartView {
     _dataSort(
         data: List<BarSeriesModel, DefaultDataVisual>,
         map: ((idx: number) => number)
-    ): OrdinalNumber[] {
-        const dataValues: number[] = [];
-        const order: OrdinalNumber[] = [];
+    ): OrdinalSortInfo[] {
+        type SortValueInfo = {
+            mappedValue: number,
+            ordinalNumber: OrdinalNumber,
+            beforeSortIndex: number
+        };
+        const info: SortValueInfo[] = [];
         data.each(idx => {
-            const value = map(idx);
-            for (let i = 0, len = dataValues.length; i < len; ++i) {
-                if (dataValues[i] < value) {
-                    dataValues.splice(i, 0, value);
-                    for (let j = 0; j < len; ++j) {
-                        if (order[j] >= i) {
-                            ++order[j];
-                        }
-                    }
-                    order.push(i);
-                    return;
-                }
-            }
-            dataValues.push(value);
-            order.push(order.length);
+            info.push({
+                mappedValue: map(idx),
+                ordinalNumber: idx,
+                beforeSortIndex: null
+            });
         });
-        return order;
+
+        info.sort((a, b) => {
+            return b.mappedValue - a.mappedValue;
+        });
+
+        // Update beforeSortIndex
+        for (let i = 0; i < info.length; ++i) {
+            info[info[i].ordinalNumber].beforeSortIndex = i;
+        }
+        return info.map(item => {
+            return {
+                ordinalNumber: item.ordinalNumber,
+                beforeSortIndex: item.beforeSortIndex
+            };
+        });
+    }
+
+    _isDataOrderChanged(
+        data: List<BarSeriesModel, DefaultDataVisual>,
+        orderMap: ((idx: number) => number),
+        oldOrder: OrdinalSortInfo[]
+    ): boolean {
+        if (!oldOrder || oldOrder.length === 0) {
+            // If no old order, return if has new data
+            return data.count() !== 0;
+        }
+
+        let lastValue = Number.MAX_VALUE;
+        for (let i = 0; i < oldOrder.length; ++i) {
+            const value = orderMap(oldOrder[i].ordinalNumber);
+            if (value > lastValue) {
+                return true;
+            }
+            lastValue = value;
+        }
+        return false;
     }
 
     _updateSort(
         data: List<BarSeriesModel, DefaultDataVisual>,
+        orderMap: ((idx: number) => number),
         baseAxis: Axis2D,
-        isHorizontal: boolean,
-        ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        const orderMap = (idx: number) => {
-            const shape = (data.getItemGraphicEl(idx) as Rect).shape;
-            return isHorizontal ? shape.y + shape.height : shape.x + shape.width;
-        }
-        const newOrder = this._dataSort(data, orderMap);
+        const oldOrder = (baseAxis.scale as OrdinalScale).getCategorySortInfo();
+        const isOrderChanged = this._isDataOrderChanged(data, orderMap, oldOrder);
+        if (isOrderChanged) {
+            // re-sort and update in axis
+            const sortInfo = this._dataSort(data, orderMap);
+            baseAxis.setCategorySortInfo(sortInfo);
 
-        const hasOrderChanged = baseAxis.setCategoryIndices(newOrder);
-        if (hasOrderChanged) {
             const action = {
-                type: 'axisOrderChanged',
+                type: 'changeAxisOrder',
                 componentType: baseAxis.dim + 'Axis',
                 axisId: baseAxis.index
             } as Payload;

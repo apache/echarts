@@ -33,8 +33,8 @@ import * as zrUtil from 'zrender/src/core/util';
  * @property {number} [originY]
  */
 echarts.registerAction({
-    type: 'axisOrderChanged',
-    event: 'axisOrderChanged',
+    type: 'changeAxisOrder',
+    event: 'changeAxisOrder',
     update: 'update'
 }, function (payload, ecModel) {
     const componentType = payload.componentType || 'series';

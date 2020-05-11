@@ -242,6 +242,10 @@ export type TooltipRenderMode = 'html' | 'richText';
 // Check `convertDataValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
+export type OrdinalSortInfo = {
+    ordinalNumber: OrdinalNumber,
+    beforeSortIndex: number
+};
 export type ParsedValueNumeric = number | OrdinalNumber;
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // FIXME:TS better name?

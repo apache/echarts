@@ -28,7 +28,7 @@ import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
 import List from '../data/List';
 import * as scaleHelper from './helper';
-import { OrdinalRawValue, OrdinalNumber, DimensionLoose } from '../util/types';
+import { OrdinalRawValue, OrdinalNumber, DimensionLoose, OrdinalSortInfo } from '../util/types';
 import { AxisBaseOption } from '../coord/axisCommonTypes';
 import { isArray } from 'zrender/src/core/util';
 
@@ -39,7 +39,7 @@ class OrdinalScale extends Scale {
     readonly type = 'ordinal';
 
     private _ordinalMeta: OrdinalMeta;
-    private _categoryIndices: OrdinalNumber[];
+    private _categorySortInfo: OrdinalSortInfo[];
 
 
     constructor(setting?: {
@@ -55,7 +55,7 @@ class OrdinalScale extends Scale {
             ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
         }
         this._ordinalMeta = ordinalMeta;
-        this._categoryIndices = [];
+        this._categorySortInfo = [];
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }
 
@@ -76,12 +76,12 @@ class OrdinalScale extends Scale {
      * Normalize given rank or name to linear [0, 1]
      */
     normalize(val: OrdinalRawValue | OrdinalNumber): number {
-        val = this.getCategoryIndices(this.parse(val));
+        val = this.getCategoryIndex(this.parse(val));
         return scaleHelper.normalize(val, this._extent);
     }
 
     scale(val: number): OrdinalNumber {
-        val = this.getCategoryIndices(val);
+        val = this.getCategoryIndex(val);
         return Math.round(scaleHelper.scale(val, this._extent));
     }
 
@@ -103,13 +103,17 @@ class OrdinalScale extends Scale {
         return;
     }
 
-    setCategoryIndices(indices: OrdinalNumber[]): void {
-        this._categoryIndices = indices;
+    setCategorySortInfo(info: OrdinalSortInfo[]): void {
+        this._categorySortInfo = info;
     }
 
-    getCategoryIndices(n: OrdinalNumber): OrdinalNumber {
-        if (this._categoryIndices.length) {
-            return this._categoryIndices[n];
+    getCategorySortInfo(): OrdinalSortInfo[] {
+        return this._categorySortInfo;
+    }
+
+    getCategoryIndex(n: OrdinalNumber): OrdinalNumber {
+        if (this._categorySortInfo.length) {
+            return this._categorySortInfo[n].beforeSortIndex;
         }
         else {
             return n;

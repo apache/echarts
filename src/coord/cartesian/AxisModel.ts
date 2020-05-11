@@ -25,7 +25,7 @@ import Axis2D from './Axis2D';
 import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
 import { AxisBaseModel } from '../AxisBaseModel';
-import {OrdinalNumber} from '../../util/types';
+import {OrdinalSortInfo} from '../../util/types';
 
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -38,7 +38,8 @@ interface CartesianAxisOption extends AxisBaseOption {
     offset?: number;
     sort?: boolean;
     realtimeSort?: boolean;
-    categoryIndices?: OrdinalNumber[];
+    sortSeriesIndex?: number;
+    categorySortInfo?: OrdinalSortInfo[];
 }
 
 class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
@@ -83,7 +84,8 @@ const extraOption: CartesianAxisOption = {
     offset: 0,
     sort: false,
     realtimeSort: false,
-    categoryIndices: []
+    sortSeriesIndex: null,
+    categorySortInfo: []
 };
 
 axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('x', CartesianAxisModel, extraOption);

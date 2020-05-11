@@ -416,11 +416,8 @@ class Grid implements CoordinateSystemMaster {
         each(this._axesList, function (axis) {
             axis.scale.setExtent(Infinity, -Infinity);
             if (axis.type === 'category') {
-                const categoryIndices = axis.model.get('categoryIndices');
-                if (categoryIndices && categoryIndices.length > 0) {
-                    hasCategoryIndices = true;
-                    (axis.scale as OrdinalScale).setCategoryIndices(categoryIndices);
-                }
+                const categorySortInfo = axis.model.get('categorySortInfo');
+                (axis.scale as OrdinalScale).setCategorySortInfo(categorySortInfo);
             }
         });
 
@@ -466,35 +463,35 @@ class Grid implements CoordinateSystemMaster {
             });
         }
 
-        function sortCategory(
-            data: List,
-            axis: Axis2D,
-            axisModel: CartesianAxisModel,
-            otherAxis: Axis2D
-        ): void {
-            const sort = axisModel.get('sort');
-            if (axis.type === 'category' && sort) {
-                data.each(otherAxis.dim, value => {
-                    for (let i = 0, len = sortedDataValue.length; i < len; ++i) {
-                        if (value > sortedDataValue[i]) {
-                            sortedDataValue.splice(i, 0, value as number);
+        // function sortCategory(
+        //     data: List,
+        //     axis: Axis2D,
+        //     axisModel: CartesianAxisModel,
+        //     otherAxis: Axis2D
+        // ): void {
+        //     const sort = axisModel.get('sort');
+        //     if (axis.type === 'category' && sort) {
+        //         data.each(otherAxis.dim, value => {
+        //             for (let i = 0, len = sortedDataValue.length; i < len; ++i) {
+        //                 if (value > sortedDataValue[i]) {
+        //                     sortedDataValue.splice(i, 0, value as number);
 
-                            for (let j = 0; j <= len; ++j) {
-                                if (sortedDataIndex[j] >= i) {
-                                    ++sortedDataIndex[j];
-                                }
-                            }
-                            sortedDataIndex.push(i);
-                            return;
-                        }
-                    }
-                    // Smallest for now, insert at the end
-                    sortedDataValue.push(value as number);
-                    sortedDataIndex.push(sortedDataIndex.length);
-                });
-                (axis.scale as OrdinalScale).setCategoryIndices(sortedDataIndex);
-            }
-        }
+        //                     for (let j = 0; j <= len; ++j) {
+        //                         if (sortedDataIndex[j] >= i) {
+        //                             ++sortedDataIndex[j];
+        //                         }
+        //                     }
+        //                     sortedDataIndex.push(i);
+        //                     return;
+        //                 }
+        //             }
+        //             // Smallest for now, insert at the end
+        //             sortedDataValue.push(value as number);
+        //             sortedDataIndex.push(sortedDataIndex.length);
+        //         });
+        //         (axis.scale as OrdinalScale).setCategoryIndices(sortedDataIndex);
+        //     }
+        // }
     }
 
     /**

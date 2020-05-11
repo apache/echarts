@@ -18,7 +18,7 @@
 */
 
 import Axis from '../Axis';
-import { DimensionName, OrdinalNumber } from '../../util/types';
+import { DimensionName, OrdinalSortInfo } from '../../util/types';
 import Scale from '../../scale/Scale';
 import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
@@ -113,21 +113,16 @@ class Axis2D extends Axis {
     }
 
     /**
-     * Set categoryIndices and return if has order changed
-     * @param newIndices new categoryIndices
-     * @return if the order has changed
+     * Set ordinalSortInfo
+     * @param info new OrdinalSortInfo
      */
-    setCategoryIndices(newIndices: OrdinalNumber[], force?: boolean): boolean {
+    setCategorySortInfo(info: OrdinalSortInfo[]): boolean {
         if (this.type !== 'category') {
             return false;
         }
 
-        const isOrderChanged = force || !isEqualArray(this.model.option.categoryIndices, newIndices);
-        if (isOrderChanged) {
-            this.model.option.categoryIndices = newIndices;
-            (this.scale as OrdinalScale).setCategoryIndices(newIndices);
-        }
-        return isOrderChanged;
+        this.model.option.categorySortInfo = info;
+        (this.scale as OrdinalScale).setCategorySortInfo(info);
     }
 
 }
