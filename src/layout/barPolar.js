@@ -38,7 +38,6 @@ function getAxisKey(polar, axis) {
 function barLayoutPolar(seriesType, ecModel, api) {
 
     var lastStackCoords = {};
-    var lastStackSum = {};
 
     var barWidthAndOffset = calRadialBar(
         zrUtil.filter(
@@ -76,7 +75,6 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var barMinAngle = seriesModel.get('barMinAngle') || 0;
 
         lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-        lastStackSum[stackId] = lastStackSum[stackId] || [];
 
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
@@ -116,7 +114,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
 
             // radial sector
             if (valueAxis.dim === 'radius') {
-                var radiusSpan = valueAxis.dataToRadius(value) - valueAxisStart
+                var radiusSpan = valueAxis.dataToRadius(value) - valueAxisStart;
                 var angle = baseAxis.dataToAngle(baseValue);
 
                 if (Math.abs(radiusSpan) < barMinHeight) {
