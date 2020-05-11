@@ -336,7 +336,12 @@ var clip = {
         return clipped;
     },
 
-    polar: function (coordSysClipArea) {
+    polar: function (coordSysClipArea, layout) {
+        var r = mathMin(layout.r, coordSysClipArea.r);
+        var r0 = mathMin(layout.r0, coordSysClipArea.r);
+
+        layout.r = r;
+        layout.r0 = r0;
         return false;
     }
 };
