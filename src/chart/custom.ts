@@ -84,6 +84,8 @@ const inner = makeInner<{
     customImagePath: CustomImageOption['style']['image'];
     customText: string;
     txConZ2Set: number;
+    orginalDuring: Element['updateDuringAnimation'];
+    customDuring: CustomZRPathOption['during'];
 }, Element>();
 
 type CustomExtraElementInfo = Dictionary<unknown>;
@@ -103,6 +105,8 @@ interface CustomBaseElementOption extends Partial<Pick<
     info?: CustomExtraElementInfo;
     // `false` means remove the textContent.
     textContent?: CustomTextOption | false;
+    // updateDuringAnimation
+    during?(elProps: CustomDuringElProps): void;
 };
 interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
@@ -127,6 +131,9 @@ interface CustomGroupOption extends CustomBaseElementOption {
     $mergeChildren: false | 'byName' | 'byIndex';
 }
 interface CustomZRPathOption extends CustomDisplayableOption, Pick<PathProps, 'shape'> {
+}
+interface CustomDuringElProps extends Partial<Pick<Element, TransformProps>> {
+    shape?: PathProps['shape'];
 }
 interface CustomSVGPathOption extends CustomDisplayableOption {
     type: 'path';
@@ -277,7 +284,7 @@ const Z2_SPECIFIED_BIT = {
     emphasis: 1
 } as const;
 
-
+const tmpDuringElProps = {} as CustomDuringElProps;
 
 
 export type PrepareCustomInfo = (coordSys: CoordinateSystem) => {
@@ -640,6 +647,19 @@ function updateElNormal(
     zrUtil.hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
     zrUtil.hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
 
+    const customDuringMounted = el.updateDuringAnimation === elUpdateDuringAnimation;
+    if (elOption.during) {
+        const innerEl = inner(el);
+        if (!customDuringMounted) {
+            innerEl.orginalDuring = el.updateDuringAnimation;
+            el.updateDuringAnimation = elUpdateDuringAnimation;
+        }
+        innerEl.customDuring = elOption.during;
+    }
+    else if (customDuringMounted) {
+        el.updateDuringAnimation = inner(el).orginalDuring;
+    }
+
     if (!isTextContent) {
         // `elOption.info` enables user to mount some info on
         // elements and use them in event handlers.
@@ -648,6 +668,38 @@ function updateElNormal(
     }
 
     el.markRedraw();
+}
+
+function elUpdateDuringAnimation(this: graphicUtil.Path, key: string): void {
+    const innerEl = inner(this);
+    // FIXME `this.markRedraw();` directly ?
+    innerEl.orginalDuring.call(this, key);
+    const customDuring = innerEl.customDuring;
+
+    // Only provide these props. Usually other props do not need to be
+    // changed in animation during.
+    // Do not give `this` to user util really needed in future.
+    // Props in `shape` can be modified directly in the during callback.
+    tmpDuringElProps.shape = this.shape;
+    tmpDuringElProps.x = this.x;
+    tmpDuringElProps.y = this.y;
+    tmpDuringElProps.scaleX = this.scaleX;
+    tmpDuringElProps.scaleX = this.scaleY;
+    tmpDuringElProps.originX = this.originX;
+    tmpDuringElProps.originY = this.originY;
+    tmpDuringElProps.rotation = this.rotation;
+
+    customDuring(tmpDuringElProps);
+
+    tmpDuringElProps.shape !== this.shape && (this.shape = tmpDuringElProps.shape);
+    // Consider prop on prototype.
+    tmpDuringElProps.x !== this.x && (this.x = tmpDuringElProps.x);
+    tmpDuringElProps.y !== this.y && (this.y = tmpDuringElProps.y);
+    tmpDuringElProps.scaleX !== this.scaleX && (this.scaleX = tmpDuringElProps.scaleX);
+    tmpDuringElProps.scaleY !== this.scaleY && (this.scaleY = tmpDuringElProps.scaleY);
+    tmpDuringElProps.originX !== this.originX && (this.originX = tmpDuringElProps.originX);
+    tmpDuringElProps.originY !== this.originY && (this.originY = tmpDuringElProps.originY);
+    tmpDuringElProps.rotation !== this.rotation && (this.rotation = tmpDuringElProps.rotation);
 }
 
 function updateElOnState(
