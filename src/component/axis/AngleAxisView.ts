@@ -359,7 +359,8 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
         const clockwise = angleAxisModel.get('clockwise');
 
-        for (let i = 1; i < ticksAngles.length; i++) {
+        for (let i = 1, len = ticksAngles.length; i <= len; i++) {
+            const coord = i === len ? ticksAngles[0].coord : ticksAngles[i].coord;
             const colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
             splitAreas[colorIndex].push(new graphic.Sector({
@@ -369,12 +370,12 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     r0: r0,
                     r: r1,
                     startAngle: prevAngle,
-                    endAngle: -ticksAngles[i].coord * RADIAN,
+                    endAngle: -coord * RADIAN,
                     clockwise: clockwise
                 },
                 silent: true
             }));
-            prevAngle = -ticksAngles[i].coord * RADIAN;
+            prevAngle = -coord * RADIAN;
         }
 
         // Simple optimization
