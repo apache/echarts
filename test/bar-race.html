@@ -105,7 +105,12 @@ under the License.
                         label: {
                             show: true,
                             position: 'right',
-                            formatter: '{c}元'
+                            // formatter: '{c}元',
+                            formatter: function (params) {
+                                // console.log(params);
+                                return params.animatedValue + '元';
+                            },
+                            valueAnimation: true
                         }
                     // }, {
                         // name: 'Y',
@@ -129,7 +134,9 @@ under the License.
                     legend: {
                         show: true
                     },
-                    animationDurationUpdate: 10000
+                    animationDuration: 10000,
+                    animationDurationUpdate: 10000,
+                    animationEasing: 'linear'
                 };
 
                 chart.setOption(option);

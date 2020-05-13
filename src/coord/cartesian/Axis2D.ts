@@ -23,7 +23,6 @@ import Scale from '../../scale/Scale';
 import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
 import { OptionAxisType } from '../axisCommonTypes';
-import {isEqualArray} from 'zrender/src/core/util';
 import OrdinalScale from '../../scale/Ordinal';
 
 

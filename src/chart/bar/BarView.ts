@@ -321,22 +321,22 @@ class BarView extends ChartView {
                         let seriesShape, axisShape;
                         if (baseAxis.dim === 'x') {
                             axisShape = {
-                                x: rect.x
+                                x: rect.x,
+                                width: rect.width
                             };
                             seriesShape = {
                                 y: rect.y,
-                                width: rect.width,
                                 height: rect.height
                             };
                         }
                         else {
                             axisShape = {
-                                y: rect.y
+                                y: rect.y,
+                                height: rect.height
                             };
                             seriesShape = {
                                 x: rect.x,
-                                width: rect.width,
-                                height: rect.height
+                                width: rect.width
                             };
                         }
 
