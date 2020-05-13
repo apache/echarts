@@ -179,6 +179,14 @@ TooltipRichContent.prototype = {
         return this._show;
     },
 
+    dispose: function () {
+        clearTimeout(this._hideTimeout);
+
+        if (this.el) {
+            this._zr.remove(this.el);
+        }
+    },
+
     getOuterSize: function () {
         var size = this.getSize();
         return {
