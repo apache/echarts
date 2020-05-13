@@ -19,7 +19,7 @@
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {formatTpl} from '../../util/format';
-import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor } from '../../util/types';
+import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor, OptionDataValue } from '../../util/types';
 import GlobalModel from '../Global';
 import Element from 'zrender/src/Element';
 
@@ -33,6 +33,7 @@ interface DataFormatMixin extends DataHost {
     componentIndex: number;
     id: string;
     name: string;
+    animatedValue: OptionDataValue[];
 }
 
 class DataFormatMixin {
@@ -48,6 +49,7 @@ class DataFormatMixin {
 
         const data = this.getData(dataType);
         const rawValue = this.getRawValue(dataIndex, dataType);
+        const animatedValue = this.getAnimatedValue(dataIndex);
         const rawDataIndex = data.getRawIndex(dataIndex);
         const name = data.getName(dataIndex);
         const itemOpt = data.getRawDataItem(dataIndex);
@@ -71,6 +73,7 @@ class DataFormatMixin {
             data: itemOpt,
             dataType: dataType,
             value: rawValue,
+            animatedValue: animatedValue,
             color: color,
             borderColor: borderColor,
             dimensionNames: userOutput ? userOutput.dimensionNames : null,
@@ -141,6 +144,30 @@ class DataFormatMixin {
         dataType?: string
     ): unknown {
         return retrieveRawValue(this.getData(dataType), idx);
+    }
+
+    setAnimatedValues(
+        dataValue: OptionDataValue[]
+    ): void {
+        this.animatedValue = dataValue.slice();
+    }
+
+    setAnimatedValue(
+        idx: number,
+        dataValue: OptionDataValue
+    ): void {
+        this.animatedValue[idx] = dataValue;
+    }
+
+    getAnimatedValue(
+        idx: number
+    ): OptionDataValue {
+        if (!this.animatedValue || this.animatedValue.length === 0) {
+            return null;
+        }
+        else {
+            return this.animatedValue[idx];
+        }
     }
 
     /**

@@ -464,6 +464,7 @@ export interface CallbackDataParams {
     data: any;
     dataType?: string;
     value: any;
+    animatedValue?: any;
     color?: ZRColor;
     borderColor?: string;
     dimensionNames?: DimensionName[];

@@ -121,7 +121,6 @@ class Axis {
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
         let extent = this._extent;
         const scale = this.scale;
-        // data = (scale instanceof OrdinalScale && typeof data === 'number') ? scale.getSortedDataIndex(data) : data;
         data = scale.normalize(data);
 
         if (this.onBand && scale.type === 'ordinal') {
