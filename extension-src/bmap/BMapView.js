@@ -18,7 +18,6 @@
 */
 
 import * as echarts from 'echarts';
-import { clone } from 'zrender/src/core/util';
 
 export default echarts.extendComponentView({
     type: 'bmap',
@@ -97,7 +96,7 @@ export default echarts.extendComponentView({
         if (JSON.stringify(originalStyle) !== mapStyleStr) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (Object.keys(newMapStyle).length) {
-                bmap.setMapStyle(clone(newMapStyle));
+                bmap.setMapStyle(echarts.util.clone(newMapStyle));
             }
             bMapModel.__mapStyle = JSON.parse(mapStyleStr);
         }
@@ -111,7 +110,7 @@ export default echarts.extendComponentView({
         if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (Object.keys(newMapStyle2).length) {
-                bmap.setMapStyleV2(clone(newMapStyle2));
+                bmap.setMapStyleV2(echarts.util.clone(newMapStyle2));
             }
             bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);
         }
