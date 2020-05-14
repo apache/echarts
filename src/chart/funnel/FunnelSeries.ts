@@ -172,8 +172,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
             length: 20,
             lineStyle: {
                 // color: 各异,
-                width: 1,
-                type: 'solid'
+                width: 1
             }
         },
         itemStyle: {

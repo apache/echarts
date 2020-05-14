@@ -72,7 +72,8 @@ import {
     trim,
     isArrayLike,
     map,
-    defaults
+    defaults,
+    indexOf
 } from 'zrender/src/core/util';
 
 
@@ -383,11 +384,6 @@ function singleEnterEmphasis(el: Element) {
         // TODO Configuration
         easing: 'cubicOut'
     });
-
-    const textContent = el.getTextContent();
-    if (textContent) {
-        textContent.z2 += Z2_EMPHASIS_LIFT;
-    }
     // TODO hover layer
 }
 
@@ -446,36 +442,41 @@ export function clearStates(el: Element) {
 function elementStateProxy(this: Displayable, stateName: string): DisplayableState {
     let state = this.states[stateName];
     if (stateName === 'emphasis' && this.style) {
-        const currentFill = this.style.fill;
-        const currentStroke = this.style.stroke;
-        if (currentFill || currentStroke) {
-            state = state || {};
-            // Apply default color lift
-            let emphasisStyle = state.style || {};
-            let cloned = false;
-            if (!hasFillOrStroke(emphasisStyle.fill)) {
-                cloned = true;
-                // Not modify the original value.
-                state = extend({}, state);
-                emphasisStyle = extend({}, emphasisStyle);
-                emphasisStyle.fill = liftColor(currentFill);
-            }
-            if (!hasFillOrStroke(emphasisStyle.stroke)) {
-                if (!cloned) {
+        const hasEmphasis = indexOf(this.currentStates, stateName) >= 0;
+        if (!(this instanceof ZRText)) {
+            const currentFill = this.style.fill;
+            const currentStroke = this.style.stroke;
+            if (currentFill || currentStroke) {
+                state = state || {};
+                // Apply default color lift
+                let emphasisStyle = state.style || {};
+                let cloned = false;
+                if (!hasFillOrStroke(emphasisStyle.fill)) {
+                    cloned = true;
+                    // Not modify the original value.
                     state = extend({}, state);
                     emphasisStyle = extend({}, emphasisStyle);
+                    // Already being applied 'emphasis'. DON'T lift color multiple times.
+                    emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(currentFill);
                 }
-                emphasisStyle.stroke = liftColor(currentStroke);
-            }
+                if (!hasFillOrStroke(emphasisStyle.stroke)) {
+                    if (!cloned) {
+                        state = extend({}, state);
+                        emphasisStyle = extend({}, emphasisStyle);
+                    }
+                    emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(currentStroke);
+                }
 
-            state.style = emphasisStyle;
+                state.style = emphasisStyle;
+            }
         }
+        state.z2 = this.z2 + Z2_EMPHASIS_LIFT;
     }
 
     return state;
 }
 
-/**
+/**FI
  * Set hover style (namely "emphasis style") of element.
  * @param el Should not be `zrender/graphic/Group`.
  */
@@ -694,7 +695,7 @@ type LabelModelForText = Model<Omit<
  * And create a new style object.
  *
  * NOTICE: Because the style on ZRText will be replaced with new(only x, y are keeped).
- * So please use the style on ZRText after use this method.
+ * So please update the style on ZRText after use this method.
  */
 // eslint-disable-next-line
 function setLabelStyle<LDI>(targetEl: ZRText, normalModel: LabelModelForText, emphasisModel: LabelModelForText, opt?: SetLabelStyleOpt<LDI>, normalSpecified?: TextStyleProps, emphasisSpecified?: TextStyleProps): void;

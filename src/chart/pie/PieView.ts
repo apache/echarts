@@ -28,6 +28,7 @@ import { Payload, ColorString } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import { ElementAnimateConfig } from 'zrender/src/Element';
+import labelLayout from './labelLayout';
 
 function updateDataSelected(
     this: PiePiece,
@@ -143,12 +144,6 @@ class PiePiece extends graphic.Sector {
         sectorSelectState.x = dx;
         sectorSelectState.y = dy;
 
-
-        sector.toggleState('select', seriesModel.isSelected(data.getName(idx)), {
-            duration: seriesModel.get('animation') ? 200 : 0,
-            easing: 'cubicOut'
-        });
-
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
@@ -165,14 +160,23 @@ class PiePiece extends graphic.Sector {
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
-        const labelLineSelectState = labelLine.ensureState('select');
-        const labelTextSelectState = labelText.ensureState('select');
-        labelLineSelectState.x = dx;
-        labelLineSelectState.y = dy;
-        labelTextSelectState.x = dx;
-        labelTextSelectState.y = dy;
+        labelLine.states.select = {
+            x: dx, y: dy
+        };
+        if (layout.label) {
+            labelText.states.select = {
+                x: layout.label.x + dx,
+                y: layout.label.y + dy
+            };
+        }
 
         graphic.enableHoverEmphasis(this);
+
+        // Switch after `select` state updated.
+        sector.toggleState('select', seriesModel.isSelected(data.getName(idx)), {
+            duration: seriesModel.get('animation') ? 200 : 0,
+            easing: 'cubicOut'
+        });
     }
 
     private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
