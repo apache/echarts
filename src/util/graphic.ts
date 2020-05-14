@@ -705,14 +705,22 @@ export function setLabelStyle<LDI>(
             targetEl.setTextConfig(createTextConfig(
                 normalStyle,
                 normalModel,
-                opt
+                opt,
+                false
             ));
-            emphasisState.textConfig = createTextConfig(
+            const targetElEmphasisState = targetEl.ensureState('emphasis');
+            targetElEmphasisState.textConfig = createTextConfig(
                 emphasisState.style,
                 emphasisModel,
-                opt
+                opt,
+                true
             );
         }
+
+        // PENDING: if there is many requirements that emphasis position
+        // need to be different from normal position, we might consider
+        // auto slient is those cases.
+        richText.silent = !!normalModel.getShallow('silent');
 
         normalStyle.text = normalStyleText;
         emphasisState.style.text = emphasisStyleText;
@@ -759,8 +767,8 @@ export function createTextStyle(
 export function createTextConfig(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: TextCommonParams,
-    isEmphasis?: boolean
+    opt: TextCommonParams,
+    isEmphasis: boolean
 ) {
     const textConfig: ElementTextConfig = {};
     let labelPosition;
@@ -796,18 +804,19 @@ export function createTextConfig(
     }
 
     // fill and auto is determined by the color of path fill if it's not specified by developers.
-    if (!textStyle.fill) {
-        textConfig.insideFill = 'auto';
-        textConfig.outsideFill = opt.autoColor || null;
-    }
-    if (!textStyle.stroke) {
-        textConfig.insideStroke = 'auto';
-        // textConfig.outsideStroke = 'auto';
-    }
-    else if (opt.autoColor) {
-        // TODO: stroke set to autoColor. if label is inside?
-        textConfig.insideStroke = opt.autoColor;
-    }
+    textConfig.outsideFill = opt.autoColor || null;
+
+    // if (!textStyle.fill) {
+    //     textConfig.insideFill = 'auto';
+    //     textConfig.outsideFill = opt.autoColor || null;
+    // }
+    // if (!textStyle.stroke) {
+    //     textConfig.insideStroke = 'auto';
+    // }
+    // else if (opt.autoColor) {
+    //     // TODO: stroke set to autoColor. if label is inside?
+    //     textConfig.insideStroke = opt.autoColor;
+    // }
 
     return textConfig;
 }

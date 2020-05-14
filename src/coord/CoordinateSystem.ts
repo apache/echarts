@@ -151,7 +151,6 @@ export interface CoordinateSystem {
     // Currently only Cartesian2D implements it.
     // But if other coordinate systems implement it, should follow this signature.
     getAxesByScale?: (scaleType: string) => Axis[];
-
 }
 
 /**

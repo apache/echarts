@@ -95,13 +95,13 @@ class BarView extends ChartView {
     static type = 'bar' as const;
     type = BarView.type;
 
-    _data: List;
+    private _data: List;
 
-    _isLargeDraw: boolean;
+    private _isLargeDraw: boolean;
 
-    _backgroundGroup: Group;
+    private _backgroundGroup: Group;
 
-    _backgroundEls: (Rect | Sector)[];
+    private _backgroundEls: (Rect | Sector)[];
 
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
         this._updateDrawMode(seriesModel);
@@ -120,22 +120,22 @@ class BarView extends ChartView {
         else if (__DEV__) {
             console.warn('Only cartesian2d and polar supported for bar.');
         }
-
-        return this.group;
     }
 
-    incrementalPrepareRender(seriesModel: BarSeriesModel) {
+    incrementalPrepareRender(seriesModel: BarSeriesModel): void {
         this._clear();
         this._updateDrawMode(seriesModel);
+        // incremental also need to clip, otherwise might be overlow.
+        // But must not set clip in each frame, otherwise all of the children will be marked redraw.
+        this._updateLargeClip(seriesModel);
     }
 
-    incrementalRender(
-        params: StageHandlerProgressParams, seriesModel: BarSeriesModel) {
+    incrementalRender(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
         // Do not support progressive in normal mode.
         this._incrementalRenderLarge(params, seriesModel);
     }
 
-    _updateDrawMode(seriesModel: BarSeriesModel) {
+    private _updateDrawMode(seriesModel: BarSeriesModel): void {
         const isLargeDraw = seriesModel.pipelineContext.large;
         if (this._isLargeDraw == null || isLargeDraw !== this._isLargeDraw) {
             this._isLargeDraw = isLargeDraw;
@@ -143,7 +143,7 @@ class BarView extends ChartView {
         }
     }
 
-    _renderNormal(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
+    private _renderNormal(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void {
         const that = this;
         const group = this.group;
         const data = seriesModel.getData();
@@ -387,10 +387,18 @@ class BarView extends ChartView {
         this._data = data;
     }
 
-    _renderLarge(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
+    private _renderLarge(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void {
         this._clear();
         createLarge(seriesModel, this.group);
+        this._updateLargeClip(seriesModel);
+    }
 
+    private _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
+        this._removeBackground();
+        createLarge(seriesModel, this.group, true);
+    }
+
+    private _updateLargeClip(seriesModel: BarSeriesModel): void {
         // Use clipPath in large mode.
         const clipPath = seriesModel.get('clip', true)
             ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
@@ -401,11 +409,6 @@ class BarView extends ChartView {
         else {
             this.group.removeClipPath();
         }
-    }
-
-    _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel) {
-        this._removeBackground();
-        createLarge(seriesModel, this.group, true);
     }
 
     _dataSort(
@@ -489,7 +492,7 @@ class BarView extends ChartView {
         this._clear(ecModel);
     }
 
-    _clear(ecModel?: GlobalModel) {
+    private _clear(ecModel?: GlobalModel): void {
         const group = this.group;
         const data = this._data;
         if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
@@ -511,7 +514,7 @@ class BarView extends ChartView {
         this._data = null;
     }
 
-    _removeBackground() {
+    private _removeBackground(): void {
         this.group.remove(this._backgroundGroup);
         this._backgroundGroup = null;
     }

@@ -46,11 +46,15 @@ type Value<Opt, R> = Opt extends Dictionary<any>
 
 class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown insteadof any?
 
-    // [Caution]: for compat the previous "class extend"
-    // publich and protected fields must be initialized on
-    // prototype rather than in constructor. Otherwise the
-    // subclass overrided filed will be overwritten by this
-    // class. That is, they should not be initialized here.
+    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // the class members must not be initialized in constructor or declaration place.
+    // Otherwise there is bad case:
+    //   class A {xxx = 1;}
+    //   enableClassExtend(A);
+    //   class B extends A {}
+    //   var C = B.extend({xxx: 5});
+    //   var c = new C();
+    //   console.log(c.xxx); // expect 5 but always 1.
 
     /**
      * @readOnly
@@ -147,6 +151,9 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     getModel<R extends keyof Opt, S extends keyof Opt[R]>(
         path: readonly [R, S], parentModel?: Model
     ): Model<Opt[R][S]>;
+    getModel<Ra extends keyof Opt, Rb extends keyof Opt, S extends keyof Opt[Rb]>(
+        path: readonly [Ra] | readonly [Rb, S], parentModel?: Model
+    ): Model<Opt[Ra]> | Model<Opt[Rb][S]>;
     getModel<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
         path: readonly [R, S, T], parentModel?: Model
     ): Model<Opt[R][S][T]>;

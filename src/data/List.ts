@@ -1603,10 +1603,10 @@ class List<
         return new DataDiffer(
             otherList ? otherList.getIndices() : [],
             this.getIndices(),
-            function (idx) {
+            function (idx: number) {
                 return getId(otherList, idx);
             },
-            function (idx) {
+            function (idx: number) {
                 return getId(thisList, idx);
             }
         );

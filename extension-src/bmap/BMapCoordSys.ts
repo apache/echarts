@@ -89,7 +89,7 @@ BMapCoordSys.prototype.getRoamTransform = function () {
     return matrix.create();
 };
 
-BMapCoordSys.prototype.prepareCustoms = function (data) {
+BMapCoordSys.prototype.prepareCustoms = function () {
     const rect = this.getViewRect();
     return {
         coordSys: {

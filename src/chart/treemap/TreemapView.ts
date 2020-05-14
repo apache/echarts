@@ -207,10 +207,7 @@ class TreemapView extends ChartView {
         this._renderBreadcrumb(seriesModel, api, targetInfo);
     }
 
-    /**
-     * @private
-     */
-    _giveContainerGroup(layoutInfo: LayoutRect) {
+    private _giveContainerGroup(layoutInfo: LayoutRect) {
         let containerGroup = this._containerGroup;
         if (!containerGroup) {
             // FIXME
@@ -225,10 +222,7 @@ class TreemapView extends ChartView {
         return containerGroup;
     }
 
-    /**
-     * @private
-     */
-    _doRender(containerGroup: graphic.Group, seriesModel: TreemapSeriesModel, reRoot: ReRoot): RenderResult {
+    private _doRender(containerGroup: graphic.Group, seriesModel: TreemapSeriesModel, reRoot: ReRoot): RenderResult {
         const thisTree = seriesModel.getData().tree;
         const oldTree = this._oldTree;
 
@@ -345,10 +339,7 @@ class TreemapView extends ChartView {
         }
     }
 
-    /**
-     * @private
-     */
-    _doAnimation(
+    private _doAnimation(
         containerGroup: graphic.Group,
         renderResult: RenderResult,
         seriesModel: TreemapSeriesModel,
@@ -466,10 +457,7 @@ class TreemapView extends ChartView {
             .start();
     }
 
-    /**
-     * @private
-     */
-    _resetController(api: ExtensionAPI) {
+    private _resetController(api: ExtensionAPI) {
         let controller = this._controller;
 
         // Init controller.
@@ -486,10 +474,7 @@ class TreemapView extends ChartView {
         });
     }
 
-    /**
-     * @private
-     */
-    _clearController() {
+    private _clearController() {
         let controller = this._controller;
         if (controller) {
             controller.dispose();
@@ -497,10 +482,7 @@ class TreemapView extends ChartView {
         }
     }
 
-    /**
-     * @private
-     */
-    _onPan(e: RoamEventParams['pan']) {
+    private _onPan(e: RoamEventParams['pan']) {
         if (this._state !== 'animating'
             && (Math.abs(e.dx) > DRAG_THRESHOLD || Math.abs(e.dy) > DRAG_THRESHOLD)
         ) {
@@ -529,10 +511,7 @@ class TreemapView extends ChartView {
         }
     }
 
-    /**
-     * @private
-     */
-    _onZoom(e: RoamEventParams['zoom']) {
+    private _onZoom(e: RoamEventParams['zoom']) {
         let mouseX = e.originX;
         let mouseY = e.originY;
 
@@ -579,10 +558,7 @@ class TreemapView extends ChartView {
         }
     }
 
-    /**
-     * @private
-     */
-    _initEvents(containerGroup: graphic.Group) {
+    private _initEvents(containerGroup: graphic.Group) {
         containerGroup.on('click', (e) => {
             if (this._state !== 'ready') {
                 return;
@@ -619,10 +595,7 @@ class TreemapView extends ChartView {
         }, this);
     }
 
-    /**
-     * @private
-     */
-    _renderBreadcrumb(seriesModel: TreemapSeriesModel, api: ExtensionAPI, targetInfo: FoundTargetInfo) {
+    private _renderBreadcrumb(seriesModel: TreemapSeriesModel, api: ExtensionAPI, targetInfo: FoundTargetInfo) {
         if (!targetInfo) {
             targetInfo = seriesModel.get('leafDepth', true) != null
                 ? {node: seriesModel.getViewRoot()}
@@ -661,10 +634,7 @@ class TreemapView extends ChartView {
         this._clearController();
     }
 
-    /**
-     * @private
-     */
-    _zoomToNode(targetInfo: FoundTargetInfo) {
+    private _zoomToNode(targetInfo: FoundTargetInfo) {
         this.api.dispatchAction({
             type: 'treemapZoomToNode',
             from: this.uid,
@@ -673,10 +643,7 @@ class TreemapView extends ChartView {
         });
     }
 
-    /**
-     * @private
-     */
-    _rootToNode(targetInfo: FoundTargetInfo) {
+    private _rootToNode(targetInfo: FoundTargetInfo) {
         this.api.dispatchAction({
             type: 'treemapRootToNode',
             from: this.uid,

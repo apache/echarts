@@ -29,7 +29,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 230px;
+    width: 250px;
     overflow: auto;
     font-size: 13px;
 }
@@ -63,7 +63,7 @@
     margin: 10px 0;
 }
 .case-frame .page-content {
-    margin-left: 235px;
+    margin-left: 255px;
     height: 100%;
     padding: 0;
     position: relative;

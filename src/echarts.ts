@@ -1620,6 +1620,8 @@ class ECharts extends Eventful {
                 const componentModel = componentView.__model;
                 componentView.render(componentModel, ecModel, api, payload);
 
+                componentView.group.markRedraw();
+
                 updateZ(componentModel, componentView);
                 updateHoverEmphasisHandler(componentView);
             });
@@ -1652,6 +1654,9 @@ class ECharts extends Eventful {
                 unfinished |= +renderTask.perform(scheduler.getPerformArgs(renderTask));
 
                 chartView.group.silent = !!seriesModel.get('silent');
+                // Should not call markRedraw on group, because it will disable zrender
+                // increamental render (alway render from the __startIndex each frame)
+                // chartView.group.markRedraw();
 
                 updateZ(seriesModel, chartView);
 
