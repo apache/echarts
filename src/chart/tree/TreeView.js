@@ -379,9 +379,8 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
         // Fix #12279.
         // if the type of symbol is image,
         // update symbol's data immediately but not wait until the next update rendering.
-        var symbolType = symbolEl._symbolType;
-        symbolType.indexOf('image://') === 0 
-            && symbolEl.updateData(data, dataIndex, seriesScope);
+        var symbolType = symbolEl.getSymbolPath().type;
+        symbolType === 'image' && symbolEl.updateData(data, dataIndex, seriesScope);
     }
     else {
         symbolEl.updateData(data, dataIndex, seriesScope);
