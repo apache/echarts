@@ -488,7 +488,7 @@ export default echarts.extendComponentView({
         ]);
 
         var tooltipTrigger = tooltipModel.get('trigger');
-        if (tooltipTrigger != null && tooltipTrigger !== 'item') {
+        if (tooltipTrigger === null || tooltipTrigger === 'none') {
             return;
         }
 
