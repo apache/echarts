@@ -424,7 +424,7 @@ class GaugeView extends ChartView {
                     text: data.getName(0),
                     align: 'center',
                     verticalAlign: 'middle'
-                }, {autoColor: autoColor, forceRich: true})
+                }, {autoColor: autoColor})
             }));
         }
     }
@@ -464,7 +464,7 @@ class GaugeView extends ChartView {
                     height: isNaN(height) ? null : height,
                     align: 'center',
                     verticalAlign: 'middle'
-                }, {autoColor: autoColor, forceRich: true})
+                }, {autoColor: autoColor})
             }));
         }
     }

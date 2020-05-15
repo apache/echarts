@@ -27,8 +27,6 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, ColorString } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
-import { ElementAnimateConfig } from 'zrender/src/Element';
-import labelLayout from './labelLayout';
 
 function updateDataSelected(
     this: PiePiece,
@@ -48,13 +46,9 @@ function updateDataSelected(
         seriesId: seriesModel.id
     });
 
-    const animationCfg: ElementAnimateConfig = {
-        duration: seriesModel.get('animation') ? 200 : 0,
-        easing: 'cubicOut'
-    };
     data.each(function (idx) {
         const el = data.getItemGraphicEl(idx);
-        el.toggleState('select', seriesModel.isSelected(data.getName(idx)), animationCfg);
+        el.toggleState('select', seriesModel.isSelected(data.getName(idx)));
     });
 }
 
@@ -173,10 +167,7 @@ class PiePiece extends graphic.Sector {
         graphic.enableHoverEmphasis(this);
 
         // Switch after `select` state updated.
-        sector.toggleState('select', seriesModel.isSelected(data.getName(idx)), {
-            duration: seriesModel.get('animation') ? 200 : 0,
-            easing: 'cubicOut'
-        });
+        sector.toggleState('select', seriesModel.isSelected(data.getName(idx)));
     }
 
     private _updateLabel(data: List, idx: number, withAnimation: boolean): void {

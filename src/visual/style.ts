@@ -187,7 +187,7 @@ const dataColorPaletteTask: StageHandler = {
                 idxMap[rawIdx] = idx;
             });
 
-            // Iterate on dat before filtered. To make sure color from palette can be
+            // Iterate on data before filtered. To make sure color from palette can be
             // Consistent when toggling legend.
             dataAll.each(function (rawIdx) {
                 const idx = idxMap[rawIdx];

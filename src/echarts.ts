@@ -1673,6 +1673,8 @@ class ECharts extends Eventful {
 
                 updateBlend(seriesModel, chartView);
 
+                updateStates(seriesModel, chartView);
+
                 updateHoverEmphasisHandler(chartView);
 
                 // Add albels.
@@ -1681,8 +1683,8 @@ class ECharts extends Eventful {
 
             scheduler.unfinished = unfinished || scheduler.unfinished;
 
-            labelManager.updateLayoutConfig(api);
-            labelManager.layout();
+            // labelManager.updateLayoutConfig(api);
+            // labelManager.layout();
 
             // If use hover layer
             updateHoverLayerStatus(ecIns, ecModel);
@@ -1753,7 +1755,7 @@ class ECharts extends Eventful {
             const zlevel = model.get('zlevel');
             // Set z and zlevel
             view.group.traverse(function (el: Displayable) {
-                if (el.type !== 'group') {
+                if (!el.isGroup) {
                     z != null && (el.z = z);
                     zlevel != null && (el.zlevel = zlevel);
 
@@ -1764,6 +1766,22 @@ class ECharts extends Eventful {
                         textContent.zlevel = el.zlevel;
                         // lift z2 of text content
                         textContent.z2 = el.z2 + 1;
+                    }
+                }
+            });
+        };
+
+        updateStates = function (seriesModel: SeriesModel, view: ChartView): void {
+            const stateAnimationModel = seriesModel.getModel('stateAnimation');
+            const enableAnimation = seriesModel.isAnimationEnabled();
+            view.group.traverse(function (el: Displayable) {
+                if (el.states && el.states.emphasis) {
+                    if (enableAnimation) {
+                        // TODO textContent?
+                        graphic.setStateTransition(el, stateAnimationModel);
+                    }
+                    else if (el.stateTransition) {
+                        el.stateTransition = null;
                     }
                 }
             });
@@ -1888,6 +1906,7 @@ let renderSeries: (
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
 let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
+let updateStates: (model: SeriesModel, chartView: ChartView) => void;
 let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
 let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;

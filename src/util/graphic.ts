@@ -60,7 +60,8 @@ import {
     ColorString,
     DataModel,
     ECEventData,
-    ZRStyleProps
+    ZRStyleProps,
+    AnimationOption
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
@@ -126,8 +127,6 @@ type TextCommonParams = {
      * for textFill, textStroke, textBackgroundColor, and textBorderColor. If autoColor specified, it is used as default textFill.
      */
     autoColor?: ColorString
-
-    forceRich?: boolean
 
     getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
@@ -379,19 +378,13 @@ function singleEnterEmphasis(el: Element) {
         return;
     }
 
-    el.useState('emphasis', true, {
-        duration: 300,
-        // TODO Configuration
-        easing: 'cubicOut'
-    });
+    el.useState('emphasis', true);
     // TODO hover layer
 }
 
 
 function singleLeaveEmphasis(el: Element) {
-    el.removeState('emphasis', {
-        duration: 300
-    });
+    el.removeState('emphasis');
     (el as ExtendedElement).__highlighted = false;
 }
 
@@ -549,6 +542,23 @@ export function enableHoverEmphasis(el: Element, hoverStyle?: ZRStyleProps) {
 }
 
 /**
+ * Set animation config on state transition.
+ */
+export function setStateTransition(el: Element, animatableModel: Model<AnimationOption>) {
+    const duration = animatableModel.get('duration');
+    if (duration > 0) {
+        el.stateTransition = {
+            duration,
+            delay: animatableModel.get('delay'),
+            easing: animatableModel.get('easing')
+        };
+    }
+    else if (el.stateTransition) {
+        el.stateTransition = null;
+    }
+}
+
+/**
  * @param {module:zrender/Element} el
  * @param {Function} [el.onStateChange] Called when state updated.
  *        Since `setHoverStyle` has the constraint that it must be called after
@@ -648,37 +658,6 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
 }
 
 
-// function handleSquashCallback<LDI>(
-//     func: Function,
-//     labelDataIndex: LDI,
-//     labelFetcher: SetLabelStyleOpt<LDI>['labelFetcher'],
-//     rect: RectLike,
-//     status: DisplayState
-// ) {
-//     let params: {
-//         status?: DisplayState
-//         rect?: RectLike
-//     };
-//     if (labelFetcher && labelFetcher.getDataParams) {
-//         params = labelFetcher.getDataParams(labelDataIndex);
-//     }
-//     else {
-//         params = {};
-//     }
-//     params.status = status;
-//     params.rect = rect;
-//     return func(params);
-// }
-
-// function getGlobalBoundingRect(el: Element) {
-//     const rect = el.getBoundingRect().clone();
-//     const transform = el.getComputedTransform();
-//     if (transform) {
-//         rect.applyTransform(transform);
-//     }
-//     return rect;
-// }
-
 type LabelModel = Model<LabelOption & {
     formatter?: string | ((params: any) => string)
 }>;
@@ -717,33 +696,9 @@ function setLabelStyle<LDI>(
     const labelDataIndex = opt.labelDataIndex;
     const labelDimIndex = opt.labelDimIndex;
 
-    // TODO Performance optimization
-    // normalModel.squash(false, function (func: Function) {
-    //     return handleSquashCallback(
-    //         func,
-    //         labelDataIndex,
-    //         labelFetcher,
-    //         isSetOnText ? null : getGlobalBoundingRect(targetEl),
-    //         'normal'
-    //     );
-    // });
-
-    // emphasisModel.squash(false, function (func: Function) {
-    //     return handleSquashCallback(
-    //         func,
-    //         labelDataIndex,
-    //         labelFetcher,
-    //         isSetOnText ? null : getGlobalBoundingRect(targetEl),
-    //         'emphasis'
-    //     );
-    // });
-
     const showNormal = normalModel.getShallow('show');
     const showEmphasis = emphasisModel.getShallow('show');
 
-    // Consider performance, only fetch label when necessary.
-    // If `normal.show` is `false` and `emphasis.show` is `true` and `emphasis.formatter` is not set,
-    // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
     let richText = isSetOnText ? targetEl as ZRText : null;
     if (showNormal || showEmphasis) {
         let baseText;
@@ -780,12 +735,6 @@ function setLabelStyle<LDI>(
         const emphasisState = richText.ensureState('emphasis');
         emphasisState.ignore = !showEmphasis;
 
-        // Always set `textStyle` even if `normalStyle.text` is null, because default
-        // values have to be set on `normalStyle`.
-        // If we set default values on `emphasisStyle`, consider case:
-        // Firstly, `setOption(... label: {normal: {text: null}, emphasis: {show: true}} ...);`
-        // Secondly, `setOption(... label: {noraml: {show: true, text: 'abc', color: 'red'} ...);`
-        // Then the 'red' will not work on emphasis.
         const normalStyle = createTextStyle(
             normalModel,
             normalSpecified,
@@ -848,12 +797,12 @@ export {setLabelStyle};
 export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: TextStyleProps,    // Can be overrided by settings in model.
-    opt?: TextCommonParams,
-    isEmphasis?: boolean,
+    opt?: Pick<TextCommonParams, 'autoColor' | 'disableBox'>,
+    isNotNormal?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
     const textStyle: TextStyleProps = {};
-    setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis, isAttached);
+    setTextStyleCommon(textStyle, textStyleModel, opt, isNotNormal, isAttached);
     specifiedTextStyle && extend(textStyle, specifiedTextStyle);
     // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
@@ -863,25 +812,25 @@ export function createTextStyle(
 export function createTextConfig(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: TextCommonParams,
-    isEmphasis?: boolean
+    opt?: Pick<TextCommonParams, 'getTextPosition' | 'defaultOutsidePosition' | 'autoColor'>,
+    isNotNormal?: boolean
 ) {
     const textConfig: ElementTextConfig = {};
     let labelPosition;
     let labelRotate = textStyleModel.getShallow('rotate');
     const labelDistance = retrieve2(
-        textStyleModel.getShallow('distance'), isEmphasis ? null : 5
+        textStyleModel.getShallow('distance'), isNotNormal ? null : 5
     );
     const labelOffset = textStyleModel.getShallow('offset');
 
     if (opt.getTextPosition) {
-        labelPosition = opt.getTextPosition(textStyleModel, isEmphasis);
+        labelPosition = opt.getTextPosition(textStyleModel, isNotNormal);
     }
     else {
         labelPosition = textStyleModel.getShallow('position')
-            || (isEmphasis ? null : 'inside');
+            || (isNotNormal ? null : 'inside');
         // 'outside' is not a valid zr textPostion value, but used
-        // in bar series, and magric type should be considered.
+        // in bar series, and magic type should be considered.
         labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
     }
 
@@ -905,17 +854,6 @@ export function createTextConfig(
     // Set default stroke, which is useful when label is over other
     // messy graphics (like lines) in background.
     textConfig.outsideStroke = 'rgba(255, 255, 255, 0.9)';
-    // if (!textStyle.fill) {
-    //     textConfig.insideFill = 'auto';
-    //     textConfig.outsideFill = opt.autoColor || null;
-    // }
-    // if (!textStyle.stroke) {
-    //     textConfig.insideStroke = 'auto';
-    // }
-    // else if (opt.autoColor) {
-    //     // TODO: stroke set to autoColor. if label is inside?
-    //     textConfig.insideStroke = opt.autoColor;
-    // }
 
     return textConfig;
 }
@@ -933,8 +871,8 @@ export function createTextConfig(
 function setTextStyleCommon(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: TextCommonParams,
-    isEmphasis?: boolean,
+    opt?: Pick<TextCommonParams, 'autoColor' | 'disableBox'>,
+    isNotNormal?: boolean,
     isAttached?: boolean
 ) {
     // Consider there will be abnormal when merge hover style to normal style if given default value.
@@ -970,7 +908,7 @@ function setTextStyleCommon(
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
-                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isEmphasis, isAttached);
+                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached);
             }
         }
     }
@@ -983,12 +921,7 @@ function setTextStyleCommon(
         textStyle.overflow = overflow;
     }
 
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, isAttached, true);
-
-    // TODO
-    if (opt.forceRich && !opt.textStyle) {
-        opt.textStyle = {};
-    }
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true);
 }
 
 // Consider case:
@@ -1025,7 +958,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
 }
 
 const TEXT_PROPS_WITH_GLOBAL = [
-    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'opacity',
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 
@@ -1043,13 +976,13 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    opt?: TextCommonParams,
-    isEmphasis?: boolean,
+    opt?: Pick<TextCommonParams, 'autoColor' | 'disableBox'>,
+    isNotNormal?: boolean,
     isAttached?: boolean,
     isBlock?: boolean
 ) {
     // In merge mode, default value should not be given.
-    globalTextStyle = !isEmphasis && globalTextStyle || EMPTY_OBJ;
+    globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
 
     const autoColor = opt && opt.autoColor;
     let fillColor = textStyleModel.getShallow('color');
@@ -1078,7 +1011,7 @@ function setTokenTextStyle(
     }
 
     // TODO
-    if (!isEmphasis && !isAttached) {
+    if (!isNotNormal && !isAttached) {
         // Set default finally.
         if (textStyle.fill == null && opt.autoColor) {
             textStyle.fill = opt.autoColor;

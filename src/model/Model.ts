@@ -169,37 +169,37 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
      *
      * @param deepMerge If do deep merge. Default to be false.
      */
-    squash(
-        deepMerge?: boolean,
-        handleCallback?: (func: () => object) => object
-    ) {
-        const optionStack = [];
-        let model: Model = this;
-        while (model) {
-            if (model.option) {
-                optionStack.push(model.option);
-            }
-            model = model.parentModel;
-        }
+    // squash(
+    //     deepMerge?: boolean,
+    //     handleCallback?: (func: () => object) => object
+    // ) {
+    //     const optionStack = [];
+    //     let model: Model = this;
+    //     while (model) {
+    //         if (model.option) {
+    //             optionStack.push(model.option);
+    //         }
+    //         model = model.parentModel;
+    //     }
 
-        const newOption = {} as Opt;
-        let option;
-        while (option = optionStack.pop()) {    // Top down merge
-            if (isFunction(option) && handleCallback) {
-                option = handleCallback(option);
-            }
-            if (deepMerge) {
-                merge(newOption, option);
-            }
-            else {
-                extend(newOption, option);
-            }
-        }
+    //     const newOption = {} as Opt;
+    //     let option;
+    //     while (option = optionStack.pop()) {    // Top down merge
+    //         if (isFunction(option) && handleCallback) {
+    //             option = handleCallback(option);
+    //         }
+    //         if (deepMerge) {
+    //             merge(newOption, option);
+    //         }
+    //         else {
+    //             extend(newOption, option);
+    //         }
+    //     }
 
-        // Remove parentModel
-        this.option = newOption;
-        this.parentModel = null;
-    }
+    //     // Remove parentModel
+    //     this.option = newOption;
+    //     this.parentModel = null;
+    // }
 
     /**
      * If model has option

@@ -59,13 +59,19 @@ export default {
     // Default is source-over
     blendMode: null,
 
+    stateAnimation: {
+        duration: 300,
+        easing: 'cubicOut'
+    },
+
     animation: 'auto',
     animationDuration: 1000,
     animationDurationUpdate: 300,
-    animationEasing: 'exponentialOut',
+    animationEasing: 'cubicOut',
     animationEasingUpdate: 'cubicOut',
 
     animationThreshold: 2000,
+
     // Configuration for progressive/incremental rendering
     progressiveThreshold: 3000,
     progressive: 400,

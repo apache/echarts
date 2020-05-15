@@ -534,10 +534,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         };
     }
 
-    /**
-     * @return {boolean}
-     */
-    isAnimationEnabled() {
+    isAnimationEnabled(): boolean {
         if (env.node) {
             return false;
         }
@@ -547,7 +544,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 animationEnabled = false;
             }
         }
-        return animationEnabled;
+        return !!animationEnabled;
     }
 
     restoreData() {

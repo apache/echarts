@@ -546,6 +546,11 @@ export type AnimationDelayCallbackParam = {
 export type AnimationDurationCallback = (idx: number) => number;
 export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
 
+export interface AnimationOption {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
+}
 /**
  * Mixin of option set to control the animation of series.
  */
@@ -1122,6 +1127,11 @@ export interface SeriesOption extends
      * Global label layout option in label layout stage.
      */
     labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
+
+    /**
+     * Animation config for state transition.
+     */
+    stateAnimation?: AnimationOption
 }
 
 export interface SeriesOnCartesianOptionMixin {
