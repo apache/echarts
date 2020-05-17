@@ -273,7 +273,6 @@ class MarkAreaView extends MarkerView {
             })
             .update(function (newIdx, oldIdx) {
                 const polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
-                graphic.clearStates(polygon);
                 graphic.updateProps(polygon, {
                     shape: {
                         points: areaData.getItemLayout(newIdx)

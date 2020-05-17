@@ -26,8 +26,7 @@ import {
     updateProps,
     initProps,
     enableHoverEmphasis,
-    setLabelStyle,
-    clearStates
+    setLabelStyle
 } from '../../util/graphic';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
@@ -236,7 +235,6 @@ class BarView extends ChartView {
                 }
 
                 if (el) {
-                    clearStates(el);
                     updateProps(el as Path, {
                         shape: layout
                     }, animationModel, newIndex);

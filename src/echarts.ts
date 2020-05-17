@@ -1660,6 +1660,9 @@ class ECharts extends Eventful {
                 const renderTask = chartView.renderTask;
                 scheduler.updatePayload(renderTask, payload);
 
+                // TODO states on marker.
+                clearStates(seriesModel, chartView);
+
                 if (dirtyMap && dirtyMap.get(seriesModel.uid)) {
                     renderTask.dirty();
                 }
@@ -1673,21 +1676,25 @@ class ECharts extends Eventful {
 
                 updateBlend(seriesModel, chartView);
 
-                updateStates(seriesModel, chartView);
-
                 updateHoverEmphasisHandler(chartView);
 
-                // Add albels.
+                // Add labels.
                 labelManager.addLabelsOfSeries(chartView);
+
+                // NOTE: Update states after label is added.
+                // Because in LabelManager#addLabel. It will cache the properties(transform, textConfig) of label.
+                // We need to cache the normal state. Not other states.
+                updateStates(seriesModel, chartView);
             });
 
             scheduler.unfinished = unfinished || scheduler.unfinished;
 
-            // labelManager.updateLayoutConfig(api);
-            // labelManager.layout();
+            labelManager.updateLayoutConfig(api);
+            labelManager.layout();
 
             // If use hover layer
-            updateHoverLayerStatus(ecIns, ecModel);
+            // TODO
+            // updateHoverLayerStatus(ecIns, ecModel);
 
             // Add aria
             aria(ecIns._zr.dom, ecModel);
@@ -1699,7 +1706,7 @@ class ECharts extends Eventful {
             });
         };
 
-        updateHoverLayerStatus = function (ecIns: ECharts, ecModel: GlobalModel): void {
+        function updateHoverLayerStatus(ecIns: ECharts, ecModel: GlobalModel): void {
             const zr = ecIns._zr;
             const storage = zr.storage;
             let elCount = 0;
@@ -1717,7 +1724,7 @@ class ECharts extends Eventful {
                     if (chartView.__alive) {
                         chartView.group.traverse(function (el: ECElement) {
                             // Don't switch back.
-                            // el.useHoverLayer = true;
+                            el.useHoverLayer = true;
                         });
                     }
                 });
@@ -1727,7 +1734,7 @@ class ECharts extends Eventful {
         /**
          * Update chart progressive and blend.
          */
-        updateBlend = function (seriesModel: SeriesModel, chartView: ChartView): void {
+        function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
             if (__DEV__) {
                 if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
@@ -1737,20 +1744,18 @@ class ECharts extends Eventful {
             chartView.group.traverse(function (el: Displayable) {
                 // FIXME marker and other components
                 if (!el.isGroup) {
-                    // Only set if blendMode is changed. In case element is incremental and don't wan't to rerender.
-                    if (el.style.blend !== blendMode) {
-                        el.setStyle('blend', blendMode);
-                    }
+                    // DONT mark the element dirty. In case element is incremental and don't wan't to rerender.
+                    el.style.blend = blendMode;
                 }
                 if ((el as IncrementalDisplayable).eachPendingDisplayable) {
                     (el as IncrementalDisplayable).eachPendingDisplayable(function (displayable) {
-                        displayable.setStyle('blend', blendMode);
+                        displayable.style.blend = blendMode;
                     });
                 }
             });
         };
 
-        updateZ = function (model: ComponentModel, view: ComponentView | ChartView): void {
+        function updateZ(model: ComponentModel, view: ComponentView | ChartView): void {
             const z = model.get('z');
             const zlevel = model.get('zlevel');
             // Set z and zlevel
@@ -1771,17 +1776,54 @@ class ECharts extends Eventful {
             });
         };
 
-        updateStates = function (seriesModel: SeriesModel, view: ChartView): void {
+        interface DisplayableWithStatesHistory extends Displayable {
+            __prevStates: string[]
+        };
+        // TODO States on component.
+        function clearStates(seriesModel: SeriesModel, view: ChartView): void {
+            view.group.traverse(function (el: Displayable) {
+                // TODO If el is incremental.
+                if (el.hasState()) {
+                    (el as DisplayableWithStatesHistory).__prevStates = el.currentStates;
+                    const textContent = el.getTextContent();
+                    const textGuide = el.getTextGuideLine();
+                    // Not use animation when clearStates and restore states in `updateStates`
+                    if (el.stateTransition) {
+                        el.stateTransition = null;
+                    }
+                    if (textContent && textContent.stateTransition) {
+                        textContent.stateTransition = null;
+                    }
+                    if (textGuide && textGuide.stateTransition) {
+                        textGuide.stateTransition = null;
+                    }
+                    el.clearStates();
+                }
+            });
+        }
+
+        function updateStates(seriesModel: SeriesModel, view: ChartView): void {
             const stateAnimationModel = seriesModel.getModel('stateAnimation');
             const enableAnimation = seriesModel.isAnimationEnabled();
             view.group.traverse(function (el: Displayable) {
-                if (el.states && el.states.emphasis) {
-                    if (enableAnimation) {
-                        // TODO textContent?
-                        graphic.setStateTransition(el, stateAnimationModel);
+                // Only updated on changed element. In case element is incremental and don't wan't to rerender.
+                if (el.__dirty && el.states && el.states.emphasis) {
+                    const prevStates = (el as DisplayableWithStatesHistory).__prevStates;
+                    if (prevStates) {
+                        el.useStates(prevStates);
                     }
-                    else if (el.stateTransition) {
-                        el.stateTransition = null;
+                    // Update state transition and enable animation again.
+                    if (enableAnimation) {
+                        graphic.setStateTransition(el, stateAnimationModel);
+                        const textContent = el.getTextContent();
+                        const textGuide = el.getTextGuideLine();
+                        // TODO Is it necessary to animate label?
+                        if (textContent) {
+                            graphic.setStateTransition(textContent, stateAnimationModel);
+                        }
+                        if (textGuide) {
+                            graphic.setStateTransition(textGuide, stateAnimationModel);
+                        }
                     }
                 }
             });
@@ -1805,7 +1847,7 @@ class ECharts extends Eventful {
                 graphic.leaveEmphasisWhenMouseOut(dispatcher, e);
             }
         }
-        updateHoverEmphasisHandler = function (view: ComponentView | ChartView): void {
+        function updateHoverEmphasisHandler(view: ComponentView | ChartView): void {
             view.group.on('mouseover', onMouseOver)
                 .on('mouseout', onMouseOut);
         };
@@ -1904,11 +1946,6 @@ let renderSeries: (
     dirtyMap?: {[uid: string]: any}
 ) => void;
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
-let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
-let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
-let updateStates: (model: SeriesModel, chartView: ChartView) => void;
-let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
-let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (chart: ECharts) => void;
 

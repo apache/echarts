@@ -480,17 +480,6 @@ export function enableElementHoverEmphasis(el: Displayable, hoverStl?: ZRStylePr
     }
 
     el.stateProxy = elementStateProxy;
-
-    // FIXME
-    // It is not completely right to save "normal"/"emphasis" flag on elements.
-    // It probably should be saved on `data` of series. Consider the cases:
-    // (1) A highlighted elements are moved out of the view port and re-enter
-    // again by dataZoom.
-    // (2) call `setOption` and replace elements totally when they are highlighted.
-    if ((el as ExtendedDisplayable).__highlighted) {
-        // singleLeaveEmphasis(el);
-        singleEnterEmphasis(el);
-    }
 }
 
 export function enterEmphasisWhenMouseOver(el: Element, e: ElementEvent) {

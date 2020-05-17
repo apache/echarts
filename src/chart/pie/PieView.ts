@@ -337,8 +337,6 @@ class PieView extends ChartView {
             .update(function (newIdx, oldIdx) {
                 const piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
 
-                graphic.clearStates(piePiece);
-
                 piePiece.updateData(data, newIdx, startAngle);
 
                 piePiece.off('click');

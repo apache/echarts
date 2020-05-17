@@ -77,7 +77,6 @@ class ParallelView extends ChartView {
 
         function update(newDataIndex: number, oldDataIndex: number) {
             const line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
-            graphic.clearStates(line);
 
             const points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);

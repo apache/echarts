@@ -173,19 +173,16 @@ class SunburstPiece extends graphic.Sector {
         this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
             if (n.piece) {
                 n.piece.clearStates();
-                // n.piece.updateData(false, n, 'normal');
             }
         });
     }
 
     onHighlight() {
-        this.removeState('downplay');
-        this.useState('highlight', true);
+        this.replaceState('downplay', 'highlight', true);
     }
 
     onDownplay() {
-        this.removeState('highlight');
-        this.useState('downplay', true);
+        this.replaceState('highlight', 'downplay', true);
     }
 
     _updateLabel(

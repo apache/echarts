@@ -144,8 +144,6 @@ class RadarView extends ChartView {
             .update(function (newIdx, oldIdx) {
                 const itemGroup = oldData.getItemGraphicEl(oldIdx) as graphic.Group;
 
-                graphic.clearStates(itemGroup);
-
                 const polyline = itemGroup.childAt(0) as graphic.Polyline;
                 const polygon = itemGroup.childAt(1) as graphic.Polygon;
                 const symbolGroup = itemGroup.childAt(2) as graphic.Group;

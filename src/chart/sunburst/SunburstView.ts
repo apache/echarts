@@ -25,8 +25,7 @@ import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSer
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
-
-const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
+import { ROOT_TO_NODE_ACTION } from './sunburstAction';
 
 interface DrawTreeNode extends TreeNode {
     parentNode: DrawTreeNode

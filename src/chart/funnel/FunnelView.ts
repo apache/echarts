@@ -190,7 +190,6 @@ class FunnelView extends ChartView {
             })
             .update(function (newIdx, oldIdx) {
                 const piece = oldData.getItemGraphicEl(oldIdx) as FunnelPiece;
-                graphic.clearStates(piece);
 
                 piece.updateData(data, newIdx);
 

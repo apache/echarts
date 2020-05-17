@@ -190,7 +190,6 @@ class PictorialBarView extends ChartView {
                 }
 
                 if (bar) {
-                    bar.clearStates();
                     updateBar(bar, opt, symbolMeta);
                 }
                 else {

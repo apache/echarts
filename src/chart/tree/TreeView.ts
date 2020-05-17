@@ -224,9 +224,6 @@ class TreeView extends ChartView {
                     symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
                     return;
                 }
-                if (symbolEl) {
-                    graphic.clearStates(symbolEl);
-                }
                 // Update node and edge
                 updateNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
             })

@@ -259,7 +259,7 @@ class LabelManager {
                     position: (layoutOption.x != null || layoutOption.y != null)
                         ? null : defaultLabelAttr.attachedPos,
                     // Ignore rotation config on the host el if rotation is changed.
-                    rotation: layoutOption.rotation != null ? null : defaultLabelAttr.attachedRot,
+                    rotation: layoutOption.rotation != null ? layoutOption.rotation : defaultLabelAttr.attachedRot,
                     offset: [layoutOption.dx || 0, layoutOption.dy || 0]
                 });
             }

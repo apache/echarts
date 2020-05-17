@@ -245,7 +245,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
                 opacity: 0.5
             },
             label: {
-                opacity: 0.6
+                opacity: 0.5
             }
         },
 
