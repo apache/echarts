@@ -19,11 +19,12 @@
 
 // Compatitable with 2.0
 
-import {each, isArray, isObject} from 'zrender/src/core/util';
-import compatStyle from './helper/compatStyle';
+import {each, isArray, isObject, isTypedArray} from 'zrender/src/core/util';
+import compatStyle, {deprecateLog} from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
 import { ECUnitOption, SeriesOption } from '../util/types';
+import { __DEV__ } from '../config';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -70,6 +71,24 @@ const COMPATITABLE_COMPONENTS = [
     'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
 ];
 
+function compatBarItemStyle(option: Dictionary<any>) {
+    const itemStyle = option && option.itemStyle;
+    if (itemStyle) {
+        if (itemStyle.barBorderRadius != null) {
+            itemStyle.barderRadius = itemStyle.barBorderRadius;
+            if (__DEV__) {
+                deprecateLog('barBorderRadius has been changed to borderRadius.');
+            }
+        }
+        if (itemStyle.barBorderColor != null) {
+            itemStyle.borderColor = itemStyle.barBorderColor;
+            if (__DEV__) {
+                deprecateLog('barBorderColor has been changed to borderColor.');
+            }
+        }
+    }
+}
+
 export default function (option: ECUnitOption, isTheme?: boolean) {
     compatStyle(option, isTheme);
 
@@ -88,6 +107,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             if (seriesOpt.clipOverflow != null) {
                 // @ts-ignore
                 seriesOpt.clip = seriesOpt.clipOverflow;
+                deprecateLog('clipOverflow has been changed to clip.');
             }
         }
         else if (seriesType === 'pie' || seriesType === 'gauge') {
@@ -95,12 +115,27 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             if (seriesOpt.clockWise != null) {
                 // @ts-ignore
                 seriesOpt.clockwise = seriesOpt.clockWise;
+                deprecateLog('clockWise has been changed to clockwise.');
             }
         }
         else if (seriesType === 'gauge') {
             const pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
                 && set(seriesOpt, 'itemStyle.color', pointerColor);
+        }
+        else if (seriesType === 'bar') {
+            compatBarItemStyle(seriesOpt);
+            // @ts-ignore
+            compatBarItemStyle(seriesOpt.emphasis);
+            const data = seriesOpt.data;
+            if (data && !isTypedArray(data)) {
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i]) {
+                        compatBarItemStyle(data[i]);
+                        compatBarItemStyle(data[i] && data[i].emphasis);
+                    }
+                }
+            }
         }
 
         compatLayoutProperties(seriesOpt);
