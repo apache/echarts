@@ -480,6 +480,14 @@ export function enableElementHoverEmphasis(el: Displayable, hoverStl?: ZRStylePr
     }
 
     el.stateProxy = elementStateProxy;
+    const textContent = el.getTextContent();
+    const textGuide = el.getTextGuideLine();
+    if (textContent) {
+        textContent.stateProxy = elementStateProxy;
+    }
+    if (textGuide) {
+        textGuide.stateProxy = elementStateProxy;
+    }
 }
 
 export function enterEmphasisWhenMouseOver(el: Element, e: ElementEvent) {
