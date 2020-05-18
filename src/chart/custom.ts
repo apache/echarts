@@ -82,7 +82,7 @@ const inner = makeInner<{
     customPathData: string;
     customGraphicType: string;
     customImagePath: CustomImageOption['style']['image'];
-    customText: string;
+    // customText: string;
     txConZ2Set: number;
     orginalDuring: Element['updateDuringAnimation'];
     customDuring: CustomZRPathOption['during'];
@@ -126,6 +126,7 @@ interface CustomGroupOption extends CustomBaseElementOption {
     type: 'group';
     width?: number;
     height?: number;
+    // @deprecated
     diffChildrenByName?: boolean;
     children: CustomElementOption[];
     $mergeChildren: false | 'byName' | 'byIndex';
@@ -134,6 +135,7 @@ interface CustomZRPathOption extends CustomDisplayableOption, Pick<PathProps, 's
 }
 interface CustomDuringElProps extends Partial<Pick<Element, TransformProps>> {
     shape?: PathProps['shape'];
+    style?: { text: string };
 }
 interface CustomSVGPathOption extends CustomDisplayableOption {
     type: 'path';
@@ -284,8 +286,7 @@ const Z2_SPECIFIED_BIT = {
     emphasis: 1
 } as const;
 
-const tmpDuringElProps = {} as CustomDuringElProps;
-
+const tmpDuringElProps = { style: {} } as CustomDuringElProps;
 
 export type PrepareCustomInfo = (coordSys: CoordinateSystem) => {
     coordSys: CustomSeriesRenderItemParamsCoordSys;
@@ -507,7 +508,7 @@ function createEl(elOption: CustomElementOption): Element {
     }
     else if (graphicType === 'text') {
         el = new graphicUtil.Text({});
-        inner(el).customText = (elOption.style as TextStyleProps).text;
+        // inner(el).customText = (elOption.style as TextStyleProps).text;
     }
     else if (graphicType === 'group') {
         el = new graphicUtil.Group();
@@ -667,39 +668,58 @@ function updateElNormal(
         zrUtil.hasOwn(elOption, 'info') && (inner(el).info = elOption.info);
     }
 
-    el.markRedraw();
+    styleOpt ? el.dirty() : el.markRedraw();
 }
 
-function elUpdateDuringAnimation(this: graphicUtil.Path, key: string): void {
+function elUpdateDuringAnimation(this: Element, key: string): void {
     const innerEl = inner(this);
     // FIXME `this.markRedraw();` directly ?
     innerEl.orginalDuring.call(this, key);
     const customDuring = innerEl.customDuring;
+    const thisPath = this as graphicUtil.Path;
+    const thisText = this as graphicUtil.Text;
+    let dirtyStyle = false;
 
     // Only provide these props. Usually other props do not need to be
     // changed in animation during.
     // Do not give `this` to user util really needed in future.
     // Props in `shape` can be modified directly in the during callback.
-    tmpDuringElProps.shape = this.shape;
-    tmpDuringElProps.x = this.x;
-    tmpDuringElProps.y = this.y;
-    tmpDuringElProps.scaleX = this.scaleX;
-    tmpDuringElProps.scaleX = this.scaleY;
-    tmpDuringElProps.originX = this.originX;
-    tmpDuringElProps.originY = this.originY;
-    tmpDuringElProps.rotation = this.rotation;
+    const shapeCurr = tmpDuringElProps.shape = thisPath.shape;
+    const xCurr = tmpDuringElProps.x = this.x;
+    const yCurr = tmpDuringElProps.y = this.y;
+    const scaleXCurr = tmpDuringElProps.scaleX = this.scaleX;
+    const scaleYCurr = tmpDuringElProps.scaleY = this.scaleY;
+    const originXCurr = tmpDuringElProps.originX = this.originX;
+    const originYCurr = tmpDuringElProps.originY = this.originY;
+    const rotationCurr = tmpDuringElProps.rotation = this.rotation;
+
+    // PENDING:
+    // Do not expose other style in case that is not stable.
+    const isText = this.type === 'text';
+    const textCurr = tmpDuringElProps.style.text = isText ? thisText.style.text : null;
 
     customDuring(tmpDuringElProps);
 
-    tmpDuringElProps.shape !== this.shape && (this.shape = tmpDuringElProps.shape);
+    tmpDuringElProps.shape !== shapeCurr && (thisPath.shape = tmpDuringElProps.shape);
     // Consider prop on prototype.
-    tmpDuringElProps.x !== this.x && (this.x = tmpDuringElProps.x);
-    tmpDuringElProps.y !== this.y && (this.y = tmpDuringElProps.y);
-    tmpDuringElProps.scaleX !== this.scaleX && (this.scaleX = tmpDuringElProps.scaleX);
-    tmpDuringElProps.scaleY !== this.scaleY && (this.scaleY = tmpDuringElProps.scaleY);
-    tmpDuringElProps.originX !== this.originX && (this.originX = tmpDuringElProps.originX);
-    tmpDuringElProps.originY !== this.originY && (this.originY = tmpDuringElProps.originY);
-    tmpDuringElProps.rotation !== this.rotation && (this.rotation = tmpDuringElProps.rotation);
+    tmpDuringElProps.x !== xCurr && (this.x = tmpDuringElProps.x);
+    tmpDuringElProps.y !== yCurr && (this.y = tmpDuringElProps.y);
+    tmpDuringElProps.scaleX !== scaleXCurr && (this.scaleX = tmpDuringElProps.scaleX);
+    tmpDuringElProps.scaleY !== scaleYCurr && (this.scaleY = tmpDuringElProps.scaleY);
+    tmpDuringElProps.originX !== originXCurr && (this.originX = tmpDuringElProps.originX);
+    tmpDuringElProps.originY !== originYCurr && (this.originY = tmpDuringElProps.originY);
+    tmpDuringElProps.rotation !== rotationCurr && (this.rotation = tmpDuringElProps.rotation);
+
+    if (isText) {
+        const currTmpStl = tmpDuringElProps.style;
+        currTmpStl && currTmpStl.text !== textCurr && (thisText.style.text = currTmpStl.text, dirtyStyle = true);
+    }
+
+    dirtyStyle && this.dirty();
+    // markRedraw() will be called by default.
+
+    // FIXME: if in future meet the case that some prop will be both modified in `during` and `state`,
+    // consider the issue that the prop might be incorrect when return to "normal" state.
 }
 
 function updateElOnState(
@@ -1193,6 +1213,7 @@ function doCreateOrUpdate(
     const elOptionType = elOption.type;
     const elOptionShape = (elOption as CustomZRPathOption).shape;
     const elOptionStyle = elOption.style;
+    let toBeReplacedIdx = -1;
 
     if (el) {
         const elInner = inner(el);
@@ -1210,13 +1231,14 @@ function doCreateOrUpdate(
                 && zrUtil.hasOwn(elOptionStyle, 'image')
                 && (elOptionStyle as CustomImageOption['style']).image !== elInner.customImagePath
             )
-            // FIXME test and remove this restriction?
-            || (elOptionType === 'text'
-                && zrUtil.hasOwn(elOptionStyle, 'text')
-                && (elOptionStyle as TextStyleProps).text !== elInner.customText
-            )
+            // // FIXME test and remove this restriction?
+            // || (elOptionType === 'text'
+            //     && zrUtil.hasOwn(elOptionStyle, 'text')
+            //     && (elOptionStyle as TextStyleProps).text !== elInner.customText
+            // )
         ) {
-            group.remove(el);
+            // Should keep at the original index, otherwise "merge by index" will be incorrect.
+            toBeReplacedIdx = group.childrenRef().indexOf(el);
             el = null;
         }
     }
@@ -1254,8 +1276,12 @@ function doCreateOrUpdate(
         );
     }
 
-    // Always add whatever already added to ensure sequence.
-    group.add(el);
+    if (toBeReplacedIdx >= 0) {
+        group.replaceAt(el, toBeReplacedIdx);
+    }
+    else {
+        group.add(el);
+    }
 
     return el;
 }
@@ -1316,7 +1342,7 @@ function doCreateOrUpdateAttachedTx(
             const txConStlOptEmphasis = retrieveStyleOptionOnState(txConOptNormal, txConOptEmphasis, EMPHASIS);
             updateElOnState(EMPHASIS, textContent, txConOptEmphasis, txConStlOptEmphasis, null, false, true);
 
-            textContent.markRedraw();
+            txConStlOptNormal ? textContent.dirty() : textContent.markRedraw();
         }
     }
 }
