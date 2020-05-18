@@ -272,8 +272,8 @@ class GraphView extends ChartView {
 
                 symbolPath.setTextConfig({
                     rotation: -rad,
-                    position: textPosition
-                    // textOrigin: 'center'
+                    position: textPosition,
+                    origin: 'center'
                 });
                 const emphasisState = symbolPath.ensureState('emphasis');
                 zrUtil.extend(emphasisState.textConfig || (emphasisState.textConfig = {}), {

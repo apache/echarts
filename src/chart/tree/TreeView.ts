@@ -518,8 +518,8 @@ function updateNode(
         if (textContent) {
             symbolPath.setTextConfig({
                 position: seriesScope.labelModel.get('position') || textPosition,
-                rotation: rotate == null ? -rad : labelRotateRadian
-                // textOrigin: 'center',
+                rotation: rotate == null ? -rad : labelRotateRadian,
+                origin: 'center'
             });
             textContent.setStyle('verticalAlign', 'middle');
         }
