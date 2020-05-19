@@ -325,6 +325,9 @@ class LabelManager {
 
             const globalRect = localRect.clone();
             globalRect.applyTransform(transform);
+            // Text has a default 1px stroke. Exclude this.
+            globalRect.width -= 3;
+            globalRect.height -= 3;
 
             let obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
             let overlapped = false;
