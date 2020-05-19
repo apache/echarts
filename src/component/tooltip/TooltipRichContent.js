@@ -115,27 +115,6 @@ TooltipRichContent.prototype = {
         }
 
         this.el = new Text({
-            // style: {
-            //     rich: markers,
-            //     text: content,
-            //     textLineHeight: 20,
-            //     textBackgroundColor: tooltipModel.get('backgroundColor'),
-            //     textBorderRadius: tooltipModel.get('borderRadius'),
-            //     textFill: tooltipModel.get('textStyle.color'),
-            //     textPadding: tooltipModel.get('padding'),
-            //     fontStyle: tooltipModel.get('fontStyle'),
-            //     fontWeight: tooltipModel.get('fontWeight'),
-            //     fontFamily: tooltipModel.get('fontFamily'),
-            //     fontSize: tooltipModel.get('fontSize'),
-            //     lineHeight: tooltipModel.get('lineHeight'),
-            //     width: tooltipModel.get('width'),
-            //     height: tooltipModel.get('height'),
-            //     textBorderColor: tooltipModel.get('textBorderColor'),
-            //     textBorderWidth: tooltipModel.get('textBorderWidth'),
-            //     textShadowBlur: tooltipModel.get('textShadowBlur'),
-            //     textShadowOffsetX: tooltipModel.get('textShadowOffsetX'),
-            //     textShadowOffsetY: tooltipModel.get('textShadowOffsetY')
-            // },
             style: graphicUtil.setTextStyle({}, textStyleModel, {
                 rich: markers,
                 text: content,
