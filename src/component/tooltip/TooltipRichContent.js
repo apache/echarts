@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 // import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';
+import * as graphicUtil from '../../util/graphic';
 
 /**
  * @alias module:echarts/component/tooltip/TooltipRichContent
@@ -106,16 +107,44 @@ TooltipRichContent.prototype = {
             startId = text.indexOf('{marker');
         }
 
+        var textStyleModel = tooltipModel.getModel('textStyle');
+        var fontSize = textStyleModel.get('fontSize');
+        var lineHeight = tooltipModel.get('textLineHeight');
+        if (lineHeight == null) {
+            lineHeight = Math.round(fontSize * 3 / 2);
+        }
+
         this.el = new Text({
-            style: {
+            // style: {
+            //     rich: markers,
+            //     text: content,
+            //     textLineHeight: 20,
+            //     textBackgroundColor: tooltipModel.get('backgroundColor'),
+            //     textBorderRadius: tooltipModel.get('borderRadius'),
+            //     textFill: tooltipModel.get('textStyle.color'),
+            //     textPadding: tooltipModel.get('padding'),
+            //     fontStyle: tooltipModel.get('fontStyle'),
+            //     fontWeight: tooltipModel.get('fontWeight'),
+            //     fontFamily: tooltipModel.get('fontFamily'),
+            //     fontSize: tooltipModel.get('fontSize'),
+            //     lineHeight: tooltipModel.get('lineHeight'),
+            //     width: tooltipModel.get('width'),
+            //     height: tooltipModel.get('height'),
+            //     textBorderColor: tooltipModel.get('textBorderColor'),
+            //     textBorderWidth: tooltipModel.get('textBorderWidth'),
+            //     textShadowBlur: tooltipModel.get('textShadowBlur'),
+            //     textShadowOffsetX: tooltipModel.get('textShadowOffsetX'),
+            //     textShadowOffsetY: tooltipModel.get('textShadowOffsetY')
+            // },
+            style: graphicUtil.setTextStyle({}, textStyleModel, {
                 rich: markers,
                 text: content,
-                textLineHeight: 20,
                 textBackgroundColor: tooltipModel.get('backgroundColor'),
                 textBorderRadius: tooltipModel.get('borderRadius'),
                 textFill: tooltipModel.get('textStyle.color'),
-                textPadding: tooltipModel.get('padding')
-            },
+                textPadding: tooltipModel.get('padding'),
+                textLineHeight: lineHeight
+            }),
             z: tooltipModel.get('z')
         });
         this._zr.add(this.el);
