@@ -24,7 +24,7 @@ import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Payload, ColorString } from '../../util/types';
+import { Payload, ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 
@@ -44,11 +44,6 @@ function updateDataSelected(
         from: uid,
         name: name,
         seriesId: seriesModel.id
-    });
-
-    data.each(function (idx) {
-        const el = data.getItemGraphicEl(idx);
-        el.toggleState('select', seriesModel.isSelected(data.getName(idx)));
     });
 }
 
@@ -166,8 +161,8 @@ class PiePiece extends graphic.Sector {
 
         graphic.enableHoverEmphasis(this);
 
-        // Switch after `select` state updated.
-        sector.toggleState('select', seriesModel.isSelected(data.getName(idx)));
+        // State will be set after all rendered in the pipeline.
+        (sector as ECElement).selected = seriesModel.isSelected(data.getName(idx));
     }
 
     private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
@@ -296,11 +291,17 @@ class PieView extends ChartView {
     }
 
     render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+        const data = seriesModel.getData();
         if (payload && (payload.from === this.uid)) {
+            // update selected status
+            data.each(function (idx) {
+                const el = data.getItemGraphicEl(idx);
+                (el as ECElement).selected = seriesModel.isSelected(data.getName(idx));
+            });
+
             return;
         }
 
-        const data = seriesModel.getData();
         const oldData = this._data;
         const group = this.group;
 

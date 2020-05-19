@@ -106,7 +106,6 @@ type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
 
 type ExtendedProps = {
-    __highlighted?: boolean | 'layer' | 'plain'
     __highByOuter: number
 
     __highDownSilentOnTouch: boolean
@@ -371,7 +370,7 @@ function liftColor(color: string): string {
 
 function singleEnterEmphasis(el: Element) {
 
-    (el as ExtendedElement).__highlighted = true;
+    (el as ECElement).highlighted = true;
 
     // el may be an array.
     if (!el.states.emphasis) {
@@ -385,7 +384,7 @@ function singleEnterEmphasis(el: Element) {
 
 function singleLeaveEmphasis(el: Element) {
     el.removeState('emphasis');
-    (el as ExtendedElement).__highlighted = false;
+    (el as ECElement).highlighted = false;
 }
 
 function updateElementState<T>(
@@ -398,9 +397,9 @@ function updateElementState<T>(
     let toState: DisplayState = NORMAL;
     let trigger;
     // See the rule of `onStateChange` on `graphic.setAsHighDownDispatcher`.
-    el.__highlighted && (fromState = EMPHASIS, trigger = true);
+    (el as ECElement).highlighted && (fromState = EMPHASIS, trigger = true);
     updater(el, commonParam);
-    el.__highlighted && (toState = EMPHASIS, trigger = true);
+    (el as ECElement).highlighted && (toState = EMPHASIS, trigger = true);
     trigger && el.__onStateChange && el.__onStateChange(fromState, toState);
 }
 

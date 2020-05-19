@@ -1779,6 +1779,7 @@ class ECharts extends Eventful {
         interface DisplayableWithStatesHistory extends Displayable {
             __prevStates: string[]
         };
+        // Clear states without animation.
         // TODO States on component.
         function clearStates(seriesModel: SeriesModel, view: ChartView): void {
             view.group.traverse(function (el: Displayable) {
@@ -1787,7 +1788,6 @@ class ECharts extends Eventful {
                     (el as DisplayableWithStatesHistory).__prevStates = el.currentStates;
                     const textContent = el.getTextContent();
                     const textGuide = el.getTextGuideLine();
-                    // Not use animation when clearStates and restore states in `updateStates`
                     if (el.stateTransition) {
                         el.stateTransition = null;
                     }
@@ -1809,6 +1809,7 @@ class ECharts extends Eventful {
                 // Only updated on changed element. In case element is incremental and don't wan't to rerender.
                 if (el.__dirty && el.states && el.states.emphasis) {
                     const prevStates = (el as DisplayableWithStatesHistory).__prevStates;
+                    // Restore states without animation
                     if (prevStates) {
                         el.useStates(prevStates);
                     }
@@ -1825,6 +1826,18 @@ class ECharts extends Eventful {
                             graphic.setStateTransition(textGuide, stateAnimationModel);
                         }
                     }
+
+                    // The use higlighted and selected flag to toggle states.
+                    const states = [];
+                    if ((el as ECElement).selected) {
+                        states.push('select');
+                    }
+                    if ((el as ECElement).highlighted) {
+                        states.push('emphasis');
+                    }
+                    el.useStates(states);
+                    // el.toggleState('select', (el as ECElement).selected);
+                    // el.toggleState('emphasis', (el as ECElement).highlighted);
                 }
             });
         };

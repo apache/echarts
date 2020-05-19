@@ -106,6 +106,9 @@ export interface ECElement extends Element {
     };
     highDownSilentOnTouch?: boolean;
     onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+
+    highlighted?: boolean;
+    selected?: boolean;
 }
 
 export interface DataHost {
