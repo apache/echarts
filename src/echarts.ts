@@ -1632,9 +1632,9 @@ class ECharts extends Eventful {
          * (5) no delayed setOption needs to be processed.
          */
         bindRenderedEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
-            zr.on('rendered', function () {
+            zr.on('rendered', function (params) {
 
-                ecIns.trigger('rendered');
+                ecIns.trigger('rendered', params);
 
                 // The `finished` event should not be triggered repeatly,
                 // so it should only be triggered when rendering indeed happend
