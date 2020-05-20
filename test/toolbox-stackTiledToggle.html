@@ -44,12 +44,13 @@ under the License.
         <script>
 
             // See <https://github.com/ecomfe/echarts/issues/12359>
+            // See <https://github.com/ecomfe/echarts/issues/12667>
 
             var chart;
             var option;
 
             require([
-                'echarts'/*, 'map/js/china' */
+                'echarts'
             ], function (echarts) {
 
                 option = {
@@ -66,13 +67,23 @@ under the License.
                     toolbox: {
                         show: true,
                         feature: {
-                            magicType: {show: true, type: ['stack', 'tiled']}
+                            magicType: {
+                                show: true,
+                                type: ['line', 'bar', 'stack'/*, 'tiled'*/],
+                                title: {
+                                    stack: 'stack',
+                                    tiled: 'tiled'
+                                },
+                                icon: {
+                                    //tiled: 'path://M2.3,2.2h22.8V25H2.3V2.2z M35,2.2h22.8V25H35V2.2zM2.3,35h22.8v22.8H2.3V35z M35,35h22.8v22.8H35V35z'
+                                }
+                            }
                         }
                     },
                     xAxis: {
                         type: 'category',
-                        boundaryGap: false,
-                        data: ['周一','周二','周三','周四','周五','周六','周日']
+                        boundaryGap: true,
+                        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
                     },
                     yAxis: {
                         type: 'value'
@@ -81,29 +92,36 @@ under the License.
                         name: '成交',
                         type: 'line',
                         smooth: true,
-                        data: [10, 12, 21, 54, 260, 830, 710]
+                        data: [10, 12, 21, 54, 260, 830, 710],
+                        stack: 'all'
                     },
                     {
                         name: '预购',
                         type: 'line',
                         smooth: true,
-                        data: [30, 182, 434, 791, 390, 30, 10]
+                        data: [30, 182, 434, 791, 390, 30, 10],
+                        stack: 'all'
                     },
                     {
                         name: '意向',
                         type: 'line',
                         smooth: true,
-                        data: [1320, 1132, 601, 234, 120, 90, 20]
+                        data: [1320, 1132, 601, 234, 120, 90, 20],
+                        stack: 'all'
                     }]
                 };
 
                 chart = testHelper.create(echarts, 'main0', {
-                    title: 'the event `magictypechanged` should return the type `tiled` if stack icon status is normal, see the console for details.',
-                    option: option,
-                    info: option
+                    title: [
+                        '1. if stack status is emphasis, `currentType` in `magictypechanged` event should be `tiled`(#12359)',
+                        '2. improve stack icon toggle experience',
+                        '3. emphasized stack icon by default if there are two or more than two series having the same stack value.',
+                        '4. fix the language of title switched to Chinese after clicking stack button.(fix #12667, tweak #11743)'
+                    ],
+                    option: option
                 });
-                chart.on('magictypechanged', function(obj) {
-                    console.log('current magic type is', obj.currentType)
+                chart.on('magictypechanged', function (obj) {
+                    console.log('current magic type is', obj.currentType);
                 });
             });
 

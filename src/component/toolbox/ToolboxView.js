@@ -30,6 +30,10 @@ export default echarts.extendComponentView({
 
     type: 'toolbox',
 
+    init: function () {
+        this._isFirstRender = true;
+    },
+
     render: function (toolboxModel, ecModel, api, payload) {
         var group = this.group;
         group.removeAll();
@@ -41,6 +45,7 @@ export default echarts.extendComponentView({
         var itemSize = +toolboxModel.get('itemSize');
         var featureOpts = toolboxModel.get('feature') || {};
         var features = this._features || (this._features = {});
+        var isFirstRender = this._isFirstRender;
 
         var featureNames = [];
         zrUtil.each(featureOpts, function (opt, name) {
@@ -62,11 +67,6 @@ export default echarts.extendComponentView({
             var featureOpt = featureOpts[featureName];
             var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
             var feature;
-
-            // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
-            if (payload && payload.newTitle != null && payload.featureName === featureName) {
-                featureOpt.title = payload.newTitle;
-            }
 
             if (featureName && !oldName) { // Create
                 if (isUserFeatureName(featureName)) {
@@ -106,8 +106,6 @@ export default echarts.extendComponentView({
                 return;
             }
 
-            createIconPaths(featureModel, feature, featureName);
-
             featureModel.setIconStatus = function (iconName, status) {
                 var option = this.option;
                 var iconPaths = this.iconPaths;
@@ -117,12 +115,15 @@ export default echarts.extendComponentView({
                 iconPaths[iconName] && iconPaths[iconName].trigger(status);
             };
 
+            createIconPaths(featureModel, feature, featureName);
+
             if (feature.render) {
                 feature.render(featureModel, ecModel, api, payload);
             }
         }
 
         function createIconPaths(featureModel, feature, featureName) {
+            var isMagicType = featureName === 'magicType';
             var iconStyleModel = featureModel.getModel('iconStyle');
             var iconStyleEmphasisModel = featureModel.getModel('emphasis.iconStyle');
 
@@ -139,6 +140,7 @@ export default echarts.extendComponentView({
             // }
             var icons = feature.getIcons ? feature.getIcons() : featureModel.get('icon');
             var titles = featureModel.get('title') || {};
+
             if (typeof icons === 'string') {
                 var icon = icons;
                 var title = titles;
@@ -147,8 +149,35 @@ export default echarts.extendComponentView({
                 icons[featureName] = icon;
                 titles[featureName] = title;
             }
+
             var iconPaths = featureModel.iconPaths = {};
             zrUtil.each(icons, function (iconStr, iconName) {
+                // `tiled` is just for changing stack toggle icon, no need to add a path.
+                if (isMagicType && iconName === 'tiled') {
+                    return;
+                }
+
+                var titleText;
+                var iconStatus = featureModel.get('iconStatus.' + iconName) || 'normal';
+
+                // toggle stack icon and title
+                if (isMagicType && iconName === 'stack') {
+                    // if initial series is stack,
+                    // we should set stack icon status to emphasis by default.
+                    if (isFirstRender && isSeriesStack()) {
+                        iconStatus = 'emphasis';
+                    }
+                    var isEmphasis = iconStatus === 'emphasis';
+                    iconStr = isEmphasis
+                        ? icons.tiled || icons.stack
+                        : icons.stack;
+                    titleText = isEmphasis
+                        ? titles.tiled
+                        : titles.stack;
+                } else {
+                    titleText = titles[iconName];
+                }
+
                 var path = graphic.createIcon(
                     iconStr,
                     {},
@@ -164,7 +193,7 @@ export default echarts.extendComponentView({
 
                 // Text position calculation
                 path.setStyle({
-                    text: titles[iconName],
+                    text: titleText,
                     textAlign: iconStyleEmphasisModel.get('textAlign'),
                     textBorderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
                     textPadding: iconStyleEmphasisModel.get('textPadding'),
@@ -174,15 +203,15 @@ export default echarts.extendComponentView({
                 var tooltipModel = toolboxModel.getModel('tooltip');
                 if (tooltipModel && tooltipModel.get('show')) {
                     path.attr('tooltip', zrUtil.extend({
-                        content: titles[iconName],
+                        content: titleText,
                         formatter: tooltipModel.get('formatter', true)
                             || function () {
-                                return titles[iconName];
+                                return titleText;
                             },
                         formatterParams: {
                             componentType: 'toolbox',
                             name: iconName,
-                            title: titles[iconName],
+                            title: titleText,
                             $vars: ['name', 'title']
                         },
                         position: tooltipModel.get('position', true) || 'bottom'
@@ -192,7 +221,7 @@ export default echarts.extendComponentView({
                 graphic.setHoverStyle(path);
 
                 if (toolboxModel.get('showTitle')) {
-                    path.__title = titles[iconName];
+                    path.__title = titleText;
                     path.on('mouseover', function () {
                             // Should not reuse above hoverStyle, which might be modified.
                             var hoverStyle = iconStyleEmphasisModel.getItemStyle();
@@ -213,15 +242,37 @@ export default echarts.extendComponentView({
                             });
                         });
                 }
-                path.trigger(featureModel.get('iconStatus.' + iconName) || 'normal');
 
-                group.add(path);
                 path.on('click', zrUtil.bind(
                     feature.onclick, feature, ecModel, api, iconName
                 ));
 
                 iconPaths[iconName] = path;
+
+                group.add(path);
+
+                featureModel.setIconStatus(iconName, iconStatus);
             });
+        }
+
+        // whether there are two or more than two series having the same stack value.
+        function isSeriesStack() {
+            var tempStack = {};
+            var series = zrUtil.filter(ecModel.getSeries(), function (seriesModel) {
+                var seriesType = seriesModel.subType;
+                return seriesType === 'line' || seriesType === 'bar';
+            });
+            for (var i = 0; i < series.length; i++) {
+                var seriesModel = series[i];
+                var stack = seriesModel.get('stack');
+                if (stack != null) {
+                    if (tempStack[stack]) {
+                        return true;
+                    }
+                    tempStack[stack] = true;
+                }
+            }
+            return false;
         }
 
         listComponentHelper.layout(group, toolboxModel, api);
@@ -257,6 +308,8 @@ export default echarts.extendComponentView({
                 }
             }
         });
+
+        this._isFirstRender = false;
     },
 
     updateView: function (toolboxModel, ecModel, api, payload) {

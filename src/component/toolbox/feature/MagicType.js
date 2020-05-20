@@ -148,6 +148,9 @@ proto.onclick = function (ecModel, api, type) {
         }
     };
 
+    var isStack = type === 'stack';
+    var ignoreEmphasis = isStack && model.get('iconStatus.stack') === 'emphasis';
+
     zrUtil.each(radioTypes, function (radio) {
         if (zrUtil.indexOf(radio, type) >= 0) {
             zrUtil.each(radio, function (item) {
@@ -156,7 +159,8 @@ proto.onclick = function (ecModel, api, type) {
         }
     });
 
-    model.setIconStatus(type, 'emphasis');
+    // to keep initial status of stack icon
+    ignoreEmphasis || model.setIconStatus(type, 'emphasis');
 
     ecModel.eachComponent(
         {
@@ -164,27 +168,27 @@ proto.onclick = function (ecModel, api, type) {
             query: seriesIndex == null ? null : {
                 seriesIndex: seriesIndex
             }
-        }, generateNewSeriesTypes
+        }, function(seriesModel) {
+            // to keep initial status of stack icon
+            // set stack to INNER_STACK_KEYWORD here,
+            // seriesOptGenreator.stack won't set stack icon to emphasis status
+            ignoreEmphasis && seriesModel.mergeOption({
+                stack: INNER_STACK_KEYWORD
+            }, ecModel);
+            generateNewSeriesTypes(seriesModel)
+        }
     );
 
-    var newTitle;
-    // Change title of stack
-    if (type === 'stack') {
-        var isStack = newOption.series && newOption.series[0] && newOption.series[0].stack === INNER_STACK_KEYWORD;
-        newTitle = isStack
-            ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
-            : zrUtil.clone(magicTypeLang.title);
-        // Change type to `tiled` if series is not stack, fix #12359.
-        if (!isStack) {
-            type = 'tiled';
-        }
+    // fix #12359
+    // if stack status is emphasis, `currentType` in `magictypechanged` event should be `tiled`
+    if (isStack && model.get('iconStatus.stack') !== 'emphasis') {
+        type = 'tiled';
     }
 
     api.dispatchAction({
         type: 'changeMagicType',
         currentType: type,
         newOption: newOption,
-        newTitle: newTitle,
         featureName: 'magicType'
     });
 };
