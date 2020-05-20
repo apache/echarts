@@ -62,7 +62,7 @@ export function buildLabelElOption(
     var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
 
     var font = labelModel.getFont();
-    var textRect = textContain.getBoundingRect(text, font);
+    var textRect = textContain.getBoundingRect(text, font, null, null, null, labelModel.get('lineHeight'));
 
     var position = labelPos.position;
     var width = textRect.width + paddings[1] + paddings[3];
