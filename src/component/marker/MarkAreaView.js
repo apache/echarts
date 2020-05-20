@@ -95,7 +95,11 @@ function markAreaFilter(coordSys, item) {
         });
 }
 
-// dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
+/**
+ * dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
+ *
+ * @return marker end point, null if is clipped
+ */
 function getSingleMarkerEndPoint(data, idx, dims, seriesModel, api) {
     var coordSys = seriesModel.coordinateSystem;
     var itemModel = data.getItemModel(idx);
@@ -208,9 +212,35 @@ MarkerView.extend({
         // Update visual and layout of line
         areaData.each(function (idx) {
             // Layout
-            areaData.setItemLayout(idx, zrUtil.map(dimPermutations, function (dim) {
+            var points = zrUtil.map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
-            }));
+            });
+            // If none of the area is inside coordSys, allClipped is set to be true
+            // in layout so that label will not be displayed. See #12591
+            var allClipped = true;
+            zrUtil.each(dimPermutations, function (dim) {
+                if (!allClipped) {
+                    return;
+                }
+                var xValue = areaData.get(dim[0], idx);
+                var yValue = areaData.get(dim[1], idx);
+                var xScale = coordSys.getAxis('x').scale;
+                var yScale = coordSys.getAxis('y').scale;
+                var xExtent = xScale.getExtent();
+                var yExtent = yScale.getExtent();
+                var x = xScale.parse(xValue);
+                var y = yScale.parse(yValue);
+                // If is infinity, the axis should be considered not clipped
+                if ((isInifinity(x) || x >= xExtent[0] && x <= xExtent[1])
+                    && (isInifinity(y) || y >= yExtent[0] && y <= yExtent[1])
+                ) {
+                    allClipped = false;
+                }
+            });
+            areaData.setItemLayout(idx, {
+                points: points,
+                allClipped: allClipped
+            });
 
             // Visual
             areaData.setItemVisual(idx, {
@@ -221,23 +251,41 @@ MarkerView.extend({
 
         areaData.diff(polygonGroup.__data)
             .add(function (idx) {
-                var polygon = new graphic.Polygon({
-                    shape: {
-                        points: areaData.getItemLayout(idx)
-                    }
-                });
-                areaData.setItemGraphicEl(idx, polygon);
-                polygonGroup.group.add(polygon);
+                var layout = areaData.getItemLayout(idx);
+                if (!layout.allClipped) {
+                    var polygon = new graphic.Polygon({
+                        shape: {
+                            points: layout.points
+                        }
+                    });
+                    areaData.setItemGraphicEl(idx, polygon);
+                    polygonGroup.group.add(polygon);
+                }
             })
             .update(function (newIdx, oldIdx) {
                 var polygon = polygonGroup.__data.getItemGraphicEl(oldIdx);
-                graphic.updateProps(polygon, {
-                    shape: {
-                        points: areaData.getItemLayout(newIdx)
+                var layout = areaData.getItemLayout(newIdx);
+                if (!layout.allClipped) {
+                    if (polygon) {
+                        graphic.updateProps(polygon, {
+                            shape: {
+                                points: layout.points
+                            }
+                        }, maModel, newIdx);
                     }
-                }, maModel, newIdx);
-                polygonGroup.group.add(polygon);
-                areaData.setItemGraphicEl(newIdx, polygon);
+                    else {
+                        polygon = new graphic.Polygon({
+                            shape: {
+                                points: layout.points
+                            }
+                        });
+                    }
+                    areaData.setItemGraphicEl(newIdx, polygon);
+                    polygonGroup.group.add(polygon);
+                }
+                else if (polygon) {
+                    polygonGroup.group.remove(polygon);
+                }
             })
             .remove(function (idx) {
                 var polygon = polygonGroup.__data.getItemGraphicEl(idx);
