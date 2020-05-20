@@ -95,11 +95,7 @@ function markAreaFilter(coordSys, item) {
         });
 }
 
-/**
- * dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
- *
- * @return marker end point, null if is clipped
- */
+// dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
 function getSingleMarkerEndPoint(data, idx, dims, seriesModel, api) {
     var coordSys = seriesModel.coordinateSystem;
     var itemModel = data.getItemModel(idx);
