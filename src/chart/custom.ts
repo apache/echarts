@@ -286,7 +286,8 @@ const Z2_SPECIFIED_BIT = {
     emphasis: 1
 } as const;
 
-const tmpDuringElProps = { style: {} } as CustomDuringElProps;
+const tmpDuringStyle = {} as CustomDuringElProps['style'];
+const tmpDuringElProps = {} as CustomDuringElProps;
 
 export type PrepareCustomInfo = (coordSys: CoordinateSystem) => {
     coordSys: CustomSeriesRenderItemParamsCoordSys;
@@ -696,7 +697,9 @@ function elUpdateDuringAnimation(this: Element, key: string): void {
     // PENDING:
     // Do not expose other style in case that is not stable.
     const isText = this.type === 'text';
-    const textCurr = tmpDuringElProps.style.text = isText ? thisText.style.text : null;
+    // Always assign in case that user modify `.style`.
+    tmpDuringElProps.style = tmpDuringStyle;
+    const textCurr = tmpDuringStyle.text = isText ? thisText.style.text : null;
 
     customDuring(tmpDuringElProps);
 
@@ -711,7 +714,7 @@ function elUpdateDuringAnimation(this: Element, key: string): void {
     tmpDuringElProps.rotation !== rotationCurr && (this.rotation = tmpDuringElProps.rotation);
 
     if (isText) {
-        const currTmpStl = tmpDuringElProps.style;
+        const currTmpStl = tmpDuringElProps.style; // Allow user modify `.style`.
         currTmpStl && currTmpStl.text !== textCurr && (thisText.style.text = currTmpStl.text, dirtyStyle = true);
     }
 
