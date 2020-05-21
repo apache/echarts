@@ -42,11 +42,18 @@ class RadiusAxisView extends AxisView {
 
     axisPointerClass = 'PolarAxisPointer';
 
+    private _axisGroup: graphic.Group;
+
     render(radiusAxisModel: RadiusAxisModel, ecModel: GlobalModel) {
         this.group.removeAll();
         if (!radiusAxisModel.get('show')) {
             return;
         }
+
+        const oldAxisGroup = this._axisGroup;
+        const newAxisGroup = this._axisGroup = new graphic.Group();
+        this.group.add(newAxisGroup);
+
         const radiusAxis = radiusAxisModel.axis;
         const polar = radiusAxis.polar;
         const angleAxis = polar.getAngleAxis();
@@ -58,7 +65,9 @@ class RadiusAxisView extends AxisView {
         const layout = layoutAxis(polar, radiusAxisModel, axisAngle);
         const axisBuilder = new AxisBuilder(radiusAxisModel, layout);
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
-        this.group.add(axisBuilder.getGroup());
+        newAxisGroup.add(axisBuilder.getGroup());
+
+        graphic.groupTransition(oldAxisGroup, newAxisGroup, radiusAxisModel);
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (radiusAxisModel.get([name, 'show']) && !radiusAxis.scale.isBlank()) {
