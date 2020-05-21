@@ -333,6 +333,10 @@ var VisualMapModel = echarts.extendComponentModel({
             return;
         }
 
+        if (list.hostModel.coordinateSystem.type === 'polar') {
+            return 'radius';
+        }
+
         if (optDim != null) {
             return list.getDimension(optDim);
         }
