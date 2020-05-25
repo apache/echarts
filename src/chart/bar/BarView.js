@@ -337,12 +337,13 @@ var clip = {
     },
 
     polar: function (coordSysClipArea, layout) {
+        var clipped = (layout.r - coordSysClipArea.r > 0 && layout.r0 - coordSysClipArea.r > 0)
         var r = mathMin(layout.r, coordSysClipArea.r);
         var r0 = mathMin(layout.r0, coordSysClipArea.r);
 
         layout.r = r;
         layout.r0 = r0;
-        return false;
+        return clipped;
     }
 };
 
