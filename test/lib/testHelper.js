@@ -147,44 +147,51 @@
             infoContainer.innerHTML = createObjectHTML(opt.info, opt.infoKey || 'option');
         }
 
-        if (opt.recordCanvas) {
-            recordCanvasContainer.innerHTML = ''
-                + '<button>Show Canvas Record</button>'
-                + '<button>Clear Canvas Record</button>'
-                + '<div class="content-area"><textarea></textarea><br><button>Close</button></div>';
-            var buttons = recordCanvasContainer.getElementsByTagName('button');
-            var canvasRecordButton = buttons[0];
-            var clearButton = buttons[1];
-            var closeButton = buttons[2];
-            var recordArea = recordCanvasContainer.getElementsByTagName('textarea')[0];
-            var contentAraa = recordArea.parentNode;
-            canvasRecordButton.addEventListener('click', function () {
-                var content = [];
-                eachCtx(function (zlevel, ctx) {
-                    content.push('Layer zlevel: ' + zlevel, '\n\n');
-                    if (typeof ctx.stack !== 'function') {
-                        alert('Missing: <script src="test/lib/canteen.js"></script>');
-                        return;
-                    }
-                    var stack = ctx.stack();
-                    for (var i = 0; i < stack.length; i++) {
-                        var line = stack[i];
-                        content.push(JSON.stringify(line), ',\n');
-                    }
-                });
-                contentAraa.style.display = 'block';
-                recordArea.value = content.join('');
-            });
-            clearButton.addEventListener('click', function () {
-                eachCtx(function (zlevel, ctx) {
-                    ctx.clear();
-                });
-                recordArea.value = 'Cleared.';
-            });
-            closeButton.addEventListener('click', function () {
-                contentAraa.style.display = 'none';
-            });
+        initRecordCanvas(opt, chart, recordCanvasContainer);
+
+        return chart;
+    };
+
+    function initRecordCanvas(opt, chart, recordCanvasContainer) {
+        if (!opt.recordCanvas) {
+            return;
         }
+        recordCanvasContainer.innerHTML = ''
+            + '<button>Show Canvas Record</button>'
+            + '<button>Clear Canvas Record</button>'
+            + '<div class="content-area"><textarea></textarea><br><button>Close</button></div>';
+        var buttons = recordCanvasContainer.getElementsByTagName('button');
+        var canvasRecordButton = buttons[0];
+        var clearButton = buttons[1];
+        var closeButton = buttons[2];
+        var recordArea = recordCanvasContainer.getElementsByTagName('textarea')[0];
+        var contentAraa = recordArea.parentNode;
+        canvasRecordButton.addEventListener('click', function () {
+            var content = [];
+            eachCtx(function (zlevel, ctx) {
+                content.push('\nLayer zlevel: ' + zlevel, '\n\n');
+                if (typeof ctx.stack !== 'function') {
+                    alert('Missing: <script src="test/lib/canteen.js"></script>');
+                    return;
+                }
+                var stack = ctx.stack();
+                for (var i = 0; i < stack.length; i++) {
+                    var line = stack[i];
+                    content.push(JSON.stringify(line), ',\n');
+                }
+            });
+            contentAraa.style.display = 'block';
+            recordArea.value = content.join('');
+        });
+        clearButton.addEventListener('click', function () {
+            eachCtx(function (zlevel, ctx) {
+                ctx.clear();
+            });
+            recordArea.value = 'Cleared.';
+        });
+        closeButton.addEventListener('click', function () {
+            contentAraa.style.display = 'none';
+        });
 
         function eachCtx(cb) {
             var layers = chart.getZr().painter.getLayers();
@@ -197,9 +204,7 @@
                 }
             }
         }
-
-        return chart;
-    };
+    }
 
     /**
      * @param {ECharts} echarts
@@ -256,6 +261,100 @@
         }
     };
 
+
+    var _dummyRequestAnimationFrameMounted = false;
+
+    /**
+     * Usage:
+     * ```js
+     * testHelper.controlFrame({pauseAt: 60});
+     * // Then load echarts.js (must after controlFrame called)
+     * ```
+     *
+     * @param {Object} [opt]
+     * @param {number} [opt.puaseAt] If specified `pauseAt`, auto pause at the frame.
+     * @param {Function} [opt.onFrame]
+     */
+    testHelper.controlFrame = function (opt) {
+        opt = opt || {};
+        var pauseAt = opt.pauseAt;
+        pauseAt == null && (pauseAt = 0);
+
+        var _running = true;
+        var _pendingCbList = [];
+        var _frameNumber = 0;
+        var _mounted = false;
+
+        function getRunBtnText() {
+            return _running ? 'pause' : 'run';
+        }
+
+        var buttons = [{
+            text: getRunBtnText(),
+            onclick: function () {
+                buttons[0].el.innerHTML = getRunBtnText();
+                _running ? pause() : run();
+            }
+        }, {
+            text: 'next frame',
+            onclick: nextFrame
+        }];
+
+        var btnPanel = document.createElement('div');
+        btnPanel.className = 'control-frame-btn-panel'
+        var infoEl = document.createElement('div');
+        infoEl.className = 'control-frame-info';
+        btnPanel.appendChild(infoEl);
+        document.body.appendChild(btnPanel);
+        for (var i = 0; i < buttons.length; i++) {
+            var button = buttons[i];
+            var btnEl = button.el = document.createElement('button');
+            btnEl.innerHTML = button.text;
+            btnEl.addEventListener('click', button.onclick);
+            btnPanel.appendChild(btnEl);
+        }
+
+        if (_dummyRequestAnimationFrameMounted) {
+            throw new Error('Do not support `controlFrame` twice');
+        }
+        _dummyRequestAnimationFrameMounted = true;
+        var raf = window.requestAnimationFrame;
+        window.requestAnimationFrame = function (cb) {
+            _pendingCbList.push(cb);
+            if (_running && !_mounted) {
+                _mounted = true;
+                raf(nextFrame);
+            }
+        };
+
+        function run() {
+            _running = true;
+            nextFrame();
+        }
+
+        function pause() {
+            _running = false;
+        }
+
+        function nextFrame() {
+            opt.onFrame && opt.onFrame(_frameNumber);
+
+            if (pauseAt != null && _frameNumber === pauseAt) {
+                _running = false;
+                pauseAt = null;
+            }
+            infoEl.innerHTML = 'Frame: ' + _frameNumber + ' ( ' + (_running ? 'Running' : 'Paused') + ' )';
+            buttons[0].el.innerHTML = getRunBtnText();
+
+            _mounted = false;
+            var pending = _pendingCbList;
+            _pendingCbList = [];
+            for (var i = 0; i < pending.length; i++) {
+                pending[i]();
+            }
+            _frameNumber++;
+        }
+    }
 
     testHelper.resizable = function (chart) {
         var dom = chart.getDom();
@@ -505,7 +604,6 @@
      *        For example: 'z2' or ['z2', 'style.fill', 'style.stroke']
      * @param {function} [opt.filter] print a subtree only if any satisfied node exists.
      *        param: el, return: boolean
-     * @param {boolean} [opt.preventPrint]
      */
     testHelper.stringifyElements = function (chart, opt) {
         if (!chart) {
@@ -600,6 +698,52 @@
     testHelper.printElements = function (chart, opt) {
         var elsStr = testHelper.stringifyElements(chart, opt);
         console.log(elsStr);
+    };
+
+    /**
+     * Usage:
+     * ```js
+     * // Print all elements that has `style.text`:
+     * testHelper.retrieveElements(chart, {
+     *     filter: el => el.style && el.style.text
+     * });
+     * ```
+     *
+     * @param {EChart} chart
+     * @param {Object} [opt]
+     * @param {function} [opt.filter] print a subtree only if any satisfied node exists.
+     *        param: el, return: boolean
+     * @return {Array.<Element>}
+     */
+    testHelper.retrieveElements = function (chart, opt) {
+        if (!chart) {
+            return;
+        }
+        opt = opt || {};
+        var attrNameList = opt.attr;
+        if (getType(attrNameList) !== 'array') {
+            attrNameList = attrNameList ? [attrNameList] : [];
+        }
+
+        var zr = chart.getZr();
+        var roots = zr.storage.getRoots();
+        var result = [];
+
+        retrieve(roots);
+
+        function retrieve(elList) {
+            for (var i = 0; i < elList.length; i++) {
+                var el = elList[i];
+                if (!opt.filter || opt.filter(el)) {
+                    result.push(el);
+                }
+                if (el.isGroup) {
+                    retrieve(el.childrenRef());
+                }
+            }
+        }
+
+        return result;
     };
 
     // opt: {record: JSON, width: number, height: number}

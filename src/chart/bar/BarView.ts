@@ -118,6 +118,9 @@ class BarView extends ChartView {
     incrementalPrepareRender(seriesModel: BarSeriesModel): void {
         this._clear();
         this._updateDrawMode(seriesModel);
+        // incremental also need to clip, otherwise might be overlow.
+        // But must not set clip in each frame, otherwise all of the children will be marked redraw.
+        this._updateLargeClip(seriesModel);
     }
 
     incrementalRender(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
@@ -286,8 +289,6 @@ class BarView extends ChartView {
     private _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
         this._removeBackground();
         createLarge(seriesModel, this.group, true);
-        // incremental also need to clip, otherwise might be overlow.
-        this._updateLargeClip(seriesModel);
     }
 
     private _updateLargeClip(seriesModel: BarSeriesModel): void {
