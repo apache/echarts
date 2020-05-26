@@ -358,8 +358,8 @@ class TreeView extends ChartView {
 
         const nodeScale = this._getNodeGlobalScale(seriesModel);
 
-        data.eachItemGraphicEl(function (el, idx) {
-            el.scaleX = el.scaleY = nodeScale;
+        data.eachItemGraphicEl(function (el: SymbolClz, idx) {
+            el.setSymbolScale(nodeScale);
         });
     }
 

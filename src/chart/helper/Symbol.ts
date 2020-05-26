@@ -46,8 +46,8 @@ class Symbol extends graphic.Group {
     /**
      * Original scale
      */
-    private _scaleX: number;
-    private _scaleY: number;
+    private _sizeX: number;
+    private _sizeY: number;
 
     private _z2: number;
 
@@ -174,8 +174,8 @@ class Symbol extends graphic.Group {
             const fadeIn = true;
 
             const target: PathProps = {
-                scaleX: this._scaleX,
-                scaleY: this._scaleY
+                scaleX: this._sizeX,
+                scaleY: this._sizeY
             };
             fadeIn && (target.style = {
                 opacity: symbolPath.style.opacity
@@ -276,22 +276,31 @@ class Symbol extends graphic.Group {
             return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
         }
 
-        this._scaleX = symbolSize[0] / 2;
-        this._scaleY = symbolSize[1] / 2;
+        this._sizeX = symbolSize[0] / 2;
+        this._sizeY = symbolSize[1] / 2;
 
         symbolPath.ensureState('emphasis').style = hoverItemStyle;
 
         if (hoverAnimation && seriesModel.isAnimationEnabled()) {
-            const scaleEmphasisState = this.ensureState('emphasis');
-            const scale = Math.max(1.1, 3 / this._scaleY + 1);
-            scaleEmphasisState.scaleX = scale;
-            scaleEmphasisState.scaleY = scale;
+            this.ensureState('emphasis');
+            this.setSymbolScale(1);
         }
         else {
             this.states.emphasis = null;
         }
 
         graphic.enableHoverEmphasis(this);
+    }
+
+    setSymbolScale(scale: number) {
+        const emphasisState = this.states.emphasis;
+        if (emphasisState) {
+            const hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
+            emphasisState.scaleX = hoverScale;
+            emphasisState.scaleY = hoverScale;
+        }
+
+        this.scaleX = this.scaleY = scale;
     }
 
     fadeOut(cb: () => void, opt?: {

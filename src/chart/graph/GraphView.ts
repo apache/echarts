@@ -448,8 +448,8 @@ class GraphView extends ChartView {
 
         const nodeScale = getNodeGlobalScale(seriesModel);
 
-        data.eachItemGraphicEl(function (el, idx) {
-            el.scaleX = el.scaleY = nodeScale;
+        data.eachItemGraphicEl(function (el: Symbol, idx) {
+            el.setSymbolScale(nodeScale);
         });
     }
 
