@@ -105,14 +105,9 @@ function calculateStack(stackInfoList) {
                 if (stackedDataRawIndex >= 0) {
                     var val = stackInfo.data.getByRawIndex(stackInfo.stackResultDimension, stackedDataRawIndex);
 
-                    // Considering positive stack, negative stack and empty data
-                    if ((sum >= 0 && val > 0) // Positive stack
-                        || (sum <= 0 && val < 0) // Negative stack
-                    ) {
-                        sum += val;
-                        stackedOver = val;
-                        break;
-                    }
+                    sum += val;
+                    stackedOver = val;
+                    break;
                 }
             }
 

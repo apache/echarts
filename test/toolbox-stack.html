@@ -137,53 +137,48 @@ under the License.
             var chart = echarts.init(document.getElementById('nodata'), null, {
                 // renderer: 'svg'
             });
-            option = {
-                color: ['#3398DB', '#CA2121'],
-                legend: {
-                    show: true,
-                    data: [],
+
+            let option = {
+                title: {
+                    text: "某楼盘销售情况",
+                    subtext: "纯属虚构"
                 },
                 tooltip: {
-                    show: true
+                    trigger: "axis"
+                },
+                legend: {
+                    data: ["意向", "成交"]
                 },
                 toolbox: {
                     show: true,
-                    right: '5%',
                     feature: {
-                        saveAsImage: {
-                            show: true,
-                            title: 'Save As Image'
-                        },
-                        dataView: {
-                            show: true,
-                            title: 'Data View'
-                        },
-                        magicType : {show: true, type: ['line', 'bar', 'stack']},
+                        magicType: { show: true, type: ["stack", "tiled"] },
+                        saveAsImage: { show: true }
+                    }
+                },
+                xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+                },
+                yAxis: {
+                    type: "value"
+                },
+                series: [
+                    {
+                        name: "成交",
+                        type: "line",
+                        smooth: true,
+                        data: [-100, 12, 21, -54, 260, 830, 0]
                     },
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis : [
                     {
-                        type : 'category',
-                        data : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        axisTick: {
-                            alignWithLabel: true
-                        }
+                        name: "意向",
+                        type: "line",
+                        smooth: true,
+                        data: [220, 132, 601, 234, 120, 90, 20]
                     }
-                ],
-                yAxis : [
-                    {
-                        type : 'value'
-                    }
-                ],
-                series : [
                 ]
-            };
+            }
 
             chart.setOption(option, true);
 
