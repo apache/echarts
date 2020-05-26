@@ -514,7 +514,7 @@ class ECharts extends Eventful {
 
     getDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg',
+        type?: 'png' | 'jpg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         // component type array
