@@ -57,11 +57,15 @@ import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { Dictionary } from 'zrender/src/core/types';
 
+// -----------------------
+// Internal method names:
+// -----------------------
+let createSeriesIndices: (ecModel: GlobalModel, seriesModels: ComponentModel[]) => void;
+let assertSeriesInitialized: (ecModel: GlobalModel) => void;
+let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
+
 const OPTION_INNER_KEY = '\0_ec_inner';
-
-
 class GlobalModel extends Model<ECUnitOption> {
-
     // @readonly
     option: ECUnitOption;
 
@@ -656,13 +660,6 @@ class GlobalModel extends Model<ECUnitOption> {
 
     })();
 }
-
-// -----------------------
-// Internal method names:
-// -----------------------
-let createSeriesIndices: (ecModel: GlobalModel, seriesModels: ComponentModel[]) => void;
-let assertSeriesInitialized: (ecModel: GlobalModel) => void;
-let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
 
 
 /**

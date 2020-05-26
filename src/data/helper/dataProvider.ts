@@ -53,6 +53,9 @@ export interface DataProvider {
     clean(): void;
 }
 
+
+let providerMethods: Dictionary<any>;
+
 /**
  * If normal array used, mutable chunk size is supported.
  * If typed array used, chunk size must be fixed.
@@ -260,9 +263,6 @@ export class DefaultDataProvider implements DataProvider {
 
     })();
 }
-
-let providerMethods: Dictionary<any>;
-
 // TODO
 // merge it to dataProvider?
 type RawValueGetter = (
