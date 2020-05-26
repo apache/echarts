@@ -174,6 +174,48 @@ messageCenterProto.on = createRegisterEventWithLowercaseMessageCenter('on');
 messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
 // messageCenterProto.one = createRegisterEventWithLowercaseMessageCenter('one');
 
+// ---------------------------------------
+// Internal method names for class ECharts
+// ---------------------------------------
+let prepare: (ecIns: ECharts) => void;
+let prepareView: (ecIns: ECharts, isComponent: boolean) => void;
+let updateDirectly: (
+    ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
+) => void;
+type UpdateMethod = (this: ECharts, payload?: Payload) => void;
+let updateMethods: {
+    prepareAndUpdate: UpdateMethod,
+    update: UpdateMethod,
+    updateTransform: UpdateMethod,
+    updateView: UpdateMethod,
+    updateVisual: UpdateMethod,
+    updateLayout: UpdateMethod
+};
+let doConvertPixel: (ecIns: ECharts, methodName: string, finder: ModelFinder, value: any) => any;
+let updateStreamModes: (ecIns: ECharts, ecModel: GlobalModel) => void;
+let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void;
+let flushPendingActions: (this: ECharts, silent: boolean) => void;
+let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
+let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
+let clearColorPalette: (ecModel: GlobalModel) => void;
+let render: (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) => void;
+let renderComponents: (
+    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, dirtyList?: ComponentView[]
+) => void;
+let renderSeries: (
+    ecIns: ECharts,
+    ecModel: GlobalModel,
+    api: ExtensionAPI,
+    payload: Payload | 'remain',
+    dirtyMap?: {[uid: string]: any}
+) => void;
+let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
+let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
+let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
+let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
+let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
+let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
+let enableConnect: (chart: ECharts) => void;
 
 class ECharts extends Eventful {
 
@@ -1831,49 +1873,6 @@ class ECharts extends Eventful {
     })();
 }
 
-
-// ---------------------------------------
-// Internal method names for class ECharts
-// ---------------------------------------
-let prepare: (ecIns: ECharts) => void;
-let prepareView: (ecIns: ECharts, isComponent: boolean) => void;
-let updateDirectly: (
-    ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
-) => void;
-type UpdateMethod = (this: ECharts, payload?: Payload) => void;
-let updateMethods: {
-    prepareAndUpdate: UpdateMethod,
-    update: UpdateMethod,
-    updateTransform: UpdateMethod,
-    updateView: UpdateMethod,
-    updateVisual: UpdateMethod,
-    updateLayout: UpdateMethod
-};
-let doConvertPixel: (ecIns: ECharts, methodName: string, finder: ModelFinder, value: any) => any;
-let updateStreamModes: (ecIns: ECharts, ecModel: GlobalModel) => void;
-let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void;
-let flushPendingActions: (this: ECharts, silent: boolean) => void;
-let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
-let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
-let clearColorPalette: (ecModel: GlobalModel) => void;
-let render: (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) => void;
-let renderComponents: (
-    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, dirtyList?: ComponentView[]
-) => void;
-let renderSeries: (
-    ecIns: ECharts,
-    ecModel: GlobalModel,
-    api: ExtensionAPI,
-    payload: Payload | 'remain',
-    dirtyMap?: {[uid: string]: any}
-) => void;
-let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
-let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
-let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
-let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
-let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
-let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
-let enableConnect: (chart: ECharts) => void;
 
 
 const echartsProto = ECharts.prototype;

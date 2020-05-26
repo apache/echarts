@@ -144,6 +144,27 @@ export interface DefaultDataVisual {
     colorFromPalette?: boolean
 }
 
+// -----------------------------
+// Internal method declarations:
+// -----------------------------
+let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
+let prepareInvertedIndex: (list: List) => void;
+let getRawValueFromStore: (list: List, dimIndex: number, rawIndex: number) => any;
+let getIndicesCtor: (list: List) => DataArrayLikeConstructor;
+let prepareChunks: (
+    storage: DataStorage, dimInfo: DataDimensionInfo, chunkSize: number, chunkCount: number, end: number
+) => void;
+let getRawIndexWithoutIndices: (this: List, idx: number) => number;
+let getRawIndexWithIndices: (this: List, idx: number) => number;
+let getId: (list: List, rawIndex: number) => string;
+let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
+let validateDimensions: (list: List, dims: DimensionName[]) => void;
+let cloneListForMapAndSample: (original: List, excludeDimensions: DimensionName[]) => List;
+let cloneDimStore: (originalDimStore: DataValueChunk[]) => DataValueChunk[];
+let getInitialExtent: () => [number, number];
+let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
+let transferProperties: (target: List, source: List) => void;
+
 class List<
     HostModel extends Model = Model,
     Visual extends DefaultDataVisual = DefaultDataVisual
@@ -2153,27 +2174,5 @@ class List<
     })();
 
 }
-
-// -----------------------------
-// Internal method declarations:
-// -----------------------------
-let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
-let prepareInvertedIndex: (list: List) => void;
-let getRawValueFromStore: (list: List, dimIndex: number, rawIndex: number) => any;
-let getIndicesCtor: (list: List) => DataArrayLikeConstructor;
-let prepareChunks: (
-    storage: DataStorage, dimInfo: DataDimensionInfo, chunkSize: number, chunkCount: number, end: number
-) => void;
-let getRawIndexWithoutIndices: (this: List, idx: number) => number;
-let getRawIndexWithIndices: (this: List, idx: number) => number;
-let getId: (list: List, rawIndex: number) => string;
-let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
-let validateDimensions: (list: List, dims: DimensionName[]) => void;
-let cloneListForMapAndSample: (original: List, excludeDimensions: DimensionName[]) => List;
-let cloneDimStore: (originalDimStore: DataValueChunk[]) => DataValueChunk[];
-let getInitialExtent: () => [number, number];
-let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
-let transferProperties: (target: List, source: List) => void;
-
 
 export default List;
