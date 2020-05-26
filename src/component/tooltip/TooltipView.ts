@@ -621,7 +621,7 @@ class TooltipView extends ComponentView {
         const dataModel = ecData.dataModel || seriesModel;
         const dataIndex = ecData.dataIndex;
         const dataType = ecData.dataType;
-        const data = dataModel.getData();
+        const data = dataModel.getData(dataType);
 
         const tooltipModel = buildTooltipModel([
             data.getItemModel<TooltipableOption>(dataIndex),

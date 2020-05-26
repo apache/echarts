@@ -245,7 +245,10 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         },
         downplay: {
             itemStyle: {
-                opacity: 0.9
+                opacity: 0.5
+            },
+            label: {
+                opacity: 0.6
             }
         },
 

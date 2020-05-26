@@ -131,6 +131,7 @@ export interface DefaultDataVisual {
 
     symbol?: string
     symbolSize?: number | number[]
+    symbolRotate?: number
     symbolKeepAspect?: boolean
 
     liftZ?: number

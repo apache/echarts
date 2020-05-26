@@ -445,7 +445,10 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         let allDay = Math.floor(parsedRange[1].time / PROXIMATE_ONE_DAY)
             - Math.floor(parsedRange[0].time / PROXIMATE_ONE_DAY) + 1;
 
-        // Consider case:
+        // Consider case1 (#11677 #10430):
+        // Set the system timezone as "UK", set the range to `['2016-07-01', '2016-12-31']`
+
+        // Consider case2:
         // Firstly set system timezone as "Time Zone: America/Toronto",
         // ```
         // let first = new Date(1478412000000 - 3600 * 1000 * 2.5);
@@ -458,11 +461,15 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         const endDateNum = parsedRange[1].date.getDate();
         date.setDate(startDateNum + allDay - 1);
         // The bias can not over a month, so just compare date.
-        if (date.getDate() !== endDateNum) {
+        let dateNum = date.getDate();
+        if (dateNum !== endDateNum) {
             const sign = date.getTime() - parsedRange[1].time > 0 ? 1 : -1;
-            while (date.getDate() !== endDateNum && (date.getTime() - parsedRange[1].time) * sign > 0) {
+            while (
+                (dateNum = date.getDate()) !== endDateNum
+                && (date.getTime() - parsedRange[1].time) * sign > 0
+            ) {
                 allDay -= sign;
-                date.setDate(startDateNum + allDay - 1);
+                date.setDate(dateNum - sign);
             }
         }
 

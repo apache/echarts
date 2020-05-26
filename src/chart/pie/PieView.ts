@@ -177,26 +177,27 @@ class PiePiece extends graphic.Group {
         const withAnimation = !firstCreate && animationTypeUpdate === 'transition';
         this._updateLabel(data, idx, withAnimation);
 
-        (this as ECElement).onStateChange = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+        (this as ECElement).onStateChange = !seriesModel.get('silent')
             ? function (fromState: DisplayState, toState: DisplayState): void {
-                if (toState === 'emphasis') {
-
-                    // Sector may has animation of updating data. Force to move to the last frame
-                    // Or it may stopped on the wrong shape
-                    sector.stopAnimation(true);
-                    sector.animateTo({
-                        shape: {
-                            r: layout.r + seriesModel.get('hoverOffset')
-                        }
-                    }, { duration: 300, easing: 'elasticOut' });
-                }
-                else {
-                    sector.stopAnimation(true);
-                    sector.animateTo({
-                        shape: {
-                            r: layout.r
-                        }
-                    }, { duration: 300, easing: 'elasticOut' });
+                if (seriesModel.isAnimationEnabled() && itemModel.get('hoverAnimation')) {
+                    if (toState === 'emphasis') {
+                        // Sector may has animation of updating data. Force to move to the last frame
+                        // Or it may stopped on the wrong shape
+                        sector.stopAnimation(true);
+                        sector.animateTo({
+                            shape: {
+                                r: layout.r + seriesModel.get('hoverOffset')
+                            }
+                        }, { duration: 300, easing: 'elasticOut' });
+                    }
+                    else {
+                        sector.stopAnimation(true);
+                        sector.animateTo({
+                            shape: {
+                                r: layout.r
+                            }
+                        }, { duration: 300, easing: 'elasticOut' });
+                    }
                 }
             }
             : null;

@@ -21,33 +21,29 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, .chart {
-                width: 100%;
-                margin: 0;
-            }
-
             .chart {
                 height: 400px;
             }
         </style>
+
         <div id="chart-1" class="chart"></div>
+        <div id="main1"></div>
+
+
         <script>
 
             require([
                 'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/chart/line',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/dataZoom',
-                // 'echarts/component/markPoint',
-                // 'echarts/component/toolbox',
-                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('chart-1'));
@@ -125,5 +121,100 @@ under the License.
                 });
             });
         </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                function xAxisData() { return ['a', 'b', 'c']; };
+                function seriesData() { return [12, 32, 44]; };
+                var gridWidth = 100;
+                var gridBottom = 80;
+                var gridGap = 50;
+                var gridCurrLeft = gridGap;
+                var nameTextStyle = {align: 'left'};
+
+                function getGridLeft() {
+                    var left = gridCurrLeft;
+                    gridCurrLeft += gridWidth + gridGap;
+                    return left;
+                }
+
+                var option = {
+                    dataZoom: [
+                        {type: 'inside', yAxisIndex: 1},
+                        {type: 'inside', yAxisIndex: 3}
+                    ],
+                    grid: [
+                        {width: gridWidth, bottom: gridBottom, left: getGridLeft()},
+                        {width: gridWidth, bottom: gridBottom, left: getGridLeft()},
+                        {width: gridWidth, bottom: gridBottom, left: getGridLeft()},
+                        {width: gridWidth, bottom: gridBottom, left: getGridLeft()}
+                    ],
+                    xAxis: [
+                        {gridIndex: 0, data: xAxisData()},
+                        {gridIndex: 1, data: xAxisData()},
+                        {gridIndex: 2, data: xAxisData()},
+                        {gridIndex: 3, data: xAxisData()}
+                    ],
+                    yAxis: [{
+                        gridIndex: 0,
+                        name: 'y min/max:\nfunction return null\nno dataZoom',
+                        nameTextStyle: nameTextStyle,
+                        min: function (param) {
+                            return null;
+                        },
+                        max: function (param) {
+                            return null;
+                        }
+                    }, {
+                        gridIndex: 1,
+                        name: 'y min/max:\nfunction return null\ny inside dataZoom',
+                        nameTextStyle: nameTextStyle,
+                        min: function (param) {
+                            return null;
+                        },
+                        max: function (param) {
+                            return null;
+                        }
+                    }, {
+                        gridIndex: 2,
+                        name: 'y min/max:\nnull\nno dataZoom',
+                        nameTextStyle: nameTextStyle,
+                        min: null,
+                        max: null
+                    }, {
+                        gridIndex: 3,
+                        name: 'y min/max:\nnull\ny inside dataZoom',
+                        nameTextStyle: nameTextStyle,
+                        min: null,
+                        max: null
+                    }],
+                    series: [
+                        {type: 'scatter', data: seriesData(), xAxisIndex: 0, yAxisIndex: 0},
+                        {type: 'scatter', data: seriesData(), xAxisIndex: 1, yAxisIndex: 1},
+                        {type: 'scatter', data: seriesData(), xAxisIndex: 2, yAxisIndex: 2},
+                        {type: 'scatter', data: seriesData(), xAxisIndex: 3, yAxisIndex: 3},
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Y range should be all the same',
+                        'dataZoom should be normal'
+                    ],
+                    option: option
+                });
+
+            });
+
+        </script>
+
+
+
     </body>
 </html>

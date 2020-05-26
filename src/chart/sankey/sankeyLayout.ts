@@ -428,8 +428,14 @@ function relaxRightToLeft(
     zrUtil.each(nodesByBreadth.slice().reverse(), function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.outEdges.length) {
-                const y = sum(node.outEdges, weightedTarget, orient)
+                let y = sum(node.outEdges, weightedTarget, orient)
                     / sum(node.outEdges, getEdgeValue);
+
+                if (isNaN(y)) {
+                    const len = node.outEdges.length;
+                    y = len ? sum(node.outEdges, centerTarget, orient) / len : 0;
+                }
+
                 if (orient === 'vertical') {
                     const nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);
@@ -446,9 +452,15 @@ function relaxRightToLeft(
 function weightedTarget(edge: GraphEdge, orient: LayoutOrient) {
     return center(edge.node2, orient) * (edge.getValue() as number);
 }
+function centerTarget(edge: GraphEdge, orient: LayoutOrient) {
+    return center(edge.node2, orient);
+}
 
 function weightedSource(edge: GraphEdge, orient: LayoutOrient) {
     return center(edge.node1, orient) * (edge.getValue() as number);
+}
+function centerSource(edge: GraphEdge, orient: LayoutOrient) {
+    return center(edge.node1, orient);
 }
 
 function center(node: GraphNode, orient: LayoutOrient) {
@@ -481,8 +493,14 @@ function relaxLeftToRight(nodesByBreadth: GraphNode[][], alpha: number, orient: 
     zrUtil.each(nodesByBreadth, function (nodes) {
         zrUtil.each(nodes, function (node) {
             if (node.inEdges.length) {
-                const y = sum(node.inEdges, weightedSource, orient)
+                let y = sum(node.inEdges, weightedSource, orient)
                         / sum(node.inEdges, getEdgeValue);
+
+                if (isNaN(y)) {
+                    const len = node.inEdges.length;
+                    y = len ? sum(node.inEdges, centerSource, orient) / len : 0;
+                }
+
                 if (orient === 'vertical') {
                     const nodeX = node.getLayout().x + (y - center(node, orient)) * alpha;
                     node.setLayout({x: nodeX}, true);

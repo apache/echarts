@@ -149,7 +149,7 @@ class LineDraw {
 
     incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw) {
         function updateIncrementalAndHover(el: Displayable) {
-            if (!el.isGroup) {
+            if (!el.isGroup && !isEffectObject(el)) {
                 el.incremental = el.useHoverLayer = true;
             }
         }
@@ -212,6 +212,10 @@ class LineDraw {
 
         this.group.add(itemEl);
     }
+}
+
+function isEffectObject(el: Displayable) {
+    return el.animators && el.animators.length > 0;
 }
 
 function makeSeriesScope(lineData: ListForLineDraw) {

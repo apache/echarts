@@ -27,27 +27,60 @@ under the License.
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
+            .chart {
+                height: 200px;
             }
-            #main {
-                background: #fff;
+            h1 {
+                font-size: 20px;
+                text-align: center;
+                background: #bbb;
+                padding: 10px 0;
             }
         </style>
-        <div id="main"></div>
+
+        <h1>use the default values </h1>
+        <div class="chart" id="main0"></div>
+        <h1>only show the animation </h1>
+        <div class="chart" id="main1"></div>
+        <h1>only show the text </h1>
+        <div class="chart" id="main2"></div>
+        <h1>fontSzie: 25px, arcRadius: 12, lineWidth: 8</h1>
+        <div class="chart" id="main3"></div>
         <script>
 
             require([
                 'echarts'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
-                chart.showLoading({
-                    text: '暂无数据'
+                var chart0 = echarts.init(document.getElementById('main0'));
+                chart0.showLoading();
+
+                var chart1 = echarts.init(document.getElementById('main1'));
+                chart1.showLoading({
+                    text: ''
                 });
-                window.onresize = chart.resize;
+
+                var chart2 = echarts.init(document.getElementById('main2'));
+                chart2.showLoading({
+                    showAnimation: false
+                });
+                var chart3 = echarts.init(document.getElementById('main3'));
+                chart3.showLoading({
+                    text: '暂无数据',
+                    textColor: '#000',
+                    fontSize: '25px',
+                    maskColor: 'rgba(255, 255, 255, 0.8)',
+                    color: '#c23531',
+                    arcRadius: 12,
+                    lineWidth: 8,
+                    zlevel: 0
+                });
+                window.onresize = function () {
+                    chart0.resize();
+                    chart1.resize();
+                    chart2.resize();
+                    chart3.resize();
+                };
             });
         </script>
     </body>

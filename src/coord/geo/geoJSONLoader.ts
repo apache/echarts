@@ -41,7 +41,7 @@ const inner = makeInner<MapRecordInner, GeoJSONMapRecord>();
 
 export default {
 
-    load(mapName: string, mapRecord: GeoJSONMapRecord): MapRecordInner['parsed'] {
+    load(mapName: string, mapRecord: GeoJSONMapRecord, nameProperty: string): MapRecordInner['parsed'] {
 
         const parsed = inner(mapRecord).parsed;
 
@@ -55,7 +55,7 @@ export default {
 
         // https://jsperf.com/try-catch-performance-overhead
         try {
-            regions = geoJSON ? parseGeoJson(geoJSON) : [];
+            regions = geoJSON ? parseGeoJson(geoJSON, nameProperty) : [];
         }
         catch (e) {
             throw new Error('Invalid geoJson format\n' + e.message);
