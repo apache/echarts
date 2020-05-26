@@ -42,6 +42,7 @@ const getBarItemStyleInner = makeStyleMapper(
         // But the echarts-doc has been describing it as `barBorderXxx`
         // until echarts4. So we still compat that settings to reduce
         // the break change.
+        // `barBorderXXX` always has higher priority.
         ['stroke', 'barBorderColor'],
         ['lineWidth', 'barBorderWidth'],
         ['opacity'],
@@ -75,18 +76,13 @@ export function fixBarItemStyle(
 
     const barBorderColor = itemModel.get(ITEM_STYLE_BAR_BORDER_COLOR);
     const barBorderWidth = itemModel.get(ITEM_STYLE_BAR_BORDER_WIDTH);
-    let newProps: Dictionary<unknown>;
 
-    if (barBorderColor != null) {
-        newProps = newProps || {};
-        newProps.barBorderColor = barBorderColor;
-    }
-    if (barBorderWidth != null) {
-        newProps = newProps || {};
-        newProps.barBorderColor = barBorderWidth;
-    }
-    if (newProps) {
-        style = zrUtil.createObject(style, newProps);
+    if (barBorderColor != null || barBorderWidth != null) {
+        // Here the `style` is a plain object, see `visual/style.ts`.
+        style = zrUtil.defaults({
+            stroke: barBorderColor,
+            lineWidth: barBorderWidth
+        }, style);
     }
 
     return style;
@@ -94,28 +90,28 @@ export function fixBarItemStyle(
 
 export function getBarBorderColor(styleModel: Model<BarItemStyleOption>): BarItemStyleOption['borderColor'] {
     return zrUtil.retrieve2(
-        styleModel.get('borderColor'),
-        styleModel.get('barBorderColor')
+        styleModel.get('barBorderColor'),
+        styleModel.get('borderColor')
     );
 }
 export function getBarBorderRadius(styleModel: Model<BarItemStyleOption>): BarItemStyleOption['borderRadius'] {
     return zrUtil.retrieve2(
-        styleModel.get('borderRadius'),
-        styleModel.get('barBorderRadius')
+        styleModel.get('barBorderRadius'),
+        styleModel.get('borderRadius')
     );
 }
 
 export function getBarItemModelBorderWidth(itemModel: Model<BarDataItemOption>): BarItemStyleOption['borderWidth'] {
     return zrUtil.retrieve2(
-        itemModel.get(ITEM_STYLE_BORDER_WIDTH),
-        itemModel.get(ITEM_STYLE_BAR_BORDER_WIDTH)
+        itemModel.get(ITEM_STYLE_BAR_BORDER_WIDTH),
+        itemModel.get(ITEM_STYLE_BORDER_WIDTH)
     );
 }
 
 export function getBarItemModelBorderRadius(itemModel: Model<BarDataItemOption>): BarItemStyleOption['borderRadius'] {
     return zrUtil.retrieve2(
-        itemModel.get(ITEM_STYLE_BORDER_RADIUS),
-        itemModel.get(ITEM_STYLE_BAR_BORDER_RADIUS)
+        itemModel.get(ITEM_STYLE_BAR_BORDER_RADIUS),
+        itemModel.get(ITEM_STYLE_BORDER_RADIUS)
     );
 }
 
