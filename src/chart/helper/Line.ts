@@ -277,7 +277,7 @@ class Line extends graphic.Group {
             // Only these properties supported in this emphasis style here.
             emphasisState.style = {
                 text: emphasisText as string,
-                textFill: hoverLabelModel.getTextColor(true),
+                fill: hoverLabelModel.getTextColor(true),
                 // For merging hover style to normal style, do not use
                 // `hoverLabelModel.getFont()` here.
                 fontStyle: hoverLabelModel.getShallow('fontStyle'),

@@ -30,7 +30,7 @@ import Group from 'zrender/src/graphic/Group';
 
 
 interface Loader {
-    load: (mapName: string, mapRecord: MapRecord, nameProperty: string) => {
+    load: (mapName: string, mapRecord: MapRecord, nameProperty?: string) => {
         regions?: Region[];
         boundingRect?: BoundingRect;
     };
@@ -44,7 +44,7 @@ const loaders = {
 
 export default {
 
-    load: function (mapName: string, nameMap: NameMap, nameProperty: string): {
+    load: function (mapName: string, nameMap: NameMap, nameProperty?: string): {
         regions: Region[];
         // Key: mapName
         regionsMap: HashMap<Region>;
