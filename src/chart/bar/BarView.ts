@@ -543,7 +543,7 @@ function updateStyle(
     const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'barBorderRadius']) || 0);
+        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
     }
 
     el.useStyle(style);

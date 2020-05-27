@@ -32,7 +32,7 @@ export interface BarItemStyleOption extends ItemStyleOption {
     /**
      * Border radius is not supported for bar on polar
      */
-    barBorderRadius?: number | number[]
+    borderRadius?: number | number[]
 }
 export interface BarDataItemOption {
     name?: string
