@@ -166,7 +166,8 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             type: 'changeMagicType',
             currentType: type,
             newOption: newOption,
-            newTitle: newTitle
+            newTitle: newTitle,
+            featureName: 'magicType'
         });
     }
 }

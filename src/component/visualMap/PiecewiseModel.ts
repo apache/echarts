@@ -453,25 +453,21 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
         thisOption.precision = precision;
         splitStep = +splitStep.toFixed(precision);
 
-        let index = 0;
-
         if (thisOption.minOpen) {
             outPieceList.push({
-                index: index++,
                 interval: [-Infinity, dataExtent[0]],
                 close: [0, 0]
             });
         }
 
         for (
-            let curr = dataExtent[0], len = index + splitNumber;
-            index < len;
-            curr += splitStep
+            let index = 0, curr = dataExtent[0];
+            index < splitNumber;
+            curr += splitStep, index++
         ) {
             const max = index === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
 
             outPieceList.push({
-                index: index++,
                 interval: [curr, max],
                 close: [1, 1]
             });
@@ -479,7 +475,6 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 
         if (thisOption.maxOpen) {
             outPieceList.push({
-                index: index++,
                 interval: [dataExtent[1], Infinity],
                 close: [0, 0]
             });
@@ -487,7 +482,8 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 
         reformIntervals(outPieceList as Required<InnerVisualPiece>[]);
 
-        zrUtil.each(outPieceList, function (piece) {
+        zrUtil.each(outPieceList, function (piece, index) {
+            piece.index = index;
             piece.text = this.formatValueText(piece.interval);
         }, this);
     },

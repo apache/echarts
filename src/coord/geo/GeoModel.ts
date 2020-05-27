@@ -32,7 +32,8 @@ import {
     ZRColor,
     LabelOption,
     DisplayState,
-    RoamOptionMixin
+    RoamOptionMixin,
+    AnimationOptionMixin
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -84,6 +85,8 @@ export interface GeoOption extends
     ComponentOption,
     BoxLayoutOptionMixin,
     DataSelectableOptionMixin,
+    // For lens animation on geo.
+    AnimationOptionMixin,
     GeoCommonOptionMixin {
 
     show?: boolean;

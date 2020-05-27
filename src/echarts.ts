@@ -80,10 +80,10 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 
-export const version = '4.6.0';
+export const version = '4.8.0';
 
 export const dependencies = {
-    zrender: '4.2.0'
+    zrender: '4.3.1'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -174,6 +174,48 @@ messageCenterProto.on = createRegisterEventWithLowercaseMessageCenter('on');
 messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
 // messageCenterProto.one = createRegisterEventWithLowercaseMessageCenter('one');
 
+// ---------------------------------------
+// Internal method names for class ECharts
+// ---------------------------------------
+let prepare: (ecIns: ECharts) => void;
+let prepareView: (ecIns: ECharts, isComponent: boolean) => void;
+let updateDirectly: (
+    ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
+) => void;
+type UpdateMethod = (this: ECharts, payload?: Payload) => void;
+let updateMethods: {
+    prepareAndUpdate: UpdateMethod,
+    update: UpdateMethod,
+    updateTransform: UpdateMethod,
+    updateView: UpdateMethod,
+    updateVisual: UpdateMethod,
+    updateLayout: UpdateMethod
+};
+let doConvertPixel: (ecIns: ECharts, methodName: string, finder: ModelFinder, value: any) => any;
+let updateStreamModes: (ecIns: ECharts, ecModel: GlobalModel) => void;
+let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void;
+let flushPendingActions: (this: ECharts, silent: boolean) => void;
+let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
+let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
+let clearColorPalette: (ecModel: GlobalModel) => void;
+let render: (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) => void;
+let renderComponents: (
+    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, dirtyList?: ComponentView[]
+) => void;
+let renderSeries: (
+    ecIns: ECharts,
+    ecModel: GlobalModel,
+    api: ExtensionAPI,
+    payload: Payload | 'remain',
+    dirtyMap?: {[uid: string]: any}
+) => void;
+let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
+let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
+let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
+let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
+let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
+let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
+let enableConnect: (chart: ECharts) => void;
 
 class ECharts extends Eventful {
 
@@ -497,7 +539,7 @@ class ECharts extends Eventful {
     /**
      * Get svg data url
      */
-    getSvgDataUrl(): string {
+    getSvgDataURL(): string {
         if (!env.svgSupported) {
             return;
         }
@@ -509,12 +551,12 @@ class ECharts extends Eventful {
             el.stopAnimation(true);
         });
 
-        return (zr.painter as SVGPainter).pathToDataUrl();
+        return (zr.painter as SVGPainter).toDataURL();
     }
 
     getDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg',
+        type?: 'png' | 'jpg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         // component type array
@@ -544,7 +586,7 @@ class ECharts extends Eventful {
         });
 
         const url = this._zr.painter.getType() === 'svg'
-            ? this.getSvgDataUrl()
+            ? this.getSvgDataURL()
             : this.getRenderedCanvas(opts).toDataURL(
                 'image/' + (opts && opts.type || 'png')
             );
@@ -558,7 +600,7 @@ class ECharts extends Eventful {
 
     getConnectedDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg',
+        type?: 'png' | 'jpg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         connectedBackgroundColor?: ZRColor
@@ -572,6 +614,7 @@ class ECharts extends Eventful {
         if (!env.canvasSupported) {
             return;
         }
+        const isSvg = opts.type === 'svg';
         const groupId = this.group;
         const mathMin = Math.min;
         const mathMax = Math.max;
@@ -581,14 +624,14 @@ class ECharts extends Eventful {
             let top = MAX_NUMBER;
             let right = -MAX_NUMBER;
             let bottom = -MAX_NUMBER;
-            const canvasList: {dom: HTMLCanvasElement, left: number, top: number}[] = [];
+            const canvasList: {dom: HTMLCanvasElement | string, left: number, top: number}[] = [];
             const dpr = (opts && opts.pixelRatio) || 1;
 
             zrUtil.each(instances, function (chart, id) {
                 if (chart.group === groupId) {
-                    const canvas = chart.getRenderedCanvas(
-                        zrUtil.clone(opts)
-                    );
+                    const canvas = isSvg
+                        ? (chart.getZr().painter as SVGPainter).getSvgDom().innerHTML
+                        : chart.getRenderedCanvas(zrUtil.clone(opts));
                     const boundingRect = chart.getDom().getBoundingClientRect();
                     left = mathMin(boundingRect.left, left);
                     top = mathMin(boundingRect.top, top);
@@ -609,38 +652,61 @@ class ECharts extends Eventful {
             const width = right - left;
             const height = bottom - top;
             const targetCanvas = zrUtil.createCanvas();
-            targetCanvas.width = width;
-            targetCanvas.height = height;
-            const zr = zrender.init(targetCanvas);
-
-            // Background between the charts
-            if (opts.connectedBackgroundColor) {
-                zr.add(new graphic.Rect({
-                    shape: {
-                        x: 0,
-                        y: 0,
-                        width: width,
-                        height: height
-                    },
-                    style: {
-                        fill: opts.connectedBackgroundColor
-                    }
-                }));
-            }
-
-            each(canvasList, function (item) {
-                const img = new graphic.Image({
-                    style: {
-                        x: item.left * dpr - left,
-                        y: item.top * dpr - top,
-                        image: item.dom
-                    }
-                });
-                zr.add(img);
+            const zr = zrender.init(targetCanvas, {
+                renderer: isSvg ? 'svg' : 'canvas'
             });
-            zr.refreshImmediately();
+            zr.resize({
+                width: width,
+                height: height
+            });
 
-            return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+            if (isSvg) {
+                let content = '';
+                each(canvasList, function (item) {
+                    const x = item.left - left;
+                    const y = item.top - top;
+                    content += '<g transform="translate(' + x + ','
+                        + y + ')">' + item.dom + '</g>';
+                });
+                (zr.painter as SVGPainter).getSvgRoot().innerHTML = content;
+
+                if (opts.connectedBackgroundColor) {
+                    (zr.painter as SVGPainter).setBackgroundColor(opts.connectedBackgroundColor as string);
+                }
+
+                zr.refreshImmediately();
+                return (zr.painter as SVGPainter).toDataURL();
+            }
+            else {
+                // Background between the charts
+                if (opts.connectedBackgroundColor) {
+                    zr.add(new graphic.Rect({
+                        shape: {
+                            x: 0,
+                            y: 0,
+                            width: width,
+                            height: height
+                        },
+                        style: {
+                            fill: opts.connectedBackgroundColor
+                        }
+                    }));
+                }
+
+                each(canvasList, function (item) {
+                    const img = new graphic.Image({
+                        style: {
+                            x: item.left * dpr - left,
+                            y: item.top * dpr - top,
+                            image: item.dom
+                        }
+                    });
+                    zr.add(img);
+                });
+                zr.refreshImmediately();
+
+                return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+            }
         }
         else {
             return this.getDataURL(opts);
@@ -1835,49 +1901,6 @@ class ECharts extends Eventful {
     })();
 }
 
-
-// ---------------------------------------
-// Internal method names for class ECharts
-// ---------------------------------------
-let prepare: (ecIns: ECharts) => void;
-let prepareView: (ecIns: ECharts, isComponent: boolean) => void;
-let updateDirectly: (
-    ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
-) => void;
-type UpdateMethod = (this: ECharts, payload?: Payload) => void;
-let updateMethods: {
-    prepareAndUpdate: UpdateMethod,
-    update: UpdateMethod,
-    updateTransform: UpdateMethod,
-    updateView: UpdateMethod,
-    updateVisual: UpdateMethod,
-    updateLayout: UpdateMethod
-};
-let doConvertPixel: (ecIns: ECharts, methodName: string, finder: ModelFinder, value: any) => any;
-let updateStreamModes: (ecIns: ECharts, ecModel: GlobalModel) => void;
-let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void;
-let flushPendingActions: (this: ECharts, silent: boolean) => void;
-let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
-let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
-let clearColorPalette: (ecModel: GlobalModel) => void;
-let render: (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) => void;
-let renderComponents: (
-    ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload, dirtyList?: ComponentView[]
-) => void;
-let renderSeries: (
-    ecIns: ECharts,
-    ecModel: GlobalModel,
-    api: ExtensionAPI,
-    payload: Payload | 'remain',
-    dirtyMap?: {[uid: string]: any}
-) => void;
-let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
-let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
-let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
-let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
-let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
-let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
-let enableConnect: (chart: ECharts) => void;
 
 
 const echartsProto = ECharts.prototype;

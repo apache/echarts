@@ -29,10 +29,8 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 type BarDataValue = OptionDataValue | OptionDataValue[];
 
 export interface BarItemStyleOption extends ItemStyleOption {
-    /**
-     * Border radius is not supported for bar on polar
-     */
-    barBorderRadius?: number | number[]
+    // Border radius is not supported for bar on polar
+    borderRadius?: number | number[]
 }
 export interface BarDataItemOption {
     name?: string

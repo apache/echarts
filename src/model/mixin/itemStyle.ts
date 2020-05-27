@@ -55,7 +55,7 @@ class ItemStyleMixin {
     ): ItemStyleProps {
         const style = getItemStyle(this, excludes, includes);
         const lineDash = this.getBorderLineDash();
-        lineDash && ((style as any).lineDash = lineDash);
+        lineDash && (style.lineDash = lineDash);
         return style;
     }
 

@@ -98,6 +98,8 @@ export interface MapSeriesOption extends
         label?: LabelOption;
         itemStyle?: GeoItemStyleOption;
     };
+
+    nameProperty: string;
 }
 
 class MapSeries extends SeriesModel<MapSeriesOption> {
@@ -141,7 +143,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             });
         }
 
-        const geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap);
+        const geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap, this.option.nameProperty);
         zrUtil.each(geoSource.regions, function (region) {
             const name = region.name;
             if (!dataNameMap.get(name)) {
@@ -310,7 +312,9 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             itemStyle: {
                 areaColor: 'rgba(255,215,0,0.8)'
             }
-        }
+        },
+
+        nameProperty: 'name'
     };
 
 }

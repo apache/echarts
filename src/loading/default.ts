@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 import { LoadingEffect } from '../util/types';
 import ExtensionAPI from '../ExtensionAPI';
+import * as textContain from 'zrender/src/contain/text';
 
 const PI = Math.PI;
 
@@ -35,21 +36,30 @@ const PI = Math.PI;
 export default function (
     api: ExtensionAPI,
     opts?: {
-        text?: string,
-        color?: string,
-        textColor?: string,
-        maskColor?: string,
-        zlevel?: number
+        text?: string;
+        color?: string;
+        textColor?: string;
+        maskColor?: string;
+        zlevel?: number;
+        showSpinner?: boolean;
+        spinnerRadius?: number;
+        lineWidth?: number;
+        fontSize?: number;
     }
 ): LoadingEffect {
     opts = opts || {};
     zrUtil.defaults(opts, {
         text: 'loading',
-        color: '#c23531',
         textColor: '#000',
+        fontSize: '12px',
         maskColor: 'rgba(255, 255, 255, 0.8)',
+        showSpinner: true,
+        color: '#c23531',
+        spinnerRadius: 10,
+        lineWidth: 5,
         zlevel: 0
     });
+    const group = new graphic.Group() as (graphic.Group & LoadingEffect);
     const mask = new graphic.Rect({
         style: {
             fill: opts.maskColor
@@ -57,20 +67,8 @@ export default function (
         zlevel: opts.zlevel,
         z: 10000
     });
-    const arc = new graphic.Arc({
-        shape: {
-            startAngle: -PI / 2,
-            endAngle: -PI / 2 + 0.1,
-            r: 10
-        },
-        style: {
-            stroke: opts.color,
-            lineCap: 'round',
-            lineWidth: 5
-        },
-        zlevel: opts.zlevel,
-        z: 10001
-    });
+    group.add(mask);
+    const font = opts.fontSize + ' sans-serif';
     const labelRect = new graphic.Rect({
         style: {
             fill: 'none'
@@ -78,7 +76,8 @@ export default function (
         textContent: new graphic.Text({
             style: {
                 text: opts.text,
-                fill: opts.textColor
+                fill: opts.textColor,
+                font: font
             }
         }),
         textConfig: {
@@ -88,33 +87,53 @@ export default function (
         zlevel: opts.zlevel,
         z: 10001
     });
-
-    arc.animateShape(true)
-        .when(1000, {
-            endAngle: PI * 3 / 2
-        })
-        .start('circularInOut');
-    arc.animateShape(true)
-        .when(1000, {
-            startAngle: PI * 3 / 2
-        })
-        .delay(300)
-        .start('circularInOut');
-
-    const group = new graphic.Group() as (graphic.Group & LoadingEffect);
-    group.add(arc);
     group.add(labelRect);
-    group.add(mask);
+    let arc: graphic.Arc;
+
+    if (opts.showSpinner) {
+        arc = new graphic.Arc({
+            shape: {
+                startAngle: -PI / 2,
+                endAngle: -PI / 2 + 0.1,
+                r: opts.spinnerRadius
+            },
+            style: {
+                stroke: opts.color,
+                lineCap: 'round',
+                lineWidth: opts.lineWidth
+            },
+            zlevel: opts.zlevel,
+            z: 10001
+        });
+        arc.animateShape(true)
+            .when(1000, {
+                endAngle: PI * 3 / 2
+            })
+            .start('circularInOut');
+        arc.animateShape(true)
+            .when(1000, {
+                startAngle: PI * 3 / 2
+            })
+            .delay(300)
+            .start('circularInOut');
+
+        group.add(arc);
+    }
 
     // Inject resize
     group.resize = function () {
-        const cx = api.getWidth() / 2;
+        const textWidth = textContain.getWidth(opts.text, font);
+        const r = opts.showSpinner ? opts.spinnerRadius : 0;
+        // cx = (containerWidth - arcDiameter - textDistance - textWidth) / 2
+        // textDistance needs to be calculated when both animation and text exist
+        const cx = (api.getWidth() - r * 2 - (opts.showSpinner && textWidth ? 10 : 0) - textWidth) / 2
+            // only show the text
+            - (opts.showSpinner ? 0 : textWidth / 2);
         const cy = api.getHeight() / 2;
-        arc.setShape({
+        opts.showSpinner && arc.setShape({
             cx: cx,
             cy: cy
         });
-        const r = arc.shape.r;
         labelRect.setShape({
             x: cx - r,
             y: cy - r,

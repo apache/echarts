@@ -34,6 +34,7 @@ import MapView from '../../chart/map/MapView';
 import Region from '../../coord/geo/Region';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
+import Transformable from 'zrender/src/core/Transformable';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -135,9 +136,30 @@ class MapDraw {
         const group = this.group;
 
         const transformInfo = geo.getTransformInfo();
-        group.transform = transformInfo.roamTransform;
-        group.decomposeTransform();
-        group.dirty();
+
+        // No animation when first draw or in action
+        const isFirstDraw = !regionsGroup.childAt(0) || payload;
+        let targetScaleX: number;
+        let targetScaleY: number;
+        if (isFirstDraw) {
+            group.transform = transformInfo.roamTransform;
+            group.decomposeTransform();
+            group.dirty();
+        }
+        else {
+            const target = new Transformable();
+            target.transform = transformInfo.roamTransform;
+            target.decomposeTransform();
+            const props = {
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                x: target.x,
+                y: target.y
+            };
+            targetScaleX = target.scaleX;
+            targetScaleY = target.scaleY;
+            graphic.updateProps(group, props, mapOrGeoModel);
+        }
 
         regionsGroup.removeAll();
 
@@ -296,6 +318,14 @@ class MapDraw {
                         verticalAlign: 'middle'
                     }
                 );
+
+                if (!isFirstDraw) {
+                    // Text animation
+                    graphic.updateProps(textEl, {
+                        scaleX: 1 / targetScaleX,
+                        scaleY: 1 / targetScaleY
+                    }, mapOrGeoModel);
+                }
 
                 regionGroup.add(textEl);
             }

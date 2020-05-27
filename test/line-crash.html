@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var FIXED_IDX = -1;
+
+            var xAxisDataRaw = ['05:15:43', '05:15:46', '05:15:48'];
+            var seriesDataRaw0 = [3547546, 3903750, 1628242];
+            var seriesDataRaw1 = [-167033, -2092606, -1622461];
+
+            var xAxisData = ['05:15:41'];
+            var seriesData0 = [0];
+            var seriesData1 = [0];
+
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            option = {
+                xAxis: [{
+                    data: xAxisData
+                }],
+                yAxis: {},
+                series: [{
+                    name: 'A',
+                    type: 'line',
+                    areaStyle: {
+                        color: {
+                            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{offset: 0, color: 'green'}, {offset: 1, color: 'yellow'}],
+                            global: false
+                        },
+                        shadowColor: 'green',
+                        shadowBlur: 10
+                    },
+                    data: seriesData0
+                }, {
+                    name: 'B',
+                    type: 'line',
+                    areaStyle: {
+                        color: {
+                            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{offset: 0, color: 'green'}, {offset: 1, color: 'yellow'}],
+                            global: false
+                        },
+                        shadowColor: 'green',
+                        shadowBlur: 10
+                    },
+                    data: seriesData1
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'There should be no animation and won\'t crash in safari after addData'
+                ],
+                option: option,
+                // height: 300,
+                buttons: [{
+                    text: 'Add Data', onclick: function () {
+                        FIXED_IDX++;
+                        if (FIXED_IDX >= xAxisDataRaw.length) {
+                            return;
+                        }
+
+                        xAxisData.push(xAxisDataRaw[FIXED_IDX]);
+                        seriesData0.push(seriesDataRaw0[FIXED_IDX]);
+                        seriesData1.push(seriesDataRaw1[FIXED_IDX]);
+
+                        chart.setOption({
+                            xAxis: {
+                                data: xAxisData
+                            },
+                            series: [{
+                                animationDurationUpdate: 10000,
+                                data: seriesData0
+                            }, {
+                                animationDurationUpdate: 10000,
+                                data: seriesData1
+                            }]
+                        });
+                    }
+                }],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

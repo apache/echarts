@@ -597,18 +597,23 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     defaultText?: string | (
         (labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>) => string
     ),
-    // Fetch text by `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
+    // Fetch text by:
+    // opt.labelFetcher.getFormattedLabel(
+    //     opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp
+    // )
     labelFetcher?: {
         getFormattedLabel?: (
             // In MapDraw case it can be string (region name)
             labelDataIndex: LDI,
             state: DisplayState,
             dataType: string,
-            labelDimIndex: number
+            labelDimIndex: number,
+            labelProp: string
         ) => string
     },
     labelDataIndex?: LDI,
     labelDimIndex?: number
+    labelProp?: string
 }
 
 
@@ -644,10 +649,11 @@ export function setLabelStyle<LDI>(
         const labelFetcher = opt.labelFetcher;
         const labelDataIndex = opt.labelDataIndex;
         const labelDimIndex = opt.labelDimIndex;
+        const labelProp = opt.labelProp;
 
         let baseText;
         if (labelFetcher) {
-            baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex);
+            baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex, labelProp);
         }
         if (baseText == null) {
             baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
@@ -655,7 +661,7 @@ export function setLabelStyle<LDI>(
         const normalStyleText = baseText;
         const emphasisStyleText = retrieve2(
             labelFetcher
-                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
+                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex, labelProp)
                 : null,
             baseText
         );

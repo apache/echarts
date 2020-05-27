@@ -170,6 +170,8 @@ class SunburstPiece extends graphic.Group {
 
         this._seriesModel = seriesModel || this._seriesModel;
         this._ecModel = ecModel || this._ecModel;
+
+        graphic.enableHoverEmphasis(this);
     }
 
     onEmphasis(highlightPolicy: AllPropTypes<typeof NodeHighlightPolicy>) {
