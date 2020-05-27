@@ -46,11 +46,9 @@ import type { RectLike } from 'zrender/src/core/BoundingRect';
 import type Model from '../../model/Model';
 import { isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { getDefaultLabel } from '../helper/labelHelper';
-import {
-    getBarItemStyle, fixBarItemStyle, getBarItemModelBorderWidth,
-    getBarBorderColor, getBarBorderRadius, getBarItemModelBorderRadius
-} from './barItemStyle';
 
+const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
+const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
 const _eventPos = [0, 0];
 
 const mathMax = Math.max;
@@ -169,7 +167,7 @@ class BarView extends ChartView {
 
         const drawBackground = seriesModel.get('showBackground', true);
         const backgroundModel = seriesModel.getModel('backgroundStyle');
-        const barBorderRadius = getBarBorderRadius(backgroundModel) || 0;
+        const barBorderRadius = backgroundModel.get('borderRadius') || 0;
 
         const bgEls: BarView['_backgroundEls'] = [];
         const oldBgEls = this._backgroundEls;
@@ -182,7 +180,7 @@ class BarView extends ChartView {
                 if (drawBackground) {
                     const bgLayout = getLayout[coord.type](data, dataIndex);
                     const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
-                    bgEl.useStyle(getBarItemStyle(backgroundModel));
+                    bgEl.useStyle(backgroundModel.getItemStyle());
                     // Only cartesian2d support borderRadius.
                     if (coord.type === 'cartesian2d') {
                         (bgEl as Rect).setShape('r', barBorderRadius);
@@ -222,7 +220,7 @@ class BarView extends ChartView {
 
                 if (drawBackground) {
                     const bgEl = oldBgEls[oldIndex];
-                    bgEl.useStyle(getBarItemStyle(backgroundModel));
+                    bgEl.useStyle(backgroundModel.getItemStyle());
                     // Only cartesian2d support borderRadius.
                     if (coord.type === 'cartesian2d') {
                         (bgEl as Rect).setShape('r', barBorderRadius);
@@ -556,13 +554,13 @@ function updateStyle(
     isPolar: boolean
 ) {
     const style = data.getItemVisual(dataIndex, 'style');
-    const hoverStyle = getBarItemStyle(itemModel.getModel(['emphasis', 'itemStyle']));
+    const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
     if (!isPolar) {
-        (el as Rect).setShape('r', getBarItemModelBorderRadius(itemModel) || 0);
+        (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
     }
 
-    el.useStyle(fixBarItemStyle(itemModel, style));
+    el.useStyle(style);
 
     el.ignore = isZeroOnPolar(layout as SectorLayout);
 
@@ -598,7 +596,7 @@ function getLineWidth(
     itemModel: Model<BarSeriesOption>,
     rawLayout: RectLayout
 ) {
-    const lineWidth = getBarItemModelBorderWidth(itemModel) || 0;
+    const lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
     // width or height may be NaN for empty data
     const width = isNaN(rawLayout.width) ? Number.MAX_VALUE : Math.abs(rawLayout.width);
     const height = isNaN(rawLayout.height) ? Number.MAX_VALUE : Math.abs(rawLayout.height);
@@ -760,8 +758,8 @@ function setLargeBackgroundStyle(
     backgroundModel: Model<BarSeriesOption['backgroundStyle']>,
     data: List
 ) {
-    const borderColor = getBarBorderColor(backgroundModel) || backgroundModel.get('color');
-    const itemStyle = getBarItemStyle(backgroundModel);
+    const borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
+    const itemStyle = backgroundModel.getItemStyle();
 
     el.useStyle(itemStyle);
     el.style.fill = null;

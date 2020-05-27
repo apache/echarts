@@ -19,7 +19,7 @@
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
 import SeriesModel from '../../model/Series';
-import { ItemStyleOption, OptionDataValue, LabelOption, SeriesStackOptionMixin, ZRColor } from '../../util/types';
+import { ItemStyleOption, OptionDataValue, LabelOption, SeriesStackOptionMixin } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
@@ -31,10 +31,6 @@ type BarDataValue = OptionDataValue | OptionDataValue[];
 export interface BarItemStyleOption extends ItemStyleOption {
     // Border radius is not supported for bar on polar
     borderRadius?: number | number[]
-    // Compat. See `src/chart/bar/barItemStyle`.
-    barBorderRadius?: number | number[]
-    barBorderColor?: ItemStyleOption['borderColor']
-    barBorderWidth?: ItemStyleOption['borderWidth']
 }
 export interface BarDataItemOption {
     name?: string
