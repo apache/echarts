@@ -2,6 +2,8 @@ const chokidar = require('chokidar');
 const path = require('path');
 const {build} = require('esbuild');
 const fs = require('fs');
+const debounce = require('lodash.debounce');
+const sourceMap = require('source-map');
 
 const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 
@@ -23,9 +25,18 @@ const umdWrapperHead = `
 const umdWrapperTail = `
 }));`;
 
-// attach properties to the exports object to define
-// the exported module properties.
-exports.action = function () {};
+async function wrapUMDCode() {
+    const consumer = await new sourceMap.SourceMapConsumer(fs.readFileSync(outFilePath + '.map', 'utf8'));
+    const node = sourceMap.SourceNode.fromStringWithSourceMap(fs.readFileSync(outFilePath, 'utf-8'), consumer);
+    // add six empty lines
+    node.prepend(umdWrapperHead);
+    node.add(umdWrapperTail);
+    const res = node.toStringWithSourceMap({
+        file: outFilePath
+    });
+    fs.writeFileSync(outFilePath, res.code, 'utf-8');
+    fs.writeFileSync(outFilePath + '.map', res.map.toString(), 'utf-8');
+}
 
 function rebuild() {
     build({
@@ -33,20 +44,22 @@ function rebuild() {
         entryPoints: [path.resolve(__dirname, '../echarts.all.ts')],
         outfile: outFilePath,
         format: 'cjs',
+        sourcemap: true,
         bundle: true,
     }).catch(e => {
         console.error(e.toString());
     }).then(() => {
-        const mainCode = fs.readFileSync(outFilePath, 'utf-8');
-        fs.writeFileSync(outFilePath, umdWrapperHead + mainCode + umdWrapperTail)
+        console.time('Wrap UMD');
+        wrapUMDCode();
+        console.timeEnd('Wrap UMD');
     })
 }
+
+const debouncedRebuild = debounce(rebuild, 200);
 
 chokidar.watch([
     path.resolve(__dirname, '../src/**/*.ts'),
     path.resolve(__dirname, '../node_modules/zrender/src/**/*.ts'),
 ], {
     persistent: true
-}).on('change', rebuild).on('ready', function () {
-    rebuild();
-})
+}).on('all', debouncedRebuild);

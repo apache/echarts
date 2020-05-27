@@ -57,6 +57,7 @@
     "jest-canvas-mock": "^2.2.0",
     "jsdom": "^15.2.1",
     "jshint": "2.10.2",
+    "lodash.debounce": "^4.0.8",
     "open": "6.4.0",
     "pixelmatch": "5.0.2",
     "pngjs": "3.4.0",
@@ -70,6 +71,7 @@
     "serve-handler": "6.1.1",
     "slugify": "1.3.4",
     "socket.io": "2.2.0",
+    "source-map": "^0.7.3",
     "typescript": "^3.8.3"
   }
 }
