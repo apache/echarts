@@ -21,6 +21,7 @@
 
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
+import {fromPoints} from 'zrender/src/core/bbox';
 import SymbolDraw from '../helper/SymbolDraw';
 import SymbolClz from '../helper/Symbol';
 import lineAnimationDiff from './lineAnimationDiff';
@@ -62,6 +63,26 @@ function isPointsSame(points1: number[][], points2: number[][]) {
         }
     }
     return true;
+}
+
+function getBoundingDiff(points1: number[][], points2: number[][]): number {
+    const min1 = [] as number[];
+    const max1 = [] as number[];
+
+    const min2 = [] as number[];
+    const max2 = [] as number[];
+
+    fromPoints(points1, min1, max1);
+    fromPoints(points2, min2, max2);
+
+    // Get a max value from each corner of two boundings.
+    return Math.max(
+        Math.abs(min1[0] - min2[0]),
+        Math.abs(min1[1] - min2[1]),
+
+        Math.abs(max1[0] - max2[0]),
+        Math.abs(max1[1] - max2[1])
+    );
 }
 
 function getSmooth(smooth: number | boolean) {
@@ -725,9 +746,23 @@ class LineView extends ChartView {
             stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
         }
 
-        // if (next.length < polyline.shape.points.length) {
-        //     debugger
-        // }
+        // Don't apply animation if diff is large.
+        // For better result and avoid memory explosion problems like
+        // https://github.com/apache/incubator-echarts/issues/12229
+        if (getBoundingDiff(current, next) > 3000
+            || (polygon && getBoundingDiff(stackedOnCurrent, stackedOnNext) > 3000)
+        ) {
+            polyline.setShape({
+                points: next
+            });
+            if (polygon) {
+                polygon.setShape({
+                    points: next,
+                    stackedOnPoints: stackedOnNext
+                });
+            }
+            return;
+        }
 
         // `diff.current` is subset of `current` (which should be ensured by
         // turnPointsIntoStep), so points in `__points` can be updated when

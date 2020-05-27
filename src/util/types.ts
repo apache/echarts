@@ -618,6 +618,7 @@ export interface RoamOptionMixin {
 // TODO: TYPE value type?
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
+export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -632,7 +633,8 @@ export interface SymbolOptionMixin<T = unknown> {
      */
     symbolSize?: number | number[] | (unknown extends T ? never : SymbolSizeCallback<T>)
 
-    symbolRotate?: number
+    symbolRotate?: number | (unknown extends T ? never : SymbolRotateCallback<T>)
+
     symbolKeepAspect?: boolean
 
     symbolOffset?: number[]

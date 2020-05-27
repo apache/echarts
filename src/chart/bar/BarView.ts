@@ -52,6 +52,7 @@ import AngleAxis from '../../coord/polar/AngleAxis';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
+const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
 const _eventPos = [0, 0];
 
 const mathMax = Math.max;
@@ -182,6 +183,7 @@ class BarView extends ChartView {
 
         const drawBackground = seriesModel.get('showBackground', true);
         const backgroundModel = seriesModel.getModel('backgroundStyle');
+        const barBorderRadius = backgroundModel.get('borderRadius') || 0;
 
         const bgEls: BarView['_backgroundEls'] = [];
         const oldBgEls = this._backgroundEls;
@@ -246,10 +248,13 @@ class BarView extends ChartView {
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    const bgEl = createBackgroundEl(
-                        coord, isHorizontalOrRadial, layout
-                    );
+                    const bgLayout = getLayout[coord.type](data, dataIndex);
+                    const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
                     bgEl.useStyle(backgroundModel.getItemStyle());
+                    // Only cartesian2d support borderRadius.
+                    if (coord.type === 'cartesian2d') {
+                        (bgEl as Rect).setShape('r', barBorderRadius);
+                    }
                     bgEls[dataIndex] = bgEl;
                 }
 
@@ -289,9 +294,14 @@ class BarView extends ChartView {
                 if (drawBackground) {
                     const bgEl = oldBgEls[oldIndex];
                     bgEl.useStyle(backgroundModel.getItemStyle());
+                    // Only cartesian2d support borderRadius.
+                    if (coord.type === 'cartesian2d') {
+                        (bgEl as Rect).setShape('r', barBorderRadius);
+                    }
                     bgEls[newIndex] = bgEl;
 
-                    const shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
+                    const bgLayout = getLayout[coord.type](data, newIndex);
+                    const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
                     updateProps(
                         bgEl as Path, { shape: shape }, animationModel, newIndex
                     );
@@ -681,14 +691,16 @@ function removeSector(
 }
 
 interface GetLayout {
-    (data: List, dataIndex: number, itemModel: Model<BarDataItemOption>): RectLayout | SectorLayout
+    (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
 const getLayout: {
     [key in 'cartesian2d' | 'polar']: GetLayout
 } = {
-    cartesian2d(data, dataIndex, itemModel): RectLayout {
+    // itemModel is only used to get borderWidth, which is not needed
+    // when calculating bar background layout.
+    cartesian2d(data, dataIndex, itemModel?): RectLayout {
         const layout = data.getItemLayout(dataIndex) as RectLayout;
-        const fixedLineWidth = getLineWidth(itemModel, layout);
+        const fixedLineWidth = itemModel ? getLineWidth(itemModel, layout) : 0;
 
         // fix layout with lineWidth
         const signX = layout.width > 0 ? 1 : -1;
@@ -701,7 +713,7 @@ const getLayout: {
         };
     },
 
-    polar(data, dataIndex, itemModel): SectorLayout {
+    polar(data, dataIndex, itemModel?): SectorLayout {
         const layout = data.getItemLayout(dataIndex);
         return {
             cx: layout.cx,
@@ -733,7 +745,7 @@ function updateStyle(
     const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'barBorderRadius']) || 0);
+        (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
     }
 
     el.useStyle(style);
@@ -935,7 +947,7 @@ function setLargeBackgroundStyle(
     data: List
 ) {
     const borderColor = backgroundModel.get('borderColor') || backgroundModel.get('color');
-    const itemStyle = backgroundModel.getItemStyle(['color', 'borderColor']);
+    const itemStyle = backgroundModel.getItemStyle();
 
     el.useStyle(itemStyle);
     el.style.fill = null;

@@ -48,6 +48,7 @@ under the License.
         <div id="main4"></div>
         <div id="main5"></div>
         <div id="main6"></div>
+        <div id="main7"></div>
 
         <script>
 
@@ -226,7 +227,7 @@ under the License.
                 var chart = testHelper.create(echarts, 'main1', {
                     option: option,
                     title: [
-                        'large mode'
+                        'Background with large render mode.'
                     ]
                 });
             });
@@ -298,7 +299,7 @@ under the License.
                 var chart = testHelper.create(echarts, 'main2', {
                     option: option,
                     title: [
-                        'normal bars'
+                        'Background with normal render mode.'
                     ]
                 });
             });
@@ -344,7 +345,7 @@ under the License.
                 var chart = testHelper.create(echarts, 'main3', {
                     option: option,
                     title: [
-                        'polar bars'
+                        'Bar background on radial polar'
                     ]
                 });
             });
@@ -391,7 +392,7 @@ under the License.
                 var chart = testHelper.create(echarts, 'main4', {
                     option: option,
                     title: [
-                        'polar bars'
+                        'Bar background on tangential polar'
                     ]
                 });
             });
@@ -445,7 +446,7 @@ under the License.
                 var chart = testHelper.create(echarts, 'main5', {
                     option: option,
                     title: [
-                        'polar bars'
+                        'Multiple bar series with background on radial polar'
                     ]
                 });
             });
@@ -504,6 +505,63 @@ under the License.
                     title: [
                         'polar bars'
                     ]
+                });
+            });
+        </script>
+
+        <script>
+
+            require([
+                'echarts'
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar',
+                // 'echarts/component/grid',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main7'));
+
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', '1', '3', '4', '5', '6', '7', '8']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: [110, 120, 150, 250, 350, 400, 500, 600],
+                        type: 'bar',
+                        itemStyle: {
+                            barBorderWidth: 20,
+                            barBorderColor: 'rgba(50,50,50,0.3)'
+                        },
+                        showBackground: true,
+                        backgroundStyle: {
+                            color: 'green',
+                            barBorderRadius: [20, 20, 20, 20],
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main7', {
+                    option: option,
+                    title: [
+                        'background barBorderRadius'
+                    ],
+                    buttons: [{
+                        text: 'update barBorderRadius to [30, 40, 0, 60]',
+                        onclick: function () {
+                            chart.setOption({
+                                series: {
+                                    backgroundStyle: {
+                                        barBorderRadius: [30, 40, 0, 60]
+                                    }
+                                }
+                            });
+                        }
+                    }]
                 });
             });
         </script>

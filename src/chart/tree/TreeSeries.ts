@@ -33,6 +33,7 @@ import {
 import List from '../../data/List';
 import View from '../../coord/View';
 import { LayoutRect } from '../../util/layout';
+import Model from '../../model/Model';
 
 interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
@@ -156,15 +157,13 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         };
 
         const leaves = option.leaves || {};
+        const leavesModel = new Model(leaves, this, this.ecModel);
 
-        const tree = Tree.createTree(root, this, {
-            leaves: leaves
-        }, beforeLink);
+        const tree = Tree.createTree(root, this, {}, beforeLink);
 
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
-                const leavesModel = node.getLeavesModel();
                 if (!node.children.length || !node.isExpand) {
                     model.parentModel = leavesModel;
                 }

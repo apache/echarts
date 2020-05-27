@@ -93,7 +93,7 @@ class ToolboxView extends ComponentView {
             let feature: ToolboxFeature | UserDefinedToolboxFeature;
 
             // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
-            if (payload && payload.newTitle != null) {
+            if (payload && payload.newTitle != null && payload.featureName === featureName) {
                 featureOpt.title = payload.newTitle;
             }
 

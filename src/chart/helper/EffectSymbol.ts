@@ -188,7 +188,8 @@ class EffectSymbol extends Group {
             rippleGroup.x = parsePercent(symbolOffset[0], symbolSize[0]);
             rippleGroup.y = parsePercent(symbolOffset[1], symbolSize[1]);
         }
-        rippleGroup.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
+        const symbolRotate = data.getItemVisual(idx, 'symbolRotate');
+        rippleGroup.rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
 
         const effectCfg: RippleEffectCfg = {};
 

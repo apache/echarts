@@ -49,8 +49,6 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
 
     let min = model.getMin();
     let max = model.getMax();
-    const fixMin = min != null;
-    const fixMax = max != null;
     const originalExtent = scale.getExtent();
 
     let axisDataLen;
@@ -98,17 +96,6 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
     // (2) When `needCrossZero` and all data is positive/negative, should it be ensured
     // that the results processed by boundaryGap are positive/negative?
 
-    if (min == null) {
-        min = scaleType === 'ordinal'
-            ? (axisDataLen ? 0 : NaN)
-            : originalExtent[0] - boundaryGapInner[0] * span;
-    }
-    if (max == null) {
-        max = scaleType === 'ordinal'
-            ? (axisDataLen ? axisDataLen - 1 : NaN)
-            : originalExtent[1] + boundaryGapInner[1] * span;
-    }
-
     if (min === 'dataMin') {
         min = originalExtent[0];
     }
@@ -127,6 +114,20 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
             min: originalExtent[0],
             max: originalExtent[1]
         });
+    }
+
+    const fixMin = min != null;
+    const fixMax = max != null;
+
+    if (min == null) {
+        min = scaleType === 'ordinal'
+            ? (axisDataLen ? 0 : NaN)
+            : originalExtent[0] - boundaryGapInner[0] * span;
+    }
+    if (max == null) {
+        max = scaleType === 'ordinal'
+            ? (axisDataLen ? axisDataLen - 1 : NaN)
+            : originalExtent[1] + boundaryGapInner[1] * span;
     }
 
     (min == null || !isFinite(min)) && (min = NaN);
@@ -180,7 +181,13 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
         }
     }
 
-    return [min, max];
+    return {
+        extent: [min, max],
+        // "fix" means "fixed", the value should not be
+        // changed in the subsequent steps.
+        fixMin: fixMin,
+        fixMax: fixMax
+    };
 }
 
 function adjustScaleForOverflow(
@@ -224,9 +231,8 @@ function adjustScaleForOverflow(
 }
 
 export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
-    const extent = getScaleExtent(scale, model);
-    const fixMin = model.getMin() != null;
-    const fixMax = model.getMax() != null;
+    const extentInfo = getScaleExtent(scale, model);
+    const extent = extentInfo.extent;
     const splitNumber = model.get('splitNumber');
 
     if (scale instanceof LogScale) {
@@ -237,8 +243,8 @@ export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
     scale.setExtent(extent[0], extent[1]);
     scale.niceExtent({
         splitNumber: splitNumber,
-        fixMin: fixMin,
-        fixMax: fixMax,
+        fixMin: extentInfo.fixMin,
+        fixMax: extentInfo.fixMax,
         minInterval: (scaleType === 'interval' || scaleType === 'time')
             ? model.get('minInterval') : null,
         maxInterval: (scaleType === 'interval' || scaleType === 'time')

@@ -187,7 +187,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         }
         // Force all the axis fixing the maxSplitNumber.
         zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-            const rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model);
+            const rawExtent = getScaleExtent(indicatorAxis.scale, indicatorAxis.model).extent;
             niceScaleExtent(indicatorAxis.scale, indicatorAxis.model);
 
             const axisModel = indicatorAxis.model;

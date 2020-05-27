@@ -24,7 +24,8 @@ import {
     SymbolOptionMixin,
     SymbolSizeCallback,
     SymbolCallback,
-    CallbackDataParams
+    CallbackDataParams,
+    SymbolRotateCallback
 } from '../util/types';
 import List from '../data/List';
 import SeriesModel from '../model/Series';
@@ -55,12 +56,15 @@ const seriesSymbolTask: StageHandler = {
         const symbolType = seriesModel.get('symbol');
         const symbolSize = seriesModel.get('symbolSize');
         const keepAspect = seriesModel.get('symbolKeepAspect');
+        const symbolRotate = seriesModel.get('symbolRotate');
 
         const hasSymbolTypeCallback = isFunction(symbolType);
         const hasSymbolSizeCallback = isFunction(symbolSize);
-        const hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
+        const hasSymbolRotateCallback = isFunction(symbolRotate);
+        const hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback || hasSymbolRotateCallback;
         const seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : seriesModel.defaultSymbol;
         const seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
+        const seriesSymbolRotate = !hasSymbolRotateCallback ? symbolRotate : null;
 
         data.setVisual({
             legendSymbol: seriesModel.legendSymbol || seriesSymbol as string,
@@ -70,7 +74,8 @@ const seriesSymbolTask: StageHandler = {
             // some cases but generally it is not recommanded.
             symbol: seriesSymbol as string,
             symbolSize: seriesSymbolSize as number | number[],
-            symbolKeepAspect: keepAspect
+            symbolKeepAspect: keepAspect,
+            symbolRotate: seriesSymbolRotate as number
         });
 
         // Only visible series has each data be visual encoded
@@ -86,6 +91,9 @@ const seriesSymbolTask: StageHandler = {
             );
             hasSymbolSizeCallback && data.setItemVisual(
                 idx, 'symbolSize', (symbolSize as SymbolSizeCallback<CallbackDataParams>)(rawValue, params)
+            );
+            hasSymbolRotateCallback && data.setItemVisual(
+                idx, 'symbolRotate', (symbolRotate as SymbolRotateCallback<CallbackDataParams>)(rawValue, params)
             );
         }
 
@@ -118,6 +126,7 @@ const dataSymbolTask: StageHandler = {
             const itemModel = data.getItemModel<SymbolOptionMixin>(idx);
             const itemSymbolType = itemModel.getShallow('symbol', true);
             const itemSymbolSize = itemModel.getShallow('symbolSize', true);
+            const itemSymbolRotate = itemModel.getShallow('symbolRotate', true);
             const itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
 
             // If has item symbol
@@ -127,6 +136,9 @@ const dataSymbolTask: StageHandler = {
             if (itemSymbolSize != null) {
                 // PENDING Transform symbolSize ?
                 data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+            }
+            if (itemSymbolRotate != null) {
+                data.setItemVisual(idx, 'symbolRotate', itemSymbolRotate);
             }
             if (itemSymbolKeepAspect != null) {
                 data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
