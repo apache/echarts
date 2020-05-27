@@ -71,19 +71,23 @@ const COMPATITABLE_COMPONENTS = [
     'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
 ];
 
+const BAR_ITEM_STYLE_MAP = [
+    ['borderRadius', 'barBorderRadius'],
+    ['borderColor', 'barBorderColor'],
+    ['borderWidth', 'barBorderWidth']
+];
+
 function compatBarItemStyle(option: Dictionary<any>) {
     const itemStyle = option && option.itemStyle;
     if (itemStyle) {
-        if (itemStyle.barBorderRadius != null) {
-            itemStyle.barderRadius = itemStyle.barBorderRadius;
-            if (__DEV__) {
-                deprecateLog('barBorderRadius has been changed to borderRadius.');
-            }
-        }
-        if (itemStyle.barBorderColor != null) {
-            itemStyle.borderColor = itemStyle.barBorderColor;
-            if (__DEV__) {
-                deprecateLog('barBorderColor has been changed to borderColor.');
+        for (let i = 0; i < BAR_ITEM_STYLE_MAP.length; i++) {
+            const oldName = BAR_ITEM_STYLE_MAP[i][1];
+            const newName = BAR_ITEM_STYLE_MAP[i][0];
+            if (itemStyle[oldName] != null) {
+                itemStyle[newName] = itemStyle[oldName];
+                if (__DEV__) {
+                    deprecateLog(`${oldName} has been changed to ${newName}.`);
+                }
             }
         }
     }
