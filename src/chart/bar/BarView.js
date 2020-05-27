@@ -144,7 +144,10 @@ export default echarts.extendChartView({
                     var bgLayout = getLayout[coord.type](data, dataIndex);
                     var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    bgEl.setShape('r', barBorderRadius);
+                    // Only cartesian2d support borderRadius.
+                    if (coord.type === 'cartesian2d') {
+                        bgEl.setShape('r', barBorderRadius);
+                    }
                     bgEls[dataIndex] = bgEl;
                 }
 
@@ -181,7 +184,10 @@ export default echarts.extendChartView({
                 if (drawBackground) {
                     var bgEl = oldBgEls[oldIndex];
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    bgEl.setShape('r', barBorderRadius);
+                    // Only cartesian2d support borderRadius.
+                    if (coord.type === 'cartesian2d') {
+                        bgEl.setShape('r', barBorderRadius);
+                    }
                     bgEls[newIndex] = bgEl;
 
                     var bgLayout = getLayout[coord.type](data, newIndex);
