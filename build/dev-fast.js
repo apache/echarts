@@ -33,6 +33,7 @@ function rebuild() {
         entryPoints: [path.resolve(__dirname, '../echarts.all.ts')],
         outfile: outFilePath,
         format: 'cjs',
+        sourcemap: true,
         bundle: true,
     }).catch(e => {
         console.error(e.toString());
