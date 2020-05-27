@@ -337,12 +337,29 @@ var clip = {
     },
 
     polar: function (coordSysClipArea, layout) {
-        var clipped = (layout.r - coordSysClipArea.r > 0 && layout.r0 - coordSysClipArea.r > 0)
+        var signR = layout.r0 <= layout.r ? 1 : -1;
+        // Make sure r is larger than r0
+        if (signR < 0) {
+            var r = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = r;
+        }
+
         var r = mathMin(layout.r, coordSysClipArea.r);
-        var r0 = mathMin(layout.r0, coordSysClipArea.r);
+        var r0 = mathMax(layout.r0, coordSysClipArea.r0);
 
         layout.r = r;
         layout.r0 = r0;
+
+        var clipped = r - r0 < 0;
+
+        // Reverse back
+        if (signR < 0) {
+            var r = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = r;
+        }
+
         return clipped;
     }
 };
