@@ -25,6 +25,7 @@ import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
 import { ECUnitOption, SeriesOption } from '../util/types';
 import { __DEV__ } from '../config';
+import type { BarSeriesOption } from '../chart/bar/BarSeries';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -129,6 +130,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         }
         else if (seriesType === 'bar') {
             compatBarItemStyle(seriesOpt);
+            compatBarItemStyle((seriesOpt as BarSeriesOption).backgroundStyle);
             // @ts-ignore
             compatBarItemStyle(seriesOpt.emphasis);
             const data = seriesOpt.data;
