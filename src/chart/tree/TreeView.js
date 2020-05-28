@@ -537,12 +537,27 @@ function removeNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     var sourceSymbolEl = data.getItemGraphicEl(source.dataIndex);
     var sourceEdge = sourceSymbolEl.__edge;
 
+    // mark the treenode is deleted, for delete the edge when all the children deleted, #12706
+    var deleteCnt = 0;
+    if (source.children) {
+        for (var t = 0; t < source.children.length; t++) {
+            if (source.children[t]) {
+                if (source.children[t].dataIndex === symbolEl.dataIndex) {
+                    source.children[t].isRemoved = true;
+                }
+                if (source.children[t].isRemoved) {
+                    deleteCnt += 1;
+                }
+            }
+        }
+    }
+
     // 1. when expand the sub tree, delete the children node should delete the edge of
     // the source at the same time. because the polyline edge shape is only owned by the source.
-    // 2.when the node is the only children of the source, delete the node should delete the edge of
+    // 2.when the node is the all children are mark delete, delete the edge of
     // the source at the same time. the same reason as above.
     var edge = symbolEl.__edge
-        || ((source.isExpand === false || source.children.length === 1) ? sourceEdge : undefined);
+        || ((source.isExpand === false || deleteCnt === source.children.length) ? sourceEdge : undefined);
 
     var edgeShape = seriesScope.edgeShape;
 
