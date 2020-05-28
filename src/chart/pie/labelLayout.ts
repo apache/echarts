@@ -323,6 +323,11 @@ export default function (
         const text = seriesModel.getFormattedLabel(idx, 'normal')
                 || data.getName(idx);
         const textRect = textContain.getBoundingRect(text, font, textAlign, 'top');
+        // Text has a default 1px stroke. Exclude this.
+        textRect.x -= 1;
+        textRect.y -= 1;
+        textRect.width += 2.1;
+        textRect.height += 2.1;
 
         const isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         if (labelPosition === 'center') {

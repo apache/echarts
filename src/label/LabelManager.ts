@@ -25,7 +25,9 @@ import {
     Point,
     BoundingRect,
     getECData,
-    Polyline
+    Polyline,
+    updateProps,
+    initProps
 } from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import ExtensionAPI from '../ExtensionAPI';
@@ -38,10 +40,13 @@ import {
 } from '../util/types';
 import { parsePercent } from '../util/number';
 import ChartView from '../view/Chart';
-import { ElementTextConfig, ElementTextGuideLineConfig } from 'zrender/src/Element';
+import { ElementTextConfig } from 'zrender/src/Element';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Transformable from 'zrender/src/core/Transformable';
 import { updateLabelGuideLine } from './labelGuideHelper';
+import SeriesModel from '../model/Series';
+import { makeInner } from '../util/model';
+import { retrieve2, guid, each } from 'zrender/src/core/util';
 
 interface DisplayedLabelItem {
     label: ZRText
@@ -56,7 +61,7 @@ interface LabelLayoutDesc {
     label: ZRText
     labelGuide: Polyline
 
-    seriesIndex: number
+    seriesModel: SeriesModel
     dataIndex: number
 
     layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
@@ -100,7 +105,7 @@ function prepareLayoutCallbackParams(labelItem: LabelLayoutDesc): LabelLayoutOpt
     const label = labelItem.label;
     return {
         dataIndex: labelItem.dataIndex,
-        seriesIndex: labelItem.seriesIndex,
+        seriesIndex: labelItem.seriesModel.seriesIndex,
         text: labelItem.label.style.text,
         rect: labelItem.hostRect,
         labelRect: labelAttr.rect,
@@ -115,26 +120,38 @@ const LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height']
 
 const dummyTransformable = new Transformable();
 
+const labelAnimationStore = makeInner<{
+    oldLayout: {
+        x: number,
+        y: number,
+        rotation: number
+    }
+}, ZRText>();
+
+const labelLineAnimationStore = makeInner<{
+    oldLayout: {
+        points: number[][]
+    }
+}, Polyline>();
+
 class LabelManager {
 
     private _labelList: LabelLayoutDesc[] = [];
+    private _chartViewList: ChartView[] = [];
 
     constructor() {}
 
     clearLabels() {
         this._labelList = [];
+        this._chartViewList = [];
     }
 
     /**
      * Add label to manager
-     * @param dataIndex
-     * @param seriesIndex
-     * @param label
-     * @param layoutOption
      */
     addLabel(
         dataIndex: number,
-        seriesIndex: number,
+        seriesModel: SeriesModel,
         label: ZRText,
         layoutOption: LabelLayoutDesc['layoutOption']
     ) {
@@ -171,7 +188,7 @@ class LabelManager {
             label,
             labelGuide: labelGuide,
 
-            seriesIndex,
+            seriesModel,
             dataIndex,
 
             layoutOption,
@@ -215,6 +232,8 @@ class LabelManager {
     }
 
     addLabelsOfSeries(chartView: ChartView) {
+        this._chartViewList.push(chartView);
+
         const seriesModel = chartView.__model;
         const layoutOption = seriesModel.get('labelLayout');
         chartView.group.traverse((child) => {
@@ -226,7 +245,7 @@ class LabelManager {
             const textEl = child.getTextContent();
             const dataIndex = getECData(child).dataIndex;
             if (textEl && dataIndex != null) {
-                this.addLabel(dataIndex, seriesModel.seriesIndex, textEl, layoutOption);
+                this.addLabel(dataIndex, seriesModel, textEl, layoutOption);
             }
         });
     }
@@ -251,6 +270,7 @@ class LabelManager {
             }
 
             layoutOption = layoutOption || {};
+
             if (hostEl) {
                 hostEl.setTextConfig({
                     // Force to set local false.
@@ -288,10 +308,7 @@ class LabelManager {
 
             for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
                 const key = LABEL_OPTION_TO_STYLE_KEYS[k];
-                label.setStyle(
-                    key,
-                    layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]
-                );
+                label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
             }
 
             labelItem.overlap = layoutOption.overlap;
@@ -325,9 +342,6 @@ class LabelManager {
 
             const globalRect = localRect.clone();
             globalRect.applyTransform(transform);
-            // Text has a default 1px stroke. Exclude this.
-            globalRect.width -= 3;
-            globalRect.height -= 3;
 
             let obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
             let overlapped = false;
@@ -362,14 +376,10 @@ class LabelManager {
             const labelGuide = labelItem.labelGuide;
             // TODO Callback to determine if this overlap should be handled?
             if (overlapped) {
-                // label.setStyle({ opacity: 0.1 });
-                // label.z = 0;
                 label.hide();
                 labelGuide && labelGuide.hide();
             }
             else {
-                // TODO Restore z
-                // label.setStyle({ opacity: 1 });
                 label.attr('ignore', labelItem.defaultAttr.ignore);
                 labelGuide && labelGuide.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
 
@@ -390,6 +400,70 @@ class LabelManager {
                 labelItem.hostRect
             );
         }
+    }
+
+    animateLabels() {
+        each(this._chartViewList, function (chartView) {
+            const seriesModel = chartView.__model;
+            if (!seriesModel.isAnimationEnabled()) {
+                return;
+            }
+
+            chartView.group.traverse((child) => {
+                if (child.ignore) {
+                    return true;    // Stop traverse descendants.
+                }
+
+                // Only support label being hosted on graphic elements.
+                const textEl = child.getTextContent();
+                const guideLine = child.getTextGuideLine();
+
+                if (textEl && !textEl.ignore && !textEl.invisible) {
+                    const layoutStore = labelAnimationStore(textEl);
+                    const oldLayout = layoutStore.oldLayout;
+                    const newProps = {
+                        x: textEl.x,
+                        y: textEl.y,
+                        rotation: textEl.rotation
+                    };
+                    if (!oldLayout) {
+                        textEl.attr(newProps);
+                        const oldOpacity = retrieve2(textEl.style.opacity, 1);
+                        // Fade in animation
+                        textEl.style.opacity = 0;
+                        initProps(textEl, {
+                            style: { opacity: oldOpacity }
+                        }, seriesModel);
+                    }
+                    else {
+                        textEl.attr(oldLayout);
+                        updateProps(textEl, newProps, seriesModel);
+                    }
+                    layoutStore.oldLayout = newProps;
+                }
+
+                if (guideLine && !guideLine.ignore && !guideLine.invisible) {
+                    const layoutStore = labelLineAnimationStore(guideLine);
+                    const oldLayout = layoutStore.oldLayout;
+                    const newLayout = { points: guideLine.shape.points };
+                    if (!oldLayout) {
+                        guideLine.setShape(newLayout);
+                        guideLine.style.strokePercent = 0;
+                        initProps(guideLine, {
+                            style: { strokePercent: 1 }
+                        }, seriesModel);
+                    }
+                    else {
+                        guideLine.attr({ shape: oldLayout });
+                        updateProps(guideLine, {
+                            shape: newLayout
+                        }, seriesModel);
+                    }
+
+                    layoutStore.oldLayout = newLayout;
+                }
+            });
+        });
     }
 }
 

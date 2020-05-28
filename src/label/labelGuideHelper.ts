@@ -346,7 +346,7 @@ export function updateLabelGuideLine(
     for (let i = 0; i < searchSpace.length; i++) {
         const candidate = searchSpace[i];
         getCandidateAnchor(candidate, 0, labelRect, pt0, dir);
-        Point.scaleAndAdd(pt1, pt0, dir, labelGuideConfig.len);
+        Point.scaleAndAdd(pt1, pt0, dir, labelGuideConfig.len == null ? 15 : labelGuideConfig.len);
 
         const dist = anchorPoint ? anchorPoint.distance(pt1)
             : (target instanceof Path

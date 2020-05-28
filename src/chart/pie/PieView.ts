@@ -136,9 +136,7 @@ class PiePiece extends graphic.Sector {
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
-        // Label and text animation should be applied only for transition type animation when update
-        const withAnimation = !firstCreate && animationTypeUpdate === 'transition';
-        this._updateLabel(data, idx, withAnimation);
+        this._updateLabel(data, idx);
 
         const emphasisState = sector.ensureState('emphasis');
         emphasisState.shape = {
@@ -165,12 +163,11 @@ class PiePiece extends graphic.Sector {
         (sector as ECElement).selected = seriesModel.isSelected(data.getName(idx));
     }
 
-    private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
+    private _updateLabel(data: List, idx: number): void {
         const sector = this;
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
-        const seriesModel = data.hostModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const layout = data.getItemLayout(idx);
         const labelLayout = layout.label;
@@ -225,25 +222,15 @@ class PiePiece extends graphic.Sector {
             outsideFill: visualColor
         });
 
-        const targetTextPos = {
+        labelLine.attr({
+            shape: targetLineShape
+        });
+        // Make sure update style on labelText after setLabelStyle.
+        // Because setLabelStyle will replace a new style on it.
+        labelText.attr({
             x: labelLayout.x,
             y: labelLayout.y
-        };
-        if (withAnimation) {
-            graphic.updateProps(labelLine, {
-                shape: targetLineShape
-            }, seriesModel, idx);
-
-            graphic.updateProps(labelText, targetTextPos, seriesModel, idx);
-        }
-        else {
-            labelLine.attr({
-                shape: targetLineShape
-            });
-            // Make sure update style on labelText after setLabelStyle.
-            // Because setLabelStyle will replace a new style on it.
-            labelText.attr(targetTextPos);
-        }
+        });
 
         labelText.attr({
             rotation: labelLayout.rotation,

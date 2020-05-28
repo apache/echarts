@@ -1097,6 +1097,7 @@ class ECharts extends Eventful {
         const labelManager = this._labelManager;
         labelManager.updateLayoutConfig(this._api);
         labelManager.layout();
+        labelManager.animateLabels();
     }
 
     appendData(params: {
@@ -1722,16 +1723,20 @@ class ECharts extends Eventful {
                 // Add labels.
                 labelManager.addLabelsOfSeries(chartView);
 
-                // NOTE: Update states after label is added.
-                // Because in LabelManager#addLabel. It will cache the properties(transform, textConfig) of label.
-                // We need to cache the normal state. Not other states.
-                updateStates(seriesModel, chartView);
             });
 
             scheduler.unfinished = unfinished || scheduler.unfinished;
 
             labelManager.updateLayoutConfig(api);
             labelManager.layout();
+            labelManager.animateLabels();
+
+            ecModel.eachSeries(function (seriesModel) {
+                const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                // NOTE: Update states after label is updated.
+                // label should be in normal status when layouting.
+                updateStates(seriesModel, chartView);
+            });
 
             // If use hover layer
             // TODO
@@ -1877,8 +1882,6 @@ class ECharts extends Eventful {
                         states.push('emphasis');
                     }
                     el.useStates(states);
-                    // el.toggleState('select', (el as ECElement).selected);
-                    // el.toggleState('emphasis', (el as ECElement).highlighted);
                 }
             });
         };
