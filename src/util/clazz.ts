@@ -99,17 +99,25 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         // constructor.
         // If this constructor/$constructor is declared, it is responsible for
         // calling the super constructor.
-        const ExtendedClass = (class {
-            constructor() {
-                if (!proto.$constructor) {
-                    superClass.apply(this, arguments);
+        function ExtendedClass(this: any, ...args: any[]) {
+            if (!proto.$constructor) {
+                try {
+                    // Will throw error if superClass is a es6 native class.
+                    superClass.apply(this, args);
                 }
-                else {
-                    proto.$constructor.apply(this, arguments);
+                catch (e) {
+                    const ins = zrUtil.createObject(
+                        // @ts-ignore
+                        ExtendedClass.prototype, new superClass(...args)
+                    );
+                    return ins;
                 }
             }
-            static [IS_EXTENDED_CLASS] = true;
-        }) as ExtendableConstructor;
+            else {
+                proto.$constructor.apply(this, arguments);
+            }
+        };
+        ExtendedClass[IS_EXTENDED_CLASS] = true;
 
         zrUtil.extend(ExtendedClass.prototype, proto);
 
@@ -119,7 +127,7 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         zrUtil.inherits(ExtendedClass, this);
         ExtendedClass.superClass = superClass;
 
-        return ExtendedClass as ExtendableConstructor;
+        return ExtendedClass as unknown as ExtendableConstructor;
     };
 }
 
