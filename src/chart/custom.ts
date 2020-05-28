@@ -105,6 +105,8 @@ interface CustomBaseElementOption extends Partial<Pick<
     info?: CustomExtraElementInfo;
     // `false` means remove the textContent.
     textContent?: CustomTextOption | false;
+    // `false` means remove the clipPath
+    clipPath?: CustomZRPathOption | false;
     // updateDuringAnimation
     during?(elProps: CustomDuringElProps): void;
 };
@@ -1180,7 +1182,7 @@ function createOrUpdate(
     group: ViewRootGroup,
     data: List<CustomSeriesModel>
 ): Element {
-    el = doCreateOrUpdate(el, dataIndex, elOption, seriesModel, group, data, true);
+    el = doCreateOrUpdate(el, dataIndex, elOption, seriesModel, group, true);
     el && data.setItemGraphicEl(dataIndex, el);
 
     return el;
@@ -1192,7 +1194,6 @@ function doCreateOrUpdate(
     elOption: CustomElementOption,
     seriesModel: CustomSeriesModel,
     group: ViewRootGroup,
-    data: List<CustomSeriesModel>,
     isRoot: boolean
 ): Element {
 
@@ -1213,37 +1214,12 @@ function doCreateOrUpdate(
     }
 
     elOption = elOption || {} as CustomElementOption;
-    const elOptionType = elOption.type;
-    const elOptionShape = (elOption as CustomZRPathOption).shape;
-    const elOptionStyle = elOption.style;
     let toBeReplacedIdx = -1;
 
-    if (el) {
-        const elInner = inner(el);
-        if (
-            // || elOption.$merge === false
-            // If `elOptionType` is `null`, follow the merge principle.
-            (elOptionType != null
-                && elOptionType !== elInner.customGraphicType
-            )
-            || (elOptionType === 'path'
-                && hasOwnPathData(elOptionShape)
-                && getPathData(elOptionShape) !== elInner.customPathData
-            )
-            || (elOptionType === 'image'
-                && zrUtil.hasOwn(elOptionStyle, 'image')
-                && (elOptionStyle as CustomImageOption['style']).image !== elInner.customImagePath
-            )
-            // // FIXME test and remove this restriction?
-            // || (elOptionType === 'text'
-            //     && zrUtil.hasOwn(elOptionStyle, 'text')
-            //     && (elOptionStyle as TextStyleProps).text !== elInner.customText
-            // )
-        ) {
-            // Should keep at the original index, otherwise "merge by index" will be incorrect.
-            toBeReplacedIdx = group.childrenRef().indexOf(el);
-            el = null;
-        }
+    if (el && doesElNeedRecreate(el, elOption)) {
+        // Should keep at the original index, otherwise "merge by index" will be incorrect.
+        toBeReplacedIdx = group.childrenRef().indexOf(el);
+        el = null;
     }
 
     const isInit = !el;
@@ -1252,6 +1228,7 @@ function doCreateOrUpdate(
         el = createEl(elOption);
     }
     else {
+        // FIMXE:NEXT unified clearState?
         // If in some case the performance issue arised, consider
         // do not clearState but update cached normal state directly.
         el.clearStates();
@@ -1265,6 +1242,10 @@ function doCreateOrUpdate(
         el, dataIndex, elOption, seriesModel, isInit, attachedTxInfoTmp
     );
 
+    doCreateOrUpdateClipPath(
+        el, dataIndex, elOption, seriesModel, isInit
+    );
+
     const stateOptEmphasis = retrieveStateOption(elOption, EMPHASIS);
     const styleOptEmphasis = retrieveStyleOptionOnState(elOption, stateOptEmphasis, EMPHASIS);
 
@@ -1273,9 +1254,9 @@ function doCreateOrUpdate(
 
     updateZ(el, elOption, seriesModel, attachedTxInfoTmp);
 
-    if (elOptionType === 'group') {
+    if (elOption.type === 'group') {
         mergeChildren(
-            el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel, data
+            el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel
         );
     }
 
@@ -1287,6 +1268,72 @@ function doCreateOrUpdate(
     }
 
     return el;
+}
+
+// `el` must not be null/undefined.
+function doesElNeedRecreate(el: Element, elOption: CustomElementOption): boolean {
+    const elInner = inner(el);
+    const elOptionType = elOption.type;
+    const elOptionShape = (elOption as CustomZRPathOption).shape;
+    const elOptionStyle = elOption.style;
+    return (
+        // || elOption.$merge === false
+        // If `elOptionType` is `null`, follow the merge principle.
+        (elOptionType != null
+            && elOptionType !== elInner.customGraphicType
+        )
+        || (elOptionType === 'path'
+            && hasOwnPathData(elOptionShape)
+            && getPathData(elOptionShape) !== elInner.customPathData
+        )
+        || (elOptionType === 'image'
+            && zrUtil.hasOwn(elOptionStyle, 'image')
+            && (elOptionStyle as CustomImageOption['style']).image !== elInner.customImagePath
+        )
+        // // FIXME test and remove this restriction?
+        // || (elOptionType === 'text'
+        //     && zrUtil.hasOwn(elOptionStyle, 'text')
+        //     && (elOptionStyle as TextStyleProps).text !== elInner.customText
+        // )
+    );
+}
+
+function doCreateOrUpdateClipPath(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    isInit: boolean
+): void {
+    // Based on the "merge" principle, if no clipPath provided,
+    // do nothing. The exists clip will be totally removed only if
+    // `el.clipPath` is `false`. Otherwise it will be merged/replaced.
+    const clipPathOpt = elOption.clipPath;
+    if (clipPathOpt === false) {
+        if (el && el.getClipPath()) {
+            el.removeClipPath();
+        }
+    }
+    else if (clipPathOpt) {
+        let clipPath = el.getClipPath();
+        if (clipPath && doesElNeedRecreate(clipPath, clipPathOpt)) {
+            clipPath = null;
+        }
+        if (!clipPath) {
+            clipPath = createEl(clipPathOpt) as graphicUtil.Path;
+            if (__DEV__) {
+                zrUtil.assert(
+                    clipPath instanceof graphicUtil.Path,
+                    'Only any type of `path` can be used in `clipPath`, rather than ' + clipPath.type + '.'
+                );
+            }
+            el.setClipPath(clipPath);
+        }
+        updateElNormal(
+            clipPath, dataIndex, clipPathOpt, null, null, seriesModel, isInit, false
+        );
+    }
+    // If not define `clipPath` in option, do nothing unnecessary.
 }
 
 function doCreateOrUpdateAttachedTx(
@@ -1440,8 +1487,7 @@ function mergeChildren(
     el: graphicUtil.Group,
     dataIndex: number,
     elOption: CustomGroupOption,
-    seriesModel: CustomSeriesModel,
-    data: List<CustomSeriesModel>
+    seriesModel: CustomSeriesModel
 ): void {
 
     const newChildren = elOption.children;
@@ -1462,8 +1508,7 @@ function mergeChildren(
             newChildren: newChildren || [],
             dataIndex: dataIndex,
             seriesModel: seriesModel,
-            group: el,
-            data: data
+            group: el
         });
         return;
     }
@@ -1480,7 +1525,6 @@ function mergeChildren(
             newChildren[index],
             seriesModel,
             el,
-            data,
             false
         );
     }
@@ -1497,8 +1541,7 @@ type DiffGroupContext = {
     newChildren: CustomElementOption[],
     dataIndex: number,
     seriesModel: CustomSeriesModel,
-    group: graphicUtil.Group,
-    data: List<CustomSeriesModel>
+    group: graphicUtil.Group
 };
 function diffGroupChildren(context: DiffGroupContext) {
     (new DataDiffer(
@@ -1534,7 +1577,6 @@ function processAddUpdate(
         childOption,
         context.seriesModel,
         context.group,
-        context.data,
         false
     );
 }

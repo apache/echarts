@@ -28,6 +28,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="./custom-transition-texture.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -38,7 +39,8 @@ under the License.
         <div id="init-animation-additive"></div>
         <div id="spiral-fixed-extent"></div>
         <div id="spiral-dynamic-extent"></div>
-        <div id="texture-bar"></div>
+        <div id="texture-bar-by-clipPath"></div>
+        <!-- <div id="texture-bar-texture-maker"></div> -->
 
 
 
@@ -616,6 +618,243 @@ under the License.
             });
         </script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var _animationDuration = 1000;
+                var _animationDurationUpdate = 1000;
+                var _animationEasingUpdate = 'elasticOut';
+                var _datasourceList = [
+                    [[1, 156]],
+                    [[1, 54]],
+                    [[1, 131]],
+                    [[1, 32]],
+                    [[1, 103]],
+                    [[1, 66]],
+                ];
+                var _valOnRadianMax = 200;
+                var _outerRadius = 100;
+                var _innerRadius = 85;
+                var _pointerInnerRadius = 40;
+                var _insidePanelRadius = 65;
+                var _currentDataIndex = 0;
+
+                function renderItem(params, api) {
+                    var children = [];
+                    var dataIdx = params.dataIndex;
+                    var valOnRadian = api.value(1);
+                    var coords = api.coord([api.value(0), valOnRadian]);
+                    var polarEndRadian = coords[3];
+                    var imageStyle = {
+                        image: window.BAR_ROUND_GRADIENT_TEXTURE,
+                        x: params.coordSys.cx - _outerRadius,
+                        y: params.coordSys.cy - _outerRadius,
+                        width: _outerRadius * 2,
+                        height: _outerRadius * 2
+                    };
+
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'image',
+                            style: imageStyle,
+                            clipPath: {
+                                type: 'sector',
+                                shape: {
+                                    cx: params.coordSys.cx,
+                                    cy: params.coordSys.cy,
+                                    r: _outerRadius,
+                                    r0: _innerRadius,
+                                    startAngle: 0,
+                                    // polor: anticlockwise-positive radian
+                                    // sector: clockwise-positive radian
+                                    endAngle: -polarEndRadian
+                                },
+                            }
+                        }, {
+                            type: 'image',
+                            style: imageStyle,
+                            clipPath: {
+                                type: 'polygon',
+                                shape: {
+                                    points: makePionterPoints(params, polarEndRadian),
+                                    polarEndRadian: polarEndRadian
+                                },
+                                during: function (elProps) {
+                                    elProps.shape.points = makePionterPoints(params, elProps.shape.polarEndRadian);
+                                }
+                            },
+                        }, {
+                            type: 'circle',
+                            shape: {
+                                cx: params.coordSys.cx,
+                                cy: params.coordSys.cy,
+                                r: _insidePanelRadius
+                            },
+                            style: {
+                                fill: '#fff',
+                                shadowBlur: 25,
+                                shadowOffsetX: 0,
+                                shadowOffsetY: 0,
+                                shadowColor: 'rgb(0,0,50)'
+                            }
+                        }, {
+                            type: 'text',
+                            shape: {
+                                valOnRadian: valOnRadian
+                            },
+                            style: {
+                                text: makeText(valOnRadian),
+                                fontSize: 40,
+                                x: params.coordSys.cx,
+                                y: params.coordSys.cy,
+                                fill: 'rgb(0,50,190)',
+                                align: 'center',
+                                verticalAlign: 'middle',
+                            },
+                            during: function (elProps) {
+                                elProps.style.text = makeText(elProps.shape.valOnRadian);
+                            }
+                        }]
+                    };
+                }
+
+                function convertToPolarPoint(renderItemParams, radius, radian) {
+                    return [
+                        Math.cos(radian) * radius + renderItemParams.coordSys.cx,
+                        -Math.sin(radian) * radius + renderItemParams.coordSys.cy
+                    ];
+                }
+
+                function makePionterPoints(renderItemParams, polarEndRadian) {
+                    return [
+                        convertToPolarPoint(renderItemParams, _outerRadius, polarEndRadian),
+                        convertToPolarPoint(renderItemParams, _outerRadius, polarEndRadian + Math.PI * 0.03),
+                        convertToPolarPoint(renderItemParams, _pointerInnerRadius, polarEndRadian)
+                    ];
+                }
+
+                function makeText(valOnRadian) {
+                    return (valOnRadian / _valOnRadianMax * 100).toFixed(0) + '%'
+                }
+
+                var option = {
+                    animationDuration: _animationDuration,
+                    animationDurationUpdate: _animationDurationUpdate,
+                    animationEasingUpdate: _animationEasingUpdate,
+                    dataset: {
+                        source: _datasourceList[_currentDataIndex]
+                    },
+                    tooltip: {},
+                    angleAxis: {
+                        type: 'value',
+                        startAngle: 0,
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: { show: false },
+                        splitLine: { show: false },
+                        min: 0,
+                        max: _valOnRadianMax
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: { show: false },
+                        splitLine: { show: false }
+                    },
+                    polar: {},
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'polar',
+                        renderItem: renderItem
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'texture-bar-by-clipPath', {
+                    title: [
+                        'Angle gradient | clipPath animation',
+                        'click **next** to check the transition animation in both bar and text.'
+                    ],
+                    option: option,
+                    height: 300,
+                    buttons: [{
+                        text: 'next',
+                        onclick: function () {
+                            _currentDataIndex++;
+                            _currentDataIndex >= _datasourceList.length && (_currentDataIndex = 0);
+                            chart.setOption({
+                                dataset: {
+                                    source: _datasourceList[_currentDataIndex]
+                                }
+                            });
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart = testHelper.create(echarts, 'texture-bar-texture-maker', {
+                    title: [],
+                    width: 200,
+                    height: 200,
+                    option: {},
+                    buttons: [{
+                        text: 'dataURL',
+                        onclick: function () {
+                            console.log(chart.getDataURL({
+                                type: 'png',
+                                backgroundColor: 'rgba(0,0,0,0)'
+                            }));
+                        }
+                    }]
+                });
+                if (!chart) {
+                    return;
+                }
+
+                var zr = chart.getZr();
+                var eles = [];
+                var extent = [0.0, 0.95];
+                var count = 200;
+                var unit = (extent[1] - extent[0]) / count;
+                var baseColor = 'rgb(0,0,255)';
+                for (var i = 0; i < count; i++) {
+                    var oo = extent[0] + (count - i) * unit;
+                    var color = echarts.color.modifyHSL(baseColor, null, null, oo);
+                    var startAngle = 2 * Math.PI / count * i;
+                    var endAngle = Math.min((2 * Math.PI / count * (i + 1) + 0.05), Math.PI * 2);
+                    zr.add(new echarts.graphic.Sector({
+                        type: 'sector',
+                        shape: {
+                            cx: 100,
+                            cy: 100,
+                            r: 100,
+                            r0: 60,
+                            startAngle: startAngle,
+                            endAngle: endAngle
+                        },
+                        style: {
+                            fill: color
+                        }
+                    }));
+                }
+            });
+        </script>
 
 
 
