@@ -462,7 +462,9 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
                 state.style = emphasisStyle;
             }
         }
-        state.z2 = this.z2 + Z2_EMPHASIS_LIFT;
+        if (state) {
+            state.z2 = this.z2 + Z2_EMPHASIS_LIFT;
+        }
     }
 
     return state;
