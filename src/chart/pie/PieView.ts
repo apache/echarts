@@ -27,6 +27,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
+import labelLayout from './labelLayout';
 
 function updateDataSelected(
     this: PiePiece,
@@ -74,11 +75,6 @@ class PiePiece extends graphic.Sector {
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const layout = data.getItemLayout(idx);
         const sectorShape = zrUtil.extend({}, layout);
-        // Not animate label
-        sectorShape.label = null;
-        sectorShape.viewRect = null;
-
-        const animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -136,7 +132,7 @@ class PiePiece extends graphic.Sector {
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
-        this._updateLabel(data, idx);
+        this._updateLabel(seriesModel, data, idx);
 
         const emphasisState = sector.ensureState('emphasis');
         emphasisState.shape = {
@@ -150,12 +146,11 @@ class PiePiece extends graphic.Sector {
         labelLine.states.select = {
             x: dx, y: dy
         };
-        if (layout.label) {
-            labelText.states.select = {
-                x: layout.label.x + dx,
-                y: layout.label.y + dy
-            };
-        }
+        // TODO: needs dx, dy in zrender?
+        labelText.states.select = {
+            x: dx,
+            y: dy
+        };
 
         graphic.enableHoverEmphasis(this);
 
@@ -163,32 +158,16 @@ class PiePiece extends graphic.Sector {
         (sector as ECElement).selected = seriesModel.isSelected(data.getName(idx));
     }
 
-    private _updateLabel(data: List, idx: number): void {
+    private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
         const sector = this;
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
-        const layout = data.getItemLayout(idx);
-        const labelLayout = layout.label;
-        // let visualColor = data.getItemVisual(idx, 'color');
 
         const labelTextEmphasisState = labelText.ensureState('emphasis');
         const labelLineEmphasisState = labelLine.ensureState('emphasis');
 
-        if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
-            labelText.ignore = labelTextEmphasisState.ignore = true;
-            labelLine.ignore = labelLineEmphasisState.ignore = true;
-            return;
-        }
-
-        const targetLineShape: {
-            points: number[][]
-        } = {
-            points: labelLayout.linePoints || [
-                [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
-            ]
-        };
         const labelModel = itemModel.getModel('label');
         const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
         const labelLineModel = itemModel.getModel('labelLine');
@@ -204,11 +183,10 @@ class PiePiece extends graphic.Sector {
             {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
-                defaultText: labelLayout.text
+                defaultText: seriesModel.getFormattedLabel(idx, 'normal')
+                    || data.getName(idx)
             },
             {
-                align: labelLayout.textAlign,
-                verticalAlign: labelLayout.verticalAlign,
                 opacity: style && style.opacity
             }
         );
@@ -216,24 +194,15 @@ class PiePiece extends graphic.Sector {
         // Set textConfig on sector.
         sector.setTextConfig({
             local: true,
-            inside: !!labelLayout.inside,
             insideStroke: visualColor,
             // insideFill: 'auto',
             outsideFill: visualColor
         });
 
-        labelLine.attr({
-            shape: targetLineShape
-        });
         // Make sure update style on labelText after setLabelStyle.
         // Because setLabelStyle will replace a new style on it.
-        labelText.attr({
-            x: labelLayout.x,
-            y: labelLayout.y
-        });
 
         labelText.attr({
-            rotation: labelLayout.rotation,
             z2: 10
         });
 
@@ -337,6 +306,8 @@ class PieView extends ChartView {
                 group.remove(piePiece);
             })
             .execute();
+
+        labelLayout(seriesModel);
 
         // Always use initial animation.
         if (seriesModel.get('animationTypeUpdate') !== 'expansion') {
