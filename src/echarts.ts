@@ -1670,9 +1670,14 @@ class ECharts extends Eventful {
                 const componentModel = componentView.__model;
                 componentView.render(componentModel, ecModel, api, payload);
 
+                clearStates(componentModel, componentView);
+
                 updateZ(componentModel, componentView);
                 updateHoverEmphasisHandler(componentView);
+
+                updateStates(componentModel, componentView);
             });
+
         };
 
         /**
@@ -1827,7 +1832,7 @@ class ECharts extends Eventful {
         };
         // Clear states without animation.
         // TODO States on component.
-        function clearStates(seriesModel: SeriesModel, view: ChartView): void {
+        function clearStates(model: ComponentModel, view: ComponentView | ChartView): void {
             view.group.traverse(function (el: Displayable) {
                 // TODO If el is incremental.
                 if (el.hasState()) {
@@ -1848,9 +1853,9 @@ class ECharts extends Eventful {
             });
         }
 
-        function updateStates(seriesModel: SeriesModel, view: ChartView): void {
-            const stateAnimationModel = seriesModel.getModel('stateAnimation');
-            const enableAnimation = seriesModel.isAnimationEnabled();
+        function updateStates(model: ComponentModel, view: ComponentView | ChartView): void {
+            const stateAnimationModel = (model as SeriesModel).getModel('stateAnimation');
+            const enableAnimation = model.isAnimationEnabled();
             view.group.traverse(function (el: Displayable) {
                 // Only updated on changed element. In case element is incremental and don't wan't to rerender.
                 if (el.__dirty && el.states && el.states.emphasis) {

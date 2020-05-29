@@ -32,7 +32,8 @@ import {
     ZRColor,
     LabelOption,
     DisplayState,
-    RoamOptionMixin
+    RoamOptionMixin,
+    AnimationOption
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -98,6 +99,8 @@ export interface GeoOption extends
     };
 
     regions: RegoinOption[];
+
+    stateAnimation?: AnimationOption
 }
 
 const LABEL_FORMATTER_NORMAL = ['label', 'formatter'] as const;
