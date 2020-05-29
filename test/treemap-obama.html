@@ -1,8 +1,28 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -90,11 +110,11 @@
             var SERIES_NAME = 'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent';
 
             require([
-                'echarts',
-                'echarts/util/format',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/chart/treemap'
+                'echarts'
+                // 'echarts/util/format',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/chart/treemap'
             ], init);
 
             function areaMeasureChange(mode) {
@@ -213,19 +233,15 @@
                             : null,
                         colorMappingBy: 'id',
                         itemStyle: {
-                            normal: {
-                                borderWidth: 3,
-                                gapWidth: 3
-                            }
+                            borderWidth: 3,
+                            gapWidth: 3
                         }
                     },
                     {
                         colorAlpha: mode === 2
                             ? [0.5, 1] : null,
                         itemStyle: {
-                            normal: {
-                                gapWidth: 1
-                            }
+                            gapWidth: 1
                         }
                     }
                 ];
@@ -272,12 +288,12 @@
                 }
             }
 
-            function init(echarts, format) {
+            function init(echarts) {
 
-                formatUtil = format;
+                formatUtil = echarts.format;
 
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 chart.setOption({
@@ -299,16 +315,10 @@
                             label: {
                                 show: true,
                                 formatter: "{b}",
-                                normal: {
-                                    textStyle: {
-                                        ellipsis: true
-                                    }
-                                }
+                                ellipsis: true
                             },
                             itemStyle: {
-                                normal: {
-                                    borderColor: 'black'
-                                }
+                                borderColor: 'black'
                             },
                             levels: getLevelOption(0),
                             data: buildData('2012 Amount', window.obama_budget_2012)

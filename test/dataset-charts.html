@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: rgb(182, 120, 7);
+                color: #fff;
+            }
+            .test-chart {
+                height: 250px;
+            }
+        </style>
+
+
+
+
+
+        <div id="layout0"></div>
+        <div id="layout1"></div>
+        <div id="layout2"></div>
+        <div id="layout3"></div>
+        <div id="layout4"></div>
+        <div id="layout5"></div>
+        <div id="layout6"></div>
+        <div id="layout7"></div>
+        <div id="layout7.5"></div>
+        <div id="layout8"></div>
+        <div id="layout9"></div>
+        <div id="layout10"></div>
+        <div id="layout11"></div>
+
+
+
+
+
+
+
+        <script>
+            var arrayRows0 = [
+                ['product', '2015', '2016', '2017'],
+                ['Matcha Latte', 43.3, 85.8, 93.7],
+                ['Milk Tea', 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRows1 = [
+                ['product', '2012', '2013', '2014', '2015', '2016', '2017'],
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRowsNoColumnHeader = [
+                ['Matcha Latte', 41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                ['Milk Tea', 86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                ['Cheese Cocoa', 24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                ['Walnut Brownie', 55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRowsNoRowHeader = [
+                ['2012', '2013', '2014', '2015', '2016', '2017'],
+                [41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                [86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                [24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                [55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            ];
+
+            var arrayRowsPairValueColumns = [
+                ['2012', null, '2013', null, '2014', 'amount'],
+                [41.1, 2585, 30.4, 2473, 65.1, 3418],
+                [86.5, 2316, 92.1, 3255, 85.7, 2485],
+                [24.1, 1532, 67.2, 1452, 79.5, 4689],
+                [55.2, 5312, 67.1, 3266, 69.2, 1354]
+            ];
+
+            var errorData = [
+                ['name', 'Price', 'Prime cost', 'Prime cost min', 'Prime cost max', 'Price min', 'Price max'],
+                ['Blouse "Blue Viola"', 101.88, 99.75, 76.75, 116.75, 69.88, 119.88],
+                ['Dress "Daisy"', 155.8, 144.03, 126.03, 156.03, 129.8, 188.8],
+                ['Trousers "Cutesy Classic"', 203.25, 173.56, 151.56, 187.56, 183.25, 249.25],
+                ['Dress "Morning Dew"', 256, 120.5, 98.5, 136.5, 236, 279],
+                ['Turtleneck "Dark Chocolate"', 408.89, 294.75, 276.75, 316.75, 385.89, 427.89],
+                ['Jumper "Early Spring"', 427.36, 430.24, 407.24, 452.24, 399.36, 461.36],
+                ['Breeches "Summer Mood"', 356, 135.5, 123.5, 151.5, 333, 387],
+                ['Dress "Mauve Chamomile"', 406, 95.5, 73.5, 111.5, 366, 429],
+                ['Dress "Flying Tits"', 527.36, 503.24, 488.24, 525.24, 485.36, 551.36],
+                ['Dress "Singing Nightingales"', 587.36, 543.24, 518.24, 555.24, 559.36, 624.36],
+                ['Sundress "Cloudy weather"', 603.36, 407.24, 392.24, 419.24, 581.36, 627.36],
+                ['Sundress "East motives"', 633.36, 477.24, 445.24, 487.24, 594.36, 652.36],
+                ['Sweater "Cold morning"', 517.36, 437.24, 416.24, 454.24, 488.36, 565.36],
+                ['Trousers "Lavender Fields"', 443.36, 387.24, 370.24, 413.24, 412.36, 484.36],
+                ['Jumper "Coffee with Milk"', 543.36, 307.24, 288.24, 317.24, 509.36, 574.36],
+                ['Blouse "Blooming Cactus"', 790.36, 277.24, 254.24, 295.24, 764.36, 818.36],
+                ['Sweater "Fluffy Comfort"', 790.34, 678.34, 660.34, 690.34, 762.34, 824.34]
+            ];
+
+            // No 北京 上海 江苏
+            var nameValueGeo0 = [
+                {name: '天津', value: 514},
+                {name: '上海', value: 863},
+                {name: '重庆', value: 224},
+                {name: '河北', value: 671},
+                {name: '河南', value: 888},
+                {name: '云南', value: 992},
+                {name: '辽宁', value: 136},
+                {name: '黑龙江', value: 406},
+                {name: '湖南', value: 101},
+                {name: '安徽', value: 885},
+                {name: '新疆', value: 187},
+                {name: '浙江', value: 1},
+                {name: '江西', value: 138},
+                {name: '湖北', value: 337},
+                {name: '广西', value: 410},
+                {name: '甘肃', value: 22},
+                {name: '山西', value: 814},
+                {name: '内蒙古', value: 449},
+                {name: '陕西', value: 324},
+                {name: '吉林', value: 429},
+                {name: '福建', value: 377},
+                {name: '贵州', value: 811},
+                {name: '广东', value: 954},
+                {name: '青海', value: 653},
+                {name: '西藏', value: 297},
+                {name: '四川', value: 981},
+                {name: '宁夏', value: 66},
+                {name: '海南', value: 667},
+                {name: '台湾', value: 345},
+                {name: '香港', value: 970},
+                {name: '澳门', value: 683}
+            ];
+
+            var nameValueGeo1 = [
+                {name: '北京', value: 507},
+                {name: '天津', value: 263},
+                {name: '上海', value: 732},
+                {name: '重庆', value: 976},
+                {name: '河北', value: 299},
+                {name: '安徽', value: 465},
+                {name: '新疆', value: 259},
+                {name: '浙江', value: 822},
+                {name: '江西', value: 922},
+                {name: '山西', value: 379},
+                {name: '内蒙古', value: 544},
+                {name: '吉林', value: 190},
+                {name: '福建', value: 66},
+                {name: '广东', value: 842},
+                {name: '西藏', value: 827},
+                {name: '四川', value: 71},
+                {name: '宁夏', value: 428},
+                {name: '香港', value: 466},
+                {name: '澳门', value: 119}
+            ]
+
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'pie', id: 'pie'}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout0', {
+                    title: 'pie, default encoding, legend',
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var encode = {
+                    value: '2016',
+                    itemName: 'product'
+                };
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {type: 'pie', id: 'pie', encode: encode}
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout1', {
+                    title: 'pie, give encoding, default legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    infoKey: 'encode',
+                    info: encode
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {
+                            type: 'pie',
+                            id: 'pie',
+                            seriesLayoutBy: 'row',
+                            encode: {
+                                value: 'Milk Tea',
+                                itemName: 'product',
+                                tooltip: 'Milk Tea'
+                            }
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout2', {
+                    title: 'pie, give encoding, default legend',
+                    option: option,
+                    dataTable: arrayRows0,
+                    info: {
+                        legend: '<default>',
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: [{
+                        source: arrayRowsNoColumnHeader
+                    }, {
+                        source: arrayRowsNoRowHeader
+                    }],
+                    series: [{
+                        type: 'pie',
+                        radius: 50,
+                        center: ['25%', '25%'],
+                        sourceHeader: false
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['50%', '25%']
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['75%', '25%'],
+                        sourceHeader: true
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['25%', '75%'],
+                        seriesLayoutBy: 'row',
+                        sourceHeader: false,
+                        datasetIndex: 1
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['50%', '75%'],
+                        seriesLayoutBy: 'row',
+                        datasetIndex: 1
+                    }, {
+                        type: 'pie',
+                        radius: 50,
+                        center: ['75%', '75%'],
+                        seriesLayoutBy: 'row',
+                        sourceHeader: true,
+                        datasetIndex: 1
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout3', {
+                    title: 'no sourceHeader',
+                    height: 400,
+                    option: option,
+                    dataTables: [
+                        arrayRowsNoColumnHeader,
+                        arrayRowsNoRowHeader
+                    ],
+                    info: {
+                        legend: '<default>',
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts', 'map/js/china'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: [{
+                        source: nameValueGeo0
+                    }, {
+                        source: nameValueGeo1
+                    }],
+                    visualMap: {
+                        min: 0,
+                        max: 1500,
+                        calculable : true
+                    },
+                    series: [{
+                        name: 'A',
+                        type: 'map',
+                        label: {
+                            show: true
+                        },
+                        mapType: 'china'
+                    }, {
+                        name: 'B',
+                        type: 'map',
+                        label: {
+                            show: true
+                        },
+                        mapType: 'china',
+                        datasetIndex: 1
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout4', {
+                    option: option,
+                    height: 400,
+                    dataTables: [
+                        nameValueGeo0,
+                        nameValueGeo1
+                    ],
+                    info: {
+                        legend: option.legend,
+                        tooltip: option.tooltip,
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    xAxis: {},
+                    yAxis: {},
+                    dataset: [{
+                        source: arrayRowsPairValueColumns
+                    }],
+                    series: [{
+                        type: 'scatter'
+                    }, {
+                        type: 'scatter'
+                    }, {
+                        type: 'scatter'
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout5', {
+                    title: 'column (dimension name duplicated)',
+                    height: 400,
+                    option: option,
+                    dataTables: [
+                        arrayRowsPairValueColumns
+                    ],
+                    info: {
+                        legend: '<default>',
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+
+
+                function renderItem(params, api) {
+                    var children = [];
+                    var coordDims = ['x', 'y'];
+
+                    for (var baseDimIdx = 0; baseDimIdx < 2; baseDimIdx++) {
+                        var otherDimIdx = 1 - baseDimIdx;
+                        var encode = params.encode;
+                        var baseValue = api.value(encode[coordDims[baseDimIdx]][0]);
+                        var param = [];
+                        param[baseDimIdx] = baseValue;
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][1]);
+                        var highPoint = api.coord(param);
+                        param[otherDimIdx] = api.value(encode[coordDims[otherDimIdx]][2]);
+                        var lowPoint = api.coord(param);
+                        var halfWidth = 5;
+
+                        var style = api.style({
+                            stroke: api.visual('color'),
+                            fill: null
+                        });
+
+                        children.push({
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx] - halfWidth, highPoint[otherDimIdx],
+                                highPoint[baseDimIdx] + halfWidth, highPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                highPoint[baseDimIdx], highPoint[otherDimIdx],
+                                lowPoint[baseDimIdx], lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        }, {
+                            type: 'line',
+                            shape: makeShape(
+                                baseDimIdx,
+                                lowPoint[baseDimIdx] - halfWidth, lowPoint[otherDimIdx],
+                                lowPoint[baseDimIdx] + halfWidth, lowPoint[otherDimIdx]
+                            ),
+                            style: style
+                        });
+                    }
+
+                    function makeShape(baseDimIdx, base1, value1, base2, value2) {
+                        var shape = {};
+                        shape[coordDims[baseDimIdx] + '1'] = base1;
+                        shape[coordDims[1 - baseDimIdx] + '1'] = value1;
+                        shape[coordDims[baseDimIdx] + '2'] = base2;
+                        shape[coordDims[1 - baseDimIdx] + '2'] = value2;
+                        return shape;
+                    }
+
+                    return {
+                        type: 'group',
+                        children: children
+                    };
+                }
+
+                var option = {
+                    dataset: {
+                        source: errorData
+                    },
+                    tooltip: {
+                    },
+                    legend: {
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    visualMap: {
+                        min: 0,
+                        max: 1000,
+                        dimension: 1,
+                        calculable: true
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    series: [{
+                        type: 'scatter',
+                        name: 'error',
+                        encode: {
+                            x: 2,
+                            y: 1,
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            itemName: 0
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#77bef7'
+                            }
+                        }
+                    }, {
+                        type: 'custom',
+                        name: 'error',
+                        renderItem: renderItem,
+                        encode: {
+                            x: [2, 3, 4],
+                            y: [1, 5, 6],
+                            tooltip: [2, 1, 3, 4, 5, 6],
+                            itemName: 0
+                        },
+                        z: 100
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout6', {
+                    title: 'error data (custom)',
+                    height: 400,
+                    dataTables: [
+                        errorData
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts', 'data/stock-DJI.json'], function (echarts, source) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    dataset: [{
+                        source: source
+                    }],
+                    dataZoom: [{}, {type: 'inside'}],
+                    animation: false,
+                    series: [{
+                        type: 'candlestick',
+                        encode: {
+                            x: 0,
+                            y: [1, 2, 3, 4]
+                        }
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout7', {
+                    height: 400,
+                    option: option,
+                    dataTables: [source],
+                    info: {
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts, source) {
+                // Thanks to <https://github.com/OvidiuBuleandra>
+                option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        type: "category",
+                        scale: true
+                    },
+                    yAxis: {
+                        type: "value",
+                        scale: true,
+                        boundaryGap: ['5%', '5%']
+                    },
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    dataset: {
+                        dimensions: ["date","open","high","low","close","volume",{name: "haOpen", displayName: 'open'},"haHigh","haLow","haClose","sma9"],
+                        source: [
+                            ["2018-01-09 14:30:00",14636.21,14682.6,14401.0,14659.57,349.069176,14647.89,14682.6,14401.0,14594.845,0.0],
+                            ["2018-01-09 15:00:00",14650.0,14700.0,14238.99,14347.43,459.735215,14621.3675,14700.0,14238.99,14484.105,0.0],
+                            ["2018-01-09 15:30:00",14374.72,14434.2,14011.05,14041.03,697.055035,14552.73625,14552.73625,14011.05,14215.25,0.0],
+                            ["2018-01-09 16:00:00",14072.87,14497.06,14064.13,14349.0,671.165463,14383.993125,14497.06,14064.13,14245.765,0.0],
+                            ["2018-01-09 16:30:00",14369.98,14640.99,14340.0,14560.48,416.750768,14314.8790625,14640.99,14314.8790625,14477.8625,0.0],
+                            ["2018-01-09 17:00:00",14551.42,14800.0,14551.41,14749.55,357.445717,14396.37078125,14800.0,14396.37078125,14663.095000000001,0.0],
+                            ["2018-01-09 17:30:00",14745.0,14766.2,14485.0,14654.96,306.727704,14529.732890625,14766.2,14485.0,14662.789999999999,0.0],
+                            ["2018-01-09 18:00:00",14655.01,14829.0,14585.01,14800.1,194.858965,14596.261445312499,14829.0,14585.01,14717.28,0.0],
+                            ["2018-01-09 18:30:00",14800.1,14998.62,14792.03,14951.01,313.268531,14656.770722656249,14998.62,14656.770722656249,14885.44,0.0],
+                            ["2018-01-09 19:00:00",14968.0,14982.0,14778.47,14810.0,214.504459,14771.105361328126,14982.0,14771.105361328126,14884.6175,16213.681111111111],
+                            ["2018-01-09 19:30:00",14810.0,14973.49,14799.95,14949.98,144.830078,14827.861430664063,14973.49,14799.95,14883.355,16245.94888888889],
+                            ["2018-01-09 20:00:00",14949.98,14990.0,14865.49,14916.91,145.574797,14855.608215332031,14990.0,14855.608215332031,14930.595000000001,16309.224444444444],
+                            ["2018-01-09 20:30:00",14914.03,14945.01,14799.01,14803.44,146.21296,14893.101607666016,14945.01,14799.01,14865.372500000001,16393.936666666665],
+                            ["2018-01-09 21:00:00",14803.46,14863.93,14700.44,14799.0,190.167582,14879.237053833009,14879.237053833009,14700.44,14791.7075,16443.936666666665],
+                            ["2018-01-09 21:30:00",14798.99,14798.99,14650.0,14717.82,209.543776,14835.472276916506,14835.472276916506,14650.0,14741.449999999999,16461.41888888889],
+                            ["2018-01-09 22:00:00",14717.82,14781.56,14600.0,14615.9,164.859485,14788.461138458253,14788.461138458253,14600.0,14678.82,16446.568888888887],
+                            ["2018-01-09 22:30:00",14647.09,14861.56,14615.4,14755.03,228.445843,14733.640569229126,14861.56,14615.4,14719.77,16457.687777777777],
+                            ["2018-01-09 23:00:00",14755.33,14780.0,14680.0,14702.33,150.779654,14726.705284614563,14780.0,14680.0,14729.415,16446.824444444443],
+                            ["2018-01-09 23:30:00",14709.49,14709.49,14420.0,14462.81,274.752199,14728.060142307282,14728.060142307282,14420.0,14575.447499999998,16392.579999999998],
+                            ["2018-01-10 00:00:00",14452.0,14536.36,14407.77,14435.0,279.156552,14651.753821153641,14651.753821153641,14407.77,14457.782500000001,16350.913333333334],
+                            ["2018-01-10 00:30:00",14435.0,14459.94,14182.84,14254.92,435.050575,14554.768160576821,14554.768160576821,14182.84,14333.175,16273.684444444445],
+                            ["2018-01-10 01:00:00",14234.7,14290.56,14125.0,14259.98,422.926221,14443.97158028841,14443.97158028841,14125.0,14227.560000000001,16200.692222222224],
+                            ["2018-01-10 01:30:00",14259.98,14454.95,14144.13,14400.0,377.788542,14335.765790144205,14454.95,14144.13,14314.765,16155.865555555552],
+                            ["2018-01-10 02:00:00",14401.0,14480.0,13750.0,13972.46,582.921859,14325.265395072103,14480.0,13750.0,14150.865,16064.027777777777]
+                        ]
+                    },
+                    series: [{
+                        type: "candlestick",
+                        encode: {
+                            x: "date",
+                            // y: ["open", "close", "low", "high"],
+                            y: ["haOpen","haClose","haLow","haHigh"],
+                            tooltip: ["haOpen", "haHigh", "haLow", "haClose"]
+                        }
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout7.5', {
+                    title: 'Check: Y use haOpen, haHigh, haLow, haClose, but display name of "haOpen" is open',
+                    height: 400,
+                    option: option,
+                    dataTable: option.dataset.source,
+                    info: {
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts', 'data/stock-DJI.json'], function (echarts, source) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'time'},
+                    yAxis: {},
+                    dataset: [{
+                        source: source
+                    }],
+                    dataZoom: [{}, {type: 'inside'}],
+                    animation: false,
+                    series: [{
+                        type: 'candlestick',
+                        encode: {
+                            x: 0,
+                            y: [1, 2, 3, 4]
+                        }
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout8', {
+                    title: 'time axis',
+                    height: 400,
+                    option: option,
+                    dataTables: [source],
+                    info: {
+                        series: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts, source) {
+                var option = {
+                    legend: {},
+                    dataset: [{
+                        source: arrayRows1
+                    }],
+                    parallelAxis: [
+                        {dim: 0, type: 'category'},
+                        {dim: 1},
+                        {dim: 2},
+                        {dim: 3}
+                    ],
+                    parallel: {
+                        axisExpandable: true,
+                        axisExpandCenter: 15,
+                        axisExpandCount: 10,
+                        axisExpandWidth: 60,
+                        axisExpandTriggerOn: 'mousemove',
+
+                        parallelAxisDefault: {
+                            type: 'value',
+                            nameLocation: 'end',
+                            nameGap: 20,
+                            tooltip: {
+                                show: true
+                            },
+                            nameTextStyle: {
+                                fontSize: 14
+                            },
+                            splitLine: {
+                                show: false
+                            }
+                        }
+                    },
+                    series: [{
+                        type: 'parallel'
+                    }]
+                };
+
+                testHelper.create(echarts, 'layout9', {
+                    height: 400,
+                    option: option,
+                    dataTables: [arrayRows1]
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        source: arrayRows0
+                    },
+                    series: [
+                        {
+                            label: {
+                                formatter: '{@product} {@[1]}'
+                            },
+                            type: 'funnel',
+                            id: 'pie'
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'layout10', {
+                    option: option,
+                    dataTable: arrayRows0
+                });
+            });
+        </script>
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    dataset: {
+                        source: [
+                            [12, 323, 11.2],
+                            [23, 167, 8.3],
+                            [81, 284, 12],
+                            [91, 413, 4.1],
+                            [13, 287, 13.5]
+                        ]
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    visualMap: {
+                        show: false,
+                        dimension: 2,
+                        min: 2,
+                        max: 15,
+                        inRange: {
+                            symbolSize: [5, 60]
+                        }
+                    },
+                    series: {
+                        type: 'scatter'
+                    }
+                };
+
+                testHelper.create(echarts, 'layout11', {
+                    option: option,
+                    dataTable: option.dataset.source
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+    </body>
+</html>

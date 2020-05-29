@@ -1,77 +1,108 @@
-define(function(require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    'use strict';
+import SeriesModel from '../../model/Series';
+import createListSimply from '../helper/createListSimply';
+import * as zrUtil from 'zrender/src/core/util';
+import {encodeHTML} from '../../util/format';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
 
-    var SeriesModel = require('../../model/Series');
-    var List = require('../../data/List');
-    var completeDimensions = require('../../data/helper/completeDimensions');
-    var zrUtil = require('zrender/core/util');
-    var encodeHTML = require('../../util/format').encodeHTML;
+var RadarSeries = SeriesModel.extend({
 
-    var RadarSeries = SeriesModel.extend({
+    type: 'series.radar',
 
-        type: 'series.radar',
-
-        dependencies: ['radar'],
+    dependencies: ['radar'],
 
 
-        // Overwrite
-        init: function (option) {
-            RadarSeries.superApply(this, 'init', arguments);
+    // Overwrite
+    init: function (option) {
+        RadarSeries.superApply(this, 'init', arguments);
 
-            // Enable legend selection for each data item
-            // Use a function instead of direct access because data reference may changed
-            this.legendDataProvider = function () {
-                return this.getRawData();
-            };
-        },
+        // Enable legend selection for each data item
+        // Use a function instead of direct access because data reference may changed
+        this.legendVisualProvider = new LegendVisualProvider(
+            zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+        );
 
-        getInitialData: function (option, ecModel) {
-            var data = option.data || [];
-            var dimensions = completeDimensions(
-                [], data, {extraPrefix: 'indicator_', extraFromZero: true}
-            );
-            var list = new List(dimensions, this);
-            list.initData(data);
-            return list;
-        },
+    },
 
-        formatTooltip: function (dataIndex) {
-            var value = this.getRawValue(dataIndex);
+    getInitialData: function (option, ecModel) {
+        return createListSimply(this, {
+            generateCoord: 'indicator_',
+            generateCoordCount: Infinity
+        });
+    },
+
+    formatTooltip: function (dataIndex) {
+        var data = this.getData();
+        var coordSys = this.coordinateSystem;
+        var indicatorAxes = coordSys.getIndicatorAxes();
+        var name = this.getData().getName(dataIndex);
+        return encodeHTML(name === '' ? this.name : name) + '<br/>'
+            + zrUtil.map(indicatorAxes, function (axis, idx) {
+                var val = data.get(data.mapDimension(axis.dim), dataIndex);
+                return encodeHTML(axis.name + ' : ' + val);
+            }).join('<br />');
+    },
+
+    /**
+     * @implement
+     */
+    getTooltipPosition: function (dataIndex) {
+        if (dataIndex != null) {
+            var data = this.getData();
             var coordSys = this.coordinateSystem;
-            var indicatorAxes = coordSys.getIndicatorAxes();
-            var name = this.getData().getName(dataIndex);
-            return encodeHTML(name === '' ? this.name : name) + '<br/>'
-                + zrUtil.map(indicatorAxes, function (axis, idx) {
-                    return encodeHTML(axis.name + ' : ' + value[idx]);
-                }).join('<br />');
-        },
+            var values = data.getValues(
+                zrUtil.map(coordSys.dimensions, function (dim) {
+                    return data.mapDimension(dim);
+                }), dataIndex, true
+            );
 
-        defaultOption: {
-            zlevel: 0,
-            z: 2,
-            coordinateSystem: 'radar',
-            legendHoverLink: true,
-            radarIndex: 0,
-            lineStyle: {
-                normal: {
-                    width: 2,
-                    type: 'solid'
+            for (var i = 0, len = values.length; i < len; i++) {
+                if (!isNaN(values[i])) {
+                    var indicatorAxes = coordSys.getIndicatorAxes();
+                    return coordSys.coordToPoint(indicatorAxes[i].dataToCoord(values[i]), i);
                 }
-            },
-            label: {
-                normal: {
-                    position: 'top'
-                }
-            },
-            // areaStyle: {
-            // },
-            // itemStyle: {}
-            symbol: 'emptyCircle',
-            symbolSize: 4
-            // symbolRotate: null
+            }
         }
-    });
+    },
 
-    return RadarSeries;
+    defaultOption: {
+        zlevel: 0,
+        z: 2,
+        coordinateSystem: 'radar',
+        legendHoverLink: true,
+        radarIndex: 0,
+        lineStyle: {
+            width: 2,
+            type: 'solid'
+        },
+        label: {
+            position: 'top'
+        },
+        // areaStyle: {
+        // },
+        // itemStyle: {}
+        symbol: 'emptyCircle',
+        symbolSize: 4
+        // symbolRotate: null
+    }
 });
+
+export default RadarSeries;

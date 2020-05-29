@@ -1,24 +1,63 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="./esl.js"></script>
-        <script src="./config.js"></script>
-        <link rel="stylesheet" href="./reset.css">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            body {
-                /*background: #000;*/
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #e0ebff;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
             }
-            #main {
-                width: 766px;
-                height: 688px;
+            .chart {
+                height: 500px;
             }
         </style>
-        <div id="main"></div>
+
+        <h1>normal</h1>
+        <div class="chart" id="main0"></div>
+        <h1>data column 0 and column 2 is not used.</h1>
+        <div class="chart" id="main1"></div>
+        <h1>category is not specified but auto-collected.</h1>
+        <div class="chart" id="main2"></div>
+
+
+
+
+
+
+
+
 
         <script>
-
             // Schema:
             // date,AQIindex,PM2.5,PM10,CO,NO2,SO2
             var schema = [
@@ -32,33 +71,36 @@
                 {name: '等级', index: 7, text: '等级'}
             ];
 
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
             require([
                 'data/aqi/BJdata',
                 'data/aqi/GZdata',
                 'data/aqi/SHdata',
-                'zrender/core/util',
-                'echarts',
-                'echarts/chart/parallel',
-                'echarts/component/legend',
-                'echarts/component/tooltip',
-                'echarts/component/visualMap',
-                'echarts/component/parallel',
-            ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
-
-                var chart = echarts.init(document.getElementById('main'));
+                'echarts'
+            ], function (dataBJ, dataGZ, dataSH, echarts) {
+                var zrUtil = echarts.util;
 
                 var lineStyle = {
                     normal: {
                         width: 1
-                        // opacity: 0.5,
-                        // shadowBlur: 10,
-                        // shadowOffsetX: 0,
-                        // shadowOffsetY: 0,
-                        // shadowColor: 'rgba(0, 0, 0, 0.5)'
                     }
                 };
 
-                chart.setOption({
+                var option = {
+                    aria: {
+                        show: true
+                    },
                     animation: true,
                     legend: {
                         bottom: 30,
@@ -92,6 +134,7 @@
                         show: true,
                         min: 0,
                         max: 150,
+                        top: 'center',
                         dimension: 2,
                         inRange: {
                             color: ['#d94e5d','#eac736','#50a3ba'].reverse()
@@ -101,13 +144,8 @@
                             opacity: 0.001
                         }
                     },
-                    // dataZoom: {
-                    //     show: true,
-                    //     orient: 'vertical',
-                    //     parallelAxisIndex: [0]
-                    // },
                     parallelAxis: [
-                        {dim: 0, name: schema[0].text, inverse: true, max: 31, nameLocation: 'end'},
+                        {dim: 0, name: schema[0].text, max: 31, inverse: true, nameLocation: 'end'},
                         {dim: 1, name: schema[1].text},
                         {dim: 2, name: schema[2].text},
                         {dim: 3, name: schema[3].text},
@@ -115,7 +153,9 @@
                         {dim: 5, name: schema[5].text},
                         {dim: 6, name: schema[6].text},
                         {dim: 7, name: schema[7].text,
-                        type: 'category', data: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染']}
+                            type: 'category',
+                            data: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染']
+                        }
                     ],
                     parallel: {
                         bottom: 100,
@@ -128,26 +168,10 @@
                                 show: true
                             },
                             nameTextStyle: {
-                                // color: '#fff',
                                 fontSize: 14
-                            },
-                            axisLine: {
-                                lineStyle: {
-                                    // color: '#aaa'
-                                }
-                            },
-                            axisTick: {
-                                lineStyle: {
-                                    // color: '#777'
-                                }
                             },
                             splitLine: {
                                 show: false
-                            },
-                            axisLabel: {
-                                textStyle: {
-                                    // color: '#fff'
-                                }
                             }
                         }
                     },
@@ -157,18 +181,12 @@
                             type: 'parallel',
                             lineStyle: lineStyle,
                             data: dataBJ
-                            // data: [
-                            //     [ 1, 32,12 , 19, 28,1.39,24, 8,"优"],
-                            // ]
                         },
                         {
                             name: '上海',
                             type: 'parallel',
                             lineStyle: lineStyle,
                             data: dataSH
-                            // data: [
-                            //     [ 1, 332,212 , 119, 128,12.39,124, 18,"良"],
-                            // ]
                         },
                         {
                             name: '广州',
@@ -177,17 +195,295 @@
                             data: dataGZ
                         }
                     ]
-                });
+                };
 
+                var chart = testHelper.createChart(echarts, 'main0', option);
 
-                chart.on('axisAreaSelected', function (event) {
-
+                chart && chart.on('axisAreaSelected', function (event) {
                     var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
                     console.log('北京: ', indices);
-
                 });
             });
 
         </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/aqi/BJdata',
+                'data/aqi/GZdata',
+                'data/aqi/SHdata',
+                'echarts'
+            ], function (dataBJ, dataGZ, dataSH, echarts) {
+                var zrUtil = echarts.util;
+
+                var lineStyle = {
+                    normal: {
+                        width: 1
+                    }
+                };
+
+                var option = {
+                    animation: true,
+                    legend: {
+                        bottom: 30,
+                        data: ['北京', '上海', '广州'],
+                        itemGap: 20,
+                        textStyle: {
+                            // color: '#fff',
+                            fontSize: 16
+                        }
+                    },
+                    tooltip: {
+                        padding: 10,
+                        backgroundColor: '#222',
+                        borderColor: '#777',
+                        borderWidth: 1,
+                        formatter: function (obj) {
+                            var value = obj[0].value;
+                            return '<div style="border-bottom: 1px solid rgba(255,255,255,.3); font-size: 18px;padding-bottom: 7px;margin-bottom: 7px">'
+                                + obj[0].seriesName + ' ' + value[0] + '日期：'
+                                + value[7]
+                                + '</div>'
+                                + schema[1].text + '：' + value[1] + '<br>'
+                                + schema[2].text + '：' + value[2] + '<br>'
+                                + schema[3].text + '：' + value[3] + '<br>'
+                                + schema[4].text + '：' + value[4] + '<br>'
+                                + schema[5].text + '：' + value[5] + '<br>'
+                                + schema[6].text + '：' + value[6] + '<br>';
+                        }
+                    },
+                    visualMap: {
+                        show: true,
+                        min: 0,
+                        max: 150,
+                        top: 'center',
+                        dimension: 2,
+                        inRange: {
+                            color: ['#d94e5d','#eac736','#50a3ba'].reverse()
+                        },
+                        outOfRange: {
+                            color: ['#ccc'],
+                            opacity: 0.001
+                        }
+                    },
+                    parallelAxis: [
+                        // {dim: 0, name: schema[0].text, max: 31, inverse: true, nameLocation: 'end'},
+                        {dim: 1, name: schema[1].text},
+                        // {dim: 2, name: schema[2].text},
+                        {dim: 3, name: schema[3].text},
+                        {dim: 4, name: schema[4].text},
+                        {dim: 5, name: schema[5].text},
+                        {dim: 6, name: schema[6].text},
+                        {dim: 7, name: schema[7].text,
+                            type: 'category',
+                            data: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染']
+                        }
+                    ],
+                    parallel: {
+                        bottom: 100,
+                        parallelAxisDefault: {
+                            type: 'value',
+                            name: 'AQI指数',
+                            nameLocation: 'end',
+                            nameGap: 20,
+                            tooltip: {
+                                show: true
+                            },
+                            nameTextStyle: {
+                                fontSize: 14
+                            },
+                            splitLine: {
+                                show: false
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            name: '北京',
+                            type: 'parallel',
+                            lineStyle: lineStyle,
+                            data: dataBJ
+                        },
+                        {
+                            name: '上海',
+                            type: 'parallel',
+                            lineStyle: lineStyle,
+                            data: dataSH
+                        },
+                        {
+                            name: '广州',
+                            type: 'parallel',
+                            lineStyle: lineStyle,
+                            data: dataGZ
+                        }
+                    ]
+                };
+
+                var chart = testHelper.createChart(echarts, 'main1', option);
+
+                chart && chart.on('axisAreaSelected', function (event) {
+                    var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
+                    console.log('北京: ', indices);
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'data/aqi/BJdata',
+                'data/aqi/GZdata',
+                'data/aqi/SHdata',
+                'echarts'
+            ], function (dataBJ, dataGZ, dataSH, echarts) {
+                var zrUtil = echarts.util;
+
+                var lineStyle = {
+                    normal: {
+                        width: 1
+                    }
+                };
+
+                var option = {
+                    animation: true,
+                    legend: {
+                        bottom: 30,
+                        data: ['北京', '上海', '广州'],
+                        itemGap: 20,
+                        textStyle: {
+                            // color: '#fff',
+                            fontSize: 16
+                        }
+                    },
+                    tooltip: {
+                        padding: 10,
+                        backgroundColor: '#222',
+                        borderColor: '#777',
+                        borderWidth: 1,
+                        formatter: function (obj) {
+                            var value = obj[0].value;
+                            return '<div style="border-bottom: 1px solid rgba(255,255,255,.3); font-size: 18px;padding-bottom: 7px;margin-bottom: 7px">'
+                                + obj[0].seriesName + ' ' + value[0] + '日期：'
+                                + value[7]
+                                + '</div>'
+                                + schema[1].text + '：' + value[1] + '<br>'
+                                + schema[2].text + '：' + value[2] + '<br>'
+                                + schema[3].text + '：' + value[3] + '<br>'
+                                + schema[4].text + '：' + value[4] + '<br>'
+                                + schema[5].text + '：' + value[5] + '<br>'
+                                + schema[6].text + '：' + value[6] + '<br>';
+                        }
+                    },
+                    visualMap: {
+                        show: true,
+                        min: 0,
+                        max: 150,
+                        top: 'center',
+                        dimension: 2,
+                        inRange: {
+                            color: ['#d94e5d','#eac736','#50a3ba'].reverse()
+                        },
+                        outOfRange: {
+                            color: ['#ccc'],
+                            opacity: 0.001
+                        }
+                    },
+                    parallelAxis: [
+                        // {dim: 0, name: schema[0].text, max: 31, inverse: true, nameLocation: 'end'},
+                        {dim: 1, name: schema[1].text},
+                        // {dim: 2, name: schema[2].text},
+                        {dim: 3, name: schema[3].text},
+                        {dim: 4, name: schema[4].text},
+                        {dim: 5, name: schema[5].text},
+                        {dim: 6, name: schema[6].text},
+                        {dim: 7, name: schema[7].text,
+                            type: 'category'
+                            // data: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染']
+                        }
+                    ],
+                    parallel: {
+                        bottom: 100,
+                        parallelAxisDefault: {
+                            type: 'value',
+                            name: 'AQI指数',
+                            nameLocation: 'end',
+                            nameGap: 20,
+                            tooltip: {
+                                show: true
+                            },
+                            nameTextStyle: {
+                                fontSize: 14
+                            },
+                            splitLine: {
+                                show: false
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            name: '北京',
+                            type: 'parallel',
+                            lineStyle: lineStyle,
+                            data: dataBJ
+                        },
+                        {
+                            name: '上海',
+                            type: 'parallel',
+                            lineStyle: lineStyle,
+                            data: dataSH
+                        },
+                        {
+                            name: '广州',
+                            type: 'parallel',
+                            lineStyle: lineStyle,
+                            data: dataGZ
+                        }
+                    ]
+                };
+
+                var chart = testHelper.createChart(echarts, 'main2', option);
+
+                chart && chart.on('axisAreaSelected', function (event) {
+                    var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
+                    console.log('北京: ', indices);
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
     </body>
 </html>

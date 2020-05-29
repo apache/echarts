@@ -1,51 +1,176 @@
-define(function(require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    'use strict';
+import * as zrUtil from 'zrender/src/core/util';
+import ChartView from '../../view/Chart';
+import * as graphic from '../../util/graphic';
+import Path from 'zrender/src/graphic/Path';
 
-    var zrUtil = require('zrender/core/util');
-    var ChartView = require('../../view/Chart');
-    var graphic = require('../../util/graphic');
-    var whiskerBoxCommon = require('../helper/whiskerBoxCommon');
+// Update common properties
+var NORMAL_ITEM_STYLE_PATH = ['itemStyle'];
+var EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'];
 
-    var BoxplotView = ChartView.extend({
+var BoxplotView = ChartView.extend({
 
-        type: 'boxplot',
+    type: 'boxplot',
 
-        getStyleUpdater: function () {
-            return updateStyle;
-        },
+    render: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+        var group = this.group;
+        var oldData = this._data;
 
-        dispose: zrUtil.noop
-    });
+        // There is no old data only when first rendering or switching from
+        // stream mode to normal mode, where previous elements should be removed.
+        if (!this._data) {
+            group.removeAll();
+        }
 
-    zrUtil.mixin(BoxplotView, whiskerBoxCommon.viewMixin, true);
+        var constDim = seriesModel.get('layout') === 'horizontal' ? 1 : 0;
 
-    // Update common properties
-    var normalStyleAccessPath = ['itemStyle', 'normal'];
-    var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
+        data.diff(oldData)
+            .add(function (newIdx) {
+                if (data.hasValue(newIdx)) {
+                    var itemLayout = data.getItemLayout(newIdx);
+                    var symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
+                    data.setItemGraphicEl(newIdx, symbolEl);
+                    group.add(symbolEl);
+                }
+            })
+            .update(function (newIdx, oldIdx) {
+                var symbolEl = oldData.getItemGraphicEl(oldIdx);
 
-    function updateStyle(itemGroup, data, idx) {
-        var itemModel = data.getItemModel(idx);
-        var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
-        var borderColor = data.getItemVisual(idx, 'color');
+                // Empty data
+                if (!data.hasValue(newIdx)) {
+                    group.remove(symbolEl);
+                    return;
+                }
 
-        // Exclude borderColor.
-        var itemStyle = normalItemStyleModel.getItemStyle(['borderColor']);
+                var itemLayout = data.getItemLayout(newIdx);
+                if (!symbolEl) {
+                    symbolEl = createNormalBox(itemLayout, data, newIdx, constDim);
+                }
+                else {
+                    updateNormalBoxData(itemLayout, symbolEl, data, newIdx);
+                }
 
-        var whiskerEl = itemGroup.childAt(itemGroup.whiskerIndex);
-        whiskerEl.style.set(itemStyle);
-        whiskerEl.style.stroke = borderColor;
-        whiskerEl.dirty();
+                group.add(symbolEl);
 
-        var bodyEl = itemGroup.childAt(itemGroup.bodyIndex);
-        bodyEl.style.set(itemStyle);
-        bodyEl.style.stroke = borderColor;
-        bodyEl.dirty();
+                data.setItemGraphicEl(newIdx, symbolEl);
+            })
+            .remove(function (oldIdx) {
+                var el = oldData.getItemGraphicEl(oldIdx);
+                el && group.remove(el);
+            })
+            .execute();
 
-        var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
-        graphic.setHoverStyle(itemGroup, hoverStyle);
-    }
+        this._data = data;
+    },
 
-    return BoxplotView;
+    remove: function (ecModel) {
+        var group = this.group;
+        var data = this._data;
+        this._data = null;
+        data && data.eachItemGraphicEl(function (el) {
+            el && group.remove(el);
+        });
+    },
+
+    dispose: zrUtil.noop
 
 });
+
+
+var BoxPath = Path.extend({
+
+    type: 'boxplotBoxPath',
+
+    shape: {},
+
+    buildPath: function (ctx, shape) {
+        var ends = shape.points;
+
+        var i = 0;
+        ctx.moveTo(ends[i][0], ends[i][1]);
+        i++;
+        for (; i < 4; i++) {
+            ctx.lineTo(ends[i][0], ends[i][1]);
+        }
+        ctx.closePath();
+
+        for (; i < ends.length; i++) {
+            ctx.moveTo(ends[i][0], ends[i][1]);
+            i++;
+            ctx.lineTo(ends[i][0], ends[i][1]);
+        }
+    }
+});
+
+
+function createNormalBox(itemLayout, data, dataIndex, constDim, isInit) {
+    var ends = itemLayout.ends;
+
+    var el = new BoxPath({
+        shape: {
+            points: isInit
+                ? transInit(ends, constDim, itemLayout)
+                : ends
+        }
+    });
+
+    updateNormalBoxData(itemLayout, el, data, dataIndex, isInit);
+
+    return el;
+}
+
+function updateNormalBoxData(itemLayout, el, data, dataIndex, isInit) {
+    var seriesModel = data.hostModel;
+    var updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
+
+    updateMethod(
+        el,
+        {shape: {points: itemLayout.ends}},
+        seriesModel,
+        dataIndex
+    );
+
+    var itemModel = data.getItemModel(dataIndex);
+    var normalItemStyleModel = itemModel.getModel(NORMAL_ITEM_STYLE_PATH);
+    var borderColor = data.getItemVisual(dataIndex, 'color');
+
+    // Exclude borderColor.
+    var itemStyle = normalItemStyleModel.getItemStyle(['borderColor']);
+    itemStyle.stroke = borderColor;
+    itemStyle.strokeNoScale = true;
+    el.useStyle(itemStyle);
+
+    el.z2 = 100;
+
+    var hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
+    graphic.setHoverStyle(el, hoverStyle);
+}
+
+function transInit(points, dim, itemLayout) {
+    return zrUtil.map(points, function (point) {
+        point = point.slice();
+        point[dim] = itemLayout.initBaseline;
+        return point;
+    });
+}
+
+export default BoxplotView;

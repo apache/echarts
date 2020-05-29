@@ -1,0 +1,584 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <meta name="viewport" content="user-scalable=no,width=device-width,height=device-height">
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main0'));
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+                var data4 = [];
+                var data5 = [];
+                var data6 = [];
+
+                xAxisData.push('类目' + -1);
+                data1.push('-');
+                data2.push('-');
+                data3.push('-');
+                data4.push('-');
+                data5.push('-');
+                data6.push('-');
+
+                for (var i = 0; i < 5; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((-Math.random() - 0.2).toFixed(3));
+                    data2.push((Math.random() + 0.3).toFixed(3));
+                    data3.push((Math.random() + 0.2).toFixed(3));
+                    data4.push((-Math.random() - 0.2).toFixed(3));
+                    data5.push((-Math.random() - 0.2).toFixed(3));
+                    data6.push((Math.random() + 0.2).toFixed(3));
+                }
+
+                xAxisData.push('类目' + i);
+                data1.push('-');
+                data2.push('-');
+                data3.push('-');
+                data4.push('-');
+                data5.push('-');
+                data6.push('-');
+
+                for (; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((-Math.random() - 0.2).toFixed(3));
+                    data2.push((Math.random() + 0.3).toFixed(3));
+                    data3.push((Math.random() + 0.2).toFixed(3));
+                    data4.push((-Math.random() - 0.2).toFixed(3));
+                    data5.push((-Math.random() - 0.2).toFixed(3));
+                    data6.push((Math.random() + 0.2).toFixed(3));
+                }
+                xAxisData.push('类目' + i);
+                data1.push('-');
+                data2.push('-');
+                data3.push('-');
+                data4.push('-');
+                data5.push('-');
+                data6.push('-');
+
+                var itemStyle = {
+                    normal: {
+                        // borderColor: 'white',
+                        // borderWidth: 3,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 5,
+                        // shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        lineStyle: {
+                            width: 2
+                            // shadowBlur: 10,
+                            // shadowOffsetX: 0,
+                            // shadowOffsetY: 5,
+                            // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        areaStyle: {
+                        }
+                    }
+                };
+
+                var option = {
+                    legend: {
+                    },
+                    toolbox: {
+                        feature: {
+                            magicType: {
+                                type: ['line', 'bar', 'stack', 'tiled']
+                            }
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        position: function (point) {
+                            return [point[0], '10%'];
+                        },
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: false,
+                        // inverse: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        splitLine: {
+                            // show: false
+                        }
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider'
+                    }],
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data1,
+                        itemStyle: itemStyle,
+                        smooth: true,
+                        connectNulls: true
+                    }, {
+                        name: 'line2',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data2,
+                        itemStyle: itemStyle,
+                        connectNulls: true,
+                        smooth: true
+                    }, {
+                        name: '+connectNulls:true',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data3,
+                        itemStyle: itemStyle,
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
+                        connectNulls: true,
+                        smooth: true
+                    }, {
+                        name: '-connectNulls:false',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data4,
+                        itemStyle: itemStyle,
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
+                        connectNulls: false,
+                        smooth: true
+                    }, {
+                        name: '-connectNulls:true',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data5,
+                        itemStyle: itemStyle,
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
+                        connectNulls: true,
+                        smooth: true
+                    }, {
+                        name: '+connectNulls:false',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data6,
+                        itemStyle: itemStyle,
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
+                        connectNulls: false,
+                        smooth: true
+                    }]
+                };
+
+                testHelper.create(echarts, 'main0', {
+                    title: 'line break',
+                    option: option,
+                    height: 600
+                });
+
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var xAxisData = ["2018-04-11 13:30:00","2018-04-11 13:45:00","2018-04-11 14:00:00","2018-04-11 14:30:00","2018-04-11 14:45:00","2018-04-11 15:00:00","2018-04-11 15:15:00","2018-04-11 15:30:00","2018-04-11 15:45:00","2018-04-12 09:30:00","2018-04-12 09:45:00","2018-04-12 10:00:00","2018-04-12 10:15:00","2018-04-12 10:30:00","2018-04-12 10:45:00","2018-04-12 11:00:00","2018-04-12 11:15:00","2018-04-12 11:30:00","2018-04-12 11:45:00","2018-04-12 12:00:00","2018-04-12 12:15:00","2018-04-12 12:30:00","2018-04-12 12:45:00","2018-04-12 13:00:00","2018-04-12 13:15:00","2018-04-12 13:30:00","2018-04-12 13:45:00","2018-04-12 14:00:00","2018-04-12 14:15:00","2018-04-12 14:30:00","2018-04-12 14:45:00","2018-04-12 15:00:00","2018-04-12 15:15:00","2018-04-12 15:30:00","2018-04-12 15:45:00","2018-04-13 09:30:00","2018-04-13 09:45:00","2018-04-13 10:00:00","2018-04-13 10:15:00","2018-04-13 10:30:00","2018-04-13 10:45:00","2018-04-13 11:00:00","2018-04-13 11:15:00","2018-04-13 11:45:00","2018-04-13 12:00:00","2018-04-13 12:15:00","2018-04-13 12:45:00","2018-04-13 13:00:00","2018-04-13 13:30:00","2018-04-13 13:45:00","2018-04-13 14:00:00","2018-04-13 14:30:00","2018-04-13 14:45:00","2018-04-13 15:00:00","2018-04-13 15:15:00","2018-04-13 15:30:00","2018-04-13 15:45:00","2018-04-16 09:30:00","2018-04-16 09:45:00","2018-04-16 10:00:00","2018-04-16 10:15:00","2018-04-16 10:30:00","2018-04-16 10:45:00","2018-04-16 11:00:00","2018-04-16 11:15:00","2018-04-16 11:45:00","2018-04-16 12:00:00","2018-04-16 12:15:00","2018-04-16 12:30:00","2018-04-16 12:45:00","2018-04-16 13:00:00","2018-04-16 13:15:00","2018-04-16 13:30:00","2018-04-16 13:45:00","2018-04-16 14:00:00","2018-04-16 14:15:00","2018-04-16 14:30:00","2018-04-16 14:45:00","2018-04-16 15:00:00","2018-04-16 15:15:00","2018-04-16 15:30:00","2018-04-16 15:45:00","2018-04-17 09:30:00","2018-04-17 09:45:00","2018-04-17 10:00:00","2018-04-17 10:15:00","2018-04-17 10:30:00","2018-04-17 10:45:00","2018-04-17 11:00:00","2018-04-17 11:15:00","2018-04-17 11:30:00","2018-04-17 11:45:00","2018-04-17 12:00:00","2018-04-17 12:30:00","2018-04-17 13:00:00","2018-04-17 13:15:00","2018-04-17 13:30:00","2018-04-17 13:45:00","2018-04-17 14:15:00","2018-04-17 14:30:00","2018-04-17 14:45:00","2018-04-17 15:00:00","2018-04-17 15:15:00","2018-04-17 15:30:00","2018-04-17 15:45:00","2018-04-18 09:30:00","2018-04-18 09:45:00","2018-04-18 10:00:00","2018-04-18 10:15:00","2018-04-18 10:30:00","2018-04-18 10:45:00","2018-04-18 11:00:00","2018-04-18 11:15:00","2018-04-18 11:30:00","2018-04-18 11:45:00","2018-04-18 12:00:00","2018-04-18 12:15:00","2018-04-18 12:30:00","2018-04-18 12:45:00","2018-04-18 13:00:00","2018-04-18 13:15:00","2018-04-18 13:30:00","2018-04-18 13:45:00","2018-04-18 14:00:00","2018-04-18 14:15:00","2018-04-18 14:45:00","2018-04-18 15:00:00","2018-04-18 15:15:00","2018-04-18 15:30:00","2018-04-18 15:45:00"];
+                var dataUpper = [6.89,6.9,6.9,6.9,6.89,6.87,6.86,6.83,6.8,6.78,6.75,6.71,6.67,6.65,6.64,6.62,6.61,6.6,6.6,6.61,6.65,6.67,6.68,6.69,6.72,6.74,6.79,6.83,6.87,6.9,6.93,6.95,6.98,6.99,7.01,7.01,7.02,7.02,7,7,7.02,7.01,7.01,7,6.98,6.97,6.97,6.97,6.97,6.97,6.97,6.97,6.98,6.98,6.98,6.99,6.99,6.99,6.99,6.99,6.98,6.97,6.97,6.97,6.97,6.99];
+                var dataMiddle = [6.7,6.69,6.67,6.66,6.64,6.63,6.61,6.6,6.59,6.58,6.57,6.56,6.55,6.54,6.54,6.53,6.53,6.53,6.52,6.53,6.53,6.54,6.55,6.56,6.58,6.59,6.61,6.62,6.64,6.65,6.67,6.68,6.7,6.72,6.73,6.75,6.77,6.78,6.81,6.82,6.84,6.85,6.86,6.87,6.88,6.89,6.89,6.89,6.89,6.89,6.89,6.89,6.89,6.9,6.9,6.9,6.91,6.91,6.91,6.91,6.9,6.91,6.9,6.9,6.9,6.89];
+                var dataLower = [6.51,6.48,6.45,6.42,6.4,6.38,6.37,6.37,6.38,6.38,6.39,6.4,6.43,6.43,6.44,6.44,6.45,6.45,6.45,6.44,6.42,6.42,6.42,6.43,6.44,6.44,6.42,6.41,6.4,6.4,6.4,6.41,6.42,6.44,6.46,6.49,6.52,6.54,6.61,6.65,6.66,6.68,6.71,6.75,6.77,6.8,6.81,6.81,6.81,6.81,6.81,6.81,6.81,6.81,6.82,6.82,6.82,6.82,6.82,6.82,6.83,6.84,6.84,6.83,6.83,6.79];
+
+                dataUpper = dataUpper.map(function (value, index) {
+                    return value - dataMiddle[index];
+                });
+                dataMiddle = dataMiddle.map(function (value, index) {
+                    return value - dataLower[index];
+                });
+
+                var option = {
+                    "series": [
+                        {
+                            "smooth": true,
+                            "lineStyle": {
+                                "normal": {
+                                    "opacity": 0.5,
+                                    "width": 1
+                                }
+                            },
+                            "name": "range",
+                            "id": "lower",
+                            "stack": "range",
+                            "data": dataLower,
+                            "type": "line",
+                            "showSymbol": false
+                        },
+                        {
+                            "smooth": true,
+                            "lineStyle": {
+                                "normal": {
+                                    "opacity": 0.5,
+                                    "width": 1
+                                }
+                            },
+                            "name": "range",
+                            "id": "middle",
+                            "stack": "range",
+                            "data": dataMiddle,
+                            "areaStyle": {
+                                "normal": {
+                                    "color": "rgba(102, 202, 196, .3)"
+                                }
+                            },
+                            "type": "line",
+                            "showSymbol": false
+                        },
+                        {
+                            "smooth": true,
+                            "lineStyle": {
+                                "normal": {
+                                    "opacity": 0.5,
+                                    "width": 1
+                                }
+                            },
+                            "name": "range",
+                            "id": "upper",
+                            "stack": "range",
+                            "data": dataUpper,
+                            "areaStyle": {
+                                "normal": {
+                                    "color": "rgba(102, 202, 196, .3)"
+                                }
+                            },
+                            "type": "line",
+                            "showSymbol": false
+                        }
+                    ],
+                    "tooltip": {
+                        "trigger": "axis"
+                    },
+                    "grid": [
+                        {
+                            "containLabel": false,
+                            "show": false
+                        }
+                    ],
+                    "xAxis": [
+                        {
+                            "type": "category",
+                            "boundaryGap": true,
+                            "max": "dataMax",
+                            "axisLabel": {
+                                "show": false
+                            },
+                            "axisLine": {
+                                "show": false
+                            },
+                            "axisTick": {
+                                "show": false
+                            },
+                            "splitLine": {
+                                "show": true,
+                                "lineStyle": {
+                                    "color": "#edeff2"
+                                }
+                            },
+                            "data": xAxisData
+                        }
+                    ],
+                    "yAxis": [
+                        {
+                            "scale": true,
+                            "boundaryGap": [
+                                "5%",
+                                "5%"
+                            ],
+                            "splitArea": {
+                                "show": false
+                            },
+                            "axisLabel": {
+                                "color": "#32325d",
+                                "fontFamily": "rubiklight",
+                                "fontSize": 14,
+                                "showMinLabel": false,
+                                "showMaxLabel": false
+                            },
+                            "axisLine": {
+                                "lineStyle": {
+                                    "color": "#32325d"
+                                }
+                            },
+                            "splitLine": {
+                                "lineStyle": {
+                                    "color": "#edeff2"
+                                }
+                            },
+                            "position": "right"
+                        }
+                    ],
+                    "axisPointer": {
+                        "link": {
+                            "xAxis": "all"
+                        },
+                        "lineStyle": {
+                            "color": "#c3c6c9",
+                            "type": "dotted"
+                        }
+                    }
+                };
+
+
+                testHelper.create(echarts, 'main1', {
+                    title: 'yAxis extent should not contain 0 (should about [5, 8])',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require(['echarts'], function (echarts) {
+
+                var data = [
+                    [["2016-10-4",44],["2016-10-5",54],["2016-10-6",47],["2016-10-7",37],["2016-10-8",36],["2016-10-9",30],["2016-10-10",20],["2016-10-11",21],["2016-10-12",29]],
+                    [["2016-10-4",28],["2016-10-5",38],["2016-10-6",44],["2016-10-7",40],["2016-10-8",42],["2016-10-9",39],["2016-10-10",46],["2016-10-11",50],["2016-10-12",46]]
+                ];
+
+                var option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        triggerOn: 'none',
+                        position: function (pt) {
+                            return [pt[0], 130];
+                        }
+                    },
+                    toolbox: {
+                        left: 'center',
+                        itemSize: 25,
+                        top: 55,
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            restore: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'time',
+                        axisPointer: {
+                            value: '2016-10-7',
+                            snap: true,
+                            lineStyle: {
+                                color: '#004E52',
+                                opacity: 0.5,
+                                width: 2
+                            },
+                            label: {
+                                show: true,
+                                formatter: function (params) {
+                                    return echarts.format.formatTime('yyyy-MM-dd', params.value);
+                                },
+                                backgroundColor: '#004E52'
+                            },
+                            handle: {
+                                show: true,
+                                color: '#004E52'
+                            }
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisTick: {
+                            inside: true
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        axisLabel: {
+                            inside: true,
+                            formatter: '{value}\n'
+                        },
+                        z: 10
+                    },
+                    grid: {
+                        top: 110,
+                        left: 15,
+                        right: 15,
+                        height: 160
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        throttle: 50
+                    }],
+                    series: [
+                        {
+                            name:'line1',
+                            type:'line',
+                            smooth: true,
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            sampling: 'average',
+                            itemStyle: {
+                                normal: {
+                                    color: '#8ec6ad'
+                                }
+                            },
+                            stack: 'a',
+                            areaStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#8ec6ad'
+                                    }, {
+                                        offset: 1,
+                                        color: '#ffe'
+                                    }])
+                                }
+                            },
+                            data: data[0]
+                        },
+                        {
+                            name:'line2',
+                            type:'line',
+                            smooth:true,
+                            stack: 'a',
+                            symbol: 'circle',
+                            symbolSize: 5,
+                            sampling: 'average',
+                            itemStyle: {
+                                normal: {
+                                    color: '#d68262'
+                                }
+                            },
+                            areaStyle: {
+                                normal: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: '#d68262'
+                                    }, {
+                                        offset: 1,
+                                        color: '#ffe'
+                                    }])
+                                }
+                            },
+                            data: data[1]
+                        }
+
+                    ]
+                };
+
+                testHelper.create(echarts, 'main2', {
+                    title: 'Stack on time axis (byIndex)',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+    </body>
+</html>

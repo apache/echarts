@@ -1,124 +1,135 @@
-define(function(require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    'use strict';
 
-    var List = require('../../data/List');
-    var completeDimensions = require('../../data/helper/completeDimensions');
-    var WhiskerBoxDraw = require('../helper/WhiskerBoxDraw');
-    var zrUtil = require('zrender/core/util');
+import createListSimply from '../helper/createListSimply';
+import * as zrUtil from 'zrender/src/core/util';
+import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
+import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
 
-    var seriesModelMixin = {
+export var seriesModelMixin = {
 
-        /**
-         * @private
-         * @type {string}
-         */
-        _baseAxisDim: null,
+    /**
+     * @private
+     * @type {string}
+     */
+    _baseAxisDim: null,
 
-        /**
-         * @override
-         */
-        getInitialData: function (option, ecModel) {
-            // When both types of xAxis and yAxis are 'value', layout is
-            // needed to be specified by user. Otherwise, layout can be
-            // judged by which axis is category.
+    /**
+     * @override
+     */
+    getInitialData: function (option, ecModel) {
+        // When both types of xAxis and yAxis are 'value', layout is
+        // needed to be specified by user. Otherwise, layout can be
+        // judged by which axis is category.
 
-            var categories;
+        var ordinalMeta;
 
-            var xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex'));
-            var yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex'));
-            var xAxisType = xAxisModel.get('type');
-            var yAxisType = yAxisModel.get('type');
-            var addOrdinal;
+        var xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex'));
+        var yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex'));
+        var xAxisType = xAxisModel.get('type');
+        var yAxisType = yAxisModel.get('type');
+        var addOrdinal;
 
-            // FIXME
-            // 考虑时间轴
+        // FIXME
+        // Consider time axis.
 
-            if (xAxisType === 'category') {
-                option.layout = 'horizontal';
-                categories = xAxisModel.getCategories();
-                addOrdinal = true;
-            }
-            else if (yAxisType  === 'category') {
-                option.layout = 'vertical';
-                categories = yAxisModel.getCategories();
-                addOrdinal = true;
-            }
-            else {
-                option.layout = option.layout || 'horizontal';
-            }
-
-            var coordDims = ['x', 'y'];
-            var baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
-            var baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
-            var otherAxisDim = coordDims[1 - baseAxisDimIndex];
-            var data = option.data;
-
-            addOrdinal && zrUtil.each(data, function (item, index) {
-                zrUtil.isArray(item) && item.unshift(index);
-            });
-
-            var defaultValueDimensions = this.defaultValueDimensions;
-            var dimensions = [{
-                name: baseAxisDim,
-                otherDims: {
-                    tooltip: false
-                },
-                dimsDef: ['base']
-            }, {
-                name: otherAxisDim,
-                dimsDef: defaultValueDimensions.slice()
-            }];
-
-            dimensions = completeDimensions(dimensions, data, {
-                encodeDef: this.get('encode'),
-                dimsDef: this.get('dimensions'),
-                // Consider empty data entry.
-                dimCount: defaultValueDimensions.length + 1
-            });
-
-            var list = new List(dimensions, this);
-            list.initData(data, categories ? categories.slice() : null);
-
-            return list;
-        },
-
-        /**
-         * If horizontal, base axis is x, otherwise y.
-         * @override
-         */
-        getBaseAxis: function () {
-            var dim = this._baseAxisDim;
-            return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
+        if (xAxisType === 'category') {
+            option.layout = 'horizontal';
+            ordinalMeta = xAxisModel.getOrdinalMeta();
+            addOrdinal = true;
+        }
+        else if (yAxisType === 'category') {
+            option.layout = 'vertical';
+            ordinalMeta = yAxisModel.getOrdinalMeta();
+            addOrdinal = true;
+        }
+        else {
+            option.layout = option.layout || 'horizontal';
         }
 
-    };
+        var coordDims = ['x', 'y'];
+        var baseAxisDimIndex = option.layout === 'horizontal' ? 0 : 1;
+        var baseAxisDim = this._baseAxisDim = coordDims[baseAxisDimIndex];
+        var otherAxisDim = coordDims[1 - baseAxisDimIndex];
+        var axisModels = [xAxisModel, yAxisModel];
+        var baseAxisType = axisModels[baseAxisDimIndex].get('type');
+        var otherAxisType = axisModels[1 - baseAxisDimIndex].get('type');
+        var data = option.data;
 
-    var viewMixin = {
-
-        init: function () {
-            /**
-             * Old data.
-             * @private
-             * @type {module:echarts/chart/helper/WhiskerBoxDraw}
-             */
-            var whiskerBoxDraw = this._whiskerBoxDraw = new WhiskerBoxDraw(
-                this.getStyleUpdater()
-            );
-            this.group.add(whiskerBoxDraw.group);
-        },
-
-        render: function (seriesModel, ecModel, api) {
-            this._whiskerBoxDraw.updateData(seriesModel.getData());
-        },
-
-        remove: function (ecModel) {
-            this._whiskerBoxDraw.remove();
+        // ??? FIXME make a stage to perform data transfrom.
+        // MUST create a new data, consider setOption({}) again.
+        if (data && addOrdinal) {
+            var newOptionData = [];
+            zrUtil.each(data, function (item, index) {
+                var newItem;
+                if (item.value && zrUtil.isArray(item.value)) {
+                    newItem = item.value.slice();
+                    item.value.unshift(index);
+                }
+                else if (zrUtil.isArray(item)) {
+                    newItem = item.slice();
+                    item.unshift(index);
+                }
+                else {
+                    newItem = item;
+                }
+                newOptionData.push(newItem);
+            });
+            option.data = newOptionData;
         }
-    };
 
-    return {
-        seriesModelMixin: seriesModelMixin,
-        viewMixin: viewMixin
-    };
-});
+        var defaultValueDimensions = this.defaultValueDimensions;
+        var coordDimensions = [{
+            name: baseAxisDim,
+            type: getDimensionTypeByAxis(baseAxisType),
+            ordinalMeta: ordinalMeta,
+            otherDims: {
+                tooltip: false,
+                itemName: 0
+            },
+            dimsDef: ['base']
+        }, {
+            name: otherAxisDim,
+            type: getDimensionTypeByAxis(otherAxisType),
+            dimsDef: defaultValueDimensions.slice()
+        }];
+
+        return createListSimply(
+            this,
+            {
+                coordDimensions: coordDimensions,
+                dimensionsCount: defaultValueDimensions.length + 1,
+                encodeDefaulter: zrUtil.curry(
+                    makeSeriesEncodeForAxisCoordSys, coordDimensions, this
+                )
+            }
+        );
+    },
+
+    /**
+     * If horizontal, base axis is x, otherwise y.
+     * @override
+     */
+    getBaseAxis: function () {
+        var dim = this._baseAxisDim;
+        return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
+    }
+
+};

@@ -1,23 +1,38 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    var zrUtil = require('zrender/core/util');
-    var echarts = require('../echarts');
 
-    // Must use radar component
-    require('../component/radar');
+import * as echarts from '../echarts';
 
-    require('./radar/RadarSeries');
-    require('./radar/RadarView');
+// Must use radar component
+import '../component/radar';
+import './radar/RadarSeries';
+import './radar/RadarView';
 
-    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'radar'));
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'radar', 'circle', null
-    ));
-    echarts.registerLayout(require('./radar/radarLayout'));
+import dataColor from '../visual/dataColor';
+import visualSymbol from '../visual/symbol';
+import radarLayout from './radar/radarLayout';
+import dataFilter from '../processor/dataFilter';
+import backwardCompat from './radar/backwardCompat';
 
-    echarts.registerProcessor(
-        zrUtil.curry(require('../processor/dataFilter'), 'radar')
-    );
-
-    echarts.registerPreprocessor(require('./radar/backwardCompat'));
-});
+echarts.registerVisual(dataColor('radar'));
+echarts.registerVisual(visualSymbol('radar', 'circle'));
+echarts.registerLayout(radarLayout);
+echarts.registerProcessor(dataFilter('radar'));
+echarts.registerPreprocessor(backwardCompat);

@@ -1,106 +1,118 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 // Compatitable with 2.0
-define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
-    var compatStyle = require('./helper/compatStyle');
+import {each, isArray, isObject} from 'zrender/src/core/util';
+import compatStyle from './helper/compatStyle';
+import {normalizeToArray} from '../util/model';
 
-    function get(opt, path) {
-        path = path.split(',');
-        var obj = opt;
-        for (var i = 0; i < path.length; i++) {
-            obj = obj && obj[path[i]];
-            if (obj == null) {
-                break;
-            }
-        }
-        return obj;
-    }
-
-    function set(opt, path, val, overwrite) {
-        path = path.split(',');
-        var obj = opt;
-        var key;
-        for (var i = 0; i < path.length - 1; i++) {
-            key = path[i];
-            if (obj[key] == null) {
-                obj[key] = {};
-            }
-            obj = obj[key];
-        }
-        if (overwrite || obj[path[i]] == null) {
-            obj[path[i]] = val;
+function get(opt, path) {
+    path = path.split(',');
+    var obj = opt;
+    for (var i = 0; i < path.length; i++) {
+        obj = obj && obj[path[i]];
+        if (obj == null) {
+            break;
         }
     }
+    return obj;
+}
 
-    function compatLayoutProperties(option) {
-        each(LAYOUT_PROPERTIES, function (prop) {
-            if (prop[0] in option && !(prop[1] in option)) {
-                option[prop[1]] = option[prop[0]];
-            }
-        });
+function set(opt, path, val, overwrite) {
+    path = path.split(',');
+    var obj = opt;
+    var key;
+    for (var i = 0; i < path.length - 1; i++) {
+        key = path[i];
+        if (obj[key] == null) {
+            obj[key] = {};
+        }
+        obj = obj[key];
     }
+    if (overwrite || obj[path[i]] == null) {
+        obj[path[i]] = val;
+    }
+}
 
-    var LAYOUT_PROPERTIES = [
-        ['x', 'left'], ['y', 'top'], ['x2', 'right'], ['y2', 'bottom']
-    ];
+function compatLayoutProperties(option) {
+    each(LAYOUT_PROPERTIES, function (prop) {
+        if (prop[0] in option && !(prop[1] in option)) {
+            option[prop[1]] = option[prop[0]];
+        }
+    });
+}
 
-    var COMPATITABLE_COMPONENTS = [
-        'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
-    ];
+var LAYOUT_PROPERTIES = [
+    ['x', 'left'], ['y', 'top'], ['x2', 'right'], ['y2', 'bottom']
+];
 
-    var COMPATITABLE_SERIES = [
-        'bar', 'boxplot', 'candlestick', 'chord', 'effectScatter',
-        'funnel', 'gauge', 'lines', 'graph', 'heatmap', 'line', 'map', 'parallel',
-        'pie', 'radar', 'sankey', 'scatter', 'treemap'
-    ];
+var COMPATITABLE_COMPONENTS = [
+    'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
+];
 
-    var each = zrUtil.each;
+export default function (option, isTheme) {
+    compatStyle(option, isTheme);
 
-    return function (option) {
-        compatStyle(option);
+    // Make sure series array for model initialization.
+    option.series = normalizeToArray(option.series);
 
-        var series = option.series;
-        each(zrUtil.isArray(series) ? series : [series], function (seriesOpt) {
-            if (!zrUtil.isObject(seriesOpt)) {
-                return;
-            }
-
-            var seriesType = seriesOpt.type;
-
-            if (seriesType === 'pie' || seriesType === 'gauge') {
-                if (seriesOpt.clockWise != null) {
-                    seriesOpt.clockwise = seriesOpt.clockWise;
-                }
-            }
-            if (seriesType === 'gauge') {
-                var pointerColor = get(seriesOpt, 'pointer.color');
-                pointerColor != null
-                    && set(seriesOpt, 'itemStyle.normal.color', pointerColor);
-            }
-
-            for (var i = 0; i < COMPATITABLE_SERIES.length; i++) {
-                if (COMPATITABLE_SERIES[i] === seriesOpt.type) {
-                    compatLayoutProperties(seriesOpt);
-                    break;
-                }
-            }
-        });
-
-        // dataRange has changed to visualMap
-        if (option.dataRange) {
-            option.visualMap = option.dataRange;
+    each(option.series, function (seriesOpt) {
+        if (!isObject(seriesOpt)) {
+            return;
         }
 
-        each(COMPATITABLE_COMPONENTS, function (componentName) {
-            var options = option[componentName];
-            if (options) {
-                if (!zrUtil.isArray(options)) {
-                    options = [options];
-                }
-                each(options, function (option) {
-                    compatLayoutProperties(option);
-                });
+        var seriesType = seriesOpt.type;
+
+        if (seriesType === 'line') {
+            if (seriesOpt.clipOverflow != null) {
+                seriesOpt.clip = seriesOpt.clipOverflow;
             }
-        });
-    };
-});
+        }
+        else if (seriesType === 'pie' || seriesType === 'gauge') {
+            if (seriesOpt.clockWise != null) {
+                seriesOpt.clockwise = seriesOpt.clockWise;
+            }
+        }
+        else if (seriesType === 'gauge') {
+            var pointerColor = get(seriesOpt, 'pointer.color');
+            pointerColor != null
+                && set(seriesOpt, 'itemStyle.color', pointerColor);
+        }
+
+        compatLayoutProperties(seriesOpt);
+    });
+
+    // dataRange has changed to visualMap
+    if (option.dataRange) {
+        option.visualMap = option.dataRange;
+    }
+
+    each(COMPATITABLE_COMPONENTS, function (componentName) {
+        var options = option[componentName];
+        if (options) {
+            if (!isArray(options)) {
+                options = [options];
+            }
+            each(options, function (option) {
+                compatLayoutProperties(option);
+            });
+        }
+    });
+}

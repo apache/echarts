@@ -1,40 +1,57 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    return require('./MarkerModel').extend({
+import MarkerModel from './MarkerModel';
 
-        type: 'markLine',
+export default MarkerModel.extend({
 
-        defaultOption: {
-            zlevel: 0,
-            z: 5,
+    type: 'markLine',
 
-            symbol: ['circle', 'arrow'],
-            symbolSize: [8, 16],
+    defaultOption: {
+        zlevel: 0,
+        z: 5,
 
-            //symbolRotate: 0,
+        symbol: ['circle', 'arrow'],
+        symbolSize: [8, 16],
 
-            precision: 2,
-            tooltip: {
-                trigger: 'item'
-            },
+        //symbolRotate: 0,
+
+        precision: 2,
+        tooltip: {
+            trigger: 'item'
+        },
+        label: {
+            show: true,
+            position: 'end',
+            distance: 5
+        },
+        lineStyle: {
+            type: 'dashed'
+        },
+        emphasis: {
             label: {
-                normal: {
-                    show: true,
-                    position: 'end'
-                },
-                emphasis: {
-                    show: true
-                }
+                show: true
             },
             lineStyle: {
-                normal: {
-                    type: 'dashed'
-                },
-                emphasis: {
-                    width: 3
-                }
-            },
-            animationEasing: 'linear'
-        }
-    });
+                width: 3
+            }
+        },
+        animationEasing: 'linear'
+    }
 });

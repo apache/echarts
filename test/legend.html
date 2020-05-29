@@ -1,0 +1,1174 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 300px;
+            }
+        </style>
+
+        <div class="chart" id="plain"></div>
+        <h1>No scroll, width 300, right: 10</h1>
+        <div class="chart" id="plain2"></div>
+        <h1>No scroll, has '\n' after 'line3', bottom: 20</h1>
+        <div class="chart" id="plain3"></div>
+        <h1>No scroll, vertical, has '\n' after 'line3', right 20</h1>
+        <div class="chart" id="plain-v"></div>
+        <h1>No scroll, vertical, top 'middle', left: 20, heigth: 150</h1>
+        <div class="chart" id="plain-v2"></div>
+        <h1>Scroll</h1>
+        <div class="chart" id="scroll"></div>
+         <h1>Scroll auto: try to change window size (width: 80%, right: 30)</h1>
+        <div class="chart" id="scroll-auto"></div>
+        <h1>Scroll auto: left: 30, right: 30, bottom: 0, position: 'start'</h1>
+        <div class="chart" id="scroll-lr"></div>
+        <h1>Scroll vertically</h1>
+        <div class="chart" id="scroll-v"></div>
+        <h1>Scroll vertically, left: 10, top: 'center', position: 'start', height: 50% (Turn the second page and resize it until page button disappear)</h1>
+        <div class="chart" id="scroll-v2"></div>
+
+        <div id="legendHoverLink"></div>
+        <div id="multi-pie"></div>
+        <div id="icon-circle"></div>
+        <div id="only-single-item"></div>
+        <div id="vary-size"></div>
+        <div id="index-to-no-name"></div>
+
+        <script>
+
+            function makeSeries(seriesCount, categoryCount) {
+                var series = [];
+                var legendData = [];
+                var xAxisData = [];
+
+                for (var j = 0; j < categoryCount; j++) {
+                    xAxisData.push('category' + j);
+                }
+
+                for (var i = 0; i < seriesCount; i++) {
+                    var data = [];
+                    for (var j = 0; j < categoryCount; j++) {
+                        data.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    var seriesName = 'line' + i;
+                    series.push({
+                        name: seriesName,
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data,
+                        step: 'end'
+                    });
+                    legendData.push(seriesName);
+                }
+
+                return {
+                    series: series,
+                    legendData: legendData,
+                    xAxisData: xAxisData
+                }
+            }
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(5, 3);
+
+                var option = {
+                    legend: {
+                        selector: true,
+                        selectorLabel: {
+                            color: 'yellow',
+                            borderColor: 'green',
+                            backgroundColor: 'blue'
+                        },
+                        emphasis: {
+                            selectorLabel: {
+                                backgroundColor: 'red'
+                            }
+                        },
+                        data: seriesInfo.legendData,
+                        // backgroundColor: 'rgba(0,100,50,0.2)'
+                    },
+                    tooltip: {
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.create(echarts, 'plain', {
+                    title: [
+                        'No scroll, left not set (should be center)',
+                        'color: yellow, borderColor: green, backgroundColor: blue, emphasis backgroundColor: red'
+                    ],
+                    option: option
+                });
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(10, 3);
+
+                var option = {
+                    legend: {
+                        right: 10,
+                        width: 300,
+                        selector: true,
+                        data: seriesInfo.legendData,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        top: 100,
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'plain2', option);
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(10, 3);
+                seriesInfo.legendData.splice(4, 0, '\n');
+
+                var option = {
+                    legend: {
+                        bottom: 20,
+                        selector: true,
+                        data: seriesInfo.legendData,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        bottom: 100
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'plain3', option);
+            })
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(20, 3);
+                seriesInfo.legendData.splice(4, 0, '\n');
+
+                var option = {
+                    legend: {
+                        orient: 'vertical',
+                        right: 20,
+                        selector: true,
+                        data: seriesInfo.legendData,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        right: 240
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'plain-v', option);
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(20, 3);
+
+                var option = {
+                    legend: {
+                        orient: 'vertical',
+                        left: 20,
+                        top: 'center',
+                        selector: true,
+                        height: 150,
+                        data: seriesInfo.legendData,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 280
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'plain-v2', option);
+            })
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legendScroll',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(50, 3);
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        selector: true,
+                        data: seriesInfo.legendData,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    }, {
+                        type: 'scroll',
+                        bottom: 0,
+                        selector: true,
+                        data: seriesInfo.legendData,
+                        backgroundColor: 'rgba(0,100,50,0.2)',
+                        pageButtonPosition: 'start'
+                    }],
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 280
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'scroll', option, {draggable: true});
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legendScroll',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(5, 3);
+
+                var option = {
+                    legend: {
+                        type: 'scroll',
+                        width: '80%',
+                        right: 30,
+                        selector: true,
+                        data: seriesInfo.legendData,
+                        pageIconSize: 50,
+                        pageIconColor: 'red',
+                        pageIconInactiveColor: 'green',
+                        backgroundColor: 'rgba(0,100,50,0.2)',
+                        pageTextStyle: {
+                            color: 'yellow',
+                            fontSize: 22
+                        }
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 280
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'scroll-auto', option, {draggable: true, width: 400});
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legendScroll',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(55, 3);
+
+                var option = {
+                    legend: {
+                        type: 'scroll',
+                        bottom: 0,
+                        right: 30,
+                        left: 30,
+                        data: seriesInfo.legendData,
+                        selector: true,
+                        pageIconSize: 5,
+                        pageIconColor: 'red',
+                        pageIconInactiveColor: 'green',
+                        backgroundColor: 'rgba(0,100,50,0.2)',
+                        pageButtonPosition: 'start',
+                        pageButtonGap: 20,
+                        pageTextStyle: {
+                            fontSize: 9
+                        }
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 280
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'scroll-lr', option, {draggable: true, width: 400});
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legendScroll',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(55, 3);
+
+                var option = {
+                    legend: {
+                        type: 'scroll',
+                        orient: 'vertical',
+                        selector: true,
+                        bottom: 0,
+                        right: 30,
+                        data: seriesInfo.legendData
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        right: 180
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'scroll-v', option, {draggable: true, width: 400});
+            })
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legendScroll',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoomInside',
+                // 'zrender/svg/svg'
+            ], function (echarts) {
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var seriesInfo = makeSeries(5, 3);
+
+                var option = {
+                    legend: {
+                        type: 'scroll',
+                        orient: 'vertical',
+                        selector: true,
+                        top: 'middle',
+                        left: 10,
+                        height: '50%',
+                        borderColor: '#819356',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        data: seriesInfo.legendData,
+                        pageButtonPosition: 'start'
+                    },
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 180
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    series: seriesInfo.series
+                };
+
+                testHelper.createChart(echarts, 'scroll-v2', option, {draggable: true, width: 400});
+            })
+        </script>
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['AAA']
+                    },
+                    xAxis: {
+                        data: ['A', 'B', 'C']
+                    },
+                    yAxis: {
+                    },
+                    grid: {
+                        right: '50%'
+                    },
+                    series: [
+                        {
+                            name: 'AAA',
+                            type: 'bar',
+                            data: [12, 33, 11]
+                        },
+                        {
+                            name: 'AAA',
+                            type: 'pie',
+                            legendHoverLink: false,
+                            center: ['75%', '50%'],
+                            label: {
+                                show: false,
+                            },
+                            emphasis: {
+                                label: {
+                                    show: true
+                                }
+                            },
+                            data: [
+                                { value: 0, name: 'A' },
+                                { value: 367, name: 'B' },
+                                { value: 20, name: 'C' }
+                            ]
+                        }
+                    ]
+                }
+
+                chart = myChart = testHelper.create(echarts, 'legendHoverLink', {
+                    title: 'legendHoverLink is disabled on pie',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['a', 'b', 'c'],
+                        selector: true
+                    },
+                    series: [
+                        {
+                            name: 'AAA',
+                            type: 'pie',
+                            center: ['75%', '50%'],
+                            radius: '30%',
+                            data: [
+                                {name: 'a', value: 12},
+                                {name: 'b', value: 34},
+                                {name: 'c', value: 56}
+                            ]
+                        },
+                        {
+                            name: 'BBB',
+                            type: 'pie',
+                            center: ['25%', '50%'],
+                            radius: '30%',
+                            data: [
+                                {name: 'a', value: 12},
+                                {name: 'b', value: 34},
+                                {name: 'c', value: 56}
+                            ]
+                        }
+                    ]
+                }
+
+                chart = myChart = testHelper.create(echarts, 'multi-pie', {
+                    title: 'Hover legend, the segments of BOTH pie should be hightlighted',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 30; i++) {
+                    data.push({name: i + '', value: Math.random()});
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        type: 'scroll',
+                        selector: true,
+                        top: 10,
+                        left: 0,
+                        data: echarts.util.map(data, function (item) {
+                            return {
+                                name: item.name,
+                                icon: 'circle'
+                            };
+                        })
+                    },
+                    series: [{
+                        type: 'pie',
+                        data: data
+                    }]
+                };
+
+                testHelper.create(echarts, 'icon-circle', {
+                    title: 'The first icon should not be overflow',
+                    option: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 6; i++) {
+                    data.push({name: i + '哈哈哈嘿嘿嘿', value: Math.random()});
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        type: 'scroll',
+                        top: 10,
+                        left: 50,
+                        width: 105,
+                        data: echarts.util.map(data, function (item) {
+                            return {
+                                name: item.name,
+                                icon: 'circle'
+                            };
+                        })
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: 20,
+                        label: {show: false},
+                        labelLine: {show: false},
+                        data: data
+                    }]
+                };
+
+                testHelper.create(echarts, 'only-single-item', {
+                    title: 'Page up/down should be normal when only single item displayed',
+                    option: option,
+                    draggable: true
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var data = [];
+                for (var i = 0; i < 26; i++) {
+                    var name = '';
+                    var nameNumber = Math.floor(Math.random() * 10);
+                    for (var j = 0; j < nameNumber; j++) {
+                        name += j;
+                    }
+                    data.push({
+                        name: name,
+                        value: Math.random()
+                    });
+                }
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        selector: true,
+                        itemGap: 30,
+                        backgroundColor: 'rgba(0,100,50,0.2)'
+                    }],
+                    tooltip: {
+                    },
+                    grid: {
+                        left: 280
+                    },
+                    series: {
+                        type: 'pie',
+                        label: {show: false},
+                        labelLine: {show: false},
+                        radius: 30,
+                        data: data
+                    }
+                };
+
+                testHelper.create(echarts, 'vary-size', {
+                    option: option,
+                    draggable: true
+                });
+            })
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var seriesInfo = makeSeries(50, 3);
+                var series = seriesInfo.series.slice();
+                series.shift();
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        selector: true,
+                        data: seriesInfo.legendData
+                    }],
+                    tooltip: {
+                    },
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {
+                    },
+                    series: series
+                };
+
+                testHelper.create(echarts, 'index-to-no-name', {
+                    option: option,
+                    title: [
+                        'Pager should be OK when legend 0 (legendData index 0) is not be displayed.',
+                        'should be at **page 1** at the beginning'
+                    ],
+                    draggable: true
+                });
+            })
+        </script>
+
+
+    </body>
+</html>

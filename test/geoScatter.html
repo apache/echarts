@@ -1,8 +1,28 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
     </head>
     <body>
@@ -13,15 +33,16 @@
                 margin: 0;
             }
         </style>
+        新疆 should be yellow. The pattern in the right geo should not be blurred.
         <div id="main"></div>
         <script>
 
             require([
-                'echarts',
+                'echarts'
 
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/geo'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo'
             ], function (echarts) {
 
                 $.get('../map/json/china.json', function (chinaJson) {
@@ -224,7 +245,7 @@
                     ];
 
                     var chart = echarts.init(document.getElementById('main'), null, {
-                        renderer: 'canvas'
+
                     });
 
                     var data = [];
@@ -252,69 +273,67 @@
                         });
                     }
 
-                    chart.setOption({
-                        legend: {
-                            data: ['scatter', 'scatter2']
-                        },
-                        geo: [{
-                            map: 'china',
-                            roam: true,
-                            left: 10,
-                            width: 300,
-                            // zoom: 1.5,
-                            scaleLimit: {
-                                min: 1.5,
-                                max: 2
+                    var pattern = new Image();
+                    pattern.onload = function () {
+                        chart.setOption({
+                            legend: {
+                                data: ['scatter', 'scatter2']
                             },
-                            regions: [{
-                                name: '新疆',
-                                label: {
-                                    normal: {
-                                        show: true
-                                    }
+                            geo: [{
+                                map: 'china',
+                                roam: true,
+                                left: 100,
+                                width: 300,
+                                // zoom: 1.5,
+                                scaleLimit: {
+                                    min: 1.5,
+                                    max: 2
                                 },
+                                regions: [{
+                                    name: '新疆',
+                                    label: {
+                                        normal: {
+                                            formatter: 'asdf',
+                                            show: true,
+                                            offset: [100, 200]
+                                        }
+                                    },
+                                    itemStyle: {
+                                        normal: {
+                                            areaColor: 'yellow'
+                                        }
+                                    }
+                                }]
+                            }, {
+                                map: 'china',
+                                roam: true,
+                                selectedMode: 'single',
+                                left: null,
+                                right: 100,
+                                width: 300,
                                 itemStyle: {
-                                    normal: {
-                                        areaColor: '#aaa'
+                                    repeat: 'repeat',
+                                    areaColor: {
+                                        image: pattern,
+                                        repeat: 'repeat'
                                     }
                                 }
-                            }]
-                        }, {
-                            map: 'china',
-                            roam: true,
-                            selectedMode: 'single',
-                            left: null,
-                            right: 10,
-                            width: 300
-                        }],
-                        tooltip: {
-                            trigger: 'axis',
-                            axisPointer: {
-                                type: 'cross'
-                            }
-                        },
-                        series: [{
-                            coordinateSystem: 'geo',
-                            name: 'scatter',
-                            type: 'scatter',
-                            symbolSize: function (val) {
-                                return val[2] * 20;
+                            }],
+                            tooltip: {
+                                trigger: 'axis',
+                                axisPointer: {
+                                    type: 'cross'
+                                }
                             },
-                            data: data
-                        }, {
-                            coordinateSystem: 'geo',
-                            name: 'scatter2',
-                            type: 'scatter',
-                            symbolSize: function (val) {
-                                return val[2] * 20;
-                            },
-                            data: data2
-                        }]
-                    });
+                            series: []
+                        });
 
-                    chart.on('click', function (param) {
-                        console.log(param);
-                    });
+                        chart.on('click', function (param) {
+                            console.log(param);
+                        });
+                    };
+
+                    pattern.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3Ycb+AAAAQlBMVEX////y8vL19fXS0dLy8fHi4uLc3Nz5+fnx8fHw8PDp6enr6+v39/fa2trl5OXb29v7+vrv7+/19PT08/P09PTX19dlapQUAAAClElEQVR4Xu3cuWrEMBiF0dizT/bt/V81vxuZFGkUBOJydCqDuGBCCAyT78EBgCTHOh/taTnVWdrj66FO313D/7i8/rV83pb77hrOeT0/kK/2dN2Wr+3xeVvuu2u48/Ja52l/utdZ2+PLuU7H3c5hwwAAADiXOm/701Ln0h7fH+v03TXceflY57M93U51bu3x+1Cn767h/ss+lN2HffxueMLfU8PT/Yk0DAAAAPN8O8zwtF/MNOxD2d/DPn43POW/vxgGAAAAZqF1onVi2OtpnQQNa50YBgAAAEkSrRPDWidaJ4a1TgYMa50YBgAAAEkSrRPDWidaJzHDWieGAQAAABCfEZ8xHPt64jMaMeIzhgEAAEAjRnzGsPiM+Ixh8ZkBw+IzhgEAAEAjRnzGsPiM+EzAsPiMYQAAAGASWidaJ4a9ntZJ0LDWiWEAAACQJNE6Max1onViWOtkwLDWiWEAAACQJNE6Max1onUSM6x1YhgAAAAA8RnxGcOxryc+oxEjPmMYAAAANGLEZwyLz4jPGBafGTAsPmMYAAAANGLEZwyLz4jPBAyLzxgGAAAAJqF1onVi2OtpnQQNa50YBgAAAEkSrRPDWidaJ4a1TgYMa50YBgAAAEkSrRPDWidaJzHDWieGAQAAABCfEZ8xHPt64jMaMeIzhgEAAEAjRnzGsPiM+Ixh8ZkBw+IzhgEAAEAjRnzGsPiM+EzAsPiMYQAAAGASWidaJ4a9ntZJ0LDWiWEAAACQJNE6Max1onViWOtkwLDWiWEAAACQJNE6Max1onUSM6x1YhgAAAAA8RnxGcOxryc+oxEjPmMYAAAANGLEZwyLz4jPGBafGTAsPmMYAAAANGLEZwyLz4jPBAyLzxgGAGLOD2dJsYoNf2AgAAAAAElFTkSuQmCC';
                 });
             });
 

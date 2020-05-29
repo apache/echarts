@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <script>
+
+            require([
+                'echarts', 'map/js/china'
+            ], function (echarts) {
+
+                $.getJSON('./data/weibo.json', function (weiboData) {
+
+                    weiboData = weiboData.map(function (serieData, idx) {
+                        var px = serieData[0] / 1000;
+                        var py = serieData[1] / 1000;
+                        var res = [[px, py]];
+
+                        for (var i = 2; i < serieData.length; i += 2) {
+                            var dx = serieData[i] / 1000;
+                            var dy = serieData[i + 1] / 1000;
+                            var x = px + dx;
+                            var y = py + dy;
+                            res.push([x.toFixed(2), y.toFixed(2), 1]);
+
+                            px = x;
+                            py = y;
+                        }
+                        return res;
+                    });
+                    var option = {
+                        backgroundColor: '#404a59',
+                        title : {
+                            text: '微博签到数据点亮中国',
+                            subtext: 'From ThinkGIS',
+                            sublink: 'http://www.thinkgis.cn/public/sina',
+                            left: 'center',
+                            top: 'top',
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        },
+                        tooltip: {},
+                        legend: {
+                            left: 'left',
+                            data: ['强', '中', '弱'],
+                            textStyle: {
+                                color: '#ccc'
+                            }
+                        },
+                        geo: {
+                            map: 'china',
+                            roam: true,
+                            label: {
+                                emphasis: {
+                                    show: false
+                                }
+                            },
+                            itemStyle: {
+                                normal: {
+                                    areaColor: '#323c48',
+                                    borderColor: '#111'
+                                },
+                                emphasis: {
+                                    areaColor: '#2a333d'
+                                }
+                            }
+                        },
+                        series: [{
+                            name: '弱',
+                            type: 'scatter',
+                            coordinateSystem: 'geo',
+                            symbolSize: 1,
+                            large: true,
+                            itemStyle: {
+                                normal: {
+                                    shadowBlur: 2,
+                                    shadowColor: 'rgba(37, 140, 249, 0.8)',
+                                    color: 'rgba(37, 140, 249, 0.8)'
+                                }
+                            },
+                            data: weiboData[0]
+                        }, {
+                            name: '中',
+                            type: 'scatter',
+                            coordinateSystem: 'geo',
+                            symbolSize: 1,
+                            large: true,
+                            itemStyle: {
+                                normal: {
+                                    shadowBlur: 2,
+                                    shadowColor: 'rgba(14, 241, 242, 0.8)',
+                                    color: 'rgba(14, 241, 242, 0.8)'
+                                }
+                            },
+                            data: weiboData[1]
+                        }, {
+                            name: '强',
+                            type: 'scatter',
+                            coordinateSystem: 'geo',
+                            symbolSize: 1,
+                            large: true,
+                            itemStyle: {
+                                normal: {
+                                    shadowBlur: 2,
+                                    shadowColor: 'rgba(255, 255, 255, 0.8)',
+                                    color: 'rgba(255, 255, 255, 0.8)'
+                                }
+                            },
+                            data: weiboData[2]
+                        }]
+                    };
+
+                    testHelper.create(echarts, 'main0', {
+                        option: option,
+                        height: 500
+                    });
+                });
+            });
+
+        </script>
+    </body>
+</html>

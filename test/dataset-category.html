@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: rgb(97, 17, 97);
+            }
+            .test-chart {
+                height: 400px;
+            }
+        </style>
+
+
+        <div id="specify-dimensions"></div>
+        <div id="key-columns"></div>
+        <div id="category-no-encode-two-value-axis"></div>
+        <div id="category-no-axis-data-multi"></div>
+        <div id="category-no-encode-no-axis-data-single"></div>
+        <div id="category-no-encode-has-axis-data"></div>
+        <div id="category"></div>
+        <div id="two-value-axes"></div>
+        <div id="empty-data"></div>
+        <div id="empty-source"></div>
+        <div id="dynamic-category"></div>
+        <div id="dynamic-time"></div>
+        <div id="dimension-but-no-column1"></div>
+        <div id="dimension-but-no-column2"></div>
+        <div id="dimension-but-no-column3"></div>
+
+
+
+
+        <script>
+            var keyColumnsDrink = {
+                'product': ['2012', '2013', '2014', '2015', '2016', '2017'],
+                'Matcha Latte': [41.1, 30.4, 65.1, 53.3, 83.8, 98.7],
+                'Milk Tea': [86.5, 92.1, 85.7, 83.1, 73.4, 55.1],
+                'Cheese Cocoa': [24.1, 67.2, 79.5, 86.4, 65.2, 82.5],
+                'Walnut Brownie': [55.2, 67.1, 69.2, 72.4, 53.9, 39.1]
+            };
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    [21, 120, 220, 150, 320, 820],
+                    [31, 132, 182, 232, 332, 932],
+                    [41, 101, 191, 201, 301, 901],
+                    [51, 134, 234, 154, 334, 934],
+                    [61, 90, 290, 190, 309, 1290],
+                    [71, 230, 330, 330, 330, 1330],
+                    [81, 210, 310, 410, 320, 1320]
+                ];
+
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    grid: {},
+                    xAxis: {},
+                    yAxis: {},
+                    dataZoom: [{}, {type: 'inside'}],
+                    dataset: [{
+                        dimensions: ['G', 'H', 'I', 'Q', 'R'],
+                        // sourceHeader: true,
+                        source: source
+                    }],
+                    series: [
+                        {type:'scatter', label: {show: true, position: 'top', textBorderWidth: 2, textBorderColor: '#fff'}, dimensions: ['cccccccccc', 'ddddddddddd']},
+                        {type:'scatter', label: {show: true, position: 'top', textBorderWidth: 2, textBorderColor: '#fff'}},
+                        {type:'scatter', label: {show: true, position: 'top', textBorderWidth: 2, textBorderColor: '#fff'}, sourceHeader: true}
+                    ]
+                };
+                testHelper.create(echarts, 'specify-dimensions', {
+                    title: 'speify dimensions',
+                    dataTable: source,
+                    option: option,
+                    info: {
+                        dimensions: option.dataset[0].dimensions,
+                        serise: option.series
+                    }
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    grid: {},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    dataset: [{
+                        source: keyColumnsDrink
+                    }],
+                    series: [
+                        {type:'line'},
+                        {type:'line'},
+                        {type:'line'}
+                    ]
+                };
+                testHelper.create(echarts, 'key-columns', {
+                    title: 'category: no encode declared, two value axis',
+                    dataTable: keyColumnsDrink,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    [21, 120, 220, 150, 320, 820],
+                    [21, 132, 182, 232, 332, 932],
+                    [21, 101, 191, 201, 301, 901],
+                    [21, 134, 234, 154, 334, 934],
+                    [21, 90, 290, 190, 309, 1290],
+                    [21, 230, 330, 330, 330, 1330],
+                    [21, 210, 310, 410, 320, 1320]
+                ];
+                var option = {
+                    legend: {
+                        data: ['A', 'B', 'C']
+                    },
+                    tooltip: {trigger: 'axis'},
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    dataset: [{
+                        source: source
+                    }],
+                    series: [
+                        {
+                            name:'A',
+                            type:'line',
+                        },
+                        {
+                            name:'B',
+                            type:'line',
+                        },
+                        {
+                            name:'C',
+                            type:'line',
+                        }
+                    ]
+                };
+                testHelper.create(echarts, 'category-no-encode-two-value-axis', {
+                    title: 'category: no encode declared, two value axis',
+                    option: option,
+                    dataTable: source
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    ['周一', 120, '苹果', 150, 320, 820],
+                    ['周二', 132, '狸猫', 232, 332, 932],
+                    ['周三', 101, '周一', 201, 301, 901],
+                    ['周四', 134, '周八', 154, 334, 934],
+                    ['周五', 90, '周六', 190, 309, 1290],
+                    ['周六', 230, '-', 330, 330, 1330],
+                    ['周日', 210, '周日', 410, 320, 1320]
+                ];
+                var option = {
+                    legend: {
+                        data:[
+                            '{x: 0, y: 1}',
+                            '{x: 2, y: 3}',
+                            '{x: 2, y: 4}',
+                            '{x: 1, y: 2}',
+                            '{x: 2, y: 0}'
+                        ]
+                    },
+                    tooltip: {trigger: 'axis'},
+                    grid: {
+                        bottom: 70
+                    },
+                    xAxis: [{
+                        type: 'category',
+                        boundaryGap: false
+                    }],
+                    dataZoom: {
+                        type: 'slider'
+                    },
+                    yAxis: [{
+                        type: 'value'
+                    }, {
+                        type: 'category'
+                    }],
+                    dataset: [{
+                        source: source
+                    }, {
+                        source: [
+                            [122, '第二个 dataset', 44],
+                            [56, '周六', 10],
+                            [96, '狸猫', 112]
+                        ]
+                    }],
+                    series: [
+                        {
+                            name:'{x: 0, y: 1}',
+                            type:'line',
+                            encode: {x: 0, y: 1}
+                        },
+                        {
+                            name:'{x: 2, y: 3}',
+                            type:'line',
+                            encode: {x: 2, y: 3}
+                        },
+                        {
+                            name:'{x: 2, y: 4}',
+                            type:'line',
+                            encode: {x: 2, y: 4}
+                        },
+                        {
+                            name:'{x: 1, y: 2}',
+                            type:'line',
+                            encode: {x: 1, y: 2},
+                            datasetIndex: 1
+                        },
+                        {
+                            name: '{x: 2, y: 0}',
+                            type: 'scatter',
+                            yAxisIndex: 1,
+                            symbolSize: function (val) {
+                                return val[5] / 30;
+                            },
+                            encode: {x: 2, y: 0}
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'category-no-axis-data-multi', {
+                    title: 'category: no axis.data, multi category',
+                    dataTable: source,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
+                var option = {
+                    legend: {
+                        data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+                    },
+                    tooltip: {trigger: 'axis'},
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: false
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    dataset: {
+                        source: source
+                    },
+                    series: [
+                        {
+                            name:'邮件营销',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'联盟广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'视频广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'直接访问',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {show: true},
+                            areaStyle: {normal: {}}
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'category-no-encode-no-axis-data-single', {
+                    title: 'category: no encode declared, no axis.data, single category',
+                    dataTable: source,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
+                var option = {
+                    legend: {
+                        data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+                    },
+                    tooltip: {trigger: 'axis'},
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: ['周零', '周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    dataset: {
+                        source: source
+                    },
+                    series: [
+                        {
+                            name:'邮件营销',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'联盟广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'视频广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'直接访问',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}}
+                        },
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {show: true},
+                            areaStyle: {normal: {}}
+                        }
+                    ]
+                };
+                testHelper.create(echarts, 'category-no-encode-has-axis-data', {
+                    title: 'category: no encode declared, axis.data given',
+                    dataTable: source,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross',
+                            label: {
+                                backgroundColor: '#6a7985'
+                            }
+                        }
+                    },
+                    legend: {
+                        data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            boundaryGap: false
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    dataset: {
+                        source: source
+                    },
+                    series: [
+                        {
+                            name:'邮件营销',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            encode: {x: 0, y: 1}
+                        },
+                        {
+                            name:'联盟广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            encode: {x: 0, y: 2}
+                        },
+                        {
+                            name:'视频广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            encode: {x: 0, y: 3}
+                        },
+                        {
+                            name:'直接访问',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            encode: {x: 0, y: 4}
+                        },
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
+                            },
+                            areaStyle: {normal: {}},
+                            encode: {x: 0, y: 5}
+                        }
+                    ]
+                };
+                testHelper.create(echarts, 'category', {
+                    title: 'category: encode declared',
+                    dataTable: source,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var source = [
+                    ['周一', 120, 220, 150, 320, 820],
+                    ['周二', 132, 182, 232, 332, 932],
+                    ['周三', 101, 191, 201, 301, 901],
+                    ['周四', 134, 234, 154, 334, 934],
+                    ['周五', 90, 290, 190, 309, 1290],
+                    ['周六', 230, 330, 330, 330, 1330],
+                    ['周日', 210, 310, 410, 320, 1320]
+                ];
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {},
+                    yAxis: {},
+                    grid: {
+                        right: 50,
+                        bottom: 70
+                    },
+                    legend: {
+                        left: 'center',
+                        data: ['A Series', 'B Series']
+                    },
+                    dataZoom: [{
+                        xAxisIndex: 0,
+                        type: 'inside'
+                    }, {
+                        yAxisIndex: 0,
+                        type: 'inside'
+                    }, {
+                        xAxisIndex: 0,
+                        type: 'slider'
+                    }, {
+                        yAxisIndex: 0,
+                        type: 'slider'
+                    }],
+                    dataset: {
+                        source: source
+                    },
+                    series: [
+                        {
+                            name:'A Series',
+                            type:'scatter',
+                            areaStyle: {normal: {}},
+                            encode: {x: 2, y: 1}
+                        },
+                        {
+                            name:'B Series',
+                            type:'scatter',
+                            areaStyle: {normal: {}},
+                            encode: {x: 4, y: 1}
+                        }
+                    ]
+                };
+                testHelper.create(echarts, 'two-value-axes', {
+                    title: 'two value axes (A: {x: 2, y: 1}, B: {x: 4, y: 1})',
+                    dataTable: source,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: [
+                        {
+                            type:'line'
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'empty-data', {
+                    title: 'data and dataset undefined, only axis shown.',
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: [
+                        {
+                            type:'line'
+                        }
+                    ],
+                    dataset: {
+                        source: []
+                    }
+                };
+
+                testHelper.create(echarts, 'empty-source', {
+                    title: 'data.source = [], only axis shown.',
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type:'line', encode: {x: 'date', y: 'Matcha Latte', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Milk Tea', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Cheese Cocoa', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Walnut Brownie', itemId: 'date'}}
+                    ]
+                };
+
+                var baseSource = [
+                    ['date', 'Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
+                    ['2012-03-01', 11.1, 40.4, 65.1, 13.3],
+                    ['2012-03-02', 36.5, 52.1, 85.7, 23.1],
+                    ['2012-03-03', 64.1, 17.2, 99.5, 16.4],
+                    ['2012-03-04', 15.2, 77.1, 29.2, 62.4],
+                    ['2012-03-05', 55.4, 73.1, 49.2, 22.9],
+                    ['2012-03-06', 35.2, 27.1, 24.6, 92.7],
+                    ['2012-03-07', 51.7, 57.1, 89.1, 69.2]
+                ];
+                var lastDate = +echarts.number.parseDate('2012-03-07');
+
+                var chart = testHelper.create(echarts, 'dynamic-category', {
+                    title: 'dynamic-category',
+                    dataTable: keyColumnsDrink,
+                    option: option,
+                    info: baseSource
+                });
+
+                if (chart) {
+                    setInterval(function () {
+                        lastDate += 3600 * 24 * 1000;
+
+                        baseSource.push([
+                            echarts.format.formatTime('yyyy-MM-dd', lastDate),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1)
+                        ]);
+
+                        baseSource.splice(1, 1);
+
+                        chart.setOption({
+                            dataset: {
+                                source: baseSource
+                            }
+                        });
+                    }, 1000);
+                }
+
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {trigger: 'axis'},
+                    xAxis: {type: 'time'},
+                    yAxis: {},
+                    series: [
+                        {type:'line', encode: {x: 'date', y: 'Matcha Latte', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Milk Tea', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Cheese Cocoa', itemId: 'date'}},
+                        {type:'line', encode: {x: 'date', y: 'Walnut Brownie', itemId: 'date'}}
+                    ]
+                };
+
+                var baseSource = [
+                    ['date', 'Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
+                    ['2012-03-01', 11.1, 40.4, 65.1, 13.3],
+                    ['2012-03-02', 36.5, 52.1, 85.7, 23.1],
+                    ['2012-03-03', 64.1, 17.2, 99.5, 16.4],
+                    ['2012-03-04', 15.2, 77.1, 29.2, 62.4],
+                    ['2012-03-05', 55.4, 73.1, 49.2, 22.9],
+                    ['2012-03-06', 35.2, 27.1, 24.6, 92.7],
+                    ['2012-03-07', 51.7, 57.1, 89.1, 69.2]
+                ];
+                var lastDate = +echarts.number.parseDate('2012-03-07');
+
+                var chart = testHelper.create(echarts, 'dynamic-time', {
+                    title: 'dynamic-time',
+                    dataTable: keyColumnsDrink,
+                    option: option,
+                    info: baseSource
+                });
+
+                if (chart) {
+                    setInterval(function () {
+                        lastDate += 3600 * 24 * 1000;
+
+                        baseSource.push([
+                            echarts.format.formatTime('yyyy-MM-dd', lastDate),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1),
+                            +(Math.random() * 100).toFixed(1)
+                        ]);
+
+                        baseSource.splice(1, 1);
+
+                        chart.setOption({
+                            dataset: {
+                                source: baseSource
+                            }
+                        });
+                    }, 1000);
+                }
+
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        dimensions: ['product', '2015', '2016', '2017'],
+                        source: [
+                            {product: 'Matcha Latte', '2015': 43.3, '2016': 85.8},
+                            {product: 'Milk Tea', '2015': 83.1, '2016': 73.4},
+                            {product: 'Cheese Cocoa', '2015': 86.4, '2016': 65.2},
+                            {product: 'Walnut Brownie', '2015': 72.4, '2016': 53.9}
+                        ]
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'dimension-but-no-column1', {
+                    title: '[obejct array] No 2017, but chart should be rendered',
+                    dataTable: option.dataset.source,
+                    option: option,
+                    info: option.dataset.dimensions,
+                    infoKey: 'dimensions'
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        dimensions: ['product', '2015', '2016', '2017'],
+                        source: [
+                            ['Matcha Latte', 43.3, 85.8],
+                            ['Milk Tea', 83.1, 73.4],
+                            ['Cheese Cocoa', 86.4, 65.2],
+                            ['Walnut Brownie', 72.4, 53.9]
+                        ]
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'dimension-but-no-column2', {
+                    title: '[2d-array] No 2017, but chart should be rendered',
+                    dataTable: option.dataset.source,
+                    option: option,
+                    info: option.dataset.dimensions,
+                    infoKey: 'dimensions'
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    dataset: {
+                        dimensions: ['product', '2015', '2016', '2017'],
+                        source: {
+                            'product': ['Matcha Latte', 'Milk Tea', 'Cheese Cocoa', 'Walnut Brownie'],
+                            '2015': [43.3, 83.1, 86.4, 72.4],
+                            '2016': [85.8, 73.4, 65.2, 53.9]
+                        }
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: [
+                        {type: 'bar'},
+                        {type: 'bar'}
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'dimension-but-no-column3', {
+                    title: '[key columns] No 2017, but chart should be rendered',
+                    dataTable: option.dataset.source,
+                    option: option,
+                    info: option.dataset.dimensions,
+                    infoKey: 'dimensions'
+                });
+            });
+        </script>
+
+
+
+    </body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var data = [[10, 300], [10, 600]];
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    tooltip: {
+                        position: function (point, params, dom, rect, size) {
+                            return [rect.x, rect.y];
+                        },
+                        extraCssText: 'width: 60px; height: 60px;'
+                    },
+                    series: [{
+                        id: 'scatter',
+                        type: 'scatter',
+                        symbol: 'rect',
+                        symbolSize: 50,
+                        emphasis: {
+                            itemStyle: {
+                                color: 'green'
+                            }
+                        },
+                        data: data
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Tooltip should be event disalbed:',
+                        '(1) When hovering on the symbol',
+                        'tooltip is shown on the symbol;',
+                        'the symbol should keep green, but not return to red.',
+                        '(2) Enable moving the symbol without tooltip effection',
+                        '(3) click "set tooltip enterable, button in tooltip should be clickable'
+                    ],
+                    option: option,
+                    button: {
+                        text: 'set tooltip enterable',
+                        onclick: function () {
+                            chart.setOption({
+                                tooltip: {
+                                    formatter: function () {
+                                        return [
+                                            '<button onclick="console.log(\'click\');">click me</button>'
+                                        ].join('');
+                                    },
+                                    enterable: true
+                                }
+                            });
+                        }
+                    }
+                });
+
+                if (chart) {
+                    var zr = chart.getZr();
+                    var pointerOffset;
+                    var draggingDataIndex;
+
+                    chart.on('mousedown', function (params) {
+                        if (params.seriesIndex === 0) {
+                            var pointerData = chart.convertFromPixel(
+                                'grid', [params.event.offsetX, params.event.offsetY]
+                            );
+                            draggingDataIndex = params.dataIndex;
+                            pointerOffset = [
+                                params.data[0] - pointerData[0],
+                                params.data[1] - pointerData[1]
+                            ];
+                        }
+                    });
+
+                    zr.on('mousemove', function (params) {
+                        if (draggingDataIndex != null) {
+                            var pointerData = chart.convertFromPixel(
+                                'grid', [params.event.offsetX, params.event.offsetY]
+                            );
+                            data[draggingDataIndex] = [
+                                pointerData[0] + pointerOffset[0],
+                                pointerData[1] + pointerOffset[1]
+                            ];
+                            chart.setOption({
+                                series: {
+                                    id: 'scatter',
+                                    data: data
+                                },
+                                animationDurationUpdate: 0
+                            });
+                        }
+                    });
+
+                    zr.on('mouseup', function (params) {
+                        draggingDataIndex = null;
+                        chart.setOption({
+                            animationDurationUpdate: 700
+                        });
+                    });
+                }
+            });
+
+        </script>
+    </body>
+</html>

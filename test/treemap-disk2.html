@@ -1,8 +1,29 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
@@ -39,7 +60,17 @@
                 font-size: 16px;
                 margin-bottom: 5px;
             }
+            #btn-area {
+                position: fixed;
+                left: 10px;
+                top: 10px;
+                z-index: 999999;
+                background-color: #fff;
+            }
         </style>
+
+        <div id="btn-area">
+        </div>
 
         <div id="main"></div>
 
@@ -51,19 +82,19 @@
             var formatUtil;
 
             require([
-                'echarts',
-                'echarts/util/format',
-                'echarts/component/tooltip',
-                'echarts/component/legend',
-                'echarts/chart/treemap'
-            ], function (echarts, format) {
-                formatUtil = format;
+                'echarts'
+                // 'echarts/util/format',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/legend',
+                // 'echarts/chart/treemap'
+            ], function (echarts) {
+                formatUtil = echarts.format;
                 initEcharts(echarts);
             });
 
             function initEcharts(echarts) {
                 chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
+
                 });
 
                 chart.setOption({
@@ -93,14 +124,17 @@
                             upperLabel: {
                                 normal: {
                                     show: true,
-                                    height: 30
+                                    height: 30,
+                                    color: 'green'
                                 }
                             },
                             itemStyle: {
                                 normal: {
-                                    borderColor: '#fff'
+                                    // borderColor: '#fff'
                                 },
                                 emphasis: {
+                                    strokeColor: 'yellow',
+                                    strokeWidth: 2
                                 }
                             },
                             levels: [
@@ -122,6 +156,7 @@
                                         '#675bba', '#fec42c', '#dd4444',
                                         '#d4df5a', '#cd4870'
                                     ],
+                                    highDownTarget: 'subtree',
                                     colorMappingBy: 'value',
                                     itemStyle: {
                                         normal: {
@@ -153,6 +188,45 @@
                 chart.on('click', function (params) {
                     console.log(params);
                 });
+
+                initBtns('Only single bg highlighted for non-leaf', [
+                    'Disk Usage',
+                    'PrivateFrameworks'
+                ]);
+                initBtns('Both of the bg and content is highlighted for leaf', [
+                    'Alex.SpeechVoice'
+                ]);
+
+                function initBtns(desc, names) {
+                    var btnArea = document.getElementById('btn-area');
+
+                    var descEl = document.createElement('span');
+                    descEl.innerHTML = testHelper.encodeHTML(desc) + '&nbsp;:&nbsp;&nbsp;';
+                    btnArea.appendChild(descEl);
+
+                    var highDown = ['highlight', 'downplay'];
+
+                    for (var i = 0; i < names.length; i++) {
+                        for (var j = 0; j < highDown.length; j++) {
+                            var highDownName = highDown[j];
+                            var name = names[i];
+                            var btnEl = document.createElement('button');
+                            btnEl.innerHTML = testHelper.encodeHTML(highDownName + ': ' + name);
+                            btnEl.onclick = echarts.util.curry(clickHandler, highDownName, name);
+                            btnArea.appendChild(btnEl);
+                        }
+                    }
+
+                    function clickHandler(highDownName, name) {
+                        chart.dispatchAction({
+                            type: highDownName,
+                            seriesIndex: 0,
+                            name: name
+                        });
+                    }
+
+                    btnArea.appendChild(document.createElement('br'));
+                }
             }
 
         </script>

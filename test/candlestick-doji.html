@@ -1,0 +1,123 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
+
+            /**
+             * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
+             * @see <http://bl.ocks.org/mbostock/4061502>
+             */
+            var chart;
+            var data;
+
+            require([
+                'echarts',
+                'data/security-sh-2013.json'
+                // 'echarts/chart/candlestick',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/line',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip'
+            ], function (echarts, rawData) {
+
+                chart = echarts.init(document.getElementById('main'), null, {
+
+                });
+
+                option = {
+                    title: {
+                        text: "十字星颜色测试，期望值：红、红、红、绿、红、红、红、绿"
+                    },
+                    "xAxis": [{
+                        "type": "category",
+                        "data": ["2017-08-22", "2017-08-23", "2017-08-24", "2017-08-25", "2017-08-28", "2017-08-29", "2017-08-30", "2017-08-31"],
+                        "scale": true,
+                        "boundaryGap": false,
+                        "axisLine": {
+                            "onZero": false,
+                            "lineStyle": {
+                                "color": "#f1f1f1"
+                            }
+                        },
+                        "axisTick": {
+                            "show": false
+                        },
+                        "axisLabel": {
+                            "show": false
+                        },
+                        "axisPointer": {
+                            "z": 100
+                        }
+                    }],
+                    "yAxis": [{
+                    }],
+                    "series": [{
+                        "name": "stock",
+                        "type": "candlestick",
+                        "data": [
+                            [20, 20, 17, 29],
+                            [22.68, 22.68, 22.68, 22.68],
+                            [24.95, 24.95, 20, 28],
+                            [20, 20, 18, 24],
+                            [35, 35, 35, 40],
+                            [36.54, 36.54, 30, 36.54],
+                            [40, 45, 38, 45],
+                            [32, 28, 27, 33]
+                        ],
+                        "itemStyle": {
+                            "normal": {
+                                "color": "#fa6464",
+                                "color0": "#32C896",
+                                "borderColor": "#fa6464",
+                                "borderColor0": "#32C896"
+                            }
+                        },
+                        "markPoint": {
+                            "label": {
+                                "normal": {}
+                            },
+                            "data": []
+                        }
+                    }]
+                };
+                chart.setOption(option);
+            });
+        </script>
+    </body>
+</html>

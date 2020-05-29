@@ -1,8 +1,28 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
     </head>
     <body>
         <style>
@@ -15,12 +35,12 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/toolbox'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -28,6 +48,12 @@
                 var data1 = [];
                 var data2 = [];
                 var data3 = [];
+
+                var names = [
+                    'diamond, red, show inside label only on hover',
+                    'green, show top label only on hover',
+                    'indigo, show inside label on normal'
+                ];
 
                 var random = function (max) {
                     return (Math.random() * max).toFixed(3);
@@ -40,8 +66,11 @@
                 }
 
                 chart.setOption({
+                    aria: {
+                        show: true
+                    },
                     legend: {
-                        data: ['scatter', 'scatter2', 'scatter3']
+                        data: names.slice()
                     },
                     toolbox: {
                         left: 'left',
@@ -73,30 +102,24 @@
                         }
                     },
                     series: [{
-                        name: 'scatter',
+                        name: names[0],
                         type: 'scatter',
                         label: {
                             emphasis: {
                                 show: true
                             }
                         },
-                        // symbol: 'diamond',
+                        symbol: 'diamond',
                         symbolSize: function (val) {
                             return val[2] * 40;
                         },
-                        // itemStyle: {
-                        //     normal: {
-                        //         color: function (params) {
-                        //             return 'rgba(30, 70, 50, ' + params.value[2] + ')';
-                        //         }
-                        //     }
-                        // },
                         data: data1
-                    }, {
-                        name: 'scatter2',
+                    },
+                    {
+                        name: names[1],
                         type: 'scatter',
-                        label: {
-                            emphasis: {
+                        emphasis: {
+                            label: {
                                 show: true,
                                 position: 'top',
                                 formatter: function (params) {
@@ -107,21 +130,18 @@
                         symbolSize: function (val) {
                             return val[2] * 40;
                         },
-                        // itemStyle: {
-                        //     normal: {
-                        //         label: {
-                        //             show: true
-                        //         }
-                        //     }
-                        // },
+                        itemStyle: {
+                            color: function (params) {
+                                return 'rgba(30, 70, 50, ' + (params.value ? params.value[2] : 0) + ')';
+                            }
+                        },
                         data: data2
-                    }, {
-                        name: 'scatter3',
+                    },
+                    {
+                        name: names[2],
                         type: 'scatter',
                         label: {
-                            emphasis: {
-                                show: true
-                            }
+                            show: true
                         },
                         symbolSize: function (val) {
                             return val[2] * 40;

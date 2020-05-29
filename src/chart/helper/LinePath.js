@@ -1,52 +1,74 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * Line path for bezier and straight line draw
  */
-define(function (require) {
-    var graphic = require('../../util/graphic');
-    var vec2 = require('zrender/core/vector');
 
-    var straightLineProto = graphic.Line.prototype;
-    var bezierCurveProto = graphic.BezierCurve.prototype;
+import * as graphic from '../../util/graphic';
+import * as vec2 from 'zrender/src/core/vector';
 
-    function isLine(shape) {
-        return isNaN(+shape.cpx1) || isNaN(+shape.cpy1);
-    }
+var straightLineProto = graphic.Line.prototype;
+var bezierCurveProto = graphic.BezierCurve.prototype;
 
-    return graphic.extendShape({
+function isLine(shape) {
+    return isNaN(+shape.cpx1) || isNaN(+shape.cpy1);
+}
 
-        type: 'ec-line',
+export default graphic.extendShape({
 
-        style: {
-            stroke: '#000',
-            fill: null
-        },
+    type: 'ec-line',
 
-        shape: {
-            x1: 0,
-            y1: 0,
-            x2: 0,
-            y2: 0,
-            percent: 1,
-            cpx1: null,
-            cpy1: null
-        },
+    style: {
+        stroke: '#000',
+        fill: null
+    },
 
-        buildPath: function (ctx, shape) {
-            (isLine(shape) ? straightLineProto : bezierCurveProto).buildPath(ctx, shape);
-        },
+    shape: {
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 0,
+        percent: 1,
+        cpx1: null,
+        cpy1: null
+    },
 
-        pointAt: function (t) {
-            return isLine(this.shape)
-                ? straightLineProto.pointAt.call(this, t)
-                : bezierCurveProto.pointAt.call(this, t);
-        },
+    buildPath: function (ctx, shape) {
+        this[isLine(shape) ? '_buildPathLine' : '_buildPathCurve'](ctx, shape);
+    },
+    _buildPathLine: straightLineProto.buildPath,
+    _buildPathCurve: bezierCurveProto.buildPath,
 
-        tangentAt: function (t) {
-            var shape = this.shape;
-            var p = isLine(shape)
-                ? [shape.x2 - shape.x1, shape.y2 - shape.y1]
-                : bezierCurveProto.tangentAt.call(this, t);
-            return vec2.normalize(p, p);
-        }
-    });
+    pointAt: function (t) {
+        return this[isLine(this.shape) ? '_pointAtLine' : '_pointAtCurve'](t);
+    },
+    _pointAtLine: straightLineProto.pointAt,
+    _pointAtCurve: bezierCurveProto.pointAt,
+
+    tangentAt: function (t) {
+        var shape = this.shape;
+        var p = isLine(shape)
+            ? [shape.x2 - shape.x1, shape.y2 - shape.y1]
+            : this._tangentAtCurve(t);
+        return vec2.normalize(p, p);
+    },
+    _tangentAtCurve: bezierCurveProto.tangentAt
+
 });

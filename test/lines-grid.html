@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            #main {
+                height: 500px;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/lines',
+                // 'echarts/chart/line',
+                // 'echarts/component/grid',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = echarts.color;
+                chart = myChart = echarts.init(document.getElementById('main'));
+
+                var json = {
+                    chart0:{
+                        text: '未来一周气温变化',
+                        subtext: '纯属虚构',
+                        legend: [['最高气温', '最低气温'],['A','B']],
+                        xcategory: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                        high: [11, 11, 15, 13, 12, 13, 10],
+                        highLine: [],
+                        low: [1, -2, 2, 5, 3, 2, 0],
+                        lowLine:[],
+                        avg:[]
+                    }
+                };
+
+                var zrUtil = echarts.util;
+                var zrVector = echarts.vector;
+                var zrMatrix = echarts.matrix;
+                var zrNumber = echarts.number;
+                var zrFormat = echarts.format;
+                var zrGraphic = echarts.graphic;
+
+                zrUtil.each(json.chart0.xcategory, function(item, index){
+                    json.chart0.highLine.push([{coord:[index,json.chart0.high[index]] },{coord:[index+1,json.chart0.high[index+1]]}]);
+                });
+                zrUtil.each(json.chart0.xcategory, function(item, index){
+                    json.chart0.lowLine.push([{coord:[index,json.chart0.low[index]] },{coord:[index+1,json.chart0.low[index+1]]}]);
+                });
+                zrUtil.each(json.chart0.high, function(item, index){
+                    json.chart0.avg.push((json.chart0.low[index] + json.chart0.high[index]) / 2);
+                });
+
+                var option = {
+                    title: {
+                        text: json.chart0.text,
+                        subtext: json.chart0.subtext
+                    },
+                    animationEasing: 'ElasticOut',
+                    legend: [{
+                        data: json.chart0.legend[0]
+                    },{
+                        data: json.chart0.legend[1],
+                        top:15,
+                    }],
+                    calculable: true,
+                    xAxis: [{
+                        type: 'category',
+                        axisLabel:{
+                            formatter:function(value){
+
+                                var sepCount = 1;//每几个字符分隔
+
+                                return value.replace(/(\S{1})(?=[^$])/g, "$1\n\n")
+                            }
+                        },
+                        boundaryGap: false,
+                            data: json.chart0.xcategory
+                        }],
+                    yAxis: [{
+                        type: 'value',
+                        axisLabel: {
+                            formatter: '{value} °C'
+                        }
+                    }],
+                    series: [{
+                        name: '最高气温',
+                        type: 'line',
+                        data: json.chart0.high
+                    }, {
+                        name: '最低气温',
+                        type: 'line',
+                        data: json.chart0.low
+                    },{
+                        name: '平均气温',
+                        type: 'line',
+                        data: json.chart0.avg
+                    },{
+                        name: 'A',
+                        type: 'lines',
+                        coordinateSystem: 'cartesian2d',
+                        zlevel: 2,
+                        effect: {
+                            show: true,
+                            smooth: false,
+                            period: 6,
+                            //trailLength: 0,
+                            //symbol: planePath,
+                            //color:'rgba(55,155,255,0.5)',
+                            symbolSize: 8
+                        },
+                        data: json.chart0.highLine
+                    },{
+                        name: 'B',
+                        type: 'lines',
+                        coordinateSystem: 'cartesian2d',
+                        zlevel: 2,
+                        effect: {
+                            show: true,
+                            smooth: false,
+                            period: 6,
+                            symbolSize: 8
+                        },
+                        data: json.chart0.lowLine
+                    }]
+                };
+
+                chart.setOption(option);
+            });
+
+        </script>
+    </body>
+</html>

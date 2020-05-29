@@ -1,0 +1,869 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 90%;
+                /*border: 1px solid #000;*/
+            }
+        </style>
+        <div id="main"><div>
+        <script>
+            require([
+                'echarts'
+                // 'echarts/chart/sankey',
+                // 'echarts/component/tooltip'
+                ], function (echarts) {
+
+                    var chart = echarts.init(document.getElementById('main'), null, {
+
+                    });
+
+                    window.onresize = function () {
+                        chart.resize();
+                    };
+
+                    chart.on('click', function (params) {
+                        console.log(params, params.data);
+                    });
+
+                    var option = {
+                        "backgroundColor": "#404a59",
+                        "animation": false,
+                        "tooltip": {
+                            "showContent": true,
+                            "borderRadius": 0,
+                            "padding": 4.645544922419401,
+                            "textStyle": {
+                                "fontSize": "10",
+                                "fontWeight": "normal"
+                            }
+                        },
+                        "legend": {
+                            "show": true,
+                            "x": "center",
+                            "y": "bottom",
+                            "padding": 6.194059896559202,
+                            "itemGap": 6.194059896559202,
+                            "data": [
+                                {
+                                    "name": "Number of tourists",
+                                    "icon": "circle"
+                                },
+                                {
+                                    "name": "Overnights",
+                                    "icon": "circle"
+                                }
+                            ],
+                            "itemWidth": 14.6455449224194,
+                            "itemHeight": 13.097029948279602,
+                            "orient": "horizontal",
+                            "textStyle": {
+                                "fontSize": "12",
+                                "fontWeight": "normal"
+                            },
+                            "selectedMode": "single"
+                        },
+                        "title": {
+                            "text": "Foreign tourist inflow – Q1 2016",
+                            "subtext": "",
+                            "sublink": "https://pioneers.io/festival2016/pioneers500/top70/",
+                            "x": "center",
+                            "y": "top",
+                            "textStyle": {
+                                "fontSize": "24",
+                                "fontWeight": "normal"
+                            },
+                            "subtextStyle": {
+                                "fontSize": 13,
+                                "fontWeight": "bold"
+                            }
+                        },
+                        "series": [
+                            {
+                                "name": "Number of tourists",
+                                "type": "sankey",
+                                "top": 100,
+                                "left": 20,
+                                "width": "30%",
+                                "bottom": 50,
+                                "zlevel": 1,
+                                "nodeWidth": 25,
+                                "nodeGap": 11,
+                                "data": [
+                                    {
+                                        "name": " Hungary",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "1850000"
+                                    },
+                                    {
+                                        "name": "Romania",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "1850000"
+                                    },
+                                    {
+                                        "name": " Macedonia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "1167000"
+                                    },
+                                    {
+                                        "name": "Bulgaria",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "1167000"
+                                    },
+                                    {
+                                        "name": "Slovenia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "692000"
+                                    },
+                                    {
+                                        "name": " Italy",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "692000"
+                                    },
+                                    {
+                                        "name": " Austria",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "692000"
+                                    },
+                                    {
+                                        "name": "Croatia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "519868"
+                                    },
+                                    {
+                                        "name": " Germany",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "519868"
+                                    },
+                                    {
+                                        "name": " Bulgaria",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "212476"
+                                    },
+                                    {
+                                        "name": "Serbia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "212476"
+                                    },
+                                    {
+                                        "name": " Bosnia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "212476"
+                                    },
+                                    {
+                                        "name": " Croatia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "212476"
+                                    },
+                                    {
+                                        "name": "Bosnia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "172085"
+                                    },
+                                    {
+                                        "name": "Macedonia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "115222"
+                                    },
+                                    {
+                                        "name": " Greece",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "115222"
+                                    },
+                                    {
+                                        "name": " Turkey",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "100000"
+                                    },
+                                    {
+                                        "name": "Albania",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "100000"
+                                    },
+                                    {
+                                        "name": " Russia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "54292"
+                                    },
+                                    {
+                                        "name": "Montenegro",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "54292"
+                                    },
+                                    {
+                                        "name": " Serbia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "54292"
+                                    },
+                                    {
+                                        "name": " Ukraine",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "35709"
+                                    },
+                                    {
+                                        "name": " Romania",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "35709"
+                                    },
+                                    {
+                                        "name": "Moldova",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "35709"
+                                    }
+                                ],
+                                "links": [
+                                    {
+                                        "source": " Ukraine",
+                                        "target": "Moldova",
+                                        "value": "35709"
+                                    },
+                                    {
+                                        "source": " Russia",
+                                        "target": "Moldova",
+                                        "value": "35709"
+                                    },
+                                    {
+                                        "source": " Romania",
+                                        "target": "Moldova",
+                                        "value": "35709"
+                                    },
+                                    {
+                                        "source": " Serbia",
+                                        "target": "Montenegro",
+                                        "value": "54292"
+                                    },
+                                    {
+                                        "source": " Russia",
+                                        "target": "Montenegro",
+                                        "value": "54292"
+                                    },
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Albania",
+                                        "value": "100000"
+                                    },
+                                    {
+                                        "source": " Greece",
+                                        "target": "Macedonia",
+                                        "value": "115222"
+                                    },
+                                    {
+                                        "source": " Serbia",
+                                        "target": "Macedonia",
+                                        "value": "115222"
+                                    },
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Macedonia",
+                                        "value": "115222"
+                                    },
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Bosnia",
+                                        "value": "172085"
+                                    },
+                                    {
+                                        "source": " Croatia",
+                                        "target": "Bosnia",
+                                        "value": "172085"
+                                    },
+                                    {
+                                        "source": " Serbia",
+                                        "target": "Bosnia",
+                                        "value": "172085"
+                                    },
+                                    {
+                                        "source": " Bulgaria",
+                                        "target": "Serbia",
+                                        "value": "212476"
+                                    },
+                                    {
+                                        "source": " Croatia",
+                                        "target": "Serbia",
+                                        "value": "212476"
+                                    },
+                                    {
+                                        "source": " Bosnia",
+                                        "target": "Serbia",
+                                        "value": "212476"
+                                    },
+                                    {
+                                        "source": " Austria",
+                                        "target": "Croatia",
+                                        "value": "519868"
+                                    },
+                                    {
+                                        "source": " Germany",
+                                        "target": "Croatia",
+                                        "value": "519868"
+                                    },
+                                    {
+                                        "source": " Italy",
+                                        "target": "Slovenia",
+                                        "value": "692000"
+                                    },
+                                    {
+                                        "source": " Austria",
+                                        "target": "Slovenia",
+                                        "value": "692000"
+                                    },
+                                    {
+                                        "source": " Macedonia",
+                                        "target": "Bulgaria",
+                                        "value": "1167000"
+                                    },
+                                    {
+                                        "source": " Romania",
+                                        "target": "Bulgaria",
+                                        "value": "1167000"
+                                    },
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Bulgaria",
+                                        "value": "1167000"
+                                    },
+                                    {
+                                        "source": " Bulgaria",
+                                        "target": "Romania",
+                                        "value": "1850000"
+                                    },
+                                    {
+                                        "source": " Hungary",
+                                        "target": "Romania",
+                                        "value": "1850000"
+                                    }
+                                ],
+                                "itemStyle": {
+                                    "normal": {
+                                        "color": "#25b7bc",
+                                        "borderWidth": 0
+                                    }
+                                },
+                                "label": {
+                                    "normal": {
+                                        "textStyle": {
+                                            "color": "white"
+                                        }
+                                    }
+                                },
+                                "lineStyle": {
+                                    "normal": {
+                                        "curveness": 0.5,
+                                        "opacity": 0.7,
+                                        "color": "rgba(255,255,255,0.2)"
+                                    }
+                                },
+                                "tooltip": {
+                                    "showContent": true,
+                                    "borderRadius": 0,
+                                    "padding": 4.645544922419401,
+                                    "textStyle": {
+                                        "fontSize": "10",
+                                        "fontWeight": "normal"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Overnights",
+                                "type": "sankey",
+                                "top": 100,
+                                "left": 20,
+                                "width": "30%",
+                                "zlevel": 2,
+                                "bottom": 50,
+                                "nodeWidth": 25,
+                                "nodeGap": 11,
+                                "data": [
+                                    {
+                                        "name": " Hungary",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "3620000"
+                                    },
+                                    {
+                                        "name": "Romania",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "3620000"
+                                    },
+                                    {
+                                        "name": "Moldova",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "1937000"
+                                    },
+                                    {
+                                        "name": " Romania",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "1937000"
+                                    },
+                                    {
+                                        "name": " Ukraine",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "1937000"
+                                    },
+                                    {
+                                        "name": " Austria",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "1855000"
+                                    },
+                                    {
+                                        "name": " Italy",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "1855000"
+                                    },
+                                    {
+                                        "name": "Slovenia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "1855000"
+                                    },
+                                    {
+                                        "name": " Germany",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "1200000"
+                                    },
+                                    {
+                                        "name": "Croatia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "1200000"
+                                    },
+                                    {
+                                        "name": "Bulgaria",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "996695"
+                                    },
+                                    {
+                                        "name": " Macedonia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "996695"
+                                    },
+                                    {
+                                        "name": " Croatia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "528030"
+                                    },
+                                    {
+                                        "name": " Bulgaria",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "528030"
+                                    },
+                                    {
+                                        "name": "Serbia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "528030"
+                                    },
+                                    {
+                                        "name": " Bosnia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "528030"
+                                    },
+                                    {
+                                        "name": "Bosnia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "366133"
+                                    },
+                                    {
+                                        "name": "Macedonia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "245618"
+                                    },
+                                    {
+                                        "name": " Greece",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "245618"
+                                    },
+                                    {
+                                        "name": " Russia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "209911"
+                                    },
+                                    {
+                                        "name": "Montenegro",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "209911"
+                                    },
+                                    {
+                                        "name": " Serbia",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "209911"
+                                    },
+                                    {
+                                        "name": " Turkey",
+                                        "label": {
+                                            "normal": {
+                                                "position": "right"
+                                            }
+                                        },
+                                        "value": "100000"
+                                    },
+                                    {
+                                        "name": "Albania",
+                                        "label": {
+                                            "normal": {
+                                                "position": "left"
+                                            }
+                                        },
+                                        "value": "100000"
+                                    }
+                                ],
+                                "links": [
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Albania",
+                                        "value": "100000"
+                                    },
+                                    {
+                                        "source": " Serbia",
+                                        "target": "Montenegro",
+                                        "value": "209911"
+                                    },
+                                    {
+                                        "source": " Russia",
+                                        "target": "Montenegro",
+                                        "value": "209911"
+                                    },
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Macedonia",
+                                        "value": "245618"
+                                    },
+                                    {
+                                        "source": " Serbia",
+                                        "target": "Macedonia",
+                                        "value": "245618"
+                                    },
+                                    {
+                                        "source": " Greece",
+                                        "target": "Macedonia",
+                                        "value": "245618"
+                                    },
+                                    {
+                                        "source": " Croatia",
+                                        "target": "Bosnia",
+                                        "value": "366133"
+                                    },
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Bosnia",
+                                        "value": "366133"
+                                    },
+                                    {
+                                        "source": " Serbia",
+                                        "target": "Bosnia",
+                                        "value": "366133"
+                                    },
+                                    {
+                                        "source": " Bulgaria",
+                                        "target": "Serbia",
+                                        "value": "528030"
+                                    },
+                                    {
+                                        "source": " Bosnia",
+                                        "target": "Serbia",
+                                        "value": "528030"
+                                    },
+                                    {
+                                        "source": " Croatia",
+                                        "target": "Serbia",
+                                        "value": "528030"
+                                    },
+                                    {
+                                        "source": " Turkey",
+                                        "target": "Bulgaria",
+                                        "value": "996695"
+                                    },
+                                    {
+                                        "source": " Macedonia",
+                                        "target": "Bulgaria",
+                                        "value": "996695"
+                                    },
+                                    {
+                                        "source": " Romania",
+                                        "target": "Bulgaria",
+                                        "value": "996695"
+                                    },
+                                    {
+                                        "source": " Austria",
+                                        "target": "Croatia",
+                                        "value": "1200000"
+                                    },
+                                    {
+                                        "source": " Germany",
+                                        "target": "Croatia",
+                                        "value": "1200000"
+                                    },
+                                    {
+                                        "source": " Austria",
+                                        "target": "Slovenia",
+                                        "value": "1855000"
+                                    },
+                                    {
+                                        "source": " Italy",
+                                        "target": "Slovenia",
+                                        "value": "1855000"
+                                    },
+                                    {
+                                        "source": " Russia",
+                                        "target": "Moldova",
+                                        "value": "1937000"
+                                    },
+                                    {
+                                        "source": " Romania",
+                                        "target": "Moldova",
+                                        "value": "1937000"
+                                    },
+                                    {
+                                        "source": " Ukraine",
+                                        "target": "Moldova",
+                                        "value": "1937000"
+                                    },
+                                    {
+                                        "source": " Bulgaria",
+                                        "target": "Romania",
+                                        "value": "3620000"
+                                    },
+                                    {
+                                        "source": " Hungary",
+                                        "target": "Romania",
+                                        "value": "3620000"
+                                    }
+                                ],
+                                "itemStyle": {
+                                    "normal": {
+                                        "color": "#ff5d60",
+                                        "borderWidth": 0
+                                    }
+                                },
+                                "label": {
+                                    "normal": {
+                                        "textStyle": {
+                                            "color": "white"
+                                        }
+                                    }
+                                },
+                                "lineStyle": {
+                                    "normal": {
+                                        "curveness": 0.5,
+                                        "opacity": 0.7,
+                                        "color": "rgba(255,255,255,0.2)"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+
+                    chart.setOption(option);
+
+                });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #146402;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+
+        <div class="chart" id="main"></div>
+
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+            ], function (ec) {
+                echarts = ec;
+                chart = myChart = echarts.init(document.getElementById('main'));
+
+                var data = [
+                    {name:'广州', value: 50},
+                    {name:'深圳', value: 72},
+                    {name:'珠海', value: 30},
+                    {name:'佛山', value: 38},
+                    {name:'杭州', value: 42},
+                    {name:'舟山', value: 32},
+                    {name:'宁波', value: 52}
+                ];
+
+
+                option = {
+                    tooltip : {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        data:['广州','深圳','珠海','佛山','杭州','舟山','宁波'],
+                        top: 0,
+                        left: 'center'
+                    },
+                    xAxis : [
+                        {
+                            type : 'category',
+                            data : [0],
+                            axisTick: {show: false},
+                            axisLabel: {show: false}
+                        },
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : echarts.util.map(data, function (item) {
+                        return {
+                            name: item.name,
+                            type: 'bar',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'bottom',
+                                    formatter: function (param) {
+                                        return param.seriesName;
+                                    }
+                                }
+                            },
+                            data: [item.value]
+                        }
+                    }).concat([{
+                        type: 'custom',
+                        renderItem: renderProvinceName,
+                        data: [0]
+                    }])
+                };
+
+                function renderProvinceName(param, api) {
+                    var currentSeriesIndices = api.currentSeriesIndices();
+                    currentSeriesIndices.pop(); // remove custom series;
+
+                    var barLayout = api.barLayout({
+                        barGap: '30%', barCategoryGap: '20%', count: currentSeriesIndices.length
+                    });
+
+                    var nameTexts = echarts.util.map(currentSeriesIndices, function (serIdx, index) {
+                        var point = api.coord([0, 0]);
+                        point[0] += barLayout[index].offsetCenter;
+                        point[1] = api.getHeight() - 20;
+
+                        return {
+                            position: point,
+                            name: serIdx,
+                            type: 'circle',
+                            shape: {
+                                cx: 0, cy: 0, r: 10
+                            },
+                            style: {
+                                text: serIdx,
+                                fill: '#333',
+                                textFill: '#eee',
+                                stroke: null
+                            }
+                        };
+                    });
+
+                    return {
+                        type: 'group',
+                        $mergeChildren: 'byName',
+                        children: nameTexts
+                    };
+                }
+
+                chart.setOption(option);
+            });
+
+        </script>
+    </body>
+</html>

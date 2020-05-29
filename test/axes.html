@@ -1,9 +1,29 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
-        <link rel="stylesheet" href="reset.css">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
@@ -54,19 +74,19 @@
 
 
             require([
-                'echarts',
-                'zrender/core/util',
-                'echarts/chart/line',
-                'echarts/chart/bar',
-                'echarts/chart/parallel',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/polar',
-                'echarts/component/parallel',
-                'echarts/component/tooltip'
-            ], function (ec, zu) {
+                'echarts'
+                // 'zrender/core/util',
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/chart/parallel',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/polar',
+                // 'echarts/component/parallel',
+                // 'echarts/component/tooltip'
+            ], function (ec) {
                 echarts = ec;
-                zrUtil = zu;
+                zrUtil = ec.util;
 
 
 
@@ -430,7 +450,7 @@
                 el.innerHTML = '<div class="ec"></div><label>' + encodeHTML(label) + '</label>';
                 containerEl.appendChild(el);
 
-                var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                var chart = echarts.init(el.firstChild, null, { });
                 chart.setOption(zrUtil.merge(opt, getOption()));
             }
 

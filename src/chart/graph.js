@@ -1,27 +1,48 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    var echarts = require('../echarts');
-    var zrUtil = require('zrender/core/util');
+import * as echarts from '../echarts';
 
-    require('./graph/GraphSeries');
-    require('./graph/GraphView');
+import './graph/GraphSeries';
+import './graph/GraphView';
+import './graph/graphAction';
 
-    require('./graph/graphAction');
+import categoryFilter from './graph/categoryFilter';
+import visualSymbol from '../visual/symbol';
+import categoryVisual from './graph/categoryVisual';
+import edgeVisual from './graph/edgeVisual';
+import simpleLayout from './graph/simpleLayout';
+import circularLayout from './graph/circularLayout';
+import forceLayout from './graph/forceLayout';
+import createView from './graph/createView';
 
-    echarts.registerProcessor(require('./graph/categoryFilter'));
+echarts.registerProcessor(categoryFilter);
 
-    echarts.registerVisual(zrUtil.curry(
-        require('../visual/symbol'), 'graph', 'circle', null
-    ));
-    echarts.registerVisual(require('./graph/categoryVisual'));
-    echarts.registerVisual(require('./graph/edgeVisual'));
+echarts.registerVisual(visualSymbol('graph', 'circle', null));
+echarts.registerVisual(categoryVisual);
+echarts.registerVisual(edgeVisual);
 
-    echarts.registerLayout(require('./graph/simpleLayout'));
-    echarts.registerLayout(require('./graph/circularLayout'));
-    echarts.registerLayout(require('./graph/forceLayout'));
+echarts.registerLayout(simpleLayout);
+echarts.registerLayout(echarts.PRIORITY.VISUAL.POST_CHART_LAYOUT, circularLayout);
+echarts.registerLayout(forceLayout);
 
-    // Graph view coordinate system
-    echarts.registerCoordinateSystem('graphView', {
-        create: require('./graph/createView')
-    });
+// Graph view coordinate system
+echarts.registerCoordinateSystem('graphView', {
+    create: createView
 });

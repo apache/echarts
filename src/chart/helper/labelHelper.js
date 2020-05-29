@@ -1,49 +1,43 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+import {retrieveRawValue} from '../../data/helper/dataProvider';
+
 /**
- * @module echarts/chart/helper/Symbol
+ * @param {module:echarts/data/List} data
+ * @param {number} dataIndex
+ * @return {string} label string. Not null/undefined
  */
-define(function (require) {
+export function getDefaultLabel(data, dataIndex) {
+    var labelDims = data.mapDimension('defaultedLabel', true);
+    var len = labelDims.length;
 
-    var graphic = require('../../util/graphic');
-    var zrUtil = require('zrender/core/util');
-    var modelUtil = require('../../util/model');
-
-    var helper = {};
-
-    helper.findLabelValueDim = function (data) {
-        var valueDim;
-        var labelDims = modelUtil.otherDimToDataDim(data, 'label');
-
-        if (labelDims.length) {
-            valueDim = labelDims[0];
+    // Simple optimization (in lots of cases, label dims length is 1)
+    if (len === 1) {
+        return retrieveRawValue(data, dataIndex, labelDims[0]);
+    }
+    else if (len) {
+        var vals = [];
+        for (var i = 0; i < labelDims.length; i++) {
+            var val = retrieveRawValue(data, dataIndex, labelDims[i]);
+            vals.push(val);
         }
-        else {
-            // Get last value dim
-            var dimensions = data.dimensions.slice();
-            var dataType;
-            while (dimensions.length && (
-                valueDim = dimensions.pop(),
-                dataType = data.getDimensionInfo(valueDim).type,
-                dataType === 'ordinal' || dataType === 'time'
-            )) {} // jshint ignore:line
-        }
-
-        return valueDim;
-    };
-
-    helper.setTextToStyle = function (
-        data, dataIndex, valueDim, elStyle, seriesModel, labelModel, color
-    ) {
-        if (valueDim != null && labelModel.getShallow('show')) {
-            graphic.setText(elStyle, labelModel, color);
-            elStyle.text = zrUtil.retrieve(
-                seriesModel.getFormattedLabel(dataIndex, 'normal'),
-                data.get(valueDim, dataIndex)
-            );
-        }
-        else {
-            elStyle.text = null;
-        }
-    };
-
-    return helper;
-});
+        return vals.join(' ');
+    }
+}

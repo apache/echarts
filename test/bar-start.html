@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+        <script>
+
+            // See <https://github.com/ecomfe/echarts/issues/7412>
+            // Thanks to <https://github.com/CrazyShipOne>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                option = {
+                    legend: {},
+                    xAxis: {
+                        data: ['1','2','3','4','5','6']
+                    },
+                    yAxis: [{
+                        min: 5000000
+                    }, {
+                    }],
+                    grid: {
+                        left: 100
+                    },
+                    series: [{
+                        name: 'bar',
+                        type: 'bar',
+                        data: [5590986,5644154,5682473,5709709,5748763,5770601],
+                        animation: true
+                    }, {
+                        name: 'line',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [1.1496899,0.9420012,0.6743367,0.47701207,0.67934614,0.37843546]
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main0', {
+                    title: 'bar start should be correct when two Y axes exists',
+                    option: option,
+                    info: option
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+
+            // See <https://github.com/apache/incubator-echarts/issues/8747>
+            // Thanks to <https://github.com/kuky121>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+
+                var option = {
+                    xAxis : [
+                        {
+                            type : 'category',
+                            data : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            axisTick: {
+                                alignWithLabel: true
+                            }
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        },
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series : [
+                        {
+                            yAxisIndex:0,
+                            name:'数据1',
+                            type:'bar',
+                            data:[10, -52]
+                        },
+                        {
+                            yAxisIndex:1,
+                            name:'数据2',
+                            type:'bar',
+                            data:[10, -52]
+                        }
+                    ]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main1', {
+                    title: 'bar start should be correct when two Y axes exists',
+                    option: option,
+                    info: option
+                });
+            });
+
+        </script>
+
+
+
+
+    </body>
+</html>

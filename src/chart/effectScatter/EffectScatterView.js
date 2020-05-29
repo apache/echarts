@@ -1,31 +1,68 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    var SymbolDraw = require('../helper/SymbolDraw');
-    var EffectSymbol = require('../helper/EffectSymbol');
+import * as echarts from '../../echarts';
+import SymbolDraw from '../helper/SymbolDraw';
+import EffectSymbol from '../helper/EffectSymbol';
+import * as matrix from 'zrender/src/core/matrix';
 
-    require('../../echarts').extendChartView({
+import pointsLayout from '../../layout/points';
 
-        type: 'effectScatter',
+export default echarts.extendChartView({
 
-        init: function () {
-            this._symbolDraw = new SymbolDraw(EffectSymbol);
-        },
+    type: 'effectScatter',
 
-        render: function (seriesModel, ecModel, api) {
-            var data = seriesModel.getData();
-            var effectSymbolDraw = this._symbolDraw;
-            effectSymbolDraw.updateData(data);
-            this.group.add(effectSymbolDraw.group);
-        },
+    init: function () {
+        this._symbolDraw = new SymbolDraw(EffectSymbol);
+    },
 
-        updateLayout: function () {
-            this._symbolDraw.updateLayout();
-        },
+    render: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
+        var effectSymbolDraw = this._symbolDraw;
+        effectSymbolDraw.updateData(data);
+        this.group.add(effectSymbolDraw.group);
+    },
 
-        remove: function (ecModel, api) {
-            this._symbolDraw && this._symbolDraw.remove(api);
-        },
+    updateTransform: function (seriesModel, ecModel, api) {
+        var data = seriesModel.getData();
 
-        dispose: function () {}
-    });
+        this.group.dirty();
+
+        var res = pointsLayout().reset(seriesModel);
+        if (res.progress) {
+            res.progress({ start: 0, end: data.count() }, data);
+        }
+
+        this._symbolDraw.updateLayout(data);
+    },
+
+    _updateGroupTransform: function (seriesModel) {
+        var coordSys = seriesModel.coordinateSystem;
+        if (coordSys && coordSys.getRoamTransform) {
+            this.group.transform = matrix.clone(coordSys.getRoamTransform());
+            this.group.decomposeTransform();
+        }
+    },
+
+    remove: function (ecModel, api) {
+        this._symbolDraw && this._symbolDraw.remove(api);
+    },
+
+    dispose: function () {}
 });

@@ -1,0 +1,159 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src="lib/dat.gui.min.js"></script>
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                background: #111;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id='main'></div>
+        <script>
+
+        var xs = [440000, 450000];
+        var ys = [4368000, 4537000];
+
+        // var dataURL = '../../data-online/figshare_Urban_Road_Network/public/links_ny.bin';
+        // var dataURL = '../../echarts-worker/example/data/links_ny.bin';
+        // var dataURL = '../../echarts-worker/example/data/Links_NewYork_1.json';
+        // var dataURL = 'http://echarts.baidu.com/resource/data/figshare_Urban_Road_Network/public/Links_NewYork_1.json';
+
+
+        require([
+            'echarts', 'map/js/world'
+        ], function (echarts) {
+
+            var config = {
+                dataLoading: 'whole',
+                progressive: 40000,
+                progressiveThreshold: 3000,
+                largeModel: true
+            };
+
+
+
+            var myChart = echarts.init(document.getElementById('main'));
+
+            var CHUNK_COUNT = 32;
+
+            var dataCount = 0;
+
+            function fetchData(idx) {
+                if (idx >= CHUNK_COUNT) {
+                    return;
+                }
+                var dataURL = `../../echarts-examples/public/data/asset/data/links-ny/links_ny_${idx}.bin`;
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', dataURL, true);
+                xhr.responseType = 'arraybuffer';
+
+                xhr.onload = function (e) {
+                    var rawData = new Float32Array(this.response);
+                    var data = new Float64Array(rawData.length - 2);
+                    var offsetX = rawData[0];
+                    var offsetY = rawData[1];
+                    var off = 0;
+                    var addedDataCount = 0;
+                    for (var i = 2; i < rawData.length;) {
+                        var count = rawData[i++];
+                        data[off++] = count;
+                        for (var k = 0; k < count; k++) {
+                            var x = rawData[i++] + offsetX;
+                            var y = rawData[i++] + offsetY;
+                            data[off++] = x;
+                            data[off++] = y;
+
+                            addedDataCount++;
+                        }
+                    }
+
+                    myChart.appendData({
+                        seriesIndex: 0,
+                        data: data
+                    });
+
+                    dataCount += addedDataCount;
+
+                    fetchData(idx + 1);
+                }
+
+                xhr.send();
+            }
+
+            var option = {
+                progressive: 20000,
+                backgroundColor: '#111',
+                geo: {
+                    center: [-74.04327099998152, 40.86737600240287],
+                    zoom: 360,
+                    map: 'world',
+                    roam: true,
+                    silent: true,
+                    itemStyle: {
+                        normal: {
+                            color: 'transparent',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1
+                        }
+                    }
+                },
+                series: [{
+                    type: 'lines',
+
+                    coordinateSystem: 'geo',
+
+                    blendMode: 'lighter',
+
+                    dimensions: ['value'],
+
+                    data: new Float64Array(),
+                    polyline: true,
+                    large: true,
+
+                    lineStyle: {
+                        color: 'orange',
+                        width: 0.5,
+                        opacity: 0.3
+                    }
+                }]
+            };
+
+            fetchData(0);
+
+            myChart.setOption(option);
+
+
+        });
+
+        </script>
+    </body>
+</html>

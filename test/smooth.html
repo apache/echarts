@@ -1,0 +1,488 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <meta name="viewport" content="user-scalable=no,width=device-width,height=device-height">
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var data = [
+                    [0, 0]
+                    [1, 1],
+                    [2, 4],
+                    [3, 3],
+                    [4, 3],
+                    [5, 3],
+                    [6, 7],
+                    [7, 7]
+                ];
+
+                var option = {
+                    color: ['#4ea397', '#d0648a', '#f5b841'],
+                    animation: false,
+                    title: {
+                        text: '光滑曲线新老算法对比',
+                        left: '50%',
+                        textAlign: 'center'
+                    },
+                    legend: {
+                        top: 30,
+                        data: ['非单调光滑（老算法）','单调光滑（新算法）', '不光滑']
+                    },
+                    xAxis: {
+                        type: 'value'
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    grid: {
+                        left: 30,
+                        right: 30
+                    },
+                    series: [{
+                        name: '非单调光滑（老算法）',
+                        type: 'line',
+                        smoothMonotone: 'none',
+                        smooth: true,
+                        showSymbol: false,
+                        connectNulls: true,
+                        data: data,
+                        lineStyle: {
+                            width: 1
+                        },
+                        areaStyle: {
+                            opacity: 0.4
+                        }
+                    }, {
+                        name: '单调光滑（新算法）',
+                        type: 'line',
+                        smooth: true,
+                        showSymbol: false,
+                        connectNulls: true,
+                        data: data,
+                        lineStyle: {
+                            width: 1
+                        },
+                        areaStyle: {
+                            opacity: 0.4
+                        }
+                    }, {
+                        name: '不光滑',
+                        type: 'line',
+                        smooth: false,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        connectNulls: true,
+                        data: data,
+                        lineStyle: {
+                            width: 3,
+                            type: 'dashed'
+                        }
+                    }]
+                };
+
+                testHelper.create(echarts, 'main0', {
+                    option: option,
+                    height: 550
+                });
+            })
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var symbolSize = 20;
+                var data = [[15, 0], [-50, 10], [-56.5, 20], [-46.5, 30], [-22.1, 40]];
+                var points = [];
+
+                var option = {
+                    title: {
+                        text: 'Click to Add Points'
+                    },
+                    tooltip: {
+                        formatter: function (params) {
+                            var data = params.data || [0, 0];
+                            return data[0].toFixed(2) + ', ' + data[1].toFixed(2);
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        min: -60,
+                        max: 20,
+                        type: 'value',
+                        axisLine: {onZero: false}
+                    },
+                    yAxis: {
+                        min: 0,
+                        max: 40,
+                        type: 'value',
+                        axisLine: {onZero: false}
+                    },
+                    series: [
+                        {
+                            id: 'a',
+                            type: 'line',
+                            smooth: true,
+                            symbolSize: symbolSize,
+                            data: data
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: 'click to add points, check smooth',
+                    option: option,
+                    height: 550
+                });
+
+                if (chart) {
+
+                    var zr = chart.getZr();
+
+                    zr.on('click', function (params) {
+                        var pointInPixel = [params.offsetX, params.offsetY];
+                        var pointInGrid = chart.convertFromPixel('grid', pointInPixel);
+
+                        if (chart.containPixel('grid', pointInPixel)) {
+                            data.push(pointInGrid);
+
+                            chart.setOption({
+                                series: [{
+                                    id: 'a',
+                                    data: data
+                                }]
+                            });
+                        }
+                    });
+
+                    zr.on('mousemove', function (params) {
+                        var pointInPixel = [params.offsetX, params.offsetY];
+                        zr.setCursorStyle(chart.containPixel('grid', pointInPixel) ? 'copy' : 'default');
+                    });
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        axisLine: {onZero: false},
+                        boundaryGap: false,
+                        data: ['0', '10', '20', '30', '40', '50', '60', '70', '80']
+                    },
+                    series: [
+                        {
+                            name: '高度(km)与气温(°C)变化关系',
+                            type: 'line',
+                            smooth: true,
+                            smoothMonotone: 'x',
+                            lineStyle: {
+                                normal: {
+                                    width: 3,
+                                    shadowColor: 'rgba(0,0,0,0.4)',
+                                    shadowBlur: 10,
+                                    shadowOffsetY: 10
+                                }
+                            },
+                            data: [15, -50, -56.5, -46.5, -22.1, -2.5, -27.7, -55.7, -76.5]
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main', {
+                    title: 'FIXME: bad case',
+                    option: option,
+                    height: 550
+                });
+
+                if (chart) {
+
+                    var zr = chart.getZr();
+
+                    zr.on('click', function (params) {
+                        var pointInPixel = [params.offsetX, params.offsetY];
+                        var pointInGrid = chart.convertFromPixel('grid', pointInPixel);
+
+                        if (chart.containPixel('grid', pointInPixel)) {
+                            data.push(pointInGrid);
+
+                            chart.setOption({
+                                series: [{
+                                    id: 'a',
+                                    data: data
+                                }]
+                            });
+                        }
+                    });
+
+                    zr.on('mousemove', function (params) {
+                        var pointInPixel = [params.offsetX, params.offsetY];
+                        zr.setCursorStyle(chart.containPixel('grid', pointInPixel) ? 'copy' : 'default');
+                    });
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                option = {
+                    legend: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        axisLine: {onZero: false},
+                        boundaryGap: false,
+                        data: ['0', '10', '20', '30', '40', '50', '60', '70', '80']
+                    },
+                    series: [
+                        {
+                            name: '高度(km)与气温(°C)变化关系',
+                            type: 'line',
+                            smooth: true,
+                            smoothMonotone: 'x',
+                            lineStyle: {
+                                normal: {
+                                    width: 3,
+                                    shadowColor: 'rgba(0,0,0,0.4)',
+                                    shadowBlur: 10,
+                                    shadowOffsetY: 10
+                                }
+                            },
+                            data: [15, -50, -56.5, -46.5, -22.1, -2.5, -27.7, -55.7, -76.5]
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: 'FIXME: bad case',
+                    option: option,
+                    height: 550
+                });
+
+                if (chart) {
+
+                    var zr = chart.getZr();
+
+                    zr.on('click', function (params) {
+                        var pointInPixel = [params.offsetX, params.offsetY];
+                        var pointInGrid = chart.convertFromPixel('grid', pointInPixel);
+
+                        if (chart.containPixel('grid', pointInPixel)) {
+                            data.push(pointInGrid);
+
+                            chart.setOption({
+                                series: [{
+                                    id: 'a',
+                                    data: data
+                                }]
+                            });
+                        }
+                    });
+
+                    zr.on('mousemove', function (params) {
+                        var pointInPixel = [params.offsetX, params.offsetY];
+                        zr.setCursorStyle(chart.containPixel('grid', pointInPixel) ? 'copy' : 'default');
+                    });
+                }
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var data = [[1, 4862.4],[2, 5294.7],[3, 5934.5],[4, 7171.0],[5, 8964.4],[6, 10202.2],[7, 11962.5],[8, 14928.3],[9, 16909.2],[10, 18547.9],[11, 21617.8],[12, 26638.1],[13, 34634.4],[14, 46759.4],[15, 58478.1],[16, 67884.6],[17, 74462.6],[18, 79395.7]];
+                var myRegression = {"points":[[1,4162.436774392433],[2,4982.540245685443],[3,5964.224478460412],[4,7139.324897630159],[5,8545.949297850559],[6,10229.71365621353],[7,12245.221430747537],[8,14657.834317479834],[9,17545.791890639037],[10,21002.74886464572],[11,25140.812259760092],[12,30094.176964828697],[13,36023.47759622737],[14,43120.997781149395],[15,51616.90579913977],[16,61786.7187999529],[17,73960.23765779613],[18,88532.24221386963]],"parameter":{"coefficient":3477.318605869281,"index":0.1798391846241552},"expression":"y = 3477.32e^(0.18x)"};
+
+                option = {
+                    title: {
+                        text: '1981 - 1998 gross domestic product GDP (trillion yuan)',
+                        subtext: 'By ecStat.regression',
+                        sublink: 'https://github.com/ecomfe/echarts-stat',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
+                    xAxis: {
+                        type: 'value',
+                        splitLine: {
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        },
+                        splitNumber: 20
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: {
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'scatter',
+                        type: 'scatter',
+                        label: {
+                            emphasis: {
+                                show: true,
+                                position: 'left',
+                                textStyle: {
+                                    color: 'blue',
+                                    fontSize: 16
+                                }
+                            }
+                        },
+                        data: data
+                    }, {
+                        name: 'line',
+                        type: 'line',
+                        showSymbol: false,
+                        smooth: true,
+                        smoothMonotone: 'x',
+                        data: myRegression.points,
+                        markPoint: {
+                            itemStyle: {
+                                normal: {
+                                    color: 'transparent'
+                                }
+                            },
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'left',
+                                    formatter: myRegression.expression,
+                                    textStyle: {
+                                        color: '#333',
+                                        fontSize: 14
+                                    }
+                                }
+                            },
+                            data: [{
+                                coord: myRegression.points[myRegression.points.length - 1]
+                            }]
+                        }
+                    }]
+                };
+
+                testHelper.create(echarts, 'main3', {
+                    title: 'FIXME: bad case',
+                    option: option,
+                    height: 550
+                });
+            })
+
+        </script>
+
+
+
+
+
+    </body>
+</html>

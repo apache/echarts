@@ -1,0 +1,116 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                /* background-image: url(old_mathematics.png); */
+                /* background-repeat: repeat; */
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+            var chart;
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                chart = echarts.init(document.getElementById('main'), null, {
+                    // renderer: 'svg'
+                });
+                option = {
+                    silent: true,
+                    series: {
+                        radius: ['15%', '80%'],
+                        type: 'sunburst',
+                        sort: null,
+                        highlightPolicy: 'descendant',
+                        data: [{
+                            value: 10,
+                            children: [{
+                                name: 'target',
+                                value: 4,
+                                children: [{
+                                    value: 2,
+                                    children: [{
+                                        value: 1
+                                    }]
+                                }, {
+                                    value: 1
+                                }, {
+                                    value: 0.5
+                                }]
+                            }, {
+                                value: 2
+                            }]
+                        }, {
+                            value: 4,
+                            children: [{
+                                children: [{
+                                    value: 2
+                                }]
+                            }]
+                        }],
+                        label: {
+                            rotate: 'none',
+                            color: '#fff'
+                        },
+                        levels: [],
+                        itemStyle: {
+                            color: 'yellow',
+                            borderWidth: 2
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: 'red'
+                            }
+                        },
+                        highlight: {
+                            itemStyle: {
+                                color: 'orange'
+                            }
+                        },
+                        downplay: {
+                            itemStyle: {
+                                color: '#ccc'
+                            }
+                        }
+                    }
+                };
+
+                chart.setOption(option);
+
+                chart.dispatchAction({
+                    type: 'sunburstHighlight',
+                    targetNodeId: 'target'
+                });
+            });
+
+        </script>
+    </body>
+</html>

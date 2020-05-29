@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            body {
+            }
+            #main {
+                height: 600px;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts'
+                // 'zrender/tool/color',
+                // 'echarts/chart/line',
+                // 'echarts/chart/map',
+                // 'echarts/component/title',
+                // 'echarts/component/geo',
+                // 'echarts/component/legend',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/toolbox',
+                // 'echarts/component/visualMap'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = echarts.color;
+                chart = myChart = echarts.init(document.getElementById('main'));
+
+                $.get('../map/json/world.json', function (worldJson) {
+                    echarts.registerMap('world', worldJson);
+
+                    option = {
+                        title: {
+                            text: 'Test hover link\nCheck highlights and label positions',
+                            subtext: 'Each colony is a region.\nLabel should not be in the ocean.'
+                        },
+                        visualMap: {
+                            type: 'piecewise',
+                            dimension: 1,
+                            orient: 'vertical',
+                            top: 120,
+                            left: 0,
+                            categories: [
+                                'China', 'France', 'United Kingdom',
+                                'Netherlands', 'Denmark', 'Portugal', 'Spain'
+                            ],
+                            inRange: {
+                                color: {
+                                    'China': '#943382',
+                                    'France': '#2196f3',
+                                    'United Kingdom': '#e91e63',
+                                    'Netherlands': '#341290',
+                                    'Denmark': '#e1648f',
+                                    'Portugal': '#498121',
+                                    'Spain': '#a41933'
+                                }
+                            }
+                        },
+                        series: [
+                            {
+                                map: 'world',
+                                name: 'France',
+                                type: 'map',
+                                roam: true,
+                                left: 130,
+                                data: [
+                                    {
+                                        name: 'China',
+                                        value: [6, 'China']
+                                    },
+                                    {
+                                        name: 'France',
+                                        value: [6, 'France']
+                                    },
+                                    {
+                                        name: 'United Kingdom',
+                                        value: [5, 'United Kingdom']
+                                    },
+                                    {
+                                        name: 'Netherlands',
+                                        value: [5, 'Netherlands']
+                                    },
+                                    {
+                                        name: 'Denmark',
+                                        value: [5, 'Denmark']
+                                    },
+                                    {
+                                        name: 'Portugal',
+                                        value: [5, 'Portugal']
+                                    },
+                                    {
+                                        name: 'Spain',
+                                        value: [5, 'Spain']
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+
+                    chart.setOption(option);
+                });
+            });
+
+        </script>
+    </body>
+</html>

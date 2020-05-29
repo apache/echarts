@@ -1,0 +1,243 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+
+            #snapshot {
+                position: fixed;
+                right: 10;
+                bottom: 10;
+                width: 200;
+                height: 200;
+                background: #fff;
+                border: 5px solid rgba(0,0,0,0.5);
+            }
+        </style>
+        <div id="main"></div>
+        <img id="snapshot"/>
+        <textarea id="xx"></textarea>
+
+        <script>
+
+            var chunkMax = 4;
+            var chunkCount = 0;
+
+            function genData1(len, offset) {
+                // console.profile('gen');
+                var lngRange = [-10.781327, 131.48];
+                var latRange = [18.252847, 52.33];
+
+                var arr = new Float32Array(len * 2);
+                var off = 0;
+
+                // var data = [];
+                for (var i = 0; i < len; i++) {
+                    var x = +Math.random() * 10;
+                    var y = +Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random() + (offset || 0) / 10;
+                    arr[off++] = x;
+                    arr[off++] = y;
+                    // data.push([
+                    //     x,
+                    //     y
+                    // ]);
+                }
+                // console.profileEnd('gen');
+                return arr;
+                // return data;
+            }
+
+            function genData2(count) {
+                var lngRange = [-10.781327, 31.48];
+                var latRange = [-18.252847, 30.33];
+                return genData(count, lngRange, latRange);
+            }
+
+            function genData(count, lngRange, latRange) {
+                lngRange[1] += 5;
+                lngRange[0] -= 10;
+                latRange[1] += 4;
+                var lngExtent = lngRange[1] - lngRange[0];
+                var latExtent = latRange[1] - latRange[0];
+                var data = [];
+                for (var i = 0; i < count; i++) {
+                    data.push([
+                        Math.random() * lngExtent + lngRange[0],
+                        Math.random() * latExtent + latRange[0],
+                        Math.random() * 1000
+                    ]);
+                }
+                return data;
+            }
+
+// var data = genData1(5e5);
+// var t = document.getElementById('xx');
+// t.innerHTML = data;
+
+            require([
+                'echarts'
+                // 'echarts/chart/map',
+                // 'echarts/chart/scatter',
+                // 'echarts/component/title',
+                // 'echarts/component/legend',
+                // 'echarts/component/geo',
+                // 'echarts/component/visualMap',
+                // 'echarts/component/markPoint',
+                // 'echarts/component/tooltip'
+            ], function (echarts) {
+
+                require(['map/js/china'], function () {
+                    var chart = echarts.init(document.getElementById('main'));
+
+                    chart.setOption({
+                        tooltip: {},
+                        toolbox: {
+                            left: 'center',
+                            feature: {
+                                dataZoom: {}
+                            }
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            left: 'left',
+                            data: ['pm2.5' /* ,'pm10' */]
+                        },
+                        // ???
+                        // visualMap: {
+                        //     min: 0,
+                        //     max: 1500,
+                        //     left: 'left',
+                        //     top: 'bottom',
+                        //     text: ['High','Low'],
+                        //     seriesIndex: [1, 2, 3],
+                        //     inRange: {
+                        //         color: ['#006edd', '#e0ffff']
+                        //     },
+                        //     calculable : true
+                        // },
+                        grid: {
+                            right: '20%',
+                            left: '20%'
+                        },
+                        xAxis: [{
+                        }],
+                        yAxis: [{
+                            max: 0,
+                            min: -0.7
+                        }],
+                        dataZoom: [{
+                            type: 'inside',
+                            startValue: 5.214,
+                            endValue: 6.13
+                        }, {
+                            type: 'slider',
+                            startValue: 5.214,
+                            endValue: 6.13
+                        }],
+                        animation: false,
+                        series : [{
+                            name: 'pm2.5',
+                            type: 'scatter',
+                            data: genData1(1e5),
+                            dimensions: ['x', 'y'],
+                            // symbol: 'rect',
+                            symbolSize: 3,
+                            // symbol: 'rect',
+                            itemStyle: {
+                                color: '#128de3',
+                                opacity: 0.4
+                            },
+                            large: true,
+                            // large: {
+                            //     symbolSize: 2
+                            // },
+                            // large: function (params) {
+                            //     if (params.dataCount > 30000) {
+                            //         return {symbolSize: 1};
+                            //     }
+                            //     else if (params.dataCount > 3000) {
+                            //         return {symbolSize: 5};
+                            //     }
+                            // },
+                            largeThreshold: 500,
+                            progressive: 500
+                        // }, {
+                        //     name: 'pm10',
+                        //     type: 'scatter',
+                        //     data: genData2(2001),
+                        //     xAxisIndex: 0,
+                        //     yAxisIndex: 0,
+                        //     symbolSize: 2,
+                        //     // symbol: 'rect',
+                        //     itemStyle: {
+                        //         normal: {
+                        //             borderWidth: 0.5,
+                        //             borderColor: '#e01',
+                        //             color: '#128de3'
+                        //         }
+                        //     },
+                        //     progressive: 3000
+                        }]
+                    });
+
+                    chart.on('click', function (param) {
+                        alert('asdf');
+                    });
+
+                    chart.on('finished', function () {
+                        // console.log('Render finished');
+                        var url = chart.getDataURL();
+                        var snapshotEl = document.getElementById('snapshot');
+                        snapshotEl.src = url;
+                    });
+
+                    window.onresize = chart.resize;
+
+                    // next();
+
+                    function next() {
+                        if (chunkCount++ < chunkMax) {
+                            var newData = genData1(100000, chunkCount);
+                            chart.appendData({seriesIndex: 0, data: newData});
+                            // console.log('Data loaded');
+                            setTimeout(next, 3000);
+                        }
+                    }
+
+                });
+            });
+
+        </script>
+    </body>
+</html>

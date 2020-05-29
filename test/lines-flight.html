@@ -1,0 +1,154 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src='lib/esl.js'></script>
+        <script src='lib/config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src="lib/dat.gui.min.js"></script>
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id='main'></div>
+        <script>
+
+        var xs = [440000, 450000];
+        var ys = [4368000, 4537000];
+
+        var dataURL = './data/flight.json';
+
+        require([
+            'echarts'
+
+            // 'echarts/chart/lines',
+            // 'echarts/component/legend',
+            // 'extension/bmap'
+        ], function (echarts) {
+
+            $.get('../map/json/world.json', function (worldJson) {
+                echarts.registerMap('world', worldJson);
+
+                $.get(dataURL, function (data) {
+                    var config = {
+                        dataLoading: 'whole',
+                        streamThreshold: 0,
+                        streamRender: true,
+                        largeModel: true
+                    };
+
+                    var chart;
+
+                    // var gui = new dat.GUI();
+                    // gui.add(config, 'dataLoading', ['whole', 'chunked'])
+                    //     .onChange(init);
+                    // gui.add(config, 'largeModel')
+                    //     .onChange(init);
+                    // gui.add(config, 'streamRender')
+                    //     .onChange(init);
+                    // gui.add(config, 'streamThreshold', 0, 200000)
+                    //     .onChange(init);
+
+                    init();
+
+                    function init() {
+                        if (chart) {
+                            chart.dispose();
+                        }
+
+                        chart = echarts.init(document.getElementById('main'));
+
+                        function getAirportCoord(idx) {
+                            return [data.airports[idx][3], data.airports[idx][4]];
+                        }
+                        var routes = data.routes.map(function (airline) {
+                            return [
+                                getAirportCoord(airline[1]),
+                                getAirportCoord(airline[2])
+                            ];
+                        });
+
+                        var option = {
+                            streamStep: 4000,
+                            title: {
+                                text: 'World Flights',
+                                left: 'center',
+                                textStyle: {
+                                    color: '#eee'
+                                }
+                            },
+                            backgroundColor: '#003',
+                            tooltip: {
+                                formatter: function (param) {
+                                    var route = data.routes[param.dataIndex];
+                                    return data.airports[route[1]][1] + ' > ' + data.airports[route[2]][1];
+                                }
+                            },
+                            geo: {
+                                map: 'world',
+                                left: 0,
+                                right: 0,
+                                roam: true,
+                                silent: true,
+                                itemStyle: {
+                                    normal: {
+                                        borderColor: '#003',
+                                        color: '#005'
+                                    }
+                                }
+                            },
+                            series: [{
+                                type: 'lines',
+                                coordinateSystem: 'geo',
+                                blendModel: 'lighter',
+                                data: routes,
+                                large: true,
+                                largeThreshold: 100,
+                                lineStyle: {
+                                    normal: {
+                                        opacity: 0.5,
+                                        width: 0.5,
+                                        curveness: 0.3
+                                    }
+                                },
+                                // 设置混合模式为叠加
+                                blendMode: 'lighter'
+                            }]
+                        };
+
+                        chart.setOption(option);
+                    }
+
+                });
+
+            });
+        });
+
+        </script>
+    </body>
+</html>

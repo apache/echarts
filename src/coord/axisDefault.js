@@ -1,157 +1,217 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    var zrUtil = require('zrender/core/util');
+import * as zrUtil from 'zrender/src/core/util';
 
-    var defaultOption = {
+var defaultOption = {
+    show: true,
+    zlevel: 0,
+    z: 0,
+    // Inverse the axis.
+    inverse: false,
+
+    // Axis name displayed.
+    name: '',
+    // 'start' | 'middle' | 'end'
+    nameLocation: 'end',
+    // By degree. By defualt auto rotate by nameLocation.
+    nameRotate: null,
+    nameTruncate: {
+        maxWidth: null,
+        ellipsis: '...',
+        placeholder: '.'
+    },
+    // Use global text style by default.
+    nameTextStyle: {},
+    // The gap between axisName and axisLine.
+    nameGap: 15,
+
+    // Default `false` to support tooltip.
+    silent: false,
+    // Default `false` to avoid legacy user event listener fail.
+    triggerEvent: false,
+
+    tooltip: {
+        show: false
+    },
+
+    axisPointer: {},
+
+    axisLine: {
         show: true,
-        zlevel: 0,                  // 一级层叠
-        z: 0,                       // 二级层叠
-        // 反向坐标轴
-        inverse: false,
-
-        // 坐标轴名字，默认为空
-        name: '',
-        // 坐标轴名字位置，支持'start' | 'middle' | 'end'
-        nameLocation: 'end',
-        // 坐标轴名字旋转，degree。
-        nameRotate: null, // Adapt to axis rotate, when nameLocation is 'middle'.
-        nameTruncate: {
-            maxWidth: null,
-            ellipsis: '...',
-            placeholder: '.'
+        onZero: true,
+        onZeroAxisIndex: null,
+        lineStyle: {
+            color: '#333',
+            width: 1,
+            type: 'solid'
         },
-        // 坐标轴文字样式，默认取全局样式
-        nameTextStyle: {},
-        // 文字与轴线距离
-        nameGap: 15,
-
-        silent: false, // Default false to support tooltip.
-        triggerEvent: false, // Default false to avoid legacy user event listener fail.
-
-        tooltip: {
-            show: false
-        },
-
-        axisPointer: {},
-
-        // 坐标轴线
-        axisLine: {
-            // 默认显示，属性show控制显示与否
-            show: true,
-            onZero: true,
-            onZeroAxisIndex: null,
-            // 属性lineStyle控制线条样式
-            lineStyle: {
-                color: '#333',
-                width: 1,
-                type: 'solid'
-            }
-        },
-        // 坐标轴小标记
-        axisTick: {
-            // 属性show控制显示与否，默认显示
-            show: true,
-            // 控制小标记是否在grid里
-            inside: false,
-            // 属性length控制线长
-            length: 5,
-            // 属性lineStyle控制线条样式
-            lineStyle: {
-                width: 1
-            }
-        },
-        // 坐标轴文本标签，详见axis.axisLabel
-        axisLabel: {
-            show: true,
-            // 控制文本标签是否在grid里
-            inside: false,
-            rotate: 0,
-            showMinLabel: null, // true | false | null (auto)
-            showMaxLabel: null, // true | false | null (auto)
-            margin: 8,
-            // formatter: null,
-            // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            fontSize: 12
-        },
-        // 分隔线
-        splitLine: {
-            // 默认显示，属性show控制显示与否
-            show: true,
-            // 属性lineStyle（详见lineStyle）控制线条样式
-            lineStyle: {
-                color: ['#ccc'],
-                width: 1,
-                type: 'solid'
-            }
-        },
-        // 分隔区域
-        splitArea: {
-            // 默认不显示，属性show控制显示与否
-            show: false,
-            // 属性areaStyle（详见areaStyle）控制区域样式
-            areaStyle: {
-                color: ['rgba(250,250,250,0.3)','rgba(200,200,200,0.3)']
-            }
+        // The arrow at both ends the the axis.
+        symbol: ['none', 'none'],
+        symbolSize: [10, 15]
+    },
+    axisTick: {
+        show: true,
+        // Whether axisTick is inside the grid or outside the grid.
+        inside: false,
+        // The length of axisTick.
+        length: 5,
+        lineStyle: {
+            width: 1
         }
-    };
-
-    var categoryAxis = zrUtil.merge({
-        // 类目起始和结束两端空白策略
-        boundaryGap: true,
-        // splitArea: {
-            // show: false
-        // },
-        splitLine: {
-            show: false
-        },
-        // 坐标轴小标记
-        axisTick: {
-            // If tick is align with label when boundaryGap is true
-            alignWithLabel: false,
-            interval: 'auto'
-        },
-        // 坐标轴文本标签，详见axis.axisLabel
-        axisLabel: {
-            interval: 'auto'
+    },
+    axisLabel: {
+        show: true,
+        // Whether axisLabel is inside the grid or outside the grid.
+        inside: false,
+        rotate: 0,
+        // true | false | null/undefined (auto)
+        showMinLabel: null,
+        // true | false | null/undefined (auto)
+        showMaxLabel: null,
+        margin: 8,
+        // formatter: null,
+        fontSize: 12
+    },
+    splitLine: {
+        show: true,
+        lineStyle: {
+            color: ['#ccc'],
+            width: 1,
+            type: 'solid'
         }
-    }, defaultOption);
+    },
+    splitArea: {
+        show: false,
+        areaStyle: {
+            color: ['rgba(250,250,250,0.3)', 'rgba(200,200,200,0.3)']
+        }
+    }
+};
 
-    var valueAxis = zrUtil.merge({
-        // 数值起始和结束两端空白策略
-        boundaryGap: [0, 0],
-        // 最小值, 设置成 'dataMin' 则从数据中计算最小值
-        // min: null,
-        // 最大值，设置成 'dataMax' 则从数据中计算最大值
-        // max: null,
-        // Readonly prop, specifies start value of the range when using data zoom.
-        // rangeStart: null
-        // Readonly prop, specifies end value of the range when using data zoom.
-        // rangeEnd: null
-        // 脱离0值比例，放大聚焦到最终_min，_max区间
-        // scale: false,
-        // 分割段数，默认为5
-        splitNumber: 5
-        // Minimum interval
-        // minInterval: null
-        // maxInterval: null
-    }, defaultOption);
+var axisDefault = {};
 
-    // FIXME
-    var timeAxis = zrUtil.defaults({
-        scale: true,
-        min: 'dataMin',
-        max: 'dataMax'
-    }, valueAxis);
+axisDefault.categoryAxis = zrUtil.merge({
+    // The gap at both ends of the axis. For categoryAxis, boolean.
+    boundaryGap: true,
+    // Set false to faster category collection.
+    // Only usefull in the case like: category is
+    // ['2012-01-01', '2012-01-02', ...], where the input
+    // data has been ensured not duplicate and is large data.
+    // null means "auto":
+    // if axis.data provided, do not deduplication,
+    // else do deduplication.
+    deduplication: null,
+    // splitArea: {
+        // show: false
+    // },
+    splitLine: {
+        show: false
+    },
+    axisTick: {
+        // If tick is align with label when boundaryGap is true
+        alignWithLabel: false,
+        interval: 'auto'
+    },
+    axisLabel: {
+        interval: 'auto'
+    }
+}, defaultOption);
 
-    var logAxis = zrUtil.defaults({
-        scale: true,
-        logBase: 10
-    }, valueAxis);
+axisDefault.valueAxis = zrUtil.merge({
+    // The gap at both ends of the axis. For value axis, [GAP, GAP], where
+    // `GAP` can be an absolute pixel number (like `35`), or percent (like `'30%'`)
+    boundaryGap: [0, 0],
 
-    return {
-        categoryAxis: categoryAxis,
-        valueAxis: valueAxis,
-        timeAxis: timeAxis,
-        logAxis: logAxis
-    };
-});
+    // TODO
+    // min/max: [30, datamin, 60] or [20, datamin] or [datamin, 60]
+
+    // Min value of the axis. can be:
+    // + a number
+    // + 'dataMin': use the min value in data.
+    // + null/undefined: auto decide min value (consider pretty look and boundaryGap).
+    // min: null,
+
+    // Max value of the axis. can be:
+    // + a number
+    // + 'dataMax': use the max value in data.
+    // + null/undefined: auto decide max value (consider pretty look and boundaryGap).
+    // max: null,
+
+    // Readonly prop, specifies start value of the range when using data zoom.
+    // rangeStart: null
+
+    // Readonly prop, specifies end value of the range when using data zoom.
+    // rangeEnd: null
+
+    // Optional value can be:
+    // + `false`: always include value 0.
+    // + `true`: the extent do not consider value 0.
+    // scale: false,
+
+    // AxisTick and axisLabel and splitLine are caculated based on splitNumber.
+    splitNumber: 5,
+
+    // Interval specifies the span of the ticks is mandatorily.
+    // interval: null
+
+    // Specify min interval when auto calculate tick interval.
+    // minInterval: null
+
+    // Specify max interval when auto calculate tick interval.
+    // maxInterval: null
+
+    minorTick: {
+        // Minor tick, not available for cateogry axis.
+        show: false,
+        // Split number of minor ticks. The value should be in range of (0, 100)
+        splitNumber: 5,
+        // Lenght of minor tick
+        length: 3,
+
+        // Same inside with axisTick
+
+        // Line style
+        lineStyle: {
+            // Default to be same with axisTick
+        }
+    },
+
+    minorSplitLine: {
+        show: false,
+
+        lineStyle: {
+            color: '#eee',
+            width: 1
+        }
+    }
+}, defaultOption);
+
+axisDefault.timeAxis = zrUtil.defaults({
+    scale: true,
+    min: 'dataMin',
+    max: 'dataMax'
+}, axisDefault.valueAxis);
+
+axisDefault.logAxis = zrUtil.defaults({
+    scale: true,
+    logBase: 10
+}, axisDefault.valueAxis);
+
+export default axisDefault;

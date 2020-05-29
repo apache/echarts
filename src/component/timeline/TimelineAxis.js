@@ -1,96 +1,76 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    var zrUtil = require('zrender/core/util');
-    var Axis = require('../../coord/Axis');
-    var axisHelper = require('../../coord/axisHelper');
+import * as zrUtil from 'zrender/src/core/util';
+import Axis from '../../coord/Axis';
+
+/**
+ * Extend axis 2d
+ * @constructor module:echarts/coord/cartesian/Axis2D
+ * @extends {module:echarts/coord/cartesian/Axis}
+ * @param {string} dim
+ * @param {*} scale
+ * @param {Array.<number>} coordExtent
+ * @param {string} axisType
+ * @param {string} position
+ */
+var TimelineAxis = function (dim, scale, coordExtent, axisType) {
+
+    Axis.call(this, dim, scale, coordExtent);
 
     /**
-     * Extend axis 2d
-     * @constructor module:echarts/coord/cartesian/Axis2D
-     * @extends {module:echarts/coord/cartesian/Axis}
-     * @param {string} dim
-     * @param {*} scale
-     * @param {Array.<number>} coordExtent
-     * @param {string} axisType
-     * @param {string} position
+     * Axis type
+     *  - 'category'
+     *  - 'value'
+     *  - 'time'
+     *  - 'log'
+     * @type {string}
      */
-    var TimelineAxis = function (dim, scale, coordExtent, axisType) {
+    this.type = axisType || 'value';
 
-        Axis.call(this, dim, scale, coordExtent);
+    /**
+     * Axis model
+     * @param {module:echarts/component/TimelineModel}
+     */
+    this.model = null;
+};
 
-        /**
-         * Axis type
-         *  - 'category'
-         *  - 'value'
-         *  - 'time'
-         *  - 'log'
-         * @type {string}
-         */
-        this.type = axisType || 'value';
+TimelineAxis.prototype = {
 
-        /**
-         * @private
-         * @type {number}
-         */
-        this._autoLabelInterval;
+    constructor: TimelineAxis,
 
-        /**
-         * Axis model
-         * @param {module:echarts/component/TimelineModel}
-         */
-        this.model = null;
-    };
+    /**
+     * @override
+     */
+    getLabelModel: function () {
+        return this.model.getModel('label');
+    },
 
-    TimelineAxis.prototype = {
+    /**
+     * @override
+     */
+    isHorizontal: function () {
+        return this.model.get('orient') === 'horizontal';
+    }
 
-        constructor: TimelineAxis,
+};
 
-        /**
-         * @public
-         * @return {number}
-         */
-        getLabelInterval: function () {
-            var timelineModel = this.model;
-            var labelModel = timelineModel.getModel('label.normal');
-            var labelInterval = labelModel.get('interval');
+zrUtil.inherits(TimelineAxis, Axis);
 
-            if (labelInterval != null && labelInterval != 'auto') {
-                return labelInterval;
-            }
-
-            var labelInterval = this._autoLabelInterval;
-
-            if (!labelInterval) {
-                labelInterval = this._autoLabelInterval = axisHelper.getAxisLabelInterval(
-                    zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
-                    axisHelper.getFormattedLabels(this, labelModel.get('formatter')),
-                    labelModel.getFont(),
-                    timelineModel.get('orient') === 'horizontal'
-                );
-            }
-
-            return labelInterval;
-        },
-
-        /**
-         * If label is ignored.
-         * Automatically used when axis is category and label can not be all shown
-         * @public
-         * @param  {number} idx
-         * @return {boolean}
-         */
-        isLabelIgnored: function (idx) {
-            if (this.type === 'category') {
-                var labelInterval = this.getLabelInterval();
-                return ((typeof labelInterval === 'function')
-                    && !labelInterval(idx, this.scale.getLabel(idx)))
-                    || idx % (labelInterval + 1);
-            }
-        }
-
-    };
-
-    zrUtil.inherits(TimelineAxis, Axis);
-
-    return TimelineAxis;
-});
+export default TimelineAxis;

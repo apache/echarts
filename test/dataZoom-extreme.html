@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+        .test-title {
+            background: #146402;
+            color: #fff;
+        }
+    </style>
+
+
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+
+
+    <script>
+
+        var chart;
+        var myChart;
+        var option;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+
+            // Thanks to <https://github.com/vision57>
+            // See <https://github.com/ecomfe/echarts/issues/7666>
+
+            function createParams() {
+                var notMerge = true;
+                var option = {
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider'
+                    }],
+                    xAxis: {
+                        type: 'time'
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: []
+                };
+                return {
+                    title: 'series empty, should no exception.',
+                    notMerge: notMerge,
+                    option: option,
+                    info: option
+                };
+            }
+
+            chart = myChart = testHelper.create(echarts, 'main0', createParams());
+            if (chart) {
+                // Set option again with notMerge mode.
+                chart.setOption(createParams().option, true);
+            }
+        });
+
+    </script>
+
+
+
+
+
+
+
+
+
+
+    <script>
+
+        // See https://github.com/ecomfe/echarts/issues/7955
+        // Thanks to https://github.com/cbtpro
+
+        require([
+            'echarts',
+            'extension/bmap'
+        ], function (echarts) {
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: 'Step Start',
+                        type: 'line',
+                        step: 'start',
+                        data: [120, 132, null, 134, 90, 230, 210]
+                    },
+                    {
+                        name: 'Step Middle',
+                        type: 'line',
+                        step: 'middle',
+                        data: [220, 282, 201, 234, null, 430, 410]
+                    }
+                ]
+            }
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: 'When toolbox.dataZoom enabled, line should keep broken.',
+                option: option,
+                button: {
+                    text: 'Click enable toolbox.dataZoom',
+                    onClick: function () {
+                        chart.setOption({
+                            toolbox: {
+                                feature: {
+                                    dataZoom: {}
+                                }
+                            },
+                            // xAxis: {
+                            //     type: 'category',
+                            //     data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                            // },
+                            // yAxis: {
+                            //     type: 'value'
+                            // },
+                            // series: [
+                            //     {
+                            //         name:'Step Start',
+                            //         type:'line',
+                            //         step: 'start',
+                            //         data:[120, 132, null, 134, 90, 230, 210]
+                            //     },
+                            //     {
+                            //         name:'Step Middle',
+                            //         type:'line',
+                            //         step: 'middle',
+                            //         data:[220, 282, 201, 234, null, 430, 410]
+                            //     },
+                            //     {
+                            //         name:'Step End',
+                            //         type:'line',
+                            //         step: 'end',
+                            //         data:[450, 432, 401, 454, 590, null, 510]
+                            //     }
+                            // ]
+                        });
+                    }
+                }
+            });
+
+        });
+    </script>
+
+
+
+
+    <script>
+
+        require([
+            'echarts',
+            'extension/bmap'
+        ], function (echarts) {
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                },
+                xAxis: {
+                },
+                yAxis: {
+                },
+                series: [
+                    {
+                        name: 'Step Start',
+                        type: 'line',
+                        data: [[12, 120], [23, 132], null, [19, 134], [45, 90]]
+                    },
+                    {
+                        name: 'Step Middle',
+                        type: 'line',
+                        data: [[42, 120], [53, 132], [null, 55], [49, 134], [15, 90]]
+                    }
+                ]
+            }
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: 'Add dataZoom, and zoom data, line should keep broken',
+                option: option,
+                button: {
+                    text: 'Click to add dataZoom',
+                    onClick: function () {
+                        chart.setOption({
+                            dataZoom: [{
+                            }, {
+                                type: 'inside'
+                            }]
+                        })
+                    }
+                }
+            });
+        });
+
+    </script>
+
+    <script>
+
+        require([
+            'echarts',
+            'extension/bmap'
+        ], function (echarts) {
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                },
+                dataZoom: [
+                    { type: 'slider' }
+                ],
+                xAxis: {
+                },
+                yAxis: {
+                },
+                series: [
+                    {
+                        name: 'Step Middle',
+                        type: 'line',
+                        data: [[42, 120], [53, 132], [null, 55], [49, 134], [15, 90]]
+                    }
+                ]
+            }
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: 'Add dataZoom, and the type of dataZoom should change to inside after 3s',
+                option: option
+            });
+
+            setTimeout(function () {
+                option.dataZoom[0].type = 'inside';
+                chart.setOption(option);
+            }, 3000);
+        });
+
+    </script>
+
+
+
+
+
+
+
+
+
+</body>
+
+</html>

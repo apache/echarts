@@ -1,13 +1,31 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    require('./chord/ChordSeries');
-    require('./chord/ChordView');
+import * as echarts from '../echarts';
 
-    var echarts = require('../echarts');
-    var zrUtil = require('zrender/core/util');
-    echarts.registerLayout(require('./chord/chordCircularLayout'));
+import './chord/ChordSeries';
+import './chord/ChordView';
 
-    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'chord'));
+import chordCircularLayout from './chord/chordCircularLayout';
+import dataColor from '../visual/dataColor';
+import dataFilter from '../processor/dataFilter';
 
-    echarts.registerProcessor(zrUtil.curry(require('../processor/dataFilter'), 'pie'));
-});
+echarts.registerLayout(chordCircularLayout);
+echarts.registerVisual(dataColor('chord'));
+echarts.registerProcessor(dataFilter('pie'));

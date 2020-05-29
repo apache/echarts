@@ -1,10 +1,30 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="esl.js"></script>
-        <script src="config.js"></script>
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="reset.css" />
+        <link rel="stylesheet" href="lib/reset.css" />
         <script src="lib/testHelper.js"></script>
         <script src="tooltipTestHelper.js"></script>
     </head>
@@ -53,19 +73,21 @@
         <div class="chart" id="no-tooltip"></div>
         <h1>axisPointer.type: 'none', but label.show: true</h1>
         <div class="chart" id="none"></div>
+        <h1>tooltip.axisPointer.label.show: fasle</h1>
+        <div class="chart" id="tooltip.axisPointer.label.show: fasle"></div>
 
 
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -104,15 +126,15 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/chart/line',
-                'echarts/chart/bar',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'echarts/component/dataZoom',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/line',
+                // 'echarts/chart/bar',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/dataZoom',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -154,13 +176,13 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -200,13 +222,13 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -245,12 +267,12 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/scatter',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/scatter',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -320,12 +342,12 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -426,19 +448,25 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
-                            type: 'cross'
+                            type: 'cross',
+                            label: {
+                                formatter: function (params) {
+                                    console.log(params);
+                                    return 'asdfa';
+                                }
+                            }
                         }
                     }
                 };
@@ -479,12 +507,12 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -532,12 +560,12 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -577,12 +605,12 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -631,12 +659,12 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/polar',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -702,12 +730,12 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -802,12 +830,12 @@
         <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/component/legend',
+                // 'echarts/component/grid',
+                // 'echarts/component/tooltip',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -851,14 +879,14 @@
 
         <script>
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/chart/themeRiver',
-                'echarts/component/legend',
-                'echarts/component/polar',
-                'echarts/component/tooltip',
-                'echarts/component/singleAxis',
-                'zrender/vml/vml'
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/chart/themeRiver',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/singleAxis',
+                // 'zrender/vml/vml'
             ], function (echarts) {
 
                 var option = {
@@ -948,6 +976,60 @@
 
         </script>
 
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts'
+                // 'echarts/chart/line',
+                // 'echarts/chart/themeRiver',
+                // 'echarts/component/legend',
+                // 'echarts/component/polar',
+                // 'echarts/component/tooltip',
+                // 'echarts/component/singleAxis',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross',
+                            label: {
+                                show: false
+                            }
+                        }
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {},
+                    series: {
+                        type: 'scatter',
+                        data: [
+                            ['2015/11/08',10,'DQ'],['2015/11/09',15,'DQ'],['2015/11/10',35,'DQ'],
+                            ['2015/11/14',7,'DQ'],['2015/11/15',2,'DQ'],['2015/11/16',17,'DQ'],
+                            ['2015/11/17',33,'DQ'],['2015/11/18',40,'DQ'],['2015/11/19',32,'DQ'],
+                            ['2015/11/20',26,'DQ'],['2015/11/21',35,'DQ'],['2015/11/22',40,'DQ'],
+                            ['2015/11/23',32,'DQ'],['2015/11/24',26,'DQ'],['2015/11/25',22,'DQ'],
+                            // ['2015/11/26',16,'DQ'],['2015/11/27',22,'DQ'],['2015/11/28',10,'DQ'],
+                            ['2015/11/08',35,'TY'],['2015/11/09',36,'TY'],['2015/11/10',37,'TY'],
+                            ['2015/11/11',22,'TY'],['2015/11/12',24,'TY'],['2015/11/13',26,'TY'],
+                            ['2015/11/14',34,'TY'],['2015/11/15',21,'TY'],['2015/11/16',18,'TY'],
+                            ['2015/11/17',45,'TY'],['2015/11/18',32,'TY'],['2015/11/19',35,'TY'],
+                            ['2015/11/20',30,'TY'],['2015/11/21',28,'TY'],['2015/11/22',27,'TY']
+                        ]
+                    }
+                };
+
+                createChart('tooltip.axisPointer.label.show: fasle', echarts, option);
+            })
+
+        </script>
 
 
 

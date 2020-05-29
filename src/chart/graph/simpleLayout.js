@@ -1,42 +1,60 @@
-define(function (require) {
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
-    var simpleLayoutHelper = require('./simpleLayoutHelper');
-    var simpleLayoutEdge = require('./simpleLayoutEdge');
+import {each} from 'zrender/src/core/util';
+import {simpleLayout, simpleLayoutEdge} from './simpleLayoutHelper';
 
-    return function (ecModel, api) {
-        ecModel.eachSeriesByType('graph', function (seriesModel) {
-            var layout = seriesModel.get('layout');
-            var coordSys = seriesModel.coordinateSystem;
-            if (coordSys && coordSys.type !== 'view') {
-                var data = seriesModel.getData();
-                var dimensions = coordSys.dimensions;
+export default function (ecModel, api) {
+    ecModel.eachSeriesByType('graph', function (seriesModel) {
+        var layout = seriesModel.get('layout');
+        var coordSys = seriesModel.coordinateSystem;
+        if (coordSys && coordSys.type !== 'view') {
+            var data = seriesModel.getData();
 
-                data.each(dimensions, function () {
-                    var hasValue;
-                    var args = arguments;
-                    var value = [];
-                    for (var i = 0; i < dimensions.length; i++) {
-                        if (!isNaN(args[i])) {
-                            hasValue = true;
-                        }
-                        value.push(args[i]);
+            var dimensions = [];
+            each(coordSys.dimensions, function (coordDim) {
+                dimensions = dimensions.concat(data.mapDimension(coordDim, true));
+            });
+
+            for (var dataIndex = 0; dataIndex < data.count(); dataIndex++) {
+                var value = [];
+                var hasValue = false;
+                for (var i = 0; i < dimensions.length; i++) {
+                    var val = data.get(dimensions[i], dataIndex);
+                    if (!isNaN(val)) {
+                        hasValue = true;
                     }
-                    var idx = args[args.length - 1];
-
-                    if (hasValue) {
-                        data.setItemLayout(idx, coordSys.dataToPoint(value));
-                    }
-                    else {
-                        // Also {Array.<number>}, not undefined to avoid if...else... statement
-                        data.setItemLayout(idx, [NaN, NaN]);
-                    }
-                });
-
-                simpleLayoutEdge(data.graph);
+                    value.push(val);
+                }
+                if (hasValue) {
+                    data.setItemLayout(dataIndex, coordSys.dataToPoint(value));
+                }
+                else {
+                    // Also {Array.<number>}, not undefined to avoid if...else... statement
+                    data.setItemLayout(dataIndex, [NaN, NaN]);
+                }
             }
-            else if (!layout || layout === 'none') {
-                simpleLayoutHelper(seriesModel);
-            }
-        });
-    };
-});
+
+            simpleLayoutEdge(data.graph);
+        }
+        else if (!layout || layout === 'none') {
+            simpleLayout(seriesModel);
+        }
+    });
+}

@@ -1,0 +1,291 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+
+            .snapshot-rendered {
+                position: absolute;
+                right: 10px;
+                top: 10px;
+                width: 200px;
+                height: 180px;
+                background: #fff;
+                border: 5px solid rgba(0,0,0,0.5);
+                z-index: 100;
+            }
+            .snapshot-finished {
+                position: absolute;
+                right: 10px;
+                bottom: 30px;
+                width: 200px;
+                height: 180px;
+                background: #fff;
+                border: 5px solid rgba(0,0,0,0.5);
+                z-index: 100;
+            }
+            .snapshot-info {
+                position: absolute;
+                right: 10px;
+                width: 200px;
+                text-align: center;
+                background: #333;
+                color: #fff;
+                padding: 2px 5px;
+                font-size: 12px;
+                z-index: 100;
+            }
+            .snapshot-info span {
+                color: yellow;
+            }
+            .block-box {
+                position: relative;
+            }
+        </style>
+
+        <div class="block-box">
+            <div id="main0"></div>
+        </div>
+
+        <div class="block-box">
+            <div id="main1"></div>
+        </div>
+
+        <div class="block-box">
+            <div id="main2"></div>
+        </div>
+
+
+
+
+
+
+
+        <script>
+            function enableSnapshot(chart, domId) {
+                var chartDom = testHelper.getDom(domId);
+
+                var snapshotRenderedDom = document.createElement('img');
+                snapshotRenderedDom.className = 'snapshot-rendered';
+                chartDom.parentNode.appendChild(snapshotRenderedDom);
+
+                var snapshotFinishedDom = document.createElement('img');
+                snapshotFinishedDom.className = 'snapshot-finished';
+                chartDom.parentNode.appendChild(snapshotFinishedDom);
+
+                var renderedInfoDom = document.createElement('div');
+                renderedInfoDom.className = 'snapshot-info';
+                chartDom.parentNode.appendChild(renderedInfoDom);
+                renderedInfoDom.style.top = snapshotRenderedDom.offsetTop + snapshotRenderedDom.offsetHeight + 'px';
+
+                var finishedInfoDom = document.createElement('div');
+                finishedInfoDom.className = 'snapshot-info';
+                chartDom.parentNode.appendChild(finishedInfoDom);
+                finishedInfoDom.style.top = snapshotFinishedDom.offsetTop + snapshotFinishedDom.offsetHeight + 'px';
+
+                chart.on('rendered', function () {
+                    var url = chart.getDataURL();
+                    snapshotRenderedDom.src = url;
+                    renderedInfoDom.innerHTML = 'rendered triggered at <span>' + +new Date() + '</span>';
+                });
+
+                chart.on('finished', function () {
+                    var url = chart.getDataURL();
+                    snapshotFinishedDom.src = url;
+                    finishedInfoDom.innerHTML = 'finished triggered at <span>' + +new Date() + '</span>';
+                });
+            }
+        </script>
+
+
+        <script>
+            var chunkMax = 4;
+            var chunkCount = 0;
+
+            function genData1(len, offset) {
+                var lngRange = [-10.781327, 131.48];
+                var latRange = [18.252847, 52.33];
+
+                var arr = new Float32Array(len * 2);
+                var off = 0;
+
+                for (var i = 0; i < len; i++) {
+                    var x = +Math.random() * 10;
+                    var y = +Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random() + (offset || 0) / 10;
+                    arr[off++] = x;
+                    arr[off++] = y;
+                }
+                return arr;
+            }
+
+            require(['echarts'], function (echarts) {
+                require(['map/js/china'], function () {
+                    var option = {
+                        tooltip: {},
+                        toolbox: {
+                            left: 'center',
+                            feature: {
+                                dataZoom: {}
+                            }
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            left: 'left',
+                            data: ['pm2.5' /* ,'pm10' */]
+                        },
+                        xAxis: [{
+                        }],
+                        yAxis: [{
+                        }],
+                        dataZoom: [{
+                            type: 'inside'
+                        }, {
+                            type: 'slider'
+                        }],
+                        animation: false,
+                        series : [{
+                            name: 'pm2.5',
+                            type: 'scatter',
+                            data: genData1(1e5),
+                            dimensions: ['x', 'y'],
+                            symbolSize: 3,
+                            itemStyle: {
+                                color: '#128de3',
+                                opacity: 0.4
+                            },
+                            large: true,
+                            largeThreshold: 500,
+                            progressive: 500
+                        }]
+                    };
+
+                    var chart = testHelper.create(echarts, 'main0', {
+                        title: [
+                            'finished should be triggered, and not repeatly',
+                            'finished should not triggered before real finished'
+                        ],
+                        autoResize: false,
+                        option: option
+                    });
+
+                    chart && enableSnapshot(chart, 'main0');
+                });
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    animationDuration: 4000,
+                    animationDurationUpdate: 5500,
+                    dataset: {
+                        source: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 456},
+                            {name: 'should be selected', value: 789, selected: true}
+                        ]
+                    },
+                    series: {
+                        type: 'pie',
+                        selectedMode: 'multiply'
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: 'Check animation normal. \nfinished should be triggered, and not repeatly',
+                    option: option
+                    // info: option
+                });
+
+                chart && enableSnapshot(chart, 'main1');
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    tooltip: {},
+                    xAxis: {},
+                    yAxis: {},
+                    dataset: [{
+                        source: [
+                            ['2012', null, '2013', null, '2014', 'amount'],
+                            [41.1, 2585, 30.4, 2473, 65.1, 3418],
+                            [86.5, 2316, 92.1, 3255, 85.7, 2485],
+                            [24.1, 1532, 67.2, 1452, 79.5, 4689],
+                            [55.2, 5312, 67.1, 3266, 69.2, 1354]
+                        ]
+                    }],
+                    series: [{
+                        type: 'scatter'
+                    }, {
+                        type: 'scatter'
+                    }, {
+                        type: 'scatter'
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: 'setOption delay',
+                    option: option,
+                    lazyUpdate: true
+                });
+
+                chart && enableSnapshot(chart, 'main2');
+            });
+        </script>
+
+
+
+
+
+    </body>
+</html>
