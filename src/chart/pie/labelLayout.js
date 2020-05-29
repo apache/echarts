@@ -21,6 +21,8 @@
 
 import * as textContain from 'zrender/src/contain/text';
 import {parsePercent} from '../../util/number';
+import * as zrUtil from 'zrender/src/core/util';
+import { getFont } from '../../util/graphic';
 
 var RADIAN = Math.PI / 180;
 
@@ -269,6 +271,22 @@ export default function (seriesModel, r, viewWidth, viewHeight, viewLeft, viewTo
         var textRect = textContain.getBoundingRect(
             text, font, textAlign, 'top'
         );
+
+        // calculate after rich convert
+        var rich = labelModel.get('rich');
+        if (rich) {
+            var cloneRich = zrUtil.clone(rich);
+            Object.keys(cloneRich).forEach(key => {
+                const convertFont = getFont(cloneRich[key]);
+                cloneRich[key].font = convertFont;
+            });
+            var textParseRich = textContain.parseRichText(text, {
+                rich: cloneRich,
+                font: font
+            });
+            textRect.width = textParseRich.width;
+            textRect.height = textParseRich.height;
+        }
 
         var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         if (labelPosition === 'center') {
