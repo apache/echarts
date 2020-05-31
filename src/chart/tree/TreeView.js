@@ -375,12 +375,6 @@ function updateNode(data, dataIndex, symbolEl, group, seriesModel, seriesScope) 
     if (isInit) {
         symbolEl = new SymbolClz(data, dataIndex, seriesScope);
         symbolEl.attr('position', [sourceOldLayout.x, sourceOldLayout.y]);
-
-        // Fix #12279.
-        // if the type of symbol is image,
-        // update symbol's data immediately but not wait until the next update rendering.
-        var symbolType = symbolEl.getSymbolPath().type;
-        symbolType === 'image' && symbolEl.updateData(data, dataIndex, seriesScope);
     }
     else {
         symbolEl.updateData(data, dataIndex, seriesScope);
