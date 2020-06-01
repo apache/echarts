@@ -25,7 +25,6 @@ import { HorizontalAlign, VerticalAlign, ZRRectLike, ZRTextAlign } from '../../u
 import { Sector, Polyline } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import Displayable from 'zrender/src/graphic/Displayable';
 import { each } from 'zrender/src/core/util';
 
 const RADIAN = Math.PI / 180;
@@ -40,7 +39,6 @@ interface LabelLayout {
     len2: number
     linePoints: VectorArray[]
     textAlign: HorizontalAlign
-    verticalAlign: VerticalAlign,
     rotation: number,
     labelDistance: number,
     labelAlignTo: PieSeriesOption['label']['alignTo'],
@@ -65,13 +63,17 @@ function adjustSingleSide(
         return a.y - b.y;
     });
 
+    let adjusted = false;
+
     function shiftDown(start: number, end: number, delta: number, dir: number) {
         for (let j = start; j < end; j++) {
-            if (list[j].y + delta > viewTop + viewHeight) {
+            if (list[j].y + delta + list[j].textRect.height / 2 > viewTop + viewHeight) {
                 break;
             }
 
             list[j].y += delta;
+            adjusted = true;
+
             if (j > start
                 && j + 1 < end
                 && list[j + 1].y > list[j].y + list[j].textRect.height
@@ -86,11 +88,13 @@ function adjustSingleSide(
 
     function shiftUp(end: number, delta: number) {
         for (let j = end; j >= 0; j--) {
-            if (list[j].y - delta < viewTop) {
+            if (list[j].y - delta - list[j].textRect.height / 2 < viewTop) {
                 break;
             }
 
             list[j].y -= delta;
+            adjusted = true;
+
             if (j > 0
                 && list[j].y > list[j - 1].y + list[j - 1].textRect.height
             ) {
@@ -99,52 +103,61 @@ function adjustSingleSide(
         }
     }
 
-    function changeX(
-        list: LabelLayout[], isDownList: boolean,
-        cx: number, cy: number, r: number,
-        dir: 1 | -1
-    ) {
-        let lastDeltaX = dir > 0
-            ? isDownList                // right-side
-                ? Number.MAX_VALUE      // down
-                : 0                     // up
-            : isDownList                // left-side
-                ? Number.MAX_VALUE      // down
-                : 0;                    // up
+    interface SemiInfo {
+        list: LabelLayout[]
+        rB: number
+        maxY: number
+    };
 
-        for (let i = 0, l = list.length; i < l; i++) {
-            if (list[i].labelAlignTo !== 'none') {
+    function recalculateXOnSemiToAlignOnEllipseCurve(semi: SemiInfo) {
+        const rB = semi.rB;
+        const rB2 = rB * rB;
+        for (let i = 0; i < semi.list.length; i++) {
+            const item = semi.list[i];
+            const dy = Math.abs(item.y - cy);
+            // horizontal r is always same with original r because x is not changed.
+            const rA = r + item.len;
+            const rA2 = rA * rA;
+            // Use ellipse implicit function to calculate x
+            const dx = Math.sqrt((1 - Math.abs(dy * dy / rB2)) * rA2);
+            item.x = cx + (dx + item.len2) * dir;
+        }
+    }
+
+    // Adjust X based on the shifted y. Make tight labels aligned on an ellipse curve.
+    function recalculateX(items: LabelLayout[]) {
+        // Extremes of
+        const topSemi = { list: [], maxY: 0} as SemiInfo;
+        const bottomSemi = { list: [], maxY: 0 } as SemiInfo;
+
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].labelAlignTo !== 'none') {
                 continue;
             }
-
-            const deltaY = Math.abs(list[i].y - cy);
-            const length = list[i].len;
-            const length2 = list[i].len2;
-            let deltaX = (deltaY < r + length)
-                ? Math.sqrt(
-                        (r + length + length2) * (r + length + length2)
-                        - deltaY * deltaY
-                    )
-                : Math.abs(list[i].x - cx);
-            if (isDownList && deltaX >= lastDeltaX) {
-                // right-down, left-down
-                deltaX = lastDeltaX - 10;
+            const item = items[i];
+            const semi = item.y > cy ? bottomSemi : topSemi;
+            const dy = Math.abs(item.y - cy);
+            if (dy > semi.maxY) {
+                const dx = item.x - cx - item.len2 * dir;
+                // horizontal r is always same with original r because x is not changed.
+                const rA = r + item.len;
+                // Canculate rB based on the topest / bottemest label.
+                const rB = dx < rA
+                    ? Math.sqrt(dy * dy / (1 - dx * dx / rA / rA))
+                    : rA;
+                semi.rB = rB;
+                semi.maxY = dy;
             }
-            if (!isDownList && deltaX <= lastDeltaX) {
-                // right-up, left-up
-                deltaX = lastDeltaX + 10;
-            }
-
-            list[i].x = cx + deltaX * dir;
-            lastDeltaX = deltaX;
+            semi.list.push(item);
         }
+
+        recalculateXOnSemiToAlignOnEllipseCurve(topSemi);
+        recalculateXOnSemiToAlignOnEllipseCurve(bottomSemi);
     }
 
     let lastY = 0;
     let delta;
     const len = list.length;
-    const upList = [];
-    const downList = [];
     for (let i = 0; i < len; i++) {
         if (list[i].position === 'outer' && list[i].labelAlignTo === 'labelLine') {
             const dx = list[i].x - farthestX;
@@ -161,16 +174,10 @@ function adjustSingleSide(
     if (viewHeight - lastY < 0) {
         shiftUp(len - 1, lastY - viewHeight);
     }
-    for (let i = 0; i < len; i++) {
-        if (list[i].y >= cy) {
-            downList.push(list[i]);
-        }
-        else {
-            upList.push(list[i]);
-        }
+
+    if (adjusted) {
+        recalculateX(list);
     }
-    changeX(upList, false, cx, cy, r, dir);
-    changeX(downList, true, cx, cy, r, dir);
 }
 
 function avoidOverlap(
@@ -291,6 +298,10 @@ export default function (
     const viewTop = viewRect.y;
     const viewHeight = viewRect.height;
 
+    function setNotShow(el: {ignore: boolean}) {
+        el.ignore = true;
+    }
+
     data.each(function (idx) {
         const sector = data.getItemGraphicEl(idx) as Sector;
         const sectorShape = sector.shape;
@@ -313,6 +324,8 @@ export default function (
         labelLineLen2 = parsePercent(labelLineLen2, viewWidth);
 
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
+            each(label.states, setNotShow);
+            label.ignore = true;
             return;
         }
 
@@ -400,13 +413,21 @@ export default function (
                 len2: labelLineLen2,
                 linePoints: linePoints,
                 textAlign: textAlign,
-                verticalAlign: 'middle',
                 rotation: labelRotate,
                 labelDistance: labelDistance,
                 labelAlignTo: labelAlignTo,
                 labelMargin: labelMargin,
                 bleedMargin: bleedMargin,
                 textRect: textRect
+            });
+        }
+        else {
+            label.x = textX;
+            label.y = textY;
+            label.rotation = labelRotate;
+            label.setStyle({
+                align: textAlign,
+                verticalAlign: 'middle'
             });
         }
         sector.setTextConfig({
@@ -418,10 +439,6 @@ export default function (
         avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLeft, viewTop);
     }
 
-    function setNotShow(el: {ignore: boolean}) {
-        el.ignore = true;
-    }
-
     for (let i = 0; i < labelLayoutList.length; i++) {
         const layout = labelLayoutList[i];
         const label = layout.label;
@@ -430,9 +447,10 @@ export default function (
         if (label) {
             label.x = layout.x;
             label.y = layout.y;
+            label.rotation = layout.rotation;
             label.setStyle({
                 align: layout.textAlign,
-                verticalAlign: layout.verticalAlign
+                verticalAlign: 'middle'
             });
             if (notShowLabel) {
                 each(label.states, setNotShow);
