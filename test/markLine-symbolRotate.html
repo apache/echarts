@@ -43,132 +43,164 @@ under the License.
 
                 var chart = echarts.init(document.getElementById('main'));
 
-                $.getJSON('./data/aqi/aqi-beijing.json', function(data) {
-                    var option = {
-                        title: {
-                            text: 'Beijing AQI',
-                            subtext: 'Fix #12388'
-                        },
-                        tooltip: {
-                            trigger: 'axis'
-                        },
-                        xAxis: {
-                            data: data.map(function (item) {
-                                return item[0];
-                            })
-                        },
-                        yAxis: {
-                            splitLine: {
-                                show: false
-                            }
-                        },
-                        toolbox: {
-                            left: 'center',
-                            feature: {
-                                dataZoom: {
-                                    yAxisIndex: 'none'
-                                },
-                                restore: {},
-                                saveAsImage: {}
-                            }
-                        },
-                        dataZoom: [{
-                            startValue: '2014-06-01'
-                        }, {
-                            type: 'inside'
-                        }],
-                        visualMap: {
-                            top: 10,
-                            right: 10,
-                            pieces: [{
-                                gt: 0,
-                                lte: 50,
-                                color: '#096'
-                            }, {
-                                gt: 50,
-                                lte: 100,
-                                color: '#ffde33'
-                            }, {
-                                gt: 100,
-                                lte: 150,
-                                color: '#ff9933'
-                            }, {
-                                gt: 150,
-                                lte: 200,
-                                color: '#cc0033'
-                            }, {
-                                gt: 200,
-                                lte: 300,
-                                color: '#660099'
-                            }, {
-                                gt: 300,
-                                color: '#7e0023'
-                            }],
-                            outOfRange: {
-                                color: '#999'
-                            }
-                        },
-                        series: [{
-                            name: 'Beijing AQI',
-                            type: 'line',
-                            data: data.map(function (item) {
-                                return item[1];
-                            }),
-                            markLine: {
-                                silent: true,
-                                // symbol: 'triangle',
-                                data: [
-                                {
-                                    yAxis: 50,
-                                    // symbolRotate: 0,
-                                    // symbolRotate: null,
-                                    symbol: 'triangle',
-                                    symbolSize: 20
-                                },{
-                                    yAxis: 100,
-                                    symbolRotate: 80,
-                                    symbol: 'rect',
-                                    symbolSize: 20
-                                }, {
-                                    yAxis: 150,
-                                    symbol: 'roundRect',
-                                    symbolRotate: 40
-                                }, {
-                                    yAxis: 200,
-                                    symbol: 'diamond',
-                                    symbolRotate: 70
-                                }, {
-                                    yAxis: 250,
-                                    symbol: 'pin',
-                                    symbolRotate: 45
-                                }, {
-                                    yAxis: 300,
-                                    symbol: 'circle',
-                                    symbolRotate: 90
-                                },
-                                [{
-                                    symbol: 'rect',
-                                    x: '90%',
-                                    yAxis: 'average'
-                                }, {
-                                    symbol: 'triangle',
-                                    symbolRotate: 180,
-                                    label: {
-                                        position: 'start',
-                                        formatter: 'Average',
-                                        distance: 10
-                                    },
-                                    type: 'average',
-                                    lineStyle: {
-                                        color: '#14c4ba'
-                                    }
-                                }]]
-                            }
-                        }]
-                    };
+                function generateData() {
+                    var data = [];
+                    var start = new Date(2020, 1, 1);
+                    for (var i = 1; i < 50; i++) {
+                        start.setDate(start.getDate() + 1);
+                        var num = ~~(Math.random() * 200);
+                        if (num < 0) num = -num;
+                        data.push([echarts.format.formatTime('yyyy-MM-dd', start), num])
+                    }
+                    return data
+                }
 
-                    chart.setOption(option);
-                })
+                var data = generateData();
+
+                var option = {
+                    title: {
+                        text: 'Beijing AQI',
+                        subtext: 'Fix #12388'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        data: data.map(function(item) {
+                            return item[0];
+                        })
+                    },
+                    yAxis: {
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    toolbox: {
+                        left: 'center',
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    dataZoom: [{
+                        startValue: '2020-01-01'
+                    }, {
+                        type: 'inside'
+                    }],
+                    visualMap: {
+                        top: 10,
+                        right: 10,
+                        pieces: [{
+                            gt: 0,
+                            lte: 50,
+                            color: '#096'
+                        }, {
+                            gt: 50,
+                            lte: 100,
+                            color: '#ffde33'
+                        }, {
+                            gt: 100,
+                            lte: 150,
+                            color: '#ff9933'
+                        }, {
+                            gt: 150,
+                            lte: 200,
+                            color: '#cc0033'
+                        }, {
+                            gt: 200,
+                            lte: 300,
+                            color: '#660099'
+                        }, {
+                            gt: 300,
+                            color: '#7e0023'
+                        }],
+                        outOfRange: {
+                            color: '#999'
+                        }
+                    },
+                    series: [{
+                        name: 'Beijing AQI',
+                        type: 'line',
+                        data: data.map(function(item) {
+                            return item[1];
+                        }),
+                        markArea: {
+                            silent: true,
+                            data: [
+                                [{
+                                    name: '60到80',
+                                    yAxis: 60,
+                                    xAxis: '2020-02-10'
+                                },
+                                {
+                                    yAxis: 80,
+                                    xAxis: '2020-03-01'
+                                }]
+                            ]
+                        },
+                        markLine: {
+                            silent: true,
+                            // symbol: 'triangle',
+                            symbol: ['pin', 'triangle'],
+                            symbolRotate: [60, -45],
+                            //symbolRotate: 45,
+                            symbolSize: 20,
+                            data: [
+                                [{
+                                    name: 'Y 轴值为 100 的水平线',
+                                    yAxis: 100,
+                                    xAxis: '2020-02-10',
+                                    symbol: 'roundRect',
+                                    symbolRotate: 130
+                                }, {
+                                    yAxis: 100,
+                                    xAxis: '2020-03-10',
+                                    symbolRotate: 'default' // 设置一个非数值的旋转角度可使symbol采用默认旋转角度
+                                }],
+                                [{
+                                    name: '最小值到最大值',
+                                    type: 'min',
+                                    symbol: 'triangle'
+                                }, {
+                                    type: 'max',
+                                    symbol: 'rect',
+                                    symbolSize: [30, 60]
+                                }],
+                                [{
+                                    name: '两个坐标之间的标域',
+                                    coord: [10, 20]
+                                }, {
+                                    coord: [20, 30]
+                                }],
+                                [{
+                                    name: '两个屏幕坐标之间的标线',
+                                    x: 100,
+                                    y: 100
+                                }, {
+                                    x: 500,
+                                    y: 200
+                                }],
+                                [{
+                                    name: '60到80',
+                                    yAxis: 60,
+                                    xAxis: '2020-03-01',
+                                    symbol: 'circle'
+                                }, {
+                                    yAxis: 120,
+                                    xAxis: '2020-03-01',
+                                    symbol: 'rect',
+                                    symbolRotate: 30
+                                }],
+                            ]
+                        }
+                    }]
+                };
+
+
+                chart.setOption(option);
 
                 window.onresize = chart.resize;
             });

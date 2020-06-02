@@ -269,11 +269,15 @@ export default MarkerView.extend({
 
         var symbolType = mlModel.get('symbol');
         var symbolSize = mlModel.get('symbolSize');
+        var symbolRotate = mlModel.get('symbolRotate');
         if (!zrUtil.isArray(symbolType)) {
             symbolType = [symbolType, symbolType];
         }
         if (typeof symbolSize === 'number') {
             symbolSize = [symbolSize, symbolSize];
+        }
+        if (!zrUtil.isArray(symbolRotate)) {
+            symbolRotate = [symbolRotate, symbolRotate];
         }
 
         // Update visual and layout of from symbol and to symbol
@@ -320,7 +324,7 @@ export default MarkerView.extend({
                 data, idx, isFrom, seriesModel, api
             );
             data.setItemVisual(idx, {
-                symbolRotate: itemModel.get('symbolRotate'),
+                symbolRotate: itemModel.get('symbolRotate', true) || symbolRotate[isFrom ? 0 : 1],
                 symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
                 symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
                 color: itemModel.get('itemStyle.color') || seriesData.getVisual('color')
