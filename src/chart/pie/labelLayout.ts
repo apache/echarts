@@ -21,7 +21,7 @@
 import {parsePercent} from '../../util/number';
 import PieSeriesModel, { PieSeriesOption, PieDataItemOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
-import { HorizontalAlign, VerticalAlign, ZRRectLike, ZRTextAlign } from '../../util/types';
+import { HorizontalAlign, ZRRectLike, ZRTextAlign } from '../../util/types';
 import { Sector, Polyline } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import { RectLike } from 'zrender/src/core/BoundingRect';
@@ -69,12 +69,13 @@ function adjustSingleSide(
 
     function shiftDown(start: number, end: number, delta: number, dir: number) {
         for (let j = start; j < end; j++) {
-            if (list[j].y + delta + list[j].textRect.height / 2 > viewTop + viewHeight) {
-                break;
-            }
-
             list[j].y += delta;
             adjusted = true;
+
+            // const textHeight = list[j].textRect.height;
+            // if (list[j].y + textHeight / 2 > viewTop + viewHeight) {
+            //     list[j].y = viewTop + viewHeight - textHeight / 2;
+            // }
 
             if (j > start
                 && j + 1 < end
@@ -90,12 +91,13 @@ function adjustSingleSide(
 
     function shiftUp(end: number, delta: number) {
         for (let j = end; j >= 0; j--) {
-            if (list[j].y - delta - list[j].textRect.height / 2 < viewTop) {
-                break;
-            }
-
             list[j].y -= delta;
             adjusted = true;
+
+            const textHeight = list[j].textRect.height;
+            if (list[j].y - textHeight / 2 < viewTop) {
+                list[j].y = viewTop + textHeight / 2;
+            }
 
             if (j > 0
                 && list[j].y > list[j - 1].y + list[j - 1].textRect.height
@@ -173,6 +175,9 @@ function adjustSingleSide(
         }
         lastY = list[i].y + list[i].textRect.height;
     }
+    // PENDING:
+    // If data is sorted. Left top is usually the small data with a lower priority.
+    // So shift up and make sure the data on the bottom is always displayed well.
     if (viewHeight - lastY < 0) {
         shiftUp(len - 1, lastY - viewHeight);
     }

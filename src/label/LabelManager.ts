@@ -241,7 +241,7 @@ class LabelManager {
         /**
          * Ignore layouting if it's not specified anything.
          */
-        if (!layoutOption && !keys(layoutOption).length) {
+        if (!layoutOption || !keys(layoutOption).length) {
             return;
         }
 
@@ -384,7 +384,10 @@ class LabelManager {
 
             const labelGuide = labelItem.labelGuide;
             // TODO Callback to determine if this overlap should be handled?
-            if (overlapped) {
+            if (overlapped
+                && labelItem.layoutOption
+                && (labelItem.layoutOption as LabelLayoutOption).overlap === 'hidden'
+            ) {
                 label.hide();
                 labelGuide && labelGuide.hide();
             }
