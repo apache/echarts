@@ -804,6 +804,7 @@ export interface LabelGuideLineOption {
     length?: number
     length2?: number
     smooth?: boolean | number
+    minTurnAngle?: number,
     lineStyle?: LineStyleOption
 }
 
@@ -1131,6 +1132,8 @@ export interface SeriesOption extends
      * Global label layout option in label layout stage.
      */
     labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
+
+    labelLine?: LabelGuideLineOption
 
     /**
      * Animation config for state transition.

@@ -224,7 +224,7 @@ class PiePiece extends graphic.Sector {
 
         let smooth = labelLineModel.get('smooth');
         if (smooth && smooth === true) {
-            smooth = 0.4;
+            smooth = 0.3;
         }
         labelLine.setShape({
             smooth: smooth as number

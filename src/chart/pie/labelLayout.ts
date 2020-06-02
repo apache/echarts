@@ -26,6 +26,7 @@ import { Sector, Polyline } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { each } from 'zrender/src/core/util';
+import { limitTurnAngle } from '../../label/labelGuideHelper';
 
 const RADIAN = Math.PI / 180;
 
@@ -37,6 +38,7 @@ interface LabelLayout {
     position: PieSeriesOption['label']['position'],
     len: number
     len2: number
+    minTurnAngle: number
     linePoints: VectorArray[]
     textAlign: HorizontalAlign
     rotation: number,
@@ -411,6 +413,7 @@ export default function (
                 position: labelPosition,
                 len: labelLineLen,
                 len2: labelLineLen2,
+                minTurnAngle: labelLineModel.get('minTurnAngle'),
                 linePoints: linePoints,
                 textAlign: textAlign,
                 rotation: labelRotate,
@@ -463,10 +466,13 @@ export default function (
             }
         }
         if (labelLine) {
-            labelLine.setShape({ points: layout.linePoints });
-            if (notShowLabel) {
+            if (notShowLabel || !layout.linePoints) {
                 each(labelLine.states, setNotShow);
                 labelLine.ignore = true;
+            }
+            else {
+                limitTurnAngle(layout.linePoints, layout.minTurnAngle);
+                labelLine.setShape({ points: layout.linePoints });
             }
         }
     }

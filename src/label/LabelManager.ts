@@ -397,7 +397,8 @@ class LabelManager {
                 label,
                 globalRect,
                 label.__hostTarget,
-                labelItem.hostRect
+                labelItem.hostRect,
+                labelItem.seriesModel.getModel(['labelLine'])
             );
         }
     }

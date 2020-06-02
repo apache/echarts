@@ -272,6 +272,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // 引导线两段中的第二段长度
             length2: 15,
             smooth: false,
+            minTurnAngle: 100,
             lineStyle: {
                 // color: 各异,
                 width: 1,

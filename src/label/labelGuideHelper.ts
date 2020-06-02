@@ -27,6 +27,8 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import { normalizeRadian } from 'zrender/src/contain/util';
 import { cubicProjectPoint, quadraticProjectPoint } from 'zrender/src/core/curve';
 import Element from 'zrender/src/Element';
+import { LabelGuideLineOption } from '../util/types';
+import Model from '../model/Model';
 
 const PI2 = Math.PI * 2;
 const CMD = PathProxy.CMD;
@@ -144,7 +146,9 @@ function projectPointToArc(
     }
 }
 
-function projectPointToLine(x1: number, y1: number, x2: number, y2: number, x: number, y: number, out: number[]) {
+function projectPointToLine(
+    x1: number, y1: number, x2: number, y2: number, x: number, y: number, out: number[], limitToEnds: boolean
+) {
     const dx = x - x1;
     const dy = y - y1;
 
@@ -157,7 +161,11 @@ function projectPointToLine(x1: number, y1: number, x2: number, y2: number, x: n
 
     // dot product
     const projectedLen = dx * dx1 + dy * dy1;
-    const t = Math.min(Math.max(projectedLen / lineLen, 0), 1);
+    let t = projectedLen / lineLen;
+    if (limitToEnds) {
+        t = Math.min(Math.max(t, 0), 1);
+    }
+    t *= lineLen;
     const ox = out[0] = x1 + t * dx1;
     const oy = out[1] = y1 + t * dy1;
 
@@ -234,7 +242,7 @@ function nearestPointOnPath(pt: Point, path: PathProxy, out: Point) {
                 yi = y0;
                 break;
             case CMD.L:
-                d = projectPointToLine(xi, yi, data[i], data[i + 1], x, y, tmpPt);
+                d = projectPointToLine(xi, yi, data[i], data[i + 1], x, y, tmpPt, true);
                 xi = data[i++];
                 yi = data[i++];
                 break;
@@ -293,7 +301,7 @@ function nearestPointOnPath(pt: Point, path: PathProxy, out: Point) {
                 d = projectPointToRect(x0, y0, width, height, x, y, tmpPt);
                 break;
             case CMD.Z:
-                d = projectPointToLine(xi, yi, x0, y0, x, y, tmpPt);
+                d = projectPointToLine(xi, yi, x0, y0, x, y, tmpPt, true);
 
                 xi = x0;
                 yi = y0;
@@ -309,15 +317,26 @@ function nearestPointOnPath(pt: Point, path: PathProxy, out: Point) {
     return minDist;
 }
 
+// Temporal varible for intermediate usage.
 const pt0 = new Point();
 const pt1 = new Point();
 const pt2 = new Point();
 const dir = new Point();
+const dir2 = new Point();
+
+/**
+ * Calculate a proper guide line based on the label position and graphic element definition
+ * @param label
+ * @param labelRect
+ * @param target
+ * @param targetRect
+ */
 export function updateLabelGuideLine(
     label: ZRText,
     labelRect: RectLike,
     target: Element,
-    targetRect: RectLike
+    targetRect: RectLike,
+    labelLineModel: Model<LabelGuideLineOption>
 ) {
     if (!target) {
         return;
@@ -356,11 +375,69 @@ export function updateLabelGuideLine(
         // TODO pt2 is in the path
         if (dist < minDist) {
             minDist = dist;
-            pt0.toArray(points[0]);
+            pt2.toArray(points[0]);
             pt1.toArray(points[1]);
-            pt2.toArray(points[2]);
+            pt0.toArray(points[2]);
         }
     }
 
+    limitTurnAngle(points, labelLineModel.get('minTurnAngle'));
+
     labelLine.setShape({ points });
+}
+
+// Temporal variable for the limitTurnAngle function
+const tmpArr: number[] = [];
+const tmpProjPoint = new Point();
+/**
+ * Reduce the line segment attached to the label to limit the turn angle between two segments.
+ * @param linePoints
+ * @param minTurnAngle Radian of minimum turn angle. 0 - 180
+ */
+export function limitTurnAngle(linePoints: number[][], minTurnAngle: number) {
+    if (!(minTurnAngle < 180 && minTurnAngle > 0)) {
+        return;
+    }
+    minTurnAngle = minTurnAngle / 180 * Math.PI;
+    // The line points can be
+    //      /pt1----pt2 (label)
+    //     /
+    // pt0/
+    pt0.fromArray(linePoints[0]);
+    pt1.fromArray(linePoints[1]);
+    pt2.fromArray(linePoints[2]);
+
+    Point.sub(dir, pt0, pt1);
+    Point.sub(dir2, pt2, pt1);
+
+    const len1 = dir.len();
+    const len2 = dir2.len();
+    if (len1 < 1e-3 || len2 < 1e-3) {
+        return;
+    }
+
+    dir.scale(1 / len1);
+    dir2.scale(1 / len2);
+
+    const angleCos = dir.dot(dir2);
+    const minTurnAngleCos = Math.cos(minTurnAngle);
+    if (minTurnAngleCos < angleCos) {    // Smaller than minTurnAngle
+        // Calculate project point of pt0 on pt1-pt2
+        const d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
+        tmpProjPoint.fromArray(tmpArr);
+        // Calculate new projected length with limited minTurnAngle and get the new connect point
+        tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI - minTurnAngle));
+        // Limit the new calculated connect point between pt1 and pt2.
+        const t = pt2.x !== pt1.x
+            ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x)
+            : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
+        if (t < 0) {
+            Point.copy(tmpProjPoint, pt1);
+        }
+        else if (t > 1) {
+            Point.copy(tmpProjPoint, pt2);
+        }
+
+        tmpProjPoint.toArray(linePoints[1]);
+    }
 }
