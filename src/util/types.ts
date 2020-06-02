@@ -822,6 +822,10 @@ export interface LabelLayoutOptionCallbackParams {
 };
 
 export interface LabelLayoutOption {
+    /**
+     * How to handle the element when it's overlapped
+     * @default 'visible'
+     */
     overlap?: 'visible' | 'hidden' | 'blur'
     /**
      * Minimal margin between two labels which will be considered as overlapped.
@@ -1128,12 +1132,12 @@ export interface SeriesOption extends
      */
     seriesLayoutBy?: 'column' | 'row'
 
+    labelLine?: LabelGuideLineOption
+
     /**
      * Global label layout option in label layout stage.
      */
     labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
-
-    labelLine?: LabelGuideLineOption
 
     /**
      * Animation config for state transition.

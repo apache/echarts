@@ -46,7 +46,7 @@ import Transformable from 'zrender/src/core/Transformable';
 import { updateLabelGuideLine } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
-import { retrieve2, guid, each } from 'zrender/src/core/util';
+import { retrieve2, guid, each, keys } from 'zrender/src/core/util';
 
 interface DisplayedLabelItem {
     label: ZRText
@@ -149,7 +149,7 @@ class LabelManager {
     /**
      * Add label to manager
      */
-    addLabel(
+    private _addLabel(
         dataIndex: number,
         seriesModel: SeriesModel,
         label: ZRText,
@@ -235,7 +235,16 @@ class LabelManager {
         this._chartViewList.push(chartView);
 
         const seriesModel = chartView.__model;
+
         const layoutOption = seriesModel.get('labelLayout');
+
+        /**
+         * Ignore layouting if it's not specified anything.
+         */
+        if (!layoutOption && !keys(layoutOption).length) {
+            return;
+        }
+
         chartView.group.traverse((child) => {
             if (child.ignore) {
                 return true;    // Stop traverse descendants.
@@ -245,7 +254,7 @@ class LabelManager {
             const textEl = child.getTextContent();
             const dataIndex = getECData(child).dataIndex;
             if (textEl && dataIndex != null) {
-                this.addLabel(dataIndex, seriesModel, textEl, layoutOption);
+                this._addLabel(dataIndex, seriesModel, textEl, layoutOption);
             }
         });
     }

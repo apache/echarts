@@ -224,8 +224,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // 高亮扇区偏移量
         hoverOffset: 5,
 
-        // If use strategy to avoid label overlapping
-        avoidLabelOverlap: true,
         // 选择模式，默认关闭，可选single，multiple
         // selectedMode: false,
         // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
@@ -282,6 +280,14 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         itemStyle: {
             borderWidth: 1
         },
+
+        labelLayout: {
+            // Hide the overlapped label.
+            overlap: 'hidden'
+        },
+
+        // If use strategy to avoid label overlapping
+        avoidLabelOverlap: true,
 
         // Animation type. Valid values: expansion, scale
         animationType: 'expansion',
