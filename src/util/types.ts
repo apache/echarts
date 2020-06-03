@@ -811,6 +811,7 @@ export interface LabelLineOption {
 
 export interface LabelLayoutOptionCallbackParams {
     dataIndex: number,
+    dataType: string,
     seriesIndex: number,
     text: string
     align: ZRTextAlign
@@ -831,6 +832,11 @@ export interface LabelLayoutOption {
      * Minimal margin between two labels which will be considered as overlapped.
      */
     overlapMargin?: number
+
+    /**
+     * If label is draggable.
+     */
+    draggable?: boolean
     /**
      * Can be absolute px number or percent string.
      */

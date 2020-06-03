@@ -67,11 +67,13 @@ under the License.
                     },
                     labelLayout: {
                         y: 20,
+                        draggable: true,
                         align: 'center',
                         overlap: 'hidden'
                     },
                     labelLine: {
-                        show: true
+                        show: true,
+                        length2: 10
                     },
                     label: {
                         show: true,
@@ -89,11 +91,13 @@ under the License.
                     },
                     labelLayout: {
                         y: 40,
+                        draggable: true,
                         align: 'center',
                         overlap: 'hidden'
                     },
                     labelLine: {
-                        show: true
+                        show: true,
+                        length2: 10
                     },
                     label: {
                         show: true,
@@ -107,8 +111,6 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Test Case Description of main0',
-                    '(Muliple lines and **emphasis** are supported in description)'
                 ],
                 option: option
                 // height: 300,

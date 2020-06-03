@@ -49,6 +49,7 @@ import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
 import { retrieve2, each, keys } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
+import Model from '../model/Model';
 
 interface DisplayedLabelItem {
     label: ZRText
@@ -65,6 +66,7 @@ interface LabelLayoutDesc {
 
     seriesModel: SeriesModel
     dataIndex: number
+    dataType: string
 
     layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
 
@@ -107,6 +109,7 @@ function prepareLayoutCallbackParams(labelItem: LabelLayoutDesc): LabelLayoutOpt
     const label = labelItem.label;
     return {
         dataIndex: labelItem.dataIndex,
+        dataType: labelItem.dataType,
         seriesIndex: labelItem.seriesModel.seriesIndex,
         text: labelItem.label.style.text,
         rect: labelItem.hostRect,
@@ -136,6 +139,11 @@ const labelLineAnimationStore = makeInner<{
     }
 }, Polyline>();
 
+type LabelLineOptionMixin = {
+    labelLine: LabelLineOption,
+    emphasis: { labelLine: LabelLineOption }
+};
+
 class LabelManager {
 
     private _labelList: LabelLayoutDesc[] = [];
@@ -153,6 +161,7 @@ class LabelManager {
      */
     private _addLabel(
         dataIndex: number,
+        dataType: string,
         seriesModel: SeriesModel,
         label: ZRText,
         layoutOption: LabelLayoutDesc['layoutOption']
@@ -192,6 +201,7 @@ class LabelManager {
 
             seriesModel,
             dataIndex,
+            dataType,
 
             layoutOption,
 
@@ -253,10 +263,11 @@ class LabelManager {
 
             // Only support label being hosted on graphic elements.
             const textEl = child.getTextContent();
-            const dataIndex = getECData(child).dataIndex;
+            const ecData = getECData(child);
+            const dataIndex = ecData.dataIndex;
             // Can only attach the text on the element with dataIndex
             if (textEl && dataIndex != null) {
-                this._addLabel(dataIndex, seriesModel, textEl, layoutOption);
+                this._addLabel(dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
             }
         });
     }
@@ -264,6 +275,12 @@ class LabelManager {
     updateLayoutConfig(api: ExtensionAPI) {
         const width = api.getWidth();
         const height = api.getHeight();
+
+        function createDragHandler(el: Element, labelLineModel: Model) {
+            return function () {
+                updateLabelLinePoints(el, labelLineModel);
+            };
+        }
         for (let i = 0; i < this._labelList.length; i++) {
             const labelItem = this._labelList[i];
             const label = labelItem.label;
@@ -324,6 +341,21 @@ class LabelManager {
 
             labelItem.overlap = layoutOption.overlap;
             labelItem.overlapMargin = layoutOption.overlapMargin;
+
+            if (layoutOption.draggable) {
+                label.draggable = true;
+                label.cursor = 'move';
+                if (hostEl) {
+                    const data = labelItem.seriesModel.getData(labelItem.dataType);
+                    const itemModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);
+                    label.on('drag', createDragHandler(hostEl, itemModel.getModel('labelLine')));
+                }
+            }
+            else {
+                // TODO Other drag functions?
+                label.off('drag');
+                label.cursor = 'default';
+            }
         }
     }
 
@@ -406,7 +438,6 @@ class LabelManager {
                     transform
                 });
             }
-
         }
     }
 
@@ -444,10 +475,7 @@ class LabelManager {
 
         if (textEl && dataIndex != null) {
             const data = seriesModel.getData(ecData.dataType);
-            const itemModel = data.getItemModel<{
-                labelLine: LabelLineOption,
-                emphasis: { labelLine: LabelLineOption }
-            }>(dataIndex);
+            const itemModel = data.getItemModel<LabelLineOptionMixin>(dataIndex);
 
             const defaultStyle: PathStyleProps = {};
             const visualStyle = data.getItemVisual(dataIndex, 'style');
@@ -461,7 +489,6 @@ class LabelManager {
                 normal: labelLineModel,
                 emphasis: itemModel.getModel(['emphasis', 'labelLine'])
             }, defaultStyle);
-
 
             updateLabelLinePoints(el, labelLineModel);
         }
