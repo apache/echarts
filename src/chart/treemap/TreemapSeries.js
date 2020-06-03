@@ -190,7 +190,7 @@ export default SeriesModel.extend({
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        var tree = Tree.createTree(root, this, null, beforeLink);
+        var tree = Tree.createTree(root, this, beforeLink);
 
         function beforeLink(nodeData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {

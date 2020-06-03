@@ -38,22 +38,14 @@ export default SeriesModel.extend({
 
         completeTreeValue(root);
 
-        var levels = option.levels || [];
-
-        // levels = option.levels = setDefault(levels, ecModel);
-
-        var levelModels = zrUtil.map(levels || [], function (levelDefine) {
+        var levelModels = zrUtil.map(option.levels || [], function (levelDefine) {
             return new Model(levelDefine, this, ecModel);
         }, this);
-
-        var treeOption = {};
-
-        treeOption.levels = levels;
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        var tree = Tree.createTree(root, this, treeOption, beforeLink);
+        var tree = Tree.createTree(root, this, beforeLink);
 
         function beforeLink(nodeData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {

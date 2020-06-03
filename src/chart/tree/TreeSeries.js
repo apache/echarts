@@ -45,7 +45,7 @@ export default SeriesModel.extend({
         var leaves = option.leaves || {};
         var leavesModel = new Model(leaves, this, this.ecModel);
 
-        var tree = Tree.createTree(root, this, {}, beforeLink);
+        var tree = Tree.createTree(root, this, beforeLink);
 
         function beforeLink(nodeData) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
