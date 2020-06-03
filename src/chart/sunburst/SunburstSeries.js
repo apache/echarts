@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
+import Model from '../../model/Model';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 
 export default SeriesModel.extend({
@@ -41,6 +42,10 @@ export default SeriesModel.extend({
 
         // levels = option.levels = setDefault(levels, ecModel);
 
+        var levelModels = zrUtil.map(levels || [], function (levelDefine) {
+            return new Model(levelDefine, this, ecModel);
+        }, this);
+
         var treeOption = {};
 
         treeOption.levels = levels;
@@ -48,7 +53,18 @@ export default SeriesModel.extend({
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        return Tree.createTree(root, this, treeOption).data;
+        var tree = Tree.createTree(root, this, treeOption, beforeLink);
+
+        function beforeLink(nodeData) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                var node = tree.getNodeByDataIndex(idx);
+                var levelModel = levelModels[node.depth];
+                levelModel && (model.parentModel = levelModel);
+                return model;
+            });
+        }
+
+        return tree.data;
     },
 
     optionUpdated: function () {
