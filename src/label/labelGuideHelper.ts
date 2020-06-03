@@ -20,18 +20,23 @@
 import {
     Text as ZRText,
     Point,
-    Path
+    Path,
+    Polyline
 } from '../util/graphic';
 import PathProxy from 'zrender/src/core/PathProxy';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { normalizeRadian } from 'zrender/src/contain/util';
 import { cubicProjectPoint, quadraticProjectPoint } from 'zrender/src/core/curve';
 import Element from 'zrender/src/Element';
-import { LabelGuideLineOption } from '../util/types';
+import { extend, defaults, retrieve2 } from 'zrender/src/core/util';
+import { LabelLineOption } from '../util/types';
 import Model from '../model/Model';
+import { invert } from 'zrender/src/core/matrix';
 
 const PI2 = Math.PI * 2;
 const CMD = PathProxy.CMD;
+
+const STATES = ['normal', 'emphasis'] as const;
 
 const DEFAULT_SEARCH_SPACE = ['top', 'right', 'bottom', 'left'] as const;
 
@@ -331,50 +336,58 @@ const dir2 = new Point();
  * @param target
  * @param targetRect
  */
-export function updateLabelGuideLine(
-    label: ZRText,
-    labelRect: RectLike,
+export function updateLabelLinePoints(
     target: Element,
-    targetRect: RectLike,
-    labelLineModel: Model<LabelGuideLineOption>
+    labelLineModel: Model<LabelLineOption>
 ) {
     if (!target) {
         return;
     }
 
     const labelLine = target.getTextGuideLine();
+    const label = target.getTextContent();
     // Needs to create text guide in each charts.
-    if (!labelLine) {
+    if (!(label && labelLine)) {
         return;
     }
 
     const labelGuideConfig = target.textGuideLineConfig || {};
-    if (!labelGuideConfig.autoCalculate) {
-        return;
-    }
 
     const points = [[0, 0], [0, 0], [0, 0]];
 
     const searchSpace = labelGuideConfig.candidates || DEFAULT_SEARCH_SPACE;
+    const labelRect = label.getBoundingRect().clone();
+    labelRect.applyTransform(label.getComputedTransform());
 
     let minDist = Infinity;
     const anchorPoint = labelGuideConfig && labelGuideConfig.anchor;
+    const targetTransform = target.getComputedTransform();
+    const targetInversedTransform = invert([], targetTransform);
+    const len = labelLineModel.get('length2') || 0;
+
     if (anchorPoint) {
         pt2.copy(anchorPoint);
     }
     for (let i = 0; i < searchSpace.length; i++) {
         const candidate = searchSpace[i];
         getCandidateAnchor(candidate, 0, labelRect, pt0, dir);
-        Point.scaleAndAdd(pt1, pt0, dir, labelGuideConfig.len == null ? 15 : labelGuideConfig.len);
+        Point.scaleAndAdd(pt1, pt0, dir, len);
+
+        // Transform to target coord space.
+        pt1.transform(targetInversedTransform);
 
         const dist = anchorPoint ? anchorPoint.distance(pt1)
             : (target instanceof Path
                 ? nearestPointOnPath(pt1, target.path, pt2)
-                : nearestPointOnRect(pt1, targetRect, pt2));
+                : nearestPointOnRect(pt1, target.getBoundingRect(), pt2));
 
         // TODO pt2 is in the path
         if (dist < minDist) {
             minDist = dist;
+            // Transform back to global space.
+            pt1.transform(targetTransform);
+            pt2.transform(targetTransform);
+
             pt2.toArray(points[0]);
             pt1.toArray(points[1]);
             pt0.toArray(points[2]);
@@ -439,5 +452,77 @@ export function limitTurnAngle(linePoints: number[][], minTurnAngle: number) {
         }
 
         tmpProjPoint.toArray(linePoints[1]);
+    }
+}
+
+
+type LabelLineModel = Model<LabelLineOption>;
+/**
+ * Create a label line if necessary and set it's style.
+ */
+export function setLabelLineStyle(
+    targetEl: Element,
+    statesModels: Record<typeof STATES[number], LabelLineModel>,
+    defaultStyle?: Polyline['style'],
+    defaultConfig?: Element['textGuideLineConfig']
+) {
+    let labelLine = targetEl.getTextGuideLine();
+    const label = targetEl.getTextContent();
+    if (!label) {
+        // Not show label line if there is no label.
+        if (labelLine) {
+            targetEl.removeTextGuideLine();
+        }
+        return;
+    }
+
+    const normalModel = statesModels.normal;
+    const showNormal = normalModel.get('show');
+    const labelShowNormal = label.ignore;
+
+    for (let i = 0; i < STATES.length; i++) {
+        const stateName = STATES[i];
+        const stateModel = statesModels[stateName];
+        const isNormal = stateName === 'normal';
+        if (stateModel) {
+            const stateShow = stateModel.get('show');
+            const isLabelIgnored = isNormal
+                ? labelShowNormal
+                : retrieve2(label.states && label.states[stateName].ignore, labelShowNormal);
+            if (isLabelIgnored  // Not show when label is not shown in this state.
+                || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
+            ) {
+                const stateObj = isNormal ? labelLine : (labelLine && labelLine.states.normal);
+                if (stateObj) {
+                    stateObj.ignore = true;
+                }
+                continue;
+            }
+            // Create labelLine if not exists
+            if (!labelLine) {
+                labelLine = new Polyline();
+                targetEl.setTextGuideLine(labelLine);
+            }
+
+            const stateObj = isNormal ? labelLine : labelLine.ensureState(stateName);
+            // Make sure display.
+            stateObj.ignore = false;
+            // Set smooth
+            let smooth = stateModel.get('smooth');
+            if (smooth && smooth === true) {
+                smooth = 0.4;
+            }
+            stateObj.shape = stateObj.shape || {};
+            (stateObj.shape as Polyline['shape']).smooth = smooth as number;
+
+            const styleObj = stateModel.getModel('lineStyle').getLineStyle();
+            isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
+        }
+    }
+
+    if (labelLine) {
+        defaults(labelLine.style, defaultStyle);
+        // Not fill.
+        labelLine.style.fill = null;
     }
 }

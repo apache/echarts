@@ -28,7 +28,7 @@ import {
     BoxLayoutOptionMixin,
     HorizontalAlign,
     LabelOption,
-    LabelGuideLineOption,
+    LabelLineOption,
     ItemStyleOption,
     OptionDataValueNumeric
 } from '../../util/types';
@@ -51,12 +51,12 @@ export interface FunnelDataItemOption {
         height?: number | string
     }
     label?: FunnelLabelOption
-    labelLine?: LabelGuideLineOption
+    labelLine?: LabelLineOption
 
     emphasis?: {
         itemStyle?: ItemStyleOption
         label?: FunnelLabelOption
-        labelLine?: LabelGuideLineOption
+        labelLine?: LabelLineOption
     }
 }
 
@@ -80,12 +80,12 @@ export interface FunnelSeriesOption
     funnelAlign?: HorizontalAlign
 
     label?: FunnelLabelOption
-    labelLine?: LabelGuideLineOption
+    labelLine?: LabelLineOption
     itemStyle?: ItemStyleOption
 
     emphasis?: {
         label?: FunnelLabelOption
-        labelLine?: LabelGuideLineOption
+        labelLine?: LabelLineOption
         itemStyle?: ItemStyleOption
     }
 

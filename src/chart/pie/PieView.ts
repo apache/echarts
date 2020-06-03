@@ -28,6 +28,7 @@ import { Payload, ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
+import { setLabelLineStyle } from '../../label/labelGuideHelper';
 
 function updateDataSelected(
     this: PiePiece,
@@ -160,13 +161,11 @@ class PiePiece extends graphic.Sector {
 
     private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
         const sector = this;
-        const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
 
         const labelTextEmphasisState = labelText.ensureState('emphasis');
-        const labelLineEmphasisState = labelLine.ensureState('emphasis');
 
         const labelModel = itemModel.getModel('label');
         const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
@@ -209,25 +208,15 @@ class PiePiece extends graphic.Sector {
         labelText.ignore = !labelModel.get('show');
         labelTextEmphasisState.ignore = !labelHoverModel.get('show');
 
-        labelLine.ignore = !labelLineModel.get('show');
-        labelLineEmphasisState.ignore = !labelLineHoverModel.get('show');
-
         // Default use item visual color
-        labelLine.setStyle({
+        setLabelLineStyle(this, {
+            normal: labelLineModel,
+            emphasis: labelLineHoverModel
+        }, {
             stroke: visualColor,
             opacity: style && style.opacity
-        });
-        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
-
-        const lineEmphasisState = labelLine.ensureState('emphasis');
-        lineEmphasisState.style = labelLineHoverModel.getModel('lineStyle').getLineStyle();
-
-        let smooth = labelLineModel.get('smooth');
-        if (smooth && smooth === true) {
-            smooth = 0.3;
-        }
-        labelLine.setShape({
-            smooth: smooth as number
+        }, {
+            autoCalculate: false
         });
     }
 }
@@ -237,6 +226,8 @@ class PiePiece extends graphic.Sector {
 class PieView extends ChartView {
 
     static type = 'pie';
+
+    ignoreLabelLineUpdate = true;
 
     private _sectorGroup: graphic.Group;
     private _data: List;

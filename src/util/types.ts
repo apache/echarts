@@ -799,7 +799,7 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
     distance?: number | number[]
 }
 
-export interface LabelGuideLineOption {
+export interface LabelLineOption {
     show?: boolean
     length?: number
     length2?: number
@@ -1132,7 +1132,7 @@ export interface SeriesOption extends
      */
     seriesLayoutBy?: 'column' | 'row'
 
-    labelLine?: LabelGuideLineOption
+    labelLine?: LabelLineOption
 
     /**
      * Global label layout option in label layout stage.

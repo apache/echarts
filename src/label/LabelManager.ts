@@ -36,17 +36,19 @@ import {
     ZRTextVerticalAlign,
     LabelLayoutOption,
     LabelLayoutOptionCallback,
-    LabelLayoutOptionCallbackParams
+    LabelLayoutOptionCallbackParams,
+    LabelLineOption
 } from '../util/types';
 import { parsePercent } from '../util/number';
 import ChartView from '../view/Chart';
-import { ElementTextConfig } from 'zrender/src/Element';
+import Element, { ElementTextConfig } from 'zrender/src/Element';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Transformable from 'zrender/src/core/Transformable';
-import { updateLabelGuideLine } from './labelGuideHelper';
+import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
-import { retrieve2, guid, each, keys } from 'zrender/src/core/util';
+import { retrieve2, each, keys } from 'zrender/src/core/util';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 interface DisplayedLabelItem {
     label: ZRText
@@ -59,7 +61,7 @@ interface DisplayedLabelItem {
 
 interface LabelLayoutDesc {
     label: ZRText
-    labelGuide: Polyline
+    labelLine: Polyline
 
     seriesModel: SeriesModel
     dataIndex: number
@@ -186,7 +188,7 @@ class LabelManager {
 
         this._labelList.push({
             label,
-            labelGuide: labelGuide,
+            labelLine: labelGuide,
 
             seriesModel,
             dataIndex,
@@ -228,7 +230,6 @@ class LabelManager {
                 attachedRot: textConfig.rotation
             }
         });
-
     }
 
     addLabelsOfSeries(chartView: ChartView) {
@@ -253,6 +254,7 @@ class LabelManager {
             // Only support label being hosted on graphic elements.
             const textEl = child.getTextContent();
             const dataIndex = getECData(child).dataIndex;
+            // Can only attach the text on the element with dataIndex
             if (textEl && dataIndex != null) {
                 this._addLabel(dataIndex, seriesModel, textEl, layoutOption);
             }
@@ -382,18 +384,18 @@ class LabelManager {
                 }
             }
 
-            const labelGuide = labelItem.labelGuide;
+            const labelLine = labelItem.labelLine;
             // TODO Callback to determine if this overlap should be handled?
             if (overlapped
                 && labelItem.layoutOption
                 && (labelItem.layoutOption as LabelLayoutOption).overlap === 'hidden'
             ) {
                 label.hide();
-                labelGuide && labelGuide.hide();
+                labelLine && labelLine.hide();
             }
             else {
                 label.attr('ignore', labelItem.defaultAttr.ignore);
-                labelGuide && labelGuide.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
+                labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
 
                 displayedLabels.push({
                     label,
@@ -405,78 +407,114 @@ class LabelManager {
                 });
             }
 
-            updateLabelGuideLine(
-                label,
-                globalRect,
-                label.__hostTarget,
-                labelItem.hostRect,
-                labelItem.seriesModel.getModel(['labelLine'])
-            );
         }
     }
 
-    animateLabels() {
-        each(this._chartViewList, function (chartView) {
+    /**
+     * Process all labels. Not only labels with layoutOption.
+     */
+    processLabelsOverall() {
+        each(this._chartViewList, (chartView) => {
             const seriesModel = chartView.__model;
-            if (!seriesModel.isAnimationEnabled()) {
-                return;
-            }
+            const animationEnabled = seriesModel.isAnimationEnabled();
+            const ignoreLabelLineUpdate = chartView.ignoreLabelLineUpdate;
 
             chartView.group.traverse((child) => {
                 if (child.ignore) {
                     return true;    // Stop traverse descendants.
                 }
 
-                // Only support label being hosted on graphic elements.
-                const textEl = child.getTextContent();
-                const guideLine = child.getTextGuideLine();
-
-                if (textEl && !textEl.ignore && !textEl.invisible) {
-                    const layoutStore = labelAnimationStore(textEl);
-                    const oldLayout = layoutStore.oldLayout;
-                    const newProps = {
-                        x: textEl.x,
-                        y: textEl.y,
-                        rotation: textEl.rotation
-                    };
-                    if (!oldLayout) {
-                        textEl.attr(newProps);
-                        const oldOpacity = retrieve2(textEl.style.opacity, 1);
-                        // Fade in animation
-                        textEl.style.opacity = 0;
-                        initProps(textEl, {
-                            style: { opacity: oldOpacity }
-                        }, seriesModel);
-                    }
-                    else {
-                        textEl.attr(oldLayout);
-                        updateProps(textEl, newProps, seriesModel);
-                    }
-                    layoutStore.oldLayout = newProps;
+                if (!ignoreLabelLineUpdate) {
+                    this._updateLabelLine(child, seriesModel);
                 }
 
-                if (guideLine && !guideLine.ignore && !guideLine.invisible) {
-                    const layoutStore = labelLineAnimationStore(guideLine);
-                    const oldLayout = layoutStore.oldLayout;
-                    const newLayout = { points: guideLine.shape.points };
-                    if (!oldLayout) {
-                        guideLine.setShape(newLayout);
-                        guideLine.style.strokePercent = 0;
-                        initProps(guideLine, {
-                            style: { strokePercent: 1 }
-                        }, seriesModel);
-                    }
-                    else {
-                        guideLine.attr({ shape: oldLayout });
-                        updateProps(guideLine, {
-                            shape: newLayout
-                        }, seriesModel);
-                    }
-
-                    layoutStore.oldLayout = newLayout;
+                if (animationEnabled) {
+                    this._animateLabels(child, seriesModel);
                 }
             });
         });
+    }
+
+    private _updateLabelLine(el: Element, seriesModel: SeriesModel) {
+        // Only support label being hosted on graphic elements.
+        const textEl = el.getTextContent();
+        // Update label line style.
+        const ecData = getECData(el);
+        const dataIndex = ecData.dataIndex;
+
+        if (textEl && dataIndex != null) {
+            const data = seriesModel.getData(ecData.dataType);
+            const itemModel = data.getItemModel<{
+                labelLine: LabelLineOption,
+                emphasis: { labelLine: LabelLineOption }
+            }>(dataIndex);
+
+            const defaultStyle: PathStyleProps = {};
+            const visualStyle = data.getItemVisual(dataIndex, 'style');
+            const visualType = data.getVisual('drawType');
+            // Default to be same with main color
+            defaultStyle.stroke = visualStyle[visualType];
+
+            const labelLineModel = itemModel.getModel('labelLine');
+
+            setLabelLineStyle(el, {
+                normal: labelLineModel,
+                emphasis: itemModel.getModel(['emphasis', 'labelLine'])
+            }, defaultStyle);
+
+
+            updateLabelLinePoints(el, labelLineModel);
+        }
+    }
+
+    private _animateLabels(el: Element, seriesModel: SeriesModel) {
+        const textEl = el.getTextContent();
+        const guideLine = el.getTextGuideLine();
+        // Animate
+        if (textEl && !textEl.ignore && !textEl.invisible) {
+            const layoutStore = labelAnimationStore(textEl);
+            const oldLayout = layoutStore.oldLayout;
+            const newProps = {
+                x: textEl.x,
+                y: textEl.y,
+                rotation: textEl.rotation
+            };
+            if (!oldLayout) {
+                textEl.attr(newProps);
+                const oldOpacity = retrieve2(textEl.style.opacity, 1);
+                // Fade in animation
+                textEl.style.opacity = 0;
+                initProps(textEl, {
+                    style: { opacity: oldOpacity }
+                }, seriesModel);
+            }
+            else {
+                textEl.attr(oldLayout);
+                updateProps(textEl, newProps, seriesModel);
+            }
+            layoutStore.oldLayout = newProps;
+        }
+
+        if (guideLine && !guideLine.ignore && !guideLine.invisible) {
+            const layoutStore = labelLineAnimationStore(guideLine);
+            const oldLayout = layoutStore.oldLayout;
+            const newLayout = { points: guideLine.shape.points };
+            if (!oldLayout) {
+                guideLine.setShape(newLayout);
+                guideLine.style.strokePercent = 0;
+                initProps(guideLine, {
+                    style: { strokePercent: 1 }
+                }, seriesModel);
+            }
+            else {
+                guideLine.attr({ shape: oldLayout });
+                updateProps(guideLine, {
+                    shape: newLayout
+                }, seriesModel);
+            }
+
+            layoutStore.oldLayout = newLayout;
+        }
     }
 }
 

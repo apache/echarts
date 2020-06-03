@@ -25,30 +25,30 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import { ColorString, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
+import { setLabelLineStyle } from '../../label/labelGuideHelper';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
-class FunnelPiece extends graphic.Group {
+class FunnelPiece extends graphic.Polygon {
 
     constructor(data: List, idx: number) {
         super();
 
-        const polygon = new graphic.Polygon();
+        const polygon = this;
         const labelLine = new graphic.Polyline();
         const text = new graphic.Text();
-        this.add(polygon);
-        this.add(labelLine);
         polygon.setTextContent(text);
+        this.setTextGuideLine(labelLine);
 
         this.updateData(data, idx, true);
     }
 
     updateData(data: List, idx: number, firstCreate?: boolean) {
 
-        const polygon = this.childAt(0) as graphic.Polygon;
+        const polygon = this;
 
         const seriesModel = data.hostModel;
         const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
@@ -92,8 +92,8 @@ class FunnelPiece extends graphic.Group {
     }
 
     _updateLabel(data: List, idx: number) {
-        const polygon = this.childAt(0);
-        const labelLine = this.childAt(1) as graphic.Polyline;
+        const polygon = this;
+        const labelLine = this.getTextGuideLine();
         const labelText = polygon.getTextContent();
 
         const seriesModel = data.hostModel;
@@ -131,11 +131,9 @@ class FunnelPiece extends graphic.Group {
             outsideFill: visualColor
         });
 
-        graphic.updateProps(labelLine, {
-            shape: {
-                points: labelLayout.linePoints || labelLayout.linePoints
-            }
-        }, seriesModel, idx);
+        labelLine.setShape({
+            points: labelLayout.linePoints || labelLayout.linePoints
+        });
 
         // Make sure update style on labelText after setLabelStyle.
         // Because setLabelStyle will replace a new style on it.
@@ -153,18 +151,15 @@ class FunnelPiece extends graphic.Group {
             z2: 10
         });
 
-        labelLine.ignore = !labelLineModel.get('show');
-        const labelLineEmphasisState = labelLine.ensureState('emphasis');
-        labelLineEmphasisState.ignore = !labelLineHoverModel.get('show');
-
-        // Default use item visual color
-        labelLine.setStyle({
+        setLabelLineStyle(polygon, {
+            normal: labelLineModel,
+            emphasis: labelLineHoverModel
+        }, {
+            // Default use item visual color
             stroke: visualColor
+        }, {
+            autoCalculate: false
         });
-        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
-
-        const lineEmphasisState = labelLine.ensureState('emphasis');
-        lineEmphasisState.style = labelLineHoverModel.getModel('lineStyle').getLineStyle();
     }
 }
 
@@ -173,6 +168,8 @@ class FunnelView extends ChartView {
     type = FunnelView.type;
 
     private _data: List;
+
+    ignoreLabelLineUpdate = true;
 
     render(seriesModel: FunnelSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
