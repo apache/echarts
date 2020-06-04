@@ -19,7 +19,9 @@
 
 
 import {__DEV__} from '../config';
-import * as zrUtil from 'zrender/src/core/util';
+import {
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike
+} from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
@@ -57,7 +59,7 @@ import prepareCalendar from '../coord/calendar/prepareCustom';
 import ComponentModel from '../model/Component';
 import List, { DefaultDataVisual } from '../data/List';
 import GlobalModel from '../model/Global';
-import { makeInner } from '../util/model';
+import { makeInner, normalizeToArray } from '../util/model';
 import ExtensionAPI from '../ExtensionAPI';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Axis2D from '../coord/cartesian/Axis2D';
@@ -75,6 +77,7 @@ import {
 } from '../util/styleCompat';
 import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
+import { cloneValue } from 'zrender/src/animation/Animator';
 
 
 const inner = makeInner<{
@@ -86,17 +89,38 @@ const inner = makeInner<{
     txConZ2Set: number;
     orginalDuring: Element['updateDuringAnimation'];
     customDuring: CustomZRPathOption['during'];
+    leaveToProps: ElementProps
 }, Element>();
 
 type CustomExtraElementInfo = Dictionary<unknown>;
-type TransformPropsX = 'x' | 'scaleX' | 'originX';
-type TransformPropsY = 'y' | 'scaleY' | 'originY';
-type TransformProps = TransformPropsX | TransformPropsY | 'rotation';
+const TRANSFORM_PROPS = {
+    x: 1,
+    y: 1,
+    scaleX: 1,
+    scaleY: 1,
+    originX: 1,
+    originY: 1,
+    rotation: 1
+} as const;
+type TransformProps = keyof typeof TRANSFORM_PROPS;
 
+type TransitionAnyProps = string | string[];
+type TransitionTransformProps = TransformProps | TransformProps[];
+// Do not declare "Dictionary" in TransitionAnyOption to restrict the type check.
+type TransitionAnyOption = {
+    $transition?: TransitionAnyProps;
+    $enterFrom?: Dictionary<unknown>;
+    $leaveTo?: Dictionary<unknown>;
+};
+type TransitionTransformOption = {
+    $transition?: TransitionTransformProps;
+    $enterFrom?: Dictionary<unknown>;
+    $leaveTo?: Dictionary<unknown>;
+};
 
 interface CustomBaseElementOption extends Partial<Pick<
     Element, TransformProps | 'silent' | 'ignore' | 'textConfig'
->> {
+>>, TransitionTransformOption {
     // element type, mandatory.
     type: string;
     id?: string;
@@ -107,13 +131,15 @@ interface CustomBaseElementOption extends Partial<Pick<
     textContent?: CustomTextOption | false;
     // `false` means remove the clipPath
     clipPath?: CustomZRPathOption | false;
+    // Shape can be set in any el option for custom prop for annimation duration.
+    shape?: TransitionAnyOption;
     // updateDuringAnimation
     during?(elProps: CustomDuringElProps): void;
 };
 interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
 >> {
-    style?: ZRStyleProps;
+    style?: ZRStyleProps & TransitionAnyOption;
     // `false` means remove emphasis trigger.
     styleEmphasis?: ZRStyleProps | false;
     emphasis?: CustomDisplayableOptionOnState;
@@ -122,7 +148,7 @@ interface CustomDisplayableOptionOnState extends Partial<Pick<
     Displayable, TransformProps | 'textConfig' | 'z2'
 >> {
     // `false` means remove emphasis trigger.
-    style?: ZRStyleProps | false;
+    style?: (ZRStyleProps & TransitionAnyOption) | false;
 }
 interface CustomGroupOption extends CustomBaseElementOption {
     type: 'group';
@@ -133,7 +159,8 @@ interface CustomGroupOption extends CustomBaseElementOption {
     children: CustomElementOption[];
     $mergeChildren: false | 'byName' | 'byIndex';
 }
-interface CustomZRPathOption extends CustomDisplayableOption, Pick<PathProps, 'shape'> {
+interface CustomZRPathOption extends CustomDisplayableOption {
+    shape?: PathProps['shape'] & TransitionAnyOption;
 }
 interface CustomDuringElProps extends Partial<Pick<Element, TransformProps>> {
     shape?: PathProps['shape'];
@@ -151,22 +178,21 @@ interface CustomSVGPathOption extends CustomDisplayableOption {
         y?: number;
         width?: number;
         height?: number;
-    };
+    } & TransitionAnyOption;
 }
 interface CustomImageOption extends CustomDisplayableOption {
     type: 'image';
-    style?: ImageStyleProps;
+    style?: ImageStyleProps & TransitionAnyOption;
     emphasis?: CustomImageOptionOnState;
 }
 interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
-    style?: ImageStyleProps;
+    style?: ImageStyleProps & TransitionAnyOption;
 }
 interface CustomTextOption extends CustomDisplayableOption {
     type: 'text';
 }
 type CustomElementOption = CustomZRPathOption | CustomSVGPathOption | CustomImageOption | CustomTextOption;
 type CustomElementOptionOnState = CustomDisplayableOptionOnState | CustomImageOptionOnState;
-type StyleOption = ZRStyleProps | ImageStyleProps | false;
 
 
 interface CustomSeriesRenderItemAPI extends
@@ -237,6 +263,11 @@ interface CustomSeriesOption extends
     };
 }
 
+interface LooseElementProps extends ElementProps {
+    style?: ZRStyleProps;
+    shape?: Dictionary<unknown>;
+}
+
 // Also compat with ec4, where
 // `visual('color') visual('borderColor')` is supported.
 const STYLE_VISUAL_TYPE = {
@@ -290,6 +321,13 @@ const Z2_SPECIFIED_BIT = {
 
 const tmpDuringStyle = {} as CustomDuringElProps['style'];
 const tmpDuringElProps = {} as CustomDuringElProps;
+
+const LEGACY_TRANSFORM_PROPS = {
+    position: ['x', 'y'],
+    scale: ['scaleX', 'scaleY'],
+    origin: ['originX', 'originY']
+} as const;
+type LegacyTransformProp = keyof typeof LEGACY_TRANSFORM_PROPS;
 
 export type PrepareCustomInfo = (coordSys: CoordinateSystem) => {
     coordSys: CustomSeriesRenderItemParamsCoordSys;
@@ -400,19 +438,18 @@ class CustomSeriesView extends ChartView {
         // roam or data zoom according to `actionType`.
         data.diff(oldData)
             .add(function (newIdx) {
-                createOrUpdate(
+                createOrUpdateItemEl(
                     null, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .update(function (newIdx, oldIdx) {
-                const el = oldData.getItemGraphicEl(oldIdx);
-                createOrUpdate(
-                    el, newIdx, renderItem(newIdx, payload), customSeries, group, data
+                createOrUpdateItemEl(
+                    oldData.getItemGraphicEl(oldIdx),
+                    newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .remove(function (oldIdx) {
-                const el = oldData.getItemGraphicEl(oldIdx);
-                el && group.remove(el);
+                removeItemEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
             })
             .execute();
 
@@ -455,7 +492,7 @@ class CustomSeriesView extends ChartView {
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {
-            const el = createOrUpdate(null, idx, renderItem(idx, payload), customSeries, this.group, data);
+            const el = createOrUpdateItemEl(null, idx, renderItem(idx, payload), customSeries, this.group, data);
             el.traverse(setIncrementalAndHoverLayer);
         }
     }
@@ -523,7 +560,7 @@ function createEl(elOption: CustomElementOption): Element {
         const Clz = graphicUtil.getShapeClass(graphicType);
 
         if (__DEV__) {
-            zrUtil.assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
+            assert(Clz, 'graphic type "' + graphicType + '" can not be found.');
         }
 
         el = new Clz();
@@ -541,7 +578,8 @@ function createEl(elOption: CustomElementOption): Element {
 }
 
 /**
- * [STRATEGY] Merge properties or erase all properties:
+ * ----------------------------------------------------------
+ * [STRATEGY_MERGE] Merge properties or erase all properties:
  *
  * Based on the fact that the existing zr element probably be reused, we discuss whether
  * merge or erase all properties to the exsiting elements.
@@ -558,7 +596,8 @@ function createEl(elOption: CustomElementOption): Element {
  * Some "object-like" config like `textConfig`, `textContent`, `style` which are not needed for
  * every elment, so we replace them only when user specify them. And the that is a total replace.
  *
- * [STRATEGY] `hasOwnProperty` or `== null`:
+ * ----------------------------------------------
+ * [STRATEGY_NULL] `hasOwnProperty` or `== null`:
  *
  * Ditinguishing "own property" probably bring little trouble to user when make el options.
  * So we  trade a {xx: null} or {xx: undefined} as "not specified" if possible rather than
@@ -566,33 +605,36 @@ function createEl(elOption: CustomElementOption): Element {
  * clearable props like `style`/`textConfig`/`textContent` we enable `false` to means
  * "clear". In some othere special cases that the prop is able to set as null/undefined,
  * but not suitable to use `false`, `hasOwnProperty` is checked.
+ *
+ * ---------------------------------------------
+ * [STRATEGY_TRANSITION] The rule of transition:
+ * + For props on the root level of a element:
+ *      If there is no `$transition` specified, tansform props will be transitioned by default,
+ *      which is the same as the previous setting in echarts4 and suitable for the scenario
+ *      of dataZoom change.
+ *      If `$transition` specified, only the specified props will be transitioned.
+ * + For props in `shape` and `style`:
+ *      Only props specified in `$transition` will be transitioned.
+ * + Break:
+ *      Since ec5, do not make transition to shape by default, because it might result in
+ *      performance issue (especially `points` of polygon) and do not necessary in most cases.
  */
 function updateElNormal(
     el: Element,
     dataIndex: number,
     elOption: CustomElementOption,
-    styleOpt: StyleOption,
+    styleOpt: CustomElementOption['style'],
     attachedTxInfo: AttachedTxInfo,
     seriesModel: CustomSeriesModel,
     isInit: boolean,
     isTextContent: boolean
 ): void {
-    const transitionProps = {} as ElementProps;
+    const transFromProps = {} as ElementProps;
+    const allProps = {} as ElementProps;
     const elDisplayable = el.isGroup ? null : el as Displayable;
 
-    (elOption as CustomZRPathOption).shape && (
-        (transitionProps as PathProps).shape = zrUtil.clone((elOption as CustomZRPathOption).shape)
-    );
-    setLagecyProp(elOption, transitionProps, 'position', 'x', 'y');
-    setLagecyProp(elOption, transitionProps, 'scale', 'scaleX', 'scaleY');
-    setLagecyProp(elOption, transitionProps, 'origin', 'originX', 'originY');
-    setTransProp(elOption, transitionProps, 'x');
-    setTransProp(elOption, transitionProps, 'y');
-    setTransProp(elOption, transitionProps, 'scaleX');
-    setTransProp(elOption, transitionProps, 'scaleY');
-    setTransProp(elOption, transitionProps, 'originX');
-    setTransProp(elOption, transitionProps, 'originY');
-    setTransProp(elOption, transitionProps, 'rotation');
+    prepareShapeUpdate(el, elOption, allProps, transFromProps, isInit);
+    prepareTransformUpdate(el, elOption, allProps, transFromProps, isInit);
 
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
     if (txCfgOpt) {
@@ -601,55 +643,59 @@ function updateElNormal(
         el.setTextConfig(txCfgOpt);
     }
 
-    if (el.type === 'image' && styleOpt) {
-        const targetStyle = (transitionProps as Displayable).style = {};
-        const imgStyle = (el as graphicUtil.Image).style;
-        prepareStyleTransition('x', targetStyle, styleOpt, imgStyle, isInit);
-        prepareStyleTransition('y', targetStyle, styleOpt, imgStyle, isInit);
-        prepareStyleTransition('width', targetStyle, styleOpt, imgStyle, isInit);
-        prepareStyleTransition('height', targetStyle, styleOpt, imgStyle, isInit);
-    }
-
     if (el.type === 'text' && styleOpt) {
         const textOptionStyle = styleOpt as TextStyleProps;
-        const targetStyle = (transitionProps as Displayable).style = {};
-        const textStyle = (el as graphicUtil.Text).style;
-        prepareStyleTransition('x', targetStyle, textOptionStyle, textStyle, isInit);
-        prepareStyleTransition('y', targetStyle, textOptionStyle, textStyle, isInit);
         // Compatible with ec4: if `textFill` or `textStroke` exists use them.
-        zrUtil.hasOwn(textOptionStyle, 'textFill') && (
+        hasOwn(textOptionStyle, 'textFill') && (
             textOptionStyle.fill = (textOptionStyle as any).textFill
         );
-        zrUtil.hasOwn(textOptionStyle, 'textStroke') && (
+        hasOwn(textOptionStyle, 'textStroke') && (
             textOptionStyle.stroke = (textOptionStyle as any).textStroke
         );
     }
+
+    prepareStyleUpdate(el, styleOpt, transFromProps, isInit);
 
     if (elDisplayable) {
         // PENDING: here the input style object is used directly.
         // Good for performance but bad for compatibility control.
         styleOpt && elDisplayable.useStyle(styleOpt);
 
-        // Init animation.
-        if (isInit) {
-            elDisplayable.style.opacity = 0;
-            const targetOpacity = (styleOpt && styleOpt.opacity != null) ? styleOpt.opacity : 1;
-            graphicUtil.initProps(elDisplayable, {style: {opacity: targetOpacity}}, seriesModel, dataIndex);
+        // When style object changed, how to trade the existing animation?
+        // It is probably conplicated and not needed to cover all the cases.
+        // But still need consider the case:
+        // (1) When using init animation on `style.opacity`, and before the animation
+        //     ended users triggers an update by mousewhell. At that time the init
+        //     animation should better be continued rather than terminated.
+        //     So after `useStyle` called, we should change the animation target manually
+        //     to continue the effect of the init animation.
+        // (2) PENDING: If the previous animation targeted at a `val1`, and currently we need
+        //     to update the value to `val2` and no animation declared, should be terminate
+        //     the previous animation or just modify the target of the animation?
+        //     Therotically That will happen not only on `style` but also on `shape` and
+        //     `transfrom` props. But we haven't handle this case at present yet.
+        // (3) PENDING: Is it proper to visit `animators` and `targetName`?
+        const animators = elDisplayable.animators;
+        for (let i = 0; i < animators.length; i++) {
+            const animator = animators[i];
+            // targetName is the "topKey".
+            if (animator.targetName === 'style') {
+                animator.changeTarget(elDisplayable.style);
+            }
         }
 
-        zrUtil.hasOwn(elOption, 'invisible') && (elDisplayable.invisible = elOption.invisible);
+        hasOwn(elOption, 'invisible') && (elDisplayable.invisible = elOption.invisible);
     }
 
-    if (isInit) {
-        el.attr(transitionProps);
-    }
-    else {
-        graphicUtil.updateProps(el, transitionProps, seriesModel, dataIndex);
-    }
+    el.attr(allProps);
+    const params = {dataIndex: dataIndex, isFrom: true};
+    isInit
+        ? graphicUtil.initProps(el, transFromProps, seriesModel, params)
+        : graphicUtil.updateProps(el, transFromProps, seriesModel, params);
 
     // Merge by default.
-    zrUtil.hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
-    zrUtil.hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
+    hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
+    hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
 
     const customDuringMounted = el.updateDuringAnimation === elUpdateDuringAnimation;
     if (elOption.during) {
@@ -668,10 +714,221 @@ function updateElNormal(
         // `elOption.info` enables user to mount some info on
         // elements and use them in event handlers.
         // Update them only when user specified, otherwise, remain.
-        zrUtil.hasOwn(elOption, 'info') && (inner(el).info = elOption.info);
+        hasOwn(elOption, 'info') && (inner(el).info = elOption.info);
     }
 
     styleOpt ? el.dirty() : el.markRedraw();
+}
+
+// See [STRATEGY_TRANSITION]
+function prepareShapeUpdate(
+    el: Element,
+    elOption: CustomElementOption,
+    allProps: LooseElementProps,
+    transFromProps: LooseElementProps,
+    isInit: boolean
+): void {
+
+    const shapeOpt = (elOption as CustomElementOption).shape;
+    if (!shapeOpt) {
+        return;
+    }
+
+    const elShape = (el as LooseElementProps).shape;
+    let tranFromShapeProps: LooseElementProps['shape'];
+
+    const enterFrom = shapeOpt.$enterFrom;
+    if (isInit && enterFrom) {
+        !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
+        const enterFromKeys = keys(enterFrom);
+        for (let i = 0; i < enterFromKeys.length; i++) {
+            // `$enterFrom` props are not necessarily also declared in `shape`/`style`/...,
+            // for example, `opacity` can only declared in `$enterFrom` but not in `style`.
+            const key = enterFromKeys[i];
+            // Do not clone, animator will perform that clone.
+            tranFromShapeProps[key] = enterFrom[key];
+        }
+    }
+
+    if (!isInit && elShape && shapeOpt.$transition) {
+        !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
+        const transitionKeys = normalizeToArray(shapeOpt.$transition);
+        for (let i = 0; i < transitionKeys.length; i++) {
+            const key = transitionKeys[i];
+            const elVal = elShape[key];
+            if (__DEV__) {
+                checkTansitionRefer(key, (shapeOpt as any)[key], elVal);
+            }
+            // Do not clone, see `checkTansitionRefer`.
+            tranFromShapeProps[key] = elVal;
+        }
+    }
+
+    const allPropsShape = allProps.shape = {} as LooseElementProps['shape'];
+    const shapeOptKeys = keys(shapeOpt);
+    for (let i = 0; i < shapeOptKeys.length; i++) {
+        const key = shapeOptKeys[i];
+        // To avoid share one object with different element, and
+        // to avoid user modify the object inexpectedly, have to clone.
+        allPropsShape[key] = cloneValue((shapeOpt as any)[key]);
+    }
+
+    const leaveTo = shapeOpt.$leaveTo;
+    if (leaveTo) {
+        const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
+        const leaveToShapeProps = leaveToProps.shape || (leaveToProps.shape = {});
+        const leaveToKeys = keys(leaveTo);
+        for (let i = 0; i < leaveToKeys.length; i++) {
+            const key = leaveToKeys[i];
+            leaveToShapeProps[key] = leaveTo[key];
+        }
+    }
+}
+
+// See [STRATEGY_TRANSITION].
+function prepareTransformUpdate(
+    el: Element,
+    elOption: CustomElementOption,
+    allProps: ElementProps,
+    transFromProps: ElementProps,
+    isInit: boolean
+): void {
+    const enterFrom = elOption.$enterFrom;
+    if (isInit && enterFrom) {
+        const enterFromKeys = keys(enterFrom);
+        for (let i = 0; i < enterFromKeys.length; i++) {
+            const key = enterFromKeys[i] as TransformProps;
+            if (__DEV__) {
+                checkTransformPropRefer(key, 'el.$enterFrom');
+            }
+            // Do not clone, animator will perform that clone.
+            transFromProps[key] = enterFrom[key] as number;
+        }
+    }
+
+    if (!isInit) {
+        if (elOption.$transition) {
+            const transitionKeys = normalizeToArray(elOption.$transition);
+            for (let i = 0; i < transitionKeys.length; i++) {
+                const key = transitionKeys[i];
+                const elVal = el[key];
+                if (__DEV__) {
+                    checkTransformPropRefer(key, 'el.$transition');
+                    checkTansitionRefer(key, elOption[key], elVal);
+                }
+                // Do not clone, see `checkTansitionRefer`.
+                transFromProps[key] = elVal;
+            }
+        }
+        // This default transition see [STRATEGY_TRANSITION]
+        else {
+            setLagecyProp(elOption, transFromProps, 'position', el);
+            setTransProp(elOption, transFromProps, 'x', el);
+            setTransProp(elOption, transFromProps, 'y', el);
+        }
+    }
+
+    setLagecyProp(elOption, allProps, 'position');
+    setLagecyProp(elOption, allProps, 'scale');
+    setLagecyProp(elOption, allProps, 'origin');
+    setTransProp(elOption, allProps, 'x');
+    setTransProp(elOption, allProps, 'y');
+    setTransProp(elOption, allProps, 'scaleX');
+    setTransProp(elOption, allProps, 'scaleY');
+    setTransProp(elOption, allProps, 'originX');
+    setTransProp(elOption, allProps, 'originY');
+    setTransProp(elOption, allProps, 'rotation');
+
+    const leaveTo = elOption.$leaveTo;
+    if (leaveTo) {
+        const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
+        const leaveToKeys = keys(leaveTo);
+        for (let i = 0; i < leaveToKeys.length; i++) {
+            const key = leaveToKeys[i] as TransformProps;
+            if (__DEV__) {
+                checkTransformPropRefer(key, 'el.$leaveTo');
+            }
+            leaveToProps[key] = leaveTo[key] as number;
+        }
+    }
+}
+
+// See [STRATEGY_TRANSITION].
+function prepareStyleUpdate(
+    el: Element,
+    styleOpt: CustomElementOption['style'],
+    transFromProps: LooseElementProps,
+    isInit: boolean
+): void {
+    if (!styleOpt) {
+        return;
+    }
+
+    const elStyle = (el as LooseElementProps).style as LooseElementProps['style'];
+    let transFromStyleProps: LooseElementProps['style'];
+
+    const enterFrom = styleOpt.$enterFrom;
+    if (isInit && enterFrom) {
+        const enterFromKeys = keys(enterFrom);
+        !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
+        for (let i = 0; i < enterFromKeys.length; i++) {
+            const key = enterFromKeys[i];
+            // Do not clone, animator will perform that clone.
+            (transFromStyleProps as any)[key] = enterFrom[key];
+        }
+    }
+
+    if (!isInit && elStyle && styleOpt.$transition) {
+        const transitionKeys = normalizeToArray(styleOpt.$transition);
+        !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
+        for (let i = 0; i < transitionKeys.length; i++) {
+            const key = transitionKeys[i];
+            const elVal = (elStyle as any)[key];
+            if (__DEV__) {
+                checkTansitionRefer(key, (styleOpt as any)[key], elVal);
+            }
+            // Do not clone, see `checkTansitionRefer`.
+            (transFromStyleProps as any)[key] = elVal;
+        }
+    }
+
+    const leaveTo = styleOpt.$leaveTo;
+    if (leaveTo) {
+        const leaveToKeys = keys(leaveTo);
+        const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
+        const leaveToStyleProps = leaveToProps.style || (leaveToProps.style = {});
+        for (let i = 0; i < leaveToKeys.length; i++) {
+            const key = leaveToKeys[i];
+            (leaveToStyleProps as any)[key] = leaveTo[key];
+        }
+    }
+}
+
+function checkTansitionRefer(propName: string, optVal: unknown, elVal: unknown): void {
+    const isArrLike = isArrayLike(optVal);
+    assert(
+        isArrLike || (optVal != null && isFinite(optVal as number)),
+        'Prop `' + propName + '` must refer to a finite number or ArrayLike for transition.'
+    );
+    // Try not to copy array for performance, but if user use the same object in different
+    // call of `renderItem`, it will casue animation transition fail.
+    assert(
+        !isArrLike || optVal !== elVal,
+        'Prop `' + propName + '` must use different Array object each time for transition.'
+    );
+}
+
+function checkTransformPropRefer(key: string, usedIn: string): void {
+    assert(
+        hasOwn(TRANSFORM_PROPS, key),
+        'Prop `' + key + '` is not a permitted in `' + usedIn + '`. '
+            + 'Only `' + keys(TRANSFORM_PROPS).join('`, `') + '` are permitted.'
+    );
+}
+
+function getOrCreateLeaveToPropsFromEl(el: Element): LooseElementProps {
+    const innerEl = inner(el);
+    return innerEl.leaveToProps || (innerEl.leaveToProps = {});
 }
 
 function elUpdateDuringAnimation(this: Element, key: string): void {
@@ -731,7 +988,7 @@ function updateElOnState(
     state: DisplayStateNonNormal,
     el: Element,
     elStateOpt: CustomElementOptionOnState,
-    styleOpt: StyleOption,
+    styleOpt: CustomElementOptionOnState['style'],
     attachedTxInfo: AttachedTxInfo,
     isRoot: boolean,
     isTextContent: boolean
@@ -842,46 +1099,32 @@ function updateZForEachState(
 
 function setLagecyProp(
     elOption: CustomElementOption,
-    transitionProps: Partial<Pick<Transformable, TransformProps>>,
-    legacyName: 'position' | 'scale' | 'origin',
-    xName: TransformPropsX,
-    yName: TransformPropsY
+    targetProps: Partial<Pick<Transformable, TransformProps>>,
+    legacyName: LegacyTransformProp,
+    fromEl?: Element // If provided, retrieve from the element.
 ): void {
     const legacyArr = (elOption as any)[legacyName];
-    legacyArr && (transitionProps[xName] = legacyArr[0], transitionProps[yName] = legacyArr[1]);
-}
-function setTransProp(
-    elOption: CustomElementOption,
-    transitionProps: Partial<Pick<Transformable, TransformProps>>,
-    name: TransformProps
-): void {
-    elOption[name] != null && (transitionProps[name] = elOption[name]);
+    const xyName = LEGACY_TRANSFORM_PROPS[legacyName];
+    if (legacyArr) {
+        if (fromEl) {
+            targetProps[xyName[0]] = fromEl[xyName[0]];
+            targetProps[xyName[1]] = fromEl[xyName[1]];
+        }
+        else {
+            targetProps[xyName[0]] = legacyArr[0];
+            targetProps[xyName[1]] = legacyArr[1];
+        }
+    }
 }
 
-function prepareStyleTransition(
-    prop: 'x' | 'y',
-    targetStyle: CustomTextOption['style'],
-    elOptionStyle: CustomTextOption['style'],
-    oldElStyle: graphicUtil.Text['style'],
-    isInit: boolean
-): void;
-function prepareStyleTransition(
-    prop: 'x' | 'y' | 'width' | 'height',
-    targetStyle: CustomImageOption['style'],
-    elOptionStyle: CustomImageOption['style'],
-    oldElStyle: graphicUtil.Image['style'],
-    isInit: boolean
-): void;
-function prepareStyleTransition(
-    prop: string,
-    targetStyle: any,
-    elOptionStyle: any,
-    oldElStyle: any,
-    isInit: boolean
+function setTransProp(
+    elOption: CustomElementOption,
+    targetProps: Partial<Pick<Transformable, TransformProps>>,
+    name: TransformProps,
+    fromEl?: Element // If provided, retrieve from the element.
 ): void {
-    if (elOptionStyle[prop] != null && !isInit) {
-        targetStyle[prop] = elOptionStyle[prop];
-        elOptionStyle[prop] = oldElStyle[prop];
+    if (elOption[name] != null) {
+        targetProps[name] = fromEl ? fromEl[name] : elOption[name];
     }
 }
 
@@ -897,8 +1140,8 @@ function makeRenderItem(
 
     if (coordSys) {
         if (__DEV__) {
-            zrUtil.assert(renderItem, 'series.render is required.');
-            zrUtil.assert(
+            assert(renderItem, 'series.render is required.');
+            assert(
                 coordSys.prepareCustoms || prepareCustoms[coordSys.type],
                 'This coordSys does not support custom series.'
             );
@@ -910,7 +1153,7 @@ function makeRenderItem(
             : prepareCustoms[coordSys.type](coordSys);
     }
 
-    const userAPI = zrUtil.defaults({
+    const userAPI = defaults({
         getWidth: api.getWidth,
         getHeight: api.getHeight,
         getZr: api.getZr,
@@ -987,7 +1230,7 @@ function makeRenderItem(
         currLabelModels = {};
 
         return renderItem && renderItem(
-            zrUtil.defaults({
+            defaults({
                 dataIndexInside: dataIndexInside,
                 dataIndex: data.getRawIndex(dataIndexInside),
                 // Can be used for optimization when zoom or roam.
@@ -1041,14 +1284,14 @@ function makeRenderItem(
         visualColor != null && (itemStyle.fill = visualColor);
         opacity != null && (itemStyle.opacity = opacity);
 
-        const opt = {autoColor: zrUtil.isString(visualColor) ? visualColor : '#000'};
+        const opt = {autoColor: isString(visualColor) ? visualColor : '#000'};
         const labelModel = getLabelModel(dataIndexInside, NORMAL);
         // Now that the feture of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in
         // `convertToEC4StyleForCustomSerise`.
         const textStyle = graphicUtil.createTextStyle(labelModel, null, opt, false, true);
         textStyle.text = labelModel.getShallow('show')
-            ? zrUtil.retrieve2(
+            ? retrieve2(
                 customSeries.getFormattedLabel(dataIndexInside, NORMAL),
                 getDefaultLabel(data, dataIndexInside)
             )
@@ -1080,7 +1323,7 @@ function makeRenderItem(
         const labelModel = getLabelModel(dataIndexInside, EMPHASIS);
         const textStyle = graphicUtil.createTextStyle(labelModel, null, null, true, true);
         textStyle.text = labelModel.getShallow('show')
-            ? zrUtil.retrieve3(
+            ? retrieve3(
                 customSeries.getFormattedLabel(dataIndexInside, EMPHASIS),
                 customSeries.getFormattedLabel(dataIndexInside, NORMAL),
                 getDefaultLabel(data, dataIndexInside)
@@ -1117,7 +1360,7 @@ function makeRenderItem(
     ): ReturnType<List['getItemVisual']> {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
 
-        if (zrUtil.hasOwn(STYLE_VISUAL_TYPE, visualType)) {
+        if (hasOwn(STYLE_VISUAL_TYPE, visualType)) {
             const style = data.getItemVisual(dataIndexInside, 'style');
             return style
                 ? style[STYLE_VISUAL_TYPE[visualType as keyof typeof STYLE_VISUAL_TYPE]] as any
@@ -1125,7 +1368,7 @@ function makeRenderItem(
         }
         // Only support these visuals. Other visual might be inner tricky
         // for performance (like `style`), do not expose to users.
-        if (zrUtil.hasOwn(VISUAL_PROPS, visualType)) {
+        if (hasOwn(VISUAL_PROPS, visualType)) {
             return data.getItemVisual(dataIndexInside, visualType);
         }
     }
@@ -1139,7 +1382,7 @@ function makeRenderItem(
     ): ReturnType<typeof getLayoutOnAxis> {
         if (coordSys.type === 'cartesian2d') {
             const baseAxis = coordSys.getBaseAxis() as Axis2D;
-            return getLayoutOnAxis(zrUtil.defaults({axis: baseAxis}, opt));
+            return getLayoutOnAxis(defaults({axis: baseAxis}, opt));
         }
     }
 
@@ -1163,7 +1406,7 @@ function makeRenderItem(
 
 function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
     const encodeDef = {} as Dictionary<number[]>;
-    zrUtil.each(data.dimensions, function (dimName, dataDimIndex) {
+    each(data.dimensions, function (dimName, dataDimIndex) {
         const dimInfo = data.getDimensionInfo(dimName);
         if (!dimInfo.isExtraCoord) {
             const coordDim = dimInfo.coordDim;
@@ -1174,7 +1417,7 @@ function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
     return encodeDef;
 }
 
-function createOrUpdate(
+function createOrUpdateItemEl(
     el: Element,
     dataIndex: number,
     elOption: CustomElementOption,
@@ -1198,14 +1441,11 @@ function doCreateOrUpdate(
 ): Element {
 
     // [Rule]
-    // By default, follow merge mode.
-    //     (It probably brings benifit for performance in some cases of large data, where
-    //     user program can be optimized to that only updated props needed to be re-calculated,
-    //     or according to `actionType` some calculation can be skipped.)
     // If `renderItem` returns `null`/`undefined`/`false`, remove the previous el if existing.
     //     (It seems that violate the "merge" principle, but most of users probably intuitively
     //     regard "return;" as "show nothing element whatever", so make a exception to meet the
     //     most cases.)
+    // The rule or "merge" see [STRATEGY_MERGE].
 
     // If `elOption` is `null`/`undefined`/`false` (when `renderItem` returns nothing).
     if (!elOption) {
@@ -1287,12 +1527,12 @@ function doesElNeedRecreate(el: Element, elOption: CustomElementOption): boolean
             && getPathData(elOptionShape) !== elInner.customPathData
         )
         || (elOptionType === 'image'
-            && zrUtil.hasOwn(elOptionStyle, 'image')
+            && hasOwn(elOptionStyle, 'image')
             && (elOptionStyle as CustomImageOption['style']).image !== elInner.customImagePath
         )
         // // FIXME test and remove this restriction?
         // || (elOptionType === 'text'
-        //     && zrUtil.hasOwn(elOptionStyle, 'text')
+        //     && hasOwn(elOptionStyle, 'text')
         //     && (elOptionStyle as TextStyleProps).text !== elInner.customText
         // )
     );
@@ -1322,7 +1562,7 @@ function doCreateOrUpdateClipPath(
         if (!clipPath) {
             clipPath = createEl(clipPathOpt) as graphicUtil.Path;
             if (__DEV__) {
-                zrUtil.assert(
+                assert(
                     clipPath instanceof graphicUtil.Path,
                     'Only any type of `path` can be used in `clipPath`, rather than ' + clipPath.type + '.'
                 );
@@ -1436,7 +1676,7 @@ function processTxInfo(
         !txConOptNormal.type && (txConOptNormal.type = 'text');
         if (__DEV__) {
             // Do not tolerate incorret type for forward compat.
-            txConOptNormal.type !== 'text' && zrUtil.assert(
+            txConOptNormal.type !== 'text' && assert(
                 txConOptNormal.type === 'text',
                 'textContent.type must be "text"'
             );
@@ -1458,7 +1698,7 @@ function retrieveStyleOptionOnState(
     stateOptionNormal: CustomElementOption,
     stateOption: CustomElementOptionOnState,
     state: DisplayStateNonNormal
-): StyleOption {
+): CustomElementOptionOnState['style'] {
     let style = stateOption && stateOption.style;
     if (style == null && state === EMPHASIS && stateOptionNormal) {
         style = stateOptionNormal.styleEmphasis;
@@ -1529,7 +1769,7 @@ function mergeChildren(
         );
     }
     if (__DEV__) {
-        zrUtil.assert(
+        assert(
             !notMerge || el.childCount() === index,
             'MUST NOT contain empty item in children array when `group.$mergeChildren` is `false`.'
         );
@@ -1583,7 +1823,7 @@ function processAddUpdate(
 
 function applyExtraAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
     for (const key in extra) {
-        if (zrUtil.hasOwn(extra, key)) {
+        if (hasOwn(extra, key)) {
             (itemStyle as any)[key] = (extra as any)[key];
         }
     }
@@ -1595,6 +1835,23 @@ function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): vo
     child && context.group.remove(child);
 }
 
+function removeItemEl(
+    el: Element,
+    seriesModel: CustomSeriesModel,
+    group: ViewRootGroup
+): void {
+    if (el) {
+        const leaveToProps = inner(el).leaveToProps;
+        leaveToProps
+            ? graphicUtil.updateProps(el, leaveToProps, seriesModel, {
+                cb: function () {
+                    group.remove(el);
+                }
+            })
+            : group.remove(el);
+    }
+}
+
 /**
  * @return SVG Path data.
  */
@@ -1604,6 +1861,6 @@ function getPathData(shape: CustomSVGPathOption['shape']): string {
 }
 
 function hasOwnPathData(shape: CustomSVGPathOption['shape']): boolean {
-    return shape && (zrUtil.hasOwn(shape, 'pathData') || zrUtil.hasOwn(shape, 'd'));
+    return shape && (hasOwn(shape, 'pathData') || hasOwn(shape, 'd'));
 }
 

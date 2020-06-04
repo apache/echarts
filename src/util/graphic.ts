@@ -71,7 +71,8 @@ import {
     trim,
     isArrayLike,
     map,
-    defaults
+    defaults,
+    isObject
 } from 'zrender/src/core/util';
 
 
@@ -1041,6 +1042,12 @@ export function getFont(
     ].join(' '));
 }
 
+type AnimateOrSetPropsOption = {
+    dataIndex?: number;
+    cb?: () => void;
+    isFrom?: boolean;
+};
+
 function animateOrSetProps<Props>(
     isUpdate: boolean,
     el: Element<Props>,
@@ -1048,12 +1055,18 @@ function animateOrSetProps<Props>(
     animatableModel?: Model<AnimationOptionMixin> & {
         getAnimationDelayParams?: (el: Element<Props>, dataIndex: number) => AnimationDelayCallbackParam
     },
-    dataIndex?: number | (() => void),
-    cb?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb']
 ) {
+    let isFrom = false;
     if (typeof dataIndex === 'function') {
         cb = dataIndex;
         dataIndex = null;
+    }
+    else if (isObject(dataIndex)) {
+        cb = dataIndex.cb;
+        isFrom = dataIndex.isFrom;
+        dataIndex = dataIndex.dataIndex;
     }
     // Do not check 'animation' property directly here. Consider this case:
     // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
@@ -1083,13 +1096,23 @@ function animateOrSetProps<Props>(
         }
 
         duration > 0
-            ? el.animateTo(props, {
-                duration,
-                delay: animationDelay || 0,
-                easing: animationEasing,
-                done: cb,
-                force: !!cb
-            })
+            ? (
+                isFrom
+                    ? el.animateFrom(props, {
+                        duration,
+                        delay: animationDelay || 0,
+                        easing: animationEasing,
+                        done: cb,
+                        force: !!cb
+                    })
+                    : el.animateTo(props, {
+                        duration,
+                        delay: animationDelay || 0,
+                        easing: animationEasing,
+                        done: cb,
+                        force: !!cb
+                    })
+            )
             : (el.stopAnimation(), el.attr(props), cb && cb());
     }
     else {
@@ -1120,8 +1143,8 @@ function updateProps<Props>(
     props: Props,
     // TODO: TYPE AnimatableModel
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number | (() => void),
-    cb?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb']
 ) {
     animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
 }
@@ -1140,8 +1163,8 @@ export function initProps<Props>(
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number | (() => void),
-    cb?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb']
 ) {
     animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
 }
