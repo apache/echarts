@@ -36,14 +36,9 @@ export default {
             return;
         }
 
-        var levelItemStyles = zrUtil.map(tree.levelModels, function (levelModel) {
-            return levelModel ? levelModel.get(ITEM_STYLE_NORMAL) : null;
-        });
-
         travelTree(
             root, // Visual should calculate from tree root but not view root.
             {},
-            levelItemStyles,
             seriesItemStyleModel,
             seriesModel.getViewRoot().getAncestors(),
             seriesModel
@@ -52,7 +47,7 @@ export default {
 };
 
 function travelTree(
-    node, designatedVisual, levelItemStyles, seriesItemStyleModel,
+    node, designatedVisual, seriesItemStyleModel,
     viewRootAncestors, seriesModel
 ) {
     var nodeModel = node.getModel();
@@ -64,9 +59,8 @@ function travelTree(
     }
 
     var nodeItemStyleModel = node.getModel(ITEM_STYLE_NORMAL);
-    var levelItemStyle = levelItemStyles[node.depth];
     var visuals = buildVisuals(
-        nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
+        nodeItemStyleModel, designatedVisual, seriesItemStyleModel
     );
 
     // calculate border color
@@ -101,7 +95,7 @@ function travelTree(
                     nodeModel, visuals, child, index, mapping, seriesModel
                 );
                 travelTree(
-                    child, childVisual, levelItemStyles, seriesItemStyleModel,
+                    child, childVisual, seriesItemStyleModel,
                     viewRootAncestors, seriesModel
                 );
             }
@@ -110,14 +104,13 @@ function travelTree(
 }
 
 function buildVisuals(
-    nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
+    nodeItemStyleModel, designatedVisual, seriesItemStyleModel
 ) {
     var visuals = zrUtil.extend({}, designatedVisual);
 
     zrUtil.each(['color', 'colorAlpha', 'colorSaturation'], function (visualName) {
         // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
         var val = nodeItemStyleModel.get(visualName, true); // Ignore parent
-        val == null && levelItemStyle && (val = levelItemStyle[visualName]);
         val == null && (val = designatedVisual[visualName]);
         val == null && (val = seriesItemStyleModel.get(visualName));
 
