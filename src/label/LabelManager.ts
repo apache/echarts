@@ -47,7 +47,7 @@ import Transformable from 'zrender/src/core/Transformable';
 import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
-import { retrieve2, each, keys } from 'zrender/src/core/util';
+import { retrieve2, each, keys, isFunction } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 
@@ -69,9 +69,7 @@ interface LabelLayoutDesc {
     dataType: string
 
     layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
-
-    overlap: LabelLayoutOption['overlap']
-    overlapMargin: LabelLayoutOption['overlapMargin']
+    computedLayoutOption: LabelLayoutOption
 
     hostRect: RectLike
     priority: number
@@ -204,11 +202,9 @@ class LabelManager {
             dataType,
 
             layoutOption,
+            computedLayoutOption: null,
 
             hostRect,
-
-            overlap: 'hidden',
-            overlapMargin: 0,
 
             // Label with lower priority will be hidden when overlapped
             // Use rect size as default priority
@@ -252,7 +248,7 @@ class LabelManager {
         /**
          * Ignore layouting if it's not specified anything.
          */
-        if (!layoutOption || !keys(layoutOption).length) {
+        if (!(isFunction(layoutOption) || keys(layoutOption).length)) {
             return;
         }
 
@@ -298,6 +294,7 @@ class LabelManager {
             }
 
             layoutOption = layoutOption || {};
+            labelItem.computedLayoutOption = layoutOption;
 
             if (hostEl) {
                 hostEl.setTextConfig({
@@ -339,9 +336,6 @@ class LabelManager {
                 label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
             }
 
-            labelItem.overlap = layoutOption.overlap;
-            labelItem.overlapMargin = layoutOption.overlapMargin;
-
             if (layoutOption.draggable) {
                 label.draggable = true;
                 label.cursor = 'move';
@@ -377,6 +371,7 @@ class LabelManager {
                 continue;
             }
 
+            const layoutOption = labelItem.computedLayoutOption;
             const label = labelItem.label;
             const transform = label.getComputedTransform();
             // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
@@ -388,8 +383,8 @@ class LabelManager {
 
             let obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
             let overlapped = false;
-            const overlapMargin = labelItem.overlapMargin || 0;
-            const marginSqr = overlapMargin * overlapMargin;
+            const minMargin = layoutOption.minMargin || 0;
+            const marginSqr = minMargin * minMargin;
             for (let j = 0; j < displayedLabels.length; j++) {
                 const existsTextCfg = displayedLabels[j];
                 // Fast rejection.
@@ -418,10 +413,7 @@ class LabelManager {
 
             const labelLine = labelItem.labelLine;
             // TODO Callback to determine if this overlap should be handled?
-            if (overlapped
-                && labelItem.layoutOption
-                && (labelItem.layoutOption as LabelLayoutOption).overlap === 'hidden'
-            ) {
+            if (overlapped && layoutOption.hideOverlap) {
                 label.hide();
                 labelLine && labelLine.hide();
             }

@@ -157,8 +157,6 @@ class FunnelPiece extends graphic.Polygon {
         }, {
             // Default use item visual color
             stroke: visualColor
-        }, {
-            autoCalculate: false
         });
     }
 }

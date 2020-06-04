@@ -283,7 +283,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
         labelLayout: {
             // Hide the overlapped label.
-            overlap: 'hidden'
+            hideOverlap: true
         },
 
         // If use strategy to avoid label overlapping

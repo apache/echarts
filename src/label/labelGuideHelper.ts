@@ -18,7 +18,6 @@
 */
 
 import {
-    Text as ZRText,
     Point,
     Path,
     Polyline
@@ -28,7 +27,7 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import { normalizeRadian } from 'zrender/src/contain/util';
 import { cubicProjectPoint, quadraticProjectPoint } from 'zrender/src/core/curve';
 import Element from 'zrender/src/Element';
-import { extend, defaults, retrieve2 } from 'zrender/src/core/util';
+import { defaults, retrieve2 } from 'zrender/src/core/util';
 import { LabelLineOption } from '../util/types';
 import Model from '../model/Model';
 import { invert } from 'zrender/src/core/matrix';

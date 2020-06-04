@@ -215,8 +215,6 @@ class PiePiece extends graphic.Sector {
         }, {
             stroke: visualColor,
             opacity: style && style.opacity
-        }, {
-            autoCalculate: false
         });
     }
 }

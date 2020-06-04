@@ -824,14 +824,20 @@ export interface LabelLayoutOptionCallbackParams {
 
 export interface LabelLayoutOption {
     /**
-     * How to handle the element when it's overlapped
-     * @default 'visible'
+     * If move the overlapped label. If label is still overlapped after moved.
+     * It will determine if to hide this label with `hideOverlap` policy.
      */
-    overlap?: 'visible' | 'hidden' | 'blur'
+    moveOverlap?: 'x' | 'y' | boolean
+    /**
+     * If hide the overlapped label. It will be handled after move.
+     * @default 'none'
+     */
+    hideOverlap?: boolean
+
     /**
      * Minimal margin between two labels which will be considered as overlapped.
      */
-    overlapMargin?: number
+    minMargin?: number
 
     /**
      * If label is draggable.
