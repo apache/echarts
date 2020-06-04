@@ -457,6 +457,28 @@ export function limitTurnAngle(linePoints: number[][], minTurnAngle: number) {
 
 
 type LabelLineModel = Model<LabelLineOption>;
+
+function setLabelLineState(
+    labelLine: Polyline,
+    ignore: boolean,
+    stateName: string,
+    stateModel: Model
+) {
+    const isNormal = stateName === 'normal';
+    const stateObj = isNormal ? labelLine : labelLine.ensureState(stateName);
+    // Make sure display.
+    stateObj.ignore = ignore;
+    // Set smooth
+    let smooth = stateModel.get('smooth');
+    if (smooth && smooth === true) {
+        smooth = 0.4;
+    }
+    stateObj.shape = stateObj.shape || {};
+    (stateObj.shape as Polyline['shape']).smooth = smooth as number;
+
+    const styleObj = stateModel.getModel('lineStyle').getLineStyle();
+    isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
+}
 /**
  * Create a label line if necessary and set it's style.
  */
@@ -478,7 +500,7 @@ export function setLabelLineStyle(
 
     const normalModel = statesModels.normal;
     const showNormal = normalModel.get('show');
-    const labelShowNormal = label.ignore;
+    const labelIgnoreNormal = label.ignore;
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
@@ -487,8 +509,8 @@ export function setLabelLineStyle(
         if (stateModel) {
             const stateShow = stateModel.get('show');
             const isLabelIgnored = isNormal
-                ? labelShowNormal
-                : retrieve2(label.states && label.states[stateName].ignore, labelShowNormal);
+                ? labelIgnoreNormal
+                : retrieve2(label.states && label.states[stateName].ignore, labelIgnoreNormal);
             if (isLabelIgnored  // Not show when label is not shown in this state.
                 || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
             ) {
@@ -502,21 +524,14 @@ export function setLabelLineStyle(
             if (!labelLine) {
                 labelLine = new Polyline();
                 targetEl.setTextGuideLine(labelLine);
+                // Reset state of normal because it's new created.
+                // NOTE: NORMAL should always been the first!
+                if (!isNormal && (labelIgnoreNormal || !showNormal)) {
+                    setLabelLineState(labelLine, true, 'normal', statesModels.normal);
+                }
             }
 
-            const stateObj = isNormal ? labelLine : labelLine.ensureState(stateName);
-            // Make sure display.
-            stateObj.ignore = false;
-            // Set smooth
-            let smooth = stateModel.get('smooth');
-            if (smooth && smooth === true) {
-                smooth = 0.4;
-            }
-            stateObj.shape = stateObj.shape || {};
-            (stateObj.shape as Polyline['shape']).smooth = smooth as number;
-
-            const styleObj = stateModel.getModel('lineStyle').getLineStyle();
-            isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
+            setLabelLineState(labelLine, false, stateName, stateModel);
         }
     }
 
