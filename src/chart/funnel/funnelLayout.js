@@ -57,6 +57,7 @@ function labelLayout(data) {
         var itemModel = data.getItemModel(idx);
         var labelModel = itemModel.getModel('label');
         var labelPosition = labelModel.get('position');
+        var orient = itemModel.get('orient');
 
         var labelLineModel = itemModel.getModel('labelLine');
 
@@ -96,67 +97,122 @@ function labelLayout(data) {
             var x1;
             var y1;
             var x2;
+            var y2;
             var labelLineLen = labelLineModel.get('length');
             if (labelPosition === 'left') {
                 // Left side
                 x1 = (points[3][0] + points[0][0]) / 2;
                 y1 = (points[3][1] + points[0][1]) / 2;
-                x2 = x1 - labelLineLen;
-                textX = x2 - 5;
-                textAlign = 'right';
+                if (orient === 'horizontal') {
+                    y2 = y1 - labelLineLen;
+                    textY = y2 - 5;
+                    textAlign = 'center';
+                }
+                else {
+                    x2 = x1 - labelLineLen;
+                    textX = x2 - 5;
+                    textAlign = 'right';
+                }
             }
             else if (labelPosition === 'right') {
                 // Right side
                 x1 = (points[1][0] + points[2][0]) / 2;
                 y1 = (points[1][1] + points[2][1]) / 2;
-                x2 = x1 + labelLineLen;
-                textX = x2 + 5;
-                textAlign = 'left';
+                if (orient === 'horizontal') {
+                    y2 = y1 + labelLineLen;
+                    textY = y2 + 5;
+                    textAlign = 'center';
+                }
+                else {
+                    x2 = x1 + labelLineLen;
+                    textX = x2 + 5;
+                    textAlign = 'left';
+                }
             }
             else if (labelPosition === 'rightTop') {
                 // RightTop side
-                x1 = points[1][0];
-                y1 = points[1][1];
-                x2 = x1 + labelLineLen;
-                textX = x2 + 5;
-                textAlign = 'top';
+                x1 = orient === 'horizontal' ? points[3][0] : points[1][0];
+                y1 = orient === 'horizontal' ? points[3][1] : points[1][1];
+                if (orient === 'horizontal') {
+                    y2 = y1 - labelLineLen;
+                    textY = y2 - 5;
+                    textAlign = 'center';
+                }
+                else {
+                    x2 = x1 + labelLineLen;
+                    textX = x2 + 5;
+                    textAlign = 'top';
+                }
             }
             else if (labelPosition === 'rightBottom') {
                 // RightBottom side
                 x1 = points[2][0];
                 y1 = points[2][1];
-                x2 = x1 + labelLineLen;
-                textX = x2 + 5;
-                textAlign = 'bottom';
+                if (orient === 'horizontal') {
+                    y2 = y1 + labelLineLen;
+                    textY = y2 + 5;
+                    textAlign = 'center';
+                }
+                else {
+                    x2 = x1 + labelLineLen;
+                    textX = x2 + 5;
+                    textAlign = 'bottom';
+                }
             }
             else if (labelPosition === 'leftTop') {
                 // LeftTop side
                 x1 = points[0][0];
-                y1 = points[1][1];
-                x2 = x1 - labelLineLen;
-                textX = x2 - 5;
-                textAlign = 'right';
+                y1 = orient === 'horizontal' ? points[0][1] : points[1][1];
+                if (orient === 'horizontal') {
+                    y2 = y1 - labelLineLen;
+                    textY = y2 - 5;
+                    textAlign = 'center';
+                }
+                else {
+                    x2 = x1 - labelLineLen;
+                    textX = x2 - 5;
+                    textAlign = 'right';
+                }
             }
             else if (labelPosition === 'leftBottom') {
                 // LeftBottom side
-                x1 = points[3][0];
-                y1 = points[2][1];
-                x2 = x1 - labelLineLen;
-                textX = x2 - 5;
-                textAlign = 'right';
+                x1 = orient === 'horizontal' ? points[1][0] : points[3][0];
+                y1 = orient === 'horizontal' ? points[1][1] : points[2][1];
+                if (orient === 'horizontal') {
+                    y2 = y1 + labelLineLen;
+                    textY = y2 + 5;
+                    textAlign = 'center';
+                }
+                else {
+                    x2 = x1 - labelLineLen;
+                    textX = x2 - 5;
+                    textAlign = 'right';
+                }
             }
             else {
-                // Right side
+                // Right side or Bottom side
                 x1 = (points[1][0] + points[2][0]) / 2;
                 y1 = (points[1][1] + points[2][1]) / 2;
-                x2 = x1 + labelLineLen;
-                textX = x2 + 5;
-                textAlign = 'left';
+                if (orient === 'horizontal') {
+                    y2 = y1 + labelLineLen;
+                    textY = y2 + 5;
+                    textAlign = 'center';
+                }
+                else {
+                    x2 = x1 + labelLineLen;
+                    textX = x2 + 5;
+                    textAlign = 'left';
+                }
             }
-            var y2 = y1;
-
+            if (orient === 'horizontal') {
+                x2 = x1;
+                textX = x2;
+            }
+            else {
+                y2 = y1;
+                textY = y2;
+            }
             linePoints = [[x1, y1], [x2, y2]];
-            textY = y2;
         }
 
         layout.label = {
@@ -177,11 +233,19 @@ export default function (ecModel, api, payload) {
         var sort = seriesModel.get('sort');
         var viewRect = getViewRect(seriesModel, api);
         var indices = getSortedIndices(data, sort);
+        var orient = seriesModel.get('orient');
+        var viewWidth = viewRect.width;
+        var viewHeight = viewRect.height;
+        var x = viewRect.x;
+        var y = viewRect.y;
 
-        var sizeExtent = [
-            parsePercent(seriesModel.get('minSize'), viewRect.width),
-            parsePercent(seriesModel.get('maxSize'), viewRect.width)
-        ];
+        var sizeExtent = orient === 'horizontal' ? [
+            parsePercent(seriesModel.get('minSize'), viewHeight),
+            parsePercent(seriesModel.get('maxSize'), viewHeight)
+        ] : [
+                parsePercent(seriesModel.get('minSize'), viewWidth),
+                parsePercent(seriesModel.get('maxSize'), viewWidth)
+            ];
         var dataExtent = data.getDataExtent(valueDim);
         var min = seriesModel.get('min');
         var max = seriesModel.get('max');
@@ -194,64 +258,113 @@ export default function (ecModel, api, payload) {
 
         var funnelAlign = seriesModel.get('funnelAlign');
         var gap = seriesModel.get('gap');
-        var itemHeight = (viewRect.height - gap * (data.count() - 1)) / data.count();
+        var viewSize = orient === 'horizontal' ? viewWidth : viewHeight;
+        var itemSize = (viewSize - gap * (data.count() - 1)) / data.count();
 
-        var y = viewRect.y;
-
-        var getLinePoints = function (idx, offY) {
+        var getLinePoints = function (idx, offset) {
             // End point index is data.count() and we assign it 0
+            if (orient === 'horizontal') {
+                var val = data.get(valueDim, idx) || 0;
+                var itemHeight = linearMap(val, [min, max], sizeExtent, true);
+                var y0;
+                switch (funnelAlign) {
+                    case 'top':
+                        y0 = y;
+                        break;
+                    case 'center':
+                        y0 = y + (viewHeight - itemHeight) / 2;
+                        break;
+                    case 'bottom':
+                        y0 = y + (viewHeight - itemHeight);
+                        break;
+                }
+
+                return [
+                    [offset, y0],
+                    [offset, y0 + itemHeight]
+                ];
+            }
             var val = data.get(valueDim, idx) || 0;
             var itemWidth = linearMap(val, [min, max], sizeExtent, true);
             var x0;
             switch (funnelAlign) {
                 case 'left':
-                    x0 = viewRect.x;
+                    x0 = x;
                     break;
                 case 'center':
-                    x0 = viewRect.x + (viewRect.width - itemWidth) / 2;
+                    x0 = x + (viewWidth - itemWidth) / 2;
                     break;
                 case 'right':
-                    x0 = viewRect.x + viewRect.width - itemWidth;
+                    x0 = x + viewWidth - itemWidth;
                     break;
             }
             return [
-                [x0, offY],
-                [x0 + itemWidth, offY]
+                [x0, offset],
+                [x0 + itemWidth, offset]
             ];
         };
 
         if (sort === 'ascending') {
             // From bottom to top
-            itemHeight = -itemHeight;
+            itemSize = -itemSize;
             gap = -gap;
-            y += viewRect.height;
+            if (orient === 'horizontal') {
+                x += viewWidth;
+            }
+            else {
+                y += viewHeight;
+            }
             indices = indices.reverse();
         }
 
         for (var i = 0; i < indices.length; i++) {
             var idx = indices[i];
             var nextIdx = indices[i + 1];
-
             var itemModel = data.getItemModel(idx);
-            var height = itemModel.get('itemStyle.height');
-            if (height == null) {
-                height = itemHeight;
+
+            if (orient === 'horizontal') {
+                var width = itemModel.get('itemStyle.width');
+                if (width == null) {
+                    width = itemSize;
+                }
+                else {
+                    width = parsePercent(width, viewWidth);
+                    if (sort === 'ascending') {
+                        width = -width;
+                    }
+                }
+
+                var start = getLinePoints(idx, x);
+                var end = getLinePoints(nextIdx, x + width);
+
+                x += width + gap;
+
+                data.setItemLayout(idx, {
+                    points: start.concat(end.slice().reverse())
+                });
             }
             else {
-                height = parsePercent(height, viewRect.height);
-                if (sort === 'ascending') {
-                    height = -height;
+                var height = itemModel.get('itemStyle.height');
+                if (height == null) {
+                    height = itemSize;
                 }
+                else {
+                    height = parsePercent(height, viewHeight);
+                    if (sort === 'ascending') {
+                        height = -height;
+                    }
+                }
+
+                var start = orient === 'horizontal' ? getLinePoints(idx, x) : getLinePoints(idx, y);
+                var end = orient === 'horizontal'
+                    ? getLinePoints(nextIdx, x + width) : getLinePoints(nextIdx, y + height);
+
+                y += height + gap;
+
+                data.setItemLayout(idx, {
+                    points: start.concat(end.slice().reverse())
+                });
             }
-
-            var start = getLinePoints(idx, y);
-            var end = getLinePoints(nextIdx, y + height);
-
-            y += height + gap;
-
-            data.setItemLayout(idx, {
-                points: start.concat(end.slice().reverse())
-            });
         }
 
         labelLayout(data);
