@@ -182,9 +182,16 @@ export default SeriesModel.extend({
 
         var levels = option.levels || [];
 
+        // Used in "visual priority" in `treemapVisual.js`.
+        // This way is a little tricky, must satisfy the precondition:
+        //   1. There is no `treeNode.getModel('itemStyle.xxx')` used.
+        //   2. The `Model.prototype.getModel()` will not use any clone-like way.
+        var designatedVisualItemStyle = this.designatedVisualItemStyle = {};
+        var designatedVisualModel = new Model({itemStyle: designatedVisualItemStyle}, this, ecModel);
+
         levels = option.levels = setDefault(levels, ecModel);
         var levelModels = zrUtil.map(levels || [], function (levelDefine) {
-            return new Model(levelDefine, this, ecModel);
+            return new Model(levelDefine, designatedVisualModel, ecModel);
         }, this);
 
         // Make sure always a new tree is created when setOption,
@@ -196,7 +203,8 @@ export default SeriesModel.extend({
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 var node = tree.getNodeByDataIndex(idx);
                 var levelModel = levelModels[node.depth];
-                levelModel && (model.parentModel = levelModel);
+                // If no levelModel, we also need `designatedVisualModel`.
+                model.parentModel = levelModel || designatedVisualModel;
                 return model;
             });
         }

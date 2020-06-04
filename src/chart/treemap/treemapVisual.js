@@ -30,7 +30,6 @@ export default {
     reset: function (seriesModel, ecModel, api, payload) {
         var tree = seriesModel.getData().tree;
         var root = tree.root;
-        var seriesItemStyleModel = seriesModel.getModel(ITEM_STYLE_NORMAL);
 
         if (root.isRemoved()) {
             return;
@@ -39,7 +38,6 @@ export default {
         travelTree(
             root, // Visual should calculate from tree root but not view root.
             {},
-            seriesItemStyleModel,
             seriesModel.getViewRoot().getAncestors(),
             seriesModel
         );
@@ -47,8 +45,7 @@ export default {
 };
 
 function travelTree(
-    node, designatedVisual, seriesItemStyleModel,
-    viewRootAncestors, seriesModel
+    node, designatedVisual, viewRootAncestors, seriesModel
 ) {
     var nodeModel = node.getModel();
     var nodeLayout = node.getLayout();
@@ -59,9 +56,7 @@ function travelTree(
     }
 
     var nodeItemStyleModel = node.getModel(ITEM_STYLE_NORMAL);
-    var visuals = buildVisuals(
-        nodeItemStyleModel, designatedVisual, seriesItemStyleModel
-    );
+    var visuals = buildVisuals(nodeItemStyleModel, designatedVisual, seriesModel);
 
     // calculate border color
     var borderColor = nodeItemStyleModel.get('borderColor');
@@ -94,26 +89,21 @@ function travelTree(
                 var childVisual = mapVisual(
                     nodeModel, visuals, child, index, mapping, seriesModel
                 );
-                travelTree(
-                    child, childVisual, seriesItemStyleModel,
-                    viewRootAncestors, seriesModel
-                );
+                travelTree(child, childVisual, viewRootAncestors, seriesModel);
             }
         });
     }
 }
 
-function buildVisuals(
-    nodeItemStyleModel, designatedVisual, seriesItemStyleModel
-) {
+function buildVisuals(nodeItemStyleModel, designatedVisual, seriesModel) {
     var visuals = zrUtil.extend({}, designatedVisual);
+    var designatedVisualItemStyle = seriesModel.designatedVisualItemStyle;
 
     zrUtil.each(['color', 'colorAlpha', 'colorSaturation'], function (visualName) {
         // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
-        var val = nodeItemStyleModel.get(visualName, true); // Ignore parent
-        val == null && (val = designatedVisual[visualName]);
-        val == null && (val = seriesItemStyleModel.get(visualName));
-
+        designatedVisualItemStyle[visualName] = designatedVisual[visualName];
+        var val = nodeItemStyleModel.get(visualName);
+        designatedVisualItemStyle[visualName] = null;
         val != null && (visuals[visualName] = val);
     });
 
