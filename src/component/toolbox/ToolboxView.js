@@ -164,7 +164,7 @@ export default echarts.extendComponentView({
                 if (isMagicType && iconName === 'stack') {
                     // if initial series is stack,
                     // we should set stack icon status to emphasis by default.
-                    if (isFirstRender && isSeriesStack()) {
+                    if (isFirstRender && isSeriesStack(ecModel)) {
                         iconStatus = 'emphasis';
                     }
                     var isEmphasis = iconStatus === 'emphasis';
@@ -174,7 +174,8 @@ export default echarts.extendComponentView({
                     titleText = isEmphasis
                         ? titles.tiled
                         : titles.stack;
-                } else {
+                }
+                else {
                     titleText = titles[iconName];
                 }
 
@@ -255,26 +256,6 @@ export default echarts.extendComponentView({
             });
         }
 
-        // whether there are two or more than two series having the same stack value.
-        function isSeriesStack() {
-            var tempStack = {};
-            var series = zrUtil.filter(ecModel.getSeries(), function (seriesModel) {
-                var seriesType = seriesModel.subType;
-                return seriesType === 'line' || seriesType === 'bar';
-            });
-            for (var i = 0; i < series.length; i++) {
-                var seriesModel = series[i];
-                var stack = seriesModel.get('stack');
-                if (stack != null) {
-                    if (tempStack[stack]) {
-                        return true;
-                    }
-                    tempStack[stack] = true;
-                }
-            }
-            return false;
-        }
-
         listComponentHelper.layout(group, toolboxModel, api);
         // Render background after group is layout
         // FIXME
@@ -340,4 +321,24 @@ export default echarts.extendComponentView({
 
 function isUserFeatureName(featureName) {
     return featureName.indexOf('my') === 0;
+}
+
+// whether there are two or more than two series having the same stack value.
+function isSeriesStack(ecModel) {
+    var tempStack = {};
+    var series = zrUtil.filter(ecModel.getSeries(), function (seriesModel) {
+        var seriesType = seriesModel.subType;
+        return seriesType === 'line' || seriesType === 'bar';
+    });
+    for (var i = 0; i < series.length; i++) {
+        var seriesModel = series[i];
+        var stack = seriesModel.get('stack');
+        if (stack != null) {
+            if (tempStack[stack]) {
+                return true;
+            }
+            tempStack[stack] = true;
+        }
+    }
+    return false;
 }
