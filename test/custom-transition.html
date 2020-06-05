@@ -42,10 +42,66 @@ under the License.
         <div id="texture-bar-by-clipPath"></div>
         <div id="enter-animation"></div>
         <div id="enter-animation2"></div>
+        <div id="enter-animation-clipPath"></div>
         <div id="style-animation"></div>
         <div id="transform-animation"></div>
         <div id="transform-animation-disabled"></div>
         <div id="leave-animation"></div>
+
+
+
+
+
+<!--
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart = testHelper.create(echarts, 'texture-bar-texture-maker', {
+                    title: [],
+                    width: 200,
+                    height: 200,
+                    option: {},
+                    buttons: [{
+                        text: 'dataURL',
+                        onclick: function () {
+                            console.log(chart.getDataURL({
+                                type: 'png',
+                                backgroundColor: 'rgba(0,0,0,0)'
+                            }));
+                        }
+                    }]
+                });
+                if (!chart) {
+                    return;
+                }
+
+                var zr = chart.getZr();
+                var eles = [];
+                var extent = [0.0, 0.95];
+                var count = 200;
+                var unit = (extent[1] - extent[0]) / count;
+                var baseColor = 'rgb(0,0,255)';
+                for (var i = 0; i < count; i++) {
+                    var oo = extent[0] + (count - i) * unit;
+                    var color = echarts.color.modifyHSL(baseColor, null, null, oo);
+                    var startAngle = 2 * Math.PI / count * i;
+                    var endAngle = Math.min((2 * Math.PI / count * (i + 1) + 0.05), Math.PI * 2);
+                    zr.add(new echarts.graphic.Sector({
+                        type: 'sector',
+                        shape: {
+                            cx: 100,
+                            cy: 100,
+                            r: 100,
+                            r0: 60,
+                            startAngle: startAngle,
+                            endAngle: endAngle
+                        },
+                        style: {
+                            fill: color
+                        }
+                    }));
+                }
+            });
+        </script> -->
 
 
 
@@ -726,57 +782,6 @@ under the License.
         </script>
 
 
-        <script>
-            require(['echarts'], function (echarts) {
-                var chart = testHelper.create(echarts, 'texture-bar-texture-maker', {
-                    title: [],
-                    width: 200,
-                    height: 200,
-                    option: {},
-                    buttons: [{
-                        text: 'dataURL',
-                        onclick: function () {
-                            console.log(chart.getDataURL({
-                                type: 'png',
-                                backgroundColor: 'rgba(0,0,0,0)'
-                            }));
-                        }
-                    }]
-                });
-                if (!chart) {
-                    return;
-                }
-
-                var zr = chart.getZr();
-                var eles = [];
-                var extent = [0.0, 0.95];
-                var count = 200;
-                var unit = (extent[1] - extent[0]) / count;
-                var baseColor = 'rgb(0,0,255)';
-                for (var i = 0; i < count; i++) {
-                    var oo = extent[0] + (count - i) * unit;
-                    var color = echarts.color.modifyHSL(baseColor, null, null, oo);
-                    var startAngle = 2 * Math.PI / count * i;
-                    var endAngle = Math.min((2 * Math.PI / count * (i + 1) + 0.05), Math.PI * 2);
-                    zr.add(new echarts.graphic.Sector({
-                        type: 'sector',
-                        shape: {
-                            cx: 100,
-                            cy: 100,
-                            r: 100,
-                            r0: 60,
-                            startAngle: startAngle,
-                            endAngle: endAngle
-                        },
-                        style: {
-                            fill: color
-                        }
-                    }));
-                }
-            });
-        </script>
-
-
 
 
 
@@ -949,6 +954,83 @@ under the License.
             });
         </script>
 
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var animationDuration = 1000;
+                var animationDurationUpdate = 1000;
+                var option = {
+                    animationDuration: animationDuration,
+                    animationDurationUpdate: animationDurationUpdate,
+                    animationEasing: 'linear',
+                    xAxis: {
+                        max: 500
+                    },
+                    yAxis: {
+                        max: 300
+                    },
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            var pos = api.coord([api.value(0), api.value(1)]);
+                            return {
+                                type: 'group',
+                                children: [{
+                                    type: 'rect',
+                                    shape: {x: 0, y: 0, width: 2000, height: 2000},
+                                    style: {fill: 'orange'}
+                                }, {
+                                    type: 'polygon',
+                                    x: pos[0],
+                                    y: pos[1],
+                                    shape: {
+                                        points: [
+                                            [0, 0],
+                                            [50, -50],
+                                            [90, -50],
+                                            [140, 0],
+                                            [90, 50]
+                                        ]
+                                    },
+                                    style: {
+                                        fill: 'green'
+                                    }
+                                }],
+                                clipPath: {
+                                    type: 'rect',
+                                    shape: {
+                                        x: params.coordSys.x,
+                                        y: params.coordSys.y,
+                                        width: params.coordSys.width,
+                                        height: params.coordSys.height,
+                                        $enterFrom: {width: 0}
+                                    }
+                                }
+                            };
+                        },
+                        data: [[71, 133], [159, 113]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'enter-animation-clipPath', {
+                    title: [
+                        'Ensure enter animation by clipPath play normal (from left to right).'
+                    ],
+                    height: 300,
+                    option: option
+                });
+            });
+        </script>
 
 
 

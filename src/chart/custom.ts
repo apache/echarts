@@ -221,13 +221,13 @@ interface CustomSeriesRenderItemCoordinateSystemAPI {
     ): number | number[];
 }
 interface CustomSeriesRenderItemParams {
-    context: {};
+    context: Dictionary<unknown>;
     seriesId: string;
     seriesName: string;
     seriesIndex: number;
     coordSys: CustomSeriesRenderItemParamsCoordSys;
     dataInsideLength: number;
-    encode: ReturnType<typeof wrapEncodeDef>
+    encode: ReturnType<typeof wrapEncodeDef>;
 }
 type CustomSeriesRenderItem = (
     params: CustomSeriesRenderItemParams,
