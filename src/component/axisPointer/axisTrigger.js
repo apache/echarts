@@ -286,8 +286,8 @@ function showTooltip(dataByCoordSys, axisInfo, payloadInfo, value) {
         // here. Considering axisPointerModel used here is volatile, which is hard
         // to be retrieve in TooltipView, we prepare parameters here.
         valueLabelOpt: {
-            precision: axisPointerModel.get('label.precision'),
-            formatter: axisPointerModel.get('label.formatter')
+            precision: axisPointerModel.get('label.precision', true),
+            formatter: axisPointerModel.get('label.formatter', true)
         },
         seriesDataIndices: payloadBatch.slice()
     });

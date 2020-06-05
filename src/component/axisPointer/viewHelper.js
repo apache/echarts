@@ -19,7 +19,6 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import * as textContain from 'zrender/src/contain/text';
 import * as formatUtil from '../../util/format';
 import * as matrix from 'zrender/src/core/matrix';
 import * as axisHelper from '../../coord/axisHelper';
@@ -60,24 +59,8 @@ export function buildLabelElOption(
     );
     var labelModel = axisPointerModel.getModel('label');
     var paddings = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
-
-    var font = labelModel.getFont();
-    var textRect = textContain.getBoundingRect(text, font);
-
     var position = labelPos.position;
-    var width = textRect.width + paddings[1] + paddings[3];
-    var height = textRect.height + paddings[0] + paddings[2];
-
-    // Adjust by align.
-    var align = labelPos.align;
-    align === 'right' && (position[0] -= width);
-    align === 'center' && (position[0] -= width / 2);
-    var verticalAlign = labelPos.verticalAlign;
-    verticalAlign === 'bottom' && (position[1] -= height);
-    verticalAlign === 'middle' && (position[1] -= height / 2);
-
-    // Not overflow ec container
-    confineInContainer(position, width, height, api);
+    var font = labelModel.getFont();
 
     var bgColor = labelModel.get('backgroundColor');
     if (!bgColor || bgColor === 'auto') {
@@ -85,37 +68,32 @@ export function buildLabelElOption(
     }
 
     elOption.label = {
-        shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
+        shape: {},
         position: position.slice(),
-        // TODO: rich
-        style: {
-            text: text,
+        style: graphic.setTextStyle({}, labelModel, {
+            text: labelModel.get('show') ? text : null,
+            textBackgroundColor: bgColor,
             textFont: font,
-            textFill: labelModel.getTextColor(),
             textPosition: 'inside',
             textPadding: paddings,
-            fill: bgColor,
-            stroke: labelModel.get('borderColor') || 'transparent',
-            lineWidth: labelModel.get('borderWidth') || 0,
-            shadowBlur: labelModel.get('shadowBlur'),
-            shadowColor: labelModel.get('shadowColor'),
-            shadowOffsetX: labelModel.get('shadowOffsetX'),
-            shadowOffsetY: labelModel.get('shadowOffsetY')
-        },
+            textFill: labelModel.getTextColor(),
+            rotation: labelModel.get('rotate'),
+            opacity: labelModel.get('opacity')
+        }, {isRectText: true}),
         // Lable should be over axisPointer.
         z2: 10
     };
 }
 
 // Do not overflow ec container
-function confineInContainer(position, width, height, api) {
-    var viewWidth = api.getWidth();
-    var viewHeight = api.getHeight();
-    position[0] = Math.min(position[0] + width, viewWidth) - width;
-    position[1] = Math.min(position[1] + height, viewHeight) - height;
-    position[0] = Math.max(position[0], 0);
-    position[1] = Math.max(position[1], 0);
-}
+// function confineInContainer(position, width, height, api) {
+//     var viewWidth = api.getWidth();
+//     var viewHeight = api.getHeight();
+//     position[0] = Math.min(position[0] + width, viewWidth) - width;
+//     position[1] = Math.min(position[1] + height, viewHeight) - height;
+//     position[0] = Math.max(position[0], 0);
+//     position[1] = Math.max(position[1], 0);
+// }
 
 /**
  * @param {number} value
@@ -150,7 +128,7 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
         });
 
         if (zrUtil.isString(formatter)) {
-            text = formatter.replace('{value}', text);
+            text = formatter.replace(/{value}/g, text);
         }
         else if (zrUtil.isFunction(formatter)) {
             text = formatter(params);
