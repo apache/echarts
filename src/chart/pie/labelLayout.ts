@@ -72,15 +72,10 @@ function adjustSingleSide(
             list[j].y += delta;
             adjusted = true;
 
-            // const textHeight = list[j].textRect.height;
-            // if (list[j].y + textHeight / 2 > viewTop + viewHeight) {
-            //     list[j].y = viewTop + viewHeight - textHeight / 2;
-            // }
-
-            if (j > start
-                && j + 1 < end
+            if (j > start && j + 1 < end
                 && list[j + 1].y > list[j].y + list[j].textRect.height
             ) {
+                // Shift up so it can be more equaly distributed.
                 shiftUp(j, delta / 2);
                 return;
             }

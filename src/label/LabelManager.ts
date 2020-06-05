@@ -20,16 +20,13 @@
 // TODO: move labels out of viewport.
 
 import {
-    OrientedBoundingRect,
     Text as ZRText,
-    Point,
     BoundingRect,
     getECData,
     Polyline,
     updateProps,
     initProps
 } from '../util/graphic';
-import { MatrixArray } from 'zrender/src/core/matrix';
 import ExtensionAPI from '../ExtensionAPI';
 import {
     ZRTextAlign,
@@ -47,20 +44,12 @@ import Transformable from 'zrender/src/core/Transformable';
 import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
-import { retrieve2, each, keys, isFunction } from 'zrender/src/core/util';
+import { retrieve2, each, keys, isFunction, filter } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
+import { LabelLayoutInfo, prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
 
-interface DisplayedLabelItem {
-    label: ZRText
-    rect: BoundingRect
-    localRect: BoundingRect
-    obb?: OrientedBoundingRect
-    axisAligned: boolean
-    transform: MatrixArray
-}
-
-interface LabelLayoutDesc {
+interface LabelDesc {
     label: ZRText
     labelLine: Polyline
 
@@ -102,7 +91,7 @@ interface SavedLabelAttr {
     rect: RectLike
 }
 
-function prepareLayoutCallbackParams(labelItem: LabelLayoutDesc): LabelLayoutOptionCallbackParams {
+function prepareLayoutCallbackParams(labelItem: LabelDesc): LabelLayoutOptionCallbackParams {
     const labelAttr = labelItem.defaultAttr;
     const label = labelItem.label;
     return {
@@ -144,7 +133,7 @@ type LabelLineOptionMixin = {
 
 class LabelManager {
 
-    private _labelList: LabelLayoutDesc[] = [];
+    private _labelList: LabelDesc[] = [];
     private _chartViewList: ChartView[] = [];
 
     constructor() {}
@@ -162,7 +151,7 @@ class LabelManager {
         dataType: string,
         seriesModel: SeriesModel,
         label: ZRText,
-        layoutOption: LabelLayoutDesc['layoutOption']
+        layoutOption: LabelDesc['layoutOption']
     ) {
         const labelStyle = label.style;
         const hostEl = label.__hostTarget;
@@ -353,84 +342,26 @@ class LabelManager {
         }
     }
 
-    layout() {
-        // TODO: sort by priority(area)
-        const labelList = this._labelList;
+    layout(api: ExtensionAPI) {
+        const width = api.getWidth();
+        const height = api.getHeight();
 
-        const displayedLabels: DisplayedLabelItem[] = [];
-        const mvt = new Point();
-
-        // TODO, render overflow visible first, put in the displayedLabels.
-        labelList.sort(function (a, b) {
-            return b.priority - a.priority;
+        const labelList = prepareLayoutList(this._labelList);
+        const labelsNeedsAdjustOnX = filter(labelList, function (item) {
+            return item.layoutOption.moveOverlap === 'shift-x';
+        });
+        const labelsNeedsAdjustOnY = filter(labelList, function (item) {
+            return item.layoutOption.moveOverlap === 'shift-y';
         });
 
-        for (let i = 0; i < labelList.length; i++) {
-            const labelItem = labelList[i];
-            if (labelItem.defaultAttr.ignore) {
-                continue;
-            }
+        shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
+        shiftLayoutOnY(labelsNeedsAdjustOnY, 0, height);
 
-            const layoutOption = labelItem.computedLayoutOption;
-            const label = labelItem.label;
-            const transform = label.getComputedTransform();
-            // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
-            const localRect = label.getBoundingRect();
-            const isAxisAligned = !transform || (transform[1] < 1e-5 && transform[2] < 1e-5);
+        const labelsNeedsHideOverlap = filter(labelList, function (item) {
+            return item.layoutOption.hideOverlap;
+        });
 
-            const globalRect = localRect.clone();
-            globalRect.applyTransform(transform);
-
-            let obb = isAxisAligned ? new OrientedBoundingRect(localRect, transform) : null;
-            let overlapped = false;
-            const minMargin = layoutOption.minMargin || 0;
-            const marginSqr = minMargin * minMargin;
-            for (let j = 0; j < displayedLabels.length; j++) {
-                const existsTextCfg = displayedLabels[j];
-                // Fast rejection.
-                if (!globalRect.intersect(existsTextCfg.rect, mvt) && mvt.lenSquare() > marginSqr) {
-                    continue;
-                }
-
-                if (isAxisAligned && existsTextCfg.axisAligned) {   // Is overlapped
-                    overlapped = true;
-                    break;
-                }
-
-                if (!existsTextCfg.obb) { // If self is not axis aligned. But other is.
-                    existsTextCfg.obb = new OrientedBoundingRect(existsTextCfg.localRect, existsTextCfg.transform);
-                }
-
-                if (!obb) { // If self is axis aligned. But other is not.
-                    obb = new OrientedBoundingRect(localRect, transform);
-                }
-
-                if (obb.intersect(existsTextCfg.obb, mvt) || mvt.lenSquare() < marginSqr) {
-                    overlapped = true;
-                    break;
-                }
-            }
-
-            const labelLine = labelItem.labelLine;
-            // TODO Callback to determine if this overlap should be handled?
-            if (overlapped && layoutOption.hideOverlap) {
-                label.hide();
-                labelLine && labelLine.hide();
-            }
-            else {
-                label.attr('ignore', labelItem.defaultAttr.ignore);
-                labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
-
-                displayedLabels.push({
-                    label,
-                    rect: globalRect,
-                    localRect,
-                    obb,
-                    axisAligned: isAxisAligned,
-                    transform
-                });
-            }
-        }
+        hideOverlap(labelsNeedsHideOverlap);
     }
 
     /**

@@ -826,8 +826,14 @@ export interface LabelLayoutOption {
     /**
      * If move the overlapped label. If label is still overlapped after moved.
      * It will determine if to hide this label with `hideOverlap` policy.
+     *
+     * shift-x/y will keep the order on x/y
+     * shuffle-x/y will move the label around the original position randomly.
      */
-    moveOverlap?: 'x' | 'y' | boolean
+    moveOverlap?: 'shift-x'
+        | 'shift-y'
+        | 'shuffle-x'
+        | 'shuffle-y'
     /**
      * If hide the overlapped label. It will be handled after move.
      * @default 'none'

@@ -1096,7 +1096,7 @@ class ECharts extends Eventful {
     updateLabelLayout() {
         const labelManager = this._labelManager;
         labelManager.updateLayoutConfig(this._api);
-        labelManager.layout();
+        labelManager.layout(this._api);
         labelManager.processLabelsOverall();
     }
 
@@ -1732,7 +1732,7 @@ class ECharts extends Eventful {
             scheduler.unfinished = unfinished || scheduler.unfinished;
 
             labelManager.updateLayoutConfig(api);
-            labelManager.layout();
+            labelManager.layout(api);
             labelManager.processLabelsOverall();
 
             ecModel.eachSeries(function (seriesModel) {
