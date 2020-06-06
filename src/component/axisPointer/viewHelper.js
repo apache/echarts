@@ -128,7 +128,7 @@ export function getValueLabel(value, axis, ecModel, seriesDataIndices, opt) {
         });
 
         if (zrUtil.isString(formatter)) {
-            text = formatter.replace(/{value}/g, text);
+            text = formatter.replace('{value}', text);
         }
         else if (zrUtil.isFunction(formatter)) {
             text = formatter(params);
