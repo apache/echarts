@@ -64,8 +64,7 @@ export function prepareLayoutList(input: LabelLayoutListPrepareInput[]): LabelLa
         const localRect = label.getBoundingRect();
         const isAxisAligned = !transform || (transform[1] < 1e-5 && transform[2] < 1e-5);
 
-        // Text has a default 1px stroke. Exclude this.
-        const minMargin = (layoutOption.minMargin || 0) + 2.2;
+        const minMargin = layoutOption.minMargin || 0;
         const globalRect = localRect.clone();
         globalRect.applyTransform(transform);
         globalRect.x -= minMargin / 2;
@@ -98,13 +97,30 @@ function shiftLayout(
     minBound: number,
     maxBound: number
 ) {
-    if (!list.length) {
+    const len = list.length;
+
+    if (!len) {
         return;
     }
 
     list.sort(function (a, b) {
-        return a.label[xyDim] - b.label[xyDim];
+        return a.rect[xyDim] - b.rect[xyDim];
     });
+
+    let lastPos = 0;
+    let delta;
+    for (let i = 0; i < len; i++) {
+        delta = list[i].rect[xyDim] - lastPos;
+        if (delta < 0) {
+            shiftForward(i, len, -delta);
+        }
+        lastPos = list[i].rect[xyDim] + list[i].rect[sizeDim];
+    }
+    // TODO bleedMargin?
+    if (maxBound < lastPos) {
+        shiftBackward(len - 1, lastPos - maxBound);
+    }
+
 
     function shiftForward(start: number, end: number, delta: number) {
         for (let j = start; j < end; j++) {
@@ -113,10 +129,8 @@ function shiftLayout(
             const rect = list[j].rect;
             rect[xyDim] += delta;
 
-            if (j > start && j + 1 < end
-                && list[j + 1].rect[xyDim] > rect[xyDim] + rect[sizeDim]
-            ) {
-                // Shift up so it can be more equaly distributed.
+            if (j > start && j + 1 < end && !list[j + 1].rect.intersect(rect)) {
+                // Shift the following so it can be more equaly distributed.
                 shiftBackward(j, delta / 2);
                 return;
             }
@@ -127,9 +141,8 @@ function shiftLayout(
 
     function shiftBackward(end: number, delta: number) {
         for (let j = end; j >= 0; j--) {
-            list[j].label[xyDim] -= delta;
-
             const rect = list[j].rect;
+            list[j].label[xyDim] -= delta;
             rect[xyDim] -= delta;
 
             // const textSize = rect[sizeDim];
@@ -139,25 +152,10 @@ function shiftLayout(
                 list[j].label[xyDim] -= diffToMinBound;
             }
 
-            if (j > 0
-                && rect[xyDim] > list[j - 1].rect[xyDim] + list[j - 1].rect[sizeDim]
-            ) {
+            if (j > 0 && !rect.intersect(list[j - 1].rect)) {
                 break;
             }
         }
-    }
-    let lastPos = 0;
-    let delta;
-    const len = list.length;
-    for (let i = 0; i < len; i++) {
-        delta = list[i].label[xyDim] - lastPos;
-        if (delta < 0) {
-            shiftForward(i, len, -delta);
-        }
-        lastPos = list[i].label[xyDim] + list[i].rect[sizeDim];
-    }
-    if (maxBound - lastPos < 0) {
-        shiftBackward(len - 1, lastPos - maxBound);
     }
 }
 
@@ -191,14 +189,21 @@ export function hideOverlap(labelList: LabelLayoutInfo[]) {
         return b.priority - a.priority;
     });
 
+    const globalRect = new BoundingRect(0, 0, 0, 0);
+
     for (let i = 0; i < labelList.length; i++) {
         const labelItem = labelList[i];
-        const globalRect = labelItem.rect;
         const isAxisAligned = labelItem.axisAligned;
         const localRect = labelItem.localRect;
         const transform = labelItem.transform;
         const label = labelItem.label;
         const labelLine = labelItem.labelLine;
+        globalRect.copy(labelItem.rect);
+        // Add a threshold because layout may be aligned precisely.
+        globalRect.width -= 0.1;
+        globalRect.height -= 0.1;
+        globalRect.x += 0.05;
+        globalRect.y += 0.05;
 
         let obb = labelItem.obb;
         let overlapped = false;

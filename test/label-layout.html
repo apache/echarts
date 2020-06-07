@@ -413,11 +413,15 @@ under the License.
                 ];
 
                 option = {
-                    xAxis: {},
+                    xAxis: {
+                        splitLine: { show: false }
+                    },
                     yAxis: {
+                        splitLine: { show: false },
                         scale: true
                     },
                     grid: {
+                        left: 100,
                         width: 300
                     },
                     series: [{
@@ -430,7 +434,6 @@ under the License.
                         labelLayout: {
                             x: 500,
                             draggable: true,
-                            align: 'center',
                             moveOverlap: 'shift-y',
                             // hideOverlap: true,
                             minMargin: 2
