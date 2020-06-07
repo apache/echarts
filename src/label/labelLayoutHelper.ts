@@ -99,7 +99,7 @@ function shiftLayout(
 ) {
     const len = list.length;
 
-    if (!len) {
+    if (len < 2) {
         return;
     }
 
@@ -109,52 +109,84 @@ function shiftLayout(
 
     let lastPos = 0;
     let delta;
+    const shifts = [];
+    let totalShifts = 0;
     for (let i = 0; i < len; i++) {
-        delta = list[i].rect[xyDim] - lastPos;
+        const item = list[i];
+        const rect = item.rect;
+        delta = rect[xyDim] - lastPos;
         if (delta < 0) {
-            shiftForward(i, len, -delta);
-        }
-        lastPos = list[i].rect[xyDim] + list[i].rect[sizeDim];
-    }
-    // TODO bleedMargin?
-    if (maxBound < lastPos) {
-        shiftBackward(len - 1, lastPos - maxBound);
-    }
-
-
-    function shiftForward(start: number, end: number, delta: number) {
-        for (let j = start; j < end; j++) {
-            list[j].label[xyDim] += delta;
-
-            const rect = list[j].rect;
-            rect[xyDim] += delta;
-
-            if (j > start && j + 1 < end && !list[j + 1].rect.intersect(rect)) {
-                // Shift the following so it can be more equaly distributed.
-                shiftBackward(j, delta / 2);
-                return;
-            }
-        }
-
-        shiftBackward(end - 1, delta / 2);
-    }
-
-    function shiftBackward(end: number, delta: number) {
-        for (let j = end; j >= 0; j--) {
-            const rect = list[j].rect;
-            list[j].label[xyDim] -= delta;
+            // shiftForward(i, len, -delta);
             rect[xyDim] -= delta;
+            item.label[xyDim] -= delta;
+        }
+        const shift = Math.max(-delta, 0);
+        shifts.push(shift);
+        totalShifts += shift;
 
-            // const textSize = rect[sizeDim];
-            const diffToMinBound = rect[xyDim] - minBound;
-            if (diffToMinBound < 0) {
-                rect[xyDim] -= diffToMinBound;
-                list[j].label[xyDim] -= diffToMinBound;
-            }
+        lastPos = rect[xyDim] + rect[sizeDim];
+    }
+    if (totalShifts > 0) {
+        // Shift back to make the distribution more equally.
+        shiftList(-totalShifts / len, 0, len);
+    }
 
-            if (j > 0 && !rect.intersect(list[j - 1].rect)) {
-                break;
+    // TODO bleedMargin?
+    const minGap = list[0].rect[xyDim] - minBound;
+    const last = list[len - 1];
+    const maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+
+    // If ends exceed two bounds
+    handleBoundsGap(minGap, maxGap, 1);
+    handleBoundsGap(maxGap, minGap, -1);
+
+    function handleBoundsGap(gapThisBound: number, gapOtherBound: number, moveDir: 1 | -1) {
+        if (gapThisBound < 0) {
+            // Move from other gap if can.
+            const moveFromMaxGap = Math.min(gapOtherBound, -gapThisBound);
+            if (moveFromMaxGap > 0) {
+                shiftList(moveFromMaxGap * moveDir, 0, len);
+                const remained = moveFromMaxGap + gapThisBound;
+                if (remained < 0) {
+                    squeezeGaps(-remained * moveDir);
+                }
             }
+            else {
+                squeezeGaps(-gapThisBound * moveDir);
+            }
+        }
+    }
+
+    function shiftList(delta: number, start: number, end: number) {
+        for (let i = start; i < end; i++) {
+            const item = list[i];
+            const rect = item.rect;
+            rect[xyDim] += delta;
+            item.label[xyDim] += delta;
+        }
+    }
+
+    // Squeeze gaps if the labels exceed margin.
+    function squeezeGaps(delta: number) {
+        const gaps: number[] = [];
+        let totalGaps = 0;
+        for (let i = 1; i < len; i++) {
+            const prevItemRect = list[i - 1].rect;
+            const gap = Math.max(list[i].rect[xyDim] - prevItemRect[xyDim] - prevItemRect[sizeDim], 0);
+            gaps.push(gap);
+            totalGaps += gap;
+        }
+        if (!totalGaps) {
+            return;
+        }
+
+        for (let i = 0; i < len - 1; i++) {
+            // Distribute the shift delta to all gaps.
+            // NOTE:
+            // it may overlap if remained gap is not enough for the total movements.
+            // aka totalGaps / delta is < 1. In this situation the label may move too much and cause overlap again.
+            // This is by design. Let the hideOverlap do the job instead of keep exceeding the bounds.
+            shiftList(gaps[i] / totalGaps * delta, 0, i + 1);
         }
     }
 }

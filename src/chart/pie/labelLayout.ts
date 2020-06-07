@@ -61,6 +61,10 @@ function adjustSingleSide(
     viewTop: number,
     farthestX: number
 ) {
+    if (list.length < 2) {
+        return;
+    }
+
     list.sort(function (a, b) {
         return a.y - b.y;
     });
