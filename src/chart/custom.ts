@@ -432,18 +432,18 @@ class CustomSeriesView extends ChartView {
         // roam or data zoom according to `actionType`.
         data.diff(oldData)
             .add(function (newIdx) {
-                createOrUpdateItemEl(
+                createOrUpdateItem(
                     null, newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .update(function (newIdx, oldIdx) {
-                createOrUpdateItemEl(
+                createOrUpdateItem(
                     oldData.getItemGraphicEl(oldIdx),
                     newIdx, renderItem(newIdx, payload), customSeries, group, data
                 );
             })
             .remove(function (oldIdx) {
-                removeItemEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
+                doRemoveEl(oldData.getItemGraphicEl(oldIdx), customSeries, group);
             })
             .execute();
 
@@ -486,7 +486,7 @@ class CustomSeriesView extends ChartView {
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {
-            const el = createOrUpdateItemEl(null, idx, renderItem(idx, payload), customSeries, this.group, data);
+            const el = createOrUpdateItem(null, idx, renderItem(idx, payload), customSeries, this.group, data);
             el.traverse(setIncrementalAndHoverLayer);
         }
     }
@@ -589,6 +589,13 @@ function createEl(elOption: CustomElementOption): Element {
  * simple always set all of the props each time.
  * Some "object-like" config like `textConfig`, `textContent`, `style` which are not needed for
  * every elment, so we replace them only when user specify them. And the that is a total replace.
+ *
+ * TODO: there is no hint of 'isFirst' to users. So the performance enhancement can not be
+ * performed yet. Consider the case:
+ * (1) setOption to "mergeChildren" with a smaller children count
+ * (2) Use dataZoom to make an item disappear.
+ * (3) User dataZoom to make the item display again. At that time, renderItem need to return the
+ * full option rather than partial option to recreate the element.
  *
  * ----------------------------------------------
  * [STRATEGY_NULL] `hasOwnProperty` or `== null`:
@@ -1348,6 +1355,14 @@ function makeRenderItem(
         return itemStyle;
     }
 
+    function applyExtraAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
+        for (const key in extra) {
+            if (hasOwn(extra, key)) {
+                (itemStyle as any)[key] = (extra as any)[key];
+            }
+        }
+    }
+
     function preFetchFromExtra(extra: ZRStyleProps, itemStyle: ItemStyleProps): void {
         // A trick to retrieve those props firstly, which are used to
         // apply auto inside fill/stroke in `convertToEC4StyleForCustomSerise`.
@@ -1425,7 +1440,7 @@ function wrapEncodeDef(data: List<CustomSeriesModel>): Dictionary<number[]> {
     return encodeDef;
 }
 
-function createOrUpdateItemEl(
+function createOrUpdateItem(
     el: Element,
     dataIndex: number,
     elOption: CustomElementOption,
@@ -1433,21 +1448,6 @@ function createOrUpdateItemEl(
     group: ViewRootGroup,
     data: List<CustomSeriesModel>
 ): Element {
-    el = doCreateOrUpdate(el, dataIndex, elOption, seriesModel, group, true);
-    el && data.setItemGraphicEl(dataIndex, el);
-
-    return el;
-}
-
-function doCreateOrUpdate(
-    el: Element,
-    dataIndex: number,
-    elOption: CustomElementOption,
-    seriesModel: CustomSeriesModel,
-    group: ViewRootGroup,
-    isRoot: boolean
-): Element {
-
     // [Rule]
     // If `renderItem` returns `null`/`undefined`/`false`, remove the previous el if existing.
     //     (It seems that violate the "merge" principle, but most of users probably intuitively
@@ -1460,8 +1460,25 @@ function doCreateOrUpdate(
         el && group.remove(el);
         return;
     }
+    el = doCreateOrUpdateEl(el, dataIndex, elOption, seriesModel, group, true);
+    el && data.setItemGraphicEl(dataIndex, el);
 
-    elOption = elOption || {} as CustomElementOption;
+    return el;
+}
+
+function doCreateOrUpdateEl(
+    el: Element,
+    dataIndex: number,
+    elOption: CustomElementOption,
+    seriesModel: CustomSeriesModel,
+    group: ViewRootGroup,
+    isRoot: boolean
+): Element {
+
+    if (__DEV__) {
+        assert(elOption, 'should not have an null/undefined element setting');
+    }
+
     let toBeReplacedIdx = -1;
 
     if (el && doesElNeedRecreate(el, elOption)) {
@@ -1525,7 +1542,6 @@ function doesElNeedRecreate(el: Element, elOption: CustomElementOption): boolean
     const elOptionShape = (elOption as CustomZRPathOption).shape;
     const elOptionStyle = elOption.style;
     return (
-        // || elOption.$merge === false
         // If `elOptionType` is `null`, follow the merge principle.
         (elOptionType != null
             && elOptionType !== elInner.customGraphicType
@@ -1729,8 +1745,7 @@ function retrieveStyleOptionOnState(
 //
 // For implementation simpleness, do not provide a direct way to remove sinlge
 // child (otherwise the total indicies of the children array have to be modified).
-// User can remove a single child by set its `ignore` as `true` or replace
-// it by another element, where its `$merge` can be set as `true` if necessary.
+// User can remove a single child by set its `ignore` as `true`.
 function mergeChildren(
     el: graphicUtil.Group,
     dataIndex: number,
@@ -1767,7 +1782,7 @@ function mergeChildren(
     // might be better performance.
     let index = 0;
     for (; index < newLen; index++) {
-        newChildren[index] && doCreateOrUpdate(
+        newChildren[index] && doCreateOrUpdateEl(
             el.childAt(index),
             dataIndex,
             newChildren[index],
@@ -1776,11 +1791,8 @@ function mergeChildren(
             false
         );
     }
-    if (__DEV__) {
-        assert(
-            !notMerge || el.childCount() === index,
-            'MUST NOT contain empty item in children array when `group.$mergeChildren` is `false`.'
-        );
+    for (let i = el.childCount() - 1; i >= index; i--) {
+        doRemoveEl(el.childAt(i), seriesModel, el);
     }
 }
 
@@ -1819,7 +1831,7 @@ function processAddUpdate(
     const childOption = newIndex != null ? context.newChildren[newIndex] : null;
     const child = oldIndex != null ? context.oldChildren[oldIndex] : null;
 
-    doCreateOrUpdate(
+    doCreateOrUpdateEl(
         child,
         context.dataIndex,
         childOption,
@@ -1829,21 +1841,13 @@ function processAddUpdate(
     );
 }
 
-function applyExtraAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
-    for (const key in extra) {
-        if (hasOwn(extra, key)) {
-            (itemStyle as any)[key] = (extra as any)[key];
-        }
-    }
-}
-
 function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): void {
     const context = this.context;
     const child = context.oldChildren[oldIndex];
-    child && context.group.remove(child);
+    doRemoveEl(child, context.seriesModel, context.group);
 }
 
-function removeItemEl(
+function doRemoveEl(
     el: Element,
     seriesModel: CustomSeriesModel,
     group: ViewRootGroup

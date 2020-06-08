@@ -1117,7 +1117,7 @@ function animateOrSetProps<Props>(
     }
     else {
         el.stopAnimation();
-        el.attr(props);
+        !isFrom && el.attr(props);
         cb && cb();
     }
 }

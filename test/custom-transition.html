@@ -37,9 +37,11 @@ under the License.
 
 
         <!-- <div id="texture-bar-texture-maker"></div> -->
+
         <div id="spiral-fixed-extent"></div>
         <div id="spiral-dynamic-extent"></div>
         <div id="texture-bar-by-clipPath"></div>
+        <div id="no-animation"></div>
         <div id="enter-animation-and-merge"></div>
         <div id="enter-animation2"></div>
         <div id="enter-animation-clipPath"></div>
@@ -47,7 +49,6 @@ under the License.
         <div id="transform-animation"></div>
         <div id="transform-animation-disabled"></div>
         <div id="leave-animation"></div>
-
 
 
 
@@ -799,21 +800,24 @@ under the License.
 
 
 
+
+
+
+
+
         <script>
             require(['echarts'], function (echarts) {
 
-                var animationDuration = 5000;
-                var animationDurationUpdate = 4000;
                 var option = {
-                    animationDuration: animationDuration,
-                    animationDurationUpdate: animationDurationUpdate,
+                    animation: false,
                     xAxis: {
+                        max: 600,
                     },
                     yAxis: {
                     },
                     dataZoom: [
-                        { type: 'slider' },
-                        { type: 'inside' }
+                        { type: 'slider', start: 10, end: 60 },
+                        { type: 'inside', start: 10, end: 60 }
                     ],
                     series: [{
                         type: 'custom',
@@ -834,7 +838,6 @@ under the License.
                                     },
                                     style: {
                                         fill: 'blue',
-                                        $enterFrom: { opacity: 0 }
                                     }
                                 }, {
                                     type: 'circle',
@@ -845,7 +848,6 @@ under the License.
                                     },
                                     style: {
                                         fill: 'green',
-                                        $enterFrom: { opacity: 0 }
                                     },
                                     textConfig: {
                                         position: 'bottom'
@@ -854,44 +856,182 @@ under the License.
                                         style: {
                                             text: 'xxxx',
                                             fill: 'black',
-                                            $enterFrom: { opacity: 0 }
                                         }
                                     }
                                 }]
                             };
                         },
-                        data: [[121, 333], [29, 312]]
+                        data: [[221, 333], [129, 312]]
                     }]
                 };
 
-                var chart = testHelper.create(echarts, 'enter-animation-and-merge', {
+                var chart = testHelper.create(echarts, 'no-animation', {
                     title: [
-                        '(1) Move dataZoom, position should have transition animation.',
-                        '(2) Use dataZoom hide a data item, and then show it, ensure the **fade in** animation not be interupted.',
-                        '(3) click button to setOption merge.',
-                        '(4) Repeat (2), should be correct.'
+                        'No-animation',
+                        '(1) Move dataZoom, position should have no transition animation but move normally.',
+                        '(2) Use dataZoom hide a data item, and then show it.',
+                        '(3) click button to setOption merge: ',
+                        '   circle **disappears** and rect become **red border black bg**',
+                        '(4) **Repeat (2)** after merged, should be correct.'
                     ],
                     height: 300,
                     option: option,
                     buttons: [{
-                        text: 'replace style: border become red, and background become black',
+                        text: 'go',
+                        onclick: function () {
+                            chart.dispatchAction({type: 'dataZoom', start: 10, end: 60});
+                        }
+                    }, {
+                        text: 'click me to merge children',
                         onclick: function () {
                             chart.setOption({
                                 series: {
                                     type: 'custom',
                                     renderItem: function (params, api) {
+                                        var pos = api.coord([api.value(0), api.value(1)]);
                                         return {
                                             type: 'group',
+                                            x: pos[0],
+                                            y: pos[1],
                                             children: [{
                                                 type: 'rect',
+                                                shape: {
+                                                    x: -50,
+                                                    y: 50,
+                                                    width: 100,
+                                                    height: 50,
+                                                    r: 10
+                                                },
                                                 style: {
                                                     stroke: 'red',
                                                     lineWidth: 5
                                                 }
                                             }]
                                         };
+                                    }
+                                }
+                            });
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var animationDuration = 5000;
+                var animationDurationUpdate = 4000;
+                var option = {
+                    animationDuration: animationDuration,
+                    animationDurationUpdate: animationDurationUpdate,
+                    xAxis: {
+                        max: 600
+                    },
+                    yAxis: {
+                    },
+                    dataZoom: [
+                        { type: 'slider', start: 10, end: 60 },
+                        { type: 'inside', start: 10, end: 60 }
+                    ],
+                    series: [{
+                        type: 'custom',
+                        renderItem: function (params, api) {
+                            var pos = api.coord([api.value(0), api.value(1)]);
+                            return {
+                                type: 'group',
+                                x: pos[0],
+                                y: pos[1],
+                                children: [{
+                                    type: 'rect',
+                                    shape: {
+                                        x: -50,
+                                        y: 50,
+                                        width: 100,
+                                        height: 50,
+                                        r: 10
                                     },
-                                    data: [[121, 333], [29, 312]]
+                                    style: {
+                                        fill: 'blue',
+                                        // $enterFrom: { opacity: 0 }
+                                    }
+                                }, {
+                                    type: 'circle',
+                                    shape: {
+                                        cx: -50,
+                                        cy: 50,
+                                        r: 30
+                                    },
+                                    style: {
+                                        fill: 'green',
+                                        // $enterFrom: { opacity: 0 }
+                                    },
+                                    textConfig: {
+                                        position: 'bottom'
+                                    },
+                                    textContent: {
+                                        style: {
+                                            text: 'xxxx',
+                                            fill: 'black',
+                                            // $enterFrom: { opacity: 0 }
+                                        }
+                                    }
+                                }]
+                            };
+                        },
+                        data: [[221, 333], [129, 312]]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'enter-animation-and-merge', {
+                    title: [
+                        'Transition animation:',
+                        '(1) Move dataZoom, position should have transition animation.',
+                        '(2) Use dataZoom hide a data item, and then show it, ensure the **fade in** animation not be interupted.',
+                        '(3) click button to setOption merge: ',
+                        '   circle **disappears** and rect become **red border black bg**',
+                        '(4) **Repeat (2)** after merged, should be correct.'
+                    ],
+                    height: 300,
+                    option: option,
+                    buttons: [{
+                        text: 'click me to merge children',
+                        onclick: function () {
+                            chart.setOption({
+                                series: {
+                                    type: 'custom',
+                                    renderItem: function (params, api) {
+                                        var pos = api.coord([api.value(0), api.value(1)]);
+                                        return {
+                                            type: 'group',
+                                            x: pos[0],
+                                            y: pos[1],
+                                            children: [{
+                                                type: 'rect',
+                                                shape: {
+                                                    x: -50,
+                                                    y: 50,
+                                                    width: 100,
+                                                    height: 50,
+                                                    r: 10
+                                                },
+                                                style: {
+                                                    stroke: 'red',
+                                                    lineWidth: 5
+                                                }
+                                            }]
+                                        };
+                                    }
                                 }
                             });
                         }
