@@ -862,7 +862,7 @@ export interface LabelLayoutOption {
      * offset on y based on the original position.
      */
     dy?: number
-    rotation?: number
+    rotate?: number
     align?: ZRTextAlign
     verticalAlign?: ZRTextVerticalAlign
     width?: number
