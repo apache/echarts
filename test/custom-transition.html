@@ -40,7 +40,7 @@ under the License.
         <div id="spiral-fixed-extent"></div>
         <div id="spiral-dynamic-extent"></div>
         <div id="texture-bar-by-clipPath"></div>
-        <div id="enter-animation"></div>
+        <div id="enter-animation-and-merge"></div>
         <div id="enter-animation2"></div>
         <div id="enter-animation-clipPath"></div>
         <div id="style-animation"></div>
@@ -185,10 +185,10 @@ under the License.
                             fill: color.inner,
                             stroke: color.border
                         },
-                        during: function (elProps) {
-                            elProps.shape.points = makeShapePoints(
-                                api, valOnRadius, elProps.shape.valOnAngle
-                            );
+                        during: function (apiDuring) {
+                            apiDuring.setShape('points', makeShapePoints(
+                                api, valOnRadius, apiDuring.getShape('valOnAngle')
+                            ));
                         }
                     });
                 }
@@ -230,12 +230,12 @@ under the License.
                             verticalAlign: 'middle'
                         },
                         z2: 50,
-                        during: function (elProps) {
-                            var iValOnAngle = elProps.shape.valOnAngle;
+                        during: function (apiDuring) {
+                            var iValOnAngle = apiDuring.getShape('valOnAngle');
                             var point = makeLabelPosition(api, valOnRadius, iValOnAngle);
-                            elProps.x = point[0];
-                            elProps.y = point[1];
-                            elProps.style.text = getText(iValOnAngle);
+                            apiDuring.setAttr('x', point[0]);
+                            apiDuring.setAttr('y', point[1]);
+                            apiDuring.setStyle('text', getText(iValOnAngle));
                         }
                     });
 
@@ -414,9 +414,13 @@ under the License.
                             fill: color.inner,
                             stroke: color.border
                         },
-                        during: function (elProps) {
-                            var shp = elProps.shape;
-                            shp.points = makeShapePoints(params, shp.widthRadius, shp.startRadius, shp.endRadian);
+                        during: function (apiDuring) {
+                            apiDuring.setShape('points', makeShapePoints(
+                                params,
+                                apiDuring.getShape('widthRadius'),
+                                apiDuring.getShape('startRadius'),
+                                apiDuring.getShape('endRadian')
+                            ));
                         }
                     });
                 }
@@ -476,12 +480,17 @@ under the License.
                             }
                         },
                         z2: 50,
-                        during: function (elProps) {
-                            var shp = elProps.shape;
-                            var point = makeLabelPosition(params, shp.widthRadius, shp.startRadius, shp.endRadian);
-                            elProps.x = point[0];
-                            elProps.y = point[1];
-                            elProps.style.text = makeText(shp.endRadian);
+                        during: function (apiDuring) {
+                            var endRadian = apiDuring.getShape('endRadian');
+                            var point = makeLabelPosition(
+                                params,
+                                apiDuring.getShape('widthRadius'),
+                                apiDuring.getShape('startRadius'),
+                                endRadian
+                            );
+                            apiDuring.setAttr('x', point[0]);
+                            apiDuring.setAttr('y', point[1]);
+                            apiDuring.setStyle('text', makeText(endRadian));
                         }
                     });
 
@@ -659,8 +668,11 @@ under the License.
                                     $transition: 'polarEndRadian',
                                     $enterFrom: { polarEndRadian: 0 }
                                 },
-                                during: function (elProps) {
-                                    elProps.shape.points = makePionterPoints(params, elProps.shape.polarEndRadian);
+                                during: function (apiDuring) {
+                                    apiDuring.setShape(
+                                        'points',
+                                        makePionterPoints(params, apiDuring.getShape('polarEndRadian'))
+                                    );
                                 }
                             },
                         }, {
@@ -694,8 +706,8 @@ under the License.
                                 verticalAlign: 'middle',
                                 $enterFrom: { opacity: 0 }
                             },
-                            during: function (elProps) {
-                                elProps.style.text = makeText(elProps.shape.valOnRadian);
+                            during: function (apiDuring) {
+                                apiDuring.setStyle('text', makeText(apiDuring.getShape('valOnRadian')));
                             }
                         }]
                     };
@@ -852,11 +864,12 @@ under the License.
                     }]
                 };
 
-                var chart = testHelper.create(echarts, 'enter-animation', {
+                var chart = testHelper.create(echarts, 'enter-animation-and-merge', {
                     title: [
                         '(1) Move dataZoom, position should have transition animation.',
                         '(2) Use dataZoom hide a data item, and then show it, ensure the **fade in** animation not be interupted.',
-                        '(3) click button to setOption merge.'
+                        '(3) click button to setOption merge.',
+                        '(4) Repeat (2), should be correct.'
                     ],
                     height: 300,
                     option: option,

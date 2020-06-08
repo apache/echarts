@@ -103,6 +103,7 @@ const TRANSFORM_PROPS = {
     rotation: 1
 } as const;
 type TransformProps = keyof typeof TRANSFORM_PROPS;
+const transformPropNamesStr = keys(TRANSFORM_PROPS).join(', ');
 
 type TransitionAnyProps = string | string[];
 type TransitionTransformProps = TransformProps | TransformProps[];
@@ -134,7 +135,7 @@ interface CustomBaseElementOption extends Partial<Pick<
     // Shape can be set in any el option for custom prop for annimation duration.
     shape?: TransitionAnyOption;
     // updateDuringAnimation
-    during?(elProps: CustomDuringElProps): void;
+    during?(params: typeof customDuringAPI): void;
 };
 interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
@@ -161,10 +162,6 @@ interface CustomGroupOption extends CustomBaseElementOption {
 }
 interface CustomZRPathOption extends CustomDisplayableOption {
     shape?: PathProps['shape'] & TransitionAnyOption;
-}
-interface CustomDuringElProps extends Partial<Pick<Element, TransformProps>> {
-    shape?: PathProps['shape'];
-    style?: { text: string };
 }
 interface CustomSVGPathOption extends CustomDisplayableOption {
     type: 'path';
@@ -318,9 +315,6 @@ const Z2_SPECIFIED_BIT = {
     normal: 0,
     emphasis: 1
 } as const;
-
-const tmpDuringStyle = {} as CustomDuringElProps['style'];
-const tmpDuringElProps = {} as CustomDuringElProps;
 
 const LEGACY_TRANSFORM_PROPS = {
     position: ['x', 'y'],
@@ -931,54 +925,68 @@ function getOrCreateLeaveToPropsFromEl(el: Element): LooseElementProps {
     return innerEl.leaveToProps || (innerEl.leaveToProps = {});
 }
 
+// Use it to avoid it be exposed to user.
+const tmpDuringScope = {} as {
+    el: Element;
+    isShapeDirty: boolean;
+    isStyleDirty: boolean;
+};
+const customDuringAPI = {
+    // Usually other props do not need to be changed in animation during.
+    setAttr(key: TransformProps, val: unknown): void {
+        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setAttr`.');
+        tmpDuringScope.el[key] = val as number;
+    },
+    getAttr(key: TransformProps): unknown {
+        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getAttr`.');
+        return tmpDuringScope.el[key];
+    },
+    setShape(key: string, val: unknown): void {
+        // In custom series, el other than Path can also has `shape` for intepolating props.
+        const shape = (tmpDuringScope.el as any).shape || ((tmpDuringScope.el as any).shape = {});
+        shape[key] = val;
+        tmpDuringScope.isShapeDirty = true;
+    },
+    getShape(key: string): unknown {
+        const shape = (tmpDuringScope.el as any).shape;
+        if (shape) {
+            return shape[key];
+        }
+    },
+    setStyle(key: string, val: unknown): void {
+        const style = (tmpDuringScope.el as Displayable).style;
+        if (style) {
+            style[key] = val;
+            tmpDuringScope.isStyleDirty = true;
+        }
+    },
+    getStyle(key: string): unknown {
+        const style = (tmpDuringScope.el as Displayable).style;
+        if (style) {
+            return style[key];
+        }
+    }
+};
+
 function elUpdateDuringAnimation(this: Element, key: string): void {
     const innerEl = inner(this);
     // FIXME `this.markRedraw();` directly ?
     innerEl.orginalDuring.call(this, key);
     const customDuring = innerEl.customDuring;
-    const thisPath = this as graphicUtil.Path;
-    const thisText = this as graphicUtil.Text;
-    let dirtyStyle = false;
 
-    // Only provide these props. Usually other props do not need to be
-    // changed in animation during.
-    // Do not give `this` to user util really needed in future.
-    // Props in `shape` can be modified directly in the during callback.
-    const shapeCurr = tmpDuringElProps.shape = thisPath.shape;
-    const xCurr = tmpDuringElProps.x = this.x;
-    const yCurr = tmpDuringElProps.y = this.y;
-    const scaleXCurr = tmpDuringElProps.scaleX = this.scaleX;
-    const scaleYCurr = tmpDuringElProps.scaleY = this.scaleY;
-    const originXCurr = tmpDuringElProps.originX = this.originX;
-    const originYCurr = tmpDuringElProps.originY = this.originY;
-    const rotationCurr = tmpDuringElProps.rotation = this.rotation;
+    tmpDuringScope.el = this;
+    tmpDuringScope.isShapeDirty = false;
+    tmpDuringScope.isStyleDirty = false;
 
-    // PENDING:
-    // Do not expose other style in case that is not stable.
-    const isText = this.type === 'text';
-    // Always assign in case that user modify `.style`.
-    tmpDuringElProps.style = tmpDuringStyle;
-    const textCurr = tmpDuringStyle.text = isText ? thisText.style.text : null;
+    customDuring(customDuringAPI);
 
-    customDuring(tmpDuringElProps);
-
-    tmpDuringElProps.shape !== shapeCurr && (thisPath.shape = tmpDuringElProps.shape);
-    // Consider prop on prototype.
-    tmpDuringElProps.x !== xCurr && (this.x = tmpDuringElProps.x);
-    tmpDuringElProps.y !== yCurr && (this.y = tmpDuringElProps.y);
-    tmpDuringElProps.scaleX !== scaleXCurr && (this.scaleX = tmpDuringElProps.scaleX);
-    tmpDuringElProps.scaleY !== scaleYCurr && (this.scaleY = tmpDuringElProps.scaleY);
-    tmpDuringElProps.originX !== originXCurr && (this.originX = tmpDuringElProps.originX);
-    tmpDuringElProps.originY !== originYCurr && (this.originY = tmpDuringElProps.originY);
-    tmpDuringElProps.rotation !== rotationCurr && (this.rotation = tmpDuringElProps.rotation);
-
-    if (isText) {
-        const currTmpStl = tmpDuringElProps.style; // Allow user modify `.style`.
-        currTmpStl && currTmpStl.text !== textCurr && (thisText.style.text = currTmpStl.text, dirtyStyle = true);
+    if (tmpDuringScope.isShapeDirty && (this as graphicUtil.Path).dirtyShape) {
+        (this as graphicUtil.Path).dirtyShape();
     }
-
-    dirtyStyle && this.dirty();
-    // markRedraw() will be called by default.
+    if (tmpDuringScope.isStyleDirty && (this as Displayable).dirtyStyle) {
+        (this as Displayable).dirtyStyle();
+    }
+    // markRedraw() will be called by default in during.
 
     // FIXME: if in future meet the case that some prop will be both modified in `during` and `state`,
     // consider the issue that the prop might be incorrect when return to "normal" state.
