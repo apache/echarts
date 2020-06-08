@@ -439,6 +439,17 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
             const currentFill = this.style.fill;
             const currentStroke = this.style.stroke;
             if (currentFill || currentStroke) {
+                let fromState;
+                if (!hasEmphasis) {
+                    fromState = {fill: currentFill, stroke: currentStroke};
+                    for (let i = 0; i < this.animators.length; i++) {
+                        const animator = this.animators[i];
+                        if (animator.targetName === 'style') {
+                            animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
+                        }
+                    }
+                }
+
                 state = state || {};
                 // Apply default color lift
                 let emphasisStyle = state.style || {};
@@ -449,14 +460,14 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
                     state = extend({}, state);
                     emphasisStyle = extend({}, emphasisStyle);
                     // Already being applied 'emphasis'. DON'T lift color multiple times.
-                    emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(currentFill);
+                    emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(fromState.fill);
                 }
                 if (!hasFillOrStroke(emphasisStyle.stroke)) {
                     if (!cloned) {
                         state = extend({}, state);
                         emphasisStyle = extend({}, emphasisStyle);
                     }
-                    emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(currentStroke);
+                    emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(fromState.stroke);
                 }
 
                 state.style = emphasisStyle;
