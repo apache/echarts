@@ -285,6 +285,7 @@ class LabelManager {
             layoutOption = layoutOption || {};
             labelItem.computedLayoutOption = layoutOption;
 
+            const degreeToRadian = Math.PI / 180;
             if (hostEl) {
                 hostEl.setTextConfig({
                     // Force to set local false.
@@ -293,7 +294,8 @@ class LabelManager {
                     position: (layoutOption.x != null || layoutOption.y != null)
                         ? null : defaultLabelAttr.attachedPos,
                     // Ignore rotation config on the host el if rotation is changed.
-                    rotation: layoutOption.rotation != null ? layoutOption.rotation : defaultLabelAttr.attachedRot,
+                    rotation: layoutOption.rotate != null
+                        ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.attachedRot,
                     offset: [layoutOption.dx || 0, layoutOption.dy || 0]
                 });
             }
@@ -317,8 +319,8 @@ class LabelManager {
                 label.setStyle('y', defaultLabelAttr.style.y);
             }
 
-            label.rotation = layoutOption.rotation != null
-                ? layoutOption.rotation : defaultLabelAttr.rotation;
+            label.rotation = layoutOption.rotate != null
+                ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
 
             for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
                 const key = LABEL_OPTION_TO_STYLE_KEYS[k];

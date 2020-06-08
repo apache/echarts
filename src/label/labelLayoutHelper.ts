@@ -132,13 +132,25 @@ function shiftLayout(
     }
 
     // TODO bleedMargin?
-    const minGap = list[0].rect[xyDim] - minBound;
+    const first = list[0];
     const last = list[len - 1];
-    const maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+    let minGap = first.rect[xyDim] - minBound;
+    let maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
 
     // If ends exceed two bounds
     handleBoundsGap(minGap, maxGap, 1);
     handleBoundsGap(maxGap, minGap, -1);
+
+    // Handle bailout when there is not enough space.
+    minGap = first.rect[xyDim] - minBound;
+    maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+
+    if (minGap < 0) {
+        squeezeWhenBailout(-minGap);
+    }
+    if (maxGap < 0) {
+        squeezeWhenBailout(maxGap);
+    }
 
     function handleBoundsGap(gapThisBound: number, gapOtherBound: number, moveDir: 1 | -1) {
         if (gapThisBound < 0) {
@@ -180,13 +192,48 @@ function shiftLayout(
             return;
         }
 
+        if (Math.abs(delta) > totalGaps) {
+            delta = totalGaps * (delta < 0 ? -1 : 1);
+        }
+
         for (let i = 0; i < len - 1; i++) {
             // Distribute the shift delta to all gaps.
-            // NOTE:
-            // it may overlap if remained gap is not enough for the total movements.
-            // aka totalGaps / delta is < 1. In this situation the label may move too much and cause overlap again.
-            // This is by design. Let the hideOverlap do the job instead of keep exceeding the bounds.
-            shiftList(gaps[i] / totalGaps * delta, 0, i + 1);
+            const movement = gaps[i] / totalGaps * delta;
+            if (delta > 0) {
+                // Forward
+                shiftList(movement, 0, i + 1);
+            }
+            else {
+                // Backward
+                shiftList(movement, len - i - 1, len);
+            }
+        }
+    }
+
+    /**
+     * Squeeze to allow overlap if there is no more space available.
+     * Let other overlapping strategy like hideOverlap do the job instead of keep exceeding the bounds.
+     */
+    function squeezeWhenBailout(delta: number) {
+        const dir = delta < 0 ? -1 : 1;
+        delta = Math.abs(delta);
+        const moveForEachLabel = Math.ceil(delta / (len - 1));
+
+        for (let i = 0; i < len - 1; i++) {
+            if (dir > 0) {
+                // Forward
+                shiftList(moveForEachLabel, 0, i + 1);
+            }
+            else {
+                // Backward
+                shiftList(-moveForEachLabel, len - i - 1, len);
+            }
+
+            delta -= moveForEachLabel;
+
+            if (delta <= 0) {
+                return;
+            }
         }
     }
 }
