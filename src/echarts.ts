@@ -1668,9 +1668,9 @@ class ECharts extends Eventful {
         ): void {
             each(dirtyList || ecIns._componentsViews, function (componentView: ComponentView) {
                 const componentModel = componentView.__model;
-                componentView.render(componentModel, ecModel, api, payload);
-
                 clearStates(componentModel, componentView);
+
+                componentView.render(componentModel, ecModel, api, payload);
 
                 updateZ(componentModel, componentView);
                 updateHoverEmphasisHandler(componentView);
