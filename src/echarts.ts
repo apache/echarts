@@ -1836,18 +1836,22 @@ class ECharts extends Eventful {
                 // TODO If el is incremental.
                 if (el.hasState()) {
                     (el as DisplayableWithStatesHistory).__prevStates = el.currentStates;
-                    const textContent = el.getTextContent();
-                    const textGuide = el.getTextGuideLine();
-                    if (el.stateTransition) {
-                        el.stateTransition = null;
-                    }
-                    if (textContent && textContent.stateTransition) {
-                        textContent.stateTransition = null;
-                    }
-                    if (textGuide && textGuide.stateTransition) {
-                        textGuide.stateTransition = null;
-                    }
                     el.clearStates();
+                }
+                else if ((el as DisplayableWithStatesHistory).__prevStates) {
+                    (el as DisplayableWithStatesHistory).__prevStates = null;
+                }
+
+                const textContent = el.getTextContent();
+                const textGuide = el.getTextGuideLine();
+                if (el.stateTransition) {
+                    el.stateTransition = null;
+                }
+                if (textContent && textContent.stateTransition) {
+                    textContent.stateTransition = null;
+                }
+                if (textGuide && textGuide.stateTransition) {
+                    textGuide.stateTransition = null;
                 }
             });
         }
