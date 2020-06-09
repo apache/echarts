@@ -218,12 +218,15 @@ function TooltipContent(container, api, opt) {
         }
     };
     el.onmouseleave = function () {
+        // fix #12778
+        // we should set `_inContent` before `hideLater`
+        self._inContent = false;
+
         if (self._enterable) {
             if (self._show) {
                 self.hideLater(self._hideDelay);
             }
         }
-        self._inContent = false;
     };
 }
 
