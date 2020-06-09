@@ -1826,15 +1826,13 @@ class ECharts extends Eventful {
             });
         };
 
+        interface DisplayableWithStatesHistory extends Displayable {
+            __prevStates: string[]
+        };
         // Clear states without animation.
         // TODO States on component.
         function clearStates(model: ComponentModel, view: ComponentView | ChartView): void {
             view.group.traverse(function (el: Displayable) {
-                // TODO If el is incremental.
-                if (el.hasState()) {
-                    el.clearStates();
-                }
-
                 const textContent = el.getTextContent();
                 const textGuide = el.getTextGuideLine();
                 if (el.stateTransition) {
@@ -1846,6 +1844,15 @@ class ECharts extends Eventful {
                 if (textGuide && textGuide.stateTransition) {
                     textGuide.stateTransition = null;
                 }
+
+                // TODO If el is incremental.
+                if (el.hasState()) {
+                    (el as DisplayableWithStatesHistory).__prevStates = el.currentStates;
+                    el.clearStates();
+                }
+                else if ((el as DisplayableWithStatesHistory).__prevStates) {
+                    (el as DisplayableWithStatesHistory).__prevStates = null;
+                }
             });
         }
 
@@ -1855,6 +1862,12 @@ class ECharts extends Eventful {
             view.group.traverse(function (el: Displayable) {
                 // Only updated on changed element. In case element is incremental and don't wan't to rerender.
                 if (el.__dirty && el.states && el.states.emphasis) {
+                    const prevStates = (el as DisplayableWithStatesHistory).__prevStates;
+                    // Restore states without animation
+                    if (prevStates) {
+                        el.useStates(prevStates);
+                    }
+
                     // Update state transition and enable animation again.
                     if (enableAnimation) {
                         graphic.setStateTransition(el, stateAnimationModel);
