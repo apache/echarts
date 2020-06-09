@@ -439,12 +439,16 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
             const currentFill = this.style.fill;
             const currentStroke = this.style.stroke;
             if (currentFill || currentStroke) {
-                let fromState;
+                let fromState: {fill: ColorString, stroke: ColorString};
                 if (!hasEmphasis) {
                     fromState = {fill: currentFill, stroke: currentStroke};
                     for (let i = 0; i < this.animators.length; i++) {
                         const animator = this.animators[i];
-                        if (animator.targetName === 'style') {
+                        if (animator.__fromStateTransition
+                            // Dont consider the animation to emphasis state.
+                            && animator.__fromStateTransition.indexOf('emphasis') < 0
+                            && animator.targetName === 'style'
+                        ) {
                             animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
                         }
                     }
