@@ -34,7 +34,8 @@ import {
     LabelLayoutOption,
     LabelLayoutOptionCallback,
     LabelLayoutOptionCallbackParams,
-    LabelLineOption
+    LabelLineOption,
+    Dictionary
 } from '../util/types';
 import { parsePercent } from '../util/number';
 import ChartView from '../view/Chart';
@@ -44,10 +45,10 @@ import Transformable from 'zrender/src/core/Transformable';
 import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
-import { retrieve2, each, keys, isFunction, filter } from 'zrender/src/core/util';
+import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
-import { LabelLayoutInfo, prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
+import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
 
 interface LabelDesc {
     label: ZRText
@@ -117,6 +118,16 @@ const labelAnimationStore = makeInner<{
         x: number,
         y: number,
         rotation: number
+    },
+    oldLayoutSelect?: {
+        x?: number,
+        y?: number,
+        rotation?: number
+    },
+    oldLayoutEmphasis?: {
+        x?: number,
+        y?: number,
+        rotation?: number
     }
 }, ZRText>();
 
@@ -130,6 +141,17 @@ type LabelLineOptionMixin = {
     labelLine: LabelLineOption,
     emphasis: { labelLine: LabelLineOption }
 };
+
+function extendWithKeys(target: Dictionary<any>, source: Dictionary<any>, keys: string[]) {
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (source[key] != null) {
+            target[key] = source[key];
+        }
+    }
+}
+
+const LABEL_LAYOUT_PROPS = ['x', 'y', 'rotation'];
 
 class LabelManager {
 
@@ -372,22 +394,33 @@ class LabelManager {
     processLabelsOverall() {
         each(this._chartViewList, (chartView) => {
             const seriesModel = chartView.__model;
-            const animationEnabled = seriesModel.isAnimationEnabled();
             const ignoreLabelLineUpdate = chartView.ignoreLabelLineUpdate;
 
-            chartView.group.traverse((child) => {
-                if (child.ignore) {
-                    return true;    // Stop traverse descendants.
-                }
+            if (!ignoreLabelLineUpdate) {
+                chartView.group.traverse((child) => {
+                    if (child.ignore) {
+                        return true;    // Stop traverse descendants.
+                    }
 
-                if (!ignoreLabelLineUpdate) {
                     this._updateLabelLine(child, seriesModel);
-                }
+                });
+            }
+        });
+    }
 
-                if (animationEnabled) {
+    applyAnimation() {
+        each(this._chartViewList, (chartView) => {
+            const seriesModel = chartView.__model;
+            const animationEnabled = seriesModel.isAnimationEnabled();
+
+            if (animationEnabled) {
+                chartView.group.traverse((child) => {
+                    if (child.ignore) {
+                        return true;    // Stop traverse descendants.
+                    }
                     this._animateLabels(child, seriesModel);
-                }
-            });
+                });
+            }
         });
     }
 
@@ -442,9 +475,32 @@ class LabelManager {
             }
             else {
                 textEl.attr(oldLayout);
+
+                // Make sure the animation from is in the right status.
+                const prevStates = el.prevStates;
+                if (prevStates) {
+                    if (indexOf(prevStates, 'select') >= 0) {
+                        textEl.attr(layoutStore.oldLayoutSelect);
+                    }
+                    if (indexOf(prevStates, 'emphasis') >= 0) {
+                        textEl.attr(layoutStore.oldLayoutEmphasis);
+                    }
+                }
                 updateProps(textEl, newProps, seriesModel);
             }
             layoutStore.oldLayout = newProps;
+
+            if (textEl.states.select) {
+                const layoutSelect = layoutStore.oldLayoutSelect = {};
+                extendWithKeys(layoutSelect, newProps, LABEL_LAYOUT_PROPS);
+                extendWithKeys(layoutSelect, textEl.states.select, LABEL_LAYOUT_PROPS);
+            }
+
+            if (textEl.states.emphasis) {
+                const layoutEmphasis = layoutStore.oldLayoutEmphasis = {};
+                extendWithKeys(layoutEmphasis, newProps, LABEL_LAYOUT_PROPS);
+                extendWithKeys(layoutEmphasis, textEl.states.emphasis, LABEL_LAYOUT_PROPS);
+            }
         }
 
         if (guideLine && !guideLine.ignore && !guideLine.invisible) {
@@ -469,8 +525,6 @@ class LabelManager {
         }
     }
 }
-
-
 
 
 export default LabelManager;

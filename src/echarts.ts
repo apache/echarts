@@ -1098,6 +1098,7 @@ class ECharts extends Eventful {
         labelManager.updateLayoutConfig(this._api);
         labelManager.layout(this._api);
         labelManager.processLabelsOverall();
+        labelManager.applyAnimation();
     }
 
     appendData(params: {
@@ -1734,6 +1735,7 @@ class ECharts extends Eventful {
             labelManager.updateLayoutConfig(api);
             labelManager.layout(api);
             labelManager.processLabelsOverall();
+            labelManager.applyAnimation();
 
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
@@ -1741,6 +1743,7 @@ class ECharts extends Eventful {
                 // label should be in normal status when layouting.
                 updateStates(seriesModel, chartView);
             });
+
 
             // If use hover layer
             // TODO
@@ -1826,9 +1829,6 @@ class ECharts extends Eventful {
             });
         };
 
-        interface DisplayableWithStatesHistory extends Displayable {
-            __prevStates: string[]
-        };
         // Clear states without animation.
         // TODO States on component.
         function clearStates(model: ComponentModel, view: ComponentView | ChartView): void {
@@ -1847,11 +1847,11 @@ class ECharts extends Eventful {
 
                 // TODO If el is incremental.
                 if (el.hasState()) {
-                    (el as DisplayableWithStatesHistory).__prevStates = el.currentStates;
+                    el.prevStates = el.currentStates;
                     el.clearStates();
                 }
-                else if ((el as DisplayableWithStatesHistory).__prevStates) {
-                    (el as DisplayableWithStatesHistory).__prevStates = null;
+                else if (el.prevStates) {
+                    el.prevStates = null;
                 }
             });
         }
@@ -1862,7 +1862,7 @@ class ECharts extends Eventful {
             view.group.traverse(function (el: Displayable) {
                 // Only updated on changed element. In case element is incremental and don't wan't to rerender.
                 if (el.__dirty && el.states && el.states.emphasis) {
-                    const prevStates = (el as DisplayableWithStatesHistory).__prevStates;
+                    const prevStates = el.prevStates;
                     // Restore states without animation
                     if (prevStates) {
                         el.useStates(prevStates);
