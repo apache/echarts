@@ -106,7 +106,7 @@ function labelLayout(data) {
                     console.warn('Position error: Funnel chart on vertical orient dose not support top and bottom.');
                 }
                 if (orient === 'horizontal' && ['left', 'right'].indexOf(labelPosition) > -1) {
-                    labelPosition = 'top';
+                    labelPosition = 'bottom';
                     console.warn('Position error: Funnel chart on horizontal orient dose not support left and right.');
                 }
             }
