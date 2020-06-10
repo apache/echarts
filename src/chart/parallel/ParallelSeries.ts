@@ -56,6 +56,8 @@ export interface ParallelSeriesOption extends
     SeriesOption,
     SeriesEncodeOptionMixin {
 
+    type?: 'parallel';
+
     coordinateSystem?: string;
     parallelIndex?: number;
     parallelId?: string;

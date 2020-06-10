@@ -29,7 +29,7 @@ import {
 } from '../../util/types';
 import { inheritDefaultOption } from '../../util/component';
 
-interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
+export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
 
     show?: boolean
     /**

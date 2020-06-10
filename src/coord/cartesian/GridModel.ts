@@ -24,7 +24,7 @@ import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin } fro
 import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 
-interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
     show?: boolean;
 
     // Whether grid size contain label.
