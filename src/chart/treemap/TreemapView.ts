@@ -52,9 +52,9 @@ const Group = graphic.Group;
 const Rect = graphic.Rect;
 
 const DRAG_THRESHOLD = 3;
-const PATH_LABEL_NOAMAL = ['label'] as const;
+const PATH_LABEL_NOAMAL = 'label';
 const PATH_LABEL_EMPHASIS = ['emphasis', 'label'] as const;
-const PATH_UPPERLABEL_NORMAL = ['upperLabel'] as const;
+const PATH_UPPERLABEL_NORMAL = 'upperLabel';
 const PATH_UPPERLABEL_EMPHASIS = ['emphasis', 'upperLabel'] as const;
 const Z_BASE = 10; // Should bigger than every z.
 const Z_BG = 1;
@@ -912,9 +912,16 @@ function renderNode(
         height: number,
         upperLabelRect?: RectLike
     ) {
+        const normalLabelModel = nodeModel.getModel(
+            upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
+        );
+        const emphasisLabelModel = nodeModel.getModel(
+            upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
+        );
+
         let text = retrieve(
             seriesModel.getFormattedLabel(
-                thisNode.dataIndex, 'normal', null, null, upperLabelRect ? 'upperLabel' : 'label'
+                thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')
             ),
             nodeModel.get('name')
         );
@@ -922,13 +929,6 @@ function renderNode(
             const iconChar = seriesModel.get('drillDownIcon', true);
             text = iconChar ? iconChar + ' ' + text : text;
         }
-
-        const normalLabelModel = nodeModel.getModel(
-            upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
-        );
-        const emphasisLabelModel = nodeModel.getModel(
-            upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
-        );
 
         const isShow = normalLabelModel.getShallow('show');
 
