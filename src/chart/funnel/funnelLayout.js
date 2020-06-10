@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import {__DEV__} from '../../config';
 import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
 
@@ -99,35 +100,47 @@ function labelLayout(data) {
             var x2;
             var y2;
             var labelLineLen = labelLineModel.get('length');
+            if (__DEV__) {
+                if (orient === 'vertical' && ['top', 'bottom'].indexOf(labelPosition) > -1) {
+                    labelPosition = 'left';
+                    console.warn('Position error: Funnel chart on vertical orient dose not support top and bottom.');
+                }
+                if (orient === 'horizontal' && ['left', 'right'].indexOf(labelPosition) > -1) {
+                    labelPosition = 'top';
+                    console.warn('Position error: Funnel chart on horizontal orient dose not support left and right.');
+                }
+            }
             if (labelPosition === 'left') {
                 // Left side
                 x1 = (points[3][0] + points[0][0]) / 2;
                 y1 = (points[3][1] + points[0][1]) / 2;
-                if (orient === 'horizontal') {
-                    y2 = y1 - labelLineLen;
-                    textY = y2 - 5;
-                    textAlign = 'center';
-                }
-                else {
-                    x2 = x1 - labelLineLen;
-                    textX = x2 - 5;
-                    textAlign = 'right';
-                }
+                x2 = x1 - labelLineLen;
+                textX = x2 - 5;
+                textAlign = 'right';
             }
             else if (labelPosition === 'right') {
                 // Right side
                 x1 = (points[1][0] + points[2][0]) / 2;
                 y1 = (points[1][1] + points[2][1]) / 2;
-                if (orient === 'horizontal') {
-                    y2 = y1 + labelLineLen;
-                    textY = y2 + 5;
-                    textAlign = 'center';
-                }
-                else {
-                    x2 = x1 + labelLineLen;
-                    textX = x2 + 5;
-                    textAlign = 'left';
-                }
+                x2 = x1 + labelLineLen;
+                textX = x2 + 5;
+                textAlign = 'left';
+            }
+            else if (labelPosition === 'top') {
+                // Top side
+                x1 = (points[3][0] + points[0][0]) / 2;
+                y1 = (points[3][1] + points[0][1]) / 2;
+                y2 = y1 - labelLineLen;
+                textY = y2 - 5;
+                textAlign = 'center';
+            }
+            else if (labelPosition === 'bottom') {
+                // Bottom side
+                x1 = (points[1][0] + points[2][0]) / 2;
+                y1 = (points[1][1] + points[2][1]) / 2;
+                y2 = y1 + labelLineLen;
+                textY = y2 + 5;
+                textAlign = 'center';
             }
             else if (labelPosition === 'rightTop') {
                 // RightTop side
