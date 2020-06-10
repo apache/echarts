@@ -27,7 +27,9 @@ import {
     initProps,
     enableHoverEmphasis,
     setLabelStyle,
-    clearStates
+    clearStates,
+    updateLabel,
+    initLabel
 } from '../../util/graphic';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import * as numberUtil from '../../util/number';
@@ -107,16 +109,15 @@ class BarView extends ChartView {
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
         this._updateDrawMode(seriesModel);
 
-        seriesModel.setAnimatedValues([]);
-
         const coordinateSystemType = seriesModel.get('coordinateSystem');
+        const isReorder = payload && payload.type === 'changeAxisOrder';
 
         if (coordinateSystemType === 'cartesian2d'
             || coordinateSystemType === 'polar'
         ) {
             this._isLargeDraw
                 ? this._renderLarge(seriesModel, ecModel, api)
-                : this._renderNormal(seriesModel, ecModel, api);
+                : this._renderNormal(seriesModel, ecModel, api, isReorder);
         }
         else if (__DEV__) {
             console.warn('Only cartesian2d and polar supported for bar.');
@@ -144,7 +145,12 @@ class BarView extends ChartView {
         }
     }
 
-    private _renderNormal(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void {
+    private _renderNormal(
+        seriesModel: BarSeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        isReorder: boolean
+    ): void {
         const that = this;
         const group = this.group;
         const data = seriesModel.getData();
@@ -179,6 +185,8 @@ class BarView extends ChartView {
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
 
+        const labelModel = seriesModel.getModel('label');
+
         const roundCap = seriesModel.get('roundCap', true);
 
         const drawBackground = seriesModel.get('showBackground', true);
@@ -199,11 +207,6 @@ class BarView extends ChartView {
             };
 
             if (realtimeSort) {
-                let precision = seriesModel.get(['label', 'precision']);
-                if (precision == null || precision === 'auto') {
-                    precision = 0;
-                }
-
                 // Sort in animation during
                 const isOrderChanged = this._isDataOrderChanged(data, orderMap, oldOrder);
                 if (isOrderChanged) {
@@ -216,16 +219,6 @@ class BarView extends ChartView {
                                     return isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width;
                                 };
                                 that._updateSort(data, orderMap, baseAxis as Axis2D, api);
-
-                                // Update labels
-                                data.eachItemGraphicEl((el: Rect, dataIndex) => {
-                                    const value = numberUtil.round(el.__value, precision as number, true);
-                                    seriesModel.setAnimatedValue(dataIndex, value);
-                                    const label = seriesModel.getFormattedLabel(dataIndex, 'normal');
-                                    const text = el.getTextContent();
-                                    text.style.text = label;
-                                    text.dirty();
-                                });
                             };
                         }
                         else {
@@ -233,7 +226,6 @@ class BarView extends ChartView {
                         }
                     };
                 }
-
             }
             else if (axisSort) {
                 // Sort now in the first frame
@@ -273,9 +265,8 @@ class BarView extends ChartView {
                     }
                 }
 
-                const dataValue = data.get(valueAxis.dim, dataIndex);
                 const el = elementCreator[coord.type](
-                    seriesModel, 0, dataValue, dataIndex, layout, isHorizontalOrRadial, itemModel, animationModel, false, getDuring(), roundCap
+                    seriesModel, data, dataIndex, layout, isHorizontalOrRadial, animationModel, false, getDuring(), roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -350,7 +341,9 @@ class BarView extends ChartView {
                             };
                         }
 
-                        updateProps(el as Path, { shape: seriesShape }, animationModel, newIndex, null, getDuring());
+                        if (!isReorder) {
+                            updateProps(el as Path, { shape: seriesShape }, animationModel, newIndex, null, getDuring());
+                        }
                         updateProps(el as Path, { shape: axisShape }, axisAnimationModel, newIndex, null);
                     }
                     else {
@@ -358,10 +351,11 @@ class BarView extends ChartView {
                             shape: layout
                         }, animationModel, newIndex, null);
                     }
+                    updateLabel(el, data, newIndex, labelModel, seriesModel, animationModel);
                 }
                 else {
                     el = elementCreator[coord.type](
-                        seriesModel, oldValue, newValue, newIndex, layout, isHorizontalOrRadial, itemModel, animationModel, true, getDuring(), roundCap
+                        seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, true, getDuring(), roundCap
                     );
                 }
 
@@ -581,9 +575,9 @@ const clip: {
 
 interface ElementCreator {
     (
-        seriesModel: BarSeriesModel, oldValue: OrdinalRawValue, newValue: OrdinalRawValue, dataIndex: number,
+        seriesModel: BarSeriesModel, data: List, newIndex: number,
         layout: RectLayout | SectorLayout, isHorizontalOrRadial: boolean,
-        itemModel: Model<BarDataItemOption>, animationModel: BarSeriesModel, isUpdate: boolean, during: () => void,
+        animationModel: BarSeriesModel, isUpdate: boolean, during: () => void,
         roundCap?: boolean
     ): BarPossiblePath
 }
@@ -593,8 +587,8 @@ const elementCreator: {
 } = {
 
     cartesian2d(
-        seriesModel, oldValue, newValue, dataIndex, layout: RectLayout, isHorizontal,
-        itemModel, animationModel, isUpdate, during
+        seriesModel, data, newIndex, layout: RectLayout, isHorizontal,
+        animationModel, isUpdate, during
     ) {
         const rect = new Rect({
             shape: zrUtil.extend({}, layout),
@@ -611,20 +605,21 @@ const elementCreator: {
             const animateTarget = {} as RectShape;
             rectShape[animateProperty] = 0;
             animateTarget[animateProperty] = layout[animateProperty];
-            rect.__value = typeof oldValue === 'string' ? parseInt(oldValue, 10) : oldValue;
 
             (isUpdate ? updateProps : initProps)(rect, {
-                shape: animateTarget,
-                __value: typeof newValue === 'string' ? parseInt(newValue, 10) : newValue
-            }, animationModel, dataIndex, null, during);
+                shape: animateTarget
+            }, animationModel, newIndex, null, during);
+
+            const labelModel = seriesModel.getModel('label');
+            (isUpdate ? updateLabel : initLabel)(rect, data, newIndex, labelModel, seriesModel, animationModel);
         }
 
         return rect;
     },
 
     polar(
-        seriesModel, oldValue, newValue, dataIndex, layout: SectorLayout, isRadial: boolean,
-        itemModel, animationModel, isUpdate, during, roundCap
+        seriesModel, data, newIndex, layout: SectorLayout, isRadial: boolean,
+        animationModel, isUpdate, during, roundCap
     ) {
         // Keep the same logic with bar in catesion: use end value to control
         // direction. Notice that if clockwise is true (by default), the sector

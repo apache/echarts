@@ -17,11 +17,12 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
+import Element from 'zrender/src/Element';
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {formatTpl} from '../../util/format';
 import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor, OptionDataValue } from '../../util/types';
 import GlobalModel from '../Global';
-import Element from 'zrender/src/Element';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
@@ -44,12 +45,12 @@ class DataFormatMixin {
     getDataParams(
         dataIndex: number,
         dataType?: string,
-        el?: Element // May be used in override.
+        el?: Element, // May be used in override.
+        rawValue?: unknown
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
-        const rawValue = this.getRawValue(dataIndex, dataType);
-        const animatedValue = this.getAnimatedValue(dataIndex);
+        rawValue = rawValue || this.getRawValue(dataIndex, dataType);
         const rawDataIndex = data.getRawIndex(dataIndex);
         const name = data.getName(dataIndex);
         const itemOpt = data.getRawDataItem(dataIndex);
@@ -73,7 +74,6 @@ class DataFormatMixin {
             data: itemOpt,
             dataType: dataType,
             value: rawValue,
-            animatedValue: animatedValue,
             color: color,
             borderColor: borderColor,
             dimensionNames: userOutput ? userOutput.dimensionNames : null,
@@ -99,13 +99,14 @@ class DataFormatMixin {
         status?: DisplayState,
         dataType?: string,
         dimIndex?: number,
-        labelProp?: string
+        labelProp?: string,
+        rawValue?: unknown
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
         const itemModel = data.getItemModel(dataIndex);
 
-        const params = this.getDataParams(dataIndex, dataType);
+        const params = this.getDataParams(dataIndex, dataType, null, rawValue);
         if (dimIndex != null && (params.value instanceof Array)) {
             params.value = params.value[dimIndex];
         }
@@ -144,30 +145,6 @@ class DataFormatMixin {
         dataType?: string
     ): unknown {
         return retrieveRawValue(this.getData(dataType), idx);
-    }
-
-    setAnimatedValues(
-        dataValue: OptionDataValue[]
-    ): void {
-        this.animatedValue = dataValue.slice();
-    }
-
-    setAnimatedValue(
-        idx: number,
-        dataValue: OptionDataValue
-    ): void {
-        this.animatedValue[idx] = dataValue;
-    }
-
-    getAnimatedValue(
-        idx: number
-    ): OptionDataValue {
-        if (!this.animatedValue || this.animatedValue.length === 0) {
-            return null;
-        }
-        else {
-            return this.animatedValue[idx];
-        }
     }
 
     /**

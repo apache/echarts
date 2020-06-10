@@ -464,7 +464,6 @@ export interface CallbackDataParams {
     data: any;
     dataType?: string;
     value: any;
-    animatedValue?: any;
     color?: ZRColor;
     borderColor?: string;
     dimensionNames?: DimensionName[];
@@ -767,6 +766,8 @@ export interface LabelOption extends TextCommonOption {
 
     overflow?: TextStyleProps['overflow']
     silent?: boolean
+    precision?: number
+    valueAnimation?: boolean
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)

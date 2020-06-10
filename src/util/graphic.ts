@@ -46,7 +46,7 @@ import LRU from 'zrender/src/core/LRU';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
-import Element, { ElementEvent, ElementTextConfig } from 'zrender/src/Element';
+import Element, { ElementEvent, ElementTextConfig, ElementProps } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
     AnimationOptionMixin,
@@ -58,7 +58,9 @@ import {
     ColorString,
     DataModel,
     ECEventData,
-    ZRStyleProps
+    ZRStyleProps,
+    SeriesOption,
+    ParsedValue
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
@@ -72,6 +74,11 @@ import {
     map,
     defaults
 } from 'zrender/src/core/util';
+import * as numberUtil from './number';
+import SeriesModel from '../model/Series';
+import {OnframeCallback} from 'zrender/src/animation/Animator';
+import List from '../data/List';
+import DataFormatMixin from '../model/mixin/dataFormat';
 
 
 const mathMax = Math.max;
@@ -1057,7 +1064,7 @@ function animateOrSetProps<Props>(
     },
     dataIndex?: number | (() => void),
     cb?: () => void,
-    during?: () => void
+    during?: OnframeCallback<any>
 ) {
     if (typeof dataIndex === 'function') {
         during = cb;
@@ -1156,6 +1163,105 @@ export function initProps<Props>(
     during?: () => void
 ) {
     animateOrSetProps(false, el, props, animatableModel, dataIndex, cb, during);
+}
+
+function animateOrSetLabel<Props extends PathProps>(
+    isUpdate: boolean,
+    el: Element<Props>,
+    data: List,
+    dataIndex: number,
+    labelModel: Model<LabelOption>,
+    seriesModel: SeriesModel,
+    animatableModel?: Model<AnimationOptionMixin>
+) {
+    const element = el as Element<Props> & { __value: (string | number)[] | number };
+    const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
+    if (valueAnimationEnabled) {
+        let precision = labelModel.get('precision') || 0;
+
+        let interpolateValues: (number | string)[] | (number | string);
+        const rawValues = seriesModel.getRawValue(dataIndex);
+        let isRawValueNumber = false;
+        if (typeof rawValues === 'number') {
+            isRawValueNumber = true;
+            interpolateValues = rawValues;
+        }
+        else {
+            interpolateValues = [];
+            for (let i = 0; i < (rawValues as []).length; ++i) {
+                const info = data.getDimensionInfo(i);
+                if (info.type !== 'ordinal') {
+                    interpolateValues.push((rawValues as [])[i]);
+                }
+            }
+        }
+
+        const props = {
+            __value: interpolateValues
+        } as ElementProps;
+
+        if (!element.__value) {
+            // Init with 0 for non-ordinal dims
+            if (isRawValueNumber) {
+                element.__value = 0;
+            }
+            else {
+                const initValues = [];
+                for (let i = 0; i < (interpolateValues as []).length; ++i) {
+                    initValues[i] = 0;
+                }
+                element.__value = initValues;
+            }
+        }
+
+        const during = (target: Props, percent: number) => {
+            let interpolated;
+            if (isRawValueNumber) {
+                interpolated = numberUtil.round(target.__value as number, precision);
+            }
+            else {
+                interpolated = [];
+                for (let i = 0, j = 0; i < (rawValues as []).length; ++i) {
+                    const info = data.getDimensionInfo(i);
+                    // Don't interpolate ordinal dims
+                    if (info.type === 'ordinal') {
+                        interpolated[i] = (rawValues as [])[i];
+                    }
+                    else {
+                        interpolated[i] = numberUtil.round((target.__value as [])[j], precision);
+                        ++j;
+                    }
+                }
+            }
+            const text = el.getTextContent();
+            text.style.text = seriesModel.getFormattedLabel(dataIndex, 'normal', null, null, null, interpolated);
+            text.dirty();
+        };
+
+        animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, null, during);
+    }
+}
+
+export function updateLabel<Props>(
+    el: Element<Props>,
+    data: List,
+    dataIndex: number,
+    labelModel: Model<LabelOption>,
+    seriesModel: SeriesModel,
+    animatableModel?: Model<AnimationOptionMixin>
+) {
+    animateOrSetLabel(true, el, data, dataIndex, labelModel, seriesModel, animatableModel);
+}
+
+export function initLabel<Props>(
+    el: Element<Props>,
+    data: List,
+    dataIndex: number,
+    labelModel: Model<LabelOption>,
+    seriesModel: SeriesModel,
+    animatableModel?: Model<AnimationOptionMixin>
+) {
+    animateOrSetLabel(false, el, data, dataIndex, labelModel, seriesModel, animatableModel);
 }
 
 /**
