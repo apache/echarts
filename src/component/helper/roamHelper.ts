@@ -17,35 +17,30 @@
 * under the License.
 */
 
-// @ts-nocheck
+import Element from 'zrender/src/Element';
+
+interface ControllerHost {
+    target: Element,
+    zoom: number
+    zoomLimit: {min: number, max: number}
+}
 
 /**
  * For geo and graph.
- *
- * @param {Object} controllerHost
- * @param {module:zrender/Element} controllerHost.target
  */
-export function updateViewOnPan(controllerHost, dx, dy) {
+export function updateViewOnPan(controllerHost: ControllerHost, dx: number, dy: number) {
     const target = controllerHost.target;
-    const pos = target.position;
-    pos[0] += dx;
-    pos[1] += dy;
+    target.x += dx;
+    target.y += dy;
     target.dirty();
 }
 
 /**
  * For geo and graph.
- *
- * @param {Object} controllerHost
- * @param {module:zrender/Element} controllerHost.target
- * @param {number} controllerHost.zoom
- * @param {number} controllerHost.zoomLimit like: {min: 1, max: 2}
  */
-export function updateViewOnZoom(controllerHost, zoomDelta, zoomX, zoomY) {
+export function updateViewOnZoom(controllerHost: ControllerHost, zoomDelta: number, zoomX: number, zoomY: number) {
     const target = controllerHost.target;
     const zoomLimit = controllerHost.zoomLimit;
-    const pos = target.position;
-    const scale = target.scale;
 
     let newZoom = controllerHost.zoom = controllerHost.zoom || 1;
     newZoom *= zoomDelta;
@@ -60,10 +55,10 @@ export function updateViewOnZoom(controllerHost, zoomDelta, zoomX, zoomY) {
     const zoomScale = newZoom / controllerHost.zoom;
     controllerHost.zoom = newZoom;
     // Keep the mouse center when scaling
-    pos[0] -= (zoomX - pos[0]) * (zoomScale - 1);
-    pos[1] -= (zoomY - pos[1]) * (zoomScale - 1);
-    scale[0] *= zoomScale;
-    scale[1] *= zoomScale;
+    target.x -= (zoomX - target.x) * (zoomScale - 1);
+    target.y -= (zoomY - target.y) * (zoomScale - 1);
+    target.scaleX *= zoomScale;
+    target.scaleY *= zoomScale;
 
     target.dirty();
 }
