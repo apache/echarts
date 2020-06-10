@@ -1128,6 +1128,6 @@ export interface SeriesSamplingOptionMixin {
 export interface SeriesEncodeOptionMixin {
     datasetIndex?: number;
     seriesLayoutBy?: SeriesLayoutBy;
-    dimentions?: DimensionName[];
+    dimensions?: DimensionName[];
     encode?: OptionEncode
 }
