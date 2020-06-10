@@ -24,7 +24,6 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import Model from '../model/Model';
 import linkList from './helper/linkList';
 import List from './List';
 import createDimensions from './helper/createDimensions';
@@ -247,22 +246,7 @@ TreeNode.prototype = {
         }
         var hostTree = this.hostTree;
         var itemModel = hostTree.data.getItemModel(this.dataIndex);
-        var levelModel = this.getLevelModel();
-
-        // FIXME: refactor levelModel to "beforeLink", and remove levelModel here.
-        if (levelModel) {
-            return itemModel.getModel(path, levelModel.getModel(path));
-        }
-        else {
-            return itemModel.getModel(path);
-        }
-    },
-
-    /**
-     * @return {module:echarts/model/Model}
-     */
-    getLevelModel: function () {
-        return (this.hostTree.levelModels || [])[this.depth];
+        return itemModel.getModel(path);
     },
 
     /**
@@ -334,9 +318,8 @@ TreeNode.prototype = {
  * @constructor
  * @alias module:echarts/data/Tree
  * @param {module:echarts/model/Model} hostModel
- * @param {Array.<Object>} levelOptions
  */
-function Tree(hostModel, levelOptions) {
+function Tree(hostModel) {
     /**
      * @type {module:echarts/data/Tree~TreeNode}
      * @readOnly
@@ -362,15 +345,6 @@ function Tree(hostModel, levelOptions) {
      * @type {module:echarts/model/Model}
      */
     this.hostModel = hostModel;
-
-    /**
-     * @private
-     * @readOnly
-     * @type {Array.<module:echarts/model/Model}
-     */
-    this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
-        return new Model(levelDefine, hostModel, hostModel.ecModel);
-    });
 
 }
 
@@ -461,13 +435,11 @@ Tree.prototype = {
  * @static
  * @param {Object} dataRoot Root node.
  * @param {module:echarts/model/Model} hostModel
- * @param {Object} treeOptions
- * @param {Array.<Object>} treeOptions.levels
  * @return module:echarts/data/Tree
  */
-Tree.createTree = function (dataRoot, hostModel, treeOptions, beforeLink) {
+Tree.createTree = function (dataRoot, hostModel, beforeLink) {
 
-    var tree = new Tree(hostModel, treeOptions && treeOptions.levels);
+    var tree = new Tree(hostModel);
     var listData = [];
     var dimMax = 1;
 
