@@ -130,12 +130,14 @@ class SunburstPiece extends graphic.Sector {
                 node.dataIndex
             );
         }
+        else {
+            // Disable animation for gradient since no interpolation method
+            // is supported for gradient
+            graphic.updateProps(sector, {
+                shape: sectorShape
+            }, seriesModel);
+        }
 
-        // Disable animation for gradient since no interpolation method
-        // is supported for gradient
-        graphic.updateProps(sector, {
-            shape: sectorShape
-        }, seriesModel);
         sector.useStyle(normalStyle);
 
         this._updateLabel(seriesModel);
