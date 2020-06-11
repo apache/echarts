@@ -25,6 +25,7 @@ import Model from '../../model/Model';
 import {encodeHTML} from '../../util/format';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import {initCurvenessList} from '../helper/multipleGraphEdgeHelper';
 
 var GraphSeries = echarts.extendSeriesModel({
 
@@ -66,6 +67,8 @@ var GraphSeries = echarts.extendSeriesModel({
         var self = this;
 
         if (nodes && edges) {
+            // auto curveness
+            initCurvenessList(edges, this);
             return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
         }
 

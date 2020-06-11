@@ -17,122 +17,117 @@
 * under the License.
 */
 
-var linkMap = {};
-var curvenessList = [];
-
+var KEY_DELIMITER = '-->';
 /**
  * params handler
- * @param seriesModel
+ * @param {module:echarts/model/SeriesModel} seriesModel
  * @returns {*}
  */
 var getAutoCurvenessParams = function (seriesModel) {
-    var autoCurveness = seriesModel.getModel('autoCurveness');
-
-    if (!autoCurveness || !autoCurveness.option) {
-        return null;
-    }
-
-    return autoCurveness.option;
+    return seriesModel.get('autoCurveness') || null;
 };
 
 /**
  * Generate a list of edge curvatures, 20 is the default
- * @param seriesModel
- * @param addLength append length
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @param {number} appendLength
  * @return  20 => [0, -0.2, 0.2, -0.4, 0.4, -0.6, 0.6, -0.8, 0.8, -1, 1, -1.2, 1.2, -1.4, 1.4, -1.6, 1.6, -1.8, 1.8, -2]
  */
-var createCurveness = function (seriesModel, addLength) {
-    var autoCurvenssParmas = getAutoCurvenessParams(seriesModel);
+var createCurveness = function (seriesModel, appendLength) {
+    var autoCurvenessParmas = getAutoCurvenessParams(seriesModel);
     var length = 20;
+    var curvenessList = [];
 
     // handler the function set
-    if (typeof autoCurvenssParmas === 'number') {
-        length = autoCurvenssParmas;
+    if (typeof autoCurvenessParmas === 'number') {
+        length = autoCurvenessParmas;
     }
-    else if (typeof autoCurvenssParmas === 'function') {
-        curvenessList = autoCurvenssParmas();
+    else if (Object.prototype.toString.call(autoCurvenessParmas) === '[object Array]') {
+        seriesModel._curvenessList = autoCurvenessParmas;
         return;
     }
 
-    // addLength
-    if (addLength) {
-        length = addLength;
+    // append length
+    if (appendLength > length) {
+        length = appendLength;
     }
 
-    // if already calculated return
-    if (length < curvenessList.length) {
-        return;
-    }
-
-    // 保证长度为偶数
+    // make sure the length is even
     var len = length % 2 ? length + 2 : length + 3;
     curvenessList = [];
 
     for (var i = 0; i < len; i++) {
         curvenessList.push((i % 2 ? i + 1 : i) / 10 * (i % 2 ? -1 : 1));
     }
+    seriesModel._curvenessList = curvenessList;
 };
 
 /**
  * Create different cache key data in the positive and negative directions, in order to set the curvature later
- * @param link
- * @param seriesModel
- * @returns {string}
+ * @param {number|string|module:echarts/data/Graph.Node} n1
+ * @param {number|string|module:echarts/data/Graph.Node} n2
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @returns {string} key
  */
-var getKeyOfLinks = function (link, seriesModel) {
-    return [seriesModel.uid, link.source, link.target].join('>');
+var getKeyOfEdges = function (n1, n2, seriesModel) {
+    var source = [n1.id, n1.dataIndex].join('.');
+    var target = [n2.id, n2.dataIndex].join('.');
+    return [seriesModel.uid, source, target].join(KEY_DELIMITER);
 };
 
 /**
  * get opposite key
- * 获取反向的key
- * @param key
+ * @param {string} key
  * @returns {string}
  */
 var getOppositeKey = function (key) {
-    var keys = key.split('>');
-
-    return [keys[0], keys[2], keys[1]].join('>');
+    var keys = key.split(KEY_DELIMITER);
+    return [keys[0], keys[2], keys[1]].join(KEY_DELIMITER);
 };
 
 /**
- * set linkMap with key
- * @param link
- * @param seriesModel
- * @param index
+ * set edgeMap with key
+ * @param {number|string|module:echarts/data/Graph.Node} n1
+ * @param {number|string|module:echarts/data/Graph.Node} n2
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @param {number} index
  */
-var setLinkToMap = function (link, seriesModel, index) {
-    var key = getKeyOfLinks(link, seriesModel);
-    var hasOppositeLinks = linkMap[getOppositeKey(key)];
+var setEdgeToMap = function (n1, n2, seriesModel, index) {
+    var key = getKeyOfEdges(n1, n2, seriesModel);
+    var edgeMap = seriesModel._edgeMap;
+    var oppositeEdges = edgeMap[getOppositeKey(key)];
     // set direction
-    if (hasOppositeLinks && linkMap[key] && !linkMap[key].isForward) {
-        linkMap[getOppositeKey(key)].isForward = true;
+    if (edgeMap[key] && !oppositeEdges) {
+        edgeMap[key].isForward = true;
+    }
+    else if (oppositeEdges && edgeMap[key]) {
+        oppositeEdges.isForward = true;
+        edgeMap[key].isForward = false;
     }
 
-    linkMap[key] = linkMap[key] || [];
-    linkMap[key].push(index);
+    edgeMap[key] = edgeMap[key] || [];
+    edgeMap[key].push(index);
 };
 
 /**
- * get linkMap with key
- * @param link
- * @param seriesModel
- * @param index
+ * get edgeMap with key
+ * @param edge
+ * @param {module:echarts/model/SeriesModel} seriesModel
  */
-var getLinkFromMap = function (link, seriesModel) {
-    var key = getKeyOfLinks(link, seriesModel);
-    return linkMap[key];
+var getEdgeFromMap = function (edge, seriesModel) {
+    var key = getKeyOfEdges(edge.node1, edge.node2, seriesModel);
+    return seriesModel._edgeMap[key];
 };
 
 /**
  * calculate all cases total length
- * @param link
+ * @param edge
  * @param seriesModel
  * @returns {number}
  */
-var getTotalLengthBetweenNodes = function (link, seriesModel) {
-    var len = getLinkMapLengthWithKey([seriesModel.uid, link.source, link.target].join('>'));
-    var lenV = getLinkMapLengthWithKey([seriesModel.uid, link.target, link.source].join('>'));
+var getTotalLengthBetweenNodes = function (edge, seriesModel) {
+    var len = getEdgeMapLengthWithKey(getKeyOfEdges(edge.node1, edge.node2, seriesModel), seriesModel);
+    var lenV = getEdgeMapLengthWithKey(getKeyOfEdges(edge.node2, edge.node1, seriesModel), seriesModel);
 
     return len + lenV;
 };
@@ -141,81 +136,96 @@ var getTotalLengthBetweenNodes = function (link, seriesModel) {
  *
  * @param key
  */
-var getLinkMapLengthWithKey = function (key) {
-    return linkMap[key] ? linkMap[key].length : 0;
+var getEdgeMapLengthWithKey = function (key, seriesModel) {
+    var edgeMap = seriesModel._edgeMap;
+    return edgeMap[key] ? edgeMap[key].length : 0;
 };
 
 /**
  * Count the number of edges between the same two points, used to obtain the curvature table and the parity of the edge
+ * @see /graph/GraphSeries.js@getInitialData
  * @param edges
- * @param seriesModel
- * @param graph
+ * @param {module:echarts/model/SeriesModel} seriesModel
  */
-export function calculateMutilEdges(edges, seriesModel, graph) {
+export function initCurvenessList(edges, seriesModel) {
     if (!getAutoCurvenessParams(seriesModel)) {
         return;
     }
     // Hang on this object 4 dispose
-    curvenessList = graph.curvenessList || [];
-    linkMap = graph.linkMap = graph.linkMap || {};
-
-
-    for (var i = 0; i < edges.length; i++) {
-        var link = edges[i];
-        var source = link.source;
-        var target = link.target;
-        if (!source || !target) {
-            continue;
-        }
-        setLinkToMap(link, seriesModel, i);
-    }
-
-    // calc the array of curvenessList
+    seriesModel._curvenessList = seriesModel._curvenessList || [];
+    // calc the array of curveness List
     createCurveness(seriesModel);
 }
 
 /**
- * Set curvature for link
- * @param link
- * @param seriesModel
+ * create the edgeMap after addEdges
+ * @see chart/helper/createGraphFromNodeEdge.js#L52
+ * @param {number|string|module:echarts/data/Graph.Node} n1
+ * @param {number|string|module:echarts/data/Graph.Node} n2
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @param {number} dataIndex
+ */
+export function createEdgeMapForCurveness(n1, n2, seriesModel, dataIndex) {
+    seriesModel._edgeMap = seriesModel._edgeMap || {};
+    setEdgeToMap(n1, n2, seriesModel, dataIndex);
+}
+
+/**
+ * get curvature for edge
+ * @param edge
+ * @param {module:echarts/model/SeriesModel} seriesModel
  * @param index
  */
-export function setCurvenessForLink(link, seriesModel, index) {
-    if (!getAutoCurvenessParams(seriesModel)) {
-        return;
+export function getCurvenessForEdge(edge, seriesModel, index, needReverse) {
+    const autoCurvenessParams = getAutoCurvenessParams(seriesModel);
+    const isArrayParam = Object.prototype.toString.call(autoCurvenessParams) === '[object Array]';
+    if (!autoCurvenessParams) {
+        return null;
     }
 
-    var linkArray = getLinkFromMap(link, seriesModel);
-    if (!linkArray) {
-        return;
+    var edgeArray = getEdgeFromMap(edge, seriesModel);
+    if (!edgeArray) {
+        return null;
     }
 
-    var linkIndex = linkArray.findIndex(function (it) {
-        return it === index;
-    });
-    var totalLen = getTotalLengthBetweenNodes(link, seriesModel);
-    // if totalLen bigger than curvenessList, recreate curvenessList
-    if (totalLen > curvenessList.length) {
-        createCurveness(seriesModel, totalLen);
-    }
-
-    link.lineStyle = link.lineStyle || {};
-    // if is opposite link, must set curvenss to opposite number
-    var curKey = getKeyOfLinks(link, seriesModel);
-    if (!linkArray.isForward) {
-        // the opposite link show outside
-        var oppositeKey = getOppositeKey(curKey);
-        var len = getLinkMapLengthWithKey(oppositeKey);
-        var layout = seriesModel.getModel('layout').option;
-        // Because the curvature algorithm of each layout is different, the reverse needs to be adapted here
-        if (layout === 'none' || layout === 'force') {
-            link.lineStyle.curveness = -1 * curvenessList[linkIndex + len + (totalLen % 2 ? 0 : 1)];
+    var edgeIndex = -1;
+    for (var i = 0; i < edgeArray.length; i++) {
+        if (edgeArray[i] === index) {
+            edgeIndex = i;
+            break;
         }
-        else if (layout === 'circular') {
-            link.lineStyle.curveness = curvenessList[linkIndex + len + (totalLen % 2 ? 0 : 1)];
+    }
+    // if totalLen is Longer createCurveness
+    var totalLen = getTotalLengthBetweenNodes(edge, seriesModel);
+    createCurveness(seriesModel, totalLen);
+
+    edge.lineStyle = edge.lineStyle || {};
+    // if is opposite edge, must set curvenss to opposite number
+    var curKey = getKeyOfEdges(edge.node1, edge.node2, seriesModel);
+    var curvenessList = seriesModel._curvenessList;
+    // if pass array no need parity
+    var parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
+
+    if (!edgeArray.isForward) {
+        // the opposite edge show outside
+        var oppositeKey = getOppositeKey(curKey);
+        var len = getEdgeMapLengthWithKey(oppositeKey, seriesModel);
+        var resValue = curvenessList[edgeIndex + len + parityCorrection];
+        // isNeedReverse, simple, force type need reverse the curveness in the junction of the forword and the opposite
+        if (needReverse) {
+            // set as array may make the parity by add 1
+            if (isArrayParam) {
+                return (len + parityCorrection + 1) % 2 ? resValue : -resValue;
+            }
+            else {
+                return (len + parityCorrection) % 2 ? resValue : -resValue;
+            }
+        }
+        else {
+            return curvenessList[edgeIndex + len + parityCorrection];
         }
     }
     else {
-        link.lineStyle.curveness = curvenessList[linkIndex + (totalLen % 2 ? 0 : 1)];
+        return curvenessList[edgeIndex];
     }
 }

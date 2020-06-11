@@ -34,6 +34,7 @@ under the License.
     }
 </style>
 <div id="main0" class="main"></div>
+<div id="main7" class="main"></div>
 <div id="main1" class="main"></div>
 <div id="main2" class="main"></div>
 <div id="main3" class="main"></div>
@@ -41,37 +42,17 @@ under the License.
 <div id="main5" class="main"></div>
 <div id="main6" class="main"></div>
 
-<script>
-    window.createLinks = function (length) {
-        var res = []
-        for(var i = 0; i < length; i++) {
-            var x = Math.round((Math.random() * 10)) % 2
-            res.push({
-                source: x ? 'node1' : 'node3',
-                target: x ? 'node3' : 'node1',
-                label: {
-                    show: true
-                },
-            })
-        }
 
-        res.push({
-            source: 'node1',
-            target: 'node2'
-        })
-
-        return res;
-    }
-</script>
 <script>
     require([
         'echarts'
     ], function (echarts) {
         var container = document.getElementById('main6');
+        var data = [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}];
 
         var option = {
             title: {
-                text: 'autoCurveness函数测试'
+                text: 'autoCurveness array test'
             },
             tooltip: {},
             animationDurationUpdate: 1500,
@@ -103,10 +84,8 @@ under the License.
                         x: 550,
                         y: 100
                     }],
-                    links: createLinks(14),
-                    autoCurveness: function() {
-                        return [0.2, -0.2, 0.4, -0.4, 0.6, -0.6, 0.8, -0.8, 1, -1, 0.1, -0.1, 0.3, -0.3, 0.5, -0.5, 0.7, -0.7, 0.9, -0.9];
-                    },
+                    links: data,
+                    autoCurveness: [0.2, -0.2, 0.4, -0.4, 0.6, -0.6, 0.8, -0.8, 1, -1, 0.1, -0.1, 0.3, -0.3, 0.5, -0.5, 0.7, -0.7, 0.9, -0.9],
                     lineStyle: {
                         opacity: 0.9,
                         width: 2,
@@ -126,10 +105,11 @@ under the License.
         'echarts'
     ], function (echarts) {
         var container = document.getElementById('main5');
+        var data = [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}];
 
         var option = {
             title: {
-                text: 'autoCurveness 不传入测试'
+                text: 'no set autoCurveness '
             },
             tooltip: {},
             animationDurationUpdate: 1500,
@@ -161,7 +141,68 @@ under the License.
                         x: 550,
                         y: 100
                     }],
-                    links: createLinks(14),
+                    links: data,
+                    lineStyle: {
+                        opacity: 0.9,
+                        width: 2,
+                        curveness: 0
+                    }
+                }
+            ]
+        }
+
+        var chart = echarts.init(container, '', {renderer: 'svg'});
+        chart.setOption(option)
+    })
+</script>
+
+<script>
+    require([
+        'echarts'
+    ], function (echarts) {
+        var container = document.getElementById('main7');
+        var data = [
+            {source: 'node1', target: 'node3', label: {show: true}},
+            {source: 'node1', target: 'node3', label: {show: true}},
+            {source: 'node3', target: 'node1', label: {show: true}},
+        ]
+
+        var option = {
+            title: {
+                text: 'autoCurveness 3 test case'
+            },
+            tooltip: {},
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [
+                {
+                    type: 'graph',
+                    layout: 'none',
+                    symbolSize: 50,
+                    roam: true,
+                    label: {
+                        show: true
+                    },
+                    edgeSymbol: ['circle', 'arrow'],
+                    edgeSymbolSize: [4, 10],
+                    edgeLabel: {
+                        fontSize: 12
+                    },
+                    data: [{
+                        name: 'node1',
+                        x: 300,
+                        y: 300
+                    }, {
+                        name: 'node2',
+                        x: 800,
+                        y: 300
+                    }, {
+                        name: 'node3',
+                        x: 550,
+                        y: 100
+                    }],
+                    links: data,
+                    autoCurveness: 3,
                     lineStyle: {
                         opacity: 0.9,
                         width: 2,
@@ -181,7 +222,6 @@ under the License.
         if(i % 3 === 0) return 'none';
         if(i % 3 == 1) return 'circular';
         if(i % 3 == 2) return 'force';
-        // return 'force'
     }
     require([
         'echarts'
@@ -189,10 +229,17 @@ under the License.
         for(var i = 0; i < 5; i++) {
             var container = document.getElementById('main' + i);
             var times = 8;
+            var datas = {
+                '1': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '9': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '17': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '25': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '33': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}]
+            }
 
             var option = {
                 title: {
-                    text: 'Graph 简单示例, 边数：' + (i * times + 1) + '布局：' + getLayout(i)
+                    text: 'Graph, edges numbers：' + (i * times + 1) + ' layout：' + getLayout(i)
                 },
                 tooltip: {},
                 animationDurationUpdate: 1500,
@@ -224,7 +271,7 @@ under the License.
                             x: 550,
                             y: 100
                         }],
-                        links: createLinks(i * times + 1),
+                        links: datas[(i * times + 1) + ''],
                         autoCurveness: i * times + 1,
                         lineStyle: {
                             opacity: 0.9,

@@ -20,6 +20,7 @@
 import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {enableClassCheck} from '../util/clazz';
+import {createEdgeMapForCurveness} from '../chart/helper/multipleGraphEdgeHelper';
 
 // id may be function name of Object, add a prefix to avoid this problem.
 function generateNodeKey(id) {
@@ -137,9 +138,10 @@ graphProto.getNodeById = function (id) {
  * @param {number|string|module:echarts/data/Graph.Node} n1
  * @param {number|string|module:echarts/data/Graph.Node} n2
  * @param {number} [dataIndex=-1]
+ * @param {module:echarts/model/SeriesModel} seriesModel
  * @return {module:echarts/data/Graph.Edge}
  */
-graphProto.addEdge = function (n1, n2, dataIndex) {
+graphProto.addEdge = function (n1, n2, dataIndex, seriesModel) {
     var nodesMap = this._nodesMap;
     var edgesMap = this._edgesMap;
 
@@ -176,6 +178,8 @@ graphProto.addEdge = function (n1, n2, dataIndex) {
 
     this.edges.push(edge);
     edgesMap[key] = edge;
+
+    createEdgeMapForCurveness(n1, n2, seriesModel, dataIndex);
 
     return edge;
 };
