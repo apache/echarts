@@ -213,9 +213,14 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse) {
         var resValue = curvenessList[edgeIndex + len + parityCorrection];
         // isNeedReverse, simple, force type need reverse the curveness in the junction of the forword and the opposite
         if (needReverse) {
-            // set as array may make the parity by add 1
+            // set as array may make the parity handle with the len of opposite
             if (isArrayParam) {
-                return ((len % 2 ? 0 : 1) + parityCorrection) % 2 ? resValue : -resValue;
+                if (autoCurvenessParams && autoCurvenessParams[0] === 0) {
+                    return (len + parityCorrection) % 2 ? resValue : -resValue;
+                }
+                else {
+                    return ((len % 2 ? 0 : 1) + parityCorrection) % 2 ? resValue : -resValue;
+                }
             }
             else {
                 return (len + parityCorrection) % 2 ? resValue : -resValue;
