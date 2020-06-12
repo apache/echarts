@@ -215,7 +215,7 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse) {
         if (needReverse) {
             // set as array may make the parity by add 1
             if (isArrayParam) {
-                return (len + parityCorrection + 1) % 2 ? resValue : -resValue;
+                return ((len % 2 ? 0 : 1) + parityCorrection) % 2 ? resValue : -resValue;
             }
             else {
                 return (len + parityCorrection) % 2 ? resValue : -resValue;
