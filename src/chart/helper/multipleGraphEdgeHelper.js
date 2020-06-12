@@ -17,6 +17,8 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
+
 var KEY_DELIMITER = '-->';
 /**
  * params handler
@@ -42,7 +44,7 @@ var createCurveness = function (seriesModel, appendLength) {
     if (typeof autoCurvenessParmas === 'number') {
         length = autoCurvenessParmas;
     }
-    else if (Object.prototype.toString.call(autoCurvenessParmas) === '[object Array]') {
+    else if (zrUtil.isArray(autoCurvenessParmas)) {
         seriesModel._curvenessList = autoCurvenessParmas;
         return;
     }
@@ -178,7 +180,7 @@ export function createEdgeMapForCurveness(n1, n2, seriesModel, dataIndex) {
  */
 export function getCurvenessForEdge(edge, seriesModel, index, needReverse) {
     const autoCurvenessParams = getAutoCurvenessParams(seriesModel);
-    const isArrayParam = Object.prototype.toString.call(autoCurvenessParams) === '[object Array]';
+    const isArrayParam = zrUtil.isArray(autoCurvenessParams);
     if (!autoCurvenessParams) {
         return null;
     }
