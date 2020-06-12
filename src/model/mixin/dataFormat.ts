@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import Element from 'zrender/src/Element';
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {formatTpl} from '../../util/format';
-import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor, OptionDataValue } from '../../util/types';
+import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor, OptionDataValue, ParsedValue } from '../../util/types';
 import GlobalModel from '../Global';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
@@ -100,13 +100,13 @@ class DataFormatMixin {
         dataType?: string,
         dimIndex?: number,
         labelProp?: string,
-        rawValue?: unknown
+        interpolateValues?: ParsedValue | ParsedValue[]
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
         const itemModel = data.getItemModel(dataIndex);
 
-        const params = this.getDataParams(dataIndex, dataType, null, rawValue);
+        const params = this.getDataParams(dataIndex, dataType, null, interpolateValues);
         if (dimIndex != null && (params.value instanceof Array)) {
             params.value = params.value[dimIndex];
         }

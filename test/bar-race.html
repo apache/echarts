@@ -48,8 +48,8 @@ under the License.
         <button id='btn-2'>B++</button>
         <button id='btn-3'>C++</button>
         <button id='btn-4'>D++</button>
+        <div id="main2" class="chart"></div>
 
-        <div id="main" class="chart"></div>
         <script>
 
         require(
@@ -76,7 +76,7 @@ under the License.
                 ]
             ),
             function (echarts) {
-                var chart = echarts.init(document.getElementById('main'), null, {
+                var chart = echarts.init(document.getElementById('main2'), null, {
                     // renderer: 'svg'
                 });
 
@@ -105,38 +105,17 @@ under the License.
                         label: {
                             show: true,
                             position: 'right',
-                            // formatter: '{c}元',
-                            formatter: function (params) {
-                                // console.log(params);
-                                return params.animatedValue + '元';
-                            },
+                            formatter: '{c}元',
                             valueAnimation: true
                         }
-                    // }, {
-                        // name: 'Y',
-                        // type: 'bar',
-                        // data: [20, 200, 40, 90],
-                        // label: {
-                        //     show: true,
-                        //     position: 'right',
-                        //     formatter: '{a}'
-                        // }
-                    // }, {
-                    //     name: 'Z',
-                    //     type: 'bar',
-                    //     data: [100, 20, 70, 80],
-                    //     label: {
-                    //         show: true,
-                    //         position: 'right',
-                    //         formatter: '{a}'
-                    //     }
                     }],
                     legend: {
                         show: true
                     },
-                    animationDuration: 10000,
-                    animationDurationUpdate: 10000,
-                    animationEasing: 'linear'
+                    animationDuration: 5000,
+                    animationDurationUpdate: 5000,
+                    animationEasing: 'linear',
+                    animationEasingUpdate: 'linear'
                 };
 
                 chart.setOption(option);
@@ -151,12 +130,6 @@ under the License.
                         };
                     })(x);
                 }
-
-
-                // setTimeout(function () {
-                //     console.log('go')
-                //     chart.setOption({});
-                // }, 5000);
             }
 
         );

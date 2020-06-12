@@ -621,7 +621,8 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
             state: DisplayState,
             dataType: string,
             labelDimIndex: number,
-            labelProp: string
+            labelProp: string,
+            interpolateValues?: ParsedValue | ParsedValue[]
         ) => string
     },
     labelDataIndex?: LDI,
@@ -629,6 +630,31 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     labelProp?: string
 }
 
+
+function getLabelText<LDI>(opt?: SetLabelStyleOpt<LDI>, interpolateValues?: ParsedValue | ParsedValue[]) {
+    const labelFetcher = opt.labelFetcher;
+    const labelDataIndex = opt.labelDataIndex;
+    const labelDimIndex = opt.labelDimIndex;
+    const labelProp = opt.labelProp;
+
+    let baseText;
+    if (labelFetcher) {
+        baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex, labelProp, interpolateValues);
+    }
+    if (baseText == null) {
+        baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
+    }
+    const emphasisStyleText = retrieve2(
+        labelFetcher
+            ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex, labelProp)
+            : null,
+        baseText
+    );
+    return {
+        normal: baseText,
+        emphasis: emphasisStyleText
+    };
+}
 
 /**
  * Set normal styles and emphasis styles about text on target element
@@ -659,26 +685,6 @@ export function setLabelStyle<LDI>(
     // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
     let richText = isSetOnText ? targetEl as ZRText : null;
     if (showNormal || showEmphasis) {
-        const labelFetcher = opt.labelFetcher;
-        const labelDataIndex = opt.labelDataIndex;
-        const labelDimIndex = opt.labelDimIndex;
-        const labelProp = opt.labelProp;
-
-        let baseText;
-        if (labelFetcher) {
-            baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex, labelProp);
-        }
-        if (baseText == null) {
-            baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
-        }
-        const normalStyleText = baseText;
-        const emphasisStyleText = retrieve2(
-            labelFetcher
-                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex, labelProp)
-                : null,
-            baseText
-        );
-
         if (!isSetOnText) {
             // Reuse the previous
             richText = targetEl.getTextContent();
@@ -735,8 +741,9 @@ export function setLabelStyle<LDI>(
         // auto slient is those cases.
         richText.silent = !!normalModel.getShallow('silent');
 
-        normalStyle.text = normalStyleText;
-        emphasisState.style.text = emphasisStyleText;
+        const labelText = getLabelText(opt);
+        normalStyle.text = labelText.normal;
+        emphasisState.style.text = labelText.emphasis;
 
         // Keep x and y
         if (richText.style.x != null) {
@@ -1172,9 +1179,10 @@ function animateOrSetLabel<Props extends PathProps>(
     dataIndex: number,
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
-    animatableModel?: Model<AnimationOptionMixin>
+    animatableModel?: Model<AnimationOptionMixin>,
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    const element = el as Element<Props> & { __value: (string | number)[] | number };
+    const element = el as Element<Props> & { __value: ParsedValue[] | ParsedValue };
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     if (valueAnimationEnabled) {
         let precision = labelModel.get('precision') || 0;
@@ -1234,8 +1242,17 @@ function animateOrSetLabel<Props extends PathProps>(
                 }
             }
             const text = el.getTextContent();
-            text.style.text = seriesModel.getFormattedLabel(dataIndex, 'normal', null, null, null, interpolated);
-            text.dirty();
+            if (text) {
+                const labelText = getLabelText({
+                    labelDataIndex: dataIndex,
+                    labelFetcher: seriesModel,
+                    defaultText: defaultTextGetter
+                        ? defaultTextGetter(interpolated)
+                        : interpolated + ''
+                }, interpolated);
+                text.style.text = labelText.normal;
+                text.dirty();
+            }
         };
 
         animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, null, during);
@@ -1248,9 +1265,10 @@ export function updateLabel<Props>(
     dataIndex: number,
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
-    animatableModel?: Model<AnimationOptionMixin>
+    animatableModel?: Model<AnimationOptionMixin>,
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel(true, el, data, dataIndex, labelModel, seriesModel, animatableModel);
+    animateOrSetLabel(true, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 export function initLabel<Props>(
@@ -1259,9 +1277,10 @@ export function initLabel<Props>(
     dataIndex: number,
     labelModel: Model<LabelOption>,
     seriesModel: SeriesModel,
-    animatableModel?: Model<AnimationOptionMixin>
+    animatableModel?: Model<AnimationOptionMixin>,
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel(false, el, data, dataIndex, labelModel, seriesModel, animatableModel);
+    animateOrSetLabel(false, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 /**

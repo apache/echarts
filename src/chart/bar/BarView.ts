@@ -41,7 +41,7 @@ import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { StageHandlerProgressParams, ZRElementEvent, ColorString, OrdinalSortInfo, Payload, OrdinalNumber, OrdinalRawValue, DisplayState } from '../../util/types';
+import { StageHandlerProgressParams, ZRElementEvent, ColorString, OrdinalSortInfo, Payload, OrdinalNumber, OrdinalRawValue, DisplayState, ParsedValue } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -215,8 +215,14 @@ class BarView extends ChartView {
                             hasDuringForOneData = true;
                             return () => {
                                 const orderMap = (idx: number) => {
-                                    const shape = (data.getItemGraphicEl(idx) as Rect).shape;
-                                    return isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width;
+                                    const el = (data.getItemGraphicEl(idx) as Rect);
+                                    if (el) {
+                                        const shape = el.shape;
+                                        return isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width;
+                                    }
+                                    else {
+                                        return 0;
+                                    }
                                 };
                                 that._updateSort(data, orderMap, baseAxis as Axis2D, api);
                             };
@@ -279,8 +285,6 @@ class BarView extends ChartView {
             .update(function (newIndex, oldIndex) {
                 const itemModel = data.getItemModel(newIndex);
                 const layout = getLayout[coord.type](data, newIndex, itemModel);
-                const newValue = data.get(valueAxis.dim, newIndex);
-                const oldValue = data.get(valueAxis.dim, oldIndex);
 
                 if (drawBackground) {
                     const bgEl = oldBgEls[oldIndex];
@@ -351,7 +355,11 @@ class BarView extends ChartView {
                             shape: layout
                         }, animationModel, newIndex, null);
                     }
-                    updateLabel(el, data, newIndex, labelModel, seriesModel, animationModel);
+
+                    const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
+                        return getDefaultLabel(seriesModel.getData(), newIndex, values);
+                    };
+                    updateLabel(el, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter);
                 }
                 else {
                     el = elementCreator[coord.type](
@@ -610,8 +618,12 @@ const elementCreator: {
                 shape: animateTarget
             }, animationModel, newIndex, null, during);
 
+            const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
+                return getDefaultLabel(seriesModel.getData(), newIndex, values);
+            };
+
             const labelModel = seriesModel.getModel('label');
-            (isUpdate ? updateLabel : initLabel)(rect, data, newIndex, labelModel, seriesModel, animationModel);
+            (isUpdate ? updateLabel : initLabel)(rect, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter);
         }
 
         return rect;
