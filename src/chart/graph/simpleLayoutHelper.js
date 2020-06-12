@@ -40,7 +40,7 @@ export function simpleLayout(seriesModel) {
 export function simpleLayoutEdge(graph, seriesModel) {
     graph.eachEdge(function (edge, index) {
         var curveness = zrUtil.retrieve3(
-            edge.getModel().get('lineStyle.curveness') || null,
+            edge.getModel().get('lineStyle.curveness'),
             -getCurvenessForEdge(edge, seriesModel, index, true),
             0
         );

@@ -77,7 +77,7 @@ export function circularLayout(seriesModel, basedOn) {
 
     graph.eachEdge(function (edge, index) {
         var curveness = zrUtil.retrieve3(
-            edge.getModel().get('lineStyle.curveness') || null,
+            edge.getModel().get('lineStyle.curveness'),
             getCurvenessForEdge(edge, seriesModel, index),
             0
         );
