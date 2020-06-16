@@ -281,7 +281,6 @@ var GraphSeries = echarts.extendSeriesModel({
         lineStyle: {
             color: '#aaa',
             width: 1,
-            curveness: 0,
             opacity: 0.5
         },
         emphasis: {

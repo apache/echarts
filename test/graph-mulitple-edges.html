@@ -34,20 +34,160 @@ under the License.
     }
 </style>
 <div id="main0" class="main"></div>
-<div id="main7" class="main"></div>
 <div id="main1" class="main"></div>
 <div id="main2" class="main"></div>
 <div id="main3" class="main"></div>
 <div id="main4" class="main"></div>
+
 <div id="main5" class="main"></div>
 <div id="main6" class="main"></div>
+<div id="main7" class="main"></div>
+<div id="main8" class="main"></div>
+<div id="main9" class="main"></div>
 
+<div id="main10" class="main"></div>
+<div id="main11" class="main"></div>
+<div id="main12" class="main"></div>
+
+<script>
+    var getLayout= function(i) {
+        if(i % 3 === 0) return 'none';
+        if(i % 3 == 1) return 'circular';
+        if(i % 3 == 2) return 'force';
+    }
+    require([
+        'echarts'
+    ], function (echarts) {
+        for(var i = 0; i < 5; i++) {
+            var container = document.getElementById('main' + i);
+            var times = 8;
+            var datas = {
+                '1': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '9': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '17': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '25': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '33': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}]
+                }
+
+            var option = {
+                title: {
+                    text: 'Graph, edges numbers：' + (i * times + 1) + ' layout：' + getLayout(i)
+                },
+                tooltip: {},
+                animationDurationUpdate: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series: [
+                    {
+                        type: 'graph',
+                        layout: getLayout(i),
+                        symbolSize: 50,
+                        label: {
+                            show: true
+                        },
+                        roam: true,
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 10],
+                        edgeLabel: {
+                            fontSize: 12
+                        },
+                        data: [{
+                            name: 'node1',
+                            x: 300,
+                            y: 300
+                        }, {
+                            name: 'node2',
+                            x: 800,
+                            y: 300
+                        }, {
+                            name: 'node3',
+                            x: 550,
+                            y: 100
+                        }],
+                        links: datas[(i * times + 1) + ''],
+                        autoCurveness:  datas[(i * times + 1) + ''].length,
+                        lineStyle: {
+                            opacity: 0.9,
+                            width: 2,
+                        }
+                    }
+                ]
+            }
+
+            var chart = echarts.init(container, '', {renderer: 'svg'});
+            chart.setOption(option)
+        }
+    })
+</script>
+<script>
+    require([
+        'echarts'
+    ], function (echarts) {
+        for(var i = 0; i < 5; i++) {
+            var container = document.getElementById('main' + (i + 5));
+            var times = 8;
+            var datas = {
+                '2': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '10': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '18': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '26': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
+                '34': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}]
+            }
+
+            var option = {
+                title: {
+                    text: 'Graph, edges numbers：' + (i * times + 2) + ' layout：' + getLayout(i)
+                },
+                tooltip: {},
+                animationDurationUpdate: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series: [
+                    {
+                        type: 'graph',
+                        layout: getLayout(i),
+                        symbolSize: 50,
+                        label: {
+                            show: true
+                        },
+                        roam: true,
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 10],
+                        edgeLabel: {
+                            fontSize: 12
+                        },
+                        data: [{
+                            name: 'node1',
+                            x: 300,
+                            y: 300
+                        }, {
+                            name: 'node2',
+                            x: 800,
+                            y: 300
+                        }, {
+                            name: 'node3',
+                            x: 550,
+                            y: 100
+                        }],
+                        links: datas[(i * times + 2) + ''],
+                        autoCurveness: datas[(i * times + 2) + ''].length,
+                        lineStyle: {
+                            opacity: 0.9,
+                            width: 2,
+                        }
+                    }
+                ]
+            }
+
+            var chart = echarts.init(container, '', {renderer: 'svg'});
+            chart.setOption(option)
+        }
+    })
+</script>
 
 <script>
     require([
         'echarts'
     ], function (echarts) {
-        var container = document.getElementById('main6');
+        var container = document.getElementById('main10');
         var data = [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}];
 
         var option = {
@@ -89,7 +229,6 @@ under the License.
                     lineStyle: {
                         opacity: 0.9,
                         width: 2,
-                        curveness: 0
                     }
                 }
             ]
@@ -104,7 +243,7 @@ under the License.
     require([
         'echarts'
     ], function (echarts) {
-        var container = document.getElementById('main5');
+        var container = document.getElementById('main11');
         var data = [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}];
 
         var option = {
@@ -145,7 +284,6 @@ under the License.
                     lineStyle: {
                         opacity: 0.9,
                         width: 2,
-                        curveness: 0
                     }
                 }
             ]
@@ -160,7 +298,7 @@ under the License.
     require([
         'echarts'
     ], function (echarts) {
-        var container = document.getElementById('main7');
+        var container = document.getElementById('main12');
         var data = [
             {source: 'node1', target: 'node3', label: {show: true}},
             {source: 'node1', target: 'node3', label: {show: true}},
@@ -206,7 +344,6 @@ under the License.
                     lineStyle: {
                         opacity: 0.9,
                         width: 2,
-                        curveness: 0
                     }
                 }
             ]
@@ -214,77 +351,6 @@ under the License.
 
         var chart = echarts.init(container, '', {renderer: 'svg'});
         chart.setOption(option)
-    })
-</script>
-
-<script>
-    var getLayout= function(i) {
-        if(i % 3 === 0) return 'none';
-        if(i % 3 == 1) return 'circular';
-        if(i % 3 == 2) return 'force';
-    }
-    require([
-        'echarts'
-    ], function (echarts) {
-        for(var i = 0; i < 5; i++) {
-            var container = document.getElementById('main' + i);
-            var times = 8;
-            var datas = {
-                '1': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}],
-                '9': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
-                '17': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
-                '25': [{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node2"}],
-                '33': [{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node1","target":"node3","label":{"show":true}},{"source":"node3","target":"node1","label":{"show":true}},{"source":"node1","target":"node2"}]
-            }
-
-            var option = {
-                title: {
-                    text: 'Graph, edges numbers：' + (i * times + 1) + ' layout：' + getLayout(i)
-                },
-                tooltip: {},
-                animationDurationUpdate: 1500,
-                animationEasingUpdate: 'quinticInOut',
-                series: [
-                    {
-                        type: 'graph',
-                        layout: getLayout(i),
-                        symbolSize: 50,
-                        label: {
-                            show: true
-                        },
-                        roam: true,
-                        edgeSymbol: ['circle', 'arrow'],
-                        edgeSymbolSize: [4, 10],
-                        edgeLabel: {
-                            fontSize: 12
-                        },
-                        data: [{
-                            name: 'node1',
-                            x: 300,
-                            y: 300
-                        }, {
-                            name: 'node2',
-                            x: 800,
-                            y: 300
-                        }, {
-                            name: 'node3',
-                            x: 550,
-                            y: 100
-                        }],
-                        links: datas[(i * times + 1) + ''],
-                        autoCurveness: i * times + 1,
-                        lineStyle: {
-                            opacity: 0.9,
-                            width: 2,
-                            curveness: 0
-                        }
-                    }
-                ]
-            }
-
-            var chart = echarts.init(container, '', {renderer: 'svg'});
-            chart.setOption(option)
-        }
     })
 </script>
 </body>

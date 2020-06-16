@@ -233,6 +233,6 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse) {
         }
     }
     else {
-        return curvenessList[edgeIndex];
+        return curvenessList[parityCorrection + edgeIndex];
     }
 }
