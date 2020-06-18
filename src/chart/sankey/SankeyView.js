@@ -62,20 +62,20 @@ function fadeInItem(item, opacityPath) {
 }
 
 function sum(array, cb, orient) {
-  var sum = 0;
-  var len = array.length;
-  var i = -1;
-  while (++i < len) {
-      var value = +cb.call(array, array[i], orient);
-      if (!isNaN(value)) {
-          sum += value;
-      }
-  }
-  return sum;
+    var sum = 0;
+    var len = array.length;
+    var i = -1;
+    while (++i < len) {
+        var value = +cb.call(array, array[i], orient);
+        if (!isNaN(value)) {
+            sum += value;
+        }
+    }
+    return sum;
 }
 
 function getEdgeValue(edge) {
-  return edge.getValue();
+    return edge.getValue();
 }
 
 var SankeyShape = graphic.extendShape({
@@ -154,7 +154,7 @@ export default echarts.extendChartView({
         var width = layoutInfo.width;
         // view height
         var height = layoutInfo.height;
-        var mode = seriesModel.get('mode') || 'normal';
+        var mode = seriesModel.get('mode');
         var nodeData = seriesModel.getData();
         var edgeData = seriesModel.getData('edge');
         var orient = seriesModel.get('orient');

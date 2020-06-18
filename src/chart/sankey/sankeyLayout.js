@@ -28,7 +28,7 @@ export default function (ecModel, api, payload) {
         var nodeWidth = seriesModel.get('nodeWidth');
         var nodeGap = seriesModel.get('nodeGap');
 
-        var mode = seriesModel.get('mode') || 'normal';
+        var mode = seriesModel.get('mode');
 
         var layoutInfo = getViewRect(seriesModel, api);
 
