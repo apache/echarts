@@ -21,7 +21,7 @@ import DataZoomModel, {DataZoomOption} from './DataZoomModel';
 import ComponentModel from '../../model/Component';
 import { inheritDefaultOption } from '../../util/component';
 
-interface InsideDataZoomOption extends DataZoomOption {
+export interface InsideDataZoomOption extends DataZoomOption {
 
     /**
      * Whether disable this inside zoom.
