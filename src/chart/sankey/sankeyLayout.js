@@ -28,7 +28,7 @@ export default function (ecModel, api, payload) {
         var nodeWidth = seriesModel.get('nodeWidth');
         var nodeGap = seriesModel.get('nodeGap');
 
-        var mode = seriesModel.option.mode || 'normal';
+        var mode = seriesModel.get('mode') || 'normal';
 
         var layoutInfo = getViewRect(seriesModel, api);
 
@@ -87,12 +87,13 @@ function layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iteration
  * @param {string} mode  mode of sankey view
  */
 function computeNodeValues(nodes, mode) {
+    var isUnevenMode = mode === 'uneven';
     zrUtil.each(nodes, function (node) {
         var value1 = sum(node.outEdges, getEdgeValue);
         var value2 = sum(node.inEdges, getEdgeValue);
         var nodeRawValue = node.getValue() || 0;
         var value = Math.max(value1, value2, nodeRawValue);
-        if (mode === 'uneven') {
+        if (isUnevenMode) {
           value = nodeRawValue || value;
         }
         node.setLayout({value: value}, true);

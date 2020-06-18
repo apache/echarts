@@ -154,7 +154,7 @@ export default echarts.extendChartView({
         var width = layoutInfo.width;
         // view height
         var height = layoutInfo.height;
-        var mode = seriesModel.option.mode || 'normal';
+        var mode = seriesModel.get('mode') || 'normal';
         var nodeData = seriesModel.getData();
         var edgeData = seriesModel.getData('edge');
         var orient = seriesModel.get('orient');
@@ -227,7 +227,6 @@ export default echarts.extendChartView({
                 cpx2 = x1 * curvature + x2 * (1 - curvature);
                 cpy2 = y2;
             }
-            // debugger
 
             curve.setShape({
                 x1: x1,
