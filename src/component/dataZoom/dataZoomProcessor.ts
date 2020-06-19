@@ -22,7 +22,7 @@ import {createHashMap, each} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import DataZoomModel from './DataZoomModel';
 
-echarts.registerProcessor({
+echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
 
     // `dataZoomProcessor` will only be performed in needed series. Consider if
     // there is a line series and a pie series, it is better not to update the
