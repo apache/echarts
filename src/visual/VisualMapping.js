@@ -49,7 +49,7 @@ var CATEGORY_DEFAULT_VISUAL_INDEX = -1;
  *                                            visual data can be array or object
  *                                            (like: {cate1: '#222', none: '#fff'})
  *                                            or primary types (which represents
- *                                            defualt category visual), otherwise visual
+ *                                            default category visual), otherwise visual
  *                                            can be array or primary (which will be
  *                                            normalized to array).
  *
