@@ -22,7 +22,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 
 import './axis';
-// import '../coord/cartesian/defaultAxisExtentFromData';
+import '../coord/cartesian/defaultAxisExtentFromData';
 import ComponentView from '../view/Component';
 import GlobalModel from '../model/Global';
 import GridModel from '../coord/cartesian/GridModel';
