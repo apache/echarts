@@ -897,8 +897,6 @@ class List<
     /**
      * Calculate extent on a filtered data might be time consuming.
      * Approximate extent is only used for: calculte extent of filtered data outside.
-     * But if more than one modules do that work, that would be incorrect.
-     * We makes some assertion to check that.
      */
     setApproximateExtent(extent: [number, number], dim: DimensionLoose): void {
         dim = this.getDimension(dim);

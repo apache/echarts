@@ -193,8 +193,8 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
             const axisModel = indicatorAxis.model;
             const scale = indicatorAxis.scale as IntervalScale;
-            const fixedMin = parseAxisModelMinMax(axisModel.axis.scale, axisModel.get('min', true) as ScaleDataValue);
-            const fixedMax = parseAxisModelMinMax(axisModel.axis.scale, axisModel.get('max', true) as ScaleDataValue);
+            const fixedMin = parseAxisModelMinMax(scale, axisModel.get('min', true) as ScaleDataValue);
+            const fixedMax = parseAxisModelMinMax(scale, axisModel.get('max', true) as ScaleDataValue);
             let interval = scale.getInterval();
 
             if (fixedMin != null && fixedMax != null) {

@@ -1,6 +1,6 @@
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See theICE file
+* or more contributor license agreements.  See the NOTICE file
 * distributed with this work for additional information
 * regarding copyright ownership.  The ASF licenses this file
 * to you under the Apache License, Version 2.0 (the
@@ -49,7 +49,7 @@ type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
  *
  * Caution:
  * Precondition of calling this method:
- * The scale extent has been initailized with data extent from data via
+ * The scale extent has been initailized using series data extent via
  * `scale.setExtent` or `scale.unionExtentFromData`;
  */
 export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
@@ -141,7 +141,7 @@ function adjustScaleForOverflow(
 }
 
 // Precondition of calling this method:
-// The scale extent has been initailized with data extent from data via
+// The scale extent has been initailized using series data extent via
 // `scale.setExtent` or `scale.unionExtentFromData`;
 export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
     const extentInfo = getScaleExtent(scale, model);
@@ -340,15 +340,12 @@ export function shouldShowAllLabels(axis: Axis) {
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
 
-// PEINDING: if there has been a stack dim (like '__\0ecstackresult'),
-// should we remove the original dim (like 'y') from the "coord dim"
-// in data? Thus the calling of `data.mapDimensionsAll(axis.dim)` will
-// not return the original dim and we do not to call `getDataDimensionsOnAxis`
-// manually in each coord sys.
 export function getDataDimensionsOnAxis(data: List, axisDim: string) {
     // Remove duplicated dat dimensions caused by `getStackedDimension`.
     const dataDimMap = {} as Dictionary<boolean>;
     // Currently `mapDimensionsAll` will contian stack result dimension ('__\0ecstackresult').
+    // PENDING: is it reasonable? Do we need to remove the original dim from "coord dim" since
+    // there has been stacked result dim?
     zrUtil.each(data.mapDimensionsAll(axisDim), function (dataDim) {
         // For example, the extent of the orginal dimension
         // is [0.1, 0.5], the extent of the `stackResultDimension`

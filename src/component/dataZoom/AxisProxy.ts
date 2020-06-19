@@ -26,7 +26,6 @@ import SeriesModel from '../../model/Series';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Dictionary } from '../../util/types';
 // TODO Polar?
-// import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import DataZoomModel from './DataZoomModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { unionAxisExtentFromData } from '../../coord/axisHelper';
@@ -128,32 +127,6 @@ class AxisProxy {
     getAxisModel(): AxisBaseModel {
         return this.ecModel.getComponent(this._dimName + 'Axis', this._axisIndex) as AxisBaseModel;
     }
-
-    // getOtherAxisModel() {
-    //     const axisDim = this._dimName;
-    //     const ecModel = this.ecModel;
-    //     const axisModel = this.getAxisModel();
-    //     const isCartesian = axisDim === 'x' || axisDim === 'y';
-    //     let otherAxisDim: 'x' | 'y' | 'radius' | 'angle';
-    //     let coordSysIndexName: 'gridIndex' | 'polarIndex';
-    //     if (isCartesian) {
-    //         coordSysIndexName = 'gridIndex';
-    //         otherAxisDim = axisDim === 'x' ? 'y' : 'x';
-    //     }
-    //     else {
-    //         coordSysIndexName = 'polarIndex';
-    //         otherAxisDim = axisDim === 'angle' ? 'radius' : 'angle';
-    //     }
-    //     let foundOtherAxisModel;
-    //     ecModel.eachComponent(otherAxisDim + 'Axis', function (otherAxisModel) {
-    //         if (((otherAxisModel as CartesianAxisModel).get(coordSysIndexName as 'gridIndex') || 0)
-    //             === ((axisModel as CartesianAxisModel).get(coordSysIndexName as 'gridIndex') || 0)
-    //         ) {
-    //             foundOtherAxisModel = otherAxisModel;
-    //         }
-    //     });
-    //     return foundOtherAxisModel;
-    // }
 
     getMinMaxSpan() {
         return zrUtil.clone(this._minMaxSpan);
