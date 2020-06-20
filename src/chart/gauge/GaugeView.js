@@ -342,7 +342,8 @@ var GaugeView = ChartView.extend({
 
             pointer.useStyle(itemModel.getModel('itemStyle').getItemStyle());
 
-            if (pointer.style.fill === '#000') {
+            var itemStyleModel = itemModel.getModel('itemStyle');
+            if (pointer.style.fill === '#000' && !itemStyleModel.get('color')) {
                 pointer.setStyle('fill', getColor(
                     linearMap(data.get(valueDim, idx), valueExtent, [0, 1], true)
                 ));
