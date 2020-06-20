@@ -47,6 +47,8 @@ under the License.
 
     <div id="main3"></div>
 
+    <div id="main4"></div>
+
 
 
 
@@ -174,6 +176,84 @@ under the License.
             };
 
             var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'Simple gauge',
+                    'Legend rect color should be red'
+                ],
+                option: option
+            });
+        });
+    </script>
+
+    <script>
+        require(['echarts'], function (echarts) {
+            option = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                legend: {
+					backgroundColor: "#ffffff",
+					borderColor: "#662727",
+					align:'right',
+					data: [
+					    {
+					        name:"浙江",
+					        textStyle: {
+        						color:['red']
+        					}
+					    },
+					    {
+					        name:"鞍山",
+					        textStyle: {
+        						color:['green']
+        					}
+					    },
+					    {
+					        name:"沈阳",
+					        textStyle: {
+        						color:['blue']
+        					}
+					    }
+						
+					],
+					show: true,
+					
+				},
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '浙江',
+                        type: 'gauge',
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 50, name: '完成率'}],
+                        center:['20%','50%'],
+                        radius:'20%'
+                    },
+                    {
+                        name: '鞍山',
+                        type: 'gauge',
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 50, name: '完成率'}],
+                        center:['50%','50%'],
+                        radius:'20%'
+                    },
+                    {
+                        name: '沈阳',
+                        type: 'gauge',
+                        detail: {formatter: '{value}%'},
+                        data: [{value: 50, name: '完成率'}],
+                        center:['80%','50%'],
+                        radius:'20%'
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
                 title: [
                     'Simple gauge',
                     'Legend rect color should be red'
