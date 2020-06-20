@@ -91,7 +91,7 @@ export function prepareLayoutList(input: LabelLayoutListPrepareInput[]): LabelLa
 }
 
 function shiftLayout(
-    list: LabelLayoutInfo[],
+    list: Pick<LabelLayoutInfo, 'rect' | 'label'>[],
     xyDim: 'x' | 'y',
     sizeDim: 'width' | 'height',
     minBound: number,
@@ -109,6 +109,8 @@ function shiftLayout(
 
     let lastPos = 0;
     let delta;
+    let adjusted = false;
+
     const shifts = [];
     let totalShifts = 0;
     for (let i = 0; i < len; i++) {
@@ -119,6 +121,7 @@ function shiftLayout(
             // shiftForward(i, len, -delta);
             rect[xyDim] -= delta;
             item.label[xyDim] -= delta;
+            adjusted = true;
         }
         const shift = Math.max(-delta, 0);
         shifts.push(shift);
@@ -170,6 +173,9 @@ function shiftLayout(
     }
 
     function shiftList(delta: number, start: number, end: number) {
+        if (delta !== 0) {
+            adjusted = true;
+        }
         for (let i = start; i < end; i++) {
             const item = list[i];
             const rect = item.rect;
@@ -236,28 +242,30 @@ function shiftLayout(
             }
         }
     }
+
+    return adjusted;
 }
 
 /**
  * Adjust labels on x direction to avoid overlap.
  */
 export function shiftLayoutOnX(
-    list: LabelLayoutInfo[],
+    list: Pick<LabelLayoutInfo, 'rect' | 'label'>[],
     leftBound: number,
     rightBound: number
-) {
-    shiftLayout(list, 'x', 'width', leftBound, rightBound);
+): boolean {
+    return shiftLayout(list, 'x', 'width', leftBound, rightBound);
 }
 
 /**
  * Adjust labels on y direction to avoid overlap.
  */
 export function shiftLayoutOnY(
-    list: LabelLayoutInfo[],
+    list: Pick<LabelLayoutInfo, 'rect' | 'label'>[],
     topBound: number,
     bottomBound: number
-) {
-    shiftLayout(list, 'y', 'height', topBound, bottomBound);
+): boolean {
+    return shiftLayout(list, 'y', 'height', topBound, bottomBound);
 }
 
 export function hideOverlap(labelList: LabelLayoutInfo[]) {
