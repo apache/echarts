@@ -333,22 +333,10 @@ var VisualMapModel = echarts.extendComponentModel({
             return;
         }
 
-        if (list.hostModel.coordinateSystem.type === 'polar') {
-            return 'radius';
-        }
-
-        if (optDim != null) {
-            return list.getDimension(optDim);
-        }
-
-        var dimNames = list.dimensions;
-        for (var i = dimNames.length - 1; i >= 0; i--) {
-            var dimName = dimNames[i];
-            var dimInfo = list.getDimensionInfo(dimName);
-            if (!dimInfo.isCalculationCoord) {
-                return dimName;
-            }
-        }
+        var coordSys = list.hostModel.coordinateSystem;
+        var baseAxis = coordSys.getBaseAxis();
+        var valueAxis = coordSys.getOtherAxis(baseAxis);
+        return valueAxis.dim;
     },
 
     /**
