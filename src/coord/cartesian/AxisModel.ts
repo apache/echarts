@@ -44,21 +44,6 @@ class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
 
     axis: Axis2D;
 
-    init(...args: any) {
-        super.init.apply(this, args);
-        this.resetRange();
-    }
-
-    mergeOption(...args: any) {
-        super.mergeOption.apply(this, args);
-        this.resetRange();
-    }
-
-    restoreData(...args: any) {
-        super.restoreData.apply(this, args);
-        this.resetRange();
-    }
-
     getCoordSysModel(): GridModel {
         return this.ecModel.queryComponents({
             mainType: 'grid',

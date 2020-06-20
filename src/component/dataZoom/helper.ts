@@ -32,6 +32,7 @@ export interface DataZoomPayloadBatchItem {
 
 const AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle', 'single'] as const;
 // Supported coords.
+// FIXME: polar has been broken (but rarely used).
 const COORDS = ['cartesian2d', 'polar', 'singleAxis'] as const;
 
 export function isCoordSupported(coordType: string) {

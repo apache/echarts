@@ -30,48 +30,9 @@ interface AxisModelCommonMixin<Opt extends AxisBaseOption> extends Pick<Model<Op
 
 class AxisModelCommonMixin<Opt extends AxisBaseOption> {
 
-    /**
-     * @return min value or 'dataMin' or null/undefined (means auto) or NaN
-     */
-    getMin(origin?: boolean): AxisBaseOption['min'] | number {
-        const option = this.option;
-        let min = (!origin && option.rangeStart != null)
-            ? option.rangeStart : option.min;
-
-        if (this.axis
-            && min != null
-            && min !== 'dataMin'
-            && typeof min !== 'function'
-            && !zrUtil.eqNaN(min)
-        ) {
-            min = this.axis.scale.parse(min);
-        }
-        return min;
-    }
-
-    /**
-     * @return max value or 'dataMax' or null/undefined (means auto) or NaN
-     */
-    getMax(origin?: boolean): AxisBaseOption['max'] | number {
-        const option = this.option;
-        let max = (!origin && option.rangeEnd != null)
-            ? option.rangeEnd : option.max;
-
-        if (this.axis
-            && max != null
-            && max !== 'dataMax'
-            && typeof max !== 'function'
-            && !zrUtil.eqNaN(max)
-        ) {
-            max = this.axis.scale.parse(max);
-        }
-        return max;
-    }
-
     getNeedCrossZero(): boolean {
         const option = this.option;
-        return (option.rangeStart != null || option.rangeEnd != null)
-            ? false : !option.scale;
+        return !option.scale;
     }
 
     /**
@@ -82,22 +43,6 @@ class AxisModelCommonMixin<Opt extends AxisBaseOption> {
         return;
     }
 
-    /**
-     * @param rangeStart Can only be finite number or null/undefined or NaN.
-     * @param rangeEnd Can only be finite number or null/undefined or NaN.
-     */
-    setRange(rangeStart: number, rangeEnd: number): void {
-        this.option.rangeStart = rangeStart;
-        this.option.rangeEnd = rangeEnd;
-    }
-
-    /**
-     * Reset range
-     */
-    resetRange(): void {
-        // rangeStart and rangeEnd is readonly.
-        this.option.rangeStart = this.option.rangeEnd = null;
-    }
 }
 
 export {AxisModelCommonMixin};

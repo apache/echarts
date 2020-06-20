@@ -88,9 +88,14 @@ export const dependencies = {
 
 const TEST_FRAME_REMAIN_TIME = 1;
 
-const PRIORITY_PROCESSOR_FILTER = 1000;
 const PRIORITY_PROCESSOR_SERIES_FILTER = 800;
+// Some data processors depends on the stack result dimension (to calculate data extent).
+// So data stack stage should be in front of data processing stage.
 const PRIORITY_PROCESSOR_DATASTACK = 900;
+// "Data filter" will block the stream, so it should be
+// put at the begining of data processing.
+const PRIORITY_PROCESSOR_FILTER = 1000;
+const PRIORITY_PROCESSOR_DEFAULT = 2000;
 const PRIORITY_PROCESSOR_STATISTIC = 5000;
 
 const PRIORITY_VISUAL_LAYOUT = 1000;
@@ -2131,7 +2136,7 @@ export function registerProcessor(
     priority: number | StageHandler | StageHandlerOverallReset,
     processor?: StageHandler | StageHandlerOverallReset
 ): void {
-    normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_FILTER);
+    normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_DEFAULT);
 }
 
 /**

@@ -20,7 +20,7 @@
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary
+    AnimationOptionMixin, Dictionary, ScaleDataValue
 } from '../util/types';
 
 
@@ -71,21 +71,15 @@ export interface AxisBaseOption extends ComponentOption,
     boundaryGap?: boolean | [number | string, number | string];
 
     // Min value of the axis. can be:
-    // + a number
+    // + ScaleDataValue
     // + 'dataMin': use the min value in data.
     // + null/undefined: auto decide min value (consider pretty look and boundaryGap).
-    min?: number | 'dataMin' | ((extent: {min: number, max: number}) => number);
+    min?: ScaleDataValue | 'dataMin' | ((extent: {min: number, max: number}) => ScaleDataValue);
     // Max value of the axis. can be:
-    // + a number
+    // + ScaleDataValue
     // + 'dataMax': use the max value in data.
     // + null/undefined: auto decide max value (consider pretty look and boundaryGap).
-    max?: number | 'dataMax' | ((extent: {min: number, max: number}) => number);
-    // Readonly prop, specifies start value of the range when using data zoom.
-    // Only for internal usage.
-    rangeStart?: number;
-    // Readonly prop, specifies end value of the range when using data zoom.
-    // Only for internal usage.
-    rangeEnd?: number;
+    max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
     // Optional value can be:
     // + `false`: always include value 0.
     // + `true`: the extent do not consider value 0.
