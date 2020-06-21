@@ -353,6 +353,7 @@ echartsProto.getZr = function () {
  * @param {Object|boolean} [opts] opts or notMerge.
  * @param {boolean} [opts.notMerge=false]
  * @param {boolean} [opts.lazyUpdate=false] Useful when setOption frequently.
+ * @param {boolean} [opts.silent=false] states whether not to prevent triggering events when calling setOption
  */
 echartsProto.setOption = function (option, notMerge, lazyUpdate, silent) {
     if (__DEV__) {
