@@ -202,16 +202,20 @@ function shiftLayout(
             delta = totalGaps * (delta < 0 ? -1 : 1);
         }
 
-        for (let i = 0; i < len - 1; i++) {
-            // Distribute the shift delta to all gaps.
-            const movement = gaps[i] / totalGaps * delta;
-            if (delta > 0) {
+        if (delta > 0) {
+            for (let i = 0; i < len - 1; i++) {
+                // Distribute the shift delta to all gaps.
+                const movement = gaps[i] / totalGaps * delta;
                 // Forward
                 shiftList(movement, 0, i + 1);
             }
-            else {
-                // Backward
-                shiftList(movement, len - i - 1, len);
+        }
+        else {
+            // Backward
+            for (let i = len - 1; i > 0; i--) {
+                // Distribute the shift delta to all gaps.
+                const movement = gaps[i - 1] / totalGaps * delta;
+                shiftList(movement, i, len);
             }
         }
     }
