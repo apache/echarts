@@ -19,7 +19,8 @@
 
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {getTooltipMarker, formatTpl} from '../../util/format';
-import { getTooltipRenderMode } from '../../util/model';
+import {getTooltipRenderMode} from '../../util/model';
+import {getDefaultLabel} from '../../chart/helper/labelHelper';
 
 var DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
