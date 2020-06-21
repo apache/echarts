@@ -354,7 +354,7 @@ echartsProto.getZr = function () {
  * @param {boolean} [opts.notMerge=false]
  * @param {boolean} [opts.lazyUpdate=false] Useful when setOption frequently.
  */
-echartsProto.setOption = function (option, notMerge, lazyUpdate) {
+echartsProto.setOption = function (option, notMerge, lazyUpdate, silent) {
     if (__DEV__) {
         assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
     }
@@ -363,7 +363,6 @@ echartsProto.setOption = function (option, notMerge, lazyUpdate) {
         return;
     }
 
-    var silent;
     if (isObject(notMerge)) {
         lazyUpdate = notMerge.lazyUpdate;
         silent = notMerge.silent;
