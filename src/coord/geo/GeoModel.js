@@ -147,6 +147,7 @@ var GeoModel = ComponentModel.extend({
      * @return {string}
      */
     getFormattedLabel: function (name, status) {
+        status = status || 'normal';
         var regionModel = this.getRegionModel(name);
         var formatter = regionModel.get((status === 'normal' ? '' : status + '.') + 'label.formatter');
         var params = {
