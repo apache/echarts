@@ -1153,7 +1153,7 @@ export interface SeriesOption extends
     labelLine?: LabelLineOption
 
     /**
-     * Global label layout option in label layout stage.
+     * Overall label layout option in label layout stage.
      */
     labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
 

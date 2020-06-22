@@ -231,7 +231,6 @@ class Symbol extends graphic.Group {
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
-        // PENDING setColor before setStyle!!!
         const symbolStyle = data.getItemVisual(idx, 'style');
         const visualColor = symbolStyle.fill;
         if (symbolPath.__isEmptyBrush) {

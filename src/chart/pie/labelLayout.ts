@@ -22,7 +22,7 @@ import {parsePercent} from '../../util/number';
 import PieSeriesModel, { PieSeriesOption, PieDataItemOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
 import { HorizontalAlign, ZRTextAlign } from '../../util/types';
-import { Sector, Polyline } from '../../util/graphic';
+import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import { each } from 'zrender/src/core/util';
@@ -413,13 +413,19 @@ export default function (
             }
         }
         if (labelLine) {
-            if (notShowLabel || !layout.linePoints) {
+            const linePoints = layout.linePoints;
+            if (notShowLabel || !linePoints) {
                 each(labelLine.states, setNotShow);
                 labelLine.ignore = true;
             }
             else {
-                limitTurnAngle(layout.linePoints, layout.minTurnAngle);
-                labelLine.setShape({ points: layout.linePoints });
+                limitTurnAngle(linePoints, layout.minTurnAngle);
+                labelLine.setShape({ points: linePoints });
+
+                // Set the anchor to the midpoint of sector
+                label.__hostTarget.textGuideLineConfig = {
+                    anchor: new Point(linePoints[0][0], linePoints[0][1])
+                };
             }
         }
     }

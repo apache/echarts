@@ -31,6 +31,7 @@ import { defaults, retrieve2 } from 'zrender/src/core/util';
 import { LabelLineOption } from '../util/types';
 import Model from '../model/Model';
 import { invert } from 'zrender/src/core/matrix';
+import * as vector from 'zrender/src/core/vector';
 
 const PI2 = Math.PI * 2;
 const CMD = PathProxy.CMD;
@@ -470,7 +471,7 @@ function setLabelLineState(
     // Set smooth
     let smooth = stateModel.get('smooth');
     if (smooth && smooth === true) {
-        smooth = 0.4;
+        smooth = 0.3;
     }
     stateObj.shape = stateObj.shape || {};
     (stateObj.shape as Polyline['shape']).smooth = smooth as number;
@@ -478,6 +479,35 @@ function setLabelLineState(
     const styleObj = stateModel.getModel('lineStyle').getLineStyle();
     isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
 }
+
+function buildLabelLinePath(path: CanvasRenderingContext2D, shape: Polyline['shape']) {
+    const smooth = shape.smooth as number;
+    const points = shape.points;
+    path.moveTo(points[0][0], points[0][1]);
+    if (smooth > 0) {
+        const len1 = vector.dist(points[0], points[1]);
+        const len2 = vector.dist(points[1], points[2]);
+        if (!len1 || !len2) {
+            path.lineTo(points[1][0], points[1][1]);
+            path.lineTo(points[2][0], points[2][1]);
+            return;
+        }
+
+        const moveLen = Math.min(len1, len2) * smooth;
+
+        const midPoint0 = vector.lerp([], points[1], points[0], moveLen / len1);
+        const midPoint2 = vector.lerp([], points[1], points[2], moveLen / len2);
+
+        const midPoint1 = vector.lerp([], midPoint0, midPoint2, 0.5);
+        path.bezierCurveTo(midPoint0[0], midPoint0[1], midPoint0[0], midPoint0[1], midPoint1[0], midPoint1[1]);
+        path.bezierCurveTo(midPoint2[0], midPoint2[1], midPoint2[0], midPoint2[1], points[2][0], points[2][1]);
+    }
+    else {
+        path.lineTo(points[1][0], points[1][1]);
+        path.lineTo(points[2][0], points[2][1]);
+    }
+}
+
 /**
  * Create a label line if necessary and set it's style.
  */
@@ -538,5 +568,8 @@ export function setLabelLineStyle(
         defaults(labelLine.style, defaultStyle);
         // Not fill.
         labelLine.style.fill = null;
+
+        // Custom the buildPath.
+        labelLine.buildPath = buildLabelLinePath;
     }
 }
