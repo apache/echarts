@@ -22,8 +22,8 @@ import { __DEV__ } from '../config';
 import Scale from '../scale/Scale';
 import { AxisBaseModel } from './AxisBaseModel';
 import { parsePercent } from 'zrender/src/contain/text';
-import { parseAxisModelMinMax } from './axisHelper';
 import { AxisBaseOption } from './axisCommonTypes';
+import { ScaleDataValue } from '../util/types';
 
 
 export interface ScaleRawExtentResult {
@@ -314,3 +314,8 @@ export function ensureScaleRawExtentInfo(
     return rawExtentInfo;
 }
 
+export function parseAxisModelMinMax(scale: Scale, minMax: ScaleDataValue): number {
+    return minMax == null ? null
+        : eqNaN(minMax) ? NaN
+        : scale.parse(minMax);
+}

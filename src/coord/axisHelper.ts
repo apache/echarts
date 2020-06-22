@@ -366,9 +366,3 @@ export function unionAxisExtentFromData(dataExtent: number[], data: List, axisDi
         });
     }
 }
-
-export function parseAxisModelMinMax(scale: Scale, minMax: ScaleDataValue): number {
-    return minMax == null ? null
-        : zrUtil.eqNaN(minMax) ? NaN
-        : scale.parse(minMax);
-}
