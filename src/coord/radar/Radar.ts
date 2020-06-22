@@ -25,8 +25,7 @@ import IntervalScale from '../../scale/Interval';
 import * as numberUtil from '../../util/number';
 import {
     getScaleExtent,
-    niceScaleExtent,
-    parseAxisModelMinMax
+    niceScaleExtent
 } from '../axisHelper';
 import CoordinateSystemManager from '../../CoordinateSystem';
 import { CoordinateSystemMaster, CoordinateSystem } from '../CoordinateSystem';
@@ -35,6 +34,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
+import { parseAxisModelMinMax } from '../scaleRawExtentInfo';
 
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {

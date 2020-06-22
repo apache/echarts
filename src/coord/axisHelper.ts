@@ -333,9 +333,8 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
  * Set `categoryInterval` as 0 implicitly indicates that
  * show all labels reguardless of overlap.
  * @param {Object} axis axisModel.axis
- * @return {boolean}
  */
-export function shouldShowAllLabels(axis: Axis) {
+export function shouldShowAllLabels(axis: Axis): boolean {
     return axis.type === 'category'
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
@@ -366,10 +365,4 @@ export function unionAxisExtentFromData(dataExtent: number[], data: List, axisDi
             seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
         });
     }
-}
-
-export function parseAxisModelMinMax(scale: Scale, minMax: ScaleDataValue): number {
-    return minMax == null ? null
-        : zrUtil.eqNaN(minMax) ? NaN
-        : scale.parse(minMax);
 }
