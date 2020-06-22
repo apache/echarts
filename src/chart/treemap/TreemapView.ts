@@ -936,7 +936,7 @@ function renderNode(
             rectEl, normalLabelModel, emphasisLabelModel,
             {
                 defaultText: isShow ? text : null,
-                autoColor: visualColor
+                inheritColor: visualColor
             }
         );
 

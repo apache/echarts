@@ -300,7 +300,7 @@ class MarkAreaView extends MarkerView {
                     labelFetcher: maModel,
                     labelDataIndex: idx,
                     defaultText: areaData.getName(idx) || '',
-                    autoColor: typeof style.fill === 'string'
+                    inheritColor: typeof style.fill === 'string'
                         ? colorUtil.modifyAlpha(style.fill, 1) : '#000'
                 }
             );

@@ -122,10 +122,10 @@ type TextCommonParams = {
      */
     disableBox?: boolean
     /**
-     * Specify a color when color is 'auto',
-     * for textFill, textStroke, textBackgroundColor, and textBorderColor. If autoColor specified, it is used as default textFill.
+     * Specify a color when color is 'inherit',
+     * If inheritColor specified, it is used as default textFill.
      */
-    autoColor?: ColorString
+    inheritColor?: ColorString
 
     getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
@@ -816,7 +816,7 @@ export {setLabelStyle};
 export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: TextStyleProps,    // Can be overrided by settings in model.
-    opt?: Pick<TextCommonParams, 'autoColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
@@ -831,7 +831,7 @@ export function createTextStyle(
 export function createTextConfig(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'getTextPosition' | 'defaultOutsidePosition' | 'autoColor'>,
+    opt?: Pick<TextCommonParams, 'getTextPosition' | 'defaultOutsidePosition' | 'inheritColor'>,
     isNotNormal?: boolean
 ) {
     const textConfig: ElementTextConfig = {};
@@ -868,19 +868,10 @@ export function createTextConfig(
     }
 
     // fill and auto is determined by the color of path fill if it's not specified by developers.
-    textConfig.outsideFill = opt.autoColor || null;
 
-    // if (!textStyle.fill) {
-    //     textConfig.insideFill = 'auto';
-    //     textConfig.outsideFill = opt.autoColor || null;
-    // }
-    // if (!textStyle.stroke) {
-    //     textConfig.insideStroke = 'auto';
-    // }
-    // else if (opt.autoColor) {
-    //     // TODO: stroke set to autoColor. if label is inside?
-    //     textConfig.insideStroke = opt.autoColor;
-    // }
+    textConfig.outsideFill = textStyleModel.get('color') === 'inherit'
+        ? (opt.inheritColor || null)
+        : 'auto';
 
     return textConfig;
 }
@@ -898,7 +889,7 @@ export function createTextConfig(
 function setTextStyleCommon(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'autoColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean
 ) {
@@ -1003,7 +994,7 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    opt?: Pick<TextCommonParams, 'autoColor' | 'disableBox'>,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
     isBlock?: boolean
@@ -1011,14 +1002,24 @@ function setTokenTextStyle(
     // In merge mode, default value should not be given.
     globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
 
-    const autoColor = opt && opt.autoColor;
+    const inheritColor = opt && opt.inheritColor;
     let fillColor = textStyleModel.getShallow('color');
     let strokeColor = textStyleModel.getShallow('textBorderColor');
-    if (fillColor === 'auto' && autoColor) {
-        fillColor = autoColor;
+    if (fillColor === 'inherit') {
+        if (inheritColor) {
+            fillColor = inheritColor;
+        }
+        else {
+            fillColor = null;
+        }
     }
-    if (strokeColor === 'auto' && autoColor) {
-        strokeColor = autoColor;
+    if (strokeColor === 'inherit' && inheritColor) {
+        if (inheritColor) {
+            strokeColor = inheritColor;
+        }
+        else {
+            strokeColor = inheritColor;
+        }
     }
     fillColor = fillColor || globalTextStyle.color;
     strokeColor = strokeColor || globalTextStyle.textBorderColor;
@@ -1040,8 +1041,8 @@ function setTokenTextStyle(
     // TODO
     if (!isNotNormal && !isAttached) {
         // Set default finally.
-        if (textStyle.fill == null && opt.autoColor) {
-            textStyle.fill = opt.autoColor;
+        if (textStyle.fill == null && opt.inheritColor) {
+            textStyle.fill = opt.inheritColor;
         }
     }
 
@@ -1073,11 +1074,11 @@ function setTokenTextStyle(
 
 
     if (!isBlock || !opt.disableBox) {
-        if (textStyle.backgroundColor === 'auto' && autoColor) {
-            textStyle.backgroundColor = autoColor;
+        if (textStyle.backgroundColor === 'auto' && inheritColor) {
+            textStyle.backgroundColor = inheritColor;
         }
-        if (textStyle.borderColor === 'auto' && autoColor) {
-            textStyle.borderColor = autoColor;
+        if (textStyle.borderColor === 'auto' && inheritColor) {
+            textStyle.borderColor = inheritColor;
         }
 
         for (let i = 0; i < TEXT_PROPS_BOX.length; i++) {

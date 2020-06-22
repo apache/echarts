@@ -482,7 +482,7 @@ function makeRenderItem(customSeries, data, ecModel, api) {
             : currLabelNormalModel;
 
         const textStyle = graphicUtil.createTextStyle(labelModel, null, {
-            autoColor: currVisualColor,
+            inheritColor: currVisualColor,
             isRectText: true
         });
 

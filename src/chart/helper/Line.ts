@@ -256,7 +256,7 @@ class Line extends graphic.Group {
             label.useStyle(graphic.createTextStyle(labelModel, {
                 text: normalText as string
             }, {
-                autoColor: defaultLabelColor
+                inheritColor: defaultLabelColor
             }));
 
             label.__align = label.style.align;

@@ -266,7 +266,7 @@ class Symbol extends graphic.Group {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
-                autoColor: visualColor as ColorString
+                inheritColor: visualColor as ColorString
             }
         );
 

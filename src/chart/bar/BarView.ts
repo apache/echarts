@@ -566,7 +566,7 @@ function updateStyle(
                 labelFetcher: seriesModel,
                 labelDataIndex: dataIndex,
                 defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                autoColor: style.fill as ColorString,
+                inheritColor: style.fill as ColorString,
                 defaultOutsidePosition: labelPositionOutside
             }
         );

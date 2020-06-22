@@ -182,6 +182,7 @@ class PiePiece extends graphic.Sector {
             {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
+                inheritColor: visualColor,
                 defaultText: seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx)
             },
@@ -193,9 +194,7 @@ class PiePiece extends graphic.Sector {
         // Set textConfig on sector.
         sector.setTextConfig({
             local: true,
-            insideStroke: visualColor,
-            // insideFill: 'auto',
-            outsideFill: visualColor
+            outsideFill: labelModel.get('color') === 'inherit' ? visualColor : 'auto'
         });
 
         // Make sure update style on labelText after setLabelStyle.

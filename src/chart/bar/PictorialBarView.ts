@@ -952,7 +952,7 @@ function updateCommon(
             labelFetcher: opt.seriesModel,
             labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
-            autoColor: symbolMeta.style.fill as ColorString,
+            inheritColor: symbolMeta.style.fill as ColorString,
             defaultOutsidePosition: barPositionOutside
         }
     );

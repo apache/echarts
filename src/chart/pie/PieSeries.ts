@@ -244,6 +244,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         height: null,
 
         label: {
+            color: 'inherit',
             // If rotate around circle
             rotate: 0,
             show: true,
