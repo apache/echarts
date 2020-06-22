@@ -74,6 +74,9 @@ under the License.
                         "fontSize": 10
                     },
                     "labelLine": {
+                        "lineStyle": {
+                            "color": '#ccc'
+                        },
                         "smooth": true
                     },
                     "data": [{
@@ -708,7 +711,7 @@ under the License.
             labelFolder.open();
             labelLineFolder.open();
             labelFolder.add(config.label, 'alignTo', ['none', 'edge', 'labelLine']).onChange(update);
-            labelFolder.add(config.label, 'overflow', ['truncate', 'wrap']).onChange(update);
+            labelFolder.add(config.label, 'overflow', ['truncate', 'break', 'breakAll']).onChange(update);
             labelFolder.add(config.label, 'margin', 0, 50).onChange(update);
             labelFolder.add(config.label, 'bleedMargin', 0, 500).onChange(update);
             labelLineFolder.add(config.labelLine, 'length', 0, 500).onChange(update);

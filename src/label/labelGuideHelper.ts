@@ -485,8 +485,11 @@ function setLabelLineState(
 function buildLabelLinePath(path: CanvasRenderingContext2D, shape: Polyline['shape']) {
     const smooth = shape.smooth as number;
     const points = shape.points;
+    if (!points) {
+        return;
+    }
     path.moveTo(points[0][0], points[0][1]);
-    if (smooth > 0) {
+    if (smooth > 0 && points.length >= 3) {
         const len1 = vector.dist(points[0], points[1]);
         const len2 = vector.dist(points[1], points[2]);
         if (!len1 || !len2) {
@@ -505,8 +508,9 @@ function buildLabelLinePath(path: CanvasRenderingContext2D, shape: Polyline['sha
         path.bezierCurveTo(midPoint2[0], midPoint2[1], midPoint2[0], midPoint2[1], points[2][0], points[2][1]);
     }
     else {
-        path.lineTo(points[1][0], points[1][1]);
-        path.lineTo(points[2][0], points[2][1]);
+        for (let i = 1; i < points.length; i++) {
+            path.lineTo(points[i][0], points[i][1]);
+        }
     }
 }
 

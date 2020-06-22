@@ -211,45 +211,45 @@ under the License.
             });
             var config = {
                 length2: 15,
-                margin: 20
+                margin: 20,
+                overflow: 'truncate'
             };
 
-            gui
-                .add(config, 'length2', 0, 300)
-                .onChange(function (value) {
-                    if (chart0) {
-                        option0.series[0].labelLine.length2 = value;
-                        option1.series[0].labelLine.length2 = value;
-                        optionNone.series[0].labelLine.length2 = value;
-                        chart0.setOption(option0);
-                        chart1.setOption(option1);
-                        chartNone.setOption(optionNone);
-
-                        for (var i = 0; i < 4; ++i) {
-                            option2.series[i].labelLine.length2 = value;
+            function update() {
+                const newOpt = {
+                    series: [{
+                        labelLine: {
+                            length2: config.length2
+                        },
+                        label: {
+                            margin: config.margin,
+                            overflow: config.overflow
                         }
-                        chart2.setOption(option2);
-                    }
-                });
+                    }]
+                }
+                chart0.setOption(newOpt);
+                chart1.setOption(newOpt);
+                chartNone.setOption(newOpt);
 
-            gui
-                .add(config, 'margin', 0, 300)
-                .onChange(function (value) {
-                    if (chart0) {
-                        option0.series[0].label.margin = value;
-                        option1.series[0].label.margin = value;
-                        optionNone.series[0].label.margin = value;
-                        chart0.setOption(option0);
-                        chart1.setOption(option1);
-                        chartNone.setOption(optionNone);
-
-                        for (var i = 0; i < 4; ++i) {
-                            option2.series[i].label.margin = value;
+                const newOpt2 = { series: [] };
+                for (var i = 0; i < 4; ++i) {
+                    newOpt2.series.push({
+                        labelLine: {
+                            length2: config.length2,
+                        },
+                        label: {
+                            margin: config.margin,
+                            overflow: config.overflow
                         }
-                        chart2.setOption(option2);
-                    }
-                });
-            });
+                    })
+                }
+                chart2.setOption(newOpt2);
+            }
+
+            gui.add(config, 'length2', 0, 300).onChange(update);
+            gui.add(config, 'margin', 0, 300).onChange(update);
+            gui.add(config, 'overflow', ['truncate', 'break', 'breakAll']).onChange(update);
+        });
         </script>
     </body>
 </html>
