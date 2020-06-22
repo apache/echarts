@@ -408,7 +408,7 @@ const tmpProjPoint = new Point();
  * @param minTurnAngle Radian of minimum turn angle. 0 - 180
  */
 export function limitTurnAngle(linePoints: number[][], minTurnAngle: number) {
-    if (!(minTurnAngle < 180 && minTurnAngle > 0)) {
+    if (!(minTurnAngle <= 180 && minTurnAngle > 0)) {
         return;
     }
     minTurnAngle = minTurnAngle / 180 * Math.PI;

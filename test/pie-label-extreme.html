@@ -681,12 +681,14 @@ under the License.
                 labelLine: {
                     length: 15,
                     length2: 15,
-                    smooth: 0.3
+                    smooth: 0.3,
+                    minTurnAngle: 110
                 },
                 label: {
                     margin: 25,
                     bleedMargin: 10,
-                    alignTo: 'none'
+                    alignTo: 'none',
+                    overflow: 'truncate'
                 }
             };
 
@@ -706,10 +708,12 @@ under the License.
             labelFolder.open();
             labelLineFolder.open();
             labelFolder.add(config.label, 'alignTo', ['none', 'edge', 'labelLine']).onChange(update);
+            labelFolder.add(config.label, 'overflow', ['truncate', 'wrap']).onChange(update);
             labelFolder.add(config.label, 'margin', 0, 50).onChange(update);
             labelFolder.add(config.label, 'bleedMargin', 0, 500).onChange(update);
             labelLineFolder.add(config.labelLine, 'length', 0, 500).onChange(update);
             labelLineFolder.add(config.labelLine, 'length2', 0, 500).onChange(update);
+            labelLineFolder.add(config.labelLine, 'minTurnAngle', 0, 180).onChange(update);
             labelLineFolder.add(config.labelLine, 'smooth', 0, 1).onChange(update);
         });
 

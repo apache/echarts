@@ -247,6 +247,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // If rotate around circle
             rotate: 0,
             show: true,
+            overflow: 'truncate',
             // 'outer', 'inside', 'center'
             position: 'outer',
             // 'none', 'labelLine', 'edge'. Works only when position is 'outer'

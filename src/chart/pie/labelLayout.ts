@@ -197,7 +197,6 @@ function avoidOverlap(
                 // TODOTODO
                 // layout.text = textContain.truncateText(layout.text, targetTextWidth, layout.font);
                 layout.label.style.width = targetTextWidth;
-                layout.label.style.overflow = 'truncate';
                 if (layout.labelAlignTo === 'edge') {
                     realTextWidth = targetTextWidth;
                     // realTextWidth = textContain.getWidth(layout.text, layout.font);
