@@ -21,6 +21,8 @@
 import * as zrUtil from 'zrender/src/core/util';
 import GridModel from './GridModel';
 import CartesianAxisModel from './AxisModel';
+import SeriesModel from '../../model/Series';
+import { __DEV__ } from '../../config';
 
 interface CartesianAxisLayout {
     position: [number, number];
@@ -95,3 +97,36 @@ export function layout(
 
     return layout;
 }
+
+export function isCartesian2DSeries(seriesModel: SeriesModel): boolean {
+    return seriesModel.get('coordinateSystem') === 'cartesian2d';
+}
+
+export function findAxisModels(seriesModel: SeriesModel): {
+    xAxisModel: CartesianAxisModel;
+    yAxisModel: CartesianAxisModel;
+} {
+    const axisModelMap = {
+        xAxisModel: null,
+        yAxisModel: null
+    } as ReturnType<typeof findAxisModels>;
+    zrUtil.each(axisModelMap, function (v, key) {
+        const axisType = key.replace(/Model$/, '');
+        const axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
+
+        if (__DEV__) {
+            if (!axisModel) {
+                throw new Error(axisType + ' "' + zrUtil.retrieve3(
+                    seriesModel.get(axisType + 'Index' as any),
+                    seriesModel.get(axisType + 'Id' as any),
+                    0
+                ) + '" not found');
+            }
+        }
+
+        axisModelMap[key] = axisModel;
+    });
+
+    return axisModelMap;
+}
+

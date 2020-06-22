@@ -26,9 +26,10 @@ import SeriesModel from '../../model/Series';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Dictionary } from '../../util/types';
 // TODO Polar?
-import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import DataZoomModel from './DataZoomModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { unionAxisExtentFromData } from '../../coord/axisHelper';
+import { ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
 
 const each = zrUtil.each;
 const asc = numberUtil.asc;
@@ -125,32 +126,6 @@ class AxisProxy {
 
     getAxisModel(): AxisBaseModel {
         return this.ecModel.getComponent(this._dimName + 'Axis', this._axisIndex) as AxisBaseModel;
-    }
-
-    getOtherAxisModel() {
-        const axisDim = this._dimName;
-        const ecModel = this.ecModel;
-        const axisModel = this.getAxisModel();
-        const isCartesian = axisDim === 'x' || axisDim === 'y';
-        let otherAxisDim: 'x' | 'y' | 'radius' | 'angle';
-        let coordSysIndexName: 'gridIndex' | 'polarIndex';
-        if (isCartesian) {
-            coordSysIndexName = 'gridIndex';
-            otherAxisDim = axisDim === 'x' ? 'y' : 'x';
-        }
-        else {
-            coordSysIndexName = 'polarIndex';
-            otherAxisDim = axisDim === 'angle' ? 'radius' : 'angle';
-        }
-        let foundOtherAxisModel;
-        ecModel.eachComponent(otherAxisDim + 'Axis', function (otherAxisModel) {
-            if (((otherAxisModel as CartesianAxisModel).get(coordSysIndexName as 'gridIndex') || 0)
-                === ((axisModel as CartesianAxisModel).get(coordSysIndexName as 'gridIndex') || 0)
-            ) {
-                foundOtherAxisModel = otherAxisModel;
-            }
-        });
-        return foundOtherAxisModel;
     }
 
     getMinMaxSpan() {
@@ -291,15 +266,6 @@ class AxisProxy {
         this._setAxisModel();
     }
 
-    restore(dataZoomModel: DataZoomModel) {
-        if (dataZoomModel !== this._dataZoomModel) {
-            return;
-        }
-
-        this._valueWindow = this._percentWindow = null;
-        this._setAxisModel(true);
-    }
-
     filterData(dataZoomModel: DataZoomModel, api: ExtensionAPI) {
         if (dataZoomModel !== this._dataZoomModel) {
             return;
@@ -421,7 +387,7 @@ class AxisProxy {
         }, this);
     }
 
-    private _setAxisModel(isRestore?: boolean) {
+    private _setAxisModel() {
 
         const axisModel = this.getAxisModel();
 
@@ -435,33 +401,28 @@ class AxisProxy {
         // [0, 500]: arbitrary value, guess axis extent.
         let precision = numberUtil.getPixelPrecision(valueWindow, [0, 500]);
         precision = Math.min(precision, 20);
-        // isRestore or isFull
-        const useOrigin = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
 
-        axisModel.setRange(
-            useOrigin ? null : +valueWindow[0].toFixed(precision),
-            useOrigin ? null : +valueWindow[1].toFixed(precision)
-        );
+        // For value axis, if min/max/scale are not set, we just use the extent obtained
+        // by series data, which may be a little different from the extent calculated by
+        // `axisHelper.getScaleExtent`. But the different just affects the experience a
+        // little when zooming. So it will not be fixed until some users require it strongly.
+        const rawExtentInfo = axisModel.axis.scale.rawExtentInfo;
+        if (percentWindow[0] !== 0) {
+            rawExtentInfo.setDeterminedMinMax('min', +valueWindow[0].toFixed(precision));
+        }
+        if (percentWindow[1] !== 100) {
+            rawExtentInfo.setDeterminedMinMax('max', +valueWindow[1].toFixed(precision));
+        }
+        rawExtentInfo.freeze();
     }
 }
 
 function calculateDataExtent(axisProxy: AxisProxy, axisDim: string, seriesModels: SeriesModel[]) {
-    let dataExtent = [Infinity, -Infinity];
+    const dataExtent = [Infinity, -Infinity];
 
     each(seriesModels, function (seriesModel) {
-        const seriesData = seriesModel.getData();
-        if (seriesData) {
-            each(seriesData.mapDimensionsAll(axisDim), function (dim) {
-                const seriesExtent = seriesData.getApproximateExtent(dim);
-                seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
-                seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
-            });
-        }
+        unionAxisExtentFromData(dataExtent, seriesModel.getData(), axisDim);
     });
-
-    if (dataExtent[1] < dataExtent[0]) {
-        dataExtent = [NaN, NaN];
-    }
 
     // It is important to get "consistent" extent when more then one axes is
     // controlled by a `dataZoom`, otherwise those axes will not be synchronized
@@ -472,46 +433,10 @@ function calculateDataExtent(axisProxy: AxisProxy, axisDim: string, seriesModels
     // extent can be obtained from axis.data).
     // Nevertheless, user can set min/max/scale on axes to make extent of axes
     // consistent.
-    fixExtentByAxis(axisProxy, dataExtent);
+    const axisModel = axisProxy.getAxisModel();
+    const rawExtentResult = ensureScaleRawExtentInfo(axisModel.axis.scale, axisModel, dataExtent).calculate();
 
-    return dataExtent as [number, number];
-}
-
-function fixExtentByAxis(axisProxy: AxisProxy, dataExtent: number[]) {
-    const axisModel = axisProxy.getAxisModel() as CartesianAxisModel;
-    const min = axisModel.getMin(true);
-
-    // For category axis, if min/max/scale are not set, extent is determined
-    // by axis.data by default.
-    const isCategoryAxis = axisModel.get('type') === 'category';
-    const axisDataLen = isCategoryAxis && axisModel.getCategories().length;
-
-    if (min != null && min !== 'dataMin' && typeof min !== 'function') {
-        dataExtent[0] = min;
-    }
-    else if (isCategoryAxis) {
-        dataExtent[0] = axisDataLen > 0 ? 0 : NaN;
-    }
-
-    const max = axisModel.getMax(true);
-    if (max != null && max !== 'dataMax' && typeof max !== 'function') {
-        dataExtent[1] = max;
-    }
-    else if (isCategoryAxis) {
-        dataExtent[1] = axisDataLen > 0 ? axisDataLen - 1 : NaN;
-    }
-
-    if (!axisModel.get('scale', true)) {
-        dataExtent[0] > 0 && (dataExtent[0] = 0);
-        dataExtent[1] < 0 && (dataExtent[1] = 0);
-    }
-
-    // For value axis, if min/max/scale are not set, we just use the extent obtained
-    // by series data, which may be a little different from the extent calculated by
-    // `axisHelper.getScaleExtent`. But the different just affects the experience a
-    // little when zooming. So it will not be fixed until some users require it strongly.
-
-    return dataExtent;
+    return [rawExtentResult.min, rawExtentResult.max] as [number, number];
 }
 
 export default AxisProxy;

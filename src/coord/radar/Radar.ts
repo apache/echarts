@@ -25,7 +25,8 @@ import IntervalScale from '../../scale/Interval';
 import * as numberUtil from '../../util/number';
 import {
     getScaleExtent,
-    niceScaleExtent
+    niceScaleExtent,
+    parseAxisModelMinMax
 } from '../axisHelper';
 import CoordinateSystemManager from '../../CoordinateSystem';
 import { CoordinateSystemMaster, CoordinateSystem } from '../CoordinateSystem';
@@ -192,8 +193,8 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
             const axisModel = indicatorAxis.model;
             const scale = indicatorAxis.scale as IntervalScale;
-            const fixedMin = axisModel.getMin() as number;
-            const fixedMax = axisModel.getMax() as number;
+            const fixedMin = parseAxisModelMinMax(scale, axisModel.get('min', true) as ScaleDataValue);
+            const fixedMax = parseAxisModelMinMax(scale, axisModel.get('max', true) as ScaleDataValue);
             let interval = scale.getInterval();
 
             if (fixedMin != null && fixedMax != null) {

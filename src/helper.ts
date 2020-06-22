@@ -102,8 +102,6 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
  * `getMin(origin: boolean) => number`
  * `getMax(origin: boolean) => number`
  * `getNeedCrossZero() => boolean`
- * `setRange(start: number, end: number)`
- * `resetRange()`
  */
 export function mixinAxisModelCommonMethods(Model: Model) {
     zrUtil.mixin(Model, AxisModelCommonMixin);

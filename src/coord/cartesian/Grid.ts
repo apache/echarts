@@ -1,4 +1,4 @@
-/*
+zz/*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
 * distributed with this work for additional information
@@ -24,18 +24,18 @@
  */
 
 import {__DEV__} from '../../config';
-import {isObject, each, map, indexOf, retrieve, retrieve3} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
     niceScaleExtent,
-    estimateLabelUnionRect
+    estimateLabelUnionRect,
+    getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystemManager from '../../CoordinateSystem';
-import {getStackedDimension} from '../../data/helper/dataStackHelper';
 import {ParsedModelFinder} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
@@ -47,8 +47,8 @@ import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
 import List from '../../data/List';
-import SeriesModel from '../../model/Series';
 import OrdinalScale from '../../scale/Ordinal';
+import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -422,10 +422,10 @@ class Grid implements CoordinateSystemMaster {
         });
 
         ecModel.eachSeries(function (seriesModel) {
-            if (isCartesian2D(seriesModel)) {
-                const axesModels = findAxesModels(seriesModel);
-                const xAxisModel = axesModels[0];
-                const yAxisModel = axesModels[1];
+            if (isCartesian2DSeries(seriesModel)) {
+                const axesModelMap = findAxisModels(seriesModel);
+                const xAxisModel = axesModelMap.xAxisModel;
+                const yAxisModel = axesModelMap.yAxisModel;
 
                 if (!isAxisUsedInTheGrid(xAxisModel, gridModel)
                     || !isAxisUsedInTheGrid(yAxisModel, gridModel)
@@ -453,45 +453,10 @@ class Grid implements CoordinateSystemMaster {
         }, this);
 
         function unionExtent(data: List, axis: Axis2D): void {
-            each(data.mapDimensionsAll(axis.dim), function (dim) {
-                axis.scale.unionExtentFromData(
-                    // For example, the extent of the orginal dimension
-                    // is [0.1, 0.5], the extent of the `stackResultDimension`
-                    // is [7, 9], the final extent should not include [0.1, 0.5].
-                    data, getStackedDimension(data, dim)
-                );
+            each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
+                axis.scale.unionExtentFromData(data, dim);
             });
         }
-
-        // function sortCategory(
-        //     data: List,
-        //     axis: Axis2D,
-        //     axisModel: CartesianAxisModel,
-        //     otherAxis: Axis2D
-        // ): void {
-        //     const sort = axisModel.get('sort');
-        //     if (axis.type === 'category' && sort) {
-        //         data.each(otherAxis.dim, value => {
-        //             for (let i = 0, len = sortedDataValue.length; i < len; ++i) {
-        //                 if (value > sortedDataValue[i]) {
-        //                     sortedDataValue.splice(i, 0, value as number);
-
-        //                     for (let j = 0; j <= len; ++j) {
-        //                         if (sortedDataIndex[j] >= i) {
-        //                             ++sortedDataIndex[j];
-        //                         }
-        //                     }
-        //                     sortedDataIndex.push(i);
-        //                     return;
-        //                 }
-        //             }
-        //             // Smallest for now, insert at the end
-        //             sortedDataValue.push(value as number);
-        //             sortedDataIndex.push(sortedDataIndex.length);
-        //         });
-        //         (axis.scale as OrdinalScale).setCategoryIndices(sortedDataIndex);
-        //     }
-        // }
     }
 
     /**
@@ -531,13 +496,13 @@ class Grid implements CoordinateSystemMaster {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
-            if (!isCartesian2D(seriesModel)) {
+            if (!isCartesian2DSeries(seriesModel)) {
                 return;
             }
 
-            const axesModels = findAxesModels(seriesModel);
-            const xAxisModel = axesModels[0];
-            const yAxisModel = axesModels[1];
+            const axesModelMap = findAxisModels(seriesModel);
+            const xAxisModel = axesModelMap.xAxisModel;
+            const yAxisModel = axesModelMap.yAxisModel;
 
             const gridModel = xAxisModel.getCoordSysModel();
 
@@ -655,28 +620,6 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
         : function (coord) {
             return axisExtentSum - coord + coordBase;
         };
-}
-
-const axesTypes = ['xAxis', 'yAxis'];
-function findAxesModels(seriesModel: SeriesModel): CartesianAxisModel[] {
-    return map(axesTypes, function (axisType) {
-        const axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
-
-        if (__DEV__) {
-            if (!axisModel) {
-                throw new Error(axisType + ' "' + retrieve(
-                    seriesModel.get(axisType + 'Index' as any),
-                    seriesModel.get(axisType + 'Id' as any),
-                    0
-                ) + '" not found');
-            }
-        }
-        return axisModel;
-    });
-}
-
-function isCartesian2D(seriesModel: SeriesModel): boolean {
-    return seriesModel.get('coordinateSystem') === 'cartesian2d';
 }
 
 CoordinateSystemManager.register('cartesian2d', Grid);
