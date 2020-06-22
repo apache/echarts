@@ -47,6 +47,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
 import List from '../../data/List';
+import OrdinalScale from '../../scale/Ordinal';
 import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
 
 
@@ -407,10 +408,19 @@ class Grid implements CoordinateSystemMaster {
      * Update cartesian properties from series.
      */
     private _updateScale(ecModel: GlobalModel, gridModel: GridModel): void {
+        const sortedDataValue: number[] = [];
+        const sortedDataIndex: number[] = [];
+        let hasCategoryIndices = false;
+
         // Reset scale
         each(this._axesList, function (axis) {
             axis.scale.setExtent(Infinity, -Infinity);
+            if (axis.type === 'category') {
+                const categorySortInfo = axis.model.get('categorySortInfo');
+                (axis.scale as OrdinalScale).setCategorySortInfo(categorySortInfo);
+            }
         });
+
         ecModel.eachSeries(function (seriesModel) {
             if (isCartesian2DSeries(seriesModel)) {
                 const axesModelMap = findAxisModels(seriesModel);

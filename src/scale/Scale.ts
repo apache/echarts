@@ -21,7 +21,7 @@
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
-import { DimensionName, ScaleDataValue, OptionDataValue } from '../util/types';
+import { DimensionName, ScaleDataValue, OptionDataValue, DimensionLoose } from '../util/types';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 
 
@@ -85,7 +85,7 @@ abstract class Scale {
     /**
      * Set extent from data
      */
-    unionExtentFromData(data: List, dim: DimensionName): void {
+    unionExtentFromData(data: List, dim: DimensionName | DimensionLoose): void {
         this.unionExtent(data.getApproximateExtent(dim));
     }
 

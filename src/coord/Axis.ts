@@ -178,7 +178,7 @@ class Axis {
         const ticksCoords = map(ticks, function (tickValue) {
             return {
                 coord: this.dataToCoord(tickValue),
-                tickValue: tickValue
+                tickValue: this.scale instanceof OrdinalScale ? this.scale.getCategoryIndex(tickValue) : tickValue
             };
         }, this);
 
