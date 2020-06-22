@@ -940,19 +940,21 @@ const tmpDuringScope = {} as {
 };
 const customDuringAPI = {
     // Usually other props do not need to be changed in animation during.
-    setAttr(key: TransformProps, val: unknown): void {
-        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setAttr`.');
+    setTransform(key: TransformProps, val: unknown) {
+        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
         tmpDuringScope.el[key] = val as number;
+        return this;
     },
-    getAttr(key: TransformProps): unknown {
-        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getAttr`.');
+    getTransform(key: TransformProps): unknown {
+        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
         return tmpDuringScope.el[key];
     },
-    setShape(key: string, val: unknown): void {
+    setShape(key: string, val: unknown) {
         // In custom series, el other than Path can also has `shape` for intepolating props.
         const shape = (tmpDuringScope.el as any).shape || ((tmpDuringScope.el as any).shape = {});
         shape[key] = val;
         tmpDuringScope.isShapeDirty = true;
+        return this;
     },
     getShape(key: string): unknown {
         const shape = (tmpDuringScope.el as any).shape;
@@ -960,12 +962,13 @@ const customDuringAPI = {
             return shape[key];
         }
     },
-    setStyle(key: string, val: unknown): void {
+    setStyle(key: string, val: unknown) {
         const style = (tmpDuringScope.el as Displayable).style;
         if (style) {
             style[key] = val;
             tmpDuringScope.isStyleDirty = true;
         }
+        return this;
     },
     getStyle(key: string): unknown {
         const style = (tmpDuringScope.el as Displayable).style;

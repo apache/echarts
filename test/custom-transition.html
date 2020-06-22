@@ -234,8 +234,7 @@ under the License.
                         during: function (apiDuring) {
                             var iValOnAngle = apiDuring.getShape('valOnAngle');
                             var point = makeLabelPosition(api, valOnRadius, iValOnAngle);
-                            apiDuring.setAttr('x', point[0]);
-                            apiDuring.setAttr('y', point[1]);
+                            apiDuring.setTransform('x', point[0]).setTransform('y', point[1]);
                             apiDuring.setStyle('text', getText(iValOnAngle));
                         }
                     });
@@ -489,8 +488,7 @@ under the License.
                                 apiDuring.getShape('startRadius'),
                                 endRadian
                             );
-                            apiDuring.setAttr('x', point[0]);
-                            apiDuring.setAttr('y', point[1]);
+                            apiDuring.setTransform('x', point[0]).setTransform('y', point[1]);
                             apiDuring.setStyle('text', makeText(endRadian));
                         }
                     });
