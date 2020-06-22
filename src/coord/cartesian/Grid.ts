@@ -443,11 +443,6 @@ class Grid implements CoordinateSystemMaster {
                 if (data.type === 'list') {
                     unionExtent(data, xAxis);
                     unionExtent(data, yAxis);
-                    // if (!hasCategoryIndices && !sortedDataIndex.length) {
-                    //     // Only sort by the first series
-                    //     sortCategory(data, xAxis, xAxisModel, yAxis);
-                    //     sortCategory(data, yAxis, yAxisModel, xAxis);
-                    // }
                 }
             }
         }, this);

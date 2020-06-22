@@ -60,7 +60,8 @@ import {
     ECEventData,
     ZRStyleProps,
     SeriesOption,
-    ParsedValue
+    ParsedValue,
+    CallbackDataParams
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
@@ -622,7 +623,7 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
             dataType: string,
             labelDimIndex: number,
             labelProp: string,
-            interpolateValues?: ParsedValue | ParsedValue[]
+            extendParams?: Partial<CallbackDataParams>
         ) => string
     },
     labelDataIndex?: LDI,
@@ -639,7 +640,9 @@ function getLabelText<LDI>(opt?: SetLabelStyleOpt<LDI>, interpolateValues?: Pars
 
     let baseText;
     if (labelFetcher) {
-        baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex, labelProp, interpolateValues);
+        baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex, labelProp, {
+            value: interpolateValues
+        });
     }
     if (baseText == null) {
         baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;

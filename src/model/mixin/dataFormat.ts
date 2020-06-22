@@ -46,11 +46,10 @@ class DataFormatMixin {
         dataIndex: number,
         dataType?: string,
         el?: Element, // May be used in override.
-        rawValue?: unknown
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
-        rawValue = rawValue || this.getRawValue(dataIndex, dataType);
+        const rawValue = this.getRawValue(dataIndex, dataType);
         const rawDataIndex = data.getRawIndex(dataIndex);
         const name = data.getName(dataIndex);
         const itemOpt = data.getRawDataItem(dataIndex);
@@ -100,13 +99,19 @@ class DataFormatMixin {
         dataType?: string,
         dimIndex?: number,
         labelProp?: string,
-        interpolateValues?: ParsedValue | ParsedValue[]
+        // interpolateValues?: ParsedValue | ParsedValue[]
+        extendParams?: Partial<CallbackDataParams>
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
         const itemModel = data.getItemModel(dataIndex);
 
-        const params = this.getDataParams(dataIndex, dataType, null, interpolateValues);
+        const params = this.getDataParams(dataIndex, dataType, null);
+
+        if (extendParams) {
+            zrUtil.extend(params, extendParams);
+        }
+
         if (dimIndex != null && (params.value instanceof Array)) {
             params.value = params.value[dimIndex];
         }

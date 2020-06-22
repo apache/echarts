@@ -35,7 +35,7 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    DimensionIndexLoose, OptionDataItem, OptionDataValue, ParsedValue
+    DimensionIndexLoose, OptionDataItem, OptionDataValue
 } from '../../util/types';
 import List from '../List';
 
@@ -314,15 +314,14 @@ function getRawValueSimply(
 // value may be 0.91000000001, which have brings trouble to display.
 // TODO: consider how to treat null/undefined/NaN when display?
 export function retrieveRawValue(
-    data: List, dataIndex: number, dim?: DimensionName | DimensionIndexLoose,
-    interpolatedValues?: ParsedValue | ParsedValue[]
+    data: List, dataIndex: number, dim?: DimensionName | DimensionIndexLoose
 ): any {
     if (!data) {
         return;
     }
 
     // Consider data may be not persistent.
-    const dataItem = interpolatedValues || data.getRawDataItem(dataIndex);
+    const dataItem = data.getRawDataItem(dataIndex);
 
     if (dataItem == null) {
         return;

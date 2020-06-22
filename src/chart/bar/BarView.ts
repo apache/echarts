@@ -449,7 +449,8 @@ class BarView extends ChartView {
         for (let i = 0; i < info.length; ++i) {
             info[info[i].ordinalNumber].beforeSortIndex = i;
         }
-        return info.map(item => {
+
+        return zrUtil.map(info, item => {
             return {
                 ordinalNumber: item.ordinalNumber,
                 beforeSortIndex: item.beforeSortIndex

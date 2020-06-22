@@ -35,12 +35,16 @@ export function getDefaultLabel(
 
     // Simple optimization (in lots of cases, label dims length is 1)
     if (len === 1) {
-        return retrieveRawValue(data, dataIndex, labelDims[0], interpolatedValues);
+        return interpolatedValues == null
+            ? retrieveRawValue(data, dataIndex, labelDims[0])
+            : interpolatedValues;
     }
     else if (len) {
         const vals = [];
         for (let i = 0; i < labelDims.length; i++) {
-            const val = retrieveRawValue(data, dataIndex, labelDims[i], interpolatedValues);
+            const val = interpolatedValues == null
+                ? retrieveRawValue(data, dataIndex, labelDims[i])
+                : interpolatedValues;
             vals.push(val);
         }
         return vals.join(' ');
