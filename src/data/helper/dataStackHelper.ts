@@ -21,7 +21,7 @@ import {each, isString} from 'zrender/src/core/util';
 import DataDimensionInfo from '../DataDimensionInfo';
 import SeriesModel from '../../model/Series';
 import List from '../List';
-import type { SeriesOption, SeriesStackOptionMixin } from '../../util/types';
+import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../util/types';
 
 interface DataStackResult {
     stackedDimension: string
@@ -154,7 +154,7 @@ export function enableDataStack(
     };
 }
 
-export function isDimensionStacked(data: List, stackedDim: string /*, stackedByDim*/) {
+export function isDimensionStacked(data: List, stackedDim: string /*, stackedByDim*/): boolean {
     // Each single series only maps to one pair of axis. So we do not need to
     // check stackByDim, whatever stacked by a dimension or stacked by index.
     return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
@@ -165,7 +165,7 @@ export function isDimensionStacked(data: List, stackedDim: string /*, stackedByD
         // );
 }
 
-export function getStackedDimension(data: List, targetDim: string) {
+export function getStackedDimension(data: List, targetDim: string): DimensionName {
     return isDimensionStacked(data, targetDim)
         ? data.getCalculationInfo('stackResultDimension')
         : targetDim;

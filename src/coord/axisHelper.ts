@@ -37,7 +37,7 @@ import { AxisBaseOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
 import List from '../data/List';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, ScaleDataValue } from '../util/types';
+import { Dictionary, ScaleDataValue, DimensionName } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
 
 
@@ -333,14 +333,13 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
  * Set `categoryInterval` as 0 implicitly indicates that
  * show all labels reguardless of overlap.
  * @param {Object} axis axisModel.axis
- * @return {boolean}
  */
-export function shouldShowAllLabels(axis: Axis) {
+export function shouldShowAllLabels(axis: Axis): boolean {
     return axis.type === 'category'
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
 
-export function getDataDimensionsOnAxis(data: List, axisDim: string) {
+export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionName[] {
     // Remove duplicated dat dimensions caused by `getStackedDimension`.
     const dataDimMap = {} as Dictionary<boolean>;
     // Currently `mapDimensionsAll` will contian stack result dimension ('__\0ecstackresult').
