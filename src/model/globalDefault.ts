@@ -25,6 +25,8 @@ if (typeof navigator !== 'undefined') {
 }
 
 export default {
+
+    darkMode: 'auto',
     // backgroundColor: 'rgba(0,0,0,0)',
 
     // https://dribbble.com/shots/1065960-Infographic-Pie-chart-visualization

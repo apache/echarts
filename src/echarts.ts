@@ -1327,6 +1327,7 @@ class ECharts extends Eventful {
 
                 // Set background
                 let backgroundColor = ecModel.get('backgroundColor') || 'transparent';
+                const darkMode = ecModel.get('darkMode');
 
                 // In IE8
                 if (!env.canvasSupported) {
@@ -1338,6 +1339,11 @@ class ECharts extends Eventful {
                 }
                 else {
                     zr.setBackgroundColor(backgroundColor);
+
+                    // Force set dark mode.
+                    if (darkMode != null && darkMode !== 'auto') {
+                        zr.setDarkMode(darkMode);
+                    }
                 }
 
                 performPostUpdateFuncs(ecModel, api);
