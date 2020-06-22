@@ -474,7 +474,9 @@ function setLabelLineState(
         smooth = 0.3;
     }
     stateObj.shape = stateObj.shape || {};
-    (stateObj.shape as Polyline['shape']).smooth = smooth as number;
+    if (smooth > 0) {
+        (stateObj.shape as Polyline['shape']).smooth = smooth as number;
+    }
 
     const styleObj = stateModel.getModel('lineStyle').getLineStyle();
     isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
