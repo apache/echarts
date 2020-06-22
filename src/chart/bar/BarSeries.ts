@@ -69,9 +69,7 @@ export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionM
 
     data?: (BarDataItemOption | BarDataValue)[]
 
-    label?: LabelOption & {
-        precision?: 'auto' | number
-    }
+    label?: LabelOption
 
     itemStyle?: BarItemStyleOption
 

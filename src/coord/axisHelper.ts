@@ -37,7 +37,7 @@ import { AxisBaseOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
 import List from '../data/List';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, ScaleDataValue } from '../util/types';
+import { Dictionary, ScaleDataValue, DimensionName } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
 
 
@@ -340,7 +340,7 @@ export function shouldShowAllLabels(axis: Axis) {
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
 
-export function getDataDimensionsOnAxis(data: List, axisDim: string) {
+export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionName[] {
     // Remove duplicated dat dimensions caused by `getStackedDimension`.
     const dataDimMap = {} as Dictionary<boolean>;
     // Currently `mapDimensionsAll` will contian stack result dimension ('__\0ecstackresult').

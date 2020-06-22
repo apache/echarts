@@ -766,7 +766,7 @@ export interface LabelOption extends TextCommonOption {
 
     overflow?: TextStyleProps['overflow']
     silent?: boolean
-    precision?: number
+    precision?: number | 'auto'
     valueAnimation?: boolean
 
     // TODO: TYPE not all label support formatter

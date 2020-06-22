@@ -76,7 +76,7 @@ import {
 } from 'zrender/src/core/util';
 import * as numberUtil from './number';
 import SeriesModel from '../model/Series';
-import {OnframeCallback} from 'zrender/src/animation/Animator';
+import {OnframeCallback, interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
 import DataFormatMixin from '../model/mixin/dataFormat';
 
@@ -1071,7 +1071,7 @@ function animateOrSetProps<Props>(
     },
     dataIndex?: number | (() => void),
     cb?: () => void,
-    during?: OnframeCallback<any>
+    during?: (percent: number) => void
 ) {
     if (typeof dataIndex === 'function') {
         during = cb;
@@ -1185,7 +1185,8 @@ function animateOrSetLabel<Props extends PathProps>(
     const element = el as Element<Props> & { __value: ParsedValue[] | ParsedValue };
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     if (valueAnimationEnabled) {
-        let precision = labelModel.get('precision') || 0;
+        const precisionOption = labelModel.get('precision');
+        let precision: number = precisionOption === 'auto' ? 0 : precisionOption;
 
         let interpolateValues: (number | string)[] | (number | string);
         const rawValues = seriesModel.getRawValue(dataIndex);
@@ -1204,28 +1205,11 @@ function animateOrSetLabel<Props extends PathProps>(
             }
         }
 
-        const props = {
-            __value: interpolateValues
-        } as ElementProps;
-
-        if (!element.__value) {
-            // Init with 0 for non-ordinal dims
-            if (isRawValueNumber) {
-                element.__value = 0;
-            }
-            else {
-                const initValues = [];
-                for (let i = 0; i < (interpolateValues as []).length; ++i) {
-                    initValues[i] = 0;
-                }
-                element.__value = initValues;
-            }
-        }
-
-        const during = (target: Props, percent: number) => {
+        const during = (percent: number) => {
             let interpolated;
             if (isRawValueNumber) {
-                interpolated = numberUtil.round(target.__value as number, precision);
+                const value = interpolateNumber(0, interpolateValues as number, percent);
+                interpolated = numberUtil.round(value, precision);
             }
             else {
                 interpolated = [];
@@ -1236,7 +1220,8 @@ function animateOrSetLabel<Props extends PathProps>(
                         interpolated[i] = (rawValues as [])[i];
                     }
                     else {
-                        interpolated[i] = numberUtil.round((target.__value as [])[j], precision);
+                        const value = interpolateNumber(0, (interpolateValues as number[])[i], percent);
+                        interpolated[i] = numberUtil.round(value), precision;
                         ++j;
                     }
                 }
@@ -1255,6 +1240,7 @@ function animateOrSetLabel<Props extends PathProps>(
             }
         };
 
+        const props: ElementProps = {};
         animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, null, during);
     }
 }
