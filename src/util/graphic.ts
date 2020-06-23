@@ -79,9 +79,8 @@ import {
 } from 'zrender/src/core/util';
 import * as numberUtil from './number';
 import SeriesModel from '../model/Series';
-import {OnframeCallback, interpolateNumber} from 'zrender/src/animation/Animator';
+import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
-import DataFormatMixin from '../model/mixin/dataFormat';
 
 
 const mathMax = Math.max;
