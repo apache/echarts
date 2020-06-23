@@ -75,7 +75,7 @@ under the License.
             }];
 
             var colorAll = [
-                '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
+                '#bbb', '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
             ];
             var ANIMATION_DURATION_UPDATE = 1500;
 
@@ -106,13 +106,18 @@ under the License.
 
                 for (var stepIdx = 0; stepIdx < allStepsData.length; stepIdx++) {
                     var stepData = allStepsData[stepIdx];
-                    var stepResult = {
-                        centroids: stepData.centroids,
-                        points: []
-                    };
-                    result.push(stepResult);
                     var ptsInCluster = stepData.pointsInCluster;
                     var newestClusterIdx = ptsInCluster.length - 1;
+
+                    var stepResult = {
+                        centroids: stepData.centroids,
+                        points: [],
+                        newestClusterIndex: newestClusterIdx,
+                        newestClusterMaxAssessmentIndex: -1
+                    };
+                    result.push(stepResult);
+
+
                     for (var cIdx = 0; cIdx < ptsInCluster.length; cIdx++) {
                         var clusterPoints = ptsInCluster[cIdx];
                         for (var i = 0; i < clusterPoints.length; i++) {
@@ -123,6 +128,15 @@ under the License.
                                 throw Error(key);
                             }
                             stepResult.points[ptsIdx] = [point[0], point[1], cIdx, newestClusterIdx];
+                        }
+                    }
+
+                    var assessment = -Infinity;
+                    for (var i = 0; i < stepData.clusterAssment.length; i++) {
+                        var assessmentRecord = stepData.clusterAssment[i];
+                        if (assessmentRecord[0] === newestClusterIdx && assessmentRecord[1] > assessment) {
+                            assessment = assessmentRecord[1];
+                            stepResult.newestClusterMaxAssessmentIndex = i;
                         }
                     }
                 }
@@ -138,7 +152,7 @@ under the License.
                     cx: 0,
                     cy: 0,
                     r: 10,
-                    $transition: []
+                    transition: []
                 };
 
                 var contentColor = colorAll[clusterIdx];
@@ -152,15 +166,15 @@ under the License.
                     y: coord[1],
                     // scaleX: isNewCluster ? 1.2 : 1,
                     // scaleY: isNewCluster ? 1.2 : 1,
-                    // $transition: ['scaleX', 'scaleY'],
+                    // transition: ['scaleX', 'scaleY'],
                     shape: shape,
                     style: {
                         fill: contentColor,
                         stroke: '#333',
                         lineWidth: 1,
                         shadowColor: contentColor,
-                        shadowBlur: isNewCluster ? 7 : 0,
-                        $transition: 'shadowBlur'
+                        shadowBlur: isNewCluster ? 12 : 0,
+                        transition: 'shadowBlur'
                     },
                     during: function (apiDuring) {
                         var currContentColor = getColorInTransition(apiDuring, 'content');
@@ -177,7 +191,7 @@ under the License.
                 shape[key + 'G'] = colorRGBA[1];
                 shape[key + 'B'] = colorRGBA[2];
                 shape[key + 'A'] = colorRGBA[3];
-                var transition = shape.$transition || (shape.$transition = []);
+                var transition = shape.transition || (shape.transition = []);
                 transition.push(key + 'R', key + 'G', key + 'B', key + 'A');
             }
 
@@ -191,19 +205,66 @@ under the License.
                 return echarts.color.stringify(colorArr, 'rgba');
             }
 
+            function renderBoundary(params, api) {
+                var center = api.coord([api.value(2), api.value(3)]);
+                var endP = api.coord([api.value(0), api.value(1)]);
+                var diffX = center[0] - endP[0];
+                var diffY = center[1] - endP[1];
+                var radius = Math.pow(diffX * diffX + diffY * diffY, 0.5) + 10;
+                var newCluIdx = api.value(4);
+
+                return {
+                    type: 'circle',
+                    shape: {
+                        cx: isNaN(center[0]) ? 0 : center[0],
+                        cy: isNaN(center[1]) ? 0 : center[1],
+                        r: isNaN(radius) ? 0 : radius,
+                        // transition: 'newCluIdx'
+                    },
+                    style: {
+                        fill: null,
+                        stroke: '#bbb',
+                        lineDash: [5, 5],
+                        lineWidth: 3,
+                        // opacity: 0
+                    },
+                    during: function (apiDuring) {
+                        apiDuring.setShape('cx', Math.random() * 10);
+                        // var cluIdx = apiDuring.setShape('newCluIdx');
+                        // var percent = Math.ceil(cluIdx) - cluIdx;
+                        // var opacity = (Math.ceil(cluIdx) - cluIdx) > 0.5 ?
+                    }
+                };
+            }
+
             function makeStepOption(option, stepResult) {
-                var centroids = stepResult.centroids;
+                var centroids = stepResult.centroids || [];
                 var points = stepResult.points;
+                var newMaxAssmIdx = stepResult.newestClusterMaxAssessmentIndex;
+                var newCluIdx = stepResult.newestClusterIndex;
 
                 option.options.push({
-                    series: {
+                    series: [{
                         type: 'custom',
                         encode: {
                             tooltip: [0, 1]
                         },
                         renderItem: renderItemPoint,
                         data: points
-                    }
+                    }, {
+                        type: 'custom',
+                        renderItem: renderBoundary,
+                        animationDuration: 3000,
+                        data: [
+                            [
+                                (points[newMaxAssmIdx] || [])[0],
+                                (points[newMaxAssmIdx] || [])[1],
+                                (centroids[newCluIdx] || [])[0],
+                                (centroids[newCluIdx] || [])[1],
+                                newCluIdx
+                            ]
+                        ]
+                    }]
                 });
             }
 
@@ -258,6 +319,7 @@ under the License.
                 title: [
                     'Cluster algorithm visualization'
                 ],
+                height: 600,
                 option: option
             });
         });

@@ -179,7 +179,7 @@ under the License.
                         shape: {
                             points: makeShapePoints(api, valOnRadius, valOnAngle),
                             valOnAngle: valOnAngle,
-                            $transition: 'valOnAngle'
+                            transition: 'valOnAngle'
                         },
                         style: {
                             lineWidth: 1,
@@ -219,7 +219,7 @@ under the License.
                         y: point[1],
                         shape: {
                             valOnAngle: valOnAngle,
-                            $transition: 'valOnAngle'
+                            transition: 'valOnAngle'
                         },
                         style: {
                             text: getText(valOnAngle),
@@ -407,7 +407,7 @@ under the License.
                             widthRadius: widthRadius,
                             startRadius: startRadius,
                             endRadian: endRadian,
-                            $transition: ['widthRadius', 'startRadius', 'endRadian']
+                            transition: ['widthRadius', 'startRadius', 'endRadian']
                         },
                         style: {
                             lineWidth: 1,
@@ -464,7 +464,7 @@ under the License.
                             startRadius: startRadius,
                             endRadian: endRadian,
                             widthRadius: widthRadius,
-                            $transition: ['startRadius', 'endRadian', 'widthRadius']
+                            transition: ['startRadius', 'endRadian', 'widthRadius']
                         },
                         style: {
                             text: makeText(endRadian),
@@ -652,8 +652,8 @@ under the License.
                                     // polor: anticlockwise-positive radian
                                     // sector: clockwise-positive radian
                                     endAngle: -polarEndRadian,
-                                    $transition: 'endAngle',
-                                    $enterFrom: { endAngle: 0 }
+                                    transition: 'endAngle',
+                                    enterFrom: { endAngle: 0 }
                                 }
                             }
                         }, {
@@ -664,8 +664,8 @@ under the License.
                                 shape: {
                                     points: makePionterPoints(params, polarEndRadian),
                                     polarEndRadian: polarEndRadian,
-                                    $transition: 'polarEndRadian',
-                                    $enterFrom: { polarEndRadian: 0 }
+                                    transition: 'polarEndRadian',
+                                    enterFrom: { polarEndRadian: 0 }
                                 },
                                 during: function (apiDuring) {
                                     apiDuring.setShape(
@@ -692,8 +692,8 @@ under the License.
                             type: 'text',
                             shape: {
                                 valOnRadian: valOnRadian,
-                                $transition: 'valOnRadian',
-                                $enterFrom: { valOnRadian: 0 }
+                                transition: 'valOnRadian',
+                                enterFrom: { valOnRadian: 0 }
                             },
                             style: {
                                 text: makeText(valOnRadian),
@@ -703,7 +703,7 @@ under the License.
                                 fill: 'rgb(0,50,190)',
                                 align: 'center',
                                 verticalAlign: 'middle',
-                                $enterFrom: { opacity: 0 }
+                                enterFrom: { opacity: 0 }
                             },
                             during: function (apiDuring) {
                                 apiDuring.setStyle('text', makeText(apiDuring.getShape('valOnRadian')));
@@ -961,7 +961,7 @@ under the License.
                                     },
                                     style: {
                                         fill: 'blue',
-                                        // $enterFrom: { opacity: 0 }
+                                        // enterFrom: { opacity: 0 }
                                     }
                                 }, {
                                     type: 'circle',
@@ -972,7 +972,7 @@ under the License.
                                     },
                                     style: {
                                         fill: 'green',
-                                        // $enterFrom: { opacity: 0 }
+                                        // enterFrom: { opacity: 0 }
                                     },
                                     textConfig: {
                                         position: 'bottom'
@@ -981,7 +981,7 @@ under the License.
                                         style: {
                                             text: 'xxxx',
                                             fill: 'black',
-                                            // $enterFrom: { opacity: 0 }
+                                            // enterFrom: { opacity: 0 }
                                         }
                                     }
                                 }]
@@ -1078,7 +1078,7 @@ under the License.
                                 type: 'group',
                                 x: pos[0],
                                 y: pos[1],
-                                $enterFrom: {
+                                enterFrom: {
                                     y: 0
                                 },
                                 children: [{
@@ -1164,7 +1164,7 @@ under the License.
                                         y: params.coordSys.y,
                                         width: params.coordSys.width,
                                         height: params.coordSys.height,
-                                        $enterFrom: {width: 0}
+                                        enterFrom: {width: 0}
                                     }
                                 }
                             };
@@ -1225,7 +1225,7 @@ under the License.
                                 style: {
                                     image: weatherIcons.Showers,
                                     width: width,
-                                    $transition: 'width'
+                                    transition: 'width'
                                 }
                             };
                         },
@@ -1277,7 +1277,7 @@ under the License.
                                 x: pos[0],
                                 y: pos[1],
                                 rotation: pos[0] / 500 * Math.PI,
-                                $transition: ['rotation'],
+                                transition: ['rotation'],
                                 originX: -50,
                                 originY: 50,
                                 children: [{
@@ -1291,7 +1291,7 @@ under the License.
                                     },
                                     style: {
                                         fill: 'green',
-                                        $enterFrom: { opacity: 0 }
+                                        enterFrom: { opacity: 0 }
                                     }
                                 }, {
                                     type: 'circle',
@@ -1302,7 +1302,7 @@ under the License.
                                     },
                                     style: {
                                         fill: 'blue',
-                                        $enterFrom: { opacity: 0 }
+                                        enterFrom: { opacity: 0 }
                                     },
                                     textConfig: {
                                         position: 'bottom'
@@ -1311,7 +1311,7 @@ under the License.
                                         style: {
                                             text: 'xxxx',
                                             fill: 'black',
-                                            $enterFrom: { opacity: 0 }
+                                            enterFrom: { opacity: 0 }
                                         }
                                     }
                                 }]
@@ -1363,7 +1363,7 @@ under the License.
                             return {
                                 type: 'rect',
                                 position: pos,
-                                $transition: [],
+                                transition: [],
                                 shape: {
                                     x: -50,
                                     y: 50,
@@ -1373,7 +1373,7 @@ under the License.
                                 },
                                 style: {
                                     fill: 'green',
-                                    $enterFrom: { opacity: 0 }
+                                    enterFrom: { opacity: 0 }
                                 }
                             };
                         },
@@ -1426,10 +1426,10 @@ under the License.
                                 x: pos[0],
                                 y: pos[1],
                                 rotation: pos[0] / 500 * Math.PI,
-                                $transition: ['x', 'y', 'rotation'],
+                                transition: ['x', 'y', 'rotation'],
                                 originX: -50,
                                 originY: 50,
-                                $leaveTo: {scaleX: 0, scaleY: 0},
+                                leaveTo: {scaleX: 0, scaleY: 0},
                                 children: [{
                                     type: 'rect',
                                     shape: {
@@ -1441,7 +1441,7 @@ under the License.
                                     },
                                     style: {
                                         fill: 'green',
-                                        $enterFrom: { opacity: 0 }
+                                        enterFrom: { opacity: 0 }
                                     }
                                 }, {
                                     type: 'circle',
@@ -1452,7 +1452,7 @@ under the License.
                                     },
                                     style: {
                                         fill: 'blue',
-                                        $enterFrom: { opacity: 0 }
+                                        enterFrom: { opacity: 0 }
                                     },
                                     textConfig: {
                                         position: 'bottom'
@@ -1461,7 +1461,7 @@ under the License.
                                         style: {
                                             text: 'xxxx',
                                             fill: 'black',
-                                            $enterFrom: { opacity: 0 }
+                                            enterFrom: { opacity: 0 }
                                         }
                                     }
                                 }]

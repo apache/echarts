@@ -78,6 +78,7 @@ import {
 import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
+import { number } from '../export';
 
 
 const inner = makeInner<{
@@ -109,14 +110,14 @@ type TransitionAnyProps = string | string[];
 type TransitionTransformProps = TransformProps | TransformProps[];
 // Do not declare "Dictionary" in TransitionAnyOption to restrict the type check.
 type TransitionAnyOption = {
-    $transition?: TransitionAnyProps;
-    $enterFrom?: Dictionary<unknown>;
-    $leaveTo?: Dictionary<unknown>;
+    transition?: TransitionAnyProps;
+    enterFrom?: Dictionary<unknown>;
+    leaveTo?: Dictionary<unknown>;
 };
 type TransitionTransformOption = {
-    $transition?: TransitionTransformProps;
-    $enterFrom?: Dictionary<unknown>;
-    $leaveTo?: Dictionary<unknown>;
+    transition?: TransitionTransformProps;
+    enterFrom?: Dictionary<unknown>;
+    leaveTo?: Dictionary<unknown>;
 };
 
 interface CustomBaseElementOption extends Partial<Pick<
@@ -610,12 +611,12 @@ function createEl(elOption: CustomElementOption): Element {
  * ---------------------------------------------
  * [STRATEGY_TRANSITION] The rule of transition:
  * + For props on the root level of a element:
- *      If there is no `$transition` specified, tansform props will be transitioned by default,
+ *      If there is no `transition` specified, tansform props will be transitioned by default,
  *      which is the same as the previous setting in echarts4 and suitable for the scenario
  *      of dataZoom change.
- *      If `$transition` specified, only the specified props will be transitioned.
+ *      If `transition` specified, only the specified props will be transitioned.
  * + For props in `shape` and `style`:
- *      Only props specified in `$transition` will be transitioned.
+ *      Only props specified in `transition` will be transitioned.
  * + Break:
  *      Since ec5, do not make transition to shape by default, because it might result in
  *      performance issue (especially `points` of polygon) and do not necessary in most cases.
@@ -738,22 +739,22 @@ function prepareShapeUpdate(
     const elShape = (el as LooseElementProps).shape;
     let tranFromShapeProps: LooseElementProps['shape'];
 
-    const enterFrom = shapeOpt.$enterFrom;
+    const enterFrom = shapeOpt.enterFrom;
     if (isInit && enterFrom) {
         !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
-            // `$enterFrom` props are not necessarily also declared in `shape`/`style`/...,
-            // for example, `opacity` can only declared in `$enterFrom` but not in `style`.
+            // `enterFrom` props are not necessarily also declared in `shape`/`style`/...,
+            // for example, `opacity` can only declared in `enterFrom` but not in `style`.
             const key = enterFromKeys[i];
             // Do not clone, animator will perform that clone.
             tranFromShapeProps[key] = enterFrom[key];
         }
     }
 
-    if (!isInit && elShape && shapeOpt.$transition) {
+    if (!isInit && elShape && shapeOpt.transition) {
         !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
-        const transitionKeys = normalizeToArray(shapeOpt.$transition);
+        const transitionKeys = normalizeToArray(shapeOpt.transition);
         for (let i = 0; i < transitionKeys.length; i++) {
             const key = transitionKeys[i];
             const elVal = elShape[key];
@@ -774,7 +775,7 @@ function prepareShapeUpdate(
         allPropsShape[key] = cloneValue((shapeOpt as any)[key]);
     }
 
-    const leaveTo = shapeOpt.$leaveTo;
+    const leaveTo = shapeOpt.leaveTo;
     if (leaveTo) {
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
         const leaveToShapeProps = leaveToProps.shape || (leaveToProps.shape = {});
@@ -794,13 +795,13 @@ function prepareTransformUpdate(
     transFromProps: ElementProps,
     isInit: boolean
 ): void {
-    const enterFrom = elOption.$enterFrom;
+    const enterFrom = elOption.enterFrom;
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
             const key = enterFromKeys[i] as TransformProps;
             if (__DEV__) {
-                checkTransformPropRefer(key, 'el.$enterFrom');
+                checkTransformPropRefer(key, 'el.enterFrom');
             }
             // Do not clone, animator will perform that clone.
             transFromProps[key] = enterFrom[key] as number;
@@ -808,13 +809,13 @@ function prepareTransformUpdate(
     }
 
     if (!isInit) {
-        if (elOption.$transition) {
-            const transitionKeys = normalizeToArray(elOption.$transition);
+        if (elOption.transition) {
+            const transitionKeys = normalizeToArray(elOption.transition);
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
                 const elVal = el[key];
                 if (__DEV__) {
-                    checkTransformPropRefer(key, 'el.$transition');
+                    checkTransformPropRefer(key, 'el.transition');
                     checkTansitionRefer(key, elOption[key], elVal);
                 }
                 // Do not clone, see `checkTansitionRefer`.
@@ -840,14 +841,14 @@ function prepareTransformUpdate(
     setTransProp(elOption, allProps, 'originY');
     setTransProp(elOption, allProps, 'rotation');
 
-    const leaveTo = elOption.$leaveTo;
+    const leaveTo = elOption.leaveTo;
     if (leaveTo) {
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
         const leaveToKeys = keys(leaveTo);
         for (let i = 0; i < leaveToKeys.length; i++) {
             const key = leaveToKeys[i] as TransformProps;
             if (__DEV__) {
-                checkTransformPropRefer(key, 'el.$leaveTo');
+                checkTransformPropRefer(key, 'el.leaveTo');
             }
             leaveToProps[key] = leaveTo[key] as number;
         }
@@ -868,7 +869,7 @@ function prepareStyleUpdate(
     const elStyle = (el as LooseElementProps).style as LooseElementProps['style'];
     let transFromStyleProps: LooseElementProps['style'];
 
-    const enterFrom = styleOpt.$enterFrom;
+    const enterFrom = styleOpt.enterFrom;
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
@@ -879,8 +880,8 @@ function prepareStyleUpdate(
         }
     }
 
-    if (!isInit && elStyle && styleOpt.$transition) {
-        const transitionKeys = normalizeToArray(styleOpt.$transition);
+    if (!isInit && elStyle && styleOpt.transition) {
+        const transitionKeys = normalizeToArray(styleOpt.transition);
         !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
         for (let i = 0; i < transitionKeys.length; i++) {
             const key = transitionKeys[i];
@@ -893,7 +894,7 @@ function prepareStyleUpdate(
         }
     }
 
-    const leaveTo = styleOpt.$leaveTo;
+    const leaveTo = styleOpt.leaveTo;
     if (leaveTo) {
         const leaveToKeys = keys(leaveTo);
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
@@ -941,12 +942,16 @@ const tmpDuringScope = {} as {
 const customDuringAPI = {
     // Usually other props do not need to be changed in animation during.
     setTransform(key: TransformProps, val: unknown) {
-        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
+        if (__DEV__) {
+            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
+        }
         tmpDuringScope.el[key] = val as number;
         return this;
     },
     getTransform(key: TransformProps): unknown {
-        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
+        if (__DEV__) {
+            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
+        }
         return tmpDuringScope.el[key];
     },
     setShape(key: string, val: unknown) {
@@ -979,6 +984,11 @@ const customDuringAPI = {
 };
 
 function elUpdateDuringAnimation(this: Element, key: string): void {
+    // Do not provide "percent" until some requirements come.
+    // Because consider thies case:
+    // enterFrom: {x: 100, y: 30}, transition: 'x'.
+    // And enter duration is different from update duration.
+    // Thus it might be confused about the meaning of "percent" in during callback.
     const innerEl = inner(this);
     // FIXME `this.markRedraw();` directly ?
     innerEl.orginalDuring.call(this, key);
