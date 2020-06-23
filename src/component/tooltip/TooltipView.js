@@ -109,7 +109,7 @@ export default echarts.extendComponentView({
         this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         var tooltipContent = this._tooltipContent;
-        tooltipContent.update();
+        tooltipContent.update(tooltipModel);
         tooltipContent.setEnterable(tooltipModel.get('enterable'));
 
         this._initGlobalListener();
