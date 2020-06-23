@@ -704,8 +704,8 @@ function removeRect(
     // Not show text when animating
     el.removeTextContent();
     updateProps(el, {
-        shape: {
-            width: 0
+        style: {
+            opacity: 0
         }
     }, animationModel, dataIndex, function () {
         el.parent && el.parent.remove(el);
@@ -720,8 +720,8 @@ function removeSector(
     // Not show text when animating
     el.removeTextContent();
     updateProps(el, {
-        shape: {
-            r: el.shape.r0
+        style: {
+            opacity: 0
         }
     }, animationModel, dataIndex, function () {
         el.parent && el.parent.remove(el);
