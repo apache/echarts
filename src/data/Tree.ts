@@ -214,22 +214,19 @@ export class TreeNode {
         const hostTree = this.hostTree;
         const itemModel = hostTree.data.getItemModel(this.dataIndex);
         const levelModel = this.getLevelModel();
-        let leavesModel;
-        if (!levelModel && (this.children.length === 0 || (this.children.length !== 0 && this.isExpand === false))) {
-            leavesModel = this.getLeavesModel();
+
+        // FIXME: refactor levelModel to "beforeLink", and remove levelModel here.
+        if (levelModel) {
+            return itemModel.getModel(path as any, levelModel.getModel(path));
         }
-        return itemModel.getModel(
-            path as any,
-            (levelModel || leavesModel || hostTree.hostModel).getModel(path as any)
-        );
+        else {
+            return itemModel.getModel(path as any);
+        }
     }
+
     // TODO: TYPE More specific model
     getLevelModel(): Model {
         return (this.hostTree.levelModels || [])[this.depth];
-    }
-
-    getLeavesModel(): Model {
-        return this.hostTree.leavesModel;
     }
 
     /**
@@ -302,23 +299,15 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
 
     levelModels: Model<LevelOption>[];
 
-    leavesModel: Model<LeavesOption>;
-
     private _nodes: TreeNode[] = [];
 
-    constructor(hostModel: HostModel, levelOptions: LevelOption[], leavesOption: LeavesOption) {
+    constructor(hostModel: HostModel, levelOptions: LevelOption[]) {
 
         this.hostModel = hostModel;
 
         this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
             return new Model(levelDefine, hostModel, hostModel.ecModel);
         });
-
-        this.leavesModel = new Model<LeavesOption>(
-            leavesOption || {} as LeavesOption,
-            hostModel,
-            hostModel.ecModel
-        );
     }
     /**
      * Travel this subtree (include this node).
@@ -397,17 +386,16 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
      *     ]
      * }
      */
-    static createTree<T extends TreeNodeData, HostModel extends Model, LevelOption, LeavesOption>(
+    static createTree<T extends TreeNodeData, HostModel extends Model, LevelOption>(
         dataRoot: T,
         hostModel: HostModel,
         treeOptions?: {
-            levels?: LevelOption[],
-            leaves?: LeavesOption
+            levels?: LevelOption[]
         },
         beforeLink?: (data: List) => void
     ) {
 
-        const tree = new Tree(hostModel, treeOptions.levels, treeOptions.leaves);
+        const tree = new Tree(hostModel, treeOptions && treeOptions.levels);
         const listData: TreeNodeData[] = [];
         let dimMax = 1;
 
@@ -444,6 +432,8 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
         const list = new List(dimensionsInfo, hostModel);
         list.initData(listData);
 
+        beforeLink && beforeLink(list);
+
         linkList({
             mainData: list,
             struct: tree,
@@ -451,8 +441,6 @@ class Tree<HostModel extends Model = Model, LevelOption = any, LeavesOption = an
         });
 
         tree.update();
-
-        beforeLink && beforeLink(list);
 
         return tree;
     }

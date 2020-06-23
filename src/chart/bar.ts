@@ -24,6 +24,7 @@ import {layout, largeLayout} from '../layout/barGrid';
 import '../coord/cartesian/Grid';
 import './bar/BarSeries';
 import './bar/BarView';
+import '../action/changeAxisOrder';
 // In case developer forget to include grid component
 import '../component/gridSimple';
 

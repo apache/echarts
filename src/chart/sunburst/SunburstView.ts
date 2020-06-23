@@ -26,6 +26,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { ROOT_TO_NODE_ACTION } from './sunburstAction';
+import { windowOpen } from '../../util/format';
 
 interface DrawTreeNode extends TreeNode {
     parentNode: DrawTreeNode
@@ -219,7 +220,7 @@ class SunburstView extends ChartView {
                         if (link) {
                             const linkTarget = itemModel.get('target', true)
                                 || '_blank';
-                            window.open(link, linkTarget);
+                            windowOpen(link, linkTarget);
                         }
                     }
                     targetFound = true;

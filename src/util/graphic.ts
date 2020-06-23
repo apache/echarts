@@ -48,7 +48,7 @@ import LRU from 'zrender/src/core/LRU';
 import Displayable, { DisplayableProps, DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
-import Element, { ElementEvent, ElementTextConfig } from 'zrender/src/Element';
+import Element, { ElementEvent, ElementTextConfig, ElementProps } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
     AnimationOptionMixin,
@@ -61,7 +61,11 @@ import {
     DataModel,
     ECEventData,
     ZRStyleProps,
-    AnimationOption
+    AnimationOption,
+    TextCommonOption,
+    SeriesOption,
+    ParsedValue,
+    CallbackDataParams
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
@@ -74,8 +78,13 @@ import {
     isArrayLike,
     map,
     defaults,
-    indexOf
+    indexOf,
+    isObject
 } from 'zrender/src/core/util';
+import * as numberUtil from './number';
+import SeriesModel from '../model/Series';
+import {interpolateNumber} from 'zrender/src/animation/Animator';
+import List from '../data/List';
 
 
 const mathMax = Math.max;
@@ -84,13 +93,6 @@ const mathMin = Math.min;
 const EMPTY_OBJ = {};
 
 export const Z2_EMPHASIS_LIFT = 10;
-
-// key: label model property nane, value: style property name.
-export const CACHED_LABEL_STYLE_PROPERTIES = {
-    color: 'textFill',
-    textBorderColor: 'textStroke',
-    textBorderWidth: 'textStrokeWidth'
-};
 
 const EMPHASIS = 'emphasis';
 const NORMAL = 'normal';
@@ -126,8 +128,6 @@ type TextCommonParams = {
      * If inheritColor specified, it is used as default textFill.
      */
     inheritColor?: ColorString
-
-    getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
     defaultOutsidePosition?: LabelOption['position']
 
@@ -478,7 +478,9 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
             }
         }
         if (state) {
-            state.z2 = this.z2 + Z2_EMPHASIS_LIFT;
+            const z2EmphasisLift = (this as ECElement).z2EmphasisLift;
+            // TODO Share with textContent?
+            state.z2 = this.z2 + z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
         }
     }
 
@@ -654,7 +656,10 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     defaultText?: string | (
         (labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>) => string
     ),
-    // Fetch text by `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
+    // Fetch text by:
+    // opt.labelFetcher.getFormattedLabel(
+    //     opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp
+    // )
     labelFetcher?: {
         getFormattedLabel: (
             // In MapDraw case it can be string (region name)
@@ -662,7 +667,8 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
             status: DisplayState,
             dataType?: string,
             labelDimIndex?: number,
-            formatter?: string | ((params: object) => string)
+            formatter?: string | ((params: object) => string),
+            extendParams?: Partial<CallbackDataParams>
         ) => string
         // getDataParams: (labelDataIndex: LDI, dataType?: string) => object
     },
@@ -680,6 +686,51 @@ type LabelModelForText = Model<Omit<
 > & {
     formatter?: string | ((params: any) => string)
 }>;
+
+function getLabelText<LDI>(
+    opt?: SetLabelStyleOpt<LDI>,
+    normalModel: LabelModel,
+    emphasisModel: LabelModel,
+    interpolateValues?: ParsedValue | ParsedValue[]
+) {
+    const labelFetcher = opt.labelFetcher;
+    const labelDataIndex = opt.labelDataIndex;
+    const labelDimIndex = opt.labelDimIndex;
+
+    let baseText;
+    if (labelFetcher) {
+        baseText = labelFetcher.getFormattedLabel(
+            labelDataIndex,
+            'normal',
+            null,
+            labelDimIndex,
+            normalModel && normalModel.get('formatter'),
+            {
+                value: interpolateValues
+            }
+        );
+    }
+    if (baseText == null) {
+        baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
+    }
+    const emphasisStyleText = retrieve2(
+        labelFetcher
+            ? labelFetcher.getFormattedLabel(
+                labelDataIndex,
+                'emphasis',
+                null,
+                labelDimIndex,
+                emphasisModel && emphasisModel.get('formatter')
+            )
+            : null,
+        baseText
+    );
+    return {
+        normal: baseText,
+        emphasis: emphasisStyleText
+    };
+}
+
 /**
  * Set normal styles and emphasis styles about text on target element
  * If target is a ZRText. It will create a new style object.
@@ -705,36 +756,11 @@ function setLabelStyle<LDI>(
     opt = opt || EMPTY_OBJ;
     const isSetOnText = targetEl instanceof ZRText;
 
-    const labelFetcher = opt.labelFetcher;
-    const labelDataIndex = opt.labelDataIndex;
-    const labelDimIndex = opt.labelDimIndex;
-
     const showNormal = normalModel.getShallow('show');
     const showEmphasis = emphasisModel.getShallow('show');
 
     let richText = isSetOnText ? targetEl as ZRText : null;
     if (showNormal || showEmphasis) {
-        let baseText;
-        if (labelFetcher) {
-            baseText = labelFetcher.getFormattedLabel(
-                labelDataIndex, 'normal', null, labelDimIndex,
-                normalModel.get('formatter')
-            );
-        }
-        if (baseText == null) {
-            baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
-        }
-        const normalStyleText = baseText;
-        const emphasisStyleText = retrieve2(
-            labelFetcher
-                ? labelFetcher.getFormattedLabel(
-                    labelDataIndex, 'emphasis', null, labelDimIndex,
-                    emphasisModel.get('formatter')
-                )
-                : null,
-            baseText
-        );
-
         if (!isSetOnText) {
             // Reuse the previous
             richText = targetEl.getTextContent();
@@ -785,8 +811,9 @@ function setLabelStyle<LDI>(
         // auto slient is those cases.
         richText.silent = !!normalModel.getShallow('silent');
 
-        normalStyle.text = normalStyleText;
-        emphasisState.style.text = emphasisStyleText;
+        const labelText = getLabelText(opt, normalModel, emphasisModel);
+        normalStyle.text = labelText.normal;
+        emphasisState.style.text = labelText.emphasis;
 
         // Keep x and y
         if (richText.style.x != null) {
@@ -831,9 +858,10 @@ export function createTextStyle(
 export function createTextConfig(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'getTextPosition' | 'defaultOutsidePosition' | 'inheritColor'>,
+    opt?: Pick<TextCommonParams, 'defaultOutsidePosition' | 'inheritColor'>,
     isNotNormal?: boolean
 ) {
+    opt = opt || {};
     const textConfig: ElementTextConfig = {};
     let labelPosition;
     let labelRotate = textStyleModel.getShallow('rotate');
@@ -842,16 +870,11 @@ export function createTextConfig(
     );
     const labelOffset = textStyleModel.getShallow('offset');
 
-    if (opt.getTextPosition) {
-        labelPosition = opt.getTextPosition(textStyleModel, isNotNormal);
-    }
-    else {
-        labelPosition = textStyleModel.getShallow('position')
-            || (isNotNormal ? null : 'inside');
-        // 'outside' is not a valid zr textPostion value, but used
-        // in bar series, and magic type should be considered.
-        labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
-    }
+    labelPosition = textStyleModel.getShallow('position')
+        || (isNotNormal ? null : 'inside');
+    // 'outside' is not a valid zr textPostion value, but used
+    // in bar series, and magric type should be considered.
+    labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
 
     if (labelPosition != null) {
         textConfig.position = labelPosition;
@@ -1091,7 +1114,10 @@ function setTokenTextStyle(
     }
 }
 
-export function getFont(opt: LabelOption, ecModel: GlobalModel) {
+export function getFont(
+    opt: Pick<TextCommonOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>,
+    ecModel: GlobalModel
+) {
     const gTextStyleModel = ecModel && ecModel.getModel('textStyle');
     return trim([
         // FIXME in node-canvas fontWeight is before fontStyle
@@ -1102,6 +1128,13 @@ export function getFont(opt: LabelOption, ecModel: GlobalModel) {
     ].join(' '));
 }
 
+type AnimateOrSetPropsOption = {
+    dataIndex?: number;
+    cb?: () => void;
+    during?: (percent: number) => void;
+    isFrom?: boolean;
+};
+
 function animateOrSetProps<Props>(
     isUpdate: boolean,
     el: Element<Props>,
@@ -1109,12 +1142,21 @@ function animateOrSetProps<Props>(
     animatableModel?: Model<AnimationOptionMixin> & {
         getAnimationDelayParams?: (el: Element<Props>, dataIndex: number) => AnimationDelayCallbackParam
     },
-    dataIndex?: number | (() => void),
-    cb?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
 ) {
+    let isFrom = false;
     if (typeof dataIndex === 'function') {
+        during = cb;
         cb = dataIndex;
         dataIndex = null;
+    }
+    else if (isObject(dataIndex)) {
+        cb = dataIndex.cb;
+        during = dataIndex.during;
+        isFrom = dataIndex.isFrom;
+        dataIndex = dataIndex.dataIndex;
     }
     // Do not check 'animation' property directly here. Consider this case:
     // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
@@ -1144,20 +1186,32 @@ function animateOrSetProps<Props>(
         }
 
         duration > 0
-            ? el.animateTo(props, {
-                duration,
-                delay: animationDelay || 0,
-                easing: animationEasing,
-                done: cb,
-                setToFinal: true,
-                force: !!cb
-            })
-            : (el.stopAnimation(), el.attr(props), cb && cb());
+            ? (
+                isFrom
+                    ? el.animateFrom(props, {
+                        duration,
+                        delay: animationDelay || 0,
+                        easing: animationEasing,
+                        done: cb,
+                        force: !!cb || !!during,
+                        during: during
+                    })
+                    : el.animateTo(props, {
+                        duration,
+                        delay: animationDelay || 0,
+                        easing: animationEasing,
+                        done: cb,
+                        force: !!cb || !!during,
+                        setToFinal: true,
+                        during: during
+                    })
+            )
+            : (el.stopAnimation(), el.attr(props), cb && (cb as AnimateOrSetPropsOption['cb'])());
     }
     else {
         el.stopAnimation();
-        el.attr(props);
-        cb && cb();
+        !isFrom && el.attr(props);
+        cb && (cb as AnimateOrSetPropsOption['cb'])();
     }
 }
 
@@ -1182,10 +1236,11 @@ function updateProps<Props>(
     props: Props,
     // TODO: TYPE AnimatableModel
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number | (() => void),
-    cb?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
+    animateOrSetProps(true, el, props, animatableModel, dataIndex, cb, during);
 }
 
 export {updateProps};
@@ -1202,10 +1257,108 @@ export function initProps<Props>(
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number | (() => void),
-    cb?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
+    animateOrSetProps(false, el, props, animatableModel, dataIndex, cb, during);
+}
+
+function animateOrSetLabel<Props extends PathProps>(
+    isUpdate: boolean,
+    el: Element<Props>,
+    data: List,
+    dataIndex: number,
+    labelModel: Model<LabelOption>,
+    seriesModel: SeriesModel,
+    animatableModel?: Model<AnimationOptionMixin>,
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
+) {
+    const element = el as Element<Props> & { __value: ParsedValue[] | ParsedValue };
+    const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
+    if (valueAnimationEnabled) {
+        const precisionOption = labelModel.get('precision');
+        let precision: number = precisionOption === 'auto' ? 0 : precisionOption;
+
+        let interpolateValues: (number | string)[] | (number | string);
+        const rawValues = seriesModel.getRawValue(dataIndex);
+        let isRawValueNumber = false;
+        if (typeof rawValues === 'number') {
+            isRawValueNumber = true;
+            interpolateValues = rawValues;
+        }
+        else {
+            interpolateValues = [];
+            for (let i = 0; i < (rawValues as []).length; ++i) {
+                const info = data.getDimensionInfo(i);
+                if (info.type !== 'ordinal') {
+                    interpolateValues.push((rawValues as [])[i]);
+                }
+            }
+        }
+
+        const during = (percent: number) => {
+            let interpolated;
+            if (isRawValueNumber) {
+                const value = interpolateNumber(0, interpolateValues as number, percent);
+                interpolated = numberUtil.round(value, precision);
+            }
+            else {
+                interpolated = [];
+                for (let i = 0, j = 0; i < (rawValues as []).length; ++i) {
+                    const info = data.getDimensionInfo(i);
+                    // Don't interpolate ordinal dims
+                    if (info.type === 'ordinal') {
+                        interpolated[i] = (rawValues as [])[i];
+                    }
+                    else {
+                        const value = interpolateNumber(0, (interpolateValues as number[])[i], percent);
+                        interpolated[i] = numberUtil.round(value), precision;
+                        ++j;
+                    }
+                }
+            }
+            const text = el.getTextContent();
+            if (text) {
+                const labelText = getLabelText({
+                    labelDataIndex: dataIndex,
+                    labelFetcher: seriesModel,
+                    defaultText: defaultTextGetter
+                        ? defaultTextGetter(interpolated)
+                        : interpolated + ''
+                }, labelModel, null, interpolated);
+                text.style.text = labelText.normal;
+                text.dirty();
+            }
+        };
+
+        const props: ElementProps = {};
+        animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, null, during);
+    }
+}
+
+export function updateLabel<Props>(
+    el: Element<Props>,
+    data: List,
+    dataIndex: number,
+    labelModel: Model<LabelOption>,
+    seriesModel: SeriesModel,
+    animatableModel?: Model<AnimationOptionMixin>,
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
+) {
+    animateOrSetLabel(true, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
+}
+
+export function initLabel<Props>(
+    el: Element<Props>,
+    data: List,
+    dataIndex: number,
+    labelModel: Model<LabelOption>,
+    seriesModel: SeriesModel,
+    animatableModel?: Model<AnimationOptionMixin>,
+    defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
+) {
+    animateOrSetLabel(false, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 /**

@@ -50,7 +50,8 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
         const model = this.model;
         const title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
-        const type = model.get('type', true) || 'png';
+        const isSvg = api.getZr().painter.getType() === 'svg';
+        const type = isSvg ? 'svg' : model.get('type', true) || 'png';
         const url = api.getConnectedDataURL({
             type: type,
             backgroundColor: model.get('backgroundColor', true)

@@ -109,6 +109,7 @@ export interface ECElement extends Element {
 
     highlighted?: boolean;
     selected?: boolean;
+    z2EmphasisLift?: number;
 }
 
 export interface DataHost {
@@ -245,6 +246,10 @@ export type TooltipRenderMode = 'html' | 'richText';
 // Check `convertDataValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
+export type OrdinalSortInfo = {
+    ordinalNumber: OrdinalNumber,
+    beforeSortIndex: number
+};
 export type ParsedValueNumeric = number | OrdinalNumber;
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // FIXME:TS better name?
@@ -425,6 +430,7 @@ export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
 export type DisplayState = 'normal' | 'emphasis';
+export type DisplayStateNonNormal = 'emphasis';
 export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
     [key: string]: any
@@ -621,6 +627,7 @@ export interface RoamOptionMixin {
 // TODO: TYPE value type?
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
+export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -635,7 +642,8 @@ export interface SymbolOptionMixin<T = unknown> {
      */
     symbolSize?: number | number[] | (unknown extends T ? never : SymbolSizeCallback<T>)
 
-    symbolRotate?: number
+    symbolRotate?: number | (unknown extends T ? never : SymbolRotateCallback<T>)
+
     symbolKeepAspect?: boolean
 
     symbolOffset?: number[]
@@ -768,6 +776,8 @@ export interface LabelOption extends TextCommonOption {
 
     overflow?: TextStyleProps['overflow']
     silent?: boolean
+    precision?: number | 'auto'
+    valueAnimation?: boolean
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)
@@ -1211,6 +1221,6 @@ export interface SeriesSamplingOptionMixin {
 export interface SeriesEncodeOptionMixin {
     datasetIndex?: number;
     seriesLayoutBy?: SeriesLayoutBy;
-    dimentions?: DimensionName[];
+    dimensions?: DimensionName[];
     encode?: OptionEncode
 }

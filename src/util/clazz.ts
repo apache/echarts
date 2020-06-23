@@ -101,11 +101,12 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         // calling the super constructor.
         function ExtendedClass(this: any, ...args: any[]) {
             if (!proto.$constructor) {
-                try {
-                    // Will throw error if superClass is a es6 native class.
-                    superClass.apply(this, args);
+
+                if (!isESClass(superClass)) {
+                    // Will throw error if superClass is an es6 native class.
+                    superClass.apply(this, arguments);
                 }
-                catch (e) {
+                else {
                     const ins = zrUtil.createObject(
                         // @ts-ignore
                         ExtendedClass.prototype, new superClass(...args)
@@ -116,7 +117,7 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
             else {
                 proto.$constructor.apply(this, arguments);
             }
-        };
+        }
         ExtendedClass[IS_EXTENDED_CLASS] = true;
 
         zrUtil.extend(ExtendedClass.prototype, proto);
@@ -129,6 +130,11 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
 
         return ExtendedClass as unknown as ExtendableConstructor;
     };
+}
+
+function isESClass(fn: unknown): boolean {
+    return typeof fn === 'function'
+        && /^class\s/.test(Function.prototype.toString.call(fn));
 }
 
 /**

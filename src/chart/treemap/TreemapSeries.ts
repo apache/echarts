@@ -35,6 +35,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
+import List from '../../data/List';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -349,15 +350,25 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         let levels = option.levels || [];
 
         levels = option.levels = setDefault(levels, ecModel);
-
-        const treeOption = {
-            levels
-        };
+        const levelModels = zrUtil.map(levels || [], function (levelDefine) {
+            return new Model(levelDefine, this, ecModel);
+        }, this);
 
         // Make sure always a new tree is created when setOption,
         // in TreemapView, we check whether oldTree === newTree
         // to choose mappings approach among old shapes and new shapes.
-        return Tree.createTree(root, this, treeOption).data;
+        const tree = Tree.createTree(root, this, null, beforeLink);
+
+        function beforeLink(nodeData: List) {
+            nodeData.wrapMethod('getItemModel', function (model, idx) {
+                const node = tree.getNodeByDataIndex(idx);
+                const levelModel = levelModels[node.depth];
+                levelModel && (model.parentModel = levelModel);
+                return model;
+            });
+        }
+
+        return tree.data;
     }
 
     optionUpdated() {

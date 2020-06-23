@@ -33,6 +33,8 @@ import {
 import ComponentView from '../view/Component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
+import {windowOpen} from '../util/format';
+
 
 export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
     show?: boolean
@@ -179,12 +181,12 @@ class TitleView extends ComponentView {
 
         if (link) {
             textEl.on('click', function () {
-                window.open(link, '_' + titleModel.get('target'));
+                windowOpen(link, '_' + titleModel.get('target'));
             });
         }
         if (sublink) {
             subTextEl.on('click', function () {
-                window.open(sublink, '_' + titleModel.get('subtarget'));
+                windowOpen(link, '_' + titleModel.get('subtarget'));
             });
         }
 

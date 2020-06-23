@@ -17,11 +17,19 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {formatTpl} from '../../util/format';
-import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor } from '../../util/types';
+import {
+    DataHost,
+    DisplayState,
+    TooltipRenderMode,
+    CallbackDataParams,
+    ColorString,
+    ZRColor,
+    OptionDataValue
+} from '../../util/types';
 import GlobalModel from '../Global';
-import Element from 'zrender/src/Element';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
@@ -33,6 +41,7 @@ interface DataFormatMixin extends DataHost {
     componentIndex: number;
     id: string;
     name: string;
+    animatedValue: OptionDataValue[];
 }
 
 class DataFormatMixin {
@@ -42,8 +51,7 @@ class DataFormatMixin {
      */
     getDataParams(
         dataIndex: number,
-        dataType?: string,
-        el?: Element // May be used in override.
+        dataType?: string
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
@@ -96,12 +104,18 @@ class DataFormatMixin {
         status?: DisplayState,
         dataType?: string,
         labelDimIndex?: number,
-        formatter?: string | ((params: object) => string)
+        formatter?: string | ((params: object) => string),
+        extendParams?: Partial<CallbackDataParams>
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
 
         const params = this.getDataParams(dataIndex, dataType);
+
+        if (extendParams) {
+            zrUtil.extend(params, extendParams);
+        }
+
         if (labelDimIndex != null && (params.value instanceof Array)) {
             params.value = params.value[labelDimIndex];
         }

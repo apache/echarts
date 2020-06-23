@@ -45,6 +45,7 @@ text {
 <svg width="960" height="960"><g transform="translate(1,1)"></g></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="../dist/echarts.js"></script>
+<script src="./lib/testHelper.js"></script>
 <script>
 
 var stratify = d3.stratify()
@@ -105,6 +106,8 @@ d3.csv("data/flare.csv", function(error, rawData) {
             nodeName = nodePath.slice(nodePath.lastIndexOf('.') + 1).split(/(?=[A-Z][^A-Z])/g).join('\n');
             nodeName = echarts.format.truncateText(nodeName, itemLayout.r, textFont, '.');
         }
+        var z2 = api.value(1) * 2;
+        // console.log(api.style());
 
         return {
             type: 'circle',
@@ -113,19 +116,35 @@ d3.csv("data/flare.csv", function(error, rawData) {
                 cy: itemLayout.y,
                 r: itemLayout.r
             },
-            z2: api.value(1) * 2,
-            style: api.style({
+            z2: z2,
+            textContent: {
+                type: 'text',
+                style: {
+                    text: nodeName,
+                    // fill: 'blue'
+                },
+                emphasis: {
+                    style: {
+                        fontSize: 16,
+                        // fill: 'red'
+                    }
+                }
+            },
+            textConfig: {
+                position: 'inside'
+            },
+            style: {
+                fill: api.visual('color'),
                 text: nodeName,
-                textFont: textFont,
-                textPosition: 'inside'
-            }),
-            styleEmphasis: api.style({
-                text: nodeName,
-                textPosition: 'inside',
-                textFont: textFont,
-                stroke: 'rgba(0,0,0,0.5)',
-                lineWidth: 3
-            })
+                font: textFont,
+            },
+            emphasis: {
+                style: {
+                    font: textFont,
+                    stroke: 'rgba(0,0,0,0.5)',
+                    lineWidth: 3
+                }
+            }
         };
     }
 
@@ -164,6 +183,13 @@ d3.csv("data/flare.csv", function(error, rawData) {
     };
 
     chart.setOption(option);
+
+    // testHelper.printElements(chart, {
+    //     attr: ['z', 'z2', 'style.text', 'style.fill', 'style.stroke'],
+    //     filter: function (el) {
+    //         return el.style && el.style.text;
+    //     }
+    // });
 
 });
 

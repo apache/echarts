@@ -246,3 +246,19 @@ export function capitalFirst(str: string): string {
 
 
 export {truncateText} from 'zrender/src/graphic/helper/parseText';
+
+/**
+ * open new tab
+ * @param link url
+ * @param target blank or self
+ */
+export function windowOpen(link: string, target: string): void {
+    if (target === '_blank' || target === 'blank') {
+        const blank = window.open();
+        blank.opener = null;
+        blank.location.href = link;
+    }
+    else {
+        window.open(link, target);
+    }
+}

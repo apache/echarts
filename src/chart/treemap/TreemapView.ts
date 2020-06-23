@@ -47,6 +47,8 @@ import {
     TreemapZoomToNodePayload
 } from './treemapAction';
 import { ColorString } from '../../util/types';
+import { windowOpen } from '../../util/format';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
@@ -588,7 +590,7 @@ class TreemapView extends ChartView {
                     const itemModel = node.hostTree.data.getItemModel<TreeSeriesNodeItemOption>(node.dataIndex);
                     const link = itemModel.get('link', true);
                     const linkTarget = itemModel.get('target', true) || 'blank';
-                    link && window.open(link, linkTarget);
+                    link && windowOpen(link, linkTarget);
                 }
             }
 
@@ -782,7 +784,7 @@ function renderNode(
 
     // Background
     const bg = giveGraphic('background', Rect, depth, Z_BG);
-    bg && renderBackground(group, bg, isParent && thisLayout.upperHeight);
+    bg && renderBackground(group, bg, isParent && thisLayout.upperLabelHeight);
 
     // No children, render content.
     if (isParent) {
@@ -936,14 +938,21 @@ function renderNode(
             rectEl, normalLabelModel, emphasisLabelModel,
             {
                 defaultText: isShow ? text : null,
-                inheritColor: visualColor
+                inheritColor: visualColor,
+                labelFetcher: seriesModel,
+                labelDataIndex: thisNode.dataIndex
             }
         );
 
         const textEl = rectEl.getTextContent();
-        textEl.style.overflow = 'truncate';
-        textEl.style.truncateMinChar = 2;
-        textEl.style.width = width;
+        const textStyle = textEl.style;
+        textStyle.overflow = 'truncate';
+        textStyle.truncateMinChar = 2;
+        textStyle.width = width;
+
+        addDrillDownIcon(textStyle, upperLabelRect, thisLayout);
+        const textEmphasisState = textEl.getState('emphasis');
+        addDrillDownIcon(textEmphasisState ? textEmphasisState.style : null, upperLabelRect, thisLayout);
 
         // TODOTODO
         // upperLabelRect && (normalStyle.textRect = clone(upperLabelRect));
@@ -955,6 +964,14 @@ function renderNode(
         //         minChar: 2
         //     }
         //     : null;
+    }
+
+    function addDrillDownIcon(style: TextStyleProps, upperLabelRect: RectLike, thisLayout: any) {
+        const text = style ? style.text : null;
+        if (!upperLabelRect && thisLayout.isLeafRoot && text != null) {
+            const iconChar = seriesModel.get('drillDownIcon', true);
+            style.text = iconChar ? iconChar + ' ' + text : text;
+        }
     }
 
     function giveGraphic<T extends graphic.Group | graphic.Rect>(

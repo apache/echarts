@@ -200,7 +200,6 @@ class Symbol extends graphic.Group {
         const seriesModel = data.hostModel as SeriesModel;
 
         let hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
-        let symbolRotate = seriesScope && seriesScope.symbolRotate;
         let symbolOffset = seriesScope && seriesScope.symbolOffset;
         let labelModel = seriesScope && seriesScope.labelModel;
         let hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
@@ -213,7 +212,6 @@ class Symbol extends graphic.Group {
 
             hoverItemStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
-            symbolRotate = itemModel.getShallow('symbolRotate');
             symbolOffset = itemModel.getShallow('symbolOffset');
 
             labelModel = itemModel.getModel(normalLabelAccessPath);
@@ -221,6 +219,8 @@ class Symbol extends graphic.Group {
             hoverAnimation = itemModel.getShallow('hoverAnimation');
             cursorStyle = itemModel.getShallow('cursor');
         }
+
+        const symbolRotate = data.getItemVisual(idx, 'symbolRotate');
 
         symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 

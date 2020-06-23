@@ -17,12 +17,10 @@
 * under the License.
 */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import OrdinalScale from '../scale/Ordinal';
 import IntervalScale from '../scale/Interval';
 import Scale from '../scale/Scale';
-import * as numberUtil from '../util/number';
 import {
     prepareLayoutBarSeries,
     makeColumnLayout,
@@ -37,118 +35,31 @@ import LogScale from '../scale/Log';
 import Axis from './Axis';
 import { AxisBaseOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
+import List from '../data/List';
+import { getStackedDimension } from '../data/helper/dataStackHelper';
+import { Dictionary, ScaleDataValue, DimensionName } from '../util/types';
+import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
+
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
 
 /**
  * Get axis scale extent before niced.
  * Item of returned array can only be number (including Infinity and NaN).
+ *
+ * Caution:
+ * Precondition of calling this method:
+ * The scale extent has been initailized using series data extent via
+ * `scale.setExtent` or `scale.unionExtentFromData`;
  */
 export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
     const scaleType = scale.type;
+    const rawExtentResult = ensureScaleRawExtentInfo(scale, model, scale.getExtent()).calculate();
 
-    let min = model.getMin();
-    let max = model.getMax();
-    const fixMin = min != null;
-    const fixMax = max != null;
-    const originalExtent = scale.getExtent();
+    scale.setBlank(rawExtentResult.isBlank);
 
-    let axisDataLen;
-    let boundaryGapInner: number[];
-    let span;
-    if (scaleType === 'ordinal') {
-        axisDataLen = model.getCategories().length;
-    }
-    else {
-        const boundaryGap = model.get('boundaryGap');
-        const boundaryGapArr = zrUtil.isArray(boundaryGap)
-            ? boundaryGap : [boundaryGap || 0, boundaryGap || 0];
-
-        if (typeof boundaryGapArr[0] === 'boolean' || typeof boundaryGapArr[1] === 'boolean') {
-            if (__DEV__) {
-                console.warn('Boolean type for boundaryGap is only '
-                    + 'allowed for ordinal axis. Please use string in '
-                    + 'percentage instead, e.g., "20%". Currently, '
-                    + 'boundaryGap is set to be 0.');
-            }
-            boundaryGapInner = [0, 0];
-        }
-        else {
-            boundaryGapInner = [
-                numberUtil.parsePercent(boundaryGapArr[0], 1),
-                numberUtil.parsePercent(boundaryGapArr[1], 1)
-            ];
-        }
-        span = (originalExtent[1] - originalExtent[0])
-            || Math.abs(originalExtent[0]);
-    }
-
-    // Notice: When min/max is not set (that is, when there are null/undefined,
-    // which is the most common case), these cases should be ensured:
-    // (1) For 'ordinal', show all axis.data.
-    // (2) For others:
-    //      + `boundaryGap` is applied (if min/max set, boundaryGap is
-    //      disabled).
-    //      + If `needCrossZero`, min/max should be zero, otherwise, min/max should
-    //      be the result that originalExtent enlarged by boundaryGap.
-    // (3) If no data, it should be ensured that `scale.setBlank` is set.
-
-    // FIXME
-    // (1) When min/max is 'dataMin' or 'dataMax', should boundaryGap be able to used?
-    // (2) When `needCrossZero` and all data is positive/negative, should it be ensured
-    // that the results processed by boundaryGap are positive/negative?
-
-    if (min == null) {
-        min = scaleType === 'ordinal'
-            ? (axisDataLen ? 0 : NaN)
-            : originalExtent[0] - boundaryGapInner[0] * span;
-    }
-    if (max == null) {
-        max = scaleType === 'ordinal'
-            ? (axisDataLen ? axisDataLen - 1 : NaN)
-            : originalExtent[1] + boundaryGapInner[1] * span;
-    }
-
-    if (min === 'dataMin') {
-        min = originalExtent[0];
-    }
-    else if (typeof min === 'function') {
-        min = min({
-            min: originalExtent[0],
-            max: originalExtent[1]
-        });
-    }
-
-    if (max === 'dataMax') {
-        max = originalExtent[1];
-    }
-    else if (typeof max === 'function') {
-        max = max({
-            min: originalExtent[0],
-            max: originalExtent[1]
-        });
-    }
-
-    (min == null || !isFinite(min)) && (min = NaN);
-    (max == null || !isFinite(max)) && (max = NaN);
-
-    scale.setBlank(
-        zrUtil.eqNaN(min)
-        || zrUtil.eqNaN(max)
-        || ((scale instanceof OrdinalScale) && !scale.getOrdinalMeta().categories.length)
-    );
-
-    // Evaluate if axis needs cross zero
-    if (model.getNeedCrossZero()) {
-        // Axis is over zero and min is not set
-        if (min > 0 && max > 0 && !fixMin) {
-            min = 0;
-        }
-        // Axis is under zero and max is not set
-        if (min < 0 && max < 0 && !fixMax) {
-            max = 0;
-        }
-    }
+    let min = rawExtentResult.min;
+    let max = rawExtentResult.max;
 
     // If bars are placed on a base axis of type time or interval account for axis boundary overflow and current axis
     // is base axis
@@ -180,7 +91,13 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
         }
     }
 
-    return [min, max];
+    return {
+        extent: [min, max],
+        // "fix" means "fixed", the value should not be
+        // changed in the subsequent steps.
+        fixMin: rawExtentResult.minFixed,
+        fixMax: rawExtentResult.maxFixed
+    };
 }
 
 function adjustScaleForOverflow(
@@ -223,10 +140,12 @@ function adjustScaleForOverflow(
     return {min: min, max: max};
 }
 
+// Precondition of calling this method:
+// The scale extent has been initailized using series data extent via
+// `scale.setExtent` or `scale.unionExtentFromData`;
 export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
-    const extent = getScaleExtent(scale, model);
-    const fixMin = model.getMin() != null;
-    const fixMax = model.getMax() != null;
+    const extentInfo = getScaleExtent(scale, model);
+    const extent = extentInfo.extent;
     const splitNumber = model.get('splitNumber');
 
     if (scale instanceof LogScale) {
@@ -237,8 +156,8 @@ export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
     scale.setExtent(extent[0], extent[1]);
     scale.niceExtent({
         splitNumber: splitNumber,
-        fixMin: fixMin,
-        fixMax: fixMax,
+        fixMin: extentInfo.fixMin,
+        fixMax: extentInfo.fixMax,
         minInterval: (scaleType === 'interval' || scaleType === 'time')
             ? model.get('minInterval') : null,
         maxInterval: (scaleType === 'interval' || scaleType === 'time')
@@ -414,10 +333,36 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
  * Set `categoryInterval` as 0 implicitly indicates that
  * show all labels reguardless of overlap.
  * @param {Object} axis axisModel.axis
- * @return {boolean}
  */
-export function shouldShowAllLabels(axis: Axis) {
+export function shouldShowAllLabels(axis: Axis): boolean {
     return axis.type === 'category'
         && getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
 
+export function getDataDimensionsOnAxis(data: List, axisDim: string): DimensionName[] {
+    // Remove duplicated dat dimensions caused by `getStackedDimension`.
+    const dataDimMap = {} as Dictionary<boolean>;
+    // Currently `mapDimensionsAll` will contian stack result dimension ('__\0ecstackresult').
+    // PENDING: is it reasonable? Do we need to remove the original dim from "coord dim" since
+    // there has been stacked result dim?
+    zrUtil.each(data.mapDimensionsAll(axisDim), function (dataDim) {
+        // For example, the extent of the orginal dimension
+        // is [0.1, 0.5], the extent of the `stackResultDimension`
+        // is [7, 9], the final extent should NOT include [0.1, 0.5],
+        // because there is no graphic corresponding to [0.1, 0.5].
+        // See the case in `test/area-stack.html` `main1`, where area line
+        // stack needs `yAxis` not start from 0.
+        dataDimMap[getStackedDimension(data, dataDim)] = true;
+    });
+    return zrUtil.keys(dataDimMap);
+}
+
+export function unionAxisExtentFromData(dataExtent: number[], data: List, axisDim: string): void {
+    if (data) {
+        zrUtil.each(getDataDimensionsOnAxis(data, axisDim), function (dim) {
+            const seriesExtent = data.getApproximateExtent(dim);
+            seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
+            seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
+        });
+    }
+}

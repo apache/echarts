@@ -44,7 +44,7 @@ type ItemStyleKeys = 'fill'
     | 'shadowOffsetY'
     | 'shadowColor';
 
-type ItemStyleProps = Pick<PathStyleProps, ItemStyleKeys>;
+export type ItemStyleProps = Pick<PathStyleProps, ItemStyleKeys>;
 
 class ItemStyleMixin {
 
@@ -55,7 +55,7 @@ class ItemStyleMixin {
     ): ItemStyleProps {
         const style = getItemStyle(this, excludes, includes);
         const lineDash = this.getBorderLineDash();
-        lineDash && ((style as any).lineDash = lineDash);
+        lineDash && (style.lineDash = lineDash);
         return style;
     }
 

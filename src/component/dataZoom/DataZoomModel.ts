@@ -268,10 +268,10 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
         this._resetTarget();
 
-        this._giveAxisProxies();
+        this._prepareAxisProxies();
     }
 
-    private _giveAxisProxies() {
+    private _prepareAxisProxies() {
         const axisProxies = this._axisProxies;
 
         this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {

@@ -81,17 +81,22 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 
-export const version = '4.6.0';
+export const version = '4.8.0';
 
 export const dependencies = {
-    zrender: '4.2.0'
+    zrender: '4.3.1'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
 
-const PRIORITY_PROCESSOR_FILTER = 1000;
 const PRIORITY_PROCESSOR_SERIES_FILTER = 800;
+// Some data processors depends on the stack result dimension (to calculate data extent).
+// So data stack stage should be in front of data processing stage.
 const PRIORITY_PROCESSOR_DATASTACK = 900;
+// "Data filter" will block the stream, so it should be
+// put at the begining of data processing.
+const PRIORITY_PROCESSOR_FILTER = 1000;
+const PRIORITY_PROCESSOR_DEFAULT = 2000;
 const PRIORITY_PROCESSOR_STATISTIC = 5000;
 
 const PRIORITY_VISUAL_LAYOUT = 1000;
@@ -540,7 +545,7 @@ class ECharts extends Eventful {
     /**
      * Get svg data url
      */
-    getSvgDataUrl(): string {
+    getSvgDataURL(): string {
         if (!env.svgSupported) {
             return;
         }
@@ -552,12 +557,12 @@ class ECharts extends Eventful {
             el.stopAnimation(true);
         });
 
-        return (zr.painter as SVGPainter).pathToDataUrl();
+        return (zr.painter as SVGPainter).toDataURL();
     }
 
     getDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg',
+        type?: 'png' | 'jpg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         // component type array
@@ -587,7 +592,7 @@ class ECharts extends Eventful {
         });
 
         const url = this._zr.painter.getType() === 'svg'
-            ? this.getSvgDataUrl()
+            ? this.getSvgDataURL()
             : this.getRenderedCanvas(opts).toDataURL(
                 'image/' + (opts && opts.type || 'png')
             );
@@ -601,7 +606,7 @@ class ECharts extends Eventful {
 
     getConnectedDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg',
+        type?: 'png' | 'jpg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         connectedBackgroundColor?: ZRColor
@@ -615,6 +620,7 @@ class ECharts extends Eventful {
         if (!env.canvasSupported) {
             return;
         }
+        const isSvg = opts.type === 'svg';
         const groupId = this.group;
         const mathMin = Math.min;
         const mathMax = Math.max;
@@ -624,14 +630,14 @@ class ECharts extends Eventful {
             let top = MAX_NUMBER;
             let right = -MAX_NUMBER;
             let bottom = -MAX_NUMBER;
-            const canvasList: {dom: HTMLCanvasElement, left: number, top: number}[] = [];
+            const canvasList: {dom: HTMLCanvasElement | string, left: number, top: number}[] = [];
             const dpr = (opts && opts.pixelRatio) || 1;
 
             zrUtil.each(instances, function (chart, id) {
                 if (chart.group === groupId) {
-                    const canvas = chart.getRenderedCanvas(
-                        zrUtil.clone(opts)
-                    );
+                    const canvas = isSvg
+                        ? (chart.getZr().painter as SVGPainter).getSvgDom().innerHTML
+                        : chart.getRenderedCanvas(zrUtil.clone(opts));
                     const boundingRect = chart.getDom().getBoundingClientRect();
                     left = mathMin(boundingRect.left, left);
                     top = mathMin(boundingRect.top, top);
@@ -652,38 +658,61 @@ class ECharts extends Eventful {
             const width = right - left;
             const height = bottom - top;
             const targetCanvas = zrUtil.createCanvas();
-            targetCanvas.width = width;
-            targetCanvas.height = height;
-            const zr = zrender.init(targetCanvas);
-
-            // Background between the charts
-            if (opts.connectedBackgroundColor) {
-                zr.add(new graphic.Rect({
-                    shape: {
-                        x: 0,
-                        y: 0,
-                        width: width,
-                        height: height
-                    },
-                    style: {
-                        fill: opts.connectedBackgroundColor
-                    }
-                }));
-            }
-
-            each(canvasList, function (item) {
-                const img = new graphic.Image({
-                    style: {
-                        x: item.left * dpr - left,
-                        y: item.top * dpr - top,
-                        image: item.dom
-                    }
-                });
-                zr.add(img);
+            const zr = zrender.init(targetCanvas, {
+                renderer: isSvg ? 'svg' : 'canvas'
             });
-            zr.refreshImmediately();
+            zr.resize({
+                width: width,
+                height: height
+            });
 
-            return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+            if (isSvg) {
+                let content = '';
+                each(canvasList, function (item) {
+                    const x = item.left - left;
+                    const y = item.top - top;
+                    content += '<g transform="translate(' + x + ','
+                        + y + ')">' + item.dom + '</g>';
+                });
+                (zr.painter as SVGPainter).getSvgRoot().innerHTML = content;
+
+                if (opts.connectedBackgroundColor) {
+                    (zr.painter as SVGPainter).setBackgroundColor(opts.connectedBackgroundColor as string);
+                }
+
+                zr.refreshImmediately();
+                return (zr.painter as SVGPainter).toDataURL();
+            }
+            else {
+                // Background between the charts
+                if (opts.connectedBackgroundColor) {
+                    zr.add(new graphic.Rect({
+                        shape: {
+                            x: 0,
+                            y: 0,
+                            width: width,
+                            height: height
+                        },
+                        style: {
+                            fill: opts.connectedBackgroundColor
+                        }
+                    }));
+                }
+
+                each(canvasList, function (item) {
+                    const img = new graphic.Image({
+                        style: {
+                            x: item.left * dpr - left,
+                            y: item.top * dpr - top,
+                            image: item.dom
+                        }
+                    });
+                    zr.add(img);
+                });
+                zr.refreshImmediately();
+
+                return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+            }
         }
         else {
             return this.getDataURL(opts);
@@ -1623,9 +1652,9 @@ class ECharts extends Eventful {
          * (5) no delayed setOption needs to be processed.
          */
         bindRenderedEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
-            zr.on('rendered', function () {
+            zr.on('rendered', function (params) {
 
-                ecIns.trigger('rendered');
+                ecIns.trigger('rendered', params);
 
                 // The `finished` event should not be triggered repeatly,
                 // so it should only be triggered when rendering indeed happend
@@ -1815,6 +1844,9 @@ class ECharts extends Eventful {
         };
 
         function updateZ(model: ComponentModel, view: ComponentView | ChartView): void {
+            if (model.preventAutoZ) {
+                return;
+            }
             const z = model.get('z');
             const zlevel = model.get('zlevel');
             // Set z and zlevel
@@ -1829,6 +1861,7 @@ class ECharts extends Eventful {
                         textContent.z = el.z;
                         textContent.zlevel = el.zlevel;
                         // lift z2 of text content
+                        // TODO if el.emphasis.z2 is spcefied, what about textContent.
                         textContent.z2 = el.z2 + 1;
                     }
                 }
@@ -2214,7 +2247,7 @@ export function registerProcessor(
     priority: number | StageHandler | StageHandlerOverallReset,
     processor?: StageHandler | StageHandlerOverallReset
 ): void {
-    normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_FILTER);
+    normalizeRegister(dataProcessorFuncs, priority, processor, PRIORITY_PROCESSOR_DEFAULT);
 }
 
 /**
