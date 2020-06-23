@@ -192,7 +192,7 @@ TooltipRichContent.prototype = {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
             }

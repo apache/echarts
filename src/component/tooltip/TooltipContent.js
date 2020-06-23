@@ -285,10 +285,10 @@ TooltipContent.prototype = {
 
         el.style.display = el.innerHTML ? 'block' : 'none';
 
-        // If mouse occsionally move over the tooltip, a mouseout event will be
-        // triggered by canvas, and cuase some unexpectable result like dragging
+        // If mouse occasionally move over the tooltip, a mouseout event will be
+        // triggered by canvas, and cause some unexpectable result like dragging
         // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
-        // it. Although it is not suppored by IE8~IE10, fortunately it is a rare
+        // it. Although it is not supported by IE8~IE10, fortunately it is a rare
         // scenario.
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
@@ -326,7 +326,7 @@ TooltipContent.prototype = {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
             }
