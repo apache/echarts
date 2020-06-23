@@ -145,6 +145,8 @@ function makeStyleCoord(out, zr, appendToBody, zrX, zrY) {
             out[1] += viewportRootOffset.offsetTop;
         }
     }
+    out[2] = out[0] / zr.getWidth(); // The ratio of left to width
+    out[3] = out[1] / zr.getHeight(); // The ratio of top to height
 }
 
 /**
@@ -169,7 +171,7 @@ function TooltipContent(container, api, opt) {
     var zr = this._zr = api.getZr();
     var appendToBody = this._appendToBody = opt && opt.appendToBody;
 
-    this._styleCoord = [0, 0];
+    this._styleCoord = [0, 0, 0, 0]; // [left, top, left/width, top/height]
 
     makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
 
@@ -240,7 +242,7 @@ TooltipContent.prototype = {
     /**
      * Update when tooltip is rendered
      */
-    update: function () {
+    update: function (tooltipModel) {
         // FIXME
         // Move this logic to ec main?
         var container = this._container;
@@ -250,9 +252,23 @@ TooltipContent.prototype = {
         if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
             domStyle.position = 'relative';
         }
+        var alwaysShowContent = tooltipModel.get('alwaysShowContent');
+        alwaysShowContent && this._moveTooltipIfResized();
         // Hide the tooltip
         // PENDING
         // this.hide();
+    },
+
+    /**
+     * when `alwaysShowContent` is true,
+     * we should move the tooltip after chart resized
+     */
+    _moveTooltipIfResized: function () {
+        var ratioX = this._styleCoord[2]; // The ratio of left to width
+        var ratioY = this._styleCoord[3]; // The ratio of top to height
+        var realX = ratioX * this._zr.getWidth();
+        var realY = ratioY * this._zr.getHeight();
+        this.moveTo(realX, realY);
     },
 
     show: function (tooltipModel) {
@@ -269,10 +285,10 @@ TooltipContent.prototype = {
 
         el.style.display = el.innerHTML ? 'block' : 'none';
 
-        // If mouse occsionally move over the tooltip, a mouseout event will be
-        // triggered by canvas, and cuase some unexpectable result like dragging
+        // If mouse occasionally move over the tooltip, a mouseout event will be
+        // triggered by canvas, and cause some unexpectable result like dragging
         // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
-        // it. Although it is not suppored by IE8~IE10, fortunately it is a rare
+        // it. Although it is not supported by IE8~IE10, fortunately it is a rare
         // scenario.
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
@@ -310,7 +326,7 @@ TooltipContent.prototype = {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
             }
