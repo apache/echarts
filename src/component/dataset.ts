@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * This module is imported by echarts directly.
  *
@@ -31,36 +29,41 @@
 import ComponentModel from '../model/Component';
 import ComponentView from '../view/Component';
 import {detectSourceFormat} from '../data/helper/sourceHelper';
-import { SERIES_LAYOUT_BY_COLUMN } from '../util/types';
+import {
+    SERIES_LAYOUT_BY_COLUMN, ComponentOption, SeriesEncodeOptionMixin, OptionSourceData, SeriesLayoutBy
+} from '../util/types';
 
-ComponentModel.extend({
 
-    type: 'dataset',
+interface DatasetOption extends
+        Pick<ComponentOption, 'type' | 'id' | 'name'>,
+        Pick<SeriesEncodeOptionMixin, 'dimensions'> {
+    seriesLayoutBy?: SeriesLayoutBy;
+    // null/undefined/'auto': auto detect header, see "src/data/helper/sourceHelper".
+    sourceHeader?: boolean | 'auto';
+    data?: OptionSourceData;
+}
 
-    /**
-     * @protected
-     */
-    defaultOption: {
+class DatasetModel extends ComponentModel {
 
-        // 'row', 'column'
-        seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+    type = 'dataset';
+    static type = 'dataset';
 
-        // null/'auto': auto detect header, see "module:echarts/data/helper/sourceHelper"
-        sourceHeader: null,
+    static defaultOption: DatasetOption = {
+        seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN
+    };
 
-        dimensions: null,
-
-        source: null
-    },
-
-    optionUpdated: function () {
+    optionUpdated() {
         detectSourceFormat(this);
     }
+}
 
-});
+ComponentModel.registerClass(DatasetModel);
 
-ComponentView.extend({
 
-    type: 'dataset'
+class DatasetView extends ComponentView {
+    static type = 'dataset';
+    type = 'dataset';
+}
 
-});
+ComponentView.registerClass(DatasetView);
+

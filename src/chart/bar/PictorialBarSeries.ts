@@ -109,6 +109,8 @@ export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOpti
 export interface PictorialBarSeriesOption extends BaseBarSeriesOption,
     PictorialBarSeriesSymbolOption,
     SeriesStackOptionMixin {
+    type?: 'pictorialBar'
+
     coordinateSystem?: 'cartesian2d'
 
     data?: (PictorialBarDataItemOption | PictorialBarValue)[]

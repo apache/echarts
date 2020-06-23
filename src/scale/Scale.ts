@@ -21,7 +21,9 @@
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
-import { DimensionName, ScaleDataValue, OptionDataValue } from '../util/types';
+import { DimensionName, ScaleDataValue, OptionDataValue, DimensionLoose } from '../util/types';
+import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
+
 
 abstract class Scale {
 
@@ -32,6 +34,9 @@ abstract class Scale {
     protected _extent: [number, number];
 
     private _isBlank: boolean;
+
+    // Inject
+    readonly rawExtentInfo: ScaleRawExtentInfo;
 
     constructor(setting?: Dictionary<any>) {
         this._setting = setting || {};
@@ -80,7 +85,7 @@ abstract class Scale {
     /**
      * Set extent from data
      */
-    unionExtentFromData(data: List, dim: DimensionName): void {
+    unionExtentFromData(data: List, dim: DimensionName | DimensionLoose): void {
         this.unionExtent(data.getApproximateExtent(dim));
     }
 

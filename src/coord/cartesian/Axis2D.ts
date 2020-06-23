@@ -18,11 +18,12 @@
 */
 
 import Axis from '../Axis';
-import { DimensionName } from '../../util/types';
+import { DimensionName, OrdinalSortInfo } from '../../util/types';
 import Scale from '../../scale/Scale';
 import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
 import { OptionAxisType } from '../axisCommonTypes';
+import OrdinalScale from '../../scale/Ordinal';
 
 
 interface Axis2D {
@@ -110,6 +111,18 @@ class Axis2D extends Axis {
         return this.coordToData(this.toLocalCoord(point[this.dim === 'x' ? 0 : 1]), clamp);
     }
 
+    /**
+     * Set ordinalSortInfo
+     * @param info new OrdinalSortInfo
+     */
+    setCategorySortInfo(info: OrdinalSortInfo[]): boolean {
+        if (this.type !== 'category') {
+            return false;
+        }
+
+        this.model.option.categorySortInfo = info;
+        (this.scale as OrdinalScale).setCategorySortInfo(info);
+    }
 
 }
 

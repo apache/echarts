@@ -25,10 +25,10 @@ import Polar from './Polar';
 import {parsePercent} from '../../util/number';
 import {
     createScaleByModel,
-    niceScaleExtent
+    niceScaleExtent,
+    getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 import CoordinateSystem from '../../CoordinateSystem';
-import {getStackedDimension} from '../../data/helper/dataStackHelper';
 
 import PolarModel from './PolarModel';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -86,15 +86,11 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     ecModel.eachSeries(function (seriesModel) {
         if (seriesModel.coordinateSystem === polar) {
             const data = seriesModel.getData();
-            zrUtil.each(data.mapDimensionsAll('radius'), function (dim) {
-                radiusAxis.scale.unionExtentFromData(
-                    data, getStackedDimension(data, dim)
-                );
+            zrUtil.each(getDataDimensionsOnAxis(data, 'radius'), function (dim) {
+                radiusAxis.scale.unionExtentFromData(data, dim);
             });
-            zrUtil.each(data.mapDimensionsAll('angle'), function (dim) {
-                angleAxis.scale.unionExtentFromData(
-                    data, getStackedDimension(data, dim)
-                );
+            zrUtil.each(getDataDimensionsOnAxis(data, 'angle'), function (dim) {
+                angleAxis.scale.unionExtentFromData(data, dim);
             });
         }
     });

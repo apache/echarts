@@ -24,7 +24,7 @@ import { mixin } from 'zrender/src/core/util';
 import List from '../../data/List';
 import { inheritDefaultOption } from '../../util/component';
 
-interface SliderTimelineOption extends TimelineOption {
+export interface SliderTimelineOption extends TimelineOption {
 }
 
 class SliderTimelineModel extends TimelineModel {
