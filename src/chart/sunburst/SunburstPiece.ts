@@ -231,11 +231,9 @@ class SunburstPiece extends graphic.Sector {
             const sectorState = isNormal ? sector : sector.states[stateName];
             const labelColor = sectorState.style.fill as ColorString;
             sectorState.textConfig = {
+                outsideFill: labelStateModel.get('color') === 'inherit' ? labelColor : null,
                 inside: labelPosition !== 'outside'
             };
-            if (labelColor) {
-                sectorState.textConfig.insideStroke = sectorState.textConfig.outsideFill = labelColor;
-            }
 
             let r;
             const labelPadding = getLabelAttr(labelStateModel, 'distance') || 0;

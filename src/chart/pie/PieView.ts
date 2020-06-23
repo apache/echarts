@@ -26,9 +26,10 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
-import PieSeriesModel, {PieDataItemOption} from './PieSeries';
+import PieSeriesModel, {PieDataItemOption, PieSeriesOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle } from '../../label/labelGuideHelper';
+import Model from '../../model/Model';
 
 function updateDataSelected(
     this: PiePiece,
@@ -176,9 +177,9 @@ class PiePiece extends graphic.Sector {
         const visualColor = style && style.fill as ColorString;
 
         graphic.setLabelStyle(
-            labelText,
-            labelModel,
-            labelHoverModel,
+            sector,
+            labelModel as Model<Omit<PieSeriesOption['label'], 'position' | 'rotate'>>, // position / rotate won't be used.
+            labelHoverModel as Model<Omit<PieSeriesOption['label'], 'position' | 'rotate'>>,
             {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
@@ -193,8 +194,9 @@ class PiePiece extends graphic.Sector {
 
         // Set textConfig on sector.
         sector.setTextConfig({
-            local: true,
-            outsideFill: labelModel.get('color') === 'inherit' ? visualColor : 'auto'
+            // reset position, rotation
+            position: null,
+            rotation: null
         });
 
         // Make sure update style on labelText after setLabelStyle.
