@@ -80,8 +80,6 @@ var LinesSeries = SeriesModel.extend({
     },
 
     mergeOption: function (option) {
-        // The input data may be null/undefined.
-        option.data = option.data || [];
 
         compatEc2(option);
 
