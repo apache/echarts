@@ -148,15 +148,12 @@ under the License.
                 var clusterIdx = api.value(2);
                 var isNewCluster = clusterIdx === api.value(3);
 
-                var shape = {
-                    cx: 0,
-                    cy: 0,
-                    r: 10,
+                var extra = {
                     transition: []
                 };
 
                 var contentColor = colorAll[clusterIdx];
-                addColorTransition(shape, contentColor, 'content');
+                addColorTransition(extra, contentColor, 'content');
                 // var borderColor = isNewCluster ? '#333' : '#fff';
                 // addColorTransition(shape, borderColor, 'border');
 
@@ -167,7 +164,12 @@ under the License.
                     // scaleX: isNewCluster ? 1.2 : 1,
                     // scaleY: isNewCluster ? 1.2 : 1,
                     // transition: ['scaleX', 'scaleY'],
-                    shape: shape,
+                    shape: {
+                        cx: 0,
+                        cy: 0,
+                        r: 10
+                    },
+                    extra: extra,
                     style: {
                         fill: contentColor,
                         stroke: '#333',
@@ -197,10 +199,10 @@ under the License.
 
             function getColorInTransition(apiDuring, key) {
                 var colorArr = [
-                    apiDuring.getShape(key + 'R'),
-                    apiDuring.getShape(key + 'G'),
-                    apiDuring.getShape(key + 'B'),
-                    apiDuring.getShape(key + 'A')
+                    apiDuring.getExtra(key + 'R'),
+                    apiDuring.getExtra(key + 'G'),
+                    apiDuring.getExtra(key + 'B'),
+                    apiDuring.getExtra(key + 'A')
                 ];
                 return echarts.color.stringify(colorArr, 'rgba');
             }
@@ -216,10 +218,16 @@ under the License.
                 return {
                     type: 'circle',
                     shape: {
-                        cx: isNaN(center[0]) ? 0 : center[0],
-                        cy: isNaN(center[1]) ? 0 : center[1],
-                        r: isNaN(radius) ? 0 : radius,
-                        // transition: 'newCluIdx'
+                        cx: 0,
+                        cy: 0,
+                        r: 0
+                    },
+                    extra: {
+                        cxNext: isNaN(center[0]) ? 0 : center[0],
+                        cyNext: isNaN(center[1]) ? 0 : center[1],
+                        rNext: isNaN(radius) ? 0 : radius,
+                        renderNumber: ++renderNumber,
+                        transition: 'renderNumber'
                     },
                     style: {
                         fill: null,
@@ -229,12 +237,118 @@ under the License.
                         // opacity: 0
                     },
                     during: function (apiDuring) {
-                        apiDuring.setShape('cx', Math.random() * 10);
-                        // var cluIdx = apiDuring.setShape('newCluIdx');
-                        // var percent = Math.ceil(cluIdx) - cluIdx;
-                        // var opacity = (Math.ceil(cluIdx) - cluIdx) > 0.5 ?
+                        var currNum = apiDuring.getExtra('renderNumber');
+                        if (apiDuring.getStyle('opacity') < 0.9) {
+                            apiDuring
+                                .setShape('cx', apiDuring.getExtra('cxNext'))
+                                .setShape('cy', apiDuring.getExtra('cyNext'))
+                                .setShape('r', apiDuring.getExtra('rNext'));
+                        }
+                        apiDuring.setStyle('opacity', 1 - (renderNumber - currNum));
                     }
                 };
+
+                // return {
+                //     type: 'group',
+                //     children: [{
+                //         type: 'circle',
+                //         shape: {
+                //             cx: 0,
+                //             cy: 0,
+                //             r: 0,
+                //         },
+                //         extra: {
+                //             renderNumber: ++renderNumber,
+                //             cxNext: isNaN(center[0]) ? 0 : center[0],
+                //             cyNext: isNaN(center[1]) ? 0 : center[1],
+                //             rNext: isNaN(radius) ? 0 : radius,
+                //             transition: 'renderNumber'
+                //         },
+                //         style: {
+                //             fill: null,
+                //             stroke: '#bbb',
+                //             lineDash: [5, 5],
+                //             lineWidth: 3
+                //         },
+                //         during: function (apiDuring) {
+                //             var currNum = apiDuring.getExtra('renderNumber');
+                //             var progress = 0.5 - (renderNumber - currNum);
+                //             if (progress >= 0) {
+                //                 apiDuring
+                //                     .setShape('cx', apiDuring.getExtra('cxNext'))
+                //                     .setShape('cy', apiDuring.getExtra('cyNext'))
+                //                     .setShape('r', apiDuring.getExtra('rNext'));
+                //             }
+                //             var opacity = Math.abs(progress) / 0.5;
+                //             apiDuring.setStyle('opacity', opacity);
+                //         }
+                //     }, {
+                //         type: 'circle',
+                //         shape: {
+                //             cx: 0,
+                //             cy: 0,
+                //             r: 0,
+                //         },
+                //         extra: {
+                //             renderNumber: ++renderNumber,
+                //             cxNext: isNaN(center[0]) ? 0 : center[0],
+                //             cyNext: isNaN(center[1]) ? 0 : center[1],
+                //             rNext: isNaN(radius) ? 0 : radius,
+                //             transition: 'renderNumber'
+                //         },
+                //         style: {
+                //             fill: null,
+                //             stroke: '#bbb',
+                //             lineDash: [5, 5],
+                //             lineWidth: 3
+                //         },
+                //         during: function (apiDuring) {
+                //             var currNum = apiDuring.getExtra('renderNumber');
+                //             var progress = 0.5 - (renderNumber - currNum);
+                //             if (progress >= 0) {
+                //                 apiDuring
+                //                     .setShape('cx', apiDuring.getExtra('cxNext'))
+                //                     .setShape('cy', apiDuring.getExtra('cyNext'))
+                //                     .setShape('r', apiDuring.getExtra('rNext'));
+                //             }
+                //             var opacity = Math.abs(progress) / 0.5;
+                //             apiDuring.setStyle('opacity', opacity);
+                //         }
+                //     }]
+                // };
+                // return {
+                //     type: 'circle',
+                //     shape: {
+                //         cx: 0,
+                //         cy: 0,
+                //         r: 0,
+                //     },
+                //     extra: {
+                //         renderNumber: ++renderNumber,
+                //         cxNext: isNaN(center[0]) ? 0 : center[0],
+                //         cyNext: isNaN(center[1]) ? 0 : center[1],
+                //         rNext: isNaN(radius) ? 0 : radius,
+                //         transition: 'renderNumber'
+                //     },
+                //     style: {
+                //         fill: null,
+                //         stroke: '#bbb',
+                //         lineDash: [5, 5],
+                //         lineWidth: 3
+                //     },
+                //     during: function (apiDuring) {
+                //         var currNum = apiDuring.getExtra('renderNumber');
+                //         var progress = 0.5 - (renderNumber - currNum);
+                //         if (progress >= 0) {
+                //             apiDuring
+                //                 .setShape('cx', apiDuring.getExtra('cxNext'))
+                //                 .setShape('cy', apiDuring.getExtra('cyNext'))
+                //                 .setShape('r', apiDuring.getExtra('rNext'));
+                //         }
+                //         var opacity = Math.abs(progress) / 0.5;
+                //         apiDuring.setStyle('opacity', opacity);
+                //     }
+                // };
             }
 
             function makeStepOption(option, stepResult) {
@@ -267,6 +381,8 @@ under the License.
                     }]
                 });
             }
+
+            var renderNumber = 0;
 
             var option = {
                 timeline: {

@@ -177,7 +177,9 @@ under the License.
                     children.push({
                         type: 'polygon',
                         shape: {
-                            points: makeShapePoints(api, valOnRadius, valOnAngle),
+                            points: makeShapePoints(api, valOnRadius, valOnAngle)
+                        },
+                        extra: {
                             valOnAngle: valOnAngle,
                             transition: 'valOnAngle'
                         },
@@ -188,7 +190,7 @@ under the License.
                         },
                         during: function (apiDuring) {
                             apiDuring.setShape('points', makeShapePoints(
-                                api, valOnRadius, apiDuring.getShape('valOnAngle')
+                                api, valOnRadius, apiDuring.getExtra('valOnAngle')
                             ));
                         }
                     });
@@ -217,7 +219,7 @@ under the License.
                         type: 'text',
                         x: point[0],
                         y: point[1],
-                        shape: {
+                        extra: {
                             valOnAngle: valOnAngle,
                             transition: 'valOnAngle'
                         },
@@ -232,7 +234,7 @@ under the License.
                         },
                         z2: 50,
                         during: function (apiDuring) {
-                            var iValOnAngle = apiDuring.getShape('valOnAngle');
+                            var iValOnAngle = apiDuring.getExtra('valOnAngle');
                             var point = makeLabelPosition(api, valOnRadius, iValOnAngle);
                             apiDuring.setTransform('x', point[0]).setTransform('y', point[1]);
                             apiDuring.setStyle('text', getText(iValOnAngle));
@@ -403,7 +405,9 @@ under the License.
                     children.push({
                         type: 'polygon',
                         shape: {
-                            points: makeShapePoints(params, widthRadius, startRadius, endRadian),
+                            points: makeShapePoints(params, widthRadius, startRadius, endRadian)
+                        },
+                        extra: {
                             widthRadius: widthRadius,
                             startRadius: startRadius,
                             endRadian: endRadian,
@@ -417,9 +421,9 @@ under the License.
                         during: function (apiDuring) {
                             apiDuring.setShape('points', makeShapePoints(
                                 params,
-                                apiDuring.getShape('widthRadius'),
-                                apiDuring.getShape('startRadius'),
-                                apiDuring.getShape('endRadian')
+                                apiDuring.getExtra('widthRadius'),
+                                apiDuring.getExtra('startRadius'),
+                                apiDuring.getExtra('endRadian')
                             ));
                         }
                     });
@@ -460,7 +464,7 @@ under the License.
                         type: 'text',
                         x: point[0],
                         y: point[1],
-                        shape: {
+                        extra: {
                             startRadius: startRadius,
                             endRadian: endRadian,
                             widthRadius: widthRadius,
@@ -481,11 +485,11 @@ under the License.
                         },
                         z2: 50,
                         during: function (apiDuring) {
-                            var endRadian = apiDuring.getShape('endRadian');
+                            var endRadian = apiDuring.getExtra('endRadian');
                             var point = makeLabelPosition(
                                 params,
-                                apiDuring.getShape('widthRadius'),
-                                apiDuring.getShape('startRadius'),
+                                apiDuring.getExtra('widthRadius'),
+                                apiDuring.getExtra('startRadius'),
                                 endRadian
                             );
                             apiDuring.setTransform('x', point[0]).setTransform('y', point[1]);
@@ -663,6 +667,8 @@ under the License.
                                 type: 'polygon',
                                 shape: {
                                     points: makePionterPoints(params, polarEndRadian),
+                                },
+                                extra: {
                                     polarEndRadian: polarEndRadian,
                                     transition: 'polarEndRadian',
                                     enterFrom: { polarEndRadian: 0 }
@@ -670,7 +676,7 @@ under the License.
                                 during: function (apiDuring) {
                                     apiDuring.setShape(
                                         'points',
-                                        makePionterPoints(params, apiDuring.getShape('polarEndRadian'))
+                                        makePionterPoints(params, apiDuring.getExtra('polarEndRadian'))
                                     );
                                 }
                             },
@@ -690,7 +696,7 @@ under the License.
                             }
                         }, {
                             type: 'text',
-                            shape: {
+                            extra: {
                                 valOnRadian: valOnRadian,
                                 transition: 'valOnRadian',
                                 enterFrom: { valOnRadian: 0 }
@@ -706,7 +712,7 @@ under the License.
                                 enterFrom: { opacity: 0 }
                             },
                             during: function (apiDuring) {
-                                apiDuring.setStyle('text', makeText(apiDuring.getShape('valOnRadian')));
+                                apiDuring.setStyle('text', makeText(apiDuring.getExtra('valOnRadian')));
                             }
                         }]
                     };

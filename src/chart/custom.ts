@@ -78,7 +78,6 @@ import {
 import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
-import { number } from '../export';
 
 
 const inner = makeInner<{
@@ -133,8 +132,8 @@ interface CustomBaseElementOption extends Partial<Pick<
     textContent?: CustomTextOption | false;
     // `false` means remove the clipPath
     clipPath?: CustomZRPathOption | false;
-    // Shape can be set in any el option for custom prop for annimation duration.
-    shape?: TransitionAnyOption;
+    // `extra` can be set in any el option for custom prop for annimation duration.
+    extra?: TransitionAnyOption;
     // updateDuringAnimation
     during?(params: typeof customDuringAPI): void;
 };
@@ -197,8 +196,8 @@ interface CustomSeriesRenderItemAPI extends
         CustomSeriesRenderItemCoordinateSystemAPI,
         Pick<ExtensionAPI, 'getWidth' | 'getHeight' | 'getZr' | 'getDevicePixelRatio'> {
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
-    style(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
-    styleEmphasis(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     visual(visualType: string, dataIndexInside?: number): ReturnType<List['getItemVisual']>;
     barLayout(opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>): ReturnType<typeof getLayoutOnAxis>;
     currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']>;
@@ -264,6 +263,7 @@ interface CustomSeriesOption extends
 interface LooseElementProps extends ElementProps {
     style?: ZRStyleProps;
     shape?: Dictionary<unknown>;
+    extra?: Dictionary<unknown>;
 }
 
 // Also compat with ec4, where
@@ -635,7 +635,8 @@ function updateElNormal(
     const allProps = {} as ElementProps;
     const elDisplayable = el.isGroup ? null : el as Displayable;
 
-    prepareShapeUpdate(el, elOption, allProps, transFromProps, isInit);
+    prepareShapeOrExtraUpdate('shape', el, elOption, allProps, transFromProps, isInit);
+    prepareShapeOrExtraUpdate('extra', el, elOption, allProps, transFromProps, isInit);
     prepareTransformUpdate(el, elOption, allProps, transFromProps, isInit);
 
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
@@ -723,7 +724,8 @@ function updateElNormal(
 }
 
 // See [STRATEGY_TRANSITION]
-function prepareShapeUpdate(
+function prepareShapeOrExtraUpdate(
+    mainAttr: 'shape' | 'extra',
     el: Element,
     elOption: CustomElementOption,
     allProps: LooseElementProps,
@@ -731,58 +733,58 @@ function prepareShapeUpdate(
     isInit: boolean
 ): void {
 
-    const shapeOpt = (elOption as CustomElementOption).shape;
-    if (!shapeOpt) {
+    const attrOpt: Dictionary<unknown> & TransitionAnyOption = (elOption as any)[mainAttr];
+    if (!attrOpt) {
         return;
     }
 
-    const elShape = (el as LooseElementProps).shape;
-    let tranFromShapeProps: LooseElementProps['shape'];
+    const elPropsInAttr = (el as LooseElementProps)[mainAttr];
+    let transFromPropsInAttr: Dictionary<unknown>;
 
-    const enterFrom = shapeOpt.enterFrom;
+    const enterFrom = attrOpt.enterFrom;
     if (isInit && enterFrom) {
-        !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
+        !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
             // `enterFrom` props are not necessarily also declared in `shape`/`style`/...,
             // for example, `opacity` can only declared in `enterFrom` but not in `style`.
             const key = enterFromKeys[i];
             // Do not clone, animator will perform that clone.
-            tranFromShapeProps[key] = enterFrom[key];
+            transFromPropsInAttr[key] = enterFrom[key];
         }
     }
 
-    if (!isInit && elShape && shapeOpt.transition) {
-        !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
-        const transitionKeys = normalizeToArray(shapeOpt.transition);
+    if (!isInit && elPropsInAttr && attrOpt.transition) {
+        !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
+        const transitionKeys = normalizeToArray(attrOpt.transition);
         for (let i = 0; i < transitionKeys.length; i++) {
             const key = transitionKeys[i];
-            const elVal = elShape[key];
+            const elVal = elPropsInAttr[key];
             if (__DEV__) {
-                checkTansitionRefer(key, (shapeOpt as any)[key], elVal);
+                checkTansitionRefer(key, (attrOpt as any)[key], elVal);
             }
             // Do not clone, see `checkTansitionRefer`.
-            tranFromShapeProps[key] = elVal;
+            transFromPropsInAttr[key] = elVal;
         }
     }
 
-    const allPropsShape = allProps.shape = {} as LooseElementProps['shape'];
-    const shapeOptKeys = keys(shapeOpt);
-    for (let i = 0; i < shapeOptKeys.length; i++) {
-        const key = shapeOptKeys[i];
+    const allPropsInAttr = allProps[mainAttr] = {} as Dictionary<unknown>;
+    const keysInAttr = keys(attrOpt);
+    for (let i = 0; i < keysInAttr.length; i++) {
+        const key = keysInAttr[i];
         // To avoid share one object with different element, and
         // to avoid user modify the object inexpectedly, have to clone.
-        allPropsShape[key] = cloneValue((shapeOpt as any)[key]);
+        allPropsInAttr[key] = cloneValue((attrOpt as any)[key]);
     }
 
-    const leaveTo = shapeOpt.leaveTo;
+    const leaveTo = attrOpt.leaveTo;
     if (leaveTo) {
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
-        const leaveToShapeProps = leaveToProps.shape || (leaveToProps.shape = {});
+        const leaveToPropsInAttr: Dictionary<unknown> = leaveToProps[mainAttr] || (leaveToProps[mainAttr] = {});
         const leaveToKeys = keys(leaveTo);
         for (let i = 0; i < leaveToKeys.length; i++) {
             const key = leaveToKeys[i];
-            leaveToShapeProps[key] = leaveTo[key];
+            leaveToPropsInAttr[key] = leaveTo[key];
         }
     }
 }
@@ -955,19 +957,28 @@ const customDuringAPI = {
         return tmpDuringScope.el[key];
     },
     setShape(key: string, val: unknown) {
-        // In custom series, el other than Path can also has `shape` for intepolating props.
-        const shape = (tmpDuringScope.el as any).shape || ((tmpDuringScope.el as any).shape = {});
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const shape = (tmpDuringScope.el as graphicUtil.Path).shape
+            || ((tmpDuringScope.el as graphicUtil.Path).shape = {});
         shape[key] = val;
         tmpDuringScope.isShapeDirty = true;
         return this;
     },
     getShape(key: string): unknown {
-        const shape = (tmpDuringScope.el as any).shape;
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const shape = (tmpDuringScope.el as graphicUtil.Path).shape;
         if (shape) {
             return shape[key];
         }
     },
     setStyle(key: string, val: unknown) {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
         const style = (tmpDuringScope.el as Displayable).style;
         if (style) {
             style[key] = val;
@@ -976,12 +987,41 @@ const customDuringAPI = {
         return this;
     },
     getStyle(key: string): unknown {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
         const style = (tmpDuringScope.el as Displayable).style;
         if (style) {
             return style[key];
         }
+    },
+    setExtra(key: string, val: unknown) {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const extra = (tmpDuringScope.el as LooseElementProps).extra
+            || ((tmpDuringScope.el as LooseElementProps).extra = {});
+        extra[key] = val;
+        return this;
+    },
+    getExtra(key: string): unknown {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const extra = (tmpDuringScope.el as LooseElementProps).extra;
+        if (extra) {
+            return extra[key];
+        }
     }
 };
+
+function assertNotReserved(key: string) {
+    if (__DEV__) {
+        if (key === 'transition' || key === 'enterFrom' || key === 'leaveTo') {
+            throw new Error('key must not be "' + key + '"');
+        }
+    }
+}
 
 function elUpdateDuringAnimation(this: Element, key: string): void {
     // Do not provide "percent" until some requirements come.
@@ -1297,7 +1337,7 @@ function makeRenderItem(
      * @public
      * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function style(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
+    function style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
         if (__DEV__) {
             warnDeprecated('api.style', 'Please write literal style directly instead.');
         }
@@ -1326,10 +1366,10 @@ function makeRenderItem(
             : null;
         const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, opt, false);
 
-        preFetchFromExtra(extra, itemStyle);
+        preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
 
-        extra && applyExtraAfter(itemStyle, extra);
+        userProps && applyUserPropsAfter(itemStyle, userProps);
         (itemStyle as LegacyStyleProps).legacy = true;
 
         return itemStyle;
@@ -1340,7 +1380,7 @@ function makeRenderItem(
      * @public
      * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function styleEmphasis(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
+    function styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
         if (__DEV__) {
             warnDeprecated('api.styleEmphasis', 'Please write literal style directly instead.');
         }
@@ -1359,16 +1399,16 @@ function makeRenderItem(
             : null;
         const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, null, true);
 
-        preFetchFromExtra(extra, itemStyle);
+        preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
 
-        extra && applyExtraAfter(itemStyle, extra);
+        userProps && applyUserPropsAfter(itemStyle, userProps);
         (itemStyle as LegacyStyleProps).legacy = true;
 
         return itemStyle;
     }
 
-    function applyExtraAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
+    function applyUserPropsAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
         for (const key in extra) {
             if (hasOwn(extra, key)) {
                 (itemStyle as any)[key] = (extra as any)[key];
