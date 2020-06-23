@@ -44,7 +44,7 @@ type ItemStyleKeys = 'fill'
     | 'shadowOffsetY'
     | 'shadowColor';
 
-type ItemStyleProps = Pick<PathStyleProps, ItemStyleKeys>;
+export type ItemStyleProps = Pick<PathStyleProps, ItemStyleKeys>;
 
 class ItemStyleMixin {
 

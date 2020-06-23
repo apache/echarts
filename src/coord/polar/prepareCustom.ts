@@ -24,6 +24,7 @@ import RadiusAxis from './RadiusAxis';
 
 function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
     // dataItem is necessary in log axis.
+    dataItem = dataItem || [0, 0];
     return zrUtil.map(['Radius', 'Angle'], function (dim, dimIdx) {
         const getterName = 'get' + dim + 'Axis' as 'getAngleAxis'| 'getRadiusAxis';
         // TODO: TYPE Check Angle Axis
