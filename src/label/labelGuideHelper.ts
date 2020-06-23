@@ -362,7 +362,7 @@ export function updateLabelLinePoints(
     let minDist = Infinity;
     const anchorPoint = labelGuideConfig && labelGuideConfig.anchor;
     const targetTransform = target.getComputedTransform();
-    const targetInversedTransform = invert([], targetTransform);
+    const targetInversedTransform = targetTransform && invert([], targetTransform);
     const len = labelLineModel.get('length2') || 0;
 
     if (anchorPoint) {

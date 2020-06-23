@@ -1127,7 +1127,6 @@ class ECharts extends Eventful {
         labelManager.updateLayoutConfig(this._api);
         labelManager.layout(this._api);
         labelManager.processLabelsOverall();
-        labelManager.applyAnimation();
     }
 
     appendData(params: {
@@ -1770,7 +1769,6 @@ class ECharts extends Eventful {
             labelManager.updateLayoutConfig(api);
             labelManager.layout(api);
             labelManager.processLabelsOverall();
-            labelManager.applyAnimation();
 
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];

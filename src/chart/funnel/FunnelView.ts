@@ -26,6 +26,7 @@ import List from '../../data/List';
 import { ColorString, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 import { setLabelLineStyle } from '../../label/labelGuideHelper';
+import points from '../../layout/points';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -131,9 +132,15 @@ class FunnelPiece extends graphic.Polygon {
             outsideFill: visualColor
         });
 
+        const linePoints = labelLayout.linePoints;
+
         labelLine.setShape({
-            points: labelLayout.linePoints || labelLayout.linePoints
+            points: linePoints
         });
+
+        polygon.textGuideLineConfig = {
+            anchor: linePoints ? new graphic.Point(linePoints[0][0], linePoints[0][1]) : null
+        };
 
         // Make sure update style on labelText after setLabelStyle.
         // Because setLabelStyle will replace a new style on it.

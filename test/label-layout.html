@@ -48,6 +48,7 @@ under the License.
         <div id="main5"></div>
         <div id="main6"></div>
         <div id="main7"></div>
+        <div id="main8"></div>
 
 
 
@@ -214,80 +215,147 @@ under the License.
 
 
 
+
         <script>
-            require(['echarts',  'extension/dataTool'], function (echarts, dataTool) {
-                $.get('./data/les-miserables.gexf', function (xml) {
-                    var graph = dataTool.gexf.parse(xml);
-                    var categories = [];
-                    for (var i = 0; i < 9; i++) {
-                        categories[i] = {
-                            name: '类目' + i
-                        };
-                    }
-                    graph.nodes.forEach(function (node) {
-                        delete node.itemStyle;
-                        node.value = node.symbolSize;
-                        node.category = node.attributes['modularity_class'];
-                    });
-                    graph.links.forEach(function (link) {
-                        delete link.lineStyle;
-                    });
-                    var option = {
-                        legend: [{}],
-                        animationDurationUpdate: 1500,
-                        animationEasingUpdate: 'quinticInOut',
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
 
-                        series : [
-                            {
-                                name: 'Les Miserables',
-                                type: 'graph',
-                                layout: 'none',
-                                data: graph.nodes,
-                                links: graph.links,
-                                categories: categories,
-                                roam: true,
-                                draggable: true,
+                const data = [{
+                    "name": "United States",
+                    "value": [213242, 22.86439111423725, "United States"]
+                }, {
+                    "name": "Italy",
+                    "value": [110574, 11.856047040759652, "Italy"]
+                }, {
+                    "name": "Spain",
+                    "value": [104118, 11.163817043697554, "Spain"]
+                }, {
+                    "name": "China",
+                    "value": [82361, 8.830971931231625, "China"]
+                }, {
+                    "name": "Germany",
+                    "value": [77872, 8.349649059978255, "Germany"]
+                }, {
+                    "name": "France",
+                    "value": [57749, 6.192005901539504, "France"]
+                }, {
+                    "name": "Iran",
+                    "value": [47593, 5.103051773571311, "Iran"]
+                }, {
+                    "name": "United Kingdom",
+                    "value": [29865, 3.202207072840695, "United Kingdom"]
+                }, {
+                    "name": "Switzerland",
+                    "value": [17768, 1.905133610253925, "Switzerland"]
+                }, {
+                    "name": "Turkey",
+                    "value": [15679, 1.6811453103991045, "Turkey"]
+                }, {
+                    "name": "Belgium",
+                    "value": [13964, 1.4972583145872247, "Belgium"]
+                }, {
+                    "name": "Netherlands",
+                    "value": [13696, 1.4685226207810533, "Netherlands"]
+                }, {
+                    "name": "Austria",
+                    "value": [10711, 1.1484627476041078, "Austria"]
+                }, {
+                    "name": "Korea, South",
+                    "value": [9887, 1.0601112114239395, "Korea, South"]
+                }, {
+                    "name": "Canada",
+                    "value": [9560, 1.0250493760708872, "Canada"]
+                }, {
+                    "name": "Portugal",
+                    "value": [8251, 0.8846948119205952, "Portugal"]
+                }, {
+                    "name": "Brazil",
+                    "value": [6836, 0.7329746375335339, "Brazil"]
+                }, {
+                    "name": "Israel",
+                    "value": [6092, 0.6532009203999837, "Israel"]
+                }, {
+                    "name": "Sweden",
+                    "value": [4947, 0.5304308852952593, "Sweden"]
+                }, {
+                    "name": "Norway",
+                    "value": [4863, 0.52142417529631, "Norway"]
+                }, {
+                    "name": "Australia",
+                    "value": [4862, 0.5213169525582273, "Australia"]
+                }, {
+                    "name": "Czechia",
+                    "value": [3508, 0.37613736519421254, "Czechia"]
+                }, {
+                    "name": "Ireland",
+                    "value": [3447, 0.3695967781711661, "Ireland"]
+                }, {
+                    "name": "Denmark",
+                    "value": [3290, 0.35276280829217765, "Denmark"]
+                }, {
+                    "name": "Chile",
+                    "value": [3031, 0.3249921191287509, "Chile"]
+                }, {
+                    "name": "Malaysia",
+                    "value": [2908, 0.31180372234457526, "Malaysia"]
+                }, {
+                    "name": "Russia",
+                    "value": [2777, 0.2977575436557378, "Russia"]
+                }, {
+                    "name": "Ecuador",
+                    "value": [2748, 0.29464808425133865, "Ecuador"]
+                }, {
+                    "name": "Poland",
+                    "value": [2554, 0.2738468730632893, "Poland"]
+                }, {
+                    "name": "Romania",
+                    "value": [2460, 0.2637679356835128, "Romania"]
+                }];
 
-                                label: {
-                                    show: true,
-                                    formatter: '{b}',
-                                    position: 'right'
-                                },
+                var option = {
+                    backgroundColor: '#333',
+                    visualMap: {
+                        dimension: 0,
+                        left: 10,
+                        itemWidth: 12,
+                        min: data[29].value[0],
+                        max: data[0].value[0],
+                        text: ['High', 'Low'],
+                        textStyle: {
+                            color: '#ddd'
+                        },
+                        inRange: {
+                            color: ['lightskyblue', 'yellow', 'orangered', 'red']
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        data: data,
+                        roseType: 'radius',
+                        radius: ['30%', '70%'],
+                        labelLine: {
+                            length2: 100
+                        },
+                        labelLayout: function (params) {
+                            const cx = window.innerWidth / 2;
+                            const isLeft = params.labelRect.x < cx;
+                            return isLeft ? {
+                                x: cx - 200,
+                                textAlign: 'right',
+                            } : {
+                                x: cx + 100,
+                                textAlign: 'left'
+                            };
+                        }
+                    }]
+                };
 
-                                labelLayout: {
-                                    hideOverlap: true
-                                },
-
-                                emphasis: {
-                                    label: {
-                                        show: true
-                                    }
-                                },
-                                lineStyle: {
-                                    color: 'source',
-                                    curveness: 0.3
-                                },
-                                emphasis: {
-                                    lineStyle: {
-                                        width: 10
-                                    }
-                                }
-                            }
-                        ]
-                    };
-
-                    var chart = testHelper.create(echarts, 'main2', {
-                        title: [
-                            'Hide overlap in graph zooming.'
-                        ],
-                        height: 800,
-                        option: option
-                    });
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: 'Pie label edge.',
+                    height: 300,
+                    option
                 });
             });
         </script>
-
-
 
         <script>
             require(['echarts'/*, 'map/js/china' */], function (echarts) {
@@ -339,7 +407,7 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main3', {
                     title: [
-                        'Overlap of line.'
+                        'Pie label center.'
                     ],
                     option: option
                 });
@@ -466,6 +534,83 @@ under the License.
                 });
             });
         </script>
+
+
+
+        <script>
+            require(['echarts',  'extension/dataTool'], function (echarts, dataTool) {
+                $.get('./data/les-miserables.gexf', function (xml) {
+                    var graph = dataTool.gexf.parse(xml);
+                    var categories = [];
+                    for (var i = 0; i < 9; i++) {
+                        categories[i] = {
+                            name: '类目' + i
+                        };
+                    }
+                    graph.nodes.forEach(function (node) {
+                        delete node.itemStyle;
+                        node.value = node.symbolSize;
+                        node.category = node.attributes['modularity_class'];
+                    });
+                    graph.links.forEach(function (link) {
+                        delete link.lineStyle;
+                    });
+                    var option = {
+                        legend: [{}],
+                        animationDurationUpdate: 1500,
+                        animationEasingUpdate: 'quinticInOut',
+
+                        series : [
+                            {
+                                name: 'Les Miserables',
+                                type: 'graph',
+                                layout: 'none',
+                                data: graph.nodes,
+                                links: graph.links,
+                                categories: categories,
+                                roam: true,
+                                draggable: true,
+
+                                label: {
+                                    show: true,
+                                    formatter: '{b}',
+                                    position: 'right'
+                                },
+
+                                labelLayout: {
+                                    hideOverlap: true
+                                },
+
+                                emphasis: {
+                                    label: {
+                                        show: true
+                                    }
+                                },
+                                lineStyle: {
+                                    color: 'source',
+                                    curveness: 0.3
+                                },
+                                emphasis: {
+                                    lineStyle: {
+                                        width: 10
+                                    }
+                                }
+                            }
+                        ]
+                    };
+
+                    var chart = testHelper.create(echarts, 'main8', {
+                        title: [
+                            'Hide overlap in graph zooming.'
+                        ],
+                        height: 800,
+                        option: option
+                    });
+                });
+            });
+        </script>
+
+
     </body>
 </html>
 

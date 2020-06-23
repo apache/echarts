@@ -113,7 +113,7 @@ const LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height']
 
 const dummyTransformable = new Transformable();
 
-const labelAnimationStore = makeInner<{
+const labelLayoutInnerStore = makeInner<{
     oldLayout: {
         x: number,
         y: number,
@@ -128,7 +128,9 @@ const labelAnimationStore = makeInner<{
         x?: number,
         y?: number,
         rotation?: number
-    }
+    },
+
+    changedByUser?: boolean
 }, ZRText>();
 
 const labelLineAnimationStore = makeInner<{
@@ -321,10 +323,12 @@ class LabelManager {
                     offset: [layoutOption.dx || 0, layoutOption.dy || 0]
                 });
             }
+            let changedByUser = false;
             if (layoutOption.x != null) {
                 // TODO width of chart view.
                 label.x = parsePercent(layoutOption.x, width);
                 label.setStyle('x', 0);  // Ignore movement in style. TODO: origin.
+                changedByUser = changedByUser || true;
             }
             else {
                 label.x = defaultLabelAttr.x;
@@ -335,10 +339,14 @@ class LabelManager {
                 // TODO height of chart view.
                 label.y = parsePercent(layoutOption.y, height);
                 label.setStyle('y', 0);  // Ignore movement in style.
+                changedByUser = changedByUser || true;
             }
             else {
                 label.y = defaultLabelAttr.y;
                 label.setStyle('y', defaultLabelAttr.style.y);
+            }
+            if (changedByUser) {
+                labelLayoutInnerStore(label).changedByUser = true;
             }
 
             label.rotation = layoutOption.rotate != null
@@ -395,32 +403,26 @@ class LabelManager {
         each(this._chartViewList, (chartView) => {
             const seriesModel = chartView.__model;
             const ignoreLabelLineUpdate = chartView.ignoreLabelLineUpdate;
-
-            if (!ignoreLabelLineUpdate) {
-                chartView.group.traverse((child) => {
-                    if (child.ignore) {
-                        return true;    // Stop traverse descendants.
-                    }
-
-                    this._updateLabelLine(child, seriesModel);
-                });
-            }
-        });
-    }
-
-    applyAnimation() {
-        each(this._chartViewList, (chartView) => {
-            const seriesModel = chartView.__model;
             const animationEnabled = seriesModel.isAnimationEnabled();
 
-            if (animationEnabled) {
-                chartView.group.traverse((child) => {
-                    if (child.ignore) {
-                        return true;    // Stop traverse descendants.
-                    }
+            chartView.group.traverse((child) => {
+                if (child.ignore) {
+                    return true;    // Stop traverse descendants.
+                }
+
+                let needsUpdateLabelLine = !ignoreLabelLineUpdate;
+                const label = child.getTextContent();
+                if (!needsUpdateLabelLine && label) {
+                    needsUpdateLabelLine = labelLayoutInnerStore(label).changedByUser;
+                }
+                if (needsUpdateLabelLine) {
+                    this._updateLabelLine(child, seriesModel);
+                }
+
+                if (animationEnabled) {
                     this._animateLabels(child, seriesModel);
-                });
-            }
+                }
+            });
         });
     }
 
@@ -457,7 +459,7 @@ class LabelManager {
         const guideLine = el.getTextGuideLine();
         // Animate
         if (textEl && !textEl.ignore && !textEl.invisible) {
-            const layoutStore = labelAnimationStore(textEl);
+            const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;
             const newProps = {
                 x: textEl.x,
