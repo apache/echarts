@@ -199,13 +199,24 @@ function pad(str: string, len: number): string {
  * @inner
  */
 export function formatTime(tpl: string, value: number | string | Date, isUTC?: boolean) {
-    if (tpl === 'week'
-        || tpl === 'month'
-        || tpl === 'quarter'
-        || tpl === 'half-year'
-        || tpl === 'year'
-    ) {
+    if (tpl === 'year') {
         tpl = 'MM-dd\nyyyy';
+    }
+    else if (tpl === 'month' || tpl === 'quarter' || tpl === 'half-year'
+    ) {
+        tpl = 'M月';
+    }
+    else if (tpl === 'week' || tpl === 'day') {
+        tpl = 'M/d';
+    }
+    else if (tpl === 'hour' || tpl === 'minute') {
+        tpl = 'hh:mm';
+    }
+    else if (tpl === 'second') {
+        tpl = 'hh:mm:ss';
+    }
+    else if (tpl === 'millisecond') {
+        tpl = 'hh:mm:ss SSS';
     }
 
     const date = numberUtil.parseDate(value);

@@ -163,8 +163,8 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
 
 const timeAxis: AxisBaseOption = zrUtil.defaults({
     scale: true,
-    min: 'dataMin',
-    max: 'dataMax'
+    // min: 'dataMin',
+    // max: 'dataMax'
 }, valueAxis);
 
 const logAxis: AxisBaseOption = zrUtil.defaults({
