@@ -904,9 +904,9 @@ listProto.hasValue = function (idx) {
 /**
  * Get extent of data in one dimension
  * @param {string} dim
- * @param {boolean} stack
+ * @param {boolean} useRaw
  */
-listProto.getDataExtent = function (dim /*, stack */) {
+listProto.getDataExtent = function (dim, useRaw) {
     // Make sure use concrete dim as cache name.
     dim = this.getDimension(dim);
     var dimData = this._storage[dim];
@@ -926,7 +926,7 @@ listProto.getDataExtent = function (dim /*, stack */) {
     // Consider the most cases when using data zoom, `getDataExtent`
     // happened before filtering. We cache raw extent, which is not
     // necessary to be cleared and recalculated when restore data.
-    var useRaw = !this._indices; // && !stack;
+    useRaw = useRaw || !this._indices; // && !stack;
     var dimExtent;
 
     if (useRaw) {
