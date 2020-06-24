@@ -501,7 +501,7 @@ class LineView extends ChartView {
             // Stop symbol animation and sync with line points
             // FIXME performance?
             data.eachItemGraphicEl(function (el) {
-                el.stopAnimation(true);
+                el.stopAnimation('', true);
             });
 
             // In the case data zoom triggerred refreshing frequently

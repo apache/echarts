@@ -795,7 +795,7 @@ function pointerMoveTo(
         pointer.y = 0;
     }
     else {
-        pointer.stopAnimation(true);
+        pointer.stopAnimation('', true);
         pointer.animateTo({
             x: toCoord,
             y: 0

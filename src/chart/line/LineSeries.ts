@@ -53,6 +53,7 @@ export interface LineDataItemOption extends SymbolOptionMixin {
     }
 }
 
+
 export interface LineSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,

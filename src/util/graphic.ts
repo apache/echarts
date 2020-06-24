@@ -688,7 +688,7 @@ type LabelModelForText = Model<Omit<
 }>;
 
 function getLabelText<LDI>(
-    opt?: SetLabelStyleOpt<LDI>,
+    opt: SetLabelStyleOpt<LDI>,
     normalModel: LabelModel,
     emphasisModel: LabelModel,
     interpolateValues?: ParsedValue | ParsedValue[]
@@ -1136,7 +1136,7 @@ type AnimateOrSetPropsOption = {
 };
 
 function animateOrSetProps<Props>(
-    isUpdate: boolean,
+    animationType: 'init' | 'update' | 'remove',
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin> & {
@@ -1158,19 +1158,22 @@ function animateOrSetProps<Props>(
         isFrom = dataIndex.isFrom;
         dataIndex = dataIndex.dataIndex;
     }
+    const isUpdate = animationType === 'update';
+    const isRemove = animationType === 'remove';
     // Do not check 'animation' property directly here. Consider this case:
     // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
     // but its parent model (`seriesModel`) does.
     const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
     if (animationEnabled) {
-        let duration = animatableModel.getShallow(
+        // TODO Configurable
+        let duration = isRemove ? 200 : animatableModel.getShallow(
             isUpdate ? 'animationDurationUpdate' : 'animationDuration'
         );
-        const animationEasing = animatableModel.getShallow(
+        const animationEasing = isRemove ? 'cubicOut' : animatableModel.getShallow(
             isUpdate ? 'animationEasingUpdate' : 'animationEasing'
         );
-        let animationDelay = animatableModel.getShallow(
+        let animationDelay = isRemove ? 0 : animatableModel.getShallow(
             isUpdate ? 'animationDelayUpdate' : 'animationDelay'
         );
         if (typeof animationDelay === 'function') {
@@ -1185,6 +1188,11 @@ function animateOrSetProps<Props>(
             duration = duration(dataIndex as number);
         }
 
+        if (!isRemove) {
+            // Must stop the remove animation.
+            el.stopAnimation('remove');
+        }
+
         duration > 0
             ? (
                 isFrom
@@ -1194,6 +1202,7 @@ function animateOrSetProps<Props>(
                         easing: animationEasing,
                         done: cb,
                         force: !!cb || !!during,
+                        scope: animationType,
                         during: during
                     })
                     : el.animateTo(props, {
@@ -1203,6 +1212,7 @@ function animateOrSetProps<Props>(
                         done: cb,
                         force: !!cb || !!during,
                         setToFinal: true,
+                        scope: animationType,
                         during: during
                     })
             )
@@ -1240,7 +1250,7 @@ function updateProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps(true, el, props, animatableModel, dataIndex, cb, during);
+    animateOrSetProps('update', el, props, animatableModel, dataIndex, cb, during);
 }
 
 export {updateProps};
@@ -1261,7 +1271,21 @@ export function initProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps(false, el, props, animatableModel, dataIndex, cb, during);
+    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
+}
+
+/**
+ * Remove graphic element
+ */
+export function removeElement<Props>(
+    el: Element<Props>,
+    props: Props,
+    animatableModel?: Model<AnimationOptionMixin>,
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
+) {
+    animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
 }
 
 function animateOrSetLabel<Props extends PathProps>(
@@ -1278,7 +1302,7 @@ function animateOrSetLabel<Props extends PathProps>(
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     if (valueAnimationEnabled) {
         const precisionOption = labelModel.get('precision');
-        let precision: number = precisionOption === 'auto' ? 0 : precisionOption;
+        const precision: number = precisionOption === 'auto' ? 0 : precisionOption;
 
         let interpolateValues: (number | string)[] | (number | string);
         const rawValues = seriesModel.getRawValue(dataIndex);

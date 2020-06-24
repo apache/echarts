@@ -28,7 +28,8 @@ import {
     enableHoverEmphasis,
     setLabelStyle,
     updateLabel,
-    initLabel
+    initLabel,
+    removeElement
 } from '../../util/graphic';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
@@ -703,7 +704,7 @@ function removeRect(
 ) {
     // Not show text when animating
     el.removeTextContent();
-    updateProps(el, {
+    removeElement(el, {
         style: {
             opacity: 0
         }
@@ -719,7 +720,7 @@ function removeSector(
 ) {
     // Not show text when animating
     el.removeTextContent();
-    updateProps(el, {
+    removeElement(el, {
         style: {
             opacity: 0
         }

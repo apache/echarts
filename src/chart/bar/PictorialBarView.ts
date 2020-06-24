@@ -869,7 +869,7 @@ function removeBar(
     bar.__pictorialClipPath && (animationModel = null);
 
     zrUtil.each(pathes, function (path) {
-        graphic.updateProps(
+        graphic.removeElement(
             path, { scaleX: 0, scaleY: 0 }, animationModel, dataIndex,
             function () {
                 bar.parent && bar.parent.remove(bar);

@@ -169,20 +169,18 @@ class Symbol extends graphic.Group {
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
-            // Always fadeIn. Because it has fadeOut animation when symbol is removed..
-            // const fadeIn = seriesScope && seriesScope.fadeIn;
-            const fadeIn = true;
 
             const target: PathProps = {
                 scaleX: this._sizeX,
-                scaleY: this._sizeY
+                scaleY: this._sizeY,
+                style: {
+                    // Always fadeIn. Because it has fadeOut animation when symbol is removed..
+                    opacity: symbolPath.style.opacity
+                }
             };
-            fadeIn && (target.style = {
-                opacity: symbolPath.style.opacity
-            });
 
             symbolPath.scaleX = symbolPath.scaleY = 0;
-            fadeIn && (symbolPath.style.opacity = 0);
+            symbolPath.style.opacity = 0;
 
             graphic.initProps(symbolPath, target, seriesModel, idx);
         }
@@ -311,7 +309,7 @@ class Symbol extends graphic.Group {
         // Not show text when animating
         !(opt && opt.keepLabel) && (symbolPath.removeTextContent());
 
-        graphic.updateProps(
+        graphic.removeElement(
             symbolPath,
             {
                 style: {
