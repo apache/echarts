@@ -53,21 +53,26 @@ function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
 
 function fadeInItem(nodeOrEdge: GraphNode | GraphEdge) {
     const el = nodeOrEdge.getGraphicEl() as Symbol | Line;
-    if ((el as Symbol).getSymbolPath) {
-        (el as Symbol).getSymbolPath().removeState('blur');
-    }
-    else {
-        (el as Line).getLinePath().removeState('blur');
+    if (el) {
+        if ((el as Symbol).getSymbolPath) {
+            (el as Symbol).getSymbolPath().removeState('blur');
+        }
+        else {
+            (el as Line).getLinePath().removeState('blur');
+        }
+
     }
 }
 
 function fadeOutItem(nodeOrEdge: GraphNode | GraphEdge) {
     const el = nodeOrEdge.getGraphicEl() as Symbol | Line;
-    if ((el as Symbol).getSymbolPath) {
-        (el as Symbol).getSymbolPath().useState('blur');
-    }
-    else {
-        (el as Line).getLinePath().useState('blur');
+    if (el) {
+        if ((el as Symbol).getSymbolPath) {
+            (el as Symbol).getSymbolPath().useState('blur');
+        }
+        else {
+            (el as Line).getLinePath().useState('blur');
+        }
     }
 }
 
@@ -183,7 +188,8 @@ class GraphView extends ChartView {
                 const symbolPath = el.getSymbolPath();
                 const blurState = symbolPath.ensureState('blur');
                 blurState.style = {
-                    opacity: symbolPath.style.opacity * 0.1
+                    // TODO Based on the original opacity.
+                    opacity: 0.1
                 };
 
                 el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
@@ -211,7 +217,7 @@ class GraphView extends ChartView {
                 const linePath = el.getLinePath();
                 const blurState = linePath.ensureState('blur');
                 blurState.style = {
-                    opacity: linePath.style.opacity * 0.1
+                    opacity: 0.1
                 };
 
                 el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
