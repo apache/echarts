@@ -22,7 +22,7 @@ import Element from 'zrender/src/Element';
 interface ControllerHost {
     target: Element,
     zoom?: number
-    zoomLimit?: {min: number, max: number}
+    zoomLimit?: {min?: number, max?: number}
 }
 
 /**
