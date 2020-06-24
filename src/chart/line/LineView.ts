@@ -786,7 +786,6 @@ class LineView extends ChartView {
             polygon.stopAnimation();
             graphic.updateProps(polygon, {
                 shape: {
-                    points: next,
                     stackedOnPoints: stackedOnNext
                 }
             }, seriesModel);
