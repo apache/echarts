@@ -74,6 +74,7 @@ const GRAPHIC_KEYS = [
     'Image',
     'Text',
     'Circle',
+    'Ellipse',
     'Sector',
     'Ring',
     'Polygon',

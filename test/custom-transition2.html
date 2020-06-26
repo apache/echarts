@@ -38,6 +38,11 @@ under the License.
 
 
         <div id="main-cluster-step"></div>
+        <div id="during-case-continue"></div>
+        <div id="during-case-get-curr"></div>
+        <div id="during-case-partial-change"></div>
+        <div id="during-first-frame-correct"></div>
+        <div id="during-ensure-once-in-each-frame"></div>
 
 
 
@@ -113,10 +118,12 @@ under the License.
                         centroids: stepData.centroids,
                         points: [],
                         newestClusterIndex: newestClusterIdx,
-                        newestClusterMaxAssessmentIndex: -1
+                        newestClusterMaxDistance: -Infinity
                     };
                     result.push(stepResult);
 
+                    var newestCenter = stepData.centroids[newestClusterIdx];
+                    var newestClusterPoints = ptsInCluster[newestClusterIdx];
 
                     for (var cIdx = 0; cIdx < ptsInCluster.length; cIdx++) {
                         var clusterPoints = ptsInCluster[cIdx];
@@ -128,15 +135,15 @@ under the License.
                                 throw Error(key);
                             }
                             stepResult.points[ptsIdx] = [point[0], point[1], cIdx, newestClusterIdx];
-                        }
-                    }
 
-                    var assessment = -Infinity;
-                    for (var i = 0; i < stepData.clusterAssment.length; i++) {
-                        var assessmentRecord = stepData.clusterAssment[i];
-                        if (assessmentRecord[0] === newestClusterIdx && assessmentRecord[1] > assessment) {
-                            assessment = assessmentRecord[1];
-                            stepResult.newestClusterMaxAssessmentIndex = i;
+                            if (cIdx === newestClusterIdx) {
+                                var dx = newestCenter[0] - point[0];
+                                var dy = newestCenter[1] - point[1];
+                                var dist = Math.pow(dx * dx + dy * dy, 0.5);
+                                if (dist > stepResult.newestClusterMaxDistance) {
+                                    stepResult.newestClusterMaxDistance = dist;
+                                }
+                            }
                         }
                     }
                 }
@@ -154,16 +161,11 @@ under the License.
 
                 var contentColor = colorAll[clusterIdx];
                 addColorTransition(extra, contentColor, 'content');
-                // var borderColor = isNewCluster ? '#333' : '#fff';
-                // addColorTransition(shape, borderColor, 'border');
 
                 return {
                     type: 'circle',
                     x: coord[0],
                     y: coord[1],
-                    // scaleX: isNewCluster ? 1.2 : 1,
-                    // scaleY: isNewCluster ? 1.2 : 1,
-                    // transition: ['scaleX', 'scaleY'],
                     shape: {
                         cx: 0,
                         cy: 0,
@@ -181,8 +183,6 @@ under the License.
                     during: function (apiDuring) {
                         var currContentColor = getColorInTransition(apiDuring, 'content');
                         apiDuring.setStyle('fill', currContentColor);
-                        // var currBorderColor = getColorInTransition(apiDuring, 'border');
-                        // apiDuring.setStyle('stroke', currBorderColor);
                     }
                 };
             }
@@ -208,153 +208,43 @@ under the License.
             }
 
             function renderBoundary(params, api) {
-                var center = api.coord([api.value(2), api.value(3)]);
-                var endP = api.coord([api.value(0), api.value(1)]);
-                var diffX = center[0] - endP[0];
-                var diffY = center[1] - endP[1];
-                var radius = Math.pow(diffX * diffX + diffY * diffY, 0.5) + 10;
-                var newCluIdx = api.value(4);
+                var xVal = api.value(0);
+                var yVal = api.value(1);
+                var maxDist = api.value(2);
+                var center = api.coord([xVal, yVal]);
+                var size = api.size([maxDist, maxDist]);
+                var renderNumberStar;
 
                 return {
-                    type: 'circle',
+                    type: 'ellipse',
                     shape: {
-                        cx: 0,
-                        cy: 0,
-                        r: 0
+                        cx: isNaN(center[0]) ? 0 : center[0],
+                        cy: isNaN(center[1]) ? 0 : center[1],
+                        rx: isNaN(size[0]) ? 0 : size[0] + 15,
+                        ry: isNaN(size[1]) ? 0 : size[1] + 15
                     },
                     extra: {
-                        cxNext: isNaN(center[0]) ? 0 : center[0],
-                        cyNext: isNaN(center[1]) ? 0 : center[1],
-                        rNext: isNaN(radius) ? 0 : radius,
                         renderNumber: ++renderNumber,
                         transition: 'renderNumber'
                     },
                     style: {
                         fill: null,
-                        stroke: '#bbb',
-                        lineDash: [5, 5],
-                        lineWidth: 3,
-                        // opacity: 0
+                        stroke: 'rgba(0,0,0,0.2)',
+                        lineDash: [4, 4],
+                        lineWidth: 4
                     },
                     during: function (apiDuring) {
                         var currNum = apiDuring.getExtra('renderNumber');
-                        if (apiDuring.getStyle('opacity') < 0.9) {
-                            apiDuring
-                                .setShape('cx', apiDuring.getExtra('cxNext'))
-                                .setShape('cy', apiDuring.getExtra('cyNext'))
-                                .setShape('r', apiDuring.getExtra('rNext'));
-                        }
-                        apiDuring.setStyle('opacity', 1 - (renderNumber - currNum));
+                        !renderNumberStar && (renderNumberStar = currNum);
+                        apiDuring.setStyle('opacity', (currNum - renderNumberStar) / (renderNumber - renderNumberStar));
                     }
                 };
-
-                // return {
-                //     type: 'group',
-                //     children: [{
-                //         type: 'circle',
-                //         shape: {
-                //             cx: 0,
-                //             cy: 0,
-                //             r: 0,
-                //         },
-                //         extra: {
-                //             renderNumber: ++renderNumber,
-                //             cxNext: isNaN(center[0]) ? 0 : center[0],
-                //             cyNext: isNaN(center[1]) ? 0 : center[1],
-                //             rNext: isNaN(radius) ? 0 : radius,
-                //             transition: 'renderNumber'
-                //         },
-                //         style: {
-                //             fill: null,
-                //             stroke: '#bbb',
-                //             lineDash: [5, 5],
-                //             lineWidth: 3
-                //         },
-                //         during: function (apiDuring) {
-                //             var currNum = apiDuring.getExtra('renderNumber');
-                //             var progress = 0.5 - (renderNumber - currNum);
-                //             if (progress >= 0) {
-                //                 apiDuring
-                //                     .setShape('cx', apiDuring.getExtra('cxNext'))
-                //                     .setShape('cy', apiDuring.getExtra('cyNext'))
-                //                     .setShape('r', apiDuring.getExtra('rNext'));
-                //             }
-                //             var opacity = Math.abs(progress) / 0.5;
-                //             apiDuring.setStyle('opacity', opacity);
-                //         }
-                //     }, {
-                //         type: 'circle',
-                //         shape: {
-                //             cx: 0,
-                //             cy: 0,
-                //             r: 0,
-                //         },
-                //         extra: {
-                //             renderNumber: ++renderNumber,
-                //             cxNext: isNaN(center[0]) ? 0 : center[0],
-                //             cyNext: isNaN(center[1]) ? 0 : center[1],
-                //             rNext: isNaN(radius) ? 0 : radius,
-                //             transition: 'renderNumber'
-                //         },
-                //         style: {
-                //             fill: null,
-                //             stroke: '#bbb',
-                //             lineDash: [5, 5],
-                //             lineWidth: 3
-                //         },
-                //         during: function (apiDuring) {
-                //             var currNum = apiDuring.getExtra('renderNumber');
-                //             var progress = 0.5 - (renderNumber - currNum);
-                //             if (progress >= 0) {
-                //                 apiDuring
-                //                     .setShape('cx', apiDuring.getExtra('cxNext'))
-                //                     .setShape('cy', apiDuring.getExtra('cyNext'))
-                //                     .setShape('r', apiDuring.getExtra('rNext'));
-                //             }
-                //             var opacity = Math.abs(progress) / 0.5;
-                //             apiDuring.setStyle('opacity', opacity);
-                //         }
-                //     }]
-                // };
-                // return {
-                //     type: 'circle',
-                //     shape: {
-                //         cx: 0,
-                //         cy: 0,
-                //         r: 0,
-                //     },
-                //     extra: {
-                //         renderNumber: ++renderNumber,
-                //         cxNext: isNaN(center[0]) ? 0 : center[0],
-                //         cyNext: isNaN(center[1]) ? 0 : center[1],
-                //         rNext: isNaN(radius) ? 0 : radius,
-                //         transition: 'renderNumber'
-                //     },
-                //     style: {
-                //         fill: null,
-                //         stroke: '#bbb',
-                //         lineDash: [5, 5],
-                //         lineWidth: 3
-                //     },
-                //     during: function (apiDuring) {
-                //         var currNum = apiDuring.getExtra('renderNumber');
-                //         var progress = 0.5 - (renderNumber - currNum);
-                //         if (progress >= 0) {
-                //             apiDuring
-                //                 .setShape('cx', apiDuring.getExtra('cxNext'))
-                //                 .setShape('cy', apiDuring.getExtra('cyNext'))
-                //                 .setShape('r', apiDuring.getExtra('rNext'));
-                //         }
-                //         var opacity = Math.abs(progress) / 0.5;
-                //         apiDuring.setStyle('opacity', opacity);
-                //     }
-                // };
             }
 
             function makeStepOption(option, stepResult) {
                 var centroids = stepResult.centroids || [];
                 var points = stepResult.points;
-                var newMaxAssmIdx = stepResult.newestClusterMaxAssessmentIndex;
+                var maxDist = stepResult.newestClusterMaxDistance;
                 var newCluIdx = stepResult.newestClusterIndex;
 
                 option.options.push({
@@ -369,13 +259,12 @@ under the License.
                         type: 'custom',
                         renderItem: renderBoundary,
                         animationDuration: 3000,
+                        silent: true,
                         data: [
                             [
-                                (points[newMaxAssmIdx] || [])[0],
-                                (points[newMaxAssmIdx] || [])[1],
                                 (centroids[newCluIdx] || [])[0],
                                 (centroids[newCluIdx] || [])[1],
-                                newCluIdx
+                                maxDist
                             ]
                         ]
                     }]
@@ -440,6 +329,503 @@ under the License.
             });
         });
         </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            function renderItem(params, api) {
+                return {
+                    type: 'circle',
+                    shape: {
+                        cx: api.value(0),
+                        cy: api.value(1),
+                        r: 40,
+                        transition: 'cx'
+                    },
+                    style: {
+                        fill: 'green',
+                    },
+                };
+            }
+
+            var baseX = 60;
+            var baseY = 80
+
+            var option = {
+                series: [{
+                    id: 'a',
+                    type: 'custom',
+                    coordinateSystem: 'none',
+                    renderItem: renderItem,
+                    animationDuration: 3000,
+                    animationDurationUpdate: 6000,
+                    data: [[baseX, baseY]]
+                }]
+            };
+
+
+            var chart = testHelper.create(echarts, 'during-case-continue', {
+                title: [
+                    'Click "move" several times **before animation finished**',
+                    'The cirle should keep move to right **without jump**'
+                ],
+                height: 200,
+                option: option,
+                buttons: [{
+                    text: 'move',
+                    onclick: function () {
+                        chart.setOption({
+                            series: {
+                                id: 'a',
+                                data: [[baseX += 60, baseY]]
+                            }
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            function renderItem(params, api) {
+                var renderNumberStar;
+                return {
+                    type: 'circle',
+                    shape: {
+                        cx: api.value(0),
+                        cy: api.value(1),
+                        r: 40
+                    },
+                    extra: {
+                        renderNumber: ++renderNumber,
+                        transition: 'renderNumber'
+                    },
+                    style: {
+                        fill: 'green'
+                    },
+                    during: function (apiDuring) {
+                        var currNum = apiDuring.getExtra('renderNumber');
+                        !renderNumberStar && (renderNumberStar = currNum);
+                        apiDuring.setStyle('opacity', (currNum - renderNumberStar) / (renderNumber - renderNumberStar));
+                    }
+                };
+            }
+
+            var renderNumber = 1;
+            var baseX = 60;
+            var baseY = 100;
+
+            var option = {
+                series: [{
+                    id: 'a',
+                    type: 'custom',
+                    coordinateSystem: 'none',
+                    renderItem: renderItem,
+                    animationDuration: 3000,
+                    animationDurationUpdate: 10000,
+                    data: [[baseX, baseY]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'during-case-get-curr', {
+                title: [
+                    'Click next several times **before animation finished**',
+                    'Each click, the circle **disappear immediately** and **fade in** at right a bit',
+                    'MUST **not blink**'
+                ],
+                height: 200,
+                option: option,
+                buttons: [{
+                    text: 'next',
+                    onclick: function () {
+                        chart.setOption({
+                            series: {
+                                id: 'a',
+                                data: [[baseX += 20, baseY]]
+                            }
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            var baseX = 100;
+            var baseY = 100;
+
+            function renderItem(params, api) {
+                var textOpt = {
+                    type: 'text',
+                    extra: { },
+                    transition: [], // disable the default transition of x y.
+                    style: { x: 20, y: 20, fontSize: 20, stroke: 'green' },
+                    during: function (apiDuring) {
+                        var x = apiDuring.getExtra('x');
+                        var y = apiDuring.getExtra('y');
+                        apiDuring.setStyle('text', makeText(x, y));
+                    }
+                };
+                var movingCircleOpt = {
+                    type: 'circle',
+                    shape: { cx: 0, cy: 0, r: 10 },
+                    extra: { },
+                    style: { fill: 'red' },
+                    transition: [], // disable the default transition of x y.
+                    during: function (apiDuring) {
+                        var x = apiDuring.getExtra('x');
+                        var y = apiDuring.getExtra('y');
+                        apiDuring.setTransform('x', x).setTransform('y', y);
+                    }
+                };
+
+                var cmd = api.value(0);
+                if (cmd === 'init') {
+                    textOpt.extra.x = baseX;
+                    textOpt.extra.y = baseY;
+                    textOpt.extra.transition = ['x', 'y'];
+                    textOpt.style.text = makeText(baseX, baseY);
+                    movingCircleOpt.x = baseX;
+                    movingCircleOpt.y = baseY;
+                    movingCircleOpt.extra.x = baseX;
+                    movingCircleOpt.extra.y = baseY;
+                    movingCircleOpt.extra.transition = ['x', 'y'];
+                }
+                else if (cmd === 'x') {
+                    baseX += 100;
+                    textOpt.extra.x = baseX;
+                    textOpt.extra.transition = ['x'];
+                    // textOpt.style.text = makeText(baseX, baseY);
+                    movingCircleOpt.extra.x = baseX;
+                    movingCircleOpt.extra.transition = ['x'];
+                }
+                else if (cmd === 'y') {
+                    baseY += 100;
+                    textOpt.extra.y = baseY;
+                    textOpt.extra.transition = ['y'];
+                    // textOpt.style.text = makeText(baseX, baseY);
+                    movingCircleOpt.extra.y = baseY;
+                    movingCircleOpt.extra.transition = ['y'];
+                }
+
+                return {
+                    type: 'group',
+                    children: [
+                        textOpt,
+                        movingCircleOpt,
+                        {
+                            // Standard circle: used to check the result of moving circle.
+                            type: 'circle',
+                            x: baseX,
+                            y: baseY,
+                            transition: [], // disable the default transition of x y.
+                            shape: {cx: 0, cy: 0, r: 15},
+                            style: {fill: '#aaa'},
+                            z2: -1
+                        }
+                    ]
+                };
+            }
+
+            function makeText(x, y) {
+                return ['x: ' + x.toFixed(2), 'y: ' + y.toFixed(2)].join('\n');
+            }
+
+            var option = {
+                series: [{
+                    id: 'a',
+                    type: 'custom',
+                    coordinateSystem: 'none',
+                    renderItem: renderItem,
+                    animationDuration: 3000,
+                    animationDurationUpdate: 5000,
+                    data: [['init']]
+                }]
+            };
+
+
+            var chart = testHelper.create(echarts, 'during-case-partial-change', {
+                title: [
+                    'Partial change props test:',
+                    'Click "add x" and "add y" before animation finished.',
+                    'The red circle animation should be smooth **without jump**.',
+                    'The red circle should be finally **reach at the grey circle**.',
+                    'The **text should be correct**.',
+                ],
+                height: 500,
+                option: option,
+                buttons: [{
+                    text: 'add x 100',
+                    onclick: function () {
+                        chart.setOption({
+                            series: {
+                                id: 'a',
+                                data: [['x']]
+                            }
+                        });
+                    }
+                }, {
+                    text: 'add y 100',
+                    onclick: function () {
+                        chart.setOption({
+                            series: {
+                                id: 'a',
+                                data: [['y']]
+                            }
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var resultPrinted = false;
+
+            function renderItem(params, api) {
+                return {
+                    type: 'text',
+                    extra: {
+                        renderNumber: renderNumber,
+                        transition: 'renderNumber'
+                    },
+                    style: {
+                        x: 100,
+                        y: 50,
+                        fontSize: 30,
+                        enterFrom: {
+                            x: 10
+                        }
+                    },
+                    during: function (apiDuring) {
+                        var currNum = apiDuring.getExtra('renderNumber');
+                        if (resultPrinted || currNum <= 2) {
+                            return;
+                        }
+                        resultPrinted = true;
+                        if (currNum === 3) {
+                            apiDuring.setStyle('text', 'TEST FAIL');
+                            apiDuring.setStyle('fill', 'red');
+                        }
+                        else {
+                            apiDuring.setStyle('text', 'TEST PASS');
+                            apiDuring.setStyle('fill', 'green');
+                        }
+                    }
+                };
+            }
+
+            var renderNumber = 2;
+
+            var option = {
+                series: [{
+                    id: 'a',
+                    type: 'custom',
+                    coordinateSystem: 'none',
+                    renderItem: renderItem,
+                    animationDuration: 10000,
+                    animationDurationUpdate: 10000,
+                    data: [[10]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'during-first-frame-correct', {
+                title: [
+                    'Test the first during call should not get the target value:',
+                    'Should print TEST PASS'
+                ],
+                option: option,
+                height: 200
+            });
+
+            chart && setTimeout(function () {
+                renderNumber = 3;
+                chart.setOption({
+                    series: {
+                        id: 'a',
+                        data: [[10]]
+                    }
+                });
+                // Set option before init finished.
+            }, 100);
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var resultPrinted = false;
+            var currX = 0;
+            var currFontSize = 16;
+
+            function renderItem(params, api) {
+                var cmd = api.value(0);
+
+                var opt = {
+                    type: 'text',
+                    extra: {
+                        renderNumber: renderNumber,
+                        transition: 'renderNumber'
+                    },
+                    style: {
+                        x: 100,
+                        y: 50,
+                        fontSize: currFontSize,
+                        fill: 'green'
+                    }
+                };
+
+                if (cmd !== 'noDuring') {
+                    opt.during = function (apiDuring) {
+                        duringCount++;
+                        var currNum = apiDuring.getExtra('renderNumber');
+                        apiDuring.setStyle(
+                            'text',
+                            'during count: ' + duringCount + '\n' + 'rAF count: ' + rAFCount
+                        );
+                    };
+                }
+                if (cmd === 'addX') {
+                    currX += 50;
+                    opt.x = currX;
+                    opt.transition = 'x';
+                }
+                if (cmd === 'addFontSize') {
+                    currFontSize += 8;
+                    opt.style.fontSize = currFontSize;
+                    opt.style.transition = 'fontSize';
+                }
+
+                return opt;
+            }
+
+            var renderNumber = 2;
+
+            var option = {
+                series: [{
+                    id: 'a',
+                    type: 'custom',
+                    coordinateSystem: 'none',
+                    renderItem: renderItem,
+                    animationDuration: 3000,
+                    animationDurationUpdate: 3000,
+                    data: [[10]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'during-ensure-once-in-each-frame', {
+                title: [
+                    'Test during only called once in each:',
+                    'In **init** and after **click the buttons**,',
+                    'during count and rAF count',
+                    'should **be the same** (may be 1 different)'
+                ],
+                option: option,
+                height: 200,
+                button: [{
+                    text: 'add x 50',
+                    onclick: function () {
+                        chart.setOption({ series: { id: 'a', data: [['addX']] } });
+                        startCountFrame();
+                    }
+                }, {
+                    text: 'add fontSize 8',
+                    onclick: function () {
+                        chart.setOption({ series: { id: 'a', data: [['addFontSize']] } });
+                        startCountFrame();
+                    }
+                }]
+            });
+
+            var rAFCount = 0;
+            var duringCount = 0;
+            var rAFId;
+
+            function startCountFrame() {
+                stopCountFrame();
+                rAFId = requestAnimationFrame(countFrame);
+
+                function countFrame() {
+                    rAFCount++;
+                    rAFId = requestAnimationFrame(countFrame);
+                }
+            }
+
+            function stopCountFrame() {
+                if (rAFId != null) {
+                    cancelAnimationFrame(rAFId);
+                    rAFId = null;
+                }
+            }
+
+            if (chart) {
+                chart.on('finished', function () {
+                    stopCountFrame();
+                });
+
+                startCountFrame();
+
+                setTimeout(function () {
+                    renderNumber = 3;
+                    chart.setOption({ series: { id: 'a', data: [['init']] } });
+                    // Set option before init finished.
+                    startCountFrame();
+                }, 100);
+            }
+        });
+        </script>
+
+
+
+
 
 
     </body>

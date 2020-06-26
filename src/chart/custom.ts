@@ -20,7 +20,7 @@
 
 import {__DEV__} from '../config';
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import {getDefaultLabel} from './helper/labelHelper';
@@ -87,9 +87,8 @@ const inner = makeInner<{
     customImagePath: CustomImageOption['style']['image'];
     // customText: string;
     txConZ2Set: number;
-    orginalDuring: Element['updateDuringAnimation'];
-    customDuring: CustomZRPathOption['during'];
-    leaveToProps: ElementProps
+    leaveToProps: ElementProps;
+    userDuring: CustomBaseElementOption['during'];
 }, Element>();
 
 type CustomExtraElementInfo = Dictionary<unknown>;
@@ -263,7 +262,6 @@ interface CustomSeriesOption extends
 interface LooseElementProps extends ElementProps {
     style?: ZRStyleProps;
     shape?: Dictionary<unknown>;
-    extra?: Dictionary<unknown>;
 }
 
 // Also compat with ec4, where
@@ -576,16 +574,17 @@ function createEl(elOption: CustomElementOption): Element {
  * ----------------------------------------------------------
  * [STRATEGY_MERGE] Merge properties or erase all properties:
  *
- * Based on the fact that the existing zr element probably be reused, we discuss whether
+ * Based on the fact that the existing zr element probably be reused, we now consider whether
  * merge or erase all properties to the exsiting elements.
- * + "Merge" means that if a certain props is not specified, do not assign to the existing element.
- * + "Erase all" means that assign all of the available props whatever it specified by users.
+ * That is, if a certain props is not specified in the lastest return of `renderItem`:
+ * + "Merge" means that do not modify the value on the existing element.
+ * + "Erase all" means that use a default value to the existing element.
  *
  * "Merge" might bring some unexpected state retaining for users and "erase all" seams to be
- * more safe. But "erase all" force users to specify all of the props each time, which
- * theoretically disables the chance of performance optimization (e.g., just generete shape
- * and style at the first time rather than always do that). And "force user set all of the props"
- * might bring trouble to specify which props need to perform "transition animation".
+ * more safe. "erase all" force users to specify all of the props each time, which is recommanded
+ * in most cases.
+ * But "erase all" theoretically disables the chance of performance optimization (e.g., just
+ * generete shape and style at the first time rather than always do that).
  * So we still use "merge" rather than "erase all". If users need "erase all", they can
  * simple always set all of the props each time.
  * Some "object-like" config like `textConfig`, `textContent`, `style` which are not needed for
@@ -690,28 +689,29 @@ function updateElNormal(
         hasOwn(elOption, 'invisible') && (elDisplayable.invisible = elOption.invisible);
     }
 
+    // Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
+    // be called mutiple time in each animation frame. For example, if both "transform" props
+    // and shape props and style props changed, it will generate three animator and called
+    // one-by-one in each animation frame.
+    // We use the during in `animateTo/From` params.
+    const userDuring = elOption.during;
+    // For simplicity, if during not specified, the previous during will not work any more.
+    inner(el).userDuring = userDuring;
+    const cfgDuringCall = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
+
     el.attr(allProps);
-    const params = {dataIndex: dataIndex, isFrom: true};
+    const cfg = {
+        dataIndex: dataIndex,
+        isFrom: true,
+        during: cfgDuringCall
+    };
     isInit
-        ? graphicUtil.initProps(el, transFromProps, seriesModel, params)
-        : graphicUtil.updateProps(el, transFromProps, seriesModel, params);
+        ? graphicUtil.initProps(el, transFromProps, seriesModel, cfg)
+        : graphicUtil.updateProps(el, transFromProps, seriesModel, cfg);
 
     // Merge by default.
     hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
     hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
-
-    const customDuringMounted = el.updateDuringAnimation === elUpdateDuringAnimation;
-    if (elOption.during) {
-        const innerEl = inner(el);
-        if (!customDuringMounted) {
-            innerEl.orginalDuring = el.updateDuringAnimation;
-            el.updateDuringAnimation = elUpdateDuringAnimation;
-        }
-        innerEl.customDuring = elOption.during;
-    }
-    else if (customDuringMounted) {
-        el.updateDuringAnimation = inner(el).orginalDuring;
-    }
 
     if (!isTextContent) {
         // `elOption.info` enables user to mount some info on
@@ -722,6 +722,7 @@ function updateElNormal(
 
     styleOpt ? el.dirty() : el.markRedraw();
 }
+
 
 // See [STRATEGY_TRANSITION]
 function prepareShapeOrExtraUpdate(
@@ -1023,30 +1024,54 @@ function assertNotReserved(key: string) {
     }
 }
 
-function elUpdateDuringAnimation(this: Element, key: string): void {
+function duringCall(
+    this: {
+        el: Element;
+        userDuring: CustomBaseElementOption['during']
+    }
+): void {
     // Do not provide "percent" until some requirements come.
     // Because consider thies case:
     // enterFrom: {x: 100, y: 30}, transition: 'x'.
     // And enter duration is different from update duration.
     // Thus it might be confused about the meaning of "percent" in during callback.
-    const innerEl = inner(this);
-    // FIXME `this.markRedraw();` directly ?
-    innerEl.orginalDuring.call(this, key);
-    const customDuring = innerEl.customDuring;
+    const scope = this;
+    const el = scope.el;
+    if (!el) {
+        return;
+    }
+    // If el is remove from zr by reason like legend, during still need to called,
+    // becuase el will be added back to zr and the prop value should not be incorrect.
 
-    tmpDuringScope.el = this;
+    const newstUserDuring = inner(el).userDuring;
+    const scopeUserDuring = scope.userDuring;
+    // Ensured a during is only called once in each animation frame.
+    // If a during is called multiple times in one frame, maybe some users' calulation logic
+    // might be wrong (not sure whether this usage exists).
+    // The case of a during might be called twice can be: by default there is a animator for
+    // 'x', 'y' when init. Before the init animation finished, call `setOption` to start
+    // another animators for 'style'/'shape'/'extra'.
+    if (newstUserDuring !== scopeUserDuring) {
+        // release
+        scope.el = scope.userDuring = null;
+        return;
+    }
+
+    tmpDuringScope.el = el;
     tmpDuringScope.isShapeDirty = false;
     tmpDuringScope.isStyleDirty = false;
 
-    customDuring(customDuringAPI);
+    // Give no `this` to user in "during" calling.
+    scopeUserDuring(customDuringAPI);
 
-    if (tmpDuringScope.isShapeDirty && (this as graphicUtil.Path).dirtyShape) {
-        (this as graphicUtil.Path).dirtyShape();
+    if (tmpDuringScope.isShapeDirty && (el as graphicUtil.Path).dirtyShape) {
+        (el as graphicUtil.Path).dirtyShape();
     }
-    if (tmpDuringScope.isStyleDirty && (this as Displayable).dirtyStyle) {
-        (this as Displayable).dirtyStyle();
+    if (tmpDuringScope.isStyleDirty && (el as Displayable).dirtyStyle) {
+        (el as Displayable).dirtyStyle();
     }
     // markRedraw() will be called by default in during.
+    // FIXME `this.markRedraw();` directly ?
 
     // FIXME: if in future meet the case that some prop will be both modified in `during` and `state`,
     // consider the issue that the prop might be incorrect when return to "normal" state.
@@ -1845,6 +1870,9 @@ function mergeChildren(
         );
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
+        // Do not supprot leave elements that are not mentioned in the latest
+        // `renderItem` return. Otherwise users may not have a clear and simple
+        // concept that how to contorl all of the elements.
         doRemoveEl(el.childAt(i), seriesModel, el);
     }
 }
