@@ -27,6 +27,7 @@ import ZRImage, { ImageStyleProps } from 'zrender/src/graphic/Image';
 import Group from 'zrender/src/graphic/Group';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import Circle from 'zrender/src/graphic/shape/Circle';
+import Ellipse from 'zrender/src/graphic/shape/Ellipse';
 import Sector from 'zrender/src/graphic/shape/Sector';
 import Ring from 'zrender/src/graphic/shape/Ring';
 import Polygon from 'zrender/src/graphic/shape/Polygon';
@@ -1565,6 +1566,7 @@ export const getECData = makeInner<ECData, Element>();
 // Register built-in shapes. These shapes might be overwirtten
 // by users, although we do not recommend that.
 registerShape('circle', Circle);
+registerShape('ellipse', Ellipse);
 registerShape('sector', Sector);
 registerShape('ring', Ring);
 registerShape('polygon', Polygon);
@@ -1579,6 +1581,7 @@ export {
     ZRImage as Image,
     ZRText as Text,
     Circle,
+    Ellipse,
     Sector,
     Ring,
     Polygon,
