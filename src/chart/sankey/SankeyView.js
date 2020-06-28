@@ -63,14 +63,12 @@ function fadeInItem(item, opacityPath) {
 
 function sum(array, cb, orient) {
     var sum = 0;
-    var len = array.length;
-    var i = -1;
-    while (++i < len) {
-        var value = +cb.call(array, array[i], orient);
+    zrUtil.each(array, function (data) {
+      var value = +cb.call(array, data, orient);
         if (!isNaN(value)) {
             sum += value;
         }
-    }
+    });
     return sum;
 }
 
