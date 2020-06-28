@@ -385,11 +385,11 @@ var SeriesModel = ComponentModel.extend({
             };
         }
 
-        function formatSingleValue(val) {
+        function formatSingleValue(val, noCommas) {
             // return encodeHTML(addCommas(val));
             return {
                 renderMode: renderMode,
-                content: encodeHTML(addCommas(val)),
+                content: encodeHTML(noCommas ? val : addCommas(val)),
                 style: markers
             };
         }
@@ -410,7 +410,7 @@ var SeriesModel = ComponentModel.extend({
         var formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
             ? formatArrayValue(value)
             : tooltipDimLen
-            ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
+            ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]), true)
             : formatSingleValue(isValueArr ? value[0] : value);
         var content = formattedValue.content;
 
