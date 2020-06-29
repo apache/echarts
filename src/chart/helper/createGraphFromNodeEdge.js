@@ -39,12 +39,14 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
     var linkNameList = [];
     var validEdges = [];
     var linkCount = 0;
+
     for (var i = 0; i < edges.length; i++) {
         var link = edges[i];
         var source = link.source;
         var target = link.target;
+
         // addEdge may fail when source or target not exists
-        if (graph.addEdge(source, target, linkCount)) {
+        if (graph.addEdge(source, target, linkCount, seriesModel)) {
             validEdges.push(link);
             linkNameList.push(zrUtil.retrieve(link.id, source + ' > ' + target));
             linkCount++;
@@ -89,6 +91,5 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
 
     // Update dataIndex of nodes and edges because invalid edge may be removed
     graph.update();
-
     return graph;
 }
