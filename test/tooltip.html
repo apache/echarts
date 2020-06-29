@@ -64,6 +64,8 @@ under the License.
         <div class="chart" id="click"></div>
         <h1>dispatchAciton manually with `position` specified (postion: [10,10])</h1>
         <div class="chart" id="positionSpecified"></div>
+        <h1>Encode tooltip</h1>
+        <div class="chart" id="encode"></div>
         <!--<h1>alwaysShowContent (check when hover on the last one, the content should not be the previous one)</h1>-->
         <!--<div class="chart" id="alwaysShowContent"></div>-->
 
@@ -901,60 +903,47 @@ under the License.
 
 
 
-        <!--<script>
+        <script>
 
             require([
-                'echarts',
-                'echarts/chart/line',
-                'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/tooltip',
-                'zrender/vml/vml'
+                'echarts'
             ], function (echarts) {
 
-                option = {
-                    tooltip : {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'line',
-                            label: {
-                                backgroundColor: '#6a7985'
-                            }
-                        },
-                        alwaysShowContent: true
+                var option = {
+                    tooltip: {
+                    show: true,
+                    trigger: "axis"
                     },
-                    xAxis : [
-                        {
-                            type : 'category',
-                            boundaryGap : false,
-                            data : ['周一','周二','周三','周四','周五','周六','周日']
-                        }
-                    ],
-                    yAxis : [
-                        {
-                            type : 'value'
-                        }
-                    ],
-                    series : [
-                        {
-                            name:'搜索引擎',
-                            type:'line',
-                            stack: '总量',
-                            label: {
-                                normal: {
-                                    show: true,
-                                    position: 'top'
-                                }
-                            },
-                            areaStyle: {normal: {}},
-                            data:[820, 932, 456, 934, 1290, 1330]
-                        }
+                    xAxis: {
+                    type: "category",
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    },
+                    yAxis: {
+                    type: "value"
+                    },
+                    series: [
+                    {
+                        type: "line",
+                        encode: {
+                        x: 0,
+                        y: 1,
+                        tooltip: 2
+                        },
+                        data: [
+                        ["Mon", 820, "820万"], //显示"-"
+                        ["Tue", 932, "932"], //显示"932"
+                        ["Wed", 901, [1, "901万"]], //显示"-"
+                        ["Thu", 934, undefined], //显示"-"
+                        ["Fri", 1290, ""], //显示""
+                        ["Sat", 1330, true], //显示"true"
+                        ["Sun", 1320, 1320] //显示"1320"
+                        ]
+                    }
                     ]
                 };
-
-                createChart('alwaysShowContent', echarts, option);
+                createChart('encode', echarts, option);
             })
-        </script>-->
+        </script>
 
 
     </body>
