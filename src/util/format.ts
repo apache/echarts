@@ -207,7 +207,7 @@ export function formatTime(tpl: string, value: number | string | Date, isUTC?: b
         tpl = 'M月';
     }
     else if (tpl === 'week' || tpl === 'day') {
-        tpl = 'M/d';
+        tpl = 'd';
     }
     else if (tpl === 'hour' || tpl === 'minute') {
         tpl = 'hh:mm';

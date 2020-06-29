@@ -83,6 +83,7 @@ class TimeScale extends IntervalScale {
         const stepLvl = this._stepLvl;
 
         const labelFormatType = getLabelFormatType(val, this.getSetting('useUTC'), false);
+        console.log(formatUtil.formatTime(labelFormatType, val));
         return formatUtil.formatTime(labelFormatType, val);
     }
 

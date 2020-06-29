@@ -157,6 +157,15 @@ under the License.
                             // minInterval: 3600 * 1000 * 24
                             // min: 'dataMin',
                             // max: 'dataMax'
+                            axisLabel: {
+                                formatter: {
+                                    second: 'hh:mm:ss',
+                                    minute: 'hh:mm',
+                                    hour: function (time) {
+                                        return time.getHours();
+                                    }
+                                }
+                            }
                         }
                     ],
                     yAxis : [
