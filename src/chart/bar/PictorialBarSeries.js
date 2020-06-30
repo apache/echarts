@@ -33,7 +33,7 @@ var PictorialBarSeries = BaseBarSeries.extend({
         symbolPosition: null, // 'start' or 'end' or 'center', null means auto.
         symbolOffset: null,
         symbolMargin: null,   // start margin and end margin. Can be a number or a percent string.
-                                // Auto margin by defualt.
+                                // Auto margin by default.
         symbolRepeat: false,  // false/null/undefined, means no repeat.
                                 // Can be true, means auto calculate repeat times and cut by data.
                                 // Can be a number, specifies repeat times, and do not cut by data.

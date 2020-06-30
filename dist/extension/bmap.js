@@ -270,6 +270,340 @@ echarts.extendComponentModel({
     }
 });
 
+/**
+ * @module zrender/core/util
+ */
+
+// 用于处理merge时无法遍历Date等对象的问题
+var BUILTIN_OBJECT = {
+    '[object Function]': 1,
+    '[object RegExp]': 1,
+    '[object Date]': 1,
+    '[object Error]': 1,
+    '[object CanvasGradient]': 1,
+    '[object CanvasPattern]': 1,
+    // For node-canvas
+    '[object Image]': 1,
+    '[object Canvas]': 1
+};
+
+var TYPED_ARRAY = {
+    '[object Int8Array]': 1,
+    '[object Uint8Array]': 1,
+    '[object Uint8ClampedArray]': 1,
+    '[object Int16Array]': 1,
+    '[object Uint16Array]': 1,
+    '[object Int32Array]': 1,
+    '[object Uint32Array]': 1,
+    '[object Float32Array]': 1,
+    '[object Float64Array]': 1
+};
+
+var objToString = Object.prototype.toString;
+
+
+
+/**
+ * Those data types can be cloned:
+ *     Plain object, Array, TypedArray, number, string, null, undefined.
+ * Those data types will be assgined using the orginal data:
+ *     BUILTIN_OBJECT
+ * Instance of user defined class will be cloned to a plain object, without
+ * properties in prototype.
+ * Other data types is not supported (not sure what will happen).
+ *
+ * Caution: do not support clone Date, for performance consideration.
+ * (There might be a large number of date in `series.data`).
+ * So date should not be modified in and out of echarts.
+ *
+ * @param {*} source
+ * @return {*} new
+ */
+function clone(source) {
+    if (source == null || typeof source !== 'object') {
+        return source;
+    }
+
+    var result = source;
+    var typeStr = objToString.call(source);
+
+    if (typeStr === '[object Array]') {
+        if (!isPrimitive(source)) {
+            result = [];
+            for (var i = 0, len = source.length; i < len; i++) {
+                result[i] = clone(source[i]);
+            }
+        }
+    }
+    else if (TYPED_ARRAY[typeStr]) {
+        if (!isPrimitive(source)) {
+            var Ctor = source.constructor;
+            if (source.constructor.from) {
+                result = Ctor.from(source);
+            }
+            else {
+                result = new Ctor(source.length);
+                for (var i = 0, len = source.length; i < len; i++) {
+                    result[i] = clone(source[i]);
+                }
+            }
+        }
+    }
+    else if (!BUILTIN_OBJECT[typeStr] && !isPrimitive(source) && !isDom(source)) {
+        result = {};
+        for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+                result[key] = clone(source[key]);
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} target
+ * @param {*} source
+ * @param {boolean} [overwrite=false]
+ */
+
+
+/**
+ * @param {Array} targetAndSources The first item is target, and the rests are source.
+ * @param {boolean} [overwrite=false]
+ * @return {*} target
+ */
+
+
+/**
+ * @param {*} target
+ * @param {*} source
+ * @memberOf module:zrender/core/util
+ */
+
+
+/**
+ * @param {*} target
+ * @param {*} source
+ * @param {boolean} [overlay=false]
+ * @memberOf module:zrender/core/util
+ */
+
+
+
+
+
+
+/**
+ * 查询数组中元素的index
+ * @memberOf module:zrender/core/util
+ */
+
+
+/**
+ * 构造类继承关系
+ *
+ * @memberOf module:zrender/core/util
+ * @param {Function} clazz 源类
+ * @param {Function} baseClazz 基类
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {Object|Function} target
+ * @param {Object|Function} sorce
+ * @param {boolean} overlay
+ */
+
+
+/**
+ * Consider typed array.
+ * @param {Array|TypedArray} data
+ */
+
+
+/**
+ * 数组或对象遍历
+ * @memberOf module:zrender/core/util
+ * @param {Object|Array} obj
+ * @param {Function} cb
+ * @param {*} [context]
+ */
+
+
+/**
+ * 数组映射
+ * @memberOf module:zrender/core/util
+ * @param {Array} obj
+ * @param {Function} cb
+ * @param {*} [context]
+ * @return {Array}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {Array} obj
+ * @param {Function} cb
+ * @param {Object} [memo]
+ * @param {*} [context]
+ * @return {Array}
+ */
+
+
+/**
+ * 数组过滤
+ * @memberOf module:zrender/core/util
+ * @param {Array} obj
+ * @param {Function} cb
+ * @param {*} [context]
+ * @return {Array}
+ */
+
+
+/**
+ * 数组项查找
+ * @memberOf module:zrender/core/util
+ * @param {Array} obj
+ * @param {Function} cb
+ * @param {*} [context]
+ * @return {*}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {Function} func
+ * @param {*} context
+ * @return {Function}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {Function} func
+ * @return {Function}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {*} value
+ * @return {boolean}
+ */
+function isDom(value) {
+    return typeof value === 'object'
+        && typeof value.nodeType === 'number'
+        && typeof value.ownerDocument === 'object';
+}
+
+/**
+ * Whether is exactly NaN. Notice isNaN('a') returns true.
+ * @param {*} value
+ * @return {boolean}
+ */
+
+
+/**
+ * If value1 is not null, then return value1, otherwise judget rest of values.
+ * Low performance.
+ * @memberOf module:zrender/core/util
+ * @return {*} Final value
+ */
+
+
+
+
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {Array} arr
+ * @param {number} startIndex
+ * @param {number} endIndex
+ * @return {Array}
+ */
+
+
+/**
+ * Normalize css liked array configuration
+ * e.g.
+ *  3 => [3, 3, 3, 3]
+ *  [4, 2] => [4, 2, 4, 2]
+ *  [4, 3, 2] => [4, 3, 2, 3]
+ * @param {number|Array.<number>} val
+ * @return {Array.<number>}
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {boolean} condition
+ * @param {string} message
+ */
+
+
+/**
+ * @memberOf module:zrender/core/util
+ * @param {string} str string to be trimed
+ * @return {string} trimed string
+ */
+
+
+var primitiveKey = '__ec_primitive__';
+/**
+ * Set an object as primitive to be ignored traversing children in clone or merge
+ */
+
+
+function isPrimitive(obj) {
+    return obj[primitiveKey];
+}
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -366,7 +700,7 @@ echarts.extendComponentView({
         if (JSON.stringify(originalStyle) !== mapStyleStr) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (Object.keys(newMapStyle).length) {
-                bmap.setMapStyle(newMapStyle);
+                bmap.setMapStyle(clone(newMapStyle));
             }
             bMapModel.__mapStyle = JSON.parse(mapStyleStr);
         }
@@ -380,7 +714,7 @@ echarts.extendComponentView({
         if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (Object.keys(newMapStyle2).length) {
-                bmap.setMapStyleV2(newMapStyle2);
+                bmap.setMapStyleV2(clone(newMapStyle2));
             }
             bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);
         }

@@ -474,7 +474,7 @@ function position(row, rowFixedLength, rect, halfGapWidth, flush) {
     rect[wh[idx1WhenH]] -= rowOtherLength;
 }
 
-// Return [containerWidth, containerHeight] as defualt.
+// Return [containerWidth, containerHeight] as default.
 function estimateRootSize(seriesModel, targetInfo, viewRoot, containerWidth, containerHeight) {
     // If targetInfo.node exists, we zoom to the node,
     // so estimate whold width and heigth by target node.

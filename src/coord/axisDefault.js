@@ -30,7 +30,7 @@ var defaultOption = {
     name: '',
     // 'start' | 'middle' | 'end'
     nameLocation: 'end',
-    // By degree. By defualt auto rotate by nameLocation.
+    // By degree. By default auto rotate by nameLocation.
     nameRotate: null,
     nameTruncate: {
         maxWidth: null,

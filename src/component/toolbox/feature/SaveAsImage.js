@@ -67,7 +67,8 @@ proto.onclick = function (ecModel, api) {
         $a.target = '_blank';
         $a.href = url;
         var evt = new MouseEvent('click', {
-            view: window,
+            // some micro front-end framework， window maybe is a Proxy
+            view: document.defaultView,
             bubbles: true,
             cancelable: false
         });
