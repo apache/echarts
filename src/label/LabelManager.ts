@@ -45,7 +45,7 @@ import Transformable from 'zrender/src/core/Transformable';
 import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
-import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/core/util';
+import { retrieve2, each, keys, isFunction, filter, indexOf, map, guid } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
@@ -92,9 +92,20 @@ interface SavedLabelAttr {
     rect: RectLike
 }
 
-function prepareLayoutCallbackParams(labelItem: LabelDesc): LabelLayoutOptionCallbackParams {
+function cloneArr(points: number[][]) {
+    if (points) {
+        const newPoints = [];
+        for (let i = 0; i < points.length; i++) {
+            newPoints.push(points[i].slice());
+        }
+        return newPoints;
+    }
+}
+
+function prepareLayoutCallbackParams(labelItem: LabelDesc, hostEl?: Element): LabelLayoutOptionCallbackParams {
     const labelAttr = labelItem.defaultAttr;
     const label = labelItem.label;
+    const labelLine = hostEl && hostEl.getTextGuideLine();
     return {
         dataIndex: labelItem.dataIndex,
         dataType: labelItem.dataType,
@@ -105,7 +116,8 @@ function prepareLayoutCallbackParams(labelItem: LabelDesc): LabelLayoutOptionCal
         // x: labelAttr.x,
         // y: labelAttr.y,
         align: label.style.align,
-        verticalAlign: label.style.verticalAlign
+        verticalAlign: label.style.verticalAlign,
+        labelLinePoints: cloneArr(labelLine && labelLine.shape.points)
     };
 }
 
@@ -130,7 +142,7 @@ const labelLayoutInnerStore = makeInner<{
         rotation?: number
     },
 
-    changedByUser?: boolean
+    needsUpdateLabelLine?: boolean
 }, ZRText>();
 
 const labelLineAnimationStore = makeInner<{
@@ -299,7 +311,7 @@ class LabelManager {
             // TODO A global layout option?
             if (typeof labelItem.layoutOption === 'function') {
                 layoutOption = labelItem.layoutOption(
-                    prepareLayoutCallbackParams(labelItem)
+                    prepareLayoutCallbackParams(labelItem, hostEl)
                 );
             }
             else {
@@ -323,12 +335,12 @@ class LabelManager {
                     offset: [layoutOption.dx || 0, layoutOption.dy || 0]
                 });
             }
-            let changedByUser = false;
+            let needsUpdateLabelLine = false;
             if (layoutOption.x != null) {
                 // TODO width of chart view.
                 label.x = parsePercent(layoutOption.x, width);
                 label.setStyle('x', 0);  // Ignore movement in style. TODO: origin.
-                changedByUser = changedByUser || true;
+                needsUpdateLabelLine = true;
             }
             else {
                 label.x = defaultLabelAttr.x;
@@ -339,15 +351,24 @@ class LabelManager {
                 // TODO height of chart view.
                 label.y = parsePercent(layoutOption.y, height);
                 label.setStyle('y', 0);  // Ignore movement in style.
-                changedByUser = changedByUser || true;
+                needsUpdateLabelLine = true;
             }
             else {
                 label.y = defaultLabelAttr.y;
                 label.setStyle('y', defaultLabelAttr.style.y);
             }
-            if (changedByUser) {
-                labelLayoutInnerStore(label).changedByUser = true;
+
+            if (layoutOption.labelLinePoints) {
+                const guideLine = hostEl.getTextGuideLine();
+                if (guideLine) {
+                    guideLine.setShape({ points: layoutOption.labelLinePoints });
+                    // Not update
+                    needsUpdateLabelLine = false;
+                }
             }
+
+            const labelLayoutStore = labelLayoutInnerStore(label);
+            labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
 
             label.rotation = layoutOption.rotate != null
                 ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
@@ -356,6 +377,7 @@ class LabelManager {
                 const key = LABEL_OPTION_TO_STYLE_KEYS[k];
                 label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
             }
+
 
             if (layoutOption.draggable) {
                 label.draggable = true;
@@ -413,7 +435,7 @@ class LabelManager {
                 let needsUpdateLabelLine = !ignoreLabelLineUpdate;
                 const label = child.getTextContent();
                 if (!needsUpdateLabelLine && label) {
-                    needsUpdateLabelLine = labelLayoutInnerStore(label).changedByUser;
+                    needsUpdateLabelLine = labelLayoutInnerStore(label).needsUpdateLabelLine;
                 }
                 if (needsUpdateLabelLine) {
                     this._updateLabelLine(child, seriesModel);

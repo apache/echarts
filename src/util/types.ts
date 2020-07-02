@@ -828,6 +828,8 @@ export interface LabelLayoutOptionCallbackParams {
     verticalAlign: ZRTextVerticalAlign
     rect: RectLike
     labelRect: RectLike
+    // Points of label line in pie/funnel
+    labelLinePoints?: number[][]
     // x: number
     // y: number
 };
@@ -877,6 +879,9 @@ export interface LabelLayoutOption {
     verticalAlign?: ZRTextVerticalAlign
     width?: number
     height?: number
+
+    // Points of label line in pie/funnel
+    labelLinePoints?: number[][]
 }
 
 export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
