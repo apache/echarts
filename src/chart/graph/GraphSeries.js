@@ -25,8 +25,7 @@ import Model from '../../model/Model';
 import {encodeHTML} from '../../util/format';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
-import {initCurvenessList} from '../helper/multipleGraphEdgeHelper';
-import {createEdgeMapForCurveness} from '../../chart/helper/multipleGraphEdgeHelper';
+import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
 
 var GraphSeries = echarts.extendSeriesModel({
 

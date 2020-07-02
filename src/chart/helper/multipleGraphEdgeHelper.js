@@ -170,8 +170,8 @@ export function createEdgeMapForCurveness(n1, n2, seriesModel, index) {
  * @param index
  */
 export function getCurvenessForEdge(edge, seriesModel, index, needReverse) {
-    const autoCurvenessParams = getAutoCurvenessParams(seriesModel);
-    const isArrayParam = zrUtil.isArray(autoCurvenessParams);
+    var autoCurvenessParams = getAutoCurvenessParams(seriesModel);
+    var isArrayParam = zrUtil.isArray(autoCurvenessParams);
     if (!autoCurvenessParams) {
         return null;
     }

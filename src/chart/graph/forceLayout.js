@@ -86,7 +86,7 @@ export default function (ecModel) {
                 }
                 var edgeModel = edge.getModel();
                 var curveness = zrUtil.retrieve3(
-                    edge.getModel().get('lineStyle.curveness'),
+                    edgeModel.get('lineStyle.curveness'),
                     -getCurvenessForEdge(edge, graphSeries, idx, true),
                     0
                 );

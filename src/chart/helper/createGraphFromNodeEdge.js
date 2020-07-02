@@ -46,7 +46,7 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
         var target = link.target;
 
         // addEdge may fail when source or target not exists
-        if (graph.addEdge(source, target, linkCount, seriesModel)) {
+        if (graph.addEdge(source, target, linkCount)) {
             validEdges.push(link);
             linkNameList.push(zrUtil.retrieve(link.id, source + ' > ' + target));
             linkCount++;
