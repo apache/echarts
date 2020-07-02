@@ -705,9 +705,9 @@ function getLabelText<LDI>(
             null,
             labelDimIndex,
             normalModel && normalModel.get('formatter'),
-            {
+            interpolateValues != null ? {
                 value: interpolateValues
-            }
+            } : null
         );
     }
     if (baseText == null) {

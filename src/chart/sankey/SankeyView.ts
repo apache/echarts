@@ -218,7 +218,7 @@ class SankeyView extends ChartView {
                 cpy2: cpy2
             });
 
-            curve.setStyle(lineStyleModel.getItemStyle());
+            curve.useStyle(lineStyleModel.getItemStyle());
             // Special color, use source node color or target node color
             switch (curve.style.fill) {
                 case 'source':
@@ -347,7 +347,7 @@ class SankeyView extends ChartView {
             if (edgeModel.get('focusNodeAdjacency')) {
                 const blurState = el.ensureState('blur');
                 blurState.style = {
-                    opacity: 0.1
+                    opacity: 0.02
                 };
 
                 el.on('mouseover', el.focusNodeAdjHandler = function () {
