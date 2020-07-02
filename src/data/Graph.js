@@ -137,10 +137,9 @@ graphProto.getNodeById = function (id) {
  * @param {number|string|module:echarts/data/Graph.Node} n1
  * @param {number|string|module:echarts/data/Graph.Node} n2
  * @param {number} [dataIndex=-1]
- * @param {module:echarts/model/SeriesModel} seriesModel
  * @return {module:echarts/data/Graph.Edge}
  */
-graphProto.addEdge = function (n1, n2, dataIndex, seriesModel) {
+graphProto.addEdge = function (n1, n2, dataIndex) {
     var nodesMap = this._nodesMap;
     var edgesMap = this._edgesMap;
 
