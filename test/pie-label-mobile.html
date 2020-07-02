@@ -133,12 +133,10 @@ under the License.
                             const isLeft = params.labelRect.x < chart.getWidth() / 2;
                             const points = params.labelLinePoints;
                             // Update the end point.
-                            if (isLeft) {
-                                points[2][0] = params.labelRect.x;
-                            }
-                            else {
-                                points[2][0] = params.labelRect.x + params.labelRect.width;
-                            }
+                            points[2][0] = isLeft
+                                ? params.labelRect.x
+                                : params.labelRect.x + params.labelRect.width;
+
                             return {
                                 labelLinePoints: points
                             }

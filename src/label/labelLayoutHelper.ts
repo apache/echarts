@@ -95,7 +95,8 @@ function shiftLayout(
     xyDim: 'x' | 'y',
     sizeDim: 'width' | 'height',
     minBound: number,
-    maxBound: number
+    maxBound: number,
+    balanceShift: boolean
 ) {
     const len = list.length;
 
@@ -129,7 +130,7 @@ function shiftLayout(
 
         lastPos = rect[xyDim] + rect[sizeDim];
     }
-    if (totalShifts > 0) {
+    if (totalShifts > 0 && balanceShift) {
         // Shift back to make the distribution more equally.
         shiftList(-totalShifts / len, 0, len);
     }
@@ -137,16 +138,19 @@ function shiftLayout(
     // TODO bleedMargin?
     const first = list[0];
     const last = list[len - 1];
-    let minGap = first.rect[xyDim] - minBound;
-    let maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+    let minGap: number;
+    let maxGap: number;
+    updateMinMaxGap();
 
-    // If ends exceed two bounds
-    handleBoundsGap(minGap, maxGap, 1);
-    handleBoundsGap(maxGap, minGap, -1);
+    // If ends exceed two bounds, squeeze at most 80%, then take the gap of two bounds.
+    minGap < 0 && squeezeGaps(-minGap, 0.8);
+    maxGap < 0 && squeezeGaps(maxGap, 0.8);
+    updateMinMaxGap();
+    takeBoundsGap(minGap, maxGap, 1);
+    takeBoundsGap(maxGap, minGap, -1);
 
     // Handle bailout when there is not enough space.
-    minGap = first.rect[xyDim] - minBound;
-    maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+    updateMinMaxGap();
 
     if (minGap < 0) {
         squeezeWhenBailout(-minGap);
@@ -155,7 +159,12 @@ function shiftLayout(
         squeezeWhenBailout(maxGap);
     }
 
-    function handleBoundsGap(gapThisBound: number, gapOtherBound: number, moveDir: 1 | -1) {
+    function updateMinMaxGap() {
+        minGap = first.rect[xyDim] - minBound;
+        maxGap = maxBound - last.rect[xyDim] - last.rect[sizeDim];
+    }
+
+    function takeBoundsGap(gapThisBound: number, gapOtherBound: number, moveDir: 1 | -1) {
         if (gapThisBound < 0) {
             // Move from other gap if can.
             const moveFromMaxGap = Math.min(gapOtherBound, -gapThisBound);
@@ -163,11 +172,11 @@ function shiftLayout(
                 shiftList(moveFromMaxGap * moveDir, 0, len);
                 const remained = moveFromMaxGap + gapThisBound;
                 if (remained < 0) {
-                    squeezeGaps(-remained * moveDir);
+                    squeezeGaps(-remained * moveDir, 1);
                 }
             }
             else {
-                squeezeGaps(-gapThisBound * moveDir);
+                squeezeGaps(-gapThisBound * moveDir, 1);
             }
         }
     }
@@ -185,7 +194,7 @@ function shiftLayout(
     }
 
     // Squeeze gaps if the labels exceed margin.
-    function squeezeGaps(delta: number) {
+    function squeezeGaps(delta: number, maxSqeezePercent: number) {
         const gaps: number[] = [];
         let totalGaps = 0;
         for (let i = 1; i < len; i++) {
@@ -198,14 +207,12 @@ function shiftLayout(
             return;
         }
 
-        if (Math.abs(delta) > totalGaps) {
-            delta = totalGaps * (delta < 0 ? -1 : 1);
-        }
+        const squeezePercent = Math.min(Math.abs(delta) / totalGaps, maxSqeezePercent);
 
         if (delta > 0) {
             for (let i = 0; i < len - 1; i++) {
                 // Distribute the shift delta to all gaps.
-                const movement = gaps[i] / totalGaps * delta;
+                const movement = gaps[i] * squeezePercent;
                 // Forward
                 shiftList(movement, 0, i + 1);
             }
@@ -214,8 +221,8 @@ function shiftLayout(
             // Backward
             for (let i = len - 1; i > 0; i--) {
                 // Distribute the shift delta to all gaps.
-                const movement = gaps[i - 1] / totalGaps * delta;
-                shiftList(movement, i, len);
+                const movement = gaps[i - 1] * squeezePercent;
+                shiftList(-movement, i, len);
             }
         }
     }
@@ -256,9 +263,14 @@ function shiftLayout(
 export function shiftLayoutOnX(
     list: Pick<LabelLayoutInfo, 'rect' | 'label'>[],
     leftBound: number,
-    rightBound: number
+    rightBound: number,
+    // If average the shifts on all labels and add them to 0
+    // TODO: Not sure if should enable it.
+    // Pros: The angle of lines will distribute more equally
+    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
+    balanceShift?: boolean
 ): boolean {
-    return shiftLayout(list, 'x', 'width', leftBound, rightBound);
+    return shiftLayout(list, 'x', 'width', leftBound, rightBound, balanceShift);
 }
 
 /**
@@ -267,9 +279,11 @@ export function shiftLayoutOnX(
 export function shiftLayoutOnY(
     list: Pick<LabelLayoutInfo, 'rect' | 'label'>[],
     topBound: number,
-    bottomBound: number
+    bottomBound: number,
+    // If average the shifts on all labels and add them to 0
+    balanceShift?: boolean
 ): boolean {
-    return shiftLayout(list, 'y', 'height', topBound, bottomBound);
+    return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
 }
 
 export function hideOverlap(labelList: LabelLayoutInfo[]) {
