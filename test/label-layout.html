@@ -440,8 +440,7 @@ under the License.
                             draggable: true,
                             align: 'center',
                             moveOverlap: 'shift-x',
-                            hideOverlap: true,
-                            minMargin: 10
+                            hideOverlap: true
                         },
                         labelLine: {
                             show: true,
@@ -455,6 +454,7 @@ under the License.
                             formatter: function (param) {
                                 return param.data[3];
                             },
+                            minMargin: 10,
                             color: '#333',
                             textBorderColor: '#fff',
                             textBorderWidth: 1,
@@ -504,8 +504,7 @@ under the License.
                             x: 500,
                             draggable: true,
                             moveOverlap: 'shift-y',
-                            // hideOverlap: true,
-                            minMargin: 2
+                            // hideOverlap: true
                         },
                         labelLine: {
                             show: true,
@@ -521,7 +520,8 @@ under the License.
                             },
                             textBorderColor: '#fff',
                             textBorderWidth: 1,
-                            position: 'top'
+                            position: 'top',
+                            minMargin: 2
                         }
                     }]
                 };

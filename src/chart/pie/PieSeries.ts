@@ -44,7 +44,7 @@ import List from '../../data/List';
 interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
-    margin?: string | number
+    edgeDistance?: string | number
     bleedMargin?: number
     distanceToLabelLine?: number
 
@@ -255,7 +255,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             alignTo: 'none',
             // Closest distance between label and chart edge.
             // Works only position is 'outer' and alignTo is 'edge'.
-            margin: '25%',
+            edgeDistance: '25%',
             // Works only position is 'outer' and alignTo is not 'edge'.
             bleedMargin: 10,
             // Distance between text and label line.

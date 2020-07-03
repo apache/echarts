@@ -774,6 +774,12 @@ export interface LabelOption extends TextCommonOption {
     rotate?: number
     offset?: number[]
 
+    /**
+     * Min margin between labels. Used when label has layout.
+     */
+    // It's minMargin instead of margin is for not breaking the previous code using margin.
+    minMargin?: number
+
     overflow?: TextStyleProps['overflow']
     silent?: boolean
     precision?: number | 'auto'
@@ -851,12 +857,6 @@ export interface LabelLayoutOption {
      * @default 'none'
      */
     hideOverlap?: boolean
-
-    /**
-     * Minimal margin between two labels which will be considered as overlapped.
-     */
-    minMargin?: number
-
     /**
      * If label is draggable.
      */

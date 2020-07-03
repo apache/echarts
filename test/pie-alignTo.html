@@ -73,7 +73,7 @@ under the License.
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer'
                     }
                 }]
@@ -89,7 +89,7 @@ under the License.
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'labelLine'
                     }
@@ -106,7 +106,7 @@ under the License.
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'edge'
                     }
@@ -141,7 +141,7 @@ under the License.
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'labelLine'
                     },
@@ -176,7 +176,7 @@ under the License.
                         length2: 15
                     },
                     label: {
-                        margin: 20,
+                        edgeDistance: 20,
                         position: 'outer',
                         alignTo: 'labelLine'
                     },
@@ -211,7 +211,7 @@ under the License.
             });
             var config = {
                 length2: 15,
-                margin: 20,
+                edgeDistance: 20,
                 overflow: 'truncate'
             };
 
@@ -222,7 +222,7 @@ under the License.
                             length2: config.length2
                         },
                         label: {
-                            margin: config.margin,
+                            edgeDistance: config.edgeDistance,
                             overflow: config.overflow
                         }
                     }]
@@ -238,7 +238,7 @@ under the License.
                             length2: config.length2,
                         },
                         label: {
-                            margin: config.margin,
+                            edgeDistance: config.edgeDistance,
                             overflow: config.overflow
                         }
                     })
@@ -247,7 +247,7 @@ under the License.
             }
 
             gui.add(config, 'length2', 0, 300).onChange(update);
-            gui.add(config, 'margin', 0, 300).onChange(update);
+            gui.add(config, 'edgeDistance', 0, 300).onChange(update);
             gui.add(config, 'overflow', ['truncate', 'break', 'breakAll']).onChange(update);
         });
         </script>

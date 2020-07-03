@@ -57,14 +57,13 @@ export function prepareLayoutList(input: LabelLayoutListPrepareInput[]): LabelLa
             continue;
         }
 
-        const layoutOption = rawItem.computedLayoutOption;
         const label = rawItem.label;
         const transform = label.getComputedTransform();
         // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
         const localRect = label.getBoundingRect();
         const isAxisAligned = !transform || (transform[1] < 1e-5 && transform[2] < 1e-5);
 
-        const minMargin = layoutOption.minMargin || 0;
+        const minMargin = label.style.margin || 0;
         const globalRect = localRect.clone();
         globalRect.applyTransform(transform);
         globalRect.x -= minMargin / 2;

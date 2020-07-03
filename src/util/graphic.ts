@@ -961,6 +961,10 @@ function setTextStyleCommon(
     if (overflow) {
         textStyle.overflow = overflow;
     }
+    const margin = textStyleModel.get('minMargin');
+    if (margin != null) {
+        textStyle.margin = margin;
+    }
 
     setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true);
 }

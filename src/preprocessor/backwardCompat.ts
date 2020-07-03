@@ -26,6 +26,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import { ECUnitOption, SeriesOption } from '../util/types';
 import { __DEV__ } from '../config';
 import type { BarSeriesOption } from '../chart/bar/BarSeries';
+import { PieSeriesOption } from '../chart/pie/PieSeries';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -94,6 +95,18 @@ function compatBarItemStyle(option: Dictionary<any>) {
     }
 }
 
+function compatPieLabel(option: Dictionary<any>) {
+    if (!option) {
+        return;
+    }
+    if (option.alignTo === 'edge' && option.margin != null && option.edgeDistance == null) {
+        if (__DEV__) {
+            deprecateLog('label.margin has been changed to label.edgeDistance in pie.');
+        }
+        option.edgeDistance = option.margin;
+    }
+}
+
 export default function (option: ECUnitOption, isTheme?: boolean) {
     compatStyle(option, isTheme);
 
@@ -122,6 +135,13 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
                 seriesOpt.clockwise = seriesOpt.clockWise;
                 deprecateLog('clockWise has been changed to clockwise.');
             }
+            compatPieLabel((seriesOpt as PieSeriesOption).label);
+            const data = seriesOpt.data;
+            if (data && !isTypedArray(data)) {
+                for (let i = 0; i < data.length; i++) {
+                    compatPieLabel(data[i]);
+                }
+            }
         }
         else if (seriesType === 'gauge') {
             const pointerColor = get(seriesOpt, 'pointer.color');
@@ -136,7 +156,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             const data = seriesOpt.data;
             if (data && !isTypedArray(data)) {
                 for (let i = 0; i < data.length; i++) {
-                    if (data[i]) {
+                    if (typeof data[i] === 'object') {
                         compatBarItemStyle(data[i]);
                         compatBarItemStyle(data[i] && data[i].emphasis);
                     }

@@ -45,7 +45,7 @@ import Transformable from 'zrender/src/core/Transformable';
 import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
-import { retrieve2, each, keys, isFunction, filter, indexOf, map, guid } from 'zrender/src/core/util';
+import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';

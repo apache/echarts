@@ -42,7 +42,7 @@ interface LabelLayout {
     textAlign: HorizontalAlign
     labelDistance: number,
     labelAlignTo: PieSeriesOption['label']['alignTo'],
-    labelMargin: number,
+    edgeDistance: number,
     bleedMargin: PieSeriesOption['label']['bleedMargin'],
     rect: BoundingRect
 }
@@ -178,10 +178,10 @@ function avoidOverlap(
             if (isAlignToEdge) {
                 if (label.x < cx) {
                     targetTextWidth = linePoints[2][0] - layout.labelDistance
-                            - viewLeft - layout.labelMargin;
+                            - viewLeft - layout.edgeDistance;
                 }
                 else {
-                    targetTextWidth = viewLeft + viewWidth - layout.labelMargin
+                    targetTextWidth = viewLeft + viewWidth - layout.edgeDistance
                             - linePoints[2][0] - layout.labelDistance;
                 }
             }
@@ -206,10 +206,10 @@ function avoidOverlap(
             const dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
                 if (label.x < cx) {
-                    linePoints[2][0] = viewLeft + layout.labelMargin + realTextWidth + layout.labelDistance;
+                    linePoints[2][0] = viewLeft + layout.edgeDistance + realTextWidth + layout.labelDistance;
                 }
                 else {
-                    linePoints[2][0] = viewLeft + viewWidth - layout.labelMargin
+                    linePoints[2][0] = viewLeft + viewWidth - layout.edgeDistance
                             - realTextWidth - layout.labelDistance;
                 }
             }
@@ -265,7 +265,7 @@ export default function (
         const labelPosition = labelModel.get('position') || itemModel.get(['emphasis', 'label', 'position']);
         const labelDistance = labelModel.get('distanceToLabelLine');
         const labelAlignTo = labelModel.get('alignTo');
-        const labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
+        const edgeDistance = parsePercent(labelModel.get('edgeDistance'), viewWidth);
         const bleedMargin = labelModel.get('bleedMargin');
 
         const labelLineModel = itemModel.getModel('labelLine');
@@ -316,8 +316,8 @@ export default function (
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
                     textX = dx < 0
-                        ? viewLeft + labelMargin
-                        : viewLeft + viewWidth - labelMargin;
+                        ? viewLeft + edgeDistance
+                        : viewLeft + viewWidth - edgeDistance;
                 }
                 else {
                     textX = x3 + (dx < 0 ? -labelDistance : labelDistance);
@@ -355,10 +355,11 @@ export default function (
             const textRect = label.getBoundingRect().clone();
             textRect.applyTransform(label.getComputedTransform());
             // Text has a default 1px stroke. Exclude this.
-            textRect.x -= 1;
-            textRect.y -= 1;
-            textRect.width += 2.1;
-            textRect.height += 2.1;
+            const margin = (label.style.margin || 0) + 2.1;
+            textRect.x -= margin / 2;
+            textRect.y -= margin / 2;
+            textRect.width += margin;
+            textRect.height += margin;
 
             labelLayoutList.push({
                 label,
@@ -371,7 +372,7 @@ export default function (
                 textAlign: textAlign,
                 labelDistance: labelDistance,
                 labelAlignTo: labelAlignTo,
-                labelMargin: labelMargin,
+                edgeDistance: edgeDistance,
                 bleedMargin: bleedMargin,
                 rect: textRect
             });
