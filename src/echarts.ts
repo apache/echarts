@@ -1854,13 +1854,19 @@ class ECharts extends Eventful {
                     zlevel != null && (el.zlevel = zlevel);
 
                     // TODO if textContent is on group.
-                    const textContent = el.getTextContent();
-                    if (textContent) {
-                        textContent.z = el.z;
-                        textContent.zlevel = el.zlevel;
+                    const label = el.getTextContent();
+                    const labelLine = el.getTextGuideLine();
+                    if (label) {
+                        label.z = el.z;
+                        label.zlevel = el.zlevel;
                         // lift z2 of text content
                         // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        textContent.z2 = el.z2 + 1;
+                        label.z2 = el.z2 + 1;
+                    }
+                    if (labelLine) {
+                        labelLine.z = el.z;
+                        labelLine.zlevel = el.zlevel;
+                        labelLine.z2 = el.z2 - 1;
                     }
                 }
             });

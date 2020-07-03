@@ -114,11 +114,16 @@ under the License.
                     series: [{
                         type: 'pie',
                         radius: [20, 60],
+                        itemStyle: {
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        },
                         label: {
                             alignTo: 'edge',
-                            formatter: '{name|{b}}\n{time|{c}小时}',
+                            formatter: '{name|{b}}\n{time|{c} 小时}',
                             margin: 10,
                             lineHeight: 15,
+                            // color: 'inherit',
                             rich: {
                                 time: {
                                     fontSize: 10,
@@ -127,7 +132,8 @@ under the License.
                             }
                         },
                         labelLine: {
-                            length: 5
+                            length: 15,
+                            length2: 0
                         },
                         labelLayout: function (params) {
                             const isLeft = params.labelRect.x < chart.getWidth() / 2;

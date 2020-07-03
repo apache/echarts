@@ -520,8 +520,7 @@ function buildLabelLinePath(path: CanvasRenderingContext2D, shape: Polyline['sha
 export function setLabelLineStyle(
     targetEl: Element,
     statesModels: Record<typeof STATES[number], LabelLineModel>,
-    defaultStyle?: Polyline['style'],
-    defaultConfig?: Element['textGuideLineConfig']
+    defaultStyle?: Polyline['style']
 ) {
     let labelLine = targetEl.getTextGuideLine();
     const label = targetEl.getTextContent();
