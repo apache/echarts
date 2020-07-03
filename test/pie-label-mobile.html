@@ -28,6 +28,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
@@ -44,6 +45,9 @@ under the License.
                 width: 360px;
                 height: 200px;
                 background-color: #fff;
+                text-align: left;
+            }
+            .dg {
                 text-align: left;
             }
         </style>
@@ -73,7 +77,7 @@ under the License.
                     { name: '其它', value: 3.8 }
                 ],
 
-                ////////////////////////////////////////
+                // ////////////////////////////////////////
                 [
                     { name: '银河帝国5：迈向基地', value: 3.8 },
                     { name: '俞军产品方法论', value: 2.3 },
@@ -93,6 +97,8 @@ under the License.
                     { name: '其它', value: 3.8 }
                 ]
             ];
+
+            const charts = [];
 
             datas.forEach(function (data) {
                 const dom = document.createElement('div');
@@ -133,7 +139,8 @@ under the License.
                         },
                         labelLine: {
                             length: 15,
-                            length2: 0
+                            length2: 0,
+                            maxSurfaceAngle: 80
                         },
                         labelLayout: function (params) {
                             const isLeft = params.labelRect.x < chart.getWidth() / 2;
@@ -150,7 +157,41 @@ under the License.
                         data: data
                     }]
                 });
+
+                charts.push(chart);
             });
+
+            const gui = new dat.GUI();
+            const config = {
+                labelLine: {
+                    smooth: 0,
+                    maxSurfaceAngle: 80
+                },
+                label: {
+                    edgeDistance: 10
+                }
+            };
+
+            function update() {
+                charts.forEach(function (chart) {
+                    chart.setOption({
+                        series: {
+                            label: Object.assign({}, config.label, {
+                                edgeDistance: config.label.edgeDistance
+                            }),
+                            labelLine: config.labelLine
+                        }
+                    });
+                });
+            }
+
+            const labelFolder = gui.addFolder('label');
+            const labelLineFolder = gui.addFolder('labelLine');
+            labelFolder.open();
+            labelLineFolder.open();
+            labelFolder.add(config.label, 'edgeDistance', 0, 50).onChange(update);
+            labelLineFolder.add(config.labelLine, 'maxSurfaceAngle', 0, 90).onChange(update);
+            labelLineFolder.add(config.labelLine, 'smooth', 0, 1).onChange(update);
         });
         </script>
 

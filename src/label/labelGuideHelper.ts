@@ -444,11 +444,80 @@ export function limitTurnAngle(linePoints: number[][], minTurnAngle: number) {
         const t = pt2.x !== pt1.x
             ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x)
             : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
+        if (isNaN(t)) {
+            return;
+        }
+
         if (t < 0) {
             Point.copy(tmpProjPoint, pt1);
         }
         else if (t > 1) {
             Point.copy(tmpProjPoint, pt2);
+        }
+
+        tmpProjPoint.toArray(linePoints[1]);
+    }
+}
+
+/**
+ * Limit the angle of line and the surface
+ * @param maxSurfaceAngle Radian of minimum turn angle. 0 - 180. 0 is same direction to normal. 180 is opposite
+ */
+export function limitSurfaceAngle(linePoints: vector.VectorArray[], surfaceNormal: Point, maxSurfaceAngle: number) {
+    if (!(maxSurfaceAngle <= 180 && maxSurfaceAngle > 0)) {
+        return;
+    }
+    maxSurfaceAngle = maxSurfaceAngle / 180 * Math.PI;
+
+    pt0.fromArray(linePoints[0]);
+    pt1.fromArray(linePoints[1]);
+    pt2.fromArray(linePoints[2]);
+
+    Point.sub(dir, pt1, pt0);
+    Point.sub(dir2, pt2, pt1);
+
+    const len1 = dir.len();
+    const len2 = dir2.len();
+
+    if (len1 < 1e-3 || len2 < 1e-3) {
+        return;
+    }
+
+    dir.scale(1 / len1);
+    dir2.scale(1 / len2);
+
+    const angleCos = dir.dot(surfaceNormal);
+    const maxSurfaceAngleCos = Math.cos(maxSurfaceAngle);
+
+    if (angleCos < maxSurfaceAngleCos) {
+        // Calculate project point of pt0 on pt1-pt2
+        const d = projectPointToLine(pt1.x, pt1.y, pt2.x, pt2.y, pt0.x, pt0.y, tmpArr, false);
+        tmpProjPoint.fromArray(tmpArr);
+
+        const HALF_PI = Math.PI / 2;
+        const angle2 = Math.acos(dir2.dot(surfaceNormal));
+        const newAngle = HALF_PI + angle2 - maxSurfaceAngle;
+        if (newAngle >= HALF_PI) {
+            // parallel
+            Point.copy(tmpProjPoint, pt2);
+        }
+        else {
+            // Calculate new projected length with limited minTurnAngle and get the new connect point
+            tmpProjPoint.scaleAndAdd(dir2, d / Math.tan(Math.PI / 2 - newAngle));
+            // Limit the new calculated connect point between pt1 and pt2.
+            const t = pt2.x !== pt1.x
+                ? (tmpProjPoint.x - pt1.x) / (pt2.x - pt1.x)
+                : (tmpProjPoint.y - pt1.y) / (pt2.y - pt1.y);
+            if (isNaN(t)) {
+                return;
+            }
+
+            if (t < 0) {
+                Point.copy(tmpProjPoint, pt1);
+            }
+            else if (t > 1) {
+                Point.copy(tmpProjPoint, pt2);
+            }
         }
 
         tmpProjPoint.toArray(linePoints[1]);

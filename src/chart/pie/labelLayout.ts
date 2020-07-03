@@ -26,7 +26,7 @@ import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import { each } from 'zrender/src/core/util';
-import { limitTurnAngle } from '../../label/labelGuideHelper';
+import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
 
 const RADIAN = Math.PI / 180;
@@ -38,6 +38,8 @@ interface LabelLayout {
     len: number
     len2: number
     minTurnAngle: number
+    maxSurfaceAngle: number
+    surfaceNormal: Point
     linePoints: VectorArray[]
     textAlign: HorizontalAlign
     labelDistance: number,
@@ -281,8 +283,8 @@ export default function (
         }
 
         const midAngle = (sectorShape.startAngle + sectorShape.endAngle) / 2;
-        const dx = Math.cos(midAngle);
-        const dy = Math.sin(midAngle);
+        const nx = Math.cos(midAngle);
+        const ny = Math.sin(midAngle);
 
         let textX;
         let textY;
@@ -300,27 +302,27 @@ export default function (
             textAlign = 'center';
         }
         else {
-            const x1 = (isLabelInside ? (sectorShape.r + sectorShape.r0) / 2 * dx : sectorShape.r * dx) + cx;
-            const y1 = (isLabelInside ? (sectorShape.r + sectorShape.r0) / 2 * dy : sectorShape.r * dy) + cy;
+            const x1 = (isLabelInside ? (sectorShape.r + sectorShape.r0) / 2 * nx : sectorShape.r * nx) + cx;
+            const y1 = (isLabelInside ? (sectorShape.r + sectorShape.r0) / 2 * ny : sectorShape.r * ny) + cy;
 
-            textX = x1 + dx * 3;
-            textY = y1 + dy * 3;
+            textX = x1 + nx * 3;
+            textY = y1 + ny * 3;
 
             if (!isLabelInside) {
                 // For roseType
-                const x2 = x1 + dx * (labelLineLen + r - sectorShape.r);
-                const y2 = y1 + dy * (labelLineLen + r - sectorShape.r);
-                const x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
+                const x2 = x1 + nx * (labelLineLen + r - sectorShape.r);
+                const y2 = y1 + ny * (labelLineLen + r - sectorShape.r);
+                const x3 = x2 + ((nx < 0 ? -1 : 1) * labelLineLen2);
                 const y3 = y2;
 
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
-                    textX = dx < 0
+                    textX = nx < 0
                         ? viewLeft + edgeDistance
                         : viewLeft + viewWidth - edgeDistance;
                 }
                 else {
-                    textX = x3 + (dx < 0 ? -labelDistance : labelDistance);
+                    textX = x3 + (nx < 0 ? -labelDistance : labelDistance);
                 }
                 textY = y3;
                 linePoints = [[x1, y1], [x2, y2], [x3, y3]];
@@ -329,8 +331,8 @@ export default function (
             textAlign = isLabelInside
                 ? 'center'
                 : (labelAlignTo === 'edge'
-                    ? (dx > 0 ? 'right' : 'left')
-                    : (dx > 0 ? 'left' : 'right'));
+                    ? (nx > 0 ? 'right' : 'left')
+                    : (nx > 0 ? 'left' : 'right'));
         }
 
         let labelRotate;
@@ -340,7 +342,7 @@ export default function (
         }
         else {
             labelRotate = rotate
-                ? (dx < 0 ? -midAngle + Math.PI : -midAngle)
+                ? (nx < 0 ? -midAngle + Math.PI : -midAngle)
                 : 0;
         }
 
@@ -368,6 +370,8 @@ export default function (
                 len: labelLineLen,
                 len2: labelLineLen2,
                 minTurnAngle: labelLineModel.get('minTurnAngle'),
+                maxSurfaceAngle: labelLineModel.get('maxSurfaceAngle'),
+                surfaceNormal: new Point(nx, ny),
                 linePoints: linePoints,
                 textAlign: textAlign,
                 labelDistance: labelDistance,
@@ -420,6 +424,8 @@ export default function (
             }
             else {
                 limitTurnAngle(linePoints, layout.minTurnAngle);
+                limitSurfaceAngle(linePoints, layout.surfaceNormal, layout.maxSurfaceAngle);
+
                 labelLine.setShape({ points: linePoints });
 
                 // Set the anchor to the midpoint of sector

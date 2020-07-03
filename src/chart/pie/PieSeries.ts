@@ -51,18 +51,26 @@ interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     position?: LabelOption['position'] | 'outer' | 'inner' | 'center'
 }
 
+interface PieLabelLineOption extends LabelLineOption {
+    /**
+     * Max angle between labelLine and surface normal.
+     * 0 - 180
+     */
+    maxSurfaceAngle?: number
+}
+
 export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
     SelectableTarget {
 
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
-    labelLine?: LabelLineOption
+    labelLine?: PieLabelLineOption
 
     emphasis?: {
         itemStyle?: ItemStyleOption
         label?: PieLabelOption
-        labelLine?: LabelLineOption
+        labelLine?: PieLabelLineOption
     }
 }
 export interface PieSeriesOption extends
@@ -81,7 +89,7 @@ export interface PieSeriesOption extends
     // TODO: TYPE Color Callback
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
-    labelLine?: LabelLineOption
+    labelLine?: PieLabelLineOption
 
     clockwise?: boolean
     startAngle?: number
@@ -99,7 +107,7 @@ export interface PieSeriesOption extends
     emphasis?: {
         itemStyle?: ItemStyleOption
         label?: PieLabelOption
-        labelLine?: LabelLineOption
+        labelLine?: PieLabelLineOption
     }
 
     animationType?: 'expansion' | 'scale'
@@ -272,7 +280,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // 引导线两段中的第二段长度
             length2: 15,
             smooth: false,
-            minTurnAngle: 100,
+            minTurnAngle: 90,
+            maxSurfaceAngle: 90,
             lineStyle: {
                 // color: 各异,
                 width: 1,

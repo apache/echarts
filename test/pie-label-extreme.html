@@ -688,7 +688,7 @@ under the License.
                     minTurnAngle: 110
                 },
                 label: {
-                    margin: 25,
+                    edgeDistance: 25,
                     bleedMargin: 10,
                     alignTo: 'none',
                     overflow: 'truncate'
@@ -699,7 +699,7 @@ under the License.
                 chart.setOption({
                     series: {
                         label: Object.assign({}, config.label, {
-                            margin: config.label.margin + '%'
+                            edgeDistance: config.label.edgeDistance + '%'
                         }),
                         labelLine: config.labelLine
                     }
@@ -712,7 +712,7 @@ under the License.
             labelLineFolder.open();
             labelFolder.add(config.label, 'alignTo', ['none', 'edge', 'labelLine']).onChange(update);
             labelFolder.add(config.label, 'overflow', ['truncate', 'break', 'breakAll']).onChange(update);
-            labelFolder.add(config.label, 'margin', 0, 50).onChange(update);
+            labelFolder.add(config.label, 'edgeDistance', 0, 50).onChange(update);
             labelFolder.add(config.label, 'bleedMargin', 0, 500).onChange(update);
             labelLineFolder.add(config.labelLine, 'length', 0, 500).onChange(update);
             labelLineFolder.add(config.labelLine, 'length2', 0, 500).onChange(update);
