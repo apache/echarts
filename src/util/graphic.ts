@@ -1293,7 +1293,7 @@ export function removeElement<Props>(
 }
 
 function animateOrSetLabel<Props extends PathProps>(
-    isUpdate: boolean,
+    animationType: 'init' | 'update' | 'remove',
     el: Element<Props>,
     data: List,
     dataIndex: number,
@@ -1361,7 +1361,7 @@ function animateOrSetLabel<Props extends PathProps>(
         };
 
         const props: ElementProps = {};
-        animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, null, during);
+        animateOrSetProps(animationType, el, props, animatableModel, dataIndex, null, during);
     }
 }
 
@@ -1374,7 +1374,7 @@ export function updateLabel<Props>(
     animatableModel?: Model<AnimationOptionMixin>,
     defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel(true, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
+    animateOrSetLabel('update', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 export function initLabel<Props>(
@@ -1386,7 +1386,7 @@ export function initLabel<Props>(
     animatableModel?: Model<AnimationOptionMixin>,
     defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel(false, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
+    animateOrSetLabel('init', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 /**

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-
+// @ts-nocheck
 import {__DEV__} from '../config';
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike

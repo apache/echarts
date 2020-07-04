@@ -102,7 +102,7 @@ export interface GeoOption extends
 
     regions: RegoinOption[];
 
-    stateAnimation?: AnimationOption
+    stateAnimation?: AnimationOptionMixin
 }
 
 const LABEL_FORMATTER_NORMAL = ['label', 'formatter'] as const;
