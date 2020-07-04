@@ -20,7 +20,7 @@
 // @ts-nocheck
 import {__DEV__} from '../config';
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import {getDefaultLabel} from './helper/labelHelper';
@@ -87,9 +87,8 @@ const inner = makeInner<{
     customImagePath: CustomImageOption['style']['image'];
     // customText: string;
     txConZ2Set: number;
-    orginalDuring: Element['updateDuringAnimation'];
-    customDuring: CustomZRPathOption['during'];
-    leaveToProps: ElementProps
+    leaveToProps: ElementProps;
+    userDuring: CustomBaseElementOption['during'];
 }, Element>();
 
 type CustomExtraElementInfo = Dictionary<unknown>;
@@ -109,14 +108,14 @@ type TransitionAnyProps = string | string[];
 type TransitionTransformProps = TransformProps | TransformProps[];
 // Do not declare "Dictionary" in TransitionAnyOption to restrict the type check.
 type TransitionAnyOption = {
-    $transition?: TransitionAnyProps;
-    $enterFrom?: Dictionary<unknown>;
-    $leaveTo?: Dictionary<unknown>;
+    transition?: TransitionAnyProps;
+    enterFrom?: Dictionary<unknown>;
+    leaveTo?: Dictionary<unknown>;
 };
 type TransitionTransformOption = {
-    $transition?: TransitionTransformProps;
-    $enterFrom?: Dictionary<unknown>;
-    $leaveTo?: Dictionary<unknown>;
+    transition?: TransitionTransformProps;
+    enterFrom?: Dictionary<unknown>;
+    leaveTo?: Dictionary<unknown>;
 };
 
 interface CustomBaseElementOption extends Partial<Pick<
@@ -132,8 +131,8 @@ interface CustomBaseElementOption extends Partial<Pick<
     textContent?: CustomTextOption | false;
     // `false` means remove the clipPath
     clipPath?: CustomZRPathOption | false;
-    // Shape can be set in any el option for custom prop for annimation duration.
-    shape?: TransitionAnyOption;
+    // `extra` can be set in any el option for custom prop for annimation duration.
+    extra?: TransitionAnyOption;
     // updateDuringAnimation
     during?(params: typeof customDuringAPI): void;
 };
@@ -196,8 +195,8 @@ interface CustomSeriesRenderItemAPI extends
         CustomSeriesRenderItemCoordinateSystemAPI,
         Pick<ExtensionAPI, 'getWidth' | 'getHeight' | 'getZr' | 'getDevicePixelRatio'> {
     value(dim: DimensionLoose, dataIndexInside?: number): ParsedValue;
-    style(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
-    styleEmphasis(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
+    styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps;
     visual(visualType: string, dataIndexInside?: number): ReturnType<List['getItemVisual']>;
     barLayout(opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>): ReturnType<typeof getLayoutOnAxis>;
     currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']>;
@@ -575,16 +574,17 @@ function createEl(elOption: CustomElementOption): Element {
  * ----------------------------------------------------------
  * [STRATEGY_MERGE] Merge properties or erase all properties:
  *
- * Based on the fact that the existing zr element probably be reused, we discuss whether
+ * Based on the fact that the existing zr element probably be reused, we now consider whether
  * merge or erase all properties to the exsiting elements.
- * + "Merge" means that if a certain props is not specified, do not assign to the existing element.
- * + "Erase all" means that assign all of the available props whatever it specified by users.
+ * That is, if a certain props is not specified in the lastest return of `renderItem`:
+ * + "Merge" means that do not modify the value on the existing element.
+ * + "Erase all" means that use a default value to the existing element.
  *
  * "Merge" might bring some unexpected state retaining for users and "erase all" seams to be
- * more safe. But "erase all" force users to specify all of the props each time, which
- * theoretically disables the chance of performance optimization (e.g., just generete shape
- * and style at the first time rather than always do that). And "force user set all of the props"
- * might bring trouble to specify which props need to perform "transition animation".
+ * more safe. "erase all" force users to specify all of the props each time, which is recommanded
+ * in most cases.
+ * But "erase all" theoretically disables the chance of performance optimization (e.g., just
+ * generete shape and style at the first time rather than always do that).
  * So we still use "merge" rather than "erase all". If users need "erase all", they can
  * simple always set all of the props each time.
  * Some "object-like" config like `textConfig`, `textContent`, `style` which are not needed for
@@ -610,12 +610,12 @@ function createEl(elOption: CustomElementOption): Element {
  * ---------------------------------------------
  * [STRATEGY_TRANSITION] The rule of transition:
  * + For props on the root level of a element:
- *      If there is no `$transition` specified, tansform props will be transitioned by default,
+ *      If there is no `transition` specified, tansform props will be transitioned by default,
  *      which is the same as the previous setting in echarts4 and suitable for the scenario
  *      of dataZoom change.
- *      If `$transition` specified, only the specified props will be transitioned.
+ *      If `transition` specified, only the specified props will be transitioned.
  * + For props in `shape` and `style`:
- *      Only props specified in `$transition` will be transitioned.
+ *      Only props specified in `transition` will be transitioned.
  * + Break:
  *      Since ec5, do not make transition to shape by default, because it might result in
  *      performance issue (especially `points` of polygon) and do not necessary in most cases.
@@ -634,7 +634,8 @@ function updateElNormal(
     const allProps = {} as ElementProps;
     const elDisplayable = el.isGroup ? null : el as Displayable;
 
-    prepareShapeUpdate(el, elOption, allProps, transFromProps, isInit);
+    prepareShapeOrExtraUpdate('shape', el, elOption, allProps, transFromProps, isInit);
+    prepareShapeOrExtraUpdate('extra', el, elOption, allProps, transFromProps, isInit);
     prepareTransformUpdate(el, elOption, allProps, transFromProps, isInit);
 
     const txCfgOpt = attachedTxInfo && attachedTxInfo.normal.cfg;
@@ -688,28 +689,29 @@ function updateElNormal(
         hasOwn(elOption, 'invisible') && (elDisplayable.invisible = elOption.invisible);
     }
 
+    // Do not use `el.updateDuringAnimation` here becuase `el.updateDuringAnimation` will
+    // be called mutiple time in each animation frame. For example, if both "transform" props
+    // and shape props and style props changed, it will generate three animator and called
+    // one-by-one in each animation frame.
+    // We use the during in `animateTo/From` params.
+    const userDuring = elOption.during;
+    // For simplicity, if during not specified, the previous during will not work any more.
+    inner(el).userDuring = userDuring;
+    const cfgDuringCall = userDuring ? bind(duringCall, { el: el, userDuring: userDuring }) : null;
+
     el.attr(allProps);
-    const params = {dataIndex: dataIndex, isFrom: true};
+    const cfg = {
+        dataIndex: dataIndex,
+        isFrom: true,
+        during: cfgDuringCall
+    };
     isInit
-        ? graphicUtil.initProps(el, transFromProps, seriesModel, params)
-        : graphicUtil.updateProps(el, transFromProps, seriesModel, params);
+        ? graphicUtil.initProps(el, transFromProps, seriesModel, cfg)
+        : graphicUtil.updateProps(el, transFromProps, seriesModel, cfg);
 
     // Merge by default.
     hasOwn(elOption, 'silent') && (el.silent = elOption.silent);
     hasOwn(elOption, 'ignore') && (el.ignore = elOption.ignore);
-
-    const customDuringMounted = el.updateDuringAnimation === elUpdateDuringAnimation;
-    if (elOption.during) {
-        const innerEl = inner(el);
-        if (!customDuringMounted) {
-            innerEl.orginalDuring = el.updateDuringAnimation;
-            el.updateDuringAnimation = elUpdateDuringAnimation;
-        }
-        innerEl.customDuring = elOption.during;
-    }
-    else if (customDuringMounted) {
-        el.updateDuringAnimation = inner(el).orginalDuring;
-    }
 
     if (!isTextContent) {
         // `elOption.info` enables user to mount some info on
@@ -721,8 +723,10 @@ function updateElNormal(
     styleOpt ? el.dirty() : el.markRedraw();
 }
 
+
 // See [STRATEGY_TRANSITION]
-function prepareShapeUpdate(
+function prepareShapeOrExtraUpdate(
+    mainAttr: 'shape' | 'extra',
     el: Element,
     elOption: CustomElementOption,
     allProps: LooseElementProps,
@@ -730,58 +734,58 @@ function prepareShapeUpdate(
     isInit: boolean
 ): void {
 
-    const shapeOpt = (elOption as CustomElementOption).shape;
-    if (!shapeOpt) {
+    const attrOpt: Dictionary<unknown> & TransitionAnyOption = (elOption as any)[mainAttr];
+    if (!attrOpt) {
         return;
     }
 
-    const elShape = (el as LooseElementProps).shape;
-    let tranFromShapeProps: LooseElementProps['shape'];
+    const elPropsInAttr = (el as LooseElementProps)[mainAttr];
+    let transFromPropsInAttr: Dictionary<unknown>;
 
-    const enterFrom = shapeOpt.$enterFrom;
+    const enterFrom = attrOpt.enterFrom;
     if (isInit && enterFrom) {
-        !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
+        !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
-            // `$enterFrom` props are not necessarily also declared in `shape`/`style`/...,
-            // for example, `opacity` can only declared in `$enterFrom` but not in `style`.
+            // `enterFrom` props are not necessarily also declared in `shape`/`style`/...,
+            // for example, `opacity` can only declared in `enterFrom` but not in `style`.
             const key = enterFromKeys[i];
             // Do not clone, animator will perform that clone.
-            tranFromShapeProps[key] = enterFrom[key];
+            transFromPropsInAttr[key] = enterFrom[key];
         }
     }
 
-    if (!isInit && elShape && shapeOpt.$transition) {
-        !tranFromShapeProps && (tranFromShapeProps = transFromProps.shape = {});
-        const transitionKeys = normalizeToArray(shapeOpt.$transition);
+    if (!isInit && elPropsInAttr && attrOpt.transition) {
+        !transFromPropsInAttr && (transFromPropsInAttr = transFromProps[mainAttr] = {});
+        const transitionKeys = normalizeToArray(attrOpt.transition);
         for (let i = 0; i < transitionKeys.length; i++) {
             const key = transitionKeys[i];
-            const elVal = elShape[key];
+            const elVal = elPropsInAttr[key];
             if (__DEV__) {
-                checkTansitionRefer(key, (shapeOpt as any)[key], elVal);
+                checkTansitionRefer(key, (attrOpt as any)[key], elVal);
             }
             // Do not clone, see `checkTansitionRefer`.
-            tranFromShapeProps[key] = elVal;
+            transFromPropsInAttr[key] = elVal;
         }
     }
 
-    const allPropsShape = allProps.shape = {} as LooseElementProps['shape'];
-    const shapeOptKeys = keys(shapeOpt);
-    for (let i = 0; i < shapeOptKeys.length; i++) {
-        const key = shapeOptKeys[i];
+    const allPropsInAttr = allProps[mainAttr] = {} as Dictionary<unknown>;
+    const keysInAttr = keys(attrOpt);
+    for (let i = 0; i < keysInAttr.length; i++) {
+        const key = keysInAttr[i];
         // To avoid share one object with different element, and
         // to avoid user modify the object inexpectedly, have to clone.
-        allPropsShape[key] = cloneValue((shapeOpt as any)[key]);
+        allPropsInAttr[key] = cloneValue((attrOpt as any)[key]);
     }
 
-    const leaveTo = shapeOpt.$leaveTo;
+    const leaveTo = attrOpt.leaveTo;
     if (leaveTo) {
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
-        const leaveToShapeProps = leaveToProps.shape || (leaveToProps.shape = {});
+        const leaveToPropsInAttr: Dictionary<unknown> = leaveToProps[mainAttr] || (leaveToProps[mainAttr] = {});
         const leaveToKeys = keys(leaveTo);
         for (let i = 0; i < leaveToKeys.length; i++) {
             const key = leaveToKeys[i];
-            leaveToShapeProps[key] = leaveTo[key];
+            leaveToPropsInAttr[key] = leaveTo[key];
         }
     }
 }
@@ -794,13 +798,13 @@ function prepareTransformUpdate(
     transFromProps: ElementProps,
     isInit: boolean
 ): void {
-    const enterFrom = elOption.$enterFrom;
+    const enterFrom = elOption.enterFrom;
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         for (let i = 0; i < enterFromKeys.length; i++) {
             const key = enterFromKeys[i] as TransformProps;
             if (__DEV__) {
-                checkTransformPropRefer(key, 'el.$enterFrom');
+                checkTransformPropRefer(key, 'el.enterFrom');
             }
             // Do not clone, animator will perform that clone.
             transFromProps[key] = enterFrom[key] as number;
@@ -808,13 +812,13 @@ function prepareTransformUpdate(
     }
 
     if (!isInit) {
-        if (elOption.$transition) {
-            const transitionKeys = normalizeToArray(elOption.$transition);
+        if (elOption.transition) {
+            const transitionKeys = normalizeToArray(elOption.transition);
             for (let i = 0; i < transitionKeys.length; i++) {
                 const key = transitionKeys[i];
                 const elVal = el[key];
                 if (__DEV__) {
-                    checkTransformPropRefer(key, 'el.$transition');
+                    checkTransformPropRefer(key, 'el.transition');
                     checkTansitionRefer(key, elOption[key], elVal);
                 }
                 // Do not clone, see `checkTansitionRefer`.
@@ -840,14 +844,14 @@ function prepareTransformUpdate(
     setTransProp(elOption, allProps, 'originY');
     setTransProp(elOption, allProps, 'rotation');
 
-    const leaveTo = elOption.$leaveTo;
+    const leaveTo = elOption.leaveTo;
     if (leaveTo) {
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
         const leaveToKeys = keys(leaveTo);
         for (let i = 0; i < leaveToKeys.length; i++) {
             const key = leaveToKeys[i] as TransformProps;
             if (__DEV__) {
-                checkTransformPropRefer(key, 'el.$leaveTo');
+                checkTransformPropRefer(key, 'el.leaveTo');
             }
             leaveToProps[key] = leaveTo[key] as number;
         }
@@ -868,7 +872,7 @@ function prepareStyleUpdate(
     const elStyle = (el as LooseElementProps).style as LooseElementProps['style'];
     let transFromStyleProps: LooseElementProps['style'];
 
-    const enterFrom = styleOpt.$enterFrom;
+    const enterFrom = styleOpt.enterFrom;
     if (isInit && enterFrom) {
         const enterFromKeys = keys(enterFrom);
         !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
@@ -879,8 +883,8 @@ function prepareStyleUpdate(
         }
     }
 
-    if (!isInit && elStyle && styleOpt.$transition) {
-        const transitionKeys = normalizeToArray(styleOpt.$transition);
+    if (!isInit && elStyle && styleOpt.transition) {
+        const transitionKeys = normalizeToArray(styleOpt.transition);
         !transFromStyleProps && (transFromStyleProps = transFromProps.style = {});
         for (let i = 0; i < transitionKeys.length; i++) {
             const key = transitionKeys[i];
@@ -893,7 +897,7 @@ function prepareStyleUpdate(
         }
     }
 
-    const leaveTo = styleOpt.$leaveTo;
+    const leaveTo = styleOpt.leaveTo;
     if (leaveTo) {
         const leaveToKeys = keys(leaveTo);
         const leaveToProps = getOrCreateLeaveToPropsFromEl(el);
@@ -941,28 +945,41 @@ const tmpDuringScope = {} as {
 const customDuringAPI = {
     // Usually other props do not need to be changed in animation during.
     setTransform(key: TransformProps, val: unknown) {
-        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
+        if (__DEV__) {
+            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `setTransform`.');
+        }
         tmpDuringScope.el[key] = val as number;
         return this;
     },
     getTransform(key: TransformProps): unknown {
-        assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
+        if (__DEV__) {
+            assert(hasOwn(TRANSFORM_PROPS, key), 'Only ' + transformPropNamesStr + ' available in `getTransform`.');
+        }
         return tmpDuringScope.el[key];
     },
     setShape(key: string, val: unknown) {
-        // In custom series, el other than Path can also has `shape` for intepolating props.
-        const shape = (tmpDuringScope.el as any).shape || ((tmpDuringScope.el as any).shape = {});
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const shape = (tmpDuringScope.el as graphicUtil.Path).shape
+            || ((tmpDuringScope.el as graphicUtil.Path).shape = {});
         shape[key] = val;
         tmpDuringScope.isShapeDirty = true;
         return this;
     },
     getShape(key: string): unknown {
-        const shape = (tmpDuringScope.el as any).shape;
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const shape = (tmpDuringScope.el as graphicUtil.Path).shape;
         if (shape) {
             return shape[key];
         }
     },
     setStyle(key: string, val: unknown) {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
         const style = (tmpDuringScope.el as Displayable).style;
         if (style) {
             style[key] = val;
@@ -971,32 +988,90 @@ const customDuringAPI = {
         return this;
     },
     getStyle(key: string): unknown {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
         const style = (tmpDuringScope.el as Displayable).style;
         if (style) {
             return style[key];
         }
+    },
+    setExtra(key: string, val: unknown) {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const extra = (tmpDuringScope.el as LooseElementProps).extra
+            || ((tmpDuringScope.el as LooseElementProps).extra = {});
+        extra[key] = val;
+        return this;
+    },
+    getExtra(key: string): unknown {
+        if (__DEV__) {
+            assertNotReserved(key);
+        }
+        const extra = (tmpDuringScope.el as LooseElementProps).extra;
+        if (extra) {
+            return extra[key];
+        }
     }
 };
 
-function elUpdateDuringAnimation(this: Element, key: string): void {
-    const innerEl = inner(this);
-    // FIXME `this.markRedraw();` directly ?
-    innerEl.orginalDuring.call(this, key);
-    const customDuring = innerEl.customDuring;
+function assertNotReserved(key: string) {
+    if (__DEV__) {
+        if (key === 'transition' || key === 'enterFrom' || key === 'leaveTo') {
+            throw new Error('key must not be "' + key + '"');
+        }
+    }
+}
 
-    tmpDuringScope.el = this;
+function duringCall(
+    this: {
+        el: Element;
+        userDuring: CustomBaseElementOption['during']
+    }
+): void {
+    // Do not provide "percent" until some requirements come.
+    // Because consider thies case:
+    // enterFrom: {x: 100, y: 30}, transition: 'x'.
+    // And enter duration is different from update duration.
+    // Thus it might be confused about the meaning of "percent" in during callback.
+    const scope = this;
+    const el = scope.el;
+    if (!el) {
+        return;
+    }
+    // If el is remove from zr by reason like legend, during still need to called,
+    // becuase el will be added back to zr and the prop value should not be incorrect.
+
+    const newstUserDuring = inner(el).userDuring;
+    const scopeUserDuring = scope.userDuring;
+    // Ensured a during is only called once in each animation frame.
+    // If a during is called multiple times in one frame, maybe some users' calulation logic
+    // might be wrong (not sure whether this usage exists).
+    // The case of a during might be called twice can be: by default there is a animator for
+    // 'x', 'y' when init. Before the init animation finished, call `setOption` to start
+    // another animators for 'style'/'shape'/'extra'.
+    if (newstUserDuring !== scopeUserDuring) {
+        // release
+        scope.el = scope.userDuring = null;
+        return;
+    }
+
+    tmpDuringScope.el = el;
     tmpDuringScope.isShapeDirty = false;
     tmpDuringScope.isStyleDirty = false;
 
-    customDuring(customDuringAPI);
+    // Give no `this` to user in "during" calling.
+    scopeUserDuring(customDuringAPI);
 
-    if (tmpDuringScope.isShapeDirty && (this as graphicUtil.Path).dirtyShape) {
-        (this as graphicUtil.Path).dirtyShape();
+    if (tmpDuringScope.isShapeDirty && (el as graphicUtil.Path).dirtyShape) {
+        (el as graphicUtil.Path).dirtyShape();
     }
-    if (tmpDuringScope.isStyleDirty && (this as Displayable).dirtyStyle) {
-        (this as Displayable).dirtyStyle();
+    if (tmpDuringScope.isStyleDirty && (el as Displayable).dirtyStyle) {
+        (el as Displayable).dirtyStyle();
     }
     // markRedraw() will be called by default in during.
+    // FIXME `this.markRedraw();` directly ?
 
     // FIXME: if in future meet the case that some prop will be both modified in `during` and `state`,
     // consider the issue that the prop might be incorrect when return to "normal" state.
@@ -1287,7 +1362,7 @@ function makeRenderItem(
      * @public
      * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function style(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
+    function style(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
         if (__DEV__) {
             warnDeprecated('api.style', 'Please write literal style directly instead.');
         }
@@ -1316,10 +1391,10 @@ function makeRenderItem(
             : null;
         const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, opt, false);
 
-        preFetchFromExtra(extra, itemStyle);
+        preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
 
-        extra && applyExtraAfter(itemStyle, extra);
+        userProps && applyUserPropsAfter(itemStyle, userProps);
         (itemStyle as LegacyStyleProps).legacy = true;
 
         return itemStyle;
@@ -1330,7 +1405,7 @@ function makeRenderItem(
      * @public
      * @param dataIndexInside by default `currDataIndexInside`.
      */
-    function styleEmphasis(extra?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
+    function styleEmphasis(userProps?: ZRStyleProps, dataIndexInside?: number): ZRStyleProps {
         if (__DEV__) {
             warnDeprecated('api.styleEmphasis', 'Please write literal style directly instead.');
         }
@@ -1349,16 +1424,16 @@ function makeRenderItem(
             : null;
         const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, null, true);
 
-        preFetchFromExtra(extra, itemStyle);
+        preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
 
-        extra && applyExtraAfter(itemStyle, extra);
+        userProps && applyUserPropsAfter(itemStyle, userProps);
         (itemStyle as LegacyStyleProps).legacy = true;
 
         return itemStyle;
     }
 
-    function applyExtraAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
+    function applyUserPropsAfter(itemStyle: ZRStyleProps, extra: ZRStyleProps): void {
         for (const key in extra) {
             if (hasOwn(extra, key)) {
                 (itemStyle as any)[key] = (extra as any)[key];
@@ -1795,6 +1870,9 @@ function mergeChildren(
         );
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
+        // Do not supprot leave elements that are not mentioned in the latest
+        // `renderItem` return. Otherwise users may not have a clear and simple
+        // concept that how to contorl all of the elements.
         doRemoveEl(el.childAt(i), seriesModel, el);
     }
 }

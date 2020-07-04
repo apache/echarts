@@ -554,7 +554,7 @@ class ECharts extends Eventful {
         const list = zr.storage.getDisplayList();
         // Stop animations
         zrUtil.each(list, function (el: Element) {
-            el.stopAnimation('', true);
+            el.stopAnimation(null, true);
         });
 
         return (zr.painter as SVGPainter).toDataURL();

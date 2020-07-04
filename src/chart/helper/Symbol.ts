@@ -95,7 +95,7 @@ class Symbol extends graphic.Group {
      * @param {boolean} toLastFrame
      */
     stopSymbolAnimation(toLastFrame: boolean) {
-        this.childAt(0).stopAnimation('', toLastFrame);
+        this.childAt(0).stopAnimation(null, toLastFrame);
     }
 
     /**
