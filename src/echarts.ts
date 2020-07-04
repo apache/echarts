@@ -1902,38 +1902,49 @@ class ECharts extends Eventful {
         function updateStates(model: ComponentModel, view: ComponentView | ChartView): void {
             const stateAnimationModel = (model as SeriesModel).getModel('stateAnimation');
             const enableAnimation = model.isAnimationEnabled();
+            const duration = stateAnimationModel.get('duration');
+            const stateTransition = duration > 0 ? {
+                duration,
+                delay: stateAnimationModel.get('delay'),
+                easing: stateAnimationModel.get('easing')
+            } : null;
             view.group.traverse(function (el: Displayable) {
-                // Only updated on changed element. In case element is incremental and don't wan't to rerender.
-                if (el.__dirty && el.states && el.states.emphasis) {
-                    const prevStates = el.prevStates;
-                    // Restore states without animation
-                    if (prevStates) {
-                        el.useStates(prevStates);
+                if (el.states && el.states.emphasis) {
+                    // Only updated on changed element. In case element is incremental and don't wan't to rerender.
+                    // TODO, a more proper way?
+                    if (el.__dirty) {
+                        const prevStates = el.prevStates;
+                        // Restore states without animation
+                        if (prevStates) {
+                            el.useStates(prevStates);
+                        }
                     }
 
                     // Update state transition and enable animation again.
                     if (enableAnimation) {
-                        graphic.setStateTransition(el, stateAnimationModel);
+                        el.stateTransition = stateTransition;
                         const textContent = el.getTextContent();
                         const textGuide = el.getTextGuideLine();
                         // TODO Is it necessary to animate label?
                         if (textContent) {
-                            graphic.setStateTransition(textContent, stateAnimationModel);
+                            textContent.stateTransition = stateTransition;
                         }
                         if (textGuide) {
-                            graphic.setStateTransition(textGuide, stateAnimationModel);
+                            textGuide.stateTransition = stateTransition;
                         }
                     }
 
                     // The use higlighted and selected flag to toggle states.
-                    const states = [];
-                    if ((el as ECElement).selected) {
-                        states.push('select');
+                    if (el.__dirty) {
+                        const states = [];
+                        if ((el as ECElement).selected) {
+                            states.push('select');
+                        }
+                        if ((el as ECElement).highlighted) {
+                            states.push('emphasis');
+                        }
+                        el.useStates(states);
                     }
-                    if ((el as ECElement).highlighted) {
-                        states.push('emphasis');
-                    }
-                    el.useStates(states);
                 }
             });
         };
