@@ -480,7 +480,7 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
         if (state) {
             const z2EmphasisLift = (this as ECElement).z2EmphasisLift;
             // TODO Share with textContent?
-            state.z2 = this.z2 + z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
+            state.z2 = this.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
         }
     }
 
