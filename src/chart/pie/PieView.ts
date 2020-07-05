@@ -261,9 +261,9 @@ class PieView extends ChartView {
 
         let startAngle: number;
         // First render
-        if (!oldData) {
+        if (!oldData && data.count() > 0) {
             let shape = data.getItemLayout(0) as graphic.Sector['shape'];
-            for (let s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
+            for (let s = 1; isNaN(shape && shape.startAngle) && s < data.count(); ++s) {
                 shape = data.getItemLayout(s);
             }
             if (shape) {
