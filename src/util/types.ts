@@ -880,7 +880,6 @@ export interface LabelLayoutOption {
     width?: number
     height?: number
 
-    // Points of label line in pie/funnel
     labelLinePoints?: number[][]
 }
 
