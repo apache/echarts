@@ -68,9 +68,9 @@ export default {
 
     animation: 'auto',
     animationDuration: 1000,
-    animationDurationUpdate: 300,
-    animationEasing: 'cubicOut',
-    animationEasingUpdate: 'cubicOut',
+    animationDurationUpdate: 500,
+    animationEasing: 'cubicInOut',
+    animationEasingUpdate: 'cubicInOut',
 
     animationThreshold: 2000,
 

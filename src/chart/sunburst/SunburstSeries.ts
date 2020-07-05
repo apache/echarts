@@ -253,7 +253,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         animationType: 'expansion',
         animationDuration: 1000,
         animationDurationUpdate: 500,
-        animationEasing: 'cubicOut',
 
         data: [],
 
