@@ -613,7 +613,7 @@ export function setLabelLineStyle(
             const stateShow = stateModel.get('show');
             const isLabelIgnored = isNormal
                 ? labelIgnoreNormal
-                : retrieve2(label.states && label.states[stateName].ignore, labelIgnoreNormal);
+                : retrieve2(label.states[stateName] && label.states[stateName].ignore, labelIgnoreNormal);
             if (isLabelIgnored  // Not show when label is not shown in this state.
                 || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
             ) {

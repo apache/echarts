@@ -317,6 +317,8 @@ class MapDraw {
                     }
                 );
 
+                compoundPath.setTextContent(textEl);
+
                 if (!isFirstDraw) {
                     // Text animation
                     graphic.updateProps(textEl, {

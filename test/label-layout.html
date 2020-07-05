@@ -49,6 +49,7 @@ under the License.
         <div id="main6"></div>
         <div id="main7"></div>
         <div id="main8"></div>
+        <div id="main9"></div>
 
 
 
@@ -184,7 +185,7 @@ under the License.
                                 position: 'top'
                             },
                             labelLayout: {
-                                hideOverlap: true
+                                hideOverlap: false
                             },
                             itemStyle: {
                                 color: 'rgb(255, 70, 131)'
@@ -437,7 +438,6 @@ under the License.
                         },
                         labelLayout: {
                             y: 20,
-                            draggable: true,
                             align: 'center',
                             moveOverlap: 'shift-x',
                             hideOverlap: true
@@ -502,7 +502,6 @@ under the License.
                         },
                         labelLayout: {
                             x: 500,
-                            draggable: true,
                             moveOverlap: 'shift-y',
                             // hideOverlap: true
                         },
@@ -536,6 +535,86 @@ under the License.
         </script>
 
 
+        <script>
+            require(['echarts', 'map/js/china'], function (echarts) {
+                option = {
+                    series: [{
+                        type: 'map',
+                        map: 'china',
+                        label: {
+                            show: false,
+                            formatter: [
+                                `{title|{b}}`,
+                                `{value|{c} K 平方公里}`
+                            ].join('\n'),
+                            backgroundColor: '#eee',
+                            borderColor: '#17A597',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            align: 'center',
+                            width: 150,
+                            rich: {
+                                title: {
+                                    align: 'center',
+                                    lineHeight: 17,
+                                    fontSize: 12,
+                                    color: '#fff',
+                                    backgroundColor: '#17A597',
+                                    width: 150,
+                                    height: 20,
+                                    borderRadius: [4, 4, 0, 0]
+                                },
+                                value: {
+                                    align: 'center',
+                                    height: 25
+                                }
+                            }
+                        },
+                        labelLine: {
+                            show: true,
+                            length2: 10
+                        },
+                        labelLayout: function (params) {
+                            const positionMap = [
+                                // 内蒙古
+                                (params) => { return { y: params.rect.y - 20, align: 'center' } },
+                                // 上海
+                                (params) => { return { x: params.rect.x + 50, align: 'left' } }
+                            ]
+                            return positionMap[params.dataIndex] && Object.assign({
+                                draggable: true
+                            }, positionMap[params.dataIndex](params));
+                        },
+                        emphasis: {
+                            label: {
+                                show: false
+                            }
+                        },
+                        data: [{
+                            name: '内蒙古',
+                            value: 118.3,
+                            label: {
+                                show: true
+                            }
+                        }, {
+                            name: '上海',
+                            value: 6.34,
+                            label: {
+                                show: true
+                            }
+                        }]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main8', {
+                    title: [
+                        'Draggable label'
+                    ],
+                    option: option,
+                    height: 500
+                });
+            });
+        </script>
 
         <script>
             require(['echarts',  'extension/dataTool'], function (echarts, dataTool) {
@@ -599,7 +678,7 @@ under the License.
                         ]
                     };
 
-                    var chart = testHelper.create(echarts, 'main8', {
+                    var chart = testHelper.create(echarts, 'main9', {
                         title: [
                             'Hide overlap in graph zooming.'
                         ],
