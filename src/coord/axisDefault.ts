@@ -161,10 +161,13 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
     }
 }, defaultOption);
 
-const timeAxis: AxisBaseOption = zrUtil.defaults({
+const timeAxis: AxisBaseOption = zrUtil.merge({
     scale: true,
-    // min: 'dataMin',
-    // max: 'dataMax'
+    axisLabel: {
+        // To eliminate labels that are not nice
+        showMinLabel: false,
+        showMaxLabel: false
+    }
 }, valueAxis);
 
 const logAxis: AxisBaseOption = zrUtil.defaults({

@@ -83,7 +83,6 @@ class TimeScale extends IntervalScale {
         const stepLvl = this._stepLvl;
 
         const labelFormatType = getLabelFormatType(val, this.getSetting('useUTC'), false);
-        console.log(formatUtil.formatTime(labelFormatType, val));
         return formatUtil.formatTime(labelFormatType, val);
     }
 
@@ -101,8 +100,6 @@ class TimeScale extends IntervalScale {
         if (!interval) {
             return ticks;
         }
-
-        const safeLimit = 10000;
 
         if (extent[0] < niceTickExtent[0]) {
             if (expandToNicedExtent) {
@@ -124,7 +121,6 @@ class TimeScale extends IntervalScale {
             useUTC,
             extent
         );
-        console.log(innerTicks);
         ticks = ticks.concat(innerTicks);
 
         // Consider this case: the last item of ticks is smaller
@@ -399,7 +395,6 @@ function isLevelValueSame(level: TimeAxisLabelPrimaryLevel, valueA: number, valu
     const dateB = numberUtil.parseDate(valueB) as any;
     const utc = isUTC ? 'UTC' : '';
     const isSame = (compareLevel: TimeAxisLabelPrimaryLevel) => {
-        console.log(getLabelFormatValueFromLevel(dateA, isUTC, compareLevel), getLabelFormatValueFromLevel(dateB, isUTC, compareLevel), dateA, dateB);
         return getLabelFormatValueFromLevel(dateA, isUTC, compareLevel)
             === getLabelFormatValueFromLevel(dateB, isUTC, compareLevel);
     };
@@ -459,7 +454,7 @@ function getLevelTicks(level: TimeAxisLabelLevel, isUTC: boolean, extent: number
                 date['set' + utc + 'Month'](date['get' + utc + 'Month']() + 1);
             }
         }
-        else if (!isLevelValueSame(level as TimeAxisLabelPrimaryLevel, extent[0], extent[1], isUTC)) {
+        else if (!isLevelValueSame(primaryLevels[i] as TimeAxisLabelPrimaryLevel, extent[0], extent[1], isUTC)) {
             // Level value changes within extent
             while (true) {
                 if (primaryLevels[i] === 'year') {
@@ -479,7 +474,7 @@ function getLevelTicks(level: TimeAxisLabelLevel, isUTC: boolean, extent: number
                     date['set' + utc + 'Seconds'](0);
                 }
                 else if (primaryLevels[i] === 'day') {
-                    date['set' + utc + 'Date'](date['get' + utc + 'Day']() + 1);
+                    date['set' + utc + 'Date'](date['get' + utc + 'Date']() + 1);
                     date['set' + utc + 'Hours'](0);
                     date['set' + utc + 'Minutes'](0);
                     date['set' + utc + 'Seconds'](0);
@@ -520,7 +515,7 @@ function getLevelTicks(level: TimeAxisLabelLevel, isUTC: boolean, extent: number
     }
 
     // Remove duplicates
-    const result = [];
+    const result = ticks.length ? [ticks[0]] : [];
     for (let i = 1; i < ticks.length; ++i) {
         if (ticks[i] !== ticks[i - 1]) {
             result.push(ticks[i]);
