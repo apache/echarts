@@ -31,7 +31,7 @@ const POSSIBLE_STYLES = [
 ];
 
 const storedLogs: Dictionary<boolean> = {};
-function deprecateLog(str: string) {
+export function deprecateLog(str: string) {
     if (storedLogs[str]) {  // Not display duplicate message.
         return;
     }

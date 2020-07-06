@@ -140,6 +140,7 @@ class LegendView extends ComponentView {
         );
         this.group.x = layoutRect.x - mainRect.x;
         this.group.y = layoutRect.y - mainRect.y;
+        this.group.markRedraw();
 
         // Render background after group is layout.
         this.group.add(

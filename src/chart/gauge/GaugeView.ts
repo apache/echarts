@@ -262,7 +262,7 @@ class GaugeView extends ChartView {
                         y: unitY * (r - splitLineLen - distance) + cy,
                         verticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                         align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
-                    }, {autoColor: autoColor}),
+                    }, {inheritColor: autoColor}),
                     silent: true
                 }));
             }
@@ -347,7 +347,6 @@ class GaugeView extends ChartView {
             })
             .update(function (newIdx, oldIdx) {
                 const pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
-                graphic.clearStates(pointer);
 
                 graphic.updateProps(pointer, {
                     shape: {
@@ -424,7 +423,7 @@ class GaugeView extends ChartView {
                     text: data.getName(0),
                     align: 'center',
                     verticalAlign: 'middle'
-                }, {autoColor: autoColor, forceRich: true})
+                }, {inheritColor: autoColor})
             }));
         }
     }
@@ -464,7 +463,7 @@ class GaugeView extends ChartView {
                     height: isNaN(height) ? null : height,
                     align: 'center',
                     verticalAlign: 'middle'
-                }, {autoColor: autoColor, forceRich: true})
+                }, {inheritColor: autoColor})
             }));
         }
     }

@@ -22,13 +22,11 @@ import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSer
 import { extend } from 'zrender/src/core/util';
 
 export default function (ecModel: GlobalModel) {
-
-    ecModel.eachSeriesByType('graph', function (seriesModel: SunburstSeriesModel) {
+    ecModel.eachSeriesByType('sunburst', function (seriesModel: SunburstSeriesModel) {
         const data = seriesModel.getData();
         const tree = data.tree;
         tree.eachNode(function (node) {
             const model = node.getModel<SunburstSeriesNodeItemOption>();
-            // TODO Optimize
             const style = model.getModel('itemStyle').getItemStyle();
             const existsStyle = data.ensureUniqueItemVisual(node.dataIndex, 'style');
             extend(existsStyle, style);

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-
+// @ts-nocheck
 import {__DEV__} from '../config';
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
@@ -1377,7 +1377,7 @@ function makeRenderItem(
         visualColor != null && (itemStyle.fill = visualColor);
         opacity != null && (itemStyle.opacity = opacity);
 
-        const opt = {autoColor: isString(visualColor) ? visualColor : '#000'};
+        const opt = {inheritColor: isString(visualColor) ? visualColor : '#000'};
         const labelModel = getLabelModel(dataIndexInside, NORMAL);
         // Now that the feture of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in

@@ -21,11 +21,13 @@
 import * as echarts from '../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 
-import '../coord/geo/GeoModel';
 import '../coord/geo/geoCreator';
 import './geo/GeoView';
 import '../action/geoRoam';
 import { ActionInfo } from '../util/types';
+
+// NOTE: DONT Remove this import, or GeoModel will be treeshaked.
+import '../coord/geo/GeoModel';
 import GeoModel from '../coord/geo/GeoModel';
 
 function makeAction(

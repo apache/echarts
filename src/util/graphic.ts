@@ -40,11 +40,13 @@ import CompoundPath from 'zrender/src/graphic/CompoundPath';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import RadialGradient from 'zrender/src/graphic/RadialGradient';
 import BoundingRect from 'zrender/src/core/BoundingRect';
+import OrientedBoundingRect from 'zrender/src/core/OrientedBoundingRect';
+import Point from 'zrender/src/core/Point';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import * as subPixelOptimizeUtil from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Dictionary } from 'zrender/src/core/types';
 import LRU from 'zrender/src/core/LRU';
-import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
+import Displayable, { DisplayableProps, DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent, ElementTextConfig, ElementProps } from 'zrender/src/Element';
@@ -60,6 +62,7 @@ import {
     DataModel,
     ECEventData,
     ZRStyleProps,
+    AnimationOption,
     TextCommonOption,
     SeriesOption,
     ParsedValue,
@@ -76,6 +79,7 @@ import {
     isArrayLike,
     map,
     defaults,
+    indexOf,
     isObject
 } from 'zrender/src/core/util';
 import * as numberUtil from './number';
@@ -105,7 +109,6 @@ type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
 
 type ExtendedProps = {
-    __highlighted?: boolean | 'layer' | 'plain'
     __highByOuter: number
 
     __highDownSilentOnTouch: boolean
@@ -122,12 +125,10 @@ type TextCommonParams = {
      */
     disableBox?: boolean
     /**
-     * Specify a color when color is 'auto',
-     * for textFill, textStroke, textBackgroundColor, and textBorderColor. If autoColor specified, it is used as default textFill.
+     * Specify a color when color is 'inherit',
+     * If inheritColor specified, it is used as default textFill.
      */
-    autoColor?: ColorString
-
-    forceRich?: boolean
+    inheritColor?: ColorString
 
     defaultOutsidePosition?: LabelOption['position']
 
@@ -370,43 +371,21 @@ function liftColor(color: string): string {
 
 function singleEnterEmphasis(el: Element) {
 
-    (el as ExtendedElement).__highlighted = true;
+    (el as ECElement).highlighted = true;
 
     // el may be an array.
     if (!el.states.emphasis) {
         return;
     }
-    const disp = el as Displayable;
 
-    const emphasisStyle = disp.states.emphasis.style;
-    const currentFill = disp.style && disp.style.fill;
-    const currentStroke = disp.style && disp.style.stroke;
-
-    el.useState('emphasis');
-
-    if (emphasisStyle && (currentFill || currentStroke)) {
-        if (!hasFillOrStroke(emphasisStyle.fill)) {
-            disp.style.fill = liftColor(currentFill);
-        }
-        if (!hasFillOrStroke(emphasisStyle.stroke)) {
-            disp.style.stroke = liftColor(currentStroke);
-        }
-        const z2EmphasisLift = (disp as ECElement).z2EmphasisLift;
-        disp.z2 += z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
-    }
-
-    const textContent = el.getTextContent();
-    if (textContent) {
-        const z2EmphasisLift = (textContent as ECElement).z2EmphasisLift;
-        textContent.z2 += z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
-    }
+    el.useState('emphasis', true);
     // TODO hover layer
 }
 
 
-function singleEnterNormal(el: Element) {
-    el.clearStates();
-    (el as ExtendedElement).__highlighted = false;
+function singleLeaveEmphasis(el: Element) {
+    el.removeState('emphasis');
+    (el as ECElement).highlighted = false;
 }
 
 function updateElementState<T>(
@@ -419,9 +398,9 @@ function updateElementState<T>(
     let toState: DisplayState = NORMAL;
     let trigger;
     // See the rule of `onStateChange` on `graphic.setAsHighDownDispatcher`.
-    el.__highlighted && (fromState = EMPHASIS, trigger = true);
+    (el as ECElement).highlighted && (fromState = EMPHASIS, trigger = true);
     updater(el, commonParam);
-    el.__highlighted && (toState = EMPHASIS, trigger = true);
+    (el as ECElement).highlighted && (toState = EMPHASIS, trigger = true);
     trigger && el.__onStateChange && el.__onStateChange(fromState, toState);
 }
 
@@ -453,7 +432,63 @@ export function clearStates(el: Element) {
     }
 }
 
-/**
+function elementStateProxy(this: Displayable, stateName: string): DisplayableState {
+    let state = this.states[stateName];
+    if (stateName === 'emphasis' && this.style) {
+        const hasEmphasis = indexOf(this.currentStates, stateName) >= 0;
+        if (!(this instanceof ZRText)) {
+            const currentFill = this.style.fill;
+            const currentStroke = this.style.stroke;
+            if (currentFill || currentStroke) {
+                let fromState: {fill: ColorString, stroke: ColorString};
+                if (!hasEmphasis) {
+                    fromState = {fill: currentFill, stroke: currentStroke};
+                    for (let i = 0; i < this.animators.length; i++) {
+                        const animator = this.animators[i];
+                        if (animator.__fromStateTransition
+                            // Dont consider the animation to emphasis state.
+                            && animator.__fromStateTransition.indexOf('emphasis') < 0
+                            && animator.targetName === 'style'
+                        ) {
+                            animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
+                        }
+                    }
+                }
+
+                state = state || {};
+                // Apply default color lift
+                let emphasisStyle = state.style || {};
+                let cloned = false;
+                if (!hasFillOrStroke(emphasisStyle.fill)) {
+                    cloned = true;
+                    // Not modify the original value.
+                    state = extend({}, state);
+                    emphasisStyle = extend({}, emphasisStyle);
+                    // Already being applied 'emphasis'. DON'T lift color multiple times.
+                    emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(fromState.fill);
+                }
+                if (!hasFillOrStroke(emphasisStyle.stroke)) {
+                    if (!cloned) {
+                        state = extend({}, state);
+                        emphasisStyle = extend({}, emphasisStyle);
+                    }
+                    emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(fromState.stroke);
+                }
+
+                state.style = emphasisStyle;
+            }
+        }
+        if (state) {
+            const z2EmphasisLift = (this as ECElement).z2EmphasisLift;
+            // TODO Share with textContent?
+            state.z2 = this.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+        }
+    }
+
+    return state;
+}
+
+/**FI
  * Set hover style (namely "emphasis style") of element.
  * @param el Should not be `zrender/graphic/Group`.
  */
@@ -463,15 +498,14 @@ export function enableElementHoverEmphasis(el: Displayable, hoverStl?: ZRStylePr
         emphasisState.style = hoverStl;
     }
 
-    // FIXME
-    // It is not completely right to save "normal"/"emphasis" flag on elements.
-    // It probably should be saved on `data` of series. Consider the cases:
-    // (1) A highlighted elements are moved out of the view port and re-enter
-    // again by dataZoom.
-    // (2) call `setOption` and replace elements totally when they are highlighted.
-    if ((el as ExtendedDisplayable).__highlighted) {
-        singleEnterNormal(el);
-        singleEnterEmphasis(el);
+    el.stateProxy = elementStateProxy;
+    const textContent = el.getTextContent();
+    const textGuide = el.getTextGuideLine();
+    if (textContent) {
+        textContent.stateProxy = elementStateProxy;
+    }
+    if (textGuide) {
+        textGuide.stateProxy = elementStateProxy;
     }
 }
 
@@ -486,7 +520,7 @@ export function leaveEmphasisWhenMouseOut(el: Element, e: ElementEvent) {
     !shouldSilent(el, e)
         // "emphasis" event highlight has higher priority than mouse highlight.
         && !(el as ExtendedElement).__highByOuter
-        && traverseUpdateState((el as ExtendedElement), singleEnterNormal);
+        && traverseUpdateState((el as ExtendedElement), singleLeaveEmphasis);
 }
 
 export function enterEmphasis(el: Element, highlightDigit?: number) {
@@ -496,7 +530,7 @@ export function enterEmphasis(el: Element, highlightDigit?: number) {
 
 export function leaveEmphasis(el: Element, highlightDigit?: number) {
     !((el as ExtendedElement).__highByOuter &= ~(1 << (highlightDigit || 0)))
-        && traverseUpdateState((el as ExtendedElement), singleEnterNormal);
+        && traverseUpdateState((el as ExtendedElement), singleLeaveEmphasis);
 }
 
 function shouldSilent(el: Element, e: ElementEvent) {
@@ -521,6 +555,23 @@ function shouldSilent(el: Element, e: ElementEvent) {
 export function enableHoverEmphasis(el: Element, hoverStyle?: ZRStyleProps) {
     setAsHighDownDispatcher(el, true);
     traverseUpdateState(el as ExtendedElement, enableElementHoverEmphasis, hoverStyle);
+}
+
+/**
+ * Set animation config on state transition.
+ */
+export function setStateTransition(el: Element, animatableModel: Model<AnimationOption>) {
+    const duration = animatableModel.get('duration');
+    if (duration > 0) {
+        el.stateTransition = {
+            duration,
+            delay: animatableModel.get('delay'),
+            easing: animatableModel.get('easing')
+        };
+    }
+    else if (el.stateTransition) {
+        el.stateTransition = null;
+    }
 }
 
 /**
@@ -611,40 +662,67 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     //     opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp
     // )
     labelFetcher?: {
-        getFormattedLabel?: (
+        getFormattedLabel: (
             // In MapDraw case it can be string (region name)
             labelDataIndex: LDI,
-            state: DisplayState,
-            dataType: string,
-            labelDimIndex: number,
-            labelProp: string,
+            status: DisplayState,
+            dataType?: string,
+            labelDimIndex?: number,
+            formatter?: string | ((params: object) => string),
             extendParams?: Partial<CallbackDataParams>
         ) => string
+        // getDataParams: (labelDataIndex: LDI, dataType?: string) => object
     },
     labelDataIndex?: LDI,
     labelDimIndex?: number
-    labelProp?: string
 }
 
 
-function getLabelText<LDI>(opt?: SetLabelStyleOpt<LDI>, interpolateValues?: ParsedValue | ParsedValue[]) {
+type LabelModel = Model<LabelOption & {
+    formatter?: string | ((params: any) => string)
+}>;
+type LabelModelForText = Model<Omit<
+    // Remove
+    LabelOption, 'position' | 'rotate'
+> & {
+    formatter?: string | ((params: any) => string)
+}>;
+
+function getLabelText<LDI>(
+    opt: SetLabelStyleOpt<LDI>,
+    normalModel: LabelModel,
+    emphasisModel: LabelModel,
+    interpolateValues?: ParsedValue | ParsedValue[]
+) {
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
     const labelDimIndex = opt.labelDimIndex;
-    const labelProp = opt.labelProp;
 
     let baseText;
     if (labelFetcher) {
-        baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex, labelProp, {
-            value: interpolateValues
-        });
+        baseText = labelFetcher.getFormattedLabel(
+            labelDataIndex,
+            'normal',
+            null,
+            labelDimIndex,
+            normalModel && normalModel.get('formatter'),
+            interpolateValues != null ? {
+                value: interpolateValues
+            } : null
+        );
     }
     if (baseText == null) {
         baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
     }
     const emphasisStyleText = retrieve2(
         labelFetcher
-            ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex, labelProp)
+            ? labelFetcher.getFormattedLabel(
+                labelDataIndex,
+                'emphasis',
+                null,
+                labelDimIndex,
+                emphasisModel && emphasisModel.get('formatter')
+            )
             : null,
         baseText
     );
@@ -661,12 +739,16 @@ function getLabelText<LDI>(opt?: SetLabelStyleOpt<LDI>, interpolateValues?: Pars
  * And create a new style object.
  *
  * NOTICE: Because the style on ZRText will be replaced with new(only x, y are keeped).
- * So please use the style on ZRText after use this method.
+ * So please update the style on ZRText after use this method.
  */
-export function setLabelStyle<LDI>(
+// eslint-disable-next-line
+function setLabelStyle<LDI>(targetEl: ZRText, normalModel: LabelModelForText, emphasisModel: LabelModelForText, opt?: SetLabelStyleOpt<LDI>, normalSpecified?: TextStyleProps, emphasisSpecified?: TextStyleProps): void;
+// eslint-disable-next-line
+function setLabelStyle<LDI>(targetEl: Element, normalModel: LabelModel, emphasisModel: LabelModel, opt?: SetLabelStyleOpt<LDI>, normalSpecified?: TextStyleProps, emphasisSpecified?: TextStyleProps): void;
+function setLabelStyle<LDI>(
     targetEl: Element,
-    normalModel: Model,
-    emphasisModel: Model,
+    normalModel: LabelModel,
+    emphasisModel: LabelModel,
     opt?: SetLabelStyleOpt<LDI>,
     normalSpecified?: TextStyleProps,
     emphasisSpecified?: TextStyleProps
@@ -678,9 +760,6 @@ export function setLabelStyle<LDI>(
     const showNormal = normalModel.getShallow('show');
     const showEmphasis = emphasisModel.getShallow('show');
 
-    // Consider performance, only fetch label when necessary.
-    // If `normal.show` is `false` and `emphasis.show` is `true` and `emphasis.formatter` is not set,
-    // label should be displayed, where text is fetched by `normal.formatter` or `opt.defaultText`.
     let richText = isSetOnText ? targetEl as ZRText : null;
     if (showNormal || showEmphasis) {
         if (!isSetOnText) {
@@ -696,12 +775,6 @@ export function setLabelStyle<LDI>(
         const emphasisState = richText.ensureState('emphasis');
         emphasisState.ignore = !showEmphasis;
 
-        // Always set `textStyle` even if `normalStyle.text` is null, because default
-        // values have to be set on `normalStyle`.
-        // If we set default values on `emphasisStyle`, consider case:
-        // Firstly, `setOption(... label: {normal: {text: null}, emphasis: {show: true}} ...);`
-        // Secondly, `setOption(... label: {noraml: {show: true, text: 'abc', color: 'red'} ...);`
-        // Then the 'red' will not work on emphasis.
         const normalStyle = createTextStyle(
             normalModel,
             normalSpecified,
@@ -739,7 +812,7 @@ export function setLabelStyle<LDI>(
         // auto slient is those cases.
         richText.silent = !!normalModel.getShallow('silent');
 
-        const labelText = getLabelText(opt);
+        const labelText = getLabelText(opt, normalModel, emphasisModel);
         normalStyle.text = labelText.normal;
         emphasisState.style.text = labelText.emphasis;
 
@@ -764,18 +837,19 @@ export function setLabelStyle<LDI>(
     targetEl.dirty();
 }
 
+export {setLabelStyle};
 /**
  * Set basic textStyle properties.
  */
 export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: TextStyleProps,    // Can be overrided by settings in model.
-    opt?: TextCommonParams,
-    isEmphasis?: boolean,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    isNotNormal?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
     const textStyle: TextStyleProps = {};
-    setTextStyleCommon(textStyle, textStyleModel, opt, isEmphasis, isAttached);
+    setTextStyleCommon(textStyle, textStyleModel, opt, isNotNormal, isAttached);
     specifiedTextStyle && extend(textStyle, specifiedTextStyle);
     // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
 
@@ -785,20 +859,20 @@ export function createTextStyle(
 export function createTextConfig(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt: TextCommonParams,
-    isEmphasis: boolean
+    opt?: Pick<TextCommonParams, 'defaultOutsidePosition' | 'inheritColor'>,
+    isNotNormal?: boolean
 ) {
     opt = opt || {};
     const textConfig: ElementTextConfig = {};
     let labelPosition;
     let labelRotate = textStyleModel.getShallow('rotate');
     const labelDistance = retrieve2(
-        textStyleModel.getShallow('distance'), isEmphasis ? null : 5
+        textStyleModel.getShallow('distance'), isNotNormal ? null : 5
     );
     const labelOffset = textStyleModel.getShallow('offset');
 
     labelPosition = textStyleModel.getShallow('position')
-        || (isEmphasis ? null : 'inside');
+        || (isNotNormal ? null : 'inside');
     // 'outside' is not a valid zr textPostion value, but used
     // in bar series, and magric type should be considered.
     labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
@@ -818,19 +892,10 @@ export function createTextConfig(
     }
 
     // fill and auto is determined by the color of path fill if it's not specified by developers.
-    textConfig.outsideFill = opt.autoColor || null;
 
-    // if (!textStyle.fill) {
-    //     textConfig.insideFill = 'auto';
-    //     textConfig.outsideFill = opt.autoColor || null;
-    // }
-    // if (!textStyle.stroke) {
-    //     textConfig.insideStroke = 'auto';
-    // }
-    // else if (opt.autoColor) {
-    //     // TODO: stroke set to autoColor. if label is inside?
-    //     textConfig.insideStroke = opt.autoColor;
-    // }
+    textConfig.outsideFill = textStyleModel.get('color') === 'inherit'
+        ? (opt.inheritColor || null)
+        : 'auto';
 
     return textConfig;
 }
@@ -848,8 +913,8 @@ export function createTextConfig(
 function setTextStyleCommon(
     textStyle: TextStyleProps,
     textStyleModel: Model,
-    opt?: TextCommonParams,
-    isEmphasis?: boolean,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    isNotNormal?: boolean,
     isAttached?: boolean
 ) {
     // Consider there will be abnormal when merge hover style to normal style if given default value.
@@ -885,7 +950,7 @@ function setTextStyleCommon(
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
-                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isEmphasis, isAttached);
+                setTokenTextStyle(richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached);
             }
         }
     }
@@ -897,13 +962,12 @@ function setTextStyleCommon(
     if (overflow) {
         textStyle.overflow = overflow;
     }
-
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isEmphasis, isAttached, true);
-
-    // TODO
-    if (opt.forceRich && !opt.textStyle) {
-        opt.textStyle = {};
+    const margin = textStyleModel.get('minMargin');
+    if (margin != null) {
+        textStyle.margin = margin;
     }
+
+    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true);
 }
 
 // Consider case:
@@ -940,7 +1004,7 @@ function getRichItemNames(textStyleModel: Model<LabelOption>) {
 }
 
 const TEXT_PROPS_WITH_GLOBAL = [
-    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily',
+    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'opacity',
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 
@@ -958,22 +1022,32 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    opt?: TextCommonParams,
-    isEmphasis?: boolean,
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    isNotNormal?: boolean,
     isAttached?: boolean,
     isBlock?: boolean
 ) {
     // In merge mode, default value should not be given.
-    globalTextStyle = !isEmphasis && globalTextStyle || EMPTY_OBJ;
+    globalTextStyle = !isNotNormal && globalTextStyle || EMPTY_OBJ;
 
-    const autoColor = opt && opt.autoColor;
+    const inheritColor = opt && opt.inheritColor;
     let fillColor = textStyleModel.getShallow('color');
     let strokeColor = textStyleModel.getShallow('textBorderColor');
-    if (fillColor === 'auto' && autoColor) {
-        fillColor = autoColor;
+    if (fillColor === 'inherit') {
+        if (inheritColor) {
+            fillColor = inheritColor;
+        }
+        else {
+            fillColor = null;
+        }
     }
-    if (strokeColor === 'auto' && autoColor) {
-        strokeColor = autoColor;
+    if (strokeColor === 'inherit' && inheritColor) {
+        if (inheritColor) {
+            strokeColor = inheritColor;
+        }
+        else {
+            strokeColor = inheritColor;
+        }
     }
     fillColor = fillColor || globalTextStyle.color;
     strokeColor = strokeColor || globalTextStyle.textBorderColor;
@@ -993,10 +1067,10 @@ function setTokenTextStyle(
     }
 
     // TODO
-    if (!isEmphasis && !isAttached) {
+    if (!isNotNormal && !isAttached) {
         // Set default finally.
-        if (textStyle.fill == null && opt.autoColor) {
-            textStyle.fill = opt.autoColor;
+        if (textStyle.fill == null && opt.inheritColor) {
+            textStyle.fill = opt.inheritColor;
         }
     }
 
@@ -1028,11 +1102,11 @@ function setTokenTextStyle(
 
 
     if (!isBlock || !opt.disableBox) {
-        if (textStyle.backgroundColor === 'auto' && autoColor) {
-            textStyle.backgroundColor = autoColor;
+        if (textStyle.backgroundColor === 'auto' && inheritColor) {
+            textStyle.backgroundColor = inheritColor;
         }
-        if (textStyle.borderColor === 'auto' && autoColor) {
-            textStyle.borderColor = autoColor;
+        if (textStyle.borderColor === 'auto' && inheritColor) {
+            textStyle.borderColor = inheritColor;
         }
 
         for (let i = 0; i < TEXT_PROPS_BOX.length; i++) {
@@ -1067,7 +1141,7 @@ type AnimateOrSetPropsOption = {
 };
 
 function animateOrSetProps<Props>(
-    isUpdate: boolean,
+    animationType: 'init' | 'update' | 'remove',
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin> & {
@@ -1089,19 +1163,22 @@ function animateOrSetProps<Props>(
         isFrom = dataIndex.isFrom;
         dataIndex = dataIndex.dataIndex;
     }
+    const isUpdate = animationType === 'update';
+    const isRemove = animationType === 'remove';
     // Do not check 'animation' property directly here. Consider this case:
     // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
     // but its parent model (`seriesModel`) does.
     const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
     if (animationEnabled) {
-        let duration = animatableModel.getShallow(
+        // TODO Configurable
+        let duration = isRemove ? 200 : animatableModel.getShallow(
             isUpdate ? 'animationDurationUpdate' : 'animationDuration'
         );
-        const animationEasing = animatableModel.getShallow(
+        const animationEasing = isRemove ? 'cubicOut' : animatableModel.getShallow(
             isUpdate ? 'animationEasingUpdate' : 'animationEasing'
         );
-        let animationDelay = animatableModel.getShallow(
+        let animationDelay = isRemove ? 0 : animatableModel.getShallow(
             isUpdate ? 'animationDelayUpdate' : 'animationDelay'
         );
         if (typeof animationDelay === 'function') {
@@ -1116,6 +1193,11 @@ function animateOrSetProps<Props>(
             duration = duration(dataIndex as number);
         }
 
+        if (!isRemove) {
+            // Must stop the remove animation.
+            el.stopAnimation('remove');
+        }
+
         duration > 0
             ? (
                 isFrom
@@ -1125,6 +1207,7 @@ function animateOrSetProps<Props>(
                         easing: animationEasing,
                         done: cb,
                         force: !!cb || !!during,
+                        scope: animationType,
                         during: during
                     })
                     : el.animateTo(props, {
@@ -1133,6 +1216,8 @@ function animateOrSetProps<Props>(
                         easing: animationEasing,
                         done: cb,
                         force: !!cb || !!during,
+                        setToFinal: true,
+                        scope: animationType,
                         during: during
                     })
             )
@@ -1170,7 +1255,7 @@ function updateProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps(true, el, props, animatableModel, dataIndex, cb, during);
+    animateOrSetProps('update', el, props, animatableModel, dataIndex, cb, during);
 }
 
 export {updateProps};
@@ -1191,11 +1276,25 @@ export function initProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps(false, el, props, animatableModel, dataIndex, cb, during);
+    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
+}
+
+/**
+ * Remove graphic element
+ */
+export function removeElement<Props>(
+    el: Element<Props>,
+    props: Props,
+    animatableModel?: Model<AnimationOptionMixin>,
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
+) {
+    animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
 }
 
 function animateOrSetLabel<Props extends PathProps>(
-    isUpdate: boolean,
+    animationType: 'init' | 'update' | 'remove',
     el: Element<Props>,
     data: List,
     dataIndex: number,
@@ -1208,7 +1307,7 @@ function animateOrSetLabel<Props extends PathProps>(
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     if (valueAnimationEnabled) {
         const precisionOption = labelModel.get('precision');
-        let precision: number = precisionOption === 'auto' ? 0 : precisionOption;
+        const precision: number = precisionOption === 'auto' ? 0 : precisionOption;
 
         let interpolateValues: (number | string)[] | (number | string);
         const rawValues = seriesModel.getRawValue(dataIndex);
@@ -1256,14 +1355,14 @@ function animateOrSetLabel<Props extends PathProps>(
                     defaultText: defaultTextGetter
                         ? defaultTextGetter(interpolated)
                         : interpolated + ''
-                }, interpolated);
+                }, labelModel, null, interpolated);
                 text.style.text = labelText.normal;
                 text.dirty();
             }
         };
 
         const props: ElementProps = {};
-        animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, null, during);
+        animateOrSetProps(animationType, el, props, animatableModel, dataIndex, null, during);
     }
 }
 
@@ -1276,7 +1375,7 @@ export function updateLabel<Props>(
     animatableModel?: Model<AnimationOptionMixin>,
     defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel(true, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
+    animateOrSetLabel('update', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 export function initLabel<Props>(
@@ -1288,7 +1387,7 @@ export function initLabel<Props>(
     animatableModel?: Model<AnimationOptionMixin>,
     defaultTextGetter?: (value: ParsedValue[] | ParsedValue) => string
 ) {
-    animateOrSetLabel(false, el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
+    animateOrSetLabel('init', el, data, dataIndex, labelModel, seriesModel, animatableModel, defaultTextGetter);
 }
 
 /**
@@ -1595,5 +1694,7 @@ export {
     LinearGradient,
     RadialGradient,
     BoundingRect,
+    OrientedBoundingRect,
+    Point,
     Path
 };

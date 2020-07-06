@@ -204,7 +204,6 @@ class LineDraw {
             itemEl = new this._LineCtor(newLineData, newIdx, seriesScope);
         }
         else {
-            graphic.clearStates(itemEl);
             itemEl.updateData(newLineData, newIdx, seriesScope);
         }
 

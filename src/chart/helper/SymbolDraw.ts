@@ -177,8 +177,6 @@ class SymbolDraw {
                     symbolEl.setPosition(point);
                 }
                 else {
-                    graphic.clearStates(symbolEl);
-
                     symbolEl.updateData(data, newIdx, seriesScope);
                     graphic.updateProps(symbolEl, {
                         x: point[0],

@@ -18,10 +18,17 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import Element from 'zrender/src/Element';
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {formatTpl} from '../../util/format';
-import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString, ZRColor, OptionDataValue, ParsedValue } from '../../util/types';
+import {
+    DataHost,
+    DisplayState,
+    TooltipRenderMode,
+    CallbackDataParams,
+    ColorString,
+    ZRColor,
+    OptionDataValue
+} from '../../util/types';
 import GlobalModel from '../Global';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
@@ -44,8 +51,7 @@ class DataFormatMixin {
      */
     getDataParams(
         dataIndex: number,
-        dataType?: string,
-        el?: Element, // May be used in override.
+        dataType?: string
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
@@ -88,43 +94,44 @@ class DataFormatMixin {
      * @param dataIndex
      * @param status 'normal' by default
      * @param dataType
-     * @param dimIndex Only used in some chart that
+     * @param labelDimIndex Only used in some chart that
      *        use formatter in different dimensions, like radar.
-     * @param labelProp 'label' by default
-     * @return If not formatter, return null/undefined
+     * @param formatter Formatter given outside.
+     * @return return null/undefined if no formatter
      */
     getFormattedLabel(
         dataIndex: number,
         status?: DisplayState,
         dataType?: string,
-        dimIndex?: number,
-        labelProp?: string,
-        // interpolateValues?: ParsedValue | ParsedValue[]
+        labelDimIndex?: number,
+        formatter?: string | ((params: object) => string),
         extendParams?: Partial<CallbackDataParams>
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
-        const itemModel = data.getItemModel(dataIndex);
 
-        const params = this.getDataParams(dataIndex, dataType, null);
+        const params = this.getDataParams(dataIndex, dataType);
 
         if (extendParams) {
             zrUtil.extend(params, extendParams);
         }
 
-        if (dimIndex != null && (params.value instanceof Array)) {
-            params.value = params.value[dimIndex];
+        if (labelDimIndex != null && (params.value instanceof Array)) {
+            params.value = params.value[labelDimIndex];
         }
 
-        // @ts-ignore FIXME:TooltipModel
-        const formatter = itemModel.get(status === 'normal'
-            ? [(labelProp || 'label'), 'formatter']
-            : [status, labelProp || 'label', 'formatter']
-        );
+        if (!formatter) {
+            const itemModel = data.getItemModel(dataIndex);
+            // @ts-ignore
+            formatter = itemModel.get(status === 'normal'
+                ? ['label', 'formatter']
+                : [status, 'label', 'formatter']
+            );
+        }
 
         if (typeof formatter === 'function') {
             params.status = status;
-            params.dimensionIndex = dimIndex;
+            params.dimensionIndex = labelDimIndex;
             return formatter(params);
         }
         else if (typeof formatter === 'string') {

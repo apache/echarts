@@ -54,9 +54,9 @@ const Group = graphic.Group;
 const Rect = graphic.Rect;
 
 const DRAG_THRESHOLD = 3;
-const PATH_LABEL_NOAMAL = ['label'] as const;
+const PATH_LABEL_NOAMAL = 'label';
 const PATH_LABEL_EMPHASIS = ['emphasis', 'label'] as const;
-const PATH_UPPERLABEL_NORMAL = ['upperLabel'] as const;
+const PATH_UPPERLABEL_NORMAL = 'upperLabel';
 const PATH_UPPERLABEL_EMPHASIS = ['emphasis', 'upperLabel'] as const;
 const Z_BASE = 10; // Should bigger than every z.
 const Z_BG = 1;
@@ -914,8 +914,6 @@ function renderNode(
         height: number,
         upperLabelRect?: RectLike
     ) {
-        const defaultText = nodeModel.get('name');
-
         const normalLabelModel = nodeModel.getModel(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
         );
@@ -923,16 +921,26 @@ function renderNode(
             upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
         );
 
+        let text = retrieve(
+            seriesModel.getFormattedLabel(
+                thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')
+            ),
+            nodeModel.get('name')
+        );
+        if (!upperLabelRect && thisLayout.isLeafRoot) {
+            const iconChar = seriesModel.get('drillDownIcon', true);
+            text = iconChar ? iconChar + ' ' + text : text;
+        }
+
         const isShow = normalLabelModel.getShallow('show');
 
         graphic.setLabelStyle(
             rectEl, normalLabelModel, emphasisLabelModel,
             {
-                defaultText: isShow ? defaultText : null,
-                autoColor: visualColor,
+                defaultText: isShow ? text : null,
+                inheritColor: visualColor,
                 labelFetcher: seriesModel,
-                labelDataIndex: thisNode.dataIndex,
-                labelProp: upperLabelRect ? 'upperLabel' : 'label'
+                labelDataIndex: thisNode.dataIndex
             }
         );
 
