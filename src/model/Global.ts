@@ -27,14 +27,16 @@
  * (2) In `merge option` mode, if a component has no id/name specified, it
  * will be merged by index, and the result sequence of the components is
  * consistent to the original sequence.
- * (3) `reset` feature (in toolbox). Find detailed info in comments about
+ * (3) In `replaceMerge` mode, keep the result sequence of the components is
+ * consistent to the original sequence, even though there might result in "hole".
+ * (4) `reset` feature (in toolbox). Find detailed info in comments about
  * `mergeOption` in module:echarts/model/OptionManager.
  */
 
 import {__DEV__} from '../config';
 import {
-    each, filter, map, isArray, indexOf, isObject, isString,
-    createHashMap, assert, clone, merge, extend, mixin, HashMap
+    each, filter, isArray, isObject, isString,
+    createHashMap, assert, clone, merge, extend, mixin, HashMap, isFunction
 } from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
 import Model from './Model';
@@ -55,12 +57,18 @@ import {
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
-import { Dictionary } from 'zrender/src/core/types';
+
+export interface GlobalModelSetOptionOpts {
+    replaceMerge: ComponentMainType | ComponentMainType[];
+}
+export interface InnerSetOptionOpts {
+    replaceMergeMainTypeMap: HashMap<boolean>;
+}
 
 // -----------------------
 // Internal method names:
 // -----------------------
-let createSeriesIndices: (ecModel: GlobalModel, seriesModels: ComponentModel[]) => void;
+let reCreateSeriesIndices: (ecModel: GlobalModel) => void;
 let assertSeriesInitialized: (ecModel: GlobalModel) => void;
 let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
 
@@ -76,13 +84,23 @@ class GlobalModel extends Model<ECUnitOption> {
     private _componentsMap: HashMap<ComponentModel[]>;
 
     /**
+     * `_componentsMap` might have "hole" becuase of remove.
+     * So save components count for a certain mainType here.
+     */
+    private _componentsCount: HashMap<number>;
+
+    /**
      * Mapping between filtered series list and raw series list.
      * key: filtered series indices, value: raw series indices.
+     * Items of `_seriesIndices` never be null/empty/-1.
+     * If series has been removed by `replaceMerge`, those series
+     * also won't be in `_seriesIndices`, just like be filtered.
      */
     private _seriesIndices: number[];
 
     /**
-     * Key: seriesIndex
+     * Key: seriesIndex.
+     * Keep consistent with `_seriesIndices`.
      */
     private _seriesIndicesMap: HashMap<any>;
 
@@ -103,15 +121,21 @@ class GlobalModel extends Model<ECUnitOption> {
         this._optionManager = optionManager;
     }
 
-    setOption(option: ECOption, optionPreprocessorFuncs: OptionPreprocessor[]): void {
+    setOption(
+        option: ECOption,
+        opts: GlobalModelSetOptionOpts,
+        optionPreprocessorFuncs: OptionPreprocessor[]
+    ): void {
         assert(
             !(OPTION_INNER_KEY in option),
             'please use chart.getOption()'
         );
 
-        this._optionManager.setOption(option, optionPreprocessorFuncs);
+        const innerOpt = normalizeReplaceMergeInput(opts);
 
-        this.resetOption(null);
+        this._optionManager.setOption(option, optionPreprocessorFuncs, innerOpt);
+
+        this._resetOption(null, innerOpt);
     }
 
     /**
@@ -121,7 +145,17 @@ class GlobalModel extends Model<ECUnitOption> {
      *        'media': only reset media query option
      * @return Whether option changed.
      */
-    resetOption(type: string): boolean {
+    resetOption(
+        type: 'recreate' | 'timeline' | 'media',
+        opt?: GlobalModelSetOptionOpts
+    ): boolean {
+        return this._resetOption(type, normalizeReplaceMergeInput(opt));
+    }
+
+    private _resetOption(
+        type: 'recreate' | 'timeline' | 'media',
+        opt: InnerSetOptionOpts
+    ): boolean {
         let optionChanged = false;
         const optionManager = this._optionManager;
 
@@ -133,7 +167,7 @@ class GlobalModel extends Model<ECUnitOption> {
             }
             else {
                 this.restoreData();
-                this.mergeOption(baseOption);
+                this._mergeOption(baseOption, opt);
             }
             optionChanged = true;
         }
@@ -146,7 +180,7 @@ class GlobalModel extends Model<ECUnitOption> {
             const timelineOption = optionManager.getTimelineOption(this);
             if (timelineOption) {
                 optionChanged = true;
-                this.mergeOption(timelineOption);
+                this._mergeOption(timelineOption, opt);
             }
         }
 
@@ -155,7 +189,7 @@ class GlobalModel extends Model<ECUnitOption> {
             if (mediaOptions.length) {
                 each(mediaOptions, function (mediaOption) {
                     optionChanged = true;
-                    this.mergeOption(mediaOption);
+                    this._mergeOption(mediaOption, opt);
                 }, this);
             }
         }
@@ -163,10 +197,19 @@ class GlobalModel extends Model<ECUnitOption> {
         return optionChanged;
     }
 
-    mergeOption(newOption: ECUnitOption): void {
+    public mergeOption(option: ECUnitOption): void {
+        this._mergeOption(option, null);
+    }
+
+    private _mergeOption(
+        newOption: ECUnitOption,
+        opt: InnerSetOptionOpts
+    ): void {
         const option = this.option;
         const componentsMap = this._componentsMap;
-        const newCptTypes: ComponentMainType[] = [];
+        const componentsCount = this._componentsCount;
+        const newCmptTypes: ComponentMainType[] = [];
+        const replaceMergeMainTypeMap = opt && opt.replaceMergeMainTypeMap;
 
         resetSourceDefaulter(this);
 
@@ -184,12 +227,12 @@ class GlobalModel extends Model<ECUnitOption> {
                     : merge(option[mainType], componentOption, true);
             }
             else if (mainType) {
-                newCptTypes.push(mainType);
+                newCmptTypes.push(mainType);
             }
         });
 
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
-            newCptTypes,
+            newCmptTypes,
             (ComponentModel as ComponentModelConstructor).getAllClassMainTypes(),
             visitComponent,
             this
@@ -201,41 +244,48 @@ class GlobalModel extends Model<ECUnitOption> {
             dependencies: string | string[]
         ): void {
 
-            const newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
+            const newCmptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
-            const mapResult = modelUtil.mappingToExists(
-                componentsMap.get(mainType), newCptOptionList
-            );
+            const oldCmptList = componentsMap.get(mainType);
+            const mapResult = replaceMergeMainTypeMap && replaceMergeMainTypeMap.get(mainType)
+                ? modelUtil.mappingToExistsInReplaceMerge(oldCmptList, newCmptOptionList)
+                : modelUtil.mappingToExistsInNormalMerge(oldCmptList, newCmptOptionList);
 
             modelUtil.makeIdAndName(mapResult);
 
             // Set mainType and complete subType.
             each(mapResult, function (item) {
-                const opt = item.option;
+                const opt = item.newOption;
                 if (isObject(opt)) {
                     item.keyInfo.mainType = mainType;
-                    item.keyInfo.subType = determineSubType(mainType, opt, item.exist);
+                    item.keyInfo.subType = determineSubType(mainType, opt, item.existing);
                 }
             });
 
-            option[mainType] = [];
-            componentsMap.set(mainType, []);
+            // Set it before the travel, in case that `this._componentsMap` is
+            // used in some `init` or `merge` of components.
+            option[mainType] = null;
+            componentsMap.set(mainType, null);
+            componentsCount.set(mainType, 0);
+            const optionsByMainType = [] as ComponentOption[];
+            const cmptsByMainType = [] as ComponentModel[];
+            let cmptsCountByMainType = 0;
 
             each(mapResult, function (resultItem, index) {
-                let componentModel = resultItem.exist;
-                const newCptOption = resultItem.option;
+                let componentModel = resultItem.existing;
+                const newCmptOption = resultItem.newOption;
 
-                assert(
-                    isObject(newCptOption) || componentModel,
-                    'Empty component definition'
-                );
-
-                // Consider where is no new option and should be merged using {},
-                // see removeEdgeAndAdd in topologicalTravel and
-                // ComponentModel.getAllClassMainTypes.
-                if (!newCptOption) {
-                    componentModel.mergeOption({}, this);
-                    componentModel.optionUpdated({}, false);
+                if (!newCmptOption) {
+                    if (componentModel) {
+                        // Consider where is no new option and should be merged using {},
+                        // see removeEdgeAndAdd in topologicalTravel and
+                        // ComponentModel.getAllClassMainTypes.
+                        componentModel.mergeOption({}, this);
+                        componentModel.optionUpdated({}, false);
+                    }
+                    // If no both `resultItem.exist` and `resultItem.option`,
+                    // either it is in `replaceMerge` and not matched by any id,
+                    // or it has been removed in previous `replaceMerge` and left a "hole" in this component index.
                 }
                 else {
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
@@ -245,8 +295,8 @@ class GlobalModel extends Model<ECUnitOption> {
                     if (componentModel && componentModel.constructor === ComponentModelClass) {
                         componentModel.name = resultItem.keyInfo.name;
                         // componentModel.settingTask && componentModel.settingTask.dirty();
-                        componentModel.mergeOption(newCptOption, this);
-                        componentModel.optionUpdated(newCptOption, false);
+                        componentModel.mergeOption(newCmptOption, this);
+                        componentModel.optionUpdated(newCmptOption, false);
                     }
                     else {
                         // PENDING Global as parent ?
@@ -257,32 +307,48 @@ class GlobalModel extends Model<ECUnitOption> {
                             resultItem.keyInfo
                         );
                         componentModel = new ComponentModelClass(
-                            newCptOption, this, this, extraOpt
+                            newCmptOption, this, this, extraOpt
                         );
                         extend(componentModel, extraOpt);
-                        componentModel.init(newCptOption, this, this);
+                        if (resultItem.brandNew) {
+                            componentModel.__requireNewView = true;
+                        }
+                        componentModel.init(newCmptOption, this, this);
 
                         // Call optionUpdated after init.
-                        // newCptOption has been used as componentModel.option
+                        // newCmptOption has been used as componentModel.option
                         // and may be merged with theme and default, so pass null
                         // to avoid confusion.
                         componentModel.optionUpdated(null, true);
                     }
                 }
 
-                componentsMap.get(mainType)[index] = componentModel;
-                option[mainType][index] = componentModel.option;
+                if (componentModel) {
+                    optionsByMainType.push(componentModel.option);
+                    cmptsByMainType.push(componentModel);
+                    cmptsCountByMainType++;
+                }
+                else {
+                    // Always do assign to avoid elided item in array.
+                    optionsByMainType.push(void 0);
+                    cmptsByMainType.push(void 0);
+                }
             }, this);
+
+            option[mainType] = optionsByMainType;
+            componentsMap.set(mainType, cmptsByMainType);
+            componentsCount.set(mainType, cmptsCountByMainType);
 
             // Backup series for filtering.
             if (mainType === 'series') {
-                createSeriesIndices(this, componentsMap.get('series'));
+                reCreateSeriesIndices(this);
             }
         }
 
-        this._seriesIndicesMap = createHashMap<number>(
-            this._seriesIndices = this._seriesIndices || []
-        );
+        // If no series declared, ensure `_seriesIndices` initialized.
+        if (!this._seriesIndices) {
+            reCreateSeriesIndices(this);
+        }
     }
 
     /**
@@ -294,12 +360,22 @@ class GlobalModel extends Model<ECUnitOption> {
         each(option, function (opts, mainType) {
             if ((ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
                 opts = modelUtil.normalizeToArray(opts);
-                for (let i = opts.length - 1; i >= 0; i--) {
+                // Inner cmpts need to be removed.
+                // Inner cmpts might not be at last since ec5.0, but still
+                // compatible for users: if inner cmpt at last, splice the returned array.
+                let realLen = opts.length;
+                let metNonInner = false;
+                for (let i = realLen - 1; i >= 0; i--) {
                     // Remove options with inner id.
-                    if (modelUtil.isIdInner(opts[i])) {
-                        opts.splice(i, 1);
+                    if (opts[i] && !modelUtil.isIdInner(opts[i])) {
+                        metNonInner = true;
+                    }
+                    else {
+                        opts[i] = null;
+                        !metNonInner && realLen--;
                     }
                 }
+                opts.length = realLen;
                 option[mainType] = opts;
             }
         });
@@ -323,51 +399,41 @@ class GlobalModel extends Model<ECUnitOption> {
         }
     }
 
+    /**
+     * @return Never be null/undefined.
+     */
     queryComponents(condition: QueryConditionKindB): ComponentModel[] {
         const mainType = condition.mainType;
         if (!mainType) {
             return [];
         }
 
-        let index = condition.index;
+        const index = condition.index;
         const id = condition.id;
         const name = condition.name;
+        const cmpts = this._componentsMap.get(mainType);
 
-        const cpts = this._componentsMap.get(mainType);
-
-        if (!cpts || !cpts.length) {
+        if (!cmpts || !cmpts.length) {
             return [];
         }
 
-        let result;
+        let result: ComponentModel[];
 
         if (index != null) {
-            if (!isArray(index)) {
-                index = [index];
-            }
-            result = filter(map(index, function (idx) {
-                return cpts[idx];
-            }), function (val) {
-                return !!val;
+            result = [];
+            each(modelUtil.normalizeToArray(index), function (idx) {
+                cmpts[idx] && result.push(cmpts[idx]);
             });
         }
         else if (id != null) {
-            const isIdArray = isArray(id);
-            result = filter(cpts, function (cpt) {
-                return (isIdArray && indexOf(id as string[], cpt.id) >= 0)
-                    || (!isIdArray && cpt.id === id);
-            });
+            result = queryByIdOrName('id', id, cmpts);
         }
         else if (name != null) {
-            const isNameArray = isArray(name);
-            result = filter(cpts, function (cpt) {
-                return (isNameArray && indexOf(name as string[], cpt.name) >= 0)
-                    || (!isNameArray && cpt.name === name);
-            });
+            result = queryByIdOrName('name', name, cmpts);
         }
         else {
-            // Return all components with mainType
-            result = cpts.slice();
+            // Return all non-empty components in that mainType
+            result = filter(cmpts, cmpt => !!cmpt);
         }
 
         return filterBySubType(result, condition);
@@ -397,7 +463,8 @@ class GlobalModel extends Model<ECUnitOption> {
         const queryCond = getQueryCond(query);
         const result = queryCond
             ? this.queryComponents(queryCond)
-            : this._componentsMap.get(mainType);
+            // Retrieve all non-empty components.
+            : filter(this._componentsMap.get(mainType), cmpt => !!cmpt);
 
         return doFilter(filterBySubType(result, condition));
 
@@ -428,6 +495,8 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     /**
+     * Travel components (before filtered).
+     *
      * @usage
      * eachComponent('legend', function (legendModel, index) {
      *     ...
@@ -466,31 +535,44 @@ class GlobalModel extends Model<ECUnitOption> {
     ) {
         const componentsMap = this._componentsMap;
 
-        if (typeof mainType === 'function') {
-            const contextReal = cb as T;
-            const cbReal = mainType as EachComponentAllCallback;
-            componentsMap.each(function (components, componentType) {
-                each(components, function (component, index) {
-                    cbReal.call(contextReal, componentType, component, index);
-                });
+        if (isFunction(mainType)) {
+            const ctxForAll = cb as T;
+            const cbForAll = mainType as EachComponentAllCallback;
+            componentsMap.each(function (cmpts, componentType) {
+                for (let i = 0; cmpts && i < cmpts.length; i++) {
+                    const cmpt = cmpts[i];
+                    cmpt && cbForAll.call(ctxForAll, componentType, cmpt, cmpt.componentIndex);
+                }
             });
         }
-        else if (isString(mainType)) {
-            each(componentsMap.get(mainType), cb as EachComponentInMainTypeCallback, context);
-        }
-        else if (isObject(mainType)) {
-            const queryResult = this.findComponents(mainType);
-            each(queryResult, cb as EachComponentInMainTypeCallback, context);
+        else {
+            const cmpts = isString(mainType)
+                ? componentsMap.get(mainType)
+                : isObject(mainType)
+                ? this.findComponents(mainType)
+                : null;
+            for (let i = 0; cmpts && i < cmpts.length; i++) {
+                const cmpt = cmpts[i];
+                cmpt && (cb as EachComponentInMainTypeCallback).call(
+                    context, cmpt, cmpt.componentIndex
+                );
+            }
         }
     }
 
+    /**
+     * Get series list before filtered by name.
+     */
     getSeriesByName(name: string): SeriesModel[] {
-        const series = this._componentsMap.get('series') as SeriesModel[];
-        return filter(series, function (oneSeries) {
-            return oneSeries.name === name;
-        });
+        return filter(
+            this._componentsMap.get('series') as SeriesModel[],
+            oneSeries => !!oneSeries && oneSeries.name === name
+        );
     }
 
+    /**
+     * Get series list before filtered by index.
+     */
     getSeriesByIndex(seriesIndex: number): SeriesModel {
         return this._componentsMap.get('series')[seriesIndex] as SeriesModel;
     }
@@ -500,18 +582,27 @@ class GlobalModel extends Model<ECUnitOption> {
      * FIXME: rename to getRawSeriesByType?
      */
     getSeriesByType(subType: ComponentSubType): SeriesModel[] {
-        const series = this._componentsMap.get('series') as SeriesModel[];
-        return filter(series, function (oneSeries) {
-            return oneSeries.subType === subType;
-        });
+        return filter(
+            this._componentsMap.get('series') as SeriesModel[],
+            oneSeries => !!oneSeries && oneSeries.subType === subType
+        );
     }
 
+    /**
+     * Get all series before filtered.
+     */
     getSeries(): SeriesModel[] {
-        return this._componentsMap.get('series').slice() as SeriesModel[];
+        return filter(
+            this._componentsMap.get('series').slice() as SeriesModel[],
+            oneSeries => !!oneSeries
+        );
     }
 
+    /**
+     * Count series before filtered.
+     */
     getSeriesCount(): number {
-        return this._componentsMap.get('series').length;
+        return this._componentsCount.get('series');
     }
 
     /**
@@ -539,7 +630,9 @@ class GlobalModel extends Model<ECUnitOption> {
         cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
         context?: T
     ): void {
-        each(this._componentsMap.get('series'), cb, context);
+        each(this._componentsMap.get('series'), function (series) {
+            series && cb.call(context, series, series.componentIndex);
+        });
     }
 
     /**
@@ -573,7 +666,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
     isSeriesFiltered(seriesModel: SeriesModel): boolean {
         assertSeriesInitialized(this);
-        return this._seriesIndicesMap.get(seriesModel.componentIndex + '') == null;
+        return this._seriesIndicesMap.get(seriesModel.componentIndex) == null;
     }
 
     getCurrentSeriesIndices(): number[] {
@@ -585,17 +678,22 @@ class GlobalModel extends Model<ECUnitOption> {
         context?: T
     ): void {
         assertSeriesInitialized(this);
-        const filteredSeries = filter(
-            this._componentsMap.get('series') as SeriesModel[], cb, context
-        );
-        createSeriesIndices(this, filteredSeries);
+
+        const newSeriesIndices: number[] = [];
+        each(this._seriesIndices, function (seriesRawIdx) {
+            const series = this._componentsMap.get('series')[seriesRawIdx] as SeriesModel;
+            cb.call(context, series, seriesRawIdx) && newSeriesIndices.push(seriesRawIdx);
+        }, this);
+
+        this._seriesIndices = newSeriesIndices;
+        this._seriesIndicesMap = createHashMap(newSeriesIndices);
     }
 
     restoreData(payload?: Payload): void {
+
+        reCreateSeriesIndices(this);
+
         const componentsMap = this._componentsMap;
-
-        createSeriesIndices(this, componentsMap.get('series'));
-
         const componentTypes: string[] = [];
         componentsMap.each(function (components, componentType) {
             componentTypes.push(componentType);
@@ -604,10 +702,16 @@ class GlobalModel extends Model<ECUnitOption> {
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
             componentTypes,
             (ComponentModel as ComponentModelConstructor).getAllClassMainTypes(),
-            function (componentType, dependencies) {
+            function (componentType) {
                 each(componentsMap.get(componentType), function (component) {
-                    (componentType !== 'series' || !isNotTargetSeries(component as SeriesModel, payload))
-                        && component.restoreData();
+                    if (component
+                        && (
+                            componentType !== 'series'
+                            || !isNotTargetSeries(component as SeriesModel, payload)
+                        )
+                    ) {
+                        component.restoreData();
+                    }
                 });
             }
         );
@@ -615,12 +719,13 @@ class GlobalModel extends Model<ECUnitOption> {
 
     private static internalField = (function () {
 
-        createSeriesIndices = function (ecModel: GlobalModel, seriesModels: ComponentModel[]): void {
-            ecModel._seriesIndicesMap = createHashMap(
-                ecModel._seriesIndices = map(seriesModels, function (series) {
-                    return series.componentIndex;
-                }) || []
-            );
+        reCreateSeriesIndices = function (ecModel: GlobalModel): void {
+            const seriesIndices: number[] = ecModel._seriesIndices = [];
+            each(ecModel._componentsMap.get('series'), function (series) {
+                // series may have been removed by `replaceMerge`.
+                series && seriesIndices.push(series.componentIndex);
+            });
+            ecModel._seriesIndicesMap = createHashMap(seriesIndices);
         };
 
         assertSeriesInitialized = function (ecModel: GlobalModel): void {
@@ -644,13 +749,14 @@ class GlobalModel extends Model<ECUnitOption> {
             // Init with series: [], in case of calling findSeries method
             // before series initialized.
             ecModel._componentsMap = createHashMap({series: []});
+            ecModel._componentsCount = createHashMap();
 
             mergeTheme(baseOption, ecModel._theme.option);
 
             // TODO Needs clone when merging to the unexisted property
             merge(baseOption, globalDefault, false);
 
-            ecModel.mergeOption(baseOption);
+            ecModel._mergeOption(baseOption, null);
         };
 
     })();
@@ -692,10 +798,10 @@ export interface QueryConditionKindB {
     name?: string | string[];
 }
 export interface EachComponentAllCallback {
-    (mainType: string, model: ComponentModel, index: number): void;
+    (mainType: string, model: ComponentModel, componentIndex: number): void;
 }
 interface EachComponentInMainTypeCallback {
-    (model: ComponentModel, index: number): void;
+    (model: ComponentModel, componentIndex: number): void;
 }
 
 
@@ -719,7 +825,8 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
         if (name === 'colorLayer' && notMergeColorLayer) {
             return;
         }
-        // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
+        // If it is component model mainType, the model handles that merge later.
+        // otherwise, merge them here.
         if (!(ComponentModel as ComponentModelConstructor).hasClass(name)) {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
@@ -737,18 +844,32 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
 
 function determineSubType(
     mainType: ComponentMainType,
-    newCptOption: ComponentOption,
+    newCmptOption: ComponentOption,
     existComponent: {subType: ComponentSubType} | ComponentModel
 ): ComponentSubType {
-    const subType = newCptOption.type
-        ? newCptOption.type
+    const subType = newCmptOption.type
+        ? newCmptOption.type
         : existComponent
         ? existComponent.subType
         // Use determineSubType only when there is no existComponent.
-        : (ComponentModel as ComponentModelConstructor).determineSubType(mainType, newCptOption);
+        : (ComponentModel as ComponentModelConstructor).determineSubType(mainType, newCmptOption);
 
     // tooltip, markline, markpoint may always has no subType
     return subType;
+}
+
+function queryByIdOrName<T extends { id?: string, name?: string }>(
+    attr: 'id' | 'name',
+    idOrName: string | string[],
+    cmpts: T[]
+): T[] {
+    let keyMap: HashMap<string>;
+    return isArray(idOrName)
+        ? (
+            keyMap = createHashMap(idOrName),
+            filter(cmpts, cmpt => cmpt && keyMap.get(cmpt[attr]) != null)
+        )
+        : filter(cmpts, cmpt => cmpt && cmpt[attr] === idOrName + '');
 }
 
 function filterBySubType(
@@ -758,14 +879,27 @@ function filterBySubType(
     // Using hasOwnProperty for restrict. Consider
     // subType is undefined in user payload.
     return condition.hasOwnProperty('subType')
-        ? filter(components, function (cpt) {
-            return cpt.subType === condition.subType;
-        })
+        ? filter(components, cmpt => cmpt && cmpt.subType === condition.subType)
         : components;
 }
 
-// @ts-ignore FIXME:GlobalOption
-interface GlobalModel extends ColorPaletteMixin {}
+function normalizeReplaceMergeInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
+    const replaceMergeMainTypeMap = createHashMap<boolean>();
+    opts && each(modelUtil.normalizeToArray(opts.replaceMerge), function (mainType) {
+        if (__DEV__) {
+            assert(
+                (ComponentModel as ComponentModelConstructor).hasClass(mainType),
+                '"' + mainType + '" is not valid component main type in "replaceMerge"'
+            );
+        }
+        replaceMergeMainTypeMap.set(mainType, true);
+    });
+    return {
+        replaceMergeMainTypeMap: replaceMergeMainTypeMap
+    };
+}
+
+interface GlobalModel extends ColorPaletteMixin<ECUnitOption> {}
 mixin(GlobalModel, ColorPaletteMixin);
 
 export default GlobalModel;

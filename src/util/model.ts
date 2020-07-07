@@ -46,6 +46,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
+import { __DEV__ } from '../config';
 
 /**
  * Make the name displayable. But we should
@@ -142,11 +143,24 @@ export function isDataItemOption(dataItem: OptionDataItem): boolean {
 }
 
 type MappingExistItem = {id?: string, name?: string} | ComponentModel;
+/**
+ * The array `MappingResult<T>[]` exactly represents the content of the result
+ * components array after merge.
+ * The indices are the same as the `existings`.
+ * Items will not be `null`/`undefined` even if the corresponding `existings` will be removed.
+ */
+type MappingResult<T> = MappingResultItem<T>[];
 interface MappingResultItem<T> {
-    exist?: T;
-    option?: ComponentOption;
-    id?: string;
-    name?: string;
+    // Existing component instance.
+    existing?: T;
+    // The mapped new component option.
+    newOption?: ComponentOption;
+    // Mark that the new component has nothing to do with any of the old components.
+    // So they won't share view. Also see `__requireNewView`.
+    brandNew?: boolean;
+    // id?: string;
+    // name?: string;
+    // keyInfo for new component option.
     keyInfo?: {
         name?: string,
         id?: string,
@@ -156,98 +170,184 @@ interface MappingResultItem<T> {
 }
 
 /**
- * Mapping to exists for merge.
+ * Mapping to existings for merge.
+ * The mapping result (merge result) will keep the order of the existing
+ * component, rather than the order of new option. Because we should ensure
+ * some specified index reference (like xAxisIndex) keep work.
+ * And in most cases, "merge option" is used to update partial option but not
+ * be expected to change the order.
  *
- * @public
- * @param exists
- * @param newCptOptions
- * @return Result, like [{exist: ..., option: ...}, {}],
- *                          index of which is the same as exists.
+ * @return See the comment of <MappingResult>.
  */
-export function mappingToExists<T extends MappingExistItem>(
-    exists: T[],
-    newCptOptions: ComponentOption[]
-): MappingResultItem<T>[] {
-    // Mapping by the order by original option (but not order of
-    // new option) in merge mode. Because we should ensure
-    // some specified index (like xAxisIndex) is consistent with
-    // original option, which is easy to understand, espatially in
-    // media query. And in most case, merge option is used to
-    // update partial option but not be expected to change order.
-    newCptOptions = (newCptOptions || []).slice();
+export function mappingToExistsInNormalMerge<T extends MappingExistItem>(
+    existings: T[],
+    newCmptOptions: ComponentOption[]
+): MappingResult<T> {
+    newCmptOptions = (newCmptOptions || []).slice();
+    existings = existings || [];
 
-    const result: MappingResultItem<T>[] = map(exists || [], function (obj, index) {
-        return {exist: obj};
-    });
+    const result: MappingResultItem<T>[] = [];
+    // Do not use native `map` to in case that the array `existings`
+    // contains elided items, which will be ommited.
+    for (let index = 0; index < existings.length; index++) {
+        // Because of replaceMerge, `existing` may be null/undefined.
+        result.push({ existing: existings[index] });
+    }
 
     // Mapping by id or name if specified.
-    each(newCptOptions, function (cptOption, index) {
-        if (!isObject<ComponentOption>(cptOption)) {
+    each(newCmptOptions, function (cmptOption, index) {
+        if (!isObject<ComponentOption>(cmptOption)) {
+            newCmptOptions[index] = null;
             return;
         }
 
         // id has highest priority.
         for (let i = 0; i < result.length; i++) {
-            if (!result[i].option // Consider name: two map to one.
-                && cptOption.id != null
-                && result[i].exist.id === cptOption.id + ''
+            const existing = result[i].existing;
+            if (!result[i].newOption // Consider name: two map to one.
+                && cmptOption.id != null
+                && existing
+                && existing.id === cmptOption.id + ''
             ) {
-                result[i].option = cptOption;
-                newCptOptions[index] = null;
+                result[i].newOption = cmptOption;
+                newCmptOptions[index] = null;
                 return;
             }
         }
 
         for (let i = 0; i < result.length; i++) {
-            const exist = result[i].exist;
-            if (!result[i].option // Consider name: two map to one.
-                // Can not match when both ids exist but different.
-                && (exist.id == null || cptOption.id == null)
-                && cptOption.name != null
-                && !isIdInner(cptOption)
-                && !isIdInner(exist)
-                && exist.name === cptOption.name + ''
+            const existing = result[i].existing;
+            if (!result[i].newOption // Consider name: two map to one.
+                // Can not match when both ids existing but different.
+                && existing
+                && (existing.id == null || cmptOption.id == null)
+                && cmptOption.name != null
+                && !isIdInner(cmptOption)
+                && !isIdInner(existing)
+                && existing.name === cmptOption.name + ''
             ) {
-                result[i].option = cptOption;
-                newCptOptions[index] = null;
+                result[i].newOption = cmptOption;
+                newCmptOptions[index] = null;
                 return;
             }
         }
     });
 
-    // Otherwise mapping by index.
-    each(newCptOptions, function (cptOption, index) {
-        if (!isObject<ComponentOption>(cptOption)) {
+    mappingByIndexFinally(newCmptOptions, result, false);
+
+    return result;
+}
+
+/**
+ * Mapping to exists for merge.
+ * The mode "replaceMerge" means that:
+ * (1) Only the id mapped components will be merged.
+ * (2) Other existing components (except inner compoonets) will be removed.
+ * (3) Other new options will be used to create new component.
+ * (4) The index of the existing compoents will not be modified.
+ * That means their might be "hole" after the removal.
+ * The new components are created first at those available index.
+ *
+ * @return See the comment of <MappingResult>.
+ */
+export function mappingToExistsInReplaceMerge<T extends MappingExistItem>(
+    existings: T[],
+    newCmptOptions: ComponentOption[]
+): MappingResult<T> {
+
+    existings = existings || [];
+    newCmptOptions = (newCmptOptions || []).slice();
+    const existingIdIdxMap = createHashMap<number>();
+    const result = [] as MappingResult<T>;
+
+    // Do not use native `each` to in case that the array `existings`
+    // contains elided items, which will be ommited.
+    for (let index = 0; index < existings.length; index++) {
+        const existing = existings[index];
+        let innerExisting: T;
+        // Because of replaceMerge, `existing` may be null/undefined.
+        if (existing) {
+            if (isIdInner(existing)) {
+                // inner components should not be removed.
+                innerExisting = existing;
+            }
+            // Input with inner id is allowed for convenience of some internal usage.
+            existingIdIdxMap.set(existing.id, index);
+        }
+        result.push({ existing: innerExisting });
+    }
+
+    // Mapping by id if specified.
+    each(newCmptOptions, function (cmptOption, index) {
+        if (!isObject<ComponentOption>(cmptOption)) {
+            newCmptOptions[index] = null;
             return;
         }
-
-        let i = 0;
-        for (; i < result.length; i++) {
-            const exist = result[i].exist;
-            if (!result[i].option
-                // Existing model that already has id should be able to
-                // mapped to (because after mapping performed model may
-                // be assigned with a id, whish should not affect next
-                // mapping), except those has inner id.
-                && !isIdInner(exist)
-                // Caution:
-                // Do not overwrite id. But name can be overwritten,
-                // because axis use name as 'show label text'.
-                // 'exist' always has id and name and we dont
-                // need to check it.
-                && cptOption.id == null
-            ) {
-                result[i].option = cptOption;
-                break;
+        const optionId = cmptOption.id + '';
+        const existingIdx = existingIdIdxMap.get(optionId);
+        if (existingIdx != null) {
+            if (__DEV__) {
+                assert(
+                    !result[existingIdx].newOption,
+                    'Duplicated option on id "' + optionId + '".'
+                );
             }
-        }
-
-        if (i >= result.length) {
-            result.push({option: cptOption});
+            result[existingIdx].newOption = cmptOption;
+            // Mark not to be removed but to be merged.
+            // In this case the existing component will be merged with the new option if `subType` is the same,
+            // or replaced with a new created component if the `subType` is different.
+            result[existingIdx].existing = existings[existingIdx];
+            newCmptOptions[index] = null;
         }
     });
 
+    mappingByIndexFinally(newCmptOptions, result, true);
+
+    // The array `result` MUST NOT contain elided items, otherwise the
+    // forEach will ommit those items and result in incorrect result.
     return result;
+}
+
+function mappingByIndexFinally<T extends MappingExistItem>(
+    newCmptOptions: ComponentOption[],
+    mappingResult: MappingResult<T>,
+    allBrandNew: boolean
+): void {
+    let nextIdx = 0;
+    each(newCmptOptions, function (cmptOption) {
+        if (!cmptOption) {
+            return;
+        }
+
+        // Find the first place that not mapped by id and not inner component (consider the "hole").
+        let resultItem;
+        while (
+            // Be `!resultItem` only when `nextIdx >= mappingResult.length`.
+            (resultItem = mappingResult[nextIdx])
+            // (1) Existing models that already have id should be able to mapped to. Because
+            // after mapping performed, model will always be assigned with an id if user not given.
+            // After that all models have id.
+            // (2) If new option has id, it can only set to a hole or append to the last. It should
+            // not be merged to the existings with different id. Because id should not be overwritten.
+            // (3) Name can be overwritten, because axis use name as 'show label text'.
+            && (
+                (cmptOption.id != null && resultItem.existing)
+                || resultItem.newOption
+                || isIdInner(resultItem.existing)
+            )
+        ) {
+            nextIdx++;
+        }
+
+        if (resultItem) {
+            resultItem.newOption = cmptOption;
+            resultItem.brandNew = allBrandNew;
+        }
+        else {
+            mappingResult.push({ newOption: cmptOption, brandNew: allBrandNew });
+        }
+        nextIdx++;
+    });
 }
 
 /**
@@ -255,7 +355,7 @@ export function mappingToExists<T extends MappingExistItem>(
  * into `keyInfo` field.
  */
 export function makeIdAndName(
-    mapResult: MappingResultItem<MappingExistItem>[]
+    mapResult: MappingResult<MappingExistItem>
 ): void {
     // We use this id to hash component models and view instances
     // in echarts. id can be specified by user, or auto generated.
@@ -271,13 +371,13 @@ export function makeIdAndName(
     // Ensure that each id is distinct.
     const idMap = createHashMap();
 
-    each(mapResult, function (item, index) {
-        const existCpt = item.exist;
-        existCpt && idMap.set(existCpt.id, item);
+    each(mapResult, function (item) {
+        const existing = item.existing;
+        existing && idMap.set(existing.id, item);
     });
 
-    each(mapResult, function (item, index) {
-        const opt = item.option;
+    each(mapResult, function (item) {
+        const opt = item.newOption;
 
         assert(
             !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
@@ -290,8 +390,8 @@ export function makeIdAndName(
 
     // Make name and id.
     each(mapResult, function (item, index) {
-        const existCpt = item.exist;
-        const opt = item.option;
+        const existing = item.existing;
+        const opt = item.newOption;
         const keyInfo = item.keyInfo;
 
         if (!isObject<ComponentOption>(opt)) {
@@ -304,14 +404,14 @@ export function makeIdAndName(
         // instance will be recreated, which can be accepted.
         keyInfo.name = opt.name != null
             ? opt.name + ''
-            : existCpt
-            ? existCpt.name
+            : existing
+            ? existing.name
             // Avoid diffferent series has the same name,
             // because name may be used like in color pallet.
             : DUMMY_COMPONENT_NAME_PREFIX + index;
 
-        if (existCpt) {
-            keyInfo.id = existCpt.id;
+        if (existing) {
+            keyInfo.id = existing.id;
         }
         else if (opt.id != null) {
             keyInfo.id = opt.id + '';
@@ -341,13 +441,13 @@ export function isNameSpecified(componentModel: ComponentModel): boolean {
 
 /**
  * @public
- * @param {Object} cptOption
+ * @param {Object} cmptOption
  * @return {boolean}
  */
-export function isIdInner(cptOption: ComponentOption): boolean {
-    return isObject(cptOption)
-        && cptOption.id
-        && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
+export function isIdInner(cmptOption: ComponentOption): boolean {
+    return cmptOption
+        && cmptOption.id
+        && (cmptOption.id + '').indexOf('\0_ec_\0') === 0;
 }
 
 type BatchItem = {

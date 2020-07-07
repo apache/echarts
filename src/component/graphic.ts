@@ -142,18 +142,18 @@ const GraphicModel = echarts.extendComponentModel({
         const flattenedList = [];
         this._flatten(newList, flattenedList);
 
-        const mappingResult = modelUtil.mappingToExists(existList, flattenedList);
+        const mappingResult = modelUtil.mappingToExistsInNormalMerge(existList, flattenedList);
         modelUtil.makeIdAndName(mappingResult);
 
         // Clear elOptionsToUpdate
         const elOptionsToUpdate = this._elOptionsToUpdate = [];
 
         zrUtil.each(mappingResult, function (resultItem, index) {
-            const newElOption = resultItem.option;
+            const newElOption = resultItem.newOption;
 
             if (__DEV__) {
                 zrUtil.assert(
-                    zrUtil.isObject(newElOption) || resultItem.exist,
+                    zrUtil.isObject(newElOption) || resultItem.existing,
                     'Empty graphic option definition'
                 );
             }
@@ -502,7 +502,7 @@ function isSetLoc(obj, props) {
 }
 
 function setKeyInfoToNewElOption(resultItem, newElOption) {
-    const existElOption = resultItem.exist;
+    const existElOption = resultItem.existing;
 
     // Set id and type after id assigned.
     newElOption.id = resultItem.keyInfo.id;

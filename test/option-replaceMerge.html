@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main_normalMerge_basic"></div>
+        <div id="main_replaceMerge_basic"></div>
+        <div id="main_normalMerge_add"></div>
+        <div id="main_replaceMerge_add_no_id"></div>
+        <div id="main_replaceMerge_add_new_id"></div>
+        <div id="main_replaceMerge_add_find_hole"></div>
+        <div id="main_normalMerge_add_find_hole"></div>
+        <div id="main_replaceMerge_inner_and_other_cmpt_not_effect"></div>
+        <div id="main_replaceMerge_remove_all"></div>
+
+
+
+
+        <script>
+            function makeBasicOption(opt) {
+                return {
+                    xAxis: {
+                        type: 'category'
+                    },
+                    yAxis: {},
+                    legend: {},
+                    tooltip: {},
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
+                    series: [{
+                        id: 'a',
+                        name: 'aa',
+                        type: 'line',
+                        data: [['a11', 22], ['a33', 44]]
+                    }, {
+                        id: 'b',
+                        name: 'bb',
+                        type: 'line',
+                        data: [['a11', 55], ['a33', 77]]
+                    }, {
+                        id: 'c',
+                        name: 'cc',
+                        type: 'line',
+                        data: [['a11', 66], ['a33', 100]]
+                    }, {
+                        id: 'd',
+                        name: 'dd',
+                        type: 'line',
+                        data: [['a11', 99], ['a33', 130]]
+                    }, {
+                        name: 'no_id',
+                        type: 'line',
+                        data: [['a11', 130], ['a33', 160]]
+                    }]
+                };
+            }
+
+        </script>
+
+
+
+        <!-- ----------------------------- -->
+        <!-- ----------------------------- -->
+        <!-- ----------------------------- -->
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_normalMerge_basic', {
+                title: [
+                    'normalMerge: basic case',
+                    'click "setOption": "bb" become bar chart, "aa" become **rect** symbol',
+                    'other series **do not change**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'b',
+                                type: 'bar',
+                                data: [['a11', 55], ['a33', 77]]
+                            }, {
+                                id: 'a',
+                                symbol: 'rect'
+                            }]
+                        })
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_replaceMerge_basic', {
+                title: [
+                    'replaceMerge: basic case',
+                    'click "setOption": "bb" become bar chart, "aa" become **rect** symbol',
+                    'other series **removed**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'b',
+                                type: 'bar',
+                                data: [['a11', 55], ['a33', 77]]
+                            }, {
+                                id: 'a',
+                                symbol: 'rect'
+                            }]
+                        }, {replaceMerge: 'series'})
+                    }
+                }, {
+                    text: 'check after click setOption',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 2);
+                            assert(chart.getModel().getSeriesCount() === 2);
+                        });
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_normalMerge_add', {
+                title: [
+                    'normalMerge: add',
+                    'click "setOption": "aa" become **rect** symbol, "no_id" become "new_no_id" and bar',
+                    'other series **do not change**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'a',
+                                symbol: 'rect'
+                            }, {
+                                name: 'new_no_id',
+                                type: 'bar',
+                                data: [['a11', 10], ['a33', 20]]
+                            }]
+                        })
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_replaceMerge_add_no_id', {
+                title: [
+                    'replaceMerge: add (add no id)',
+                    'click "setOption": "aa" become **rect** symbol, bar series "new_no_id" added',
+                    'other series **removed**',
+                    'click "check": should show **checked: Pass**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'a',
+                                symbol: 'rect'
+                            }, {
+                                name: 'new_no_id',
+                                type: 'bar',
+                                data: [['a11', 10], ['a33', 20]]
+                            }]
+                        }, {replaceMerge: ['series']});
+                    }
+                }, {
+                    text: 'check after click setOption',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 2);
+                            assert(
+                                seriesModels[1].componentIndex === 1
+                                && seriesModels[1].name === 'new_no_id'
+                            );
+                            assert(chart.getModel().getSeriesCount() === 2);
+                        });
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_replaceMerge_add_new_id', {
+                title: [
+                    'replaceMerge: add (has new id)',
+                    'click "setOption": "aa" become **rect** symbol, bar series "xx" added',
+                    'other series **removed**',
+                    'click "check": should show **checked: Pass**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'a',
+                                symbol: 'rect'
+                            }, {
+                                id: 'x',
+                                name: 'xx',
+                                type: 'bar',
+                                data: [['a11', 10], ['a33', 20]]
+                            }]
+                        }, {replaceMerge: 'series'});
+                    }
+                }, {
+                    text: 'check after click setOption',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 2);
+                            assert(
+                                seriesModels[1].componentIndex === 1
+                                && seriesModels[1].name === 'xx'
+                            );
+                            assert(chart.getModel().getSeriesCount() === 2);
+                        });
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_replaceMerge_add_find_hole', {
+                title: [
+                    '**replaceMerge**: add (find the first hole)',
+                    'click the buttons one by one from left to right',
+                    'should show **TWO checked: Pass**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption_remove',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'a'
+                            }, {
+                                id: 'c'
+                            }, {
+                                id: 'd'
+                            }]
+                        }, {replaceMerge: 'series'});
+                    }
+                }, {
+                    text: 'check after click setOption_remove',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 3);
+                            assert(seriesModels[0].componentIndex === 0);
+                            assert(seriesModels[1].componentIndex === 2);
+                            assert(seriesModels[2].componentIndex === 3);
+                            assert(seriesModels[0].id === 'a');
+                            assert(seriesModels[1].id === 'c');
+                            assert(seriesModels[2].id === 'd');
+
+                            assert(chart.getModel().getSeriesCount() === 3);
+
+                            var optionGotten = chart.getOption();
+                            assert(optionGotten.series.length === 4);
+                            assert(optionGotten.series[0].name === 'aa');
+                            assert(optionGotten.series[1] == null);
+                            assert(optionGotten.series[2].name === 'cc');
+                            assert(optionGotten.series[3].name === 'dd');
+
+                            assert(chart.getModel().getSeriesByIndex(1) == null);
+                            assert(chart.getModel().getComponent('series', 1) == null);
+                        });
+                    }
+                }, {
+                    text: 'setOption_replaceMerge',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'm',
+                                type: 'bar',
+                                data: [['a11', 22], ['a33', 44]]
+                            }, {
+                                id: 'n',
+                                type: 'bar',
+                                data: [['a11', 32], ['a33', 54]]
+                            }, {
+                                id: 'a'
+                            }, {
+                                id: 'c'
+                            }, {
+                                id: 'd'
+                            }]
+                        }, {replaceMerge: 'series'});
+                    }
+                }, {
+                    text: 'check after click setOption_replaceMerge',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 5);
+                            assert(seriesModels[0].componentIndex === 0);
+                            assert(seriesModels[1].componentIndex === 1);
+                            assert(seriesModels[2].componentIndex === 2);
+                            assert(seriesModels[3].componentIndex === 3);
+                            assert(seriesModels[4].componentIndex === 4);
+                            assert(seriesModels[0].id === 'a');
+                            assert(seriesModels[1].id === 'm');
+                            assert(seriesModels[2].id === 'c');
+                            assert(seriesModels[3].id === 'd');
+                            assert(seriesModels[4].id === 'n');
+
+                            assert(chart.getModel().getSeriesCount() === 5);
+
+                            var optionGotten = chart.getOption();
+                            assert(optionGotten.series.length === 5);
+                            assert(optionGotten.series[0].id === 'a');
+                            assert(optionGotten.series[1].id === 'm');
+                            assert(optionGotten.series[2].id === 'c');
+                            assert(optionGotten.series[3].id === 'd');
+                            assert(optionGotten.series[4].id === 'n');
+
+                            assert(chart.getModel().getSeriesByIndex(1).id == 'm');
+                            assert(chart.getModel().getComponent('series', 1).id == 'm');
+                        });
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_normalMerge_add_find_hole', {
+                title: [
+                    '**normalMerge**: add (find the first hole)',
+                    'click the buttons one by one from left to right',
+                    'should show **TWO checked: Pass**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption_remove',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'a'
+                            }, {
+                                id: 'c'
+                            }, {
+                                id: 'd'
+                            }]
+                        }, {replaceMerge: 'series'});
+                    }
+                }, {
+                    text: 'check after click setOption_remove',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 3);
+                            assert(seriesModels[0].componentIndex === 0);
+                            assert(seriesModels[1].componentIndex === 2);
+                            assert(seriesModels[2].componentIndex === 3);
+                            assert(seriesModels[0].id === 'a');
+                            assert(seriesModels[1].id === 'c');
+                            assert(seriesModels[2].id === 'd');
+
+                            assert(chart.getModel().getSeriesCount() === 3);
+
+                            var optionGotten = chart.getOption();
+                            assert(optionGotten.series.length === 4);
+                            assert(optionGotten.series[0].name === 'aa');
+                            assert(optionGotten.series[1] == null);
+                            assert(optionGotten.series[2].name === 'cc');
+                            assert(optionGotten.series[3].name === 'dd');
+
+                            assert(chart.getModel().getSeriesByIndex(1) == null);
+                            assert(chart.getModel().getComponent('series', 1) == null);
+                        });
+                    }
+                }, {
+                    text: 'setOption_normalMerge',
+                    onclick: function () {
+                        chart.setOption({
+                            series: [{
+                                id: 'm',
+                                type: 'bar',
+                                data: [['a11', 22], ['a33', 44]]
+                            }, {
+                                id: 'n',
+                                type: 'bar',
+                                data: [['a11', 32], ['a33', 54]]
+                            }]
+                        });
+                    }
+                }, {
+                    text: 'check after click setOption_normalMerge',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 5);
+                            assert(seriesModels[0].componentIndex === 0);
+                            assert(seriesModels[1].componentIndex === 1);
+                            assert(seriesModels[2].componentIndex === 2);
+                            assert(seriesModels[3].componentIndex === 3);
+                            assert(seriesModels[4].componentIndex === 4);
+                            assert(seriesModels[0].id === 'a');
+                            assert(seriesModels[1].id === 'm');
+                            assert(seriesModels[2].id === 'c');
+                            assert(seriesModels[3].id === 'd');
+                            assert(seriesModels[4].id === 'n');
+
+                            assert(chart.getModel().getSeriesCount() === 5);
+
+                            var optionGotten = chart.getOption();
+                            assert(optionGotten.series.length === 5);
+                            assert(optionGotten.series[0].id === 'a');
+                            assert(optionGotten.series[1].id === 'm');
+                            assert(optionGotten.series[2].id === 'c');
+                            assert(optionGotten.series[3].id === 'd');
+                            assert(optionGotten.series[4].id === 'n');
+
+                            assert(chart.getModel().getSeriesByIndex(1).id == 'm');
+                            assert(chart.getModel().getComponent('series', 1).id == 'm');
+                        });
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+        var option = {
+                xAxis: {
+                    type: 'category'
+                },
+                yAxis: {},
+                legend: {},
+                tooltip: {},
+                toolbox: {
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                dataZoom: [{
+                    id: 'inside_dz',
+                    type: 'inside'
+                }],
+                series: [{
+                    id: 'a',
+                    name: 'aa',
+                    type: 'line',
+                    data: [['a11', 22], ['a33', 44]]
+                }, {
+                    id: 'b',
+                    name: 'bb',
+                    type: 'line',
+                    data: [['a11', 55], ['a33', 77]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_replaceMerge_inner_and_other_cmpt_not_effect', {
+                title: [
+                    'replaceMerge: inner not effect',
+                    'click "setOption": a dataZoom.slider added',
+                    'check **inside dataZoom** and **select dataZoom** on toolbox still OK',
+                    'series **not change**',
+                    'click "check": should show **checked: Pass**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption',
+                    onclick: function () {
+                        chart.setOption({
+                            dataZoom: [{
+                               type: 'slider'
+                            }, {
+                                id: 'inside_dz'
+                            }]
+                        }, {replaceMerge: ['dataZoom']});
+                    }
+                }, {
+                    text: 'check after click setOption',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var insideDZ = chart.getModel().getComponent('dataZoom', 0);
+                            var selectDZX = chart.getModel().getComponent('dataZoom', 1);
+                            var selectDZY = chart.getModel().getComponent('dataZoom', 2);
+                            var sliderDZ = chart.getModel().getComponent('dataZoom', 3);
+                            assert(insideDZ.type === 'dataZoom.inside');
+                            assert(selectDZX.type === 'dataZoom.select');
+                            assert(selectDZY.type === 'dataZoom.select');
+                            assert(sliderDZ.type === 'dataZoom.slider');
+                            assert(chart.getModel().getComponent('dataZoom', 4) == null);
+                        });
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = makeBasicOption();
+
+            var chart = testHelper.create(echarts, 'main_replaceMerge_remove_all', {
+                title: [
+                    'replaceMerge: remove all',
+                    'click "setOption": "all series should be removed"',
+                    'click "check": should show **checked: Pass**'
+                ],
+                option: option,
+                buttons: [{
+                    text: 'setOption',
+                    onclick: function () {
+                        chart.setOption({
+                            series: []
+                        }, {replaceMerge: 'series'});
+                    }
+                }, {
+                    text: 'check after click setOption',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length === 0);
+                            assert(chart.getModel().getSeriesCount() === 0);
+                        });
+                    }
+                }],
+                height: 300
+            });
+        });
+        </script>
+
+
+
+
+
+
+    </body>
+</html>
+

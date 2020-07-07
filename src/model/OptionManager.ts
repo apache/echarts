@@ -27,7 +27,7 @@ import * as modelUtil from '../util/model';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import ExtensionAPI from '../ExtensionAPI';
 import { OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption } from '../util/types';
-import GlobalModel from './Global';
+import GlobalModel, { InnerSetOptionOpts } from './Global';
 
 const each = zrUtil.each;
 const clone = zrUtil.clone;
@@ -80,7 +80,11 @@ class OptionManager {
         this._api = api;
     }
 
-    setOption(rawOption: ECOption, optionPreprocessorFuncs: OptionPreprocessor[]): void {
+    setOption(
+        rawOption: ECOption,
+        optionPreprocessorFuncs: OptionPreprocessor[],
+        opt: InnerSetOptionOpts
+    ): void {
         if (rawOption) {
             // That set dat primitive is dangerous if user reuse the data when setOption again.
             zrUtil.each(modelUtil.normalizeToArray((rawOption as ECUnitOption).series), function (series) {
@@ -106,7 +110,7 @@ class OptionManager {
         // For setOption at second time (using merge mode);
         if (oldOptionBackup) {
             // Only baseOption can be merged.
-            mergeOption(oldOptionBackup.baseOption, newParsedOption.baseOption);
+            mergeOption(oldOptionBackup.baseOption, newParsedOption.baseOption, opt);
 
             // For simplicity, timeline options and media options do not support merge,
             // that is, if you `setOption` twice and both has timeline options, the latter
@@ -184,7 +188,8 @@ class OptionManager {
         }
 
         // FIXME
-        // 是否mediaDefault应该强制用户设置，否则可能修改不能回归。
+        // Whether mediaDefault should force users to provide? Otherwise
+        // the change by media query can not be recorvered.
         if (!indices.length && mediaDefault) {
             indices = [-1];
         }
@@ -345,8 +350,18 @@ function indicesEquals(indices1: number[], indices2: number[]): boolean {
  * 1. Each model handle its self restoration but not uniform treatment.
  *     (Too complex in logic and error-prone)
  * 2. Use a shadow ecModel. (Performace expensive)
+ *
+ * FIXME: A possible solution:
+ * Add a extra level of model for each component model. The inheritance chain would be:
+ * ecModel <- componentModel <- componentActionModel <- dataItemModel
+ * And all of the actions can only modify the `componentActionModel` rather than
+ * `componentModel`. `setOption` will only modify the `ecModel` and `componentModel`.
+ * When "resotre" action triggered, model from `componentActionModel` will be discarded
+ * instead of recreating the "ecModel" from the "_optionBackup".
  */
-function mergeOption(oldOption: ECUnitOption, newOption: ECUnitOption): void {
+function mergeOption(
+    oldOption: ECUnitOption, newOption: ECUnitOption, opt: InnerSetOptionOpts
+): void {
     newOption = newOption || {} as ECUnitOption;
 
     each(newOption, function (newCptOpt, mainType) {
@@ -363,12 +378,14 @@ function mergeOption(oldOption: ECUnitOption, newOption: ECUnitOption): void {
             newCptOpt = modelUtil.normalizeToArray(newCptOpt);
             oldCptOpt = modelUtil.normalizeToArray(oldCptOpt);
 
-            const mapResult = modelUtil.mappingToExists(oldCptOpt, newCptOpt);
+            const mapResult = opt.replaceMergeMainTypeMap.get(mainType)
+                ? modelUtil.mappingToExistsInReplaceMerge(oldCptOpt, newCptOpt)
+                : modelUtil.mappingToExistsInNormalMerge(oldCptOpt, newCptOpt);
 
             oldOption[mainType] = map(mapResult, function (item) {
-                return (item.option && item.exist)
-                    ? merge(item.exist, item.option, true)
-                    : (item.exist || item.option);
+                return (item.newOption && item.existing)
+                    ? merge(item.existing, item.newOption, true)
+                    : (item.existing || item.newOption);
             });
         }
     });

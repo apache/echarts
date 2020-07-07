@@ -128,6 +128,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     // Injectable properties:
     __viewId: string;
+    __requireNewView: boolean;
 
     static protoInitialize = (function () {
         const proto = ComponentModel.prototype;

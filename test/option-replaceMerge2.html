@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="transition_facet_cartesian"></div>
+        <div id="notMerge_transition_replaceMerge_newView"></div>
+        <div id="main_replaceMerge_keep_update"></div>
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var optionBase = {
+                color: ['#eb6134', '#eb9934', '#348feb', '#36b6d9'],
+                dataset: {
+                    source: [
+                        [null, 'sweet zongzi', 'salty zongzi', 'sweet milk tea', 'salty milk tea'],
+                        ['2012-01', 32, 65, 71, 31],
+                        ['2012-02', 41, 67, 89, 23],
+                        ['2012-03', 58, 61, 97, 12],
+                        ['2012-04', 67, 73, 105, 9],
+                        ['2012-05', 72, 67, 122, 18],
+                        ['2012-06', 94, 79, 118, 32],
+                        ['2012-07', 79, 89, 131, 37],
+                        ['2012-08', 65, 76, 103, 41],
+                        ['2012-09', 69, 81, 84, 48],
+                        ['2012-10', 74, 64, 104, 38],
+                        ['2012-11', 91, 76, 111, 51],
+                        ['2012-12', 64, 68, 121, 61]
+                    ]
+                },
+                legend: {},
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                dataZoom: [{
+                    type: 'slider',
+                    height: 15
+                }, {
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'bar',
+                    encode: { x: 0, y: 1, seriesName: 1 }
+                }, {
+                    type: 'bar',
+                    encode: { x: 0, y: 3, seriesName: 3 }
+                }, {
+                    type: 'bar',
+                    encode: { x: 0, y: 2, seriesName: 2 }
+                }, {
+                    type: 'bar',
+                    encode: { x: 0, y: 4, seriesName: 4 }
+                }]
+            };
+
+            var optionSingle = makeSingleCartesianOption();
+            var option0 = mergeOption(echarts, optionBase, optionSingle);
+
+            function mergeOption(echarts, target, source) {
+                echarts.util.each(source, function (srcCmpts, mainType) {
+                    var tarCmpts = target[mainType] = toArray(target[mainType]);
+                    echarts.util.each(toArray(srcCmpts), function (srcCmpt, index) {
+                        tarCmpts[index] = echarts.util.merge(tarCmpts[index], srcCmpt, true);
+                    });
+                });
+                function toArray(some) {
+                    return echarts.util.isArray(some) ? some : some ? [some] : [];
+                }
+                return target;
+            }
+
+            function makeSingleCartesianOption() {
+                return {
+                    grid: {
+                    },
+                    xAxis: {
+                        type: 'category'
+                    },
+                    yAxis: {
+                        max: 150,
+                        axisLine: { show: false },
+                        axisTick: { show: false }
+                    },
+                    axisPointer: {
+                        link: [{xAxisIndex: 0}]
+                    },
+                    dataZoom: [{
+                        xAxisIndex: 0
+                    }, {
+                        xAxisIndex: 0
+                    }],
+                    series: [{
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }]
+                };
+            }
+            function makeDoubleCartesianOption() {
+                return {
+                    grid: [{
+                        bottom: '52%'
+                    }, {
+                        top: '52%'
+                    }],
+                    dataZoom: [{
+                        xAxisIndex: [0, 1]
+                    }, {
+                        xAxisIndex: [0, 1]
+                    }],
+                    axisPointer: {
+                        link: [{xAxisIndex: [0, 1]}]
+                    },
+                    xAxis: [{
+                        type: 'category',
+                        axisLabel: { show: false },
+                        axisTick: { show: false },
+                        axisLine: { show: false },
+                        gridIndex: 0
+                    }, {
+                        type: 'category',
+                        // axisTick: { show: false },
+                        axisLine: { onZero: false },
+                        gridIndex: 1
+                    }],
+                    yAxis: [{
+                        name: 'sweet',
+                        max: 150,
+                        nameLocation: 'center',
+                        nameGap: 40,
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: { color: '#000' },
+                        gridIndex: 0
+                    }, {
+                        name: 'salty',
+                        max: 150,
+                        nameLocation: 'center',
+                        nameGap: 40,
+                        inverse: true,
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: { color: '#000' },
+                        gridIndex: 1
+                    }],
+                    series: [{
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }, {
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }]
+                };
+            }
+
+            var chart = testHelper.create(echarts, 'transition_facet_cartesian', {
+                title: [
+                    '<1> Click "double cartesian", should become **double** grid',
+                    'Click "single cartesian", should become **single** grid',
+                    'Check transition animation existing',
+                    '<2> **downplay some legend item**, then click "doulbe"/"single" btns again',
+                    'transition should be OK, legend state should be kept',
+                    '<3> **shrink dataZoom**, then click "doulbe"/"single" btns again',
+                    'transition should be OK, legend state should be kept',
+                ],
+                option: option0,
+                buttons: [{
+                    text: 'double cartesian',
+                    onclick: function () {
+                        chart.setOption(makeDoubleCartesianOption(), {
+                            replaceMerge: ['xAxis', 'yAxis', 'grid']
+                        })
+                    }
+                }, {
+                    text: 'single cartesian',
+                    onclick: function () {
+                        chart.setOption(makeSingleCartesianOption(), {
+                            replaceMerge: ['xAxis', 'yAxis', 'grid']
+                        })
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            function makeOption(extOption) {
+                return {
+                    animationDurationUpdate: 2000,
+                    dataset: {
+                        source: [
+                            [null, 'sweet zongzi', 'salty zongzi', 'sweet milk tea', 'salty milk tea', 'NewNew'],
+                            ['2012-01', 32, 65, 71, 31, 99],
+                            ['2012-02', 41, 67, 99, 23, 199],
+                            ['2012-03', 58, 61, 97, 12, 99],
+                            ['2012-04', 67, 73, 105, 9, 199],
+                            ['2012-05', 72, 67, 122, 18, 99],
+                            ['2012-06', 94, 79, 118, 32, 199],
+                        ]
+                    },
+                    legend: {},
+                    tooltip: {
+                    },
+                    xAxis: {
+                        type: 'category'
+                    },
+                    yAxis: {},
+                    series: extOption.series
+                };
+            }
+
+            var option_base = makeOption({
+                series: [{
+                    type: 'scatter',
+                    encode: { x: 0, y: 1, seriesName: 1 }
+                }, {
+                    type: 'scatter',
+                    encode: { x: 0, y: 3, seriesName: 3 }
+                }]
+            });
+
+            var option_notMerge = makeOption({
+                series: [{
+                    type: 'scatter',
+                    encode: { x: 0, y: 2, seriesName: 2 }
+                }, {
+                    type: 'scatter',
+                    encode: { x: 0, y: 4, seriesName: 4 }
+                }]
+            });
+
+            var option_replaceMerge = {
+                series: [{
+                    type: 'scatter',
+                    encode: { x: 0, y: 5, seriesName: 5 }
+                }]
+            };
+
+            var seriesModels_base;
+            var seriesModels_notMerge;
+            var seriesModels_replaceMerge;
+            var view0_notMerge;
+            var view0_replaceMerge;
+
+            var chart = testHelper.create(echarts, 'notMerge_transition_replaceMerge_newView', {
+                title: [
+                    'Click btns from left to right:',
+                    'Click "setOption_notMerge", should **has trans animation**',
+                    'Click "check", should print **checked: Pass**',
+                    'Click "setOption_replaceMerge", should only "NewNew" and **no trans animation**',
+                    'Click "check", should print **checked: Pass**',
+                ],
+                option: option_base,
+                buttons: [{
+                    text: 'setOption_notMerge',
+                    onclick: function () {
+                        seriesModels_base = chart.getModel().getSeries('series');
+                        chart.setOption(option_notMerge, true);
+                    }
+                }, {
+                    text: 'then check',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            seriesModels_notMerge = chart.getModel().getSeries();
+                            assert(seriesModels_base.length === 2);
+                            assert(seriesModels_notMerge.length === 2);
+
+                            assert(seriesModels_base[0] !== seriesModels_notMerge[0]);
+                            assert(seriesModels_base[1] !== seriesModels_notMerge[1]);
+                            assert(seriesModels_base[0] !== seriesModels_notMerge[1]);
+                            assert(seriesModels_base[1] !== seriesModels_notMerge[0]);
+                        });
+                    }
+                }, {
+                    text: 'setOption_replaceMerge',
+                    onclick: function () {
+                        seriesModels_base = chart.getModel().getSeries('series');
+                        view0_notMerge = chart.getViewOfSeriesModel(seriesModels_notMerge[0]);
+                        chart.setOption(option_replaceMerge, { replaceMerge: 'series' });
+                    }
+                }, {
+                    text: 'then check',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            seriesModels_replaceMerge = chart.getModel().getSeries();
+                            assert(seriesModels_replaceMerge.length === 1);
+                            assert(seriesModels_notMerge[0] !== seriesModels_replaceMerge[0]);
+                            view0_replaceMerge = chart.getViewOfSeriesModel(seriesModels_replaceMerge[0]);
+                            assert(view0_notMerge != null);
+                            assert(view0_notMerge !== view0_replaceMerge);
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var currentRound = 0;
+            var nameMap = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'];
+            var categories = ['Mon', 'Tue', 'Wed'];
+
+            function createUpdatableSeriesAndDataset(seriesCount) {
+                var series = [];
+                for (var i = 0; i < seriesCount; i++) {
+                    series.push({
+                        name: nameMap[i] + '_round_' + currentRound,
+                        type: 'bar',
+                        barWidth: 40,
+                        encode: {
+                            x: 0,
+                            y: i + 1
+                        },
+                        seriesLayoutBy: 'row'
+                    });
+                }
+                var dataset = {
+                    source: [categories.slice()]
+                };
+                var yVal = 22 + 100 * currentRound;
+                for (var i = 0; i < seriesCount; i++, yVal += 10) {
+                    dataset.source.push([yVal, yVal * 2, yVal * 2.5]);
+                }
+
+                currentRound++;
+
+                return {
+                    series: series,
+                    dataset: dataset
+                };
+            }
+
+            var sInfo = createUpdatableSeriesAndDataset(2);
+            var series = sInfo.series;
+            var dataset = sInfo.dataset;
+
+            series.unshift({
+                id: 'I_never_change',
+                name: 'I_never_change',
+                type: 'pie',
+                selectedMode: 'single',
+                lineStyle: {
+                    color: '#881100',
+                    width: 5
+                },
+                center: ['20%', 80],
+                radius: 40,
+                data: [
+                    {name: 'Mon', value: 100},
+                    {name: 'Tue', value: 200},
+                    {name: 'Wed', value: 150}
+                ]
+            });
+
+            var option = {
+                dataset: dataset,
+                brush: {
+                    toolbox: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear'],
+                    xAxisIndex: 'all',
+                },
+                xAxis: {
+                    type: 'category'
+                },
+                yAxis: {},
+                legend: {},
+                tooltip: {},
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
+                series: series
+            };
+
+            var chart = testHelper.create(echarts, 'main_replaceMerge_keep_update', {
+                title: [
+                    'replaceMerge: keep update',
+                    '<1> click "replace to new 4 series": bar totally replaced to new 4 different bars',
+                    'click "replace to new 2 series": bar totally replaced to new 2 different bars',
+                    'series "I_never_change" **never change color and data**',
+                    'click "check": should show **checked: Pass**',
+                    '<2> click pie legend to hide a sector',
+                    'click pie to select a sector',
+                    'click buttons again, **pie state should not changed**',
+                    '<3> use brush',
+                    'click buttons again, **brush selected should be correct**',
+                ],
+                option: option,
+                height: 400,
+                buttons: [{
+                    text: 'replace to new 4 series',
+                    onclick: function () {
+                        var sInfo = createUpdatableSeriesAndDataset(4);
+                        sInfo.series.push({id: 'I_never_change'});
+                        chart.setOption({
+                            dataset: sInfo.dataset,
+                            series: sInfo.series
+                        }, {replaceMerge: ['series', 'dataset']});
+                    }
+                }, {
+                    text: 'replace to new 2 series',
+                    onclick: function () {
+                        var sInfo = createUpdatableSeriesAndDataset(2);
+                        sInfo.series.push({id: 'I_never_change'});
+                        chart.setOption({
+                            dataset: sInfo.dataset,
+                            series: sInfo.series
+                        }, {replaceMerge: ['series', 'dataset']});
+                    }
+                }, {
+                    text: 'check after click setOption',
+                    onclick: function () {
+                        testHelper.printAssert(chart, function (assert) {
+                            var seriesModels = chart.getModel().getSeries();
+                            assert(seriesModels.length <= 6);
+                            assert(chart.getModel().getSeriesCount() <= 6);
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+    </body>
+</html>
+

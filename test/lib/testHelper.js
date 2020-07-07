@@ -261,6 +261,64 @@
         }
     };
 
+    /**
+     * @usage
+     * ```js
+     * testHelper.printAssert(chart, function (assert) {
+     *     // If any error thrown here, a "checked: Fail" will be printed on the chart;
+     *     // Otherwise, "checked: Pass" will be printed on the chart.
+     *     assert(condition1);
+     *     assert(condition2);
+     *     assert(condition3);
+     * });
+     * ```
+     * `testHelper.printAssert` can be called multiple times for one chart instance.
+     * For each call, one result (fail or pass) will be printed.
+     *
+     * @param chart {EChartsInstance}
+     * @param checkFn {Function} param: a function `assert`.
+     */
+    testHelper.printAssert = function (chart, checkerFn) {
+        var failErr;
+        function assert(cond) {
+            if (!cond) {
+                throw new Error();
+            }
+        }
+        try {
+            checkerFn(assert);
+        }
+        catch (err) {
+            console.error(err);
+            failErr = err;
+        }
+        var printAssertRecord = chart.__printAssertRecord || (chart.__printAssertRecord = []);
+
+        var resultDom = document.createElement('div');
+        resultDom.innerHTML = failErr ? 'checked: Fail' : 'checked: Pass';
+        var fontSize = 40;
+        resultDom.style.cssText = [
+            'position: absolute;',
+            'left: 20px;',
+            'font-size: ' + fontSize + 'px;',
+            'z-index: ' + (failErr ? 99999 : 88888) + ';',
+            'color: ' + (failErr ? 'red' : 'green') + ';',
+        ].join('');
+        printAssertRecord.push(resultDom);
+        chart.getDom().appendChild(resultDom);
+
+        relayoutResult();
+
+        function relayoutResult() {
+            var chartHeight = chart.getHeight();
+            var lineHeight = Math.min(fontSize + 10, (chartHeight - 20) / printAssertRecord.length);
+            for (var i = 0; i < printAssertRecord.length; i++) {
+                var record = printAssertRecord[i];
+                record.style.top = (10 + i * lineHeight) + 'px';
+            }
+        }
+    };
+
 
     var _dummyRequestAnimationFrameMounted = false;
 

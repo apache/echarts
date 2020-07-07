@@ -352,7 +352,7 @@ export type ECUnitOption = {
     media?: never
     timeline?: ComponentOption | ComponentOption[]
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<any> | any
-} & AnimationOptionMixin;
+} & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
  * [ECOption]:
