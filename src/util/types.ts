@@ -252,6 +252,15 @@ export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // This is not `OptionDataPrimitive` because the "dataProvider parse"
 // will not be performed. But "scale parse" will be performed.
 export type ScaleDataValue = ParsedValue | Date;
+export interface ScaleTick {
+    value: number
+};
+export interface TimeScaleTick extends ScaleTick {
+    level: number
+};
+export interface OrdinalScaleTick extends ScaleTick {
+    value: OrdinalNumber
+};
 
 // Can only be string or index, because it is used in object key in some code.
 // Making the type alias here just intending to show the meaning clearly in code.

@@ -667,7 +667,9 @@ class SliderZoomView extends DataZoomView {
             ? ''
             // FIXME Glue code
             : (axis.type === 'category' || axis.type === 'time')
-                ? axis.scale.getLabel(Math.round(value as number))
+                ? axis.scale.getLabel({
+                    value: Math.round(value as number)
+                })
                 // param of toFixed should less then 20.
                 : (value as number).toFixed(Math.min(labelPrecision as number, 20));
 

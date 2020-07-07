@@ -43,6 +43,7 @@ import * as formatUtil from '../util/format';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 import Scale from './Scale';
+import {TimeScaleTick} from '../util/types';
 
 
 const mathCeil = Math.ceil;
@@ -79,23 +80,23 @@ class TimeScale extends IntervalScale {
 
     private _stepLvl: [string, number];
 
-    getLabel(val: number): string {
+    getLabel(tick: TimeScaleTick): string {
         const stepLvl = this._stepLvl;
 
-        const labelFormatType = getLabelFormatType(val, this.getSetting('useUTC'), false);
-        return formatUtil.formatTime(labelFormatType, val);
+        const labelFormatType = getLabelFormatType(tick.value, this.getSetting('useUTC'), false);
+        return formatUtil.formatTime(labelFormatType, tick.value);
     }
 
     /**
      * @override
      * @param expandToNicedExtent Whether expand the ticks to niced extent.
      */
-    getTicks(expandToNicedExtent?: boolean): number[] {
+    getTicks(expandToNicedExtent?: boolean): TimeScaleTick[] {
         const interval = this._interval;
         const extent = this._extent;
         const niceTickExtent = this._niceExtent;
 
-        let ticks = [] as number[];
+        let ticks = [] as TimeScaleTick[];
         // If interval is 0, return [];
         if (!interval) {
             return ticks;
@@ -103,10 +104,16 @@ class TimeScale extends IntervalScale {
 
         if (extent[0] < niceTickExtent[0]) {
             if (expandToNicedExtent) {
-                ticks.push(numberUtil.round(niceTickExtent[0] - interval, 0));
+                ticks.push({
+                    value: numberUtil.round(niceTickExtent[0] - interval, 0),
+                    level: -1 // TODO:
+                });
             }
             else {
-                ticks.push(extent[0]);
+                ticks.push({
+                    value: extent[0],
+                    level: -1
+                });
             }
         }
 
@@ -125,13 +132,21 @@ class TimeScale extends IntervalScale {
 
         // Consider this case: the last item of ticks is smaller
         // than niceTickExtent[1] and niceTickExtent[1] === extent[1].
-        const lastNiceTick = ticks.length ? ticks[ticks.length - 1] : niceTickExtent[1];
+        const lastNiceTick = ticks.length
+            ? ticks[ticks.length - 1].value
+            : niceTickExtent[1];
         if (extent[1] > lastNiceTick) {
             if (expandToNicedExtent) {
-                ticks.push(numberUtil.round(lastNiceTick + interval, 0));
+                ticks.push({
+                    value: numberUtil.round(lastNiceTick + interval, 0),
+                    level: -1
+                });
             }
             else {
-                ticks.push(extent[1]);
+                ticks.push({
+                    value: extent[1],
+                    level: -1
+                });
             }
         }
 
@@ -423,10 +438,14 @@ function isLevelValueSame(level: TimeAxisLabelPrimaryLevel, valueA: number, valu
 }
 
 
-function getLevelTicks(level: TimeAxisLabelLevel, isUTC: boolean, extent: number[]) {
+function getLevelTicks(
+    level: TimeAxisLabelLevel,
+    isUTC: boolean,
+    extent: number[]
+): TimeScaleTick[] {
     const utc = isUTC ? 'UTC' : '';
-    const ticks: number[] = [];
-    for (let i = 0; i < primaryLevels.length; ++i) {
+    const ticks: TimeScaleTick[] = [];
+    for (let i = 0, levelId = 0; i < primaryLevels.length; ++i) {
         let date = new Date(extent[0]) as any;
 
         if (primaryLevels[i] === 'week') {
@@ -448,13 +467,21 @@ function getLevelTicks(level: TimeAxisLabelLevel, isUTC: boolean, extent: number
                         break;
                     }
                     else if (dateTime >= extent[0]) {
-                        ticks.push(dateTime);
+                        ticks.push({
+                            value: dateTime,
+                            level: levelId
+                        });
                     }
                 }
                 date['set' + utc + 'Month'](date['get' + utc + 'Month']() + 1);
             }
         }
-        else if (!isLevelValueSame(primaryLevels[i] as TimeAxisLabelPrimaryLevel, extent[0], extent[1], isUTC)) {
+        else if (
+            !isLevelValueSame(
+                primaryLevels[i] as TimeAxisLabelPrimaryLevel,
+                extent[0], extent[1], isUTC
+            )
+        ) {
             // Level value changes within extent
             while (true) {
                 if (primaryLevels[i] === 'year') {
@@ -496,12 +523,16 @@ function getLevelTicks(level: TimeAxisLabelLevel, isUTC: boolean, extent: number
 
                 const dateValue = (date as Date).getTime();
                 if (dateValue < extent[1]) {
-                    ticks.push(dateValue);
+                    ticks.push({
+                        value: dateValue,
+                        level: levelId
+                    });
                 }
                 else {
                     break;
                 }
             }
+            ++levelId;
         }
 
         if (primaryLevels[i] === level) {
@@ -509,7 +540,7 @@ function getLevelTicks(level: TimeAxisLabelLevel, isUTC: boolean, extent: number
         }
     }
 
-    ticks.sort((a, b) => a - b);
+    ticks.sort((a, b) => a.value - b.value);
     if (ticks.length <= 1) {
         return ticks;
     }

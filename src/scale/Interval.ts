@@ -22,6 +22,7 @@ import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import Scale from './Scale';
 import * as helper from './helper';
+import {ScaleTick, ParsedValue} from '../util/types';
 
 const roundNumber = numberUtil.round;
 
@@ -88,13 +89,13 @@ class IntervalScale extends Scale {
     /**
      * @param expandToNicedExtent Whether expand the ticks to niced extent.
      */
-    getTicks(expandToNicedExtent?: boolean): number[] {
+    getTicks(expandToNicedExtent?: boolean): ScaleTick[] {
         const interval = this._interval;
         const extent = this._extent;
         const niceTickExtent = this._niceExtent;
         const intervalPrecision = this._intervalPrecision;
 
-        const ticks = [] as number[];
+        const ticks = [] as ScaleTick[];
         // If interval is 0, return [];
         if (!interval) {
             return ticks;
@@ -105,19 +106,25 @@ class IntervalScale extends Scale {
 
         if (extent[0] < niceTickExtent[0]) {
             if (expandToNicedExtent) {
-                ticks.push(roundNumber(niceTickExtent[0] - interval, intervalPrecision));
+                ticks.push({
+                    value: roundNumber(niceTickExtent[0] - interval, intervalPrecision)
+                });
             }
             else {
-                ticks.push(extent[0]);
+                ticks.push({
+                    value: extent[0]
+                });
             }
         }
         let tick = niceTickExtent[0];
 
         while (tick <= niceTickExtent[1]) {
-            ticks.push(tick);
+            ticks.push({
+                value: tick
+            });
             // Avoid rounding error
             tick = roundNumber(tick + interval, intervalPrecision);
-            if (tick === ticks[ticks.length - 1]) {
+            if (tick === ticks[ticks.length - 1].value) {
                 // Consider out of safe float point, e.g.,
                 // -3711126.9907707 + 2e-10 === -3711126.9907707
                 break;
@@ -128,13 +135,17 @@ class IntervalScale extends Scale {
         }
         // Consider this case: the last item of ticks is smaller
         // than niceTickExtent[1] and niceTickExtent[1] === extent[1].
-        const lastNiceTick = ticks.length ? ticks[ticks.length - 1] : niceTickExtent[1];
+        const lastNiceTick = ticks.length ? ticks[ticks.length - 1].value : niceTickExtent[1];
         if (extent[1] > lastNiceTick) {
             if (expandToNicedExtent) {
-                ticks.push(roundNumber(lastNiceTick + interval, intervalPrecision));
+                ticks.push({
+                    value: roundNumber(lastNiceTick + interval, intervalPrecision)
+                });
             }
             else {
-                ticks.push(extent[1]);
+                ticks.push({
+                    value: extent[1]
+                });
             }
         }
 
@@ -151,11 +162,11 @@ class IntervalScale extends Scale {
             const prevTick = ticks[i - 1];
             let count = 0;
             const minorTicksGroup = [];
-            const interval = nextTick - prevTick;
+            const interval = nextTick.value - prevTick.value;
             const minorInterval = interval / splitNumber;
 
             while (count < splitNumber - 1) {
-                const minorTick = roundNumber(prevTick + (count + 1) * minorInterval);
+                const minorTick = roundNumber(prevTick.value + (count + 1) * minorInterval);
 
                 // For the first and last interval. The count may be less than splitNumber.
                 if (minorTick > extent[0] && minorTick < extent[1]) {
@@ -174,7 +185,7 @@ class IntervalScale extends Scale {
      * @param opt.pad returns 1.50 but not 1.5 if precision is 2.
      */
     getLabel(
-        data: number,
+        data: ScaleTick,
         opt?: {
             precision?: 'auto' | number,
             pad?: boolean
@@ -187,7 +198,7 @@ class IntervalScale extends Scale {
         let precision = opt && opt.precision;
 
         if (precision == null) {
-            precision = numberUtil.getPrecisionSafe(data) || 0;
+            precision = numberUtil.getPrecisionSafe(data.value) || 0;
         }
         else if (precision === 'auto') {
             // Should be more precise then tick.
@@ -196,7 +207,7 @@ class IntervalScale extends Scale {
 
         // (1) If `precision` is set, 12.005 should be display as '12.00500'.
         // (2) Use roundNumber (toFixed) to avoid scientific notation like '3.5e-7'.
-        const dataNum = roundNumber(data, precision as number, true);
+        const dataNum = roundNumber(data.value, precision as number, true);
 
         return formatUtil.addCommas(dataNum);
     }
