@@ -469,7 +469,7 @@ function drawEdge(
 
             graphic.updateProps(edge, {
                 shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
-                style: {opacity: 1}
+                style: zrUtil.defaults({opacity: 1}, seriesScope.lineStyle)
             }, seriesModel);
         }
     }
@@ -499,7 +499,7 @@ function drawEdge(
                         parentPoint: [targetLayout.x, targetLayout.y],
                         childPoints: childPoints
                     },
-                    style: {opacity: 1}
+                    style: zrUtil.defaults({opacity: 1}, seriesScope.lineStyle)
                 }, seriesModel);
             }
         }
