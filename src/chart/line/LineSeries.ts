@@ -53,6 +53,7 @@ export interface LineDataItemOption extends SymbolOptionMixin {
     }
 }
 
+
 export interface LineSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
@@ -78,6 +79,11 @@ export interface LineSeriesOption extends SeriesOption,
         origin?: 'auto' | 'start' | 'end'
     }
 
+    emphasis?: {
+        label?: LabelOption
+        itemStyle?: ItemStyleOption
+    }
+
     step?: false | 'start' | 'end' | 'middle'
 
     smooth?: boolean
@@ -85,7 +91,6 @@ export interface LineSeriesOption extends SeriesOption,
     smoothMonotone?: 'x' | 'y' | 'none'
 
     connectNulls?: boolean
-
 
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.

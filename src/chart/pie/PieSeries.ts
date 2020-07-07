@@ -30,7 +30,7 @@ import {
     SeriesOption,
     CallbackDataParams,
     CircleLayoutOptionMixin,
-    LabelGuideLineOption,
+    LabelLineOption,
     ItemStyleOption,
     LabelOption,
     BoxLayoutOptionMixin,
@@ -44,11 +44,19 @@ import List from '../../data/List';
 interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
-    margin?: string | number
+    edgeDistance?: string | number
     bleedMargin?: number
     distanceToLabelLine?: number
 
     position?: LabelOption['position'] | 'outer' | 'inner' | 'center'
+}
+
+interface PieLabelLineOption extends LabelLineOption {
+    /**
+     * Max angle between labelLine and surface normal.
+     * 0 - 180
+     */
+    maxSurfaceAngle?: number
 }
 
 export interface PieDataItemOption extends
@@ -57,12 +65,12 @@ export interface PieDataItemOption extends
 
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
-    labelLine?: LabelGuideLineOption
+    labelLine?: PieLabelLineOption
 
     emphasis?: {
         itemStyle?: ItemStyleOption
         label?: PieLabelOption
-        labelLine?: LabelGuideLineOption
+        labelLine?: PieLabelLineOption
     }
 }
 export interface PieSeriesOption extends
@@ -81,7 +89,7 @@ export interface PieSeriesOption extends
     // TODO: TYPE Color Callback
     itemStyle?: ItemStyleOption
     label?: PieLabelOption
-    labelLine?: LabelGuideLineOption
+    labelLine?: PieLabelLineOption
 
     clockwise?: boolean
     startAngle?: number
@@ -99,7 +107,7 @@ export interface PieSeriesOption extends
     emphasis?: {
         itemStyle?: ItemStyleOption
         label?: PieLabelOption
-        labelLine?: LabelGuideLineOption
+        labelLine?: PieLabelLineOption
     }
 
     animationType?: 'expansion' | 'scale'
@@ -222,10 +230,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // 选中时扇区偏移量
         selectedOffset: 10,
         // 高亮扇区偏移量
-        hoverOffset: 10,
+        hoverOffset: 5,
 
-        // If use strategy to avoid label overlapping
-        avoidLabelOverlap: true,
         // 选择模式，默认关闭，可选single，multiple
         // selectedMode: false,
         // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
@@ -246,16 +252,18 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         height: null,
 
         label: {
+            // color: 'inherit',
             // If rotate around circle
             rotate: 0,
             show: true,
+            overflow: 'truncate',
             // 'outer', 'inside', 'center'
             position: 'outer',
             // 'none', 'labelLine', 'edge'. Works only when position is 'outer'
             alignTo: 'none',
             // Closest distance between label and chart edge.
             // Works only position is 'outer' and alignTo is 'edge'.
-            margin: '25%',
+            edgeDistance: '25%',
             // Works only position is 'outer' and alignTo is not 'edge'.
             bleedMargin: 10,
             // Distance between text and label line.
@@ -272,6 +280,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // 引导线两段中的第二段长度
             length2: 15,
             smooth: false,
+            minTurnAngle: 90,
+            maxSurfaceAngle: 90,
             lineStyle: {
                 // color: 各异,
                 width: 1,
@@ -282,13 +292,25 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             borderWidth: 1
         },
 
+        labelLayout: {
+            // Hide the overlapped label.
+            hideOverlap: true
+        },
+
+        // If use strategy to avoid label overlapping
+        avoidLabelOverlap: true,
+
         // Animation type. Valid values: expansion, scale
         animationType: 'expansion',
+
+        animationDuration: 1000,
 
         // Animation type when update. Valid values: transition, expansion
         animationTypeUpdate: 'transition',
 
-        animationEasing: 'cubicOut'
+        animationEasingUpdate: 'cubicInOut',
+        animationDurationUpdate: 500,
+        animationEasing: 'cubicInOut'
     };
 
 }

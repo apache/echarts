@@ -71,6 +71,7 @@ import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import 'zrender/src/canvas/canvas';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
+import LabelManager from './label/LabelManager';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -218,10 +219,6 @@ let renderSeries: (
     dirtyMap?: {[uid: string]: any}
 ) => void;
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
-let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
-let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
-let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
-let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
 let enableConnect: (chart: ECharts) => void;
 
@@ -272,6 +269,8 @@ class ECharts extends Eventful {
     private _disposed: boolean;
 
     private _loadingFX: LoadingEffect;
+
+    private _labelManager: LabelManager;
 
     private [OPTION_UPDATED]: boolean | {silent: boolean};
     private [IN_MAIN_PROCESS]: boolean;
@@ -337,6 +336,8 @@ class ECharts extends Eventful {
 
         this._messageCenter = new MessageCenter();
 
+        this._labelManager = new LabelManager();
+
         // Init mouse events
         this._initEvents();
 
@@ -381,7 +382,7 @@ class ECharts extends Eventful {
             let remainTime = TEST_FRAME_REMAIN_TIME;
             const ecModel = this._model;
             const api = this._api;
-            scheduler.unfinished = +false;
+            scheduler.unfinished = false;
             do {
                 const startTime = +new Date();
 
@@ -859,7 +860,7 @@ class ECharts extends Eventful {
                 else if (ecData && ecData.dataIndex != null) {
                     const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                     params = (
-                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
+                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
                     ) as ECEvent;
                 }
                 // If element has custom eventData of components
@@ -1127,6 +1128,13 @@ class ECharts extends Eventful {
         triggerUpdatedEvent.call(this, silent);
     }
 
+    updateLabelLayout() {
+        const labelManager = this._labelManager;
+        labelManager.updateLayoutConfig(this._api);
+        labelManager.layout(this._api);
+        labelManager.processLabelsOverall();
+    }
+
     appendData(params: {
         seriesIndex: number,
         data: any
@@ -1154,7 +1162,7 @@ class ECharts extends Eventful {
         // graphic elements have to be changed, which make the usage of
         // `appendData` meaningless.
 
-        this._scheduler.unfinished = +true;
+        this._scheduler.unfinished = true;
     }
 
 
@@ -1363,6 +1371,7 @@ class ECharts extends Eventful {
 
                 // Set background
                 let backgroundColor = ecModel.get('backgroundColor') || 'transparent';
+                const darkMode = ecModel.get('darkMode');
 
                 // In IE8
                 if (!env.canvasSupported) {
@@ -1374,6 +1383,11 @@ class ECharts extends Eventful {
                 }
                 else {
                     zr.setBackgroundColor(backgroundColor);
+
+                    // Force set dark mode.
+                    if (darkMode != null && darkMode !== 'auto') {
+                        zr.setDarkMode(darkMode);
+                    }
                 }
 
                 performPostUpdateFuncs(ecModel, api);
@@ -1705,13 +1719,16 @@ class ECharts extends Eventful {
         ): void {
             each(dirtyList || ecIns._componentsViews, function (componentView: ComponentView) {
                 const componentModel = componentView.__model;
-                componentView.render(componentModel, ecModel, api, payload);
+                clearStates(componentModel, componentView);
 
-                componentView.group.markRedraw();
+                componentView.render(componentModel, ecModel, api, payload);
 
                 updateZ(componentModel, componentView);
                 updateHoverEmphasisHandler(componentView);
+
+                updateStates(componentModel, componentView);
             });
+
         };
 
         /**
@@ -1726,7 +1743,11 @@ class ECharts extends Eventful {
         ): void {
             // Render all charts
             const scheduler = ecIns._scheduler;
-            let unfinished: number;
+            const labelManager = ecIns._labelManager;
+
+            labelManager.clearLabels();
+
+            let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
                 chartView.__alive = true;
@@ -1734,11 +1755,15 @@ class ECharts extends Eventful {
                 const renderTask = chartView.renderTask;
                 scheduler.updatePayload(renderTask, payload);
 
+                // TODO states on marker.
+                clearStates(seriesModel, chartView);
+
                 if (dirtyMap && dirtyMap.get(seriesModel.uid)) {
                     renderTask.dirty();
                 }
-
-                unfinished |= +renderTask.perform(scheduler.getPerformArgs(renderTask));
+                if (renderTask.perform(scheduler.getPerformArgs(renderTask))) {
+                    unfinished = true;
+                }
 
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
@@ -1750,11 +1775,28 @@ class ECharts extends Eventful {
                 updateBlend(seriesModel, chartView);
 
                 updateHoverEmphasisHandler(chartView);
+
+                // Add labels.
+                labelManager.addLabelsOfSeries(chartView);
             });
-            scheduler.unfinished |= unfinished;
+
+            scheduler.unfinished = unfinished || scheduler.unfinished;
+
+            labelManager.updateLayoutConfig(api);
+            labelManager.layout(api);
+            labelManager.processLabelsOverall();
+
+            ecModel.eachSeries(function (seriesModel) {
+                const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                // NOTE: Update states after label is updated.
+                // label should be in normal status when layouting.
+                updateStates(seriesModel, chartView);
+            });
+
 
             // If use hover layer
-            updateHoverLayerStatus(ecIns, ecModel);
+            // TODO
+            // updateHoverLayerStatus(ecIns, ecModel);
 
             // Add aria
             aria(ecIns._zr.dom, ecModel);
@@ -1766,7 +1808,7 @@ class ECharts extends Eventful {
             });
         };
 
-        updateHoverLayerStatus = function (ecIns: ECharts, ecModel: GlobalModel): void {
+        function updateHoverLayerStatus(ecIns: ECharts, ecModel: GlobalModel): void {
             const zr = ecIns._zr;
             const storage = zr.storage;
             let elCount = 0;
@@ -1784,7 +1826,7 @@ class ECharts extends Eventful {
                     if (chartView.__alive) {
                         chartView.group.traverse(function (el: ECElement) {
                             // Don't switch back.
-                            // el.useHoverLayer = true;
+                            el.useHoverLayer = true;
                         });
                     }
                 });
@@ -1794,7 +1836,7 @@ class ECharts extends Eventful {
         /**
          * Update chart progressive and blend.
          */
-        updateBlend = function (seriesModel: SeriesModel, chartView: ChartView): void {
+        function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
             if (__DEV__) {
                 if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
@@ -1804,20 +1846,18 @@ class ECharts extends Eventful {
             chartView.group.traverse(function (el: Displayable) {
                 // FIXME marker and other components
                 if (!el.isGroup) {
-                    // Only set if blendMode is changed. In case element is incremental and don't wan't to rerender.
-                    if (el.style.blend !== blendMode) {
-                        el.setStyle('blend', blendMode);
-                    }
+                    // DONT mark the element dirty. In case element is incremental and don't wan't to rerender.
+                    el.style.blend = blendMode;
                 }
                 if ((el as IncrementalDisplayable).eachPendingDisplayable) {
                     (el as IncrementalDisplayable).eachPendingDisplayable(function (displayable) {
-                        displayable.setStyle('blend', blendMode);
+                        displayable.style.blend = blendMode;
                     });
                 }
             });
         };
 
-        updateZ = function (model: ComponentModel, view: ComponentView | ChartView): void {
+        function updateZ(model: ComponentModel, view: ComponentView | ChartView): void {
             if (model.preventAutoZ) {
                 return;
             }
@@ -1825,18 +1865,101 @@ class ECharts extends Eventful {
             const zlevel = model.get('zlevel');
             // Set z and zlevel
             view.group.traverse(function (el: Displayable) {
-                if (el.type !== 'group') {
+                if (!el.isGroup) {
                     z != null && (el.z = z);
                     zlevel != null && (el.zlevel = zlevel);
 
                     // TODO if textContent is on group.
-                    const textContent = el.getTextContent();
-                    if (textContent) {
-                        textContent.z = el.z;
-                        textContent.zlevel = el.zlevel;
+                    const label = el.getTextContent();
+                    const labelLine = el.getTextGuideLine();
+                    if (label) {
+                        label.z = el.z;
+                        label.zlevel = el.zlevel;
                         // lift z2 of text content
                         // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        textContent.z2 = el.z2 + 1;
+                        label.z2 = el.z2 + 1;
+                    }
+                    if (labelLine) {
+                        labelLine.z = el.z;
+                        labelLine.zlevel = el.zlevel;
+                        labelLine.z2 = el.z2 - 1;
+                    }
+                }
+            });
+        };
+
+        // Clear states without animation.
+        // TODO States on component.
+        function clearStates(model: ComponentModel, view: ComponentView | ChartView): void {
+            view.group.traverse(function (el: Displayable) {
+                const textContent = el.getTextContent();
+                const textGuide = el.getTextGuideLine();
+                if (el.stateTransition) {
+                    el.stateTransition = null;
+                }
+                if (textContent && textContent.stateTransition) {
+                    textContent.stateTransition = null;
+                }
+                if (textGuide && textGuide.stateTransition) {
+                    textGuide.stateTransition = null;
+                }
+
+                // TODO If el is incremental.
+                if (el.hasState()) {
+                    el.prevStates = el.currentStates;
+                    el.clearStates();
+                }
+                else if (el.prevStates) {
+                    el.prevStates = null;
+                }
+            });
+        }
+
+        function updateStates(model: ComponentModel, view: ComponentView | ChartView): void {
+            const stateAnimationModel = (model as SeriesModel).getModel('stateAnimation');
+            const enableAnimation = model.isAnimationEnabled();
+            const duration = stateAnimationModel.get('duration');
+            const stateTransition = duration > 0 ? {
+                duration,
+                delay: stateAnimationModel.get('delay'),
+                easing: stateAnimationModel.get('easing')
+            } : null;
+            view.group.traverse(function (el: Displayable) {
+                if (el.states && el.states.emphasis) {
+                    // Only updated on changed element. In case element is incremental and don't wan't to rerender.
+                    // TODO, a more proper way?
+                    if (el.__dirty) {
+                        const prevStates = el.prevStates;
+                        // Restore states without animation
+                        if (prevStates) {
+                            el.useStates(prevStates);
+                        }
+                    }
+
+                    // Update state transition and enable animation again.
+                    if (enableAnimation) {
+                        el.stateTransition = stateTransition;
+                        const textContent = el.getTextContent();
+                        const textGuide = el.getTextGuideLine();
+                        // TODO Is it necessary to animate label?
+                        if (textContent) {
+                            textContent.stateTransition = stateTransition;
+                        }
+                        if (textGuide) {
+                            textGuide.stateTransition = stateTransition;
+                        }
+                    }
+
+                    // The use higlighted and selected flag to toggle states.
+                    if (el.__dirty) {
+                        const states = [];
+                        if ((el as ECElement).selected) {
+                            states.push('select');
+                        }
+                        if ((el as ECElement).highlighted) {
+                            states.push('emphasis');
+                        }
+                        el.useStates(states);
                     }
                 }
             });
@@ -1860,7 +1983,7 @@ class ECharts extends Eventful {
                 graphic.leaveEmphasisWhenMouseOut(dispatcher, e);
             }
         }
-        updateHoverEmphasisHandler = function (view: ComponentView | ChartView): void {
+        function updateHoverEmphasisHandler(view: ComponentView | ChartView): void {
             view.group.on('mouseover', onMouseOver)
                 .on('mouseout', onMouseOut);
         };
@@ -1921,7 +2044,6 @@ class ECharts extends Eventful {
 
     })();
 }
-
 
 
 const echartsProto = ECharts.prototype;

@@ -18,34 +18,35 @@
 */
 
 // FIXME emphasis label position is not same with normal label position
-
-import * as textContain from 'zrender/src/contain/text';
 import {parsePercent} from '../../util/number';
 import PieSeriesModel, { PieSeriesOption, PieDataItemOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
-import { HorizontalAlign, VerticalAlign, ZRRectLike } from '../../util/types';
+import { HorizontalAlign, ZRTextAlign } from '../../util/types';
+import { Sector, Polyline, Point } from '../../util/graphic';
+import ZRText from 'zrender/src/graphic/Text';
+import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
+import { each } from 'zrender/src/core/util';
+import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
+import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
 
 const RADIAN = Math.PI / 180;
 
 interface LabelLayout {
-    x: number
-    y: number
+    label: ZRText,
+    labelLine: Polyline,
     position: PieSeriesOption['label']['position'],
-    height: number
     len: number
     len2: number
+    minTurnAngle: number
+    maxSurfaceAngle: number
+    surfaceNormal: Point
     linePoints: VectorArray[]
     textAlign: HorizontalAlign
-    verticalAlign: VerticalAlign,
-    rotation: number,
-    inside: boolean,
     labelDistance: number,
     labelAlignTo: PieSeriesOption['label']['alignTo'],
-    labelMargin: number,
+    edgeDistance: number,
     bleedMargin: PieSeriesOption['label']['bleedMargin'],
-    textRect: ZRRectLike,
-    text: string,
-    font: string
+    rect: BoundingRect
 }
 
 function adjustSingleSide(
@@ -60,116 +61,75 @@ function adjustSingleSide(
     viewTop: number,
     farthestX: number
 ) {
-    list.sort(function (a, b) {
-        return a.y - b.y;
-    });
-
-    function shiftDown(start: number, end: number, delta: number, dir: number) {
-        for (let j = start; j < end; j++) {
-            if (list[j].y + delta > viewTop + viewHeight) {
-                break;
-            }
-
-            list[j].y += delta;
-            if (j > start
-                && j + 1 < end
-                && list[j + 1].y > list[j].y + list[j].height
-            ) {
-                shiftUp(j, delta / 2);
-                return;
-            }
-        }
-
-        shiftUp(end - 1, delta / 2);
+    if (list.length < 2) {
+        return;
     }
 
-    function shiftUp(end: number, delta: number) {
-        for (let j = end; j >= 0; j--) {
-            if (list[j].y - delta < viewTop) {
-                break;
-            }
 
-            list[j].y -= delta;
-            if (j > 0
-                && list[j].y > list[j - 1].y + list[j - 1].height
-            ) {
-                break;
-            }
+    interface SemiInfo {
+        list: LabelLayout[]
+        rB: number
+        maxY: number
+    };
+
+    function recalculateXOnSemiToAlignOnEllipseCurve(semi: SemiInfo) {
+        const rB = semi.rB;
+        const rB2 = rB * rB;
+        for (let i = 0; i < semi.list.length; i++) {
+            const item = semi.list[i];
+            const dy = Math.abs(item.label.y - cy);
+            // horizontal r is always same with original r because x is not changed.
+            const rA = r + item.len;
+            const rA2 = rA * rA;
+            // Use ellipse implicit function to calculate x
+            const dx = Math.sqrt((1 - Math.abs(dy * dy / rB2)) * rA2);
+            item.label.x = cx + (dx + item.len2) * dir;
         }
     }
 
-    function changeX(
-        list: LabelLayout[], isDownList: boolean,
-        cx: number, cy: number, r: number,
-        dir: 1 | -1
-    ) {
-        let lastDeltaX = dir > 0
-            ? isDownList                // right-side
-                ? Number.MAX_VALUE      // down
-                : 0                     // up
-            : isDownList                // left-side
-                ? Number.MAX_VALUE      // down
-                : 0;                    // up
+    // Adjust X based on the shifted y. Make tight labels aligned on an ellipse curve.
+    function recalculateX(items: LabelLayout[]) {
+        // Extremes of
+        const topSemi = { list: [], maxY: 0} as SemiInfo;
+        const bottomSemi = { list: [], maxY: 0 } as SemiInfo;
 
-        for (let i = 0, l = list.length; i < l; i++) {
-            if (list[i].labelAlignTo !== 'none') {
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].labelAlignTo !== 'none') {
                 continue;
             }
-
-            const deltaY = Math.abs(list[i].y - cy);
-            const length = list[i].len;
-            const length2 = list[i].len2;
-            let deltaX = (deltaY < r + length)
-                ? Math.sqrt(
-                        (r + length + length2) * (r + length + length2)
-                        - deltaY * deltaY
-                    )
-                : Math.abs(list[i].x - cx);
-            if (isDownList && deltaX >= lastDeltaX) {
-                // right-down, left-down
-                deltaX = lastDeltaX - 10;
+            const item = items[i];
+            const semi = item.label.y > cy ? bottomSemi : topSemi;
+            const dy = Math.abs(item.label.y - cy);
+            if (dy > semi.maxY) {
+                const dx = item.label.x - cx - item.len2 * dir;
+                // horizontal r is always same with original r because x is not changed.
+                const rA = r + item.len;
+                // Canculate rB based on the topest / bottemest label.
+                const rB = dx < rA
+                    ? Math.sqrt(dy * dy / (1 - dx * dx / rA / rA))
+                    : rA;
+                semi.rB = rB;
+                semi.maxY = dy;
             }
-            if (!isDownList && deltaX <= lastDeltaX) {
-                // right-up, left-up
-                deltaX = lastDeltaX + 10;
-            }
-
-            list[i].x = cx + deltaX * dir;
-            lastDeltaX = deltaX;
+            semi.list.push(item);
         }
+
+        recalculateXOnSemiToAlignOnEllipseCurve(topSemi);
+        recalculateXOnSemiToAlignOnEllipseCurve(bottomSemi);
     }
 
-    let lastY = 0;
-    let delta;
     const len = list.length;
-    const upList = [];
-    const downList = [];
     for (let i = 0; i < len; i++) {
         if (list[i].position === 'outer' && list[i].labelAlignTo === 'labelLine') {
-            const dx = list[i].x - farthestX;
+            const dx = list[i].label.x - farthestX;
             list[i].linePoints[1][0] += dx;
-            list[i].x = farthestX;
+            list[i].label.x = farthestX;
         }
+    }
 
-        delta = list[i].y - lastY;
-        if (delta < 0) {
-            shiftDown(i, len, -delta, dir);
-        }
-        lastY = list[i].y + list[i].height;
+    if (shiftLayoutOnY(list, viewTop, viewTop + viewHeight)) {
+        recalculateX(list);
     }
-    if (viewHeight - lastY < 0) {
-        shiftUp(len - 1, lastY - viewHeight);
-    }
-    for (let i = 0; i < len; i++) {
-        if (list[i].y >= cy) {
-            downList.push(list[i]);
-        }
-        else {
-            upList.push(list[i]);
-        }
-    }
-    changeX(upList, false, cx, cy, r, dir);
-    changeX(downList, true, cx, cy, r, dir);
 }
 
 function avoidOverlap(
@@ -187,15 +147,16 @@ function avoidOverlap(
     let leftmostX = Number.MAX_VALUE;
     let rightmostX = -Number.MAX_VALUE;
     for (let i = 0; i < labelLayoutList.length; i++) {
+        const label = labelLayoutList[i].label;
         if (isPositionCenter(labelLayoutList[i])) {
             continue;
         }
-        if (labelLayoutList[i].x < cx) {
-            leftmostX = Math.min(leftmostX, labelLayoutList[i].x);
+        if (label.x < cx) {
+            leftmostX = Math.min(leftmostX, label.x);
             leftList.push(labelLayoutList[i]);
         }
         else {
-            rightmostX = Math.max(rightmostX, labelLayoutList[i].x);
+            rightmostX = Math.max(rightmostX, label.x);
             rightList.push(labelLayoutList[i]);
         }
     }
@@ -205,6 +166,7 @@ function avoidOverlap(
 
     for (let i = 0; i < labelLayoutList.length; i++) {
         const layout = labelLayoutList[i];
+        const label = layout.label;
         if (isPositionCenter(layout)) {
             continue;
         }
@@ -213,70 +175,67 @@ function avoidOverlap(
         if (linePoints) {
             const isAlignToEdge = layout.labelAlignTo === 'edge';
 
-            let realTextWidth = layout.textRect.width;
+            let realTextWidth = layout.rect.width;
             let targetTextWidth;
             if (isAlignToEdge) {
-                if (layout.x < cx) {
+                if (label.x < cx) {
                     targetTextWidth = linePoints[2][0] - layout.labelDistance
-                            - viewLeft - layout.labelMargin;
+                            - viewLeft - layout.edgeDistance;
                 }
                 else {
-                    targetTextWidth = viewLeft + viewWidth - layout.labelMargin
+                    targetTextWidth = viewLeft + viewWidth - layout.edgeDistance
                             - linePoints[2][0] - layout.labelDistance;
                 }
             }
             else {
-                if (layout.x < cx) {
-                    targetTextWidth = layout.x - viewLeft - layout.bleedMargin;
+                if (label.x < cx) {
+                    targetTextWidth = label.x - viewLeft - layout.bleedMargin;
                 }
                 else {
-                    targetTextWidth = viewLeft + viewWidth - layout.x - layout.bleedMargin;
+                    targetTextWidth = viewLeft + viewWidth - label.x - layout.bleedMargin;
                 }
             }
-            if (targetTextWidth < layout.textRect.width) {
+            if (targetTextWidth < layout.rect.width) {
                 // TODOTODO
                 // layout.text = textContain.truncateText(layout.text, targetTextWidth, layout.font);
+                layout.label.style.width = targetTextWidth;
                 if (layout.labelAlignTo === 'edge') {
-                    realTextWidth = textContain.getWidth(layout.text, layout.font);
+                    realTextWidth = targetTextWidth;
+                    // realTextWidth = textContain.getWidth(layout.text, layout.font);
                 }
             }
 
             const dist = linePoints[1][0] - linePoints[2][0];
             if (isAlignToEdge) {
-                if (layout.x < cx) {
-                    linePoints[2][0] = viewLeft + layout.labelMargin + realTextWidth + layout.labelDistance;
+                if (label.x < cx) {
+                    linePoints[2][0] = viewLeft + layout.edgeDistance + realTextWidth + layout.labelDistance;
                 }
                 else {
-                    linePoints[2][0] = viewLeft + viewWidth - layout.labelMargin
+                    linePoints[2][0] = viewLeft + viewWidth - layout.edgeDistance
                             - realTextWidth - layout.labelDistance;
                 }
             }
             else {
-                if (layout.x < cx) {
-                    linePoints[2][0] = layout.x + layout.labelDistance;
+                if (label.x < cx) {
+                    linePoints[2][0] = label.x + layout.labelDistance;
                 }
                 else {
-                    linePoints[2][0] = layout.x - layout.labelDistance;
+                    linePoints[2][0] = label.x - layout.labelDistance;
                 }
                 linePoints[1][0] = linePoints[2][0] + dist;
             }
-            linePoints[1][1] = linePoints[2][1] = layout.y;
+            linePoints[1][1] = linePoints[2][1] = label.y;
         }
     }
 }
 
-function isPositionCenter(layout: LabelLayout) {
+function isPositionCenter(sectorShape: LabelLayout) {
     // Not change x for center label
-    return layout.position === 'center';
+    return sectorShape.position === 'center';
 }
 
 export default function (
-    seriesModel: PieSeriesModel,
-    r: number,
-    viewWidth: number,
-    viewHeight: number,
-    viewLeft: number,
-    viewTop: number
+    seriesModel: PieSeriesModel
 ) {
     const data = seriesModel.getData();
     const labelLayoutList: LabelLayout[] = [];
@@ -285,8 +244,22 @@ export default function (
     let hasLabelRotate = false;
     const minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN;
 
+    const viewRect = data.getLayout('viewRect') as RectLike;
+    const r = data.getLayout('r') as number;
+    const viewWidth = viewRect.width;
+    const viewLeft = viewRect.x;
+    const viewTop = viewRect.y;
+    const viewHeight = viewRect.height;
+
+    function setNotShow(el: {ignore: boolean}) {
+        el.ignore = true;
+    }
+
     data.each(function (idx) {
-        const layout = data.getItemLayout(idx);
+        const sector = data.getItemGraphicEl(idx) as Sector;
+        const sectorShape = sector.shape;
+        const label = sector.getTextContent();
+        const labelLine = sector.getTextGuideLine();
 
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const labelModel = itemModel.getModel('label');
@@ -294,9 +267,8 @@ export default function (
         const labelPosition = labelModel.get('position') || itemModel.get(['emphasis', 'label', 'position']);
         const labelDistance = labelModel.get('distanceToLabelLine');
         const labelAlignTo = labelModel.get('alignTo');
-        const labelMargin = parsePercent(labelModel.get('margin'), viewWidth);
+        const edgeDistance = parsePercent(labelModel.get('edgeDistance'), viewWidth);
         const bleedMargin = labelModel.get('bleedMargin');
-        const font = labelModel.getFont();
 
         const labelLineModel = itemModel.getModel('labelLine');
         let labelLineLen = labelLineModel.get('length');
@@ -304,54 +276,53 @@ export default function (
         let labelLineLen2 = labelLineModel.get('length2');
         labelLineLen2 = parsePercent(labelLineLen2, viewWidth);
 
-        if (layout.angle < minShowLabelRadian) {
+        if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
+            each(label.states, setNotShow);
+            label.ignore = true;
             return;
         }
 
-        const midAngle = (layout.startAngle + layout.endAngle) / 2;
-        const dx = Math.cos(midAngle);
-        const dy = Math.sin(midAngle);
+        const midAngle = (sectorShape.startAngle + sectorShape.endAngle) / 2;
+        const nx = Math.cos(midAngle);
+        const ny = Math.sin(midAngle);
 
         let textX;
         let textY;
         let linePoints;
-        let textAlign;
+        let textAlign: ZRTextAlign;
 
-        cx = layout.cx;
-        cy = layout.cy;
+        cx = sectorShape.cx;
+        cy = sectorShape.cy;
 
-        const text = seriesModel.getFormattedLabel(idx, 'normal')
-                || data.getName(idx);
-        const textRect = textContain.getBoundingRect(text, font, textAlign, 'top');
 
         const isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         if (labelPosition === 'center') {
-            textX = layout.cx;
-            textY = layout.cy;
+            textX = sectorShape.cx;
+            textY = sectorShape.cy;
             textAlign = 'center';
         }
         else {
-            const x1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dx : layout.r * dx) + cx;
-            const y1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dy : layout.r * dy) + cy;
+            const x1 = (isLabelInside ? (sectorShape.r + sectorShape.r0) / 2 * nx : sectorShape.r * nx) + cx;
+            const y1 = (isLabelInside ? (sectorShape.r + sectorShape.r0) / 2 * ny : sectorShape.r * ny) + cy;
 
-            textX = x1 + dx * 3;
-            textY = y1 + dy * 3;
+            textX = x1 + nx * 3;
+            textY = y1 + ny * 3;
 
             if (!isLabelInside) {
                 // For roseType
-                const x2 = x1 + dx * (labelLineLen + r - layout.r);
-                const y2 = y1 + dy * (labelLineLen + r - layout.r);
-                const x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
+                const x2 = x1 + nx * (labelLineLen + r - sectorShape.r);
+                const y2 = y1 + ny * (labelLineLen + r - sectorShape.r);
+                const x3 = x2 + ((nx < 0 ? -1 : 1) * labelLineLen2);
                 const y3 = y2;
 
                 if (labelAlignTo === 'edge') {
                     // Adjust textX because text align of edge is opposite
-                    textX = dx < 0
-                        ? viewLeft + labelMargin
-                        : viewLeft + viewWidth - labelMargin;
+                    textX = nx < 0
+                        ? viewLeft + edgeDistance
+                        : viewLeft + viewWidth - edgeDistance;
                 }
                 else {
-                    textX = x3 + (dx < 0 ? -labelDistance : labelDistance);
+                    textX = x3 + (nx < 0 ? -labelDistance : labelDistance);
                 }
                 textY = y3;
                 linePoints = [[x1, y1], [x2, y2], [x3, y3]];
@@ -360,8 +331,8 @@ export default function (
             textAlign = isLabelInside
                 ? 'center'
                 : (labelAlignTo === 'edge'
-                    ? (dx > 0 ? 'right' : 'left')
-                    : (dx > 0 ? 'left' : 'right'));
+                    ? (nx > 0 ? 'right' : 'left')
+                    : (nx > 0 ? 'left' : 'right'));
         }
 
         let labelRotate;
@@ -371,38 +342,97 @@ export default function (
         }
         else {
             labelRotate = rotate
-                ? (dx < 0 ? -midAngle + Math.PI : -midAngle)
+                ? (nx < 0 ? -midAngle + Math.PI : -midAngle)
                 : 0;
         }
 
         hasLabelRotate = !!labelRotate;
-        layout.label = {
-            x: textX,
-            y: textY,
-            position: labelPosition,
-            height: textRect.height,
-            len: labelLineLen,
-            len2: labelLineLen2,
-            linePoints: linePoints,
-            textAlign: textAlign,
-            verticalAlign: 'middle',
-            rotation: labelRotate,
-            inside: isLabelInside,
-            labelDistance: labelDistance,
-            labelAlignTo: labelAlignTo,
-            labelMargin: labelMargin,
-            bleedMargin: bleedMargin,
-            textRect: textRect,
-            text: text,
-            font: font
-        };
 
-        // Not layout the inside label
+        label.x = textX;
+        label.y = textY;
+        label.rotation = labelRotate;
+
+        // Not sectorShape the inside label
         if (!isLabelInside) {
-            labelLayoutList.push(layout.label);
+            const textRect = label.getBoundingRect().clone();
+            textRect.applyTransform(label.getComputedTransform());
+            // Text has a default 1px stroke. Exclude this.
+            const margin = (label.style.margin || 0) + 2.1;
+            textRect.x -= margin / 2;
+            textRect.y -= margin / 2;
+            textRect.width += margin;
+            textRect.height += margin;
+
+            labelLayoutList.push({
+                label,
+                labelLine,
+                position: labelPosition,
+                len: labelLineLen,
+                len2: labelLineLen2,
+                minTurnAngle: labelLineModel.get('minTurnAngle'),
+                maxSurfaceAngle: labelLineModel.get('maxSurfaceAngle'),
+                surfaceNormal: new Point(nx, ny),
+                linePoints: linePoints,
+                textAlign: textAlign,
+                labelDistance: labelDistance,
+                labelAlignTo: labelAlignTo,
+                edgeDistance: edgeDistance,
+                bleedMargin: bleedMargin,
+                rect: textRect
+            });
         }
+        else {
+            label.setStyle({
+                align: textAlign,
+                verticalAlign: 'middle'
+            });
+        }
+        sector.setTextConfig({
+            inside: isLabelInside
+        });
     });
+
     if (!hasLabelRotate && seriesModel.get('avoidLabelOverlap')) {
         avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight, viewLeft, viewTop);
+    }
+
+    for (let i = 0; i < labelLayoutList.length; i++) {
+        const layout = labelLayoutList[i];
+        const label = layout.label;
+        const labelLine = layout.labelLine;
+        const notShowLabel = isNaN(label.x) || isNaN(label.y);
+        if (label) {
+            label.setStyle({
+                align: layout.textAlign,
+                verticalAlign: 'middle'
+            });
+            if (notShowLabel) {
+                each(label.states, setNotShow);
+                label.ignore = true;
+            }
+            const selectState = label.states.select;
+            if (selectState) {
+                selectState.x += label.x;
+                selectState.y += label.y;
+            }
+        }
+        if (labelLine) {
+            const linePoints = layout.linePoints;
+            if (notShowLabel || !linePoints) {
+                each(labelLine.states, setNotShow);
+                labelLine.ignore = true;
+            }
+            else {
+                limitTurnAngle(linePoints, layout.minTurnAngle);
+                limitSurfaceAngle(linePoints, layout.surfaceNormal, layout.maxSurfaceAngle);
+
+                labelLine.setShape({ points: linePoints });
+
+                // Set the anchor to the midpoint of sector
+                label.__hostTarget.textGuideLineConfig = {
+                    anchor: new Point(linePoints[0][0], linePoints[0][1])
+                };
+            }
+        }
     }
 }

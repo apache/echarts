@@ -54,6 +54,8 @@ const colorPalette = [
     '#eedd78', '#73a373', '#73b9bc', '#7289ab', '#91ca8c', '#f49f42'
 ];
 const theme = {
+    darkMode: true,
+
     color: colorPalette,
     backgroundColor: '#333',
     tooltip: {

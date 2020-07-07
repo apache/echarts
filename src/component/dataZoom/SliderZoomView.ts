@@ -251,6 +251,7 @@ class SliderZoomView extends DataZoomView {
         const rect = thisGroup.getBoundingRect([barGroup]);
         thisGroup.x = location.x - rect.x;
         thisGroup.y = location.y - rect.y;
+        thisGroup.markRedraw();
     }
 
     /**

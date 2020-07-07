@@ -19,11 +19,14 @@
 
 // Compatitable with 2.0
 
-import {each, isArray, isObject} from 'zrender/src/core/util';
-import compatStyle from './helper/compatStyle';
+import {each, isArray, isObject, isTypedArray} from 'zrender/src/core/util';
+import compatStyle, {deprecateLog} from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
 import { ECUnitOption, SeriesOption } from '../util/types';
+import { __DEV__ } from '../config';
+import type { BarSeriesOption } from '../chart/bar/BarSeries';
+import { PieSeriesOption } from '../chart/pie/PieSeries';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -70,6 +73,40 @@ const COMPATITABLE_COMPONENTS = [
     'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
 ];
 
+const BAR_ITEM_STYLE_MAP = [
+    ['borderRadius', 'barBorderRadius'],
+    ['borderColor', 'barBorderColor'],
+    ['borderWidth', 'barBorderWidth']
+];
+
+function compatBarItemStyle(option: Dictionary<any>) {
+    const itemStyle = option && option.itemStyle;
+    if (itemStyle) {
+        for (let i = 0; i < BAR_ITEM_STYLE_MAP.length; i++) {
+            const oldName = BAR_ITEM_STYLE_MAP[i][1];
+            const newName = BAR_ITEM_STYLE_MAP[i][0];
+            if (itemStyle[oldName] != null) {
+                itemStyle[newName] = itemStyle[oldName];
+                if (__DEV__) {
+                    deprecateLog(`${oldName} has been changed to ${newName}.`);
+                }
+            }
+        }
+    }
+}
+
+function compatPieLabel(option: Dictionary<any>) {
+    if (!option) {
+        return;
+    }
+    if (option.alignTo === 'edge' && option.margin != null && option.edgeDistance == null) {
+        if (__DEV__) {
+            deprecateLog('label.margin has been changed to label.edgeDistance in pie.');
+        }
+        option.edgeDistance = option.margin;
+    }
+}
+
 export default function (option: ECUnitOption, isTheme?: boolean) {
     compatStyle(option, isTheme);
 
@@ -88,6 +125,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             if (seriesOpt.clipOverflow != null) {
                 // @ts-ignore
                 seriesOpt.clip = seriesOpt.clipOverflow;
+                deprecateLog('clipOverflow has been changed to clip.');
             }
         }
         else if (seriesType === 'pie' || seriesType === 'gauge') {
@@ -95,12 +133,35 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             if (seriesOpt.clockWise != null) {
                 // @ts-ignore
                 seriesOpt.clockwise = seriesOpt.clockWise;
+                deprecateLog('clockWise has been changed to clockwise.');
+            }
+            compatPieLabel((seriesOpt as PieSeriesOption).label);
+            const data = seriesOpt.data;
+            if (data && !isTypedArray(data)) {
+                for (let i = 0; i < data.length; i++) {
+                    compatPieLabel(data[i]);
+                }
             }
         }
         else if (seriesType === 'gauge') {
             const pointerColor = get(seriesOpt, 'pointer.color');
             pointerColor != null
                 && set(seriesOpt, 'itemStyle.color', pointerColor);
+        }
+        else if (seriesType === 'bar') {
+            compatBarItemStyle(seriesOpt);
+            compatBarItemStyle((seriesOpt as BarSeriesOption).backgroundStyle);
+            // @ts-ignore
+            compatBarItemStyle(seriesOpt.emphasis);
+            const data = seriesOpt.data;
+            if (data && !isTypedArray(data)) {
+                for (let i = 0; i < data.length; i++) {
+                    if (typeof data[i] === 'object') {
+                        compatBarItemStyle(data[i]);
+                        compatBarItemStyle(data[i] && data[i].emphasis);
+                    }
+                }
+            }
         }
 
         compatLayoutProperties(seriesOpt);

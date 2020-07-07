@@ -27,7 +27,7 @@ import SunburstSeriesModel from './SunburstSeries';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
-const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
+export const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
 interface SunburstRootToNodePayload extends Payload {}
 

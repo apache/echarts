@@ -182,6 +182,10 @@ class Line extends graphic.Group {
         this._updateCommonStl(lineData, idx, seriesScope);
     };
 
+    getLinePath() {
+        return this.childAt(0) as graphic.Line;
+    }
+
     _updateCommonStl(lineData: List, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel as SeriesModel;
 
@@ -256,7 +260,7 @@ class Line extends graphic.Group {
             label.useStyle(graphic.createTextStyle(labelModel, {
                 text: normalText as string
             }, {
-                autoColor: defaultLabelColor
+                inheritColor: defaultLabelColor
             }));
 
             label.__align = label.style.align;

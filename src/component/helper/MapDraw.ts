@@ -71,14 +71,13 @@ class MapDraw {
     private _controller: RoamController;
 
     private _controllerHost: {
-        target?: graphic.Group;
+        target: graphic.Group;
         zoom?: number;
         zoomLimit?: GeoCommonOptionMixin['scaleLimit'];
     };
 
     readonly group: graphic.Group;
 
-    private _updateGroup: boolean;
 
     /**
      * This flag is used to make sure that only one among
@@ -96,14 +95,13 @@ class MapDraw {
     private _backgroundGroup: graphic.Group;
 
 
-    constructor(api: ExtensionAPI, updateGroup: boolean) {
+    constructor(api: ExtensionAPI) {
         const group = new graphic.Group();
         this.uid = getUID('ec_map_draw');
         // @ts-ignore FIXME:TS
         this._controller = new RoamController(api.getZr());
-        this._controllerHost = {target: updateGroup ? group : null};
+        this._controllerHost = { target: group };
         this.group = group;
-        this._updateGroup = updateGroup;
 
         group.add(this._regionsGroup = new graphic.Group() as RegionsGroup);
         group.add(this._backgroundGroup = new graphic.Group());
@@ -319,6 +317,8 @@ class MapDraw {
                     }
                 );
 
+                compoundPath.setTextContent(textEl);
+
                 if (!isFirstDraw) {
                     // Text animation
                     graphic.updateProps(textEl, {
@@ -370,7 +370,7 @@ class MapDraw {
         this._controller.dispose();
         this._mapName && geoSourceManager.removeGraphic(this._mapName, this.uid);
         this._mapName = null;
-        this._controllerHost = {};
+        this._controllerHost = null;
     }
 
     private _updateBackground(geo: Geo): void {
@@ -432,15 +432,13 @@ class MapDraw {
                 originY: e.originY
             }));
 
-            if (this._updateGroup) {
-                const group = this.group;
-                this._regionsGroup.traverse(function (el) {
-                    if (el.type === 'text') {
-                        el.scaleX = 1 / group.scaleX;
-                        el.scaleY = 1 / group.scaleY;
-                    }
-                });
-            }
+            const group = this.group;
+            this._regionsGroup.traverse(function (el) {
+                if (el.type === 'text') {
+                    el.scaleX = 1 / group.scaleX;
+                    el.scaleY = 1 / group.scaleY;
+                }
+            });
         }, this);
 
         controller.setPointerChecker(function (e, x, y) {

@@ -114,6 +114,12 @@ class ChartView {
 
     readonly renderTask: SeriesTask;
 
+    /**
+     * Ignore label line update in global stage. Will handle it in chart itself.
+     * Used in pie / funnel
+     */
+    ignoreLabelLineUpdate: boolean;
+
     // ----------------------
     // Injectable properties
     // ----------------------

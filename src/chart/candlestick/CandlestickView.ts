@@ -132,7 +132,6 @@ class CandlestickView extends ChartView {
                     el = createNormalBox(itemLayout, newIdx);
                 }
                 else {
-                    graphic.clearStates(el);
                     graphic.updateProps(el, {
                         shape: {
                             points: itemLayout.ends
