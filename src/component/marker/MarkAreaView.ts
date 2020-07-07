@@ -23,6 +23,7 @@ import * as colorUtil from 'zrender/src/tool/color';
 import List from '../../data/List';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
@@ -306,7 +307,7 @@ class MarkAreaView extends MarkerView {
                 }
             );
 
-            graphic.enableHoverEmphasis(polygon, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle());
+            enableHoverEmphasis(polygon, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle());
 
             graphic.getECData(polygon).dataModel = maModel;
         });

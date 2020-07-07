@@ -19,6 +19,7 @@
 
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import {createTextStyle} from '../../label/labelStyle';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
@@ -385,8 +386,8 @@ class GaugeView extends ChartView {
                 ));
             }
 
-            graphic.setStatesStylesFromModel(pointer, itemModel);
-            graphic.enableHoverEmphasis(pointer);
+            setStatesStylesFromModel(pointer, itemModel);
+            enableHoverEmphasis(pointer);
         });
 
         this._data = data;

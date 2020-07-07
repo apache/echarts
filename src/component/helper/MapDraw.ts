@@ -22,6 +22,7 @@ import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -358,7 +359,7 @@ class MapDraw {
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
-            graphic.enableHoverEmphasis(regionGroup);
+            enableHoverEmphasis(regionGroup);
 
             regionsGroup.add(regionGroup);
         });

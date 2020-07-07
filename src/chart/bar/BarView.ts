@@ -24,12 +24,10 @@ import {
     getECData,
     updateProps,
     initProps,
-    enableHoverEmphasis,
     updateLabel,
     initLabel,
-    removeElement,
-    setStatesStylesFromModel
-} from '../../util/graphic';
+    removeElement} from '../../util/graphic';
+import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { setLabelStyle } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';

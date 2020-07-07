@@ -19,6 +19,7 @@
 
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
@@ -109,14 +110,14 @@ class Symbol extends graphic.Group {
      * Highlight symbol
      */
     highlight() {
-        graphic.enterEmphasis(this.childAt(0));
+        enterEmphasis(this.childAt(0));
     }
 
     /**
      * Downplay symbol
      */
     downplay() {
-        graphic.leaveEmphasis(this.childAt(0));
+        leaveEmphasis(this.childAt(0));
     }
 
     /**
@@ -294,7 +295,7 @@ class Symbol extends graphic.Group {
             this.states.emphasis = null;
         }
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this);
     }
 
     setSymbolScale(scale: number) {

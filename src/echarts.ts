@@ -38,6 +38,7 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
+import { enterEmphasisWhenMouseOver, leaveEmphasisWhenMouseOut, isHighDownDispatcher } from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from './visual/style';
@@ -1672,7 +1673,7 @@ class ECharts extends Eventful {
 
         bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
             function getHighDownDispatcher(target: Element) {
-                while (target && !graphic.isHighDownDispatcher(target)) {
+                while (target && !isHighDownDispatcher(target)) {
                     target = target.parent;
                 }
                 return target;
@@ -1681,13 +1682,13 @@ class ECharts extends Eventful {
                 const dispatcher = getHighDownDispatcher(e.target);
                 if (dispatcher) {
                     markStatusToUpdate(ecIns);
-                    graphic.enterEmphasisWhenMouseOver(dispatcher, e);
+                    enterEmphasisWhenMouseOver(dispatcher, e);
                 }
             }).on('mouseout', function (e) {
                 const dispatcher = getHighDownDispatcher(e.target);
                 if (dispatcher) {
                     markStatusToUpdate(ecIns);
-                    graphic.leaveEmphasisWhenMouseOut(dispatcher, e);
+                    leaveEmphasisWhenMouseOut(dispatcher, e);
                 }
             });
         };
@@ -1831,14 +1832,12 @@ class ECharts extends Eventful {
                     }
                 }
 
-                if (el.selected || el.highlighted) {
-                    // Only use states when it's exists.
-                    if (el.selected && el.states.select) {
-                        newStates.push('select');
-                    }
-                    if (el.highlighted && el.states.emphasis) {
-                        newStates.push('emphasis');
-                    }
+                // Only use states when it's exists.
+                if (el.selected && el.states.select) {
+                    newStates.push('select');
+                }
+                if (el.highlighted && el.states.emphasis) {
+                    newStates.push('emphasis');
                 }
                 else if (el.blurred && el.states.blur) {
                     newStates.push('blur');

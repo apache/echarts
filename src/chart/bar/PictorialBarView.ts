@@ -19,6 +19,13 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {
+    enterEmphasisWhenMouseOver,
+    leaveEmphasisWhenMouseOut,
+    enterEmphasis,
+    leaveEmphasis,
+    enableHoverEmphasis
+} from '../../util/states';
 import {createSymbol} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
@@ -27,7 +34,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
-import { ColorString, AnimationOptionMixin } from '../../util/types';
+import { ColorString, AnimationOptionMixin, ZRElementEvent } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -623,15 +630,15 @@ function createOrUpdateRepeatSymbols(
         };
     }
 
-    function onMouseOver() {
+    function onMouseOver(e: ZRElementEvent) {
         eachPath(bar, function (path) {
-            graphic.enterEmphasis(path);
+            enterEmphasisWhenMouseOver(path, e);
         });
     }
 
-    function onMouseOut() {
+    function onMouseOut(e: ZRElementEvent) {
         eachPath(bar, function (path) {
-            graphic.leaveEmphasis(path);
+            leaveEmphasisWhenMouseOut(path, e);
         });
     }
 }
@@ -689,11 +696,11 @@ function createOrUpdateSingleSymbol(
     updateHoverAnimation(mainPath, symbolMeta);
 
     function onMouseOver(this: typeof mainPath) {
-        graphic.enterEmphasis(this);
+        enterEmphasis(this);
     }
 
     function onMouseOut(this: typeof mainPath) {
-        graphic.leaveEmphasis(this);
+        leaveEmphasis(this);
     }
 }
 
@@ -936,7 +943,7 @@ function updateCommon(
 
     eachPath(bar, function (path) {
         path.useStyle(symbolMeta.style);
-        graphic.enableHoverEmphasis(path);
+        enableHoverEmphasis(path);
 
         path.ensureState('emphasis').style = emphasisStyle;
         path.ensureState('blur').style = blurStyle;
@@ -963,7 +970,7 @@ function updateCommon(
         }
     );
 
-    graphic.enableHoverEmphasis(barRect);
+    enableHoverEmphasis(barRect);
 }
 
 function toIntTimes(times: number) {

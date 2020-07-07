@@ -18,6 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import * as zrUtil from 'zrender/src/core/util';
 import * as symbolUtil from '../../util/symbol';
 import ChartView from '../../view/Chart';
@@ -197,8 +198,8 @@ class RadarView extends ChartView {
                 )
             );
 
-            graphic.setStatesStylesFromModel(polyline, itemModel, 'lineStyle');
-            graphic.setStatesStylesFromModel(polygon, itemModel, 'areaStyle');
+            setStatesStylesFromModel(polyline, itemModel, 'lineStyle');
+            setStatesStylesFromModel(polygon, itemModel, 'areaStyle');
 
             const areaStyleModel = itemModel.getModel('areaStyle');
             const polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
@@ -243,7 +244,7 @@ class RadarView extends ChartView {
                 );
             });
 
-            graphic.enableHoverEmphasis(itemGroup);
+            enableHoverEmphasis(itemGroup);
         });
 
         this._data = data;

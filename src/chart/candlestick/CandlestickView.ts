@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel } from '../../util/states';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
@@ -279,7 +280,7 @@ function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimple
 
     el.__simpleBox = isSimpleBox;
 
-    graphic.setStatesStylesFromModel(el, itemModel);
+    setStatesStylesFromModel(el, itemModel);
 }
 
 function transInit(points: number[][], itemLayout: CandlestickItemLayout) {

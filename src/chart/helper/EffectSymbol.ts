@@ -19,7 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
-import {Group, Path, enterEmphasis, leaveEmphasis, enableHoverEmphasis} from '../../util/graphic';
+import {Group, Path} from '../../util/graphic';
+import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import SymbolClz from './Symbol';
 import List from '../../data/List';

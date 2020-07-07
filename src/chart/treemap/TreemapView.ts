@@ -19,6 +19,7 @@
 
 import {bind, each, indexOf, curry, extend, retrieve} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import { isHighDownDispatcher, setAsHighDownDispatcher, enableElementHoverEmphasis } from '../../util/states';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
@@ -794,11 +795,11 @@ function renderNode(
         // Because of the implementation about "traverse" in graphic hover style, we
         // can not set hover listener on the "group" of non-leaf node. Otherwise the
         // hover event from the descendents will be listenered.
-        if (graphic.isHighDownDispatcher(group)) {
-            graphic.setAsHighDownDispatcher(group, false);
+        if (isHighDownDispatcher(group)) {
+            setAsHighDownDispatcher(group, false);
         }
         if (bg) {
-            graphic.setAsHighDownDispatcher(bg, true);
+            setAsHighDownDispatcher(bg, true);
             // Only for enabling highlight/downplay.
             data.setItemGraphicEl(thisNode.dataIndex, bg);
         }
@@ -807,10 +808,10 @@ function renderNode(
         const content = giveGraphic('content', Rect, depth, Z_CONTENT);
         content && renderContent(group, content);
 
-        if (bg && graphic.isHighDownDispatcher(bg)) {
-            graphic.setAsHighDownDispatcher(bg, false);
+        if (bg && isHighDownDispatcher(bg)) {
+            setAsHighDownDispatcher(bg, false);
         }
-        graphic.setAsHighDownDispatcher(group, true);
+        setAsHighDownDispatcher(group, true);
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
     }
@@ -865,7 +866,7 @@ function renderNode(
             bg.ensureState('emphasis').style = emphasisStyle;
             bg.ensureState('blur').style = blurStyle;
             bg.ensureState('select').style = selectStyle;
-            graphic.enableElementHoverEmphasis(bg);
+            enableElementHoverEmphasis(bg);
         }
 
         group.add(bg);
@@ -910,7 +911,7 @@ function renderNode(
             content.ensureState('emphasis').style = emphasisStyle;
             content.ensureState('blur').style = blurStyle;
             content.ensureState('select').style = selectStyle;
-            graphic.enableElementHoverEmphasis(content);
+            enableElementHoverEmphasis(content);
         }
 
         group.add(content);

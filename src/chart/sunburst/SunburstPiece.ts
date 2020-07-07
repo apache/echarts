@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
 import {createTextStyle} from '../../label/labelStyle';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
@@ -154,7 +155,7 @@ class SunburstPiece extends graphic.Sector {
         this._seriesModel = seriesModel || this._seriesModel;
         this._ecModel = ecModel || this._ecModel;
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this);
     }
 
     onEmphasis(highlightPolicy: AllPropTypes<typeof NodeHighlightPolicy>) {

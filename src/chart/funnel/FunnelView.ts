@@ -18,6 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
@@ -84,11 +85,11 @@ class FunnelPiece extends graphic.Polygon {
             }, seriesModel, idx);
         }
 
-        graphic.setStatesStylesFromModel(polygon, itemModel);
+        setStatesStylesFromModel(polygon, itemModel);
 
         this._updateLabel(data, idx);
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this);
     }
 
     _updateLabel(data: List, idx: number) {

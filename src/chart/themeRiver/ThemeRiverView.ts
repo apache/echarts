@@ -19,6 +19,7 @@
 
 import {ECPolygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import {createTextStyle} from '../../label/labelStyle';
 import {bind, extend} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
@@ -158,9 +159,9 @@ class ThemeRiverView extends ChartView {
 
             polygon.useStyle(style);
 
-            graphic.setStatesStylesFromModel(polygon, seriesModel);
+            setStatesStylesFromModel(polygon, seriesModel);
 
-            graphic.enableHoverEmphasis(polygon);
+            enableHoverEmphasis(polygon);
         }
 
         this._layersSeries = layersSeries;

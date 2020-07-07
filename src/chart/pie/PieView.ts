@@ -21,6 +21,7 @@
 
 import { extend, curry } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -121,7 +122,7 @@ class PiePiece extends graphic.Sector {
         }
 
         sector.useStyle(data.getItemVisual(idx, 'style'));
-        graphic.setStatesStylesFromModel(sector, itemModel);
+        setStatesStylesFromModel(sector, itemModel);
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
         const offset = seriesModel.get('selectedOffset');
@@ -156,7 +157,7 @@ class PiePiece extends graphic.Sector {
             y: dy
         });
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this);
 
         // State will be set after all rendered in the pipeline.
         (sector as ECElement).selected = seriesModel.isSelected(data.getName(idx));

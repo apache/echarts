@@ -20,6 +20,7 @@
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
 import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
@@ -399,7 +400,7 @@ class SliderTimelineView extends TimelineView {
                 onclick: bind(this._changeTimeline, this, value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
-            graphic.enableHoverEmphasis(el, hoverStyleModel.getItemStyle());
+            enableHoverEmphasis(el, hoverStyleModel.getItemStyle());
 
             const ecData = graphic.getECData(el);
             if (itemModel.get('tooltip')) {
@@ -453,7 +454,7 @@ class SliderTimelineView extends TimelineView {
             });
 
             group.add(textEl);
-            graphic.enableHoverEmphasis(
+            enableHoverEmphasis(
                 textEl, createTextStyle(hoverLabelModel)
             );
 
@@ -514,7 +515,7 @@ class SliderTimelineView extends TimelineView {
             };
             const btn = makeControlIcon(timelineModel, iconPath, rect, opt);
             group.add(btn);
-            graphic.enableHoverEmphasis(btn, hoverStyle);
+            enableHoverEmphasis(btn, hoverStyle);
         }
     }
 

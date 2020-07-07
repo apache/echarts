@@ -18,6 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import * as zrUtil from 'zrender/src/core/util';
 import { LayoutOrient, Payload } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
@@ -117,11 +118,11 @@ class SankeyPath extends graphic.Path<SankeyPathProps> {
     }
 
     highlight() {
-        graphic.enterEmphasis(this);
+        enterEmphasis(this);
     }
 
     downplay() {
-        graphic.leaveEmphasis(this);
+        leaveEmphasis(this);
     }
 }
 
@@ -230,7 +231,7 @@ class SankeyView extends ChartView {
                     break;
             }
 
-            graphic.enableHoverEmphasis(
+            enableHoverEmphasis(
                 curve,
                 edgeModel.getModel(['emphasis', 'lineStyle']).getItemStyle()
             );
@@ -272,7 +273,7 @@ class SankeyView extends ChartView {
 
             rect.setStyle('fill', node.getVisual('color'));
 
-            graphic.enableHoverEmphasis(rect, hoverStyle);
+            enableHoverEmphasis(rect, hoverStyle);
 
             group.add(rect);
 
@@ -305,11 +306,11 @@ class SankeyView extends ChartView {
             }
 
             el.highlight = function () {
-                graphic.enterEmphasis(this);
+                enterEmphasis(this);
             };
 
             el.downplay = function () {
-                graphic.leaveEmphasis(this);
+                leaveEmphasis(this);
             };
 
             el.focusNodeAdjHandler && el.off('mouseover', el.focusNodeAdjHandler);

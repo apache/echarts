@@ -1124,17 +1124,29 @@ export interface ComponentOption {
     // FIXME:TS more
 }
 
-export interface StatesOptionMixin<StateOption> {
+export type BlurScope = 'coordinateSystem' | 'series' | 'global';
+
+export interface StatesOptionMixin<StateOption, ExtraFocusOptions = never> {
     /**
      * Emphasis states
      */
     emphasis?: StateOption & {
         /**
          * self: Focus self and blur all others.
-         * selfInSeries: Focus self and blur others in the same series.
          * series: Focus series and blur all other series.
          */
-        focus?: 'self' | 'selfInSeries' | 'series'
+        focus?: 'self' | 'series' | ExtraFocusOptions
+
+        /**
+         * Scope of blurred element when focus.
+         *
+         * coordinateSystem: blur others in the same coordinateSystem
+         * series: blur others in the same series
+         * global: blur all others
+         *
+         * Default to be coordinate system.
+         */
+        blurScope?: BlurScope
     }
     /**
      * Select states

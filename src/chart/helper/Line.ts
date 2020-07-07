@@ -22,6 +22,7 @@ import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis, enterEmphasis, leaveEmphasis } from '../../util/states';
 import {createTextStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
 import List from '../../data/List';
@@ -307,15 +308,15 @@ class Line extends graphic.Group {
 
         label.ignore = !showLabel && !hoverShowLabel;
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this);
     }
 
     highlight() {
-        graphic.enterEmphasis(this);
+        enterEmphasis(this);
     }
 
     downplay() {
-        graphic.leaveEmphasis(this);
+        leaveEmphasis(this);
     }
 
     updateLayout(lineData: List, idx: number) {

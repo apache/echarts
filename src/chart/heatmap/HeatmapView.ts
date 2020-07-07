@@ -19,6 +19,7 @@
 
 import {__DEV__} from '../../config';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
@@ -270,7 +271,7 @@ class HeatmapView extends ChartView {
             rect.ensureState('blur').style = blurStyle;
             rect.ensureState('select').style = selectStyle;
 
-            graphic.enableHoverEmphasis(rect);
+            enableHoverEmphasis(rect);
 
             rect.incremental = incremental;
             // PENDING

@@ -18,6 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel } from '../../util/states';
 import ChartView from '../../view/Chart';
 import List from '../../data/List';
 import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
@@ -203,7 +204,7 @@ function updateElCommon(
     seriesScope.smooth && (el.shape.smooth = seriesScope.smooth);
 
     const itemModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex);
-    graphic.setStatesStylesFromModel(el, itemModel, 'lineStyle', 'getLineStyle');
+    setStatesStylesFromModel(el, itemModel, 'lineStyle', 'getLineStyle');
 }
 
 // function simpleDiff(oldData, newData, dimensions) {
