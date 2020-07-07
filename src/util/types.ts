@@ -106,6 +106,7 @@ export interface ECElement extends Element {
     };
     highDownSilentOnTouch?: boolean;
     onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+    z2EmphasisLift?: number;
 }
 
 export interface DataHost {
@@ -435,6 +436,7 @@ export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
 export type DisplayState = 'normal' | 'emphasis';
+export type DisplayStateNonNormal = 'emphasis';
 export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
     [key: string]: any

@@ -127,6 +127,11 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      */
     static layoutMode: ComponentLayoutMode | ComponentLayoutMode['type'];
 
+    /**
+     * Prevent from auto set z, zlevel, z2 by the framework.
+     */
+    preventAutoZ: boolean;
+
     // Injectable properties:
     __viewId: string;
 

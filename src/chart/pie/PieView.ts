@@ -183,7 +183,7 @@ class PiePiece extends graphic.Group {
                     if (toState === 'emphasis') {
                         // Sector may has animation of updating data. Force to move to the last frame
                         // Or it may stopped on the wrong shape
-                        sector.stopAnimation(true);
+                        sector.stopAnimation(null, true);
                         sector.animateTo({
                             shape: {
                                 r: layout.r + seriesModel.get('hoverOffset')
@@ -191,7 +191,7 @@ class PiePiece extends graphic.Group {
                         }, { duration: 300, easing: 'elasticOut' });
                     }
                     else {
-                        sector.stopAnimation(true);
+                        sector.stopAnimation(null, true);
                         sector.animateTo({
                             shape: {
                                 r: layout.r
@@ -361,7 +361,7 @@ class PieView extends ChartView {
                 // Default expansion animation
                 if (isFirstRender && animationType !== 'scale') {
                     piePiece.eachChild(function (child) {
-                        child.stopAnimation(true);
+                        child.stopAnimation(null, true);
                     });
                 }
 
@@ -378,7 +378,7 @@ class PieView extends ChartView {
 
                 if (!isFirstRender && animationTypeUpdate !== 'transition') {
                     piePiece.eachChild(function (child) {
-                        child.stopAnimation(true);
+                        child.stopAnimation(null, true);
                     });
                 }
 

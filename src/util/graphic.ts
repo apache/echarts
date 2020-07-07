@@ -27,6 +27,7 @@ import ZRImage, { ImageStyleProps } from 'zrender/src/graphic/Image';
 import Group from 'zrender/src/graphic/Group';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import Circle from 'zrender/src/graphic/shape/Circle';
+import Ellipse from 'zrender/src/graphic/shape/Ellipse';
 import Sector from 'zrender/src/graphic/shape/Sector';
 import Ring from 'zrender/src/graphic/shape/Ring';
 import Polygon from 'zrender/src/graphic/shape/Polygon';
@@ -59,6 +60,7 @@ import {
     DataModel,
     ECEventData,
     ZRStyleProps,
+    TextCommonOption,
     SeriesOption,
     ParsedValue,
     CallbackDataParams
@@ -73,13 +75,13 @@ import {
     trim,
     isArrayLike,
     map,
-    defaults
+    defaults,
+    isObject
 } from 'zrender/src/core/util';
 import * as numberUtil from './number';
 import SeriesModel from '../model/Series';
-import {OnframeCallback, interpolateNumber} from 'zrender/src/animation/Animator';
+import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
-import DataFormatMixin from '../model/mixin/dataFormat';
 
 
 const mathMax = Math.max;
@@ -88,13 +90,6 @@ const mathMin = Math.min;
 const EMPTY_OBJ = {};
 
 export const Z2_EMPHASIS_LIFT = 10;
-
-// key: label model property nane, value: style property name.
-export const CACHED_LABEL_STYLE_PROPERTIES = {
-    color: 'textFill',
-    textBorderColor: 'textStroke',
-    textBorderWidth: 'textStrokeWidth'
-};
 
 const EMPHASIS = 'emphasis';
 const NORMAL = 'normal';
@@ -133,8 +128,6 @@ type TextCommonParams = {
     autoColor?: ColorString
 
     forceRich?: boolean
-
-    getTextPosition?: (textStyleModel: Model, isEmphasis?: boolean) => string | string[] | number[]
 
     defaultOutsidePosition?: LabelOption['position']
 
@@ -398,12 +391,14 @@ function singleEnterEmphasis(el: Element) {
         if (!hasFillOrStroke(emphasisStyle.stroke)) {
             disp.style.stroke = liftColor(currentStroke);
         }
-        disp.z2 += Z2_EMPHASIS_LIFT;
+        const z2EmphasisLift = (disp as ECElement).z2EmphasisLift;
+        disp.z2 += z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
     }
 
     const textContent = el.getTextContent();
     if (textContent) {
-        textContent.z2 += Z2_EMPHASIS_LIFT;
+        const z2EmphasisLift = (textContent as ECElement).z2EmphasisLift;
+        textContent.z2 += z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT;
     }
     // TODO hover layer
 }
@@ -793,6 +788,7 @@ export function createTextConfig(
     opt: TextCommonParams,
     isEmphasis: boolean
 ) {
+    opt = opt || {};
     const textConfig: ElementTextConfig = {};
     let labelPosition;
     let labelRotate = textStyleModel.getShallow('rotate');
@@ -801,16 +797,11 @@ export function createTextConfig(
     );
     const labelOffset = textStyleModel.getShallow('offset');
 
-    if (opt.getTextPosition) {
-        labelPosition = opt.getTextPosition(textStyleModel, isEmphasis);
-    }
-    else {
-        labelPosition = textStyleModel.getShallow('position')
-            || (isEmphasis ? null : 'inside');
-        // 'outside' is not a valid zr textPostion value, but used
-        // in bar series, and magric type should be considered.
-        labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
-    }
+    labelPosition = textStyleModel.getShallow('position')
+        || (isEmphasis ? null : 'inside');
+    // 'outside' is not a valid zr textPostion value, but used
+    // in bar series, and magric type should be considered.
+    labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
 
     if (labelPosition != null) {
         textConfig.position = labelPosition;
@@ -1054,7 +1045,10 @@ function setTokenTextStyle(
     }
 }
 
-export function getFont(opt: LabelOption, ecModel: GlobalModel) {
+export function getFont(
+    opt: Pick<TextCommonOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>,
+    ecModel: GlobalModel
+) {
     const gTextStyleModel = ecModel && ecModel.getModel('textStyle');
     return trim([
         // FIXME in node-canvas fontWeight is before fontStyle
@@ -1065,6 +1059,13 @@ export function getFont(opt: LabelOption, ecModel: GlobalModel) {
     ].join(' '));
 }
 
+type AnimateOrSetPropsOption = {
+    dataIndex?: number;
+    cb?: () => void;
+    during?: (percent: number) => void;
+    isFrom?: boolean;
+};
+
 function animateOrSetProps<Props>(
     isUpdate: boolean,
     el: Element<Props>,
@@ -1072,14 +1073,21 @@ function animateOrSetProps<Props>(
     animatableModel?: Model<AnimationOptionMixin> & {
         getAnimationDelayParams?: (el: Element<Props>, dataIndex: number) => AnimationDelayCallbackParam
     },
-    dataIndex?: number | (() => void),
-    cb?: () => void,
-    during?: (percent: number) => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
 ) {
+    let isFrom = false;
     if (typeof dataIndex === 'function') {
         during = cb;
         cb = dataIndex;
         dataIndex = null;
+    }
+    else if (isObject(dataIndex)) {
+        cb = dataIndex.cb;
+        during = dataIndex.during;
+        isFrom = dataIndex.isFrom;
+        dataIndex = dataIndex.dataIndex;
     }
     // Do not check 'animation' property directly here. Consider this case:
     // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
@@ -1109,20 +1117,31 @@ function animateOrSetProps<Props>(
         }
 
         duration > 0
-            ? el.animateTo(props, {
-                duration,
-                delay: animationDelay || 0,
-                easing: animationEasing,
-                done: cb,
-                force: !!cb || !!during,
-                during: during
-            })
-            : (el.stopAnimation(), el.attr(props), cb && cb());
+            ? (
+                isFrom
+                    ? el.animateFrom(props, {
+                        duration,
+                        delay: animationDelay || 0,
+                        easing: animationEasing,
+                        done: cb,
+                        force: !!cb || !!during,
+                        during: during
+                    })
+                    : el.animateTo(props, {
+                        duration,
+                        delay: animationDelay || 0,
+                        easing: animationEasing,
+                        done: cb,
+                        force: !!cb || !!during,
+                        during: during
+                    })
+            )
+            : (el.stopAnimation(), el.attr(props), cb && (cb as AnimateOrSetPropsOption['cb'])());
     }
     else {
         el.stopAnimation();
-        el.attr(props);
-        cb && cb();
+        !isFrom && el.attr(props);
+        cb && (cb as AnimateOrSetPropsOption['cb'])();
     }
 }
 
@@ -1147,9 +1166,9 @@ function updateProps<Props>(
     props: Props,
     // TODO: TYPE AnimatableModel
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number | (() => void),
-    cb?: () => void,
-    during?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
 ) {
     animateOrSetProps(true, el, props, animatableModel, dataIndex, cb, during);
 }
@@ -1168,9 +1187,9 @@ export function initProps<Props>(
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
-    dataIndex?: number | (() => void),
-    cb?: () => void,
-    during?: () => void
+    dataIndex?: AnimateOrSetPropsOption['dataIndex'] | AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption,
+    cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
+    during?: AnimateOrSetPropsOption['during']
 ) {
     animateOrSetProps(false, el, props, animatableModel, dataIndex, cb, during);
 }
@@ -1547,6 +1566,7 @@ export const getECData = makeInner<ECData, Element>();
 // Register built-in shapes. These shapes might be overwirtten
 // by users, although we do not recommend that.
 registerShape('circle', Circle);
+registerShape('ellipse', Ellipse);
 registerShape('sector', Sector);
 registerShape('ring', Ring);
 registerShape('polygon', Polygon);
@@ -1561,6 +1581,7 @@ export {
     ZRImage as Image,
     ZRText as Text,
     Circle,
+    Ellipse,
     Sector,
     Ring,
     Polygon,

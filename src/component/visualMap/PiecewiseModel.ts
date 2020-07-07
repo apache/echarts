@@ -185,7 +185,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         const isCategory = this.isCategory();
 
         zrUtil.each(option.pieces, function (piece) {
-            zrUtil.each(visualTypes, function (visualType) {
+            zrUtil.each(visualTypes, function (visualType: BuiltinVisualProperty) {
                 if (piece.hasOwnProperty(visualType)) {
                     visualTypesInPieces[visualType] = 1;
                 }
