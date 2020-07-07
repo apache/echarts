@@ -26,7 +26,7 @@ import List from '../../data/List';
 import { ColorString, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 import { setLabelLineStyle } from '../../label/labelGuideHelper';
-import points from '../../layout/points';
+import { setLabelStyle } from '../../label/labelStyle';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -84,8 +84,7 @@ class FunnelPiece extends graphic.Polygon {
             }, seriesModel, idx);
         }
 
-        const polygonEmphasisState = polygon.ensureState('emphasis');
-        polygonEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        graphic.setStatesStylesFromModel(polygon, itemModel);
 
         this._updateLabel(data, idx);
 
@@ -110,7 +109,7 @@ class FunnelPiece extends graphic.Polygon {
 
         const visualColor = data.getItemVisual(idx, 'style').fill as ColorString;
 
-        graphic.setLabelStyle(
+        setLabelStyle(
             // position will not be used in setLabelStyle
             labelText, labelModel as Model<LabelOption>, labelHoverModel as Model<LabelOption>,
             {

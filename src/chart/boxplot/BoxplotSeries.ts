@@ -26,27 +26,27 @@ import {
     LayoutOrient,
     ItemStyleOption,
     LabelOption,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    StatesOptionMixin
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
 // [min,  Q1,  median (or Q2),  Q3,  max]
 type BoxplotDataValue = OptionDataValueNumeric[];
-export interface BoxplotDataItemOption {
-    value: BoxplotDataValue
 
+
+export interface BoxplotStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
-
-    emphasis?: {
-        itemStyle: ItemStyleOption
-        label?: LabelOption
-    }
-
 }
 
-export interface BoxplotSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin {
+export interface BoxplotDataItemOption extends BoxplotStateOption, StatesOptionMixin<BoxplotStateOption> {
+    value: BoxplotDataValue
+}
+
+export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption>, BoxplotStateOption,
+    SeriesOnCartesianOptionMixin {
     type?: 'boxplot'
 
     coordinateSystem?: 'cartesian2d'
@@ -57,15 +57,6 @@ export interface BoxplotSeriesOption extends SeriesOption, SeriesOnCartesianOpti
      * [min, max] can be percent of band width.
      */
     boxWidth?: (string | number)[]
-
-    itemStyle?: ItemStyleOption
-
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle: ItemStyleOption
-        label?: LabelOption
-    }
 
     data?: (BoxplotDataValue | BoxplotDataItemOption)[]
 }

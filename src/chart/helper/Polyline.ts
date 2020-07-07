@@ -61,7 +61,7 @@ class Polyline extends graphic.Group {
         const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
 
-        let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
+        let hoverLineStyle = seriesScope && seriesScope.emphasisLineStyle;
 
         if (!seriesScope || lineData.hasItemOption) {
             hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();

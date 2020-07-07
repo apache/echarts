@@ -30,10 +30,12 @@ import {
     ItemStyleOption,
     ZRColor,
     AnimationOptionMixin,
-    ZRStyleProps
+    ZRStyleProps,
+    StatesOptionMixin
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
+import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -78,14 +80,16 @@ interface RippleEffectOption {
     color?: ZRColor
 }
 
-// TODO Separate series and item?
-export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object> {
+interface SymbolDrawStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
+}
+
+// TODO Separate series and item?
+export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
+    StatesOptionMixin<SymbolDrawStateOption>,
+    SymbolDrawStateOption {
+
     hoverAnimation?: boolean
     cursor?: string
 
@@ -94,11 +98,18 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object> {
 }
 
 export interface SymbolDrawSeriesScope {
-    hoverItemStyle?: ZRStyleProps
+    emphasisItemStyle?: ZRStyleProps
+    blurItemStyle?: ZRStyleProps
+    selectItemStyle?: ZRStyleProps
+
     symbolRotate?: number
     symbolOffset?: number[]
+
     labelModel?: Model<LabelOption>
-    hoverLabelModel?: Model<LabelOption>
+    emphasisLabelModel?: Model<LabelOption>
+    blurLabelModel?: Model<LabelOption>
+    selectLabelModel?: Model<LabelOption>
+
     hoverAnimation?: boolean
     itemModel?: Model<SymbolDrawItemModelOption>
     symbolInnerColor?: ColorString
@@ -108,14 +119,22 @@ export interface SymbolDrawSeriesScope {
 }
 
 function makeSeriesScope(data: List): SymbolDrawSeriesScope {
-    const seriesModel = data.hostModel;
+    const seriesModel = data.hostModel as Model<ScatterSeriesOption>;
     return {
-        hoverItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
+        emphasisItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
+        blurItemStyle: seriesModel.getModel(['blur', 'itemStyle']).getItemStyle(),
+        selectItemStyle: seriesModel.getModel(['select', 'itemStyle']).getItemStyle(),
+
         symbolRotate: seriesModel.get('symbolRotate'),
         symbolOffset: seriesModel.get('symbolOffset'),
         hoverAnimation: seriesModel.get('hoverAnimation'),
+
         labelModel: seriesModel.getModel('label'),
-        hoverLabelModel: seriesModel.getModel(['emphasis', 'label']),
+        emphasisLabelModel: seriesModel.getModel(['emphasis', 'label']),
+        blurLabelModel: seriesModel.getModel(['blur', 'label']),
+        selectLabelModel: seriesModel.getModel(['select', 'label']),
+
+
         cursorStyle: seriesModel.get('cursor')
     };
 }

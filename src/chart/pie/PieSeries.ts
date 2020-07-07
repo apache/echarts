@@ -36,11 +36,17 @@ import {
     BoxLayoutOptionMixin,
     OptionDataValueNumeric,
     SeriesEncodeOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    StatesOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 
-
+export interface PieStateOption {
+    // TODO: TYPE Color Callback
+    itemStyle?: ItemStyleOption
+    label?: PieLabelOption
+    labelLine?: PieLabelLineOption
+}
 interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
@@ -61,20 +67,14 @@ interface PieLabelLineOption extends LabelLineOption {
 
 export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
-    SelectableTarget {
+    SelectableTarget,
+    PieStateOption, StatesOptionMixin<PieStateOption> {
 
-    itemStyle?: ItemStyleOption
-    label?: PieLabelOption
-    labelLine?: PieLabelLineOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: PieLabelOption
-        labelLine?: PieLabelLineOption
-    }
+    cursor?: string
+    hoverAnimation?: boolean
 }
 export interface PieSeriesOption extends
-    SeriesOption,
+    Omit<SeriesOption<PieStateOption>, 'labelLine'>, PieStateOption,
     DataSelectableOptionMixin,
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
@@ -85,11 +85,6 @@ export interface PieSeriesOption extends
     hoverAnimation?: boolean
 
     roseType?: 'radius' | 'area'
-
-    // TODO: TYPE Color Callback
-    itemStyle?: ItemStyleOption
-    label?: PieLabelOption
-    labelLine?: PieLabelLineOption
 
     clockwise?: boolean
     startAngle?: number
@@ -103,12 +98,6 @@ export interface PieSeriesOption extends
     percentPrecision?: number
 
     stillShowZeroSum?: boolean
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: PieLabelOption
-        labelLine?: PieLabelLineOption
-    }
 
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
@@ -158,14 +147,14 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         });
     }
 
-    private _createSelectableList(): SelectableTarget[] {
+    private _createSelectableList(): PieDataItemOption[] {
         const data = this.getRawData();
         const valueDim = data.mapDimension('value');
-        const targetList = [];
+        const targetList: PieDataItemOption[] = [];
         for (let i = 0, len = data.count(); i < len; i++) {
             targetList.push({
                 name: data.getName(i),
-                value: data.get(valueDim, i),
+                value: data.get(valueDim, i) as number,
                 selected: retrieveRawAttr(data, i, 'selected')
             });
         }

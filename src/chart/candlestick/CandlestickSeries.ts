@@ -29,32 +29,31 @@ import {
     ColorString,
     LabelOption,
     SeriesLargeOptionMixin,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    StatesOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type CandlestickDataValue = OptionDataValueNumeric[];
-export interface CandlestickDataItemOption {
-    value: CandlestickDataValue
-
-    itemStyle?: CandlestickItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle: CandlestickItemStyleOption
-        label?: LabelOption
-    }
-
-}
 
 interface CandlestickItemStyleOption extends ItemStyleOption {
     color0?: ZRColor
     borderColor0?: ColorString
 }
+export interface CandlestickStateOption {
+    itemStyle?: CandlestickItemStyleOption
+    label?: LabelOption
+}
+export interface CandlestickDataItemOption extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption> {
+    value: CandlestickDataValue
+}
 
-export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin, SeriesLargeOptionMixin {
+
+export interface CandlestickSeriesOption extends SeriesOption<CandlestickStateOption>, CandlestickStateOption,
+    SeriesOnCartesianOptionMixin,
+    SeriesLargeOptionMixin {
 
     type?: 'candlestick'
 
@@ -67,14 +66,6 @@ export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesian
     barMaxWidth?: number | string
     barMinWidth?: number | string
     barWidth?: number | string
-
-    itemStyle?: CandlestickItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: CandlestickItemStyleOption
-        label?: LabelOption
-    }
 
     data?: (CandlestickDataValue | CandlestickDataItemOption)[]
 }

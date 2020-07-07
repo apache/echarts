@@ -40,7 +40,8 @@ import {
     BoxLayoutOptionMixin,
     LabelFormatterCallback,
     Dictionary,
-    LineLabelOption
+    LineLabelOption,
+    StatesOptionMixin
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -54,18 +55,17 @@ type GraphDataValue = OptionDataValue | OptionDataValue[];
 interface GraphEdgeLineStyleOption extends LineStyleOption {
     curveness: number
 }
-export interface GraphNodeItemOption extends SymbolOptionMixin {
+
+export interface GraphNodeStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
+
+export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption> {
     id?: string
     name?: string
     value?: GraphDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 
     /**
      * Fixed x position
@@ -91,7 +91,11 @@ export interface GraphNodeItemOption extends SymbolOptionMixin {
     focusNodeAdjacency?: boolean
 }
 
-export interface GraphEdgeItemOption {
+export interface GraphEdgeStateOption {
+    lineStyle?: GraphEdgeLineStyleOption
+    label?: LineLabelOption
+}
+export interface GraphEdgeItemOption extends GraphEdgeStateOption, StatesOptionMixin<GraphEdgeStateOption> {
     /**
      * Name or index of source node.
      */
@@ -102,14 +106,6 @@ export interface GraphEdgeItemOption {
     target?: string | number
 
     value?: number
-
-    lineStyle?: GraphEdgeLineStyleOption
-    label?: LineLabelOption
-
-    emphasis?: {
-        lineStyle?: GraphEdgeLineStyleOption
-        label?: LineLabelOption
-    }
 
     /**
      * Symbol of both line ends
@@ -123,21 +119,14 @@ export interface GraphEdgeItemOption {
     focusNodeAdjacency?: boolean
 }
 
-export interface GraphCategoryItemOption extends SymbolOptionMixin {
+export interface GraphCategoryItemOption extends SymbolOptionMixin,
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption> {
     name?: string
 
     value?: OptionDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 }
 
-export interface GraphSeriesOption extends SeriesOption,
+export interface GraphSeriesOption extends SeriesOption<any>,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin,
@@ -184,6 +173,20 @@ export interface GraphSeriesOption extends SeriesOption,
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
+        label?: LabelOption
+        edgeLabel?: LabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    blur?: {
+        label?: LabelOption
+        edgeLabel?: LabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    select?: {
         label?: LabelOption
         edgeLabel?: LabelOption
         itemStyle?: ItemStyleOption

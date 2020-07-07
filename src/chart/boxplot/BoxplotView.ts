@@ -27,9 +27,6 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import { BoxplotItemLayout } from './boxplotLayout';
 
-// Update common properties
-const EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
-
 class BoxplotView extends ChartView {
     static type = 'boxplot';
     type = BoxplotView.type;
@@ -178,15 +175,12 @@ function updateNormalBoxData(
         dataIndex
     );
 
-    const itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
-
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.strokeNoScale = true;
 
     el.z2 = 100;
 
-    const hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
-    graphic.enableHoverEmphasis(el, hoverStyle);
+    graphic.setStatesStylesFromModel(el, data.getItemModel<BoxplotDataItemOption>(dataIndex));
 }
 
 function transInit(points: number[][], dim: number, itemLayout: BoxplotItemLayout) {

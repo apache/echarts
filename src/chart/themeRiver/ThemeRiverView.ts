@@ -19,6 +19,7 @@
 
 import {ECPolygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
+import {createTextStyle} from '../../label/labelStyle';
 import {bind, extend} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
 import ChartView from '../../view/Chart';
@@ -97,7 +98,7 @@ class ThemeRiverView extends ChartView {
             const labelModel = seriesModel.getModel('label');
             const margin = labelModel.get('margin');
 
-            const commonTextStyle = graphic.createTextStyle(labelModel, {
+            const commonTextStyle = createTextStyle(labelModel, {
                 text: labelModel.get('show')
                     ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
                         || data.getName(indices[j - 1])
@@ -155,10 +156,11 @@ class ThemeRiverView extends ChartView {
                 }, seriesModel);
             }
 
-            const hoverItemStyleModel = seriesModel.getModel(['emphasis', 'itemStyle']);
             polygon.useStyle(style);
 
-            graphic.enableHoverEmphasis(polygon, hoverItemStyleModel.getItemStyle());
+            graphic.setStatesStylesFromModel(polygon, seriesModel);
+
+            graphic.enableHoverEmphasis(polygon);
         }
 
         this._layersSeries = layersSeries;

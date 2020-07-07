@@ -19,7 +19,7 @@
 */
 
 
-import * as zrUtil from 'zrender/src/core/util';
+import { extend, curry } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
@@ -30,6 +30,7 @@ import PieSeriesModel, {PieDataItemOption, PieSeriesOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle } from '../../label/labelGuideHelper';
 import Model from '../../model/Model';
+import { setLabelStyle } from '../../label/labelStyle';
 
 function updateDataSelected(
     this: PiePiece,
@@ -76,7 +77,7 @@ class PiePiece extends graphic.Sector {
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const layout = data.getItemLayout(idx);
-        const sectorShape = zrUtil.extend({}, layout);
+        const sectorShape = extend({}, layout);
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -120,39 +121,40 @@ class PiePiece extends graphic.Sector {
         }
 
         sector.useStyle(data.getItemVisual(idx, 'style'));
-        const sectorEmphasisState = sector.ensureState('emphasis');
-        sectorEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        graphic.setStatesStylesFromModel(sector, itemModel);
 
-        const sectorSelectState = sector.ensureState('select');
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
         const offset = seriesModel.get('selectedOffset');
         const dx = Math.cos(midAngle) * offset;
         const dy = Math.sin(midAngle) * offset;
-        sectorSelectState.x = dx;
-        sectorSelectState.y = dy;
 
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
         this._updateLabel(seriesModel, data, idx);
 
-        const emphasisState = sector.ensureState('emphasis');
-        emphasisState.shape = {
+
+        sector.ensureState('emphasis').shape = {
             r: layout.r + (itemModel.get('hoverAnimation') // TODO: Change a name.
                 ? seriesModel.get('hoverOffset') : 0)
         };
+        extend(sector.ensureState('select'), {
+            x: dx,
+            y: dy
+        });
 
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
-        labelLine.states.select = {
-            x: dx, y: dy
-        };
-        // TODO: needs dx, dy in zrender?
-        labelText.states.select = {
+        extend(labelLine.ensureState('select'), {
             x: dx,
             y: dy
-        };
+        });
+        // TODO: needs dx, dy in zrender?
+        extend(labelText.ensureState('select'), {
+            x: dx,
+            y: dy
+        });
 
         graphic.enableHoverEmphasis(this);
 
@@ -176,7 +178,7 @@ class PiePiece extends graphic.Sector {
         const style = data.getItemVisual(idx, 'style');
         const visualColor = style && style.fill as ColorString;
 
-        graphic.setLabelStyle(
+        setLabelStyle(
             sector,
             labelModel as Model<Omit<PieSeriesOption['label'], 'position' | 'rotate'>>, // position / rotate won't be used.
             labelHoverModel as Model<Omit<PieSeriesOption['label'], 'position' | 'rotate'>>,
@@ -253,9 +255,7 @@ class PieView extends ChartView {
 
         const hasAnimation = ecModel.get('animation');
 
-        const onSectorClick = zrUtil.curry(
-            updateDataSelected, this.uid, seriesModel, hasAnimation, api
-        );
+        const onSectorClick = curry(updateDataSelected, this.uid, seriesModel, hasAnimation, api);
 
         const selectedMode = seriesModel.get('selectedMode');
 

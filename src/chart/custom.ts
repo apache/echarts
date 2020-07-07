@@ -23,6 +23,7 @@ import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
+import * as SetLabelStyleOpt from '../label/labelStyle';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
 import {getLayoutOnAxis} from '../layout/barGrid';
@@ -1382,14 +1383,14 @@ function makeRenderItem(
         // Now that the feture of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in
         // `convertToEC4StyleForCustomSerise`.
-        const textStyle = graphicUtil.createTextStyle(labelModel, null, opt, false, true);
+        const textStyle = SetLabelStyleOpt.createTextStyle(labelModel, null, opt, false, true);
         textStyle.text = labelModel.getShallow('show')
             ? retrieve2(
                 customSeries.getFormattedLabel(dataIndexInside, NORMAL),
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
-        const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, opt, false);
+        const textConfig = SetLabelStyleOpt.createTextConfig(textStyle, labelModel, opt, false);
 
         preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
@@ -1414,7 +1415,7 @@ function makeRenderItem(
 
         let itemStyle = getItemStyleModel(dataIndexInside, EMPHASIS).getItemStyle();
         const labelModel = getLabelModel(dataIndexInside, EMPHASIS);
-        const textStyle = graphicUtil.createTextStyle(labelModel, null, null, true, true);
+        const textStyle = SetLabelStyleOpt.createTextStyle(labelModel, null, null, true, true);
         textStyle.text = labelModel.getShallow('show')
             ? retrieve3(
                 customSeries.getFormattedLabel(dataIndexInside, EMPHASIS),
@@ -1422,7 +1423,7 @@ function makeRenderItem(
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
-        const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, null, true);
+        const textConfig = SetLabelStyleOpt.createTextConfig(textStyle, labelModel, null, true);
 
         preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
@@ -1501,7 +1502,7 @@ function makeRenderItem(
     function font(
         opt: Parameters<typeof graphicUtil.getFont>[0]
     ): ReturnType<typeof graphicUtil.getFont> {
-        return graphicUtil.getFont(opt, ecModel);
+        return SetLabelStyleOpt.getFont(opt, ecModel);
     }
 }
 

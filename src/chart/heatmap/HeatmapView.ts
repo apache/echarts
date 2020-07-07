@@ -32,6 +32,7 @@ import { CoordinateSystem, isCoordinateSystemType } from '../../coord/Coordinate
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
+import { setLabelStyle } from '../../label/labelStyle';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -184,7 +185,9 @@ class HeatmapView extends ChartView {
         const group = this.group;
         const data = seriesModel.getData();
 
-        let hoverStl = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        let emphasisStyle = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        let blurStyle = seriesModel.getModel(['blur', 'itemStyle']).getItemStyle();
+        let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
         let labelModel = seriesModel.getModel('label');
         let hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
 
@@ -240,7 +243,10 @@ class HeatmapView extends ChartView {
 
             // Optimization for large datset
             if (data.hasItemOption) {
-                hoverStl = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+                emphasisStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+                blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
+                selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
+
                 labelModel = itemModel.getModel('label');
                 hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
             }
@@ -251,7 +257,7 @@ class HeatmapView extends ChartView {
                 defaultText = rawValue[2] + '';
             }
 
-            graphic.setLabelStyle(
+            setLabelStyle(
                 rect, labelModel, hoverLabelModel,
                 {
                     labelFetcher: seriesModel,
@@ -260,7 +266,11 @@ class HeatmapView extends ChartView {
                 }
             );
 
-            graphic.enableHoverEmphasis(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
+            rect.ensureState('emphasis').style = emphasisStyle;
+            rect.ensureState('blur').style = blurStyle;
+            rect.ensureState('select').style = selectStyle;
+
+            graphic.enableHoverEmphasis(rect);
 
             rect.incremental = incremental;
             // PENDING

@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import List from '../../data/List';
-import ParallelSeriesModel from './ParallelSeries';
+import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
@@ -201,6 +201,9 @@ function updateElCommon(
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.fill = null;
     seriesScope.smooth && (el.shape.smooth = seriesScope.smooth);
+
+    const itemModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex);
+    graphic.setStatesStylesFromModel(el, itemModel, 'lineStyle', 'getLineStyle');
 }
 
 // function simpleDiff(oldData, newData, dimensions) {

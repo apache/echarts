@@ -61,8 +61,7 @@ import {
     ECUnitOption,
     ZRColor,
     ComponentMainType,
-    ComponentSubType,
-    ZRElementEvent
+    ComponentSubType
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -133,8 +132,9 @@ export const PRIORITY = {
 // dispatchAction with updateMethod "none" in main process.
 // This flag is used to carry out this rule.
 // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
-const IN_MAIN_PROCESS = '__flagInMainProcess' as const;
-const OPTION_UPDATED = '__optionUpdated' as const;
+const IN_MAIN_PROCESS_KEY = '__flagInMainProcess' as const;
+const OPTION_UPDATED_KEY = '__optionUpdated' as const;
+const STATUS_NEEDS_UPDATE_KEY = '__needsUpdateStatus' as const;
 const ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
 const CONNECT_STATUS_KEY = '__connectUpdateStatus' as const;
@@ -203,6 +203,7 @@ let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void
 let flushPendingActions: (this: ECharts, silent: boolean) => void;
 let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
 let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
+let bindMouseEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
 let clearColorPalette: (ecModel: GlobalModel) => void;
 let render: (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) => void;
 let renderComponents: (
@@ -217,7 +218,10 @@ let renderSeries: (
 ) => void;
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
-let enableConnect: (chart: ECharts) => void;
+let enableConnect: (ecIns: ECharts) => void;
+
+let markStatusToUpdate: (ecIns: ECharts) => void;
+let applyChangedStates: (ecIns: ECharts) => void;
 
 class ECharts extends Eventful {
 
@@ -269,10 +273,10 @@ class ECharts extends Eventful {
 
     private _labelManager: LabelManager;
 
-    private [OPTION_UPDATED]: boolean | {silent: boolean};
-    private [IN_MAIN_PROCESS]: boolean;
+    private [OPTION_UPDATED_KEY]: boolean | {silent: boolean};
+    private [IN_MAIN_PROCESS_KEY]: boolean;
     private [CONNECT_STATUS_KEY]: ConnectStatus;
-
+    private [STATUS_NEEDS_UPDATE_KEY]: boolean;
 
     constructor(
         dom: HTMLElement,
@@ -345,6 +349,8 @@ class ECharts extends Eventful {
 
         bindRenderedEvent(zr, this);
 
+        bindMouseEvent(zr, this);
+
         // ECharts instance can be used as value.
         zrUtil.setAsPrimitive(this);
     }
@@ -354,20 +360,22 @@ class ECharts extends Eventful {
             return;
         }
 
+        applyChangedStates(this);
+
         const scheduler = this._scheduler;
 
         // Lazy update
-        if (this[OPTION_UPDATED]) {
-            const silent = (this[OPTION_UPDATED] as any).silent;
+        if (this[OPTION_UPDATED_KEY]) {
+            const silent = (this[OPTION_UPDATED_KEY] as any).silent;
 
-            this[IN_MAIN_PROCESS] = true;
+            this[IN_MAIN_PROCESS_KEY] = true;
 
             prepare(this);
             updateMethods.update.call(this);
 
-            this[IN_MAIN_PROCESS] = false;
+            this[IN_MAIN_PROCESS_KEY] = false;
 
-            this[OPTION_UPDATED] = false;
+            this[OPTION_UPDATED_KEY] = false;
 
             flushPendingActions.call(this, silent);
 
@@ -444,7 +452,7 @@ class ECharts extends Eventful {
     setOption(option: ECOption, opts?: SetOptionOpts): void;
     setOption(option: ECOption, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
         if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
+            assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }
         if (this._disposed) {
             disposedWarning(this.id);
@@ -458,7 +466,7 @@ class ECharts extends Eventful {
             notMerge = notMerge.notMerge;
         }
 
-        this[IN_MAIN_PROCESS] = true;
+        this[IN_MAIN_PROCESS_KEY] = true;
 
         if (!this._model || notMerge) {
             const optionManager = new OptionManager(this._api);
@@ -471,8 +479,8 @@ class ECharts extends Eventful {
         this._model.setOption(option, optionPreprocessorFuncs);
 
         if (lazyUpdate) {
-            this[OPTION_UPDATED] = {silent: silent};
-            this[IN_MAIN_PROCESS] = false;
+            this[OPTION_UPDATED_KEY] = {silent: silent};
+            this[IN_MAIN_PROCESS_KEY] = false;
         }
         else {
             prepare(this);
@@ -483,8 +491,8 @@ class ECharts extends Eventful {
             // fetched after `setOption`.
             this._zr.flush();
 
-            this[OPTION_UPDATED] = false;
-            this[IN_MAIN_PROCESS] = false;
+            this[OPTION_UPDATED_KEY] = false;
+            this[IN_MAIN_PROCESS_KEY] = false;
 
             flushPendingActions.call(this, silent);
             triggerUpdatedEvent.call(this, silent);
@@ -839,6 +847,7 @@ class ECharts extends Eventful {
         return this._chartsMap[seriesModel.__viewId];
     }
 
+
     private _initEvents(): void {
         each(MOUSE_EVENT_NAMES, function (eveName) {
             const handler = (e: ElementEvent) => {
@@ -975,7 +984,7 @@ class ECharts extends Eventful {
         silent?: boolean // by default false.
     }): void {
         if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
+            assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
         }
         if (this._disposed) {
             disposedWarning(this.id);
@@ -997,12 +1006,12 @@ class ECharts extends Eventful {
 
         const silent = opts && opts.silent;
 
-        this[IN_MAIN_PROCESS] = true;
+        this[IN_MAIN_PROCESS_KEY] = true;
 
         optionChanged && prepare(this);
         updateMethods.update.call(this);
 
-        this[IN_MAIN_PROCESS] = false;
+        this[IN_MAIN_PROCESS_KEY] = false;
 
         flushPendingActions.call(this, silent);
 
@@ -1096,7 +1105,7 @@ class ECharts extends Eventful {
         }
 
         // May dispatchAction in rendering procedure
-        if (this[IN_MAIN_PROCESS]) {
+        if (this[IN_MAIN_PROCESS_KEY]) {
             this._pendingActions.push(payload);
             return;
         }
@@ -1489,23 +1498,6 @@ class ECharts extends Eventful {
 
             updateLayout: function (this: ECharts, payload: Payload): void {
                 updateMethods.update.call(this, payload);
-
-                // let ecModel = this._model;
-
-                // // update before setOption
-                // if (!ecModel) {
-                //     return;
-                // }
-
-                // ChartView.markUpdateMethod(payload, 'updateLayout');
-
-                // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-                // // this._scheduler.performVisualTasks(ecModel, payload, 'layout', true);
-                // this._scheduler.performVisualTasks(ecModel, payload, {setDirty: true});
-
-                // render(this, this._model, this._api, payload);
-
-                // performPostUpdateFuncs(ecModel, this._api);
             }
         };
 
@@ -1559,7 +1551,7 @@ class ECharts extends Eventful {
             const updateMethod = cptTypeTmp.pop();
             const cptType = cptTypeTmp[0] != null && parseClassType(cptTypeTmp[0]);
 
-            this[IN_MAIN_PROCESS] = true;
+            this[IN_MAIN_PROCESS_KEY] = true;
 
             let payloads: Payload[] = [payload];
             let batched = false;
@@ -1590,6 +1582,11 @@ class ECharts extends Eventful {
                 if (isHighDown) {
                     // method, payload, mainType, subType
                     updateDirectly(this, updateMethod, batchItem as Payload, 'series');
+
+                    // Mark status to update
+                    // It can only being marked in echarts.ts.
+                    // So there is no chance that chart it self can trigger the highlight itself without action.
+                    markStatusToUpdate(this);
                 }
                 else if (cptType) {
                     updateDirectly(this, updateMethod, batchItem as Payload, cptType.main, cptType.sub);
@@ -1598,11 +1595,11 @@ class ECharts extends Eventful {
 
             if (updateMethod !== 'none' && !isHighDown && !cptType) {
                 // Still dirty
-                if (this[OPTION_UPDATED]) {
+                if (this[OPTION_UPDATED_KEY]) {
                     // FIXME Pass payload ?
                     prepare(this);
                     updateMethods.update.call(this, payload);
-                    this[OPTION_UPDATED] = false;
+                    this[OPTION_UPDATED_KEY] = false;
                 }
                 else {
                     updateMethods[updateMethod as keyof typeof updateMethods].call(this, payload);
@@ -1621,7 +1618,7 @@ class ECharts extends Eventful {
                 eventObj = eventObjBatch[0] as ECEvent;
             }
 
-            this[IN_MAIN_PROCESS] = false;
+            this[IN_MAIN_PROCESS_KEY] = false;
 
             !silent && this._messageCenter.trigger(eventObj.type, eventObj);
         };
@@ -1664,11 +1661,33 @@ class ECharts extends Eventful {
                     // and this checking is called on frame, we also check
                     // animation finished for robustness.
                     zr.animation.isFinished()
-                    && !ecIns[OPTION_UPDATED]
+                    && !ecIns[OPTION_UPDATED_KEY]
                     && !ecIns._scheduler.unfinished
                     && !ecIns._pendingActions.length
                 ) {
                     ecIns.trigger('finished');
+                }
+            });
+        };
+
+        bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
+            function getHighDownDispatcher(target: Element) {
+                while (target && !graphic.isHighDownDispatcher(target)) {
+                    target = target.parent;
+                }
+                return target;
+            }
+            zr.on('mouseover', function (e) {
+                const dispatcher = getHighDownDispatcher(e.target);
+                if (dispatcher) {
+                    markStatusToUpdate(ecIns);
+                    graphic.enterEmphasisWhenMouseOver(dispatcher, e);
+                }
+            }).on('mouseout', function (e) {
+                const dispatcher = getHighDownDispatcher(e.target);
+                if (dispatcher) {
+                    markStatusToUpdate(ecIns);
+                    graphic.leaveEmphasisWhenMouseOut(dispatcher, e);
                 }
             });
         };
@@ -1708,7 +1727,6 @@ class ECharts extends Eventful {
                 componentView.render(componentModel, ecModel, api, payload);
 
                 updateZ(componentModel, componentView);
-                updateHoverEmphasisHandler(componentView);
 
                 updateStates(componentModel, componentView);
             });
@@ -1758,8 +1776,6 @@ class ECharts extends Eventful {
 
                 updateBlend(seriesModel, chartView);
 
-                updateHoverEmphasisHandler(chartView);
-
                 // Add labels.
                 labelManager.addLabelsOfSeries(chartView);
             });
@@ -1790,6 +1806,47 @@ class ECharts extends Eventful {
             each(postUpdateFuncs, function (func) {
                 func(ecModel, api);
             });
+        };
+
+        markStatusToUpdate = function (ecIns: ECharts): void {
+            ecIns[STATUS_NEEDS_UPDATE_KEY] = true;
+            // Wake up zrender if it's sleep. Let it update states in the next frame.
+            ecIns.getZr().wakeUp();
+        };
+
+        applyChangedStates = function (ecIns: ECharts): void {
+            if (!ecIns[STATUS_NEEDS_UPDATE_KEY]) {
+                return;
+            }
+
+            ecIns.getZr().storage.traverse(function (el: ECElement) {
+                const newStates = [];
+                const oldStates = el.currentStates;
+
+                // Keep other states.
+                for (let i = 0; i < oldStates.length; i++) {
+                    const stateName = oldStates[i];
+                    if (!(stateName === 'emphasis' || stateName === 'blur' || stateName === 'select')) {
+                        newStates.push(stateName);
+                    }
+                }
+
+                if (el.selected || el.highlighted) {
+                    // Only use states when it's exists.
+                    if (el.selected && el.states.select) {
+                        newStates.push('select');
+                    }
+                    if (el.highlighted && el.states.emphasis) {
+                        newStates.push('emphasis');
+                    }
+                }
+                else if (el.blurred && el.states.blur) {
+                    newStates.push('blur');
+                }
+                el.useStates(newStates);
+            });
+
+            ecIns[STATUS_NEEDS_UPDATE_KEY] = false;
         };
 
         function updateHoverLayerStatus(ecIns: ECharts, ecModel: GlobalModel): void {
@@ -1947,29 +2004,6 @@ class ECharts extends Eventful {
                     }
                 }
             });
-        };
-
-        function getHighDownDispatcher(target: Element) {
-            while (target && !graphic.isHighDownDispatcher(target)) {
-                target = target.parent;
-            }
-            return target;
-        }
-        function onMouseOver(e: ZRElementEvent) {
-            const dispatcher = getHighDownDispatcher(e.target);
-            if (dispatcher) {
-                graphic.enterEmphasisWhenMouseOver(dispatcher, e);
-            }
-        }
-        function onMouseOut(e: ZRElementEvent) {
-            const dispatcher = getHighDownDispatcher(e.target);
-            if (dispatcher) {
-                graphic.leaveEmphasisWhenMouseOut(dispatcher, e);
-            }
-        }
-        function updateHoverEmphasisHandler(view: ComponentView | ChartView): void {
-            view.group.on('mouseover', onMouseOver)
-                .on('mouseout', onMouseOut);
         };
 
         createExtensionAPI = function (ecIns: ECharts): ExtensionAPI {

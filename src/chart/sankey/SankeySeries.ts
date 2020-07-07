@@ -30,24 +30,36 @@ import {
     ItemStyleOption,
     LineStyleOption,
     LayoutOrient,
-    ColorString
+    ColorString,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
 
-type SankeyDataValue = OptionDataValue | OptionDataValue[];
-
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
+
+export interface SankeyNodeStateOption {
+    label?: LabelOption
+    itemStyle?: ItemStyleOption
+}
+
+export interface SankeyEdgeStateOption {
+    lineStyle?: SankeyEdgeStyleOption
+}
+
+interface SankeyBothStateOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
+}
 
 interface SankeyEdgeStyleOption extends LineStyleOption {
     curveness?: number
 }
 
-export interface SankeyNodeItemOption {
+export interface SankeyNodeItemOption extends SankeyNodeStateOption,
+    StatesOptionMixin<SankeyNodeStateOption>,
+    OptionDataItemObject<OptionDataValue> {
     id?: string
-    name?: string
-    value?: SankeyDataValue
 
     localX?: number
     localY?: number
@@ -57,16 +69,9 @@ export interface SankeyNodeItemOption {
     draggable?: boolean
 
     focusNodeAdjacency?: FocusNodeAdjacency
-
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-    }
 }
 
-export interface SankeyEdgeItemOption {
+export interface SankeyEdgeItemOption extends SankeyEdgeStateOption, StatesOptionMixin<SankeyEdgeStateOption> {
     /**
      * Name or index of source node.
      */
@@ -77,18 +82,14 @@ export interface SankeyEdgeItemOption {
     target?: string | number
 
     focusNodeAdjacency?: FocusNodeAdjacency
-
-    lineStyle?: SankeyEdgeStyleOption
-    emphasis?: {
-        lineStyle?: SankeyEdgeStyleOption
-    }
 }
 
 export interface SankeyLevelOption {
     depth: number
 }
 
-export interface SankeySeriesOption extends SeriesOption, BoxLayoutOptionMixin {
+export interface SankeySeriesOption extends SeriesOption<SankeyBothStateOption>, SankeyBothStateOption,
+    BoxLayoutOptionMixin {
     type?: 'sankey'
 
     /**
@@ -122,15 +123,6 @@ export interface SankeySeriesOption extends SeriesOption, BoxLayoutOptionMixin {
     layoutIterations?: number
 
     nodeAlign?: 'justify' | 'left' | 'right'    // TODO justify should be auto
-
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-    lineStyle?: SankeyEdgeStyleOption
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-        lineStyle?: SankeyEdgeStyleOption
-    }
 
     data?: SankeyNodeItemOption[]
     nodes?: SankeyNodeItemOption[]

@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {createTextStyle} from '../../label/labelStyle';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
@@ -111,7 +112,7 @@ class SunburstPiece extends graphic.Sector {
         const normalStyle = node.getVisual('style') as PathStyleProps;
         normalStyle.lineJoin = 'bevel';
 
-        zrUtil.each(['emphasis', 'highlight', 'downplay'] as const, function (stateName) {
+        zrUtil.each(['emphasis', 'blur', 'select'] as const, function (stateName) {
             const state = sector.ensureState(stateName);
             state.style = itemModel.getModel([stateName, 'itemStyle']).getItemStyle();
         });
@@ -164,7 +165,7 @@ class SunburstPiece extends graphic.Sector {
                     n.piece.useState('emphasis', true);
                 }
                 else if (isNodeHighlighted(n, that.node, highlightPolicy)) {
-                    n.piece.useState('highlight', true);
+                    // n.piece.useState('highlight', true);
                 }
                 else if (highlightPolicy !== NodeHighlightPolicy.NONE) {
                     n.piece.useState('downplay', true);
@@ -206,7 +207,7 @@ class SunburstPiece extends graphic.Sector {
         const label = sector.getTextContent();
         const dataIndex = this.node.dataIndex;
 
-        zrUtil.each(['normal', 'emphasis', 'highlight', 'downplay'] as const, (stateName) => {
+        zrUtil.each(['normal', 'emphasis', 'blur', 'select'] as const, (stateName) => {
 
             const labelStateModel = stateName === 'normal' ? itemModel.getModel('label')
                 : itemModel.getModel([stateName, 'label']);
@@ -219,7 +220,7 @@ class SunburstPiece extends graphic.Sector {
                 text = text || this.node.name;
             }
 
-            state.style = graphic.createTextStyle(labelStateModel, {
+            state.style = createTextStyle(labelStateModel, {
             }, null, stateName !== 'normal', true);
             if (text) {
                 state.style.text = text;

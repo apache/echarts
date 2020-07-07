@@ -35,7 +35,8 @@ import {
     OptionDataItemObject,
     OptionDataValueNumeric,
     ParsedValue,
-    SeriesOnGeoOptionMixin
+    SeriesOnGeoOptionMixin,
+    StatesOptionMixin
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -43,23 +44,22 @@ import List from '../../data/List';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
 
-export interface MapDataItemOption extends
+export interface MapStateOption {
+    itemStyle?: GeoItemStyleOption
+    // FIXME:TS formatter?
+    label?: LabelOption
+}
+export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption>,
     OptionDataItemObject<OptionDataValueNumeric>,
     SelectableTarget {
-
-    itemStyle?: GeoItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: GeoItemStyleOption
-        label?: LabelOption
-    }
+    cursor?: string
 }
 
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
 export interface MapSeriesOption extends
-    SeriesOption,
+    SeriesOption<MapStateOption>, MapStateOption,
+
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be
     // created. Otherwise use the specified geo component, and
@@ -72,10 +72,6 @@ export interface MapSeriesOption extends
 
     coordinateSystem?: string;
     silent?: boolean;
-
-    // FIXME:TS formatter?
-    label?: LabelOption;
-    itemStyle?: GeoItemStyleOption;
 
     tooltip?: SeriesTooltipOption;
 
@@ -93,11 +89,6 @@ export interface MapSeriesOption extends
 
     data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
 
-    emphasis?: {
-        // FIXME:TS formatter?
-        label?: LabelOption;
-        itemStyle?: GeoItemStyleOption;
-    };
 
     nameProperty: string;
 }
@@ -130,7 +121,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         });
         const valueDim = data.mapDimension('value');
         const dataNameMap = zrUtil.createHashMap();
-        const selectTargetList = [];
+        const selectTargetList: MapDataItemOption[] = [];
         const toAppendNames = [] as string[];
 
         for (let i = 0, len = data.count(); i < len; i++) {
@@ -138,7 +129,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             dataNameMap.set(name, true);
             selectTargetList.push({
                 name: name,
-                value: data.get(valueDim, i),
+                value: data.get(valueDim, i) as number,
                 selected: retrieveRawAttr(data, i, 'selected')
             });
         }

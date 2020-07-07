@@ -31,7 +31,8 @@ import {
     AreaStyleOption,
     OptionDataValue,
     SymbolOptionMixin,
-    SeriesSamplingOptionMixin
+    SeriesSamplingOptionMixin,
+    StatesOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -39,22 +40,20 @@ import type Polar from '../../coord/polar/Polar';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
-export interface LineDataItemOption extends SymbolOptionMixin {
+export interface LineStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
+
+export interface LineDataItemOption extends SymbolOptionMixin,
+    LineStateOption, StatesOptionMixin<LineStateOption> {
     name?: string
 
     value?: LineDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 }
 
 
-export interface LineSeriesOption extends SeriesOption,
+export interface LineSeriesOption extends SeriesOption<LineStateOption>, LineStateOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
@@ -73,15 +72,18 @@ export interface LineSeriesOption extends SeriesOption,
 
     lineStyle?: LineStyleOption
 
-    itemStyle?: ItemStyleOption
-
     areaStyle?: AreaStyleOption & {
         origin?: 'auto' | 'start' | 'end'
     }
 
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
+    emphasis?: LineStateOption & {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+    }
+
+    blur?: LineStateOption & {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
     }
 
     step?: false | 'start' | 'end' | 'middle'

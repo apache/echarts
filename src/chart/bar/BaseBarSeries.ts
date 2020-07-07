@@ -23,8 +23,6 @@ import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
-    LabelOption,
-    ItemStyleOption,
     ScaleDataValue
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -32,7 +30,9 @@ import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import List from '../../data/List';
 
 
-export interface BaseBarSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin {
+export interface BaseBarSeriesOption<StateOption> extends SeriesOption<StateOption>,
+    SeriesOnCartesianOptionMixin,
+    SeriesOnPolarOptionMixin {
 
     /**
      * Min height of bar
@@ -68,16 +68,9 @@ export interface BaseBarSeriesOption extends SeriesOption, SeriesOnCartesianOpti
 
     large?: boolean
     largeThreshold?: number
-
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-    }
 }
 
-class BaseBarSeriesModel<Opts extends BaseBarSeriesOption = BaseBarSeriesOption> extends SeriesModel<Opts> {
+class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<any> = BaseBarSeriesOption<any>> extends SeriesModel<Opts> {
 
     static type = 'series.__base_bar__';
     type = BaseBarSeriesModel.type;
@@ -101,7 +94,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption = BaseBarSeriesOption>
         return [NaN, NaN];
     }
 
-    static defaultOption: BaseBarSeriesOption = {
+    static defaultOption: BaseBarSeriesOption<any> = {
         zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
@@ -119,10 +112,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption = BaseBarSeriesOption>
         large: false,
         largeThreshold: 400,
         progressive: 3e3,
-        progressiveChunkMode: 'mod',
-
-        itemStyle: {},
-        emphasis: {}
+        progressiveChunkMode: 'mod'
     };
 }
 

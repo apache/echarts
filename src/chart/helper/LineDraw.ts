@@ -26,7 +26,8 @@ import {
     LineLabelOption,
     ColorString,
     AnimationOptionMixin,
-    ZRStyleProps
+    ZRStyleProps,
+    StatesOptionMixin
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
@@ -41,14 +42,12 @@ interface LineLikeCtor {
     new(data: List, idx: number, scope?: LineDrawSeriesScope): LineLike
 }
 
-export interface LineDrawModelOption {
+interface LineDrawStateOption {
     lineStyle?: LineStyleOption
     label?: LineLabelOption
-    emphasis?: {
-        lineStyle?: LineStyleOption
-        label?: LineLabelOption
-    }
+}
 
+export interface LineDrawModelOption extends LineDrawStateOption, StatesOptionMixin<LineDrawStateOption> {
     // If has effect
     effect?: {
         show?: boolean
@@ -77,10 +76,15 @@ export interface LineDrawModelOption {
 type ListForLineDraw = List<Model<LineDrawModelOption & AnimationOptionMixin>>;
 
 export interface LineDrawSeriesScope {
-    hoverLineStyle?: ZRStyleProps
+    lineStyle?: ZRStyleProps
+    emphasisLineStyle?: ZRStyleProps
+    blurLineStyle?: ZRStyleProps
+    selectLineStyle?: ZRStyleProps
 
     labelModel?: Model<LineLabelOption>
-    hoverLabelModel?: Model<LineLabelOption>
+    emphasisLabelModel?: Model<LineLabelOption>
+    blurLabelModel?: Model<LineLabelOption>
+    selectLabelModel?: Model<LineLabelOption>
 }
 
 class LineDraw {
@@ -217,13 +221,18 @@ function isEffectObject(el: Displayable) {
     return el.animators && el.animators.length > 0;
 }
 
-function makeSeriesScope(lineData: ListForLineDraw) {
+function makeSeriesScope(lineData: ListForLineDraw): LineDrawSeriesScope {
     const hostModel = lineData.hostModel;
     return {
         lineStyle: hostModel.getModel('lineStyle').getLineStyle(),
-        hoverLineStyle: hostModel.getModel(['emphasis', 'lineStyle']).getLineStyle(),
+        emphasisLineStyle: hostModel.getModel(['emphasis', 'lineStyle']).getLineStyle(),
+        blurLineStyle: hostModel.getModel(['blur', 'lineStyle']).getLineStyle(),
+        selectLineStyle: hostModel.getModel(['select', 'lineStyle']).getLineStyle(),
+
         labelModel: hostModel.getModel('label'),
-        hoverLabelModel: hostModel.getModel(['emphasis', 'label'])
+        emphasisLabelModel: hostModel.getModel(['emphasis', 'label']),
+        blurLabelModel: hostModel.getModel(['blur', 'label']),
+        selectLabelModel: hostModel.getModel(['select', 'label'])
     };
 }
 

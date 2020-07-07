@@ -28,7 +28,9 @@ import {
     LineStyleOption,
     ItemStyleOption,
     LabelOption,
-    OptionDataValue
+    OptionDataValue,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -39,23 +41,18 @@ interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
 }
 
-export interface TreeSeriesNodeItemOption extends SymbolOptionMixin {
-    name?: string
-
+export interface TreeSeriesStateOption {
     itemStyle?: ItemStyleOption
     /**
      * Line style of the edge between node and it's parent.
      */
-    lineStyle?: LineStyleOption
+    lineStyle?: CurveLineStyleOption
     label?: LabelOption
+}
 
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        lineStyle?: LineStyleOption
-        label?: LabelOption
-    }
-
-    value?: OptionDataValue | OptionDataValue[]
+export interface TreeSeriesNodeItemOption extends SymbolOptionMixin,
+    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption>,
+    OptionDataItemObject<OptionDataValue> {
 
     children?: TreeSeriesNodeItemOption[]
 
@@ -65,8 +62,16 @@ export interface TreeSeriesNodeItemOption extends SymbolOptionMixin {
     target?: string
 }
 
+/**
+ * Configuration of leaves nodes.
+ */
+export interface TreeSeriesLeavesOption extends TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption> {
+
+}
+
 export interface TreeSeriesOption extends
-    SeriesOption, SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
+    SeriesOption<TreeSeriesStateOption>, TreeSeriesStateOption,
+    SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 
     hoverAnimation?: boolean
@@ -95,34 +100,7 @@ export interface TreeSeriesOption extends
      */
     initialTreeDepth?: number
 
-    /**
-     * Line style of links
-     */
-    lineStyle?: CurveLineStyleOption
-    /**
-     * Item style of nodes
-     */
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        lineStyle?: CurveLineStyleOption
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-
-    leaves?: {
-        /**
-         * Item style of leave nodes
-         */
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-
-        emphasis?: {
-            itemStyle?: ItemStyleOption
-            label?: LabelOption
-        }
-    }
+    leaves?: TreeSeriesLeavesOption
 
     data?: TreeSeriesNodeItemOption[]
 }

@@ -22,6 +22,7 @@ import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
+import {createTextStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
 import List from '../../data/List';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
@@ -191,18 +192,27 @@ class Line extends graphic.Group {
 
         const line = this.childOfName('line') as ECLinePath;
 
-        let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
+        let emphasisLineStyle = seriesScope && seriesScope.emphasisLineStyle;
+        let blurLineStyle = seriesScope && seriesScope.blurLineStyle;
+        let selectLineStyle = seriesScope && seriesScope.selectLineStyle;
+
         let labelModel = seriesScope && seriesScope.labelModel;
-        let hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
+        let emphasisLabelModel = seriesScope && seriesScope.emphasisLabelModel;
+        let blurLabelModel = seriesScope && seriesScope.blurLabelModel;
+        let selectLabelModel = seriesScope && seriesScope.selectLabelModel;
 
         // Optimization for large dataset
         if (!seriesScope || lineData.hasItemOption) {
             const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
-            hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
+            emphasisLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
+            blurLineStyle = itemModel.getModel(['blur', 'lineStyle']).getLineStyle();
+            selectLineStyle = itemModel.getModel(['select', 'lineStyle']).getLineStyle();
 
             labelModel = itemModel.getModel('label');
-            hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+            emphasisLabelModel = itemModel.getModel(['emphasis', 'label']);
+            blurLabelModel = itemModel.getModel(['blur', 'label']);
+            selectLabelModel = itemModel.getModel(['select', 'label']);
         }
 
         const lineStyle = lineData.getItemVisual(idx, 'style');
@@ -212,8 +222,9 @@ class Line extends graphic.Group {
         line.style.fill = null;
         line.style.strokeNoScale = true;
 
-        const lineEmphasisState = line.ensureState('emphasis');
-        lineEmphasisState.style = hoverLineStyle;
+        line.ensureState('emphasis').style = emphasisLineStyle;
+        line.ensureState('blur').style = blurLineStyle;
+        line.ensureState('select').style = selectLineStyle;
 
         // Update symbol
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
@@ -226,7 +237,7 @@ class Line extends graphic.Group {
         }, this);
 
         const showLabel = labelModel.getShallow('show');
-        const hoverShowLabel = hoverLabelModel.getShallow('show');
+        const hoverShowLabel = emphasisLabelModel.getShallow('show');
 
         const label = this.childOfName('label') as InnerLineLabel;
         let defaultLabelColor;
@@ -257,7 +268,7 @@ class Line extends graphic.Group {
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.
         if (normalText != null || emphasisText != null) {
-            label.useStyle(graphic.createTextStyle(labelModel, {
+            label.useStyle(createTextStyle(labelModel, {
                 text: normalText as string
             }, {
                 inheritColor: defaultLabelColor
@@ -275,23 +286,23 @@ class Line extends graphic.Group {
             label.__labelDistance = distance;
         }
 
-        const emphasisState = label.ensureState('emphasis');
+        const labelEmphasisState = label.ensureState('emphasis');
         if (emphasisText != null) {
-            emphasisState.ignore = false;
+            labelEmphasisState.ignore = false;
             // Only these properties supported in this emphasis style here.
-            emphasisState.style = {
+            labelEmphasisState.style = {
                 text: emphasisText as string,
-                fill: hoverLabelModel.getTextColor(true),
+                fill: emphasisLabelModel.getTextColor(true),
                 // For merging hover style to normal style, do not use
                 // `hoverLabelModel.getFont()` here.
-                fontStyle: hoverLabelModel.getShallow('fontStyle'),
-                fontWeight: hoverLabelModel.getShallow('fontWeight'),
-                fontSize: hoverLabelModel.getShallow('fontSize'),
-                fontFamily: hoverLabelModel.getShallow('fontFamily')
+                fontStyle: emphasisLabelModel.getShallow('fontStyle'),
+                fontWeight: emphasisLabelModel.getShallow('fontWeight'),
+                fontSize: emphasisLabelModel.getShallow('fontSize'),
+                fontFamily: emphasisLabelModel.getShallow('fontFamily')
             };
         }
         else {
-            emphasisState.ignore = true;
+            labelEmphasisState.ignore = true;
         }
 
         label.ignore = !showLabel && !hoverShowLabel;

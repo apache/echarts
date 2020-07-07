@@ -19,36 +19,38 @@
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
 import SeriesModel from '../../model/Series';
-import { ItemStyleOption, OptionDataValue, LabelOption, SeriesStackOptionMixin } from '../../util/types';
+import {
+    ItemStyleOption,
+    OptionDataValue,
+    LabelOption,
+    SeriesStackOptionMixin,
+    StatesOptionMixin,
+    OptionDataItemObject
+} from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-type BarDataValue = OptionDataValue | OptionDataValue[];
+
+export interface BarStateOption {
+    itemStyle?: BarItemStyleOption
+    label?: LabelOption
+}
 
 export interface BarItemStyleOption extends ItemStyleOption {
     // Border radius is not supported for bar on polar
     borderRadius?: number | number[]
 }
-export interface BarDataItemOption {
-    name?: string
-
-    value?: BarDataValue
-
-    itemStyle?: BarItemStyleOption
-    label?: LabelOption
-
+export interface BarDataItemOption extends BarStateOption, StatesOptionMixin<BarStateOption>,
+    OptionDataItemObject<OptionDataValue> {
     cursor?: string
-
-    emphasis?: {
-        itemStyle?: BarItemStyleOption
-        label?: LabelOption
-    }
 }
 
-export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionMixin {
+export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, BarStateOption,
+    SeriesStackOptionMixin {
+
     type?: 'bar'
 
     coordinateSystem?: 'cartesian2d' | 'polar'
@@ -67,17 +69,11 @@ export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionM
         borderRadius?: number | number[]
     }
 
-    data?: (BarDataItemOption | BarDataValue)[]
+    data?: (BarDataItemOption | OptionDataValue | OptionDataValue[])[]
 
-    label?: LabelOption
-
-    itemStyle?: BarItemStyleOption
-
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: BarItemStyleOption
-    }
-
+    emphasis?: BarStateOption
+    blur?: BarStateOption
+    select?: BarStateOption
 }
 
 class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {

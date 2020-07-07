@@ -49,6 +49,7 @@ import {
 import { ColorString } from '../../util/types';
 import { windowOpen } from '../../util/format';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
+import { setLabelStyle } from '../../label/labelStyle';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
@@ -62,7 +63,7 @@ const Z_BASE = 10; // Should bigger than every z.
 const Z_BG = 1;
 const Z_CONTENT = 2;
 
-const getItemStyleEmphasis = makeStyleMapper([
+const getStateItemStyle = makeStyleMapper([
     ['fill', 'color'],
     // `borderColor` and `borderWidth` has been occupied,
     // so use `stroke` to indicate the stroke of the rect.
@@ -75,7 +76,7 @@ const getItemStyleEmphasis = makeStyleMapper([
 ]);
 const getItemStyleNormal = function (model: Model<TreemapSeriesNodeItemOption['itemStyle']>): PathStyleProps {
     // Normal style props should include emphasis style props.
-    const itemStyle = getItemStyleEmphasis(model) as PathStyleProps;
+    const itemStyle = getStateItemStyle(model) as PathStyleProps;
     // Clear styles set by emphasis.
     itemStyle.stroke = itemStyle.fill = itemStyle.lineWidth = null;
     return itemStyle;
@@ -759,6 +760,8 @@ function renderNode(
     const isParent = thisViewChildren && thisViewChildren.length;
     const itemStyleNormalModel = nodeModel.getModel('itemStyle');
     const itemStyleEmphasisModel = nodeModel.getModel(['emphasis', 'itemStyle']);
+    const itemStyleBlurModel = nodeModel.getModel(['blur', 'itemStyle']);
+    const itemStyleSelectModel = nodeModel.getModel(['select', 'itemStyle']);
 
     // End of closure ariables available in "Procedures in renderNode".
     // -----------------------------------------------------------------
@@ -835,11 +838,14 @@ function renderNode(
         else {
             bg.invisible = false;
             const visualBorderColor = thisNode.getVisual('style').stroke;
-            const emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
-            const emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
-            emphasisStyle.fill = emphasisBorderColor;
+            const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
+            emphasisStyle.fill = itemStyleEmphasisModel.get('borderColor');
+            const blurStyle = getStateItemStyle(itemStyleBlurModel);
+            blurStyle.fill = itemStyleBlurModel.get('borderColor');
+            const selectStyle = getStateItemStyle(itemStyleSelectModel);
+            selectStyle.fill = itemStyleSelectModel.get('borderColor');
 
             if (useUpperLabel) {
                 const upperLabelWidth = thisWidth - 2 * borderWidth;
@@ -855,7 +861,11 @@ function renderNode(
             }
 
             bg.setStyle(normalStyle);
-            graphic.enableElementHoverEmphasis(bg, emphasisStyle);
+
+            bg.ensureState('emphasis').style = emphasisStyle;
+            bg.ensureState('blur').style = blurStyle;
+            bg.ensureState('select').style = selectStyle;
+            graphic.enableElementHoverEmphasis(bg);
         }
 
         group.add(bg);
@@ -890,12 +900,17 @@ function renderNode(
             const visualColor = thisNode.getVisual('style').fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
-            const emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
+            const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
+            const blurStyle = getStateItemStyle(itemStyleBlurModel);
+            const selectStyle = getStateItemStyle(itemStyleSelectModel);
 
             prepareText(content, visualColor, contentWidth, contentHeight);
 
             content.setStyle(normalStyle);
-            graphic.enableElementHoverEmphasis(content, emphasisStyle);
+            content.ensureState('emphasis').style = emphasisStyle;
+            content.ensureState('blur').style = blurStyle;
+            content.ensureState('select').style = selectStyle;
+            graphic.enableElementHoverEmphasis(content);
         }
 
         group.add(content);
@@ -934,7 +949,7 @@ function renderNode(
 
         const isShow = normalLabelModel.getShallow('show');
 
-        graphic.setLabelStyle(
+        setLabelStyle(
             rectEl, normalLabelModel, emphasisLabelModel,
             {
                 defaultText: isShow ? text : null,

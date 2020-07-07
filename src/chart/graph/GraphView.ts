@@ -185,13 +185,6 @@ class GraphView extends ChartView {
             (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
 
             if (itemModel.get('focusNodeAdjacency')) {
-                const symbolPath = el.getSymbolPath();
-                const blurState = symbolPath.ensureState('blur');
-                blurState.style = {
-                    // TODO Based on the original opacity.
-                    opacity: 0.1
-                };
-
                 el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',
@@ -213,13 +206,6 @@ class GraphView extends ChartView {
             (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
 
             if (edge.getModel<GraphEdgeItemOption>().get('focusNodeAdjacency')) {
-
-                const linePath = el.getLinePath();
-                const blurState = linePath.ensureState('blur');
-                blurState.style = {
-                    opacity: 0.1
-                };
-
                 el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
                     api.dispatchAction({
                         type: 'focusNodeAdjacency',

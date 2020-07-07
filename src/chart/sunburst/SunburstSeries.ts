@@ -27,7 +27,9 @@ import {
     LabelOption,
     ItemStyleOption,
     OptionDataValue,
-    CallbackDataParams
+    CallbackDataParams,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
@@ -46,30 +48,19 @@ interface SunburstDataParams extends CallbackDataParams {
     }[]
 }
 
-export interface SunburstSeriesNodeItemOption {
-    name?: string
+export interface SunburstStateOption {
+    itemStyle?: ItemStyleOption
+    label?: SunburstLabelOption
+}
 
+export interface SunburstSeriesNodeItemOption extends
+    SunburstStateOption, StatesOptionMixin<SunburstStateOption>,
+    OptionDataItemObject<OptionDataValue>
+{
     nodeClick?: 'rootToNode' | 'link'
     // Available when nodeClick is link
     link?: string
     target?: string
-
-    itemStyle?: ItemStyleOption
-    label?: SunburstLabelOption
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
-    highlight?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
-    downplay?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
-
-    value?: OptionDataValue | OptionDataValue[]
 
     children?: SunburstSeriesNodeItemOption[]
 
@@ -77,23 +68,14 @@ export interface SunburstSeriesNodeItemOption {
 
     cursor?: string
 }
-export interface SunburstSeriesLevelOption {
-    itemStyle?: ItemStyleOption
-    label?: SunburstLabelOption
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
+export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOptionMixin<SunburstStateOption> {
     highlight?: {
         itemStyle?: ItemStyleOption
         label?: SunburstLabelOption
     }
-    downplay?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
 }
-export interface SunburstSeriesOption extends SeriesOption, CircleLayoutOptionMixin {
+export interface SunburstSeriesOption extends SeriesOption<SunburstStateOption>, SunburstStateOption,
+    CircleLayoutOptionMixin {
     type?: 'sunburst'
 
     clockwise?: boolean
@@ -114,21 +96,6 @@ export interface SunburstSeriesOption extends SeriesOption, CircleLayoutOptionMi
 
     renderLabelForZeroData?: boolean
 
-    itemStyle?: ItemStyleOption
-    label?: SunburstLabelOption
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
-    highlight?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
-    downplay?: {
-        itemStyle?: ItemStyleOption
-        label?: SunburstLabelOption
-    }
-
     levels?: SunburstSeriesLevelOption[]
 
     animationType?: 'expansion' | 'scale'
@@ -139,7 +106,7 @@ export interface SunburstSeriesOption extends SeriesOption, CircleLayoutOptionMi
 interface SunburstSeriesModel {
     getFormattedLabel(
         dataIndex: number,
-        state?: 'emphasis' | 'normal' | 'highlight' | 'downplay'
+        state?: 'emphasis' | 'normal' | 'highlight' | 'blur' | 'select'
     ): string
 }
 class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
@@ -235,12 +202,8 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
             shadowOffsetY: 0,
             opacity: 1
         },
-        highlight: {
-            itemStyle: {
-                opacity: 1
-            }
-        },
-        downplay: {
+
+        blur: {
             itemStyle: {
                 opacity: 0.5
             },

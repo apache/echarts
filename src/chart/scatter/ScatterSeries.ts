@@ -31,29 +31,25 @@ import {
     LabelOption,
     SeriesLargeOptionMixin,
     SeriesStackOptionMixin,
-    SymbolOptionMixin
+    SymbolOptionMixin,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-type ScatterDataValue = OptionDataValue | OptionDataValue[];
-
-export interface ScatterDataItemOption extends SymbolOptionMixin {
-    name?: string
-
-    value?: ScatterDataValue
-
+interface ScatterStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 }
 
-export interface ScatterSeriesOption extends SeriesOption,
+export interface ScatterDataItemOption extends SymbolOptionMixin,
+    ScatterStateOption, StatesOptionMixin<ScatterStateOption>,
+    OptionDataItemObject<OptionDataValue> {
+}
+
+export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption>, ScatterStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
@@ -67,15 +63,7 @@ export interface ScatterSeriesOption extends SeriesOption,
     cursor?: string
     clip?: boolean
 
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-
-    data?: (ScatterDataItemOption | OptionDataValue)[]
+    data?: (ScatterDataItemOption | OptionDataValue | OptionDataValue[])[]
         | ArrayLike<number> // Can be a flattern array
 }
 

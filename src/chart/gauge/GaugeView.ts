@@ -19,6 +19,7 @@
 
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
+import {createTextStyle} from '../../label/labelStyle';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
 import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
@@ -256,7 +257,7 @@ class GaugeView extends ChartView {
                 const autoColor = getColor(i / splitNumber);
 
                 group.add(new graphic.Text({
-                    style: graphic.createTextStyle(labelModel, {
+                    style: createTextStyle(labelModel, {
                         text: label,
                         x: unitX * (r - splitLineLen - distance) + cx,
                         y: unitY * (r - splitLineLen - distance) + cy,
@@ -384,9 +385,8 @@ class GaugeView extends ChartView {
                 ));
             }
 
-            graphic.enableHoverEmphasis(
-                pointer, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle()
-            );
+            graphic.setStatesStylesFromModel(pointer, itemModel);
+            graphic.enableHoverEmphasis(pointer);
         });
 
         this._data = data;
@@ -416,7 +416,7 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.createTextStyle(titleModel, {
+                style: createTextStyle(titleModel, {
                     x: x,
                     y: y,
                     // FIXME First data name ?
@@ -452,7 +452,7 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.createTextStyle(detailModel, {
+                style: createTextStyle(detailModel, {
                     x: x,
                     y: y,
                     text: formatLabel(

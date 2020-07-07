@@ -34,6 +34,7 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
+import { setLabelStyle } from '../../label/labelStyle';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -928,25 +929,30 @@ function updateCommon(
     const itemModel = symbolMeta.itemModel;
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+    const emphasisStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+    const blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
+    const selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
     const cursorStyle = itemModel.getShallow('cursor');
 
     eachPath(bar, function (path) {
         path.useStyle(symbolMeta.style);
-        graphic.enableHoverEmphasis(path, hoverStyle);
+        graphic.enableHoverEmphasis(path);
+
+        path.ensureState('emphasis').style = emphasisStyle;
+        path.ensureState('blur').style = blurStyle;
+        path.ensureState('select').style = selectStyle;
 
         cursorStyle && (path.cursor = cursorStyle);
         path.z2 = symbolMeta.z2;
     });
 
-    const barRectHoverStyle = {};
     const barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
     const barRect = bar.__pictorialBarRect;
 
     const labelModel = itemModel.getModel('label');
     const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
-    graphic.setLabelStyle(
+    setLabelStyle(
         barRect, labelModel, hoverLabelModel,
         {
             labelFetcher: opt.seriesModel,
@@ -957,7 +963,7 @@ function updateCommon(
         }
     );
 
-    graphic.enableHoverEmphasis(barRect, barRectHoverStyle);
+    graphic.enableHoverEmphasis(barRect);
 }
 
 function toIntTimes(times: number) {

@@ -18,7 +18,6 @@
 */
 
 import {__DEV__} from '../../config';
-import * as zrUtil from 'zrender/src/core/util';
 import {
     Rect,
     Sector,
@@ -26,11 +25,12 @@ import {
     updateProps,
     initProps,
     enableHoverEmphasis,
-    setLabelStyle,
     updateLabel,
     initLabel,
-    removeElement
+    removeElement,
+    setStatesStylesFromModel
 } from '../../util/graphic';
+import { setLabelStyle } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {throttle} from '../../util/throttle';
@@ -59,6 +59,7 @@ import { getDefaultLabel } from '../helper/labelHelper';
 import OrdinalScale from '../../scale/Ordinal';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
+import { extend, map, defaults, each } from 'zrender/src/core/util';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
@@ -454,7 +455,7 @@ class BarView extends ChartView {
 
     _dataSort(
         data: List<BarSeriesModel, DefaultDataVisual>,
-        map: ((idx: number) => number)
+        idxMap: ((idx: number) => number)
     ): OrdinalSortInfo[] {
         type SortValueInfo = {
             mappedValue: number,
@@ -464,7 +465,7 @@ class BarView extends ChartView {
         const info: SortValueInfo[] = [];
         data.each(idx => {
             info.push({
-                mappedValue: map(idx),
+                mappedValue: idxMap(idx),
                 ordinalNumber: idx,
                 beforeSortIndex: null
             });
@@ -479,7 +480,7 @@ class BarView extends ChartView {
             info[info[i].ordinalNumber].beforeSortIndex = i;
         }
 
-        return zrUtil.map(info, item => {
+        return map(info, item => {
             return {
                 ordinalNumber: item.ordinalNumber,
                 beforeSortIndex: item.beforeSortIndex
@@ -629,7 +630,7 @@ const elementCreator: {
         animationModel, isUpdate, during
     ) {
         const rect = new Rect({
-            shape: zrUtil.extend({}, layout),
+            shape: extend({}, layout),
             z2: 1
         });
         // rect.autoBatch = true;
@@ -674,7 +675,7 @@ const elementCreator: {
         const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
 
         const sector = new ShapeClass({
-            shape: zrUtil.defaults({clockwise: clockwise}, layout),
+            shape: defaults({clockwise: clockwise}, layout),
             z2: 1
         });
 
@@ -781,7 +782,6 @@ function updateStyle(
     isPolar: boolean
 ) {
     const style = data.getItemVisual(dataIndex, 'style');
-    const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
     if (!isPolar) {
         (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
@@ -812,10 +812,16 @@ function updateStyle(
             }
         );
     }
+
+    enableHoverEmphasis(el);
+    setStatesStylesFromModel(el, itemModel);
     if (isZeroOnPolar(layout as SectorLayout)) {
-        hoverStyle.fill = hoverStyle.stroke = 'none';
+        each(el.states, (state) => {
+            if (state.style) {
+                state.style.fill = state.style.stroke = 'none';
+            }
+        });
     }
-    enableHoverEmphasis(el, hoverStyle);
 }
 
 // In case width or height are too small.
@@ -973,7 +979,7 @@ function setLargeStyle(
 ) {
     const globalStyle = data.getVisual('style');
 
-    el.useStyle(zrUtil.extend({}, globalStyle));
+    el.useStyle(extend({}, globalStyle));
     // Use stroke instead of fill.
     el.style.fill = null;
     el.style.stroke = globalStyle.fill;

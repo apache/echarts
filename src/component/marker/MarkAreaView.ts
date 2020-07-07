@@ -38,6 +38,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import MarkerModel from './MarkerModel';
 import { makeInner } from '../../util/model';
 import { getVisualFromData } from '../../visual/helper';
+import { setLabelStyle } from '../../label/labelStyle';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -294,7 +295,7 @@ class MarkAreaView extends MarkerView {
             const style = areaData.getItemVisual(idx, 'style');
             polygon.useStyle(areaData.getItemVisual(idx, 'style'));
 
-            graphic.setLabelStyle(
+            setLabelStyle(
                 polygon, labelModel, labelHoverModel,
                 {
                     labelFetcher: maModel,

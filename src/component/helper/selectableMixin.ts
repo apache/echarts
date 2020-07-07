@@ -30,7 +30,6 @@ import { Dictionary } from 'zrender/src/core/types';
 export interface SelectableTarget {
     name?: string;
     selected?: boolean;
-    [key: string]: any;
 };
 
 export interface DataSelectableOptionMixin {

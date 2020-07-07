@@ -21,6 +21,7 @@ import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
@@ -312,7 +313,7 @@ class LegendView extends ComponentView {
             const labelModel = legendModel.getModel('selectorLabel');
             const emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
-            graphic.setLabelStyle(
+            setLabelStyle(
                 labelText, labelModel, emphasisLabelModel,
                 {
                     defaultText: selectorItem.title
@@ -412,7 +413,7 @@ class LegendView extends ComponentView {
         }
 
         itemGroup.add(new graphic.Text({
-            style: graphic.createTextStyle(textStyleModel, {
+            style: createTextStyle(textStyleModel, {
                 text: content,
                 x: textX,
                 y: itemHeight / 2,

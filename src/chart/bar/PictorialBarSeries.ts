@@ -24,10 +24,17 @@ import {
     ItemStyleOption,
     LabelOption,
     AnimationOptionMixin,
-    SeriesStackOptionMixin
+    SeriesStackOptionMixin,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
+
+export interface PictorialBarStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
 
 interface PictorialBarSeriesSymbolOption {
     /**
@@ -82,22 +89,11 @@ interface PictorialBarSeriesSymbolOption {
     symbolPatternSize?: number
 }
 
-type PictorialBarValue = OptionDataValue;
-
 export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOption,
     // Pictorial bar support configure animation in each data item.
-    AnimationOptionMixin {
-    name?: string
-
-    value?: PictorialBarValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
+    AnimationOptionMixin,
+    PictorialBarStateOption, StatesOptionMixin<PictorialBarStateOption>,
+    OptionDataItemObject<OptionDataValue> {
 
     hoverAnimation?: boolean
 
@@ -106,14 +102,20 @@ export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOpti
     cursor?: string
 }
 
-export interface PictorialBarSeriesOption extends BaseBarSeriesOption,
+export interface PictorialBarSeriesOption extends BaseBarSeriesOption<PictorialBarStateOption>,
     PictorialBarSeriesSymbolOption,
-    SeriesStackOptionMixin {
+    SeriesStackOptionMixin,
+    PictorialBarStateOption {
+
     type?: 'pictorialBar'
 
     coordinateSystem?: 'cartesian2d'
 
-    data?: (PictorialBarDataItemOption | PictorialBarValue)[]
+    emphasis?: PictorialBarStateOption
+    blur?: PictorialBarStateOption
+    select?: PictorialBarStateOption
+
+    data?: (PictorialBarDataItemOption | OptionDataValue | OptionDataValue[])[]
 
     hoverAnimation?: boolean
 }

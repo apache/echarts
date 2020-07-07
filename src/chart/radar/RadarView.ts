@@ -24,9 +24,10 @@ import ChartView from '../../view/Chart';
 import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { DisplayState, ECElement, ColorString } from '../../util/types';
+import { ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
+import { setLabelStyle } from '../../label/labelStyle';
 
 function normalizeSymbolSize(symbolSize: number | number[]) {
     if (!zrUtil.isArray(symbolSize)) {
@@ -195,16 +196,19 @@ class RadarView extends ChartView {
                     }
                 )
             );
-            const polylineEmphasisState = polyline.ensureState('emphasis');
-            polylineEmphasisState.style = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
+
+            graphic.setStatesStylesFromModel(polyline, itemModel, 'lineStyle');
+            graphic.setStatesStylesFromModel(polygon, itemModel, 'areaStyle');
 
             const areaStyleModel = itemModel.getModel('areaStyle');
-            const hoverAreaStyleModel = itemModel.getModel(['emphasis', 'areaStyle']);
             const polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
-            let hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
 
-            hoverPolygonIgnore = hoverPolygonIgnore && polygonIgnore;
-            polygon.ignore = polygonIgnore;
+            zrUtil.each(['emphasis', 'select', 'blur'] as const, function (stateName) {
+                const stateModel = itemModel.getModel([stateName, 'areaStyle']);
+                const stateIgnore = stateModel.isEmpty() && stateModel.parentModel.isEmpty();
+                // Won't be ignore if normal state is not ignore.
+                polygon.ensureState(stateName).ignore = stateIgnore && polygonIgnore;
+            });
 
             polygon.useStyle(
                 zrUtil.defaults(
@@ -215,9 +219,6 @@ class RadarView extends ChartView {
                     }
                 )
             );
-            const polygonEmphasisState = polygon.ensureState('emphasis');
-            polygonEmphasisState.style = hoverAreaStyleModel.getAreaStyle();
-
             const itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
             const labelModel = itemModel.getModel('label');
             const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
@@ -230,7 +231,7 @@ class RadarView extends ChartView {
                 let defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
-                graphic.setLabelStyle(
+                setLabelStyle(
                     symbolPath, labelModel, labelHoverModel,
                     {
                         labelFetcher: data.hostModel,
@@ -242,9 +243,6 @@ class RadarView extends ChartView {
                 );
             });
 
-            (itemGroup as ECElement).onStateChange = function (fromState: DisplayState, toState: DisplayState) {
-                polygon.attr('ignore', toState === 'emphasis' ? hoverPolygonIgnore : polygonIgnore);
-            };
             graphic.enableHoverEmphasis(itemGroup);
         });
 

@@ -31,7 +31,8 @@ import {
     RoamOptionMixin,
     // OptionDataValue,
     CallbackDataParams,
-    ColorString
+    ColorString,
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -69,6 +70,12 @@ interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
     treePathInfo?: TreePathInfo[]
 }
 
+export interface TreemapStateOption {
+    itemStyle?: TreemapSeriesItemStyleOption
+    label?: TreemapSeriesLabelOption
+    upperLabel?: TreemapSeriesLabelOption
+}
+
 export interface TreemapSeriesVisualOption {
     /**
      * Which dimension will be applied with the visual properties.
@@ -96,33 +103,14 @@ export interface TreemapSeriesVisualOption {
     childrenVisibleMin?: number
 }
 
-
-export interface TreemapSeriesStyleSetOption {
-    itemStyle?: TreemapSeriesItemStyleOption
-    label?: TreemapSeriesLabelOption
-    upperLabel?: TreemapSeriesLabelOption
-
-    emphasis?: {
-        label?: TreemapSeriesLabelOption
-        upperLabel?: TreemapSeriesLabelOption
-        itemStyle?: TreemapSeriesItemStyleOption
-    }
-}
-export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption, TreemapSeriesStyleSetOption {
-    itemStyle?: TreemapSeriesItemStyleOption
-    label?: TreemapSeriesLabelOption
-    upperLabel?: TreemapSeriesLabelOption
-
-    emphasis?: {
-        label?: TreemapSeriesLabelOption
-        upperLabel?: TreemapSeriesLabelOption
-        itemStyle?: TreemapSeriesItemStyleOption
-    }
+export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption> {
 
     color?: ColorString[] | 'none'
 }
 
-export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption, TreemapSeriesStyleSetOption {
+export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption> {
     id?: string
     name?: string
 
@@ -133,11 +121,10 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption, 
     color?: ColorString[] | 'none'
 }
 
-export interface TreemapSeriesOption extends SeriesOption,
+export interface TreemapSeriesOption extends SeriesOption<TreemapStateOption>, TreemapStateOption,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
-    TreemapSeriesVisualOption,
-    TreemapSeriesStyleSetOption {
+    TreemapSeriesVisualOption {
 
     type?: 'treemap'
 

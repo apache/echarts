@@ -107,8 +107,10 @@ export interface ECElement extends Element {
     highDownSilentOnTouch?: boolean;
     onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
 
+    blurred?: boolean;
     highlighted?: boolean;
     selected?: boolean;
+
     z2EmphasisLift?: number;
 }
 
@@ -1122,10 +1124,33 @@ export interface ComponentOption {
     // FIXME:TS more
 }
 
-export interface SeriesOption extends
+export interface StatesOptionMixin<StateOption> {
+    /**
+     * Emphasis states
+     */
+    emphasis?: StateOption & {
+        /**
+         * self: Focus self and blur all others.
+         * selfInSeries: Focus self and blur others in the same series.
+         * series: Focus series and blur all other series.
+         */
+        focus?: 'self' | 'selfInSeries' | 'series'
+    }
+    /**
+     * Select states
+     */
+    select?: StateOption
+    /**
+     * Blur states.
+     */
+    blur?: StateOption
+}
+
+export interface SeriesOption<StateOption> extends
     ComponentOption,
     AnimationOptionMixin,
-    ColorPaletteOptionMixin
+    ColorPaletteOptionMixin,
+    StatesOptionMixin<StateOption>
 {
     name?: string
 

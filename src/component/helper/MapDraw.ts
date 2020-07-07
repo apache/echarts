@@ -35,6 +35,7 @@ import Region from '../../coord/geo/Region';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
 import Transformable from 'zrender/src/core/Transformable';
+import { setLabelStyle } from '../../label/labelStyle';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -161,8 +162,6 @@ class MapDraw {
 
         regionsGroup.removeAll();
 
-        const itemStyleAccessPath = 'itemStyle';
-        const hoverItemStyleAccessPath = ['emphasis', 'itemStyle'] as const;
         const labelAccessPath = 'label';
         const hoverLabelAccessPath = ['emphasis', 'label'] as const;
         const nameMap = zrUtil.createHashMap<RegionsGroup>();
@@ -192,14 +191,20 @@ class MapDraw {
             const regionModel = mapOrGeoModel.getRegionModel(region.name) || mapOrGeoModel;
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const itemStyleModel = regionModel.getModel(itemStyleAccessPath);
+            const itemStyleModel = regionModel.getModel('itemStyle');
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
+            const emphasisItemStyleModel = regionModel.getModel(['emphasis', 'itemStyle']);
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
+            const blurItemStyleModel = regionModel.getModel(['blur', 'itemStyle']);
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
+            const selectItemStyleModel = regionModel.getModel(['select', 'itemStyle']);
 
             // NOTE: DONT use 'style' in visual when drawing map.
             // This component is used for drawing underlying map for both geo component and map series.
             const itemStyle = getFixedItemStyle(itemStyleModel);
-            const hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
+            const emphasisItemStyle = getFixedItemStyle(emphasisItemStyleModel);
+            const blurItemStyle = getFixedItemStyle(blurItemStyleModel);
+            const selectItemStyle = getFixedItemStyle(selectItemStyleModel);
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             const labelModel = regionModel.getModel(labelAccessPath);
@@ -265,8 +270,9 @@ class MapDraw {
             compoundPath.style.strokeNoScale = true;
             compoundPath.culling = true;
 
-            const compoundPathEmphasisState = compoundPath.ensureState('emphasis');
-            compoundPathEmphasisState.style = hoverItemStyle;
+            compoundPath.ensureState('emphasis').style = emphasisItemStyle;
+            compoundPath.ensureState('blur').style = blurItemStyle;
+            compoundPath.ensureState('select').style = selectItemStyle;
 
             // Label
             const showLabel = labelModel.get('show');
@@ -304,7 +310,7 @@ class MapDraw {
                     silent: true
                 });
 
-                graphic.setLabelStyle<typeof query>(
+                setLabelStyle<typeof query>(
                     textEl, labelModel, hoverLabelModel,
                     {
                         labelFetcher: labelFetcher,

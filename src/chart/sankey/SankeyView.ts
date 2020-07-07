@@ -29,6 +29,7 @@ import { GraphNode, GraphEdge } from '../../data/Graph';
 import { GraphEdgeItemOption } from '../graph/GraphSeries';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
+import { setLabelStyle } from '../../label/labelStyle';
 
 interface FocusNodeAdjacencyPayload extends Payload {
     dataIndex?: number
@@ -260,7 +261,7 @@ class SankeyView extends ChartView {
 
             const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
-            graphic.setLabelStyle(
+            setLabelStyle(
                 rect, labelModel, labelHoverModel,
                 {
                     labelFetcher: seriesModel,
@@ -315,11 +316,6 @@ class SankeyView extends ChartView {
             el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
 
             if (itemModel.get('focusNodeAdjacency')) {
-                const blurState = el.ensureState('blur');
-                blurState.style = {
-                    opacity: 0.1
-                };
-
                 el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         api.dispatchAction({
@@ -345,11 +341,6 @@ class SankeyView extends ChartView {
             el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
 
             if (edgeModel.get('focusNodeAdjacency')) {
-                const blurState = el.ensureState('blur');
-                blurState.style = {
-                    opacity: 0.02
-                };
-
                 el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
                         api.dispatchAction({

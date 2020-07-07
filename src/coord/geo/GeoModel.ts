@@ -33,7 +33,8 @@ import {
     LabelOption,
     DisplayState,
     RoamOptionMixin,
-    AnimationOptionMixin
+    AnimationOptionMixin,
+    StatesOptionMixin
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -45,18 +46,17 @@ export interface GeoItemStyleOption extends ItemStyleOption {
 interface GeoLabelOption extends LabelOption {
     formatter?: string | ((params: GeoLabelFormatterDataParams) => string);
 }
+export interface GeoStateOption {
+    itemStyle?: GeoItemStyleOption
+    // FIXME:TS formatter?
+    label?: GeoLabelOption
+}
 interface GeoLabelFormatterDataParams {
     name: string;
     status: DisplayState;
 }
 
-export interface RegoinOption extends SelectableTarget {
-    itemStyle?: GeoItemStyleOption;
-    label?: GeoLabelOption;
-    emphasis?: {
-        itemStyle?: GeoItemStyleOption;
-        label?: GeoLabelOption;
-    }
+export interface RegoinOption extends SelectableTarget, GeoStateOption, StatesOptionMixin<GeoStateOption> {
 };
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
@@ -87,26 +87,16 @@ export interface GeoOption extends
     DataSelectableOptionMixin,
     // For lens animation on geo.
     AnimationOptionMixin,
-    GeoCommonOptionMixin {
+    GeoCommonOptionMixin,
+    StatesOptionMixin<GeoStateOption>, GeoStateOption {
 
     show?: boolean;
     silent?: boolean;
-
-    itemStyle?: GeoItemStyleOption;
-    label?: GeoLabelOption;
-
-    emphasis?: {
-        itemStyle?: GeoItemStyleOption;
-        label?: GeoLabelOption;
-    };
 
     regions: RegoinOption[];
 
     stateAnimation?: AnimationOptionMixin
 }
-
-const LABEL_FORMATTER_NORMAL = ['label', 'formatter'] as const;
-const LABEL_FORMATTER_EMPHASIS = ['emphasis', 'label', 'formatter'] as const;
 
 class GeoModel extends ComponentModel<GeoOption> {
 
@@ -220,8 +210,8 @@ class GeoModel extends ComponentModel<GeoOption> {
     getFormattedLabel(name: string, status?: DisplayState) {
         const regionModel = this.getRegionModel(name);
         const formatter = status === 'normal'
-            ? regionModel.get(LABEL_FORMATTER_NORMAL)
-            : regionModel.get(LABEL_FORMATTER_EMPHASIS);
+            ? regionModel.get(['label', 'formatter'])
+            : regionModel.get(['emphasis', 'label', 'formatter']);
         const params = {
             name: name
         } as GeoLabelFormatterDataParams;

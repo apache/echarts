@@ -20,6 +20,7 @@
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as graphic from '../../util/graphic';
+import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
 import TimelineAxis from './TimelineAxis';
@@ -444,7 +445,7 @@ class SliderTimelineView extends TimelineView {
                 rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                 onclick: bind(this._changeTimeline, this, dataIndex),
                 silent: false,
-                style: graphic.createTextStyle(normalLabelModel, {
+                style: createTextStyle(normalLabelModel, {
                     text: labelItem.formattedLabel,
                     align: layoutInfo.labelAlign,
                     verticalAlign: layoutInfo.labelBaseline
@@ -453,7 +454,7 @@ class SliderTimelineView extends TimelineView {
 
             group.add(textEl);
             graphic.enableHoverEmphasis(
-                textEl, graphic.createTextStyle(hoverLabelModel)
+                textEl, createTextStyle(hoverLabelModel)
             );
 
         }, this);

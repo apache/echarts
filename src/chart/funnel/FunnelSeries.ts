@@ -30,7 +30,9 @@ import {
     LabelOption,
     LabelLineOption,
     ItemStyleOption,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -42,26 +44,21 @@ type FunnelLabelOption = Omit<LabelOption, 'position'> & {
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
 
-export interface FunnelDataItemOption {
-    name?: string
+export interface FunnelStateOption {
+    itemStyle?: ItemStyleOption
+    label?: FunnelLabelOption
+    labelLine?: LabelLineOption
+}
 
-    value?: OptionDataValueNumeric
-
+export interface FunnelDataItemOption extends FunnelStateOption, StatesOptionMixin<FunnelStateOption>,
+    OptionDataItemObject<OptionDataValueNumeric> {
     itemStyle?: ItemStyleOption & {
         height?: number | string
     }
-    label?: FunnelLabelOption
-    labelLine?: LabelLineOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: FunnelLabelOption
-        labelLine?: LabelLineOption
-    }
 }
 
-export interface FunnelSeriesOption
-    extends SeriesOption, BoxLayoutOptionMixin {
+export interface FunnelSeriesOption extends SeriesOption<FunnelStateOption>, FunnelStateOption,
+    BoxLayoutOptionMixin {
     type?: 'funnel'
 
     min?: number
@@ -79,17 +76,7 @@ export interface FunnelSeriesOption
 
     funnelAlign?: HorizontalAlign
 
-    label?: FunnelLabelOption
-    labelLine?: LabelLineOption
-    itemStyle?: ItemStyleOption
-
-    emphasis?: {
-        label?: FunnelLabelOption
-        labelLine?: LabelLineOption
-        itemStyle?: ItemStyleOption
-    }
-
-    data?: OptionDataValueNumeric[] | FunnelDataItemOption[]
+    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | FunnelDataItemOption)[]
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {

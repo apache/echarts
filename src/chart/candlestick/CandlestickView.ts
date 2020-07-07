@@ -31,7 +31,6 @@ import {CandlestickItemLayout} from './candlestickLayout';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 
-const EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
 class CandlestickView extends ChartView {
@@ -280,8 +279,7 @@ function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimple
 
     el.__simpleBox = isSimpleBox;
 
-    const hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
-    graphic.enableHoverEmphasis(el, hoverStyle);
+    graphic.setStatesStylesFromModel(el, itemModel);
 }
 
 function transInit(points: number[][], itemLayout: CandlestickItemLayout) {

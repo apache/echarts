@@ -34,7 +34,8 @@ import {
     SeriesLargeOptionMixin,
     LineStyleOption,
     OptionDataValue,
-    LineLabelOption
+    LineLabelOption,
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -81,7 +82,12 @@ interface LegacyDataItemOption {
     name: string
 }
 
-export interface LinesDataItemOption {
+export interface LinesStateOption {
+    lineStyle?: LinesLineStyleOption
+    label?: LineLabelOption
+}
+
+export interface LinesDataItemOption extends LinesStateOption, StatesOptionMixin<LinesStateOption> {
     name?: string
 
     fromName?: string
@@ -93,17 +99,9 @@ export interface LinesDataItemOption {
     coords?: LinesCoords
 
     value?: LinesValue
-
-    lineStyle?: LinesLineStyleOption
-    label?: LineLabelOption
-
-    emphasis?: {
-        lineStyle?: LineStyleOption
-        label?: LineLabelOption
-    }
 }
 
-export interface LinesSeriesOption extends SeriesOption,
+export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, LinesStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 
@@ -127,14 +125,6 @@ export interface LinesSeriesOption extends SeriesOption,
      * Available when coordinateSystem is cartesian or polar.
      */
     clip?: boolean
-
-    label?: LineLabelOption
-    lineStyle?: LinesLineStyleOption
-
-    emphasis?: {
-        label?: LineLabelOption
-        lineStyle?: LineStyleOption
-    }
 
     data?: LinesDataItemOption[]
         // Stored as a flat array. In format
