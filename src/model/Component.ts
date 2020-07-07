@@ -108,12 +108,6 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      */
     static dependencies: string[];
 
-    /**
-     * key: componentType
-     * value: Component model list, can not be null.
-     * @readOnly
-     */
-    dependentModels: {[componentType: string]: ComponentModel[]} = {};
 
     readonly uid: string;
 

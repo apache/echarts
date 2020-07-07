@@ -218,10 +218,6 @@ class GlobalModel extends Model<ECUnitOption> {
                 }
             });
 
-            const dependentModels = getComponentsByTypes(
-                componentsMap, dependencies
-            );
-
             option[mainType] = [];
             componentsMap.set(mainType, []);
 
@@ -256,7 +252,6 @@ class GlobalModel extends Model<ECUnitOption> {
                         // PENDING Global as parent ?
                         const extraOpt = extend(
                             {
-                                dependentModels: dependentModels,
                                 componentIndex: index
                             },
                             resultItem.keyInfo
@@ -738,27 +733,6 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
             }
         }
     });
-}
-
-/**
- * @param types model types
- */
-function getComponentsByTypes(
-    componentsMap: HashMap<ComponentModel[]>,
-    types: string | string[]
-): {
-    [mainType: string]: ComponentModel[]
-} {
-    if (!isArray(types)) {
-        types = types ? [types] : [];
-    }
-
-    const ret: Dictionary<ComponentModel[]> = {};
-    each(types, function (type) {
-        ret[type] = (componentsMap.get(type) || []).slice();
-    });
-
-    return ret;
 }
 
 function determineSubType(

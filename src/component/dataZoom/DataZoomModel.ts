@@ -275,7 +275,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         const axisProxies = this._axisProxies;
 
         this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-            const axisModel = this.dependentModels[dimNames.axis][axisIndex];
+            const axisModel = this.ecModel.getComponent(dimNames.axis, axisIndex);
 
             // If exists, share axisProxy with other dataZoomModels.
             const axisProxy = (axisModel as ExtendedAxisBaseModel).__dzAxisProxy || (
@@ -344,18 +344,17 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         let autoAxisIndex = true;
         const orient = this.get('orient', true);
         const thisOption = this.option;
-        const dependentModels = this.dependentModels;
 
         if (autoAxisIndex) {
             // Find axis that parallel to dataZoom as default.
             const dimName = orient === 'vertical' ? 'y' : 'x';
 
-            if (dependentModels[dimName + 'Axis'].length) {
+            if (this.ecModel.queryComponents({ mainType: dimName + 'Axis' }).length) {
                 thisOption[dimName + 'AxisIndex' as 'xAxisIndex' | 'yAxisIndex'] = [0];
                 autoAxisIndex = false;
             }
             else {
-                each(dependentModels.singleAxis, function (
+                each(this.ecModel.queryComponents({ mainType: 'singleAxis' }), function (
                     singleAxisModel: AxisBaseModel<{'orient': LayoutOrient} & AxisBaseOption>
                 ) {
                     if (autoAxisIndex && singleAxisModel.get('orient', true) === orient) {
@@ -373,7 +372,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
                     return;
                 }
                 const axisIndices = [];
-                const axisModels = this.dependentModels[dimNames.axis];
+                const axisModels = this.ecModel.queryComponents({ mainType: dimNames.axis });
                 if (axisModels.length && !axisIndices.length) {
                     for (let i = 0, len = axisModels.length; i < len; i++) {
                         if (axisModels[i].get('type') === 'category') {
@@ -445,13 +444,12 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     private _isSeriesHasAllAxesTypeOf(seriesModel: SeriesModelOnAxis, axisType: OptionAxisType) {
         // FIXME
-        // 需要series的xAxisIndex和yAxisIndex都首先自动设置上。
-        // 例如series.type === scatter时。
+        // Depends on that series.xAxisIndex series.yAxisIndex are specified.
 
         let is = true;
         eachAxisDim(function (dimNames) {
             const seriesAxisIndex = seriesModel.get(dimNames.axisIndex);
-            const axisModel = this.dependentModels[dimNames.axis][seriesAxisIndex];
+            const axisModel = this.ecModel.getComponent(dimNames.axis, seriesAxisIndex);
 
             if (!axisModel || axisModel.get('type') !== axisType) {
                 is = false;
@@ -505,7 +503,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             if (firstAxisModel == null) {
                 const indices = this.get(dimNames.axisIndex) as number[]; // Has been normalized to array
                 if (indices.length) {
-                    firstAxisModel = this.dependentModels[dimNames.axis][indices[0]] as AxisBaseModel;
+                    firstAxisModel = this.ecModel.getComponent(dimNames.axis, indices[0]) as AxisBaseModel;
                 }
             }
         }, this);
