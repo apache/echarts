@@ -102,6 +102,15 @@ function convertNormalEmphasis(opt: Dictionary<any>, optType: string, useExtend?
             deprecateLog(`${optType}.emphasis has been changed to emphasis.${optType} since 4.0`);
             opt.emphasis = opt.emphasis || {};
             opt.emphasis[optType] = emphasisOpt;
+
+            // Also compat the case user mix the style and focus together in ec3 style
+            // for example: { itemStyle: { normal: {}, emphasis: {focus, shadowBlur} } }
+            if (emphasisOpt.focus) {
+                opt.emphasis.focus = emphasisOpt.focus;
+            }
+            if (emphasisOpt.blurScope) {
+                opt.emphasis.blurScope = emphasisOpt.blurScope;
+            }
         }
     }
 }

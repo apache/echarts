@@ -81,8 +81,6 @@ export const EMPTY_OBJ = {};
 
 export const Z2_EMPHASIS_LIFT = 10;
 
-export const EMPHASIS = 'emphasis';
-export const NORMAL = 'normal';
 
 export const _highlightKeyMap: Dictionary<number> = {};
 
@@ -91,17 +89,6 @@ const _customShapeMap: Dictionary<{ new(): Path }> = {};
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
-
-type ExtendedProps = {
-    __highByOuter: number
-
-    __highDownSilentOnTouch: boolean
-    __onStateChange: (fromState: DisplayState, toState: DisplayState) => void
-
-    __highDownDispatcher: boolean
-};
-export type ExtendedElement = Element & ExtendedProps;
-export type ExtendedDisplayable = Displayable & ExtendedProps;
 
 export type TextCommonParams = {
     /**

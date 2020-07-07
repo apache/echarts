@@ -105,10 +105,12 @@ export interface ECElement extends Element {
         formatterParams?: unknown;
     };
     highDownSilentOnTouch?: boolean;
-    onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+    onStateChange?: (toState: DisplayState) => void;
 
-    blurred?: boolean;
-    highlighted?: boolean;
+    // 0: normal
+    // 1: blur
+    // 2: emphasis
+    hoverState?: 0 | 1 | 2;
     selected?: boolean;
 
     z2EmphasisLift?: number;
@@ -431,7 +433,7 @@ export type OptionDataValueDate = Date | string | number;
 export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
-export type DisplayState = 'normal' | 'emphasis';
+export type DisplayState = 'normal' | 'emphasis' | 'blur' | 'select';
 export type DisplayStateNonNormal = 'emphasis';
 export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
@@ -1135,7 +1137,7 @@ export interface StatesOptionMixin<StateOption, ExtraFocusOptions = never> {
          * self: Focus self and blur all others.
          * series: Focus series and blur all other series.
          */
-        focus?: 'self' | 'series' | ExtraFocusOptions
+        focus?: 'none' | 'self' | 'series' | ExtraFocusOptions
 
         /**
          * Scope of blurred element when focus.

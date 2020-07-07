@@ -811,7 +811,8 @@ function updateStyle(
         );
     }
 
-    enableHoverEmphasis(el);
+    const emphasisModel = itemModel.getModel(['emphasis']);
+    enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     setStatesStylesFromModel(el, itemModel);
     if (isZeroOnPolar(layout as SectorLayout)) {
         each(el.states, (state) => {

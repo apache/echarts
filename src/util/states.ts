@@ -10,18 +10,29 @@ import { DisplayState, ECElement, ColorString, BlurScope } from './types';
 import { extend, indexOf } from 'zrender/src/core/util';
 import { __DEV__ } from '../config';
 import {
-    ExtendedElement,
-    NORMAL,
-    EMPHASIS,
     Z2_EMPHASIS_LIFT,
     getECData,
-    ExtendedDisplayable,
     _highlightKeyMap
 } from './graphic';
 import * as colorTool from 'zrender/src/tool/color';
+import { EChartsType } from '../echarts';
 
 // Reserve 0 as default.
 export let _highlightNextDigit = 1;
+
+export const HOVER_STATE_NORMAL: 0 = 0;
+export const HOVER_STATE_BLUR: 1 = 1;
+export const HOVER_STATE_EMPHASIS: 2 = 2;
+
+type ExtendedProps = {
+    __highByOuter: number
+
+    __highDownSilentOnTouch: boolean
+
+    __highDownDispatcher: boolean
+};
+type ExtendedElement = Element & ExtendedProps;
+type ExtendedDisplayable = Displayable & ExtendedProps;
 
 function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) {
     return fillOrStroke != null && fillOrStroke !== 'none';
@@ -40,32 +51,43 @@ function liftColor(color: string): string {
     return liftedColor;
 }
 
-function singleEnterEmphasis(el: Element) {
-    // Only mark the flag.
-    // States will be applied in the echarts.ts in next frame.
-    (el as ECElement).highlighted = true;
+function triggerStateChange(el: ECElement, stateEnum: 0 | 1 | 2, stateName: DisplayState) {
+    if ((el.hoverState || 0) !== stateEnum) {
+        el.onStateChange && el.onStateChange(stateName);
+    }
 }
 
-function singleLeaveEmphasis(el: Element) {
+function singleEnterEmphasis(el: ECElement) {
     // Only mark the flag.
     // States will be applied in the echarts.ts in next frame.
-    (el as ECElement).highlighted = false;
+    triggerStateChange(el, HOVER_STATE_EMPHASIS, 'emphasis');
+    el.hoverState = HOVER_STATE_EMPHASIS;
 }
+
+function singleLeaveEmphasis(el: ECElement) {
+    // Only mark the flag.
+    // States will be applied in the echarts.ts in next frame.
+    triggerStateChange(el, HOVER_STATE_NORMAL, 'normal');
+    el.hoverState = HOVER_STATE_NORMAL;
+}
+
+function singleEnterBlur(el: ECElement) {
+    triggerStateChange(el, HOVER_STATE_BLUR, 'blur');
+    el.hoverState = HOVER_STATE_BLUR;
+}
+
+function singleLeaveBlur(el: ECElement) {
+    triggerStateChange(el, HOVER_STATE_NORMAL, 'normal');
+    el.hoverState = HOVER_STATE_NORMAL;
+}
+
 
 function updateElementState<T>(
     el: ExtendedElement,
     updater: (this: void, el: Element, commonParam?: T) => void,
     commonParam?: T
 ) {
-    // If root is group, also enter updater for `onStateChange`.
-    let fromState: DisplayState = NORMAL;
-    let toState: DisplayState = NORMAL;
-    let trigger;
-    // See the rule of `onStateChange` on `graphic.setAsHighDownDispatcher`.
-    (el as ECElement).highlighted && (fromState = EMPHASIS, trigger = true);
     updater(el, commonParam);
-    (el as ECElement).highlighted && (toState = EMPHASIS, trigger = true);
-    trigger && el.__onStateChange && el.__onStateChange(fromState, toState);
 }
 
 function traverseUpdateState<T>(
@@ -93,56 +115,108 @@ export function clearStates(el: Element) {
         el.clearStates();
     }
 }
-function elementStateProxy(this: Displayable, stateName: string): DisplayableState {
-    let state = this.states[stateName];
-    if (stateName === 'emphasis' && this.style) {
-        const hasEmphasis = indexOf(this.currentStates, stateName) >= 0;
-        if (!(this instanceof ZRText)) {
-            const currentFill = this.style.fill;
-            const currentStroke = this.style.stroke;
-            if (currentFill || currentStroke) {
-                let fromState: {
-                    fill: ColorString;
-                    stroke: ColorString;
-                };
-                if (!hasEmphasis) {
-                    fromState = { fill: currentFill, stroke: currentStroke };
-                    for (let i = 0; i < this.animators.length; i++) {
-                        const animator = this.animators[i];
-                        if (animator.__fromStateTransition
-                            // Dont consider the animation to emphasis state.
-                            && animator.__fromStateTransition.indexOf('emphasis') < 0
-                            && animator.targetName === 'style') {
-                            animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
-                        }
+
+function createEmphasisDefaultState(
+    el: Displayable,
+    stateName: 'emphasis',
+    state: Displayable['states'][number]
+) {
+    const hasEmphasis = indexOf(el.currentStates, stateName) >= 0;
+    if (!(el instanceof ZRText)) {
+        const currentFill = el.style.fill;
+        const currentStroke = el.style.stroke;
+        if (currentFill || currentStroke) {
+            let fromState: {
+                fill: ColorString;
+                stroke: ColorString;
+            };
+            if (!hasEmphasis) {
+                fromState = { fill: currentFill, stroke: currentStroke };
+                for (let i = 0; i < el.animators.length; i++) {
+                    const animator = el.animators[i];
+                    if (animator.__fromStateTransition
+                        // Dont consider the animation to emphasis state.
+                        && animator.__fromStateTransition.indexOf(stateName) < 0
+                        && animator.targetName === 'style') {
+                        animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
                     }
                 }
-                state = state || {};
-                // Apply default color lift
-                let emphasisStyle = state.style || {};
-                let cloned = false;
-                if (!hasFillOrStroke(emphasisStyle.fill)) {
-                    cloned = true;
-                    // Not modify the original value.
+            }
+            state = state || {};
+            // Apply default color lift
+            let emphasisStyle = state.style || {};
+            let cloned = false;
+            if (!hasFillOrStroke(emphasisStyle.fill)) {
+                cloned = true;
+                // Not modify the original value.
+                state = extend({}, state);
+                emphasisStyle = extend({}, emphasisStyle);
+                // Already being applied 'emphasis'. DON'T lift color multiple times.
+                emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(fromState.fill);
+            }
+            if (!hasFillOrStroke(emphasisStyle.stroke)) {
+                if (!cloned) {
                     state = extend({}, state);
                     emphasisStyle = extend({}, emphasisStyle);
-                    // Already being applied 'emphasis'. DON'T lift color multiple times.
-                    emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(fromState.fill);
                 }
-                if (!hasFillOrStroke(emphasisStyle.stroke)) {
-                    if (!cloned) {
-                        state = extend({}, state);
-                        emphasisStyle = extend({}, emphasisStyle);
-                    }
-                    emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(fromState.stroke);
-                }
-                state.style = emphasisStyle;
+                emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(fromState.stroke);
+            }
+            state.style = emphasisStyle;
+        }
+    }
+    if (state) {
+        const z2EmphasisLift = (el as ECElement).z2EmphasisLift;
+        // TODO Share with textContent?
+        state.z2 = el.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+    }
+    return state;
+}
+
+function createBlurDefaultState(
+    el: Displayable,
+    stateName: 'blur',
+    state: Displayable['states'][number]
+) {
+    const hasBlur = indexOf(el.currentStates, stateName) >= 0;
+    const currentOpacity = el.style.opacity;
+    const fromState = {
+        opacity: currentOpacity == null ? 1 : currentOpacity
+    };
+    if (!hasBlur) {
+        for (let i = 0; i < el.animators.length; i++) {
+            const animator = el.animators[i];
+            if (animator.__fromStateTransition
+                // Dont consider the animation to emphasis state.
+                && animator.__fromStateTransition.indexOf(stateName) < 0
+                && animator.targetName === 'style') {
+                animator.saveFinalToTarget(fromState, ['opacity']);
             }
         }
-        if (state) {
-            const z2EmphasisLift = (this as ECElement).z2EmphasisLift;
-            // TODO Share with textContent?
-            state.z2 = this.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+    }
+
+    state = state || {};
+    let blurStyle = state.style || {};
+    if (blurStyle.opacity == null) {
+        // clone state
+        state = extend({}, state);
+        blurStyle = extend({
+            // Already being applied 'emphasis'. DON'T mul opacity multiple times.
+            opacity: hasBlur ? currentOpacity : (fromState.opacity * 0.1)
+        }, blurStyle);
+        state.style = blurStyle;
+    }
+
+    return state;
+}
+
+function elementStateProxy(this: Displayable, stateName: string): DisplayableState {
+    const state = this.states[stateName];
+    if (this.style) {
+        if (stateName === 'emphasis') {
+            return createEmphasisDefaultState(this, stateName, state);
+        }
+        else if (stateName === 'blur') {
+            return createBlurDefaultState(this, stateName, state);
         }
     }
     return state;
@@ -192,6 +266,46 @@ function shouldSilent(el: Element, e: ElementEvent) {
     return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
 }
 
+export function toggleOthersBlurStates(el: Element, ecIns: EChartsType, isBlur: boolean) {
+    const model = ecIns.getModel();
+    const ecData = getECData(el);
+    const focus = ecData.focus;
+    const blurScope = ecData.blurScope || 'coordinateSystem';
+    if (!focus || focus === 'none') {
+        return;
+    }
+
+    const dataIndex = ecData.dataIndex;
+    const seriesIndex = ecData.seriesIndex;
+
+    model.eachSeries(function (seriesModel) {
+        const view = ecIns.getViewOfSeriesModel(seriesModel);
+        view.group.traverse(function (child) {
+            // TODO getECData will mount an empty object on the element.
+            // DON'T mount on all elements?
+            const otherECData = getECData(child);
+            if (otherECData.dataIndex != null) {
+                if (isBlur) {
+                    const sameSeries = seriesIndex === otherECData.seriesIndex;
+                    const differentDataIndex = dataIndex !== otherECData.dataIndex;
+                    if (
+                        (blurScope === 'series' && focus === 'self' && sameSeries && differentDataIndex)    // Blur others in the same series.
+                        || (focus === 'self' && (!sameSeries || differentDataIndex))    // Blur all others
+                        || (focus === 'series' && !sameSeries)  // Blur all other series
+                    ) {
+                        traverseUpdateState((child as ExtendedElement), singleEnterBlur);
+                    }
+                }
+                else {
+                    traverseUpdateState((child as ExtendedElement), singleLeaveBlur);
+                }
+                // No need to traverse the children.
+                return true;
+            }
+        });
+    });
+}
+
 /**
  * Enable the function that mouseover will trigger the emphasis state.
  *
@@ -205,13 +319,15 @@ export function enableHoverEmphasis(el: Element, focus?: string, blurScope?: Blu
     setAsHighDownDispatcher(el, true);
     traverseUpdateState(el as ExtendedElement, enableElementHoverEmphasis);
     const ecData = getECData(el);
-    if (__DEV__) {
-        if (ecData.dataIndex == null && focus != null) {
+    if (ecData.dataIndex == null && focus != null) {
+        if (__DEV__) {
             console.warn('focus can only been set on element with dataIndex');
         }
     }
-    ecData.focus = focus;
-    ecData.blurScope = blurScope;
+    else {
+        ecData.focus = focus;
+        ecData.blurScope = blurScope;
+    }
 }
 
 const OTHER_STATES = ['emphasis', 'blur', 'select'] as const;
@@ -240,28 +356,8 @@ export function setStatesStylesFromModel(
 }
 
 /**
- * @param {module:zrender/Element} el
- * @param {Function} [el.onStateChange] Called when state updated.
- *        Since `setHoverStyle` has the constraint that it must be called after
- *        all of the normal style updated, `onStateChange` is not needed to
- *        trigger if both `fromState` and `toState` is 'normal', and needed to
- *        trigger if both `fromState` and `toState` is 'emphasis', which enables
- *        to sync outside style settings to "emphasis" state.
- *        @this {string} This dispatcher `el`.
- *        @param {string} fromState Can be "normal" or "emphasis".
- *               `fromState` might equal to `toState`,
- *               for example, when this method is called when `el` is
- *               on "emphasis" state.
- *        @param {string} toState Can be "normal" or "emphasis".
- *
- *        FIXME
- *        CAUTION: Do not expose `onStateChange` outside echarts.
- *        Because it is not a complete solution. The update
- *        listener should not have been mount in element,
- *        and the normal/emphasis state should not have
- *        mantained on elements.
- *
- * @param {boolean} [el.highDownSilentOnTouch=false]
+ * @parame el
+ * @param el.highDownSilentOnTouch
  *        In touch device, mouseover event will be trigger on touchstart event
  *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can
  *        conveniently use hoverStyle when tap on touch screen without additional
@@ -271,7 +367,7 @@ export function setStatesStylesFromModel(
  *        'hover-highlight' especially when roam is enabled (see geo for example).
  *        In this case, `highDownSilentOnTouch` should be used to disable
  *        hover-highlight on touch device.
- * @param {boolean} [asDispatcher=true] If `false`, do not set as "highDownDispatcher".
+ * @param asDispatcher If `false`, do not set as "highDownDispatcher".
  */
 export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     const disable = asDispatcher === false;
@@ -280,9 +376,6 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
     if ((el as ECElement).highDownSilentOnTouch) {
         extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
-    }
-    if ((el as ECElement).onStateChange) {
-        extendedEl.__onStateChange = (el as ECElement).onStateChange;
     }
     // Simple optimize, since this method might be
     // called for each elements of a group in some cases.

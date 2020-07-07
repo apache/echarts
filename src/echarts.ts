@@ -38,7 +38,7 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
-import { enterEmphasisWhenMouseOver, leaveEmphasisWhenMouseOut, isHighDownDispatcher } from './util/states';
+import { enterEmphasisWhenMouseOver, leaveEmphasisWhenMouseOut, isHighDownDispatcher, HOVER_STATE_EMPHASIS, HOVER_STATE_BLUR, toggleOthersBlurStates } from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from './visual/style';
@@ -1679,16 +1679,23 @@ class ECharts extends Eventful {
                 return target;
             }
             zr.on('mouseover', function (e) {
-                const dispatcher = getHighDownDispatcher(e.target);
+                const el = e.target;
+                const dispatcher = getHighDownDispatcher(el);
                 if (dispatcher) {
-                    markStatusToUpdate(ecIns);
+                    toggleOthersBlurStates(el, ecIns, true);
                     enterEmphasisWhenMouseOver(dispatcher, e);
+
+                    markStatusToUpdate(ecIns);
                 }
             }).on('mouseout', function (e) {
-                const dispatcher = getHighDownDispatcher(e.target);
+                const el = e.target;
+                const dispatcher = getHighDownDispatcher(el);
                 if (dispatcher) {
-                    markStatusToUpdate(ecIns);
+                    toggleOthersBlurStates(el, ecIns, false);
+
                     leaveEmphasisWhenMouseOut(dispatcher, e);
+
+                    markStatusToUpdate(ecIns);
                 }
             });
         };
@@ -1836,10 +1843,10 @@ class ECharts extends Eventful {
                 if (el.selected && el.states.select) {
                     newStates.push('select');
                 }
-                if (el.highlighted && el.states.emphasis) {
+                if (el.hoverState === HOVER_STATE_EMPHASIS && el.states.emphasis) {
                     newStates.push('emphasis');
                 }
-                else if (el.blurred && el.states.blur) {
+                else if (el.hoverState === HOVER_STATE_BLUR && el.states.blur) {
                     newStates.push('blur');
                 }
                 el.useStates(newStates);
@@ -1996,7 +2003,7 @@ class ECharts extends Eventful {
                         if ((el as ECElement).selected) {
                             states.push('select');
                         }
-                        if ((el as ECElement).highlighted) {
+                        if ((el as ECElement).hoverState) {
                             states.push('emphasis');
                         }
                         el.useStates(states);
