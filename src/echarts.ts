@@ -38,7 +38,14 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
-import { enterEmphasisWhenMouseOver, leaveEmphasisWhenMouseOut, isHighDownDispatcher, HOVER_STATE_EMPHASIS, HOVER_STATE_BLUR, toggleOthersBlurStates } from './util/states';
+import {
+    enterEmphasisWhenMouseOver,
+    leaveEmphasisWhenMouseOut,
+    isHighDownDispatcher,
+    HOVER_STATE_EMPHASIS,
+    HOVER_STATE_BLUR,
+    toggleSeriesBlurStates
+} from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from './visual/style';
@@ -1296,9 +1303,35 @@ class ECharts extends Eventful {
                 excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
             }
 
+            const isHighlight = payload.type === 'highlight';
+            const isDownplay = payload.type === 'downplay';
+
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
+                    if (isHighlight || isDownplay) {
+                        if (model instanceof SeriesModel) {
+                            const seriesIndex = model.seriesIndex;
+                            const data = model.getData(payload.dataType);
+                            let dataIndex = modelUtil.queryDataIndex(data, payload);
+                            // Pick the first one if there is multiple/none exists.
+                            dataIndex = (zrUtil.isArray(dataIndex) ? dataIndex[0] : dataIndex) || 0;
+                            let el = data.getItemGraphicEl(dataIndex as number);
+                            if (!el) {
+                                let count = data.count();
+                                let current = 0;
+                                // If data on dataIndex is NaN.
+                                while (!el && current < count) {
+                                    el = data.getItemGraphicEl(current++);
+                                }
+                            }
+                            if (el) {
+                                const ecData = graphic.getECData(el);
+                                toggleSeriesBlurStates(seriesIndex, ecData.focus, ecData.blurScope, ecIns, isHighlight);
+                            }
+                        }
+                    }
+
                     callView(ecIns[
                         mainType === 'series' ? '_chartsMap' : '_componentsMap'
                     ][model.__viewId]);
@@ -1682,7 +1715,9 @@ class ECharts extends Eventful {
                 const el = e.target;
                 const dispatcher = getHighDownDispatcher(el);
                 if (dispatcher) {
-                    toggleOthersBlurStates(el, ecIns, true);
+                    const ecData = graphic.getECData(el);
+                    // Try blur all in the related series. Then emphasis the hoverred.
+                    toggleSeriesBlurStates(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, true);
                     enterEmphasisWhenMouseOver(dispatcher, e);
 
                     markStatusToUpdate(ecIns);
@@ -1691,7 +1726,8 @@ class ECharts extends Eventful {
                 const el = e.target;
                 const dispatcher = getHighDownDispatcher(el);
                 if (dispatcher) {
-                    toggleOthersBlurStates(el, ecIns, false);
+                    const ecData = graphic.getECData(el);
+                    toggleSeriesBlurStates(ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, false);
 
                     leaveEmphasisWhenMouseOut(dispatcher, e);
 

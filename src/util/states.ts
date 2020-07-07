@@ -266,43 +266,49 @@ function shouldSilent(el: Element, e: ElementEvent) {
     return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
 }
 
-export function toggleOthersBlurStates(el: Element, ecIns: EChartsType, isBlur: boolean) {
-    const model = ecIns.getModel();
-    const ecData = getECData(el);
-    const focus = ecData.focus;
-    const blurScope = ecData.blurScope || 'coordinateSystem';
-    if (!focus || focus === 'none') {
+export function toggleSeriesBlurStates(
+    targetSeriesIndex: number,
+    focus: string,
+    blurScope: BlurScope,
+    ecIns: EChartsType,
+    isBlur: boolean
+) {
+    if (targetSeriesIndex == null) {
         return;
     }
 
-    const dataIndex = ecData.dataIndex;
-    const seriesIndex = ecData.seriesIndex;
+    const model = ecIns.getModel();
+    blurScope = blurScope || 'coordinateSystem';
+
+    if (!(focus === 'series' || focus === 'self')) {
+        return;
+    }
 
     model.eachSeries(function (seriesModel) {
-        const view = ecIns.getViewOfSeriesModel(seriesModel);
-        view.group.traverse(function (child) {
-            // TODO getECData will mount an empty object on the element.
-            // DON'T mount on all elements?
-            const otherECData = getECData(child);
-            if (otherECData.dataIndex != null) {
-                if (isBlur) {
-                    const sameSeries = seriesIndex === otherECData.seriesIndex;
-                    const differentDataIndex = dataIndex !== otherECData.dataIndex;
-                    if (
-                        (blurScope === 'series' && focus === 'self' && sameSeries && differentDataIndex)    // Blur others in the same series.
-                        || (focus === 'self' && (!sameSeries || differentDataIndex))    // Blur all others
-                        || (focus === 'series' && !sameSeries)  // Blur all other series
-                    ) {
+        const sameSeries = targetSeriesIndex === seriesModel.seriesIndex;
+        if (!(
+            blurScope === 'series' && !sameSeries   // Not blur other series if blurScope series
+          || focus === 'series' && sameSeries   // Not blur self series if focus is series.
+          // TODO blurScope: coordinate system
+        )) {
+            const view = ecIns.getViewOfSeriesModel(seriesModel);
+            view.group.traverse(function (child) {
+                // TODO getECData will mount an empty object on the element.
+                // DON'T mount on all elements?
+                const otherECData = getECData(child);
+                // TODO distinguish edge data in graph.
+                if (otherECData.dataIndex != null) {
+                    if (isBlur) {
                         traverseUpdateState((child as ExtendedElement), singleEnterBlur);
                     }
+                    else {
+                        traverseUpdateState((child as ExtendedElement), singleLeaveBlur);
+                    }
+                    // No need to traverse the children.
+                    return true;
                 }
-                else {
-                    traverseUpdateState((child as ExtendedElement), singleLeaveBlur);
-                }
-                // No need to traverse the children.
-                return true;
-            }
-        });
+            });
+        }
     });
 }
 
