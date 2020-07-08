@@ -194,7 +194,8 @@ class MapDraw {
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             const itemStyleModel = regionModel.getModel('itemStyle');
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const emphasisItemStyleModel = regionModel.getModel(['emphasis', 'itemStyle']);
+            const emphasisModel = regionModel.getModel('emphasis');
+            const emphasisItemStyleModel = emphasisModel.getModel('itemStyle');
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             const blurItemStyleModel = regionModel.getModel(['blur', 'itemStyle']);
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
@@ -359,7 +360,7 @@ class MapDraw {
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
-            enableHoverEmphasis(regionGroup);
+            enableHoverEmphasis(regionGroup, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 
             regionsGroup.add(regionGroup);
         });

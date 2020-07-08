@@ -77,6 +77,7 @@ class PiePiece extends graphic.Sector {
 
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
+        const emphasisModel = itemModel.getModel('emphasis');
         const layout = data.getItemLayout(idx);
         const sectorShape = extend({}, layout);
 
@@ -157,7 +158,7 @@ class PiePiece extends graphic.Sector {
             y: dy
         });
 
-        enableHoverEmphasis(this);
+        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 
         // State will be set after all rendered in the pipeline.
         (sector as ECElement).selected = seriesModel.isSelected(data.getName(idx));

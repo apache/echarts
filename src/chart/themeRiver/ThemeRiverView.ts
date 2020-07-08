@@ -98,6 +98,7 @@ class ThemeRiverView extends ChartView {
             const textLayout = data.getItemLayout(indices[0]);
             const labelModel = seriesModel.getModel('label');
             const margin = labelModel.get('margin');
+            const emphasisModel = seriesModel.getModel('emphasis');
 
             const commonTextStyle = createTextStyle(labelModel, {
                 text: labelModel.get('show')
@@ -159,9 +160,10 @@ class ThemeRiverView extends ChartView {
 
             polygon.useStyle(style);
 
-            setStatesStylesFromModel(polygon, seriesModel);
+            data.setItemGraphicEl(idx, polygon);
 
-            enableHoverEmphasis(polygon);
+            setStatesStylesFromModel(polygon, seriesModel);
+            enableHoverEmphasis(polygon, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
         }
 
         this._layersSeries = layersSeries;

@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
+import { enterEmphasis, leaveEmphasis, enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as zrUtil from 'zrender/src/core/util';
 import { LayoutOrient, Payload } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
@@ -31,6 +31,7 @@ import { GraphEdgeItemOption } from '../graph/GraphSeries';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle } from '../../label/labelStyle';
+import { setItemVisualFromData } from '../../visual/helper';
 
 interface FocusNodeAdjacencyPayload extends Payload {
     dataIndex?: number
@@ -231,10 +232,11 @@ class SankeyView extends ChartView {
                     break;
             }
 
-            enableHoverEmphasis(
-                curve,
-                edgeModel.getModel(['emphasis', 'lineStyle']).getItemStyle()
-            );
+            const emphasisModel = edgeModel.getModel('emphasis');
+
+            setStatesStylesFromModel(curve, edgeModel, 'lineStyle', 'getItemStyle');
+
+            enableHoverEmphasis(curve, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 
             group.add(curve);
 
@@ -247,8 +249,9 @@ class SankeyView extends ChartView {
             const itemModel = node.getModel<SankeyNodeItemOption>();
             const dragX = itemModel.get('localX');
             const dragY = itemModel.get('localY');
+            const emphasisModel = itemModel.getModel('emphasis');
             const labelModel = itemModel.getModel('label');
-            const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+            const labelHoverModel = emphasisModel.getModel('label');
 
             const rect = new graphic.Rect({
                 shape: {
@@ -259,8 +262,6 @@ class SankeyView extends ChartView {
                 },
                 style: itemModel.getModel('itemStyle').getItemStyle()
             });
-
-            const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
             setLabelStyle(
                 rect, labelModel, labelHoverModel,
@@ -273,7 +274,9 @@ class SankeyView extends ChartView {
 
             rect.setStyle('fill', node.getVisual('color'));
 
-            enableHoverEmphasis(rect, hoverStyle);
+            setStatesStylesFromModel(rect, itemModel);
+
+            enableHoverEmphasis(rect, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 
             group.add(rect);
 

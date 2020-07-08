@@ -26,7 +26,8 @@ import {
     initProps,
     updateLabel,
     initLabel,
-    removeElement} from '../../util/graphic';
+    removeElement
+} from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { setLabelStyle } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
@@ -45,7 +46,8 @@ import {
     OrdinalSortInfo,
     Payload,
     OrdinalNumber,
-    ParsedValue
+    ParsedValue,
+    AnimationOptionMixin
 } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -99,6 +101,18 @@ function getClipArea(coord: CoordSysOfBar, data: List) {
     return coordSysClipArea;
 }
 
+function remove(el: Path, dataIndex: number, model: Model<AnimationOptionMixin>) {
+    if (el) {
+        el.removeTextContent();
+        removeElement(el, {
+            style: {
+                opacity: 0
+            }
+        }, model, dataIndex, function () {
+            el.parent && el.parent.remove(el);
+        });
+    }
+}
 
 class BarView extends ChartView {
     static type = 'bar' as const;
@@ -405,13 +419,8 @@ class BarView extends ChartView {
                 );
             })
             .remove(function (dataIndex) {
-                const el = oldData.getItemGraphicEl(dataIndex);
-                if (coord.type === 'cartesian2d') {
-                    el && removeRect(dataIndex, animationModel, el as Rect);
-                }
-                else {
-                    el && removeSector(dataIndex, animationModel, el as Sector);
-                }
+                const el = oldData.getItemGraphicEl(dataIndex) as Path;
+                remove(el, dataIndex, seriesModel);
             })
             .execute();
 
@@ -540,13 +549,8 @@ class BarView extends ChartView {
             this._removeBackground();
             this._backgroundEls = [];
 
-            data.eachItemGraphicEl(function (el: Sector | Rect) {
-                if (el.type === 'sector') {
-                    removeSector(getECData(el).dataIndex, ecModel, el as (Sector));
-                }
-                else {
-                    removeRect(getECData(el).dataIndex, ecModel, el as (Rect));
-                }
+            data.eachItemGraphicEl(function (el: Path) {
+                remove(el, getECData(el).dataIndex, ecModel);
             });
         }
         else {
@@ -696,38 +700,6 @@ const elementCreator: {
     }
 };
 
-function removeRect(
-    dataIndex: number,
-    animationModel: BarSeriesModel | GlobalModel,
-    el: Rect
-) {
-    // Not show text when animating
-    el.removeTextContent();
-    removeElement(el, {
-        style: {
-            opacity: 0
-        }
-    }, animationModel, dataIndex, function () {
-        el.parent && el.parent.remove(el);
-    });
-}
-
-function removeSector(
-    dataIndex: number,
-    animationModel: BarSeriesModel | GlobalModel,
-    el: Sector
-) {
-    // Not show text when animating
-    el.removeTextContent();
-    removeElement(el, {
-        style: {
-            opacity: 0
-        }
-    }, animationModel, dataIndex, function () {
-        el.parent && el.parent.remove(el);
-    });
-}
-
 interface GetLayout {
     (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
@@ -814,6 +786,7 @@ function updateStyle(
     const emphasisModel = itemModel.getModel(['emphasis']);
     enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     setStatesStylesFromModel(el, itemModel);
+
     if (isZeroOnPolar(layout as SectorLayout)) {
         each(el.states, (state) => {
             if (state.style) {

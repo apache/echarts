@@ -220,7 +220,8 @@ class RadarView extends ChartView {
                     }
                 )
             );
-            const itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+            const emphasisModel = itemModel.getModel('emphasis');
+            const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             const labelModel = itemModel.getModel('label');
             const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
@@ -244,7 +245,7 @@ class RadarView extends ChartView {
                 );
             });
 
-            enableHoverEmphasis(itemGroup);
+            enableHoverEmphasis(itemGroup, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
         });
 
         this._data = data;

@@ -55,6 +55,7 @@ class FunnelPiece extends graphic.Polygon {
         const seriesModel = data.hostModel;
         const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         const layout = data.getItemLayout(idx);
+        const emphasisModel = itemModel.getModel('emphasis');
         let opacity = itemModel.get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
 
@@ -89,7 +90,7 @@ class FunnelPiece extends graphic.Polygon {
 
         this._updateLabel(data, idx);
 
-        enableHoverEmphasis(this);
+        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     }
 
     _updateLabel(data: List, idx: number) {

@@ -936,14 +936,19 @@ function updateCommon(
     const itemModel = symbolMeta.itemModel;
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    const emphasisStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+    const emphasisModel = itemModel.getModel('emphasis');
+    const emphasisStyle = emphasisModel.getModel('itemStyle').getItemStyle();
     const blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
     const selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
     const cursorStyle = itemModel.getShallow('cursor');
 
+    const focus = emphasisModel.get('focus');
+    const blurScope = emphasisModel.get('blurScope');
+
     eachPath(bar, function (path) {
         path.useStyle(symbolMeta.style);
-        enableHoverEmphasis(path);
+
+        enableHoverEmphasis(path, focus, blurScope);
 
         path.ensureState('emphasis').style = emphasisStyle;
         path.ensureState('blur').style = blurStyle;
@@ -970,7 +975,7 @@ function updateCommon(
         }
     );
 
-    enableHoverEmphasis(barRect);
+    enableHoverEmphasis(barRect, focus, blurScope);
 }
 
 function toIntTimes(times: number) {

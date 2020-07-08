@@ -385,7 +385,6 @@ class LineView extends ChartView {
     }
 
     render(seriesModel: LineSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-
         const coordSys = seriesModel.coordinateSystem;
         const group = this.group;
         const data = seriesModel.getData();

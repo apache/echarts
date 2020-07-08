@@ -368,6 +368,7 @@ class GaugeView extends ChartView {
         data.eachItemGraphicEl(function (pointer: PointerPath, idx) {
             const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
             const pointerModel = itemModel.getModel('pointer');
+            const emphasisModel = itemModel.getModel('emphasis');
 
             pointer.setShape({
                 x: posInfo.cx,
@@ -386,8 +387,9 @@ class GaugeView extends ChartView {
                 ));
             }
 
+
             setStatesStylesFromModel(pointer, itemModel);
-            enableHoverEmphasis(pointer);
+            enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
         });
 
         this._data = data;

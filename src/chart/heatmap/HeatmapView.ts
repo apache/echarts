@@ -191,6 +191,8 @@ class HeatmapView extends ChartView {
         let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
         let labelModel = seriesModel.getModel('label');
         let hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
+        let focus = seriesModel.get(['emphasis', 'focus']);
+        let blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
         const dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
             ? [
@@ -244,9 +246,13 @@ class HeatmapView extends ChartView {
 
             // Optimization for large datset
             if (data.hasItemOption) {
-                emphasisStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+                const emphasisModel = itemModel.getModel('emphasis');
+                emphasisStyle = emphasisModel.getModel('itemStyle').getItemStyle();
                 blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
                 selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
+
+                focus = emphasisModel.get('focus');
+                blurScope = emphasisModel.get('blurScope');
 
                 labelModel = itemModel.getModel('label');
                 hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
@@ -271,7 +277,7 @@ class HeatmapView extends ChartView {
             rect.ensureState('blur').style = blurStyle;
             rect.ensureState('select').style = selectStyle;
 
-            enableHoverEmphasis(rect);
+            enableHoverEmphasis(rect, focus, blurScope);
 
             rect.incremental = incremental;
             // PENDING

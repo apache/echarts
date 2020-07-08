@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel } from '../../util/states';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import List from '../../data/List';
 import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
@@ -176,7 +176,7 @@ function addEl(data: List, dataGroup: graphic.Group, dataIndex: number, dimensio
     const points = createLinePoints(data, dataIndex, dimensions, coordSys);
     const line = new graphic.Polyline({
         shape: {points: points},
-        silent: true,
+        // silent: true,
         z2: 10
     });
     dataGroup.add(line);
@@ -204,7 +204,10 @@ function updateElCommon(
     seriesScope.smooth && (el.shape.smooth = seriesScope.smooth);
 
     const itemModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex);
+    const emphasisModel = itemModel.getModel('emphasis');
     setStatesStylesFromModel(el, itemModel, 'lineStyle', 'getLineStyle');
+
+    enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 }
 
 // function simpleDiff(oldData, newData, dimensions) {

@@ -23,7 +23,7 @@ import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/st
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { ColorString } from '../../util/types';
+import { ColorString, BlurScope } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
@@ -192,27 +192,52 @@ class Symbol extends graphic.Group {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
 
-        let emphasisItemStyle = seriesScope && seriesScope.emphasisItemStyle;
-        let blurItemStyle = seriesScope && seriesScope.blurItemStyle;
-        let selectItemStyle = seriesScope && seriesScope.selectItemStyle;
 
-        let symbolOffset = seriesScope && seriesScope.symbolOffset;
+        let emphasisItemStyle;
+        let blurItemStyle;
+        let selectItemStyle;
+        let focus;
+        let blurScope: BlurScope;
 
-        let labelModel = seriesScope && seriesScope.labelModel;
-        let emphasisLabelModel = seriesScope && seriesScope.emphasisLabelModel;
-        let blurLabelModel = seriesScope && seriesScope.blurLabelModel;
-        let selectLabelModel = seriesScope && seriesScope.selectLabelModel;
+        let symbolOffset;
 
-        let hoverAnimation = seriesScope && seriesScope.hoverAnimation;
-        let cursorStyle = seriesScope && seriesScope.cursorStyle;
+        let labelModel;
+        let emphasisLabelModel;
+        let blurLabelModel;
+        let selectLabelModel;
+
+        let hoverAnimation;
+        let cursorStyle;
+
+        if (seriesScope) {
+            emphasisItemStyle = seriesScope.emphasisItemStyle;
+            blurItemStyle = seriesScope.blurItemStyle;
+            selectItemStyle = seriesScope.selectItemStyle;
+            focus = seriesScope.focus;
+            blurScope = seriesScope.blurScope;
+
+            symbolOffset = seriesScope.symbolOffset;
+
+            labelModel = seriesScope.labelModel;
+            emphasisLabelModel = seriesScope.emphasisLabelModel;
+            blurLabelModel = seriesScope.blurLabelModel;
+            selectLabelModel = seriesScope.selectLabelModel;
+
+            hoverAnimation = seriesScope.hoverAnimation;
+            cursorStyle = seriesScope.cursorStyle;
+        }
 
         if (!seriesScope || data.hasItemOption) {
             const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
 
-            emphasisItemStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+            const emphasisModel = itemModel.getModel('emphasis');
+            emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             selectItemStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
             blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
+
+            focus = emphasisModel.get('focus');
+            blurScope = emphasisModel.get('blurScope');
 
             symbolOffset = itemModel.getShallow('symbolOffset');
 
@@ -295,7 +320,7 @@ class Symbol extends graphic.Group {
             this.states.emphasis = null;
         }
 
-        enableHoverEmphasis(this);
+        enableHoverEmphasis(this, focus, blurScope);
     }
 
     setSymbolScale(scale: number) {

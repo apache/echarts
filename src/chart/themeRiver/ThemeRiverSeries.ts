@@ -326,6 +326,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         },
 
         emphasis: {
+
             label: {
                 show: true
             }

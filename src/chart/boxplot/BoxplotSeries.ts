@@ -110,13 +110,12 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
             itemStyle: {
                 borderWidth: 2,
                 shadowBlur: 5,
-                shadowOffsetX: 2,
-                shadowOffsetY: 2,
-                shadowColor: 'rgba(0,0,0,0.4)'
+                shadowOffsetX: 1,
+                shadowOffsetY: 1,
+                shadowColor: 'rgba(0,0,0,0.2)'
             }
         },
 
-        animationEasing: 'elasticOut',
         animationDuration: 800
     };
 }

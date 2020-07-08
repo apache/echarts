@@ -19,7 +19,7 @@
 
 import {bind, each, indexOf, curry, extend, retrieve} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { isHighDownDispatcher, setAsHighDownDispatcher, enableElementHoverEmphasis } from '../../util/states';
+import { isHighDownDispatcher, setAsHighDownDispatcher, enableElementHoverEmphasis, enableHoverFocus } from '../../util/states';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
@@ -790,6 +790,9 @@ function renderNode(
     const bg = giveGraphic('background', Rect, depth, Z_BG);
     bg && renderBackground(group, bg, isParent && thisLayout.upperLabelHeight);
 
+    const focus = nodeModel.get(['emphasis', 'focus']);
+    const blurScope = nodeModel.get(['emphasis', 'blurScope']);
+
     // No children, render content.
     if (isParent) {
         // Because of the implementation about "traverse" in graphic hover style, we
@@ -802,6 +805,8 @@ function renderNode(
             setAsHighDownDispatcher(bg, true);
             // Only for enabling highlight/downplay.
             data.setItemGraphicEl(thisNode.dataIndex, bg);
+
+            enableHoverFocus(group, focus, blurScope);
         }
     }
     else {
@@ -814,6 +819,8 @@ function renderNode(
         setAsHighDownDispatcher(group, true);
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
+
+        enableHoverFocus(group, focus, blurScope);
     }
 
     return group;

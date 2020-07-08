@@ -101,6 +101,7 @@ class SunburstPiece extends graphic.Sector {
         graphic.getECData(sector).dataIndex = node.dataIndex;
 
         const itemModel = node.getModel<SunburstSeriesNodeItemOption>();
+        const emphasisModel = itemModel.getModel('emphasis');
         const layout = node.getLayout();
         // if (!layout) {
         //     console.log(node.getLayout());
@@ -155,7 +156,7 @@ class SunburstPiece extends graphic.Sector {
         this._seriesModel = seriesModel || this._seriesModel;
         this._ecModel = ecModel || this._ecModel;
 
-        enableHoverEmphasis(this);
+        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     }
 
     onEmphasis(highlightPolicy: AllPropTypes<typeof NodeHighlightPolicy>) {

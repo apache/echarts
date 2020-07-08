@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel } from '../../util/states';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
 import GlobalModel from '../../model/Global';
@@ -181,7 +181,11 @@ function updateNormalBoxData(
 
     el.z2 = 100;
 
-    setStatesStylesFromModel(el, data.getItemModel<BoxplotDataItemOption>(dataIndex));
+    const itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
+
+    setStatesStylesFromModel(el, itemModel);
+
+    enableHoverEmphasis(el, itemModel.get(['emphasis', 'focus']), itemModel.get(['emphasis', 'blurScope']));
 }
 
 function transInit(points: number[][], dim: number, itemLayout: BoxplotItemLayout) {

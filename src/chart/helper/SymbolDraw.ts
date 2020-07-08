@@ -31,7 +31,8 @@ import {
     ZRColor,
     AnimationOptionMixin,
     ZRStyleProps,
-    StatesOptionMixin
+    StatesOptionMixin,
+    BlurScope
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
@@ -102,6 +103,9 @@ export interface SymbolDrawSeriesScope {
     blurItemStyle?: ZRStyleProps
     selectItemStyle?: ZRStyleProps
 
+    focus?: string
+    blurScope?: BlurScope
+
     symbolRotate?: number
     symbolOffset?: number[]
 
@@ -120,10 +124,14 @@ export interface SymbolDrawSeriesScope {
 
 function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     const seriesModel = data.hostModel as Model<ScatterSeriesOption>;
+    const emphasisModel = seriesModel.getModel('emphasis');
     return {
-        emphasisItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
+        emphasisItemStyle: emphasisModel.getModel('itemStyle').getItemStyle(),
         blurItemStyle: seriesModel.getModel(['blur', 'itemStyle']).getItemStyle(),
         selectItemStyle: seriesModel.getModel(['select', 'itemStyle']).getItemStyle(),
+
+        focus: emphasisModel.get('focus'),
+        blurScope: emphasisModel.get('blurScope'),
 
         symbolRotate: seriesModel.get('symbolRotate'),
         symbolOffset: seriesModel.get('symbolOffset'),
