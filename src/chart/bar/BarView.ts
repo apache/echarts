@@ -26,7 +26,8 @@ import {
     initProps,
     updateLabel,
     initLabel,
-    removeElement
+    removeElement,
+    removeElementWithFadeOut
 } from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { setLabelStyle } from '../../label/labelStyle';
@@ -46,8 +47,7 @@ import {
     OrdinalSortInfo,
     Payload,
     OrdinalNumber,
-    ParsedValue,
-    AnimationOptionMixin
+    ParsedValue
 } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -99,19 +99,6 @@ function getClipArea(coord: CoordSysOfBar, data: List) {
     }
 
     return coordSysClipArea;
-}
-
-function remove(el: Path, dataIndex: number, model: Model<AnimationOptionMixin>) {
-    if (el) {
-        el.removeTextContent();
-        removeElement(el, {
-            style: {
-                opacity: 0
-            }
-        }, model, dataIndex, function () {
-            el.parent && el.parent.remove(el);
-        });
-    }
 }
 
 class BarView extends ChartView {
@@ -420,7 +407,7 @@ class BarView extends ChartView {
             })
             .remove(function (dataIndex) {
                 const el = oldData.getItemGraphicEl(dataIndex) as Path;
-                remove(el, dataIndex, seriesModel);
+                el && removeElementWithFadeOut(el, seriesModel, dataIndex);
             })
             .execute();
 
@@ -550,7 +537,7 @@ class BarView extends ChartView {
             this._backgroundEls = [];
 
             data.eachItemGraphicEl(function (el: Path) {
-                remove(el, getECData(el).dataIndex, ecModel);
+                removeElementWithFadeOut(el, ecModel, getECData(el).dataIndex);
             });
         }
         else {

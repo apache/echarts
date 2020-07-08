@@ -316,11 +316,9 @@ export function toggleSeriesBlurStates(
 /**
  * Enable the function that mouseover will trigger the emphasis state.
  *
- * NOTICE:
- * Call the method for a "root" element once. Do not call it for each descendants.
- * If the descendants elemenets of a group has itself hover style different from the
- * root group, we can simply mount the style on `el.states.emphasis` for them, but should
- * not call this method for them.
+ * NOTE:
+ * This function should be used on the element with dataIndex, seriesIndex.
+ *
  */
 export function enableHoverEmphasis(el: Element, focus?: string, blurScope?: BlurScope) {
     setAsHighDownDispatcher(el, true);
@@ -332,15 +330,16 @@ export function enableHoverEmphasis(el: Element, focus?: string, blurScope?: Blu
 export function enableHoverFocus(el: Element, focus: string, blurScope: BlurScope) {
     if (focus != null) {
         const ecData = getECData(el);
-        if (ecData.dataIndex == null) {
-            if (__DEV__) {
-                console.warn('focus can only been set on element with dataIndex');
-            }
-        }
-        else {
-            ecData.focus = focus;
-            ecData.blurScope = blurScope;
-        }
+        // TODO dataIndex may be set after this function. This check is not useful.
+        // if (ecData.dataIndex == null) {
+        //     if (__DEV__) {
+        //         console.warn('focus can only been set on element with dataIndex');
+        //     }
+        // }
+        // else {
+        ecData.focus = focus;
+        ecData.blurScope = blurScope;
+        // }
     }
 }
 

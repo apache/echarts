@@ -201,7 +201,7 @@ class FunnelView extends ChartView {
             })
             .remove(function (idx) {
                 const piece = oldData.getItemGraphicEl(idx);
-                group.remove(piece);
+                graphic.removeElementWithFadeOut(piece, seriesModel, idx);
             })
             .execute();
 

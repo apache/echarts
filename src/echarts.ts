@@ -1873,7 +1873,7 @@ class ECharts extends Eventful {
                 const newStates = [];
                 const oldStates = el.currentStates;
 
-                // Not applied on removed elements;
+                // Not applied on removed elements, it may still in fading.
                 if (graphic.isElementRemoved(el)) {
                     return;
                 }
@@ -1986,6 +1986,11 @@ class ECharts extends Eventful {
         // TODO States on component.
         function clearStates(model: ComponentModel, view: ComponentView | ChartView): void {
             view.group.traverse(function (el: Displayable) {
+                // Not applied on removed elements, it may still in fading.
+                if (graphic.isElementRemoved(el)) {
+                    return;
+                }
+
                 const textContent = el.getTextContent();
                 const textGuide = el.getTextGuideLine();
                 if (el.stateTransition) {
@@ -2020,6 +2025,11 @@ class ECharts extends Eventful {
             } : null;
             view.group.traverse(function (el: Displayable) {
                 if (el.states && el.states.emphasis) {
+                    // Not applied on removed elements, it may still in fading.
+                    if (graphic.isElementRemoved(el)) {
+                        return;
+                    }
+
                     // Only updated on changed element. In case element is incremental and don't wan't to rerender.
                     // TODO, a more proper way?
                     if (el.__dirty) {

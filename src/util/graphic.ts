@@ -480,6 +480,44 @@ export function removeElement<Props>(
     animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
 }
 
+function fadeOutDisplayable(
+    el: Displayable,
+    animatableModel?: Model<AnimationOptionMixin>,
+    dataIndex?: number,
+    done?: AnimateOrSetPropsOption['cb']
+) {
+    el.removeTextContent();
+    el.removeTextGuideLine();
+    removeElement(el, {
+        style: {
+            opacity: 0
+        }
+    }, animatableModel, dataIndex, done);
+}
+
+export function removeElementWithFadeOut(
+    el: Element,
+    animatableModel?: Model<AnimationOptionMixin>,
+    dataIndex?: number
+) {
+    function doRemove() {
+        el.parent && el.parent.remove(el);
+    }
+    // Hide label and labelLine first
+    // TODO Also use fade out animation?
+    if (!el.isGroup) {
+        fadeOutDisplayable(el as Displayable, animatableModel, dataIndex, doRemove);
+    }
+    else {
+        (el as Group).traverse(function (disp: Displayable) {
+            if (!disp.isGroup) {
+                // Can invoke doRemove multiple times.
+                fadeOutDisplayable(disp as Displayable, animatableModel, dataIndex, doRemove);
+            }
+        });
+    }
+}
+
 /**
  * If element is removed.
  * It can determine if element is having remove animation.

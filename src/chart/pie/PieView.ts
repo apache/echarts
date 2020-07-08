@@ -295,7 +295,7 @@ class PieView extends ChartView {
             })
             .remove(function (idx) {
                 const piePiece = oldData.getItemGraphicEl(idx);
-                group.remove(piePiece);
+                graphic.removeElementWithFadeOut(piePiece, seriesModel, idx);
             })
             .execute();
 
