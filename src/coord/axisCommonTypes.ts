@@ -153,6 +153,21 @@ interface AxisTickOption {
     interval?: 'auto' | number | ((index: number, value: string) => boolean)
 }
 
+export type AxisLabelFormatterOption = string | ((value: OrdinalRawValue | number, index: number) => string);
+
+type TimeAxisLabelFormatterLevel = AxisLabelFormatterOption | string[];
+
+export type TimeAxisLabelFormatterOption = AxisLabelFormatterOption | {
+    year?: TimeAxisLabelFormatterLevel,
+    month?: TimeAxisLabelFormatterLevel,
+    week?: TimeAxisLabelFormatterLevel,
+    day?: TimeAxisLabelFormatterLevel,
+    hour?: TimeAxisLabelFormatterLevel,
+    minute?: TimeAxisLabelFormatterLevel,
+    second?: TimeAxisLabelFormatterLevel,
+    millisecond?: TimeAxisLabelFormatterLevel
+};
+
 interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
@@ -164,7 +179,7 @@ interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     showMaxLabel?: boolean,
     margin?: number,
     // value is supposed to be OptionDataPrimitive but for time axis, it is time stamp.
-    formatter?: string | ((value: OrdinalRawValue | number, index: number) => string),
+    formatter?: AxisLabelFormatterOption | TimeAxisLabelFormatterOption,
 
     // --------------------------------------------
     // [Properties below only for 'category' axis]:

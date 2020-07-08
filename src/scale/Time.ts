@@ -44,6 +44,7 @@ import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 import Scale from './Scale';
 import {TimeScaleTick} from '../util/types';
+import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 
 
 const mathCeil = Math.ceil;
@@ -81,10 +82,21 @@ class TimeScale extends IntervalScale {
     private _stepLvl: [string, number];
 
     getLabel(tick: TimeScaleTick): string {
-        const stepLvl = this._stepLvl;
+        // const stepLvl = this._stepLvl;
 
         const labelFormatType = getLabelFormatType(tick.value, this.getSetting('useUTC'), false);
         return formatUtil.formatTime(labelFormatType, tick.value);
+    }
+
+    getFormattedLabel(
+        tick: TimeScaleTick,
+        labelFormatter: TimeAxisLabelFormatterOption
+    ): string {
+        const durationName = getLabelFormatType(tick.value, this.getSetting('useUTC'), true);
+        if (typeof labelFormatter === 'string') {
+            // Single formatter for all durations and levels
+            return formatUtil.formatTime(durationName, tick.value);
+        }
     }
 
     /**
@@ -119,12 +131,12 @@ class TimeScale extends IntervalScale {
 
         const useUTC = this.getSetting('useUTC');
 
-        const scaleLevelsLen = primaryScaleLevels.length;
-        const idx = bisect(primaryScaleLevels, this._interval, 0, scaleLevelsLen);
-        const level = primaryScaleLevels[Math.min(idx, scaleLevelsLen - 1)];
+        const unitLen = primaryUnitIntervals.length;
+        const idx = bisect(primaryUnitIntervals, this._interval, 0, unitLen);
+        const intervals = primaryUnitIntervals[Math.min(idx, unitLen - 1)];
 
-        const innerTicks = getLevelTicks(
-            level[0] as TimeAxisLabelPrimaryLevel,
+        const innerTicks = getIntervalTicks(
+            intervals[0] as PrimaryTimeUnit,
             useUTC,
             extent
         );
@@ -205,13 +217,13 @@ class TimeScale extends IntervalScale {
             approxInterval = maxInterval;
         }
 
-        const scaleLevelsLen = scaleLevels.length;
-        const idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
+        const scaleIntervalsLen = scaleIntervals.length;
+        const idx = bisect(scaleIntervals, approxInterval, 0, scaleIntervalsLen);
 
-        const level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
-        let interval = level[1];
+        const intervals = scaleIntervals[Math.min(idx, scaleIntervalsLen - 1)];
+        let interval = intervals[1];
         // Same with interval scale if span is much larger than 1 year
-        if (level[0] === 'year') {
+        if (intervals[0] === 'year') {
             const yearSpan = span / interval;
 
             // From "Nice Numbers for Graph Labels" of Graphic Gems
@@ -230,7 +242,7 @@ class TimeScale extends IntervalScale {
 
         scaleHelper.fixExtent(niceExtent, extent);
 
-        this._stepLvl = level;
+        this._stepLvl = intervals;
         // Interval will be used in getTicks
         this._interval = interval;
         this._niceExtent = niceExtent;
@@ -262,7 +274,7 @@ class TimeScale extends IntervalScale {
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
-const scaleLevels = [
+const scaleIntervals = [
     // Format              interval
     ['hh:mm:ss', ONE_SECOND],          // 1s
     ['hh:mm:ss', ONE_SECOND * 5],      // 5s
@@ -301,31 +313,27 @@ const scaleLevels = [
     ['year', ONE_DAY * 380]            // 1Y
 ] as [string, number][];
 
-const primaryScaleLevels = [
+const primaryUnitIntervals = [
     // Format              interval
-    ['second', ONE_SECOND],          // 1s
-    ['minute', ONE_MINUTE],      // 1m
-    ['hour', ONE_HOUR],        // 1h
-    ['day', ONE_DAY],          // 1d
+    ['second', ONE_SECOND],            // 1s
+    ['minute', ONE_MINUTE],            // 1m
+    ['hour', ONE_HOUR],                // 1h
+    ['day', ONE_DAY],                  // 1d
     ['week', ONE_DAY * 7],             // 7d
     ['month', ONE_DAY * 31],           // 1M
     ['year', ONE_DAY * 380]            // 1Y
 ] as [string, number][];
 
 
-type TimeAxisLabelPrimaryLevel = 'millisecond'
-    | 'second' | 'minute' | 'hour'
+type PrimaryTimeUnit = 'millisecond' | 'second' | 'minute' | 'hour'
     | 'day' | 'month' | 'year';
-type TimeAxisLabelLevel = TimeAxisLabelPrimaryLevel
-    | 'week' | 'quarter' | 'half-year';
-
-const primaryLevels = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'millisecond'];
+type TimeUnit = PrimaryTimeUnit | 'week' | 'quarter' | 'half-year';
 
 function getLabelFormatType(
     value: number | string | Date,
     isUTC: boolean,
     primaryOnly: boolean
-): TimeAxisLabelLevel {
+): TimeUnit {
     const date = numberUtil.parseDate(value);
     const utc = isUTC ? 'UTC' : '';
     const M = (date as any)['get' + utc + 'Month']() + 1;
@@ -379,7 +387,7 @@ function getLabelFormatType(
 }
 
 
-function getLabelFormatValueFromLevel(value: number | Date, isUTC: boolean, level?: TimeAxisLabelLevel) : number {
+function getLabelFormatValueFromUnit(value: number | Date, isUTC: boolean, level?: TimeUnit) : number {
     const date = typeof value === 'number'
         ? numberUtil.parseDate(value) as any
         : value;
@@ -405,50 +413,53 @@ function getLabelFormatValueFromLevel(value: number | Date, isUTC: boolean, leve
 }
 
 
-function isLevelValueSame(level: TimeAxisLabelPrimaryLevel, valueA: number, valueB: number, isUTC: boolean): boolean {
+function isUnitValueSame(unit: PrimaryTimeUnit, valueA: number, valueB: number, isUTC: boolean): boolean {
     const dateA = numberUtil.parseDate(valueA) as any;
     const dateB = numberUtil.parseDate(valueB) as any;
-    const utc = isUTC ? 'UTC' : '';
-    const isSame = (compareLevel: TimeAxisLabelPrimaryLevel) => {
-        return getLabelFormatValueFromLevel(dateA, isUTC, compareLevel)
-            === getLabelFormatValueFromLevel(dateB, isUTC, compareLevel);
-    };
 
-    switch (level) {
+    const isSame = (unit: PrimaryTimeUnit) => {
+        return getLabelFormatValueFromUnit(dateA, isUTC, unit)
+            === getLabelFormatValueFromUnit(dateB, isUTC, unit);
+    };
+    const isSameYear = () => isSame('year');
+    const isSameMonth = () => isSameYear() && isSame('month');
+    const isSameDay = () => isSameMonth() && isSame('day');
+    const isSameHour = () => isSameDay() && isSame('hour');
+    const isSameMinute = () => isSameHour() && isSame('minute');
+    const isSameSecond = () => isSameMinute() && isSame('second');
+    const isSameMilliSecond = () => isSameSecond() && isSame('millisecond');
+
+    switch (unit) {
         case 'year':
-            return isSame('year');
+            return isSameYear();
         case 'month':
-            return isSame('year') && isSame('month');
+            return isSameMonth();
         case 'day':
-            return isSame('year') && isSame('month') && isSame('day');
+            return isSameDay();
         case 'hour':
-            return isSame('year') && isSame('month') && isSame('day')
-                && isSame('hour');
+            return isSameHour();
         case 'minute':
-            return isSame('year') && isSame('month') && isSame('day')
-                && isSame('hour') && isSame('minute');
+            return isSameMinute();
         case 'second':
-            return isSame('year') && isSame('month') && isSame('day')
-                && isSame('hour') && isSame('minute') && isSame('second');
+            return isSameSecond();
         case 'millisecond':
-            return isSame('year') && isSame('month') && isSame('day')
-                && isSame('hour') && isSame('minute') && isSame('second')
-                && isSame('millisecond');
+            return isSameMilliSecond();
     }
 }
 
 
-function getLevelTicks(
-    level: TimeAxisLabelLevel,
+function getIntervalTicks(
+    unitName: TimeUnit,
     isUTC: boolean,
     extent: number[]
 ): TimeScaleTick[] {
     const utc = isUTC ? 'UTC' : '';
     const ticks: TimeScaleTick[] = [];
-    for (let i = 0, levelId = 0; i < primaryLevels.length; ++i) {
+    const unitNames = primaryUnitIntervals.map(i => i[0]);
+    for (let i = unitNames.length - 1, levelId = 0; i >= 0; --i) {
         let date = new Date(extent[0]) as any;
 
-        if (primaryLevels[i] === 'week') {
+        if (unitNames[i] === 'week') {
             date['set' + utc + 'Hours'](0);
             date['set' + utc + 'Minutes'](0);
             date['set' + utc + 'Seconds'](0);
@@ -458,7 +469,7 @@ function getLevelTicks(
             while (isDateWithinExtent) {
                 const dates = date['get' + utc + 'Month']() + 1 === 2
                     ? [8, 15, 22]
-                    : [8, 16, 23];
+                    : [8, 16, 24];
                 for (let d = 0; d < dates.length; ++d) {
                     date['set' + utc + 'Date'](dates[d]);
                     const dateTime = (date as Date).getTime();
@@ -476,15 +487,13 @@ function getLevelTicks(
                 date['set' + utc + 'Month'](date['get' + utc + 'Month']() + 1);
             }
         }
-        else if (
-            !isLevelValueSame(
-                primaryLevels[i] as TimeAxisLabelPrimaryLevel,
-                extent[0], extent[1], isUTC
-            )
-        ) {
+        else if (!isUnitValueSame(
+            unitNames[i] as PrimaryTimeUnit,
+            extent[0], extent[1], isUTC
+        )) {
             // Level value changes within extent
             while (true) {
-                if (primaryLevels[i] === 'year') {
+                if (unitNames[i] === 'year') {
                     date['set' + utc + 'FullYear'](date['get' + utc + 'FullYear']() + 1);
                     date['set' + utc + 'Month'](0);
                     date['set' + utc + 'Date'](1);
@@ -492,7 +501,7 @@ function getLevelTicks(
                     date['set' + utc + 'Minutes'](0);
                     date['set' + utc + 'Seconds'](0);
                 }
-                else if (primaryLevels[i] === 'month') {
+                else if (unitNames[i] === 'month') {
                     // This also works with Dec.
                     date['set' + utc + 'Month'](date['get' + utc + 'Month']() + 1);
                     date['set' + utc + 'Date'](1);
@@ -500,23 +509,23 @@ function getLevelTicks(
                     date['set' + utc + 'Minutes'](0);
                     date['set' + utc + 'Seconds'](0);
                 }
-                else if (primaryLevels[i] === 'day') {
+                else if (unitNames[i] === 'day') {
                     date['set' + utc + 'Date'](date['get' + utc + 'Date']() + 1);
                     date['set' + utc + 'Hours'](0);
                     date['set' + utc + 'Minutes'](0);
                     date['set' + utc + 'Seconds'](0);
                 }
-                else if (primaryLevels[i] === 'hour') {
+                else if (unitNames[i] === 'hour') {
                     date['set' + utc + 'Hours'](date['get' + utc + 'Hours']() + 1);
                     date['set' + utc + 'Minutes'](0);
                     date['set' + utc + 'Seconds'](0);
                 }
-                else if (primaryLevels[i] === 'minute') {
+                else if (unitNames[i] === 'minute') {
                     date['set' + utc + 'Minutes'](date['get' + utc + 'Minutes']() + 1);
                     date['set' + utc + 'Minutes'](0);
                     date['set' + utc + 'Seconds'](0);
                 }
-                else if (primaryLevels[i] === 'second') {
+                else if (unitNames[i] === 'second') {
                     date['set' + utc + 'Seconds'](date['get' + utc + 'Seconds']() + 1);
                 }
                 date['set' + utc + 'Milliseconds'](0); // TODO: not sure
@@ -535,7 +544,7 @@ function getLevelTicks(
             ++levelId;
         }
 
-        if (primaryLevels[i] === level) {
+        if (unitNames[i] === unitName) {
             break;
         }
     }

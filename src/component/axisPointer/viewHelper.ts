@@ -164,9 +164,11 @@ export function getValueLabel(
 ): string {
     value = axis.scale.parse(value);
     let text = (axis.scale as IntervalScale).getLabel(
-        // If `precision` is set, width can be fixed (like '12.00500'), which
-        // helps to debounce when when moving label.
-        value, {
+        {
+            value
+        }, {
+            // If `precision` is set, width can be fixed (like '12.00500'), which
+            // helps to debounce when when moving label.
             precision: opt.precision
         }
     );
@@ -174,7 +176,7 @@ export function getValueLabel(
 
     if (formatter) {
         const params = {
-            value: axisHelper.getAxisRawValue(axis, value),
+            value: axisHelper.getAxisRawValue(axis, {value}),
             axisDimension: axis.dim,
             axisIndex: (axis as Axis2D).index,  // Only Carteian Axis has index
             seriesData: [] as CallbackDataParams[]

@@ -257,7 +257,15 @@ export interface ScaleTick {
     value: number
 };
 export interface TimeScaleTick extends ScaleTick {
-    level: number
+    /**
+     * Level information is used for label formatting.
+     * For example, a time axis may contain labels like: Jan, 8th, 16th, 23th,
+     * Feb, and etc. In this case, month labels like Jan and Feb should be
+     * displayed in a more significant way than days.
+     * `level` is set to be 0 when it's the most significant level, like month
+     * labels in the above case.
+     */
+    level?: number
 };
 export interface OrdinalScaleTick extends ScaleTick {
     value: OrdinalNumber
