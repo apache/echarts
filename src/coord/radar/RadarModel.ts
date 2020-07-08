@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import axisDefault from '../axisDefault';
 import Model from '../../model/Model';
-import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import ComponentModel from '../../model/Component';
 import {
     ComponentOption,
@@ -32,6 +31,7 @@ import { AxisBaseOption } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import Radar from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
+import {mixinAxisModelCommonMethods} from '../../helper';
 
 const valueAxisDefault = axisDefault.value;
 
@@ -151,11 +151,9 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                     innerIndicatorOpt.name, innerIndicatorOpt
                 );
             }
-            const model = zrUtil.extend(
-                new Model(innerIndicatorOpt, null, this.ecModel),
-                AxisModelCommonMixin.prototype
-            ) as AxisBaseModel<InnerIndicatorAxisOption>;
 
+            mixinAxisModelCommonMethods(Model);
+            const model = new Model(innerIndicatorOpt, null, this.ecModel) as AxisBaseModel<InnerIndicatorAxisOption>;
             // For triggerEvent.
             model.mainType = 'radar';
             model.componentIndex = this.componentIndex;
