@@ -142,8 +142,7 @@ const GraphicModel = echarts.extendComponentModel({
         const flattenedList = [];
         this._flatten(newList, flattenedList);
 
-        const mappingResult = modelUtil.mappingToExistsInNormalMerge(existList, flattenedList);
-        modelUtil.makeIdAndName(mappingResult);
+        const mappingResult = modelUtil.mappingToExists(existList, flattenedList, 'normalMerge');
 
         // Clear elOptionsToUpdate
         const elOptionsToUpdate = this._elOptionsToUpdate = [];

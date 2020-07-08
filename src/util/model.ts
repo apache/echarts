@@ -30,7 +30,7 @@ import {
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel, { QueryConditionKindB } from '../model/Global';
-import ComponentModel from '../model/Component';
+import ComponentModel, {ComponentModelConstructor} from '../model/Component';
 import List from '../data/List';
 import {
     ComponentOption,
@@ -142,7 +142,14 @@ export function isDataItemOption(dataItem: OptionDataItem): boolean {
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
 }
 
-type MappingExistItem = {id?: string, name?: string} | ComponentModel;
+// Compatible with previous definition: id could be number (but not recommanded).
+// number and number-like string are trade the same when compare.
+// number id will not be converted to string in option.
+// number id will be converted to string in component instance id.
+export interface MappingExistingItem {
+    id?: string | number;
+    name?: string;
+};
 /**
  * The array `MappingResult<T>[]` exactly represents the content of the result
  * components array after merge.
@@ -150,7 +157,7 @@ type MappingExistItem = {id?: string, name?: string} | ComponentModel;
  * Items will not be `null`/`undefined` even if the corresponding `existings` will be removed.
  */
 type MappingResult<T> = MappingResultItem<T>[];
-interface MappingResultItem<T> {
+interface MappingResultItem<T extends MappingExistingItem = MappingExistingItem> {
     // Existing component instance.
     existing?: T;
     // The mapped new component option.
@@ -160,13 +167,24 @@ interface MappingResultItem<T> {
     brandNew?: boolean;
     // id?: string;
     // name?: string;
-    // keyInfo for new component option.
+    // keyInfo for new component.
+    // All of them will be assigned to a created component instance.
     keyInfo?: {
-        name?: string,
-        id?: string,
-        mainType?: ComponentMainType,
-        subType?: ComponentSubType
+        name: string,
+        id: string,
+        mainType: ComponentMainType,
+        subType: ComponentSubType
     };
+}
+
+export function mappingToExists<T extends MappingExistingItem>(
+    existings: T[],
+    newCmptOptions: ComponentOption[],
+    mode: 'normalMerge' | 'replaceMerge'
+): MappingResult<T> {
+    return mode === 'replaceMerge'
+        ? mappingToExistsInReplaceMerge(existings, newCmptOptions)
+        : mappingToExistsInNormalMerge(existings, newCmptOptions);
 }
 
 /**
@@ -179,7 +197,7 @@ interface MappingResultItem<T> {
  *
  * @return See the comment of <MappingResult>.
  */
-export function mappingToExistsInNormalMerge<T extends MappingExistItem>(
+function mappingToExistsInNormalMerge<T extends MappingExistingItem>(
     existings: T[],
     newCmptOptions: ComponentOption[]
 ): MappingResult<T> {
@@ -205,9 +223,8 @@ export function mappingToExistsInNormalMerge<T extends MappingExistItem>(
         for (let i = 0; i < result.length; i++) {
             const existing = result[i].existing;
             if (!result[i].newOption // Consider name: two map to one.
-                && cmptOption.id != null
                 && existing
-                && existing.id === cmptOption.id + ''
+                && keyExistAndEqual('id', existing, cmptOption)
             ) {
                 result[i].newOption = cmptOption;
                 newCmptOptions[index] = null;
@@ -221,10 +238,9 @@ export function mappingToExistsInNormalMerge<T extends MappingExistItem>(
                 // Can not match when both ids existing but different.
                 && existing
                 && (existing.id == null || cmptOption.id == null)
-                && cmptOption.name != null
                 && !isIdInner(cmptOption)
                 && !isIdInner(existing)
-                && existing.name === cmptOption.name + ''
+                && keyExistAndEqual('name', existing, cmptOption)
             ) {
                 result[i].newOption = cmptOption;
                 newCmptOptions[index] = null;
@@ -234,6 +250,8 @@ export function mappingToExistsInNormalMerge<T extends MappingExistItem>(
     });
 
     mappingByIndexFinally(newCmptOptions, result, false);
+
+    makeIdAndName(result);
 
     return result;
 }
@@ -250,7 +268,7 @@ export function mappingToExistsInNormalMerge<T extends MappingExistItem>(
  *
  * @return See the comment of <MappingResult>.
  */
-export function mappingToExistsInReplaceMerge<T extends MappingExistItem>(
+function mappingToExistsInReplaceMerge<T extends MappingExistingItem>(
     existings: T[],
     newCmptOptions: ComponentOption[]
 ): MappingResult<T> {
@@ -272,7 +290,10 @@ export function mappingToExistsInReplaceMerge<T extends MappingExistItem>(
                 innerExisting = existing;
             }
             // Input with inner id is allowed for convenience of some internal usage.
-            existingIdIdxMap.set(existing.id, index);
+            // When `existing` is rawOption (see `OptionManager`#`mergeOption`), id might be empty.
+            if (existing.id != null) {
+                existingIdIdxMap.set(existing.id, index);
+            }
         }
         result.push({ existing: innerExisting });
     }
@@ -283,7 +304,10 @@ export function mappingToExistsInReplaceMerge<T extends MappingExistItem>(
             newCmptOptions[index] = null;
             return;
         }
-        const optionId = cmptOption.id + '';
+        if (cmptOption.id == null) {
+            return;
+        }
+        const optionId = makeComparableKey(cmptOption.id);
         const existingIdx = existingIdIdxMap.get(optionId);
         if (existingIdx != null) {
             if (__DEV__) {
@@ -303,12 +327,14 @@ export function mappingToExistsInReplaceMerge<T extends MappingExistItem>(
 
     mappingByIndexFinally(newCmptOptions, result, true);
 
+    makeIdAndName(result);
+
     // The array `result` MUST NOT contain elided items, otherwise the
     // forEach will ommit those items and result in incorrect result.
     return result;
 }
 
-function mappingByIndexFinally<T extends MappingExistItem>(
+function mappingByIndexFinally<T extends MappingExistingItem>(
     newCmptOptions: ComponentOption[],
     mappingResult: MappingResult<T>,
     allBrandNew: boolean
@@ -331,7 +357,11 @@ function mappingByIndexFinally<T extends MappingExistItem>(
             // not be merged to the existings with different id. Because id should not be overwritten.
             // (3) Name can be overwritten, because axis use name as 'show label text'.
             && (
-                (cmptOption.id != null && resultItem.existing)
+                (
+                    cmptOption.id != null
+                    && resultItem.existing
+                    && !keyExistAndEqual('id', cmptOption, resultItem.existing)
+                )
                 || resultItem.newOption
                 || isIdInner(resultItem.existing)
             )
@@ -354,8 +384,8 @@ function mappingByIndexFinally<T extends MappingExistItem>(
  * Make id and name for mapping result (result of mappingToExists)
  * into `keyInfo` field.
  */
-export function makeIdAndName(
-    mapResult: MappingResult<MappingExistItem>
+function makeIdAndName(
+    mapResult: MappingResult<MappingExistingItem>
 ): void {
     // We use this id to hash component models and view instances
     // in echarts. id can be specified by user, or auto generated.
@@ -385,7 +415,7 @@ export function makeIdAndName(
         );
 
         opt && opt.id != null && idMap.set(opt.id, item);
-        !item.keyInfo && (item.keyInfo = {});
+        !item.keyInfo && (item.keyInfo = {} as MappingResultItem['keyInfo']);
     });
 
     // Make name and id.
@@ -403,7 +433,7 @@ export function makeIdAndName(
         // only in that case: setOption with 'not merge mode' and view
         // instance will be recreated, which can be accepted.
         keyInfo.name = opt.name != null
-            ? opt.name + ''
+            ? makeComparableKey(opt.name)
             : existing
             ? existing.name
             // Avoid diffferent series has the same name,
@@ -411,10 +441,10 @@ export function makeIdAndName(
             : DUMMY_COMPONENT_NAME_PREFIX + index;
 
         if (existing) {
-            keyInfo.id = existing.id;
+            keyInfo.id = makeComparableKey(existing.id);
         }
         else if (opt.id != null) {
-            keyInfo.id = opt.id + '';
+            keyInfo.id = makeComparableKey(opt.id);
         }
         else {
             // Consider this situatoin:
@@ -433,6 +463,25 @@ export function makeIdAndName(
     });
 }
 
+function keyExistAndEqual(attr: 'id' | 'name', obj1: MappingExistingItem, obj2: MappingExistingItem): boolean {
+    const key1 = obj1[attr];
+    const key2 = obj2[attr];
+    // See `MappingExistingItem`. `id` and `name` trade number-like string equals to number.
+    return key1 != null && key2 != null && key1 + '' === key2 + '';
+}
+
+/**
+ * @return return null if not exist.
+ */
+function makeComparableKey(val: string | number): string {
+    if (__DEV__) {
+        if (val == null) {
+            throw new Error();
+        }
+    }
+    return val + '';
+}
+
 export function isNameSpecified(componentModel: ComponentModel): boolean {
     const name = componentModel.name;
     // Is specified when `indexOf` get -1 or > 0.
@@ -444,11 +493,45 @@ export function isNameSpecified(componentModel: ComponentModel): boolean {
  * @param {Object} cmptOption
  * @return {boolean}
  */
-export function isIdInner(cmptOption: ComponentOption): boolean {
+export function isIdInner(cmptOption: MappingExistingItem): boolean {
     return cmptOption
-        && cmptOption.id
-        && (cmptOption.id + '').indexOf('\0_ec_\0') === 0;
+        && cmptOption.id != null
+        && makeComparableKey(cmptOption.id).indexOf('\0_ec_\0') === 0;
 }
+
+
+export function setComponentTypeToKeyInfo(
+    mappingResult: MappingResult<MappingExistingItem & { subType?: ComponentSubType }>,
+    mainType: ComponentMainType,
+    componentModelCtor: ComponentModelConstructor
+): void {
+    // Set mainType and complete subType.
+    each(mappingResult, function (item) {
+        const newOption = item.newOption;
+        if (isObject(newOption)) {
+            item.keyInfo.mainType = mainType;
+            item.keyInfo.subType = determineSubType(mainType, newOption, item.existing, componentModelCtor);
+        }
+    });
+}
+
+function determineSubType(
+    mainType: ComponentMainType,
+    newCmptOption: ComponentOption,
+    existComponent: { subType?: ComponentSubType },
+    componentModelCtor: ComponentModelConstructor
+): ComponentSubType {
+    const subType = newCmptOption.type
+        ? newCmptOption.type
+        : existComponent
+        ? existComponent.subType
+        // Use determineSubType only when there is no existComponent.
+        : (componentModelCtor as ComponentModelConstructor).determineSubType(mainType, newCmptOption);
+
+    // tooltip, markline, markpoint may always has no subType
+    return subType;
+}
+
 
 type BatchItem = {
     seriesId: string,

@@ -22,17 +22,18 @@
  */
 
 
-import * as zrUtil from 'zrender/src/core/util';
-import * as modelUtil from '../util/model';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import ExtensionAPI from '../ExtensionAPI';
-import { OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption } from '../util/types';
+import {
+    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption, SeriesOption, ComponentOption
+} from '../util/types';
 import GlobalModel, { InnerSetOptionOpts } from './Global';
-
-const each = zrUtil.each;
-const clone = zrUtil.clone;
-const map = zrUtil.map;
-const merge = zrUtil.merge;
+import {
+    MappingExistingItem, normalizeToArray, setComponentTypeToKeyInfo, mappingToExists
+} from '../util/model';
+import {
+    each, clone, map, merge, isTypedArray, setAsPrimitive, HashMap, createHashMap, extend
+} from 'zrender/src/core/util';
 
 const QUERY_REG = /^(min|max)?(.+)$/;
 
@@ -42,6 +43,9 @@ interface ParsedRawOption {
     mediaDefault: MediaUnit;
     mediaList: MediaUnit[];
 }
+
+// Key: mainType
+type FakeComponentsMap = HashMap<(MappingExistingItem & { subType: string })[]>;
 
 /**
  * TERM EXPLANATIONS:
@@ -65,6 +69,8 @@ class OptionManager {
 
     private _optionBackup: ParsedRawOption;
 
+    private _fakeCmptsMap: FakeComponentsMap;
+
     private _newBaseOption: ECUnitOption;
 
     // timeline.notMerge is not supported in ec3. Firstly there is rearly
@@ -87,8 +93,8 @@ class OptionManager {
     ): void {
         if (rawOption) {
             // That set dat primitive is dangerous if user reuse the data when setOption again.
-            zrUtil.each(modelUtil.normalizeToArray((rawOption as ECUnitOption).series), function (series) {
-                series && series.data && zrUtil.isTypedArray(series.data) && zrUtil.setAsPrimitive(series.data);
+            each(normalizeToArray((rawOption as ECUnitOption).series), function (series: SeriesOption) {
+                series && series.data && isTypedArray(series.data) && setAsPrimitive(series.data);
             });
         }
 
@@ -101,28 +107,36 @@ class OptionManager {
         // If some property is set in timeline options or media option but
         // not set in baseOption, a warning should be given.
 
-        const oldOptionBackup = this._optionBackup;
+        const optionBackup = this._optionBackup;
         const newParsedOption = parseRawOption(
-            rawOption, optionPreprocessorFuncs, !oldOptionBackup
+            rawOption, optionPreprocessorFuncs, !optionBackup
         );
         this._newBaseOption = newParsedOption.baseOption;
 
         // For setOption at second time (using merge mode);
-        if (oldOptionBackup) {
-            // Only baseOption can be merged.
-            mergeOption(oldOptionBackup.baseOption, newParsedOption.baseOption, opt);
+        if (optionBackup) {
+            // The first merge is delayed, becuase in most cases, users do not call `setOption` twice.
+            let fakeCmptsMap = this._fakeCmptsMap;
+            if (!fakeCmptsMap) {
+                fakeCmptsMap = this._fakeCmptsMap = createHashMap();
+                mergeToBackupOption(fakeCmptsMap, null, optionBackup.baseOption, null);
+            }
+
+            mergeToBackupOption(
+                fakeCmptsMap, optionBackup.baseOption, newParsedOption.baseOption, opt
+            );
 
             // For simplicity, timeline options and media options do not support merge,
             // that is, if you `setOption` twice and both has timeline options, the latter
             // timeline opitons will not be merged to the formers, but just substitude them.
             if (newParsedOption.timelineOptions.length) {
-                oldOptionBackup.timelineOptions = newParsedOption.timelineOptions;
+                optionBackup.timelineOptions = newParsedOption.timelineOptions;
             }
             if (newParsedOption.mediaList.length) {
-                oldOptionBackup.mediaList = newParsedOption.mediaList;
+                optionBackup.mediaList = newParsedOption.mediaList;
             }
             if (newParsedOption.mediaDefault) {
-                oldOptionBackup.mediaDefault = newParsedOption.mediaDefault;
+                optionBackup.mediaDefault = newParsedOption.mediaDefault;
             }
         }
         else {
@@ -133,14 +147,14 @@ class OptionManager {
     mountOption(isRecreate: boolean): ECUnitOption {
         const optionBackup = this._optionBackup;
 
-        this._timelineOptions = map(optionBackup.timelineOptions, clone);
-        this._mediaList = map(optionBackup.mediaList, clone);
-        this._mediaDefault = clone(optionBackup.mediaDefault);
+        this._timelineOptions = optionBackup.timelineOptions;
+        this._mediaList = optionBackup.mediaList;
+        this._mediaDefault = optionBackup.mediaDefault;
         this._currentMediaIndices = [];
 
         return clone(isRecreate
             // this._optionBackup.baseOption, which is created at the first `setOption`
-            // called, and is merged into every new option by inner method `mergeOption`
+            // called, and is merged into every new option by inner method `mergeToBackupOption`
             // each time `setOption` called, can be only used in `isRecreate`, because
             // its reliability is under suspicion. In other cases option merge is
             // performed by `model.mergeOption`.
@@ -263,7 +277,7 @@ function parseRawOption(
 
     // Preprocess.
     each([baseOption].concat(timelineOptions)
-        .concat(zrUtil.map(mediaList, function (media) {
+        .concat(map(mediaList, function (media) {
             return media.option;
         })),
         function (option) {
@@ -295,7 +309,7 @@ function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): 
 
     let applicatable = true;
 
-    zrUtil.each(query, function (value: number, attr) {
+    each(query, function (value: number, attr) {
         const matched = attr.match(QUERY_REG);
 
         if (!matched || !matched[1] || !matched[2]) {
@@ -359,33 +373,73 @@ function indicesEquals(indices1: number[], indices2: number[]): boolean {
  * When "resotre" action triggered, model from `componentActionModel` will be discarded
  * instead of recreating the "ecModel" from the "_optionBackup".
  */
-function mergeOption(
-    oldOption: ECUnitOption, newOption: ECUnitOption, opt: InnerSetOptionOpts
+function mergeToBackupOption(
+    fakeCmptsMap: FakeComponentsMap,
+    // `tarOption` Can be null/undefined, means init
+    tarOption: ECUnitOption,
+    newOption: ECUnitOption,
+    // Can be null/undefined
+    opt: InnerSetOptionOpts
 ): void {
     newOption = newOption || {} as ECUnitOption;
+    const notInit = !!tarOption;
 
-    each(newOption, function (newCptOpt, mainType) {
-        if (newCptOpt == null) {
+    each(newOption, function (newOptsInMainType, mainType) {
+        if (newOptsInMainType == null) {
             return;
         }
 
-        let oldCptOpt = oldOption[mainType];
-
-        if (!(ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
-            oldOption[mainType] = merge(oldCptOpt, newCptOpt, true);
+        if (!ComponentModel.hasClass(mainType)) {
+            if (tarOption) {
+                tarOption[mainType] = merge(tarOption[mainType], newOptsInMainType, true);
+            }
         }
         else {
-            newCptOpt = modelUtil.normalizeToArray(newCptOpt);
-            oldCptOpt = modelUtil.normalizeToArray(oldCptOpt);
+            const oldTarOptsInMainType = notInit ? normalizeToArray(tarOption[mainType]) : null;
+            const oldFakeCmptsInMainType = fakeCmptsMap.get(mainType) || [];
+            const resultTarOptsInMainType = notInit ? (tarOption[mainType] = [] as ComponentOption[]) : null;
+            const resultFakeCmptsInMainType = fakeCmptsMap.set(mainType, []);
 
-            const mapResult = opt.replaceMergeMainTypeMap.get(mainType)
-                ? modelUtil.mappingToExistsInReplaceMerge(oldCptOpt, newCptOpt)
-                : modelUtil.mappingToExistsInNormalMerge(oldCptOpt, newCptOpt);
+            const mappingResult = mappingToExists(
+                oldFakeCmptsInMainType,
+                normalizeToArray(newOptsInMainType),
+                (opt && opt.replaceMergeMainTypeMap.get(mainType)) ? 'replaceMerge' : 'normalMerge'
+            );
+            setComponentTypeToKeyInfo(mappingResult, mainType, ComponentModel as ComponentModelConstructor);
 
-            oldOption[mainType] = map(mapResult, function (item) {
-                return (item.newOption && item.existing)
-                    ? merge(item.existing, item.newOption, true)
-                    : (item.existing || item.newOption);
+            each(mappingResult, function (resultItem, index) {
+                // The same logic as `Global.ts#_mergeOption`.
+                let fakeCmpt = resultItem.existing;
+                const newOption = resultItem.newOption;
+                const keyInfo = resultItem.keyInfo;
+                let fakeCmptOpt;
+
+                if (!newOption) {
+                    fakeCmptOpt = oldTarOptsInMainType[index];
+                }
+                else {
+                    if (fakeCmpt && fakeCmpt.subType === keyInfo.subType) {
+                        fakeCmpt.name = keyInfo.name;
+                        if (notInit) {
+                            fakeCmptOpt = merge(oldTarOptsInMainType[index], newOption, true);
+                        }
+                    }
+                    else {
+                        fakeCmpt = extend({}, keyInfo);
+                        if (notInit) {
+                            fakeCmptOpt = clone(newOption);
+                        }
+                    }
+                }
+
+                if (fakeCmpt) {
+                    notInit && resultTarOptsInMainType.push(fakeCmptOpt);
+                    resultFakeCmptsInMainType.push(fakeCmpt);
+                }
+                else {
+                    notInit && resultTarOptsInMainType.push(void 0);
+                    resultFakeCmptsInMainType.push(void 0);
+                }
             });
         }
     });

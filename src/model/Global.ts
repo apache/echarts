@@ -176,6 +176,15 @@ class GlobalModel extends Model<ECUnitOption> {
             this.restoreData();
         }
 
+        // By design, if `setOption(option2)` at the second time, and `option2` is a `ECUnitOption`,
+        // it should better not have the same props with `MediaUnit['option']`.
+        // Becuase either `option2` or `MediaUnit['option']` will be always merged to "current option"
+        // rather than original "baseOption". If they both override a prop, the result might be
+        // unexpected when media state changed after `setOption` called.
+        // If we really need to modify a props in each `MediaUnit['option']`, use the full version
+        // (`{baseOption, media}`) in `setOption`.
+        // For `timeline`, the case is the same.
+
         if (!type || type === 'recreate' || type === 'timeline') {
             const timelineOption = optionManager.getTimelineOption(this);
             if (timelineOption) {
@@ -220,7 +229,7 @@ class GlobalModel extends Model<ECUnitOption> {
                 return;
             }
 
-            if (!(ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
+            if (!ComponentModel.hasClass(mainType)) {
                 // globalSettingTask.dirty();
                 option[mainType] = option[mainType] == null
                     ? clone(componentOption)
@@ -247,20 +256,12 @@ class GlobalModel extends Model<ECUnitOption> {
             const newCmptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
             const oldCmptList = componentsMap.get(mainType);
-            const mapResult = replaceMergeMainTypeMap && replaceMergeMainTypeMap.get(mainType)
-                ? modelUtil.mappingToExistsInReplaceMerge(oldCmptList, newCmptOptionList)
-                : modelUtil.mappingToExistsInNormalMerge(oldCmptList, newCmptOptionList);
-
-            modelUtil.makeIdAndName(mapResult);
+            const mergeMode = (replaceMergeMainTypeMap && replaceMergeMainTypeMap.get(mainType))
+                ? 'replaceMerge' : 'normalMerge';
+            const mappingResult = modelUtil.mappingToExists(oldCmptList, newCmptOptionList, mergeMode);
 
             // Set mainType and complete subType.
-            each(mapResult, function (item) {
-                const opt = item.newOption;
-                if (isObject(opt)) {
-                    item.keyInfo.mainType = mainType;
-                    item.keyInfo.subType = determineSubType(mainType, opt, item.existing);
-                }
-            });
+            modelUtil.setComponentTypeToKeyInfo(mappingResult, mainType, ComponentModel as ComponentModelConstructor);
 
             // Set it before the travel, in case that `this._componentsMap` is
             // used in some `init` or `merge` of components.
@@ -271,7 +272,7 @@ class GlobalModel extends Model<ECUnitOption> {
             const cmptsByMainType = [] as ComponentModel[];
             let cmptsCountByMainType = 0;
 
-            each(mapResult, function (resultItem, index) {
+            each(mappingResult, function (resultItem, index) {
                 let componentModel = resultItem.existing;
                 const newCmptOption = resultItem.newOption;
 
@@ -309,6 +310,7 @@ class GlobalModel extends Model<ECUnitOption> {
                         componentModel = new ComponentModelClass(
                             newCmptOption, this, this, extraOpt
                         );
+                        // Assign `keyInfo`
                         extend(componentModel, extraOpt);
                         if (resultItem.brandNew) {
                             componentModel.__requireNewView = true;
@@ -357,9 +359,9 @@ class GlobalModel extends Model<ECUnitOption> {
     getOption(): ECUnitOption {
         const option = clone(this.option);
 
-        each(option, function (opts, mainType) {
-            if ((ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
-                opts = modelUtil.normalizeToArray(opts);
+        each(option, function (optInMainType, mainType) {
+            if (ComponentModel.hasClass(mainType)) {
+                const opts = modelUtil.normalizeToArray(optInMainType);
                 // Inner cmpts need to be removed.
                 // Inner cmpts might not be at last since ec5.0, but still
                 // compatible for users: if inner cmpt at last, splice the returned array.
@@ -739,8 +741,6 @@ class GlobalModel extends Model<ECUnitOption> {
         };
 
         initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption): void {
-            baseOption = baseOption;
-
             // Using OPTION_INNER_KEY to mark that this option can not be used outside,
             // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
             ecModel.option = {} as ECUnitOption;
@@ -827,7 +827,7 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
         }
         // If it is component model mainType, the model handles that merge later.
         // otherwise, merge them here.
-        if (!(ComponentModel as ComponentModelConstructor).hasClass(name)) {
+        if (!ComponentModel.hasClass(name)) {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
                     ? clone(themeItem)
@@ -840,22 +840,6 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
             }
         }
     });
-}
-
-function determineSubType(
-    mainType: ComponentMainType,
-    newCmptOption: ComponentOption,
-    existComponent: {subType: ComponentSubType} | ComponentModel
-): ComponentSubType {
-    const subType = newCmptOption.type
-        ? newCmptOption.type
-        : existComponent
-        ? existComponent.subType
-        // Use determineSubType only when there is no existComponent.
-        : (ComponentModel as ComponentModelConstructor).determineSubType(mainType, newCmptOption);
-
-    // tooltip, markline, markpoint may always has no subType
-    return subType;
 }
 
 function queryByIdOrName<T extends { id?: string, name?: string }>(
@@ -888,7 +872,7 @@ function normalizeReplaceMergeInput(opts: GlobalModelSetOptionOpts): InnerSetOpt
     opts && each(modelUtil.normalizeToArray(opts.replaceMerge), function (mainType) {
         if (__DEV__) {
             assert(
-                (ComponentModel as ComponentModelConstructor).hasClass(mainType),
+                ComponentModel.hasClass(mainType),
                 '"' + mainType + '" is not valid component main type in "replaceMerge"'
             );
         }
