@@ -271,6 +271,7 @@ export function toggleSeriesBlurStates(
     focus: string,
     blurScope: BlurScope,
     ecIns: EChartsType,
+    dataIndices: number[],  // TODO
     isBlur: boolean
 ) {
     if (targetSeriesIndex == null) {
@@ -324,15 +325,22 @@ export function toggleSeriesBlurStates(
 export function enableHoverEmphasis(el: Element, focus?: string, blurScope?: BlurScope) {
     setAsHighDownDispatcher(el, true);
     traverseUpdateState(el as ExtendedElement, enableElementHoverEmphasis);
-    const ecData = getECData(el);
-    if (ecData.dataIndex == null && focus != null) {
-        if (__DEV__) {
-            console.warn('focus can only been set on element with dataIndex');
+
+    enableHoverFocus(el, focus, blurScope);
+}
+
+export function enableHoverFocus(el: Element, focus: string, blurScope: BlurScope) {
+    if (focus != null) {
+        const ecData = getECData(el);
+        if (ecData.dataIndex == null) {
+            if (__DEV__) {
+                console.warn('focus can only been set on element with dataIndex');
+            }
         }
-    }
-    else {
-        ecData.focus = focus;
-        ecData.blurScope = blurScope;
+        else {
+            ecData.focus = focus;
+            ecData.blurScope = blurScope;
+        }
     }
 }
 

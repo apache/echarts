@@ -51,7 +51,6 @@ import {
     AnimationOptionMixin,
     LabelOption,
     AnimationDelayCallbackParam,
-    DisplayState,
     ZRRectLike,
     ColorString,
     DataModel,
@@ -479,6 +478,23 @@ export function removeElement<Props>(
     during?: AnimateOrSetPropsOption['during']
 ) {
     animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
+}
+
+/**
+ * If element is removed.
+ * It can determine if element is having remove animation.
+ */
+export function isElementRemoved(el: Element) {
+    if (!el.__zr) {
+        return true;
+    }
+    for (let i = 0; i < el.animators.length; i++) {
+        const animator = el.animators[i];
+        if (animator.scope === 'remove') {
+            return true;
+        }
+    }
+    return false;
 }
 
 function animateOrSetLabel<Props extends PathProps>(
