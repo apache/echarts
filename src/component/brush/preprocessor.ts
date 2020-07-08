@@ -21,14 +21,14 @@
 import * as zrUtil from 'zrender/src/core/util';
 import { ECUnitOption, Dictionary } from '../../util/types';
 import { BrushOption, BrushToolboxIconType } from './BrushModel';
+import { ToolboxOption } from '../toolbox/ToolboxModel';
+import { ToolboxBrushFeatureOption } from '../toolbox/feature/Brush';
+import { normalizeToArray } from '../../util/model';
 
 const DEFAULT_TOOLBOX_BTNS: BrushToolboxIconType[] = ['rect', 'polygon', 'keep', 'clear'];
 
 export default function (option: ECUnitOption, isNew: boolean): void {
-    let brushComponents = option && option.brush;
-    if (!zrUtil.isArray(brushComponents)) {
-        brushComponents = brushComponents ? [brushComponents] : [];
-    }
+    const brushComponents = normalizeToArray(option ? option.brush : []);
 
     if (!brushComponents.length) {
         return;
@@ -45,7 +45,7 @@ export default function (option: ECUnitOption, isNew: boolean): void {
         }
     });
 
-    let toolbox = option && option.toolbox;
+    let toolbox: ToolboxOption = option && option.toolbox;
 
     if (zrUtil.isArray(toolbox)) {
         toolbox = toolbox[0];
@@ -56,7 +56,7 @@ export default function (option: ECUnitOption, isNew: boolean): void {
     }
 
     const toolboxFeature = (toolbox.feature || (toolbox.feature = {}));
-    const toolboxBrush = toolboxFeature.brush || (toolboxFeature.brush = {});
+    const toolboxBrush = (toolboxFeature.brush || (toolboxFeature.brush = {})) as ToolboxBrushFeatureOption;
     const brushTypes = toolboxBrush.type || (toolboxBrush.type = []);
 
     brushTypes.push.apply(brushTypes, brushComponentSpecifiedBtns);

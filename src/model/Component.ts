@@ -290,6 +290,8 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     static registerClass: ClassManager['registerClass'];
 
+    static hasClass: ClassManager['hasClass'];
+
     static registerSubTypeDefaulter: componentUtil.SubTypeDefaulterManager['registerSubTypeDefaulter'];
 }
 

@@ -39,9 +39,9 @@ import ExtensionAPI from '../../../ExtensionAPI';
 import { Payload, ECUnitOption, Dictionary } from '../../../util/types';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import CartesianAxisModel from '../../../coord/cartesian/AxisModel';
-import DataZoomModel from '../../dataZoom/DataZoomModel';
+import DataZoomModel, { DataZoomOption } from '../../dataZoom/DataZoomModel';
 import { DataZoomPayloadBatchItem } from '../../dataZoom/helper';
-import { ModelFinderObject, ModelFinderIndexQuery } from '../../../util/model';
+import { ModelFinderObject, ModelFinderIndexQuery, normalizeToArray } from '../../../util/model';
 import { ToolboxOption } from '../ToolboxModel';
 
 const dataZoomLang = lang.toolbox.dataZoom;
@@ -301,10 +301,7 @@ echarts.registerPreprocessor(function (option: ECUnitOption) {
         return;
     }
 
-    let dataZoomOpts = option.dataZoom || (option.dataZoom = []);
-    if (!zrUtil.isArray(dataZoomOpts)) {
-        option.dataZoom = dataZoomOpts = [dataZoomOpts];
-    }
+    const dataZoomOpts = option.dataZoom = normalizeToArray(option.dataZoom) as DataZoomOption[];
 
     let toolboxOpt = option.toolbox as ToolboxOption;
     if (toolboxOpt) {

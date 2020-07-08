@@ -62,7 +62,8 @@ import {
     ZRColor,
     ComponentMainType,
     ComponentSubType,
-    ZRElementEvent
+    ZRElementEvent,
+    ColorString
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -1375,7 +1376,7 @@ class ECharts extends Eventful {
 
                 // In IE8
                 if (!env.canvasSupported) {
-                    const colorArr = colorTool.parse(backgroundColor);
+                    const colorArr = colorTool.parse(backgroundColor as ColorString);
                     backgroundColor = colorTool.stringify(colorArr, 'rgb');
                     if (colorArr[3] === 0) {
                         backgroundColor = 'transparent';

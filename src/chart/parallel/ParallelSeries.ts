@@ -32,7 +32,7 @@ import {
  } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
-import { ParallelActiveState } from '../../coord/parallel/AxisModel';
+import { ParallelActiveState, ParallelAxisOption } from '../../coord/parallel/AxisModel';
 import Parallel from '../../coord/parallel/Parallel';
 import Source from '../../data/Source';
 import ParallelModel from '../../coord/parallel/ParallelModel';
@@ -71,6 +71,8 @@ export interface ParallelSeriesOption extends
     smooth?: boolean | number;
     realtime?: boolean;
     tooltip?: SeriesTooltipOption;
+
+    parallelAxisDefault?: ParallelAxisOption;
 
     emphasis?: {
         label?: LabelOption;

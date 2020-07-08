@@ -47,7 +47,9 @@ import {
     OrdinalSortInfo,
     Payload,
     OrdinalNumber,
-    ParsedValue
+    ParsedValue,
+    ECUnitOption,
+    AnimationOptionMixin
 } from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -708,7 +710,7 @@ function removeRect(
         style: {
             opacity: 0
         }
-    }, animationModel, dataIndex, function () {
+    }, animationModel as Model<AnimationOptionMixin>, dataIndex, function () {
         el.parent && el.parent.remove(el);
     });
 }
@@ -724,7 +726,7 @@ function removeSector(
         style: {
             opacity: 0
         }
-    }, animationModel, dataIndex, function () {
+    }, animationModel as Model<AnimationOptionMixin>, dataIndex, function () {
         el.parent && el.parent.remove(el);
     });
 }

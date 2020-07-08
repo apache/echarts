@@ -36,15 +36,15 @@ ComponentModel.registerClass(AxisPointerModel);
 echarts.registerPreprocessor(function (option) {
     // Always has a global axisPointerModel for default setting.
     if (option) {
-        (!option.axisPointer || option.axisPointer.length === 0)
+        (!option.axisPointer || (option.axisPointer as []).length === 0)
             && (option.axisPointer = {});
 
-        const link = option.axisPointer.link;
+        const link = (option.axisPointer as any).link;
         // Normalize to array to avoid object mergin. But if link
         // is not set, remain null/undefined, otherwise it will
         // override existent link setting.
         if (link && !zrUtil.isArray(link)) {
-            option.axisPointer.link = [link];
+            (option.axisPointer as any).link = [link];
         }
     }
 });

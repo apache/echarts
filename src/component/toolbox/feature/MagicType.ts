@@ -108,7 +108,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             if (newSeriesOpt) {
                 // PENDING If merge original option?
                 zrUtil.defaults(newSeriesOpt, seriesModel.option);
-                newOption.series.push(newSeriesOpt);
+                (newOption.series as SeriesOption[]).push(newSeriesOpt);
             }
             // Modify boundaryGap
             const coordSys = seriesModel.coordinateSystem;
@@ -126,9 +126,9 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
 
                     newOption[axisType] = newOption[axisType] || [];
                     for (let i = 0; i <= axisIndex; i++) {
-                        newOption[axisType][axisIndex] = newOption[axisType][axisIndex] || {};
+                        (newOption[axisType] as any)[axisIndex] = (newOption[axisType] as any)[axisIndex] || {};
                     }
-                    newOption[axisType][axisIndex].boundaryGap = type === 'bar';
+                    (newOption[axisType] as any)[axisIndex].boundaryGap = type === 'bar';
                 }
             }
         };
@@ -155,8 +155,9 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         let newTitle;
         // Change title of stack
         if (type === 'stack') {
-            const isStack = newOption.series && newOption.series[0]
-                && newOption.series[0].stack === INNER_STACK_KEYWORD;
+            const seriesOptions = newOption.series as (SeriesOption & { stack: string })[];
+            const isStack = seriesOptions && seriesOptions[0]
+                && seriesOptions[0].stack === INNER_STACK_KEYWORD;
             newTitle = isStack
                 ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
                 : zrUtil.clone(magicTypeLang.title);
