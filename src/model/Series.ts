@@ -501,7 +501,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : tooltipDimLen
             ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
-        const content = `<strong>${formattedValue.content}<strong>`;
+        const content = `<strong style="float: right; margin-left: 20px; color: #000;">${formattedValue.content}</strong>`;
 
         const markName = series.seriesIndex + 'at' + markerId;
         const colorEl = getTooltipMarker({
@@ -520,21 +520,21 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             seriesName = '';
         }
         seriesName = seriesName
-            ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ': ')
+            ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ' ')
             : '';
 
         colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
         const html = !multipleSeries
             ? seriesName + colorStr
                 + (name
-                    ? encodeHTML(name) + ': ' + content
+                    ? `${encodeHTML(name)}${content}`
                     : content
                 )
             : colorStr + seriesName + content;
 
         return {
-            html: html,
-            markers: markers
+            html,
+            markers
         };
     }
 

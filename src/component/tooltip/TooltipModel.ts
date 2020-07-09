@@ -155,7 +155,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             // otherwise it will always override those styles on option.axisPointer.
         },
         textStyle: {
-            color: '#000',
+            color: '#666',
             fontSize: 14
         }
     };
