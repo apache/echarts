@@ -78,7 +78,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         show: true,
 
-        // tooltip主体内容
+        // tooltip main content
         showContent: true,
 
         // 'trigger' only works on coordinate system.
@@ -94,14 +94,15 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
 
-        // 是否约束 content 在 viewRect 中。默认 false 是为了兼容以前版本。
+        // whether restraint content inside viewRect
+        // For compatibility reason, default is false
         confine: false,
 
         showDelay: 0,
 
         hideDelay: 100,
 
-        // 动画变换时间，单位s
+        // Animation transition time, unit is second
         transitionDuration: 0.4,
 
         enterable: false,
@@ -110,32 +111,32 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         boxShadow: '12px 12px 2px 1px rgba(0, 0, 255, .2);',
 
-        // 提示边框颜色
+        // tooltip border color
         borderColor: '#333',
 
-        // 提示边框圆角，单位px，默认为4
+        // tooltip border radius, unit is px, default is 4
         borderRadius: 4,
 
-        // 提示边框线宽，单位px，默认为0（无边框）
+        // tooltip border width, unit is px, default is 0 (no border)
         borderWidth: 0,
 
-        // 提示内边距，单位px，默认各方向内边距为5，
-        // 接受数组分别设定上右下左边距，同css
+        // Tooltip inside padding, default is 5 for all direction
+        // Array is allowed to set up, right, bottom, left, same with css
         padding: 15,
 
         // Extra css text
         extraCssText: '',
 
-        // 坐标轴指示器，坐标轴触发有效
+        // axis indicator, trigger by axis
         axisPointer: {
-            // 默认为直线
-            // 可选为：'line' | 'shadow' | 'cross'
+            // default is line
+            // legal values: 'line' | 'shadow' | 'cross'
             type: 'line',
 
-            // type 为 line 的时候有效，指定 tooltip line 所在的轴，可选
-            // 可选 'x' | 'y' | 'angle' | 'radius' | 'auto'
-            // 默认 'auto'，会选择类型为 category 的轴，对于双数值轴，笛卡尔坐标系会默认选择 x 轴
-            // 极坐标系会默认选择 angle 轴
+            // Valid when type is line, appoint tooltip line locate on which line. Optional
+            // legal values: 'x' | 'y' | 'angle' | 'radius' | 'auto'
+            // default is 'auto', chose the axis which type is category.
+            // for multiply y axis, cartesian coord chose x axis, polar chose angle axis
             axis: 'auto',
 
             animation: 'auto',
