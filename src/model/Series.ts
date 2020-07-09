@@ -501,7 +501,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : tooltipDimLen
             ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
-        const content = formattedValue.content;
+        const content = `<strong>${formattedValue.content}<strong>`;
 
         const markName = series.seriesIndex + 'at' + markerId;
         const colorEl = getTooltipMarker({

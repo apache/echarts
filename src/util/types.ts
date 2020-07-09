@@ -990,6 +990,7 @@ export interface CommonTooltipOption<FormatterParams> {
     borderColor?: ColorString
     borderRadius?: number
     borderWidth?: number
+    boxShadow?: ColorString
 
     /**
      * Padding between tooltip content and tooltip border.

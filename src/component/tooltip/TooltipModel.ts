@@ -106,7 +106,9 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         enterable: false,
 
-        backgroundColor: 'rgba(50,50,50,0.7)',
+        backgroundColor: '#fff',
+
+        boxShadow: '12px 12px 2px 1px rgba(0, 0, 255, .2);',
 
         // 提示边框颜色
         borderColor: '#333',
@@ -119,7 +121,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // 提示内边距，单位px，默认各方向内边距为5，
         // 接受数组分别设定上右下左边距，同css
-        padding: 5,
+        padding: 15,
 
         // Extra css text
         extraCssText: '',
@@ -153,7 +155,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             // otherwise it will always override those styles on option.axisPointer.
         },
         textStyle: {
-            color: '#fff',
+            color: '#000',
             fontSize: 14
         }
     };

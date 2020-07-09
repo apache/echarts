@@ -79,6 +79,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
+    const boxShadow = tooltipModel.get('boxShadow');
     const textStyleModel = tooltipModel.getModel('textStyle');
     const padding = tooltipModel.get('padding');
 
@@ -97,6 +98,10 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
             );
             cssText.push('filter:alpha(opacity=70)');
         }
+    }
+
+    if (boxShadow) {
+        cssText.push('box-shadow:' + boxShadow);
     }
 
     // Border style
