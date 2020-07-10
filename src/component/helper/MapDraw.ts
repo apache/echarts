@@ -318,6 +318,9 @@ class MapDraw {
                 );
 
                 compoundPath.setTextContent(textEl);
+                compoundPath.setTextConfig({
+                    local: true
+                });
 
                 if (!isFirstDraw) {
                     // Text animation
@@ -434,9 +437,11 @@ class MapDraw {
 
             const group = this.group;
             this._regionsGroup.traverse(function (el) {
-                if (el.type === 'text') {
-                    el.scaleX = 1 / group.scaleX;
-                    el.scaleY = 1 / group.scaleY;
+                const textContent = el.getTextContent();
+                if (textContent) {
+                    textContent.scaleX = 1 / group.scaleX;
+                    textContent.scaleY = 1 / group.scaleY;
+                    textContent.markRedraw();
                 }
             });
         }, this);
@@ -466,10 +471,10 @@ class MapDraw {
             });
 
             regionsGroup.on('click', function (e) {
-                if (!mapDraw._mouseDownFlag) {
-                    return;
-                }
-                mapDraw._mouseDownFlag = false;
+            if (!mapDraw._mouseDownFlag) {
+                return;
+            }
+            mapDraw._mouseDownFlag = false;
 
                 let el = e.target;
                 while (!(el as RegionsGroup).__regions) {

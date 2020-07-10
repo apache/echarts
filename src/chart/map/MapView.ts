@@ -210,13 +210,13 @@ class MapView extends ChartView {
                 // Prevent removed regions effect current grapics.
                 regionGroup[RECORD_VERSION_PROP] = recordVersion;
                 zrUtil.extend(highDownRecord, {
-                    recordVersion: recordVersion,
-                    circle: circle,
-                    labelModel: labelModel,
-                    hoverLabelModel: hoverLabelModel,
-                    emphasisText: emphasisText,
-                    normalText: normalText
-                });
+                    recordVersion,
+                    circle,
+                    labelModel,
+                    hoverLabelModel,
+                    emphasisText,
+                    normalText
+                } as HighDownRecord);
 
                 // FIXME
                 // Consider set option when emphasis.
