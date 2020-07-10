@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as zrUtil from 'zrender/src/core/util';
-import { LayoutOrient, Payload } from '../../util/types';
+import { LayoutOrient, Payload, ECElement } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 import ChartView from '../../view/Chart';
@@ -271,6 +271,8 @@ class SankeyView extends ChartView {
                     defaultText: node.id
                 }
             );
+
+            (rect as ECElement).disableLabelAnimation = true;
 
             rect.setStyle('fill', node.getVisual('color'));
 

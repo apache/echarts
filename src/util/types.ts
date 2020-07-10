@@ -114,6 +114,11 @@ export interface ECElement extends Element {
     selected?: boolean;
 
     z2EmphasisLift?: number;
+
+    /**
+     * Force disable animation on any condition
+     */
+    disableLabelAnimation?: boolean
 }
 
 export interface DataHost {
