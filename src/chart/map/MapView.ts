@@ -178,6 +178,7 @@ class MapView extends ChartView {
                         }
                     }
                 });
+                (circle as ECElement).disableLabelAnimation = true;
                 if (!labelModel.get('position')) {
                     circle.setTextConfig({
                         position: 'bottom'
