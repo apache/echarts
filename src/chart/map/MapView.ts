@@ -185,7 +185,7 @@ class MapView extends ChartView {
                     });
                 }
 
-                (regionGroup as ECElement).onStateChange = function (fromState, toState) {
+                (regionGroup as ECElement).onStateChange = function (toState) {
                     circle.useState(toState);
                 };
             }
