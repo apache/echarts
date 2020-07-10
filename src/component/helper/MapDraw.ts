@@ -329,8 +329,6 @@ class MapDraw {
                         scaleY: 1 / targetScaleY
                     }, mapOrGeoModel);
                 }
-
-                regionGroup.add(textEl);
             }
 
             // setItemGraphicEl, setHoverStyle after all polygons and labels

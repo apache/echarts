@@ -112,7 +112,6 @@ type ExtendedProps = {
     __highByOuter: number
 
     __highDownSilentOnTouch: boolean
-    __onStateChange: (fromState: DisplayState, toState: DisplayState) => void
 
     __highDownDispatcher: boolean
 };
@@ -389,7 +388,7 @@ function singleLeaveEmphasis(el: Element) {
 }
 
 function updateElementState<T>(
-    el: ExtendedElement,
+    el: ECElement,
     updater: (this: void, el: Element, commonParam?: T) => void,
     commonParam?: T
 ) {
@@ -401,7 +400,7 @@ function updateElementState<T>(
     (el as ECElement).highlighted && (fromState = EMPHASIS, trigger = true);
     updater(el, commonParam);
     (el as ECElement).highlighted && (toState = EMPHASIS, trigger = true);
-    trigger && el.__onStateChange && el.__onStateChange(fromState, toState);
+    trigger && el.onStateChange && el.onStateChange(fromState, toState);
 }
 
 function traverseUpdateState<T>(
@@ -615,9 +614,6 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
     if ((el as ECElement).highDownSilentOnTouch) {
         extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
-    }
-    if ((el as ECElement).onStateChange) {
-        extendedEl.__onStateChange = (el as ECElement).onStateChange;
     }
 
     // Simple optimize, since this method might be
