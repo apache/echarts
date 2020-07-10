@@ -139,7 +139,7 @@ class TooltipView extends ComponentView {
 
     private _renderMode: TooltipRenderMode;
 
-    private _newLine: '<br/>' | '\n';
+    private _newLine: '' | '\n';
 
     private _tooltipModel: TooltipModel;
 
@@ -176,7 +176,7 @@ class TooltipView extends ComponentView {
             tooltipContent = new TooltipHTMLContent(api.getDom(), api, {
                 appendToBody: tooltipModel.get('appendToBody', true)
             });
-            this._newLine = '<br/>';
+            this._newLine = '';
         }
         else {
             tooltipContent = new TooltipRichContent(api);
@@ -571,14 +571,13 @@ class TooltipView extends ComponentView {
                 else {
                     singleDefaultHTML.push(
                         (firstLine ? formatUtil.encodeHTML(firstLine) + newLine : '')
-                        + seriesDefaultHTML.join(newLine)
+                        + seriesDefaultHTML.reverse().join(newLine)
                     );
                 }
             });
         }, this);
 
         // In most case, the second axis is shown upper than the first one.
-        singleDefaultHTML.reverse();
         const singleDefaultHTMLStr = singleDefaultHTML.join(this._newLine + this._newLine);
 
         const positionExpr = e.position;

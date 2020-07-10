@@ -403,7 +403,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         const series = this;
         renderMode = renderMode || 'html';
-        const newLine = renderMode === 'html' ? '<br/>' : '\n';
+        const newLine = renderMode === 'html' ? '' : '\n';
         const isRichText = renderMode === 'richText';
         const markers: Dictionary<ColorString> = {};
         let markerId = 0;
@@ -460,7 +460,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 }
             }
 
-            const newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
+            const newLine = vertially ? (isRichText ? '\n' : '') : '';
             const content = newLine + result.join(newLine || ', ');
             return {
                 renderMode: renderMode,
@@ -501,7 +501,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : tooltipDimLen
             ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
-        const content = `<strong style="float: right; margin-left: 20px; color: #000;">${formattedValue.content}</strong>`;
+        const content = `<strong style="float:right;margin-left:20px;color:#000;">${formattedValue.content}</strong>`;
 
         const markName = series.seriesIndex + 'at' + markerId;
         const colorEl = getTooltipMarker({
@@ -525,12 +525,12 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
         const html = !multipleSeries
-            ? seriesName + colorStr
+            ? '<p style="margin: 8px 0;">' + seriesName + colorStr
                 + (name
                     ? `${encodeHTML(name)}${content}`
                     : content
-                )
-            : colorStr + seriesName + content;
+                ) + '</p>'
+            : `<p style="margin: 8px 0;">${colorStr}${seriesName}${content}</p>`;
 
         return {
             html,

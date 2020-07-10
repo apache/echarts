@@ -27,7 +27,8 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
-import { ZRRawEvent } from 'zrender/src/core/types';
+import { ZRRawEvent, Dictionary } from 'zrender/src/core/types';
+import { ColorString } from '../../util/types';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 
@@ -37,6 +38,18 @@ const toCamelCase = formatUtil.toCamelCase;
 const vendors = ['', '-webkit-', '-moz-', '-o-'];
 
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
+
+function assembleArrow(backgroundColor: string) {
+    const border = 10;
+    const styleCss = [
+        'style="',
+        `position:absolute;left:-${2 * border}px;top:50%;transform:translateY(-50%);`,
+        `width:0;height:0;border:${border}px solid;`,
+        `border-color:transparent ${backgroundColor} transparent transparent`,
+        '"'
+    ];
+    return `<div ${styleCss.join('')}></div>`;
+}
 
 function assembleTransition(duration: number): string {
     const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
@@ -288,8 +301,8 @@ class TooltipHTMLContent {
         this._show = true;
     }
 
-    setContent(content: string) {
-        this.el.innerHTML = content == null ? '' : content;
+    setContent(content: string, markers: Dictionary<ColorString>, tooltipModel: Model<TooltipOption>) {
+        this.el.innerHTML = content == null ? '' : content + assembleArrow(tooltipModel.get('backgroundColor'));
     }
 
     setEnterable(enterable: boolean) {
