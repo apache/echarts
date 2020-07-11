@@ -23,7 +23,7 @@ import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
-import { enableElementHoverEmphasis, setAsHighDownDispatcher } from '../util/states';
+import { setDefaultStateProxy, setAsHighDownDispatcher } from '../util/states';
 import * as labelStyleHelper from '../label/labelStyle';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
@@ -1114,7 +1114,7 @@ function updateElOnState(
             stateObj.textConfig = txCfgOpt;
         }
 
-        enableElementHoverEmphasis(elDisplayable);
+        setDefaultStateProxy(elDisplayable);
     }
 
     if (isRoot) {

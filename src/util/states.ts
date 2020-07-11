@@ -81,7 +81,6 @@ function singleLeaveBlur(el: ECElement) {
     el.hoverState = HOVER_STATE_NORMAL;
 }
 
-
 function updateElementState<T>(
     el: ExtendedElement,
     updater: (this: void, el: Element, commonParam?: T) => void,
@@ -100,6 +99,23 @@ function traverseUpdateState<T>(
         updateElementState(child, updater, commonParam);
     });
 }
+
+export function setStatesFlag(el: ECElement, stateName: DisplayState) {
+    switch (stateName) {
+        case 'emphasis':
+            el.hoverState = HOVER_STATE_EMPHASIS;
+            break;
+        case 'normal':
+            el.hoverState = HOVER_STATE_NORMAL;
+            break;
+        case 'blur':
+            el.hoverState = HOVER_STATE_BLUR;
+            break;
+        case 'select':
+            el.selected = true;
+    }
+}
+
 /**
  * If we reuse elements when rerender.
  * DONT forget to clearStates before we update the style and shape.
@@ -226,7 +242,7 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
  * @param el Should not be `zrender/graphic/Group`.
  * @param focus 'self' | 'selfInSeries' | 'series'
  */
-export function enableElementHoverEmphasis(el: Displayable) {
+export function setDefaultStateProxy(el: Displayable) {
     el.stateProxy = elementStateProxy;
     const textContent = el.getTextContent();
     const textGuide = el.getTextGuideLine();
@@ -322,7 +338,7 @@ export function toggleSeriesBlurStates(
  */
 export function enableHoverEmphasis(el: Element, focus?: string, blurScope?: BlurScope) {
     setAsHighDownDispatcher(el, true);
-    traverseUpdateState(el as ExtendedElement, enableElementHoverEmphasis);
+    traverseUpdateState(el as ExtendedElement, setDefaultStateProxy);
 
     enableHoverFocus(el, focus, blurScope);
 }

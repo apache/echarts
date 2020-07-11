@@ -38,10 +38,11 @@ import type ExtensionAPI from '../../ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
 import type List from '../../data/List';
-import type { Payload, Dictionary, ColorString } from '../../util/types';
+import type { Payload, Dictionary, ColorString, ECElement, DisplayState } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import { setStatesStylesFromModel, setDefaultStateProxy, setStatesFlag } from '../../util/states';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;
@@ -500,7 +501,7 @@ class LineView extends ChartView {
             // Stop symbol animation and sync with line points
             // FIXME performance?
             data.eachItemGraphicEl(function (el) {
-                el.stopAnimation(null, true);
+                el && el.stopAnimation(null, true);
             });
 
             // In the case data zoom triggerred refreshing frequently
@@ -545,6 +546,9 @@ class LineView extends ChartView {
             }
         ));
 
+        setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
+        setDefaultStateProxy(polyline);
+
         const smooth = getSmooth(seriesModel.get('smooth'));
         polyline.setShape({
             smooth: smooth,
@@ -575,7 +579,20 @@ class LineView extends ChartView {
                 smoothMonotone: seriesModel.get('smoothMonotone'),
                 connectNulls: seriesModel.get('connectNulls')
             });
+
+            setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
+            setDefaultStateProxy(polygon);
         }
+
+        function changePolyState(toState: DisplayState) {
+            setStatesFlag(polyline, toState);
+            polygon && setStatesFlag(polygon, toState);
+        };
+
+        data.eachItemGraphicEl(function (el) {
+            // Switch polyline / polygon state if element changed its state.
+            el && ((el as ECElement).onStateChange = changePolyState);
+        });
 
         this._data = data;
         // Save the coordinate system for transition animation when data changed
