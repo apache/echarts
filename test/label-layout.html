@@ -185,7 +185,7 @@ under the License.
                                 position: 'top'
                             },
                             labelLayout: {
-                                hideOverlap: false
+                                hideOverlap: true
                             },
                             itemStyle: {
                                 color: 'rgb(255, 70, 131)'
@@ -436,6 +436,9 @@ under the License.
                         symbolSize: function (data) {
                             return Math.sqrt(data[2]) / 5e2;
                         },
+                        emphasis: {
+                            focus: 'self'
+                        },
                         labelLayout: {
                             y: 20,
                             align: 'center',
@@ -499,6 +502,9 @@ under the License.
                         type: 'scatter',
                         symbolSize: function (data) {
                             return Math.sqrt(data[2]) / 5e2;
+                        },
+                        emphasis: {
+                            focus: 'self'
                         },
                         labelLayout: {
                             x: 500,

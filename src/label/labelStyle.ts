@@ -108,6 +108,11 @@ function setLabelStyle<LDI>(
             if (!richText) {
                 richText = new ZRText();
                 targetEl.setTextContent(richText);
+
+                // Use same state proxy
+                if (targetEl.stateProxy) {
+                    richText.stateProxy = targetEl.stateProxy;
+                }
             }
         }
         richText.ignore = !showNormal;

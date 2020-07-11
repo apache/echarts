@@ -26,7 +26,6 @@ import {
     initProps,
     updateLabel,
     initLabel,
-    removeElement,
     removeElementWithFadeOut
 } from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';

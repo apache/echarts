@@ -632,6 +632,11 @@ export function setLabelLineStyle(
                 if (!isNormal && (labelIgnoreNormal || !showNormal)) {
                     setLabelLineState(labelLine, true, 'normal', statesModels.normal);
                 }
+
+                // Use same state proxy.
+                if (targetEl.stateProxy) {
+                    labelLine.stateProxy = targetEl.stateProxy;
+                }
             }
 
             setLabelLineState(labelLine, false, stateName, stateModel);

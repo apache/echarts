@@ -86,6 +86,8 @@ interface SavedLabelAttr {
         y: number
     }
 
+    cursor: string
+
     // Configuration in attached element
     attachedPos: ElementTextConfig['position']
     attachedRot: ElementTextConfig['rotation']
@@ -258,6 +260,8 @@ class LabelManager {
                     height: labelStyle.height
                 },
 
+                cursor: label.cursor,
+
                 attachedPos: textConfig.position,
                 attachedRot: textConfig.rotation
             }
@@ -392,7 +396,7 @@ class LabelManager {
             else {
                 // TODO Other drag functions?
                 label.off('drag');
-                label.cursor = 'default';
+                label.cursor = defaultLabelAttr.cursor;
             }
         }
     }

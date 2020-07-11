@@ -1709,7 +1709,12 @@ class ECharts extends Eventful {
         bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
             function getHighDownDispatcher(target: Element) {
                 while (target && !isHighDownDispatcher(target)) {
-                    target = target.parent;
+                    if (target.__hostTarget) {
+                        target = target.__hostTarget;
+                    }
+                    else {
+                        target = target.parent;
+                    }
                 }
                 return target;
             }
@@ -1717,7 +1722,7 @@ class ECharts extends Eventful {
                 const el = e.target;
                 const dispatcher = getHighDownDispatcher(el);
                 if (dispatcher) {
-                    const ecData = graphic.getECData(el);
+                    const ecData = graphic.getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
                     toggleSeriesBlurStates(
                         ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, null, true
@@ -1730,7 +1735,7 @@ class ECharts extends Eventful {
                 const el = e.target;
                 const dispatcher = getHighDownDispatcher(el);
                 if (dispatcher) {
-                    const ecData = graphic.getECData(el);
+                    const ecData = graphic.getECData(dispatcher);
                     toggleSeriesBlurStates(
                         ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, null, false
                     );
