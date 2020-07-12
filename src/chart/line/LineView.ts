@@ -584,9 +584,8 @@ class LineView extends ChartView {
             setDefaultStateProxy(polygon);
         }
 
-        function changePolyState(toState: DisplayState) {
-            setStatesFlag(polyline, toState);
-            polygon && setStatesFlag(polygon, toState);
+        const changePolyState = (toState: DisplayState) => {
+            this._changePolyState(toState);
         };
 
         data.eachItemGraphicEl(function (el) {
@@ -613,6 +612,8 @@ class LineView extends ChartView {
     ) {
         const data = seriesModel.getData();
         const dataIndex = modelUtil.queryDataIndex(data, payload);
+
+        this._changePolyState('emphasis');
 
         if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
             let symbol = data.getItemGraphicEl(dataIndex) as SymbolClz;
@@ -660,6 +661,9 @@ class LineView extends ChartView {
     ) {
         const data = seriesModel.getData();
         const dataIndex = modelUtil.queryDataIndex(data, payload) as number;
+
+        this._changePolyState('normal');
+
         if (dataIndex != null && dataIndex >= 0) {
             const symbol = data.getItemGraphicEl(dataIndex) as SymbolExtended;
             if (symbol) {
@@ -680,6 +684,12 @@ class LineView extends ChartView {
                 this, seriesModel, ecModel, api, payload
             );
         }
+    }
+
+    _changePolyState(toState: DisplayState) {
+        const polygon = this._polygon;
+        setStatesFlag(this._polyline, toState);
+        polygon && setStatesFlag(polygon, toState);
     }
 
     _newPolyline(points: number[][]) {

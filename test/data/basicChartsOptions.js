@@ -1,6 +1,5 @@
 // Basic options for all charts
-
-var allChartsOptions = [
+window.allChartsOptions = [
     ////////////////////////// Area stacks //////////////////////////////
     {
         legend: {},
@@ -65,6 +64,65 @@ var allChartsOptions = [
             }
         ]
     },
+
+    ////////////////////////// Large line ///////////////////////////////
+    (function () {
+        var option = {
+            legend: {
+                data: []
+            },
+            dataZoom: [{
+                show: true,
+                realtime: true,
+                // showDataShadow: false,
+                start: 50,
+                end: 60
+            }],
+            xAxis: [{
+                type: 'time'
+            }],
+            yAxis: [{
+                type: 'value'
+            }],
+            series: []
+        };
+
+        var date = [];
+        var oneDay = 24 * 3600 * 1000;
+        var base = +new Date(1897, 9, 3);
+        for (var j = 0; j < 1e3; j++) {
+            var now = new Date(base += oneDay);
+            date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-'));
+        }
+        for (var i = 0; i < 30; i++) {
+            var y = Math.random() * 1000;
+            var values = [];
+            for (var j = 0; j < 1e3; j++) {
+                y += Math.round(10 + Math.random() * (-10 - 10));
+                values.push(
+                    [
+                        date[j],
+                        // Math.random() < 0.1 ? '-' : y
+                        y
+                    ]
+                );
+            }
+
+            option.legend.data.push( 'line' + i );
+            option.series.push({
+                name: 'line' + i,
+                type: 'line',
+                hoverAnimation: false,
+                legendHoverLink: true,
+                showSymbol: false,
+                data: values,
+                emphasis: {
+                    focus: 'series'
+                }
+            });
+        }
+        return option;
+    })(),
 
     ////////////////////////// Stacked bar //////////////////////////////
     {

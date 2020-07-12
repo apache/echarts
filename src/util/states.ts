@@ -8,7 +8,6 @@ import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
 import { DisplayState, ECElement, ColorString, BlurScope } from './types';
 import { extend, indexOf } from 'zrender/src/core/util';
-import { __DEV__ } from '../config';
 import {
     Z2_EMPHASIS_LIFT,
     getECData,
@@ -310,20 +309,19 @@ export function toggleSeriesBlurStates(
         )) {
             const view = ecIns.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
+                isBlur ? singleEnterBlur(child) : singleLeaveBlur(child);
                 // TODO getECData will mount an empty object on the element.
                 // DON'T mount on all elements?
-                const otherECData = getECData(child);
-                // TODO distinguish edge data in graph.
-                if (otherECData.dataIndex != null) {
-                    if (isBlur) {
-                        traverseUpdateState((child as ExtendedElement), singleEnterBlur);
-                    }
-                    else {
-                        traverseUpdateState((child as ExtendedElement), singleLeaveBlur);
-                    }
-                    // No need to traverse the children.
-                    return true;
-                }
+                // const otherECData = getECData(child);
+                // // TODO distinguish edge data in graph.
+                // if (otherECData.dataIndex != null) {
+                //     if (isBlur) {
+                //         traverseUpdateState((child as ExtendedElement), singleEnterBlur);
+                //     // }
+                //     // else {
+                //         traverseUpdateState((child as ExtendedElement), singleLeaveBlur);
+                //     }
+                // }
             });
         }
     });

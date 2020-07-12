@@ -1331,6 +1331,15 @@ class ECharts extends Eventful {
                                     seriesIndex, ecData.focus, ecData.blurScope, ecIns, null, isHighlight
                                 );
                             }
+                            else {
+                                // If there is no element put on the data. Try getting it from raw option
+                                // TODO Should put it on seriesModel?
+                                const focus = model.get(['emphasis', 'focus']);
+                                const blurScope = model.get(['emphasis', 'blurScope']);
+                                if (focus != null) {
+                                    toggleSeriesBlurStates(seriesIndex, focus, blurScope, ecIns, null, isHighlight);
+                                }
+                            }
                         }
                     }
 
