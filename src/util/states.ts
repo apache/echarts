@@ -310,18 +310,6 @@ export function toggleSeriesBlurStates(
             const view = ecIns.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
                 isBlur ? singleEnterBlur(child) : singleLeaveBlur(child);
-                // TODO getECData will mount an empty object on the element.
-                // DON'T mount on all elements?
-                // const otherECData = getECData(child);
-                // // TODO distinguish edge data in graph.
-                // if (otherECData.dataIndex != null) {
-                //     if (isBlur) {
-                //         traverseUpdateState((child as ExtendedElement), singleEnterBlur);
-                //     // }
-                //     // else {
-                //         traverseUpdateState((child as ExtendedElement), singleLeaveBlur);
-                //     }
-                // }
             });
         }
     });

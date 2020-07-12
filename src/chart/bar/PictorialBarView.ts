@@ -42,6 +42,7 @@ import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle } from '../../label/labelStyle';
+import { path } from 'zrender/src/export';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -572,7 +573,7 @@ function createOrUpdateRepeatSymbols(
             });
         }
 
-        updateHoverAnimation(path, symbolMeta);
+        // updateHoverAnimation(path, symbolMeta);
 
         index++;
     });
@@ -601,13 +602,6 @@ function createOrUpdateRepeatSymbols(
             symbolMeta,
             isUpdate
         );
-
-        // FIXME
-        // If all emphasis/normal through action.
-        path.on('mouseover', onMouseOver)
-            .on('mouseout', onMouseOut);
-
-        updateHoverAnimation(path, symbolMeta);
     }
 
     function makeTarget(index: number) {
@@ -628,18 +622,6 @@ function createOrUpdateRepeatSymbols(
             scaleY: symbolMeta.symbolScale[1],
             rotation: symbolMeta.rotation
         };
-    }
-
-    function onMouseOver(e: ZRElementEvent) {
-        eachPath(bar, function (path) {
-            enterEmphasisWhenMouseOver(path, e);
-        });
-    }
-
-    function onMouseOut(e: ZRElementEvent) {
-        eachPath(bar, function (path) {
-            leaveEmphasisWhenMouseOut(path, e);
-        });
     }
 }
 
@@ -672,10 +654,6 @@ function createOrUpdateSingleSymbol(
             symbolMeta,
             isUpdate
         );
-
-        mainPath
-            .on('mouseover', onMouseOver)
-            .on('mouseout', onMouseOut);
     }
     else {
         updateAttr(
@@ -691,16 +669,6 @@ function createOrUpdateSingleSymbol(
             symbolMeta,
             isUpdate
         );
-    }
-
-    updateHoverAnimation(mainPath, symbolMeta);
-
-    function onMouseOver(this: typeof mainPath) {
-        enterEmphasis(this);
-    }
-
-    function onMouseOut(this: typeof mainPath) {
-        leaveEmphasis(this);
     }
 }
 
@@ -785,27 +753,6 @@ function getAnimationDelayParams(this: ItemModel, path: PictorialSymbol) {
 function isAnimationEnabled(this: ItemModel) {
     // `animation` prop can be set on itemModel in pictorial bar chart.
     return this.parentModel.isAnimationEnabled() && !!this.getShallow('animation');
-}
-
-function updateHoverAnimation(path: PictorialSymbol, symbolMeta: SymbolMeta) {
-    path.off('emphasis').off('normal');
-
-    const scale = symbolMeta.symbolScale;
-
-    symbolMeta.hoverAnimation && path
-        .on('emphasis', function () {
-            this.animateTo({
-                scaleX: scale[0] * 1.1,
-                scaleY: scale[1] * 1.1
-            }, { duration: 400, easing: 'elasticOut' });
-        })
-        .on('normal', function () {
-            this.animateTo({
-                scaleX: scale[0],
-                scaleY: scale[1]
-            }, { duration: 400, easing: 'elasticOut' });
-        });
-
 }
 
 function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate?: boolean) {
@@ -948,11 +895,16 @@ function updateCommon(
     eachPath(bar, function (path) {
         path.useStyle(symbolMeta.style);
 
-        enableHoverEmphasis(path, focus, blurScope);
+        const emphasisState = path.ensureState('emphasis');
+        emphasisState.style = emphasisStyle;
+        // NOTE: Must after scale is set after updateAttr
+        emphasisState.scaleX = path.scaleX * 1.1;
+        emphasisState.scaleY = path.scaleY * 1.1;
 
-        path.ensureState('emphasis').style = emphasisStyle;
         path.ensureState('blur').style = blurStyle;
         path.ensureState('select').style = selectStyle;
+
+
 
         cursorStyle && (path.cursor = cursorStyle);
         path.z2 = symbolMeta.z2;
@@ -975,7 +927,7 @@ function updateCommon(
         }
     );
 
-    enableHoverEmphasis(barRect, focus, blurScope);
+    enableHoverEmphasis(bar, focus, blurScope);
 }
 
 function toIntTimes(times: number) {
