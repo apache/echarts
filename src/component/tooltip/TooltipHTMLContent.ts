@@ -39,13 +39,14 @@ const vendors = ['', '-webkit-', '-moz-', '-o-'];
 
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
-function assembleArrow(backgroundColor: string) {
-    const border = 10;
+function assembleArrow(backgroundColor: ColorString, borderColor: ColorString) {
     const styleCss = [
         'style="',
-        `position:absolute;left:-${2 * border}px;top:50%;transform:translateY(-50%);`,
-        `width:0;height:0;border:${border}px solid;`,
-        `border-color:transparent ${backgroundColor} transparent transparent`,
+        'position:absolute;left:-6px;top:50%;transform:translateY(-50%) rotate(-45deg);',
+        'width:10px;height:10px;',
+        `border-top: ${borderColor} solid 1px;`,
+        `border-left: ${borderColor} solid 1px;`,
+        `background-color: ${backgroundColor};`,
         '"'
     ];
     return `<div ${styleCss.join('')}></div>`;
@@ -302,10 +303,15 @@ class TooltipHTMLContent {
         this._show = true;
     }
 
-    setContent(content: string, markers: Dictionary<ColorString>, tooltipModel: Model<TooltipOption>) {
+    setContent(
+        content: string,
+        markers: Dictionary<ColorString>,
+        tooltipModel: Model<TooltipOption>,
+        borderColor?: ColorString
+    ) {
         this.el.innerHTML = content == null ? '' : content;
         this.el.innerHTML += tooltipModel.get('attachToPoint')
-            ? assembleArrow(tooltipModel.get('backgroundColor')) : '';
+            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor) : '';
     }
 
     setEnterable(enterable: boolean) {

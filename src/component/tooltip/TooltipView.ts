@@ -778,7 +778,7 @@ class TooltipView extends ComponentView {
         }
 
         const nearPoint = this._getNearestPoint([x, y], params);
-        tooltipContent.setContent(html, markers, tooltipModel);
+        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color);
         tooltipContent.show(tooltipModel, nearPoint.color);
 
         this._updatePosition(
