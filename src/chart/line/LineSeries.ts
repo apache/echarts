@@ -77,6 +77,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption>, LineSta
     }
 
     emphasis?: LineStateOption & {
+        focus?: StatesOptionMixin<LineStateOption>['emphasis']['focus'],
+        blurScope?: StatesOptionMixin<LineStateOption>['emphasis']['blurScope']
         lineStyle?: LineStyleOption
         areaStyle?: AreaStyleOption
     }

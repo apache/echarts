@@ -42,7 +42,7 @@ import type { Payload, Dictionary, ColorString, ECElement, DisplayState } from '
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setDefaultStateProxy, setStatesFlag } from '../../util/states';
+import { setStatesStylesFromModel, setDefaultStateProxy, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;
@@ -535,6 +535,8 @@ class LineView extends ChartView {
 
         const visualColor = getVisualGradient(data, coordSys)
             || data.getVisual('style')[data.getVisual('drawType')];
+        const focus = seriesModel.get(['emphasis', 'focus']);
+        const blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
         polyline.useStyle(zrUtil.defaults(
             // Use color in lineStyle first
@@ -547,7 +549,9 @@ class LineView extends ChartView {
         ));
 
         setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
-        setDefaultStateProxy(polyline);
+        // Needs seriesIndex for focus
+        graphic.getECData(polyline).seriesIndex = seriesModel.seriesIndex;
+        enableHoverEmphasis(polyline, focus, blurScope);
 
         const smooth = getSmooth(seriesModel.get('smooth'));
         polyline.setShape({
@@ -581,7 +585,9 @@ class LineView extends ChartView {
             });
 
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
-            setDefaultStateProxy(polygon);
+            // Needs seriesIndex for focus
+            graphic.getECData(polygon).seriesIndex = seriesModel.seriesIndex;
+            enableHoverEmphasis(polygon, focus, blurScope);
         }
 
         const changePolyState = (toState: DisplayState) => {
@@ -704,7 +710,6 @@ class LineView extends ChartView {
                 points: points
             },
             segmentIgnoreThreshold: 2,
-            silent: true,
             z2: 10
         });
 
@@ -727,8 +732,7 @@ class LineView extends ChartView {
                 points: points,
                 stackedOnPoints: stackedOnPoints
             },
-            segmentIgnoreThreshold: 2,
-            silent: true
+            segmentIgnoreThreshold: 2
         });
 
         this._lineGroup.add(polygon);
