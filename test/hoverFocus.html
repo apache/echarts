@@ -69,6 +69,18 @@ under the License.
                 chartOption.series.forEach(function (series) {
                     series.emphasis = series.emphasis || {};
                     series.emphasis.focus = 'series';
+                    series.emphasis.lineStyle = {
+                        // opacity: 0.02
+                    }
+
+                    if (series.renderItem) {
+                        const oldRenderItem = series.renderItem;
+                        series.renderItem = function () {
+                            const ret = oldRenderItem.apply(this, arguments);
+                            ret.focus = 'self';
+                            return ret;
+                        }
+                    }
                 });
                 const dom = document.createElement('div');
                 dom.className = 'chart';

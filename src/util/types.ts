@@ -46,6 +46,7 @@ import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 
 
@@ -439,7 +440,7 @@ export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
 export type DisplayState = 'normal' | 'emphasis' | 'blur' | 'select';
-export type DisplayStateNonNormal = 'emphasis';
+export type DisplayStateNonNormal = Exclude<DisplayState, 'normal'>;
 export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
     [key: string]: any

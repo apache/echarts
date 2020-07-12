@@ -137,6 +137,7 @@ function createEmphasisDefaultState(
     state: Displayable['states'][number]
 ) {
     const hasEmphasis = indexOf(el.currentStates, stateName) >= 0;
+    let cloned = false;
     if (!(el instanceof ZRText)) {
         const currentFill = el.style.fill;
         const currentStroke = el.style.stroke;
@@ -160,7 +161,6 @@ function createEmphasisDefaultState(
             state = state || {};
             // Apply default color lift
             let emphasisStyle = state.style || {};
-            let cloned = false;
             if (!hasFillOrStroke(emphasisStyle.fill)) {
                 cloned = true;
                 // Not modify the original value.
@@ -180,9 +180,14 @@ function createEmphasisDefaultState(
         }
     }
     if (state) {
-        const z2EmphasisLift = (el as ECElement).z2EmphasisLift;
         // TODO Share with textContent?
-        state.z2 = el.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+        if (state.z2 == null) {
+            if (!cloned) {
+                state = extend({}, state);
+            }
+            const z2EmphasisLift = (el as ECElement).z2EmphasisLift;
+            state.z2 = el.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+        }
     }
     return state;
 }
