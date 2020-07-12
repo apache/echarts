@@ -63,6 +63,11 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      * Only available when renderMode is html
      */
     appendToBody?: boolean
+
+    // tooltip attach to point
+    attachToPoint?: boolean
+
+    order?: 'value' | 'valueReverse' | 'legend' | 'legendReverse'
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
@@ -118,7 +123,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         borderRadius: 4,
 
         // tooltip border width, unit is px, default is 0 (no border)
-        borderWidth: 0,
+        borderWidth: 1,
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css

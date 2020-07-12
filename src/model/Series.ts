@@ -532,10 +532,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 ) + '</p>'
             : `<p style="margin: 8px 0;">${colorStr}${seriesName}${content}</p>`;
 
-        return {
-            html,
-            markers
-        };
+        return {html, markers};
     }
 
     isAnimationEnabled(): boolean {

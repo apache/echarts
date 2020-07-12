@@ -277,7 +277,7 @@ class TooltipHTMLContent {
         // this.hide();
     }
 
-    show(tooltipModel: Model<TooltipOption>) {
+    show(tooltipModel: Model<TooltipOption>, nearPointColor: string) {
         clearTimeout(this._hideTimeout);
         const el = this.el;
         const styleCoord = this._styleCoord;
@@ -287,6 +287,7 @@ class TooltipHTMLContent {
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
             + ';left:' + styleCoord[0] + 'px;top:' + styleCoord[1] + 'px;'
+            + `border-color: ${nearPointColor}`
             + (tooltipModel.get('extraCssText') || '');
 
         el.style.display = el.innerHTML ? 'block' : 'none';
@@ -302,7 +303,9 @@ class TooltipHTMLContent {
     }
 
     setContent(content: string, markers: Dictionary<ColorString>, tooltipModel: Model<TooltipOption>) {
-        this.el.innerHTML = content == null ? '' : content + assembleArrow(tooltipModel.get('backgroundColor'));
+        this.el.innerHTML = content == null ? '' : content;
+        this.el.innerHTML += tooltipModel.get('attachToPoint')
+            ? assembleArrow(tooltipModel.get('backgroundColor')) : '';
     }
 
     setEnterable(enterable: boolean) {
