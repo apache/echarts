@@ -138,7 +138,7 @@ interface CustomBaseElementOption extends Partial<Pick<
     // updateDuringAnimation
     during?(params: typeof customDuringAPI): void;
 
-    focus?: 'none' | 'self' | 'series'
+    focus?: 'none' | 'self' | 'series' | ArrayLike<number>
     blurScope?: BlurScope
 };
 interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<

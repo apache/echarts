@@ -62,7 +62,7 @@ export interface GraphNodeStateOption {
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption> {
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, 'adjacency'> {
     id?: string
     name?: string
     value?: GraphDataValue
@@ -87,15 +87,14 @@ export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOp
     category?: number | string
 
     draggable?: boolean
-
-    focusNodeAdjacency?: boolean
 }
 
 export interface GraphEdgeStateOption {
     lineStyle?: GraphEdgeLineStyleOption
     label?: LineLabelOption
 }
-export interface GraphEdgeItemOption extends GraphEdgeStateOption, StatesOptionMixin<GraphEdgeStateOption> {
+export interface GraphEdgeItemOption
+    extends GraphEdgeStateOption, StatesOptionMixin<GraphEdgeStateOption, 'adjacency'> {
     /**
      * Name or index of source node.
      */
@@ -115,8 +114,6 @@ export interface GraphEdgeItemOption extends GraphEdgeStateOption, StatesOptionM
     symbolSize?: number | number[]
 
     ignoreForceLayout?: boolean
-
-    focusNodeAdjacency?: boolean
 }
 
 export interface GraphCategoryItemOption extends SymbolOptionMixin,
@@ -173,6 +170,7 @@ export interface GraphSeriesOption extends SeriesOption,
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
+        focus?: StatesOptionMixin<unknown, 'adjacency'>['emphasis']['focus']
         label?: LabelOption
         edgeLabel?: LabelOption
         itemStyle?: ItemStyleOption

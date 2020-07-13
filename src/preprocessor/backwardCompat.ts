@@ -115,6 +115,19 @@ function compatSunburstState(option: Dictionary<any>) {
     }
 }
 
+function compatGraphFocus(option: Dictionary<any>) {
+    if (!option) {
+        return;
+    }
+    if (option.focusNodeAdjacency != null) {
+        option.emphasis = option.emphasis || {};
+        if (option.emphasis.focus == null) {
+            deprecateLog('`focusNodeAdjacency` in graph/sankey has been changed to `emphasis: { focus: \'adjacency\'}`');
+            option.emphasis.focus = 'adjacency';
+        }
+    }
+}
+
 function traverseTree(data: any[], cb: Function) {
     if (data) {
         for (let i = 0; i < data.length; i++) {
@@ -193,6 +206,10 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             compatSunburstState(seriesOpt);
 
             traverseTree(seriesOpt.data, compatSunburstState);
+        }
+        else if (seriesType === 'graph' || seriesType === 'sankey') {
+            compatGraphFocus(seriesOpt);
+            // TODO nodes, edges?
         }
         else if (seriesType === 'map') {
             if ((seriesOpt as any).mapType && !(seriesOpt as any).map) {

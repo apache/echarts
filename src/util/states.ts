@@ -6,8 +6,8 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { DisplayState, ECElement, ColorString, BlurScope, GeneralFocus } from './types';
-import { extend, indexOf, isArrayLike } from 'zrender/src/core/util';
+import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus } from './types';
+import { extend, indexOf, isArrayLike, isObject, keys } from 'zrender/src/core/util';
 import {
     Z2_EMPHASIS_LIFT,
     getECData,
@@ -15,6 +15,7 @@ import {
 } from './graphic';
 import * as colorTool from 'zrender/src/tool/color';
 import { EChartsType } from '../echarts';
+import List from '../data/List';
 
 // Reserve 0 as default.
 export let _highlightNextDigit = 1;
@@ -288,10 +289,9 @@ function shouldSilent(el: Element, e: ElementEvent) {
 
 export function toggleSeriesBlurStates(
     targetSeriesIndex: number,
-    focus: GeneralFocus,
+    focus: InnerFocus,
     blurScope: BlurScope,
     ecIns: EChartsType,
-    dataType: string,
     isBlur: boolean
 ) {
     if (targetSeriesIndex == null) {
@@ -303,6 +303,13 @@ export function toggleSeriesBlurStates(
 
     if (!focus || focus === 'none') {
         return;
+    }
+
+    function leaveBlur(data: List, dataIndices: ArrayLike<number>) {
+        for (let i = 0; i < dataIndices.length; i++) {
+            const itemEl = data.getItemGraphicEl(dataIndices[i]);
+            itemEl && traverseUpdateState(itemEl as ExtendedElement, singleLeaveBlur);
+        }
     }
 
     model.eachSeries(function (seriesModel) {
@@ -317,11 +324,15 @@ export function toggleSeriesBlurStates(
                 isBlur ? singleEnterBlur(child) : singleLeaveBlur(child);
             });
 
-            if (isBlur && isArrayLike(focus)) {
-                const data = seriesModel.getData(dataType);
-                for (let i = 0; i < focus.length; i++) {
-                    const itemEl = data.getItemGraphicEl((focus as number[])[i]);
-                    itemEl && traverseUpdateState(itemEl as ExtendedElement, singleLeaveBlur);
+            if (isBlur) {
+                if (isArrayLike(focus)) {
+                    leaveBlur(seriesModel.getData(), focus as ArrayLike<number>);
+                }
+                else if (isObject(focus)) {
+                    const dataTypes = keys(focus);
+                    for (let d = 0; d < dataTypes.length; d++) {
+                        leaveBlur(seriesModel.getData(dataTypes[d]), focus[dataTypes[d]]);
+                    }
                 }
             }
         }
@@ -335,14 +346,14 @@ export function toggleSeriesBlurStates(
  * This function should be used on the element with dataIndex, seriesIndex.
  *
  */
-export function enableHoverEmphasis(el: Element, focus?: GeneralFocus, blurScope?: BlurScope) {
+export function enableHoverEmphasis(el: Element, focus?: InnerFocus, blurScope?: BlurScope) {
     setAsHighDownDispatcher(el, true);
     traverseUpdateState(el as ExtendedElement, setDefaultStateProxy);
 
     enableHoverFocus(el, focus, blurScope);
 }
 
-export function enableHoverFocus(el: Element, focus: GeneralFocus, blurScope: BlurScope) {
+export function enableHoverFocus(el: Element, focus: InnerFocus, blurScope: BlurScope) {
     if (focus != null) {
         const ecData = getECData(el);
         // TODO dataIndex may be set after this function. This check is not useful.

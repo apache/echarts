@@ -33,47 +33,11 @@ import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './Gr
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import View from '../../coord/View';
 import Symbol from '../helper/Symbol';
-import Model from '../../model/Model';
-import { Payload } from '../../util/types';
 import List from '../../data/List';
 import Line from '../helper/Line';
-import { GraphNode, GraphEdge } from '../../data/Graph';
-
-const FOCUS_ADJACENCY = '__focusNodeAdjacency';
-const UNFOCUS_ADJACENCY = '__unfocusNodeAdjacency';
-
-interface FocusNodePayload extends Payload {
-    dataIndex: number
-    edgeDataIndex: number
-}
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
-}
-
-function fadeInItem(nodeOrEdge: GraphNode | GraphEdge) {
-    const el = nodeOrEdge.getGraphicEl() as Symbol | Line;
-    if (el) {
-        if ((el as Symbol).getSymbolPath) {
-            (el as Symbol).getSymbolPath().removeState('blur');
-        }
-        else {
-            (el as Line).getLinePath().removeState('blur');
-        }
-
-    }
-}
-
-function fadeOutItem(nodeOrEdge: GraphNode | GraphEdge) {
-    const el = nodeOrEdge.getGraphicEl() as Symbol | Line;
-    if (el) {
-        if ((el as Symbol).getSymbolPath) {
-            (el as Symbol).getSymbolPath().useState('blur');
-        }
-        else {
-            (el as Line).getLinePath().useState('blur');
-        }
-    }
 }
 
 class GraphView extends ChartView {
@@ -115,7 +79,6 @@ class GraphView extends ChartView {
     }
 
     render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        const graphView = this;
         const coordSys = seriesModel.coordinateSystem;
 
         this._model = seriesModel;
@@ -158,8 +121,10 @@ class GraphView extends ChartView {
             this._startForceLayoutIteration(forceLayout, layoutAnimation);
         }
 
-        data.eachItemGraphicEl((el: Symbol, idx) => {
-            const itemModel = data.getItemModel(idx) as Model<GraphNodeItemOption>;
+        data.graph.eachNode((node) => {
+            const idx = node.dataIndex;
+            const el = node.getGraphicEl() as Symbol;
+            const itemModel = node.getModel<GraphNodeItemOption>();
             // Update draggable
             el.off('drag').off('dragend');
             const draggable = itemModel.get('draggable');
@@ -181,41 +146,22 @@ class GraphView extends ChartView {
             }
             el.setDraggable(draggable && !!forceLayout);
 
-            (el as any)[FOCUS_ADJACENCY] && el.off('mouseover', (el as any)[FOCUS_ADJACENCY]);
-            (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
+            const focus = itemModel.get(['emphasis', 'focus']);
 
-            if (itemModel.get('focusNodeAdjacency')) {
-                el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
-                    api.dispatchAction({
-                        type: 'focusNodeAdjacency',
-                        seriesId: seriesModel.id,
-                        dataIndex: graphic.getECData(el).dataIndex
-                    });
-                });
-                el.on('mouseout', (el as any)[UNFOCUS_ADJACENCY] = function () {
-                    graphView._dispatchUnfocus(api);
-                });
+            if (focus === 'adjacency') {
+                graphic.getECData(el).focus = node.getAdjacentDataIndices();
             }
-
         });
 
         data.graph.eachEdge(function (edge) {
             const el = edge.getGraphicEl() as Line;
+            const focus = edge.getModel<GraphEdgeItemOption>().get(['emphasis', 'focus']);
 
-            (el as any)[FOCUS_ADJACENCY] && el.off('mouseover', (el as any)[FOCUS_ADJACENCY]);
-            (el as any)[UNFOCUS_ADJACENCY] && el.off('mouseout', (el as any)[UNFOCUS_ADJACENCY]);
-
-            if (edge.getModel<GraphEdgeItemOption>().get('focusNodeAdjacency')) {
-                el.on('mouseover', (el as any)[FOCUS_ADJACENCY] = function () {
-                    api.dispatchAction({
-                        type: 'focusNodeAdjacency',
-                        seriesId: seriesModel.id,
-                        edgeDataIndex: edge.dataIndex
-                    });
-                });
-                el.on('mouseout', (el as any)[UNFOCUS_ADJACENCY] = function () {
-                    graphView._dispatchUnfocus(api);
-                });
+            if (focus === 'adjacency') {
+                graphic.getECData(el).focus = {
+                    edge: [edge.dataIndex],
+                    node: [edge.node1.dataIndex, edge.node2.dataIndex]
+                };
             }
         });
 
@@ -262,71 +208,6 @@ class GraphView extends ChartView {
     dispose() {
         this._controller && this._controller.dispose();
         this._controllerHost = null;
-    }
-
-    _dispatchUnfocus(api: ExtensionAPI) {
-        const self = this;
-        api.dispatchAction({
-            type: 'unfocusNodeAdjacency',
-            seriesId: self._model.id
-        });
-
-    }
-
-    focusNodeAdjacency(
-        seriesModel: GraphSeriesModel,
-        ecModel: GlobalModel,
-        api: ExtensionAPI,
-        payload: FocusNodePayload
-    ) {
-        const data = seriesModel.getData();
-        const graph = data.graph;
-        const dataIndex = payload.dataIndex;
-        const edgeDataIndex = payload.edgeDataIndex;
-
-        const node = graph.getNodeByIndex(dataIndex);
-        const edge = graph.getEdgeByIndex(edgeDataIndex);
-
-        if (!node && !edge) {
-            return;
-        }
-
-        graph.eachNode(function (node) {
-            fadeOutItem(node);
-        });
-        graph.eachEdge(function (edge) {
-            fadeOutItem(edge);
-        });
-
-        if (node) {
-            fadeInItem(node);
-            zrUtil.each(node.edges, function (adjacentEdge) {
-                if (adjacentEdge.dataIndex < 0) {
-                    return;
-                }
-                fadeInItem(adjacentEdge);
-                fadeInItem(adjacentEdge.node1);
-                fadeInItem(adjacentEdge.node2);
-            });
-        }
-        if (edge) {
-            fadeInItem(edge);
-            fadeInItem(edge.node1);
-            fadeInItem(edge.node2);
-        }
-    }
-
-    unfocusNodeAdjacency(
-        seriesModel: GraphSeriesModel
-    ) {
-        const graph = seriesModel.getData().graph;
-
-        graph.eachNode(function (node) {
-            fadeInItem(node);
-        });
-        graph.eachEdge(function (edge) {
-            fadeInItem(edge);
-        });
     }
 
     _startForceLayoutIteration(

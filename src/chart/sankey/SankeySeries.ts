@@ -57,7 +57,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 }
 
 export interface SankeyNodeItemOption extends SankeyNodeStateOption,
-    StatesOptionMixin<SankeyNodeStateOption>,
+    StatesOptionMixin<SankeyNodeStateOption, 'adjacency'>,
     OptionDataItemObject<OptionDataValue> {
     id?: string
 
@@ -71,7 +71,8 @@ export interface SankeyNodeItemOption extends SankeyNodeStateOption,
     focusNodeAdjacency?: FocusNodeAdjacency
 }
 
-export interface SankeyEdgeItemOption extends SankeyEdgeStateOption, StatesOptionMixin<SankeyEdgeStateOption> {
+export interface SankeyEdgeItemOption
+    extends SankeyEdgeStateOption, StatesOptionMixin<SankeyEdgeStateOption, 'adjacency'> {
     /**
      * Name or index of source node.
      */
@@ -88,7 +89,7 @@ export interface SankeyLevelOption {
     depth: number
 }
 
-export interface SankeySeriesOption extends SeriesOption<SankeyBothStateOption>, SankeyBothStateOption,
+export interface SankeySeriesOption extends SeriesOption<SankeyBothStateOption, 'adjacency'>, SankeyBothStateOption,
     BoxLayoutOptionMixin {
     type?: 'sankey'
 

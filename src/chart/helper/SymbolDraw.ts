@@ -88,7 +88,7 @@ interface SymbolDrawStateOption {
 
 // TODO Separate series and item?
 export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
-    StatesOptionMixin<SymbolDrawStateOption>,
+    StatesOptionMixin<SymbolDrawStateOption, string>,
     SymbolDrawStateOption {
 
     hoverAnimation?: boolean
