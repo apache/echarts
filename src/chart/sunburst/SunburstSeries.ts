@@ -54,7 +54,7 @@ export interface SunburstStateOption {
 }
 
 export interface SunburstSeriesNodeItemOption extends
-    SunburstStateOption, StatesOptionMixin<SunburstStateOption>,
+    SunburstStateOption, StatesOptionMixin<SunburstStateOption, 'descendant' | 'ancestor'>,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link'
@@ -74,8 +74,10 @@ export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOp
         label?: SunburstLabelOption
     }
 }
-export interface SunburstSeriesOption extends SeriesOption<SunburstStateOption>, SunburstStateOption,
+export interface SunburstSeriesOption extends
+    SeriesOption<SunburstStateOption, 'descendant' | 'ancestor'>, SunburstStateOption,
     CircleLayoutOptionMixin {
+
     type?: 'sunburst'
 
     clockwise?: boolean
@@ -90,7 +92,7 @@ export interface SunburstSeriesOption extends SeriesOption<SunburstStateOption>,
      * Valid values: 'none' (for not downplay others), 'descendant',
      * 'ancestor', 'self'
      */
-    highlightPolicy?: 'descendant' | 'ancestor' | 'self'
+    // highlightPolicy?: 'descendant' | 'ancestor' | 'self'
 
     nodeClick?: 'rootToNode' | 'link'
 
@@ -170,11 +172,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         // If still show when all data zero.
         stillShowZeroSum: true,
 
-        // Policy of highlighting pieces when hover on one
-        // Valid values: 'none' (for not downplay others), 'descendant',
-        // 'ancestor', 'self'
-        highlightPolicy: 'descendant',
-
         // 'rootToNode', 'link', or false
         nodeClick: 'rootToNode',
 
@@ -203,12 +200,16 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
             opacity: 1
         },
 
+        emphasis: {
+            focus: 'descendant'
+        },
+
         blur: {
             itemStyle: {
-                opacity: 0.5
+                opacity: 0.2
             },
             label: {
-                opacity: 0.5
+                opacity: 0.1
             }
         },
 

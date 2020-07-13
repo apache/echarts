@@ -321,7 +321,7 @@ export function toggleSeriesBlurStates(
                 const data = seriesModel.getData(dataType);
                 for (let i = 0; i < focus.length; i++) {
                     const itemEl = data.getItemGraphicEl((focus as number[])[i]);
-                    traverseUpdateState(itemEl as ExtendedElement, singleLeaveBlur);
+                    itemEl && traverseUpdateState(itemEl as ExtendedElement, singleLeaveBlur);
                 }
             }
         }

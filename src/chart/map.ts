@@ -26,12 +26,10 @@ import '../coord/geo/geoCreator';
 
 import mapSymbolLayout from './map/mapSymbolLayout';
 import mapDataStatistic from './map/mapDataStatistic';
-import backwardCompat from './map/backwardCompat';
 import createDataSelectAction from '../action/createDataSelectAction';
 
 echarts.registerLayout(mapSymbolLayout);
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, mapDataStatistic);
-echarts.registerPreprocessor(backwardCompat);
 
 createDataSelectAction('map', [{
     type: 'mapToggleSelect',

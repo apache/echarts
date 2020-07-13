@@ -24,17 +24,9 @@ import {createTextStyle} from '../../label/labelStyle';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
-import { AllPropTypes } from 'zrender/src/core/types';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
-
-const NodeHighlightPolicy = {
-    NONE: 'none', // not downplay others
-    DESCENDANT: 'descendant',
-    ANCESTOR: 'ancestor',
-    SELF: 'self'
-} as const;
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -148,48 +140,30 @@ class SunburstPiece extends graphic.Sector {
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
-        if (firstCreate) {
-            const highlightPolicy = seriesModel.getShallow('highlightPolicy');
-            this._initEvents(sector, node, seriesModel, highlightPolicy);
-        }
-
         this._seriesModel = seriesModel || this._seriesModel;
         this._ecModel = ecModel || this._ecModel;
 
-        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
-    }
+        const focus = emphasisModel.get('focus');
+        let focusArr: number[];
 
-    onEmphasis(highlightPolicy: AllPropTypes<typeof NodeHighlightPolicy>) {
-        const that = this;
-        this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
-            if (n.piece) {
-                if (that.node === n) {
-                    n.piece.useState('emphasis', true);
+        switch (focus) {
+            case 'ancestor':
+                focusArr = [];
+                let currNode = node;
+                while (currNode) {
+                    focusArr.push(currNode.dataIndex);
+                    currNode = currNode.parentNode;
                 }
-                else if (isNodeHighlighted(n, that.node, highlightPolicy)) {
-                    // n.piece.useState('highlight', true);
-                }
-                else if (highlightPolicy !== NodeHighlightPolicy.NONE) {
-                    n.piece.useState('downplay', true);
-                }
-            }
-        });
-    }
+                break;
+            case 'descendant':
+                focusArr = [];
+                node.eachNode(childNode => {
+                    focusArr.push(childNode.dataIndex);
+                });
+                break;
+        }
 
-    onNormal() {
-        this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
-            if (n.piece) {
-                n.piece.clearStates();
-            }
-        });
-    }
-
-    onHighlight() {
-        this.replaceState('downplay', 'highlight', true);
-    }
-
-    onDownplay() {
-        this.replaceState('highlight', 'downplay', true);
+        enableHoverEmphasis(this, focusArr || focus, emphasisModel.get('blurScope'));
     }
 
     _updateLabel(
@@ -308,118 +282,7 @@ class SunburstPiece extends graphic.Sector {
 
         label.dirtyStyle();
     }
-
-    _initEvents(
-        sector: graphic.Sector,
-        node: TreeNode,
-        seriesModel: SunburstSeriesModel,
-        highlightPolicy: SunburstSeriesOption['highlightPolicy']
-    ) {
-        sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
-
-        const that = this;
-        const onEmphasis = function () {
-            that.onEmphasis(highlightPolicy);
-        };
-        const onNormal = function () {
-            that.onNormal();
-        };
-        const onDownplay = function () {
-            that.onDownplay();
-        };
-        const onHighlight = function () {
-            that.onHighlight();
-        };
-
-        sector
-            .on('mouseover', onEmphasis)
-            .on('mouseout', onNormal)
-            .on('emphasis', onEmphasis)
-            .on('normal', onNormal)
-            .on('downplay', onDownplay)
-            .on('highlight', onHighlight);
-    }
-
 }
 
 
 export default SunburstPiece;
-
-
-// /**
-//  * Get node color
-//  */
-// function getNodeColor(
-//     node: TreeNode,
-//     seriesModel: SunburstSeriesModel,
-//     ecModel: GlobalModel
-// ) {
-//     // Color from visualMap
-//     let visualColor = node.getVisual('color');
-//     const visualMetaList = node.getVisual('visualMeta');
-//     if (!visualMetaList || visualMetaList.length === 0) {
-//         // Use first-generation color if has no visualMap
-//         visualColor = null;
-//     }
-
-//     // Self color or level color
-//     let color = node.getModel<SunburstSeriesNodeItemOption>().get(['itemStyle', 'color']);
-//     if (color) {
-//         return color;
-//     }
-//     else if (visualColor) {
-//         // Color mapping
-//         return visualColor;
-//     }
-//     else if (node.depth === 0) {
-//         // Virtual root node
-//         return ecModel.option.color[0];
-//     }
-//     else {
-//         // First-generation color
-//         const length = ecModel.option.color.length;
-//         color = ecModel.option.color[getRootId(node) % length];
-//     }
-//     return color;
-// }
-
-// /**
-//  * Get index of root in sorted order
-//  *
-//  * @param {TreeNode} node current node
-//  * @return {number} index in root
-//  */
-// function getRootId(node: TreeNode) {
-//     let ancestor = node;
-//     while (ancestor.depth > 1) {
-//         ancestor = ancestor.parentNode;
-//     }
-
-//     const virtualRoot = node.getAncestors()[0];
-//     return zrUtil.indexOf(virtualRoot.children, ancestor);
-// }
-
-function isNodeHighlighted(
-    node: TreeNode,
-    activeNode: TreeNode,
-    policy: AllPropTypes<typeof NodeHighlightPolicy>
-) {
-    if (policy === NodeHighlightPolicy.NONE) {
-        return false;
-    }
-    else if (policy === NodeHighlightPolicy.SELF) {
-        return node === activeNode;
-    }
-    else if (policy === NodeHighlightPolicy.ANCESTOR) {
-        return node === activeNode || node.isAncestorOf(activeNode);
-    }
-    else {
-        return node === activeNode || node.isDescendantOf(activeNode);
-    }
-}
-
-// Fix tooltip callback function params.color incorrect when pick a default color
-// function fillDefaultColor(node: TreeNode, seriesModel: SunburstSeriesModel, color: ZRColor) {
-//     const data = seriesModel.getData();
-//     data.setItemVisual(node.dataIndex, 'color', color);
-// }

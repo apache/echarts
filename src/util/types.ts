@@ -1171,11 +1171,11 @@ export interface StatesOptionMixin<StateOption, ExtraFocusOptions = never> {
     blur?: StateOption
 }
 
-export interface SeriesOption<StateOption> extends
+export interface SeriesOption<StateOption=any, ExtraFocusOptions = never> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
-    StatesOptionMixin<StateOption>
+    StatesOptionMixin<StateOption, ExtraFocusOptions>
 {
     name?: string
 

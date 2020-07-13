@@ -126,7 +126,7 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
     value?: OptionDataValue
 }
 
-export interface GraphSeriesOption extends SeriesOption<any>,
+export interface GraphSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin,

@@ -17,16 +17,14 @@
 * under the License.
 */
 
-// Compatitable with 2.0
-
-import {each, isArray, isObject, isTypedArray} from 'zrender/src/core/util';
+import {each, isArray, isObject, isTypedArray, defaults} from 'zrender/src/core/util';
 import compatStyle, {deprecateLog} from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
 import { ECUnitOption, SeriesOption } from '../util/types';
 import { __DEV__ } from '../config';
 import type { BarSeriesOption } from '../chart/bar/BarSeries';
-import { PieSeriesOption } from '../chart/pie/PieSeries';
+import type { PieSeriesOption } from '../chart/pie/PieSeries';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -107,6 +105,25 @@ function compatPieLabel(option: Dictionary<any>) {
     }
 }
 
+function compatSunburstState(option: Dictionary<any>) {
+    if (!option) {
+        return;
+    }
+    if (option.downplay && !option.blur) {
+        option.blur = option.downplay;
+        deprecateLog('`downplay` in sunburst has been changed to `blur`');
+    }
+}
+
+function traverseTree(data: any[], cb: Function) {
+    if (data) {
+        for (let i = 0; i < data.length; i++) {
+            cb(data[i]);
+            data[i] && traverseTree(data[i].children, cb);
+        }
+    }
+}
+
 export default function (option: ECUnitOption, isTheme?: boolean) {
     compatStyle(option, isTheme);
 
@@ -161,6 +178,29 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
                         compatBarItemStyle(data[i] && data[i].emphasis);
                     }
                 }
+            }
+        }
+        else if (seriesType === 'sunburst') {
+            const highlightPolicy = (seriesOpt as any).highlightPolicy;
+            if (highlightPolicy) {
+                seriesOpt.emphasis = seriesOpt.emphasis || {};
+                if (!seriesOpt.emphasis.focus) {
+                    seriesOpt.emphasis.focus = highlightPolicy;
+                    deprecateLog('`highlightPolicy` in sunburst has been changed to `emphasis.focus`');
+                }
+            }
+
+            compatSunburstState(seriesOpt);
+
+            traverseTree(seriesOpt.data, compatSunburstState);
+        }
+        else if (seriesType === 'map') {
+            if ((seriesOpt as any).mapType && !(seriesOpt as any).map) {
+                deprecateLog('`mapType` in map has been changed to `map`');
+            }
+            if ((seriesOpt as any).mapLocation) {
+                deprecateLog('`mapLocation` is not used anymore.');
+                defaults(seriesOpt, (seriesOpt as any).mapLocation);
             }
         }
 
