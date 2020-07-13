@@ -206,6 +206,18 @@ class SankeyView extends ChartView {
                 case 'target':
                     curve.style.fill = edge.node2.getVisual('color');
                     break;
+                case 'gradient':
+                    const sourceColor = edge.node1.getVisual('color');
+                    const targetColor = edge.node2.getVisual('color');
+                    if (typeof sourceColor === 'string' && typeof targetColor === 'string') {
+                        curve.style.fill = new graphic.LinearGradient(0, 0, 1, 0, [{
+                            color: sourceColor,
+                            offset: 0
+                        }, {
+                            color: targetColor,
+                            offset: 1
+                        }]);
+                    }
             }
 
             const emphasisModel = edgeModel.getModel('emphasis');
