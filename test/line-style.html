@@ -31,10 +31,9 @@ under the License.
 
 <body>
     <div id="main0"></div>
-    <div></div>
+    <div id="main1"></div>
     <script>
-        var chart;
-        var myChart;
+        var chart1;
 
         require([
             'echarts'
@@ -121,7 +120,7 @@ under the License.
                 ]
             };
 
-            chart = myChart = testHelper.create(echarts, 'main0', {
+            chart1 = testHelper.create(echarts, 'main0', {
                 title: [
                     'Test itemStyle.color and lineStyle.color',
                     'The colors should follow what the legend described.'
@@ -130,6 +129,172 @@ under the License.
             });
         });
 
+    </script>
+
+    <script>
+        var chart2;
+
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option = {
+                legend: {
+                    left: 'center',
+                    bottom: 'bottom'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: [100, 200, 20, 30, 60, 89],
+                },
+                yAxis: {
+                    type: 'value',
+                },
+                grid: {
+                    bottom: 120
+                },
+                series: [
+                    {
+                        name: 'lineStyle.dashArray is [10, 5]',
+                        type: 'line',
+                        data: [7200, 7210, 7200, 7220, 7200, 7230],
+                        symbolSize: 10,
+                        smooth: true,
+                        lineStyle: {
+                            type: 'dashed',
+                            dashArray: [10, 5]
+                        }
+                    },
+                    {
+                        name: 'lineStyle.dashArray is [12, 3, 3]',
+                        type: 'line',
+                        data: [6200, 6210, 6200, 6220, 6200, 6230],
+                        symbolSize: 10,
+                        smooth: true,
+                        lineStyle: {
+                            type: 'dashed',
+                            dashArray: [12, 3, 3]
+                        }
+                    },
+                    {
+                        name: 'lineStyle.dashArray is [20, 3, 3, 3, 3, 3, 3, 3]',
+                        type: 'line',
+                        data: [5200, 5210, 5200, 5220, 5200, 5230],
+                        symbolSize: 10,
+                        smooth: true,
+                        lineStyle: {
+                            type: 'dashed',
+                            dashArray: [20, 3, 3, 3, 3, 3, 3, 3]
+                        }
+                    },
+                    {
+                        name: 'lineStyle.dashArray is [20, 3, 3, 3, 3, 3, 3, 3]\nlineStyle.dashOffset is 20',
+                        type: 'line',
+                        data: [4200, 4210, 4200, 4220, 4200, 4230],
+                        symbolSize: 10,
+                        smooth: true,
+                        lineStyle: {
+                            type: 'dashed',
+                            dashArray: [20, 3, 3, 3, 3, 3, 3, 3],
+                            dashOffset: 20
+                        }
+                    },
+                    {
+                        name: 'lineStyle.dashArray is [2, 6]\nlineStyle.type is dotted',
+                        type: 'line',
+                        data: [3250, 3260, 3250, 3270, 3250, 3280],
+                        symbolSize: 10,
+                        smooth: true,
+                        lineStyle: {
+                            type: 'dotted',
+                            dashArray: [2, 6]
+                        }
+                    },
+                    {
+                        name: 'lineStyle.dashArray is [2, 2]\nlineStyle.type is dotted',
+                        type: 'line',
+                        data: [2200, 2210, 2200, 2220, 2200, 2230],
+                        symbolSize: 10,
+                        smooth: true,
+                        lineStyle: {
+                            type: 'dotted',
+                            dashArray: [2, 2]
+                        }
+                    },
+                    {
+                        name: 'lineStyle.cap is butt',
+                        type: 'line',
+                        data: [1200, 1210, 1200, 1240, 1210, 1230],
+                        symbolSize: 4,
+                        smooth: true,
+                        lineStyle: {
+                            width: 8,
+                            type: 'solid',
+                            cap: 'butt'
+                        },
+                        smooth: false
+                    },
+                    {
+                        name: 'lineStyle.cap is square',
+                        type: 'line',
+                        data: [200, 230, 300, 340, 310, 330],
+                        symbolSize: 4,
+                        smooth: true,
+                        lineStyle: {
+                            width: 8,
+                            type: 'solid',
+                            cap: 'square'
+                        },
+                        smooth: false
+                    },
+                    {
+                        name: 'lineStyle.cap is round',
+                        type: 'line',
+                        data: [-1000, -970, -900, -860, -890, -870],
+                        symbolSize: 4,
+                        smooth: true,
+                        lineStyle: {
+                            width: 8,
+                            type: 'solid',
+                            cap: 'round'
+                        },
+                        smooth: false
+                    },
+                    {
+                        name: 'lineStyle.join is bevel',
+                        type: 'line',
+                        data: [-1800, -3800, -1800, -3800, -1800, -3800],
+                        symbolSize: 5,
+                        smooth: true,
+                        lineStyle: {
+                            width: 10,
+                            type: 'solid',
+                            join: 'bevel'
+                        },
+                        smooth: false
+                    },
+                    {
+                        name: 'lineStyle.join is round',
+                        type: 'line',
+                        data: [-2800, -4800, -2800, -4800, -2800, -4800],
+                        symbolSize: 5,
+                        smooth: true,
+                        lineStyle: {
+                            width: 10,
+                            type: 'solid',
+                            join: 'round'
+                        },
+                        smooth: false
+                    }
+                ]
+            };
+
+            chart2 = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Test lineStyle.cap, lineStyle.join, lineStyle.dashArray and lineStyle.dashOffset'
+                ],
+                option: option
+            });
+        });
     </script>
 </body>
 

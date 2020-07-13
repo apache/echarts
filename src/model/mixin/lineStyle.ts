@@ -29,7 +29,11 @@ export const LINE_STYLE_KEY_MAP = [
     ['shadowBlur'],
     ['shadowOffsetX'],
     ['shadowOffsetY'],
-    ['shadowColor']
+    ['shadowColor'],
+    ['lineDashOffset', 'dashOffset'],
+    ['lineDash', 'dashArray'],
+    ['lineCap', 'cap'],
+    ['lineJoin', 'join']
 ];
 
 const getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);
@@ -59,8 +63,11 @@ class LineStyleMixin {
             lineWidth = 1;
         }
         const lineType = this.get('type');
-        const dotSize = Math.max(lineWidth, 2);
-        const dashSize = lineWidth * 4;
+        let dashArray = this.get('dashArray');
+        // compatible with single number
+        if (dashArray != null && !isNaN(dashArray)) {
+            dashArray = [+dashArray];
+        }
         return (lineType === 'solid' || lineType == null)
             // Use `false` but not `null` for the solid line here, because `null` might be
             // ignored when assigning to `el.style`. e.g., when setting `lineStyle.type` as
@@ -69,8 +76,8 @@ class LineStyleMixin {
             // one if using `null` here according to the emhpsis strategy in `util/graphic.js`.
             ? false
             : lineType === 'dashed'
-            ? [dashSize, dashSize]
-            : [dotSize, dotSize];
+            ? dashArray || [lineWidth * 4]
+            : dashArray || [Math.max(lineWidth, 2)];
     }
 };
 
