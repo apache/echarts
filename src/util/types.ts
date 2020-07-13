@@ -1134,6 +1134,11 @@ export interface ComponentOption {
 
 export type BlurScope = 'coordinateSystem' | 'series' | 'global';
 
+/**
+ * can be array of data indices.
+ */
+export type GeneralFocus = string | ArrayLike<number>;
+
 export interface StatesOptionMixin<StateOption, ExtraFocusOptions = never> {
     /**
      * Emphasis states

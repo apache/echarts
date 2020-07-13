@@ -375,7 +375,7 @@ class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
 
     static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
-    preventAutoZ = true;
+    // preventAutoZ = true;
 
     currentZLevel: number;
     currentZ: number;

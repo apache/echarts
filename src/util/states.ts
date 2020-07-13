@@ -6,8 +6,8 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { DisplayState, ECElement, ColorString, BlurScope } from './types';
-import { extend, indexOf } from 'zrender/src/core/util';
+import { DisplayState, ECElement, ColorString, BlurScope, GeneralFocus } from './types';
+import { extend, indexOf, isArrayLike } from 'zrender/src/core/util';
 import {
     Z2_EMPHASIS_LIFT,
     getECData,
@@ -288,10 +288,10 @@ function shouldSilent(el: Element, e: ElementEvent) {
 
 export function toggleSeriesBlurStates(
     targetSeriesIndex: number,
-    focus: string,
+    focus: GeneralFocus,
     blurScope: BlurScope,
     ecIns: EChartsType,
-    dataIndices: number[],  // TODO
+    dataType: string,
     isBlur: boolean
 ) {
     if (targetSeriesIndex == null) {
@@ -301,7 +301,7 @@ export function toggleSeriesBlurStates(
     const model = ecIns.getModel();
     blurScope = blurScope || 'coordinateSystem';
 
-    if (!(focus === 'series' || focus === 'self')) {
+    if (!focus || focus === 'none') {
         return;
     }
 
@@ -316,6 +316,14 @@ export function toggleSeriesBlurStates(
             view.group.traverse(function (child) {
                 isBlur ? singleEnterBlur(child) : singleLeaveBlur(child);
             });
+
+            if (isBlur && isArrayLike(focus)) {
+                const data = seriesModel.getData(dataType);
+                for (let i = 0; i < focus.length; i++) {
+                    const itemEl = data.getItemGraphicEl((focus as number[])[i]);
+                    traverseUpdateState(itemEl as ExtendedElement, singleLeaveBlur);
+                }
+            }
         }
     });
 }
@@ -327,14 +335,14 @@ export function toggleSeriesBlurStates(
  * This function should be used on the element with dataIndex, seriesIndex.
  *
  */
-export function enableHoverEmphasis(el: Element, focus?: string, blurScope?: BlurScope) {
+export function enableHoverEmphasis(el: Element, focus?: GeneralFocus, blurScope?: BlurScope) {
     setAsHighDownDispatcher(el, true);
     traverseUpdateState(el as ExtendedElement, setDefaultStateProxy);
 
     enableHoverFocus(el, focus, blurScope);
 }
 
-export function enableHoverFocus(el: Element, focus: string, blurScope: BlurScope) {
+export function enableHoverFocus(el: Element, focus: GeneralFocus, blurScope: BlurScope) {
     if (focus != null) {
         const ecData = getECData(el);
         // TODO dataIndex may be set after this function. This check is not useful.

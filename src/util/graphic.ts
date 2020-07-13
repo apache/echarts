@@ -57,7 +57,8 @@ import {
     ECEventData,
     ZRStyleProps,
     ParsedValue,
-    BlurScope} from './types';
+    BlurScope,
+    GeneralFocus} from './types';
 import { makeInner } from './model';
 import {
     extend,
@@ -899,8 +900,7 @@ export interface ECData {
     seriesIndex?: number;
     dataType?: string;
 
-    // self | series
-    focus?: string
+    focus?: GeneralFocus
     blurScope?: BlurScope
 }
 

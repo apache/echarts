@@ -1312,7 +1312,8 @@ class ECharts extends Eventful {
                     if (isHighlight || isDownplay) {
                         if (model instanceof SeriesModel) {
                             const seriesIndex = model.seriesIndex;
-                            const data = model.getData(payload.dataType);
+                            const dataType = payload.dataType;
+                            const data = model.getData(dataType);
                             let dataIndex = modelUtil.queryDataIndex(data, payload);
                             // Pick the first one if there is multiple/none exists.
                             dataIndex = (zrUtil.isArray(dataIndex) ? dataIndex[0] : dataIndex) || 0;
@@ -1328,7 +1329,7 @@ class ECharts extends Eventful {
                             if (el) {
                                 const ecData = graphic.getECData(el);
                                 toggleSeriesBlurStates(
-                                    seriesIndex, ecData.focus, ecData.blurScope, ecIns, null, isHighlight
+                                    seriesIndex, ecData.focus, ecData.blurScope, ecIns, dataType, isHighlight
                                 );
                             }
                             else {
@@ -1337,7 +1338,7 @@ class ECharts extends Eventful {
                                 const focus = model.get(['emphasis', 'focus']);
                                 const blurScope = model.get(['emphasis', 'blurScope']);
                                 if (focus != null) {
-                                    toggleSeriesBlurStates(seriesIndex, focus, blurScope, ecIns, null, isHighlight);
+                                    toggleSeriesBlurStates(seriesIndex, focus, blurScope, ecIns, dataType, isHighlight);
                                 }
                             }
                         }
@@ -1734,7 +1735,7 @@ class ECharts extends Eventful {
                     const ecData = graphic.getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
                     toggleSeriesBlurStates(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, null, true
+                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, ecData.dataType, true
                     );
                     enterEmphasisWhenMouseOver(dispatcher, e);
 
@@ -1746,7 +1747,7 @@ class ECharts extends Eventful {
                 if (dispatcher) {
                     const ecData = graphic.getECData(dispatcher);
                     toggleSeriesBlurStates(
-                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, null, false
+                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, ecData.dataType, false
                     );
 
                     leaveEmphasisWhenMouseOut(dispatcher, e);
