@@ -662,7 +662,7 @@ export interface LineStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     type?: ZRLineType
     cap?: CanvasLineCap
     join?: CanvasLineJoin
-    dashArray?: number[]
+    dashArray?: number | number[]
     dashOffset?: number
 }
 

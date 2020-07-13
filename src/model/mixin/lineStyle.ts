@@ -30,8 +30,8 @@ export const LINE_STYLE_KEY_MAP = [
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['shadowColor'],
-    ['lineDashOffset', 'dashOffset'],
     ['lineDash', 'dashArray'],
+    ['lineDashOffset', 'dashOffset'],
     ['lineCap', 'cap'],
     ['lineJoin', 'join']
 ];
@@ -44,7 +44,11 @@ type LineStyleKeys = 'lineWidth'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
-    | 'shadowColor';
+    | 'shadowColor'
+    | 'lineDash'
+    | 'lineDashOffset'
+    | 'lineCap'
+    | 'lineJoin';
 
 type LineStyleProps = Pick<PathStyleProps, LineStyleKeys>;
 
@@ -54,7 +58,7 @@ class LineStyleMixin {
         const style = getLineStyle(this, excludes);
         // Always set lineDash whether dashed, otherwise we can not
         // erase the previous style when assigning to el.style.
-        (style as any).lineDash = this.getLineDash((style as any).lineWidth);
+        style.lineDash = this.getLineDash(style.lineWidth);
         return style;
     }
 
