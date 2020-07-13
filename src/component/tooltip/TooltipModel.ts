@@ -127,7 +127,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css
-        padding: [5, 12, 0],
+        padding: [8, 12, 0],
 
         // Extra css text
         extraCssText: '',

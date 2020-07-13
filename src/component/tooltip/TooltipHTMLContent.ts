@@ -39,10 +39,15 @@ const vendors = ['', '-webkit-', '-moz-', '-o-'];
 
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
-function assembleArrow(backgroundColor: ColorString, borderColor: ColorString) {
+function assembleArrow(
+    backgroundColor: ColorString,
+    borderColor: ColorString,
+    arrowPosition: 'left' | 'right'
+) {
     const styleCss = [
         'style="',
-        'position:absolute;left:-6px;top:50%;transform:translateY(-50%) rotate(-45deg);',
+        `position:absolute;${arrowPosition}:-6px;top:50%;transform:translateY(-50%) `,
+        `rotate(${arrowPosition === 'left' ? -45 : -225}deg);`,
         'width:10px;height:10px;',
         `border-top: ${borderColor} solid 1px;`,
         `border-left: ${borderColor} solid 1px;`,
@@ -283,11 +288,12 @@ class TooltipHTMLContent {
         const el = this.el;
         const styleCoord = this._styleCoord;
 
+        const offset = el.offsetHeight / 2;
         el.style.cssText = gCssText + assembleCssText(tooltipModel)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
-            + ';left:' + styleCoord[0] + 'px;top:' + styleCoord[1] + 'px;'
+            + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;'
             + `border-color: ${nearPointColor}`
             + (tooltipModel.get('extraCssText') || '');
 
@@ -307,11 +313,12 @@ class TooltipHTMLContent {
         content: string,
         markers: Dictionary<ColorString>,
         tooltipModel: Model<TooltipOption>,
-        borderColor?: ColorString
+        borderColor?: ColorString,
+        arrowPosition?: 'left' | 'right'
     ) {
         this.el.innerHTML = content == null ? '' : content;
         this.el.innerHTML += tooltipModel.get('attachToPoint')
-            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor) : '';
+            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition) : '';
     }
 
     setEnterable(enterable: boolean) {

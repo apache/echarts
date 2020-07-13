@@ -760,6 +760,7 @@ class TooltipView extends ComponentView {
         const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
         let html = defaultHtml;
+        const nearPoint = this._getNearestPoint([x, y], params);
 
         if (formatter && typeof formatter === 'string') {
             html = formatUtil.formatTpl(formatter, params, true);
@@ -769,7 +770,7 @@ class TooltipView extends ComponentView {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markers, tooltipModel);
                     this._updatePosition(
-                        tooltipModel, positionExpr, x, y, tooltipContent, params, el
+                        tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y
                     );
                 }
             }, this);
@@ -777,13 +778,12 @@ class TooltipView extends ComponentView {
             html = formatter(params, asyncTicket, callback);
         }
 
-        const nearPoint = this._getNearestPoint([x, y], params);
-        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color);
-        tooltipContent.show(tooltipModel, nearPoint.color);
-
-        this._updatePosition(
+        const [finalX] = this._updatePosition(
             tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y
         );
+        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, x > finalX ? 'right' : 'left');
+        tooltipContent.show(tooltipModel, nearPoint.color);
+
     }
 
     _getNearestPoint(point: number[], tooltipDataParams: TooltipDataParams | TooltipDataParams[]): {
@@ -791,6 +791,12 @@ class TooltipView extends ComponentView {
         color: ColorString
     } {
         if (!zrUtil.isArray(tooltipDataParams)) {
+            if (!tooltipDataParams.position) {
+                return {
+                    y: point[1],
+                    color: tooltipDataParams.color as ColorString
+                };
+            }
             return {
                 y: tooltipDataParams.position[1],
                 color: tooltipDataParams.color as ColorString
@@ -814,7 +820,7 @@ class TooltipView extends ComponentView {
         params: TooltipDataParams | TooltipDataParams[],
         el?: Element,
         nearPointY?: number
-    ) {
+    ): [number, number] {
         const viewWidth = this._api.getWidth();
         const viewHeight = this._api.getHeight();
 
@@ -884,6 +890,8 @@ class TooltipView extends ComponentView {
         }
 
         content.moveTo(x, y);
+
+        return [x, y];
     }
 
     // FIXME
