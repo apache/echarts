@@ -62,7 +62,7 @@ export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
 }
 export interface InnerSetOptionOpts {
-    replaceMergeMainTypeMap: HashMap<boolean>;
+    replaceMergeMainTypeMap: HashMap<boolean, string>;
 }
 
 // -----------------------
@@ -81,7 +81,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
     private _optionManager: OptionManager;
 
-    private _componentsMap: HashMap<ComponentModel[]>;
+    private _componentsMap: HashMap<ComponentModel[], string>;
 
     /**
      * `_componentsMap` might have "hole" becuase of remove.
@@ -218,6 +218,7 @@ class GlobalModel extends Model<ECUnitOption> {
         const componentsMap = this._componentsMap;
         const componentsCount = this._componentsCount;
         const newCmptTypes: ComponentMainType[] = [];
+        const newCmptTypeMap = createHashMap<boolean, string>();
         const replaceMergeMainTypeMap = opt && opt.replaceMergeMainTypeMap;
 
         resetSourceDefaulter(this);
@@ -237,8 +238,22 @@ class GlobalModel extends Model<ECUnitOption> {
             }
             else if (mainType) {
                 newCmptTypes.push(mainType);
+                newCmptTypeMap.set(mainType, true);
             }
         });
+
+        if (replaceMergeMainTypeMap) {
+            // If there is a mainType `xxx` in `replaceMerge` but not declared in option,
+            // we trade it as it is declared in option as `{xxx: []}`. Because:
+            // (1) for normal merge, `{xxx: null/undefined}` are the same meaning as `{xxx: []}`.
+            // (2) some preprocessor may convert some of `{xxx: null/undefined}` to `{xxx: []}`.
+            replaceMergeMainTypeMap.each(function (b, mainTypeInReplaceMerge) {
+                if (!newCmptTypeMap.get(mainTypeInReplaceMerge)) {
+                    newCmptTypes.push(mainTypeInReplaceMerge);
+                    newCmptTypeMap.set(mainTypeInReplaceMerge, true);
+                }
+            });
+        }
 
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
             newCmptTypes,
@@ -249,10 +264,8 @@ class GlobalModel extends Model<ECUnitOption> {
 
         function visitComponent(
             this: GlobalModel,
-            mainType: ComponentMainType,
-            dependencies: string | string[]
+            mainType: ComponentMainType
         ): void {
-
             const newCmptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
             const oldCmptList = componentsMap.get(mainType);
@@ -263,11 +276,13 @@ class GlobalModel extends Model<ECUnitOption> {
             // Set mainType and complete subType.
             modelUtil.setComponentTypeToKeyInfo(mappingResult, mainType, ComponentModel as ComponentModelConstructor);
 
-            // Set it before the travel, in case that `this._componentsMap` is
-            // used in some `init` or `merge` of components.
+            // Empty it before the travel, in order to prevent `this._componentsMap`
+            // from being used in the `init`/`mergeOption`/`optionUpdated` of some
+            // components, which is probably incorrect logic.
             option[mainType] = null;
             componentsMap.set(mainType, null);
             componentsCount.set(mainType, 0);
+
             const optionsByMainType = [] as ComponentOption[];
             const cmptsByMainType = [] as ComponentModel[];
             let cmptsCountByMainType = 0;
@@ -794,8 +809,8 @@ export interface QueryConditionKindB {
     mainType: ComponentMainType;
     subType?: ComponentSubType;
     index?: number | number[];
-    id?: string | string[];
-    name?: string | string[];
+    id?: string | number | (string | number)[];
+    name?: (string | number) | (string | number)[];
 }
 export interface EachComponentAllCallback {
     (mainType: string, model: ComponentModel, componentIndex: number): void;
@@ -844,16 +859,25 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
 
 function queryByIdOrName<T extends { id?: string, name?: string }>(
     attr: 'id' | 'name',
-    idOrName: string | string[],
+    idOrName: string | number | (string | number)[],
     cmpts: T[]
 ): T[] {
-    let keyMap: HashMap<string>;
-    return isArray(idOrName)
-        ? (
-            keyMap = createHashMap(idOrName),
-            filter(cmpts, cmpt => cmpt && keyMap.get(cmpt[attr]) != null)
-        )
-        : filter(cmpts, cmpt => cmpt && cmpt[attr] === idOrName + '');
+    // Here is a break from echarts4: string and number-like string are
+    // traded as equal.
+    if (isArray(idOrName)) {
+        const keyMap = createHashMap<boolean>(idOrName);
+        each(idOrName, function (idOrNameItem) {
+            if (idOrNameItem != null) {
+                modelUtil.validateIdOrName(idOrNameItem);
+                keyMap.set(idOrNameItem, true);
+            }
+        });
+        return filter(cmpts, cmpt => cmpt && keyMap.get(cmpt[attr]));
+    }
+    else {
+        modelUtil.validateIdOrName(idOrName);
+        return filter(cmpts, cmpt => cmpt && cmpt[attr] === idOrName + '');
+    }
 }
 
 function filterBySubType(
@@ -868,7 +892,7 @@ function filterBySubType(
 }
 
 function normalizeReplaceMergeInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
-    const replaceMergeMainTypeMap = createHashMap<boolean>();
+    const replaceMergeMainTypeMap = createHashMap<boolean, string>();
     opts && each(modelUtil.normalizeToArray(opts.replaceMerge), function (mainType) {
         if (__DEV__) {
             assert(
