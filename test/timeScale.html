@@ -142,6 +142,9 @@ under the License.
                             saveAsImage : {show: true}
                         }
                     },
+                    grid: {
+                        bottom: 100
+                    },
                     dataZoom : {
                         show : true,
                         realtime : true,
@@ -155,14 +158,25 @@ under the License.
                             axisLine: {onZero: false},
                             splitNumber: 20,
                             // minInterval: 3600 * 1000 * 24
-                            // min: 'dataMin',
-                            // max: 'dataMax'
+                            min: 'dataMin',
+                            max: 'dataMax',
                             axisLabel: {
                                 formatter: {
                                     second: 'hh:mm:ss',
                                     minute: 'hh:mm',
-                                    hour: function (time) {
-                                        return time.getHours();
+                                    day: ['{red|{d}}', '{gray|{d}}'],
+                                    first: '{bold|{MMM} {d}\n{yyyy}}',
+                                    // last: '{MMM} {d}'
+                                },
+                                rich: {
+                                    red: {
+                                        color: 'red'
+                                    },
+                                    gray: {
+                                        color: '#aaa'
+                                    },
+                                    bold: {
+                                        fontWeight: 'bold'
                                     }
                                 }
                             }

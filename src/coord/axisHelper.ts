@@ -33,11 +33,11 @@ import Model from '../model/Model';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
 import Axis from './Axis';
-import { AxisBaseOption } from './axisCommonTypes';
+import { AxisBaseOption, TimeAxisLabelFormatterOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
 import List from '../data/List';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, ScaleDataValue, DimensionName, ScaleTick } from '../util/types';
+import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
 
 
@@ -223,7 +223,14 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx: number) =
     const labelFormatter = axis.getLabelModel().get('formatter');
     const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
-    if (typeof labelFormatter === 'string') {
+    if (axis.scale.type === 'time') {
+        return (function (tpl) {
+            return function (tick: ScaleTick, idx: number) {
+                return (axis.scale as TimeScale).getFormattedLabel(tick, idx, tpl);
+            }
+        })(labelFormatter as TimeAxisLabelFormatterOption);
+    }
+    else if (typeof labelFormatter === 'string') {
         return (function (tpl) {
             return function (tick: ScaleTick) {
                 // For category axis, get raw value; for numeric axis,
@@ -247,7 +254,10 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx: number) =
                 if (categoryTickStart != null) {
                     idx = tick.value - categoryTickStart;
                 }
-                return cb(getAxisRawValue(axis, tick), idx);
+                return cb(
+                    getAxisRawValue(axis, tick) as (TimeScaleTick & string) | (TimeScaleTick & number),
+                    idx
+                );
             };
         })(labelFormatter);
     }

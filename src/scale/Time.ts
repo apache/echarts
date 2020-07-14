@@ -40,6 +40,7 @@
 
 import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
+import * as timeUtil from '../util/time';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 import Scale from './Scale';
@@ -84,19 +85,21 @@ class TimeScale extends IntervalScale {
     getLabel(tick: TimeScaleTick): string {
         // const stepLvl = this._stepLvl;
 
-        const labelFormatType = getLabelFormatType(tick.value, this.getSetting('useUTC'), false);
+        const labelFormatType = timeUtil.getUnitFromValue(
+            tick.value,
+            this.getSetting('useUTC'),
+            false
+        );
         return formatUtil.formatTime(labelFormatType, tick.value);
     }
 
     getFormattedLabel(
         tick: TimeScaleTick,
+        idx: number,
         labelFormatter: TimeAxisLabelFormatterOption
     ): string {
-        const durationName = getLabelFormatType(tick.value, this.getSetting('useUTC'), true);
-        if (typeof labelFormatter === 'string') {
-            // Single formatter for all durations and levels
-            return formatUtil.formatTime(durationName, tick.value);
-        }
+        const isUTC = this.getSetting('useUTC');
+        return timeUtil.leveledFormat(tick, idx, labelFormatter, isUTC);
     }
 
     /**
@@ -136,7 +139,7 @@ class TimeScale extends IntervalScale {
         const intervals = primaryUnitIntervals[Math.min(idx, unitLen - 1)];
 
         const innerTicks = getIntervalTicks(
-            intervals[0] as PrimaryTimeUnit,
+            intervals[0] as timeUtil.PrimaryTimeUnit,
             useUTC,
             extent
         );
@@ -324,102 +327,18 @@ const primaryUnitIntervals = [
     ['year', ONE_DAY * 380]            // 1Y
 ] as [string, number][];
 
-
-type PrimaryTimeUnit = 'millisecond' | 'second' | 'minute' | 'hour'
-    | 'day' | 'month' | 'year';
-type TimeUnit = PrimaryTimeUnit | 'week' | 'quarter' | 'half-year';
-
-function getLabelFormatType(
-    value: number | string | Date,
-    isUTC: boolean,
-    primaryOnly: boolean
-): TimeUnit {
-    const date = numberUtil.parseDate(value);
-    const utc = isUTC ? 'UTC' : '';
-    const M = (date as any)['get' + utc + 'Month']() + 1;
-    const w = (date as any)['get' + utc + 'Day']();
-    const d = (date as any)['get' + utc + 'Date']();
-    const h = (date as any)['get' + utc + 'Hours']();
-    const m = (date as any)['get' + utc + 'Minutes']();
-    const s = (date as any)['get' + utc + 'Seconds']();
-    const S = (date as any)['get' + utc + 'Milliseconds']();
-
-    const isSecond = S === 0;
-    const isMinute = isSecond && s === 0;
-    const isHour = isMinute && m === 0;
-    const isDay = isHour && h === 0;
-    const isWeek = isDay && w === 0; // TODO: first day to be configured
-    const isMonth = isDay && d === 1;
-    const isQuarter = isMonth && (M % 3 === 1);
-    const isHalfYear = isMonth && (M % 6 === 1);
-    const isYear = isMonth && M === 1;
-
-    if (isYear) {
-        return 'year';
-    }
-    else if (isHalfYear && !primaryOnly) {
-        return 'half-year';
-    }
-    else if (isQuarter && !primaryOnly) {
-        return 'quarter';
-    }
-    else if (isMonth) {
-        return 'month';
-    }
-    else if (isWeek && !primaryOnly) {
-        return 'week';
-    }
-    else if (isDay) {
-        return 'day';
-    }
-    else if (isHour) {
-        return 'hour';
-    }
-    else if (isMinute) {
-        return 'minute';
-    }
-    else if (isSecond) {
-        return 'second';
-    }
-    else {
-        return 'millisecond';
-    }
-}
-
-
-function getLabelFormatValueFromUnit(value: number | Date, isUTC: boolean, level?: TimeUnit) : number {
-    const date = typeof value === 'number'
-        ? numberUtil.parseDate(value) as any
-        : value;
-    level = level || getLabelFormatType(value, isUTC, true);
-    const utc = isUTC ? 'UTC' : '';
-
-    switch (level) {
-        case 'millisecond':
-            return date['get' + utc + 'Milliseconds']();
-        case 'second':
-            return date['get' + utc + 'Seconds']();
-        case 'minute':
-            return date['get' + utc + 'Minutes']();
-        case 'hour':
-            return date['get' + utc + 'Hours']();
-        case 'day':
-            return date['get' + utc + 'Date']();
-        case 'month':
-            return date['get' + utc + 'Month']();
-        case 'year':
-            return date['get' + utc + 'FullYear']();
-    }
-}
-
-
-function isUnitValueSame(unit: PrimaryTimeUnit, valueA: number, valueB: number, isUTC: boolean): boolean {
+function isUnitValueSame(
+    unit: timeUtil.PrimaryTimeUnit,
+    valueA: number,
+    valueB: number,
+    isUTC: boolean
+): boolean {
     const dateA = numberUtil.parseDate(valueA) as any;
     const dateB = numberUtil.parseDate(valueB) as any;
 
-    const isSame = (unit: PrimaryTimeUnit) => {
-        return getLabelFormatValueFromUnit(dateA, isUTC, unit)
-            === getLabelFormatValueFromUnit(dateB, isUTC, unit);
+    const isSame = (unit: timeUtil.PrimaryTimeUnit) => {
+        return timeUtil.getUnitValue(dateA, unit, isUTC)
+            === timeUtil.getUnitValue(dateB, unit, isUTC);
     };
     const isSameYear = () => isSame('year');
     const isSameMonth = () => isSameYear() && isSame('month');
@@ -449,7 +368,7 @@ function isUnitValueSame(unit: PrimaryTimeUnit, valueA: number, valueB: number, 
 
 
 function getIntervalTicks(
-    unitName: TimeUnit,
+    unitName: timeUtil.TimeUnit,
     isUTC: boolean,
     extent: number[]
 ): TimeScaleTick[] {
@@ -488,7 +407,7 @@ function getIntervalTicks(
             }
         }
         else if (!isUnitValueSame(
-            unitNames[i] as PrimaryTimeUnit,
+            unitNames[i] as timeUtil.PrimaryTimeUnit,
             extent[0], extent[1], isUTC
         )) {
             // Level value changes within extent

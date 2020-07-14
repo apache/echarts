@@ -20,7 +20,7 @@
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary, ScaleDataValue
+    AnimationOptionMixin, Dictionary, ScaleDataValue, TimeScaleTick
 } from '../util/types';
 
 
@@ -155,18 +155,21 @@ interface AxisTickOption {
 
 export type AxisLabelFormatterOption = string | ((value: OrdinalRawValue | number, index: number) => string);
 
-type TimeAxisLabelFormatterLevel = AxisLabelFormatterOption | string[];
+type TimeAxisLabelUnitFormatter = AxisLabelFormatterOption | string[];
 
-export type TimeAxisLabelFormatterOption = AxisLabelFormatterOption | {
-    year?: TimeAxisLabelFormatterLevel,
-    month?: TimeAxisLabelFormatterLevel,
-    week?: TimeAxisLabelFormatterLevel,
-    day?: TimeAxisLabelFormatterLevel,
-    hour?: TimeAxisLabelFormatterLevel,
-    minute?: TimeAxisLabelFormatterLevel,
-    second?: TimeAxisLabelFormatterLevel,
-    millisecond?: TimeAxisLabelFormatterLevel
-};
+export type TimeAxisLabelFormatterOption = string
+    | ((value: TimeScaleTick, index: number) => string)
+    | {
+        year?: TimeAxisLabelUnitFormatter,
+        month?: TimeAxisLabelUnitFormatter,
+        week?: TimeAxisLabelUnitFormatter,
+        day?: TimeAxisLabelUnitFormatter,
+        hour?: TimeAxisLabelUnitFormatter,
+        minute?: TimeAxisLabelUnitFormatter,
+        second?: TimeAxisLabelUnitFormatter,
+        millisecond?: TimeAxisLabelUnitFormatter,
+        inherit?: boolean
+    };
 
 interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     show?: boolean,

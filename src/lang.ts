@@ -22,6 +22,22 @@
  */
 
 export default {
+    time: {
+        month: [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ],
+        monthAbbr: [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ],
+        dayOfWeek: [
+            '星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'
+        ],
+        dayOfWeekAbbr: [
+            '日', '一', '二', '三', '四', '五', '六'
+        ]
+    },
     legend: {
         selector: {
             all: '全选',
