@@ -66,7 +66,8 @@ import {
     TextCommonOption,
     SeriesOption,
     ParsedValue,
-    CallbackDataParams
+    CallbackDataParams,
+    AnimationPayload
 } from './types';
 import GlobalModel from '../model/Global';
 import { makeInner } from './model';
@@ -86,6 +87,7 @@ import * as numberUtil from './number';
 import SeriesModel from '../model/Series';
 import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
+import easing, { AnimationEasing } from 'zrender/src/animation/easing';
 
 
 const mathMax = Math.max;
@@ -112,7 +114,6 @@ type ExtendedProps = {
     __highByOuter: number
 
     __highDownSilentOnTouch: boolean
-    __onStateChange: (fromState: DisplayState, toState: DisplayState) => void
 
     __highDownDispatcher: boolean
 };
@@ -389,7 +390,7 @@ function singleLeaveEmphasis(el: Element) {
 }
 
 function updateElementState<T>(
-    el: ExtendedElement,
+    el: ECElement,
     updater: (this: void, el: Element, commonParam?: T) => void,
     commonParam?: T
 ) {
@@ -401,7 +402,7 @@ function updateElementState<T>(
     (el as ECElement).highlighted && (fromState = EMPHASIS, trigger = true);
     updater(el, commonParam);
     (el as ECElement).highlighted && (toState = EMPHASIS, trigger = true);
-    trigger && el.__onStateChange && el.__onStateChange(fromState, toState);
+    trigger && el.onStateChange && el.onStateChange(fromState, toState);
 }
 
 function traverseUpdateState<T>(
@@ -615,9 +616,6 @@ export function setAsHighDownDispatcher(el: Element, asDispatcher: boolean) {
     // `setAsHighDownDispatcher` called. Avoid it is modified by user unexpectedly.
     if ((el as ECElement).highDownSilentOnTouch) {
         extendedEl.__highDownSilentOnTouch = (el as ECElement).highDownSilentOnTouch;
-    }
-    if ((el as ECElement).onStateChange) {
-        extendedEl.__onStateChange = (el as ECElement).onStateChange;
     }
 
     // Simple optimize, since this method might be
@@ -1165,32 +1163,52 @@ function animateOrSetProps<Props>(
     }
     const isUpdate = animationType === 'update';
     const isRemove = animationType === 'remove';
-    // Do not check 'animation' property directly here. Consider this case:
-    // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
-    // but its parent model (`seriesModel`) does.
+
+    let animationPayload: AnimationPayload;
+    // Check if there is global animation configuration from dataZoom/resize can override the config in option.
+    // If animation is enabled. Will use this animation config in payload.
+    // If animation is disabled. Just ignore it.
+    if (animatableModel && animatableModel.ecModel) {
+        const updatePayload = animatableModel.ecModel.getUpdatePayload();
+        animationPayload = (updatePayload && updatePayload.animation) as AnimationPayload;
+    }
     const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
     if (animationEnabled) {
-        // TODO Configurable
-        let duration = isRemove ? 200 : animatableModel.getShallow(
-            isUpdate ? 'animationDurationUpdate' : 'animationDuration'
-        );
-        const animationEasing = isRemove ? 'cubicOut' : animatableModel.getShallow(
-            isUpdate ? 'animationEasingUpdate' : 'animationEasing'
-        );
-        let animationDelay = isRemove ? 0 : animatableModel.getShallow(
-            isUpdate ? 'animationDelayUpdate' : 'animationDelay'
-        );
-        if (typeof animationDelay === 'function') {
-            animationDelay = animationDelay(
-                dataIndex as number,
-                animatableModel.getAnimationDelayParams
-                    ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
-                    : null
-            );
+        let duration: number | Function;
+        let animationEasing: AnimationEasing;
+        let animationDelay: number | Function;
+        if (animationPayload) {
+            duration = animationPayload.duration || 0;
+            animationEasing = animationPayload.easing || 'cubicOut';
+            animationDelay = animationPayload.delay || 0;
         }
-        if (typeof duration === 'function') {
-            duration = duration(dataIndex as number);
+        else if (isRemove) {
+            duration = 200;
+            animationEasing = 'cubicOut';
+            animationDelay = 0;
+        }
+        else {
+            duration = animatableModel.getShallow(
+                isUpdate ? 'animationDurationUpdate' : 'animationDuration'
+            );
+            animationEasing = animatableModel.getShallow(
+                isUpdate ? 'animationEasingUpdate' : 'animationEasing'
+            );
+            animationDelay = animatableModel.getShallow(
+                isUpdate ? 'animationDelayUpdate' : 'animationDelay'
+            );
+            if (typeof animationDelay === 'function') {
+                animationDelay = animationDelay(
+                    dataIndex as number,
+                    animatableModel.getAnimationDelayParams
+                        ? animatableModel.getAnimationDelayParams(el, dataIndex as number)
+                        : null
+                );
+            }
+            if (typeof duration === 'function') {
+                duration = duration(dataIndex as number);
+            }
         }
 
         if (!isRemove) {
@@ -1202,8 +1220,8 @@ function animateOrSetProps<Props>(
             ? (
                 isFrom
                     ? el.animateFrom(props, {
-                        duration,
-                        delay: animationDelay || 0,
+                        duration: duration as number,
+                        delay: animationDelay as number || 0,
                         easing: animationEasing,
                         done: cb,
                         force: !!cb || !!during,
@@ -1211,8 +1229,8 @@ function animateOrSetProps<Props>(
                         during: during
                     })
                     : el.animateTo(props, {
-                        duration,
-                        delay: animationDelay || 0,
+                        duration: duration as number,
+                        delay: animationDelay as number || 0,
                         easing: animationEasing,
                         done: cb,
                         force: !!cb || !!during,

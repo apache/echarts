@@ -35,7 +35,8 @@ import {
     LabelLayoutOptionCallback,
     LabelLayoutOptionCallbackParams,
     LabelLineOption,
-    Dictionary
+    Dictionary,
+    ECElement
 } from '../util/types';
 import { parsePercent } from '../util/number';
 import ChartView from '../view/Chart';
@@ -480,7 +481,7 @@ class LabelManager {
         const textEl = el.getTextContent();
         const guideLine = el.getTextGuideLine();
         // Animate
-        if (textEl && !textEl.ignore && !textEl.invisible) {
+        if (textEl && !textEl.ignore && !textEl.invisible && !(el as ECElement).disableLabelAnimation) {
             const layoutStore = labelLayoutInnerStore(textEl);
             const oldLayout = layoutStore.oldLayout;
             const newProps = {
