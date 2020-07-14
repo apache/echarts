@@ -177,7 +177,9 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         }
     }
 
-    // Hooker after init or mergeOption
+    /**
+     * Called immediately after `init` or `mergeOption` of this instance called.
+     */
     optionUpdated(newCptOption: Opt, isInit: boolean): void {}
 
     /**
@@ -265,14 +267,43 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         return fields.defaultOption as Opt;
     }
 
-    getReferringComponents(mainType: ComponentMainType): ComponentModel[] {
+    /**
+     * Notice: always force to input param `useDefault` in case that forget to consider it.
+     *
+     * @param useDefault In many cases like series refer axis and axis refer grid,
+     *        If axis index / axis id not specified, use the first target as default.
+     *        In other cases like dataZoom refer axis, if not specified, measn no refer.
+     */
+    getReferringComponents(mainType: ComponentMainType, useDefault: boolean): {
+        // Always be array rather than null/undefined, which is convenient to use.
+        models: ComponentModel[],
+        // Whether index or id are specified in option.
+        specified: boolean
+    } {
         const indexKey = (mainType + 'Index') as keyof Opt;
         const idKey = (mainType + 'Id') as keyof Opt;
-        return this.ecModel.queryComponents({
+        const indexOption = this.get(indexKey, true);
+        const idOption = this.get(idKey, true);
+
+        const models = this.ecModel.queryComponents({
             mainType: mainType,
-            index: this.get(indexKey, true) as unknown as number,
-            id: this.get(idKey, true) as unknown as string
+            index: indexOption as any,
+            id: idOption as any
         });
+
+        // `queryComponents` will return all components if
+        // both index and id are null/undefined
+        let specified = true;
+        if (indexOption == null && idOption == null) {
+            specified = false;
+            // Use the first as default if `useDefault`.
+            models.length = (useDefault && models.length) ? 1 : 0;
+        }
+
+        return {
+            models: models,
+            specified: specified
+        };
     }
 
     getBoxLayoutParams() {

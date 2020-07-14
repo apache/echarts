@@ -173,7 +173,7 @@ function getCoordSys(finder: ParsedModelFinder): Geo {
         : seriesModel
         ? (
             seriesModel.coordinateSystem as Geo // For map series.
-            || ((seriesModel.getReferringComponents('geo')[0] || {}) as GeoModel).coordinateSystem
+            || ((seriesModel.getReferringComponents('geo', true).models[0] || {}) as GeoModel).coordinateSystem
         )
         : null;
 }

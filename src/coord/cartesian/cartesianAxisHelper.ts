@@ -112,7 +112,7 @@ export function findAxisModels(seriesModel: SeriesModel): {
     } as ReturnType<typeof findAxisModels>;
     zrUtil.each(axisModelMap, function (v, key) {
         const axisType = key.replace(/Model$/, '');
-        const axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
+        const axisModel = seriesModel.getReferringComponents(axisType, true).models[0] as CartesianAxisModel;
 
         if (__DEV__) {
             if (!axisModel) {

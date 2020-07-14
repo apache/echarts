@@ -47,6 +47,7 @@ import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { __DEV__ } from '../config';
+import { isNumeric } from './number';
 
 /**
  * Make the name displayable. But we should
@@ -219,6 +220,9 @@ function mappingToExistsInNormalMerge<T extends MappingExistingItem>(
             return;
         }
 
+        cmptOption.id == null || validateIdOrName(cmptOption.id);
+        cmptOption.name == null || validateIdOrName(cmptOption.name);
+
         // id has highest priority.
         for (let i = 0; i < result.length; i++) {
             const existing = result[i].existing;
@@ -304,9 +308,10 @@ function mappingToExistsInReplaceMerge<T extends MappingExistingItem>(
             newCmptOptions[index] = null;
             return;
         }
-        if (cmptOption.id == null) {
-            return;
-        }
+
+        cmptOption.id == null || validateIdOrName(cmptOption.id);
+        cmptOption.name == null || validateIdOrName(cmptOption.name);
+
         const optionId = makeComparableKey(cmptOption.id);
         const existingIdx = existingIdIdxMap.get(optionId);
         if (existingIdx != null) {
@@ -480,6 +485,19 @@ function makeComparableKey(val: string | number): string {
         }
     }
     return val + '';
+}
+
+export function validateIdOrName(idOrName: unknown) {
+    if (__DEV__) {
+        assert(
+            isValidIdOrName(idOrName),
+            '`' + idOrName + '` is invalid id or name. Must be a string.'
+        );
+    }
+}
+
+function isValidIdOrName(idOrName: unknown): boolean {
+    return isString(idOrName) || isNumeric(idOrName);
 }
 
 export function isNameSpecified(componentModel: ComponentModel): boolean {
@@ -810,9 +828,9 @@ export function groupData<T, R extends string | number>(
     getKey: (item: T) => R // return key
 ): {
     keys: R[],
-    buckets: HashMap<T[]> // hasmap key: the key returned by `getKey`.
+    buckets: HashMap<T[], R> // hasmap key: the key returned by `getKey`.
 } {
-    const buckets = createHashMap<T[]>();
+    const buckets = createHashMap<T[], R>();
     const keys: R[] = [];
 
     each(array, function (item) {

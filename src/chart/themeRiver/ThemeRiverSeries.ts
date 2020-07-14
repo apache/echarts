@@ -83,7 +83,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
     static readonly dependencies = ['singleAxis'];
 
-    nameMap: zrUtil.HashMap<number>;
+    nameMap: zrUtil.HashMap<number, string>;
 
     coordinateSystem: Single;
 

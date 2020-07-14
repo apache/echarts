@@ -254,9 +254,9 @@ class Grid implements CoordinateSystemMaster {
     } {
         const seriesModel = finder.seriesModel;
         const xAxisModel = finder.xAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('xAxis', true).models[0]);
         const yAxisModel = finder.yAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('yAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('yAxis', true).models[0]);
         const gridModel = finder.gridModel;
         const coordsList = this._coordsList;
         let cartesian: Cartesian2D;
