@@ -163,8 +163,6 @@ class MapDraw {
 
         regionsGroup.removeAll();
 
-        const labelAccessPath = 'label';
-        const hoverLabelAccessPath = ['emphasis', 'label'] as const;
         const nameMap = zrUtil.createHashMap<RegionsGroup>();
 
 

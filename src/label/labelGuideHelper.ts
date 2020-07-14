@@ -32,7 +32,6 @@ import { LabelLineOption, DisplayState, StatesOptionMixin } from '../util/types'
 import Model from '../model/Model';
 import { invert } from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
-import Displayable from 'zrender/src/graphic/Displayable';
 import { DISPLAY_STATES, SPECIAL_STATES } from '../util/states';
 
 const PI2 = Math.PI * 2;

@@ -315,7 +315,7 @@ class LegendView extends ComponentView {
             const emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
             setLabelStyle(
-                labelText, labelModel, emphasisLabelModel,
+                labelText, { normal: labelModel, emphasis: emphasisLabelModel },
                 {
                     defaultText: selectorItem.title
                 }

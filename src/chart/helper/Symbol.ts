@@ -201,8 +201,6 @@ class Symbol extends graphic.Group {
 
         let symbolOffset;
 
-        let labelModel;
-        let emphasisLabelModel;
         let labelStatesModels;
 
         let hoverAnimation;

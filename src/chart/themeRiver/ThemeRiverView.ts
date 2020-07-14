@@ -20,8 +20,8 @@
 import {ECPolygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
-import {createTextStyle, setLabelStyle, getLabelStatesModels} from '../../label/labelStyle';
-import {bind, extend} from 'zrender/src/core/util';
+import {setLabelStyle, getLabelStatesModels} from '../../label/labelStyle';
+import {bind} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
 import ChartView from '../../view/Chart';
 import ThemeRiverSeriesModel from './ThemeRiverSeries';

@@ -2,7 +2,15 @@ import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Dictionary } from 'zrender/src/core/types';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { LabelOption, DisplayState, TextCommonOption, ParsedValue, CallbackDataParams, StatesOptionMixin } from '../util/types';
+import {
+    LabelOption,
+    DisplayState,
+    TextCommonOption,
+    ParsedValue,
+    CallbackDataParams,
+    StatesOptionMixin,
+    DisplayStateNonNormal
+} from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { TextCommonParams, EMPTY_OBJ } from '../util/graphic';
@@ -37,10 +45,12 @@ type LabelModelForText = Model<Omit<
         formatter?: string | ((params: any) => string);
     }>;
 
+type LabelStatesModels<LabelModel> = Partial<Record<DisplayStateNonNormal, LabelModel>> & {normal: LabelModel};
+
 export function getLabelText<LDI>(
     opt: SetLabelStyleOpt<LDI>,
-    stateModels?: Record<DisplayState, LabelModel>,
-    interpolateValues?: ParsedValue | ParsedValue[]
+    stateModels?: LabelStatesModels<LabelModel>,
+    overrideValue?: ParsedValue | ParsedValue[]
 ): Record<DisplayState, string> {
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
@@ -53,8 +63,8 @@ export function getLabelText<LDI>(
             null,
             labelDimIndex,
             normalModel && normalModel.get('formatter'),
-            interpolateValues != null ? {
-                value: interpolateValues
+            overrideValue != null ? {
+                value: overrideValue
             } : null
         );
     }
@@ -93,20 +103,20 @@ export function getLabelText<LDI>(
 // eslint-disable-next-line
 function setLabelStyle<LDI>(
     targetEl: ZRText,
-    labelStatesModels: Record<DisplayState, LabelModelForText>,
+    labelStatesModels: LabelStatesModels<LabelModelForText>,
     opt?: SetLabelStyleOpt<LDI>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
 ): void;
 // eslint-disable-next-line
 function setLabelStyle<LDI>(
     targetEl: Element,
-    labelStatesModels: Record<DisplayState, LabelModel>,
+    labelStatesModels: LabelStatesModels<LabelModel>,
     opt?: SetLabelStyleOpt<LDI>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
 ): void;
 function setLabelStyle<LDI>(
     targetEl: Element,
-    labelStatesModels: Record<DisplayState, LabelModel>,
+    labelStatesModels: LabelStatesModels<LabelModel>,
     opt?: SetLabelStyleOpt<LDI>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
     // TODO specified position?
@@ -151,20 +161,20 @@ function setLabelStyle<LDI>(
         for (let i = 0; i < SPECIAL_STATES.length; i++) {
             const stateName = SPECIAL_STATES[i];
             const stateModel = labelStatesModels[stateName];
-            textContent.ignore = !showNormal;
 
-            const stateObj = textContent.ensureState(stateName);
-            stateObj.ignore = !retrieve2(stateModel.getShallow('show'), showNormal);
-            stateObj.style = createTextStyle(
-                stateModel, stateSpecified && stateSpecified[stateName], opt, true, !isSetOnText
-            );
-            stateObj.style.text = labelStatesTexts[stateName];
+            if (stateModel) {
+                const stateObj = textContent.ensureState(stateName);
+                stateObj.ignore = !retrieve2(stateModel.getShallow('show'), showNormal);
+                stateObj.style = createTextStyle(
+                    stateModel, stateSpecified && stateSpecified[stateName], opt, true, !isSetOnText
+                );
+                stateObj.style.text = labelStatesTexts[stateName];
 
-            if (!isSetOnText) {
-                const targetElEmphasisState = targetEl.ensureState(stateName);
-                targetElEmphasisState.textConfig = createTextConfig(stateModel, opt, true);
+                if (!isSetOnText) {
+                    const targetElEmphasisState = targetEl.ensureState(stateName);
+                    targetElEmphasisState.textConfig = createTextConfig(stateModel, opt, true);
+                }
             }
-
         }
 
         // PENDING: if there is many requirements that emphasis position

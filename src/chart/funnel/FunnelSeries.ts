@@ -50,8 +50,10 @@ export interface FunnelStateOption {
     labelLine?: LabelLineOption
 }
 
-export interface FunnelDataItemOption extends FunnelStateOption, StatesOptionMixin<FunnelStateOption>,
+export interface FunnelDataItemOption
+    extends FunnelStateOption, StatesOptionMixin<FunnelStateOption>,
     OptionDataItemObject<OptionDataValueNumeric> {
+
     itemStyle?: ItemStyleOption & {
         height?: number | string
     }

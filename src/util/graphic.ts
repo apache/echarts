@@ -596,7 +596,7 @@ function animateOrSetLabel<Props extends PathProps>(
                     defaultText: defaultTextGetter
                         ? defaultTextGetter(interpolated)
                         : interpolated + ''
-                }, labelModel, null, interpolated);
+                }, {normal: labelModel}, interpolated);
                 text.style.text = labelText.normal;
                 text.dirty();
             }

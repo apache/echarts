@@ -400,7 +400,8 @@ class SliderTimelineView extends TimelineView {
                 onclick: bind(this._changeTimeline, this, value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
-            enableHoverEmphasis(el, hoverStyleModel.getItemStyle());
+            el.ensureState('emphasis').style = hoverStyleModel.getItemStyle();
+            enableHoverEmphasis(el);
 
             const ecData = graphic.getECData(el);
             if (itemModel.get('tooltip')) {
@@ -453,10 +454,10 @@ class SliderTimelineView extends TimelineView {
                 })
             });
 
+            textEl.ensureState('emphasis').style = createTextStyle(hoverLabelModel);
+
             group.add(textEl);
-            enableHoverEmphasis(
-                textEl, createTextStyle(hoverLabelModel)
-            );
+            enableHoverEmphasis(textEl);
 
         }, this);
     }
@@ -514,8 +515,9 @@ class SliderTimelineView extends TimelineView {
                 onclick: onclick
             };
             const btn = makeControlIcon(timelineModel, iconPath, rect, opt);
+            btn.ensureState('emphasis').style = hoverStyle;
             group.add(btn);
-            enableHoverEmphasis(btn, hoverStyle);
+            enableHoverEmphasis(btn);
         }
     }
 
