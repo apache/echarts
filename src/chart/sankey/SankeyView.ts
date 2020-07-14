@@ -28,7 +28,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { GraphEdgeItemOption } from '../graph/GraphSeries';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 interface FocusNodeAdjacencyPayload extends Payload {
     dataIndex?: number
@@ -245,8 +245,6 @@ class SankeyView extends ChartView {
             const dragX = itemModel.get('localX');
             const dragY = itemModel.get('localY');
             const emphasisModel = itemModel.getModel('emphasis');
-            const labelModel = itemModel.getModel('label');
-            const labelHoverModel = emphasisModel.getModel('label');
 
             const rect = new graphic.Rect({
                 shape: {
@@ -259,7 +257,7 @@ class SankeyView extends ChartView {
             });
 
             setLabelStyle(
-                rect, labelModel, labelHoverModel,
+                rect, getLabelStatesModels(itemModel),
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: node.dataIndex,

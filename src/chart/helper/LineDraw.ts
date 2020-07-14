@@ -27,10 +27,13 @@ import {
     ColorString,
     AnimationOptionMixin,
     ZRStyleProps,
-    StatesOptionMixin
+    StatesOptionMixin,
+    DisplayState,
+    LabelOption
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
+import { getLabelStatesModels } from '../../label/labelStyle';
 
 interface LineLike extends graphic.Group {
     updateData(data: List, idx: number, scope?: LineDrawSeriesScope): void
@@ -81,10 +84,7 @@ export interface LineDrawSeriesScope {
     blurLineStyle?: ZRStyleProps
     selectLineStyle?: ZRStyleProps
 
-    labelModel?: Model<LineLabelOption>
-    emphasisLabelModel?: Model<LineLabelOption>
-    blurLabelModel?: Model<LineLabelOption>
-    selectLabelModel?: Model<LineLabelOption>
+    labelStatesModels: Record<DisplayState, Model<LabelOption>>
 }
 
 class LineDraw {
@@ -229,10 +229,7 @@ function makeSeriesScope(lineData: ListForLineDraw): LineDrawSeriesScope {
         blurLineStyle: hostModel.getModel(['blur', 'lineStyle']).getLineStyle(),
         selectLineStyle: hostModel.getModel(['select', 'lineStyle']).getLineStyle(),
 
-        labelModel: hostModel.getModel('label'),
-        emphasisLabelModel: hostModel.getModel(['emphasis', 'label']),
-        blurLabelModel: hostModel.getModel(['blur', 'label']),
-        selectLabelModel: hostModel.getModel(['select', 'label'])
+        labelStatesModels: getLabelStatesModels(hostModel)
     };
 }
 

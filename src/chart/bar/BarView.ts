@@ -29,7 +29,7 @@ import {
     removeElementWithFadeOut
 } from '../../util/graphic';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {throttle} from '../../util/throttle';
@@ -755,10 +755,8 @@ function updateStyle(
             ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
             : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
 
-        const labelModel = itemModel.getModel('label');
-        const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
         setLabelStyle(
-            el, labelModel, hoverLabelModel,
+            el, getLabelStatesModels(itemModel),
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: dataIndex,

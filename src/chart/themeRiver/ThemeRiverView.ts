@@ -20,7 +20,7 @@
 import {ECPolygon} from '../line/poly';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
-import {createTextStyle} from '../../label/labelStyle';
+import {createTextStyle, setLabelStyle, getLabelStatesModels} from '../../label/labelStyle';
 import {bind, extend} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
 import ChartView from '../../view/Chart';
@@ -28,6 +28,7 @@ import ThemeRiverSeriesModel from './ThemeRiverSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
+import { ColorString } from '../../util/types';
 
 type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>;
 
@@ -94,19 +95,11 @@ class ThemeRiverView extends ChartView {
             }
 
             let polygon: ECPolygon;
-            let text: graphic.Text;
             const textLayout = data.getItemLayout(indices[0]);
             const labelModel = seriesModel.getModel('label');
             const margin = labelModel.get('margin');
             const emphasisModel = seriesModel.getModel('emphasis');
 
-            const commonTextStyle = createTextStyle(labelModel, {
-                text: labelModel.get('show')
-                    ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
-                        || data.getName(indices[j - 1])
-                    : null,
-                verticalAlign: 'middle'
-            });
             if (status === 'add') {
                 const layerGroup = newLayersGroups[idx] = new graphic.Group();
                 polygon = new ECPolygon({
@@ -119,14 +112,7 @@ class ThemeRiverView extends ChartView {
                     },
                     z2: 0
                 });
-                text = new graphic.Text({
-                    style: extend({
-                        x: textLayout.x - margin,
-                        y: textLayout.y0 + textLayout.y / 2
-                    }, commonTextStyle)
-                });
                 layerGroup.add(polygon);
-                layerGroup.add(text);
                 group.add(layerGroup);
 
                 if (seriesModel.isAnimationEnabled()) {
@@ -138,7 +124,6 @@ class ThemeRiverView extends ChartView {
             else {
                 const layerGroup = oldLayersGroups[oldIdx];
                 polygon = layerGroup.childAt(0) as ECPolygon;
-                text = layerGroup.childAt(1) as graphic.Text;
                 group.add(layerGroup);
 
                 newLayersGroups[idx] = layerGroup;
@@ -149,13 +134,28 @@ class ThemeRiverView extends ChartView {
                         stackedOnPoints: points1
                     }
                 }, seriesModel);
+            }
 
-                graphic.updateProps(text, {
-                    style: extend({
-                        x: textLayout.x - margin,
-                        y: textLayout.y0 + textLayout.y / 2
-                    }, commonTextStyle)
-                }, seriesModel);
+            setLabelStyle(polygon, getLabelStatesModels(seriesModel), {
+                labelDataIndex: indices[j - 1],
+                defaultText: data.getName(indices[j - 1]),
+                inheritColor: style.fill as ColorString
+            }, {
+                normal: {
+                    verticalAlign: 'middle'
+                    // align: 'right'
+                }
+            });
+            polygon.setTextConfig({
+                position: null,
+                local: true
+            });
+
+            const labelEl = polygon.getTextContent();
+            // TODO More label position options.
+            if (labelEl) {
+                labelEl.x = textLayout.x - margin;
+                labelEl.y = textLayout.y0 + textLayout.y / 2;
             }
 
             polygon.useStyle(style);
@@ -183,7 +183,8 @@ function createGridClipShape(rect: RectLike, seriesModel: ThemeRiverSeriesModel,
     });
     graphic.initProps(rectEl, {
         shape: {
-            width: rect.width + 20,
+            x: rect.x - 50,
+            width: rect.width + 100,
             height: rect.height + 20
         }
     }, seriesModel, cb);

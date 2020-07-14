@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis } from '../../util/states';
+import { enableHoverEmphasis, SPECIAL_STATES, DISPLAY_STATES } from '../../util/states';
 import {createTextStyle} from '../../label/labelStyle';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
@@ -106,7 +106,7 @@ class SunburstPiece extends graphic.Sector {
         const normalStyle = node.getVisual('style') as PathStyleProps;
         normalStyle.lineJoin = 'bevel';
 
-        zrUtil.each(['emphasis', 'blur', 'select'] as const, function (stateName) {
+        zrUtil.each(SPECIAL_STATES, function (stateName) {
             const state = sector.ensureState(stateName);
             state.style = itemModel.getModel([stateName, 'itemStyle']).getItemStyle();
         });
@@ -183,7 +183,8 @@ class SunburstPiece extends graphic.Sector {
         const label = sector.getTextContent();
         const dataIndex = this.node.dataIndex;
 
-        zrUtil.each(['normal', 'emphasis', 'blur', 'select'] as const, (stateName) => {
+        // TODO use setLabelStyle
+        zrUtil.each(DISPLAY_STATES, (stateName) => {
 
             const labelStateModel = stateName === 'normal' ? itemModel.getModel('label')
                 : itemModel.getModel([stateName, 'label']);

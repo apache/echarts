@@ -24,10 +24,9 @@ import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { ColorString, LabelOption } from '../../util/types';
-import Model from '../../model/Model';
-import { setLabelLineStyle } from '../../label/labelGuideHelper';
-import { setLabelStyle } from '../../label/labelStyle';
+import { ColorString } from '../../util/types';
+import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -104,25 +103,21 @@ class FunnelPiece extends graphic.Polygon {
         const labelLayout = layout.label;
         // let visualColor = data.getItemVisual(idx, 'color');
 
-        const labelModel = itemModel.getModel('label');
-        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-        const labelLineModel = itemModel.getModel('labelLine');
-        const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
-
         const visualColor = data.getItemVisual(idx, 'style').fill as ColorString;
 
         setLabelStyle(
             // position will not be used in setLabelStyle
-            labelText, labelModel as Model<LabelOption>, labelHoverModel as Model<LabelOption>,
+            labelText,
+            getLabelStatesModels(itemModel),
             {
                 labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
                 defaultText: data.getName(idx)
             },
-            {
+            { normal: {
                 align: labelLayout.textAlign,
                 verticalAlign: labelLayout.verticalAlign
-            }
+            } }
         );
 
         polygon.setTextConfig({
@@ -159,10 +154,7 @@ class FunnelPiece extends graphic.Polygon {
             z2: 10
         });
 
-        setLabelLineStyle(polygon, {
-            normal: labelLineModel,
-            emphasis: labelLineHoverModel
-        }, {
+        setLabelLineStyle(polygon, getLabelLineStatesModels(itemModel), {
             // Default use item visual color
             stroke: visualColor
         });

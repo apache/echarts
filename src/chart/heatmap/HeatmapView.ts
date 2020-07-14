@@ -33,7 +33,7 @@ import { CoordinateSystem, isCoordinateSystemType } from '../../coord/Coordinate
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -189,8 +189,7 @@ class HeatmapView extends ChartView {
         let emphasisStyle = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
         let blurStyle = seriesModel.getModel(['blur', 'itemStyle']).getItemStyle();
         let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
-        let labelModel = seriesModel.getModel('label');
-        let hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
+        let labelStatesModels = getLabelStatesModels(seriesModel);
         let focus = seriesModel.get(['emphasis', 'focus']);
         let blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
@@ -254,8 +253,7 @@ class HeatmapView extends ChartView {
                 focus = emphasisModel.get('focus');
                 blurScope = emphasisModel.get('blurScope');
 
-                labelModel = itemModel.getModel('label');
-                hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+                labelStatesModels = getLabelStatesModels(itemModel);
             }
 
             const rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
@@ -265,7 +263,7 @@ class HeatmapView extends ChartView {
             }
 
             setLabelStyle(
-                rect, labelModel, hoverLabelModel,
+                rect, labelStatesModels,
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: idx,

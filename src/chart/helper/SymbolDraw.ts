@@ -32,11 +32,13 @@ import {
     AnimationOptionMixin,
     ZRStyleProps,
     StatesOptionMixin,
-    BlurScope
+    BlurScope,
+    DisplayState
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { ScatterSeriesOption } from '../scatter/ScatterSeries';
+import { getLabelStatesModels } from '../../label/labelStyle';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -109,10 +111,7 @@ export interface SymbolDrawSeriesScope {
     symbolRotate?: number
     symbolOffset?: number[]
 
-    labelModel?: Model<LabelOption>
-    emphasisLabelModel?: Model<LabelOption>
-    blurLabelModel?: Model<LabelOption>
-    selectLabelModel?: Model<LabelOption>
+    labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
     hoverAnimation?: boolean
     itemModel?: Model<SymbolDrawItemModelOption>
@@ -137,11 +136,7 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
         symbolOffset: seriesModel.get('symbolOffset'),
         hoverAnimation: seriesModel.get('hoverAnimation'),
 
-        labelModel: seriesModel.getModel('label'),
-        emphasisLabelModel: seriesModel.getModel(['emphasis', 'label']),
-        blurLabelModel: seriesModel.getModel(['blur', 'label']),
-        selectLabelModel: seriesModel.getModel(['select', 'label']),
-
+        labelStatesModels: getLabelStatesModels(seriesModel),
 
         cursorStyle: seriesModel.get('cursor')
     };

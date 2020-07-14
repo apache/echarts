@@ -43,13 +43,14 @@ import ChartView from '../view/Chart';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Transformable from 'zrender/src/core/Transformable';
-import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
+import { updateLabelLinePoints, setLabelLineStyle, getLabelLineStatesModels } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
 import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
+import { getLabelStatesModels } from './labelStyle';
 
 interface LabelDesc {
     label: ZRText
@@ -472,10 +473,7 @@ class LabelManager {
 
             const labelLineModel = itemModel.getModel('labelLine');
 
-            setLabelLineStyle(el, {
-                normal: labelLineModel,
-                emphasis: itemModel.getModel(['emphasis', 'labelLine'])
-            }, defaultStyle);
+            setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
 
             updateLabelLinePoints(el, labelLineModel);
         }

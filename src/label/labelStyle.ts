@@ -2,10 +2,11 @@ import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { Dictionary } from 'zrender/src/core/types';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { LabelOption, DisplayState, TextCommonOption, ParsedValue, CallbackDataParams } from '../util/types';
+import { LabelOption, DisplayState, TextCommonOption, ParsedValue, CallbackDataParams, StatesOptionMixin } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { TextCommonParams, EMPTY_OBJ } from '../util/graphic';
+import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 
 interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     defaultText?: string | ((labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>) => string);
@@ -38,13 +39,13 @@ type LabelModelForText = Model<Omit<
 
 export function getLabelText<LDI>(
     opt: SetLabelStyleOpt<LDI>,
-    normalModel: LabelModel,
-    emphasisModel: LabelModel,
+    stateModels?: Record<DisplayState, LabelModel>,
     interpolateValues?: ParsedValue | ParsedValue[]
-) {
+): Record<DisplayState, string> {
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
     const labelDimIndex = opt.labelDimIndex;
+    const normalModel = stateModels.normal;
     let baseText;
     if (labelFetcher) {
         baseText = labelFetcher.getFormattedLabel(
@@ -60,19 +61,25 @@ export function getLabelText<LDI>(
     if (baseText == null) {
         baseText = isFunction(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
     }
-    const emphasisStyleText = retrieve2(labelFetcher
-        ? labelFetcher.getFormattedLabel(
-            labelDataIndex,
-            'emphasis',
-            null,
-            labelDimIndex,
-            emphasisModel && emphasisModel.get('formatter')
-        )
-        : null, baseText);
-    return {
-        normal: baseText,
-        emphasis: emphasisStyleText
-    };
+
+    const statesText = {
+        normal: baseText
+    } as Record<DisplayState, string>;
+
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
+        const stateName = SPECIAL_STATES[i];
+        const stateModel = stateModels[stateName];
+        statesText[stateName] = retrieve2(labelFetcher
+            ? labelFetcher.getFormattedLabel(
+                labelDataIndex,
+                stateName,
+                null,
+                labelDimIndex,
+                stateModel && stateModel.get('formatter')
+            )
+            : null, baseText);
+    }
+    return statesText;
 }
 /**
  * Set normal styles and emphasis styles about text on target element
@@ -84,78 +91,128 @@ export function getLabelText<LDI>(
  * So please update the style on ZRText after use this method.
  */
 // eslint-disable-next-line
-function setLabelStyle<LDI>(targetEl: ZRText, normalModel: LabelModelForText, emphasisModel: LabelModelForText, opt?: SetLabelStyleOpt<LDI>, normalSpecified?: TextStyleProps, emphasisSpecified?: TextStyleProps): void;
+function setLabelStyle<LDI>(
+    targetEl: ZRText,
+    labelStatesModels: Record<DisplayState, LabelModelForText>,
+    opt?: SetLabelStyleOpt<LDI>,
+    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
+): void;
 // eslint-disable-next-line
-function setLabelStyle<LDI>(targetEl: Element, normalModel: LabelModel, emphasisModel: LabelModel, opt?: SetLabelStyleOpt<LDI>, normalSpecified?: TextStyleProps, emphasisSpecified?: TextStyleProps): void;
 function setLabelStyle<LDI>(
     targetEl: Element,
-    normalModel: LabelModel,
-    emphasisModel: LabelModel,
+    labelStatesModels: Record<DisplayState, LabelModel>,
     opt?: SetLabelStyleOpt<LDI>,
-    normalSpecified?: TextStyleProps,
-    emphasisSpecified?: TextStyleProps
+    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
+): void;
+function setLabelStyle<LDI>(
+    targetEl: Element,
+    labelStatesModels: Record<DisplayState, LabelModel>,
+    opt?: SetLabelStyleOpt<LDI>,
+    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
     // TODO specified position?
 ) {
     opt = opt || EMPTY_OBJ;
     const isSetOnText = targetEl instanceof ZRText;
-    const showNormal = normalModel.getShallow('show');
-    const showEmphasis = emphasisModel.getShallow('show');
-    let richText = isSetOnText ? targetEl as ZRText : null;
-    if (showNormal || showEmphasis) {
+    let needsCreateText = false;
+    for (let i = 0; i < DISPLAY_STATES.length; i++) {
+        const stateModel = labelStatesModels[DISPLAY_STATES[i]];
+        if (stateModel && stateModel.getShallow('show')) {
+            needsCreateText = true;
+            break;
+        }
+    }
+    let textContent = isSetOnText ? targetEl as ZRText : null;
+    if (needsCreateText) {
         if (!isSetOnText) {
             // Reuse the previous
-            richText = targetEl.getTextContent();
-            if (!richText) {
-                richText = new ZRText();
-                targetEl.setTextContent(richText);
-
-                // Use same state proxy
-                if (targetEl.stateProxy) {
-                    richText.stateProxy = targetEl.stateProxy;
-                }
+            textContent = targetEl.getTextContent();
+            if (!textContent) {
+                textContent = new ZRText();
+                targetEl.setTextContent(textContent);
+            }
+            // Use same state proxy
+            if (targetEl.stateProxy) {
+                textContent.stateProxy = targetEl.stateProxy;
             }
         }
-        richText.ignore = !showNormal;
-        const emphasisState = richText.ensureState('emphasis');
-        emphasisState.ignore = !showEmphasis;
-        const normalStyle = createTextStyle(normalModel, normalSpecified, opt, false, !isSetOnText);
-        emphasisState.style = createTextStyle(emphasisModel, emphasisSpecified, opt, true, !isSetOnText);
+        const labelStatesTexts = getLabelText(opt, labelStatesModels);
+
+        const normalModel = labelStatesModels.normal;
+        const showNormal = normalModel.getShallow('show');
+        const normalStyle = createTextStyle(
+            normalModel, stateSpecified && stateSpecified.normal, opt, false, !isSetOnText
+        );
+        normalStyle.text = labelStatesTexts.normal;
         if (!isSetOnText) {
             // Always create new
-            targetEl.setTextConfig(createTextConfig(normalStyle, normalModel, opt, false));
-            const targetElEmphasisState = targetEl.ensureState('emphasis');
-            targetElEmphasisState.textConfig = createTextConfig(emphasisState.style, emphasisModel, opt, true);
+            targetEl.setTextConfig(createTextConfig(normalModel, opt, false));
         }
+
+        for (let i = 0; i < SPECIAL_STATES.length; i++) {
+            const stateName = SPECIAL_STATES[i];
+            const stateModel = labelStatesModels[stateName];
+            textContent.ignore = !showNormal;
+
+            const stateObj = textContent.ensureState(stateName);
+            stateObj.ignore = !retrieve2(stateModel.getShallow('show'), showNormal);
+            stateObj.style = createTextStyle(
+                stateModel, stateSpecified && stateSpecified[stateName], opt, true, !isSetOnText
+            );
+            stateObj.style.text = labelStatesTexts[stateName];
+
+            if (!isSetOnText) {
+                const targetElEmphasisState = targetEl.ensureState(stateName);
+                targetElEmphasisState.textConfig = createTextConfig(stateModel, opt, true);
+            }
+
+        }
+
         // PENDING: if there is many requirements that emphasis position
         // need to be different from normal position, we might consider
         // auto slient is those cases.
-        richText.silent = !!normalModel.getShallow('silent');
-        const labelText = getLabelText(opt, normalModel, emphasisModel);
-        normalStyle.text = labelText.normal;
-        emphasisState.style.text = labelText.emphasis;
+        textContent.silent = !!normalModel.getShallow('silent');
         // Keep x and y
-        if (richText.style.x != null) {
-            normalStyle.x = richText.style.x;
+        if (textContent.style.x != null) {
+            normalStyle.x = textContent.style.x;
         }
-        if (richText.style.y != null) {
-            normalStyle.y = richText.style.y;
+        if (textContent.style.y != null) {
+            normalStyle.y = textContent.style.y;
         }
+        textContent.ignore = !showNormal;
         // Always create new style.
-        richText.useStyle(normalStyle);
-        richText.dirty();
+        textContent.useStyle(normalStyle);
+        textContent.dirty();
     }
-    else if (richText) {
+    else if (textContent) {
         // Not display rich text.
-        richText.ignore = true;
+        textContent.ignore = true;
     }
     targetEl.dirty();
 }
 export { setLabelStyle };
+
+export function getLabelStatesModels<LabelName extends string = 'label'>(
+    itemModel: Model<StatesOptionMixin<any> & Partial<Record<LabelName, any>>>,
+    labelName?: LabelName
+): Record<DisplayState, LabelModel> {
+    labelName = (labelName || 'label') as LabelName;
+    const statesModels = {
+        normal: itemModel.getModel(labelName) as LabelModel
+    } as Record<DisplayState, LabelModel>;
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
+        const stateName = SPECIAL_STATES[i];
+        statesModels[stateName] = itemModel.getModel([stateName, labelName]);
+    }
+    return statesModels;
+}
 /**
  * Set basic textStyle properties.
  */
-export function createTextStyle(textStyleModel: Model, specifiedTextStyle?: TextStyleProps, // Can be overrided by settings in model.
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>, isNotNormal?: boolean, isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
+export function createTextStyle(
+    textStyleModel: Model,
+    specifiedTextStyle?: TextStyleProps, // Can be overrided by settings in model.
+    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    isNotNormal?: boolean, isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
     const textStyle: TextStyleProps = {};
     setTextStyleCommon(textStyle, textStyleModel, opt, isNotNormal, isAttached);
@@ -163,7 +220,7 @@ export function createTextStyle(textStyleModel: Model, specifiedTextStyle?: Text
     // textStyle.host && textStyle.host.dirty && textStyle.host.dirty(false);
     return textStyle;
 }
-export function createTextConfig(textStyle: TextStyleProps,
+export function createTextConfig(
     textStyleModel: Model,
     opt?: Pick<TextCommonParams, 'defaultOutsidePosition' | 'inheritColor'>,
     isNotNormal?: boolean

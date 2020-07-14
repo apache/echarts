@@ -23,7 +23,7 @@ import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis, enterEmphasis, leaveEmphasis } from '../../util/states';
-import {createTextStyle} from '../../label/labelStyle';
+import {createTextStyle, getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
 import List from '../../data/List';
 import { ZRTextAlign, ZRTextVerticalAlign, LineLabelOption, ColorString } from '../../util/types';
@@ -32,6 +32,8 @@ import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
+import { setLabelLineStyle } from '../../label/labelGuideHelper';
+import Model from '../../model/Model';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
@@ -135,15 +137,6 @@ class Line extends graphic.Group {
 
         this.add(line);
 
-        const label = new graphic.Text({
-            name: 'label'
-        }) as InnerLineLabel;
-        // FIXME
-        // Temporary solution for `focusNodeAdjacency`.
-        // line label do not use the opacity of lineStyle.
-        label.lineLabelOriginalOpacity = 1;
-        this.add(label);
-
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
             const symbol = createSymbol(symbolCategory, lineData, idx);
             // symbols must added after line to make sure
@@ -197,10 +190,7 @@ class Line extends graphic.Group {
         let blurLineStyle = seriesScope && seriesScope.blurLineStyle;
         let selectLineStyle = seriesScope && seriesScope.selectLineStyle;
 
-        let labelModel = seriesScope && seriesScope.labelModel;
-        let emphasisLabelModel = seriesScope && seriesScope.emphasisLabelModel;
-        let blurLabelModel = seriesScope && seriesScope.blurLabelModel;
-        let selectLabelModel = seriesScope && seriesScope.selectLabelModel;
+        let labelStatesModels = seriesScope && seriesScope.labelStatesModels;
 
         // Optimization for large dataset
         if (!seriesScope || lineData.hasItemOption) {
@@ -210,10 +200,7 @@ class Line extends graphic.Group {
             blurLineStyle = itemModel.getModel(['blur', 'lineStyle']).getLineStyle();
             selectLineStyle = itemModel.getModel(['select', 'lineStyle']).getLineStyle();
 
-            labelModel = itemModel.getModel('label');
-            emphasisLabelModel = itemModel.getModel(['emphasis', 'label']);
-            blurLabelModel = itemModel.getModel(['blur', 'label']);
-            selectLabelModel = itemModel.getModel(['select', 'label']);
+            labelStatesModels = getLabelStatesModels(itemModel);
         }
 
         const lineStyle = lineData.getItemVisual(idx, 'style');
@@ -237,76 +224,38 @@ class Line extends graphic.Group {
             }
         }, this);
 
-        const showLabel = labelModel.getShallow('show');
-        const hoverShowLabel = emphasisLabelModel.getShallow('show');
-
-        const label = this.childOfName('label') as InnerLineLabel;
-        let defaultLabelColor;
-        let baseText;
-
-        // FIXME: the logic below probably should be merged to `graphic.setLabelStyle`.
-        if (showLabel || hoverShowLabel) {
-            defaultLabelColor = visualColor as ColorString || '#000';
-
-            baseText = seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType);
-            if (baseText == null) {
-                const rawVal = seriesModel.getRawValue(idx) as number;
-                baseText = rawVal == null
-                    ? lineData.getName(idx)
-                    : isFinite(rawVal)
-                    ? round(rawVal)
-                    : rawVal;
-            }
-        }
-        const normalText = showLabel ? baseText : null;
-        const emphasisText = hoverShowLabel
-            ? zrUtil.retrieve2(
-                seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
-                baseText
-            )
-            : null;
+        const rawVal = seriesModel.getRawValue(idx) as number;
+        setLabelStyle(this, labelStatesModels, {
+            labelDataIndex: idx,
+            labelFetcher: {
+                getFormattedLabel(dataIndex, stateName) {
+                    return seriesModel.getFormattedLabel(dataIndex, stateName, lineData.dataType);
+                }
+            },
+            inheritColor: visualColor as ColorString || '#000',
+            defaultText: (rawVal == null
+                ? lineData.getName(idx)
+                : isFinite(rawVal)
+                ? round(rawVal)
+                : rawVal) + ''
+        });
+        const label = this.getTextContent() as InnerLineLabel;
 
         // Always set `textStyle` even if `normalStyle.text` is null, because default
         // values have to be set on `normalStyle`.
-        if (normalText != null || emphasisText != null) {
-            label.useStyle(createTextStyle(labelModel, {
-                text: normalText as string
-            }, {
-                inheritColor: defaultLabelColor
-            }));
-
+        if (label) {
+            const labelNormalModel = labelStatesModels.normal as unknown as Model<LineLabelOption>;
             label.__align = label.style.align;
             label.__verticalAlign = label.style.verticalAlign;
             // 'start', 'middle', 'end'
-            label.__position = labelModel.get('position') || 'middle';
+            label.__position = labelNormalModel.get('position') || 'middle';
 
-            let distance = labelModel.get('distance');
+            let distance = labelNormalModel.get('distance');
             if (!zrUtil.isArray(distance)) {
                 distance = [distance, distance];
             }
             label.__labelDistance = distance;
         }
-
-        const labelEmphasisState = label.ensureState('emphasis');
-        if (emphasisText != null) {
-            labelEmphasisState.ignore = false;
-            // Only these properties supported in this emphasis style here.
-            labelEmphasisState.style = {
-                text: emphasisText as string,
-                fill: emphasisLabelModel.getTextColor(true),
-                // For merging hover style to normal style, do not use
-                // `hoverLabelModel.getFont()` here.
-                fontStyle: emphasisLabelModel.getShallow('fontStyle'),
-                fontWeight: emphasisLabelModel.getShallow('fontWeight'),
-                fontSize: emphasisLabelModel.getShallow('fontSize'),
-                fontFamily: emphasisLabelModel.getShallow('fontFamily')
-            };
-        }
-        else {
-            labelEmphasisState.ignore = true;
-        }
-
-        label.ignore = !showLabel && !hoverShowLabel;
 
         enableHoverEmphasis(this);
     }
@@ -333,9 +282,9 @@ class Line extends graphic.Group {
         const lineGroup = this;
         const symbolFrom = lineGroup.childOfName('fromSymbol') as ECSymbol;
         const symbolTo = lineGroup.childOfName('toSymbol') as ECSymbol;
-        const label = lineGroup.childOfName('label') as InnerLineLabel;
+        const label = lineGroup.getTextContent() as InnerLineLabel;
         // Quick reject
-        if (!symbolFrom && !symbolTo && label.ignore) {
+        if (!symbolFrom && !symbolTo && (!label || label.ignore)) {
             return;
         }
 
@@ -381,7 +330,7 @@ class Line extends graphic.Group {
             symbolTo.markRedraw();
         }
 
-        if (!label.ignore) {
+        if (label && !label.ignore) {
             label.x = label.y = 0;
             label.originX = label.originY = 0;
 

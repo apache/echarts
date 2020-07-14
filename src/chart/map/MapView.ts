@@ -26,7 +26,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import Model from '../../model/Model';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 interface HighDownRecord {
     recordVersion: number;
@@ -160,7 +160,6 @@ class MapView extends ChartView {
 
                 const itemModel = originalData.getItemModel<MapDataItemOption>(originalDataIndex);
                 const labelModel = itemModel.getModel('label');
-                const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
                 const regionGroup = fullData.getItemGraphicEl(fullIndex);
 
@@ -172,7 +171,7 @@ class MapView extends ChartView {
                 // like that from the begining, and this scenario is rarely encountered.
                 // So it won't be fixed until have to.
 
-                setLabelStyle(circle, labelModel, hoverLabelModel, {
+                setLabelStyle(circle, getLabelStatesModels(itemModel), {
                     labelFetcher: {
                         getFormattedLabel(idx: number, state: DisplayState) {
                             return mapModel.getFormattedLabel(fullIndex, state);

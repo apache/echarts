@@ -24,6 +24,9 @@ export const HOVER_STATE_NORMAL: 0 = 0;
 export const HOVER_STATE_BLUR: 1 = 1;
 export const HOVER_STATE_EMPHASIS: 2 = 2;
 
+export const SPECIAL_STATES = ['emphasis', 'blur', 'select'] as const;
+export const DISPLAY_STATES = ['normal', 'emphasis', 'blur', 'select'] as const;
+
 type ExtendedProps = {
     __highByOuter: number
 

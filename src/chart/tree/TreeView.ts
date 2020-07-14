@@ -36,7 +36,8 @@ import ExtensionAPI from '../../ExtensionAPI';
 import Tree, { TreeNode } from '../../data/Tree';
 import List from '../../data/List';
 import Model from '../../model/Model';
-import { ColorString } from '../../util/types';
+import { ColorString, DisplayState, LabelOption } from '../../util/types';
+import { getLabelStatesModels } from '../../label/labelStyle';
 
 type TreeSymbol = SymbolClz & {
     __edge: graphic.BezierCurve | TreePath
@@ -60,8 +61,9 @@ interface TreeSeriesScope extends Pick<
     itemStyle: PathStyleProps
     hoverItemStyle: PathStyleProps
     lineStyle: PathStyleProps
-    labelModel: Model<TreeSeriesNodeItemOption['label']>
-    hoverLabelModel: Model<TreeSeriesNodeItemOption['label']>
+
+    labelStatesModels: Record<DisplayState, Model<LabelOption>>
+
     symbolInnerColor: ColorString
 }
 
@@ -408,8 +410,7 @@ function getTreeNodeStyle(
     seriesScope.itemStyle = itemModel.getModel('itemStyle').getItemStyle();
     seriesScope.hoverItemStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
     seriesScope.lineStyle = itemModel.getModel('lineStyle').getLineStyle();
-    seriesScope.labelModel = itemModel.getModel('label');
-    seriesScope.hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+    seriesScope.labelStatesModels = getLabelStatesModels(itemModel);
 
     if (node.isExpand === false && node.children.length !== 0) {
         seriesScope.symbolInnerColor = seriesScope.itemStyle.fill as ColorString;
@@ -511,13 +512,14 @@ function updateNode(
         }
 
         const textPosition = isLeft ? 'left' as const : 'right' as const;
-        const rotate = seriesScope.labelModel.get('rotate');
+        const normalLabelModel = seriesScope.labelStatesModels.normal;
+        const rotate = normalLabelModel.get('rotate');
         const labelRotateRadian = rotate * (Math.PI / 180);
 
         const textContent = symbolPath.getTextContent();
         if (textContent) {
             symbolPath.setTextConfig({
-                position: seriesScope.labelModel.get('position') || textPosition,
+                position: normalLabelModel.get('position') || textPosition,
                 rotation: rotate == null ? -rad : labelRotateRadian,
                 origin: 'center'
             });

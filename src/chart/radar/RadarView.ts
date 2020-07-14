@@ -28,7 +28,7 @@ import List from '../../data/List';
 import { ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 function normalizeSymbolSize(symbolSize: number | number[]) {
     if (!zrUtil.isArray(symbolSize)) {
@@ -222,8 +222,6 @@ class RadarView extends ChartView {
             );
             const emphasisModel = itemModel.getModel('emphasis');
             const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
-            const labelModel = itemModel.getModel('label');
-            const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
                 symbolPath.useStyle(itemStyle);
                 symbolPath.setColor(color);
@@ -234,7 +232,7 @@ class RadarView extends ChartView {
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
                 setLabelStyle(
-                    symbolPath, labelModel, labelHoverModel,
+                    symbolPath, getLabelStatesModels(itemModel),
                     {
                         labelFetcher: data.hostModel,
                         labelDataIndex: idx,

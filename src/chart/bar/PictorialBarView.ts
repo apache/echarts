@@ -41,7 +41,7 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { path } from 'zrender/src/export';
 
 
@@ -913,11 +913,8 @@ function updateCommon(
     const barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
     const barRect = bar.__pictorialBarRect;
 
-    const labelModel = itemModel.getModel('label');
-    const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
-
     setLabelStyle(
-        barRect, labelModel, hoverLabelModel,
+        barRect, getLabelStatesModels(itemModel),
         {
             labelFetcher: opt.seriesModel,
             labelDataIndex: dataIndex,

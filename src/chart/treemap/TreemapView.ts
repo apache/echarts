@@ -19,7 +19,12 @@
 
 import {bind, each, indexOf, curry, extend, retrieve} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { isHighDownDispatcher, setAsHighDownDispatcher, setDefaultStateProxy, enableHoverFocus } from '../../util/states';
+import {
+    isHighDownDispatcher,
+    setAsHighDownDispatcher,
+    setDefaultStateProxy,
+    enableHoverFocus
+} from '../../util/states';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
@@ -50,16 +55,14 @@ import {
 import { ColorString } from '../../util/types';
 import { windowOpen } from '../../util/format';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
 
 const DRAG_THRESHOLD = 3;
 const PATH_LABEL_NOAMAL = 'label';
-const PATH_LABEL_EMPHASIS = ['emphasis', 'label'] as const;
 const PATH_UPPERLABEL_NORMAL = 'upperLabel';
-const PATH_UPPERLABEL_EMPHASIS = ['emphasis', 'upperLabel'] as const;
 const Z_BASE = 10; // Should bigger than every z.
 const Z_BG = 1;
 const Z_CONTENT = 2;
@@ -940,9 +943,6 @@ function renderNode(
         const normalLabelModel = nodeModel.getModel(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
         );
-        const emphasisLabelModel = nodeModel.getModel(
-            upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
-        );
 
         let text = retrieve(
             seriesModel.getFormattedLabel(
@@ -958,7 +958,7 @@ function renderNode(
         const isShow = normalLabelModel.getShallow('show');
 
         setLabelStyle(
-            rectEl, normalLabelModel, emphasisLabelModel,
+            rectEl, getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
             {
                 defaultText: isShow ? text : null,
                 inheritColor: visualColor,

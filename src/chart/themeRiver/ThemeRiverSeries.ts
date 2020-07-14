@@ -321,7 +321,6 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             margin: 4,
             show: true,
             position: 'left',
-            color: '#000',
             fontSize: 11
         },
 

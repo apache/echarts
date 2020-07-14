@@ -27,11 +27,11 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, ColorString, ECElement } from '../../util/types';
 import List from '../../data/List';
-import PieSeriesModel, {PieDataItemOption, PieSeriesOption} from './PieSeries';
+import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
-import { setLabelLineStyle } from '../../label/labelGuideHelper';
+import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import Model from '../../model/Model';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 function updateDataSelected(
     this: PiePiece,
@@ -174,16 +174,13 @@ class PiePiece extends graphic.Sector {
 
         const labelModel = itemModel.getModel('label');
         const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-        const labelLineModel = itemModel.getModel('labelLine');
-        const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
 
         const style = data.getItemVisual(idx, 'style');
         const visualColor = style && style.fill as ColorString;
 
         setLabelStyle(
             sector,
-            labelModel as Model<Omit<PieSeriesOption['label'], 'position' | 'rotate'>>, // position / rotate won't be used.
-            labelHoverModel as Model<Omit<PieSeriesOption['label'], 'position' | 'rotate'>>,
+            getLabelStatesModels(itemModel),
             {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
@@ -191,9 +188,9 @@ class PiePiece extends graphic.Sector {
                 defaultText: seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx)
             },
-            {
+            { normal: {
                 opacity: style && style.opacity
-            }
+            } }
         );
 
         // Set textConfig on sector.
@@ -214,10 +211,7 @@ class PiePiece extends graphic.Sector {
         labelTextEmphasisState.ignore = !labelHoverModel.get('show');
 
         // Default use item visual color
-        setLabelLineStyle(this, {
-            normal: labelLineModel,
-            emphasis: labelLineHoverModel
-        }, {
+        setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,
             opacity: style && style.opacity
         });

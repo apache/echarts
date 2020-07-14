@@ -28,7 +28,7 @@ import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend } from 'zrender/src/core/util';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -203,8 +203,7 @@ class Symbol extends graphic.Group {
 
         let labelModel;
         let emphasisLabelModel;
-        let blurLabelModel;
-        let selectLabelModel;
+        let labelStatesModels;
 
         let hoverAnimation;
         let cursorStyle;
@@ -218,10 +217,7 @@ class Symbol extends graphic.Group {
 
             symbolOffset = seriesScope.symbolOffset;
 
-            labelModel = seriesScope.labelModel;
-            emphasisLabelModel = seriesScope.emphasisLabelModel;
-            blurLabelModel = seriesScope.blurLabelModel;
-            selectLabelModel = seriesScope.selectLabelModel;
+            labelStatesModels = seriesScope.labelStatesModels;
 
             hoverAnimation = seriesScope.hoverAnimation;
             cursorStyle = seriesScope.cursorStyle;
@@ -241,10 +237,7 @@ class Symbol extends graphic.Group {
 
             symbolOffset = itemModel.getShallow('symbolOffset');
 
-            labelModel = itemModel.getModel(['label']);
-            emphasisLabelModel = itemModel.getModel(['emphasis', 'label']);
-            blurLabelModel = itemModel.getModel(['blur', 'label']);
-            selectLabelModel = itemModel.getModel(['select', 'label']);
+            labelStatesModels = getLabelStatesModels(itemModel);
 
             hoverAnimation = itemModel.getShallow('hoverAnimation');
             cursorStyle = itemModel.getShallow('cursor');
@@ -291,7 +284,7 @@ class Symbol extends graphic.Group {
         const useNameLabel = seriesScope && seriesScope.useNameLabel;
 
         setLabelStyle(
-            symbolPath, labelModel, emphasisLabelModel,
+            symbolPath, labelStatesModels,
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,

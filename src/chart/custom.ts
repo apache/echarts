@@ -1379,7 +1379,7 @@ function makeRenderItem(
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
-        const textConfig = labelStyleHelper.createTextConfig(textStyle, labelModel, opt, false);
+        const textConfig = labelStyleHelper.createTextConfig(labelModel, opt, false);
 
         preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
@@ -1412,7 +1412,7 @@ function makeRenderItem(
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
-        const textConfig = labelStyleHelper.createTextConfig(textStyle, labelModel, null, true);
+        const textConfig = labelStyleHelper.createTextConfig(labelModel, null, true);
 
         preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);

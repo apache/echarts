@@ -22,7 +22,7 @@ import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis } from '../../util/states';
+import { enableHoverEmphasis, DISPLAY_STATES } from '../../util/states';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -36,7 +36,7 @@ import Region from '../../coord/geo/Region';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
 import Transformable from 'zrender/src/core/Transformable';
-import { setLabelStyle } from '../../label/labelStyle';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -208,11 +208,6 @@ class MapDraw {
             const blurItemStyle = getFixedItemStyle(blurItemStyleModel);
             const selectItemStyle = getFixedItemStyle(selectItemStyleModel);
 
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const labelModel = regionModel.getModel(labelAccessPath);
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
-
             let dataIdx;
             // Use the itemStyle in data if has data
             if (data) {
@@ -276,18 +271,27 @@ class MapDraw {
             compoundPath.ensureState('blur').style = blurItemStyle;
             compoundPath.ensureState('select').style = selectItemStyle;
 
-            // Label
-            const showLabel = labelModel.get('show');
-            const hoverShowLabel = hoverLabelModel.get('show');
+            let showLabel = false;
+            for (let i = 0; i < DISPLAY_STATES.length; i++) {
+                const stateName = DISPLAY_STATES[i];
+                // @ts-ignore FIXME:TS fix the "compatible with each other"?
+                if (regionModel.get(
+                    stateName === 'normal' ? ['label', 'show'] : [stateName, 'label', 'show']
+                )) {
+                    showLabel = true;
+                    break;
+                }
+            }
 
             const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
             const itemLayout = data && data.getItemLayout(dataIdx);
+
             // In the following cases label will be drawn
             // 1. In map series and data value is NaN
             // 2. In geo component
             // 4. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
             if (
-                (isGeo || isDataNaN && (showLabel || hoverShowLabel))
+                (isGeo || isDataNaN && (showLabel))
                 || (itemLayout && itemLayout.showLabel)
             ) {
                 const query = !isGeo ? dataIdx : region.name;
@@ -313,16 +317,16 @@ class MapDraw {
                 });
 
                 setLabelStyle<typeof query>(
-                    textEl, labelModel, hoverLabelModel,
+                    textEl, getLabelStatesModels(regionModel),
                     {
                         labelFetcher: labelFetcher,
                         labelDataIndex: query,
                         defaultText: region.name
                     },
-                    {
+                    { normal: {
                         align: 'center',
                         verticalAlign: 'middle'
-                    }
+                    } }
                 );
 
                 compoundPath.setTextContent(textEl);
