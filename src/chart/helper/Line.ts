@@ -257,6 +257,12 @@ class Line extends graphic.Group {
             label.__labelDistance = distance;
         }
 
+        this.setTextConfig({
+            position: null,
+            local: true,
+            inside: false   // Can't be inside for stroke element.
+        });
+
         enableHoverEmphasis(this);
     }
 
