@@ -151,11 +151,9 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                     innerIndicatorOpt.name, innerIndicatorOpt
                 );
             }
-            const model = zrUtil.extend(
-                new Model(innerIndicatorOpt, null, this.ecModel),
-                AxisModelCommonMixin.prototype
-            ) as AxisBaseModel<InnerIndicatorAxisOption>;
 
+            const model = new Model(innerIndicatorOpt, null, this.ecModel) as AxisBaseModel<InnerIndicatorAxisOption>;
+            zrUtil.mixin(model, AxisModelCommonMixin.prototype);
             // For triggerEvent.
             model.mainType = 'radar';
             model.componentIndex = this.componentIndex;
