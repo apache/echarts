@@ -770,7 +770,7 @@ class TooltipView extends ComponentView {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markers, tooltipModel);
                     this._updatePosition(
-                        tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y
+                        tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y, nearPoint.x
                     );
                 }
             }, this);
@@ -779,7 +779,7 @@ class TooltipView extends ComponentView {
         }
 
         const [finalX] = this._updatePosition(
-            tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y
+            tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y, nearPoint.x
         );
         tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, x > finalX ? 'right' : 'left');
         tooltipContent.show(tooltipModel, nearPoint.color);
@@ -787,17 +787,20 @@ class TooltipView extends ComponentView {
     }
 
     _getNearestPoint(point: number[], tooltipDataParams: TooltipDataParams | TooltipDataParams[]): {
+        x: number;
         y: number;
-        color: ColorString
+        color: ColorString;
     } {
         if (!zrUtil.isArray(tooltipDataParams)) {
             if (!tooltipDataParams.position) {
                 return {
+                    x: point[0],
                     y: point[1],
                     color: tooltipDataParams.color as ColorString
                 };
             }
             return {
+                x: point[0],
                 y: tooltipDataParams.position[1],
                 color: tooltipDataParams.color as ColorString
             };
@@ -806,6 +809,7 @@ class TooltipView extends ComponentView {
         const distanceArr = tooltipDataParams.map(dataParams => Math.abs(dataParams.position[1] - point[1]));
         const index = distanceArr.indexOf(Math.min(...distanceArr));
         return {
+            x: tooltipDataParams[index].position[0],
             y: tooltipDataParams[index].position[1],
             color: tooltipDataParams[index].color as ColorString
         };
@@ -819,7 +823,8 @@ class TooltipView extends ComponentView {
         content: TooltipHTMLContent | TooltipRichContent,
         params: TooltipDataParams | TooltipDataParams[],
         el?: Element,
-        nearPointY?: number
+        nearPointY?: number,
+        nearPointX?: number
     ): [number, number] {
         const viewWidth = this._api.getWidth();
         const viewHeight = this._api.getHeight();
@@ -887,6 +892,7 @@ class TooltipView extends ComponentView {
 
         if (tooltipModel.get('attachToPoint')) {
             y = nearPointY;
+            x = nearPointX;
         }
 
         content.moveTo(x, y);
