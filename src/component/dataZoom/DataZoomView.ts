@@ -24,6 +24,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { Dictionary } from '../../util/types';
 import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
+import { getAxisMainType } from './helper';
 
 export interface CoordInfo {
     model: CoordinateSystemHostModel
@@ -68,8 +69,8 @@ class DataZoomView extends ComponentView {
         const ecModel = this.ecModel;
         const coordSysLists: Dictionary<CoordInfo[]> = {};
 
-        dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-            const axisModel = ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel;
+        dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+            const axisModel = ecModel.getComponent(getAxisMainType(axisDim), axisIndex) as AxisBaseModel;
             if (axisModel) {
                 const coordModel = axisModel.getCoordSysModel();
                 coordModel && save(

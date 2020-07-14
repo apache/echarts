@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="refer_by_id"></div>
+        <div id="auto_axis_second_setOption"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                grid: [{
+                    bottom: '55%'
+                }, {
+                    id: 'g1',
+                    top: '55%'
+                }],
+                xAxis: [{
+
+                }, {
+                    id: 'x1',
+                    gridId: 'g1'
+                }],
+                yAxis: [{
+
+                }, {
+                    id: 'y1',
+                    gridId: 'g1'
+                }],
+                dataZoom: [{
+                    xAxisId: 'x1',
+                    type: 'slider'
+                }, {
+                    xAxisId: 'x1',
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'line',
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    xAxisId: 'x1',
+                    yAxisId: 'y1',
+                    data: [[233, 432], [154, 552]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'refer_by_id', {
+                title: [
+                    'refer axis by id',
+                    'Two grids, dataZoom should refer to the second grid',
+                ],
+                option: option,
+                height: 300,
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: [{
+                    bottom: '60%'
+                }, {
+                    id: 'gb',
+                    top: '60%'
+                }],
+                xAxis: [{
+                    type: 'category'
+                }, {
+                    type: 'category'
+                }, {
+                    id: 'xb0',
+                    type: 'category',
+                    gridIndex: 1
+                }, {
+                    id: 'xb1',
+                    type: 'category',
+                    gridIndex: 1
+                }],
+                yAxis: [{
+
+                }, {
+                    id: 'yb',
+                    gridIndex: 1
+                }],
+                dataZoom: [{
+                    type: 'slider'
+                }, {
+                    type: 'inside'
+                }],
+                series: [{
+                    type: 'line',
+                    data: [[11, 22], [33, 44]]
+                }, {
+                    type: 'line',
+                    xAxisIndex: 1,
+                    data: [[11111, 52], [21133, 74]]
+                }, {
+                    id: 'sb0',
+                    type: 'line',
+                    xAxisIndex: 2,
+                    yAxisIndex: 1,
+                    data: [[23, 432], [54, 552]]
+                }, {
+                    id: 'sb1',
+                    type: 'line',
+                    xAxisIndex: 3,
+                    yAxisIndex: 1,
+                    data: [[222233, 1432], [111154, 1552]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'auto_axis_second_setOption', {
+                title: [
+                    'two grids, each has two xAxis.',
+                    'dataZoom should auto **control all of the two xAxis of the first** grid.',
+                    'Click btn "remove the first grid".',
+                    'dataZoom should auto **control all of the two xAxis of the second** grid.',
+                    '**inside dataZoom** on the first grid area **should be removed**.',
+                    '**toolbox zoom** should only control the second grid.',
+                    'Click btn "addback the first grid".',
+                    'dataZoom should auto **control all of the two xAxis of the first** grid.',
+                    '**inside dataZoom** on the second grid area **should be removed**.',
+                    'Click btn "remove all grids".',
+                    'Should no error.',
+                    'Click btn "addback the first grid".',
+                    'Functionalities should be OK.'
+                ],
+                option: option,
+                height: 350,
+                buttons: [{
+                    text: 'remove the first grid',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [{
+                                id: 'gb',
+                            }],
+                            xAxis: [{
+                                id: 'xb0',
+                            }, {
+                                id: 'xb1',
+                            }],
+                            yAxis: [{
+                                id: 'yb'
+                            }],
+                            series: [{
+                                id: 'sb0',
+                            }, {
+                                id: 'sb1',
+                            }]
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }, {
+                    text: 'addback the first grid',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [{
+                                bottom: '60%'
+                            }],
+                            xAxis: [{
+                            }, {
+                            }],
+                            yAxis: [{
+                            }],
+                            series: [{
+                                type: 'line',
+                                data: [[11, 22], [33, 44]]
+                            }, {
+                                type: 'line',
+                                xAxisIndex: 1,
+                                data: [[11111, 52], [21133, 74]]
+                            }]
+                        });
+                    }
+                }, {
+                    text: 'remove all grids',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [],
+                            xAxis: [],
+                            yAxis: [],
+                            series: []
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+    </body>
+</html>
+

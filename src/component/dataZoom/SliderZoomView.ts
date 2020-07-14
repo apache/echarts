@@ -27,13 +27,16 @@ import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue } from '../../util/types';
+import {
+    LayoutOrient, Payload, ZRTextVerticalAlign, ZRTextAlign, ZRElementEvent, ParsedValue
+} from '../../util/types';
 import SliderZoomModel from './SliderZoomModel';
 import ComponentView from '../../view/Component';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { getAxisMainType } from './helper';
 
 const Rect = graphic.Rect;
 
@@ -64,17 +67,17 @@ class SliderZoomView extends DataZoomView {
 
     private _orient: LayoutOrient;
 
-    private _range: [number, number];
+    private _range: number[];
 
     /**
      * [coord of the first handle, coord of the second handle]
      */
-    private _handleEnds: [number, number];
+    private _handleEnds: number[];
 
     /**
      * [length, thick]
      */
-    private _size: [number, number];
+    private _size: number[];
 
     private _handleWidth: number;
 
@@ -118,7 +121,7 @@ class SliderZoomView extends DataZoomView {
             'fixRate'
         );
 
-        this._orient = dataZoomModel.get('orient');
+        this._orient = dataZoomModel.getOrient();
 
         if (this.dataZoomModel.get('show') === false) {
             this.group.removeAll();
@@ -392,9 +395,9 @@ class SliderZoomView extends DataZoomView {
         let result: SliderZoomView['_dataShadowInfo'];
         const ecModel = this.ecModel;
 
-        dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
+        dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
             const seriesModels = dataZoomModel
-                .getAxisProxy(dimNames.name, axisIndex)
+                .getAxisProxy(axisDim, axisIndex)
                 .getTargetSeriesModels();
 
             each(seriesModels, function (seriesModel) {
@@ -409,8 +412,10 @@ class SliderZoomView extends DataZoomView {
                     return;
                 }
 
-                const thisAxis = (ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel).axis;
-                let otherDim = getOtherDim(dimNames.name);
+                const thisAxis = (
+                    ecModel.getComponent(getAxisMainType(axisDim), axisIndex) as AxisBaseModel
+                ).axis;
+                let otherDim = getOtherDim(axisDim);
                 let otherAxisInverse;
                 const coordSys = seriesModel.coordinateSystem;
 
@@ -423,7 +428,7 @@ class SliderZoomView extends DataZoomView {
                 result = {
                     thisAxis: thisAxis,
                     series: seriesModel,
-                    thisDim: dimNames.name,
+                    thisDim: axisDim,
                     otherDim: otherDim,
                     otherAxisInverse: otherAxisInverse
                 };
@@ -504,7 +509,7 @@ class SliderZoomView extends DataZoomView {
 
             barGroup.add(handles[handleIndex] = path);
 
-            const textStyleModel = dataZoomModel.textStyleModel;
+            const textStyleModel = dataZoomModel.getModel('textStyle');
 
             this.group.add(
                 handleLabels[handleIndex] = new graphic.Text({

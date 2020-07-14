@@ -41,7 +41,7 @@ class InsideZoomView extends DataZoomView {
      * 'throttle' is used in this.dispatchAction, so we save range
      * to avoid missing some 'pan' info.
      */
-    range: [number, number];
+    range: number[];
 
     /**
      * @override

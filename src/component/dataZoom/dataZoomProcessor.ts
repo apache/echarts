@@ -20,7 +20,10 @@
 import * as echarts from '../../echarts';
 import {createHashMap, each} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import DataZoomModel from './DataZoomModel';
+import DataZoomModel, { DataZoomExtendedAxisBaseModel } from './DataZoomModel';
+import { getAxisMainType, DataZoomAxisDimension } from './helper';
+import AxisProxy from './AxisProxy';
+
 
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
 
@@ -28,22 +31,48 @@ echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
     // there is a line series and a pie series, it is better not to update the
     // line series if only pie series is needed to be updated.
     getTargetSeries: function (ecModel) {
-        const seriesModelMap = createHashMap<SeriesModel>();
 
-        ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
-            dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
-                const axisProxy = dataZoomModel.getAxisProxy(dimNames.name, axisIndex);
-                each(axisProxy.getTargetSeriesModels(), function (seriesModel) {
-                    seriesModelMap.set(seriesModel.uid, seriesModel);
+        function eachAxisModel(
+            cb: (
+                axisDim: DataZoomAxisDimension,
+                axisIndex: number,
+                axisModel: DataZoomExtendedAxisBaseModel,
+                dataZoomModel: DataZoomModel
+            ) => void
+        ) {
+            ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
+                dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+                    const axisModel = ecModel.getComponent(getAxisMainType(axisDim), axisIndex);
+                    cb(axisDim, axisIndex, axisModel as DataZoomExtendedAxisBaseModel, dataZoomModel);
                 });
+            });
+        }
+        // FIXME: it brings side-effect to `getTargetSeries`.
+        // Prepare axis proxies.
+        eachAxisModel(function (axisDim, axisIndex, axisModel, dataZoomModel) {
+            // dispose all last axis proxy, in case that some axis are deleted.
+            axisModel.__dzAxisProxy = null;
+        });
+        const proxyList: AxisProxy[] = [];
+        eachAxisModel(function (axisDim, axisIndex, axisModel, dataZoomModel) {
+            // Different dataZooms may constrol the same axis. In that case,
+            // an axisProxy serves both of them.
+            if (!axisModel.__dzAxisProxy) {
+                // Use the first dataZoomModel as the main model of axisProxy.
+                axisModel.__dzAxisProxy = new AxisProxy(axisDim, axisIndex, dataZoomModel, ecModel);
+                proxyList.push(axisModel.__dzAxisProxy);
+            }
+        });
+
+        const seriesModelMap = createHashMap<SeriesModel>();
+        each(proxyList, function (axisProxy) {
+            each(axisProxy.getTargetSeriesModels(), function (seriesModel) {
+                seriesModelMap.set(seriesModel.uid, seriesModel);
             });
         });
 
         return seriesModelMap;
     },
-
-    // FIXME:TS never used, so comment it
-    // modifyOutputEnd: true,
 
     // Consider appendData, where filter should be performed. Because data process is
     // in block mode currently, it is not need to worry about that the overallProgress
@@ -54,8 +83,8 @@ echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
             // We calculate window and reset axis here but not in model
             // init stage and not after action dispatch handler, because
             // reset should be called after seriesData.restoreData.
-            dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
-                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel);
+            dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+                dataZoomModel.getAxisProxy(axisDim, axisIndex).reset(dataZoomModel);
             });
 
             // Caution: data zoom filtering is order sensitive when using
@@ -72,8 +101,8 @@ echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
             // while sliding y-dataZoom will only change the range of yAxis.
             // So we should filter x-axis after reset x-axis immediately,
             // and then reset y-axis and filter y-axis.
-            dataZoomModel.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
-                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel, api);
+            dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+                dataZoomModel.getAxisProxy(axisDim, axisIndex).filterData(dataZoomModel, api);
             });
         });
 
@@ -81,15 +110,17 @@ echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER, {
             // Fullfill all of the range props so that user
             // is able to get them from chart.getOption().
             const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
-            const percentRange = axisProxy.getDataPercentWindow();
-            const valueRange = axisProxy.getDataValueWindow();
+            if (axisProxy) {
+                const percentRange = axisProxy.getDataPercentWindow();
+                const valueRange = axisProxy.getDataValueWindow();
 
-            dataZoomModel.setCalculatedRange({
-                start: percentRange[0],
-                end: percentRange[1],
-                startValue: valueRange[0],
-                endValue: valueRange[1]
-            });
+                dataZoomModel.setCalculatedRange({
+                    start: percentRange[0],
+                    end: percentRange[1],
+                    startValue: valueRange[0],
+                    endValue: valueRange[1]
+                });
+            }
         });
     }
 });

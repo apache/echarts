@@ -105,17 +105,12 @@ class AxisProxy {
 
     getTargetSeriesModels() {
         const seriesModels: SeriesModel[] = [];
-        const ecModel = this.ecModel;
 
-        ecModel.eachSeries(function (seriesModel) {
+        this.ecModel.eachSeries(function (seriesModel) {
             if (helper.isCoordSupported(seriesModel.get('coordinateSystem'))) {
-                const dimName = this._dimName;
-                const axisModel = ecModel.queryComponents({
-                    mainType: dimName + 'Axis',
-                    index: seriesModel.get(dimName + 'AxisIndex' as any),
-                    id: seriesModel.get(dimName + 'AxisId' as any)
-                })[0];
-                if (this._axisIndex === (axisModel && axisModel.componentIndex)) {
+                const axisMainType = helper.getAxisMainType(this._dimName);
+                const axisModel = seriesModel.getReferringComponents(axisMainType, true).models[0];
+                if (axisModel && this._axisIndex === axisModel.componentIndex) {
                     seriesModels.push(seriesModel);
                 }
             }
