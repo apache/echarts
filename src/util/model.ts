@@ -56,6 +56,8 @@ import { isNumeric } from './number';
  */
 const DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
 
+const INTERNAL_COMPONENT_ID_PREFIX = '\0_ec_\0';
+
 /**
  * If value is not array, then translate it to array.
  * @param  {*} value
@@ -242,8 +244,8 @@ function mappingToExistsInNormalMerge<T extends MappingExistingItem>(
                 // Can not match when both ids existing but different.
                 && existing
                 && (existing.id == null || cmptOption.id == null)
-                && !isIdInner(cmptOption)
-                && !isIdInner(existing)
+                && !isComponentIdInternal(cmptOption)
+                && !isComponentIdInternal(existing)
                 && keyExistAndEqual('name', existing, cmptOption)
             ) {
                 result[i].newOption = cmptOption;
@@ -264,7 +266,7 @@ function mappingToExistsInNormalMerge<T extends MappingExistingItem>(
  * Mapping to exists for merge.
  * The mode "replaceMerge" means that:
  * (1) Only the id mapped components will be merged.
- * (2) Other existing components (except inner compoonets) will be removed.
+ * (2) Other existing components (except internal compoonets) will be removed.
  * (3) Other new options will be used to create new component.
  * (4) The index of the existing compoents will not be modified.
  * That means their might be "hole" after the removal.
@@ -286,20 +288,20 @@ function mappingToExistsInReplaceMerge<T extends MappingExistingItem>(
     // contains elided items, which will be ommited.
     for (let index = 0; index < existings.length; index++) {
         const existing = existings[index];
-        let innerExisting: T;
+        let internalExisting: T;
         // Because of replaceMerge, `existing` may be null/undefined.
         if (existing) {
-            if (isIdInner(existing)) {
-                // inner components should not be removed.
-                innerExisting = existing;
+            if (isComponentIdInternal(existing)) {
+                // internal components should not be removed.
+                internalExisting = existing;
             }
-            // Input with inner id is allowed for convenience of some internal usage.
+            // Input with internal id is allowed for convenience of some internal usage.
             // When `existing` is rawOption (see `OptionManager`#`mergeOption`), id might be empty.
             if (existing.id != null) {
                 existingIdIdxMap.set(existing.id, index);
             }
         }
-        result.push({ existing: innerExisting });
+        result.push({ existing: internalExisting });
     }
 
     // Mapping by id if specified.
@@ -350,7 +352,7 @@ function mappingByIndexFinally<T extends MappingExistingItem>(
             return;
         }
 
-        // Find the first place that not mapped by id and not inner component (consider the "hole").
+        // Find the first place that not mapped by id and not internal component (consider the "hole").
         let resultItem;
         while (
             // Be `!resultItem` only when `nextIdx >= mappingResult.length`.
@@ -368,7 +370,7 @@ function mappingByIndexFinally<T extends MappingExistingItem>(
                     && !keyExistAndEqual('id', cmptOption, resultItem.existing)
                 )
                 || resultItem.newOption
-                || isIdInner(resultItem.existing)
+                || isComponentIdInternal(resultItem.existing)
             )
         ) {
             nextIdx++;
@@ -414,6 +416,7 @@ function makeIdAndName(
     each(mapResult, function (item) {
         const opt = item.newOption;
 
+        // Force ensure id not duplicated.
         assert(
             !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
             'id duplicates: ' + (opt && opt.id)
@@ -511,12 +514,15 @@ export function isNameSpecified(componentModel: ComponentModel): boolean {
  * @param {Object} cmptOption
  * @return {boolean}
  */
-export function isIdInner(cmptOption: MappingExistingItem): boolean {
+export function isComponentIdInternal(cmptOption: MappingExistingItem): boolean {
     return cmptOption
         && cmptOption.id != null
-        && makeComparableKey(cmptOption.id).indexOf('\0_ec_\0') === 0;
+        && makeComparableKey(cmptOption.id).indexOf(INTERNAL_COMPONENT_ID_PREFIX) === 0;
 }
 
+export function makeInternalComponentId(idSuffix: string) {
+    return INTERNAL_COMPONENT_ID_PREFIX + idSuffix;
+}
 
 export function setComponentTypeToKeyInfo(
     mappingResult: MappingResult<MappingExistingItem & { subType?: ComponentSubType }>,

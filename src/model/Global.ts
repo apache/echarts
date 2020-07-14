@@ -384,7 +384,7 @@ class GlobalModel extends Model<ECUnitOption> {
                 let metNonInner = false;
                 for (let i = realLen - 1; i >= 0; i--) {
                     // Remove options with inner id.
-                    if (opts[i] && !modelUtil.isIdInner(opts[i])) {
+                    if (opts[i] && !modelUtil.isComponentIdInternal(opts[i])) {
                         metNonInner = true;
                     }
                     else {

@@ -275,10 +275,19 @@
      * `testHelper.printAssert` can be called multiple times for one chart instance.
      * For each call, one result (fail or pass) will be printed.
      *
-     * @param chart {EChartsInstance}
+     * @param chartOrDomId {EChartsInstance | string}
      * @param checkFn {Function} param: a function `assert`.
      */
-    testHelper.printAssert = function (chart, checkerFn) {
+    testHelper.printAssert = function (chartOrDomId, checkerFn) {
+        var hostDOMEl;
+        var chart;
+        if (typeof chartOrDomId === 'string') {
+            hostDOMEl = document.getElementById(chartOrDomId);
+        }
+        else {
+            chart = chartOrDomId;
+            hostDOMEl = chartOrDomId.getDom();
+        }
         var failErr;
         function assert(cond) {
             if (!cond) {
@@ -292,7 +301,7 @@
             console.error(err);
             failErr = err;
         }
-        var printAssertRecord = chart.__printAssertRecord || (chart.__printAssertRecord = []);
+        var printAssertRecord = hostDOMEl.__printAssertRecord || (hostDOMEl.__printAssertRecord = []);
 
         var resultDom = document.createElement('div');
         resultDom.innerHTML = failErr ? 'checked: Fail' : 'checked: Pass';
@@ -305,12 +314,12 @@
             'color: ' + (failErr ? 'red' : 'green') + ';',
         ].join('');
         printAssertRecord.push(resultDom);
-        chart.getDom().appendChild(resultDom);
+        hostDOMEl.appendChild(resultDom);
 
         relayoutResult();
 
         function relayoutResult() {
-            var chartHeight = chart.getHeight();
+            var chartHeight = chart ? chart.getHeight() : hostDOMEl.offsetHeight;
             var lineHeight = Math.min(fontSize + 10, (chartHeight - 20) / printAssertRecord.length);
             for (var i = 0; i < printAssertRecord.length; i++) {
                 var record = printAssertRecord[i];
