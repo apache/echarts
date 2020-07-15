@@ -20,10 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {
-    enterEmphasisWhenMouseOver,
-    leaveEmphasisWhenMouseOut,
-    enterEmphasis,
-    leaveEmphasis,
     enableHoverEmphasis
 } from '../../util/states';
 import {createSymbol} from '../../util/symbol';
@@ -34,7 +30,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
-import { ColorString, AnimationOptionMixin, ZRElementEvent } from '../../util/types';
+import { ColorString, AnimationOptionMixin } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import type Axis2D from '../../coord/cartesian/Axis2D';
@@ -42,7 +38,6 @@ import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { path } from 'zrender/src/export';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;

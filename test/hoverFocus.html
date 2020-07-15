@@ -65,10 +65,18 @@ under the License.
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             const charts = [];
+            const seriesFocusType = {
+                pie: 'self',
+                funnel: 'self',
+                themeRiver: 'self',
+                graph: 'adjacency',
+                sankey: 'adjacency',
+                sunburst: 'descendant'
+            }
             allChartsOptions.forEach(function (chartOption) {
                 chartOption.series.forEach(function (series) {
                     series.emphasis = series.emphasis || {};
-                    series.emphasis.focus = 'series';
+                    series.emphasis.focus = seriesFocusType[series.type] || 'series';
                     series.emphasis.lineStyle = {
                         // opacity: 0.02
                     }
@@ -78,6 +86,11 @@ under the License.
                         series.renderItem = function () {
                             const ret = oldRenderItem.apply(this, arguments);
                             ret.focus = 'self';
+                            ret.blur = {
+                                style: {
+                                    stroke: null
+                                }
+                            }
                             return ret;
                         }
                     }
@@ -92,6 +105,10 @@ under the License.
 
                 charts.push(chart);
             });
+
+            function update() {
+
+            }
 
             window.addEventListener('resize', function () {
                 charts.forEach(function (chart) {
