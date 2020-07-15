@@ -52,10 +52,11 @@ import {
     TreemapRenderPayload,
     TreemapZoomToNodePayload
 } from './treemapAction';
-import { ColorString } from '../../util/types';
+import { ColorString, ECElement } from '../../util/types';
 import { windowOpen } from '../../util/format';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { rectCoordAxisHandleRemove } from '../../component/axis/axisSplitHelper';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
@@ -796,6 +797,25 @@ function renderNode(
     const focus = nodeModel.get(['emphasis', 'focus']);
     const blurScope = nodeModel.get(['emphasis', 'blurScope']);
 
+    let focusDataIndices: number[];
+    switch (focus) {
+        case 'ancestor':
+            focusDataIndices = [];
+            let currNode = thisNode;
+            while (currNode) {
+                focusDataIndices.push(currNode.dataIndex);
+                currNode = currNode.parentNode;
+            }
+            break;
+        case 'descendant':
+            focusDataIndices = [];
+            thisNode.eachNode(childNode => {
+                focusDataIndices.push(childNode.dataIndex);
+            });
+            break;
+
+    }
+
     // No children, render content.
     if (isParent) {
         // Because of the implementation about "traverse" in graphic hover style, we
@@ -809,7 +829,7 @@ function renderNode(
             // Only for enabling highlight/downplay.
             data.setItemGraphicEl(thisNode.dataIndex, bg);
 
-            enableHoverFocus(group, focus, blurScope);
+            enableHoverFocus(bg, focusDataIndices || focus, blurScope);
         }
     }
     else {
@@ -823,7 +843,7 @@ function renderNode(
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
 
-        enableHoverFocus(group, focus, blurScope);
+        enableHoverFocus(group, focusDataIndices || focus, blurScope);
     }
 
     return group;
@@ -907,7 +927,6 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            // TODO. Optimize.
             const visualColor = thisNode.getVisual('style').fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
@@ -967,6 +986,14 @@ function renderNode(
             }
         );
 
+        if (upperLabelRect) {
+            rectEl.setTextConfig({
+                layoutRect: upperLabelRect
+            });
+            const textEl = rectEl.getTextContent();
+            (textEl as ECElement).disableLabelLayout = true;
+        }
+
         const textEl = rectEl.getTextContent();
         const textStyle = textEl.style;
         textStyle.overflow = 'truncate';
@@ -976,17 +1003,6 @@ function renderNode(
         addDrillDownIcon(textStyle, upperLabelRect, thisLayout);
         const textEmphasisState = textEl.getState('emphasis');
         addDrillDownIcon(textEmphasisState ? textEmphasisState.style : null, upperLabelRect, thisLayout);
-
-        // TODOTODO
-        // upperLabelRect && (normalStyle.textRect = clone(upperLabelRect));
-
-        // normalStyle.truncate = (isShow && normalLabelModel.get('ellipsis'))
-        //     ? {
-        //         outerWidth: width,
-        //         outerHeight: height,
-        //         minChar: 2
-        //     }
-        //     : null;
     }
 
     function addDrillDownIcon(style: TextStyleProps, upperLabelRect: RectLike, thisLayout: any) {

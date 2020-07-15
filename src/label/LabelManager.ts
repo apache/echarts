@@ -50,7 +50,6 @@ import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
-import { getLabelStatesModels } from './labelStyle';
 
 interface LabelDesc {
     label: ZRText
@@ -82,6 +81,7 @@ interface SavedLabelAttr {
         verticalAlign: ZRTextVerticalAlign
         width: number
         height: number
+        fontSize: number
 
         x: number
         y: number
@@ -125,7 +125,7 @@ function prepareLayoutCallbackParams(labelItem: LabelDesc, hostEl?: Element): La
     };
 }
 
-const LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height'] as const;
+const LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height', 'fontSize'] as const;
 
 const dummyTransformable = new Transformable();
 
@@ -258,7 +258,9 @@ class LabelManager {
                     align: labelStyle.align,
                     verticalAlign: labelStyle.verticalAlign,
                     width: labelStyle.width,
-                    height: labelStyle.height
+                    height: labelStyle.height,
+
+                    fontSize: labelStyle.fontSize
                 },
 
                 cursor: label.cursor,
@@ -293,7 +295,7 @@ class LabelManager {
             const ecData = getECData(child);
             const dataIndex = ecData.dataIndex;
             // Can only attach the text on the element with dataIndex
-            if (textEl && dataIndex != null) {
+            if (textEl && dataIndex != null && !(textEl as ECElement).disableLabelLayout) {
                 this._addLabel(dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
             }
         });

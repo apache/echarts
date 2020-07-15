@@ -104,13 +104,13 @@ export interface TreemapSeriesVisualOption {
 }
 
 export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption> {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, 'ancestor' | 'descendant'> {
 
     color?: ColorString[] | 'none'
 }
 
 export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption> {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, 'ancestor' | 'descendant'> {
     id?: string
     name?: string
 
@@ -121,7 +121,8 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
     color?: ColorString[] | 'none'
 }
 
-export interface TreemapSeriesOption extends SeriesOption<TreemapStateOption>, TreemapStateOption,
+export interface TreemapSeriesOption
+    extends SeriesOption<TreemapStateOption, 'ancestor' | 'descendant'>, TreemapStateOption,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
     TreemapSeriesVisualOption {
@@ -261,7 +262,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             position: [0, '50%'],
             height: 20,
             // formatter: null,
-            color: '#fff',
+            // color: '#fff',
             ellipsis: true,
             // align: null,
             verticalAlign: 'middle'
@@ -281,7 +282,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             upperLabel: {
                 show: true,
                 position: [0, '50%'],
-                color: '#fff',
                 ellipsis: true,
                 verticalAlign: 'middle'
             }

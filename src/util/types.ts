@@ -119,6 +119,10 @@ export interface ECElement extends Element {
      * Force disable animation on any condition
      */
     disableLabelAnimation?: boolean
+    /**
+     * Force disable overall layout
+     */
+    disableLabelLayout?: boolean
 }
 
 export interface DataHost {
@@ -892,10 +896,12 @@ export interface LabelLayoutOption {
      */
     dy?: number
     rotate?: number
+
     align?: ZRTextAlign
     verticalAlign?: ZRTextVerticalAlign
     width?: number
     height?: number
+    fontSize?: number
 
     labelLinePoints?: number[][]
 }

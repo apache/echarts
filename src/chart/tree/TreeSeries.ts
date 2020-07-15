@@ -51,7 +51,7 @@ export interface TreeSeriesStateOption {
 }
 
 export interface TreeSeriesNodeItemOption extends SymbolOptionMixin,
-    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption>,
+    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, 'ancestor' | 'descendant'>,
     OptionDataItemObject<OptionDataValue> {
 
     children?: TreeSeriesNodeItemOption[]
@@ -70,7 +70,7 @@ export interface TreeSeriesLeavesOption extends TreeSeriesStateOption, StatesOpt
 }
 
 export interface TreeSeriesOption extends
-    SeriesOption<TreeSeriesStateOption>, TreeSeriesStateOption,
+    SeriesOption<TreeSeriesStateOption, 'ancestor' | 'descendant'>, TreeSeriesStateOption,
     SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 
@@ -266,21 +266,14 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         },
 
         label: {
-            show: true,
-            color: '#555'
-        },
-
-        leaves: {
-            label: {
-                show: true
-            }
+            show: true
         },
 
         animationEasing: 'linear',
 
         animationDuration: 700,
 
-        animationDurationUpdate: 1000
+        animationDurationUpdate: 500
     };
 }
 

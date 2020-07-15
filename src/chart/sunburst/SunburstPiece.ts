@@ -61,19 +61,6 @@ class SunburstPiece extends graphic.Sector {
         this.setTextContent(text);
 
         this.updateData(true, node, seriesModel, ecModel);
-
-        // Hover to change label and labelLine
-        // FIXME
-        // function onEmphasis() {
-        //     text.ignore = text.hoverIgnore;
-        // }
-        // function onNormal() {
-        //     text.ignore = text.normalIgnore;
-        // }
-        // this.on('emphasis', onEmphasis)
-        //     .on('normal', onNormal)
-        //     .on('mouseover', onEmphasis)
-        //     .on('mouseout', onNormal);
     }
 
     updateData(
@@ -95,14 +82,10 @@ class SunburstPiece extends graphic.Sector {
         const itemModel = node.getModel<SunburstSeriesNodeItemOption>();
         const emphasisModel = itemModel.getModel('emphasis');
         const layout = node.getLayout();
-        // if (!layout) {
-        //     console.log(node.getLayout());
-        // }
+
         const sectorShape = zrUtil.extend({}, layout);
         sectorShape.label = null;
 
-        // const visualColor = getNodeColor(node, seriesModel, ecModel);
-        // fillDefaultColor(node, seriesModel, visualColor);
         const normalStyle = node.getVisual('style') as PathStyleProps;
         normalStyle.lineJoin = 'bevel';
 
@@ -144,26 +127,26 @@ class SunburstPiece extends graphic.Sector {
         this._ecModel = ecModel || this._ecModel;
 
         const focus = emphasisModel.get('focus');
-        let focusArr: number[];
+        let focusDataIndices: number[];
 
         switch (focus) {
             case 'ancestor':
-                focusArr = [];
+                focusDataIndices = [];
                 let currNode = node;
                 while (currNode) {
-                    focusArr.push(currNode.dataIndex);
+                    focusDataIndices.push(currNode.dataIndex);
                     currNode = currNode.parentNode;
                 }
                 break;
             case 'descendant':
-                focusArr = [];
+                focusDataIndices = [];
                 node.eachNode(childNode => {
-                    focusArr.push(childNode.dataIndex);
+                    focusDataIndices.push(childNode.dataIndex);
                 });
                 break;
         }
 
-        enableHoverEmphasis(this, focusArr || focus, emphasisModel.get('blurScope'));
+        enableHoverEmphasis(this, focusDataIndices || focus, emphasisModel.get('blurScope'));
     }
 
     _updateLabel(
