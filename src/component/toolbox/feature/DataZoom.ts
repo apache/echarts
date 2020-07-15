@@ -45,11 +45,12 @@ import {
 } from '../../dataZoom/helper';
 import {
     ModelFinderObject, ModelFinderIndexQuery, makeInternalComponentId,
-    queryReferringComponents, ModelFinderIdQuery
+    queryReferringComponents, ModelFinderIdQuery, parseFinder
 } from '../../../util/model';
 import ToolboxModel from '../ToolboxModel';
 import { registerInternalOptionCreator } from '../../../model/internalComponentCreator';
 import Model from '../../../model/Model';
+import ComponentModel from '../../../model/Component';
 
 
 const dataZoomLang = lang.toolbox.dataZoom;
@@ -129,7 +130,9 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         this.brushController.updateCovers([]); // remove cover
 
         const brushTargetManager = new BrushTargetManager(
-            retrieveAxisSetting(this.model.option), ecModel, {include: ['grid']}
+            makeAxisFinder(this.model),
+            ecModel,
+            {include: ['grid']}
         );
         brushTargetManager.matchOutputRanges(areas, ecModel, function (area, coordRange, coordSys: Cartesian2D) {
             if (coordSys.type !== 'cartesian2d') {
@@ -235,15 +238,23 @@ const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {
 };
 
 
-function retrieveAxisSetting(option: ToolboxDataZoomFeatureOption): ModelFinderObject {
-    const setting = {} as ModelFinderObject;
-    // Compatible with previous setting: null => all axis, false => no axis.
-    zrUtil.each(['xAxisIndex', 'yAxisIndex'] as const, function (name) {
-        let val = option[name];
-        val == null && (val = 'all');
-        (val === false || val === 'none') && (val = []);
-        setting[name] = val;
-    });
+function makeAxisFinder(dzFeatureModel: ToolboxDataZoomFeatureModel): ModelFinderObject {
+    const setting = {
+        xAxisIndex: dzFeatureModel.get('xAxisIndex', true),
+        yAxisIndex: dzFeatureModel.get('yAxisIndex', true),
+        xAxisId: dzFeatureModel.get('xAxisId', true),
+        yAxisId: dzFeatureModel.get('yAxisId', true)
+    } as ModelFinderObject;
+
+    // If not specified, it means use all axes.
+    if (setting.xAxisIndex == null
+        && setting.yAxisIndex == null
+        && setting.xAxisId == null
+        && setting.yAxisId == null
+    ) {
+        setting.xAxisIndex = setting.yAxisIndex = 'all';
+    }
+
     return setting;
 }
 
@@ -276,19 +287,23 @@ function updateZoomBtnStatus(
     featureModel.setIconStatus('zoom', zoomActive ? 'emphasis' : 'normal');
 
     const brushTargetManager = new BrushTargetManager(
-        retrieveAxisSetting(featureModel.option), ecModel, {include: ['grid']}
+        makeAxisFinder(featureModel),
+        ecModel,
+        {include: ['grid']}
     );
 
+    const panels = brushTargetManager.makePanelOpts(api, function (targetInfo: BrushTargetInfoCartesian2D) {
+        return (targetInfo.xAxisDeclared && !targetInfo.yAxisDeclared)
+            ? 'lineX'
+            : (!targetInfo.xAxisDeclared && targetInfo.yAxisDeclared)
+            ? 'lineY'
+            : 'rect';
+    });
+
     view.brushController
-        .setPanels(brushTargetManager.makePanelOpts(api, function (targetInfo: BrushTargetInfoCartesian2D) {
-            return (targetInfo.xAxisDeclared && !targetInfo.yAxisDeclared)
-                ? 'lineX'
-                : (!targetInfo.xAxisDeclared && targetInfo.yAxisDeclared)
-                ? 'lineY'
-                : 'rect';
-        }))
+        .setPanels(panels)
         .enableBrush(
-            zoomActive
+            (zoomActive && panels.length)
             ? {
                 brushType: 'auto',
                 brushStyle: {
@@ -308,40 +323,20 @@ registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): Compo
     if (!toolboxModel) {
         return;
     }
-    const dzFeatureModel = toolboxModel.getModel(['feature', 'dataZoom'] as any);
+    const dzFeatureModel = toolboxModel.getModel(['feature', 'dataZoom'] as any) as ToolboxDataZoomFeatureModel;
     const dzOptions = [] as ComponentOption[];
-    addInternalOptionForAxis(ecModel, dzOptions, 'x', dzFeatureModel);
-    addInternalOptionForAxis(ecModel, dzOptions, 'y', dzFeatureModel);
 
-    return dzOptions;
-});
+    const finder = makeAxisFinder(dzFeatureModel);
+    const finderResult = parseFinder(ecModel, finder);
 
-function addInternalOptionForAxis(
-    ecModel: GlobalModel,
-    dzOptions: ComponentOption[],
-    axisDim: 'x' | 'y',
-    dzFeatureModel: Model<ToolboxDataZoomFeatureOption>
-): void {
-    const axisIndexPropName = getAxisIndexPropName(axisDim) as 'xAxisIndex' | 'yAxisIndex';
-    const axisIdPropName = getAxisIdPropName(axisDim) as 'xAxisId' | 'yAxisId';
-    const axisMainType = getAxisMainType(axisDim);
-    let axisIndexOption = dzFeatureModel.get(axisIndexPropName, true);
-    const axisIdOption = dzFeatureModel.get(axisIdPropName, true);
+    each(finderResult.xAxisModels, axisModel => buildInternalOptions(axisModel, 'xAxis', 'xAxisIndex'));
+    each(finderResult.yAxisModels, axisModel => buildInternalOptions(axisModel, 'yAxis', 'yAxisIndex'));
 
-    if (axisIndexOption == null && axisIdOption == null) {
-        axisIndexOption = 'all';
-    }
-
-    const queryResult = queryReferringComponents(
-        ecModel,
-        axisMainType,
-        {
-            index: axisIndexOption,
-            id: axisIdOption
-        }
-    );
-
-    each(queryResult.models, function (axisModel) {
+    function buildInternalOptions(
+        axisModel: ComponentModel,
+        axisMainType: 'xAxis' | 'yAxis',
+        axisIndexPropName: 'xAxisIndex' | 'yAxisIndex'
+    ) {
         const axisIndex = axisModel.componentIndex;
         const newOpt = {
             type: 'select',
@@ -354,8 +349,10 @@ function addInternalOptionForAxis(
         newOpt[axisIndexPropName] = axisIndex;
 
         dzOptions.push(newOpt);
-    });
-}
+    }
+
+    return dzOptions;
+});
 
 
 export default DataZoomFeature;
