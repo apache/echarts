@@ -19,7 +19,7 @@
 
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
-import {encodeHTML} from '../../util/format';
+import {encodeHTML, concatTooltipHtml} from '../../util/format';
 import Model from '../../model/Model';
 import { __DEV__ } from '../../config';
 import {
@@ -238,18 +238,15 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         if (dataType === 'edge') {
             const params = this.getDataParams(dataIndex, dataType);
             const rawDataOpt = params.data;
-            let html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
-            if (params.value) {
-                html += ' : ' + params.value;
-            }
-            return encodeHTML(html);
+            const html = encodeHTML(rawDataOpt.source + ' -- ' + rawDataOpt.target);
+            return concatTooltipHtml(html, params.value || '');
         }
         else if (dataType === 'node') {
             const node = this.getGraph().getNodeByIndex(dataIndex);
             const value = node.getLayout().value;
             const name = this.getDataParams(dataIndex, dataType).data.name;
-            const html = value ? name + ' : ' + value : '';
-            return encodeHTML(html);
+            const html = encodeHTML(value ? name : '');
+            return concatTooltipHtml(html, value || '');
         }
         return super.formatTooltip(dataIndex, multipleSeries);
     }

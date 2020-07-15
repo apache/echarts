@@ -525,7 +525,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
         const html = !multipleSeries
-            ? seriesName + '<br/>' + '<p style="margin: 8px 0 0;">' + colorStr
+            ? seriesName + (seriesName ? '<br/>' : '') + '<p style="margin: 8px 0 0;">' + colorStr
                 + (name
                     ? `${encodeHTML(name)}${content}`
                     : content

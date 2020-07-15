@@ -23,7 +23,7 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
-import {encodeHTML} from '../../util/format';
+import {encodeHTML, concatTooltipHtml} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
@@ -308,7 +308,11 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         if (isNaN(htmlValue as number) || htmlValue == null) {
             htmlValue = '-';
         }
-        return encodeHTML(htmlName + ' : ' + htmlValue);
+        return `
+            <p style="margin: 8px 0 0;">
+                ${concatTooltipHtml(encodeHTML(htmlName), htmlValue)}
+            </p>
+        `;
     }
 
     static defaultOption: ThemeRiverSeriesOption = {

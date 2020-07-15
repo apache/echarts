@@ -21,7 +21,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
-import {encodeHTML, addCommas} from '../../util/format';
+import {encodeHTML, addCommas, concatTooltipHtml} from '../../util/format';
 import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '../../component/helper/selectableMixin';
 import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
@@ -223,7 +223,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         }
 
         return seriesNames.join(', ') + '<br />'
-            + encodeHTML(name + ' : ' + formattedValue);
+            + concatTooltipHtml(encodeHTML(name), formattedValue);
     }
 
     getTooltipPosition = function (this: MapSeries, dataIndex: number): number[] {

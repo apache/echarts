@@ -20,7 +20,7 @@
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import * as formatUtil from '../../util/format';
+import {addCommas, encodeHTML, concatTooltipHtml} from '../../util/format';
 import DataFormatMixin from '../../model/mixin/dataFormat';
 import ComponentModel from '../../model/Component';
 import SeriesModel from '../../model/Series';
@@ -36,9 +36,6 @@ import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { makeInner, defaultEmphasis } from '../../util/model';
-
-const addCommas = formatUtil.addCommas;
-const encodeHTML = formatUtil.encodeHTML;
 
 function fillLabel(opt: DisplayStateHostOption) {
     defaultEmphasis(opt, 'label', ['show']);
@@ -218,7 +215,7 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
             }
         }
         if (value != null) {
-            html += encodeHTML(formattedValue);
+            html = concatTooltipHtml(html, encodeHTML(formattedValue));
         }
         return html;
     }

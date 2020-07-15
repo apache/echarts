@@ -66,6 +66,10 @@ export function encodeHTML(source: string): string {
         });
 }
 
+export function concatTooltipHtml(html: string, value: unknown): string {
+    return `${html}<strong style="float:right;margin-left:20px;color:#000;">${value || ''}</strong>`;
+}
+
 const TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
 const wrapVar = function (varName: string, seriesIdx?: number): string {

@@ -20,7 +20,7 @@
 import SeriesModel from '../../model/Series';
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
-import {encodeHTML} from '../../util/format';
+import {encodeHTML, concatTooltipHtml} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
@@ -113,8 +113,8 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         return encodeHTML(name === '' ? this.name : name) + '<br/>'
             + zrUtil.map(indicatorAxes, function (axis, idx) {
                 const val = data.get(data.mapDimension(axis.dim), dataIndex);
-                return '<p style="margin: 8px 0 0;">' + encodeHTML(axis.name)
-                    + `<strong style="float:right;margin-left:20px;color:#000;">${val}</strong>`
+                return '<p style="margin: 8px 0 0;">'
+                    + concatTooltipHtml(encodeHTML(axis.name), val)
                     + '</p>';
             }).join('');
     }
