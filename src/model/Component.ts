@@ -29,7 +29,7 @@ import {
     ClassManager,
     mountExtend
 } from '../util/clazz';
-import {makeInner} from '../util/model';
+import {makeInner, ModelFinderIndexQuery, queryReferringComponents, ModelFinderIdQuery} from '../util/model';
 import * as layout from '../util/layout';
 import GlobalModel from './Global';
 import {
@@ -44,6 +44,7 @@ import {
 const inner = makeInner<{
     defaultOption: ComponentOption
 }, ComponentModel>();
+
 
 class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Model<Opt> {
 
@@ -269,6 +270,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     /**
      * Notice: always force to input param `useDefault` in case that forget to consider it.
+     * The same behavior as `modelUtil.parseFinder`.
      *
      * @param useDefault In many cases like series refer axis and axis refer grid,
      *        If axis index / axis id not specified, use the first target as default.
@@ -276,34 +278,22 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      */
     getReferringComponents(mainType: ComponentMainType, useDefault: boolean): {
         // Always be array rather than null/undefined, which is convenient to use.
-        models: ComponentModel[],
-        // Whether index or id are specified in option.
-        specified: boolean
+        models: ComponentModel[];
+        // Whether target compoent specified
+        specified: boolean;
     } {
         const indexKey = (mainType + 'Index') as keyof Opt;
         const idKey = (mainType + 'Id') as keyof Opt;
-        const indexOption = this.get(indexKey, true);
-        const idOption = this.get(idKey, true);
 
-        const models = this.ecModel.queryComponents({
-            mainType: mainType,
-            index: indexOption as any,
-            id: idOption as any
-        });
-
-        // `queryComponents` will return all components if
-        // both index and id are null/undefined
-        let specified = true;
-        if (indexOption == null && idOption == null) {
-            specified = false;
-            // Use the first as default if `useDefault`.
-            models.length = (useDefault && models.length) ? 1 : 0;
-        }
-
-        return {
-            models: models,
-            specified: specified
-        };
+        return queryReferringComponents(
+            this.ecModel,
+            mainType,
+            {
+                index: this.get(indexKey, true) as unknown as ModelFinderIndexQuery,
+                id: this.get(idKey, true) as unknown as ModelFinderIdQuery
+            },
+            useDefault
+        );
     }
 
     getBoxLayoutParams() {
@@ -324,6 +314,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     static hasClass: ClassManager['hasClass'];
 
     static registerSubTypeDefaulter: componentUtil.SubTypeDefaulterManager['registerSubTypeDefaulter'];
+
 }
 
 // Reset ComponentModel.extend, add preConstruct.
@@ -372,5 +363,6 @@ function getDependencies(componentType: string): string[] {
 
     return deps;
 }
+
 
 export default ComponentModel;

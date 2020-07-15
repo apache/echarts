@@ -52,21 +52,21 @@ export function isCoordSupported(coordType: string) {
     return indexOf(COORDS, coordType) >= 0;
 }
 
-export function getAxisMainType(axisDim: DimensionName): DataZoomAxisMainType {
+export function getAxisMainType(axisDim: DataZoomAxisDimension): DataZoomAxisMainType {
     if (__DEV__) {
         assert(axisDim);
     }
     return axisDim + 'Axis' as DataZoomAxisMainType;
 }
 
-export function getAxisIndexPropName(axisDim: DimensionName): DataZoomAxisIndexPropName {
+export function getAxisIndexPropName(axisDim: DataZoomAxisDimension): DataZoomAxisIndexPropName {
     if (__DEV__) {
         assert(axisDim);
     }
     return axisDim + 'AxisIndex' as DataZoomAxisIndexPropName;
 }
 
-export function getAxisIdPropName(axisDim: DimensionName): DataZoomAxisIdPropName {
+export function getAxisIdPropName(axisDim: DataZoomAxisDimension): DataZoomAxisIdPropName {
     if (__DEV__) {
         assert(axisDim);
     }

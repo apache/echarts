@@ -69,7 +69,7 @@ class OptionManager {
 
     private _optionBackup: ParsedRawOption;
 
-    private _fakeCmptsMap: FakeComponentsMap;
+    // private _fakeCmptsMap: FakeComponentsMap;
 
     private _newBaseOption: ECUnitOption;
 
@@ -115,16 +115,21 @@ class OptionManager {
 
         // For setOption at second time (using merge mode);
         if (optionBackup) {
-            // The first merge is delayed, becuase in most cases, users do not call `setOption` twice.
-            let fakeCmptsMap = this._fakeCmptsMap;
-            if (!fakeCmptsMap) {
-                fakeCmptsMap = this._fakeCmptsMap = createHashMap();
-                mergeToBackupOption(fakeCmptsMap, null, optionBackup.baseOption, null);
-            }
+            // FIXME
+            // the restore merge solution is essentially incorrect.
+            // the mapping can not be 100% consistent with ecModel, which probably brings
+            // potential bug!
 
-            mergeToBackupOption(
-                fakeCmptsMap, optionBackup.baseOption, newParsedOption.baseOption, opt
-            );
+            // The first merge is delayed, becuase in most cases, users do not call `setOption` twice.
+            // let fakeCmptsMap = this._fakeCmptsMap;
+            // if (!fakeCmptsMap) {
+            //     fakeCmptsMap = this._fakeCmptsMap = createHashMap();
+            //     mergeToBackupOption(fakeCmptsMap, null, optionBackup.baseOption, null);
+            // }
+
+            // mergeToBackupOption(
+            //     fakeCmptsMap, optionBackup.baseOption, newParsedOption.baseOption, opt
+            // );
 
             // For simplicity, timeline options and media options do not support merge,
             // that is, if you `setOption` twice and both has timeline options, the latter
@@ -373,76 +378,76 @@ function indicesEquals(indices1: number[], indices2: number[]): boolean {
  * When "resotre" action triggered, model from `componentActionModel` will be discarded
  * instead of recreating the "ecModel" from the "_optionBackup".
  */
-function mergeToBackupOption(
-    fakeCmptsMap: FakeComponentsMap,
-    // `tarOption` Can be null/undefined, means init
-    tarOption: ECUnitOption,
-    newOption: ECUnitOption,
-    // Can be null/undefined
-    opt: InnerSetOptionOpts
-): void {
-    newOption = newOption || {} as ECUnitOption;
-    const notInit = !!tarOption;
+// function mergeToBackupOption(
+//     fakeCmptsMap: FakeComponentsMap,
+//     // `tarOption` Can be null/undefined, means init
+//     tarOption: ECUnitOption,
+//     newOption: ECUnitOption,
+//     // Can be null/undefined
+//     opt: InnerSetOptionOpts
+// ): void {
+//     newOption = newOption || {} as ECUnitOption;
+//     const notInit = !!tarOption;
 
-    each(newOption, function (newOptsInMainType, mainType) {
-        if (newOptsInMainType == null) {
-            return;
-        }
+//     each(newOption, function (newOptsInMainType, mainType) {
+//         if (newOptsInMainType == null) {
+//             return;
+//         }
 
-        if (!ComponentModel.hasClass(mainType)) {
-            if (tarOption) {
-                tarOption[mainType] = merge(tarOption[mainType], newOptsInMainType, true);
-            }
-        }
-        else {
-            const oldTarOptsInMainType = notInit ? normalizeToArray(tarOption[mainType]) : null;
-            const oldFakeCmptsInMainType = fakeCmptsMap.get(mainType) || [];
-            const resultTarOptsInMainType = notInit ? (tarOption[mainType] = [] as ComponentOption[]) : null;
-            const resultFakeCmptsInMainType = fakeCmptsMap.set(mainType, []);
+//         if (!ComponentModel.hasClass(mainType)) {
+//             if (tarOption) {
+//                 tarOption[mainType] = merge(tarOption[mainType], newOptsInMainType, true);
+//             }
+//         }
+//         else {
+//             const oldTarOptsInMainType = notInit ? normalizeToArray(tarOption[mainType]) : null;
+//             const oldFakeCmptsInMainType = fakeCmptsMap.get(mainType) || [];
+//             const resultTarOptsInMainType = notInit ? (tarOption[mainType] = [] as ComponentOption[]) : null;
+//             const resultFakeCmptsInMainType = fakeCmptsMap.set(mainType, []);
 
-            const mappingResult = mappingToExists(
-                oldFakeCmptsInMainType,
-                normalizeToArray(newOptsInMainType),
-                (opt && opt.replaceMergeMainTypeMap.get(mainType)) ? 'replaceMerge' : 'normalMerge'
-            );
-            setComponentTypeToKeyInfo(mappingResult, mainType, ComponentModel as ComponentModelConstructor);
+//             const mappingResult = mappingToExists(
+//                 oldFakeCmptsInMainType,
+//                 normalizeToArray(newOptsInMainType),
+//                 (opt && opt.replaceMergeMainTypeMap.get(mainType)) ? 'replaceMerge' : 'normalMerge'
+//             );
+//             setComponentTypeToKeyInfo(mappingResult, mainType, ComponentModel as ComponentModelConstructor);
 
-            each(mappingResult, function (resultItem, index) {
-                // The same logic as `Global.ts#_mergeOption`.
-                let fakeCmpt = resultItem.existing;
-                const newOption = resultItem.newOption;
-                const keyInfo = resultItem.keyInfo;
-                let fakeCmptOpt;
+//             each(mappingResult, function (resultItem, index) {
+//                 // The same logic as `Global.ts#_mergeOption`.
+//                 let fakeCmpt = resultItem.existing;
+//                 const newOption = resultItem.newOption;
+//                 const keyInfo = resultItem.keyInfo;
+//                 let fakeCmptOpt;
 
-                if (!newOption) {
-                    fakeCmptOpt = oldTarOptsInMainType[index];
-                }
-                else {
-                    if (fakeCmpt && fakeCmpt.subType === keyInfo.subType) {
-                        fakeCmpt.name = keyInfo.name;
-                        if (notInit) {
-                            fakeCmptOpt = merge(oldTarOptsInMainType[index], newOption, true);
-                        }
-                    }
-                    else {
-                        fakeCmpt = extend({}, keyInfo);
-                        if (notInit) {
-                            fakeCmptOpt = clone(newOption);
-                        }
-                    }
-                }
+//                 if (!newOption) {
+//                     fakeCmptOpt = oldTarOptsInMainType[index];
+//                 }
+//                 else {
+//                     if (fakeCmpt && fakeCmpt.subType === keyInfo.subType) {
+//                         fakeCmpt.name = keyInfo.name;
+//                         if (notInit) {
+//                             fakeCmptOpt = merge(oldTarOptsInMainType[index], newOption, true);
+//                         }
+//                     }
+//                     else {
+//                         fakeCmpt = extend({}, keyInfo);
+//                         if (notInit) {
+//                             fakeCmptOpt = clone(newOption);
+//                         }
+//                     }
+//                 }
 
-                if (fakeCmpt) {
-                    notInit && resultTarOptsInMainType.push(fakeCmptOpt);
-                    resultFakeCmptsInMainType.push(fakeCmpt);
-                }
-                else {
-                    notInit && resultTarOptsInMainType.push(void 0);
-                    resultFakeCmptsInMainType.push(void 0);
-                }
-            });
-        }
-    });
-}
+//                 if (fakeCmpt) {
+//                     notInit && resultTarOptsInMainType.push(fakeCmptOpt);
+//                     resultFakeCmptsInMainType.push(fakeCmpt);
+//                 }
+//                 else {
+//                     notInit && resultTarOptsInMainType.push(void 0);
+//                     resultFakeCmptsInMainType.push(void 0);
+//                 }
+//             });
+//         }
+//     });
+// }
 
 export default OptionManager;

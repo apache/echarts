@@ -150,7 +150,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     type = DataZoomModel.type;
 
     static dependencies = [
-        'xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'series'
+        'xAxis', 'yAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'series', 'toolbox'
     ];
 
 

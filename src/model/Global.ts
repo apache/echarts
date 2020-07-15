@@ -57,6 +57,7 @@ import {
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
+import { concatInternalOptions } from './internalComponentCreator';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -247,7 +248,7 @@ class GlobalModel extends Model<ECUnitOption> {
             // we trade it as it is declared in option as `{xxx: []}`. Because:
             // (1) for normal merge, `{xxx: null/undefined}` are the same meaning as `{xxx: []}`.
             // (2) some preprocessor may convert some of `{xxx: null/undefined}` to `{xxx: []}`.
-            replaceMergeMainTypeMap.each(function (b, mainTypeInReplaceMerge) {
+            replaceMergeMainTypeMap.each(function (val, mainTypeInReplaceMerge) {
                 if (!newCmptTypeMap.get(mainTypeInReplaceMerge)) {
                     newCmptTypes.push(mainTypeInReplaceMerge);
                     newCmptTypeMap.set(mainTypeInReplaceMerge, true);
@@ -266,7 +267,9 @@ class GlobalModel extends Model<ECUnitOption> {
             this: GlobalModel,
             mainType: ComponentMainType
         ): void {
-            const newCmptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
+            const newCmptOptionList = concatInternalOptions(
+                this, mainType, modelUtil.normalizeToArray(newOption[mainType])
+            );
 
             const oldCmptList = componentsMap.get(mainType);
             const mergeMode = (replaceMergeMainTypeMap && replaceMergeMainTypeMap.get(mainType))
@@ -407,12 +410,22 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     /**
-     * @param idx 0 by default
+     * @param idx If not specified, return the first one.
      */
-    getComponent(mainType: string, idx?: number): ComponentModel {
+    getComponent(mainType: ComponentMainType, idx?: number): ComponentModel {
         const list = this._componentsMap.get(mainType);
         if (list) {
-            return list[idx || 0];
+            const cmpt = list[idx || 0];
+            if (cmpt) {
+                return cmpt;
+            }
+            else if (idx == null) {
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i]) {
+                        return list[i];
+                    }
+                }
+            }
         }
     }
 
@@ -862,7 +875,7 @@ function queryByIdOrName<T extends { id?: string, name?: string }>(
     idOrName: string | number | (string | number)[],
     cmpts: T[]
 ): T[] {
-    // Here is a break from echarts4: string and number-like string are
+    // Here is a break from echarts4: string and number are
     // traded as equal.
     if (isArray(idOrName)) {
         const keyMap = createHashMap<boolean>(idOrName);

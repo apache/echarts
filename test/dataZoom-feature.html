@@ -38,7 +38,8 @@ under the License.
 
 
         <div id="refer_by_id"></div>
-        <div id="auto_axis_second_setOption"></div>
+        <div id="auto_axis_second_setOption_normal_dz"></div>
+        <div id="auto_axis_second_setOption_only_toolbox_dz"></div>
 
 
 
@@ -172,7 +173,7 @@ under the License.
                 }]
             };
 
-            var chart = testHelper.create(echarts, 'auto_axis_second_setOption', {
+            var chart = testHelper.create(echarts, 'auto_axis_second_setOption_normal_dz', {
                 title: [
                     'two grids, each has two xAxis.',
                     'dataZoom should auto **control all of the two xAxis of the first** grid.',
@@ -248,6 +249,146 @@ under the License.
             });
         });
         </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: [{
+                    bottom: '60%'
+                }, {
+                    id: 'gb',
+                    top: '60%'
+                }],
+                xAxis: [{
+                    type: 'category'
+                }, {
+                    type: 'category'
+                }, {
+                    id: 'xb0',
+                    type: 'category',
+                    gridIndex: 1
+                }, {
+                    id: 'xb1',
+                    type: 'category',
+                    gridIndex: 1
+                }],
+                yAxis: [{
+
+                }, {
+                    id: 'yb',
+                    gridIndex: 1
+                }],
+                series: [{
+                    type: 'line',
+                    data: [[333, 22], [666, 44]]
+                }, {
+                    type: 'line',
+                    xAxisIndex: 1,
+                    data: [[88888, 52], [99999, 74]]
+                }, {
+                    id: 'sb0',
+                    type: 'line',
+                    xAxisIndex: 2,
+                    yAxisIndex: 1,
+                    data: [[63, 432], [98, 552]]
+                }, {
+                    id: 'sb1',
+                    type: 'line',
+                    xAxisIndex: 3,
+                    yAxisIndex: 1,
+                    data: [[87654, 1432], [56789, 1552]]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'auto_axis_second_setOption_only_toolbox_dz', {
+                title: [
+                    '[Only toolbox dataZoom] two grids, each has two xAxis.',
+                    'toolbox zoom should work on **all grids**.',
+                    'Click btn "remove the first grid".',
+                    'toolbox zoom should work only on **the second grids**.',
+                    'Click btn "addback the first grid".',
+                    'toolbox zoom should work on **all grids**.',
+                    'Click btn "remove all grids".',
+                    'Should **no error**.',
+                    'Check toolbox zoom should **not work on the original area**.',
+                    'Click btn "addback the first grid".',
+                    'toolbox zoom should work only on the **the first grids**.',
+                ],
+                option: option,
+                height: 350,
+                buttons: [{
+                    text: 'remove the first grid',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [{
+                                id: 'gb',
+                            }],
+                            xAxis: [{
+                                id: 'xb0',
+                            }, {
+                                id: 'xb1',
+                            }],
+                            yAxis: [{
+                                id: 'yb'
+                            }],
+                            series: [{
+                                id: 'sb0',
+                            }, {
+                                id: 'sb1',
+                            }]
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }, {
+                    text: 'addback the first grid',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [{
+                                bottom: '60%'
+                            }],
+                            xAxis: [{
+                            }, {
+                            }],
+                            yAxis: [{
+                            }],
+                            series: [{
+                                type: 'line',
+                                data: [[333, 22], [666, 44]]
+                            }, {
+                                type: 'line',
+                                xAxisIndex: 1,
+                                data: [[88888, 52], [99999, 74]]
+                            }]
+                        });
+                    }
+                }, {
+                    text: 'remove all grids',
+                    onclick: function () {
+                        chart.setOption({
+                            grid: [],
+                            xAxis: [],
+                            yAxis: [],
+                            series: []
+                        }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
 
 
 

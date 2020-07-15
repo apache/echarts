@@ -146,7 +146,7 @@ export function isDataItemOption(dataItem: OptionDataItem): boolean {
 }
 
 // Compatible with previous definition: id could be number (but not recommanded).
-// number and number-like string are trade the same when compare.
+// number and string are trade the same when compare.
 // number id will not be converted to string in option.
 // number id will be converted to string in component instance id.
 export interface MappingExistingItem {
@@ -180,64 +180,128 @@ interface MappingResultItem<T extends MappingExistingItem = MappingExistingItem>
     };
 }
 
+/**
+ * Mapping to existings for merge.
+ *
+ * Mode "normalMege":
+ *     The mapping result (merge result) will keep the order of the existing
+ *     component, rather than the order of new option. Because we should ensure
+ *     some specified index reference (like xAxisIndex) keep work.
+ *     And in most cases, "merge option" is used to update partial option but not
+ *     be expected to change the order.
+ *
+ * Mode "replaceMege":
+ *     (1) Only the id mapped components will be merged.
+ *     (2) Other existing components (except internal compoonets) will be removed.
+ *     (3) Other new options will be used to create new component.
+ *     (4) The index of the existing compoents will not be modified.
+ *     That means their might be "hole" after the removal.
+ *     The new components are created first at those available index.
+ *
+ * @return See the comment of <MappingResult>.
+ */
 export function mappingToExists<T extends MappingExistingItem>(
     existings: T[],
     newCmptOptions: ComponentOption[],
     mode: 'normalMerge' | 'replaceMerge'
 ): MappingResult<T> {
-    return mode === 'replaceMerge'
-        ? mappingToExistsInReplaceMerge(existings, newCmptOptions)
-        : mappingToExistsInNormalMerge(existings, newCmptOptions);
-}
-
-/**
- * Mapping to existings for merge.
- * The mapping result (merge result) will keep the order of the existing
- * component, rather than the order of new option. Because we should ensure
- * some specified index reference (like xAxisIndex) keep work.
- * And in most cases, "merge option" is used to update partial option but not
- * be expected to change the order.
- *
- * @return See the comment of <MappingResult>.
- */
-function mappingToExistsInNormalMerge<T extends MappingExistingItem>(
-    existings: T[],
-    newCmptOptions: ComponentOption[]
-): MappingResult<T> {
-    newCmptOptions = (newCmptOptions || []).slice();
-    existings = existings || [];
 
     const result: MappingResultItem<T>[] = [];
-    // Do not use native `map` to in case that the array `existings`
-    // contains elided items, which will be ommited.
-    for (let index = 0; index < existings.length; index++) {
-        // Because of replaceMerge, `existing` may be null/undefined.
-        result.push({ existing: existings[index] });
-    }
+    const isReplaceMergeMode = mode === 'replaceMerge';
+    existings = existings || [];
+    newCmptOptions = (newCmptOptions || []).slice();
+    const existingIdIdxMap = createHashMap<number>();
 
-    // Mapping by id or name if specified.
+    prepareResult(result, existings, existingIdIdxMap, isReplaceMergeMode);
+
     each(newCmptOptions, function (cmptOption, index) {
         if (!isObject<ComponentOption>(cmptOption)) {
             newCmptOptions[index] = null;
             return;
         }
-
         cmptOption.id == null || validateIdOrName(cmptOption.id);
         cmptOption.name == null || validateIdOrName(cmptOption.name);
+    });
 
-        // id has highest priority.
-        for (let i = 0; i < result.length; i++) {
-            const existing = result[i].existing;
-            if (!result[i].newOption // Consider name: two map to one.
-                && existing
-                && keyExistAndEqual('id', existing, cmptOption)
-            ) {
-                result[i].newOption = cmptOption;
-                newCmptOptions[index] = null;
-                return;
-            }
+    mappingById(result, existings, existingIdIdxMap, newCmptOptions);
+
+    if (!isReplaceMergeMode) {
+        mappingByName(result, newCmptOptions);
+    }
+
+    mappingByIndex(result, newCmptOptions, isReplaceMergeMode);
+
+    makeIdAndName(result);
+
+    // The array `result` MUST NOT contain elided items, otherwise the
+    // forEach will ommit those items and result in incorrect result.
+    return result;
+}
+
+function prepareResult<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    existings: T[],
+    existingIdIdxMap: HashMap<number>,
+    isReplaceMergeMode: boolean
+) {
+    // Do not use native `map` to in case that the array `existings`
+    // contains elided items, which will be ommited.
+    for (let index = 0; index < existings.length; index++) {
+        const existing = existings[index];
+        // Because of replaceMerge, `existing` may be null/undefined.
+        if (existing && existing.id != null) {
+            existingIdIdxMap.set(existing.id, index);
         }
+        // For non-internal-componnets:
+        //     Mode "normalMerge": all existings kept.
+        //     Mode "replaceMerge": all existing removed unless mapped by id.
+        // For internal-components:
+        //     go with "replaceMerge" approach in both mode.
+        result.push({
+            existing: (isReplaceMergeMode || isComponentIdInternal(existing))
+                ? null
+                : existing
+        });
+    }
+}
 
+function mappingById<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    existings: T[],
+    existingIdIdxMap: HashMap<number>,
+    newCmptOptions: ComponentOption[]
+): void {
+    // Mapping by id if specified.
+    each(newCmptOptions, function (cmptOption, index) {
+        if (!cmptOption || cmptOption.id == null) {
+            return;
+        }
+        const optionId = makeComparableKey(cmptOption.id);
+        const existingIdx = existingIdIdxMap.get(optionId);
+        if (existingIdx != null) {
+            const resultItem = result[existingIdx];
+            assert(
+                !resultItem.newOption,
+                'Duplicated option on id "' + optionId + '".'
+            );
+            resultItem.newOption = cmptOption;
+            // In both mode, if id matched, new option will be merged to
+            // the existings rather than creating new component model.
+            resultItem.existing = existings[existingIdx];
+            newCmptOptions[index] = null;
+        }
+    });
+}
+
+function mappingByName<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    newCmptOptions: ComponentOption[]
+): void {
+    // Mapping by name if specified.
+    each(newCmptOptions, function (cmptOption, index) {
+        if (!cmptOption || cmptOption.name == null) {
+            return;
+        }
         for (let i = 0; i < result.length; i++) {
             const existing = result[i].existing;
             if (!result[i].newOption // Consider name: two map to one.
@@ -254,97 +318,12 @@ function mappingToExistsInNormalMerge<T extends MappingExistingItem>(
             }
         }
     });
-
-    mappingByIndexFinally(newCmptOptions, result, false);
-
-    makeIdAndName(result);
-
-    return result;
 }
 
-/**
- * Mapping to exists for merge.
- * The mode "replaceMerge" means that:
- * (1) Only the id mapped components will be merged.
- * (2) Other existing components (except internal compoonets) will be removed.
- * (3) Other new options will be used to create new component.
- * (4) The index of the existing compoents will not be modified.
- * That means their might be "hole" after the removal.
- * The new components are created first at those available index.
- *
- * @return See the comment of <MappingResult>.
- */
-function mappingToExistsInReplaceMerge<T extends MappingExistingItem>(
-    existings: T[],
-    newCmptOptions: ComponentOption[]
-): MappingResult<T> {
-
-    existings = existings || [];
-    newCmptOptions = (newCmptOptions || []).slice();
-    const existingIdIdxMap = createHashMap<number>();
-    const result = [] as MappingResult<T>;
-
-    // Do not use native `each` to in case that the array `existings`
-    // contains elided items, which will be ommited.
-    for (let index = 0; index < existings.length; index++) {
-        const existing = existings[index];
-        let internalExisting: T;
-        // Because of replaceMerge, `existing` may be null/undefined.
-        if (existing) {
-            if (isComponentIdInternal(existing)) {
-                // internal components should not be removed.
-                internalExisting = existing;
-            }
-            // Input with internal id is allowed for convenience of some internal usage.
-            // When `existing` is rawOption (see `OptionManager`#`mergeOption`), id might be empty.
-            if (existing.id != null) {
-                existingIdIdxMap.set(existing.id, index);
-            }
-        }
-        result.push({ existing: internalExisting });
-    }
-
-    // Mapping by id if specified.
-    each(newCmptOptions, function (cmptOption, index) {
-        if (!isObject<ComponentOption>(cmptOption)) {
-            newCmptOptions[index] = null;
-            return;
-        }
-
-        cmptOption.id == null || validateIdOrName(cmptOption.id);
-        cmptOption.name == null || validateIdOrName(cmptOption.name);
-
-        const optionId = makeComparableKey(cmptOption.id);
-        const existingIdx = existingIdIdxMap.get(optionId);
-        if (existingIdx != null) {
-            if (__DEV__) {
-                assert(
-                    !result[existingIdx].newOption,
-                    'Duplicated option on id "' + optionId + '".'
-                );
-            }
-            result[existingIdx].newOption = cmptOption;
-            // Mark not to be removed but to be merged.
-            // In this case the existing component will be merged with the new option if `subType` is the same,
-            // or replaced with a new created component if the `subType` is different.
-            result[existingIdx].existing = existings[existingIdx];
-            newCmptOptions[index] = null;
-        }
-    });
-
-    mappingByIndexFinally(newCmptOptions, result, true);
-
-    makeIdAndName(result);
-
-    // The array `result` MUST NOT contain elided items, otherwise the
-    // forEach will ommit those items and result in incorrect result.
-    return result;
-}
-
-function mappingByIndexFinally<T extends MappingExistingItem>(
+function mappingByIndex<T extends MappingExistingItem>(
+    result: MappingResult<T>,
     newCmptOptions: ComponentOption[],
-    mappingResult: MappingResult<T>,
-    allBrandNew: boolean
+    isReplaceMergeMode: boolean
 ): void {
     let nextIdx = 0;
     each(newCmptOptions, function (cmptOption) {
@@ -355,8 +334,8 @@ function mappingByIndexFinally<T extends MappingExistingItem>(
         // Find the first place that not mapped by id and not internal component (consider the "hole").
         let resultItem;
         while (
-            // Be `!resultItem` only when `nextIdx >= mappingResult.length`.
-            (resultItem = mappingResult[nextIdx])
+            // Be `!resultItem` only when `nextIdx >= result.length`.
+            (resultItem = result[nextIdx])
             // (1) Existing models that already have id should be able to mapped to. Because
             // after mapping performed, model will always be assigned with an id if user not given.
             // After that all models have id.
@@ -364,13 +343,14 @@ function mappingByIndexFinally<T extends MappingExistingItem>(
             // not be merged to the existings with different id. Because id should not be overwritten.
             // (3) Name can be overwritten, because axis use name as 'show label text'.
             && (
-                (
-                    cmptOption.id != null
-                    && resultItem.existing
+                resultItem.newOption
+                || isComponentIdInternal(resultItem.existing)
+                || (
+                    // In mode "replaceMerge", here no not-mapped-non-internal-existing.
+                    resultItem.existing
+                    && cmptOption.id != null
                     && !keyExistAndEqual('id', cmptOption, resultItem.existing)
                 )
-                || resultItem.newOption
-                || isComponentIdInternal(resultItem.existing)
             )
         ) {
             nextIdx++;
@@ -378,10 +358,10 @@ function mappingByIndexFinally<T extends MappingExistingItem>(
 
         if (resultItem) {
             resultItem.newOption = cmptOption;
-            resultItem.brandNew = allBrandNew;
+            resultItem.brandNew = isReplaceMergeMode;
         }
         else {
-            mappingResult.push({ newOption: cmptOption, brandNew: allBrandNew });
+            result.push({ newOption: cmptOption, brandNew: isReplaceMergeMode });
         }
         nextIdx++;
     });
@@ -474,7 +454,7 @@ function makeIdAndName(
 function keyExistAndEqual(attr: 'id' | 'name', obj1: MappingExistingItem, obj2: MappingExistingItem): boolean {
     const key1 = obj1[attr];
     const key2 = obj2[attr];
-    // See `MappingExistingItem`. `id` and `name` trade number-like string equals to number.
+    // See `MappingExistingItem`. `id` and `name` trade string equals to number.
     return key1 != null && key2 != null && key1 + '' === key2 + '';
 }
 
@@ -702,17 +682,21 @@ let innerUniqueIndex = Math.round(Math.random() * 5);
  * }
  * xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
  * If nothing or null/undefined specified, return nothing.
+ * If both `abcIndex`, `abcId`, `abcName` specified, only one work.
+ * The priority is: index > id > name, the same with `ecModel.queryComponents`.
  */
-export type ModelFinderIndexQuery = number | number[] | 'all' | 'none';
+export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
+export type ModelFinderIdQuery = number | number[] | string | string[];
+export type ModelFinderNameQuery = number | number[] | string | string[];
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
-    seriesIndex?: ModelFinderIndexQuery, seriesId?: string, seriesName?: string,
-    geoIndex?: ModelFinderIndexQuery, geoId?: string, geoName?: string,
-    bmapIndex?: ModelFinderIndexQuery, bmapId?: string, bmapName?: string,
-    xAxisIndex?: ModelFinderIndexQuery, xAxisId?: string, xAxisName?: string,
-    yAxisIndex?: ModelFinderIndexQuery, yAxisId?: string, yAxisName?: string,
-    gridIndex?: ModelFinderIndexQuery, gridId?: string, gridName?: string,
-    // ... (can be extended)
+    seriesIndex?: ModelFinderIndexQuery, seriesId?: ModelFinderIdQuery, seriesName?: ModelFinderNameQuery
+    geoIndex?: ModelFinderIndexQuery, geoId?: ModelFinderIdQuery, geoName?: ModelFinderNameQuery
+    bmapIndex?: ModelFinderIndexQuery, bmapId?: ModelFinderIdQuery, bmapName?: ModelFinderNameQuery
+    xAxisIndex?: ModelFinderIndexQuery, xAxisId?: ModelFinderIdQuery, xAxisName?: ModelFinderNameQuery
+    yAxisIndex?: ModelFinderIndexQuery, yAxisId?: ModelFinderIdQuery, yAxisName?: ModelFinderNameQuery
+    gridIndex?: ModelFinderIndexQuery, gridId?: ModelFinderIdQuery, gridName?: ModelFinderNameQuery
+       // ... (can be extended)
     [key: string]: unknown
 };
 /**
@@ -741,10 +725,13 @@ export type ParsedModelFinder = ParsedModelFinderKnown & {
     [key: string]: ComponentModel | ComponentModel[];
 };
 
+/**
+ * The same behavior as `component.getReferringComponents`.
+ */
 export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
-    opt?: {defaultMainType?: string, includeMainTypes?: string[]}
+    opt?: {defaultMainType?: ComponentMainType, includeMainTypes?: ComponentMainType[]}
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
     if (isString(finderInput)) {
@@ -756,15 +743,8 @@ export function parseFinder(
         finder = finderInput;
     }
 
-    const defaultMainType = opt && opt.defaultMainType;
-    if (defaultMainType
-        && !has(finder, defaultMainType + 'Index')
-        && !has(finder, defaultMainType + 'Id')
-        && !has(finder, defaultMainType + 'Name')
-    ) {
-        finder[defaultMainType + 'Index'] = 0;
-    }
-
+    const defaultMainType = opt ? opt.defaultMainType : null;
+    const queryOptionMap = createHashMap<QueryReferringComponentsOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
@@ -776,32 +756,87 @@ export function parseFinder(
 
         const parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
         const mainType = parsedKey[1];
-        const queryType = (parsedKey[2] || '').toLowerCase() as ('id' | 'index' | 'name');
+        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringComponentsOption;
 
-        if (!mainType
+        if (
+            !mainType
             || !queryType
-            || value == null
-            || (queryType === 'index' && value === 'none')
+            || (mainType !== defaultMainType && value == null)
             || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
         ) {
             return;
         }
 
-        const queryParam = {mainType: mainType} as QueryConditionKindB;
-        if (queryType !== 'index' || value !== 'all') {
-            queryParam[queryType] = value as any;
-        }
+        const queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
+        queryOption[queryType] = value as any;
+    });
 
-        const models = ecModel.queryComponents(queryParam);
-        result[mainType + 'Models'] = models;
-        result[mainType + 'Model'] = models[0];
+    queryOptionMap.each(function (queryOption, mainType) {
+        const queryResult = queryReferringComponents(
+            ecModel,
+            mainType,
+            queryOption,
+            mainType === defaultMainType
+        );
+        result[mainType + 'Models'] = queryResult.models;
+        result[mainType + 'Model'] = queryResult.models[0];
     });
 
     return result;
 }
 
-function has(obj: object, prop: string): boolean {
-    return obj && obj.hasOwnProperty(prop);
+type QueryReferringComponentsOption = {
+    index?: ModelFinderIndexQuery,
+    id?: ModelFinderIdQuery,
+    name?: ModelFinderNameQuery,
+};
+
+export function queryReferringComponents(
+    ecModel: GlobalModel,
+    mainType: ComponentMainType,
+    option: QueryReferringComponentsOption,
+    useDefault?: boolean
+): {
+    // Always be array rather than null/undefined, which is convenient to use.
+    models: ComponentModel[];
+    // Whether there is indexOption/id/name specified
+    specified: boolean;
+} {
+    let indexOption = option.index;
+    let idOption = option.id;
+    let nameOption = option.name;
+
+    const result = {
+        models: null as ComponentModel[],
+        specified: indexOption != null || idOption != null || nameOption != null
+    };
+
+    if (!result.specified) {
+        // Use the first as default if `useDefault`.
+        let firstCmpt;
+        result.models = (
+            useDefault && (firstCmpt = ecModel.getComponent(mainType))
+        ) ? [firstCmpt] : [];
+        return result;
+    }
+
+    if (indexOption === 'none' || indexOption === false) {
+        result.models = [];
+        return result;
+    }
+
+    // `queryComponents` will return all components if
+    // both all of index/id/name are null/undefined.
+    if (indexOption === 'all') {
+        indexOption = idOption = nameOption = null;
+    }
+    result.models = ecModel.queryComponents({
+        mainType: mainType,
+        index: indexOption as number | number[],
+        id: idOption,
+        name: nameOption
+    });
+    return result;
 }
 
 export function setAttribute(dom: HTMLElement, key: string, value: any) {

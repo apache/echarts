@@ -19,7 +19,6 @@
 
 
 // TODO depends on DataZoom and Brush
-import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import BrushController, { BrushControllerEvents, BrushDimensionMinMax } from '../../helper/BrushController';
 import BrushTargetManager, { BrushTargetInfoCartesian2D } from '../../helper/BrushTargetManager';
@@ -36,19 +35,27 @@ import {
 } from '../featureManager';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
-import { Payload, ECUnitOption, Dictionary } from '../../../util/types';
+import { Payload, Dictionary, ComponentOption } from '../../../util/types';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import CartesianAxisModel from '../../../coord/cartesian/AxisModel';
-import DataZoomModel, { DataZoomOption } from '../../dataZoom/DataZoomModel';
-import { DataZoomPayloadBatchItem } from '../../dataZoom/helper';
-import { ModelFinderObject, ModelFinderIndexQuery, normalizeToArray } from '../../../util/model';
-import { ToolboxOption } from '../ToolboxModel';
+import DataZoomModel from '../../dataZoom/DataZoomModel';
+import {
+    DataZoomPayloadBatchItem, DataZoomAxisDimension, getAxisIndexPropName,
+    getAxisIdPropName, getAxisMainType
+} from '../../dataZoom/helper';
+import {
+    ModelFinderObject, ModelFinderIndexQuery, makeInternalComponentId,
+    queryReferringComponents, ModelFinderIdQuery
+} from '../../../util/model';
+import ToolboxModel from '../ToolboxModel';
+import { registerInternalOptionCreator } from '../../../model/internalComponentCreator';
+import Model from '../../../model/Model';
+
 
 const dataZoomLang = lang.toolbox.dataZoom;
 const each = zrUtil.each;
 
-// Spectial component id start with \0ec\0, see echarts/model/Global.js~hasInnerId
-const DATA_ZOOM_ID_BASE = '\0_ec_\0toolbox-dataZoom_';
+const DATA_ZOOM_ID_BASE = makeInternalComponentId('toolbox-dataZoom_');
 
 const ICON_TYPES = ['zoom', 'back'] as const;
 type IconType = typeof ICON_TYPES[number];
@@ -60,8 +67,10 @@ interface ToolboxDataZoomFeatureOption extends ToolboxFeatureOption {
     // TODO: TYPE Use type in dataZoom
     filterMode?: 'filter' | 'weakFilter' | 'empty' | 'none'
     // Backward compat: false means 'none'
-    xAxisIndex?: ModelFinderIndexQuery | false
-    yAxisIndex?: ModelFinderIndexQuery | false
+    xAxisIndex?: ModelFinderIndexQuery
+    yAxisIndex?: ModelFinderIndexQuery
+    xAxisId?: ModelFinderIdQuery
+    yAxisId?: ModelFinderIdQuery
 }
 
 type ToolboxDataZoomFeatureModel = ToolboxFeatureModel<ToolboxDataZoomFeatureOption>;
@@ -134,7 +143,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
             }
             else {
                 setBatch(
-                    ({lineX: 'x', lineY: 'y'})[brushType as 'lineX' | 'lineY'],
+                    ({lineX: 'x', lineY: 'y'} as const)[brushType as 'lineX' | 'lineY'],
                     coordSys,
                     coordRange as BrushDimensionMinMax
                 );
@@ -145,7 +154,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
         this._dispatchZoomAction(snapshot);
 
-        function setBatch(dimName: string, coordSys: Cartesian2D, minMax: number[]) {
+        function setBatch(dimName: DataZoomAxisDimension, coordSys: Cartesian2D, minMax: number[]) {
             const axis = coordSys.getAxis(dimName);
             const axisModel = axis.model;
             const dataZoomModel = findDataZoom(dimName, axisModel, ecModel);
@@ -166,7 +175,9 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
             });
         }
 
-        function findDataZoom(dimName: string, axisModel: CartesianAxisModel, ecModel: GlobalModel): DataZoomModel {
+        function findDataZoom(
+            dimName: DataZoomAxisDimension, axisModel: CartesianAxisModel, ecModel: GlobalModel
+        ): DataZoomModel {
             let found;
             ecModel.eachComponent({mainType: 'dataZoom', subType: 'select'}, function (dzModel: DataZoomModel) {
                 const has = dzModel.getAxisModel(dimName, axisModel.componentIndex);
@@ -290,79 +301,61 @@ function updateZoomBtnStatus(
         );
 }
 
-
 registerFeature('dataZoom', DataZoomFeature);
 
-
-// Create special dataZoom option for select
-// FIXME consider the case of merge option, where axes options are not exists.
-echarts.registerPreprocessor(function (option: ECUnitOption) {
-    if (!option) {
+registerInternalOptionCreator('dataZoom', function (ecModel: GlobalModel): ComponentOption[] {
+    const toolboxModel = ecModel.getComponent('toolbox', 0) as ToolboxModel;
+    if (!toolboxModel) {
         return;
     }
+    const dzFeatureModel = toolboxModel.getModel(['feature', 'dataZoom'] as any);
+    const dzOptions = [] as ComponentOption[];
+    addInternalOptionForAxis(ecModel, dzOptions, 'x', dzFeatureModel);
+    addInternalOptionForAxis(ecModel, dzOptions, 'y', dzFeatureModel);
 
-    const dataZoomOpts = option.dataZoom = normalizeToArray(option.dataZoom) as DataZoomOption[];
-
-    let toolboxOpt = option.toolbox as ToolboxOption;
-    if (toolboxOpt) {
-        // Assume there is only one toolbox
-        if (zrUtil.isArray(toolboxOpt)) {
-            toolboxOpt = toolboxOpt[0];
-        }
-
-        if (toolboxOpt && toolboxOpt.feature) {
-            const dataZoomOpt = toolboxOpt.feature.dataZoom as ToolboxDataZoomFeatureOption;
-            // FIXME: If add dataZoom when setOption in merge mode,
-            // no axis info to be added. See `test/dataZoom-extreme.html`
-            addForAxis('xAxis', dataZoomOpt);
-            addForAxis('yAxis', dataZoomOpt);
-        }
-    }
-
-    function addForAxis(axisName: 'xAxis' | 'yAxis', dataZoomOpt: ToolboxDataZoomFeatureOption): void {
-        if (!dataZoomOpt) {
-            return;
-        }
-
-        // Try not to modify model, because it is not merged yet.
-        const axisIndicesName = axisName + 'Index' as 'xAxisIndex' | 'yAxisIndex';
-        let givenAxisIndices = dataZoomOpt[axisIndicesName];
-        if (givenAxisIndices != null
-            && givenAxisIndices !== 'all'
-            && !zrUtil.isArray(givenAxisIndices)
-        ) {
-            givenAxisIndices = (givenAxisIndices === false || givenAxisIndices === 'none') ? [] : [givenAxisIndices];
-        }
-
-        forEachComponent(axisName, function (axisOpt: unknown, axisIndex: number) {
-            if (givenAxisIndices != null
-                && givenAxisIndices !== 'all'
-                && zrUtil.indexOf(givenAxisIndices as number[], axisIndex) === -1
-            ) {
-                return;
-            }
-            const newOpt = {
-                type: 'select',
-                $fromToolbox: true,
-                // Default to be filter
-                filterMode: dataZoomOpt.filterMode || 'filter',
-                // Id for merge mapping.
-                id: DATA_ZOOM_ID_BASE + axisName + axisIndex
-            } as Dictionary<unknown>;
-            // FIXME
-            // Only support one axis now.
-            newOpt[axisIndicesName] = axisIndex;
-            dataZoomOpts.push(newOpt);
-        });
-    }
-
-    function forEachComponent(mainType: string, cb: (axisOpt: unknown, axisIndex: number) => void) {
-        let opts = option[mainType];
-        if (!zrUtil.isArray(opts)) {
-            opts = opts ? [opts] : [];
-        }
-        each(opts, cb);
-    }
+    return dzOptions;
 });
+
+function addInternalOptionForAxis(
+    ecModel: GlobalModel,
+    dzOptions: ComponentOption[],
+    axisDim: 'x' | 'y',
+    dzFeatureModel: Model<ToolboxDataZoomFeatureOption>
+): void {
+    const axisIndexPropName = getAxisIndexPropName(axisDim) as 'xAxisIndex' | 'yAxisIndex';
+    const axisIdPropName = getAxisIdPropName(axisDim) as 'xAxisId' | 'yAxisId';
+    const axisMainType = getAxisMainType(axisDim);
+    let axisIndexOption = dzFeatureModel.get(axisIndexPropName, true);
+    const axisIdOption = dzFeatureModel.get(axisIdPropName, true);
+
+    if (axisIndexOption == null && axisIdOption == null) {
+        axisIndexOption = 'all';
+    }
+
+    const queryResult = queryReferringComponents(
+        ecModel,
+        axisMainType,
+        {
+            index: axisIndexOption,
+            id: axisIdOption
+        }
+    );
+
+    each(queryResult.models, function (axisModel) {
+        const axisIndex = axisModel.componentIndex;
+        const newOpt = {
+            type: 'select',
+            $fromToolbox: true,
+            // Default to be filter
+            filterMode: dzFeatureModel.get('filterMode', true) || 'filter',
+            // Id for merge mapping.
+            id: DATA_ZOOM_ID_BASE + axisMainType + axisIndex
+        } as Dictionary<unknown>;
+        newOpt[axisIndexPropName] = axisIndex;
+
+        dzOptions.push(newOpt);
+    });
+}
+
 
 export default DataZoomFeature;
