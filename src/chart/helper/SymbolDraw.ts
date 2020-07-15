@@ -115,10 +115,9 @@ export interface SymbolDrawSeriesScope {
 
     hoverAnimation?: boolean
     itemModel?: Model<SymbolDrawItemModelOption>
-    symbolInnerColor?: ColorString
+
     cursorStyle?: string
     fadeIn?: boolean
-    useNameLabel?: boolean
 }
 
 function makeSeriesScope(data: List): SymbolDrawSeriesScope {

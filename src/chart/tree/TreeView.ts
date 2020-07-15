@@ -30,14 +30,14 @@ import { __DEV__ } from '../../config';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
-import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
+import Path, { PathProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import Tree, { TreeNode } from '../../data/Tree';
+import { TreeNode } from '../../data/Tree';
 import List from '../../data/List';
-import Model from '../../model/Model';
-import { ColorString, DisplayState, LabelOption } from '../../util/types';
 import { getLabelStatesModels } from '../../label/labelStyle';
+import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy } from '../../util/states';
+import { ECElement } from '../../util/types';
 
 type TreeSymbol = SymbolClz & {
     __edge: graphic.BezierCurve | TreePath
@@ -47,25 +47,6 @@ type TreeSymbol = SymbolClz & {
     __radialRawX: number
     __radialRawY: number
 };
-
-interface TreeSeriesScope extends Pick<
-    TreeSeriesOption,
-    'expandAndCollapse' | 'edgeShape' | 'edgeForkPosition'
-    | 'layout' | 'orient' | 'symbolRotate' | 'symbolOffset' | 'hoverAnimation'
-> {
-    curvature: number
-    useNameLabel: boolean
-    fadeIn: boolean
-
-    itemModel: Model<TreeSeriesNodeItemOption>
-    itemStyle: PathStyleProps
-    hoverItemStyle: PathStyleProps
-    lineStyle: PathStyleProps
-
-    labelStatesModels: Record<DisplayState, Model<LabelOption>>
-
-    symbolInnerColor: ColorString
-}
 
 class TreeEdgeShape {
     parentPoint: number[] = [];
@@ -146,7 +127,6 @@ class TreeView extends ChartView {
     static readonly type = 'tree';
     readonly type = TreeView.type;
 
-    private _oldTree: Tree;
     private _mainGroup = new graphic.Group();
 
     private _controller: RoamController;
@@ -157,8 +137,6 @@ class TreeView extends ChartView {
     private _nodeScaleRatio: number;
     private _min: number[];
     private _max: number[];
-
-    private _viewCoordSys: View;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
 
@@ -199,35 +177,21 @@ class TreeView extends ChartView {
 
         const oldData = this._data;
 
-        const seriesScope = {
-            expandAndCollapse: seriesModel.get('expandAndCollapse'),
-            layout: layout,
-            edgeShape: seriesModel.get('edgeShape'),
-            edgeForkPosition: seriesModel.get('edgeForkPosition'),
-            orient: seriesModel.getOrient(),
-            curvature: seriesModel.get(['lineStyle', 'curveness']),
-            symbolRotate: seriesModel.get('symbolRotate'),
-            symbolOffset: seriesModel.get('symbolOffset'),
-            hoverAnimation: seriesModel.get('hoverAnimation'),
-            useNameLabel: true,
-            fadeIn: true
-        } as TreeSeriesScope;
-
         data.diff(oldData)
             .add(function (newIdx) {
                 if (symbolNeedsDraw(data, newIdx)) {
                     // Create node and edge
-                    updateNode(data, newIdx, null, group, seriesModel, seriesScope);
+                    updateNode(data, newIdx, null, group, seriesModel);
                 }
             })
             .update(function (newIdx, oldIdx) {
                 const symbolEl = oldData.getItemGraphicEl(oldIdx) as TreeSymbol;
                 if (!symbolNeedsDraw(data, newIdx)) {
-                    symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
+                    symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel);
                     return;
                 }
                 // Update node and edge
-                updateNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
+                updateNode(data, newIdx, symbolEl, group, seriesModel);
             })
             .remove(function (oldIdx) {
                 const symbolEl = oldData.getItemGraphicEl(oldIdx) as TreeSymbol;
@@ -237,7 +201,7 @@ class TreeView extends ChartView {
                 // so if we want to remove the symbol element we should insure
                 // that the symbol element is not null.
                 if (symbolEl) {
-                    removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
+                    removeNode(oldData, oldIdx, symbolEl, group, seriesModel);
                 }
             })
             .execute();
@@ -246,7 +210,7 @@ class TreeView extends ChartView {
 
         this._updateNodeAndLinkScale(seriesModel);
 
-        if (seriesScope.expandAndCollapse === true) {
+        if (seriesModel.get('expandAndCollapse') === true) {
             data.eachItemGraphicEl(function (el, dataIndex) {
                 el.off('click').on('click', function () {
                     api.dispatchAction({
@@ -304,7 +268,6 @@ class TreeView extends ChartView {
             scaleY: viewCoordSys.scaleY
         });
 
-        this._viewCoordSys = viewCoordSys;
         this._min = min;
         this._max = max;
     }
@@ -401,38 +364,21 @@ function symbolNeedsDraw(data: List, dataIndex: number) {
         && data.getItemVisual(dataIndex, 'symbol') !== 'none';
 }
 
-function getTreeNodeStyle(
-    node: TreeNode,
-    itemModel: Model<TreeSeriesNodeItemOption>,
-    seriesScope: TreeSeriesScope
-): TreeSeriesScope {
-    seriesScope.itemModel = itemModel;
-    seriesScope.itemStyle = itemModel.getModel('itemStyle').getItemStyle();
-    seriesScope.hoverItemStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
-    seriesScope.lineStyle = itemModel.getModel('lineStyle').getLineStyle();
-    seriesScope.labelStatesModels = getLabelStatesModels(itemModel);
-
-    if (node.isExpand === false && node.children.length !== 0) {
-        seriesScope.symbolInnerColor = seriesScope.itemStyle.fill as ColorString;
-    }
-    else {
-        seriesScope.symbolInnerColor = '#fff';
-    }
-    return seriesScope;
-}
 
 function updateNode(
     data: List,
     dataIndex: number,
     symbolEl: TreeSymbol,
     group: graphic.Group,
-    seriesModel: TreeSeriesModel,
-    seriesScope: TreeSeriesScope
+    seriesModel: TreeSeriesModel
 ) {
     const isInit = !symbolEl;
     const node = data.tree.getNodeByDataIndex(dataIndex);
-    const itemModel = node.getModel();
-    seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
+    const itemModel = node.getModel<TreeSeriesNodeItemOption>();
+    const visualColor = node.getVisual('style').fill;
+    const symbolInnerColor = node.isExpand === false && node.children.length !== 0
+            ? visualColor : '#fff';
+
     const virtualRoot = data.tree.root;
 
     const source = node.parentNode === virtualRoot ? node : node.parentNode || node;
@@ -449,12 +395,18 @@ function updateNode(
     const targetLayout = node.getLayout();
 
     if (isInit) {
-        symbolEl = new SymbolClz(data, dataIndex, seriesScope) as TreeSymbol;
+        symbolEl = new SymbolClz(data, dataIndex, null, {
+            symbolInnerColor,
+            useNameLabel: true
+        }) as TreeSymbol;
         symbolEl.x = sourceOldLayout.x;
         symbolEl.y = sourceOldLayout.y;
     }
     else {
-        symbolEl.updateData(data, dataIndex, seriesScope);
+        symbolEl.updateData(data, dataIndex, null, {
+            symbolInnerColor,
+            useNameLabel: true
+        });
     }
 
     symbolEl.__radialOldRawX = symbolEl.__radialRawX;
@@ -471,7 +423,7 @@ function updateNode(
 
     const symbolPath = symbolEl.getSymbolPath();
 
-    if (seriesScope.layout === 'radial') {
+    if (seriesModel.get('layout') === 'radial') {
         const realRoot = virtualRoot.children[0];
         const rootLayout = realRoot.getLayout();
         const length = realRoot.children.length;
@@ -512,7 +464,7 @@ function updateNode(
         }
 
         const textPosition = isLeft ? 'left' as const : 'right' as const;
-        const normalLabelModel = seriesScope.labelStatesModels.normal;
+        const normalLabelModel = itemModel.getModel('label');
         const rotate = normalLabelModel.get('rotate');
         const labelRotateRadian = rotate * (Math.PI / 180);
 
@@ -528,11 +480,27 @@ function updateNode(
 
     }
 
+    // Handle status
+    const focus = itemModel.get(['emphasis', 'focus']);
+    const focusDataIndices: number[] = focus === 'ancestor'
+        ? node.getAncestorsIndices()
+        : focus === 'descendant' ? node.getDescendantIndices() : null;
+
+    if (focusDataIndices) {
+        // Modify the focus to data indices.
+        graphic.getECData(symbolEl).focus = focusDataIndices;
+    }
+
     drawEdge(
         seriesModel, node, virtualRoot, symbolEl, sourceOldLayout,
-        sourceLayout, targetLayout, group, seriesScope
+        sourceLayout, targetLayout, group
     );
 
+    if (symbolEl.__edge) {
+        (symbolEl as ECElement).onStateChange = function (toState) {
+            setStatesFlag(symbolEl.__edge, toState);
+        };
+    }
 }
 
 function drawEdge(
@@ -543,29 +511,31 @@ function drawEdge(
     sourceOldLayout: TreeNodeLayout,
     sourceLayout: TreeNodeLayout,
     targetLayout: TreeNodeLayout,
-    group: graphic.Group,
-    seriesScope: TreeSeriesScope
+    group: graphic.Group
 ) {
-
-    const edgeShape = seriesScope.edgeShape;
+    const itemModel = node.getModel<TreeSeriesNodeItemOption>();
+    const edgeShape = seriesModel.get('edgeShape');
+    const layout = seriesModel.get('layout');
+    const orient = seriesModel.getOrient();
+    const curvature = seriesModel.get(['lineStyle', 'curveness']);
+    const edgeForkPosition = seriesModel.get('edgeForkPosition');
+    const lineStyle = itemModel.getModel('lineStyle').getLineStyle();
     let edge = symbolEl.__edge;
     if (edgeShape === 'curve') {
         if (node.parentNode && node.parentNode !== virtualRoot) {
             if (!edge) {
                 edge = symbolEl.__edge = new graphic.BezierCurve({
-                    shape: getEdgeShape(seriesScope, sourceOldLayout, sourceOldLayout),
-                    style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                    shape: getEdgeShape(layout, orient, curvature, sourceOldLayout, sourceOldLayout)
                 });
             }
 
             graphic.updateProps(edge as Path, {
-                shape: getEdgeShape(seriesScope, sourceLayout, targetLayout),
-                style: {opacity: 1}
+                shape: getEdgeShape(layout, orient, curvature, sourceLayout, targetLayout)
             }, seriesModel);
         }
     }
     else if (edgeShape === 'polyline') {
-        if (seriesScope.layout === 'orthogonal') {
+        if (layout === 'orthogonal') {
             if (node !== virtualRoot && node.children && (node.children.length !== 0) && (node.isExpand === true)) {
                 const children = node.children;
                 const childPoints = [];
@@ -579,18 +549,16 @@ function drawEdge(
                         shape: {
                             parentPoint: [targetLayout.x, targetLayout.y],
                             childPoints: [[targetLayout.x, targetLayout.y]],
-                            orient: seriesScope.orient,
-                            forkPosition: seriesScope.edgeForkPosition
-                        },
-                        style: zrUtil.defaults({opacity: 0, strokeNoScale: true}, seriesScope.lineStyle)
+                            orient: orient,
+                            forkPosition: edgeForkPosition
+                        }
                     });
                 }
                 graphic.updateProps(edge as Path, {
                     shape: {
                         parentPoint: [targetLayout.x, targetLayout.y],
                         childPoints: childPoints
-                    },
-                    style: {opacity: 1}
+                    }
                 }, seriesModel);
             }
         }
@@ -600,7 +568,17 @@ function drawEdge(
             }
         }
     }
-    group.add(edge);
+
+    if (edge) {
+        edge.useStyle(zrUtil.defaults({
+            strokeNoScale: true, fill: null
+        }, lineStyle));
+
+        setStatesStylesFromModel(edge, itemModel, 'lineStyle');
+        setDefaultStateProxy(edge);
+
+        group.add(edge);
+    }
 }
 
 function removeNode(
@@ -608,13 +586,10 @@ function removeNode(
     dataIndex: number,
     symbolEl: TreeSymbol,
     group: graphic.Group,
-    seriesModel: TreeSeriesModel,
-    seriesScope: TreeSeriesScope
+    seriesModel: TreeSeriesModel
 ) {
     const node = data.tree.getNodeByDataIndex(dataIndex);
     const virtualRoot = data.tree.root;
-    const itemModel = node.getModel();
-    seriesScope = getTreeNodeStyle(node, itemModel, seriesScope);
 
     let source = node.parentNode === virtualRoot ? node : node.parentNode || node;
     // let edgeShape = seriesScope.edgeShape;
@@ -643,12 +618,21 @@ function removeNode(
     const edge = symbolEl.__edge
         || ((source.isExpand === false || source.children.length === 1) ? sourceEdge : undefined);
 
-    const edgeShape = seriesScope.edgeShape;
+    const edgeShape = seriesModel.get('edgeShape');
+    const layoutOpt = seriesModel.get('layout');
+    const orient = seriesModel.get('orient');
+    const curvature = seriesModel.get(['lineStyle', 'curveness']);
 
     if (edge) {
         if (edgeShape === 'curve') {
             graphic.updateProps(edge as Path, {
-                shape: getEdgeShape(seriesScope, sourceLayout, sourceLayout),
+                shape: getEdgeShape(
+                    layoutOpt,
+                    orient,
+                    curvature,
+                    sourceLayout,
+                    sourceLayout
+                ),
                 style: {
                     opacity: 0
                 }
@@ -656,7 +640,7 @@ function removeNode(
                 group.remove(edge);
             });
         }
-        else if (edgeShape === 'polyline' && seriesScope.layout === 'orthogonal') {
+        else if (edgeShape === 'polyline' && seriesModel.get('layout') === 'orthogonal') {
             graphic.updateProps(edge as Path, {
                 shape: {
                     parentPoint: [sourceLayout.x, sourceLayout.y],
@@ -672,26 +656,31 @@ function removeNode(
     }
 }
 
-function getEdgeShape(seriesScope: TreeSeriesScope, sourceLayout: TreeNodeLayout, targetLayout: TreeNodeLayout) {
+function getEdgeShape(
+    layoutOpt: TreeSeriesOption['layout'],
+    orient: TreeSeriesOption['orient'],
+    curvature: number,
+    sourceLayout: TreeNodeLayout,
+    targetLayout: TreeNodeLayout
+) {
     let cpx1: number;
     let cpy1: number;
     let cpx2: number;
     let cpy2: number;
-    const orient = seriesScope.orient;
     let x1: number;
     let x2: number;
     let y1: number;
     let y2: number;
 
-    if (seriesScope.layout === 'radial') {
+    if (layoutOpt === 'radial') {
         x1 = sourceLayout.rawX;
         y1 = sourceLayout.rawY;
         x2 = targetLayout.rawX;
         y2 = targetLayout.rawY;
 
         const radialCoor1 = radialCoordinate(x1, y1);
-        const radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * seriesScope.curvature);
-        const radialCoor3 = radialCoordinate(x2, y2 + (y1 - y2) * seriesScope.curvature);
+        const radialCoor2 = radialCoordinate(x1, y1 + (y2 - y1) * curvature);
+        const radialCoor3 = radialCoordinate(x2, y2 + (y1 - y2) * curvature);
         const radialCoor4 = radialCoordinate(x2, y2);
 
         return {
@@ -712,16 +701,16 @@ function getEdgeShape(seriesScope: TreeSeriesScope, sourceLayout: TreeNodeLayout
         y2 = targetLayout.y;
 
         if (orient === 'LR' || orient === 'RL') {
-            cpx1 = x1 + (x2 - x1) * seriesScope.curvature;
+            cpx1 = x1 + (x2 - x1) * curvature;
             cpy1 = y1;
-            cpx2 = x2 + (x1 - x2) * seriesScope.curvature;
+            cpx2 = x2 + (x1 - x2) * curvature;
             cpy2 = y2;
         }
         if (orient === 'TB' || orient === 'BT') {
             cpx1 = x1;
-            cpy1 = y1 + (y2 - y1) * seriesScope.curvature;
+            cpy1 = y1 + (y2 - y1) * curvature;
             cpx2 = x2;
-            cpy2 = y2 + (y1 - y2) * seriesScope.curvature;
+            cpy2 = y2 + (y1 - y2) * curvature;
         }
     }
 

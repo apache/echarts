@@ -72,10 +72,10 @@ under the License.
                 graph: 'adjacency',
                 sankey: 'adjacency',
                 sunburst: 'descendant',
-                treemap: 'descendant'
+                treemap: 'descendant',
+                tree: 'ancestor'
             }
             allChartsOptions.forEach(function (chartOption) {
-                let isTreemap = false;
                 chartOption.series.forEach(function (series) {
                     series.emphasis = series.emphasis || {};
                     series.emphasis.focus = seriesFocusType[series.type] || 'series';
@@ -98,28 +98,26 @@ under the License.
                     }
 
                     if (series.type === 'treemap') {
-                        isTreemap = true;
                         series.itemStyle = {
                             borderColor: 'rgba(100, 100, 200, 0.1)',
                             borderWidth: 5
                         };
                         series.upperLabel = {
                             show: true,
-                            height: 30
+                            height: 15,
+                            fontSize: 10
                         };
                     }
                 });
-                if (isTreemap) {
-                    const dom = document.createElement('div');
-                    dom.className = 'chart';
-                    document.querySelector('#main').appendChild(dom);
+                const dom = document.createElement('div');
+                dom.className = 'chart';
+                document.querySelector('#main').appendChild(dom);
 
-                    const chart = echarts.init(dom);
+                const chart = echarts.init(dom);
 
-                    chart.setOption(chartOption);
+                chart.setOption(chartOption);
 
-                    charts.push(chart);
-                }
+                charts.push(chart);
             });
 
             function update() {

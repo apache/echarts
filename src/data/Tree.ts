@@ -187,6 +187,24 @@ export class TreeNode {
         return ancestors;
     }
 
+    getAncestorsIndices(): number[] {
+        const indices: number[] = [];
+        let currNode = this as TreeNode;
+        while (currNode) {
+            indices.push(currNode.dataIndex);
+            currNode = currNode.parentNode;
+        }
+        return indices;
+    }
+
+    getDescendantIndices(): number[] {
+        const indices: number[] = [];
+        this.eachNode(childNode => {
+            indices.push(childNode.dataIndex);
+        });
+        return indices;
+    }
+
     getValue(dimension?: DimensionLoose): ParsedValue {
         const data = this.hostTree.data;
         return data.get(data.getDimension(dimension || 'value'), this.dataIndex);

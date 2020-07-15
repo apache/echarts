@@ -797,24 +797,9 @@ function renderNode(
     const focus = nodeModel.get(['emphasis', 'focus']);
     const blurScope = nodeModel.get(['emphasis', 'blurScope']);
 
-    let focusDataIndices: number[];
-    switch (focus) {
-        case 'ancestor':
-            focusDataIndices = [];
-            let currNode = thisNode;
-            while (currNode) {
-                focusDataIndices.push(currNode.dataIndex);
-                currNode = currNode.parentNode;
-            }
-            break;
-        case 'descendant':
-            focusDataIndices = [];
-            thisNode.eachNode(childNode => {
-                focusDataIndices.push(childNode.dataIndex);
-            });
-            break;
-
-    }
+    const focusDataIndices: number[] = focus === 'ancestor'
+        ? thisNode.getAncestorsIndices()
+        : focus === 'descendant' ? thisNode.getDescendantIndices() : null;
 
     // No children, render content.
     if (isParent) {

@@ -32,6 +32,11 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
+interface SymbolOpts {
+    useNameLabel?: boolean
+    symbolInnerColor?: string
+}
+
 class Symbol extends graphic.Group {
 
     private _seriesModel: SeriesModel;
@@ -46,9 +51,9 @@ class Symbol extends graphic.Group {
 
     private _z2: number;
 
-    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
+    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         super();
-        this.updateData(data, idx, seriesScope);
+        this.updateData(data, idx, seriesScope, opts);
     }
 
     _createSymbol(
@@ -139,7 +144,7 @@ class Symbol extends graphic.Group {
     /**
      * Update symbol properties
      */
-    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
+    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         this.silent = false;
 
         const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
@@ -160,7 +165,7 @@ class Symbol extends graphic.Group {
             }, seriesModel, idx);
         }
 
-        this._updateCommon(data, idx, symbolSize, seriesScope);
+        this._updateCommon(data, idx, symbolSize, seriesScope, opts);
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
@@ -187,7 +192,8 @@ class Symbol extends graphic.Group {
         data: List,
         idx: number,
         symbolSize: number[],
-        seriesScope?: SymbolDrawSeriesScope
+        seriesScope?: SymbolDrawSeriesScope,
+        opts?: SymbolOpts
     ) {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
@@ -263,7 +269,7 @@ class Symbol extends graphic.Group {
         else {
             symbolPath.useStyle(symbolStyle);
         }
-        symbolPath.setColor(visualColor, seriesScope && seriesScope.symbolInnerColor);
+        symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
         symbolPath.style.strokeNoScale = true;
 
         const liftZ = data.getItemVisual(idx, 'liftZ');
@@ -279,7 +285,7 @@ class Symbol extends graphic.Group {
             this._z2 = null;
         }
 
-        const useNameLabel = seriesScope && seriesScope.useNameLabel;
+        const useNameLabel = opts && opts.useNameLabel;
 
         setLabelStyle(
             symbolPath, labelStatesModels,
