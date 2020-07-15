@@ -118,8 +118,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
     private _viewRoot: TreeNode;
 
-    useColorPaletteOnData = true;
-
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
         const root = { name: option.name, children: option.data };

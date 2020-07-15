@@ -361,12 +361,6 @@ window.allChartsOptions = [
                 data: data,
                 label: {
                     show: true
-                },
-                emphasis: {
-                    itemStyle: {
-                        shadowBlur: 10,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
                 }
             }]
         };
@@ -480,10 +474,20 @@ window.allChartsOptions = [
     {
         series: [{
             type: 'sunburst',
+            label: {
+                fontSize: 6,
+                color: '#fff'
+            },
+            emphasis: {
+                label: {
+                    fontSize: 12
+                }
+            },
+            radius: [20, '80%'],
             data: [{
                 name: 'Food',
                 children: [{
-                    value: 5,
+                    value: 3,
                     name: 'Fruit',
                     children: [{
                         value: 1,
@@ -494,15 +498,13 @@ window.allChartsOptions = [
                         children: [{
                             name: 'Seville Orange',
                             value: 1
-                        }]
-                    }, {
-                        children: [{
+                        }, {
                             name: 'Blood Orange',
                             value: 1
                         }]
                     }]
                 }, {
-                    value: 10,
+                    value: 9,
                     name: 'Meat',
                     children: [{
                         value: 6,
@@ -528,17 +530,15 @@ window.allChartsOptions = [
                             value: 1
                         }]
                     }, {
-                        children: [{
-                            name: 'Breast',
-                            value: 1
-                        }]
+                        name: 'Breast',
+                        value: 1
                     }]
                 }]
             }, {
-                value: 9,
+                value: 6,
                 name: 'Drinks',
                 children: [{
-                    value: 4,
+                    value: 3,
                     name: 'Wine',
                     children: [{
                         name: 'USA',
@@ -560,12 +560,12 @@ window.allChartsOptions = [
                             value: 1
                         }, {
                             name: 'Orange Juice',
-                            value: 1
+                            value: 2
                         }]
                     }]
                 }]
             }, {
-                value: 7,
+                value: 6,
                 name: 'Fashion',
                 children: [{
                     name: 'Clothing',
@@ -598,7 +598,7 @@ window.allChartsOptions = [
                 name: 'Computers',
                 children: [{
                     name: 'Components',
-                    value: 6,
+                    value: 4,
                     children: [{
                         name: 'Barebones',
                         value: 1
@@ -639,7 +639,7 @@ window.allChartsOptions = [
             data: [{
                 name: 'Food',
                 children: [{
-                    value: 5,
+                    value: 3,
                     name: 'Fruit',
                     children: [{
                         value: 1,
@@ -650,15 +650,13 @@ window.allChartsOptions = [
                         children: [{
                             name: 'Seville Orange',
                             value: 1
-                        }]
-                    }, {
-                        children: [{
+                        }, {
                             name: 'Blood Orange',
                             value: 1
                         }]
                     }]
                 }, {
-                    value: 10,
+                    value: 8,
                     name: 'Meat',
                     children: [{
                         value: 6,
@@ -684,17 +682,15 @@ window.allChartsOptions = [
                             value: 1
                         }]
                     }, {
-                        children: [{
-                            name: 'Breast',
-                            value: 1
-                        }]
+                        name: 'Breast',
+                        value: 1
                     }]
                 }]
             }, {
-                value: 9,
+                value: 6,
                 name: 'Drinks',
                 children: [{
-                    value: 4,
+                    value: 3,
                     name: 'Wine',
                     children: [{
                         name: 'USA',
@@ -716,12 +712,12 @@ window.allChartsOptions = [
                             value: 1
                         }, {
                             name: 'Orange Juice',
-                            value: 1
+                            value: 2
                         }]
                     }]
                 }]
             }, {
-                value: 7,
+                value: 6,
                 name: 'Fashion',
                 children: [{
                     name: 'Clothing',
@@ -754,7 +750,7 @@ window.allChartsOptions = [
                 name: 'Computers',
                 children: [{
                     name: 'Components',
-                    value: 6,
+                    value: 4,
                     children: [{
                         name: 'Barebones',
                         value: 1
@@ -909,12 +905,6 @@ window.allChartsOptions = [
         series: [
             {
                 type: 'themeRiver',
-                emphasis: {
-                    itemStyle: {
-                        shadowBlur: 20,
-                        shadowColor: 'rgba(0, 0, 0, 0.8)'
-                    }
-                },
                 /* eslint-disable */
                 data: [['2015/11/08',10,'DQ'],['2015/11/09',15,'DQ'],['2015/11/10',35,'DQ'],
                 ['2015/11/11',38,'DQ'],['2015/11/12',22,'DQ'],['2015/11/13',16,'DQ'],
@@ -1124,6 +1114,9 @@ window.allChartsOptions = [
             series: [{
                 type: 'custom',
                 dimensions: ['x', 'y'],
+                labelLayout: {
+                    hideOverlap: true
+                },
                 renderItem: function (params, api) {
                     var points = [];
                     for (var i = 0; i < data[params.dataIndex].length;) {
@@ -1140,6 +1133,21 @@ window.allChartsOptions = [
                         type: 'polygon',
                         shape: {
                             points: points,
+                        },
+                        textContent: {
+                            style: {
+                                text: new Intl.DateTimeFormat('en-US', {
+                                    year: '2-digit', month: '2-digit', day: '2-digit',
+                                    hour: 'numeric', minute: 'numeric', second: 'numeric'
+                                }).format(new Date(rawData[params.dataIndex].wall_time)),
+                                align: 'left',
+                                verticalAlign: 'bottom'
+                            },
+                            x: points[0][0],
+                            y: points[0][1],
+                        },
+                        textConfig: {
+                            position: null
                         },
                         style: api.style({
                             stroke: '#005',
