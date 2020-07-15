@@ -42,7 +42,7 @@ import type { Payload, Dictionary, ColorString, ECElement, DisplayState } from '
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
-import { setStatesStylesFromModel, setDefaultStateProxy, setStatesFlag, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;

@@ -22,7 +22,7 @@ import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis, enterEmphasis, leaveEmphasis } from '../../util/states';
+import { enableHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
 import {createTextStyle, getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
 import List from '../../data/List';
@@ -218,8 +218,26 @@ class Line extends graphic.Group {
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
             const symbol = this.childOfName(symbolCategory) as ECSymbol;
             if (symbol) {
+                // Share opacity and color with line.
                 symbol.setColor(visualColor);
                 symbol.style.opacity = lineStyle.opacity;
+
+                for (let i = 0; i < SPECIAL_STATES.length; i++) {
+                    const stateName = SPECIAL_STATES[i];
+                    const lineState = line.getState(stateName);
+                    if (lineState) {
+                        const lineStateStyle = lineState.style || {};
+                        const state = symbol.ensureState(stateName);
+                        const stateStyle = state.style || (state.style = {});
+                        if (lineStateStyle.stroke != null) {
+                            stateStyle[symbol.__isEmptyBrush ? 'stroke' : 'fill'] = lineStateStyle.stroke;
+                        }
+                        if (lineStateStyle.opacity != null) {
+                            stateStyle.opacity = lineStateStyle.opacity;
+                        }
+                    }
+                }
+
                 symbol.markRedraw();
             }
         }, this);
