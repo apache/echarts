@@ -767,6 +767,7 @@ function renderNode(
     const itemStyleEmphasisModel = nodeModel.getModel(['emphasis', 'itemStyle']);
     const itemStyleBlurModel = nodeModel.getModel(['blur', 'itemStyle']);
     const itemStyleSelectModel = nodeModel.getModel(['select', 'itemStyle']);
+    const borderRadius = itemStyleNormalModel.get('borderRadius') || 0;
 
     // End of closure ariables available in "Procedures in renderNode".
     // -----------------------------------------------------------------
@@ -843,7 +844,7 @@ function renderNode(
         ecData.dataIndex = thisNode.dataIndex;
         ecData.seriesIndex = seriesModel.seriesIndex;
 
-        bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
+        bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight, r: borderRadius});
 
         if (thisInvisible) {
             // If invisible, do not set visual, otherwise the element will
@@ -901,7 +902,8 @@ function renderNode(
             x: borderWidth,
             y: borderWidth,
             width: contentWidth,
-            height: contentHeight
+            height: contentHeight,
+            r: borderRadius
         });
 
         if (thisInvisible) {
@@ -981,7 +983,6 @@ function renderNode(
 
         const textEl = rectEl.getTextContent();
         const textStyle = textEl.style;
-        textStyle.overflow = 'truncate';
         textStyle.truncateMinChar = 2;
         textStyle.width = width;
 

@@ -52,6 +52,8 @@ interface TreemapSeriesLabelOption extends LabelOption {
 }
 
 interface TreemapSeriesItemStyleOption extends ItemStyleOption {
+    borderRadius?: number | number[]
+
     colorAlpha?: number
     colorSaturation?: number
 
@@ -253,7 +255,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             position: 'inside', // Can be [5, '5%'] or position stirng like 'insideTopLeft', ...
             // formatter: null,
             color: '#fff',
-            ellipsis: true
+            overflow: 'truncate'
             // align
             // verticalAlign
         },
@@ -263,7 +265,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             height: 20,
             // formatter: null,
             // color: '#fff',
-            ellipsis: true,
+            overflow: 'truncate',
             // align: null,
             verticalAlign: 'middle'
         },
