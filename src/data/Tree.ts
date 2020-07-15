@@ -194,6 +194,7 @@ export class TreeNode {
             indices.push(currNode.dataIndex);
             currNode = currNode.parentNode;
         }
+        indices.reverse();
         return indices;
     }
 

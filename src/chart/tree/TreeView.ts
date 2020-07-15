@@ -36,7 +36,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import List from '../../data/List';
 import { getLabelStatesModels } from '../../label/labelStyle';
-import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy } from '../../util/states';
+import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
 import { ECElement } from '../../util/types';
 
 type TreeSymbol = SymbolClz & {
@@ -498,7 +498,16 @@ function updateNode(
 
     if (symbolEl.__edge) {
         (symbolEl as ECElement).onStateChange = function (toState) {
-            setStatesFlag(symbolEl.__edge, toState);
+            if (toState !== 'blur') {
+                // NOTE: Ensure the parent elements will been blurred firstly.
+                // According to the return of getAncestorsIndices and getDescendantIndices
+                // TODO: A bit tricky.
+                const parentEl = node.parentNode
+                    && data.getItemGraphicEl(node.parentNode.dataIndex);
+                if (!(parentEl && (parentEl as ECElement).hoverState === HOVER_STATE_BLUR)) {
+                    setStatesFlag(symbolEl.__edge, toState);
+                }
+            }
         };
     }
 }
