@@ -90,10 +90,14 @@ interface SymbolDrawStateOption {
 
 // TODO Separate series and item?
 export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
-    StatesOptionMixin<SymbolDrawStateOption, string>,
+    StatesOptionMixin<SymbolDrawStateOption, {
+        emphasis?: {
+            focus?: string
+            scale?: boolean
+        }
+    }>,
     SymbolDrawStateOption {
 
-    hoverAnimation?: boolean
     cursor?: string
 
     // If has ripple effect
@@ -113,8 +117,9 @@ export interface SymbolDrawSeriesScope {
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
-    hoverAnimation?: boolean
     itemModel?: Model<SymbolDrawItemModelOption>
+
+    hoverScale?: boolean
 
     cursorStyle?: string
     fadeIn?: boolean
@@ -133,7 +138,7 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
 
         symbolRotate: seriesModel.get('symbolRotate'),
         symbolOffset: seriesModel.get('symbolOffset'),
-        hoverAnimation: seriesModel.get('hoverAnimation'),
+        hoverScale: emphasisModel.get('scale'),
 
         labelStatesModels: getLabelStatesModels(seriesModel),
 

@@ -44,12 +44,18 @@ interface ScatterStateOption {
     label?: LabelOption
 }
 
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
+
 export interface ScatterDataItemOption extends SymbolOptionMixin,
-    ScatterStateOption, StatesOptionMixin<ScatterStateOption>,
+    ScatterStateOption, StatesOptionMixin<ScatterStateOption, ExtraStateOption>,
     OptionDataItemObject<OptionDataValue> {
 }
 
-export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption>, ScatterStateOption,
+export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, ExtraStateOption>, ScatterStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
@@ -57,8 +63,6 @@ export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption>, S
     type?: 'scatter'
 
     coordinateSystem?: string
-
-    hoverAnimation?: boolean
 
     cursor?: string
     clip?: boolean
@@ -111,7 +115,6 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        hoverAnimation: true,
         symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
         // symbolRotate: null,  // 图形旋转控制
 
@@ -123,6 +126,10 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         itemStyle: {
             opacity: 0.8
             // color: 各异
+        },
+
+        emphasis: {
+            scale: true
         },
 
         // If clip the overflow graphics

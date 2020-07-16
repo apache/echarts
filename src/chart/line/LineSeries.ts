@@ -40,20 +40,35 @@ import type Polar from '../../coord/polar/Polar';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
+
 export interface LineStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
 }
 
 export interface LineDataItemOption extends SymbolOptionMixin,
-    LineStateOption, StatesOptionMixin<LineStateOption> {
+    LineStateOption, StatesOptionMixin<LineStateOption, ExtraStateOption> {
     name?: string
 
     value?: LineDataValue
 }
 
 
-export interface LineSeriesOption extends SeriesOption<LineStateOption>, LineStateOption,
+export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
+    emphasis?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+    }
+    blur?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+    }
+}>, LineStateOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
@@ -62,8 +77,6 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption>, LineSta
     type?: 'line'
 
     coordinateSystem?: 'cartesian2d' | 'polar'
-
-    hoverAnimation?: boolean
 
     // If clip the overflow value
     clip?: boolean
@@ -74,18 +87,6 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption>, LineSta
 
     areaStyle?: AreaStyleOption & {
         origin?: 'auto' | 'start' | 'end'
-    }
-
-    emphasis?: LineStateOption & {
-        focus?: StatesOptionMixin<LineStateOption>['emphasis']['focus'],
-        blurScope?: StatesOptionMixin<LineStateOption>['emphasis']['blurScope']
-        lineStyle?: LineStyleOption
-        areaStyle?: AreaStyleOption
-    }
-
-    blur?: LineStateOption & {
-        lineStyle?: LineStyleOption
-        areaStyle?: AreaStyleOption
     }
 
     step?: false | 'start' | 'end' | 'middle'
@@ -133,8 +134,6 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         clip: true,
 
         label: {
@@ -144,6 +143,10 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         lineStyle: {
             width: 2,
             type: 'solid'
+        },
+
+        emphasis: {
+            scale: true
         },
         // areaStyle: {
             // origin of areaStyle. Valid values:

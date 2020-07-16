@@ -46,12 +46,19 @@ export interface CandlestickStateOption {
     itemStyle?: CandlestickItemStyleOption
     label?: LabelOption
 }
-export interface CandlestickDataItemOption extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption> {
+export interface CandlestickDataItemOption
+    extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption, ExtraStateOption> {
     value: CandlestickDataValue
 }
 
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
 
-export interface CandlestickSeriesOption extends SeriesOption<CandlestickStateOption>, CandlestickStateOption,
+export interface CandlestickSeriesOption
+    extends SeriesOption<CandlestickStateOption, ExtraStateOption>, CandlestickStateOption,
     SeriesOnCartesianOptionMixin,
     SeriesLargeOptionMixin {
 
@@ -59,7 +66,6 @@ export interface CandlestickSeriesOption extends SeriesOption<CandlestickStateOp
 
     coordinateSystem?: 'cartesian2d'
 
-    hoverAnimation?: boolean
     layout?: LayoutOrient
     clip?: boolean
 
@@ -94,8 +100,6 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         // xAxisIndex: 0,
         // yAxisIndex: 0,
 
@@ -114,6 +118,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         },
 
         emphasis: {
+            scale: true,
             itemStyle: {
                 borderWidth: 2
             }

@@ -108,7 +108,6 @@ export interface LinesSeriesOption extends SeriesOption<LinesStateOption>, Lines
     type?: 'lines'
 
     coordinateSystem?: string
-    hoverAnimation?: boolean
 
     symbol?: string[] | string
     symbolSize?: number[] | number
@@ -364,7 +363,6 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        hoverAnimation: true,
         // Cartesian coordinate system
         xAxisIndex: 0,
         yAxisIndex: 0,

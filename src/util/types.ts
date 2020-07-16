@@ -1153,7 +1153,11 @@ export type BlurScope = 'coordinateSystem' | 'series' | 'global';
  */
 export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
 
-export interface StatesOptionMixin<StateOption, ExtraFocusOptions = never> {
+export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> {
     /**
      * Emphasis states
      */
@@ -1162,7 +1166,8 @@ export interface StatesOptionMixin<StateOption, ExtraFocusOptions = never> {
          * self: Focus self and blur all others.
          * series: Focus series and blur all other series.
          */
-        focus?: 'none' | 'self' | 'series' | ExtraFocusOptions
+        focus?: 'none' | 'self' | 'series' |
+            (ExtraStateOpts extends unknown ? never : ExtraStateOpts['emphasis']['focus'])
 
         /**
          * Scope of blurred element when focus.
@@ -1174,22 +1179,26 @@ export interface StatesOptionMixin<StateOption, ExtraFocusOptions = never> {
          * Default to be coordinate system.
          */
         blurScope?: BlurScope
-    }
+    } & Omit<ExtraStateOpts['emphasis'], 'focus'>
     /**
      * Select states
      */
-    select?: StateOption
+    select?: StateOption & ExtraStateOpts['select']
     /**
      * Blur states.
      */
-    blur?: StateOption
+    blur?: StateOption & ExtraStateOpts['blur']
 }
 
-export interface SeriesOption<StateOption=any, ExtraFocusOptions = never> extends
+export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> extends
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
-    StatesOptionMixin<StateOption, ExtraFocusOptions>
+    StatesOptionMixin<StateOption, ExtraStateOpts>
 {
     name?: string
 

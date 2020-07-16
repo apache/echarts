@@ -41,17 +41,23 @@ export interface BoxplotStateOption {
     label?: LabelOption
 }
 
-export interface BoxplotDataItemOption extends BoxplotStateOption, StatesOptionMixin<BoxplotStateOption> {
+export interface BoxplotDataItemOption
+    extends BoxplotStateOption, StatesOptionMixin<BoxplotStateOption, ExtraStateOption> {
     value: BoxplotDataValue
 }
 
-export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption>, BoxplotStateOption,
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
+
+export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption, ExtraStateOption>, BoxplotStateOption,
     SeriesOnCartesianOptionMixin {
     type?: 'boxplot'
 
     coordinateSystem?: 'cartesian2d'
 
-    hoverAnimation?: boolean
     layout?: LayoutOrient
     /**
      * [min, max] can be percent of band width.
@@ -96,8 +102,6 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         layout: null,
         boxWidth: [7, 50],
 
@@ -107,6 +111,8 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         },
 
         emphasis: {
+            scale: true,
+
             itemStyle: {
                 borderWidth: 2,
                 shadowBlur: 5,

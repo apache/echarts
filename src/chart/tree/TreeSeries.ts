@@ -50,8 +50,15 @@ export interface TreeSeriesStateOption {
     label?: LabelOption
 }
 
+interface ExtraStateOption {
+    emphasis?: {
+        focus?: 'ancestor' | 'descendant'
+        scale?: boolean
+    }
+}
+
 export interface TreeSeriesNodeItemOption extends SymbolOptionMixin,
-    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, 'ancestor' | 'descendant'>,
+    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, ExtraStateOption>,
     OptionDataItemObject<OptionDataValue> {
 
     children?: TreeSeriesNodeItemOption[]
@@ -70,11 +77,9 @@ export interface TreeSeriesLeavesOption extends TreeSeriesStateOption, StatesOpt
 }
 
 export interface TreeSeriesOption extends
-    SeriesOption<TreeSeriesStateOption, 'ancestor' | 'descendant'>, TreeSeriesStateOption,
+    SeriesOption<TreeSeriesStateOption, ExtraStateOption>, TreeSeriesStateOption,
     SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
-
-    hoverAnimation?: boolean
 
     layout?: 'orthogonal' | 'radial'
 

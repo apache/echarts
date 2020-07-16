@@ -65,24 +65,28 @@ interface PieLabelLineOption extends LabelLineOption {
     maxSurfaceAngle?: number
 }
 
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+        scaleSize?: number
+    }
+}
+
 export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
     SelectableTarget,
-    PieStateOption, StatesOptionMixin<PieStateOption> {
+    PieStateOption, StatesOptionMixin<PieStateOption, ExtraStateOption> {
 
     cursor?: string
-    hoverAnimation?: boolean
 }
 export interface PieSeriesOption extends
-    Omit<SeriesOption<PieStateOption>, 'labelLine'>, PieStateOption,
+    Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
     DataSelectableOptionMixin,
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
     type: 'pie'
-
-    hoverAnimation?: boolean
 
     roseType?: 'radius' | 'area'
 
@@ -92,7 +96,6 @@ export interface PieSeriesOption extends
     minShowLabelAngle?: number
 
     selectedOffset?: number
-    hoverOffset?: number
 
     avoidLabelOverlap?: boolean
     percentPrecision?: number
@@ -202,7 +205,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        hoverAnimation: true,
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
@@ -218,8 +220,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
         // 选中时扇区偏移量
         selectedOffset: 10,
-        // 高亮扇区偏移量
-        hoverOffset: 5,
 
         // 选择模式，默认关闭，可选single，multiple
         // selectedMode: false,
@@ -284,6 +284,11 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         labelLayout: {
             // Hide the overlapped label.
             hideOverlap: true
+        },
+
+        emphasis: {
+            scale: true,
+            scaleSize: 5
         },
 
         // If use strategy to avoid label overlapping

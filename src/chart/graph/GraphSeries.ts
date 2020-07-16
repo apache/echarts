@@ -61,8 +61,22 @@ export interface GraphNodeStateOption {
     label?: LabelOption
 }
 
+interface ExtraNodeStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+        scale?: boolean
+    }
+}
+
+interface ExtraEdgeStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+    }
+}
+
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, 'adjacency'> {
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, ExtraNodeStateOption> {
+
     id?: string
     name?: string
     value?: GraphDataValue
@@ -94,7 +108,7 @@ export interface GraphEdgeStateOption {
     label?: LineLabelOption
 }
 export interface GraphEdgeItemOption
-    extends GraphEdgeStateOption, StatesOptionMixin<GraphEdgeStateOption, 'adjacency'> {
+    extends GraphEdgeStateOption, StatesOptionMixin<GraphEdgeStateOption, ExtraEdgeStateOption> {
     /**
      * Name or index of source node.
      */
@@ -134,7 +148,6 @@ export interface GraphSeriesOption extends SeriesOption,
 
     coordinateSystem?: string
 
-    hoverAnimation?: boolean
     legendHoverLink?: boolean
 
     layout?: 'none' | 'force' | 'circular'
@@ -170,7 +183,8 @@ export interface GraphSeriesOption extends SeriesOption,
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
-        focus?: StatesOptionMixin<unknown, 'adjacency'>['emphasis']['focus']
+        focus?: GraphNodeItemOption['emphasis']['focus']
+        scale?: boolean
         label?: LabelOption
         edgeLabel?: LabelOption
         itemStyle?: ItemStyleOption
@@ -393,8 +407,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         layout: null,
 
         focusNodeAdjacency: false,
@@ -471,6 +483,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             opacity: 0.5
         },
         emphasis: {
+            scale: true,
             label: {
                 show: true
             }

@@ -101,7 +101,7 @@ interface SymbolMeta {
 
     animationModel?: ItemModel
 
-    hoverAnimation: boolean
+    hoverScale: boolean
 }
 
 interface CreateOpts {
@@ -264,7 +264,7 @@ function getSymbolMeta(
         symbolPatternSize: symbolPatternSize,
         rotation: rotation,
         animationModel: isAnimationEnabled ? itemModel : null,
-        hoverAnimation: isAnimationEnabled && itemModel.get('hoverAnimation'),
+        hoverScale: isAnimationEnabled && itemModel.get(['emphasis', 'scale']),
         z2: itemModel.getShallow('z', true) || 0
     } as SymbolMeta;
 

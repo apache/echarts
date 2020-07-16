@@ -143,7 +143,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
     // Make sure series array for model initialization.
     option.series = normalizeToArray(option.series);
 
-    each(option.series, function (seriesOpt: SeriesOption) {
+    each(option.series, function (seriesOpt: any) {
         if (!isObject(seriesOpt)) {
             return;
         }
@@ -151,17 +151,13 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         const seriesType = seriesOpt.type;
 
         if (seriesType === 'line') {
-            // @ts-ignore
             if (seriesOpt.clipOverflow != null) {
-                // @ts-ignore
                 seriesOpt.clip = seriesOpt.clipOverflow;
                 deprecateLog('clipOverflow has been changed to clip.');
             }
         }
         else if (seriesType === 'pie' || seriesType === 'gauge') {
-            // @ts-ignore
             if (seriesOpt.clockWise != null) {
-                // @ts-ignore
                 seriesOpt.clockwise = seriesOpt.clockWise;
                 deprecateLog('clockWise has been changed to clockwise.');
             }
@@ -170,6 +166,14 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             if (data && !isTypedArray(data)) {
                 for (let i = 0; i < data.length; i++) {
                     compatPieLabel(data[i]);
+                }
+            }
+
+            if (seriesOpt.hoverOffset != null) {
+                seriesOpt.emphasis = seriesOpt.emphasis || {};
+                if (seriesOpt.emphasis.scaleSize = null) {
+                    deprecateLog('`hoverOffset` has been changed to `emphasis.scaleSize`');
+                    seriesOpt.emphasis.scaleSize = seriesOpt.hoverOffset;
                 }
             }
         }
@@ -181,7 +185,6 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         else if (seriesType === 'bar') {
             compatBarItemStyle(seriesOpt);
             compatBarItemStyle((seriesOpt as BarSeriesOption).backgroundStyle);
-            // @ts-ignore
             compatBarItemStyle(seriesOpt.emphasis);
             const data = seriesOpt.data;
             if (data && !isTypedArray(data)) {
@@ -194,7 +197,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             }
         }
         else if (seriesType === 'sunburst') {
-            const highlightPolicy = (seriesOpt as any).highlightPolicy;
+            const highlightPolicy = seriesOpt.highlightPolicy;
             if (highlightPolicy) {
                 seriesOpt.emphasis = seriesOpt.emphasis || {};
                 if (!seriesOpt.emphasis.focus) {
@@ -212,12 +215,20 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             // TODO nodes, edges?
         }
         else if (seriesType === 'map') {
-            if ((seriesOpt as any).mapType && !(seriesOpt as any).map) {
+            if (seriesOpt.mapType && !seriesOpt.map) {
                 deprecateLog('`mapType` in map has been changed to `map`');
             }
-            if ((seriesOpt as any).mapLocation) {
+            if (seriesOpt.mapLocation) {
                 deprecateLog('`mapLocation` is not used anymore.');
-                defaults(seriesOpt, (seriesOpt as any).mapLocation);
+                defaults(seriesOpt, seriesOpt.mapLocation);
+            }
+        }
+
+        if (seriesOpt.hoverAnimation != null) {
+            seriesOpt.emphasis = seriesOpt.emphasis || {};
+            if (seriesOpt.emphasis && seriesOpt.emphasis.scale == null) {
+                deprecateLog('`hoverAnimation` has been changed to `emphasis.scale`');
+                seriesOpt.emphasis.scale = seriesOpt.hoverAnimation;
             }
         }
 

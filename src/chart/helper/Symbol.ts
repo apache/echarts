@@ -209,7 +209,7 @@ class Symbol extends graphic.Group {
 
         let labelStatesModels;
 
-        let hoverAnimation;
+        let hoverScale;
         let cursorStyle;
 
         if (seriesScope) {
@@ -223,7 +223,7 @@ class Symbol extends graphic.Group {
 
             labelStatesModels = seriesScope.labelStatesModels;
 
-            hoverAnimation = seriesScope.hoverAnimation;
+            hoverScale = seriesScope.hoverScale;
             cursorStyle = seriesScope.cursorStyle;
         }
 
@@ -243,7 +243,7 @@ class Symbol extends graphic.Group {
 
             labelStatesModels = getLabelStatesModels(itemModel);
 
-            hoverAnimation = itemModel.getShallow('hoverAnimation');
+            hoverScale = emphasisModel.getShallow('scale');
             cursorStyle = itemModel.getShallow('cursor');
         }
 
@@ -309,7 +309,7 @@ class Symbol extends graphic.Group {
         symbolPath.ensureState('select').style = selectItemStyle;
         symbolPath.ensureState('blur').style = blurItemStyle;
 
-        if (hoverAnimation && seriesModel.isAnimationEnabled()) {
+        if (hoverScale) {
             this.ensureState('emphasis');
             this.setSymbolScale(1);
         }

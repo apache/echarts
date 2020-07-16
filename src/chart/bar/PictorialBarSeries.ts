@@ -89,35 +89,34 @@ interface PictorialBarSeriesSymbolOption {
     symbolPatternSize?: number
 }
 
+
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
+
 export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOption,
     // Pictorial bar support configure animation in each data item.
     AnimationOptionMixin,
-    PictorialBarStateOption, StatesOptionMixin<PictorialBarStateOption>,
+    PictorialBarStateOption, StatesOptionMixin<PictorialBarStateOption, ExtraStateOption>,
     OptionDataItemObject<OptionDataValue> {
-
-    hoverAnimation?: boolean
 
     z?: number
 
     cursor?: string
 }
 
-export interface PictorialBarSeriesOption extends BaseBarSeriesOption<PictorialBarStateOption>,
+export interface PictorialBarSeriesOption
+    extends BaseBarSeriesOption<PictorialBarStateOption, ExtraStateOption>, PictorialBarStateOption,
     PictorialBarSeriesSymbolOption,
-    SeriesStackOptionMixin,
-    PictorialBarStateOption {
+    SeriesStackOptionMixin {
 
     type?: 'pictorialBar'
 
     coordinateSystem?: 'cartesian2d'
 
-    emphasis?: PictorialBarStateOption
-    blur?: PictorialBarStateOption
-    select?: PictorialBarStateOption
-
     data?: (PictorialBarDataItemOption | OptionDataValue | OptionDataValue[])[]
-
-    hoverAnimation?: boolean
 }
 
 class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOption> {
@@ -154,7 +153,10 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
 
         // Disable progressive
         progressive: 0,
-        hoverAnimation: false // Open only when needed.
+
+        emphasis: {
+            scale: false
+        }
     });
 
     getInitialData(option: PictorialBarSeriesOption) {

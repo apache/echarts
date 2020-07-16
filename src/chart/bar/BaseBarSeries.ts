@@ -30,7 +30,7 @@ import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import List from '../../data/List';
 
 
-export interface BaseBarSeriesOption<StateOption> extends SeriesOption<StateOption>,
+export interface BaseBarSeriesOption<StateOption, ExtraStateOption> extends SeriesOption<StateOption, ExtraStateOption>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin {
 
@@ -70,7 +70,8 @@ export interface BaseBarSeriesOption<StateOption> extends SeriesOption<StateOpti
     largeThreshold?: number
 }
 
-class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<any> = BaseBarSeriesOption<any>> extends SeriesModel<Opts> {
+class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown, unknown> = BaseBarSeriesOption<unknown, unknown>>
+    extends SeriesModel<Opts> {
 
     static type = 'series.__base_bar__';
     type = BaseBarSeriesModel.type;
@@ -94,7 +95,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<any> = BaseBarSeriesOp
         return [NaN, NaN];
     }
 
-    static defaultOption: BaseBarSeriesOption<any> = {
+    static defaultOption: BaseBarSeriesOption<unknown, unknown> = {
         zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',

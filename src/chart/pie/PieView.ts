@@ -136,8 +136,8 @@ class PiePiece extends graphic.Sector {
 
 
         sector.ensureState('emphasis').shape = {
-            r: layout.r + (itemModel.get('hoverAnimation') // TODO: Change a name.
-                ? seriesModel.get('hoverOffset') : 0)
+            r: layout.r + (emphasisModel.get('scale')
+                ? (emphasisModel.get('scaleSize') || 0) : 0)
         };
         extend(sector.ensureState('select'), {
             x: dx,
