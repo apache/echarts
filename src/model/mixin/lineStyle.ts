@@ -33,7 +33,8 @@ export const LINE_STYLE_KEY_MAP = [
     ['lineDash', 'dashArray'],
     ['lineDashOffset', 'dashOffset'],
     ['lineCap', 'cap'],
-    ['lineJoin', 'join']
+    ['lineJoin', 'join'],
+    ['miterLimit']
 ];
 
 const getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);
@@ -48,7 +49,8 @@ type LineStyleKeys = 'lineWidth'
     | 'lineDash'
     | 'lineDashOffset'
     | 'lineCap'
-    | 'lineJoin';
+    | 'lineJoin'
+    | 'miterLimit';
 
 type LineStyleProps = Pick<PathStyleProps, LineStyleKeys>;
 
