@@ -111,6 +111,8 @@ export interface ECElement extends Element {
     selected?: boolean;
     z2EmphasisLift?: number;
 
+    style?: Dictionary<any>
+
     /**
      * Force disable animation on any condition
      */

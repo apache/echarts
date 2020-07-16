@@ -67,12 +67,10 @@ export function encodeHTML(source: string): string {
 }
 
 export function concatTooltipHtml(html: string, value: unknown): string {
-    return `
-        ${encodeHTML(html)}
-        <strong style="float:right;margin-left:20px;color:#000;">
-            ${encodeHTML(value as string) || ''}
-        </strong>
-    `;
+    return encodeHTML(html)
+            + (value ? '<strong style="float:right;margin-left:20px;color:#000;">' : '')
+            + encodeHTML(value as string)
+            + (value ? '</strong>' : '');
 }
 
 const TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];

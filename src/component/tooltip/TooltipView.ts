@@ -745,7 +745,7 @@ class TooltipView extends ComponentView {
         x: number,
         y: number,
         positionExpr: TooltipOption['position'],
-        el: ECElement,
+        el?: ECElement,
         markers?: Dictionary<ColorString>
     ) {
         // Reset ticket
@@ -782,7 +782,7 @@ class TooltipView extends ComponentView {
             tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
         tooltipContent.setContent(html, markers, tooltipModel);
-        tooltipContent.show(tooltipModel, nearPoint.color);
+        tooltipContent.show(tooltipModel, el?.style.fill || nearPoint.color);
 
     }
 
