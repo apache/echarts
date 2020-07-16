@@ -171,7 +171,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     private _targetAxisInfoMap: DataZoomTargetAxisInfoMap;
 
-    private _noTarget: boolean;
+    private _noTarget: boolean = true;
 
     /**
      * It is `[rangeModeForMin, rangeModeForMax]`.
@@ -278,7 +278,12 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             this._fillAutoTargetAxisByOrient(targetAxisIndexMap, this._orient);
         }
 
-        this._noTarget = !targetAxisIndexMap.keys().length;
+        this._noTarget = true;
+        targetAxisIndexMap.each(function (axisInfo) {
+            if (axisInfo.indexList.length) {
+                this._noTarget = false;
+            }
+        }, this);
     }
 
     private _fillSpecifiedTargetAxis(targetAxisIndexMap: DataZoomTargetAxisInfoMap): boolean {
