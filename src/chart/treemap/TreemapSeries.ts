@@ -72,6 +72,12 @@ interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
     treePathInfo?: TreePathInfo[]
 }
 
+interface ExtraStateOption {
+    emphasis?: {
+        focus?: 'descendant' | 'ancestor'
+    }
+}
+
 export interface TreemapStateOption {
     itemStyle?: TreemapSeriesItemStyleOption
     label?: TreemapSeriesLabelOption
@@ -106,13 +112,13 @@ export interface TreemapSeriesVisualOption {
 }
 
 export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption, 'ancestor' | 'descendant'> {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
 
     color?: ColorString[] | 'none'
 }
 
 export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption, 'ancestor' | 'descendant'> {
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
     id?: string
     name?: string
 
@@ -124,7 +130,7 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 }
 
 export interface TreemapSeriesOption
-    extends SeriesOption<TreemapStateOption, 'ancestor' | 'descendant'>, TreemapStateOption,
+    extends SeriesOption<TreemapStateOption, ExtraStateOption>, TreemapStateOption,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
     TreemapSeriesVisualOption {

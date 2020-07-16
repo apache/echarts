@@ -48,13 +48,19 @@ interface SunburstDataParams extends CallbackDataParams {
     }[]
 }
 
+interface ExtraStateOption {
+    emphasis?: {
+        focus?: 'descendant' | 'ancestor'
+    }
+}
+
 export interface SunburstStateOption {
     itemStyle?: ItemStyleOption
     label?: SunburstLabelOption
 }
 
 export interface SunburstSeriesNodeItemOption extends
-    SunburstStateOption, StatesOptionMixin<SunburstStateOption, 'descendant' | 'ancestor'>,
+    SunburstStateOption, StatesOptionMixin<SunburstStateOption, ExtraStateOption>,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link'
@@ -75,7 +81,7 @@ export interface SunburstSeriesLevelOption extends SunburstStateOption, StatesOp
     }
 }
 export interface SunburstSeriesOption extends
-    SeriesOption<SunburstStateOption, 'descendant' | 'ancestor'>, SunburstStateOption,
+    SeriesOption<SunburstStateOption, ExtraStateOption>, SunburstStateOption,
     CircleLayoutOptionMixin {
 
     type?: 'sunburst'

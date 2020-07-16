@@ -1167,7 +1167,8 @@ export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends
          * series: Focus series and blur all other series.
          */
         focus?: 'none' | 'self' | 'series' |
-            (ExtraStateOpts extends unknown ? never : ExtraStateOpts['emphasis']['focus'])
+            (unknown extends ExtraStateOpts['emphasis']['focus']
+                ? never : ExtraStateOpts['emphasis']['focus'])
 
         /**
          * Scope of blurred element when focus.

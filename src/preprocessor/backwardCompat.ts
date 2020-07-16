@@ -122,7 +122,9 @@ function compatGraphFocus(option: Dictionary<any>) {
     if (option.focusNodeAdjacency != null) {
         option.emphasis = option.emphasis || {};
         if (option.emphasis.focus == null) {
-            deprecateLog('`focusNodeAdjacency` in graph/sankey has been changed to `emphasis: { focus: \'adjacency\'}`');
+            deprecateLog(
+                '`focusNodeAdjacency` in graph/sankey has been changed to `emphasis: { focus: \'adjacency\'}`'
+            );
             option.emphasis.focus = 'adjacency';
         }
     }

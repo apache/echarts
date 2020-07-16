@@ -25,7 +25,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../../model/Model';
-import { Dictionary } from 'zrender/src/core/types';
+import { Dictionary } from '../../util/types';
 
 export interface SelectableTarget {
     name?: string;
@@ -33,7 +33,8 @@ export interface SelectableTarget {
 };
 
 export interface DataSelectableOptionMixin {
-    selected?: Dictionary<boolean>
+    // selectedIndices?: number[]
+    selectedMap?: Dictionary<boolean>
     selectedMode?: 'single' | 'multiple' | boolean
 }
 
@@ -45,7 +46,6 @@ class DataSelectableMixin<Opt extends DataSelectableOptionMixin> {
 
     // Key: target.name
     private _selectTargetMap: zrUtil.HashMap<SelectableTarget>;
-
 
     /**
      * @param targetList [{name, value, selected}, ...]
