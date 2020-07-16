@@ -1458,6 +1458,10 @@ class ECharts extends Eventful {
 
                 const componentDirtyList = [];
                 ecModel.eachComponent((componentType, componentModel) => {
+                    if (componentType === 'series') {
+                        return;
+                    }
+
                     const componentView = this.getViewOfComponentModel(componentModel);
                     if (componentView && componentView.__alive) {
                         if (componentView.updateTransform) {
@@ -1544,9 +1548,11 @@ class ECharts extends Eventful {
                 this._scheduler.performVisualTasks(ecModel, payload, {visualType: 'visual', setDirty: true});
 
                 ecModel.eachComponent((componentType, componentModel) => {  // TODO componentType may be series.
-                    const componentView = this.getViewOfComponentModel(componentModel);
-                    componentView && componentView.__alive
-                        && componentView.updateVisual(componentModel, ecModel, this._api, payload);
+                    if (componentType !== 'series') {
+                        const componentView = this.getViewOfComponentModel(componentModel);
+                        componentView && componentView.__alive
+                            && componentView.updateVisual(componentModel, ecModel, this._api, payload);
+                    }
                 });
 
                 ecModel.eachSeries((seriesModel) => {

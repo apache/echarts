@@ -288,8 +288,29 @@ export function leaveEmphasis(el: Element, highlightDigit?: number) {
         && traverseUpdateState((el as ExtendedElement), singleLeaveEmphasis);
 }
 
+export function enterBlur(el: Element) {
+    traverseUpdateState(el as ExtendedElement, singleEnterBlur);
+}
+
+export function leaveBlur(el: Element) {
+    traverseUpdateState(el as ExtendedElement, singleLeaveBlur);
+}
+
 function shouldSilent(el: Element, e: ElementEvent) {
     return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
+}
+
+function allLeaveBlur(ecIns: EChartsType) {
+    const model = ecIns.getModel();
+    model.eachComponent(function (componentType, componentModel) {
+        const view = componentType === 'series'
+            ? ecIns.getViewOfSeriesModel(componentModel as SeriesModel)
+            : ecIns.getViewOfComponentModel(componentModel);
+        // Leave blur anyway
+        view.group.traverse(function (child) {
+            singleLeaveBlur(child);
+        });
+    });
 }
 
 export function toggleSeriesBlurStates(
@@ -299,31 +320,39 @@ export function toggleSeriesBlurStates(
     ecIns: EChartsType,
     isBlur: boolean
 ) {
-    if (targetSeriesIndex == null) {
+    const ecModel = ecIns.getModel();
+    blurScope = blurScope || 'coordinateSystem';
+
+    function leaveBlurOfIndices(data: List, dataIndices: ArrayLike<number>) {
+        for (let i = 0; i < dataIndices.length; i++) {
+            const itemEl = data.getItemGraphicEl(dataIndices[i]);
+            itemEl && leaveBlur(itemEl);
+        }
+    }
+
+    if (!isBlur) {
+        allLeaveBlur(ecIns);
         return;
     }
 
-    const model = ecIns.getModel();
-    blurScope = blurScope || 'coordinateSystem';
+    if (targetSeriesIndex == null) {
+        return;
+    }
 
     if (!focus || focus === 'none') {
         return;
     }
 
-    function leaveBlur(data: List, dataIndices: ArrayLike<number>) {
-        for (let i = 0; i < dataIndices.length; i++) {
-            const itemEl = data.getItemGraphicEl(dataIndices[i]);
-            itemEl && traverseUpdateState(itemEl as ExtendedElement, singleLeaveBlur);
-        }
-    }
-
-    const targetSeriesModel = model.getSeriesByIndex(targetSeriesIndex);
+    const targetSeriesModel = ecModel.getSeriesByIndex(targetSeriesIndex);
     let targetCoordSys: CoordinateSystemMaster | CoordinateSystem = targetSeriesModel.coordinateSystem;
     if (targetCoordSys && (targetCoordSys as CoordinateSystem).master) {
         targetCoordSys = (targetCoordSys as CoordinateSystem).master;
     }
 
-    model.eachSeries(function (seriesModel) {
+    const blurredSeries: SeriesModel[] = [];
+
+    ecModel.eachSeries(function (seriesModel) {
+
         const sameSeries = targetSeriesModel === seriesModel;
         let coordSys: CoordinateSystemMaster | CoordinateSystem = seriesModel.coordinateSystem;
         if (coordSys && (coordSys as CoordinateSystem).master) {
@@ -336,27 +365,37 @@ export function toggleSeriesBlurStates(
             // Not blur other series if blurScope series
             blurScope === 'series' && !sameSeries
             // Not blur other coordinate system if blurScope is coordinateSystem
-          || blurScope === 'coordinateSystem' && !sameCoordSys
+            || blurScope === 'coordinateSystem' && !sameCoordSys
             // Not blur self series if focus is series.
-          || focus === 'series' && sameSeries
-          // TODO blurScope: coordinate system
+            || focus === 'series' && sameSeries
+            // TODO blurScope: coordinate system
         )) {
             const view = ecIns.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
-                isBlur ? singleEnterBlur(child) : singleLeaveBlur(child);
+                singleEnterBlur(child);
             });
 
-            if (isBlur) {
-                if (isArrayLike(focus)) {
-                    leaveBlur(seriesModel.getData(), focus as ArrayLike<number>);
-                }
-                else if (isObject(focus)) {
-                    const dataTypes = keys(focus);
-                    for (let d = 0; d < dataTypes.length; d++) {
-                        leaveBlur(seriesModel.getData(dataTypes[d]), focus[dataTypes[d]]);
-                    }
+            if (isArrayLike(focus)) {
+                leaveBlurOfIndices(seriesModel.getData(), focus as ArrayLike<number>);
+            }
+            else if (isObject(focus)) {
+                const dataTypes = keys(focus);
+                for (let d = 0; d < dataTypes.length; d++) {
+                    leaveBlurOfIndices(seriesModel.getData(dataTypes[d]), focus[dataTypes[d]]);
                 }
             }
+
+            blurredSeries.push(seriesModel);
+        }
+    });
+
+    ecModel.eachComponent(function (componentType, componentModel) {
+        if (componentType === 'series') {
+            return;
+        }
+        const view = ecIns.getViewOfComponentModel(componentModel);
+        if (view && view.blurSeries) {
+            view.blurSeries(blurredSeries, ecModel);
         }
     });
 }
