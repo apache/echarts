@@ -34,6 +34,7 @@ import {
 } from './helper';
 import SingleAxisModel from '../../coord/single/AxisModel';
 import { __DEV__ } from '../../config';
+import { MULTIPLE_REFERRING, SINGLE_REFERRING } from '../../util/model';
 
 
 export interface DataZoomOption extends ComponentOption {
@@ -170,6 +171,8 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     private _targetAxisInfoMap: DataZoomTargetAxisInfoMap;
 
+    private _noTarget: boolean;
+
     /**
      * It is `[rangeModeForMin, rangeModeForMax]`.
      * The optional values for `rangeMode`:
@@ -274,13 +277,15 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             this._orient = optionOrient || 'horizontal';
             this._fillAutoTargetAxisByOrient(targetAxisIndexMap, this._orient);
         }
+
+        this._noTarget = !targetAxisIndexMap.keys().length;
     }
 
     private _fillSpecifiedTargetAxis(targetAxisIndexMap: DataZoomTargetAxisInfoMap): boolean {
         let hasAxisSpecified = false;
 
         each(DATA_ZOOM_AXIS_DIMENSIONS, function (axisDim) {
-            const refering = this.getReferringComponents(getAxisMainType(axisDim), false);
+            const refering = this.getReferringComponents(getAxisMainType(axisDim), MULTIPLE_REFERRING);
             // When user set axisIndex as a empty array, we think that user specify axisIndex
             // but do not want use auto mode. Because empty array may be encountered when
             // some error occured.
@@ -331,10 +336,10 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
             // Find parallel axes in the same grid.
             if (axisDim === 'x' || axisDim === 'y') {
-                const gridModel = axisModel.getReferringComponents('grid', true).models[0];
+                const gridModel = axisModel.getReferringComponents('grid', SINGLE_REFERRING).models[0];
                 gridModel && each(axisModels, function (axModel) {
                     if (axisModel.componentIndex !== axModel.componentIndex
-                        && gridModel === axModel.getReferringComponents('grid', true).models[0]
+                        && gridModel === axModel.getReferringComponents('grid', SINGLE_REFERRING).models[0]
                     ) {
                         axisInfo.add(axModel.componentIndex);
                     }
@@ -406,6 +411,10 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             }
             // else remain its original setting.
         });
+    }
+
+    noTarget(): boolean {
+        return this._noTarget;
     }
 
     getFirstTargetAxisModel(): AxisBaseModel {

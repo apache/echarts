@@ -36,7 +36,7 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { getAxisMainType } from './helper';
+import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
 
 const Rect = graphic.Rect;
 
@@ -99,10 +99,6 @@ class SliderZoomView extends DataZoomView {
         this.api = api;
     }
 
-
-    /**
-     * @override
-     */
     render(
         dataZoomModel: SliderZoomModel,
         ecModel: GlobalModel,
@@ -117,13 +113,19 @@ class SliderZoomView extends DataZoomView {
         throttle.createOrUpdate(
             this,
             '_dispatchZoomAction',
-            this.dataZoomModel.get('throttle'),
+            dataZoomModel.get('throttle'),
             'fixRate'
         );
 
         this._orient = dataZoomModel.getOrient();
 
-        if (this.dataZoomModel.get('show') === false) {
+        if (dataZoomModel.get('show') === false) {
+            this.group.removeAll();
+            return;
+        }
+
+        if (dataZoomModel.noTarget()) {
+            this._clear();
             this.group.removeAll();
             return;
         }
@@ -138,22 +140,16 @@ class SliderZoomView extends DataZoomView {
         this._updateView();
     }
 
-    /**
-     * @override
-     */
-    remove() {
-        throttle.clear(this, '_dispatchZoomAction');
-    }
-
-    /**
-     * @override
-     */
     dispose() {
+        this._clear();
         super.dispose.apply(this, arguments as any);
+    }
+
+    private _clear() {
         throttle.clear(this, '_dispatchZoomAction');
     }
 
-    _buildView() {
+    private _buildView() {
         const thisGroup = this.group;
 
         thisGroup.removeAll();
@@ -174,10 +170,7 @@ class SliderZoomView extends DataZoomView {
         this._positionGroup();
     }
 
-    /**
-     * @private
-     */
-    _resetLocation() {
+    private _resetLocation() {
         const dataZoomModel = this.dataZoomModel;
         const api = this.api;
 
@@ -223,10 +216,7 @@ class SliderZoomView extends DataZoomView {
         this._orient === VERTICAL && this._size.reverse();
     }
 
-    /**
-     * @private
-     */
-    _positionGroup() {
+    private _positionGroup() {
         const thisGroup = this.group;
         const location = this._location;
         const orient = this._orient;
@@ -257,14 +247,11 @@ class SliderZoomView extends DataZoomView {
         thisGroup.markRedraw();
     }
 
-    /**
-     * @private
-     */
-    _getViewExtent() {
+    private _getViewExtent() {
         return [0, this._size[0]];
     }
 
-    _renderBackground() {
+    private _renderBackground() {
         const dataZoomModel = this.dataZoomModel;
         const size = this._size;
         const barGroup = this._displayables.barGroup;
@@ -293,7 +280,7 @@ class SliderZoomView extends DataZoomView {
         }));
     }
 
-    _renderDataShadow() {
+    private _renderDataShadow() {
         const info = this._dataShadowInfo = this._prepareDataShadowInfo();
 
         if (!info) {
@@ -383,7 +370,7 @@ class SliderZoomView extends DataZoomView {
         }));
     }
 
-    _prepareDataShadowInfo() {
+    private _prepareDataShadowInfo() {
         const dataZoomModel = this.dataZoomModel;
         const showDataShadow = dataZoomModel.get('showDataShadow');
 
@@ -440,7 +427,7 @@ class SliderZoomView extends DataZoomView {
         return result;
     }
 
-    _renderHandle() {
+    private _renderHandle() {
         const displaybles = this._displayables;
         const handles: [graphic.Path, graphic.Path] = displaybles.handles = [null, null];
         const handleLabels: [graphic.Text, graphic.Text] = displaybles.handleLabels = [null, null];
@@ -594,10 +581,7 @@ class SliderZoomView extends DataZoomView {
         this._updateDataInfo(nonRealtime);
     }
 
-    /**
-     * @private
-     */
-    _updateDataInfo(nonRealtime?: boolean) {
+    private _updateDataInfo(nonRealtime?: boolean) {
         const dataZoomModel = this.dataZoomModel;
         const displaybles = this._displayables;
         const handleLabels = displaybles.handleLabels;
@@ -660,7 +644,7 @@ class SliderZoomView extends DataZoomView {
         }
     }
 
-    _formatLabel(value: ParsedValue, axis: Axis) {
+    private _formatLabel(value: ParsedValue, axis: Axis) {
         const dataZoomModel = this.dataZoomModel;
         const labelFormatter = dataZoomModel.get('labelFormatter');
 
@@ -685,10 +669,9 @@ class SliderZoomView extends DataZoomView {
     }
 
     /**
-     * @private
      * @param showOrHide true: show, false: hide
      */
-    _showDataInfo(showOrHide?: boolean) {
+    private _showDataInfo(showOrHide?: boolean) {
         // Always show when drgging.
         showOrHide = this._dragging || showOrHide;
 
@@ -697,7 +680,7 @@ class SliderZoomView extends DataZoomView {
         handleLabels[1].attr('invisible', !showOrHide);
     }
 
-    _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
+    private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
         this._dragging = true;
 
         // For mobile device, prevent screen slider on the button.
@@ -718,7 +701,7 @@ class SliderZoomView extends DataZoomView {
         changed && realtime && this._dispatchZoomAction();
     }
 
-    _onDragEnd() {
+    private _onDragEnd() {
         this._dragging = false;
         this._showDataInfo(false);
 
@@ -728,7 +711,7 @@ class SliderZoomView extends DataZoomView {
         !realtime && this._dispatchZoomAction();
     }
 
-    _onClickPanelClick(e: ZRElementEvent) {
+    private _onClickPanelClick(e: ZRElementEvent) {
         const size = this._size;
         const localPoint = this._displayables.barGroup.transformCoordToLocal(e.offsetX, e.offsetY);
 
@@ -747,8 +730,8 @@ class SliderZoomView extends DataZoomView {
     }
 
     /**
-     * This action will be throttled.
      * @private
+     * This action will be throttled.
      */
     _dispatchZoomAction() {
         const range = this._range;
@@ -762,18 +745,16 @@ class SliderZoomView extends DataZoomView {
         });
     }
 
-    /**
-     * @private
-     */
-    _findCoordRect() {
+    private _findCoordRect() {
         // Find the grid coresponding to the first axis referred by dataZoom.
         let rect: RectLike;
-        each(this.getTargetCoordInfo(), function (coordInfoList) {
-            if (!rect && coordInfoList.length) {
-                const coordSys = coordInfoList[0].model.coordinateSystem;
-                rect = coordSys.getRect && coordSys.getRect();
-            }
-        });
+        const coordSysInfoList = collectReferCoordSysModelInfo(this.dataZoomModel).infoList;
+
+        if (!rect && coordSysInfoList.length) {
+            const coordSys = coordSysInfoList[0].model.coordinateSystem;
+            rect = coordSys.getRect && coordSys.getRect();
+        }
+
         if (!rect) {
             const width = this.api.getWidth();
             const height = this.api.getHeight();

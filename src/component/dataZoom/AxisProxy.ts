@@ -19,7 +19,6 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
-import * as helper from './helper';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
@@ -30,6 +29,8 @@ import DataZoomModel from './DataZoomModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { unionAxisExtentFromData } from '../../coord/axisHelper';
 import { ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
+import { getAxisMainType, isCoordSupported, DataZoomAxisDimension } from './helper';
+import { SINGLE_REFERRING } from '../../util/model';
 
 const each = zrUtil.each;
 const asc = numberUtil.asc;
@@ -54,7 +55,7 @@ class AxisProxy {
 
     ecModel: GlobalModel;
 
-    private _dimName: string;
+    private _dimName: DataZoomAxisDimension;
     private _axisIndex: number;
 
     private _valueWindow: [number, number];
@@ -66,7 +67,12 @@ class AxisProxy {
 
     private _dataZoomModel: DataZoomModel;
 
-    constructor(dimName: string, axisIndex: number, dataZoomModel: DataZoomModel, ecModel: GlobalModel) {
+    constructor(
+        dimName: DataZoomAxisDimension,
+        axisIndex: number,
+        dataZoomModel: DataZoomModel,
+        ecModel: GlobalModel
+    ) {
         this._dimName = dimName;
 
         this._axisIndex = axisIndex;
@@ -107,9 +113,9 @@ class AxisProxy {
         const seriesModels: SeriesModel[] = [];
 
         this.ecModel.eachSeries(function (seriesModel) {
-            if (helper.isCoordSupported(seriesModel.get('coordinateSystem'))) {
-                const axisMainType = helper.getAxisMainType(this._dimName);
-                const axisModel = seriesModel.getReferringComponents(axisMainType, true).models[0];
+            if (isCoordSupported(seriesModel)) {
+                const axisMainType = getAxisMainType(this._dimName);
+                const axisModel = seriesModel.getReferringComponents(axisMainType, SINGLE_REFERRING).models[0];
                 if (axisModel && this._axisIndex === axisModel.componentIndex) {
                     seriesModels.push(seriesModel);
                 }

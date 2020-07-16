@@ -17,19 +17,31 @@
 * under the License.
 */
 
-import { Payload, DimensionName } from '../../util/types';
+import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import DataZoomModel from './DataZoomModel';
-import { indexOf, createHashMap, assert } from 'zrender/src/core/util';
+import { indexOf, createHashMap, assert, HashMap } from 'zrender/src/core/util';
 import { __DEV__ } from '../../config';
+import SeriesModel from '../../model/Series';
+import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
 
 
 export interface DataZoomPayloadBatchItem {
-    dataZoomId: string
-    start?: number
-    end?: number
-    startValue?: number
-    endValue?: number
+    dataZoomId: string;
+    start?: number;
+    end?: number;
+    startValue?: number;
+    endValue?: number;
+}
+
+export interface DataZoomReferCoordSysInfo {
+    model: CoordinateSystemHostModel;
+    // Notice: if two dataZooms refer the same coordinamte system model,
+    // (1) The axis they refered may different
+    // (2) The sequence the axisModels matters, may different in
+    // different dataZooms.
+    axisModels: AxisBaseModel[];
 }
 
 export const DATA_ZOOM_AXIS_DIMENSIONS = [
@@ -43,13 +55,15 @@ type DataZoomAxisIndexPropName =
     'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex' | 'angleAxisIndex' | 'singleAxisIndex';
 type DataZoomAxisIdPropName =
     'xAxisId' | 'yAxisId' | 'radiusAxisId' | 'angleAxisId' | 'singleAxisId';
+export type DataZoomCoordSysMainType = 'polar' | 'grid' | 'singleAxis';
 
 // Supported coords.
 // FIXME: polar has been broken (but rarely used).
-const COORDS = ['cartesian2d', 'polar', 'singleAxis'] as const;
+const SERIES_COORDS = ['cartesian2d', 'polar', 'singleAxis'] as const;
 
-export function isCoordSupported(coordType: string) {
-    return indexOf(COORDS, coordType) >= 0;
+export function isCoordSupported(seriesModel: SeriesModel): boolean {
+    const coordType = seriesModel.get('coordinateSystem');
+    return indexOf(SERIES_COORDS, coordType) >= 0;
 }
 
 export function getAxisMainType(axisDim: DataZoomAxisDimension): DataZoomAxisMainType {
@@ -137,4 +151,58 @@ export function findEffectedDataZooms(ecModel: GlobalModel, payload: Payload): D
     }
 
     return effectedModels;
+}
+
+/**
+ * Find the first target coordinate system.
+ * Available after model built.
+ *
+ * @return Like {
+ *                  grid: [
+ *                      {model: coord0, axisModels: [axis1, axis3], coordIndex: 1},
+ *                      {model: coord1, axisModels: [axis0, axis2], coordIndex: 0},
+ *                      ...
+ *                  ],  // cartesians must not be null/undefined.
+ *                  polar: [
+ *                      {model: coord0, axisModels: [axis4], coordIndex: 0},
+ *                      ...
+ *                  ],  // polars must not be null/undefined.
+ *                  singleAxis: [
+ *                      {model: coord0, axisModels: [], coordIndex: 0}
+ *                  ]
+ *              }
+ */
+export function collectReferCoordSysModelInfo(dataZoomModel: DataZoomModel): {
+    infoList: DataZoomReferCoordSysInfo[];
+    // Key: coordSysModel.uid
+    infoMap: HashMap<DataZoomReferCoordSysInfo, string>;
+} {
+    const ecModel = dataZoomModel.ecModel;
+    const coordSysInfoWrap = {
+        infoList: [] as DataZoomReferCoordSysInfo[],
+        infoMap: createHashMap<DataZoomReferCoordSysInfo, string>()
+    };
+
+    dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+        const axisModel = ecModel.getComponent(getAxisMainType(axisDim), axisIndex) as AxisBaseModel;
+        if (!axisModel) {
+            return;
+        }
+        const coordSysModel = axisModel.getCoordSysModel();
+        if (!coordSysModel) {
+            return;
+        }
+
+        const coordSysUid = coordSysModel.uid;
+        let coordSysInfo = coordSysInfoWrap.infoMap.get(coordSysUid);
+        if (!coordSysInfo) {
+            coordSysInfo = { model: coordSysModel, axisModels: [] };
+            coordSysInfoWrap.infoList.push(coordSysInfo);
+            coordSysInfoWrap.infoMap.set(coordSysUid, coordSysInfo);
+        }
+
+        coordSysInfo.axisModels.push(axisModel);
+    });
+
+    return coordSysInfoWrap;
 }

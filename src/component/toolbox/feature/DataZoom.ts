@@ -40,16 +40,14 @@ import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import CartesianAxisModel from '../../../coord/cartesian/AxisModel';
 import DataZoomModel from '../../dataZoom/DataZoomModel';
 import {
-    DataZoomPayloadBatchItem, DataZoomAxisDimension, getAxisIndexPropName,
-    getAxisIdPropName, getAxisMainType
+    DataZoomPayloadBatchItem, DataZoomAxisDimension
 } from '../../dataZoom/helper';
 import {
     ModelFinderObject, ModelFinderIndexQuery, makeInternalComponentId,
-    queryReferringComponents, ModelFinderIdQuery, parseFinder
+    ModelFinderIdQuery, parseFinder
 } from '../../../util/model';
 import ToolboxModel from '../ToolboxModel';
 import { registerInternalOptionCreator } from '../../../model/internalComponentCreator';
-import Model from '../../../model/Model';
 import ComponentModel from '../../../model/Component';
 
 

@@ -29,7 +29,7 @@ import {
     ClassManager,
     mountExtend
 } from '../util/clazz';
-import {makeInner, ModelFinderIndexQuery, queryReferringComponents, ModelFinderIdQuery} from '../util/model';
+import {makeInner, ModelFinderIndexQuery, queryReferringComponents, ModelFinderIdQuery, QueryReferringOpt} from '../util/model';
 import * as layout from '../util/layout';
 import GlobalModel from './Global';
 import {
@@ -276,7 +276,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      *        If axis index / axis id not specified, use the first target as default.
      *        In other cases like dataZoom refer axis, if not specified, measn no refer.
      */
-    getReferringComponents(mainType: ComponentMainType, useDefault: boolean): {
+    getReferringComponents(mainType: ComponentMainType, opt: QueryReferringOpt): {
         // Always be array rather than null/undefined, which is convenient to use.
         models: ComponentModel[];
         // Whether target compoent specified
@@ -292,7 +292,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
                 index: this.get(indexKey, true) as unknown as ModelFinderIndexQuery,
                 id: this.get(idKey, true) as unknown as ModelFinderIdQuery
             },
-            useDefault
+            opt
         );
     }
 

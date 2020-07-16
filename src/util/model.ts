@@ -744,7 +744,7 @@ export function parseFinder(
     }
 
     const defaultMainType = opt ? opt.defaultMainType : null;
-    const queryOptionMap = createHashMap<QueryReferringComponentsOption, ComponentMainType>();
+    const queryOptionMap = createHashMap<QueryReferringOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
@@ -756,7 +756,7 @@ export function parseFinder(
 
         const parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
         const mainType = parsedKey[1];
-        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringComponentsOption;
+        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringOption;
 
         if (
             !mainType
@@ -776,7 +776,11 @@ export function parseFinder(
             ecModel,
             mainType,
             queryOption,
-            mainType === defaultMainType
+            {
+                useDefault: mainType === defaultMainType,
+                enableAll: true,
+                enableNone: true
+            }
         );
         result[mainType + 'Models'] = queryResult.models;
         result[mainType + 'Model'] = queryResult.models[0];
@@ -785,26 +789,38 @@ export function parseFinder(
     return result;
 }
 
-type QueryReferringComponentsOption = {
+type QueryReferringOption = {
     index?: ModelFinderIndexQuery,
     id?: ModelFinderIdQuery,
     name?: ModelFinderNameQuery,
 };
 
+export const SINGLE_REFERRING: QueryReferringOpt = { useDefault: true, enableAll: false, enableNone: false };
+export const MULTIPLE_REFERRING: QueryReferringOpt = { useDefault: false, enableAll: true, enableNone: true };
+
+export type QueryReferringOpt = {
+    // Whether to use the first componet as the default if none of index/id/name are specified.
+    useDefault: boolean;
+    // Whether to enable `'all'` on index option.
+    enableAll: boolean;
+    // Whether to enable `'none'`/`false` on index option.
+    enableNone: boolean;
+};
+
 export function queryReferringComponents(
     ecModel: GlobalModel,
     mainType: ComponentMainType,
-    option: QueryReferringComponentsOption,
-    useDefault?: boolean
+    userOption: QueryReferringOption,
+    opt: QueryReferringOpt
 ): {
     // Always be array rather than null/undefined, which is convenient to use.
     models: ComponentModel[];
     // Whether there is indexOption/id/name specified
     specified: boolean;
 } {
-    let indexOption = option.index;
-    let idOption = option.id;
-    let nameOption = option.name;
+    let indexOption = userOption.index;
+    let idOption = userOption.id;
+    let nameOption = userOption.name;
 
     const result = {
         models: null as ComponentModel[],
@@ -815,12 +831,13 @@ export function queryReferringComponents(
         // Use the first as default if `useDefault`.
         let firstCmpt;
         result.models = (
-            useDefault && (firstCmpt = ecModel.getComponent(mainType))
+            opt.useDefault && (firstCmpt = ecModel.getComponent(mainType))
         ) ? [firstCmpt] : [];
         return result;
     }
 
     if (indexOption === 'none' || indexOption === false) {
+        assert(opt.enableNone, '`"none"` or `false` is not a valid value on index option.');
         result.models = [];
         return result;
     }
@@ -828,6 +845,7 @@ export function queryReferringComponents(
     // `queryComponents` will return all components if
     // both all of index/id/name are null/undefined.
     if (indexOption === 'all') {
+        assert(opt.enableAll, '`"all"` is not a valid value on index option.');
         indexOption = idOption = nameOption = null;
     }
     result.models = ecModel.queryComponents({

@@ -25,6 +25,7 @@ import { SeriesOption, ECUnitOption } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
 import SeriesModel from '../../../model/Series';
+import { SINGLE_REFERRING } from '../../../util/model';
 
 const magicTypeLang = lang.toolbox.magicType;
 const INNER_STACK_KEYWORD = '__ec_magicType_stack__' as const;
@@ -117,11 +118,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                 if (categoryAxis) {
                     const axisDim = categoryAxis.dim;
                     const axisType = axisDim + 'Axis';
-                    const axisModel = ecModel.queryComponents({
-                        mainType: axisType,
-                        index: seriesModel.get(name + 'Index' as any),
-                        id: seriesModel.get(name + 'Id' as any)
-                    })[0];
+                    const axisModel = seriesModel.getReferringComponents(axisType, SINGLE_REFERRING).models[0];
                     const axisIndex = axisModel.componentIndex;
 
                     newOption[axisType] = newOption[axisType] || [];

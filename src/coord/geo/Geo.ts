@@ -24,7 +24,7 @@ import geoSourceManager from './geoSourceManager';
 import Region from './Region';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
-import { ParsedModelFinder } from '../../util/model';
+import { ParsedModelFinder, SINGLE_REFERRING } from '../../util/model';
 import GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 
@@ -173,7 +173,9 @@ function getCoordSys(finder: ParsedModelFinder): Geo {
         : seriesModel
         ? (
             seriesModel.coordinateSystem as Geo // For map series.
-            || ((seriesModel.getReferringComponents('geo', true).models[0] || {}) as GeoModel).coordinateSystem
+            || (
+                (seriesModel.getReferringComponents('geo', SINGLE_REFERRING).models[0] || {}
+            ) as GeoModel).coordinateSystem
         )
         : null;
 }

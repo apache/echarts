@@ -920,72 +920,78 @@ under the License.
 
         <script>
         require(['echarts'], function (echarts) {
-            var option;
+            function makePartialOption() {
+                return {
+                    grid: [{
+                        bottom: '60%'
+                    }, {
+                        id: 'gb',
+                        top: '60%'
+                    }],
+                    xAxis: [{
+                        type: 'category'
+                    }, {
+                        type: 'category'
+                    }, {
+                        id: 'xb0',
+                        type: 'category',
+                        gridIndex: 1
+                    }, {
+                        id: 'xb1',
+                        type: 'category',
+                        gridIndex: 1
+                    }],
+                    yAxis: [{
 
-            option = {
-                // toolbox: {
-                //     left: 'center',
-                //     feature: {
-                //         dataZoom: {}
-                //     }
-                // },
-                grid: [{
-                    bottom: '60%'
-                }, {
-                    id: 'gb',
-                    top: '60%'
-                }],
-                xAxis: [{
-                    type: 'category'
-                }, {
-                    type: 'category'
-                }, {
-                    id: 'xb0',
-                    type: 'category',
-                    gridIndex: 1
-                }, {
-                    id: 'xb1',
-                    type: 'category',
-                    gridIndex: 1
-                }],
-                yAxis: [{
+                    }, {
+                        id: 'yb',
+                        gridIndex: 1
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: [[11, 22], [33, 44]]
+                    }, {
+                        type: 'line',
+                        xAxisIndex: 1,
+                        data: [[11111, 52], [21133, 74]]
+                    }, {
+                        id: 'sb0',
+                        type: 'line',
+                        xAxisIndex: 2,
+                        yAxisIndex: 1,
+                        data: [[23, 432], [54, 552]]
+                    }, {
+                        id: 'sb1',
+                        type: 'line',
+                        xAxisIndex: 3,
+                        yAxisIndex: 1,
+                        data: [[222233, 1432], [111154, 1552]]
+                    }]
+                };
+            }
 
-                }, {
-                    id: 'yb',
-                    gridIndex: 1
-                }],
+            var option = echarts.util.extend(makePartialOption(), {
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
                 dataZoom: [{
-                    type: 'slider'
+                    type: 'slider',
+                    xAxisIndex: 'all'
                 }, {
-                    type: 'inside'
-                }],
-                series: [{
-                    type: 'line',
-                    data: [[11, 22], [33, 44]]
-                }, {
-                    type: 'line',
-                    xAxisIndex: 1,
-                    data: [[11111, 52], [21133, 74]]
-                }, {
-                    id: 'sb0',
-                    type: 'line',
-                    xAxisIndex: 2,
-                    yAxisIndex: 1,
-                    data: [[23, 432], [54, 552]]
-                }, {
-                    id: 'sb1',
-                    type: 'line',
-                    xAxisIndex: 3,
-                    yAxisIndex: 1,
-                    data: [[222233, 1432], [111154, 1552]]
+                    type: 'inside',
+                    xAxisIndex: 'all'
                 }]
-            };
+            });
 
             var chart = testHelper.create(echarts, 'main_replaceMerge_if_not_declared_in_option', {
                 title: [
+                    'DataZoom controlls all of the axes.',
                     'Click btn "remove all grids".',
                     'Should no error.',
-                    'Click btn "addback the first grid".',
+                    'Click btn "addback".',
                     'Functionalities should be OK.'
                 ],
                 option: option,
@@ -996,6 +1002,11 @@ under the License.
                         chart.setOption({
                             // Not declared in option
                         }, { replaceMerge: ['grid', 'xAxis', 'yAxis', 'series'] });
+                    }
+                }, {
+                    text: 'addback',
+                    onclick: function () {
+                        chart.setOption(makePartialOption());
                     }
                 }]
             });

@@ -22,7 +22,7 @@ import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
-import {groupData} from '../../util/model';
+import {groupData, SINGLE_REFERRING} from '../../util/model';
 import {encodeHTML} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
@@ -172,11 +172,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      */
     getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): List {
 
-        const singleAxisModel = ecModel.queryComponents({
-            mainType: 'singleAxis',
-            index: this.get('singleAxisIndex'),
-            id: this.get('singleAxisId')
-        })[0];
+        const singleAxisModel = this.getReferringComponents('singleAxis', SINGLE_REFERRING).models[0];
 
         const axisType = singleAxisModel.get('type');
 
