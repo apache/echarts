@@ -22,17 +22,19 @@
  */
 
 
-import ComponentModel, { ComponentModelConstructor } from './Component';
+// import ComponentModel, { ComponentModelConstructor } from './Component';
 import ExtensionAPI from '../ExtensionAPI';
 import {
-    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption, SeriesOption, ComponentOption
+    OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECOption, SeriesOption
 } from '../util/types';
 import GlobalModel, { InnerSetOptionOpts } from './Global';
 import {
-    MappingExistingItem, normalizeToArray, setComponentTypeToKeyInfo, mappingToExists
+    normalizeToArray
+    // , MappingExistingItem, setComponentTypeToKeyInfo, mappingToExists
 } from '../util/model';
 import {
-    each, clone, map, merge, isTypedArray, setAsPrimitive, HashMap, createHashMap, extend
+    each, clone, map, isTypedArray, setAsPrimitive
+    // , HashMap , createHashMap, extend, merge,
 } from 'zrender/src/core/util';
 
 const QUERY_REG = /^(min|max)?(.+)$/;
@@ -45,7 +47,7 @@ interface ParsedRawOption {
 }
 
 // Key: mainType
-type FakeComponentsMap = HashMap<(MappingExistingItem & { subType: string })[]>;
+// type FakeComponentsMap = HashMap<(MappingExistingItem & { subType: string })[]>;
 
 /**
  * TERM EXPLANATIONS:

@@ -162,23 +162,23 @@ export interface MappingExistingItem {
 type MappingResult<T> = MappingResultItem<T>[];
 interface MappingResultItem<T extends MappingExistingItem = MappingExistingItem> {
     // Existing component instance.
-    existing?: T;
+    existing: T;
     // The mapped new component option.
-    newOption?: ComponentOption;
+    newOption: ComponentOption;
     // Mark that the new component has nothing to do with any of the old components.
     // So they won't share view. Also see `__requireNewView`.
-    brandNew?: boolean;
-    // id?: string;
-    // name?: string;
+    brandNew: boolean;
     // keyInfo for new component.
     // All of them will be assigned to a created component instance.
-    keyInfo?: {
+    keyInfo: {
         name: string,
         id: string,
         mainType: ComponentMainType,
         subType: ComponentSubType
     };
 }
+
+type MappingToExistsMode = 'normalMerge' | 'replaceMerge' | 'replaceAll';
 
 /**
  * Mapping to existings for merge.
@@ -198,22 +198,31 @@ interface MappingResultItem<T extends MappingExistingItem = MappingExistingItem>
  *     That means their might be "hole" after the removal.
  *     The new components are created first at those available index.
  *
+ * Mode "replaceAll":
+ *     This mode try to support that reproduce an echarts instance from another
+ *     echarts instance (via `getOption`) in some simple cases.
+ *     In this senario, the `result` index are exactly the consistent with the `newCmptOptions`,
+ *     which ensures the compoennt index referring (like `xAxisIndex: ?`) corrent. That is,
+ *     the "hole" in `newCmptOptions` will also be kept.
+ *     On the contrary, other modes try best to eliminate holes.
+ *     PENDING: This is an experimental mode yet.
+ *
  * @return See the comment of <MappingResult>.
  */
 export function mappingToExists<T extends MappingExistingItem>(
     existings: T[],
     newCmptOptions: ComponentOption[],
-    mode: 'normalMerge' | 'replaceMerge'
+    mode: MappingToExistsMode
 ): MappingResult<T> {
 
-    const result: MappingResultItem<T>[] = [];
+    const isNormalMergeMode = mode === 'normalMerge';
     const isReplaceMergeMode = mode === 'replaceMerge';
+    const isReplaceAllMode = mode === 'replaceAll';
     existings = existings || [];
     newCmptOptions = (newCmptOptions || []).slice();
     const existingIdIdxMap = createHashMap<number>();
 
-    prepareResult(result, existings, existingIdIdxMap, isReplaceMergeMode);
-
+    // Validate id and name on user input option.
     each(newCmptOptions, function (cmptOption, index) {
         if (!isObject<ComponentOption>(cmptOption)) {
             newCmptOptions[index] = null;
@@ -223,13 +232,22 @@ export function mappingToExists<T extends MappingExistingItem>(
         cmptOption.name == null || validateIdOrName(cmptOption.name);
     });
 
-    mappingById(result, existings, existingIdIdxMap, newCmptOptions);
+    const result = prepareResult(existings, existingIdIdxMap, mode);
 
-    if (!isReplaceMergeMode) {
+    if (isNormalMergeMode || isReplaceMergeMode) {
+        mappingById(result, existings, existingIdIdxMap, newCmptOptions);
+    }
+
+    if (isNormalMergeMode) {
         mappingByName(result, newCmptOptions);
     }
 
-    mappingByIndex(result, newCmptOptions, isReplaceMergeMode);
+    if (isNormalMergeMode || isReplaceMergeMode) {
+        mappingByIndex(result, newCmptOptions, isReplaceMergeMode);
+    }
+    else if (isReplaceAllMode) {
+        mappingInReplaceAllMode(result, newCmptOptions);
+    }
 
     makeIdAndName(result);
 
@@ -239,11 +257,16 @@ export function mappingToExists<T extends MappingExistingItem>(
 }
 
 function prepareResult<T extends MappingExistingItem>(
-    result: MappingResult<T>,
     existings: T[],
     existingIdIdxMap: HashMap<number>,
-    isReplaceMergeMode: boolean
-) {
+    mode: MappingToExistsMode
+): MappingResultItem<T>[] {
+    const result: MappingResultItem<T>[] = [];
+
+    if (mode === 'replaceAll') {
+        return result;
+    }
+
     // Do not use native `map` to in case that the array `existings`
     // contains elided items, which will be ommited.
     for (let index = 0; index < existings.length; index++) {
@@ -258,11 +281,15 @@ function prepareResult<T extends MappingExistingItem>(
         // For internal-components:
         //     go with "replaceMerge" approach in both mode.
         result.push({
-            existing: (isReplaceMergeMode || isComponentIdInternal(existing))
+            existing: (mode === 'replaceMerge' || isComponentIdInternal(existing))
                 ? null
-                : existing
+                : existing,
+            newOption: null,
+            keyInfo: null,
+            brandNew: null
         });
     }
+    return result;
 }
 
 function mappingById<T extends MappingExistingItem>(
@@ -323,7 +350,7 @@ function mappingByName<T extends MappingExistingItem>(
 function mappingByIndex<T extends MappingExistingItem>(
     result: MappingResult<T>,
     newCmptOptions: ComponentOption[],
-    isReplaceMergeMode: boolean
+    brandNew: boolean
 ): void {
     let nextIdx = 0;
     each(newCmptOptions, function (cmptOption) {
@@ -358,12 +385,33 @@ function mappingByIndex<T extends MappingExistingItem>(
 
         if (resultItem) {
             resultItem.newOption = cmptOption;
-            resultItem.brandNew = isReplaceMergeMode;
+            resultItem.brandNew = brandNew;
         }
         else {
-            result.push({ newOption: cmptOption, brandNew: isReplaceMergeMode });
+            result.push({
+                newOption: cmptOption,
+                brandNew: brandNew,
+                existing: null,
+                keyInfo: null
+            });
         }
         nextIdx++;
+    });
+}
+
+function mappingInReplaceAllMode<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    newCmptOptions: ComponentOption[]
+): void {
+    each(newCmptOptions, function (cmptOption) {
+        // The feature "reproduce" requires "hole" will also reproduced
+        // in case that compoennt index referring are broken.
+        result.push({
+            newOption: cmptOption,
+            brandNew: true,
+            existing: null,
+            keyInfo: null
+        });
     });
 }
 

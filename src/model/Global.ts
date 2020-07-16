@@ -272,8 +272,11 @@ class GlobalModel extends Model<ECUnitOption> {
             );
 
             const oldCmptList = componentsMap.get(mainType);
-            const mergeMode = (replaceMergeMainTypeMap && replaceMergeMainTypeMap.get(mainType))
-                ? 'replaceMerge' : 'normalMerge';
+            const mergeMode =
+                // `!oldCmptList` means init. See the comment in `mappingToExists`
+                  !oldCmptList ? 'replaceAll'
+                : (replaceMergeMainTypeMap && replaceMergeMainTypeMap.get(mainType)) ? 'replaceMerge'
+                : 'normalMerge';
             const mappingResult = modelUtil.mappingToExists(oldCmptList, newCmptOptionList, mergeMode);
 
             // Set mainType and complete subType.

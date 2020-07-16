@@ -717,11 +717,11 @@ under the License.
                 var option = {
                     grid: [{
                         right: '55%',
-                        bottom: 30
+                        bottom: 70
                     }, {
                         id: 'grid-r',
                         left: '55%',
-                        bottom: 30
+                        bottom: 70
                     }],
                     xAxis: [{
                         type: 'category',
@@ -739,11 +739,11 @@ under the License.
                     }],
                     legend: {},
                     tooltip: {},
-                    // dataZoom: [{
-                    //     type: 'slider'
-                    // }, {
-                    //     type: 'inside'
-                    // }],
+                    dataZoom: [{
+                        type: 'slider'
+                    }, {
+                        type: 'inside'
+                    }],
                     toolbox: {
                         left: 'center',
                         top: 25,
@@ -786,8 +786,11 @@ under the License.
 
             var chartSrc = testHelper.create(echarts, 'main_replaceMerge_reproduce_by_getOption_src', {
                 title: [
-                    '**replaceMerge**: reproduce via getOption',
-                    'click the buttons one by one from left to right',
+                    '**replaceMerge**: test reproduce via **getOption**',
+                    'Click "remove left grid"',
+                    'left grid removed and dataZoom go to right grid',
+                    'use insideZoom',
+                    'Click "reproduce1"',
                     'should show **TWO checked: Pass**',
                     'The chart reproduced below should be **the same**'
                 ],
@@ -815,83 +818,17 @@ under the License.
                     onclick: function () {
                         testHelper.printAssert(chartSrc, function (assert) {
                             var seriesModels = chartSrc.getModel().getSeries();
-                            assert(seriesModels.length === 3);
-                            assert(seriesModels[0].componentIndex === 0);
-                            assert(seriesModels[1].componentIndex === 2);
-                            assert(seriesModels[2].componentIndex === 3);
-                            assert(seriesModels[0].id === 'a');
-                            assert(seriesModels[1].id === 'c');
-                            assert(seriesModels[2].id === 'd');
-
-                            assert(chartSrc.getModel().getSeriesCount() === 3);
+                            assert(seriesModels.length === 1);
+                            assert(seriesModels[0].componentIndex === 1);
 
                             var optionGotten = chartSrc.getOption();
-                            assert(optionGotten.series.length === 4);
-                            assert(optionGotten.series[0].name === 'aa');
-                            assert(optionGotten.series[1] == null);
-                            assert(optionGotten.series[2].name === 'cc');
-                            assert(optionGotten.series[3].name === 'dd');
+                            assert(optionGotten.series.length === 2);
+                            assert(optionGotten.series[0] === null);
+                            assert(optionGotten.series[1].id === 'b');
 
-                            assert(chartSrc.getModel().getSeriesByIndex(1) == null);
-                            assert(chartSrc.getModel().getComponent('series', 1) == null);
+                            console.log(optionGotten);
+                            chartTar.setOption(optionGotten);
                         });
-                    }
-                }, {
-                    text: 'replaceMerge',
-                    onclick: function () {
-                        chartSrc.setOption({
-                            series: [{
-                                id: 'm',
-                                type: 'bar',
-                                data: [['a11', 22], ['a33', 44]]
-                            }, {
-                                id: 'n',
-                                type: 'bar',
-                                data: [['a11', 32], ['a33', 54]]
-                            }, {
-                                id: 'a'
-                            }, {
-                                id: 'c'
-                            }, {
-                                id: 'd'
-                            }]
-                        }, {replaceMerge: 'series'});
-                    }
-                }, {
-                    text: 'then check',
-                    onclick: function () {
-                        testHelper.printAssert(chartSrc, function (assert) {
-                            var seriesModels = chartSrc.getModel().getSeries();
-                            assert(seriesModels.length === 5);
-                            assert(seriesModels[0].componentIndex === 0);
-                            assert(seriesModels[1].componentIndex === 1);
-                            assert(seriesModels[2].componentIndex === 2);
-                            assert(seriesModels[3].componentIndex === 3);
-                            assert(seriesModels[4].componentIndex === 4);
-                            assert(seriesModels[0].id === 'a');
-                            assert(seriesModels[1].id === 'm');
-                            assert(seriesModels[2].id === 'c');
-                            assert(seriesModels[3].id === 'd');
-                            assert(seriesModels[4].id === 'n');
-
-                            assert(chartSrc.getModel().getSeriesCount() === 5);
-
-                            var optionGotten = chartSrc.getOption();
-                            assert(optionGotten.series.length === 5);
-                            assert(optionGotten.series[0].id === 'a');
-                            assert(optionGotten.series[1].id === 'm');
-                            assert(optionGotten.series[2].id === 'c');
-                            assert(optionGotten.series[3].id === 'd');
-                            assert(optionGotten.series[4].id === 'n');
-
-                            assert(chartSrc.getModel().getSeriesByIndex(1).id == 'm');
-                            assert(chartSrc.getModel().getComponent('series', 1).id == 'm');
-                        });
-                    }
-                }, {
-                    text: 'reset all',
-                    onclick: function () {
-                        chartSrc.setOption(makeInitOption(), true);
                     }
                 }],
                 height: 200
