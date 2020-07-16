@@ -251,6 +251,7 @@ class SliderZoomView extends DataZoomView {
         const rect = thisGroup.getBoundingRect([barGroup]);
         thisGroup.x = location.x - rect.x;
         thisGroup.y = location.y - rect.y;
+        thisGroup.markRedraw();
     }
 
     /**
@@ -751,6 +752,10 @@ class SliderZoomView extends DataZoomView {
             type: 'dataZoom',
             from: this.uid,
             dataZoomId: this.dataZoomModel.id,
+            animation: {
+                easing: 'cubicOut',
+                duration: 100
+            },
             start: range[0],
             end: range[1]
         });

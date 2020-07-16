@@ -47,6 +47,7 @@ interface BreadcrumbItemStyleOption extends ItemStyleOption {
 
 interface TreemapSeriesLabelOption extends LabelOption {
     ellipsis?: boolean
+    formatter?: string | ((params: CallbackDataParams) => string)
 }
 
 interface TreemapSeriesItemStyleOption extends ItemStyleOption {

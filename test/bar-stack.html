@@ -46,33 +46,6 @@ under the License.
             ], function (echarts) {
 
                 var option = {
-                    "tooltip": {
-                        "trigger": "axis",
-                        "axisPointer": {
-                            "type": "shadow"
-                        }
-                    },
-                    "toolbox": {
-                        "show": true,
-                        "feature": {
-                            "dataZoom": {
-                                "yAxisIndex": "none"
-                            },
-                            "dataView": {
-                                "readOnly": false
-                            },
-                            "magicType": {
-                                "type": [
-                                    "line",
-                                    "bar",
-                                    "stack",
-                                    "tiled"
-                                ]
-                            },
-                            "restore": {},
-                            "saveAsImage": {}
-                        }
-                    },
                     "xAxis": {
                         type: 'category'
                     },
@@ -99,14 +72,14 @@ under the License.
                         ],
                         barMinHeight: 10,
                         label: {
-                            normal: {show: true}
+                            show: true
                         },
                         "name": "zly13"
                     }, {
                         "type": "bar",
                         "stack": "all",
                         label: {
-                            normal: {show: true}
+                            show: true
                         },
                         "data": [
                             ["哪有那么多审批", 66],

@@ -19,21 +19,16 @@
 
 import * as graphic from '../../util/graphic';
 import * as zrUtil from 'zrender/src/core/util';
-import { LayoutOrient, Payload } from '../../util/types';
+import { LayoutOrient, Payload, ECElement } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { GraphNode, GraphEdge } from '../../data/Graph';
-import { GraphNodeItemOption, GraphEdgeItemOption } from '../graph/GraphSeries';
+import { GraphEdgeItemOption } from '../graph/GraphSeries';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-
-const nodeOpacityPath = ['itemStyle', 'opacity'] as const;
-const hoverNodeOpacityPath = ['emphasis', 'itemStyle', 'opacity'] as const;
-const lineOpacityPath = ['lineStyle', 'opacity'] as const;
-const hoverLineOpacityPath = ['emphasis', 'lineStyle', 'opacity'] as const;
 
 interface FocusNodeAdjacencyPayload extends Payload {
     dataIndex?: number
@@ -48,54 +43,19 @@ interface SankeyEl extends graphic.Path {
     unfocusNodeAdjHandler(): void
 }
 
-function getItemOpacity(
-    item: GraphNode | GraphEdge,
-    opacityPath: readonly string[]
-): number {
-    return item.getVisual('opacity')
-        // TODO: TYPE
-        || item.getModel<GraphNodeItemOption>().get(opacityPath as typeof nodeOpacityPath);
-}
-
-function fadeOutItem(
-    item: GraphNode | GraphEdge,
-    opacityPath: readonly string[],
-    opacityRatio?: number
-) {
-    const el = item.getGraphicEl() as SankeyEl;
-    let opacity = getItemOpacity(item, opacityPath);
-
-    if (opacityRatio != null) {
-        opacity == null && (opacity = 1);
-        opacity *= opacityRatio;
+function fadeInItem(nodeOrEdge: GraphNode | GraphEdge) {
+    const el = nodeOrEdge.getGraphicEl();
+    if (el) {
+        el.removeState('blur');
     }
-
-    el.downplay && el.downplay();
-
-    el.traverse(function (child) {
-        if (child.type !== 'group') {
-            child.setStyle('opacity', opacity);
-        }
-    });
 }
 
-function fadeInItem(
-    item: GraphNode | GraphEdge,
-    opacityPath: readonly string[]
-) {
-    const opacity = getItemOpacity(item, opacityPath);
-    const el = item.getGraphicEl() as SankeyEl;
-
-    // Support emphasis here.
-    el.highlight && el.highlight();
-
-    el.traverse(function (child) {
-        if (child.type !== 'group') {
-            child.setStyle('opacity', opacity);
-        }
-    });
+function fadeOutItem(nodeOrEdge: GraphNode | GraphEdge) {
+    const el = nodeOrEdge.getGraphicEl();
+    if (el) {
+        el.useState('blur');
+    }
 }
-
 class SankeyPathShape {
     x1 = 0;
     y1 = 0;
@@ -174,8 +134,6 @@ class SankeyView extends ChartView {
     private _focusAdjacencyDisabled = false;
 
     private _data: List;
-
-    private _unfocusDelayTimer: number;
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;
@@ -260,7 +218,7 @@ class SankeyView extends ChartView {
                 cpy2: cpy2
             });
 
-            curve.setStyle(lineStyleModel.getItemStyle());
+            curve.useStyle(lineStyleModel.getItemStyle());
             // Special color, use source node color or target node color
             switch (curve.style.fill) {
                 case 'source':
@@ -299,6 +257,8 @@ class SankeyView extends ChartView {
                 },
                 style: itemModel.getModel('itemStyle').getItemStyle()
             });
+
+            (rect as ECElement).disableLabelAnimation = true;
 
             const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
@@ -357,9 +317,13 @@ class SankeyView extends ChartView {
             el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
 
             if (itemModel.get('focusNodeAdjacency')) {
+                const blurState = el.ensureState('blur');
+                blurState.style = {
+                    opacity: 0.1
+                };
+
                 el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        sankeyView._clearTimer();
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -383,9 +347,13 @@ class SankeyView extends ChartView {
             el.unfocusNodeAdjHandler && el.off('mouseout', el.unfocusNodeAdjHandler);
 
             if (edgeModel.get('focusNodeAdjacency')) {
+                const blurState = el.ensureState('blur');
+                blurState.style = {
+                    opacity: 0.02
+                };
+
                 el.on('mouseover', el.focusNodeAdjHandler = function () {
                     if (!sankeyView._focusAdjacencyDisabled) {
-                        sankeyView._clearTimer();
                         api.dispatchAction({
                             type: 'focusNodeAdjacency',
                             seriesId: seriesModel.id,
@@ -412,26 +380,14 @@ class SankeyView extends ChartView {
     }
 
     dispose() {
-        this._clearTimer();
     }
 
     _dispatchUnfocus(api: ExtensionAPI) {
         const self = this;
-        this._clearTimer();
-        this._unfocusDelayTimer = setTimeout(function () {
-            self._unfocusDelayTimer = null;
-            api.dispatchAction({
-                type: 'unfocusNodeAdjacency',
-                seriesId: self._model.id
-            });
-        }, 500) as any;
-    }
-
-    _clearTimer() {
-        if (this._unfocusDelayTimer) {
-            clearTimeout(this._unfocusDelayTimer);
-            this._unfocusDelayTimer = null;
-        }
+        api.dispatchAction({
+            type: 'unfocusNodeAdjacency',
+            seriesId: self._model.id
+        });
     }
 
     focusNodeAdjacency(
@@ -452,23 +408,23 @@ class SankeyView extends ChartView {
         const edge = graph.getEdgeByIndex(edgeDataIndex);
 
         graph.eachNode(function (node) {
-            fadeOutItem(node, nodeOpacityPath, 0.1);
+            fadeOutItem(node);
         });
         graph.eachEdge(function (edge) {
-            fadeOutItem(edge, lineOpacityPath, 0.1);
+            fadeOutItem(edge);
         });
 
         if (node) {
             const itemModel = data.getItemModel<SankeyNodeItemOption>(dataIndex);
-            fadeInItem(node, hoverNodeOpacityPath);
+            fadeInItem(node);
             const focusNodeAdj = itemModel.get('focusNodeAdjacency');
             if (focusNodeAdj === 'outEdges') {
                 zrUtil.each(node.outEdges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, hoverLineOpacityPath);
-                    fadeInItem(edge.node2, hoverNodeOpacityPath);
+                    fadeInItem(edge);
+                    fadeInItem(edge.node2);
                 });
             }
             else if (focusNodeAdj === 'inEdges') {
@@ -476,8 +432,8 @@ class SankeyView extends ChartView {
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, hoverLineOpacityPath);
-                    fadeInItem(edge.node1, hoverNodeOpacityPath);
+                    fadeInItem(edge);
+                    fadeInItem(edge.node1);
                 });
             }
             else if (focusNodeAdj === 'allEdges') {
@@ -485,16 +441,16 @@ class SankeyView extends ChartView {
                     if (edge.dataIndex < 0) {
                         return;
                     }
-                    fadeInItem(edge, hoverLineOpacityPath);
-                    (edge.node1 !== node) && fadeInItem(edge.node1, hoverNodeOpacityPath);
-                    (edge.node2 !== node) && fadeInItem(edge.node2, hoverNodeOpacityPath);
+                    fadeInItem(edge);
+                    (edge.node1 !== node) && fadeInItem(edge.node1);
+                    (edge.node2 !== node) && fadeInItem(edge.node2);
                 });
             }
         }
         if (edge) {
-            fadeInItem(edge, hoverLineOpacityPath);
-            fadeInItem(edge.node1, hoverNodeOpacityPath);
-            fadeInItem(edge.node2, hoverNodeOpacityPath);
+            fadeInItem(edge);
+            fadeInItem(edge.node1);
+            fadeInItem(edge.node2);
         }
     }
 
@@ -504,10 +460,10 @@ class SankeyView extends ChartView {
         const graph = seriesModel.getGraph();
 
         graph.eachNode(function (node) {
-            fadeOutItem(node, nodeOpacityPath);
+            fadeInItem(node);
         });
         graph.eachEdge(function (edge) {
-            fadeOutItem(edge, lineOpacityPath);
+            fadeInItem(edge);
         });
     }
 }

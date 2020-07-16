@@ -190,7 +190,6 @@ class PictorialBarView extends ChartView {
                 }
 
                 if (bar) {
-                    bar.clearStates();
                     updateBar(bar, opt, symbolMeta);
                 }
                 else {
@@ -870,7 +869,7 @@ function removeBar(
     bar.__pictorialClipPath && (animationModel = null);
 
     zrUtil.each(pathes, function (path) {
-        graphic.updateProps(
+        graphic.removeElement(
             path, { scaleX: 0, scaleY: 0 }, animationModel, dataIndex,
             function () {
                 bar.parent && bar.parent.remove(bar);
@@ -953,7 +952,7 @@ function updateCommon(
             labelFetcher: opt.seriesModel,
             labelDataIndex: dataIndex,
             defaultText: getDefaultLabel(opt.seriesModel.getData(), dataIndex),
-            autoColor: symbolMeta.style.fill as ColorString,
+            inheritColor: symbolMeta.style.fill as ColorString,
             defaultOutsidePosition: barPositionOutside
         }
     );

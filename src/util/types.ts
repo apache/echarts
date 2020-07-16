@@ -106,7 +106,15 @@ export interface ECElement extends Element {
     };
     highDownSilentOnTouch?: boolean;
     onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+
+    highlighted?: boolean;
+    selected?: boolean;
     z2EmphasisLift?: number;
+
+    /**
+     * Force disable animation on any condition
+     */
+    disableLabelAnimation?: boolean
 }
 
 export interface DataHost {
@@ -119,6 +127,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 
 interface PayloadItem {
     excludeSeriesId?: string | string[];
+    animation?: AnimationPayload
     [other: string]: any;
 }
 
@@ -126,6 +135,13 @@ export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
     batch?: PayloadItem[];
+}
+
+// Payload includes override anmation info
+export interface AnimationPayload {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
 }
 
 export interface ViewRootGroup extends Group {
@@ -552,6 +568,11 @@ export type AnimationDelayCallbackParam = {
 export type AnimationDurationCallback = (idx: number) => number;
 export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
 
+export interface AnimationOption {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
+}
 /**
  * Mixin of option set to control the animation of series.
  */
@@ -770,6 +791,12 @@ export interface LabelOption extends TextCommonOption {
     rotate?: number
     offset?: number[]
 
+    /**
+     * Min margin between labels. Used when label has layout.
+     */
+    // It's minMargin instead of margin is for not breaking the previous code using margin.
+    minMargin?: number
+
     overflow?: TextStyleProps['overflow']
     silent?: boolean
     precision?: number | 'auto'
@@ -805,13 +832,76 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
     distance?: number | number[]
 }
 
-export interface LabelGuideLineOption {
+export interface LabelLineOption {
     show?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
+    minTurnAngle?: number,
     lineStyle?: LineStyleOption
 }
+
+
+export interface LabelLayoutOptionCallbackParams {
+    dataIndex: number,
+    dataType: string,
+    seriesIndex: number,
+    text: string
+    align: ZRTextAlign
+    verticalAlign: ZRTextVerticalAlign
+    rect: RectLike
+    labelRect: RectLike
+    // Points of label line in pie/funnel
+    labelLinePoints?: number[][]
+    // x: number
+    // y: number
+};
+
+export interface LabelLayoutOption {
+    /**
+     * If move the overlapped label. If label is still overlapped after moved.
+     * It will determine if to hide this label with `hideOverlap` policy.
+     *
+     * shift-x/y will keep the order on x/y
+     * shuffle-x/y will move the label around the original position randomly.
+     */
+    moveOverlap?: 'shift-x'
+        | 'shift-y'
+        | 'shuffle-x'
+        | 'shuffle-y'
+    /**
+     * If hide the overlapped label. It will be handled after move.
+     * @default 'none'
+     */
+    hideOverlap?: boolean
+    /**
+     * If label is draggable.
+     */
+    draggable?: boolean
+    /**
+     * Can be absolute px number or percent string.
+     */
+    x?: number | string
+    y?: number | string
+    /**
+     * offset on x based on the original position.
+     */
+    dx?: number
+    /**
+     * offset on y based on the original position.
+     */
+    dy?: number
+    rotate?: number
+    align?: ZRTextAlign
+    verticalAlign?: ZRTextVerticalAlign
+    width?: number
+    height?: number
+
+    labelLinePoints?: number[][]
+}
+
+export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
+
 
 interface TooltipFormatterCallback<T> {
     /**
@@ -886,7 +976,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Support to be a callback
      */
-    position?: number[] | string[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+    position?: (number | string)[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
 
     confine?: boolean
 
@@ -1090,6 +1180,18 @@ export interface SeriesOption extends
      * @default 'column'
      */
     seriesLayoutBy?: 'column' | 'row'
+
+    labelLine?: LabelLineOption
+
+    /**
+     * Overall label layout option in label layout stage.
+     */
+    labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
+
+    /**
+     * Animation config for state transition.
+     */
+    stateAnimation?: AnimationOption
 }
 
 export interface SeriesOnCartesianOptionMixin {

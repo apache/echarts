@@ -53,9 +53,7 @@ class ParallelView extends ChartView {
         seriesModel: ParallelSeriesModel,
         ecModel: GlobalModel,
         api: ExtensionAPI,
-        payload: Payload & {
-            animation?: boolean
-        }
+        payload: Payload
     ) {
         const dataGroup = this._dataGroup;
         const data = seriesModel.getData();
@@ -77,12 +75,11 @@ class ParallelView extends ChartView {
 
         function update(newDataIndex: number, oldDataIndex: number) {
             const line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
-            graphic.clearStates(line);
 
             const points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);
-            const animationModel = (payload && payload.animation === false) ? null : seriesModel;
-            graphic.updateProps(line, {shape: {points: points}}, animationModel, newDataIndex);
+
+            graphic.updateProps(line, {shape: {points: points}}, seriesModel, newDataIndex);
 
             updateElCommon(line, data, newDataIndex, seriesScope);
         }

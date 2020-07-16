@@ -780,17 +780,22 @@ class LineView extends ChartView {
 
         if (polygon) {
             polygon.setShape({
+                // Reuse the points with polyline.
                 points: current,
                 stackedOnPoints: stackedOnCurrent
             });
             polygon.stopAnimation();
             graphic.updateProps(polygon, {
                 shape: {
-                    points: next,
                     stackedOnPoints: stackedOnNext
                 }
             }, seriesModel);
+            // If use attr directly in updateProps.
+            if (polyline.shape.points !== polygon.shape.points) {
+                polygon.shape.points = polyline.shape.points;
+            }
         }
+
 
         const updatedDataInfo: {
             el: SymbolExtended,

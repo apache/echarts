@@ -19,11 +19,13 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { ColorString } from '../../util/types';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
 import { AllPropTypes } from 'zrender/src/core/types';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { ColorString } from '../../util/types';
+import Model from '../../model/Model';
 
 const NodeHighlightPolicy = {
     NONE: 'none', // not downplay others
@@ -41,7 +43,7 @@ interface DrawTreeNode extends TreeNode {
 /**
  * Sunburstce of Sunburst including Sector, Label, LabelLine
  */
-class SunburstPiece extends graphic.Group {
+class SunburstPiece extends graphic.Sector {
 
     node: TreeNode;
 
@@ -51,22 +53,20 @@ class SunburstPiece extends graphic.Group {
     constructor(node: TreeNode, seriesModel: SunburstSeriesModel, ecModel: GlobalModel) {
         super();
 
-        const sector = new graphic.Sector({
-            z2: DEFAULT_SECTOR_Z,
-            textConfig: {
-                inside: true
-            }
-        });
-        this.add(sector);
-        graphic.getECData(sector).seriesIndex = seriesModel.seriesIndex;
+        this.z2 = DEFAULT_SECTOR_Z;
+        this.textConfig = {
+            inside: true
+        };
+
+        graphic.getECData(this).seriesIndex = seriesModel.seriesIndex;
 
         const text = new graphic.Text({
             z2: DEFAULT_TEXT_Z,
             silent: node.getModel<SunburstSeriesNodeItemOption>().get(['label', 'silent'])
         });
-        sector.setTextContent(text);
+        this.setTextContent(text);
 
-        this.updateData(true, node, 'normal', seriesModel, ecModel);
+        this.updateData(true, node, seriesModel, ecModel);
 
         // Hover to change label and labelLine
         // FIXME
@@ -85,7 +85,7 @@ class SunburstPiece extends graphic.Group {
     updateData(
         firstCreate: boolean,
         node: TreeNode,
-        state: 'emphasis' | 'normal' | 'highlight' | 'downplay',
+        // state: 'emphasis' | 'normal' | 'highlight' | 'downplay',
         seriesModel?: SunburstSeriesModel,
         ecModel?: GlobalModel
     ) {
@@ -95,7 +95,7 @@ class SunburstPiece extends graphic.Group {
         seriesModel = seriesModel || this._seriesModel;
         ecModel = ecModel || this._ecModel;
 
-        const sector = this.childAt(0) as graphic.Sector;
+        const sector = this;
         graphic.getECData(sector).dataIndex = node.dataIndex;
 
         const itemModel = node.getModel<SunburstSeriesNodeItemOption>();
@@ -108,23 +108,13 @@ class SunburstPiece extends graphic.Group {
 
         // const visualColor = getNodeColor(node, seriesModel, ecModel);
         // fillDefaultColor(node, seriesModel, visualColor);
-        const normalStyle = node.getVisual('style');
-        let style;
-        if (state === 'normal') {
-            style = normalStyle;
-        }
-        else {
-            const stateStyle = itemModel.getModel([state, 'itemStyle'])
-                .getItemStyle();
-            style = zrUtil.merge(stateStyle, normalStyle);
-        }
-        // style = zrUtil.defaults(
-        //     {
-        //         lineJoin: 'bevel',
-        //         fill: style.fill || visualColor
-        //     },
-        //     style
-        // );
+        const normalStyle = node.getVisual('style') as PathStyleProps;
+        normalStyle.lineJoin = 'bevel';
+
+        zrUtil.each(['emphasis', 'highlight', 'downplay'] as const, function (stateName) {
+            const state = sector.ensureState(stateName);
+            state.style = itemModel.getModel([stateName, 'itemStyle']).getItemStyle();
+        });
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -139,26 +129,18 @@ class SunburstPiece extends graphic.Group {
                 seriesModel,
                 node.dataIndex
             );
-            sector.useStyle(style);
         }
-        else if (typeof style.fill === 'object' && style.fill.type
-            || typeof sector.style.fill === 'object' && sector.style.fill.type
-        ) {
+        else {
             // Disable animation for gradient since no interpolation method
             // is supported for gradient
             graphic.updateProps(sector, {
                 shape: sectorShape
             }, seriesModel);
-            sector.useStyle(style);
-        }
-        else {
-            graphic.updateProps(sector, {
-                shape: sectorShape,
-                style: style
-            }, seriesModel);
         }
 
-        this._updateLabel(seriesModel, style.fill, state);
+        sector.useStyle(normalStyle);
+
+        this._updateLabel(seriesModel);
 
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
@@ -179,13 +161,13 @@ class SunburstPiece extends graphic.Group {
         this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
             if (n.piece) {
                 if (that.node === n) {
-                    n.piece.updateData(false, n, 'emphasis');
+                    n.piece.useState('emphasis', true);
                 }
                 else if (isNodeHighlighted(n, that.node, highlightPolicy)) {
-                    n.piece.childAt(0).trigger('highlight');
+                    n.piece.useState('highlight', true);
                 }
                 else if (highlightPolicy !== NodeHighlightPolicy.NONE) {
-                    n.piece.childAt(0).trigger('downplay');
+                    n.piece.useState('downplay', true);
                 }
             }
         });
@@ -194,143 +176,134 @@ class SunburstPiece extends graphic.Group {
     onNormal() {
         this.node.hostTree.root.eachNode(function (n: DrawTreeNode) {
             if (n.piece) {
-                n.piece.updateData(false, n, 'normal');
+                n.piece.clearStates();
             }
         });
     }
 
     onHighlight() {
-        this.updateData(false, this.node, 'highlight');
+        this.replaceState('downplay', 'highlight', true);
     }
 
     onDownplay() {
-        this.updateData(false, this.node, 'downplay');
+        this.replaceState('highlight', 'downplay', true);
     }
 
     _updateLabel(
-        seriesModel: SunburstSeriesModel,
-        visualColor: ColorString,
-        state: 'emphasis' | 'normal' | 'highlight' | 'downplay'
+        seriesModel: SunburstSeriesModel
     ) {
         const itemModel = this.node.getModel<SunburstSeriesNodeItemOption>();
-        const normalModel = itemModel.getModel('label');
-        const labelModel = state === 'normal' || state === 'emphasis'
-            ? normalModel
-            : itemModel.getModel([state, 'label']);
-        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-
-        let text = zrUtil.retrieve(
-            seriesModel.getFormattedLabel(
-                this.node.dataIndex, state, null, null, 'label'
-            ),
-            this.node.name
-        );
-        if (getLabelAttr('show') === false) {
-            text = '';
-        }
+        const normalLabelModel = itemModel.getModel('label');
 
         const layout = this.node.getLayout();
-        let labelMinAngle = labelModel.get('minAngle');
-        if (labelMinAngle == null) {
-            labelMinAngle = normalModel.get('minAngle');
-        }
-        labelMinAngle = labelMinAngle / 180 * Math.PI;
         const angle = layout.endAngle - layout.startAngle;
-        if (labelMinAngle != null && Math.abs(angle) < labelMinAngle) {
-            // Not displaying text when angle is too small
-            text = '';
-        }
-
-        const sector = this.childAt(0);
-        const label = sector.getTextContent();
-
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
         const dx = Math.cos(midAngle);
         const dy = Math.sin(midAngle);
 
-        let r;
-        const labelPosition = getLabelAttr('position');
-        const labelPadding = getLabelAttr('distance') || 0;
-        let textAlign = getLabelAttr('align');
-        if (labelPosition === 'outside') {
-            r = layout.r + labelPadding;
-            textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
-        }
-        else {
-            if (!textAlign || textAlign === 'center') {
-                r = (layout.r + layout.r0) / 2;
-                textAlign = 'center';
-            }
-            else if (textAlign === 'left') {
-                r = layout.r0 + labelPadding;
-                if (midAngle > Math.PI / 2) {
-                    textAlign = 'right';
-                }
-            }
-            else if (textAlign === 'right') {
-                r = layout.r - labelPadding;
-                if (midAngle > Math.PI / 2) {
-                    textAlign = 'left';
-                }
-            }
-        }
+        const sector = this;
+        const label = sector.getTextContent();
+        const dataIndex = this.node.dataIndex;
 
-        graphic.setLabelStyle(
-            label, normalModel, labelHoverModel,
-            {
-                defaultText: labelModel.getShallow('show') ? text : null
-            }
-        );
-        sector.setTextConfig({
-            inside: labelPosition !== 'outside',
-            insideStroke: visualColor,
-            // insideFill: 'auto',
-            outsideFill: visualColor
-        });
+        zrUtil.each(['normal', 'emphasis', 'highlight', 'downplay'] as const, (stateName) => {
 
-        label.attr('style', {
-            text: text,
-            align: textAlign,
-            verticalAlign: getLabelAttr('verticalAlign') || 'middle',
-            opacity: getLabelAttr('opacity')
-        });
+            const labelStateModel = stateName === 'normal' ? itemModel.getModel('label')
+                : itemModel.getModel([stateName, 'label']);
+            const labelMinAngle = labelStateModel.get('minAngle') / 180 * Math.PI;
+            const isNormal = stateName === 'normal';
 
-        label.x = r * dx + layout.cx;
-        label.y = r * dy + layout.cy;
+            const state = isNormal ? label : label.ensureState(stateName);
+            let text = seriesModel.getFormattedLabel(dataIndex, stateName);
+            if (isNormal) {
+                text = text || this.node.name;
+            }
 
-        const rotateType = getLabelAttr('rotate');
-        let rotate = 0;
-        if (rotateType === 'radial') {
-            rotate = -midAngle;
-            if (rotate < -Math.PI / 2) {
-                rotate += Math.PI;
+            state.style = graphic.createTextStyle(labelStateModel, {
+            }, null, stateName !== 'normal', true);
+            if (text) {
+                state.style.text = text;
             }
-        }
-        else if (rotateType === 'tangential') {
-            rotate = Math.PI / 2 - midAngle;
-            if (rotate > Math.PI / 2) {
-                rotate -= Math.PI;
-            }
-            else if (rotate < -Math.PI / 2) {
-                rotate += Math.PI;
-            }
-        }
-        else if (typeof rotateType === 'number') {
-            rotate = rotateType * Math.PI / 180;
-        }
-        label.attr('rotation', rotate);
 
-        type LabelOption = SunburstSeriesNodeItemOption['label'];
-        function getLabelAttr<T extends keyof LabelOption>(name: T): LabelOption[T] {
-            const stateAttr = labelModel.get(name);
-            if (stateAttr == null) {
-                return normalModel.get(name);
+            // Not displaying text when angle is too small
+            state.ignore = labelMinAngle != null && Math.abs(angle) < labelMinAngle;
+
+            const labelPosition = getLabelAttr(labelStateModel, 'position');
+
+            const sectorState = isNormal ? sector : sector.states[stateName];
+            const labelColor = sectorState.style.fill as ColorString;
+            sectorState.textConfig = {
+                outsideFill: labelStateModel.get('color') === 'inherit' ? labelColor : null,
+                inside: labelPosition !== 'outside'
+            };
+
+            let r;
+            const labelPadding = getLabelAttr(labelStateModel, 'distance') || 0;
+            let textAlign = getLabelAttr(labelStateModel, 'align');
+            if (labelPosition === 'outside') {
+                r = layout.r + labelPadding;
+                textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
             }
             else {
-                return stateAttr;
+                if (!textAlign || textAlign === 'center') {
+                    r = (layout.r + layout.r0) / 2;
+                    textAlign = 'center';
+                }
+                else if (textAlign === 'left') {
+                    r = layout.r0 + labelPadding;
+                    if (midAngle > Math.PI / 2) {
+                        textAlign = 'right';
+                    }
+                }
+                else if (textAlign === 'right') {
+                    r = layout.r - labelPadding;
+                    if (midAngle > Math.PI / 2) {
+                        textAlign = 'left';
+                    }
+                }
             }
+
+            state.style.align = textAlign;
+            state.style.verticalAlign = getLabelAttr(labelStateModel, 'verticalAlign') || 'middle';
+
+            state.x = r * dx + layout.cx;
+            state.y = r * dy + layout.cy;
+
+            const rotateType = getLabelAttr(labelStateModel, 'rotate');
+            let rotate = 0;
+            if (rotateType === 'radial') {
+                rotate = -midAngle;
+                if (rotate < -Math.PI / 2) {
+                    rotate += Math.PI;
+                }
+            }
+            else if (rotateType === 'tangential') {
+                rotate = Math.PI / 2 - midAngle;
+                if (rotate > Math.PI / 2) {
+                    rotate -= Math.PI;
+                }
+                else if (rotate < -Math.PI / 2) {
+                    rotate += Math.PI;
+                }
+            }
+            else if (typeof rotateType === 'number') {
+                rotate = rotateType * Math.PI / 180;
+            }
+
+            state.rotation = rotate;
+        });
+
+
+        type LabelOpt = SunburstSeriesOption['label'];
+        function getLabelAttr<T extends keyof LabelOpt>(model: Model<LabelOpt>, name: T): LabelOpt[T] {
+            const stateAttr = model.get(name);
+            if (stateAttr == null) {
+                return normalLabelModel.get(name) as LabelOpt[T];
+            }
+            return stateAttr;
         }
+
+        label.dirtyStyle();
     }
 
     _initEvents(
@@ -355,15 +328,13 @@ class SunburstPiece extends graphic.Group {
             that.onHighlight();
         };
 
-        if (seriesModel.isAnimationEnabled()) {
-            sector
-                .on('mouseover', onEmphasis)
-                .on('mouseout', onNormal)
-                .on('emphasis', onEmphasis)
-                .on('normal', onNormal)
-                .on('downplay', onDownplay)
-                .on('highlight', onHighlight);
-        }
+        sector
+            .on('mouseover', onEmphasis)
+            .on('mouseout', onNormal)
+            .on('emphasis', onEmphasis)
+            .on('normal', onNormal)
+            .on('downplay', onDownplay)
+            .on('highlight', onHighlight);
     }
 
 }

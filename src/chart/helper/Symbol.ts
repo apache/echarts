@@ -46,8 +46,8 @@ class Symbol extends graphic.Group {
     /**
      * Original scale
      */
-    private _scaleX: number;
-    private _scaleY: number;
+    private _sizeX: number;
+    private _sizeY: number;
 
     private _z2: number;
 
@@ -112,19 +112,6 @@ class Symbol extends graphic.Group {
     }
 
     /**
-     * Get scale(aka, current symbol size).
-     * Including the change caused by animation
-     */
-    getScale() {
-        const symbolPath = this.childAt(0);
-        return [symbolPath.scaleX, symbolPath.scaleY];
-    }
-
-    getOriginalScale() {
-        return [this._scaleX, this._scaleY];
-    }
-
-    /**
      * Highlight symbol
      */
     highlight() {
@@ -182,20 +169,18 @@ class Symbol extends graphic.Group {
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
-            // Always fadeIn. Because it has fadeOut animation when symbol is removed..
-            // const fadeIn = seriesScope && seriesScope.fadeIn;
-            const fadeIn = true;
 
             const target: PathProps = {
-                scaleX: this._scaleX,
-                scaleY: this._scaleY
+                scaleX: this._sizeX,
+                scaleY: this._sizeY,
+                style: {
+                    // Always fadeIn. Because it has fadeOut animation when symbol is removed..
+                    opacity: symbolPath.style.opacity
+                }
             };
-            fadeIn && (target.style = {
-                opacity: symbolPath.style.opacity
-            });
 
             symbolPath.scaleX = symbolPath.scaleY = 0;
-            fadeIn && (symbolPath.style.opacity = 0);
+            symbolPath.style.opacity = 0;
 
             graphic.initProps(symbolPath, target, seriesModel, idx);
         }
@@ -244,7 +229,6 @@ class Symbol extends graphic.Group {
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
-        // PENDING setColor before setStyle!!!
         const symbolStyle = data.getItemVisual(idx, 'style');
         const visualColor = symbolStyle.fill;
         if (symbolPath.__isEmptyBrush) {
@@ -280,7 +264,7 @@ class Symbol extends graphic.Group {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
-                autoColor: visualColor as ColorString
+                inheritColor: visualColor as ColorString
             }
         );
 
@@ -289,13 +273,31 @@ class Symbol extends graphic.Group {
             return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
         }
 
-        this._scaleX = symbolSize[0] / 2;
-        this._scaleY = symbolSize[1] / 2;
-        symbolPath.onStateChange = (
-            hoverAnimation && seriesModel.isAnimationEnabled()
-        ) ? onStateChange : null;
+        this._sizeX = symbolSize[0] / 2;
+        this._sizeY = symbolSize[1] / 2;
 
-        graphic.enableHoverEmphasis(symbolPath, hoverItemStyle);
+        symbolPath.ensureState('emphasis').style = hoverItemStyle;
+
+        if (hoverAnimation && seriesModel.isAnimationEnabled()) {
+            this.ensureState('emphasis');
+            this.setSymbolScale(1);
+        }
+        else {
+            this.states.emphasis = null;
+        }
+
+        graphic.enableHoverEmphasis(this);
+    }
+
+    setSymbolScale(scale: number) {
+        const emphasisState = this.states.emphasis;
+        if (emphasisState) {
+            const hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
+            emphasisState.scaleX = hoverScale;
+            emphasisState.scaleY = hoverScale;
+        }
+
+        this.scaleX = this.scaleY = scale;
     }
 
     fadeOut(cb: () => void, opt?: {
@@ -307,7 +309,7 @@ class Symbol extends graphic.Group {
         // Not show text when animating
         !(opt && opt.keepLabel) && (symbolPath.removeTextContent());
 
-        graphic.updateProps(
+        graphic.removeElement(
             symbolPath,
             {
                 style: {
@@ -330,33 +332,6 @@ class Symbol extends graphic.Group {
     }
 }
 
-function onStateChange(this: ECSymbol, fromState: DisplayState, toState: DisplayState) {
-    // Do not support this hover animation util some scenario required.
-    // Animation can only be supported in hover layer when using `el.incremetal`.
-    if (this.incremental || this.useHoverLayer) {
-        return;
-    }
-
-    const scale = (this.parent as Symbol).getOriginalScale();
-    if (toState === 'emphasis') {
-        const ratio = scale[1] / scale[0];
-        const emphasisOpt = {
-            scaleX: Math.max(scale[0] * 1.1, scale[0] + 3),
-            scaleY: Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-        };
-        // FIXME
-        // modify it after support stop specified animation.
-        // toState === fromState
-        //     ? (this.stopAnimation(), this.attr(emphasisOpt))
-        this.animateTo(emphasisOpt, { duration: 400, easing: 'elasticOut' });
-    }
-    else if (toState === 'normal') {
-        this.animateTo({
-            scaleX: scale[0],
-            scaleY: scale[1]
-        }, { duration: 400, easing: 'elasticOut' });
-    }
-}
 
 function driftSymbol(this: ECSymbol, dx: number, dy: number) {
     this.parent.drift(dx, dy);

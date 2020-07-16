@@ -273,7 +273,6 @@ class MarkAreaView extends MarkerView {
             })
             .update(function (newIdx, oldIdx) {
                 const polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
-                graphic.clearStates(polygon);
                 graphic.updateProps(polygon, {
                     shape: {
                         points: areaData.getItemLayout(newIdx)
@@ -301,7 +300,7 @@ class MarkAreaView extends MarkerView {
                     labelFetcher: maModel,
                     labelDataIndex: idx,
                     defaultText: areaData.getName(idx) || '',
-                    autoColor: typeof style.fill === 'string'
+                    inheritColor: typeof style.fill === 'string'
                         ? colorUtil.modifyAlpha(style.fill, 1) : '#000'
                 }
             );

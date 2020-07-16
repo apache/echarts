@@ -245,6 +245,7 @@ class TitleView extends ComponentView {
 
         group.x = layoutRect.x;
         group.y = layoutRect.y;
+        group.markRedraw();
         const alignStyle = {
             align: textAlign,
             verticalAlign: textVerticalAlign

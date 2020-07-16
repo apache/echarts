@@ -224,9 +224,6 @@ class TreeView extends ChartView {
                     symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel, seriesScope);
                     return;
                 }
-                if (symbolEl) {
-                    graphic.clearStates(symbolEl);
-                }
                 // Update node and edge
                 updateNode(data, newIdx, symbolEl, group, seriesModel, seriesScope);
             })
@@ -351,6 +348,8 @@ class TreeView extends ChartView {
                     originY: e.originY
                 });
                 this._updateNodeAndLinkScale(seriesModel);
+                // Only update label layout on zoom
+                api.updateLabelLayout();
             });
     }
 
@@ -359,8 +358,8 @@ class TreeView extends ChartView {
 
         const nodeScale = this._getNodeGlobalScale(seriesModel);
 
-        data.eachItemGraphicEl(function (el, idx) {
-            el.scaleX = el.scaleY = nodeScale;
+        data.eachItemGraphicEl(function (el: SymbolClz, idx) {
+            el.setSymbolScale(nodeScale);
         });
     }
 
@@ -519,8 +518,8 @@ function updateNode(
         if (textContent) {
             symbolPath.setTextConfig({
                 position: seriesScope.labelModel.get('position') || textPosition,
-                rotation: rotate == null ? -rad : labelRotateRadian
-                // textOrigin: 'center',
+                rotation: rotate == null ? -rad : labelRotateRadian,
+                origin: 'center'
             });
             textContent.setStyle('verticalAlign', 'middle');
         }

@@ -25,10 +25,8 @@ import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSer
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
-import {windowOpen} from '../../util/format';
-
-
-const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
+import { ROOT_TO_NODE_ACTION } from './sunburstAction';
+import { windowOpen } from '../../util/format';
 
 interface DrawTreeNode extends TreeNode {
     parentNode: DrawTreeNode
@@ -132,7 +130,7 @@ class SunburstView extends ChartView {
                     if (newNode) {
                         // Update
                         oldNode.piece.updateData(
-                            false, newNode, 'normal', seriesModel, ecModel);
+                            false, newNode, seriesModel, ecModel);
 
                         // For tooltip
                         data.setItemGraphicEl(newNode.dataIndex, oldNode.piece);
@@ -174,7 +172,7 @@ class SunburstView extends ChartView {
                 if (self.virtualPiece) {
                     // Update
                     self.virtualPiece.updateData(
-                        false, virtualRoot, 'normal', seriesModel, ecModel);
+                        false, virtualRoot, seriesModel, ecModel);
                 }
                 else {
                     // Add
@@ -210,7 +208,7 @@ class SunburstView extends ChartView {
             const viewRoot = this.seriesModel.getViewRoot();
             viewRoot.eachNode((node: DrawTreeNode) => {
                 if (!targetFound
-                    && node.piece && node.piece.childAt(0) === e.target
+                    && node.piece && node.piece === e.target
                 ) {
                     const nodeClick = node.getModel<SunburstSeriesNodeItemOption>().get('nodeClick');
                     if (nodeClick === 'rootToNode') {

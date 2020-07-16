@@ -27,12 +27,11 @@ import {
     initProps,
     enableHoverEmphasis,
     setLabelStyle,
-    clearStates,
     updateLabel,
-    initLabel
+    initLabel,
+    removeElement
 } from '../../util/graphic';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
-import * as numberUtil from '../../util/number';
 import Group from 'zrender/src/graphic/Group';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
@@ -41,7 +40,15 @@ import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { StageHandlerProgressParams, ZRElementEvent, ColorString, OrdinalSortInfo, Payload, OrdinalNumber, OrdinalRawValue, DisplayState, ParsedValue } from '../../util/types';
+import {
+    StageHandlerProgressParams,
+    ZRElementEvent,
+    ColorString,
+    OrdinalSortInfo,
+    Payload,
+    OrdinalNumber,
+    ParsedValue
+} from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -272,7 +279,15 @@ class BarView extends ChartView {
                 }
 
                 const el = elementCreator[coord.type](
-                    seriesModel, data, dataIndex, layout, isHorizontalOrRadial, animationModel, false, getDuring(), roundCap
+                    seriesModel,
+                    data,
+                    dataIndex,
+                    layout,
+                    isHorizontalOrRadial,
+                    animationModel,
+                    false,
+                    getDuring(),
+                    roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -317,13 +332,12 @@ class BarView extends ChartView {
                 }
 
                 if (el) {
-                    clearStates(el);
-
                     if (coord.type === 'cartesian2d'
                         && baseAxis.type === 'category' && (baseAxis as Axis2D).model.get('sort')
                     ) {
                         const rect = layout as RectShape;
-                        let seriesShape, axisShape;
+                        let seriesShape;
+                        let axisShape;
                         if (baseAxis.dim === 'x') {
                             axisShape = {
                                 x: rect.x,
@@ -346,7 +360,14 @@ class BarView extends ChartView {
                         }
 
                         if (!isReorder) {
-                            updateProps(el as Path, { shape: seriesShape }, animationModel, newIndex, null, getDuring());
+                            updateProps(
+                                el as Path,
+                                { shape: seriesShape },
+                                animationModel,
+                                newIndex,
+                                null,
+                                getDuring()
+                            );
                         }
                         updateProps(el as Path, { shape: axisShape }, axisAnimationModel, newIndex, null);
                     }
@@ -363,7 +384,15 @@ class BarView extends ChartView {
                 }
                 else {
                     el = elementCreator[coord.type](
-                        seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, true, getDuring(), roundCap
+                        seriesModel,
+                        data,
+                        newIndex,
+                        layout,
+                        isHorizontalOrRadial,
+                        animationModel,
+                        true,
+                        getDuring(),
+                        roundCap
                     );
                 }
 
@@ -624,7 +653,9 @@ const elementCreator: {
             };
 
             const labelModel = seriesModel.getModel('label');
-            (isUpdate ? updateLabel : initLabel)(rect, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter);
+            (isUpdate ? updateLabel : initLabel)(
+                rect, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter
+            );
         }
 
         return rect;
@@ -657,7 +688,7 @@ const elementCreator: {
             sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(sector, {
-                shape: animateTarget,
+                shape: animateTarget
                 // __value: typeof dataValue === 'string' ? parseInt(dataValue, 10) : dataValue
             }, animationModel);
         }
@@ -673,9 +704,9 @@ function removeRect(
 ) {
     // Not show text when animating
     el.removeTextContent();
-    updateProps(el, {
-        shape: {
-            width: 0
+    removeElement(el, {
+        style: {
+            opacity: 0
         }
     }, animationModel, dataIndex, function () {
         el.parent && el.parent.remove(el);
@@ -689,9 +720,9 @@ function removeSector(
 ) {
     // Not show text when animating
     el.removeTextContent();
-    updateProps(el, {
-        shape: {
-            r: el.shape.r0
+    removeElement(el, {
+        style: {
+            opacity: 0
         }
     }, animationModel, dataIndex, function () {
         el.parent && el.parent.remove(el);
@@ -776,7 +807,7 @@ function updateStyle(
                 labelFetcher: seriesModel,
                 labelDataIndex: dataIndex,
                 defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                autoColor: style.fill as ColorString,
+                inheritColor: style.fill as ColorString,
                 defaultOutsidePosition: labelPositionOutside
             }
         );
