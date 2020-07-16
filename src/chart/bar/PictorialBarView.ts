@@ -144,7 +144,7 @@ class PictorialBarView extends ChartView {
         const cartesian = seriesModel.coordinateSystem;
         const baseAxis = cartesian.getBaseAxis();
         const isHorizontal = baseAxis.isHorizontal();
-        const coordSysRect = cartesian.grid.getRect();
+        const coordSysRect = cartesian.master.getRect();
 
         const opt: CreateOpts = {
             ecSize: {width: api.getWidth(), height: api.getHeight()},

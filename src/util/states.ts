@@ -16,6 +16,8 @@ import {
 import * as colorTool from 'zrender/src/tool/color';
 import { EChartsType } from '../echarts';
 import List from '../data/List';
+import SeriesModel from '../model/Series';
+import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
 
 // Reserve 0 as default.
 export let _highlightNextDigit = 1;
@@ -315,11 +317,25 @@ export function toggleSeriesBlurStates(
         }
     }
 
+    const targetSeriesModel = model.getSeriesByIndex(targetSeriesIndex);
+    let targetCoordSys: CoordinateSystemMaster | CoordinateSystem = targetSeriesModel.coordinateSystem;
+    if (targetCoordSys && (targetCoordSys as CoordinateSystem).master) {
+        targetCoordSys = (targetCoordSys as CoordinateSystem).master;
+    }
+
     model.eachSeries(function (seriesModel) {
-        const sameSeries = targetSeriesIndex === seriesModel.seriesIndex;
+        const sameSeries = targetSeriesModel === seriesModel;
+        let coordSys: CoordinateSystemMaster | CoordinateSystem = seriesModel.coordinateSystem;
+        if (coordSys && (coordSys as CoordinateSystem).master) {
+            coordSys = (coordSys as CoordinateSystem).master;
+        }
         if (!(
-            blurScope === 'series' && !sameSeries   // Not blur other series if blurScope series
-          || focus === 'series' && sameSeries   // Not blur self series if focus is series.
+            // Not blur other series if blurScope series
+            blurScope === 'series' && !sameSeries
+            // Not blur other coordinate system if blurScope is coordinateSystem
+          || blurScope === 'coordinateSystem' && !(coordSys && targetCoordSys && coordSys === targetCoordSys)
+            // Not blur self series if focus is series.
+          || focus === 'series' && sameSeries
           // TODO blurScope: coordinate system
         )) {
             const view = ecIns.getViewOfSeriesModel(seriesModel);

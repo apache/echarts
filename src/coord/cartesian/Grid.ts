@@ -333,12 +333,12 @@ class Grid implements CoordinateSystemMaster {
         this._axesMap = axesMap;
 
         /// Create cartesian2d
-        each(axesMap.x, function (xAxis, xAxisIndex) {
-            each(axesMap.y, function (yAxis, yAxisIndex) {
+        each(axesMap.x, (xAxis, xAxisIndex) => {
+            each(axesMap.y, (yAxis, yAxisIndex) => {
                 const key = 'x' + xAxisIndex + 'y' + yAxisIndex;
                 const cartesian = new Cartesian2D(key);
 
-                cartesian.grid = this;
+                cartesian.master = this;
                 cartesian.model = gridModel;
 
                 this._coordsMap[key] = cartesian;
@@ -346,8 +346,8 @@ class Grid implements CoordinateSystemMaster {
 
                 cartesian.addAxis(xAxis);
                 cartesian.addAxis(yAxis);
-            }, this);
-        }, this);
+            });
+        });
 
         function createAxisCreator(dimName: Cartesian2DDimensionName) {
             return function (axisModel: CartesianAxisModel, idx: number): void {
