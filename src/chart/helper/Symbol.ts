@@ -243,6 +243,11 @@ class Symbol extends graphic.Group {
         symbolPath.setColor(visualColor, seriesScope && seriesScope.symbolInnerColor);
         symbolPath.style.strokeNoScale = true;
 
+        const itemModel = (seriesScope && seriesScope.itemModel)
+            ? seriesScope.itemModel
+            : data.getItemModel<SymbolDrawItemModelOption>(idx);
+        symbolPath.style.lineDash = itemModel.getModel('itemStyle').getBorderLineDash(symbolStyle.lineWidth);
+
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;
         if (liftZ != null) {

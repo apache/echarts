@@ -56,7 +56,10 @@ type LineStyleProps = Pick<PathStyleProps, LineStyleKeys>;
 
 class LineStyleMixin {
 
-    getLineStyle(this: Model, excludes?: readonly (keyof LineStyleOption)[]): LineStyleProps {
+    getLineStyle(
+        this: Model,
+        excludes?: readonly (keyof LineStyleOption)[]
+    ): LineStyleProps {
         const style = getLineStyle(this, excludes);
         // Always set lineDash whether dashed, otherwise we can not
         // erase the previous style when assigning to el.style.
@@ -64,24 +67,25 @@ class LineStyleMixin {
         return style;
     }
 
-    getLineDash(this: Model, lineWidth?: number) {
-        if (lineWidth == null) {
-            lineWidth = 1;
-        }
+    getLineDash(this: Model, lineWidth?: number): false | number[] {
         const lineType = this.get('type');
-        let dashArray = this.get('dashArray');
-        // compatible with single number
-        if (dashArray != null && !isNaN(dashArray)) {
-            dashArray = [+dashArray];
-        }
-        return (lineType === 'solid' || lineType == null)
+        if (lineType === 'solid' || lineType == null) {
             // Use `false` but not `null` for the solid line here, because `null` might be
             // ignored when assigning to `el.style`. e.g., when setting `lineStyle.type` as
             // `'dashed'` and `emphasis.lineStyle.type` as `'solid'` in graph series, the
             // `lineDash` gotten form the latter one is not able to erase that from the former
             // one if using `null` here according to the emhpsis strategy in `util/graphic.js`.
-            ? false
-            : lineType === 'dashed'
+            return false;
+        }
+        if (lineWidth == null) {
+            lineWidth = 1;
+        }
+        let dashArray = this.get('dashArray');
+        // compatible with single number
+        if (dashArray != null && !isNaN(dashArray)) {
+            dashArray = [+dashArray];
+        }
+        return lineType === 'dashed'
             ? dashArray || [lineWidth * 4]
             : dashArray || [Math.max(lineWidth, 2)];
     }

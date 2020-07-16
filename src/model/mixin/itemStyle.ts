@@ -21,6 +21,7 @@ import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
 import { ItemStyleOption } from '../../util/types';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { map } from 'zrender/src/core/util';
 
 export const ITEM_STYLE_KEY_MAP = [
     ['fill', 'color'],
@@ -30,7 +31,12 @@ export const ITEM_STYLE_KEY_MAP = [
     ['shadowBlur'],
     ['shadowOffsetX'],
     ['shadowOffsetY'],
-    ['shadowColor']
+    ['shadowColor'],
+    ['lineDash', 'borderDashArray'],
+    ['lineDashOffset', 'borderDashOffset'],
+    ['lineCap', 'borderCap'],
+    ['lineJoin', 'borderJoin'],
+    ['miterLimit', 'borderMiterLimit']
 ];
 
 const getItemStyle = makeStyleMapper(ITEM_STYLE_KEY_MAP);
@@ -42,7 +48,12 @@ type ItemStyleKeys = 'fill'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
-    | 'shadowColor';
+    | 'shadowColor'
+    | 'lineDash'
+    | 'lineDashOffset'
+    | 'lineCap'
+    | 'lineJoin'
+    | 'miterLimit';
 
 export type ItemStyleProps = Pick<PathStyleProps, ItemStyleKeys>;
 
@@ -54,15 +65,30 @@ class ItemStyleMixin {
         includes?: readonly (keyof ItemStyleOption)[]
     ): ItemStyleProps {
         const style = getItemStyle(this, excludes, includes);
-        const lineDash = this.getBorderLineDash();
-        lineDash && (style.lineDash = lineDash);
+        style.lineDash = this.getBorderLineDash(style.lineWidth);
         return style;
     }
 
-    getBorderLineDash(this: Model): number[] {
+    getBorderLineDash(this: Model, lineWidth?: number): false | number[] {
         const lineType = this.get('borderType');
-        return (lineType === 'solid' || lineType == null) ? null
-            : (lineType === 'dashed' ? [5, 5] : [1, 1]);
+        if (lineType === 'solid' || lineType == null) {
+            return false;
+        }
+
+        lineWidth = lineWidth || 0;
+
+        let dashArray = this.get('borderDashArray');
+        // compatible with single number
+        if (dashArray != null && !isNaN(dashArray)) {
+            dashArray = [+dashArray];
+        }
+        return map<number, number, unknown>(
+            dashArray || (lineType === 'dashed' ? [5, 5] : [1, 1]),
+            function (raw): number {
+                // compute real dash array
+                return raw * 0.5 * lineWidth * 0.1;
+            }
+        );;
     }
 }
 

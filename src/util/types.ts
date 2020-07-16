@@ -559,6 +559,11 @@ export interface BorderOptionMixin {
     borderColor?: string
     borderWidth?: number
     borderType?: ZRLineType
+    borderCap?: CanvasLineCap
+    borderJoin?: CanvasLineJoin
+    borderDashArray?: number | number[]
+    borderDashOffset?: number
+    borderMiterLimit?: number
 }
 
 export type AnimationDelayCallbackParam = {
