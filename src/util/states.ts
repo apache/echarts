@@ -329,11 +329,14 @@ export function toggleSeriesBlurStates(
         if (coordSys && (coordSys as CoordinateSystem).master) {
             coordSys = (coordSys as CoordinateSystem).master;
         }
+        const sameCoordSys = coordSys && targetCoordSys
+            ? coordSys === targetCoordSys
+            : sameSeries;   // If there is no coordinate system. use sameSeries instead.
         if (!(
             // Not blur other series if blurScope series
             blurScope === 'series' && !sameSeries
             // Not blur other coordinate system if blurScope is coordinateSystem
-          || blurScope === 'coordinateSystem' && !(coordSys && targetCoordSys && coordSys === targetCoordSys)
+          || blurScope === 'coordinateSystem' && !sameCoordSys
             // Not blur self series if focus is series.
           || focus === 'series' && sameSeries
           // TODO blurScope: coordinate system
