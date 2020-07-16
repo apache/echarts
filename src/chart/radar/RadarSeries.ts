@@ -114,7 +114,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
             + zrUtil.map(indicatorAxes, function (axis, idx) {
                 const val = data.get(data.mapDimension(axis.dim), dataIndex);
                 return '<p style="margin: 8px 0 0;">'
-                    + concatTooltipHtml(encodeHTML(axis.name), val)
+                    + concatTooltipHtml(axis.name, val)
                     + '</p>';
             }).join('');
     }

@@ -223,7 +223,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         }
 
         return seriesNames.join(', ') + '<br />'
-            + concatTooltipHtml(encodeHTML(name), formattedValue);
+            + concatTooltipHtml(name, formattedValue);
     }
 
     getTooltipPosition = function (this: MapSeries, dataIndex: number): number[] {

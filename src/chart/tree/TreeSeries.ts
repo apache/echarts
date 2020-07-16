@@ -19,7 +19,7 @@
 
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
-import {encodeHTML, concatTooltipHtml} from '../../util/format';
+import {concatTooltipHtml} from '../../util/format';
 import {
     SeriesOption,
     SymbolOptionMixin,
@@ -231,7 +231,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
             node = node.parentNode;
         }
 
-        return concatTooltipHtml(encodeHTML(name), (isNaN(value as number) || value == null) ? '' : value);
+        return concatTooltipHtml(name, (isNaN(value as number) || value == null) ? '' : value);
     }
 
     static defaultOption: TreeSeriesOption = {

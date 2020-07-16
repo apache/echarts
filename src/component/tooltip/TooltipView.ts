@@ -770,7 +770,7 @@ class TooltipView extends ComponentView {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markers, tooltipModel);
                     this._updatePosition(
-                        tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y, nearPoint.x
+                        tooltipModel, positionExpr, x, y, tooltipContent, params, el
                     );
                 }
             }, this);
@@ -778,10 +778,10 @@ class TooltipView extends ComponentView {
             html = formatter(params, asyncTicket, callback);
         }
 
-        const [finalX] = this._updatePosition(
-            tooltipModel, positionExpr, x, y, tooltipContent, params, el, nearPoint.y, nearPoint.x
+        this._updatePosition(
+            tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
-        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, x > finalX ? 'right' : 'left');
+        tooltipContent.setContent(html, markers, tooltipModel);
         tooltipContent.show(tooltipModel, nearPoint.color);
 
     }

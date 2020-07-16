@@ -23,7 +23,7 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
-import {encodeHTML, concatTooltipHtml} from '../../util/format';
+import {concatTooltipHtml} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
@@ -310,7 +310,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         }
         return `
             <p style="margin: 8px 0 0;">
-                ${concatTooltipHtml(encodeHTML(htmlName), htmlValue)}
+                ${concatTooltipHtml(htmlName, htmlValue)}
             </p>
         `;
     }

@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import Tree, { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
-import {encodeHTML, addCommas, concatTooltipHtml} from '../../util/format';
+import {addCommas, concatTooltipHtml} from '../../util/format';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import {
     SeriesOption,
@@ -387,7 +387,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             ? addCommas(value[0] as number) : addCommas(value as number);
         const name = data.getName(dataIndex);
 
-        return concatTooltipHtml(encodeHTML(name), formattedValue);
+        return concatTooltipHtml(name, formattedValue);
     }
 
     /**
