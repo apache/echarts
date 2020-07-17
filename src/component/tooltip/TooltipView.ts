@@ -582,6 +582,7 @@ class TooltipView extends ComponentView {
                         singleParamsList.reverse();
                         break;
 
+                    case 'legend':
                     default:
                         break;
                 }
