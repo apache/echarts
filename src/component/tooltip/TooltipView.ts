@@ -782,7 +782,7 @@ class TooltipView extends ComponentView {
             tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
         tooltipContent.setContent(html, markers, tooltipModel);
-        tooltipContent.show(tooltipModel, el?.style.fill || nearPoint.color);
+        tooltipContent.show(tooltipModel, nearPoint.color);
 
     }
 
