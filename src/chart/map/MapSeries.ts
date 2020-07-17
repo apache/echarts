@@ -222,7 +222,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             }
         }
 
-        return seriesNames.join(', ') + '<br />'
+        return seriesNames.join(', ') + (seriesNames.length ? '<br />' : '')
             + concatTooltipHtml(name, formattedValue);
     }
 
