@@ -48,6 +48,7 @@ import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { CoordinateSystemHostModel, CoordinateSystem } from '../../coord/CoordinateSystem';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -532,7 +533,10 @@ class TooltipView extends ComponentView {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
                     const dataIndex = idxItem.dataIndexInside;
                     const dataParams = series && series.getDataParams(dataIndex) as TooltipDataParams;
-                    dataParams.position = series.coordinateSystem.dataToPoint([dataIndex, dataParams.data]);
+                    dataParams.position = findPointFromSeries({
+                        seriesIndex: idxItem.seriesIndex,
+                        dataIndex: dataIndex
+                    }, ecModel).point;
                     dataParams.axisDim = item.axisDim;
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
@@ -760,7 +764,12 @@ class TooltipView extends ComponentView {
         const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
         let html = defaultHtml;
-        const nearPoint = this._getNearestPoint([x, y], params);
+        const nearPoint = this._getNearestPoint(
+            [x, y],
+            params,
+            (tooltipModel.ecModel.getComponent('series') as CoordinateSystemHostModel)
+                .coordinateSystem as CoordinateSystem
+        );
 
         if (formatter && typeof formatter === 'string') {
             html = formatUtil.formatTpl(formatter, params, true);
@@ -786,11 +795,19 @@ class TooltipView extends ComponentView {
 
     }
 
-    _getNearestPoint(point: number[], tooltipDataParams: TooltipDataParams | TooltipDataParams[]): {
+    _getNearestPoint(
+        point: number[],
+        tooltipDataParams: TooltipDataParams | TooltipDataParams[],
+        coord?: CoordinateSystem
+    ): {
         x: number;
         y: number;
         color: ColorString;
     } {
+        let dim = '';
+        if (coord && coord.type === 'cartesian2d') {
+            dim = coord.getBaseAxis().dim;
+        }
         if (!zrUtil.isArray(tooltipDataParams)) {
             if (!tooltipDataParams.position) {
                 return {
@@ -806,12 +823,13 @@ class TooltipView extends ComponentView {
             };
         }
 
-        const distanceArr = tooltipDataParams.map(dataParams => Math.abs(dataParams.position[1] - point[1]));
+        const posIndex = +(dim === 'x');
+        const distanceArr = tooltipDataParams.map(params => Math.abs(params.position[posIndex] - point[posIndex]));
         const index = distanceArr.indexOf(Math.min(...distanceArr));
         return {
-            x: tooltipDataParams[index].position[0],
-            y: tooltipDataParams[index].position[1],
-            color: tooltipDataParams[index].color as ColorString
+            x: tooltipDataParams[index]?.position[0] || point[0],
+            y: tooltipDataParams[index]?.position[1] || point[1],
+            color: tooltipDataParams[index]?.color as ColorString
         };
     }
 
