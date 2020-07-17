@@ -18,36 +18,22 @@
 */
 
 
-import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import MapDraw from '../../component/helper/MapDraw';
 import ChartView from '../../view/Chart';
 import MapSeries, { MapDataItemOption } from './MapSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Payload } from '../../util/types';
+import { Payload, DisplayState, ECElement } from '../../util/types';
 import Model from '../../model/Model';
 
-
-const HIGH_DOWN_PROP = '__seriesMapHighDown' as const;
-const RECORD_VERSION_PROP = '__seriesMapCallKey' as const;
-const ORIGINAL_Z2 = '__mapOriginalZ2' as const;
-
-interface CircleExtend extends graphic.Circle {
-    [ORIGINAL_Z2]: number;
-}
 interface HighDownRecord {
     recordVersion: number;
-    circle: CircleExtend;
     labelModel: Model;
     hoverLabelModel: Model;
     emphasisText: string;
     normalText: string;
 };
-interface RegionGroupExtend extends graphic.Group {
-    [HIGH_DOWN_PROP]: HighDownRecord;
-    [RECORD_VERSION_PROP]: number;
-}
 
 class MapView extends ChartView {
 
@@ -175,7 +161,7 @@ class MapView extends ChartView {
                 const labelModel = itemModel.getModel('label');
                 const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
-                const regionGroup = fullData.getItemGraphicEl(fullIndex) as RegionGroupExtend;
+                const regionGroup = fullData.getItemGraphicEl(fullIndex);
 
                 // `getFormattedLabel` needs to use `getData` inside. Here
                 // `mapModel.getData()` is shallow cloned from `mainSeries.getData()`.
@@ -184,43 +170,24 @@ class MapView extends ChartView {
                 // set on original data item will never get. But it has been working
                 // like that from the begining, and this scenario is rarely encountered.
                 // So it won't be fixed until have to.
-                const normalText = zrUtil.retrieve2(
-                    mapModel.getFormattedLabel(fullIndex, 'normal'),
-                    name
-                );
-                const emphasisText = zrUtil.retrieve2(
-                    mapModel.getFormattedLabel(fullIndex, 'emphasis'),
-                    normalText
-                );
 
-                let highDownRecord = regionGroup[HIGH_DOWN_PROP];
-                const recordVersion = Math.random();
-
-                // Prevent from register listeners duplicatedly when roaming.
-                if (!highDownRecord) {
-                    highDownRecord = regionGroup[HIGH_DOWN_PROP] = {} as HighDownRecord;
-                    // let onEmphasis = zrUtil.curry(onRegionHighDown, true);
-                    // let onNormal = zrUtil.curry(onRegionHighDown, false);
-                    // regionGroup.on('mouseover', onEmphasis)
-                    //     .on('mouseout', onNormal)
-                    //     .on('emphasis', onEmphasis)
-                    //     .on('normal', onNormal);
+                graphic.setLabelStyle(circle, labelModel, hoverLabelModel, {
+                    labelFetcher: {
+                        getFormattedLabel(idx: number, state: DisplayState) {
+                            return mapModel.getFormattedLabel(fullIndex, state);
+                        }
+                    }
+                });
+                (circle as ECElement).disableLabelAnimation = true;
+                if (!labelModel.get('position')) {
+                    circle.setTextConfig({
+                        position: 'bottom'
+                    });
                 }
 
-                // Prevent removed regions effect current grapics.
-                regionGroup[RECORD_VERSION_PROP] = recordVersion;
-                zrUtil.extend(highDownRecord, {
-                    recordVersion: recordVersion,
-                    circle: circle,
-                    labelModel: labelModel,
-                    hoverLabelModel: hoverLabelModel,
-                    emphasisText: emphasisText,
-                    normalText: normalText
-                });
-
-                // FIXME
-                // Consider set option when emphasis.
-                // enterRegionHighDown(highDownRecord, false);
+                (regionGroup as ECElement).onStateChange = function (fromState, toState) {
+                    circle.useState(toState);
+                };
             }
 
             group.add(circle);

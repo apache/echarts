@@ -110,6 +110,11 @@ export interface ECElement extends Element {
     highlighted?: boolean;
     selected?: boolean;
     z2EmphasisLift?: number;
+
+    /**
+     * Force disable animation on any condition
+     */
+    disableLabelAnimation?: boolean
 }
 
 export interface DataHost {
@@ -122,6 +127,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 
 interface PayloadItem {
     excludeSeriesId?: string | string[];
+    animation?: AnimationPayload
     [other: string]: any;
 }
 
@@ -129,6 +135,13 @@ export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
     batch?: PayloadItem[];
+}
+
+// Payload includes override anmation info
+export interface AnimationPayload {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
 }
 
 export interface ViewRootGroup extends Group {

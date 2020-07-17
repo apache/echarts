@@ -740,6 +740,10 @@ class SliderZoomView extends DataZoomView {
             type: 'dataZoom',
             from: this.uid,
             dataZoomId: this.dataZoomModel.id,
+            animation: {
+                easing: 'cubicOut',
+                duration: 100
+            },
             start: range[0],
             end: range[1]
         });

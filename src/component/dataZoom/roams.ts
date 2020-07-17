@@ -230,6 +230,10 @@ function createCoordSysRecord(api: ExtensionAPI, coordSysModel: CoordinateSystem
 function dispatchAction(api: ExtensionAPI, batch: DataZoomPayloadBatchItem[]) {
     api.dispatchAction({
         type: 'dataZoom',
+        animation: {
+            easing: 'cubicOut',
+            duration: 100
+        },
         batch: batch
     });
 }

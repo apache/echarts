@@ -1007,7 +1007,13 @@ class ECharts extends Eventful {
         this[IN_MAIN_PROCESS] = true;
 
         optionChanged && prepare(this);
-        updateMethods.update.call(this);
+        updateMethods.update.call(this, {
+            type: 'resize',
+            animation: {
+                // Disable animation
+                duration: 0
+            }
+        });
 
         this[IN_MAIN_PROCESS] = false;
 
@@ -1280,6 +1286,8 @@ class ECharts extends Eventful {
         ): void {
             const ecModel = ecIns._model;
 
+            ecModel.setUpdatePayload(payload);
+
             // broadcast
             if (!mainType) {
                 // FIXME
@@ -1339,6 +1347,8 @@ class ECharts extends Eventful {
                 if (!ecModel) {
                     return;
                 }
+
+                ecModel.setUpdatePayload(payload);
 
                 scheduler.restoreData(ecModel, payload);
 
@@ -1405,6 +1415,8 @@ class ECharts extends Eventful {
                     return;
                 }
 
+                ecModel.setUpdatePayload(payload);
+
                 // ChartView.markUpdateMethod(payload, 'updateTransform');
 
                 const componentDirtyList = [];
@@ -1455,6 +1467,8 @@ class ECharts extends Eventful {
                     return;
                 }
 
+                ecModel.setUpdatePayload(payload);
+
                 ChartView.markUpdateMethod(payload, 'updateView');
 
                 clearColorPalette(ecModel);
@@ -1476,6 +1490,8 @@ class ECharts extends Eventful {
                 if (!ecModel) {
                     return;
                 }
+
+                ecModel.setUpdatePayload(payload);
 
                 // clear all visual
                 ecModel.eachSeries(function (seriesModel) {

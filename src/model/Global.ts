@@ -105,6 +105,11 @@ class GlobalModel extends Model<ECUnitOption> {
      */
     private _seriesIndicesMap: HashMap<any>;
 
+    /**
+     * Model for store update payload
+     */
+    private _payload: Payload;
+
     // Injectable properties:
     scheduler: Scheduler;
 
@@ -410,6 +415,14 @@ class GlobalModel extends Model<ECUnitOption> {
 
     getTheme(): Model {
         return this._theme;
+    }
+
+    setUpdatePayload(payload: Payload) {
+        this._payload = payload;
+    }
+
+    getUpdatePayload(): Payload {
+        return this._payload;
     }
 
     /**
