@@ -82,7 +82,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
     private _optionManager: OptionManager;
 
-    private _componentsMap: HashMap<ComponentModel[], string>;
+    private _componentsMap: HashMap<ComponentModel[], ComponentMainType>;
 
     /**
      * `_componentsMap` might have "hole" becuase of remove.
