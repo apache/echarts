@@ -627,9 +627,9 @@ export function groupData<T, R extends string | number>(
     getKey: (item: T) => R // return key
 ): {
     keys: R[],
-    buckets: HashMap<T[]> // hasmap key: the key returned by `getKey`.
+    buckets: HashMap<T[], R> // hasmap key: the key returned by `getKey`.
 } {
-    const buckets = createHashMap<T[]>();
+    const buckets = createHashMap<T[], R>();
     const keys: R[] = [];
 
     each(array, function (item) {

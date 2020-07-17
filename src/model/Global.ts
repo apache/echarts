@@ -73,7 +73,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
     private _optionManager: OptionManager;
 
-    private _componentsMap: HashMap<ComponentModel[]>;
+    private _componentsMap: HashMap<ComponentModel[], ComponentMainType>;
 
     /**
      * Mapping between filtered series list and raw series list.
