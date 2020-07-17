@@ -814,13 +814,13 @@ class TooltipView extends ComponentView {
                 return {
                     x: point[0],
                     y: point[1],
-                    color: tooltipDataParams.color as ColorString
+                    color: (tooltipDataParams.color || tooltipDataParams.borderColor) as ColorString
                 };
             }
             return {
                 x: point[0],
                 y: tooltipDataParams.position[1],
-                color: tooltipDataParams.color as ColorString
+                color: (tooltipDataParams.color || tooltipDataParams.borderColor) as ColorString
             };
         }
 
@@ -830,7 +830,7 @@ class TooltipView extends ComponentView {
         return {
             x: tooltipDataParams[index]?.position[0] || point[0],
             y: tooltipDataParams[index]?.position[1] || point[1],
-            color: tooltipDataParams[index]?.color as ColorString
+            color: (tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor) as ColorString
         };
     }
 
