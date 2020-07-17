@@ -497,7 +497,7 @@ function updateNode(
     );
 
     if (symbolEl.__edge) {
-        (symbolEl as ECElement).onStateChange = function (toState) {
+        (symbolEl as ECElement).onHoverStateChange = function (toState) {
             if (toState !== 'blur') {
                 // NOTE: Ensure the parent elements will been blurred firstly.
                 // According to the return of getAncestorsIndices and getDescendantIndices

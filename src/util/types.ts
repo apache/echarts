@@ -105,7 +105,7 @@ export interface ECElement extends Element {
         formatterParams?: unknown;
     };
     highDownSilentOnTouch?: boolean;
-    onStateChange?: (toState: DisplayState) => void;
+    onHoverStateChange?: (toState: DisplayState) => void;
 
     // 0: normal
     // 1: blur
@@ -439,6 +439,7 @@ export type OptionDataItem =
 export type OptionDataItemObject<T> = {
     name?: string
     value?: T[] | T
+    selected?: boolean;
 };
 export type OptionDataValue = string | number | Date;
 
@@ -1249,6 +1250,13 @@ export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
      * Animation config for state transition.
      */
     stateAnimation?: AnimationOption
+
+    /**
+     * Map of selected data
+     * key is name or index of data.
+     */
+    selectedMap?: Dictionary<boolean>
+    selectedMode?: 'single' | 'multiple' | boolean
 }
 
 export interface SeriesOnCartesianOptionMixin {

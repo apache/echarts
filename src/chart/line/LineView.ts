@@ -596,7 +596,7 @@ class LineView extends ChartView {
 
         data.eachItemGraphicEl(function (el) {
             // Switch polyline / polygon state if element changed its state.
-            el && ((el as ECElement).onStateChange = changePolyState);
+            el && ((el as ECElement).onHoverStateChange = changePolyState);
         });
 
         this._data = data;

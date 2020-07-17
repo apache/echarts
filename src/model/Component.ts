@@ -293,26 +293,20 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         };
     }
 
+    // // Interfaces for component / series with select ability.
+    // select(dataIndex?: number[], dataType?: string): void {}
+
+    // unSelect(dataIndex?: number[], dataType?: string): void {}
+
+    // getSelectedDataIndices(): number[] {
+    //     return [];
+    // }
+
+
     static registerClass: ClassManager['registerClass'];
 
     static registerSubTypeDefaulter: componentUtil.SubTypeDefaulterManager['registerSubTypeDefaulter'];
 }
-
-// Reset ComponentModel.extend, add preConstruct.
-// clazzUtil.enableClassExtend(
-//     ComponentModel,
-//     function (option, parentModel, ecModel, extraOpt) {
-//         // Set dependentModels, componentIndex, name, id, mainType, subType.
-//         zrUtil.extend(this, extraOpt);
-
-//         this.uid = componentUtil.getUID('componentModel');
-
-//         // this.setReadOnly([
-//         //     'type', 'id', 'uid', 'name', 'mainType', 'subType',
-//         //     'dependentModels', 'componentIndex'
-//         // ]);
-//     }
-// );
 
 export type ComponentModelConstructor = typeof ComponentModel
     & ClassManager

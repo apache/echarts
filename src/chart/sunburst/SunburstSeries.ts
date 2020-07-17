@@ -122,6 +122,8 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
     static readonly type = 'series.sunburst';
     readonly type = SunburstSeriesModel.type;
 
+    ignoreStyleOnData = true;
+
     private _viewRoot: TreeNode;
 
     getInitialData(option: SunburstSeriesOption, ecModel: GlobalModel) {

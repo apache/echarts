@@ -22,7 +22,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
-import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '../../component/helper/selectableMixin';
 import geoCreator from './geoCreator';
 import Geo from './Geo';
 import {
@@ -56,7 +55,7 @@ interface GeoLabelFormatterDataParams {
     status: DisplayState;
 }
 
-export interface RegoinOption extends SelectableTarget, GeoStateOption, StatesOptionMixin<GeoStateOption> {
+export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption> {
 };
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
@@ -235,8 +234,5 @@ class GeoModel extends ComponentModel<GeoOption> {
 }
 
 ComponentModel.registerClass(GeoModel);
-
-interface GeoModel extends DataSelectableMixin<GeoOption> {};
-zrUtil.mixin(GeoModel, DataSelectableMixin);
 
 export default GeoModel;

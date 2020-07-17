@@ -6,8 +6,8 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus } from './types';
-import { extend, indexOf, isArrayLike, isObject, keys } from 'zrender/src/core/util';
+import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload } from './types';
+import { extend, indexOf, isArrayLike, isObject, keys, isArray } from 'zrender/src/core/util';
 import {
     Z2_EMPHASIS_LIFT,
     getECData,
@@ -18,6 +18,8 @@ import { EChartsType } from '../echarts';
 import List from '../data/List';
 import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
+import { queryDataIndex } from './model';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 // Reserve 0 as default.
 export let _highlightNextDigit = 1;
@@ -56,34 +58,40 @@ function liftColor(color: string): string {
     return liftedColor;
 }
 
-function triggerStateChange(el: ECElement, stateEnum: 0 | 1 | 2, stateName: DisplayState) {
-    if ((el.hoverState || 0) !== stateEnum) {
-        el.onStateChange && el.onStateChange(stateName);
+function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
+    if (el.onHoverStateChange) {
+        if ((el.hoverState || 0) !== hoverStateEnum) {
+            el.onHoverStateChange(stateName);
+        }
     }
+    el.hoverState = hoverStateEnum;
 }
 
 function singleEnterEmphasis(el: ECElement) {
     // Only mark the flag.
     // States will be applied in the echarts.ts in next frame.
-    triggerStateChange(el, HOVER_STATE_EMPHASIS, 'emphasis');
-    el.hoverState = HOVER_STATE_EMPHASIS;
+    doChangeHoverState(el, 'emphasis', HOVER_STATE_EMPHASIS);
 }
 
 function singleLeaveEmphasis(el: ECElement) {
     // Only mark the flag.
     // States will be applied in the echarts.ts in next frame.
-    triggerStateChange(el, HOVER_STATE_NORMAL, 'normal');
-    el.hoverState = HOVER_STATE_NORMAL;
+    doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
 }
 
 function singleEnterBlur(el: ECElement) {
-    triggerStateChange(el, HOVER_STATE_BLUR, 'blur');
-    el.hoverState = HOVER_STATE_BLUR;
+    doChangeHoverState(el, 'blur', HOVER_STATE_BLUR);
 }
 
 function singleLeaveBlur(el: ECElement) {
-    triggerStateChange(el, HOVER_STATE_NORMAL, 'normal');
-    el.hoverState = HOVER_STATE_NORMAL;
+    doChangeHoverState(el, 'normal', HOVER_STATE_NORMAL);
+}
+
+function singleEnterSelect(el: ECElement) {
+    el.selected = true;
+}
+function singleLeaveSelect(el: ECElement) {
+    el.selected = false;
 }
 
 function updateElementState<T>(
@@ -137,6 +145,31 @@ export function clearStates(el: Element) {
     }
 }
 
+function getFromStateStyle(
+    el: Displayable,
+    props: (keyof PathStyleProps)[],
+    toStateName: string,
+    defaultValue?: PathStyleProps
+): PathStyleProps {
+    const style = el.style;
+    const fromState: PathStyleProps = {};
+    for (let i = 0; i < props.length; i++) {
+        const propName = props[i];
+        const val = style[propName];
+        (fromState as any)[propName] = val == null ? (defaultValue && defaultValue[propName]) : val;
+    }
+    for (let i = 0; i < el.animators.length; i++) {
+        const animator = el.animators[i];
+        if (animator.__fromStateTransition
+            // Dont consider the animation to emphasis state.
+            && animator.__fromStateTransition.indexOf(toStateName) < 0
+            && animator.targetName === 'style') {
+            animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
+        }
+    }
+    return fromState;
+}
+
 function createEmphasisDefaultState(
     el: Displayable,
     stateName: 'emphasis',
@@ -148,39 +181,26 @@ function createEmphasisDefaultState(
         const currentFill = el.style.fill;
         const currentStroke = el.style.stroke;
         if (currentFill || currentStroke) {
-            let fromState: {
-                fill: ColorString;
-                stroke: ColorString;
-            };
-            if (!hasEmphasis) {
-                fromState = { fill: currentFill, stroke: currentStroke };
-                for (let i = 0; i < el.animators.length; i++) {
-                    const animator = el.animators[i];
-                    if (animator.__fromStateTransition
-                        // Dont consider the animation to emphasis state.
-                        && animator.__fromStateTransition.indexOf(stateName) < 0
-                        && animator.targetName === 'style') {
-                        animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
-                    }
-                }
-            }
+            const fromState: PathStyleProps = !hasEmphasis
+                ? getFromStateStyle(el, ['fill', 'stroke'], stateName)
+                : null;
             state = state || {};
             // Apply default color lift
             let emphasisStyle = state.style || {};
-            if (!hasFillOrStroke(emphasisStyle.fill)) {
+            if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(currentFill)) {
                 cloned = true;
                 // Not modify the original value.
                 state = extend({}, state);
                 emphasisStyle = extend({}, emphasisStyle);
                 // Already being applied 'emphasis'. DON'T lift color multiple times.
-                emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(fromState.fill);
+                emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(fromState.fill as ColorString);
             }
-            if (!hasFillOrStroke(emphasisStyle.stroke)) {
+            if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(currentStroke)) {
                 if (!cloned) {
                     state = extend({}, state);
                     emphasisStyle = extend({}, emphasisStyle);
                 }
-                emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(fromState.stroke);
+                emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(fromState.stroke as ColorString);
             }
             state.style = emphasisStyle;
         }
@@ -205,20 +225,12 @@ function createBlurDefaultState(
 ) {
     const hasBlur = indexOf(el.currentStates, stateName) >= 0;
     const currentOpacity = el.style.opacity;
-    const fromState = {
-        opacity: currentOpacity == null ? 1 : currentOpacity
-    };
-    if (!hasBlur) {
-        for (let i = 0; i < el.animators.length; i++) {
-            const animator = el.animators[i];
-            if (animator.__fromStateTransition
-                // Dont consider the animation to emphasis state.
-                && animator.__fromStateTransition.indexOf(stateName) < 0
-                && animator.targetName === 'style') {
-                animator.saveFinalToTarget(fromState, ['opacity']);
-            }
-        }
-    }
+
+    const fromState = !hasBlur
+        ? getFromStateStyle(el, ['fill', 'stroke'], stateName, {
+            opacity: 1
+        })
+        : null;
 
     state = state || {};
     let blurStyle = state.style || {};
@@ -296,6 +308,14 @@ export function leaveBlur(el: Element) {
     traverseUpdateState(el as ExtendedElement, singleLeaveBlur);
 }
 
+export function enterSelect(el: Element) {
+    traverseUpdateState(el as ExtendedElement, singleEnterSelect);
+}
+
+export function leaveSelect(el: Element) {
+    traverseUpdateState(el as ExtendedElement, singleLeaveSelect);
+}
+
 function shouldSilent(el: Element, e: ElementEvent) {
     return (el as ExtendedElement).__highDownSilentOnTouch && e.zrByTouch;
 }
@@ -313,7 +333,7 @@ function allLeaveBlur(ecIns: EChartsType) {
     });
 }
 
-export function toggleSeriesBlurStates(
+export function toggleSeriesBlurState(
     targetSeriesIndex: number,
     focus: InnerFocus,
     blurScope: BlurScope,
@@ -397,6 +417,77 @@ export function toggleSeriesBlurStates(
         if (view && view.blurSeries) {
             view.blurSeries(blurredSeries, ecModel);
         }
+    });
+}
+
+export function toggleSeriesBlurStateFromPayload(
+    seriesModel: SeriesModel,
+    payload: Payload,
+    ecIns: EChartsType
+) {
+    const isHighlight = payload.type === 'highlight';
+    const isDownplay = payload.type === 'downplay';
+    if (!(isHighlight || isDownplay)) {
+        return;
+    }
+
+    const seriesIndex = seriesModel.seriesIndex;
+    const data = seriesModel.getData(payload.dataType);
+    let dataIndex = queryDataIndex(data, payload);
+    // Pick the first one if there is multiple/none exists.
+    dataIndex = (isArray(dataIndex) ? dataIndex[0] : dataIndex) || 0;
+    let el = data.getItemGraphicEl(dataIndex as number);
+    if (!el) {
+        const count = data.count();
+        let current = 0;
+        // If data on dataIndex is NaN.
+        while (!el && current < count) {
+            el = data.getItemGraphicEl(current++);
+        }
+    }
+    if (el) {
+        const ecData = getECData(el);
+        toggleSeriesBlurState(
+            seriesIndex, ecData.focus, ecData.blurScope, ecIns, isHighlight
+        );
+    }
+    else {
+        // If there is no element put on the data. Try getting it from raw option
+        // TODO Should put it on seriesModel?
+        const focus = seriesModel.get(['emphasis', 'focus']);
+        const blurScope = seriesModel.get(['emphasis', 'blurScope']);
+        if (focus != null) {
+            toggleSeriesBlurState(seriesIndex, focus, blurScope, ecIns, isHighlight);
+        }
+    }
+}
+
+export function toggleSelectionFromPayload(
+    seriesModel: SeriesModel,
+    payload: Payload,
+    ecIns: EChartsType
+) {
+    const isSelect = payload.type === 'select';
+    const isUnSelect = payload.type === 'unselect';
+
+    if (!(isSelect || isUnSelect)) {
+        return;
+    }
+
+    const data = seriesModel.getData(payload.dataType);
+    let dataIndex = queryDataIndex(data, payload);
+    if (!isArray(dataIndex)) {
+        dataIndex = [dataIndex];
+    }
+
+    seriesModel[isSelect ? 'select' : 'unSelect'](dataIndex, payload.dataType);
+}
+
+
+export function updateSeriesElementSelection(seriesModel: SeriesModel) {
+    const data = seriesModel.getData();
+    data.eachItemGraphicEl(function (el, idx) {
+        seriesModel.isSelected(idx) ? enterSelect(el) : leaveSelect(el);
     });
 }
 

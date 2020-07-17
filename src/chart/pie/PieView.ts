@@ -19,38 +19,18 @@
 */
 
 
-import { extend, curry } from 'zrender/src/core/util';
+import { extend } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Payload, ColorString, ECElement } from '../../util/types';
+import { Payload, ColorString } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-
-function updateDataSelected(
-    this: PiePiece,
-    uid: string,
-    seriesModel: PieSeriesModel,
-    hasAnimation: boolean,
-    api: ExtensionAPI
-): void {
-    const data = seriesModel.getData();
-    const dataIndex = graphic.getECData(this).dataIndex;
-    const name = data.getName(dataIndex);
-
-    api.dispatchAction({
-        type: 'pieToggleSelect',
-        from: uid,
-        name: name,
-        seriesId: seriesModel.id
-    });
-}
-
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
@@ -158,9 +138,6 @@ class PiePiece extends graphic.Sector {
         });
 
         enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
-
-        // State will be set after all rendered in the pipeline.
-        (sector as ECElement).selected = seriesModel.isSelected(data.getName(idx));
     }
 
     private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
@@ -235,24 +212,11 @@ class PieView extends ChartView {
 
     render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         const data = seriesModel.getData();
-        if (payload && (payload.from === this.uid)) {
-            // update selected status
-            data.each(function (idx) {
-                const el = data.getItemGraphicEl(idx);
-                (el as ECElement).selected = seriesModel.isSelected(data.getName(idx));
-            });
-
-            return;
-        }
 
         const oldData = this._data;
         const group = this.group;
 
         const hasAnimation = ecModel.get('animation');
-
-        const onSectorClick = curry(updateDataSelected, this.uid, seriesModel, hasAnimation, api);
-
-        const selectedMode = seriesModel.get('selectedMode');
 
         let startAngle: number;
         // First render
@@ -270,8 +234,6 @@ class PieView extends ChartView {
             .add(function (idx) {
                 const piePiece = new PiePiece(data, idx, startAngle);
 
-                selectedMode && piePiece.on('click', onSectorClick);
-
                 data.setItemGraphicEl(idx, piePiece);
 
                 group.add(piePiece);
@@ -282,7 +244,7 @@ class PieView extends ChartView {
                 piePiece.updateData(data, newIdx, startAngle);
 
                 piePiece.off('click');
-                selectedMode && piePiece.on('click', onSectorClick);
+
                 group.add(piePiece);
                 data.setItemGraphicEl(newIdx, piePiece);
             })

@@ -44,7 +44,10 @@ import {
     isHighDownDispatcher,
     HOVER_STATE_EMPHASIS,
     HOVER_STATE_BLUR,
-    toggleSeriesBlurStates
+    toggleSeriesBlurState,
+    toggleSeriesBlurStateFromPayload,
+    toggleSelectionFromPayload,
+    updateSeriesElementSelection
 } from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
@@ -79,6 +82,7 @@ import 'zrender/src/canvas/canvas';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 import LabelManager from './label/LabelManager';
+import { deprecateLog } from './preprocessor/helper/compatStyle';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -87,6 +91,8 @@ const assert = zrUtil.assert;
 const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
+
+const getECData = graphic.getECData;
 
 export const version = '4.8.0';
 
@@ -186,7 +192,6 @@ class MessageCenter extends Eventful {}
 const messageCenterProto = MessageCenter.prototype;
 messageCenterProto.on = createRegisterEventWithLowercaseMessageCenter('on');
 messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
-// messageCenterProto.one = createRegisterEventWithLowercaseMessageCenter('one');
 
 // ---------------------------------------
 // Internal method names for class ECharts
@@ -863,7 +868,7 @@ class ECharts extends Eventful {
                 const el = e.target;
                 let params: ECEvent;
                 const isGlobalOut = eveName === 'globalout';
-                const ecData = el && graphic.getECData(el);
+                const ecData = el && getECData(el);
                 // no e.target when 'globalout'.
                 if (isGlobalOut) {
                     params = {} as ECEvent;
@@ -1314,40 +1319,23 @@ class ECharts extends Eventful {
             const isHighlight = payload.type === 'highlight';
             const isDownplay = payload.type === 'downplay';
 
+            const isSelect = payload.type === 'select';
+            const isUnSelect = payload.type === 'unselect';
+
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
                     if (isHighlight || isDownplay) {
                         if (model instanceof SeriesModel) {
-                            const seriesIndex = model.seriesIndex;
-                            const data = model.getData(payload.dataType);
-                            let dataIndex = modelUtil.queryDataIndex(data, payload);
-                            // Pick the first one if there is multiple/none exists.
-                            dataIndex = (zrUtil.isArray(dataIndex) ? dataIndex[0] : dataIndex) || 0;
-                            let el = data.getItemGraphicEl(dataIndex as number);
-                            if (!el) {
-                                const count = data.count();
-                                let current = 0;
-                                // If data on dataIndex is NaN.
-                                while (!el && current < count) {
-                                    el = data.getItemGraphicEl(current++);
-                                }
-                            }
-                            if (el) {
-                                const ecData = graphic.getECData(el);
-                                toggleSeriesBlurStates(
-                                    seriesIndex, ecData.focus, ecData.blurScope, ecIns, isHighlight
-                                );
-                            }
-                            else {
-                                // If there is no element put on the data. Try getting it from raw option
-                                // TODO Should put it on seriesModel?
-                                const focus = model.get(['emphasis', 'focus']);
-                                const blurScope = model.get(['emphasis', 'blurScope']);
-                                if (focus != null) {
-                                    toggleSeriesBlurStates(seriesIndex, focus, blurScope, ecIns, isHighlight);
-                                }
-                            }
+                            toggleSeriesBlurStateFromPayload(model, payload, ecIns);
+                        }
+                    }
+                    else if (isSelect || isUnSelect) {
+                        // TODO geo
+                        if (model instanceof SeriesModel) {
+                            toggleSelectionFromPayload(model, payload, ecIns);
+                            updateSeriesElementSelection(model);
+                            markStatusToUpdate(ecIns);
                         }
                     }
 
@@ -1634,9 +1622,12 @@ class ECharts extends Eventful {
 
             const eventObjBatch: ECEventData[] = [];
             let eventObj: ECEvent;
-            const isHighDown = payloadType === 'highlight' || payloadType === 'downplay';
+            const isStatusChange = payloadType === 'highlight'
+                || payloadType === 'downplay'
+                || payloadType === 'select'
+                || payloadType === 'unselect';
 
-            each(payloads, function (batchItem) {
+            each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
                 eventObj = actionWrap.action(batchItem, this._model, this._api) as ECEvent;
                 // Emit event outside
@@ -1646,24 +1637,23 @@ class ECharts extends Eventful {
                 eventObjBatch.push(eventObj);
 
                 // light update does not perform data process, layout and visual.
-                if (isHighDown) {
+                if (isStatusChange) {
                     // method, payload, mainType, subType
                     updateDirectly(this, updateMethod, batchItem as Payload, 'series');
 
                     // Mark status to update
-                    // It can only being marked in echarts.ts.
+                    // It can only be marked in echarts.ts.
                     // So there is no chance that chart it self can trigger the highlight itself without action.
                     markStatusToUpdate(this);
                 }
                 else if (cptType) {
                     updateDirectly(this, updateMethod, batchItem as Payload, cptType.main, cptType.sub);
                 }
-            }, this);
+            });
 
-            if (updateMethod !== 'none' && !isHighDown && !cptType) {
+            if (updateMethod !== 'none' && !isStatusChange && !cptType) {
                 // Still dirty
                 if (this[OPTION_UPDATED_KEY]) {
-                    // FIXME Pass payload ?
                     prepare(this);
                     updateMethods.update.call(this, payload);
                     this[OPTION_UPDATED_KEY] = false;
@@ -1738,8 +1728,8 @@ class ECharts extends Eventful {
         };
 
         bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
-            function getHighDownDispatcher(target: Element) {
-                while (target && !isHighDownDispatcher(target)) {
+            function getDispatcher(target: Element, det: (target: Element) => boolean) {
+                while (target && !det(target)) {
                     if (target.__hostTarget) {
                         target = target.__hostTarget;
                     }
@@ -1751,11 +1741,11 @@ class ECharts extends Eventful {
             }
             zr.on('mouseover', function (e) {
                 const el = e.target;
-                const dispatcher = getHighDownDispatcher(el);
+                const dispatcher = getDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = graphic.getECData(dispatcher);
+                    const ecData = getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
-                    toggleSeriesBlurStates(
+                    toggleSeriesBlurState(
                         ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, true
                     );
                     enterEmphasisWhenMouseOver(dispatcher, e);
@@ -1764,16 +1754,31 @@ class ECharts extends Eventful {
                 }
             }).on('mouseout', function (e) {
                 const el = e.target;
-                const dispatcher = getHighDownDispatcher(el);
+                const dispatcher = getDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    const ecData = graphic.getECData(dispatcher);
-                    toggleSeriesBlurStates(
+                    const ecData = getECData(dispatcher);
+                    toggleSeriesBlurState(
                         ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, false
                     );
 
                     leaveEmphasisWhenMouseOut(dispatcher, e);
 
                     markStatusToUpdate(ecIns);
+                }
+            }).on('click', function (e) {
+                const el = e.target;
+                const dispatcher = getDispatcher(
+                    el, (target) => getECData(target).dataIndex != null
+                );
+                if (dispatcher) {
+                    const actionType = (dispatcher as ECElement).selected ? 'unselect' : 'select';
+                    const ecData = getECData(dispatcher);
+                    ecIns._api.dispatchAction({
+                        type: actionType,
+                        dataType: ecData.dataType,
+                        dataIndexInside: ecData.dataIndex,
+                        seriesIndex: ecData.seriesIndex
+                    });
                 }
             });
         };
@@ -1861,6 +1866,8 @@ class ECharts extends Eventful {
                 updateZ(seriesModel, chartView);
 
                 updateBlend(seriesModel, chartView);
+
+                updateSeriesElementSelection(seriesModel);
 
                 // Add labels.
                 labelManager.addLabelsOfSeries(chartView);
@@ -2166,7 +2173,16 @@ class ECharts extends Eventful {
 const echartsProto = ECharts.prototype;
 echartsProto.on = createRegisterEventWithLowercaseECharts('on');
 echartsProto.off = createRegisterEventWithLowercaseECharts('off');
-// echartsProto.one = createRegisterEventWithLowercaseECharts('one');
+// @ts-ignore
+echartsProto.one = function (eventName: string, cb: Function, ctx?: any) {
+    const self = this;
+    deprecateLog('ECharts#one is deprecated.');
+    function wrapped(this: unknown, ...args2: any) {
+        cb && cb.apply && cb.apply(this, args2);
+        self.off(eventName, wrapped);
+    };
+    this.on.call(this, eventName, wrapped, ctx);
+};
 
 // /**
 //  * Encode visual infomation from data after data processing
@@ -2657,6 +2673,18 @@ registerAction({
     type: 'downplay',
     event: 'downplay',
     update: 'downplay'
+}, zrUtil.noop);
+
+registerAction({
+    type: 'select',
+    event: 'select',
+    update: 'select'
+}, zrUtil.noop);
+
+registerAction({
+    type: 'unselect',
+    event: 'unselect',
+    update: 'unselect'
 }, zrUtil.noop);
 
 // Default theme

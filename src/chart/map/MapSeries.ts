@@ -22,8 +22,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
 import {encodeHTML, addCommas} from '../../util/format';
-import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '../../component/helper/selectableMixin';
-import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import {
@@ -50,8 +48,7 @@ export interface MapStateOption {
     label?: LabelOption
 }
 export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption>,
-    OptionDataItemObject<OptionDataValueNumeric>,
-    SelectableTarget {
+    OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
 }
 
@@ -66,7 +63,6 @@ export interface MapSeriesOption extends
     // `map` and `mapType` are ignored.
     SeriesOnGeoOptionMixin,
     BoxLayoutOptionMixin,
-    DataSelectableOptionMixin,
     SeriesEncodeOptionMixin {
     type?: 'map'
 
@@ -119,31 +115,21 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-        const valueDim = data.mapDimension('value');
         const dataNameMap = zrUtil.createHashMap();
-        const selectTargetList: MapDataItemOption[] = [];
         const toAppendNames = [] as string[];
 
         for (let i = 0, len = data.count(); i < len; i++) {
             const name = data.getName(i);
             dataNameMap.set(name, true);
-            selectTargetList.push({
-                name: name,
-                value: data.get(valueDim, i) as number,
-                selected: retrieveRawAttr(data, i, 'selected')
-            });
         }
 
         const geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap, this.option.nameProperty);
         zrUtil.each(geoSource.regions, function (region) {
             const name = region.name;
             if (!dataNameMap.get(name)) {
-                selectTargetList.push({name: name});
                 toAppendNames.push(name);
             }
         });
-
-        this.updateSelectedMap(selectTargetList);
 
         // Complete data with missing regions. The consequent processes (like visual
         // map and render) can not be performed without a "full data". For example,
@@ -309,9 +295,6 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     };
 
 }
-
-interface MapSeries extends DataSelectableMixin<MapSeriesOption> {}
-zrUtil.mixin(MapSeries, DataSelectableMixin);
 
 SeriesModel.registerClass(MapSeries);
 

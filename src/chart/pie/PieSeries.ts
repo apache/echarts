@@ -21,8 +21,6 @@ import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
-import {DataSelectableMixin, SelectableTarget, DataSelectableOptionMixin} from '../../component/helper/selectableMixin';
-import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
@@ -74,14 +72,12 @@ interface ExtraStateOption {
 
 export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
-    SelectableTarget,
     PieStateOption, StatesOptionMixin<PieStateOption, ExtraStateOption> {
 
     cursor?: string
 }
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
-    DataSelectableOptionMixin,
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
@@ -126,8 +122,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
         );
 
-        this.updateSelectedMap(this._createSelectableList());
-
         this._defaultLabelLine(option);
     }
 
@@ -136,8 +130,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      */
     mergeOption(): void {
         super.mergeOption.apply(this, arguments as any);
-
-        this.updateSelectedMap(this._createSelectableList());
     }
 
     /**
@@ -148,20 +140,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-    }
-
-    private _createSelectableList(): PieDataItemOption[] {
-        const data = this.getRawData();
-        const valueDim = data.mapDimension('value');
-        const targetList: PieDataItemOption[] = [];
-        for (let i = 0, len = data.count(); i < len; i++) {
-            targetList.push({
-                name: data.getName(i),
-                value: data.get(valueDim, i) as number,
-                selected: retrieveRawAttr(data, i, 'selected')
-            });
-        }
-        return targetList;
     }
 
     /**
@@ -308,9 +286,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     };
 
 }
-
-interface PieSeriesModel extends DataSelectableMixin<PieSeriesOption> {}
-zrUtil.mixin(PieSeriesModel, DataSelectableMixin);
 
 SeriesModel.registerClass(PieSeriesModel);
 

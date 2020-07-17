@@ -220,7 +220,7 @@ class EffectSymbol extends Group {
 
             this.stopEffectAnimation();
 
-            (this as ECElement).onStateChange = (toState) => {
+            (this as ECElement).onHoverStateChange = (toState) => {
                 if (toState === 'emphasis') {
                     if (effectCfg.showEffectOn !== 'render') {
                         this.startEffectAnimation(effectCfg);
