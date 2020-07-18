@@ -40,7 +40,8 @@ import {
     TooltipRenderMode,
     ECElement,
     ColorString,
-    CommonTooltipOption
+    CommonTooltipOption,
+    ZRColor
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -803,7 +804,7 @@ class TooltipView extends ComponentView {
     ): {
         x: number;
         y: number;
-        color: ColorString;
+        color: ZRColor;
     } {
         let dim = '';
         if (coord && coord.type === 'cartesian2d') {
@@ -814,13 +815,13 @@ class TooltipView extends ComponentView {
                 return {
                     x: point[0],
                     y: point[1],
-                    color: (tooltipDataParams.color || tooltipDataParams.borderColor) as ColorString
+                    color: tooltipDataParams.color || tooltipDataParams.borderColor
                 };
             }
             return {
                 x: point[0],
                 y: tooltipDataParams.position[1],
-                color: (tooltipDataParams.color || tooltipDataParams.borderColor) as ColorString
+                color: tooltipDataParams.color || tooltipDataParams.borderColor
             };
         }
 
@@ -830,7 +831,7 @@ class TooltipView extends ComponentView {
         return {
             x: tooltipDataParams[index]?.position[0] || point[0],
             y: tooltipDataParams[index]?.position[1] || point[1],
-            color: (tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor) as ColorString
+            color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor
         };
     }
 

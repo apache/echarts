@@ -28,7 +28,7 @@ import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
 import { ZRRawEvent, Dictionary } from 'zrender/src/core/types';
-import { ColorString } from '../../util/types';
+import { ColorString, ZRColor } from '../../util/types';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 
@@ -283,12 +283,18 @@ class TooltipHTMLContent {
         // this.hide();
     }
 
-    show(tooltipModel: Model<TooltipOption>, nearPointColor: string) {
+    show(tooltipModel: Model<TooltipOption>, nearPointColor: ZRColor) {
         clearTimeout(this._hideTimeout);
         const el = this.el;
         const styleCoord = this._styleCoord;
 
         const offset = el.offsetHeight / 2;
+        if (zrUtil.isObject(nearPointColor) && nearPointColor.type !== 'pattern') {
+            nearPointColor = nearPointColor.colorStops[0].color;
+        }
+        else if (zrUtil.isObject(nearPointColor) && (nearPointColor.type === 'pattern')) {
+            nearPointColor = 'transparent';
+        }
         el.style.cssText = gCssText + assembleCssText(tooltipModel)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
