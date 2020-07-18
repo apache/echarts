@@ -325,6 +325,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             }
         },
 
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
+        },
+
         animationEasing: 'linear',
 
         animationDuration: 1000

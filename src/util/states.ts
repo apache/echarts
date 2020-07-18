@@ -7,7 +7,7 @@ import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
 import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload } from './types';
-import { extend, indexOf, isArrayLike, isObject, keys, isArray } from 'zrender/src/core/util';
+import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './graphic';
 import * as colorTool from 'zrender/src/tool/color';
 import { EChartsType } from '../echarts';
@@ -197,7 +197,8 @@ function createEmphasisDefaultState(
                 emphasisStyle.fill = hasEmphasis
                     ? el.style.fill : liftColor(fromState.fill as ColorString);
             }
-            if (!hasFillOrStroke(emphasisStyle.stroke) && hasStrokeInNormal) {
+            // Not highlight stroke if fill has been highlighted.
+            else if (!hasFillOrStroke(emphasisStyle.stroke) && hasStrokeInNormal) {
                 if (!cloned) {
                     state = extend({}, state);
                     emphasisStyle = extend({}, emphasisStyle);
@@ -226,14 +227,11 @@ function createSelectDefaultState(
     stateName: 'select',
     state: Displayable['states'][number]
 ) {
-    const hasSelect = indexOf(el.currentStates, stateName) >= 0;
-    let cloned = false;
+    // const hasSelect = indexOf(el.currentStates, stateName) >= 0;
     if (state) {
         // TODO Share with textContent?
         if (state.z2 == null) {
-            if (!cloned) {
-                state = extend({}, state);
-            }
+            state = extend({}, state);
             const z2SelectLift = (el as ECElement).z2SelectLift;
             state.z2 = el.z2 + (z2SelectLift != null ? z2SelectLift : Z2_SELECT_LIFT);
         }
@@ -511,9 +509,11 @@ export function toggleSelectionFromPayload(
 
 
 export function updateSeriesElementSelection(seriesModel: SeriesModel) {
-    const data = seriesModel.getData();
-    data.eachItemGraphicEl(function (el, idx) {
-        seriesModel.isSelected(idx) ? enterSelect(el) : leaveSelect(el);
+    const allData = seriesModel.getAllData();
+    each(allData, function ({ data, type }) {
+        data.eachItemGraphicEl(function (el, idx) {
+            seriesModel.isSelected(idx, type) ? enterSelect(el) : leaveSelect(el);
+        });
     });
 }
 

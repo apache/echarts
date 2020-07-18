@@ -170,7 +170,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // ---------------------------------------
     private _selectedDataIndicesMap: Dictionary<number>;
 
-
     readonly preventUsingHoverLayer: boolean;
 
     static protoInitialize = (function () {
@@ -337,6 +336,18 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             // elements want to know whether fade out.
             return inner(this).data as List<this>;
         }
+    }
+
+    getAllData(): ({
+        data: List,
+        type?: string
+    })[] {
+        const mainData = this.getData();
+        // @ts-ignore
+        return (mainData && mainData.getLinkedDataAll)
+            // @ts-ignore
+            ? mainData.getLinkedDataAll()
+            : [{ data: mainData }];
     }
 
     setData(data: List): void {
@@ -605,6 +616,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             return;
         }
 
+        // TODO dataType
         const data = this.getData(dataType);
         if (selectedMode === 'multiple') {
             const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});

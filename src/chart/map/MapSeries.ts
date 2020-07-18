@@ -270,6 +270,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         scaleLimit: null,
 
+        selectedMode: true,
+
         label: {
             show: false,
             color: '#000'
@@ -288,6 +290,12 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             },
             itemStyle: {
                 areaColor: 'rgba(255,215,0,0.8)'
+            }
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
             }
         },
 

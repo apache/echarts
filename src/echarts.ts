@@ -1677,7 +1677,10 @@ class ECharts extends Eventful {
 
             this[IN_MAIN_PROCESS_KEY] = false;
 
-            !silent && this._messageCenter.trigger(eventObj.type, eventObj);
+            if (!silent) {
+                const messageCenter = this._messageCenter;
+                messageCenter.trigger(eventObj.type, eventObj);
+            }
         };
 
         flushPendingActions = function (this: ECharts, silent: boolean): void {

@@ -457,6 +457,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         zoom: 1,
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.6,
+
         // cursor: null,
 
         // categories: [],
@@ -486,6 +487,12 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             scale: true,
             label: {
                 show: true
+            }
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
             }
         }
     };

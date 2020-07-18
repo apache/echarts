@@ -173,6 +173,11 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
             label: {
                 show: true
             }
+        },
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
         }
     };
 

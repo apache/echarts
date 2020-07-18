@@ -67,24 +67,18 @@ under the License.
             const charts = [];
             allChartsOptions.forEach(function (chartOption) {
                 chartOption.series.forEach(function (series) {
+                    series.selectedMode = 'single';
                     series.select = {
                         itemStyle: {
-                            borderColor: '#000'
+                            borderWidth: 3
                         }
                     }
-
-                    series.selectedMode = 'single';
 
                     if (series.renderItem) {
                         const oldRenderItem = series.renderItem;
                         series.renderItem = function () {
                             const ret = oldRenderItem.apply(this, arguments);
                             ret.focus = 'self';
-                            ret.select = {
-                                itemStyle: {
-                                    borderColor: '#000'
-                                }
-                            }
                             return ret;
                         }
                     }
@@ -92,13 +86,14 @@ under the License.
                     if (series.type === 'treemap') {
                         series.itemStyle = {
                             borderColor: 'rgba(100, 100, 200, 0.1)',
-                            borderWidth: 5
                         };
-                        series.upperLabel = {
-                            show: true,
-                            height: 15,
-                            fontSize: 10
-                        };
+                        series.nodeClick = null;
+                        series.select = {
+                            itemStyle: {
+                                strokeColor: '#000',
+                                strokeWidth: 1
+                            }
+                        }
                     }
                 });
                 const dom = document.createElement('div');

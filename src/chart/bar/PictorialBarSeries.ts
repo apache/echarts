@@ -156,6 +156,12 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
 
         emphasis: {
             scale: false
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
         }
     });
 

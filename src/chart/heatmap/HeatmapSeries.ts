@@ -103,7 +103,13 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
 
         maxOpacity: 1,
 
-        minOpacity: 0
+        minOpacity: 0,
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
+        }
     };
 }
 

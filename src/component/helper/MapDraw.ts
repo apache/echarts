@@ -468,7 +468,6 @@ class MapDraw {
     ): void {
         const mapDraw = this;
 
-        regionsGroup.off('click');
         regionsGroup.off('mousedown');
 
         // @ts-ignore FIXME:TS resolve type conflict
@@ -479,33 +478,10 @@ class MapDraw {
             });
 
             regionsGroup.on('click', function (e) {
-            if (!mapDraw._mouseDownFlag) {
-                return;
-            }
-            mapDraw._mouseDownFlag = false;
-
-                let el = e.target;
-                while (!(el as RegionsGroup).__regions) {
-                    el = el.parent;
-                }
-                if (!el) {
+                if (!mapDraw._mouseDownFlag) {
                     return;
                 }
-
-                const action = {
-                    type: (mapOrGeoModel.mainType === 'geo' ? 'geo' : 'map') + 'ToggleSelect',
-                    batch: zrUtil.map((el as RegionsGroup).__regions, function (region) {
-                        return {
-                            name: region.name,
-                            from: fromView.uid
-                        };
-                    })
-                } as Payload;
-                action[mapOrGeoModel.mainType + 'Id'] = mapOrGeoModel.id;
-
-                api.dispatchAction(action);
-
-                updateMapSelected(mapOrGeoModel, regionsGroup);
+                mapDraw._mouseDownFlag = false;
             });
         }
     }

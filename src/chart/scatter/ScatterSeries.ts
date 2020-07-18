@@ -134,8 +134,13 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
         // If clip the overflow graphics
         // Works on cartesian / polar series
-        clip: true
+        clip: true,
 
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
+        }
         // progressive: null
     };
 

@@ -130,6 +130,12 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
             shadowOffsetX: 0,
             shadowOffsetY: 0,
             opacity: 1
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
         }
     });
 
