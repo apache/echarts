@@ -2073,6 +2073,11 @@ class ECharts extends Eventful {
                         return;
                     }
 
+                    if (el instanceof graphic.Path) {
+                        (el as ECElement).hasFillInNormal = el.hasFill();
+                        (el as ECElement).hasStrokeInNormal = el.hasStroke();
+                    }
+
                     // Only updated on changed element. In case element is incremental and don't wan't to rerender.
                     // TODO, a more proper way?
                     if (el.__dirty) {

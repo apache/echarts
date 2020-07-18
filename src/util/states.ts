@@ -15,7 +15,7 @@ import List from '../data/List';
 import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
 import { queryDataIndex } from './model';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
+import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -178,42 +178,44 @@ function createEmphasisDefaultState(
 ) {
     const hasEmphasis = indexOf(el.currentStates, stateName) >= 0;
     let cloned = false;
-    if (!hasEmphasis) { // Do nothing if there is emphasis state exists.
-        if (!(el instanceof ZRText)) {
-            const currentFill = el.style.fill;
-            const currentStroke = el.style.stroke;
-            if (currentFill || currentStroke) {
-                const fromState = getFromStateStyle(el, ['fill', 'stroke'], stateName);
-                state = state || {};
-                // Apply default color lift
-                let emphasisStyle = state.style || {};
-                if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(currentFill)) {
-                    cloned = true;
-                    // Not modify the original value.
-                    state = extend({}, state);
-                    emphasisStyle = extend({}, emphasisStyle);
-                    // Already being applied 'emphasis'. DON'T lift color multiple times.
-                    emphasisStyle.fill = liftColor(fromState.fill as ColorString);
-                }
-                if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(currentStroke)) {
-                    if (!cloned) {
-                        state = extend({}, state);
-                        emphasisStyle = extend({}, emphasisStyle);
-                    }
-                    emphasisStyle.stroke = liftColor(fromState.stroke as ColorString);
-                }
-                state.style = emphasisStyle;
+    if (el instanceof Path) {
+        const hasFillInNormal = (el as ECElement).hasFillInNormal;
+        const hasStrokeInNormal = (el as ECElement).hasStrokeInNormal;
+        if (hasFillInNormal || hasStrokeInNormal) {
+            const fromState: PathStyleProps = !hasEmphasis
+                ? getFromStateStyle(el, ['fill', 'stroke'], stateName)
+                : null;
+            state = state || {};
+            // Apply default color lift
+            let emphasisStyle = state.style || {};
+            if (!hasFillOrStroke(emphasisStyle.fill) && hasFillInNormal) {
+                cloned = true;
+                // Not modify the original value.
+                state = extend({}, state);
+                emphasisStyle = extend({}, emphasisStyle);
+                // Already being applied 'emphasis'. DON'T lift color multiple times.
+                emphasisStyle.fill = hasEmphasis
+                    ? el.style.fill : liftColor(fromState.fill as ColorString);
             }
-        }
-        if (state) {
-            // TODO Share with textContent?
-            if (state.z2 == null) {
+            if (!hasFillOrStroke(emphasisStyle.stroke) && hasStrokeInNormal) {
                 if (!cloned) {
                     state = extend({}, state);
+                    emphasisStyle = extend({}, emphasisStyle);
                 }
-                const z2EmphasisLift = (el as ECElement).z2EmphasisLift;
-                state.z2 = el.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+                emphasisStyle.stroke = hasEmphasis
+                    ? el.style.stroke : liftColor(fromState.stroke as ColorString);
             }
+            state.style = emphasisStyle;
+        }
+    }
+    if (state) {
+        // TODO Share with textContent?
+        if (state.z2 == null) {
+            if (!cloned) {
+                state = extend({}, state);
+            }
+            const z2EmphasisLift = (el as ECElement).z2EmphasisLift;
+            state.z2 = el.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
         }
     }
     return state;
