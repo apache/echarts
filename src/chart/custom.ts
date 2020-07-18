@@ -585,6 +585,7 @@ function createEl(elOption: CustomElementOption): Element {
     // some cases probably be broken: hierarchy layout along z, like circle packing,
     // where emphasis only intending to modify color/border rather than lift z2.
     (el as ECElement).z2EmphasisLift = 1;
+    (el as ECElement).z2SelectLift = 1;
 
     return el;
 }

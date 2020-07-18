@@ -8,11 +8,7 @@ import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
 import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload } from './types';
 import { extend, indexOf, isArrayLike, isObject, keys, isArray } from 'zrender/src/core/util';
-import {
-    Z2_EMPHASIS_LIFT,
-    getECData,
-    _highlightKeyMap
-} from './graphic';
+import { getECData } from './graphic';
 import * as colorTool from 'zrender/src/tool/color';
 import { EChartsType } from '../echarts';
 import List from '../data/List';
@@ -22,7 +18,9 @@ import { queryDataIndex } from './model';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 // Reserve 0 as default.
-export let _highlightNextDigit = 1;
+let _highlightNextDigit = 1;
+
+const _highlightKeyMap: Dictionary<number> = {};
 
 export const HOVER_STATE_NORMAL: 0 = 0;
 export const HOVER_STATE_BLUR: 1 = 1;
@@ -30,6 +28,9 @@ export const HOVER_STATE_EMPHASIS: 2 = 2;
 
 export const SPECIAL_STATES = ['emphasis', 'blur', 'select'] as const;
 export const DISPLAY_STATES = ['normal', 'emphasis', 'blur', 'select'] as const;
+
+export const Z2_EMPHASIS_LIFT = 10;
+export const Z2_SELECT_LIFT = 9;
 
 type ExtendedProps = {
     __highByOuter: number
@@ -177,42 +178,62 @@ function createEmphasisDefaultState(
 ) {
     const hasEmphasis = indexOf(el.currentStates, stateName) >= 0;
     let cloned = false;
-    if (!(el instanceof ZRText)) {
-        const currentFill = el.style.fill;
-        const currentStroke = el.style.stroke;
-        if (currentFill || currentStroke) {
-            const fromState: PathStyleProps = !hasEmphasis
-                ? getFromStateStyle(el, ['fill', 'stroke'], stateName)
-                : null;
-            state = state || {};
-            // Apply default color lift
-            let emphasisStyle = state.style || {};
-            if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(currentFill)) {
-                cloned = true;
-                // Not modify the original value.
-                state = extend({}, state);
-                emphasisStyle = extend({}, emphasisStyle);
-                // Already being applied 'emphasis'. DON'T lift color multiple times.
-                emphasisStyle.fill = hasEmphasis ? currentFill : liftColor(fromState.fill as ColorString);
-            }
-            if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(currentStroke)) {
-                if (!cloned) {
+    if (!hasEmphasis) { // Do nothing if there is emphasis state exists.
+        if (!(el instanceof ZRText)) {
+            const currentFill = el.style.fill;
+            const currentStroke = el.style.stroke;
+            if (currentFill || currentStroke) {
+                const fromState = getFromStateStyle(el, ['fill', 'stroke'], stateName);
+                state = state || {};
+                // Apply default color lift
+                let emphasisStyle = state.style || {};
+                if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(currentFill)) {
+                    cloned = true;
+                    // Not modify the original value.
                     state = extend({}, state);
                     emphasisStyle = extend({}, emphasisStyle);
+                    // Already being applied 'emphasis'. DON'T lift color multiple times.
+                    emphasisStyle.fill = liftColor(fromState.fill as ColorString);
                 }
-                emphasisStyle.stroke = hasEmphasis ? currentStroke : liftColor(fromState.stroke as ColorString);
+                if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(currentStroke)) {
+                    if (!cloned) {
+                        state = extend({}, state);
+                        emphasisStyle = extend({}, emphasisStyle);
+                    }
+                    emphasisStyle.stroke = liftColor(fromState.stroke as ColorString);
+                }
+                state.style = emphasisStyle;
             }
-            state.style = emphasisStyle;
+        }
+        if (state) {
+            // TODO Share with textContent?
+            if (state.z2 == null) {
+                if (!cloned) {
+                    state = extend({}, state);
+                }
+                const z2EmphasisLift = (el as ECElement).z2EmphasisLift;
+                state.z2 = el.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+            }
         }
     }
+    return state;
+}
+
+function createSelectDefaultState(
+    el: Displayable,
+    stateName: 'select',
+    state: Displayable['states'][number]
+) {
+    const hasSelect = indexOf(el.currentStates, stateName) >= 0;
+    let cloned = false;
     if (state) {
         // TODO Share with textContent?
         if (state.z2 == null) {
             if (!cloned) {
                 state = extend({}, state);
             }
-            const z2EmphasisLift = (el as ECElement).z2EmphasisLift;
-            state.z2 = el.z2 + (z2EmphasisLift != null ? z2EmphasisLift : Z2_EMPHASIS_LIFT);
+            const z2SelectLift = (el as ECElement).z2SelectLift;
+            state.z2 = el.z2 + (z2SelectLift != null ? z2SelectLift : Z2_SELECT_LIFT);
         }
     }
     return state;
@@ -227,7 +248,7 @@ function createBlurDefaultState(
     const currentOpacity = el.style.opacity;
 
     const fromState = !hasBlur
-        ? getFromStateStyle(el, ['fill', 'stroke'], stateName, {
+        ? getFromStateStyle(el, ['opacity'], stateName, {
             opacity: 1
         })
         : null;
@@ -255,6 +276,9 @@ function elementStateProxy(this: Displayable, stateName: string): DisplayableSta
         }
         else if (stateName === 'blur') {
             return createBlurDefaultState(this, stateName, state);
+        }
+        else if (stateName === 'select') {
+            return createSelectDefaultState(this, stateName, state);
         }
     }
     return state;

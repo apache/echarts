@@ -82,11 +82,6 @@ const mathMin = Math.min;
 
 export const EMPTY_OBJ = {};
 
-export const Z2_EMPHASIS_LIFT = 10;
-
-
-export const _highlightKeyMap: Dictionary<number> = {};
-
 const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];

@@ -114,6 +114,7 @@ export interface ECElement extends Element {
     selected?: boolean;
 
     z2EmphasisLift?: number;
+    z2SelectLift?: number;
 
     /**
      * Force disable animation on any condition
