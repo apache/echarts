@@ -226,7 +226,7 @@ class PictorialBarView extends ChartView {
         if (ecModel.get('animation')) {
             if (data) {
                 data.eachItemGraphicEl(function (bar: PictorialBarElement) {
-                    removeBar(data, graphic.getECData(bar).dataIndex, ecModel, bar);
+                    removeBar(data, graphic.getECData(bar).dataIndex, ecModel as Model<AnimationOptionMixin>, bar);
                 });
             }
         }

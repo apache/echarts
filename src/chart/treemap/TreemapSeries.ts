@@ -37,6 +37,7 @@ import {
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
 import List from '../../data/List';
+import { normalizeToArray } from '../../util/model';
 
 // Only support numberic value.
 type TreemapSeriesDataValue = number | number[];
@@ -515,7 +516,7 @@ function completeTreeValue(dataNode: TreemapSeriesNodeItemOption) {
  * set default to level configuration
  */
 function setDefault(levels: TreemapSeriesLevelOption[], ecModel: GlobalModel) {
-    const globalColorList = ecModel.get('color');
+    const globalColorList = normalizeToArray(ecModel.get('color')) as ColorString[];
 
     if (!globalColorList) {
         return;

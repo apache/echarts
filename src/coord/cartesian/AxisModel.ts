@@ -26,6 +26,7 @@ import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
 import { AxisBaseModel } from '../AxisBaseModel';
 import {OrdinalSortInfo} from '../../util/types';
+import { SINGLE_REFERRING } from '../../util/model';
 
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -50,11 +51,7 @@ class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     axis: Axis2D;
 
     getCoordSysModel(): GridModel {
-        return this.ecModel.queryComponents({
-            mainType: 'grid',
-            index: this.option.gridIndex,
-            id: this.option.gridId
-        })[0] as GridModel;
+        return this.getReferringComponents('grid', SINGLE_REFERRING).models[0] as GridModel;
     }
 }
 

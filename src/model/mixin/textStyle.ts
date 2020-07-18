@@ -25,7 +25,7 @@ import ZRText from 'zrender/src/graphic/Text';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 
-type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
+export type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
 > & LabelFontOption;

@@ -17,21 +17,20 @@
 * under the License.
 */
 
-import DataZoomView, {CoordInfo} from './DataZoomView';
+import DataZoomView from './DataZoomView';
 import sliderMove from '../helper/sliderMove';
 import * as roams from './roams';
 import InsideZoomModel from './InsideZoomModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import ComponentView from '../../view/Component';
-import { each, map, bind } from 'zrender/src/core/util';
+import { bind } from 'zrender/src/core/util';
 import RoamController, {RoamEventParams} from '../helper/RoamController';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import Polar from '../../coord/polar/Polar';
 import SingleAxis from '../../coord/single/SingleAxis';
+import { DataZoomCoordSysMainType, DataZoomReferCoordSysInfo } from './helper';
 
-
-type SupportedCoordSysName = 'polar' | 'grid' | 'singleAxis';
 
 class InsideZoomView extends DataZoomView {
     static type = 'dataZoom.inside';
@@ -41,13 +40,15 @@ class InsideZoomView extends DataZoomView {
      * 'throttle' is used in this.dispatchAction, so we save range
      * to avoid missing some 'pan' info.
      */
-    range: [number, number];
+    range: number[];
 
-    /**
-     * @override
-     */
-    render(dataZoomModel: InsideZoomModel, ecModel: GlobalModel, api: ExtensionAPI, payload: any) {
+    render(dataZoomModel: InsideZoomModel, ecModel: GlobalModel, api: ExtensionAPI) {
         super.render.apply(this, arguments as any);
+
+        if (dataZoomModel.noTarget()) {
+            this._clear();
+            return;
+        }
 
         // Hence the `throttle` util ensures to preserve command order,
         // here simply updating range all the time will not cause missing
@@ -55,74 +56,57 @@ class InsideZoomView extends DataZoomView {
         this.range = dataZoomModel.getPercentRange();
 
         // Reset controllers.
-        each(this.getTargetCoordInfo(), function (coordInfoList, coordSysName: SupportedCoordSysName) {
-
-            const allCoordIds = map(coordInfoList, function (coordInfo) {
-                return roams.generateCoordId(coordInfo.model);
-            });
-
-            each(coordInfoList, function (coordInfo) {
-                const coordModel = coordInfo.model;
-
-                roams.register(
-                    api,
-                    {
-                        coordId: roams.generateCoordId(coordModel),
-                        allCoordIds: allCoordIds,
-                        containsPoint(e, x, y) {
-                            return coordModel.coordinateSystem.containPoint([x, y]);
-                        },
-                        dataZoomId: dataZoomModel.id,
-                        dataZoomModel: dataZoomModel,
-                        getRange: {
-                            pan: bind(roamHandlers.pan, this, coordInfo, coordSysName),
-                            zoom: bind(roamHandlers.zoom, this, coordInfo, coordSysName),
-                            scrollMove: bind(roamHandlers.scrollMove, this, coordInfo, coordSysName)
-                        }
-                    }
-                );
-            }, this);
-
-        }, this);
+        roams.setViewInfoToCoordSysRecord(
+            api,
+            dataZoomModel,
+            {
+                pan: bind(getRangeHandlers.pan, this),
+                zoom: bind(getRangeHandlers.zoom, this),
+                scrollMove: bind(getRangeHandlers.scrollMove, this)
+            }
+        );
     }
 
-    /**
-     * @override
-     */
     dispose() {
-        roams.unregister(this.api, this.dataZoomModel.id);
+        this._clear();
         super.dispose.apply(this, arguments as any);
+    }
+
+    private _clear() {
+        roams.disposeCoordSysRecordIfNeeded(this.api, this.dataZoomModel as InsideZoomModel);
         this.range = null;
     }
 }
 
-interface RoamHandler<T extends RoamEventParams['zoom'] | RoamEventParams['scrollMove'] | RoamEventParams['pan']> {
+interface DataZoomGetRangeHandler<
+    T extends RoamEventParams['zoom'] | RoamEventParams['scrollMove'] | RoamEventParams['pan']
+> {
     (
-        coordInfo: CoordInfo,
-        coordSysName: SupportedCoordSysName,
+        coordSysInfo: DataZoomReferCoordSysInfo,
+        coordSysMainType: DataZoomCoordSysMainType,
         controller: RoamController,
         e: T
     ): [number, number]
 }
 
-const roamHandlers: {
-    pan: RoamHandler<RoamEventParams['pan']>
-    zoom: RoamHandler<RoamEventParams['zoom']>
-    scrollMove: RoamHandler<RoamEventParams['scrollMove']>
+const getRangeHandlers: {
+    pan: DataZoomGetRangeHandler<RoamEventParams['pan']>
+    zoom: DataZoomGetRangeHandler<RoamEventParams['zoom']>
+    scrollMove: DataZoomGetRangeHandler<RoamEventParams['scrollMove']>
 } & ThisType<InsideZoomView> = {
 
-    zoom(coordInfo, coordSysName, controller, e: RoamEventParams['zoom']) {
+    zoom(coordSysInfo, coordSysMainType, controller, e: RoamEventParams['zoom']) {
         const lastRange = this.range;
         const range = lastRange.slice() as [number, number];
 
         // Calculate transform by the first axis.
-        const axisModel = coordInfo.axisModels[0];
+        const axisModel = coordSysInfo.axisModels[0];
         if (!axisModel) {
             return;
         }
 
-        const directionInfo = getDirectionInfo[coordSysName](
-            null, [e.originX, e.originY], axisModel, controller, coordInfo
+        const directionInfo = getDirectionInfo[coordSysMainType](
+            null, [e.originX, e.originY], axisModel, controller, coordSysInfo
         );
         const percentPoint = (
             directionInfo.signal > 0
@@ -146,9 +130,9 @@ const roamHandlers: {
         }
     },
 
-    pan: makeMover(function (range, axisModel, coordInfo, coordSysName, controller, e: RoamEventParams['pan']) {
-        const directionInfo = getDirectionInfo[coordSysName](
-            [e.oldX, e.oldY], [e.newX, e.newY], axisModel, controller, coordInfo
+    pan: makeMover(function (range, axisModel, coordSysInfo, coordSysMainType, controller, e: RoamEventParams['pan']) {
+        const directionInfo = getDirectionInfo[coordSysMainType](
+            [e.oldX, e.oldY], [e.newX, e.newY], axisModel, controller, coordSysInfo
         );
 
         return directionInfo.signal
@@ -157,29 +141,31 @@ const roamHandlers: {
     }),
 
     scrollMove: makeMover(
-        function (range, axisModel, coordInfo, coordSysName, controller, e: RoamEventParams['scrollMove']
+        function (range, axisModel, coordSysInfo, coordSysMainType, controller, e: RoamEventParams['scrollMove']
     ) {
-        const directionInfo = getDirectionInfo[coordSysName](
-            [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordInfo
+        const directionInfo = getDirectionInfo[coordSysMainType](
+            [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordSysInfo
         );
         return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
     })
 };
 
+export type DataZoomGetRangeHandlers = typeof getRangeHandlers;
+
 function makeMover(
     getPercentDelta: (
         range: [number, number],
         axisModel: AxisBaseModel,
-        coordInfo: CoordInfo,
-        coordSysName: SupportedCoordSysName,
+        coordSysInfo: DataZoomReferCoordSysInfo,
+        coordSysMainType: DataZoomCoordSysMainType,
         controller: RoamController,
         e: RoamEventParams['scrollMove']| RoamEventParams['pan']
     ) => number
 ) {
     return function (
         this: InsideZoomView,
-        coordInfo: CoordInfo,
-        coordSysName: SupportedCoordSysName,
+        coordSysInfo: DataZoomReferCoordSysInfo,
+        coordSysMainType: DataZoomCoordSysMainType,
         controller: RoamController,
         e: RoamEventParams['scrollMove']| RoamEventParams['pan']
     ): [number, number] {
@@ -187,13 +173,13 @@ function makeMover(
         const range = lastRange.slice() as [number, number];
 
         // Calculate transform by the first axis.
-        const axisModel = coordInfo.axisModels[0];
+        const axisModel = coordSysInfo.axisModels[0];
         if (!axisModel) {
             return;
         }
 
         const percentDelta = getPercentDelta(
-            range, axisModel, coordInfo, coordSysName, controller, e
+            range, axisModel, coordSysInfo, coordSysMainType, controller, e
         );
 
         sliderMove(percentDelta, range, [0, 100], 'all');
@@ -218,16 +204,16 @@ interface GetDirectionInfo {
         newPoint: number[],
         axisModel: AxisBaseModel,
         controller: RoamController,
-        coordInfo: CoordInfo
+        coordSysInfo: DataZoomReferCoordSysInfo
     ): DirectionInfo
 }
 
 const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo> = {
 
-    grid(oldPoint, newPoint, axisModel, controller, coordInfo) {
+    grid(oldPoint, newPoint, axisModel, controller, coordSysInfo) {
         const axis = axisModel.axis;
         const ret = {} as DirectionInfo;
-        const rect = coordInfo.model.coordinateSystem.getRect();
+        const rect = coordSysInfo.model.coordinateSystem.getRect();
         oldPoint = oldPoint || [0, 0];
 
         if (axis.dim === 'x') {
@@ -246,10 +232,10 @@ const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo
         return ret;
     },
 
-    polar(oldPoint, newPoint, axisModel, controller, coordInfo) {
+    polar(oldPoint, newPoint, axisModel, controller, coordSysInfo) {
         const axis = axisModel.axis;
         const ret = {} as DirectionInfo;
-        const polar = coordInfo.model.coordinateSystem as Polar;
+        const polar = coordSysInfo.model.coordinateSystem as Polar;
         const radiusExtent = polar.getRadiusAxis().getExtent();
         const angleExtent = polar.getAngleAxis().getExtent();
 
@@ -276,9 +262,9 @@ const getDirectionInfo: Record<'grid' | 'polar' | 'singleAxis', GetDirectionInfo
         return ret;
     },
 
-    singleAxis(oldPoint, newPoint, axisModel, controller, coordInfo) {
+    singleAxis(oldPoint, newPoint, axisModel, controller, coordSysInfo) {
         const axis = axisModel.axis as SingleAxis;
-        const rect = coordInfo.model.coordinateSystem.getRect();
+        const rect = coordSysInfo.model.coordinateSystem.getRect();
         const ret = {} as DirectionInfo;
 
         oldPoint = oldPoint || [0, 0];

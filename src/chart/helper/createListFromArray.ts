@@ -47,7 +47,7 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
 
     let coordSysDimDefs: DimensionDefinitionLoose[];
 
-    if (coordSysInfo) {
+    if (coordSysInfo && coordSysInfo.coordSysDims) {
         coordSysDimDefs = zrUtil.map(coordSysInfo.coordSysDims, function (dim) {
             const dimInfo = {
                 name: dim

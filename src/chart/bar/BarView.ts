@@ -59,6 +59,7 @@ import OrdinalScale from '../../scale/Ordinal';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
 import { extend, map, defaults, each } from 'zrender/src/core/util';
+import SeriesModel from '../../model/Series';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
@@ -112,7 +113,11 @@ class BarView extends ChartView {
 
     private _backgroundEls: (Rect | Sector)[];
 
+    private _model: BarSeriesModel;
+
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+        this._model = seriesModel;
+
         this._updateDrawMode(seriesModel);
 
         const coordinateSystemType = seriesModel.get('coordinateSystem');
@@ -524,19 +529,19 @@ class BarView extends ChartView {
         }
     }
 
-    remove(ecModel?: GlobalModel) {
-        this._clear(ecModel);
+    remove() {
+        this._clear(this._model);
     }
 
-    private _clear(ecModel?: GlobalModel): void {
+    private _clear(model?: SeriesModel): void {
         const group = this.group;
         const data = this._data;
-        if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
+        if (model && model.isAnimationEnabled() && data && !this._isLargeDraw) {
             this._removeBackground();
             this._backgroundEls = [];
 
             data.eachItemGraphicEl(function (el: Path) {
-                removeElementWithFadeOut(el, ecModel, getECData(el).dataIndex);
+                removeElementWithFadeOut(el, model, getECData(el).dataIndex);
             });
         }
         else {

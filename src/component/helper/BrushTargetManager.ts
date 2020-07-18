@@ -286,10 +286,10 @@ function formatMinMax(minMax: BrushDimensionMinMax): BrushDimensionMinMax {
 }
 
 function parseFinder(
-    ecModel: GlobalModel, option: ModelFinder
+    ecModel: GlobalModel, finder: ModelFinder
 ): ParsedModelFinder {
     return modelUtilParseFinder(
-        ecModel, option, {includeMainTypes: INCLUDE_FINDER_MAIN_TYPES}
+        ecModel, finder, {includeMainTypes: INCLUDE_FINDER_MAIN_TYPES}
     );
 }
 

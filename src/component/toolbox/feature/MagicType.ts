@@ -25,6 +25,7 @@ import { SeriesOption, ECUnitOption } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
 import SeriesModel from '../../../model/Series';
+import { SINGLE_REFERRING } from '../../../util/model';
 
 const magicTypeLang = lang.toolbox.magicType;
 const INNER_STACK_KEYWORD = '__ec_magicType_stack__' as const;
@@ -108,7 +109,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             if (newSeriesOpt) {
                 // PENDING If merge original option?
                 zrUtil.defaults(newSeriesOpt, seriesModel.option);
-                newOption.series.push(newSeriesOpt);
+                (newOption.series as SeriesOption[]).push(newSeriesOpt);
             }
             // Modify boundaryGap
             const coordSys = seriesModel.coordinateSystem;
@@ -117,18 +118,14 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                 if (categoryAxis) {
                     const axisDim = categoryAxis.dim;
                     const axisType = axisDim + 'Axis';
-                    const axisModel = ecModel.queryComponents({
-                        mainType: axisType,
-                        index: seriesModel.get(name + 'Index' as any),
-                        id: seriesModel.get(name + 'Id' as any)
-                    })[0];
+                    const axisModel = seriesModel.getReferringComponents(axisType, SINGLE_REFERRING).models[0];
                     const axisIndex = axisModel.componentIndex;
 
                     newOption[axisType] = newOption[axisType] || [];
                     for (let i = 0; i <= axisIndex; i++) {
-                        newOption[axisType][axisIndex] = newOption[axisType][axisIndex] || {};
+                        (newOption[axisType] as any)[axisIndex] = (newOption[axisType] as any)[axisIndex] || {};
                     }
-                    newOption[axisType][axisIndex].boundaryGap = type === 'bar';
+                    (newOption[axisType] as any)[axisIndex].boundaryGap = type === 'bar';
                 }
             }
         };
@@ -155,8 +152,9 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         let newTitle;
         // Change title of stack
         if (type === 'stack') {
-            const isStack = newOption.series && newOption.series[0]
-                && newOption.series[0].stack === INNER_STACK_KEYWORD;
+            const seriesOptions = newOption.series as (SeriesOption & { stack: string })[];
+            const isStack = seriesOptions && seriesOptions[0]
+                && seriesOptions[0].stack === INNER_STACK_KEYWORD;
             newTitle = isStack
                 ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
                 : zrUtil.clone(magicTypeLang.title);

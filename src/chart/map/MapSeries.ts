@@ -146,7 +146,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     getHostGeoModel(): GeoModel {
         const geoIndex = this.option.geoIndex;
         return geoIndex != null
-            ? this.dependentModels.geo[geoIndex] as GeoModel
+            ? this.ecModel.getComponent('geo', geoIndex) as GeoModel
             : null;
     }
 

@@ -36,7 +36,7 @@ const ICON_TYPES = ['rect', 'polygon', 'lineX', 'lineY', 'keep', 'clear'] as con
 
 type IconType = typeof ICON_TYPES[number];
 
-interface ToolboxBrushFeatureOption extends ToolboxFeatureOption {
+export interface ToolboxBrushFeatureOption extends ToolboxFeatureOption {
     type?: IconType[]
     icon?: {[key in IconType]?: string}
     title?: {[key in IconType]?: string}
