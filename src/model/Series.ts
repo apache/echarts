@@ -30,7 +30,7 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, ColorString
+    ScaleDataValue, Dictionary, ColorString, OptionDataItemObject
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -223,6 +223,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // this.restoreData();
 
         autoSeriesName(this);
+
+        this._initSelectedMapFromData(data);
     }
 
     /**
@@ -282,6 +284,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         inner(this).dataBeforeProcessed = data;
 
         autoSeriesName(this);
+
+        this._initSelectedMapFromData(data);
     }
 
     fillDataTextStyle(data: ArrayLike<any>): void {
@@ -610,33 +614,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     // PENGING If selectedMode is null ?
     select(innerDataIndices: number[], dataType?: string): void {
-        const selectedMode = this.option.selectedMode;
-        const len = innerDataIndices.length;
-        if (!selectedMode || !len) {
-            return;
-        }
-
-        // TODO dataType
-        const data = this.getData(dataType);
-        if (selectedMode === 'multiple') {
-            const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
-            for (let i = 0; i < len; i++) {
-                const dataIndex = innerDataIndices[i];
-                const nameOrId = getSelectionKey(data, dataIndex);
-                selectedMap[nameOrId] = true;
-                this._selectedDataIndicesMap[nameOrId] = data.getRawIndex(dataIndex);
-            }
-        }
-        else if (selectedMode === 'single' || selectedMode === true) {
-            const lastDataIndex = innerDataIndices[len - 1];
-            const nameOrId = getSelectionKey(data, lastDataIndex);
-            this.option.selectedMap = {
-                [nameOrId]: true
-            };
-            this._selectedDataIndicesMap = {
-                [nameOrId]: data.getRawIndex(lastDataIndex)
-            };
-        }
+        this._innerSelect(this.getData(dataType), innerDataIndices);
     }
 
     unSelect(innerDataIndices: number[], dataType?: string): void {
@@ -676,6 +654,59 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const data = this.getData(dataType);
         const nameOrId = getSelectionKey(data, dataIndex);
         return selectedMap[nameOrId] || false;
+    }
+
+    private _innerSelect(data: List, innerDataIndices: number[]) {
+        const selectedMode = this.option.selectedMode;
+        const len = innerDataIndices.length;
+        if (!selectedMode || !len) {
+            return;
+        }
+
+        if (selectedMode === 'multiple') {
+            const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
+            for (let i = 0; i < len; i++) {
+                const dataIndex = innerDataIndices[i];
+                // TODO diffrent types of data share same object.
+                const nameOrId = getSelectionKey(data, dataIndex);
+                selectedMap[nameOrId] = true;
+                this._selectedDataIndicesMap[nameOrId] = data.getRawIndex(dataIndex);
+            }
+        }
+        else if (selectedMode === 'single' || selectedMode === true) {
+            const lastDataIndex = innerDataIndices[len - 1];
+            const nameOrId = getSelectionKey(data, lastDataIndex);
+            this.option.selectedMap = {
+                [nameOrId]: true
+            };
+            this._selectedDataIndicesMap = {
+                [nameOrId]: data.getRawIndex(lastDataIndex)
+            };
+        }
+    }
+
+    private _initSelectedMapFromData(data: List) {
+        // Ignore select info in data if selectedMap exists.
+        // NOTE It's only for legacy usage. edge data is not supported.
+        if (this.option.selectedMap) {
+            return;
+        }
+
+        const dataIndices: number[] = [];
+        if (data.hasItemOption) {
+            data.each(function (idx) {
+                const rawItem = data.getRawDataItem(idx);
+                if (typeof rawItem === 'object'
+                    && (rawItem as OptionDataItemObject<unknown>).selected
+                ) {
+                    dataIndices.push(idx);
+                }
+            });
+        }
+
+        if (dataIndices.length > 0) {
+            this._innerSelect(data, dataIndices);
+        }
     }
 
     // /**

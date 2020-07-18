@@ -22,10 +22,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import { ActionInfo } from '../util/types';
 import SeriesModel from '../model/Series';
 import { Dictionary } from 'zrender/src/core/types';
-import { DataSelectableMixin, DataSelectableOptionMixin } from '../component/helper/selectableMixin';
 
-
-type SelectableSeriesModel = SeriesModel & DataSelectableMixin<DataSelectableOptionMixin>;
 
 interface DataSelectAction extends ActionInfo {
     method: string
@@ -40,31 +37,31 @@ export default function (seriesType: string, actionInfos: DataSelectAction[]) {
          * @property {string} name
          */
         echarts.registerAction(actionInfo, function (payload, ecModel) {
-            const selected: Dictionary<Boolean> = {};
-            ecModel.eachComponent(
-                {mainType: 'series', subType: seriesType, query: payload},
-                function (seriesModel: SelectableSeriesModel) {
-                    // TODO: TYPE method type checking
-                    if ((seriesModel as any)[actionInfo.method]) {
-                        (seriesModel as any)[actionInfo.method](
-                            payload.name,
-                            payload.dataIndex
-                        );
-                    }
-                    const data = seriesModel.getData();
-                    // Create selected map
-                    data.each(function (idx) {
-                        const name = data.getName(idx);
-                        selected[name] = seriesModel.isSelected(name)
-                            || false;
-                    });
-                }
-            );
-            return {
-                name: payload.name,
-                selected: selected,
-                seriesId: payload.seriesId
-            };
+            // const selected: Dictionary<Boolean> = {};
+            // ecModel.eachComponent(
+            //     {mainType: 'series', subType: seriesType, query: payload},
+            //     function (seriesModel: SeriesModel) {
+            //         // TODO: TYPE method type checking
+            //         if ((seriesModel as any)[actionInfo.method]) {
+            //             (seriesModel as any)[actionInfo.method](
+            //                 payload.name,
+            //                 payload.dataIndex
+            //             );
+            //         }
+            //         const data = seriesModel.getData();
+            //         // Create selected map
+            //         data.each(function (idx) {
+            //             const name = data.getName(idx);
+            //             selected[name] = seriesModel.isSelected(name)
+            //                 || false;
+            //         });
+            //     }
+            // );
+            // return {
+            //     name: payload.name,
+            //     selected: selected,
+            //     seriesId: payload.seriesId
+            // };
         });
     });
 }

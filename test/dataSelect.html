@@ -107,6 +107,9 @@ under the License.
                             }
                         }
                     }
+                    else if (series.type === 'pie') {
+                        series.data[0].selected = true;
+                    }
                 });
                 const dom = document.createElement('div');
                 dom.className = 'chart';
