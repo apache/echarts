@@ -20,7 +20,7 @@
 import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import {addCommas, concatTooltipHtml} from '../../util/format';
+import {addCommas, concatTooltipHtml, encodeHTML} from '../../util/format';
 import DataFormatMixin from '../../model/mixin/dataFormat';
 import ComponentModel from '../../model/Component';
 import SeriesModel from '../../model/Series';
@@ -203,19 +203,16 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         const value = this.getRawValue(dataIndex);
         const formattedValue = zrUtil.isArray(value)
             ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
-        const name = data.getName(dataIndex);
-        let html = this.name;
+        const name = encodeHTML(data.getName(dataIndex));
+        let html = encodeHTML(this.name);
         if (value != null || name) {
             html += '<br />';
         }
         if (name) {
             html += name;
-            if (value != null) {
-                html += ' : ';
-            }
         }
         if (value != null) {
-            html = concatTooltipHtml(html, formattedValue);
+            html = concatTooltipHtml(html, formattedValue, true);
         }
         return html;
     }

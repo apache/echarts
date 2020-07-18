@@ -66,8 +66,8 @@ export function encodeHTML(source: string): string {
         });
 }
 
-export function concatTooltipHtml(html: string, value: unknown): string {
-    return encodeHTML(html)
+export function concatTooltipHtml(html: string, value: unknown, dontEncodeHtml = false): string {
+    return (dontEncodeHtml ? html : encodeHTML(html))
             + (value ? '<strong style="float:right;margin-left:20px;color:#000;">' : '')
             + encodeHTML(value as string)
             + (value ? '</strong>' : '');
