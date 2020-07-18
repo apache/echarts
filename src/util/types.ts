@@ -368,9 +368,15 @@ export type ECUnitOption = {
     baseOption?: never
     options?: never
     media?: never
+
     timeline?: ComponentOption | ComponentOption[]
-    [key: string]: ComponentOption | ComponentOption[] | Dictionary<any> | any
-} & AnimationOptionMixin;
+    backgroundColor?: ZRColor
+    darkMode?: boolean | 'auto'
+    textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+
+    [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
+
+} & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
  * [ECOption]:

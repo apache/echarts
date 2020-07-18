@@ -29,7 +29,7 @@ import {
     ClassManager,
     mountExtend
 } from '../util/clazz';
-import {makeInner} from '../util/model';
+import {makeInner, ModelFinderIndexQuery, queryReferringComponents, ModelFinderIdQuery, QueryReferringOpt} from '../util/model';
 import * as layout from '../util/layout';
 import GlobalModel from './Global';
 import {
@@ -44,6 +44,7 @@ import {
 const inner = makeInner<{
     defaultOption: ComponentOption
 }, ComponentModel>();
+
 
 class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Model<Opt> {
 
@@ -108,12 +109,6 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
      */
     static dependencies: string[];
 
-    /**
-     * key: componentType
-     * value: Component model list, can not be null.
-     * @readOnly
-     */
-    dependentModels: {[componentType: string]: ComponentModel[]} = {};
 
     readonly uid: string;
 
@@ -134,6 +129,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     // Injectable properties:
     __viewId: string;
+    __requireNewView: boolean;
 
     static protoInitialize = (function () {
         const proto = ComponentModel.prototype;
@@ -182,7 +178,9 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         }
     }
 
-    // Hooker after init or mergeOption
+    /**
+     * Called immediately after `init` or `mergeOption` of this instance called.
+     */
     optionUpdated(newCptOption: Opt, isInit: boolean): void {}
 
     /**
@@ -270,14 +268,32 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
         return fields.defaultOption as Opt;
     }
 
-    getReferringComponents(mainType: ComponentMainType): ComponentModel[] {
+    /**
+     * Notice: always force to input param `useDefault` in case that forget to consider it.
+     * The same behavior as `modelUtil.parseFinder`.
+     *
+     * @param useDefault In many cases like series refer axis and axis refer grid,
+     *        If axis index / axis id not specified, use the first target as default.
+     *        In other cases like dataZoom refer axis, if not specified, measn no refer.
+     */
+    getReferringComponents(mainType: ComponentMainType, opt: QueryReferringOpt): {
+        // Always be array rather than null/undefined, which is convenient to use.
+        models: ComponentModel[];
+        // Whether target compoent specified
+        specified: boolean;
+    } {
         const indexKey = (mainType + 'Index') as keyof Opt;
         const idKey = (mainType + 'Id') as keyof Opt;
-        return this.ecModel.queryComponents({
-            mainType: mainType,
-            index: this.get(indexKey, true) as unknown as number,
-            id: this.get(idKey, true) as unknown as string
-        });
+
+        return queryReferringComponents(
+            this.ecModel,
+            mainType,
+            {
+                index: this.get(indexKey, true) as unknown as ModelFinderIndexQuery,
+                id: this.get(idKey, true) as unknown as ModelFinderIdQuery
+            },
+            opt
+        );
     }
 
     getBoxLayoutParams() {
@@ -295,7 +311,10 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     static registerClass: ClassManager['registerClass'];
 
+    static hasClass: ClassManager['hasClass'];
+
     static registerSubTypeDefaulter: componentUtil.SubTypeDefaulterManager['registerSubTypeDefaulter'];
+
 }
 
 // Reset ComponentModel.extend, add preConstruct.
@@ -344,5 +363,6 @@ function getDependencies(componentType: string): string[] {
 
     return deps;
 }
+
 
 export default ComponentModel;

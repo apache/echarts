@@ -17,161 +17,192 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import * as formatUtil from '../../util/format';
-import { Dictionary } from '../../util/types';
+import { Payload } from '../../util/types';
+import GlobalModel from '../../model/Global';
+import DataZoomModel from './DataZoomModel';
+import { indexOf, createHashMap, assert, HashMap } from 'zrender/src/core/util';
+import { __DEV__ } from '../../config';
+import SeriesModel from '../../model/Series';
+import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
 
 
 export interface DataZoomPayloadBatchItem {
-    dataZoomId: string
-    start?: number
-    end?: number
-    startValue?: number
-    endValue?: number
+    dataZoomId: string;
+    start?: number;
+    end?: number;
+    startValue?: number;
+    endValue?: number;
 }
 
-const AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle', 'single'] as const;
+export interface DataZoomReferCoordSysInfo {
+    model: CoordinateSystemHostModel;
+    // Notice: if two dataZooms refer the same coordinamte system model,
+    // (1) The axis they refered may different
+    // (2) The sequence the axisModels matters, may different in
+    // different dataZooms.
+    axisModels: AxisBaseModel[];
+}
+
+export const DATA_ZOOM_AXIS_DIMENSIONS = [
+    'x', 'y', 'radius', 'angle', 'single'
+] as const;
+export type DataZoomAxisDimension =
+    'x' | 'y' | 'radius' | 'angle' | 'single';
+type DataZoomAxisMainType =
+    'xAxis' | 'yAxis' | 'radiusAxis' | 'angleAxis' | 'singleAxis';
+type DataZoomAxisIndexPropName =
+    'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex' | 'angleAxisIndex' | 'singleAxisIndex';
+type DataZoomAxisIdPropName =
+    'xAxisId' | 'yAxisId' | 'radiusAxisId' | 'angleAxisId' | 'singleAxisId';
+export type DataZoomCoordSysMainType = 'polar' | 'grid' | 'singleAxis';
+
 // Supported coords.
 // FIXME: polar has been broken (but rarely used).
-const COORDS = ['cartesian2d', 'polar', 'singleAxis'] as const;
+const SERIES_COORDS = ['cartesian2d', 'polar', 'singleAxis'] as const;
 
-export function isCoordSupported(coordType: string) {
-    return zrUtil.indexOf(COORDS, coordType) >= 0;
+export function isCoordSupported(seriesModel: SeriesModel): boolean {
+    const coordType = seriesModel.get('coordinateSystem');
+    return indexOf(SERIES_COORDS, coordType) >= 0;
 }
 
-type AxisAttrMap = {
-    // TODO zAxis ?
-    'axisIndex': 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex' | 'angleAxisIndex' | 'singleAxisIndex'
-    'axis': 'xAxis' | 'yAxis' | 'radiusAxis' | 'angleAxis' | 'singleAxis'
-    'axisId': 'xAxisId' | 'yAxisId' | 'radiusAxisId' | 'angleAxisId' | 'singleAxisId'
-};
+export function getAxisMainType(axisDim: DataZoomAxisDimension): DataZoomAxisMainType {
+    if (__DEV__) {
+        assert(axisDim);
+    }
+    return axisDim + 'Axis' as DataZoomAxisMainType;
+}
 
-/**
- * Create "each" method to iterate names.
- */
-function createNameEach<T extends string>(names: readonly T[]) {
-    const attrs = ['axisIndex', 'axis', 'axisId'] as const;
-    const capitalNames = zrUtil.map(names.slice(), formatUtil.capitalFirst);
-    const capitalAttrs = zrUtil.map((attrs || []).slice(), formatUtil.capitalFirst);
+export function getAxisIndexPropName(axisDim: DataZoomAxisDimension): DataZoomAxisIndexPropName {
+    if (__DEV__) {
+        assert(axisDim);
+    }
+    return axisDim + 'AxisIndex' as DataZoomAxisIndexPropName;
+}
 
-    type NameObj = {
-        name: T,
-        capital: string,
-        axisIndex: AxisAttrMap['axisIndex']
-        axis: AxisAttrMap['axis']
-        axisId: AxisAttrMap['axisId']
-    };
-    return function<Ctx> (
-        callback: (this: Ctx, nameObj: NameObj) => void,
-        context?: Ctx
-    ) {
-        zrUtil.each(names, function (name, index) {
-            const nameObj = {
-                name: name,
-                capital: capitalNames[index]
-            } as NameObj;
-
-            for (let j = 0; j < attrs.length; j++) {
-                nameObj[attrs[j]] = (name + capitalAttrs[j]) as never;
-            }
-
-            callback.call(context, nameObj);
-        });
-    };
+export function getAxisIdPropName(axisDim: DataZoomAxisDimension): DataZoomAxisIdPropName {
+    if (__DEV__) {
+        assert(axisDim);
+    }
+    return axisDim + 'AxisId' as DataZoomAxisIdPropName;
 }
 
 /**
- * Iterate each dimension name.
- *
- * @public
- * @param callback The parameter is like:
- *                            {
- *                                name: 'angle',
- *                                capital: 'Angle',
- *                                axis: 'angleAxis',
- *                                axisIndex: 'angleAxisIndex',
- *                                index: 'angleIndex'
- *                            }
- * @param context
+ * If two dataZoomModels has the same axis controlled, we say that they are 'linked'.
+ * This function finds all linked dataZoomModels start from the given payload.
  */
-export const eachAxisDim = createNameEach(AXIS_DIMS);
+export function findEffectedDataZooms(ecModel: GlobalModel, payload: Payload): DataZoomModel[] {
 
-/**
- * If tow dataZoomModels has the same axis controlled, we say that they are 'linked'.
- * dataZoomModels and 'links' make up one or more graphics.
- * This function finds the graphic where the source dataZoomModel is in.
- *
- * @public
- * @param forEachNode Node iterator.
- * @param forEachEdgeType edgeType iterator
- * @param edgeIdGetter Giving node and edgeType, return an array of edge id.
- * @return Input: sourceNode, Output: Like {nodes: [], dims: {}}
- */
-export function createLinkedNodesFinder<N, E extends {name: string}>(
-    forEachNode: (cb: (node: N) => void) => void,
-    forEachEdgeType: (cb: (edge: E) => void) => void,
-    edgeIdGetter: (node: N, edge: E) => number[]
-) {
+    // Key: `DataZoomAxisDimension`
+    const axisRecords = createHashMap<boolean[], DataZoomAxisDimension>();
+    const effectedModels: DataZoomModel[] = [];
+    // Key: uid of dataZoomModel
+    const effectedModelMap = createHashMap<boolean>();
 
-    type Result = {
-        nodes: N[]
-        // key: edgeType.name, value: Object (key: edge id, value: boolean).
-        records: Dictionary<Dictionary<boolean>>
-    };
-
-    return function (sourceNode: N) {
-        const result: Result = {
-            nodes: [],
-            records: {}
-        };
-
-        forEachEdgeType(function (edgeType) {
-            result.records[edgeType.name] = {};
-        });
-
-        if (!sourceNode) {
-            return result;
-        }
-
-        absorb(sourceNode, result);
-
-        let existsLink;
-        do {
-            existsLink = false;
-            forEachNode(processSingleNode);
-        }
-        while (existsLink);
-
-        function processSingleNode(node: N) {
-            if (!isNodeAbsorded(node, result) && isLinked(node, result)) {
-                absorb(node, result);
-                existsLink = true;
+    // Find the dataZooms specified by payload.
+    ecModel.eachComponent(
+        { mainType: 'dataZoom', query: payload },
+        function (dataZoomModel: DataZoomModel) {
+            if (!effectedModelMap.get(dataZoomModel.uid)) {
+                addToEffected(dataZoomModel);
             }
         }
+    );
 
-        return result;
+    // Start from the given dataZoomModels, travel the graph to find
+    // all of the linked dataZoom models.
+    let foundNewLink;
+    do {
+        foundNewLink = false;
+        ecModel.eachComponent('dataZoom', processSingle);
+    }
+    while (foundNewLink);
+
+    function processSingle(dataZoomModel: DataZoomModel): void {
+        if (!effectedModelMap.get(dataZoomModel.uid) && isLinked(dataZoomModel)) {
+            addToEffected(dataZoomModel);
+            foundNewLink = true;
+        }
+    }
+
+    function addToEffected(dataZoom: DataZoomModel): void {
+        effectedModelMap.set(dataZoom.uid, true);
+        effectedModels.push(dataZoom);
+        markAxisControlled(dataZoom);
+    }
+
+    function isLinked(dataZoomModel: DataZoomModel): boolean {
+        let isLink = false;
+        dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+            const axisIdxArr = axisRecords.get(axisDim);
+            if (axisIdxArr && axisIdxArr[axisIndex]) {
+                isLink = true;
+            }
+        });
+        return isLink;
+    }
+
+    function markAxisControlled(dataZoomModel: DataZoomModel) {
+        dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+            (
+                axisRecords.get(axisDim) || axisRecords.set(axisDim, [])
+            )[axisIndex] = true;
+        });
+    }
+
+    return effectedModels;
+}
+
+/**
+ * Find the first target coordinate system.
+ * Available after model built.
+ *
+ * @return Like {
+ *                  grid: [
+ *                      {model: coord0, axisModels: [axis1, axis3], coordIndex: 1},
+ *                      {model: coord1, axisModels: [axis0, axis2], coordIndex: 0},
+ *                      ...
+ *                  ],  // cartesians must not be null/undefined.
+ *                  polar: [
+ *                      {model: coord0, axisModels: [axis4], coordIndex: 0},
+ *                      ...
+ *                  ],  // polars must not be null/undefined.
+ *                  singleAxis: [
+ *                      {model: coord0, axisModels: [], coordIndex: 0}
+ *                  ]
+ *              }
+ */
+export function collectReferCoordSysModelInfo(dataZoomModel: DataZoomModel): {
+    infoList: DataZoomReferCoordSysInfo[];
+    // Key: coordSysModel.uid
+    infoMap: HashMap<DataZoomReferCoordSysInfo, string>;
+} {
+    const ecModel = dataZoomModel.ecModel;
+    const coordSysInfoWrap = {
+        infoList: [] as DataZoomReferCoordSysInfo[],
+        infoMap: createHashMap<DataZoomReferCoordSysInfo, string>()
     };
 
-    function isNodeAbsorded(node: N, result: Result) {
-        return zrUtil.indexOf(result.nodes, node) >= 0;
-    }
+    dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
+        const axisModel = ecModel.getComponent(getAxisMainType(axisDim), axisIndex) as AxisBaseModel;
+        if (!axisModel) {
+            return;
+        }
+        const coordSysModel = axisModel.getCoordSysModel();
+        if (!coordSysModel) {
+            return;
+        }
 
-    function isLinked(node: N, result: Result) {
-        let hasLink = false;
-        forEachEdgeType(function (edgeType: E) {
-            zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
-                result.records[edgeType.name][edgeId] && (hasLink = true);
-            });
-        });
-        return hasLink;
-    }
+        const coordSysUid = coordSysModel.uid;
+        let coordSysInfo = coordSysInfoWrap.infoMap.get(coordSysUid);
+        if (!coordSysInfo) {
+            coordSysInfo = { model: coordSysModel, axisModels: [] };
+            coordSysInfoWrap.infoList.push(coordSysInfo);
+            coordSysInfoWrap.infoMap.set(coordSysUid, coordSysInfo);
+        }
 
-    function absorb(node: N, result: Result) {
-        result.nodes.push(node);
-        forEachEdgeType(function (edgeType: E) {
-            zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
-                result.records[edgeType.name][edgeId] = true;
-            });
-        });
-    }
+        coordSysInfo.axisModels.push(axisModel);
+    });
+
+    return coordSysInfoWrap;
 }

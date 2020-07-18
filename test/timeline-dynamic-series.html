@@ -21,130 +21,109 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/esl.js"></script>
         <script src="lib/config.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-            }
-            #main {
-                background: #fff;
-            }
         </style>
-        <div id="main"></div>
+
+        <div id="main0"></div>
 
         <script>
 
-// markLine: {
-//     symbol: ['arrow','none'],
-//     symbolSize: [4, 2],
-//     itemStyle: {
-//         normal: {
-//             lineStyle: {color:'orange'},
-//             barBorderColor:'orange',
-//             label: {
-//                 position:'left',
-//                 formatter:function(params){
-//                     return Math.round(params.value);
-//                 },
-//                 textStyle:{color:'orange'}
-//             }
-//         }
-//     },
-//     data: [{type: 'average', name: '平均值'}]
-// }
+        require(['echarts'], function (echarts) {
 
-            require([
-                'echarts'
-                // 'echarts/chart/bar',
-                // 'echarts/chart/pie',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/timeline'
-            ], function (echarts) {
+            var option = {
+                baseOption: {
+                    timeline: {
+                        // y: 0,
+                        axisType: 'category',
+                        // realtime: false,
+                        // loop: false,
+                        autoPlay: false,
+                        // currentIndex: 2,
+                        playInterval: 1000,
+                        // controlStyle: {
+                        //     position: 'left'
+                        // },
+                        replaceMerge: 'series',
+                        data: [
+                            '2 series', '3 series', '1 series'
+                        ],
+                    },
+                    tooltip: {
+                        trigger:'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    legend: {},
+                    calculable: true,
+                    grid: {
+                        top:80, bottom: 100
+                    },
+                    toolbox: {
+                        left: 'center',
+                        top: 30,
+                        feature: {
+                            dataZoom: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['CityB', 'CityT', 'CityH', 'CityS'],
+                        splitLine: {show: false}
+                    },
+                    yAxis: [
+                        {
+                            type: 'value',
+                            name: 'GDP'
+                        }
+                    ],
+                    series: [
+                    ]
+                },
+                options: [
+                    {
+                        series: [
+                            {name: 'a', type: 'bar', data: [12, 33, 44, 55]},
+                            {name: 'b', type: 'bar', data: [55, 66, 77, 88]},
+                        ]
+                    },
+                    {
+                        series : [
+                            {name: 'a', type: 'bar', data: [22, 33, 44, 55]},
+                            {name: 'b', type: 'bar', data: [55, 66, 77, 88]},
+                            {name: 'c', type: 'bar', data: [55, 66, 77, 88]}
+                        ]
+                    },
+                    {
+                        series : [
+                            {name: 'b', type: 'bar', data: [55, 66, 77, 88]}
+                        ]
+                    }
+                ]
+            };
 
-                var chart = echarts.init(document.getElementById('main'), null, {
 
-                });
-
-var option = {
-    baseOption: {
-        timeline: {
-            // y: 0,
-            axisType: 'category',
-            // realtime: false,
-            // loop: false,
-            autoPlay: false,
-            // currentIndex: 2,
-            playInterval: 1000,
-            // controlStyle: {
-            //     position: 'left'
-            // },
-            data: [
-                '2002-01-01','2003-01-01'
-            ],
-            label: {
-                formatter : function(s) {
-                    return (new Date(s)).getFullYear();
-                }
-            }
-        },
-        title: {
-            subtext: '数据来自国家统计局'
-        },
-        tooltip: {
-            trigger:'axis',
-            axisPointer: {
-                type: 'shadow'
-            }
-        },
-        calculable: true,
-        grid: {
-            top:80, bottom: 100
-        },
-        xAxis: {
-            'type':'category',
-            'axisLabel':{'interval':0},
-            'data':[
-                '北京','\n天津','河北','\n山西'
-            ],
-            splitLine: {show: false}
-        },
-        yAxis: [
-            {
-                type: 'value',
-                name: 'GDP（亿元）'
-            }
-        ],
-        series: [
-        ]
-    },
-    options: [
-        {
-            series: [
-                {id: 'a', type: 'bar', data: [12, 33, 44, 55]}
-            ]
-        },
-        {
-            series : [
-                {id: 'a', type: 'bar', data: [22, 33, 44, 55]},
-                {id: 'b', type: 'bar', data: [55, 66, 77, 88]}
-            ]
-        }
-    ]
-};
-
-                chart.setOption(option);
-
-                window.onresize = chart.resize;
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Click "right arrow" of the timeline',
+                    'check it should be **2 bar** => **3 bar** => **1 bar**',
+                    'use toolbox "区域缩放"',
+                    'timeline change',
+                    'use toolbox "区域缩放还原"',
+                    'Should be able to return correctly.'
+                ],
+                option: option,
             });
+        });
         </script>
     </body>
 </html>

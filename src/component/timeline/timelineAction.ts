@@ -48,7 +48,7 @@ echarts.registerAction(
         }
 
         // Set normalized currentIndex to payload.
-        ecModel.resetOption('timeline');
+        ecModel.resetOption('timeline', { replaceMerge: timelineModel.get('replaceMerge', true) });
 
         return defaults({
             currentIndex: timelineModel.option.currentIndex

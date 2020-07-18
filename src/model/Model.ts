@@ -32,7 +32,7 @@ import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
 import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
-import { mixin, clone, merge, extend, isFunction } from 'zrender/src/core/util';
+import { mixin, clone, merge } from 'zrender/src/core/util';
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';

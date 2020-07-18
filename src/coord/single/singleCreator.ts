@@ -28,6 +28,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import SingleAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
+import { SINGLE_REFERRING } from '../../util/model';
 
 /**
  * Create single coordinate system and inject it into seriesModel.
@@ -50,11 +51,9 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
         singleAxisId?: string
     }>) {
         if (seriesModel.get('coordinateSystem') === 'singleAxis') {
-            const singleAxisModel = ecModel.queryComponents({
-                mainType: 'singleAxis',
-                index: seriesModel.get('singleAxisIndex'),
-                id: seriesModel.get('singleAxisId')
-            })[0] as SingleAxisModel;
+            const singleAxisModel = seriesModel.getReferringComponents(
+                'singleAxis', SINGLE_REFERRING
+            ).models[0] as SingleAxisModel;
             seriesModel.coordinateSystem = singleAxisModel && singleAxisModel.coordinateSystem;
         }
     });

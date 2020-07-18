@@ -27,7 +27,7 @@ import Eventful from 'zrender/src/core/Eventful';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
-import GlobalModel, {QueryConditionKindA} from './model/Global';
+import GlobalModel, {QueryConditionKindA, GlobalModelSetOptionOpts} from './model/Global';
 import ExtensionAPI from './ExtensionAPI';
 import CoordinateSystemManager from './CoordinateSystem';
 import OptionManager from './model/OptionManager';
@@ -62,7 +62,8 @@ import {
     ZRColor,
     ComponentMainType,
     ComponentSubType,
-    ZRElementEvent
+    ZRElementEvent,
+    ColorString
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -146,10 +147,13 @@ type ConnectStatus =
     | typeof CONNECT_STATUS_UPDATING
     | typeof CONNECT_STATUS_UPDATED;
 
-type SetOptionOpts = {
-    notMerge?: boolean,
-    lazyUpdate?: boolean,
-    silent?: boolean
+interface SetOptionOpts {
+    notMerge?: boolean;
+    lazyUpdate?: boolean;
+    silent?: boolean;
+    // Rule: only `id` mapped will be merged,
+    // other components of the certain `mainType` will be removed.
+    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
 };
 
 type EventMethodName = 'on' | 'off';
@@ -436,9 +440,10 @@ class ECharts extends Eventful {
      * });
      *
      * @param opts opts or notMerge.
-     * @param opts.notMerge Default `false`
+     * @param opts.notMerge Default `false`.
      * @param opts.lazyUpdate Default `false`. Useful when setOption frequently.
      * @param opts.silent Default `false`.
+     * @param opts.replaceMerge Default undefined.
      */
     setOption(option: ECOption, notMerge?: boolean, lazyUpdate?: boolean): void;
     setOption(option: ECOption, opts?: SetOptionOpts): void;
@@ -452,9 +457,11 @@ class ECharts extends Eventful {
         }
 
         let silent;
+        let replaceMerge;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
+            replaceMerge = notMerge.replaceMerge;
             notMerge = notMerge.notMerge;
         }
 
@@ -468,7 +475,7 @@ class ECharts extends Eventful {
             ecModel.init(null, null, null, theme, optionManager);
         }
 
-        this._model.setOption(option, optionPreprocessorFuncs);
+        this._model.setOption(option, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
 
         if (lazyUpdate) {
             this[OPTION_UPDATED] = {silent: silent};
@@ -1204,9 +1211,18 @@ class ECharts extends Eventful {
                 : ecModel.eachSeries(doPrepare);
 
             function doPrepare(model: ComponentModel): void {
+                // By defaut view will be reused if possible for the case that `setOption` with "notMerge"
+                // mode and need to enable transition animation. (Usually, when they have the same id, or
+                // especially no id but have the same type & name & index. See the `model.id` generation
+                // rule in `makeIdAndName` and `viewId` generation rule here).
+                // But in `replaceMerge` mode, this feature should be able to disabled when it is clear that
+                // the new model has nothing to do with the old model.
+                const requireNewView = model.__requireNewView;
+                // This command should not work twice.
+                model.__requireNewView = false;
                 // Consider: id same and type changed.
                 const viewId = '_ec_' + model.id + '_' + model.type;
-                let view = viewMap[viewId];
+                let view = !requireNewView && viewMap[viewId];
                 if (!view) {
                     const classType = parseClassType(model.type);
                     const Clazz = isComponent
@@ -1217,7 +1233,6 @@ class ECharts extends Eventful {
                             // For backward compat, still support a chart type declared as only subType
                             // like "liquidfill", but recommend "series.liquidfill"
                             // But need a base class to make a type series.
-                            // ||
                             (ChartView as ChartViewConstructor).getClass(classType.sub)
                         );
 
@@ -1251,7 +1266,9 @@ class ECharts extends Eventful {
                     zr.remove(view.group);
                     view.dispose(ecModel, api);
                     viewList.splice(i, 1);
-                    delete viewMap[view.__id];
+                    if (viewMap[view.__id] === view) {
+                        delete viewMap[view.__id];
+                    }
                     view.__id = view.group.__ecComponentInfo = null;
                 }
                 else {
@@ -1289,7 +1306,7 @@ class ECharts extends Eventful {
             subType && (condition.subType = subType); // subType may be '' by parseClassType;
 
             const excludeSeriesId = payload.excludeSeriesId;
-            let excludeSeriesIdMap: zrUtil.HashMap<string[]>;
+            let excludeSeriesIdMap: zrUtil.HashMap<string[], string>;
             if (excludeSeriesId != null) {
                 excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
             }
@@ -1369,7 +1386,7 @@ class ECharts extends Eventful {
 
                 // In IE8
                 if (!env.canvasSupported) {
-                    const colorArr = colorTool.parse(backgroundColor);
+                    const colorArr = colorTool.parse(backgroundColor as ColorString);
                     backgroundColor = colorTool.stringify(colorArr, 'rgb');
                     if (colorArr[3] === 0) {
                         backgroundColor = 'transparent';
