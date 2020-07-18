@@ -16,6 +16,7 @@ import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
 import { queryDataIndex } from './model';
 import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
+import GlobalModel from '../model/Global';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -515,6 +516,32 @@ export function updateSeriesElementSelection(seriesModel: SeriesModel) {
             seriesModel.isSelected(idx, type) ? enterSelect(el) : leaveSelect(el);
         });
     });
+}
+
+export function getAllSelectedIndices(ecModel: GlobalModel) {
+    const ret: {
+        seriesIndex: number
+        dataType?: string
+        dataIndex: number[]
+    }[] = [];
+    ecModel.eachSeries(function (seriesModel) {
+        const allData = seriesModel.getAllData();
+        each(allData, function ({ data, type }) {
+            const dataIndices = seriesModel.getSelectedDataIndices();
+            if (dataIndices.length > 0) {
+                const item: typeof ret[number] = {
+                    dataIndex: dataIndices,
+                    seriesIndex: seriesModel.seriesIndex
+                };
+                if (type != null) {
+                    item.dataType = type;
+                }
+                ret.push(item);
+
+            }
+        });
+    });
+    return ret;
 }
 
 /**

@@ -47,7 +47,8 @@ import {
     toggleSeriesBlurState,
     toggleSeriesBlurStateFromPayload,
     toggleSelectionFromPayload,
-    updateSeriesElementSelection
+    updateSeriesElementSelection,
+    getAllSelectedIndices
 } from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
@@ -869,7 +870,7 @@ class ECharts extends Eventful {
 
 
     private _initEvents(): void {
-        each(MOUSE_EVENT_NAMES, function (eveName) {
+        each(MOUSE_EVENT_NAMES, (eveName) => {
             const handler = (e: ElementEvent) => {
                 const ecModel = this.getModel();
                 const el = e.target;
@@ -949,13 +950,24 @@ class ECharts extends Eventful {
             // cause problem if it is called previous other inner handlers.
             (handler as any).zrEventfulCallAtLast = true;
             this._zr.on(eveName, handler, this);
-        }, this);
+        });
 
-        each(eventActionMap, function (actionType, eventType) {
+        each(eventActionMap, (actionType, eventType) => {
             this._messageCenter.on(eventType, function (event) {
                 this.trigger(eventType, event);
             }, this);
-        }, this);
+        });
+
+        // Extra events
+        // TODO register?
+        each(
+            ['selectchanged'],
+            (eventType) => {
+                this._messageCenter.on(eventType, function (event) {
+                    this.trigger(eventType, event);
+                }, this);
+            }
+        );
     }
 
     isDisposed(): boolean {
@@ -1639,10 +1651,12 @@ class ECharts extends Eventful {
 
             const eventObjBatch: ECEventData[] = [];
             let eventObj: ECEvent;
+
+            const isSelectChange = payloadType === 'select'
+                || payloadType === 'unselect';
             const isStatusChange = payloadType === 'highlight'
                 || payloadType === 'downplay'
-                || payloadType === 'select'
-                || payloadType === 'unselect';
+                || isSelectChange;
 
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
@@ -1697,6 +1711,15 @@ class ECharts extends Eventful {
             if (!silent) {
                 const messageCenter = this._messageCenter;
                 messageCenter.trigger(eventObj.type, eventObj);
+                // Also trigger 'selectchanged' event
+                if (isSelectChange) {
+                    eventObj = {
+                        type: 'selectchanged',
+                        escapeConnect: escapeConnect,
+                        selected: getAllSelectedIndices(this.getModel())
+                    };
+                    messageCenter.trigger(eventObj.type, eventObj);
+                }
             }
         };
 

@@ -53,6 +53,16 @@ under the License.
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
                 background: #fff;
             }
+            #log {
+                position: fixed;
+                right: 0;
+                top: 0;
+                width: 200px;
+                height: 200px;
+                background: rgba(0, 0, 0, 0.5);
+                color: #fff;
+                text-align: left;
+            }
         </style>
 
 
@@ -60,6 +70,8 @@ under the License.
         <div id="main">
             <h1>Tests for focus and blurScope</h1>
         </div>
+
+        <pre id="log"></pre>
 
 
         <script>
@@ -103,6 +115,10 @@ under the License.
                 const chart = echarts.init(dom);
 
                 chart.setOption(chartOption);
+
+                chart.on('selectchanged', function (e) {
+                    document.querySelector('#log').innerHTML = JSON.stringify(e.selected, null, 2);
+                });
 
                 charts.push(chart);
             });
