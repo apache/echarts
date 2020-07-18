@@ -27,14 +27,16 @@
  * (2) In `merge option` mode, if a component has no id/name specified, it
  * will be merged by index, and the result sequence of the components is
  * consistent to the original sequence.
- * (3) `reset` feature (in toolbox). Find detailed info in comments about
+ * (3) In `replaceMerge` mode, keep the result sequence of the components is
+ * consistent to the original sequence, even though there might result in "hole".
+ * (4) `reset` feature (in toolbox). Find detailed info in comments about
  * `mergeOption` in module:echarts/model/OptionManager.
  */
 
 import {__DEV__} from '../config';
 import {
-    each, filter, map, isArray, indexOf, isObject, isString,
-    createHashMap, assert, clone, merge, extend, mixin, HashMap
+    each, filter, isArray, isObject, isString,
+    createHashMap, assert, clone, merge, extend, mixin, HashMap, isFunction
 } from 'zrender/src/core/util';
 import * as modelUtil from '../util/model';
 import Model from './Model';
@@ -55,12 +57,19 @@ import {
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
-import { Dictionary } from 'zrender/src/core/types';
+import { concatInternalOptions } from './internalComponentCreator';
+
+export interface GlobalModelSetOptionOpts {
+    replaceMerge: ComponentMainType | ComponentMainType[];
+}
+export interface InnerSetOptionOpts {
+    replaceMergeMainTypeMap: HashMap<boolean, string>;
+}
 
 // -----------------------
 // Internal method names:
 // -----------------------
-let createSeriesIndices: (ecModel: GlobalModel, seriesModels: ComponentModel[]) => void;
+let reCreateSeriesIndices: (ecModel: GlobalModel) => void;
 let assertSeriesInitialized: (ecModel: GlobalModel) => void;
 let initBase: (ecModel: GlobalModel, baseOption: ECUnitOption) => void;
 
@@ -76,13 +85,23 @@ class GlobalModel extends Model<ECUnitOption> {
     private _componentsMap: HashMap<ComponentModel[], ComponentMainType>;
 
     /**
+     * `_componentsMap` might have "hole" becuase of remove.
+     * So save components count for a certain mainType here.
+     */
+    private _componentsCount: HashMap<number>;
+
+    /**
      * Mapping between filtered series list and raw series list.
      * key: filtered series indices, value: raw series indices.
+     * Items of `_seriesIndices` never be null/empty/-1.
+     * If series has been removed by `replaceMerge`, those series
+     * also won't be in `_seriesIndices`, just like be filtered.
      */
     private _seriesIndices: number[];
 
     /**
-     * Key: seriesIndex
+     * Key: seriesIndex.
+     * Keep consistent with `_seriesIndices`.
      */
     private _seriesIndicesMap: HashMap<any>;
 
@@ -108,15 +127,21 @@ class GlobalModel extends Model<ECUnitOption> {
         this._optionManager = optionManager;
     }
 
-    setOption(option: ECOption, optionPreprocessorFuncs: OptionPreprocessor[]): void {
+    setOption(
+        option: ECOption,
+        opts: GlobalModelSetOptionOpts,
+        optionPreprocessorFuncs: OptionPreprocessor[]
+    ): void {
         assert(
             !(OPTION_INNER_KEY in option),
             'please use chart.getOption()'
         );
 
-        this._optionManager.setOption(option, optionPreprocessorFuncs);
+        const innerOpt = normalizeReplaceMergeInput(opts);
 
-        this.resetOption(null);
+        this._optionManager.setOption(option, optionPreprocessorFuncs, innerOpt);
+
+        this._resetOption(null, innerOpt);
     }
 
     /**
@@ -126,7 +151,17 @@ class GlobalModel extends Model<ECUnitOption> {
      *        'media': only reset media query option
      * @return Whether option changed.
      */
-    resetOption(type: string): boolean {
+    resetOption(
+        type: 'recreate' | 'timeline' | 'media',
+        opt?: GlobalModelSetOptionOpts
+    ): boolean {
+        return this._resetOption(type, normalizeReplaceMergeInput(opt));
+    }
+
+    private _resetOption(
+        type: 'recreate' | 'timeline' | 'media',
+        opt: InnerSetOptionOpts
+    ): boolean {
         let optionChanged = false;
         const optionManager = this._optionManager;
 
@@ -138,7 +173,7 @@ class GlobalModel extends Model<ECUnitOption> {
             }
             else {
                 this.restoreData();
-                this.mergeOption(baseOption);
+                this._mergeOption(baseOption, opt);
             }
             optionChanged = true;
         }
@@ -147,11 +182,20 @@ class GlobalModel extends Model<ECUnitOption> {
             this.restoreData();
         }
 
+        // By design, if `setOption(option2)` at the second time, and `option2` is a `ECUnitOption`,
+        // it should better not have the same props with `MediaUnit['option']`.
+        // Becuase either `option2` or `MediaUnit['option']` will be always merged to "current option"
+        // rather than original "baseOption". If they both override a prop, the result might be
+        // unexpected when media state changed after `setOption` called.
+        // If we really need to modify a props in each `MediaUnit['option']`, use the full version
+        // (`{baseOption, media}`) in `setOption`.
+        // For `timeline`, the case is the same.
+
         if (!type || type === 'recreate' || type === 'timeline') {
             const timelineOption = optionManager.getTimelineOption(this);
             if (timelineOption) {
                 optionChanged = true;
-                this.mergeOption(timelineOption);
+                this._mergeOption(timelineOption, opt);
             }
         }
 
@@ -160,7 +204,7 @@ class GlobalModel extends Model<ECUnitOption> {
             if (mediaOptions.length) {
                 each(mediaOptions, function (mediaOption) {
                     optionChanged = true;
-                    this.mergeOption(mediaOption);
+                    this._mergeOption(mediaOption, opt);
                 }, this);
             }
         }
@@ -168,10 +212,20 @@ class GlobalModel extends Model<ECUnitOption> {
         return optionChanged;
     }
 
-    mergeOption(newOption: ECUnitOption): void {
+    public mergeOption(option: ECUnitOption): void {
+        this._mergeOption(option, null);
+    }
+
+    private _mergeOption(
+        newOption: ECUnitOption,
+        opt: InnerSetOptionOpts
+    ): void {
         const option = this.option;
         const componentsMap = this._componentsMap;
-        const newCptTypes: ComponentMainType[] = [];
+        const componentsCount = this._componentsCount;
+        const newCmptTypes: ComponentMainType[] = [];
+        const newCmptTypeMap = createHashMap<boolean, string>();
+        const replaceMergeMainTypeMap = opt && opt.replaceMergeMainTypeMap;
 
         resetSourceDefaulter(this);
 
@@ -182,19 +236,33 @@ class GlobalModel extends Model<ECUnitOption> {
                 return;
             }
 
-            if (!(ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
+            if (!ComponentModel.hasClass(mainType)) {
                 // globalSettingTask.dirty();
                 option[mainType] = option[mainType] == null
                     ? clone(componentOption)
                     : merge(option[mainType], componentOption, true);
             }
             else if (mainType) {
-                newCptTypes.push(mainType);
+                newCmptTypes.push(mainType);
+                newCmptTypeMap.set(mainType, true);
             }
         });
 
+        if (replaceMergeMainTypeMap) {
+            // If there is a mainType `xxx` in `replaceMerge` but not declared in option,
+            // we trade it as it is declared in option as `{xxx: []}`. Because:
+            // (1) for normal merge, `{xxx: null/undefined}` are the same meaning as `{xxx: []}`.
+            // (2) some preprocessor may convert some of `{xxx: null/undefined}` to `{xxx: []}`.
+            replaceMergeMainTypeMap.each(function (val, mainTypeInReplaceMerge) {
+                if (!newCmptTypeMap.get(mainTypeInReplaceMerge)) {
+                    newCmptTypes.push(mainTypeInReplaceMerge);
+                    newCmptTypeMap.set(mainTypeInReplaceMerge, true);
+                }
+            });
+        }
+
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
-            newCptTypes,
+            newCmptTypes,
             (ComponentModel as ComponentModelConstructor).getAllClassMainTypes(),
             visitComponent,
             this
@@ -202,49 +270,49 @@ class GlobalModel extends Model<ECUnitOption> {
 
         function visitComponent(
             this: GlobalModel,
-            mainType: ComponentMainType,
-            dependencies: string | string[]
+            mainType: ComponentMainType
         ): void {
-
-            const newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
-
-            const mapResult = modelUtil.mappingToExists(
-                componentsMap.get(mainType), newCptOptionList
+            const newCmptOptionList = concatInternalOptions(
+                this, mainType, modelUtil.normalizeToArray(newOption[mainType])
             );
 
-            modelUtil.makeIdAndName(mapResult);
+            const oldCmptList = componentsMap.get(mainType);
+            const mergeMode =
+                // `!oldCmptList` means init. See the comment in `mappingToExists`
+                  !oldCmptList ? 'replaceAll'
+                : (replaceMergeMainTypeMap && replaceMergeMainTypeMap.get(mainType)) ? 'replaceMerge'
+                : 'normalMerge';
+            const mappingResult = modelUtil.mappingToExists(oldCmptList, newCmptOptionList, mergeMode);
 
             // Set mainType and complete subType.
-            each(mapResult, function (item) {
-                const opt = item.option;
-                if (isObject(opt)) {
-                    item.keyInfo.mainType = mainType;
-                    item.keyInfo.subType = determineSubType(mainType, opt, item.exist);
-                }
-            });
+            modelUtil.setComponentTypeToKeyInfo(mappingResult, mainType, ComponentModel as ComponentModelConstructor);
 
-            const dependentModels = getComponentsByTypes(
-                componentsMap, dependencies
-            );
+            // Empty it before the travel, in order to prevent `this._componentsMap`
+            // from being used in the `init`/`mergeOption`/`optionUpdated` of some
+            // components, which is probably incorrect logic.
+            option[mainType] = null;
+            componentsMap.set(mainType, null);
+            componentsCount.set(mainType, 0);
 
-            option[mainType] = [];
-            componentsMap.set(mainType, []);
+            const optionsByMainType = [] as ComponentOption[];
+            const cmptsByMainType = [] as ComponentModel[];
+            let cmptsCountByMainType = 0;
 
-            each(mapResult, function (resultItem, index) {
-                let componentModel = resultItem.exist;
-                const newCptOption = resultItem.option;
+            each(mappingResult, function (resultItem, index) {
+                let componentModel = resultItem.existing;
+                const newCmptOption = resultItem.newOption;
 
-                assert(
-                    isObject(newCptOption) || componentModel,
-                    'Empty component definition'
-                );
-
-                // Consider where is no new option and should be merged using {},
-                // see removeEdgeAndAdd in topologicalTravel and
-                // ComponentModel.getAllClassMainTypes.
-                if (!newCptOption) {
-                    componentModel.mergeOption({}, this);
-                    componentModel.optionUpdated({}, false);
+                if (!newCmptOption) {
+                    if (componentModel) {
+                        // Consider where is no new option and should be merged using {},
+                        // see removeEdgeAndAdd in topologicalTravel and
+                        // ComponentModel.getAllClassMainTypes.
+                        componentModel.mergeOption({}, this);
+                        componentModel.optionUpdated({}, false);
+                    }
+                    // If no both `resultItem.exist` and `resultItem.option`,
+                    // either it is in `replaceMerge` and not matched by any id,
+                    // or it has been removed in previous `replaceMerge` and left a "hole" in this component index.
                 }
                 else {
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
@@ -254,45 +322,61 @@ class GlobalModel extends Model<ECUnitOption> {
                     if (componentModel && componentModel.constructor === ComponentModelClass) {
                         componentModel.name = resultItem.keyInfo.name;
                         // componentModel.settingTask && componentModel.settingTask.dirty();
-                        componentModel.mergeOption(newCptOption, this);
-                        componentModel.optionUpdated(newCptOption, false);
+                        componentModel.mergeOption(newCmptOption, this);
+                        componentModel.optionUpdated(newCmptOption, false);
                     }
                     else {
                         // PENDING Global as parent ?
                         const extraOpt = extend(
                             {
-                                dependentModels: dependentModels,
                                 componentIndex: index
                             },
                             resultItem.keyInfo
                         );
                         componentModel = new ComponentModelClass(
-                            newCptOption, this, this, extraOpt
+                            newCmptOption, this, this, extraOpt
                         );
+                        // Assign `keyInfo`
                         extend(componentModel, extraOpt);
-                        componentModel.init(newCptOption, this, this);
+                        if (resultItem.brandNew) {
+                            componentModel.__requireNewView = true;
+                        }
+                        componentModel.init(newCmptOption, this, this);
 
                         // Call optionUpdated after init.
-                        // newCptOption has been used as componentModel.option
+                        // newCmptOption has been used as componentModel.option
                         // and may be merged with theme and default, so pass null
                         // to avoid confusion.
                         componentModel.optionUpdated(null, true);
                     }
                 }
 
-                componentsMap.get(mainType)[index] = componentModel;
-                option[mainType][index] = componentModel.option;
+                if (componentModel) {
+                    optionsByMainType.push(componentModel.option);
+                    cmptsByMainType.push(componentModel);
+                    cmptsCountByMainType++;
+                }
+                else {
+                    // Always do assign to avoid elided item in array.
+                    optionsByMainType.push(void 0);
+                    cmptsByMainType.push(void 0);
+                }
             }, this);
+
+            option[mainType] = optionsByMainType;
+            componentsMap.set(mainType, cmptsByMainType);
+            componentsCount.set(mainType, cmptsCountByMainType);
 
             // Backup series for filtering.
             if (mainType === 'series') {
-                createSeriesIndices(this, componentsMap.get('series'));
+                reCreateSeriesIndices(this);
             }
         }
 
-        this._seriesIndicesMap = createHashMap<number>(
-            this._seriesIndices = this._seriesIndices || []
-        );
+        // If no series declared, ensure `_seriesIndices` initialized.
+        if (!this._seriesIndices) {
+            reCreateSeriesIndices(this);
+        }
     }
 
     /**
@@ -301,15 +385,25 @@ class GlobalModel extends Model<ECUnitOption> {
     getOption(): ECUnitOption {
         const option = clone(this.option);
 
-        each(option, function (opts, mainType) {
-            if ((ComponentModel as ComponentModelConstructor).hasClass(mainType)) {
-                opts = modelUtil.normalizeToArray(opts);
-                for (let i = opts.length - 1; i >= 0; i--) {
+        each(option, function (optInMainType, mainType) {
+            if (ComponentModel.hasClass(mainType)) {
+                const opts = modelUtil.normalizeToArray(optInMainType);
+                // Inner cmpts need to be removed.
+                // Inner cmpts might not be at last since ec5.0, but still
+                // compatible for users: if inner cmpt at last, splice the returned array.
+                let realLen = opts.length;
+                let metNonInner = false;
+                for (let i = realLen - 1; i >= 0; i--) {
                     // Remove options with inner id.
-                    if (modelUtil.isIdInner(opts[i])) {
-                        opts.splice(i, 1);
+                    if (opts[i] && !modelUtil.isComponentIdInternal(opts[i])) {
+                        metNonInner = true;
+                    }
+                    else {
+                        opts[i] = null;
+                        !metNonInner && realLen--;
                     }
                 }
+                opts.length = realLen;
                 option[mainType] = opts;
             }
         });
@@ -332,60 +426,60 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     /**
-     * @param idx 0 by default
+     * @param idx If not specified, return the first one.
      */
-    getComponent(mainType: string, idx?: number): ComponentModel {
+    getComponent(mainType: ComponentMainType, idx?: number): ComponentModel {
         const list = this._componentsMap.get(mainType);
         if (list) {
-            return list[idx || 0];
+            const cmpt = list[idx || 0];
+            if (cmpt) {
+                return cmpt;
+            }
+            else if (idx == null) {
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i]) {
+                        return list[i];
+                    }
+                }
+            }
         }
     }
 
+    /**
+     * @return Never be null/undefined.
+     */
     queryComponents(condition: QueryConditionKindB): ComponentModel[] {
         const mainType = condition.mainType;
         if (!mainType) {
             return [];
         }
 
-        let index = condition.index;
+        const index = condition.index;
         const id = condition.id;
         const name = condition.name;
+        const cmpts = this._componentsMap.get(mainType);
 
-        const cpts = this._componentsMap.get(mainType);
-
-        if (!cpts || !cpts.length) {
+        if (!cmpts || !cmpts.length) {
             return [];
         }
 
-        let result;
+        let result: ComponentModel[];
 
         if (index != null) {
-            if (!isArray(index)) {
-                index = [index];
-            }
-            result = filter(map(index, function (idx) {
-                return cpts[idx];
-            }), function (val) {
-                return !!val;
+            result = [];
+            each(modelUtil.normalizeToArray(index), function (idx) {
+                cmpts[idx] && result.push(cmpts[idx]);
             });
         }
         else if (id != null) {
-            const isIdArray = isArray(id);
-            result = filter(cpts, function (cpt) {
-                return (isIdArray && indexOf(id as string[], cpt.id) >= 0)
-                    || (!isIdArray && cpt.id === id);
-            });
+            result = queryByIdOrName('id', id, cmpts);
         }
         else if (name != null) {
-            const isNameArray = isArray(name);
-            result = filter(cpts, function (cpt) {
-                return (isNameArray && indexOf(name as string[], cpt.name) >= 0)
-                    || (!isNameArray && cpt.name === name);
-            });
+            result = queryByIdOrName('name', name, cmpts);
         }
         else {
-            // Return all components with mainType
-            result = cpts.slice();
+            // Return all non-empty components in that mainType
+            result = filter(cmpts, cmpt => !!cmpt);
         }
 
         return filterBySubType(result, condition);
@@ -415,7 +509,8 @@ class GlobalModel extends Model<ECUnitOption> {
         const queryCond = getQueryCond(query);
         const result = queryCond
             ? this.queryComponents(queryCond)
-            : this._componentsMap.get(mainType);
+            // Retrieve all non-empty components.
+            : filter(this._componentsMap.get(mainType), cmpt => !!cmpt);
 
         return doFilter(filterBySubType(result, condition));
 
@@ -446,6 +541,8 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     /**
+     * Travel components (before filtered).
+     *
      * @usage
      * eachComponent('legend', function (legendModel, index) {
      *     ...
@@ -484,31 +581,44 @@ class GlobalModel extends Model<ECUnitOption> {
     ) {
         const componentsMap = this._componentsMap;
 
-        if (typeof mainType === 'function') {
-            const contextReal = cb as T;
-            const cbReal = mainType as EachComponentAllCallback;
-            componentsMap.each(function (components, componentType) {
-                each(components, function (component, index) {
-                    cbReal.call(contextReal, componentType, component, index);
-                });
+        if (isFunction(mainType)) {
+            const ctxForAll = cb as T;
+            const cbForAll = mainType as EachComponentAllCallback;
+            componentsMap.each(function (cmpts, componentType) {
+                for (let i = 0; cmpts && i < cmpts.length; i++) {
+                    const cmpt = cmpts[i];
+                    cmpt && cbForAll.call(ctxForAll, componentType, cmpt, cmpt.componentIndex);
+                }
             });
         }
-        else if (isString(mainType)) {
-            each(componentsMap.get(mainType), cb as EachComponentInMainTypeCallback, context);
-        }
-        else if (isObject(mainType)) {
-            const queryResult = this.findComponents(mainType);
-            each(queryResult, cb as EachComponentInMainTypeCallback, context);
+        else {
+            const cmpts = isString(mainType)
+                ? componentsMap.get(mainType)
+                : isObject(mainType)
+                ? this.findComponents(mainType)
+                : null;
+            for (let i = 0; cmpts && i < cmpts.length; i++) {
+                const cmpt = cmpts[i];
+                cmpt && (cb as EachComponentInMainTypeCallback).call(
+                    context, cmpt, cmpt.componentIndex
+                );
+            }
         }
     }
 
+    /**
+     * Get series list before filtered by name.
+     */
     getSeriesByName(name: string): SeriesModel[] {
-        const series = this._componentsMap.get('series') as SeriesModel[];
-        return filter(series, function (oneSeries) {
-            return oneSeries.name === name;
-        });
+        return filter(
+            this._componentsMap.get('series') as SeriesModel[],
+            oneSeries => !!oneSeries && oneSeries.name === name
+        );
     }
 
+    /**
+     * Get series list before filtered by index.
+     */
     getSeriesByIndex(seriesIndex: number): SeriesModel {
         return this._componentsMap.get('series')[seriesIndex] as SeriesModel;
     }
@@ -518,18 +628,27 @@ class GlobalModel extends Model<ECUnitOption> {
      * FIXME: rename to getRawSeriesByType?
      */
     getSeriesByType(subType: ComponentSubType): SeriesModel[] {
-        const series = this._componentsMap.get('series') as SeriesModel[];
-        return filter(series, function (oneSeries) {
-            return oneSeries.subType === subType;
-        });
+        return filter(
+            this._componentsMap.get('series') as SeriesModel[],
+            oneSeries => !!oneSeries && oneSeries.subType === subType
+        );
     }
 
+    /**
+     * Get all series before filtered.
+     */
     getSeries(): SeriesModel[] {
-        return this._componentsMap.get('series').slice() as SeriesModel[];
+        return filter(
+            this._componentsMap.get('series').slice() as SeriesModel[],
+            oneSeries => !!oneSeries
+        );
     }
 
+    /**
+     * Count series before filtered.
+     */
     getSeriesCount(): number {
-        return this._componentsMap.get('series').length;
+        return this._componentsCount.get('series');
     }
 
     /**
@@ -557,7 +676,9 @@ class GlobalModel extends Model<ECUnitOption> {
         cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
         context?: T
     ): void {
-        each(this._componentsMap.get('series'), cb, context);
+        each(this._componentsMap.get('series'), function (series) {
+            series && cb.call(context, series, series.componentIndex);
+        });
     }
 
     /**
@@ -591,7 +712,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
     isSeriesFiltered(seriesModel: SeriesModel): boolean {
         assertSeriesInitialized(this);
-        return this._seriesIndicesMap.get(seriesModel.componentIndex + '') == null;
+        return this._seriesIndicesMap.get(seriesModel.componentIndex) == null;
     }
 
     getCurrentSeriesIndices(): number[] {
@@ -603,17 +724,22 @@ class GlobalModel extends Model<ECUnitOption> {
         context?: T
     ): void {
         assertSeriesInitialized(this);
-        const filteredSeries = filter(
-            this._componentsMap.get('series') as SeriesModel[], cb, context
-        );
-        createSeriesIndices(this, filteredSeries);
+
+        const newSeriesIndices: number[] = [];
+        each(this._seriesIndices, function (seriesRawIdx) {
+            const series = this._componentsMap.get('series')[seriesRawIdx] as SeriesModel;
+            cb.call(context, series, seriesRawIdx) && newSeriesIndices.push(seriesRawIdx);
+        }, this);
+
+        this._seriesIndices = newSeriesIndices;
+        this._seriesIndicesMap = createHashMap(newSeriesIndices);
     }
 
     restoreData(payload?: Payload): void {
+
+        reCreateSeriesIndices(this);
+
         const componentsMap = this._componentsMap;
-
-        createSeriesIndices(this, componentsMap.get('series'));
-
         const componentTypes: string[] = [];
         componentsMap.each(function (components, componentType) {
             componentTypes.push(componentType);
@@ -622,10 +748,16 @@ class GlobalModel extends Model<ECUnitOption> {
         (ComponentModel as ComponentModelConstructor).topologicalTravel(
             componentTypes,
             (ComponentModel as ComponentModelConstructor).getAllClassMainTypes(),
-            function (componentType, dependencies) {
+            function (componentType) {
                 each(componentsMap.get(componentType), function (component) {
-                    (componentType !== 'series' || !isNotTargetSeries(component as SeriesModel, payload))
-                        && component.restoreData();
+                    if (component
+                        && (
+                            componentType !== 'series'
+                            || !isNotTargetSeries(component as SeriesModel, payload)
+                        )
+                    ) {
+                        component.restoreData();
+                    }
                 });
             }
         );
@@ -633,12 +765,13 @@ class GlobalModel extends Model<ECUnitOption> {
 
     private static internalField = (function () {
 
-        createSeriesIndices = function (ecModel: GlobalModel, seriesModels: ComponentModel[]): void {
-            ecModel._seriesIndicesMap = createHashMap(
-                ecModel._seriesIndices = map(seriesModels, function (series) {
-                    return series.componentIndex;
-                }) || []
-            );
+        reCreateSeriesIndices = function (ecModel: GlobalModel): void {
+            const seriesIndices: number[] = ecModel._seriesIndices = [];
+            each(ecModel._componentsMap.get('series'), function (series) {
+                // series may have been removed by `replaceMerge`.
+                series && seriesIndices.push(series.componentIndex);
+            });
+            ecModel._seriesIndicesMap = createHashMap(seriesIndices);
         };
 
         assertSeriesInitialized = function (ecModel: GlobalModel): void {
@@ -652,8 +785,6 @@ class GlobalModel extends Model<ECUnitOption> {
         };
 
         initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption): void {
-            baseOption = baseOption;
-
             // Using OPTION_INNER_KEY to mark that this option can not be used outside,
             // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
             ecModel.option = {} as ECUnitOption;
@@ -662,13 +793,14 @@ class GlobalModel extends Model<ECUnitOption> {
             // Init with series: [], in case of calling findSeries method
             // before series initialized.
             ecModel._componentsMap = createHashMap({series: []});
+            ecModel._componentsCount = createHashMap();
 
             mergeTheme(baseOption, ecModel._theme.option);
 
             // TODO Needs clone when merging to the unexisted property
             merge(baseOption, globalDefault, false);
 
-            ecModel.mergeOption(baseOption);
+            ecModel._mergeOption(baseOption, null);
         };
 
     })();
@@ -706,14 +838,14 @@ export interface QueryConditionKindB {
     mainType: ComponentMainType;
     subType?: ComponentSubType;
     index?: number | number[];
-    id?: string | string[];
-    name?: string | string[];
+    id?: string | number | (string | number)[];
+    name?: (string | number) | (string | number)[];
 }
 export interface EachComponentAllCallback {
-    (mainType: string, model: ComponentModel, index: number): void;
+    (mainType: string, model: ComponentModel, componentIndex: number): void;
 }
 interface EachComponentInMainTypeCallback {
-    (model: ComponentModel, index: number): void;
+    (model: ComponentModel, componentIndex: number): void;
 }
 
 
@@ -737,8 +869,9 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
         if (name === 'colorLayer' && notMergeColorLayer) {
             return;
         }
-        // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
-        if (!(ComponentModel as ComponentModelConstructor).hasClass(name)) {
+        // If it is component model mainType, the model handles that merge later.
+        // otherwise, merge them here.
+        if (!ComponentModel.hasClass(name)) {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
                     ? clone(themeItem)
@@ -753,41 +886,27 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
     });
 }
 
-/**
- * @param types model types
- */
-function getComponentsByTypes(
-    componentsMap: HashMap<ComponentModel[]>,
-    types: string | string[]
-): {
-    [mainType: string]: ComponentModel[]
-} {
-    if (!isArray(types)) {
-        types = types ? [types] : [];
+function queryByIdOrName<T extends { id?: string, name?: string }>(
+    attr: 'id' | 'name',
+    idOrName: string | number | (string | number)[],
+    cmpts: T[]
+): T[] {
+    // Here is a break from echarts4: string and number are
+    // traded as equal.
+    if (isArray(idOrName)) {
+        const keyMap = createHashMap<boolean>(idOrName);
+        each(idOrName, function (idOrNameItem) {
+            if (idOrNameItem != null) {
+                modelUtil.validateIdOrName(idOrNameItem);
+                keyMap.set(idOrNameItem, true);
+            }
+        });
+        return filter(cmpts, cmpt => cmpt && keyMap.get(cmpt[attr]));
     }
-
-    const ret: Dictionary<ComponentModel[]> = {};
-    each(types, function (type) {
-        ret[type] = (componentsMap.get(type) || []).slice();
-    });
-
-    return ret;
-}
-
-function determineSubType(
-    mainType: ComponentMainType,
-    newCptOption: ComponentOption,
-    existComponent: {subType: ComponentSubType} | ComponentModel
-): ComponentSubType {
-    const subType = newCptOption.type
-        ? newCptOption.type
-        : existComponent
-        ? existComponent.subType
-        // Use determineSubType only when there is no existComponent.
-        : (ComponentModel as ComponentModelConstructor).determineSubType(mainType, newCptOption);
-
-    // tooltip, markline, markpoint may always has no subType
-    return subType;
+    else {
+        modelUtil.validateIdOrName(idOrName);
+        return filter(cmpts, cmpt => cmpt && cmpt[attr] === idOrName + '');
+    }
 }
 
 function filterBySubType(
@@ -797,14 +916,27 @@ function filterBySubType(
     // Using hasOwnProperty for restrict. Consider
     // subType is undefined in user payload.
     return condition.hasOwnProperty('subType')
-        ? filter(components, function (cpt) {
-            return cpt.subType === condition.subType;
-        })
+        ? filter(components, cmpt => cmpt && cmpt.subType === condition.subType)
         : components;
 }
 
-// @ts-ignore FIXME:GlobalOption
-interface GlobalModel extends ColorPaletteMixin {}
+function normalizeReplaceMergeInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
+    const replaceMergeMainTypeMap = createHashMap<boolean, string>();
+    opts && each(modelUtil.normalizeToArray(opts.replaceMerge), function (mainType) {
+        if (__DEV__) {
+            assert(
+                ComponentModel.hasClass(mainType),
+                '"' + mainType + '" is not valid component main type in "replaceMerge"'
+            );
+        }
+        replaceMergeMainTypeMap.set(mainType, true);
+    });
+    return {
+        replaceMergeMainTypeMap: replaceMergeMainTypeMap
+    };
+}
+
+interface GlobalModel extends ColorPaletteMixin<ECUnitOption> {}
 mixin(GlobalModel, ColorPaletteMixin);
 
 export default GlobalModel;

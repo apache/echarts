@@ -25,6 +25,7 @@ import { AxisBaseOption } from '../axisCommonTypes';
 import AngleAxis from './AngleAxis';
 import RadiusAxis from './RadiusAxis';
 import { AxisBaseModel } from '../AxisBaseModel';
+import { SINGLE_REFERRING } from '../../util/model';
 
 export interface AngleAxisOption extends AxisBaseOption {
     /**
@@ -66,11 +67,7 @@ class PolarAxisModel<T extends PolarAxisOption = PolarAxisOption> extends Compon
     axis: AngleAxis | RadiusAxis;
 
     getCoordSysModel(): ComponentModel {
-        return this.ecModel.queryComponents({
-            mainType: 'polar',
-            index: this.option.polarIndex,
-            id: this.option.polarId
-        })[0];
+        return this.getReferringComponents('polar', SINGLE_REFERRING).models[0];
     }
 }
 

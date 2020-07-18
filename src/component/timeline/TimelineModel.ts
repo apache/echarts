@@ -36,7 +36,7 @@ import {
     ZREasing
 } from '../../util/types';
 import Model from '../../model/Model';
-import GlobalModel from '../../model/Global';
+import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
 import { each, isObject, clone, isString } from 'zrender/src/core/util';
 
 
@@ -120,6 +120,10 @@ export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, S
     orient?: LayoutOrient
 
     inverse?: boolean
+
+    // If not specified, options will be changed by "normalMerge".
+    // If specified, options will be changed by "replaceMerge".
+    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
 
     lineStyle?: TimelineLineStyleOption
     itemStyle?: ItemStyleOption

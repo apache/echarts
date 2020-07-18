@@ -270,15 +270,15 @@ function parseContents(str: string, blockMetaList: SeriesGroupMeta[]) {
 
             if (blockMeta) {
                 newOption[axisKey] = newOption[axisKey] || [];
-                newOption[axisKey][blockMeta.axisIndex] = {
+                (newOption[axisKey] as any)[blockMeta.axisIndex] = {
                     data: result.categories
                 };
-                newOption.series = newOption.series.concat(result.series);
+                newOption.series = (newOption.series as SeriesOption[]).concat(result.series);
             }
         }
         else {
             const result = parseListContents(block);
-            newOption.series.push(result);
+            (newOption.series as SeriesOption[]).push(result);
         }
     });
     return newOption;

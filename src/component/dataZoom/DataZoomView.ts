@@ -21,15 +21,7 @@ import ComponentView from '../../view/Component';
 import DataZoomModel from './DataZoomModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { Dictionary } from '../../util/types';
-import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 
-export interface CoordInfo {
-    model: CoordinateSystemHostModel
-    axisModels: AxisBaseModel[]
-    coordIndex: number
-}
 
 class DataZoomView extends ComponentView {
     static type = 'dataZoom';
@@ -45,67 +37,6 @@ class DataZoomView extends ComponentView {
         this.api = api;
     }
 
-    /**
-     * Find the first target coordinate system.
-     *
-     * @protected
-     * @return {Object} {
-     *                   grid: [
-     *                       {model: coord0, axisModels: [axis1, axis3], coordIndex: 1},
-     *                       {model: coord1, axisModels: [axis0, axis2], coordIndex: 0},
-     *                       ...
-     *                   ],  // cartesians must not be null/undefined.
-     *                   polar: [
-     *                       {model: coord0, axisModels: [axis4], coordIndex: 0},
-     *                       ...
-     *                   ],  // polars must not be null/undefined.
-     *                   singleAxis: [
-     *                       {model: coord0, axisModels: [], coordIndex: 0}
-     *                   ]
-     */
-    getTargetCoordInfo() {
-        const dataZoomModel = this.dataZoomModel;
-        const ecModel = this.ecModel;
-        const coordSysLists: Dictionary<CoordInfo[]> = {};
-
-        dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-            const axisModel = ecModel.getComponent(dimNames.axis, axisIndex) as AxisBaseModel;
-            if (axisModel) {
-                const coordModel = axisModel.getCoordSysModel();
-                coordModel && save(
-                    coordModel,
-                    axisModel,
-                    coordSysLists[coordModel.mainType] || (coordSysLists[coordModel.mainType] = []),
-                    coordModel.componentIndex
-                );
-            }
-        }, this);
-
-        function save(
-            coordModel: CoordinateSystemHostModel,
-            axisModel: AxisBaseModel,
-            store: CoordInfo[],
-            coordIndex: number
-        ) {
-            let item;
-            for (let i = 0; i < store.length; i++) {
-                if (store[i].model === coordModel) {
-                    item = store[i];
-                    break;
-                }
-            }
-            if (!item) {
-                store.push(item = {
-                    model: coordModel,
-                    axisModels: [],
-                    coordIndex: coordIndex
-                });
-            }
-            item.axisModels.push(axisModel);
-        }
-
-        return coordSysLists;
-    }
 }
 
 ComponentView.registerClass(DataZoomView);

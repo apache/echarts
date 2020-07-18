@@ -36,7 +36,7 @@ import {
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystemManager from '../../CoordinateSystem';
-import {ParsedModelFinder} from '../../util/model';
+import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import GridModel from './GridModel';
@@ -254,9 +254,9 @@ class Grid implements CoordinateSystemMaster {
     } {
         const seriesModel = finder.seriesModel;
         const xAxisModel = finder.xAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('xAxis', SINGLE_REFERRING).models[0]);
         const yAxisModel = finder.yAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('yAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('yAxis', SINGLE_REFERRING).models[0]);
         const gridModel = finder.gridModel;
         const coordsList = this._coordsList;
         let cartesian: Cartesian2D;
