@@ -19,6 +19,7 @@
 
 import {__DEV__} from '../../config';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
@@ -32,6 +33,7 @@ import { CoordinateSystem, isCoordinateSystemType } from '../../coord/Coordinate
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -184,9 +186,12 @@ class HeatmapView extends ChartView {
         const group = this.group;
         const data = seriesModel.getData();
 
-        let hoverStl = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
-        let labelModel = seriesModel.getModel('label');
-        let hoverLabelModel = seriesModel.getModel(['emphasis', 'label']);
+        let emphasisStyle = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        let blurStyle = seriesModel.getModel(['blur', 'itemStyle']).getItemStyle();
+        let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
+        let labelStatesModels = getLabelStatesModels(seriesModel);
+        let focus = seriesModel.get(['emphasis', 'focus']);
+        let blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
         const dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
             ? [
@@ -240,9 +245,15 @@ class HeatmapView extends ChartView {
 
             // Optimization for large datset
             if (data.hasItemOption) {
-                hoverStl = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
-                labelModel = itemModel.getModel('label');
-                hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+                const emphasisModel = itemModel.getModel('emphasis');
+                emphasisStyle = emphasisModel.getModel('itemStyle').getItemStyle();
+                blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
+                selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
+
+                focus = emphasisModel.get('focus');
+                blurScope = emphasisModel.get('blurScope');
+
+                labelStatesModels = getLabelStatesModels(itemModel);
             }
 
             const rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
@@ -251,8 +262,8 @@ class HeatmapView extends ChartView {
                 defaultText = rawValue[2] + '';
             }
 
-            graphic.setLabelStyle(
-                rect, labelModel, hoverLabelModel,
+            setLabelStyle(
+                rect, labelStatesModels,
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: idx,
@@ -260,7 +271,11 @@ class HeatmapView extends ChartView {
                 }
             );
 
-            graphic.enableHoverEmphasis(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
+            rect.ensureState('emphasis').style = emphasisStyle;
+            rect.ensureState('blur').style = blurStyle;
+            rect.ensureState('select').style = selectStyle;
+
+            enableHoverEmphasis(rect, focus, blurScope);
 
             rect.incremental = incremental;
             // PENDING

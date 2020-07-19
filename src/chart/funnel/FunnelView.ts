@@ -18,15 +18,15 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { ColorString, LabelOption } from '../../util/types';
-import Model from '../../model/Model';
-import { setLabelLineStyle } from '../../label/labelGuideHelper';
-import points from '../../layout/points';
+import { ColorString } from '../../util/types';
+import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -54,6 +54,7 @@ class FunnelPiece extends graphic.Polygon {
         const seriesModel = data.hostModel;
         const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         const layout = data.getItemLayout(idx);
+        const emphasisModel = itemModel.getModel('emphasis');
         let opacity = itemModel.get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
 
@@ -84,12 +85,11 @@ class FunnelPiece extends graphic.Polygon {
             }, seriesModel, idx);
         }
 
-        const polygonEmphasisState = polygon.ensureState('emphasis');
-        polygonEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        setStatesStylesFromModel(polygon, itemModel);
 
         this._updateLabel(data, idx);
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     }
 
     _updateLabel(data: List, idx: number) {
@@ -103,25 +103,21 @@ class FunnelPiece extends graphic.Polygon {
         const labelLayout = layout.label;
         // let visualColor = data.getItemVisual(idx, 'color');
 
-        const labelModel = itemModel.getModel('label');
-        const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-        const labelLineModel = itemModel.getModel('labelLine');
-        const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
-
         const visualColor = data.getItemVisual(idx, 'style').fill as ColorString;
 
-        graphic.setLabelStyle(
+        setLabelStyle(
             // position will not be used in setLabelStyle
-            labelText, labelModel as Model<LabelOption>, labelHoverModel as Model<LabelOption>,
+            labelText,
+            getLabelStatesModels(itemModel),
             {
                 labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
                 defaultText: data.getName(idx)
             },
-            {
+            { normal: {
                 align: labelLayout.textAlign,
                 verticalAlign: labelLayout.verticalAlign
-            }
+            } }
         );
 
         polygon.setTextConfig({
@@ -158,10 +154,7 @@ class FunnelPiece extends graphic.Polygon {
             z2: 10
         });
 
-        setLabelLineStyle(polygon, {
-            normal: labelLineModel,
-            emphasis: labelLineHoverModel
-        }, {
+        setLabelLineStyle(polygon, getLabelLineStatesModels(itemModel), {
             // Default use item visual color
             stroke: visualColor
         });
@@ -200,7 +193,7 @@ class FunnelView extends ChartView {
             })
             .remove(function (idx) {
                 const piece = oldData.getItemGraphicEl(idx);
-                group.remove(piece);
+                graphic.removeElementWithFadeOut(piece, seriesModel, idx);
             })
             .execute();
 

@@ -20,23 +20,24 @@
 import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
 import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
-import { LineStyleOption, LineLabelOption, SymbolOptionMixin, ItemStyleOption } from '../../util/types';
+import {
+    LineStyleOption,
+    LineLabelOption,
+    SymbolOptionMixin,
+    ItemStyleOption,
+    StatesOptionMixin
+} from '../../util/types';
 
-interface MarkLineDataItemOptionBase {
-    name?: string
-
+interface MarkLineStateOption {
     lineStyle?: LineStyleOption
     /**
      * itemStyle for symbol
      */
     itemStyle?: ItemStyleOption
     label?: LineLabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        lineStyle?: LineStyleOption
-        label?: LineLabelOption
-    }
+}
+interface MarkLineDataItemOptionBase extends MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
+    name?: string
 }
 
 // 1D markLine for horizontal or vertical
@@ -76,7 +77,8 @@ export type MarkLine2DDataItemOption = [
     MarkLine2DDataItemDimOption
 ];
 
-export interface MarkLineOption extends MarkerOption {
+export interface MarkLineOption extends MarkerOption,
+    MarkLineStateOption, StatesOptionMixin<MarkLineStateOption> {
 
     symbol?: string[] | string
     symbolSize?: number[] | number
@@ -85,19 +87,6 @@ export interface MarkLineOption extends MarkerOption {
      * Precision used on statistic method
      */
     precision?: number
-
-    /**
-     * itemStyle for symbol.
-     */
-    itemStyle?: ItemStyleOption
-    lineStyle?: LineStyleOption
-    label?: LineLabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        lineStyle?: LineStyleOption
-        label?: LineLabelOption
-    }
 
     data?: (MarkLine1DDataItemOption | MarkLine2DDataItemOption)[]
 }

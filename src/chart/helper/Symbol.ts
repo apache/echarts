@@ -19,23 +19,23 @@
 
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { DisplayState, ColorString } from '../../util/types';
+import { ColorString, BlurScope } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend } from 'zrender/src/core/util';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
-// Update common properties
-const emphasisStyleAccessPath = ['emphasis', 'itemStyle'] as const;
-const normalLabelAccessPath = ['label'] as const;
-const emphasisLabelAccessPath = ['emphasis', 'label'] as const;
+type ECSymbol = ReturnType<typeof createSymbol>;
 
-type ECSymbol = ReturnType<typeof createSymbol> & {
-    onStateChange(fromState: DisplayState, toState: DisplayState): void
-};
+interface SymbolOpts {
+    useNameLabel?: boolean
+    symbolInnerColor?: string
+}
 
 class Symbol extends graphic.Group {
 
@@ -51,9 +51,9 @@ class Symbol extends graphic.Group {
 
     private _z2: number;
 
-    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
+    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         super();
-        this.updateData(data, idx, seriesScope);
+        this.updateData(data, idx, seriesScope, opts);
     }
 
     _createSymbol(
@@ -115,14 +115,14 @@ class Symbol extends graphic.Group {
      * Highlight symbol
      */
     highlight() {
-        graphic.enterEmphasis(this.childAt(0));
+        enterEmphasis(this.childAt(0));
     }
 
     /**
      * Downplay symbol
      */
     downplay() {
-        graphic.leaveEmphasis(this.childAt(0));
+        leaveEmphasis(this.childAt(0));
     }
 
     /**
@@ -144,7 +144,7 @@ class Symbol extends graphic.Group {
     /**
      * Update symbol properties
      */
-    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
+    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         this.silent = false;
 
         const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
@@ -165,7 +165,7 @@ class Symbol extends graphic.Group {
             }, seriesModel, idx);
         }
 
-        this._updateCommon(data, idx, symbolSize, seriesScope);
+        this._updateCommon(data, idx, symbolSize, seriesScope, opts);
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
@@ -192,29 +192,58 @@ class Symbol extends graphic.Group {
         data: List,
         idx: number,
         symbolSize: number[],
-        seriesScope?: SymbolDrawSeriesScope
+        seriesScope?: SymbolDrawSeriesScope,
+        opts?: SymbolOpts
     ) {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
 
-        let hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
-        let symbolOffset = seriesScope && seriesScope.symbolOffset;
-        let labelModel = seriesScope && seriesScope.labelModel;
-        let hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
-        let hoverAnimation = seriesScope && seriesScope.hoverAnimation;
-        let cursorStyle = seriesScope && seriesScope.cursorStyle;
+
+        let emphasisItemStyle;
+        let blurItemStyle;
+        let selectItemStyle;
+        let focus;
+        let blurScope: BlurScope;
+
+        let symbolOffset;
+
+        let labelStatesModels;
+
+        let hoverScale;
+        let cursorStyle;
+
+        if (seriesScope) {
+            emphasisItemStyle = seriesScope.emphasisItemStyle;
+            blurItemStyle = seriesScope.blurItemStyle;
+            selectItemStyle = seriesScope.selectItemStyle;
+            focus = seriesScope.focus;
+            blurScope = seriesScope.blurScope;
+
+            symbolOffset = seriesScope.symbolOffset;
+
+            labelStatesModels = seriesScope.labelStatesModels;
+
+            hoverScale = seriesScope.hoverScale;
+            cursorStyle = seriesScope.cursorStyle;
+        }
 
         if (!seriesScope || data.hasItemOption) {
             const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
 
-            hoverItemStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
+            const emphasisModel = itemModel.getModel('emphasis');
+            emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
+            selectItemStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
+            blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
+
+            focus = emphasisModel.get('focus');
+            blurScope = emphasisModel.get('blurScope');
 
             symbolOffset = itemModel.getShallow('symbolOffset');
 
-            labelModel = itemModel.getModel(normalLabelAccessPath);
-            hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
-            hoverAnimation = itemModel.getShallow('hoverAnimation');
+            labelStatesModels = getLabelStatesModels(itemModel);
+
+            hoverScale = emphasisModel.getShallow('scale');
             cursorStyle = itemModel.getShallow('cursor');
         }
 
@@ -240,7 +269,7 @@ class Symbol extends graphic.Group {
         else {
             symbolPath.useStyle(symbolStyle);
         }
-        symbolPath.setColor(visualColor, seriesScope && seriesScope.symbolInnerColor);
+        symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
         symbolPath.style.strokeNoScale = true;
 
         const liftZ = data.getItemVisual(idx, 'liftZ');
@@ -256,10 +285,10 @@ class Symbol extends graphic.Group {
             this._z2 = null;
         }
 
-        const useNameLabel = seriesScope && seriesScope.useNameLabel;
+        const useNameLabel = opts && opts.useNameLabel;
 
-        graphic.setLabelStyle(
-            symbolPath, labelModel, hoverLabelModel,
+        setLabelStyle(
+            symbolPath, labelStatesModels,
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
@@ -276,9 +305,11 @@ class Symbol extends graphic.Group {
         this._sizeX = symbolSize[0] / 2;
         this._sizeY = symbolSize[1] / 2;
 
-        symbolPath.ensureState('emphasis').style = hoverItemStyle;
+        symbolPath.ensureState('emphasis').style = emphasisItemStyle;
+        symbolPath.ensureState('select').style = selectItemStyle;
+        symbolPath.ensureState('blur').style = blurItemStyle;
 
-        if (hoverAnimation && seriesModel.isAnimationEnabled()) {
+        if (hoverScale) {
             this.ensureState('emphasis');
             this.setSymbolScale(1);
         }
@@ -286,7 +317,7 @@ class Symbol extends graphic.Group {
             this.states.emphasis = null;
         }
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this, focus, blurScope);
     }
 
     setSymbolScale(scale: number) {

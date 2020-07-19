@@ -40,7 +40,8 @@ import {
     BoxLayoutOptionMixin,
     LabelFormatterCallback,
     Dictionary,
-    LineLabelOption
+    LineLabelOption,
+    StatesOptionMixin
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -54,18 +55,31 @@ type GraphDataValue = OptionDataValue | OptionDataValue[];
 interface GraphEdgeLineStyleOption extends LineStyleOption {
     curveness: number
 }
-export interface GraphNodeItemOption extends SymbolOptionMixin {
+
+export interface GraphNodeStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
+
+interface ExtraNodeStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+        scale?: boolean
+    }
+}
+
+interface ExtraEdgeStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+    }
+}
+
+export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, ExtraNodeStateOption> {
+
     id?: string
     name?: string
     value?: GraphDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 
     /**
      * Fixed x position
@@ -87,11 +101,14 @@ export interface GraphNodeItemOption extends SymbolOptionMixin {
     category?: number | string
 
     draggable?: boolean
-
-    focusNodeAdjacency?: boolean
 }
 
-export interface GraphEdgeItemOption {
+export interface GraphEdgeStateOption {
+    lineStyle?: GraphEdgeLineStyleOption
+    label?: LineLabelOption
+}
+export interface GraphEdgeItemOption
+    extends GraphEdgeStateOption, StatesOptionMixin<GraphEdgeStateOption, ExtraEdgeStateOption> {
     /**
      * Name or index of source node.
      */
@@ -103,14 +120,6 @@ export interface GraphEdgeItemOption {
 
     value?: number
 
-    lineStyle?: GraphEdgeLineStyleOption
-    label?: LineLabelOption
-
-    emphasis?: {
-        lineStyle?: GraphEdgeLineStyleOption
-        label?: LineLabelOption
-    }
-
     /**
      * Symbol of both line ends
      */
@@ -119,22 +128,13 @@ export interface GraphEdgeItemOption {
     symbolSize?: number | number[]
 
     ignoreForceLayout?: boolean
-
-    focusNodeAdjacency?: boolean
 }
 
-export interface GraphCategoryItemOption extends SymbolOptionMixin {
+export interface GraphCategoryItemOption extends SymbolOptionMixin,
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption> {
     name?: string
 
     value?: OptionDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 }
 
 export interface GraphSeriesOption extends SeriesOption,
@@ -148,7 +148,6 @@ export interface GraphSeriesOption extends SeriesOption,
 
     coordinateSystem?: string
 
-    hoverAnimation?: boolean
     legendHoverLink?: boolean
 
     layout?: 'none' | 'force' | 'circular'
@@ -184,6 +183,22 @@ export interface GraphSeriesOption extends SeriesOption,
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
+        focus?: GraphNodeItemOption['emphasis']['focus']
+        scale?: boolean
+        label?: LabelOption
+        edgeLabel?: LabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    blur?: {
+        label?: LabelOption
+        edgeLabel?: LabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    select?: {
         label?: LabelOption
         edgeLabel?: LabelOption
         itemStyle?: ItemStyleOption
@@ -392,8 +407,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         layout: null,
 
         focusNodeAdjacency: false,
@@ -444,6 +457,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         zoom: 1,
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.6,
+
         // cursor: null,
 
         // categories: [],
@@ -470,8 +484,15 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             opacity: 0.5
         },
         emphasis: {
+            scale: true,
             label: {
                 show: true
+            }
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
             }
         }
     };

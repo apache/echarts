@@ -19,11 +19,12 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
-import {Group, Path, enterEmphasis, leaveEmphasis} from '../../util/graphic';
+import {Group, Path} from '../../util/graphic';
+import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import SymbolClz from './Symbol';
 import List from '../../data/List';
-import type { ZRColor } from '../../util/types';
+import type { ZRColor, ECElement } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
 import { SymbolDrawItemModelOption } from './SymbolDraw';
 
@@ -218,30 +219,28 @@ class EffectSymbol extends Group {
             this._effectCfg = null;
 
             this.stopEffectAnimation();
-            const symbol = this.childAt(0) as SymbolClz;
-            const onEmphasis = function (this: EffectSymbol) {
-                symbol.highlight();
-                if (effectCfg.showEffectOn !== 'render') {
-                    this.startEffectAnimation(effectCfg);
+
+            (this as ECElement).onHoverStateChange = (toState) => {
+                if (toState === 'emphasis') {
+                    if (effectCfg.showEffectOn !== 'render') {
+                        this.startEffectAnimation(effectCfg);
+                    }
+                }
+                else if (toState === 'normal') {
+                    if (effectCfg.showEffectOn !== 'render') {
+                        this.stopEffectAnimation();
+                    }
                 }
             };
-            const onNormal = function (this: EffectSymbol) {
-                symbol.downplay();
-                if (effectCfg.showEffectOn !== 'render') {
-                    this.stopEffectAnimation();
-                }
-            };
-            this.on('mouseover', onEmphasis, this)
-                .on('mouseout', onNormal, this)
-                .on('emphasis', onEmphasis, this)
-                .on('normal', onNormal, this);
         }
 
         this._effectCfg = effectCfg;
+
+        enableHoverEmphasis(this);
     };
 
     fadeOut(cb: () => void) {
-        this.off('mouseover').off('mouseout').off('emphasis').off('normal');
+        this.off('mouseover').off('mouseout');
         cb && cb();
     };
 

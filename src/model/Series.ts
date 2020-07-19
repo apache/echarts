@@ -30,7 +30,7 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, ColorString
+    ScaleDataValue, Dictionary, ColorString, OptionDataItemObject
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -63,6 +63,10 @@ const inner = modelUtil.makeInner<{
     data: List
     dataBeforeProcessed: List
 }, SeriesModel>();
+
+function getSelectionKey(data: List, dataIndex: number): string {
+    return data.getName(dataIndex) || data.getId(dataIndex);
+}
 
 interface SeriesModel {
     /**
@@ -138,7 +142,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
 
     // ---------------------------------------
-    // Props to tell echarts about how to do visual encoding.
+    // Props to tell visual/style.ts about how to do visual encoding.
     // ---------------------------------------
     // legend visual provider to the legend component
     legendVisualProvider: LegendVisualProvider;
@@ -150,7 +154,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Style mapping rules.
     visualStyleMapper: ReturnType<typeof makeStyleMapper>;
     // If ignore style on data. It's only for global visual/style.ts
-    // Perhaps series it self will handle it.
+    // Enabled when series it self will handle it.
     ignoreStyleOnData: boolean;
     // If use palette on each data.
     useColorPaletteOnData: boolean;
@@ -160,6 +164,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     defaultSymbol: string;
     // Symbol provide to legend.
     legendSymbol: string;
+
+    // ---------------------------------------
+    // Props about data selection
+    // ---------------------------------------
+    private _selectedDataIndicesMap: Dictionary<number> = {};
 
     readonly preventUsingHoverLayer: boolean;
 
@@ -214,6 +223,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // this.restoreData();
 
         autoSeriesName(this);
+
+        this._initSelectedMapFromData(data);
     }
 
     /**
@@ -273,6 +284,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         inner(this).dataBeforeProcessed = data;
 
         autoSeriesName(this);
+
+        this._initSelectedMapFromData(data);
     }
 
     fillDataTextStyle(data: ArrayLike<any>): void {
@@ -327,6 +340,18 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             // elements want to know whether fade out.
             return inner(this).data as List<this>;
         }
+    }
+
+    getAllData(): ({
+        data: List,
+        type?: string
+    })[] {
+        const mainData = this.getData();
+        // @ts-ignore
+        return (mainData && mainData.getLinkedDataAll)
+            // @ts-ignore
+            ? mainData.getLinkedDataAll()
+            : [{ data: mainData }];
     }
 
     setData(data: List): void {
@@ -582,6 +607,112 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      */
     getProgressiveThreshold(): number {
         return this.get('progressiveThreshold');
+    }
+
+    // PENGING If selectedMode is null ?
+    select(innerDataIndices: number[], dataType?: string): void {
+        this._innerSelect(this.getData(dataType), innerDataIndices);
+    }
+
+    unselect(innerDataIndices: number[], dataType?: string): void {
+        const selectedMap = this.option.selectedMap;
+        if (!selectedMap) {
+            return;
+        }
+        const data = this.getData(dataType);
+        for (let i = 0; i < innerDataIndices.length; i++) {
+            const dataIndex = innerDataIndices[i];
+            const nameOrId = getSelectionKey(data, dataIndex);
+            selectedMap[nameOrId] = false;
+            this._selectedDataIndicesMap[nameOrId] = -1;
+        }
+    }
+
+    toggleSelect(innerDataIndices: number[], dataType?: string): void {
+        const tmpArr: number[] = [];
+        for (let i = 0; i < innerDataIndices.length; i++) {
+            tmpArr[0] = innerDataIndices[i];
+            this.isSelected(innerDataIndices[i], dataType)
+                ? this.unselect(tmpArr, dataType)
+                : this.select(tmpArr, dataType);
+        }
+    }
+
+    getSelectedDataIndices(): number[] {
+        const selectedDataIndicesMap = this._selectedDataIndicesMap;
+        const nameOrIds = zrUtil.keys(selectedDataIndicesMap);
+        const dataIndices = [];
+        for (let i = 0; i < nameOrIds.length; i++) {
+            const dataIndex = selectedDataIndicesMap[nameOrIds[i]];
+            if (dataIndex >= 0) {
+                dataIndices.push(dataIndex);
+            }
+        }
+        return dataIndices;
+    }
+
+    isSelected(dataIndex: number, dataType?: string): boolean {
+        const selectedMap = this.option.selectedMap;
+        if (!selectedMap) {
+            return false;
+        }
+
+        const data = this.getData(dataType);
+        const nameOrId = getSelectionKey(data, dataIndex);
+        return selectedMap[nameOrId] || false;
+    }
+
+    private _innerSelect(data: List, innerDataIndices: number[]) {
+        const selectedMode = this.option.selectedMode;
+        const len = innerDataIndices.length;
+        if (!selectedMode || !len) {
+            return;
+        }
+
+        if (selectedMode === 'multiple') {
+            const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
+            for (let i = 0; i < len; i++) {
+                const dataIndex = innerDataIndices[i];
+                // TODO diffrent types of data share same object.
+                const nameOrId = getSelectionKey(data, dataIndex);
+                selectedMap[nameOrId] = true;
+                this._selectedDataIndicesMap[nameOrId] = data.getRawIndex(dataIndex);
+            }
+        }
+        else if (selectedMode === 'single' || selectedMode === true) {
+            const lastDataIndex = innerDataIndices[len - 1];
+            const nameOrId = getSelectionKey(data, lastDataIndex);
+            this.option.selectedMap = {
+                [nameOrId]: true
+            };
+            this._selectedDataIndicesMap = {
+                [nameOrId]: data.getRawIndex(lastDataIndex)
+            };
+        }
+    }
+
+    private _initSelectedMapFromData(data: List) {
+        // Ignore select info in data if selectedMap exists.
+        // NOTE It's only for legacy usage. edge data is not supported.
+        if (this.option.selectedMap) {
+            return;
+        }
+
+        const dataIndices: number[] = [];
+        if (data.hasItemOption) {
+            data.each(function (idx) {
+                const rawItem = data.getRawDataItem(idx);
+                if (typeof rawItem === 'object'
+                    && (rawItem as OptionDataItemObject<unknown>).selected
+                ) {
+                    dataIndices.push(idx);
+                }
+            });
+        }
+
+        if (dataIndices.length > 0) {
+            this._innerSelect(data, dataIndices);
+        }
     }
 
     // /**

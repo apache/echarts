@@ -23,8 +23,8 @@ import Cartesian from './Cartesian';
 import { ScaleDataValue } from '../../util/types';
 import Axis2D from './Axis2D';
 import { CoordinateSystem } from '../CoordinateSystem';
-import Grid from './Grid';
 import GridModel from './GridModel';
+import Grid from './Grid';
 
 export const cartesian2DDimensions = ['x', 'y'];
 
@@ -34,9 +34,9 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
     readonly dimensions = cartesian2DDimensions;
 
-    // Injected
-    grid: Grid;
     model: GridModel;
+
+    master: Grid;
 
     /**
      * Base axis will be used on stacking.

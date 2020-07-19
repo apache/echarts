@@ -125,6 +125,21 @@ function getLinkedData(dataType) {
         : mainData[DATAS][dataType];
 }
 
+/**
+ * Get list of all linked data
+ */
+function getLinkedDataAll() {
+    const mainData = this[MAIN_DATA];
+    return (mainData == null)
+        ? [{ data: mainData }]
+        : zrUtil.map(zrUtil.keys(mainData[DATAS]), function (type) {
+            return {
+                type,
+                data: mainData[DATAS][type]
+            };
+        });
+}
+
 function isMainData(data) {
     return data[MAIN_DATA] === data;
 }
@@ -148,6 +163,7 @@ function linkSingle(data, dataType, mainData, opt) {
 
     // Supplement method.
     data.getLinkedData = getLinkedData;
+    data.getLinkedDataAll = getLinkedDataAll;
 }
 
 export default linkList;

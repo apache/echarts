@@ -396,7 +396,7 @@ const panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
 
     grid: function (this: BrushTargetInfoCartesian2D) {
         // grid is not Transformable.
-        return this.coordSys.grid.getRect().clone();
+        return this.coordSys.master.getRect().clone();
     },
 
     geo: function (this: BrushTargetInfoGeo) {

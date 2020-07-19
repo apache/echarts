@@ -34,7 +34,7 @@ function makeAction(
     method: 'toggleSelected' | 'select' | 'unSelect',
     actionInfo: ActionInfo
 ): void {
-    actionInfo.update = 'updateView';
+    actionInfo.update = 'geo:updateSelectStatus';
     echarts.registerAction(actionInfo, function (payload, ecModel) {
         const selected = {} as {[regionName: string]: boolean};
 

@@ -20,15 +20,13 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import { BoxplotItemLayout } from './boxplotLayout';
-
-// Update common properties
-const EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
 
 class BoxplotView extends ChartView {
     static type = 'boxplot';
@@ -178,15 +176,16 @@ function updateNormalBoxData(
         dataIndex
     );
 
-    const itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
-
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.strokeNoScale = true;
 
     el.z2 = 100;
 
-    const hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
-    graphic.enableHoverEmphasis(el, hoverStyle);
+    const itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
+
+    setStatesStylesFromModel(el, itemModel);
+
+    enableHoverEmphasis(el, itemModel.get(['emphasis', 'focus']), itemModel.get(['emphasis', 'blurScope']));
 }
 
 function transInit(points: number[][], dim: number, itemLayout: BoxplotItemLayout) {

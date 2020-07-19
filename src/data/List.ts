@@ -1817,6 +1817,8 @@ class List<
             ecData.dataIndex = idx;
             ecData.dataType = this.dataType;
             ecData.seriesIndex = hostModel && (hostModel as any).seriesIndex;
+
+            // TODO: not store dataIndex on children.
             if (el.type === 'group') {
                 el.traverse(setItemDataAndSeriesIndex, el);
             }

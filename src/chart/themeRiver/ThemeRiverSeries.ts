@@ -41,17 +41,17 @@ import Single from '../../coord/single/Single';
 
 const DATA_NAME_INDEX = 2;
 
-// export interface ThemeRiverSeriesDataItemOption {
-//     date: OptionDataValueDate
-//     value: OptionDataValueNumeric
-//     name: string
-// }
-
 interface ThemeRiverSeriesLabelOption extends LabelOption {
     margin?: number
 }
 
-export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
+export interface ThemeRiverStateOption {
+    label?: ThemeRiverSeriesLabelOption
+    itemStyle?: ItemStyleOption
+}
+
+export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOption>, ThemeRiverStateOption,
+    SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
     type?: 'themeRiver'
 
     color?: ZRColor[]
@@ -62,15 +62,6 @@ export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOpti
      * gap in axis's orthogonal orientation
      */
     boundaryGap: (string | number)[]
-
-    label?: ThemeRiverSeriesLabelOption
-    itemStyle?: ItemStyleOption
-
-    emphasis?: {
-        label?: ThemeRiverSeriesLabelOption
-        itemStyle?: ItemStyleOption
-    }
-
     /**
      * [date, value, name]
      */
@@ -330,11 +321,11 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             margin: 4,
             show: true,
             position: 'left',
-            color: '#000',
             fontSize: 11
         },
 
         emphasis: {
+
             label: {
                 show: true
             }

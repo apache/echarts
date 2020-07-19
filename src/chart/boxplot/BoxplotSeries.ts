@@ -26,46 +26,43 @@ import {
     LayoutOrient,
     ItemStyleOption,
     LabelOption,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    StatesOptionMixin
 } from '../../util/types';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 
 // [min,  Q1,  median (or Q2),  Q3,  max]
 type BoxplotDataValue = OptionDataValueNumeric[];
-export interface BoxplotDataItemOption {
-    value: BoxplotDataValue
 
+
+export interface BoxplotStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
-
-    emphasis?: {
-        itemStyle: ItemStyleOption
-        label?: LabelOption
-    }
-
 }
 
-export interface BoxplotSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin {
+export interface BoxplotDataItemOption
+    extends BoxplotStateOption, StatesOptionMixin<BoxplotStateOption, ExtraStateOption> {
+    value: BoxplotDataValue
+}
+
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
+
+export interface BoxplotSeriesOption extends SeriesOption<BoxplotStateOption, ExtraStateOption>, BoxplotStateOption,
+    SeriesOnCartesianOptionMixin {
     type?: 'boxplot'
 
     coordinateSystem?: 'cartesian2d'
 
-    hoverAnimation?: boolean
     layout?: LayoutOrient
     /**
      * [min, max] can be percent of band width.
      */
     boxWidth?: (string | number)[]
-
-    itemStyle?: ItemStyleOption
-
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle: ItemStyleOption
-        label?: LabelOption
-    }
 
     data?: (BoxplotDataValue | BoxplotDataItemOption)[]
 }
@@ -105,8 +102,6 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         layout: null,
         boxWidth: [7, 50],
 
@@ -116,16 +111,17 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         },
 
         emphasis: {
+            scale: true,
+
             itemStyle: {
                 borderWidth: 2,
                 shadowBlur: 5,
-                shadowOffsetX: 2,
-                shadowOffsetY: 2,
-                shadowColor: 'rgba(0,0,0,0.4)'
+                shadowOffsetX: 1,
+                shadowOffsetY: 1,
+                shadowColor: 'rgba(0,0,0,0.2)'
             }
         },
 
-        animationEasing: 'elasticOut',
         animationDuration: 800
     };
 }
