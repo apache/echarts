@@ -88,7 +88,7 @@ class ItemStyleMixin {
                 // compute real dash array
                 return raw * 0.5 * lineWidth * 0.1;
             }
-        );;
+        );
     }
 }
 
