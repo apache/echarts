@@ -115,12 +115,6 @@ export interface ECElement extends Element {
 
     z2EmphasisLift?: number;
     z2SelectLift?: number;
-
-    // If has fill and stroke in normal state.
-    // It's used when calculating highlighted color in stateProxy.
-    hasFillInNormal?: boolean;
-    hasStrokeInNormal?: boolean;
-
     /**
      * Force disable animation on any condition
      */

@@ -5,7 +5,7 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload } from './types';
+import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload, ZRColor } from './types';
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './graphic';
 import * as colorTool from 'zrender/src/tool/color';
@@ -13,7 +13,7 @@ import { EChartsType } from '../echarts';
 import List from '../data/List';
 import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
-import { queryDataIndex } from './model';
+import { queryDataIndex, makeInner } from './model';
 import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../model/Global';
 
@@ -21,6 +21,13 @@ import GlobalModel from '../model/Global';
 let _highlightNextDigit = 1;
 
 const _highlightKeyMap: Dictionary<number> = {};
+
+const getSavedStates = makeInner<{
+    normalFill: ZRColor
+    normalStroke: ZRColor
+    selectFill?: ZRColor
+    selectStroke?: ZRColor
+}, Path>();
 
 export const HOVER_STATE_NORMAL: 0 = 0;
 export const HOVER_STATE_BLUR: 1 = 1;
@@ -181,37 +188,34 @@ function getFromStateStyle(
 function createEmphasisDefaultState(
     el: Displayable,
     stateName: 'emphasis',
+    targetStates?: string[],
     state: Displayable['states'][number]
 ) {
-    const hasEmphasis = indexOf(el.currentStates, stateName) >= 0;
+    const hasSelect = targetStates && indexOf(targetStates, 'select') >= 0;
     let cloned = false;
     if (el instanceof Path) {
-        const hasFillInNormal = (el as ECElement).hasFillInNormal;
-        const hasStrokeInNormal = (el as ECElement).hasStrokeInNormal;
-        if (hasFillInNormal || hasStrokeInNormal) {
-            const fromState: PathStyleProps = !hasEmphasis
-                ? getFromStateStyle(el, ['fill', 'stroke'], stateName)
-                : null;
+        const store = getSavedStates(el);
+        const fromFill = hasSelect ? (store.selectFill || store.normalFill) : store.normalFill;
+        const fromStroke = hasSelect ? (store.selectStroke || store.normalStroke) : store.normalStroke;
+        if (hasFillOrStroke(fromFill) || hasFillOrStroke(fromStroke)) {
             state = state || {};
             // Apply default color lift
             let emphasisStyle = state.style || {};
-            if (!hasFillOrStroke(emphasisStyle.fill) && hasFillInNormal) {
+            if (!hasFillOrStroke(emphasisStyle.fill) && hasFillOrStroke(fromFill)) {
                 cloned = true;
                 // Not modify the original value.
                 state = extend({}, state);
                 emphasisStyle = extend({}, emphasisStyle);
                 // Already being applied 'emphasis'. DON'T lift color multiple times.
-                emphasisStyle.fill = hasEmphasis
-                    ? el.style.fill : liftColor(fromState.fill as ColorString);
+                emphasisStyle.fill = liftColor(fromFill as ColorString);
             }
             // Not highlight stroke if fill has been highlighted.
-            else if (!hasFillOrStroke(emphasisStyle.stroke) && hasStrokeInNormal) {
+            else if (!hasFillOrStroke(emphasisStyle.stroke) && hasFillOrStroke(fromStroke)) {
                 if (!cloned) {
                     state = extend({}, state);
                     emphasisStyle = extend({}, emphasisStyle);
                 }
-                emphasisStyle.stroke = hasEmphasis
-                    ? el.style.stroke : liftColor(fromState.stroke as ColorString);
+                emphasisStyle.stroke = liftColor(fromStroke as ColorString);
             }
             state.style = emphasisStyle;
         }
@@ -275,11 +279,11 @@ function createBlurDefaultState(
     return state;
 }
 
-function elementStateProxy(this: Displayable, stateName: string): DisplayableState {
+function elementStateProxy(this: Displayable, stateName: string, targetStates?: string[]): DisplayableState {
     const state = this.states[stateName];
     if (this.style) {
         if (stateName === 'emphasis') {
-            return createEmphasisDefaultState(this, stateName, state);
+            return createEmphasisDefaultState(this, stateName, targetStates, state);
         }
         else if (stateName === 'blur') {
             return createBlurDefaultState(this, stateName, state);
@@ -669,4 +673,14 @@ export function isHighDownPayload(payload: Payload) {
     const payloadType = payload.type;
     return payloadType === HIGHLIGHT_ACTION_TYPE
         || payloadType === DOWNPLAY_ACTION_TYPE;
+}
+
+export function savePathStates(el: Path) {
+    const store = getSavedStates(el);
+    store.normalFill = el.style.fill;
+    store.normalStroke = el.style.stroke;
+
+    const selectState = el.states.select || {};
+    store.selectFill = (selectState.style && selectState.style.fill) || null;
+    store.selectStroke = (selectState.style && selectState.style.stroke) || null;
 }

@@ -55,7 +55,8 @@ import {
     DOWNPLAY_ACTION_TYPE,
     SELECT_ACTION_TYPE,
     UNSELECT_ACTION_TYPE,
-    TOGGLE_SELECT_ACTION_TYPE
+    TOGGLE_SELECT_ACTION_TYPE,
+    savePathStates
 } from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
@@ -2128,8 +2129,7 @@ class ECharts extends Eventful {
                     }
 
                     if (el instanceof graphic.Path) {
-                        (el as ECElement).hasFillInNormal = el.hasFill();
-                        (el as ECElement).hasStrokeInNormal = el.hasStroke();
+                        savePathStates(el);
                     }
 
                     // Only updated on changed element. In case element is incremental and don't wan't to rerender.

@@ -29,6 +29,7 @@ under the License.
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="data/basicChartsOptions.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -126,9 +127,32 @@ under the License.
                 charts.push(chart);
             });
 
-            function update() {
-
+            const selectOpts = {
+                selectRed: false
             }
+
+            function update() {
+                allChartsOptions.forEach(function (chartOption, idx) {
+                    chartOption.series.forEach(function (series) {
+                        series.select = {
+                            itemStyle: {
+                                borderWidth: 3,
+                                color: selectOpts.selectRed ? '#f00' : null
+                            },
+                            lineStyle: {
+                                color: selectOpts.selectRed ? '#f00' : null
+                            },
+                            areaStyle: {
+                                color: selectOpts.selectRed ? '#f00' : null
+                            }
+                        }
+                    });
+                    charts[idx].setOption(chartOption);
+                });
+            }
+
+            var gui = new dat.GUI();
+            gui.add(selectOpts, 'selectRed').onChange(update);
 
             window.addEventListener('resize', function () {
                 charts.forEach(function (chart) {

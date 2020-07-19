@@ -29,6 +29,7 @@ under the License.
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="data/basicChartsOptions.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -52,6 +53,9 @@ under the License.
                 margin: 20px 0;
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
                 background: #fff;
+            }
+            .dg.ac {
+                text-align: left;
             }
         </style>
 
@@ -79,9 +83,6 @@ under the License.
                 chartOption.series.forEach(function (series) {
                     series.emphasis = series.emphasis || {};
                     series.emphasis.focus = seriesFocusType[series.type] || 'series';
-                    series.emphasis.lineStyle = {
-                        // opacity: 0.02
-                    }
 
                     if (series.renderItem) {
                         const oldRenderItem = series.renderItem;
@@ -120,9 +121,40 @@ under the License.
                 charts.push(chart);
             });
 
-            function update() {
-
+            const blurOpts = {
+                opacity: 0.1,
+                grayColor: false
             }
+
+            function update() {
+                allChartsOptions.forEach(function (chartOption, idx) {
+                    chartOption.series.forEach(function (series) {
+                        series.blur = {
+                            itemStyle: {
+                                color: blurOpts.grayColor ? '#aaa' : null,
+                                opacity: blurOpts.opacity
+                            },
+                            lineStyle: {
+                                color: blurOpts.grayColor ? '#aaa' : null,
+                                opacity: blurOpts.opacity
+                            },
+                            areaStyle: {
+                                color: blurOpts.grayColor ? '#aaa' : null,
+                                opacity: blurOpts.opacity
+                            },
+                            label: {
+                                color: blurOpts.grayColor ? '#aaa' : null,
+                                opacity: blurOpts.opacity
+                            }
+                        }
+                    });
+                    charts[idx].setOption(chartOption);
+                });
+            }
+
+            var gui = new dat.GUI();
+            gui.add(blurOpts, 'opacity', 0, 1).onFinishChange(update);
+            gui.add(blurOpts, 'grayColor').onChange(update);
 
             window.addEventListener('resize', function () {
                 charts.forEach(function (chart) {
