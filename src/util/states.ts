@@ -1,4 +1,3 @@
-import ZRText from 'zrender/src/graphic/Text';
 import { Dictionary } from 'zrender/src/core/types';
 import LRU from 'zrender/src/core/LRU';
 import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
@@ -32,6 +31,13 @@ export const DISPLAY_STATES = ['normal', 'emphasis', 'blur', 'select'] as const;
 
 export const Z2_EMPHASIS_LIFT = 10;
 export const Z2_SELECT_LIFT = 9;
+
+export const HIGHLIGHT_ACTION_TYPE = 'highlight';
+export const DOWNPLAY_ACTION_TYPE = 'highlight';
+
+export const SELECT_ACTION_TYPE = 'select';
+export const UNSELECT_ACTION_TYPE = 'unselect';
+export const TOGGLE_SELECT_ACTION_TYPE = 'toggleSelect';
 
 type ExtendedProps = {
     __highByOuter: number
@@ -450,12 +456,11 @@ export function toggleSeriesBlurStateFromPayload(
     payload: Payload,
     ecIns: EChartsType
 ) {
-    const isHighlight = payload.type === 'highlight';
-    const isDownplay = payload.type === 'downplay';
-    if (!(isHighlight || isDownplay)) {
+    if (!isHighDownPayload(payload)) {
         return;
     }
 
+    const isHighlight = payload.type === HIGHLIGHT_ACTION_TYPE;
     const seriesIndex = seriesModel.seriesIndex;
     const data = seriesModel.getData(payload.dataType);
     let dataIndex = queryDataIndex(data, payload);
@@ -492,20 +497,20 @@ export function toggleSelectionFromPayload(
     payload: Payload,
     ecIns: EChartsType
 ) {
-    const isSelect = payload.type === 'select';
-    const isUnSelect = payload.type === 'unselect';
-
-    if (!(isSelect || isUnSelect)) {
+    if (!(isSelectChangePayload(payload))) {
         return;
     }
-
-    const data = seriesModel.getData(payload.dataType);
+    const dataType = payload.dataType;
+    const data = seriesModel.getData(dataType);
     let dataIndex = queryDataIndex(data, payload);
     if (!isArray(dataIndex)) {
         dataIndex = [dataIndex];
     }
 
-    seriesModel[isSelect ? 'select' : 'unSelect'](dataIndex, payload.dataType);
+    seriesModel[
+        payload.type === TOGGLE_SELECT_ACTION_TYPE ? 'toggleSelect'
+            : payload.type === SELECT_ACTION_TYPE ? 'select' : 'unselect'
+    ](dataIndex, dataType);
 }
 
 
@@ -651,4 +656,17 @@ export function getHighlightDigit(highlightKey: number) {
         highlightDigit = _highlightKeyMap[highlightKey] = _highlightNextDigit++;
     }
     return highlightDigit;
+}
+
+export function isSelectChangePayload(payload: Payload) {
+    const payloadType = payload.type;
+    return payloadType === SELECT_ACTION_TYPE
+        || payloadType === UNSELECT_ACTION_TYPE
+        || payloadType === TOGGLE_SELECT_ACTION_TYPE;
+}
+
+export function isHighDownPayload(payload: Payload) {
+    const payloadType = payload.type;
+    return payloadType === HIGHLIGHT_ACTION_TYPE
+        || payloadType === DOWNPLAY_ACTION_TYPE;
 }

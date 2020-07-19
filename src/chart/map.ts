@@ -26,21 +26,9 @@ import '../coord/geo/geoCreator';
 
 import mapSymbolLayout from './map/mapSymbolLayout';
 import mapDataStatistic from './map/mapDataStatistic';
-import createDataSelectAction from '../action/createDataSelectAction';
+import createLegacyDataSelectAction from '../action/createLegacyDataSelectAction';
 
 echarts.registerLayout(mapSymbolLayout);
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, mapDataStatistic);
 
-createDataSelectAction('map', [{
-    type: 'mapToggleSelect',
-    event: 'mapselectchanged',
-    method: 'toggleSelected'
-}, {
-    type: 'mapSelect',
-    event: 'mapselected',
-    method: 'select'
-}, {
-    type: 'mapUnSelect',
-    event: 'mapunselected',
-    method: 'unSelect'
-}]);
+createLegacyDataSelectAction('map');

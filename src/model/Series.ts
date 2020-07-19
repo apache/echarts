@@ -617,7 +617,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         this._innerSelect(this.getData(dataType), innerDataIndices);
     }
 
-    unSelect(innerDataIndices: number[], dataType?: string): void {
+    unselect(innerDataIndices: number[], dataType?: string): void {
         const selectedMap = this.option.selectedMap;
         if (!selectedMap) {
             return;
@@ -629,7 +629,16 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             selectedMap[nameOrId] = false;
             this._selectedDataIndicesMap[nameOrId] = -1;
         }
+    }
 
+    toggleSelect(innerDataIndices: number[], dataType?: string): void {
+        const tmpArr: number[] = [];
+        for (let i = 0; i < innerDataIndices.length; i++) {
+            tmpArr[0] = innerDataIndices[i];
+            this.isSelected(innerDataIndices[i], dataType)
+                ? this.unselect(tmpArr, dataType)
+                : this.select(tmpArr, dataType);
+        }
     }
 
     getSelectedDataIndices(): number[] {

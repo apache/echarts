@@ -17,17 +17,25 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import * as zrUtil from 'zrender/src/core/util';
+import { Dictionary } from './types';
+import { __DEV__ } from '../config';
 
-import './pie/PieSeries';
-import './pie/PieView';
+const storedLogs: Dictionary<boolean> = {};
 
-import createLegacyDataSelectAction from '../action/createLegacyDataSelectAction';
-import pieLayout from './pie/pieLayout';
-import dataFilter from '../processor/dataFilter';
+export function deprecateLog(str: string) {
+    if (__DEV__) {
+        if (storedLogs[str]) {  // Not display duplicate message.
+            return;
+        }
+        if (typeof console !== 'undefined' && console.warn) {
+            storedLogs[str] = true;
+                console.warn('[ECharts] DEPRECATED: ' + str);
+        }
+    }
+}
 
-createLegacyDataSelectAction('pie');
-
-echarts.registerLayout(zrUtil.curry(pieLayout, 'pie'));
-echarts.registerProcessor(dataFilter('pie'));
+export function deprecateReplaceLog(oldOpt: string, newOpt: string, scope?: string) {
+    if (__DEV__) {
+        deprecateLog((scope ? `[${scope}]` : '') + `${oldOpt} is deprecated, use ${newOpt} instead.`);
+    }
+}

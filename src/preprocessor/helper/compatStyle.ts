@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import { Dictionary } from 'zrender/src/core/types';
 import { __DEV__ } from '../../config';
+import { deprecateLog, deprecateReplaceLog } from '../../util/log';
 
 const each = zrUtil.each;
 const isObject = zrUtil.isObject;
@@ -30,16 +31,6 @@ const POSSIBLE_STYLES = [
     'chordStyle', 'label', 'labelLine'
 ];
 
-const storedLogs: Dictionary<boolean> = {};
-export function deprecateLog(str: string) {
-    if (storedLogs[str]) {  // Not display duplicate message.
-        return;
-    }
-    if (typeof console !== 'undefined' && console.warn) {
-        storedLogs[str] = true;
-        console.warn('[ECharts] DEPRECATED: ' + str);
-    }
-}
 
 function compatEC2ItemStyle(opt: Dictionary<any>) {
     const itemStyleOpt = opt && opt.itemStyle;
@@ -52,7 +43,7 @@ function compatEC2ItemStyle(opt: Dictionary<any>) {
         const emphasisItemStyleOpt = itemStyleOpt.emphasis;
         if (normalItemStyleOpt && normalItemStyleOpt[styleName]) {
             if (__DEV__) {
-                deprecateLog(`itemStyle.normal.${styleName} has been changed to ${styleName}`);
+                deprecateReplaceLog(`itemStyle.normal.${styleName}`, styleName);
             }
             opt[styleName] = opt[styleName] || {};
             if (!opt[styleName].normal) {
@@ -65,7 +56,7 @@ function compatEC2ItemStyle(opt: Dictionary<any>) {
         }
         if (emphasisItemStyleOpt && emphasisItemStyleOpt[styleName]) {
             if (__DEV__) {
-                deprecateLog(`itemStyle.emphasis.${styleName} has been changed to emphasis.${styleName}`);
+                deprecateReplaceLog(`itemStyle.emphasis.${styleName}`, `emphasis.${styleName}`);
             }
             opt[styleName] = opt[styleName] || {};
             if (!opt[styleName].emphasis) {
@@ -99,7 +90,9 @@ function convertNormalEmphasis(opt: Dictionary<any>, optType: string, useExtend?
             }
         }
         if (emphasisOpt) {
-            deprecateLog(`${optType}.emphasis has been changed to emphasis.${optType} since 4.0`);
+            if (__DEV__) {
+                deprecateLog(`${optType}.emphasis has been changed to emphasis.${optType} since 4.0`);
+            }
             opt.emphasis = opt.emphasis || {};
             opt.emphasis[optType] = emphasisOpt;
 

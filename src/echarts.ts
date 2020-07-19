@@ -48,7 +48,14 @@ import {
     toggleSeriesBlurStateFromPayload,
     toggleSelectionFromPayload,
     updateSeriesElementSelection,
-    getAllSelectedIndices
+    getAllSelectedIndices,
+    isSelectChangePayload,
+    isHighDownPayload,
+    HIGHLIGHT_ACTION_TYPE,
+    DOWNPLAY_ACTION_TYPE,
+    SELECT_ACTION_TYPE,
+    UNSELECT_ACTION_TYPE,
+    TOGGLE_SELECT_ACTION_TYPE
 } from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
@@ -84,7 +91,7 @@ import 'zrender/src/canvas/canvas';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 import LabelManager from './label/LabelManager';
-import { deprecateLog } from './preprocessor/helper/compatStyle';
+import { deprecateLog } from './util/log';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -1345,21 +1352,16 @@ class ECharts extends Eventful {
                 excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
             }
 
-            const isHighlight = payload.type === 'highlight';
-            const isDownplay = payload.type === 'downplay';
-
-            const isSelect = payload.type === 'select';
-            const isUnSelect = payload.type === 'unselect';
 
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighlight || isDownplay) {
+                    if (isHighDownPayload(payload)) {
                         if (model instanceof SeriesModel) {
                             toggleSeriesBlurStateFromPayload(model, payload, ecIns);
                         }
                     }
-                    else if (isSelect || isUnSelect) {
+                    else if (isSelectChangePayload(payload)) {
                         // TODO geo
                         if (model instanceof SeriesModel) {
                             toggleSelectionFromPayload(model, payload, ecIns);
@@ -1652,11 +1654,8 @@ class ECharts extends Eventful {
             const eventObjBatch: ECEventData[] = [];
             let eventObj: ECEvent;
 
-            const isSelectChange = payloadType === 'select'
-                || payloadType === 'unselect';
-            const isStatusChange = payloadType === 'highlight'
-                || payloadType === 'downplay'
-                || isSelectChange;
+            const isSelectChange = isSelectChangePayload(payload);
+            const isStatusChange = isHighDownPayload(payload) || isSelectChange;
 
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
@@ -2712,27 +2711,33 @@ registerLoading('default', loadingDefault);
 // Default actions
 
 registerAction({
-    type: 'highlight',
-    event: 'highlight',
-    update: 'highlight'
+    type: HIGHLIGHT_ACTION_TYPE,
+    event: HIGHLIGHT_ACTION_TYPE,
+    update: HIGHLIGHT_ACTION_TYPE
 }, zrUtil.noop);
 
 registerAction({
-    type: 'downplay',
-    event: 'downplay',
-    update: 'downplay'
+    type: DOWNPLAY_ACTION_TYPE,
+    event: DOWNPLAY_ACTION_TYPE,
+    update: DOWNPLAY_ACTION_TYPE
 }, zrUtil.noop);
 
 registerAction({
-    type: 'select',
-    event: 'select',
-    update: 'select'
+    type: SELECT_ACTION_TYPE,
+    event: SELECT_ACTION_TYPE,
+    update: SELECT_ACTION_TYPE
 }, zrUtil.noop);
 
 registerAction({
-    type: 'unselect',
-    event: 'unselect',
-    update: 'unselect'
+    type: UNSELECT_ACTION_TYPE,
+    event: UNSELECT_ACTION_TYPE,
+    update: UNSELECT_ACTION_TYPE
+}, zrUtil.noop);
+
+registerAction({
+    type: TOGGLE_SELECT_ACTION_TYPE,
+    event: TOGGLE_SELECT_ACTION_TYPE,
+    update: TOGGLE_SELECT_ACTION_TYPE
 }, zrUtil.noop);
 
 // Default theme

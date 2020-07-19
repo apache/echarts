@@ -28,7 +28,8 @@ import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { extend } from 'zrender/src/core/util';
-import { deprecateLog } from '../../preprocessor/helper/compatStyle';
+import { deprecateReplaceLog } from '../../util/log';
+import { __DEV__ } from '../../config';
 
 export const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
@@ -81,7 +82,9 @@ echarts.registerAction(
             }
         }
 
-        deprecateLog('Use `highlight` action instead of `sunburstHighlight`');
+        if (__DEV__) {
+            deprecateReplaceLog('highlight', 'sunburstHighlight');
+        }
 
         // Fast forward action
         api.dispatchAction(extend(payload, {
@@ -99,7 +102,11 @@ echarts.registerAction(
     {type: UNHIGHLIGHT_ACTION, update: 'updateView'},
     function (payload: SunburstUnhighlightPayload, ecModel: GlobalModel, api: ExtensionAPI) {
         payload = extend({}, payload);
-        deprecateLog('Use `downplay` action instead of `sunburstUnhighlight`');
+
+        if (__DEV__) {
+            deprecateReplaceLog('downplay', 'sunburstUnhighlight');
+        }
+
         api.dispatchAction(extend(payload, {
             type: 'downplay'
         }));

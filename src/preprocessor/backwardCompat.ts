@@ -18,13 +18,14 @@
 */
 
 import {each, isArray, isObject, isTypedArray, defaults} from 'zrender/src/core/util';
-import compatStyle, {deprecateLog} from './helper/compatStyle';
+import compatStyle from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
-import { ECUnitOption, SeriesOption } from '../util/types';
+import { ECUnitOption } from '../util/types';
 import { __DEV__ } from '../config';
 import type { BarSeriesOption } from '../chart/bar/BarSeries';
 import type { PieSeriesOption } from '../chart/pie/PieSeries';
+import { deprecateLog, deprecateReplaceLog } from '../util/log';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -86,7 +87,7 @@ function compatBarItemStyle(option: Dictionary<any>) {
             if (itemStyle[oldName] != null) {
                 itemStyle[newName] = itemStyle[oldName];
                 if (__DEV__) {
-                    deprecateLog(`${oldName} has been changed to ${newName}.`);
+                    deprecateReplaceLog(oldName, newName);
                 }
             }
         }
@@ -99,7 +100,7 @@ function compatPieLabel(option: Dictionary<any>) {
     }
     if (option.alignTo === 'edge' && option.margin != null && option.edgeDistance == null) {
         if (__DEV__) {
-            deprecateLog('label.margin has been changed to label.edgeDistance in pie.');
+            deprecateReplaceLog('label.margin', 'label.edgeDistance', 'pie');
         }
         option.edgeDistance = option.margin;
     }
@@ -111,7 +112,9 @@ function compatSunburstState(option: Dictionary<any>) {
     }
     if (option.downplay && !option.blur) {
         option.blur = option.downplay;
-        deprecateLog('`downplay` in sunburst has been changed to `blur`');
+        if (__DEV__) {
+            deprecateReplaceLog('downplay', 'blur', 'sunburst');
+        }
     }
 }
 
@@ -122,9 +125,9 @@ function compatGraphFocus(option: Dictionary<any>) {
     if (option.focusNodeAdjacency != null) {
         option.emphasis = option.emphasis || {};
         if (option.emphasis.focus == null) {
-            deprecateLog(
-                '`focusNodeAdjacency` in graph/sankey has been changed to `emphasis: { focus: \'adjacency\'}`'
-            );
+            if (__DEV__) {
+                deprecateReplaceLog('focusNodeAdjacency', 'emphasis: { focus: \'adjacency\'}', 'graph/sankey');
+            }
             option.emphasis.focus = 'adjacency';
         }
     }
@@ -155,13 +158,17 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         if (seriesType === 'line') {
             if (seriesOpt.clipOverflow != null) {
                 seriesOpt.clip = seriesOpt.clipOverflow;
-                deprecateLog('clipOverflow has been changed to clip.');
+                if (__DEV__) {
+                    deprecateReplaceLog('clipOverflow', 'clip', 'line');
+                }
             }
         }
         else if (seriesType === 'pie' || seriesType === 'gauge') {
             if (seriesOpt.clockWise != null) {
                 seriesOpt.clockwise = seriesOpt.clockWise;
-                deprecateLog('clockWise has been changed to clockwise.');
+                if (__DEV__) {
+                    deprecateReplaceLog('clockWise', 'clockwise');
+                }
             }
             compatPieLabel((seriesOpt as PieSeriesOption).label);
             const data = seriesOpt.data;
@@ -174,7 +181,9 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
             if (seriesOpt.hoverOffset != null) {
                 seriesOpt.emphasis = seriesOpt.emphasis || {};
                 if (seriesOpt.emphasis.scaleSize = null) {
-                    deprecateLog('`hoverOffset` has been changed to `emphasis.scaleSize`');
+                    if (__DEV__) {
+                        deprecateReplaceLog('hoverOffset', 'emphasis.scaleSize');
+                    }
                     seriesOpt.emphasis.scaleSize = seriesOpt.hoverOffset;
                 }
             }
@@ -204,7 +213,9 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
                 seriesOpt.emphasis = seriesOpt.emphasis || {};
                 if (!seriesOpt.emphasis.focus) {
                     seriesOpt.emphasis.focus = highlightPolicy;
-                    deprecateLog('`highlightPolicy` in sunburst has been changed to `emphasis.focus`');
+                    if (__DEV__) {
+                        deprecateReplaceLog('highlightPolicy', 'emphasis.focus', 'sunburst');
+                    }
                 }
             }
 
@@ -218,10 +229,15 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         }
         else if (seriesType === 'map') {
             if (seriesOpt.mapType && !seriesOpt.map) {
-                deprecateLog('`mapType` in map has been changed to `map`');
+                if (__DEV__) {
+                    deprecateReplaceLog('mapType', 'map', 'map');
+                }
+                seriesOpt.map = seriesOpt.mapType;
             }
             if (seriesOpt.mapLocation) {
-                deprecateLog('`mapLocation` is not used anymore.');
+                if (__DEV__) {
+                    deprecateLog('`mapLocation` is not used anymore.');
+                }
                 defaults(seriesOpt, seriesOpt.mapLocation);
             }
         }
@@ -229,7 +245,9 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         if (seriesOpt.hoverAnimation != null) {
             seriesOpt.emphasis = seriesOpt.emphasis || {};
             if (seriesOpt.emphasis && seriesOpt.emphasis.scale == null) {
-                deprecateLog('`hoverAnimation` has been changed to `emphasis.scale`');
+                if (__DEV__) {
+                    deprecateReplaceLog('hoverAnimation', 'emphasis.scale');
+                }
                 seriesOpt.emphasis.scale = seriesOpt.hoverAnimation;
             }
         }
