@@ -1356,7 +1356,6 @@ class ECharts extends Eventful {
                 excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
             }
 
-
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {

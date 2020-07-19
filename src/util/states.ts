@@ -33,7 +33,7 @@ export const Z2_EMPHASIS_LIFT = 10;
 export const Z2_SELECT_LIFT = 9;
 
 export const HIGHLIGHT_ACTION_TYPE = 'highlight';
-export const DOWNPLAY_ACTION_TYPE = 'highlight';
+export const DOWNPLAY_ACTION_TYPE = 'downplay';
 
 export const SELECT_ACTION_TYPE = 'select';
 export const UNSELECT_ACTION_TYPE = 'unselect';
@@ -172,7 +172,7 @@ function getFromStateStyle(
             // Dont consider the animation to emphasis state.
             && animator.__fromStateTransition.indexOf(toStateName) < 0
             && animator.targetName === 'style') {
-            animator.saveFinalToTarget(fromState, ['fill', 'stroke']);
+            animator.saveFinalToTarget(fromState, props);
         }
     }
     return fromState;
