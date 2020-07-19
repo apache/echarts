@@ -548,7 +548,7 @@ export const largeLayout: StageHandler = {
 
         const data = seriesModel.getData();
         const cartesian = seriesModel.coordinateSystem as Cartesian2D;
-        const coordLayout = cartesian.grid.getRect();
+        const coordLayout = cartesian.master.getRect();
         const baseAxis = cartesian.getBaseAxis();
         const valueAxis = cartesian.getOtherAxis(baseAxis);
         const valueDim = data.mapDimension(valueAxis.dim);

@@ -21,6 +21,8 @@ import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
+import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
@@ -312,13 +314,13 @@ class LegendView extends ComponentView {
             const labelModel = legendModel.getModel('selectorLabel');
             const emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
-            graphic.setLabelStyle(
-                labelText, labelModel, emphasisLabelModel,
+            setLabelStyle(
+                labelText, { normal: labelModel, emphasis: emphasisLabelModel },
                 {
                     defaultText: selectorItem.title
                 }
             );
-            graphic.enableHoverEmphasis(labelText);
+            enableHoverEmphasis(labelText);
         });
     }
 
@@ -412,7 +414,7 @@ class LegendView extends ComponentView {
         }
 
         itemGroup.add(new graphic.Text({
-            style: graphic.createTextStyle(textStyleModel, {
+            style: createTextStyle(textStyleModel, {
                 text: content,
                 x: textX,
                 y: itemHeight / 2,
@@ -454,7 +456,7 @@ class LegendView extends ComponentView {
 
         this.getContentGroup().add(itemGroup);
 
-        graphic.enableHoverEmphasis(itemGroup);
+        enableHoverEmphasis(itemGroup);
 
         // @ts-ignore
         itemGroup.__legendDataIndex = dataIndex;

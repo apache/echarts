@@ -99,6 +99,12 @@ export interface CoordinateSystem {
 
     type: string
 
+    /**
+     * Master of coordinate system. For example:
+     * Grid is master of cartesian.
+     */
+    master?: CoordinateSystemMaster
+
     // Should be the same as its coordinateSystemCreator.
     dimensions: DimensionName[];
 

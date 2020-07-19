@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as graphic from '../../util/graphic';
+import { enterEmphasis, leaveEmphasis } from '../../util/states';
 import Model from '../../model/Model';
 import DataDiffer from '../../data/DataDiffer';
 import * as listComponentHelper from '../helper/listComponent';
@@ -144,7 +145,7 @@ class ToolboxView extends ComponentView {
                 option.iconStatus = option.iconStatus || {};
                 option.iconStatus[iconName] = status;
                 if (iconPaths[iconName]) {
-                    graphic[status === 'emphasis' ? 'enterEmphasis' : 'leaveEmphasis'](iconPaths[iconName]);
+                    (status === 'emphasis' ? enterEmphasis : leaveEmphasis)(iconPaths[iconName]);
                 }
             };
 
@@ -262,19 +263,15 @@ class ToolboxView extends ComponentView {
 
                     // Use enterEmphasis and leaveEmphasis provide by ec.
                     // There are flags managed by the echarts.
-                    graphic.enterEmphasis(this);
+                    enterEmphasis(this);
                 })
                 .on('mouseout', function () {
                     if (featureModel.get(['iconStatus', iconName]) !== 'emphasis') {
-                        graphic.leaveEmphasis(this);
+                        leaveEmphasis(this);
                     }
                     textContent.hide();
                 });
-
-                graphic[
-                    featureModel.get(['iconStatus', iconName]) === 'emphasis'
-                    ? 'enterEmphasis' : 'leaveEmphasis'
-                ](path);
+                (featureModel.get(['iconStatus', iconName]) === 'emphasis' ? enterEmphasis : leaveEmphasis)(path);
 
                 group.add(path);
                 (path as graphic.Path).on('click', zrUtil.bind(

@@ -376,6 +376,22 @@ class GraphNode {
 
         return itemModel.getModel(path as any);
     }
+
+    getAdjacentDataIndices(): {node: number[], edge: number[]} {
+        const dataIndices = {
+            edge: [] as number[],
+            node: [] as number[]
+        };
+        for (let i = 0; i < this.edges.length; i++) {
+            const adjacentEdge = this.edges[i];
+            if (adjacentEdge.dataIndex < 0) {
+                continue;
+            }
+            dataIndices.edge.push(adjacentEdge.dataIndex);
+            dataIndices.node.push(adjacentEdge.node1.dataIndex, adjacentEdge.node2.dataIndex);
+        }
+        return dataIndices;
+    }
 }
 
 
@@ -409,6 +425,13 @@ class GraphEdge {
         const itemModel = graph.edgeData.getItemModel(this.dataIndex);
 
         return itemModel.getModel(path as any);
+    }
+
+    getAdjacentDataIndices(): {node: number[], edge: number[]} {
+        return {
+            edge: [this.dataIndex],
+            node: [this.node1.dataIndex, this.node2.dataIndex]
+        };
     }
 }
 

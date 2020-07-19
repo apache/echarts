@@ -17,18 +17,25 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import { ECUnitOption, SeriesOption } from '../../util/types';
+import { Dictionary } from './types';
+import { __DEV__ } from '../config';
 
-export default function (option: ECUnitOption) {
-    // Save geoCoord
-    const mapSeries = [];
-    zrUtil.each(option.series, function (seriesOpt: SeriesOption) {
-        if (seriesOpt && seriesOpt.type === 'map') {
-            mapSeries.push(seriesOpt);
-            (seriesOpt as any).map = (seriesOpt as any).map || (seriesOpt as any).mapType;
-            // Put x, y, width, height, x2, y2 in the top level
-            zrUtil.defaults(seriesOpt, (seriesOpt as any).mapLocation);
+const storedLogs: Dictionary<boolean> = {};
+
+export function deprecateLog(str: string) {
+    if (__DEV__) {
+        if (storedLogs[str]) {  // Not display duplicate message.
+            return;
         }
-    });
+        if (typeof console !== 'undefined' && console.warn) {
+            storedLogs[str] = true;
+                console.warn('[ECharts] DEPRECATED: ' + str);
+        }
+    }
+}
+
+export function deprecateReplaceLog(oldOpt: string, newOpt: string, scope?: string) {
+    if (__DEV__) {
+        deprecateLog((scope ? `[${scope}]` : '') + `${oldOpt} is deprecated, use ${newOpt} instead.`);
+    }
 }

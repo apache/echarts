@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import AxisView from './AxisView';
 import AxisBuilder from './AxisBuilder';
@@ -259,7 +260,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
             const textEl = new graphic.Text({
                 silent: AxisBuilder.isLabelSilent(angleAxisModel),
-                style: graphic.createTextStyle(labelModel, {
+                style: createTextStyle(labelModel, {
                     x: p[0],
                     y: p[1],
                     fill: labelModel.getTextColor()

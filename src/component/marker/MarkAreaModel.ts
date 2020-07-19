@@ -18,20 +18,18 @@
 */
 
 import MarkerModel, { MarkerOption, MarkerStatisticType, MarkerPositionOption } from './MarkerModel';
-import { LabelOption, ItemStyleOption } from '../../util/types';
+import { LabelOption, ItemStyleOption, StatesOptionMixin } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
 
-interface MarkAreaDataItemOptionBase {
-    name?: string
 
+interface MarkAreaStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
+}
 
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
+interface MarkAreaDataItemOptionBase extends MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {
+    name?: string
 }
 
 // 1D markArea for horizontal or vertical. Similar to markLine
@@ -58,17 +56,9 @@ export type MarkArea2DDataItemOption = [
     MarkArea2DDataItemDimOption
 ];
 
-export interface MarkAreaOption extends MarkerOption {
+export interface MarkAreaOption extends MarkerOption, MarkAreaStateOption, StatesOptionMixin<MarkAreaStateOption> {
 
     precision?: number
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 
     data?: (MarkArea1DDataItemOption | MarkArea2DDataItemOption)[]
 }

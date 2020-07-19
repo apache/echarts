@@ -18,6 +18,7 @@
 */
 
 import * as graphicUtil from '../../util/graphic';
+import {getFont} from '../../label/labelStyle';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
 import ZRText from 'zrender/src/graphic/Text';
@@ -49,7 +50,7 @@ class TextStyleMixin {
      * @return {string}
      */
     getFont(this: Model<LabelFontOption>) {
-        return graphicUtil.getFont({
+        return getFont({
             fontStyle: this.getShallow('fontStyle'),
             fontWeight: this.getShallow('fontWeight'),
             fontSize: this.getShallow('fontSize'),

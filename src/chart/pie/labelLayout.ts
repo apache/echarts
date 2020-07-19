@@ -65,7 +65,6 @@ function adjustSingleSide(
         return;
     }
 
-
     interface SemiInfo {
         list: LabelLayout[]
         rB: number
@@ -352,6 +351,10 @@ export default function (
         label.y = textY;
         label.rotation = labelRotate;
 
+        label.setStyle({
+            verticalAlign: 'middle'
+        });
+
         // Not sectorShape the inside label
         if (!isLabelInside) {
             const textRect = label.getBoundingRect().clone();
@@ -383,8 +386,7 @@ export default function (
         }
         else {
             label.setStyle({
-                align: textAlign,
-                verticalAlign: 'middle'
+                align: textAlign
             });
         }
         sector.setTextConfig({
@@ -403,8 +405,7 @@ export default function (
         const notShowLabel = isNaN(label.x) || isNaN(label.y);
         if (label) {
             label.setStyle({
-                align: layout.textAlign,
-                verticalAlign: 'middle'
+                align: layout.textAlign
             });
             if (notShowLabel) {
                 each(label.states, setNotShow);

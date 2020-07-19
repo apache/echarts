@@ -19,13 +19,10 @@
 
 import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
-import FunnelSeriesModel, { FunnelSeriesOption } from './FunnelSeries';
+import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
-
-type FunnelDataItem = FunnelSeriesOption['data'][number] & object;
 
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
@@ -63,7 +60,7 @@ function getSortedIndices(data: List, sort: FunnelSeriesOption['sort']) {
 
 function labelLayout(data: List) {
     data.each(function (idx) {
-        const itemModel = data.getItemModel(idx) as Model<FunnelDataItem>;
+        const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         const labelModel = itemModel.getModel('label');
         const labelPosition = labelModel.get('position');
 
@@ -241,7 +238,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
             const idx = indices[i];
             const nextIdx = indices[i + 1];
 
-            const itemModel = data.getItemModel<FunnelDataItem>(idx);
+            const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
             let height = itemModel.get(['itemStyle', 'height']);
             if (height == null) {
                 height = itemHeight;

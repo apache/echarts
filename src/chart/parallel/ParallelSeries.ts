@@ -28,7 +28,8 @@ import {
     LabelOption,
     SeriesTooltipOption,
     DimensionName,
-    OptionDataValue
+    OptionDataValue,
+    StatesOptionMixin
  } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -39,21 +40,17 @@ import ParallelModel from '../../coord/parallel/ParallelModel';
 
 type ParallelSeriesDataValue = OptionDataValue[];
 
-export interface ParallelSeriesDataItemOption {
-
-    value?: ParallelSeriesDataValue[]
-
+export interface ParallelStateOption {
     lineStyle?: LineStyleOption
     label?: LabelOption
+}
 
-    emphasis?: {
-        lineStyle?: LineStyleOption
-        label?: LabelOption
-    }
+export interface ParallelSeriesDataItemOption extends ParallelStateOption, StatesOptionMixin<ParallelStateOption> {
+    value?: ParallelSeriesDataValue[]
 }
 
 export interface ParallelSeriesOption extends
-    SeriesOption,
+    SeriesOption<ParallelStateOption>, ParallelStateOption,
     SeriesEncodeOptionMixin {
 
     type?: 'parallel';
@@ -61,9 +58,6 @@ export interface ParallelSeriesOption extends
     coordinateSystem?: string;
     parallelIndex?: number;
     parallelId?: string;
-
-    label?: LabelOption;
-    lineStyle?: LineStyleOption;
 
     inactiveOpacity?: number;
     activeOpacity?: number;
