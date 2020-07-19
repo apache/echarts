@@ -163,6 +163,8 @@ class HeatmapView extends ChartView {
         const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
         let width;
         let height;
+        let xAxisExtent;
+        let yAxisExtent;
 
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
             const xAxis = coordSys.getAxis('x');
@@ -179,6 +181,7 @@ class HeatmapView extends ChartView {
 
             width = xAxis.getBandWidth();
             height = yAxis.getBandWidth();
+            xAxisExtent=xAxis.scale.getExtent();
         }
 
         const group = this.group;
@@ -203,8 +206,8 @@ class HeatmapView extends ChartView {
             let rect;
 
             if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-                // Ignore empty data
-                if (isNaN(data.get(dataDims[2], idx) as number)) {
+                // Ignore empty data and out of extent data
+                if (isNaN(data.get(dataDims[2], idx) as number) || data.get(dataDims[0], idx) < xAxisExtent[0] || data.get(dataDims[0], idx) > xAxisExtent[1]) {
                     continue;
                 }
 
