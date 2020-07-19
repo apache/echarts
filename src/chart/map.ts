@@ -26,9 +26,9 @@ import '../coord/geo/geoCreator';
 
 import mapSymbolLayout from './map/mapSymbolLayout';
 import mapDataStatistic from './map/mapDataStatistic';
-import createLegacyDataSelectAction from '../action/createLegacyDataSelectAction';
+import {createLegacyDataSelectAction} from '../legacy/dataSelectAction';
 
 echarts.registerLayout(mapSymbolLayout);
 echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.STATISTIC, mapDataStatistic);
 
-createLegacyDataSelectAction('map');
+createLegacyDataSelectAction('map', echarts.registerAction);

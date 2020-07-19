@@ -23,11 +23,11 @@ import * as zrUtil from 'zrender/src/core/util';
 import './pie/PieSeries';
 import './pie/PieView';
 
-import createLegacyDataSelectAction from '../action/createLegacyDataSelectAction';
+import {createLegacyDataSelectAction} from '../legacy/dataSelectAction';
 import pieLayout from './pie/pieLayout';
 import dataFilter from '../processor/dataFilter';
 
-createLegacyDataSelectAction('pie');
+createLegacyDataSelectAction('pie', echarts.registerAction);
 
 echarts.registerLayout(zrUtil.curry(pieLayout, 'pie'));
 echarts.registerProcessor(dataFilter('pie'));

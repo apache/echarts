@@ -81,17 +81,19 @@ import {
     ZRColor,
     ComponentMainType,
     ComponentSubType,
-    ColorString
+    ColorString,
+    SelectChangedPayload
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
-
-// At least canvas renderer.
-import 'zrender/src/canvas/canvas';
 import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 import LabelManager from './label/LabelManager';
 import { deprecateLog } from './util/log';
+import { handleLegacySelectEvents } from './legacy/dataSelectAction';
+
+// At least canvas renderer.
+import 'zrender/src/canvas/canvas';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -975,6 +977,8 @@ class ECharts extends Eventful {
                 }, this);
             }
         );
+
+        handleLegacySelectEvents(this._messageCenter, this);
     }
 
     isDisposed(): boolean {
@@ -1628,6 +1632,7 @@ class ECharts extends Eventful {
         };
 
         doDispatchAction = function (this: ECharts, payload: Payload, silent: boolean): void {
+            const ecModel = this.getModel();
             const payloadType = payload.type;
             const escapeConnect = payload.escapeConnect;
             const actionWrap = actions[payloadType];
@@ -1710,14 +1715,17 @@ class ECharts extends Eventful {
             if (!silent) {
                 const messageCenter = this._messageCenter;
                 messageCenter.trigger(eventObj.type, eventObj);
-                // Also trigger 'selectchanged' event
+                // Extra triggered 'selectchanged' event
                 if (isSelectChange) {
-                    eventObj = {
+                    const newObj: SelectChangedPayload = {
                         type: 'selectchanged',
                         escapeConnect: escapeConnect,
-                        selected: getAllSelectedIndices(this.getModel())
+                        selected: getAllSelectedIndices(ecModel),
+                        isFromClick: payload.isFromClick || false,
+                        fromAction: payload.type as 'select' | 'unselect' | 'toggleSelected',
+                        fromActionPayload: payload
                     };
-                    messageCenter.trigger(eventObj.type, eventObj);
+                    messageCenter.trigger(newObj.type, newObj);
                 }
             }
         };
@@ -1819,7 +1827,8 @@ class ECharts extends Eventful {
                         type: actionType,
                         dataType: ecData.dataType,
                         dataIndexInside: ecData.dataIndex,
-                        seriesIndex: ecData.seriesIndex
+                        seriesIndex: ecData.seriesIndex,
+                        isFromClick: true
                     });
                 }
             });

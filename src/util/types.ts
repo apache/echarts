@@ -141,7 +141,7 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 
 interface PayloadItem {
     excludeSeriesId?: string | string[];
-    animation?: AnimationPayload
+    animation?: PayloadAnimationPart
     [other: string]: any;
 }
 
@@ -152,10 +152,23 @@ export interface Payload extends PayloadItem {
 }
 
 // Payload includes override anmation info
-export interface AnimationPayload {
+export interface PayloadAnimationPart {
     duration?: number
     easing?: AnimationEasing
     delay?: number
+}
+
+export interface SelectChangedPayload extends Payload {
+    type: 'selectchanged'
+    escapeConnect: boolean
+    isFromClick: boolean
+    fromAction: 'select' | 'unselect' | 'toggleSelected'
+    fromActionPayload: Payload
+    selected: {
+        seriesIndex: number
+        dataType?: string
+        dataIndex: number[]
+    }[]
 }
 
 export interface ViewRootGroup extends Group {

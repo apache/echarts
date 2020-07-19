@@ -117,6 +117,10 @@ under the License.
                     ]
                 });
 
+                chart.on('pieselectchanged', function (e) {
+                    console.log(e);
+                });
+
                 window.onresize = chart.resize;
             }
         );

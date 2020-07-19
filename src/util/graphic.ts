@@ -59,7 +59,7 @@ import {
     ParsedValue,
     BlurScope,
     InnerFocus,
-    AnimationPayload
+    PayloadAnimationPart
 } from './types';
 import { makeInner } from './model';
 import {
@@ -352,13 +352,13 @@ function animateOrSetProps<Props>(
     const isUpdate = animationType === 'update';
     const isRemove = animationType === 'remove';
 
-    let animationPayload: AnimationPayload;
+    let animationPayload: PayloadAnimationPart;
     // Check if there is global animation configuration from dataZoom/resize can override the config in option.
     // If animation is enabled. Will use this animation config in payload.
     // If animation is disabled. Just ignore it.
     if (animatableModel && animatableModel.ecModel) {
         const updatePayload = animatableModel.ecModel.getUpdatePayload();
-        animationPayload = (updatePayload && updatePayload.animation) as AnimationPayload;
+        animationPayload = (updatePayload && updatePayload.animation) as PayloadAnimationPart;
     }
     const animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
