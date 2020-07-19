@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import Axis from './Axis';
 import { AxisBaseOption } from './axisCommonTypes';

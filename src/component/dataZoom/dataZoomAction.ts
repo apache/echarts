@@ -20,33 +20,14 @@
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import { createLinkedNodesFinder, eachAxisDim } from './helper';
-import DataZoomModel from './DataZoomModel';
+import { findEffectedDataZooms } from './helper';
 
 
 echarts.registerAction('dataZoom', function (payload, ecModel: GlobalModel) {
 
-    const linkedNodesFinder = createLinkedNodesFinder(
-        zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom' as any),
-        eachAxisDim,
-        function (model: DataZoomModel, dimNames) {
-            // Has been normalized to array
-            return model.get(dimNames.axisIndex) as number[];
-        }
-    );
+    const effectedModels = findEffectedDataZooms(ecModel, payload);
 
-    const effectedModels: DataZoomModel[] = [];
-
-    ecModel.eachComponent(
-        {mainType: 'dataZoom', query: payload},
-        function (model: DataZoomModel, index: number) {
-            effectedModels.push.apply(
-                effectedModels, linkedNodesFinder(model).nodes
-            );
-        }
-    );
-
-    zrUtil.each(effectedModels, function (dataZoomModel, index) {
+    zrUtil.each(effectedModels, function (dataZoomModel) {
         dataZoomModel.setRawRange({
             start: payload.start,
             end: payload.end,
