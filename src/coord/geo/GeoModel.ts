@@ -33,10 +33,12 @@ import {
     DisplayState,
     RoamOptionMixin,
     AnimationOptionMixin,
-    StatesOptionMixin
+    StatesOptionMixin,
+    Dictionary
 } from '../../util/types';
 import { NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
+import type MapSeries from '../../chart/map/MapSeries';
 
 
 export interface GeoItemStyleOption extends ItemStyleOption {
@@ -56,6 +58,8 @@ interface GeoLabelFormatterDataParams {
 }
 
 export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption> {
+    name?: string
+    selected?: boolean
 };
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
@@ -83,7 +87,6 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
 export interface GeoOption extends
     ComponentOption,
     BoxLayoutOptionMixin,
-    DataSelectableOptionMixin,
     // For lens animation on geo.
     AnimationOptionMixin,
     GeoCommonOptionMixin,
@@ -95,6 +98,9 @@ export interface GeoOption extends
     regions: RegoinOption[];
 
     stateAnimation?: AnimationOptionMixin
+
+    selectedMode?: 'single' | 'multiple' | boolean
+    selectedMap?: Dictionary<boolean>
 }
 
 class GeoModel extends ComponentModel<GeoOption> {
@@ -170,6 +176,16 @@ class GeoModel extends ComponentModel<GeoOption> {
             }
         },
 
+        select: {
+            label: {
+                show: true,
+                color: 'rgb(100,0,0)'
+            },
+            itemStyle: {
+                color: 'rgba(255,215,0,0.8)'
+            }
+        },
+
         regions: []
     };
 
@@ -185,14 +201,21 @@ class GeoModel extends ComponentModel<GeoOption> {
 
         option.regions = geoCreator.getFilledRegions(option.regions, option.map, option.nameMap);
 
+        const selectedMap: Dictionary<boolean> = {};
         this._optionModelMap = zrUtil.reduce(option.regions || [], function (optionModelMap, regionOpt) {
-            if (regionOpt.name) {
-                optionModelMap.set(regionOpt.name, new Model(regionOpt, self));
+            const regionName = regionOpt.name;
+            if (regionName) {
+                optionModelMap.set(regionName, new Model(regionOpt, self));
+                if (regionOpt.selected) {
+                    selectedMap[regionName] = true;
+                }
             }
             return optionModelMap;
         }, zrUtil.createHashMap());
 
-        this.updateSelectedMap(option.regions);
+        if (!option.selectedMap) {
+            option.selectedMap = selectedMap;
+        }
     }
 
     /**
@@ -231,6 +254,39 @@ class GeoModel extends ComponentModel<GeoOption> {
         this.option.center = center;
     }
 
+    // PENGING If selectedMode is null ?
+    select(name?: string): void {
+        const option = this.option;
+        const selectedMode = option.selectedMode;
+        if (!selectedMode) {
+            return;
+        }
+        if (selectedMode !== 'multiple') {
+            option.selectedMap = null;
+        }
+
+        const selectedMap = option.selectedMap || (option.selectedMap = {});
+        selectedMap[name] = true;
+    }
+
+    unSelect(name?: string): void {
+        const selectedMap = this.option.selectedMap;
+        if (selectedMap) {
+            selectedMap[name] = false;
+        }
+    }
+
+    toggleSelected(name?: string): void {
+        this[this.isSelected(name) ? 'unSelect' : 'select'](name);
+    }
+
+    isSelected(name?: string): boolean {
+        const selectedMap = this.option.selectedMap;
+        return !!(selectedMap && selectedMap[name]);
+    }
+
+    private _initSelectedMapFromData() {
+    }
 }
 
 ComponentModel.registerClass(GeoModel);

@@ -294,8 +294,12 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         },
 
         select: {
+            label: {
+                show: true,
+                color: 'rgb(100,0,0)'
+            },
             itemStyle: {
-                borderColor: '#212121'
+                color: 'rgba(255,215,0,0.8)'
             }
         },
 

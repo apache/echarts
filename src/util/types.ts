@@ -148,6 +148,7 @@ interface PayloadItem {
 export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
+    statusChanged?: boolean;
     batch?: PayloadItem[];
 }
 
