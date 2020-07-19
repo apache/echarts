@@ -105,16 +105,24 @@ export interface ECElement extends Element {
         formatterParams?: unknown;
     };
     highDownSilentOnTouch?: boolean;
-    onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+    onHoverStateChange?: (toState: DisplayState) => void;
 
-    highlighted?: boolean;
+    // 0: normal
+    // 1: blur
+    // 2: emphasis
+    hoverState?: 0 | 1 | 2;
     selected?: boolean;
-    z2EmphasisLift?: number;
 
+    z2EmphasisLift?: number;
+    z2SelectLift?: number;
     /**
      * Force disable animation on any condition
      */
     disableLabelAnimation?: boolean
+    /**
+     * Force disable overall layout
+     */
+    disableLabelLayout?: boolean
 }
 
 export interface DataHost {
@@ -127,21 +135,35 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 
 interface PayloadItem {
     excludeSeriesId?: string | string[];
-    animation?: AnimationPayload
+    animation?: PayloadAnimationPart
     [other: string]: any;
 }
 
 export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
+    statusChanged?: boolean;
     batch?: PayloadItem[];
 }
 
 // Payload includes override anmation info
-export interface AnimationPayload {
+export interface PayloadAnimationPart {
     duration?: number
     easing?: AnimationEasing
     delay?: number
+}
+
+export interface SelectChangedPayload extends Payload {
+    type: 'selectchanged'
+    escapeConnect: boolean
+    isFromClick: boolean
+    fromAction: 'select' | 'unselect' | 'toggleSelected'
+    fromActionPayload: Payload
+    selected: {
+        seriesIndex: number
+        dataType?: string
+        dataIndex: number[]
+    }[]
 }
 
 export interface ViewRootGroup extends Group {
@@ -437,6 +459,7 @@ export type OptionDataItem =
 export type OptionDataItemObject<T> = {
     name?: string
     value?: T[] | T
+    selected?: boolean;
 };
 export type OptionDataValue = string | number | Date;
 
@@ -448,8 +471,8 @@ export type OptionDataValueDate = Date | string | number;
 export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
-export type DisplayState = 'normal' | 'emphasis';
-export type DisplayStateNonNormal = 'emphasis';
+export type DisplayState = 'normal' | 'emphasis' | 'blur' | 'select';
+export type DisplayStateNonNormal = Exclude<DisplayState, 'normal'>;
 export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
     [key: string]: any
@@ -904,10 +927,12 @@ export interface LabelLayoutOption {
      */
     dy?: number
     rotate?: number
+
     align?: ZRTextAlign
     verticalAlign?: ZRTextVerticalAlign
     width?: number
     height?: number
+    fontSize?: number
 
     labelLinePoints?: number[][]
 }
@@ -1151,10 +1176,61 @@ export interface ComponentOption {
     // FIXME:TS more
 }
 
-export interface SeriesOption extends
+export type BlurScope = 'coordinateSystem' | 'series' | 'global';
+
+/**
+ * can be array of data indices.
+ * Or may be an dictionary if have different types of data like in graph.
+ */
+export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+
+export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> {
+    /**
+     * Emphasis states
+     */
+    emphasis?: StateOption & {
+        /**
+         * self: Focus self and blur all others.
+         * series: Focus series and blur all other series.
+         */
+        focus?: 'none' | 'self' | 'series' |
+            (unknown extends ExtraStateOpts['emphasis']['focus']
+                ? never : ExtraStateOpts['emphasis']['focus'])
+
+        /**
+         * Scope of blurred element when focus.
+         *
+         * coordinateSystem: blur others in the same coordinateSystem
+         * series: blur others in the same series
+         * global: blur all others
+         *
+         * Default to be coordinate system.
+         */
+        blurScope?: BlurScope
+    } & Omit<ExtraStateOpts['emphasis'], 'focus'>
+    /**
+     * Select states
+     */
+    select?: StateOption & ExtraStateOpts['select']
+    /**
+     * Blur states.
+     */
+    blur?: StateOption & ExtraStateOpts['blur']
+}
+
+export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> extends
     ComponentOption,
     AnimationOptionMixin,
-    ColorPaletteOptionMixin
+    ColorPaletteOptionMixin,
+    StatesOptionMixin<StateOption, ExtraStateOpts>
 {
     name?: string
 
@@ -1204,6 +1280,13 @@ export interface SeriesOption extends
      * Animation config for state transition.
      */
     stateAnimation?: AnimationOption
+
+    /**
+     * Map of selected data
+     * key is name or index of data.
+     */
+    selectedMap?: Dictionary<boolean>
+    selectedMode?: 'single' | 'multiple' | boolean
 }
 
 export interface SeriesOnCartesianOptionMixin {

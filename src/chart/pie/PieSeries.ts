@@ -21,8 +21,6 @@ import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
-import {DataSelectableMixin, SelectableTarget, DataSelectableOptionMixin} from '../../component/helper/selectableMixin';
-import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
@@ -36,11 +34,17 @@ import {
     BoxLayoutOptionMixin,
     OptionDataValueNumeric,
     SeriesEncodeOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    StatesOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 
-
+export interface PieStateOption {
+    // TODO: TYPE Color Callback
+    itemStyle?: ItemStyleOption
+    label?: PieLabelOption
+    labelLine?: PieLabelLineOption
+}
 interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
@@ -59,37 +63,28 @@ interface PieLabelLineOption extends LabelLineOption {
     maxSurfaceAngle?: number
 }
 
-export interface PieDataItemOption extends
-    OptionDataItemObject<OptionDataValueNumeric>,
-    SelectableTarget {
-
-    itemStyle?: ItemStyleOption
-    label?: PieLabelOption
-    labelLine?: PieLabelLineOption
-
+interface ExtraStateOption {
     emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: PieLabelOption
-        labelLine?: PieLabelLineOption
+        scale?: boolean
+        scaleSize?: number
     }
 }
+
+export interface PieDataItemOption extends
+    OptionDataItemObject<OptionDataValueNumeric>,
+    PieStateOption, StatesOptionMixin<PieStateOption, ExtraStateOption> {
+
+    cursor?: string
+}
 export interface PieSeriesOption extends
-    SeriesOption,
-    DataSelectableOptionMixin,
+    Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
     type: 'pie'
 
-    hoverAnimation?: boolean
-
     roseType?: 'radius' | 'area'
-
-    // TODO: TYPE Color Callback
-    itemStyle?: ItemStyleOption
-    label?: PieLabelOption
-    labelLine?: PieLabelLineOption
 
     clockwise?: boolean
     startAngle?: number
@@ -97,18 +92,11 @@ export interface PieSeriesOption extends
     minShowLabelAngle?: number
 
     selectedOffset?: number
-    hoverOffset?: number
 
     avoidLabelOverlap?: boolean
     percentPrecision?: number
 
     stillShowZeroSum?: boolean
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: PieLabelOption
-        labelLine?: PieLabelLineOption
-    }
 
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
@@ -134,8 +122,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
         );
 
-        this.updateSelectedMap(this._createSelectableList());
-
         this._defaultLabelLine(option);
     }
 
@@ -144,8 +130,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      */
     mergeOption(): void {
         super.mergeOption.apply(this, arguments as any);
-
-        this.updateSelectedMap(this._createSelectableList());
     }
 
     /**
@@ -156,20 +140,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-    }
-
-    private _createSelectableList(): SelectableTarget[] {
-        const data = this.getRawData();
-        const valueDim = data.mapDimension('value');
-        const targetList = [];
-        for (let i = 0, len = data.count(); i < len; i++) {
-            targetList.push({
-                name: data.getName(i),
-                value: data.get(valueDim, i),
-                selected: retrieveRawAttr(data, i, 'selected')
-            });
-        }
-        return targetList;
     }
 
     /**
@@ -213,7 +183,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        hoverAnimation: true,
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
@@ -229,8 +198,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
         // 选中时扇区偏移量
         selectedOffset: 10,
-        // 高亮扇区偏移量
-        hoverOffset: 5,
 
         // 选择模式，默认关闭，可选single，multiple
         // selectedMode: false,
@@ -297,6 +264,11 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             hideOverlap: true
         },
 
+        emphasis: {
+            scale: true,
+            scaleSize: 5
+        },
+
         // If use strategy to avoid label overlapping
         avoidLabelOverlap: true,
 
@@ -314,9 +286,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     };
 
 }
-
-interface PieSeriesModel extends DataSelectableMixin<PieSeriesOption> {}
-zrUtil.mixin(PieSeriesModel, DataSelectableMixin);
 
 SeriesModel.registerClass(PieSeriesModel);
 

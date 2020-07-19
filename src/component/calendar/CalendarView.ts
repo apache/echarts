@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {createTextStyle} from '../../label/labelStyle';
 import * as formatUtil from '../../util/format';
 import * as numberUtil from '../../util/number';
 import CalendarModel from '../../coord/calendar/CalendarModel';
@@ -349,7 +350,7 @@ class CalendarView extends ComponentView {
 
         const yearText = new graphic.Text({
             z2: 30,
-            style: graphic.createTextStyle(yearLabel, {
+            style: createTextStyle(yearLabel, {
                 text: content
             })
         });
@@ -450,7 +451,7 @@ class CalendarView extends ComponentView {
             const monthText = new graphic.Text({
                 z2: 30,
                 style: zrUtil.extend(
-                    graphic.createTextStyle(monthLabel, {text: content}),
+                    createTextStyle(monthLabel, {text: content}),
                     this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
                 )
             });
@@ -535,7 +536,7 @@ class CalendarView extends ComponentView {
             const weekText = new graphic.Text({
                 z2: 30,
                 style: zrUtil.extend(
-                    graphic.createTextStyle(dayLabel, {text: nameMap[day]}),
+                    createTextStyle(dayLabel, {text: nameMap[day]}),
                     this._weekTextPositionControl(point, orient, pos, margin, cellSize)
                 )
             });

@@ -19,6 +19,9 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {
+    enableHoverEmphasis
+} from '../../util/states';
 import {createSymbol} from '../../util/symbol';
 import {parsePercent, isNumeric} from '../../util/number';
 import ChartView from '../../view/Chart';
@@ -34,6 +37,7 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -97,7 +101,7 @@ interface SymbolMeta {
 
     animationModel?: ItemModel
 
-    hoverAnimation: boolean
+    hoverScale: boolean
 }
 
 interface CreateOpts {
@@ -140,7 +144,7 @@ class PictorialBarView extends ChartView {
         const cartesian = seriesModel.coordinateSystem;
         const baseAxis = cartesian.getBaseAxis();
         const isHorizontal = baseAxis.isHorizontal();
-        const coordSysRect = cartesian.grid.getRect();
+        const coordSysRect = cartesian.master.getRect();
 
         const opt: CreateOpts = {
             ecSize: {width: api.getWidth(), height: api.getHeight()},
@@ -260,7 +264,7 @@ function getSymbolMeta(
         symbolPatternSize: symbolPatternSize,
         rotation: rotation,
         animationModel: isAnimationEnabled ? itemModel : null,
-        hoverAnimation: isAnimationEnabled && itemModel.get('hoverAnimation'),
+        hoverScale: isAnimationEnabled && itemModel.get(['emphasis', 'scale']),
         z2: itemModel.getShallow('z', true) || 0
     } as SymbolMeta;
 
@@ -564,7 +568,7 @@ function createOrUpdateRepeatSymbols(
             });
         }
 
-        updateHoverAnimation(path, symbolMeta);
+        // updateHoverAnimation(path, symbolMeta);
 
         index++;
     });
@@ -593,13 +597,6 @@ function createOrUpdateRepeatSymbols(
             symbolMeta,
             isUpdate
         );
-
-        // FIXME
-        // If all emphasis/normal through action.
-        path.on('mouseover', onMouseOver)
-            .on('mouseout', onMouseOut);
-
-        updateHoverAnimation(path, symbolMeta);
     }
 
     function makeTarget(index: number) {
@@ -620,18 +617,6 @@ function createOrUpdateRepeatSymbols(
             scaleY: symbolMeta.symbolScale[1],
             rotation: symbolMeta.rotation
         };
-    }
-
-    function onMouseOver() {
-        eachPath(bar, function (path) {
-            graphic.enterEmphasis(path);
-        });
-    }
-
-    function onMouseOut() {
-        eachPath(bar, function (path) {
-            graphic.leaveEmphasis(path);
-        });
     }
 }
 
@@ -664,10 +649,6 @@ function createOrUpdateSingleSymbol(
             symbolMeta,
             isUpdate
         );
-
-        mainPath
-            .on('mouseover', onMouseOver)
-            .on('mouseout', onMouseOut);
     }
     else {
         updateAttr(
@@ -683,16 +664,6 @@ function createOrUpdateSingleSymbol(
             symbolMeta,
             isUpdate
         );
-    }
-
-    updateHoverAnimation(mainPath, symbolMeta);
-
-    function onMouseOver(this: typeof mainPath) {
-        graphic.enterEmphasis(this);
-    }
-
-    function onMouseOut(this: typeof mainPath) {
-        graphic.leaveEmphasis(this);
     }
 }
 
@@ -777,27 +748,6 @@ function getAnimationDelayParams(this: ItemModel, path: PictorialSymbol) {
 function isAnimationEnabled(this: ItemModel) {
     // `animation` prop can be set on itemModel in pictorial bar chart.
     return this.parentModel.isAnimationEnabled() && !!this.getShallow('animation');
-}
-
-function updateHoverAnimation(path: PictorialSymbol, symbolMeta: SymbolMeta) {
-    path.off('emphasis').off('normal');
-
-    const scale = symbolMeta.symbolScale;
-
-    symbolMeta.hoverAnimation && path
-        .on('emphasis', function () {
-            this.animateTo({
-                scaleX: scale[0] * 1.1,
-                scaleY: scale[1] * 1.1
-            }, { duration: 400, easing: 'elasticOut' });
-        })
-        .on('normal', function () {
-            this.animateTo({
-                scaleX: scale[0],
-                scaleY: scale[1]
-            }, { duration: 400, easing: 'elasticOut' });
-        });
-
 }
 
 function createBar(data: List, opt: CreateOpts, symbolMeta: SymbolMeta, isUpdate?: boolean) {
@@ -928,26 +878,38 @@ function updateCommon(
     const itemModel = symbolMeta.itemModel;
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
-    const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+    const emphasisModel = itemModel.getModel('emphasis');
+    const emphasisStyle = emphasisModel.getModel('itemStyle').getItemStyle();
+    const blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
+    const selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
     const cursorStyle = itemModel.getShallow('cursor');
+
+    const focus = emphasisModel.get('focus');
+    const blurScope = emphasisModel.get('blurScope');
 
     eachPath(bar, function (path) {
         path.useStyle(symbolMeta.style);
-        graphic.enableHoverEmphasis(path, hoverStyle);
+
+        const emphasisState = path.ensureState('emphasis');
+        emphasisState.style = emphasisStyle;
+        // NOTE: Must after scale is set after updateAttr
+        emphasisState.scaleX = path.scaleX * 1.1;
+        emphasisState.scaleY = path.scaleY * 1.1;
+
+        path.ensureState('blur').style = blurStyle;
+        path.ensureState('select').style = selectStyle;
+
+
 
         cursorStyle && (path.cursor = cursorStyle);
         path.z2 = symbolMeta.z2;
     });
 
-    const barRectHoverStyle = {};
     const barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
     const barRect = bar.__pictorialBarRect;
 
-    const labelModel = itemModel.getModel('label');
-    const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
-
-    graphic.setLabelStyle(
-        barRect, labelModel, hoverLabelModel,
+    setLabelStyle(
+        barRect, getLabelStatesModels(itemModel),
         {
             labelFetcher: opt.seriesModel,
             labelDataIndex: dataIndex,
@@ -957,7 +919,7 @@ function updateCommon(
         }
     );
 
-    graphic.enableHoverEmphasis(barRect, barRectHoverStyle);
+    enableHoverEmphasis(bar, focus, blurScope);
 }
 
 function toIntTimes(times: number) {

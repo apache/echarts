@@ -43,7 +43,7 @@ import ChartView from '../view/Chart';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import Transformable from 'zrender/src/core/Transformable';
-import { updateLabelLinePoints, setLabelLineStyle } from './labelGuideHelper';
+import { updateLabelLinePoints, setLabelLineStyle, getLabelLineStatesModels } from './labelGuideHelper';
 import SeriesModel from '../model/Series';
 import { makeInner } from '../util/model';
 import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/core/util';
@@ -81,10 +81,13 @@ interface SavedLabelAttr {
         verticalAlign: ZRTextVerticalAlign
         width: number
         height: number
+        fontSize: number
 
         x: number
         y: number
     }
+
+    cursor: string
 
     // Configuration in attached element
     attachedPos: ElementTextConfig['position']
@@ -122,7 +125,7 @@ function prepareLayoutCallbackParams(labelItem: LabelDesc, hostEl?: Element): La
     };
 }
 
-const LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height'] as const;
+const LABEL_OPTION_TO_STYLE_KEYS = ['align', 'verticalAlign', 'width', 'height', 'fontSize'] as const;
 
 const dummyTransformable = new Transformable();
 
@@ -255,8 +258,12 @@ class LabelManager {
                     align: labelStyle.align,
                     verticalAlign: labelStyle.verticalAlign,
                     width: labelStyle.width,
-                    height: labelStyle.height
+                    height: labelStyle.height,
+
+                    fontSize: labelStyle.fontSize
                 },
+
+                cursor: label.cursor,
 
                 attachedPos: textConfig.position,
                 attachedRot: textConfig.rotation
@@ -288,7 +295,7 @@ class LabelManager {
             const ecData = getECData(child);
             const dataIndex = ecData.dataIndex;
             // Can only attach the text on the element with dataIndex
-            if (textEl && dataIndex != null) {
+            if (textEl && dataIndex != null && !(textEl as ECElement).disableLabelLayout) {
                 this._addLabel(dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
             }
         });
@@ -392,7 +399,7 @@ class LabelManager {
             else {
                 // TODO Other drag functions?
                 label.off('drag');
-                label.cursor = 'default';
+                label.cursor = defaultLabelAttr.cursor;
             }
         }
     }
@@ -468,10 +475,7 @@ class LabelManager {
 
             const labelLineModel = itemModel.getModel('labelLine');
 
-            setLabelLineStyle(el, {
-                normal: labelLineModel,
-                emphasis: itemModel.getModel(['emphasis', 'labelLine'])
-            }, defaultStyle);
+            setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
 
             updateLabelLinePoints(el, labelLineModel);
         }

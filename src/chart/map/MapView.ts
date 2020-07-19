@@ -26,6 +26,8 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import Model from '../../model/Model';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { Z2_EMPHASIS_LIFT } from '../../util/states';
 
 interface HighDownRecord {
     recordVersion: number;
@@ -138,7 +140,7 @@ class MapView extends ChartView {
                 },
                 silent: true,
                 // Do not overlap the first series, on which labels are displayed.
-                z2: 8 + (!offset ? graphic.Z2_EMPHASIS_LIFT + 1 : 0)
+                z2: 8 + (!offset ? Z2_EMPHASIS_LIFT + 1 : 0)
             });
 
             // Only the series that has the first value on the same region is in charge of rendering the label.
@@ -159,7 +161,6 @@ class MapView extends ChartView {
 
                 const itemModel = originalData.getItemModel<MapDataItemOption>(originalDataIndex);
                 const labelModel = itemModel.getModel('label');
-                const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
 
                 const regionGroup = fullData.getItemGraphicEl(fullIndex);
 
@@ -171,7 +172,7 @@ class MapView extends ChartView {
                 // like that from the begining, and this scenario is rarely encountered.
                 // So it won't be fixed until have to.
 
-                graphic.setLabelStyle(circle, labelModel, hoverLabelModel, {
+                setLabelStyle(circle, getLabelStatesModels(itemModel), {
                     labelFetcher: {
                         getFormattedLabel(idx: number, state: DisplayState) {
                             return mapModel.getFormattedLabel(fullIndex, state);
@@ -185,7 +186,7 @@ class MapView extends ChartView {
                     });
                 }
 
-                (regionGroup as ECElement).onStateChange = function (fromState, toState) {
+                (regionGroup as ECElement).onHoverStateChange = function (toState) {
                     circle.useState(toState);
                 };
             }

@@ -18,6 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import type List from '../../data/List';
 
@@ -61,7 +62,7 @@ class Polyline extends graphic.Group {
         const itemModel = lineData.getItemModel<LineDrawModelOption>(idx);
 
 
-        let hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
+        let hoverLineStyle = seriesScope && seriesScope.emphasisLineStyle;
 
         if (!seriesScope || lineData.hasItemOption) {
             hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
@@ -72,7 +73,7 @@ class Polyline extends graphic.Group {
         const lineEmphasisState = line.ensureState('emphasis');
         lineEmphasisState.style = hoverLineStyle;
 
-        graphic.enableHoverEmphasis(this);
+        enableHoverEmphasis(this);
     };
 
     updateLayout(lineData: List, idx: number) {

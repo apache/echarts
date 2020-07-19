@@ -17,16 +17,15 @@
 * under the License.
 */
 
-// Compatitable with 2.0
-
-import {each, isArray, isObject, isTypedArray} from 'zrender/src/core/util';
-import compatStyle, {deprecateLog} from './helper/compatStyle';
+import {each, isArray, isObject, isTypedArray, defaults} from 'zrender/src/core/util';
+import compatStyle from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
-import { ECUnitOption, SeriesOption } from '../util/types';
+import { ECUnitOption } from '../util/types';
 import { __DEV__ } from '../config';
 import type { BarSeriesOption } from '../chart/bar/BarSeries';
-import { PieSeriesOption } from '../chart/pie/PieSeries';
+import type { PieSeriesOption } from '../chart/pie/PieSeries';
+import { deprecateLog, deprecateReplaceLog } from '../util/log';
 
 function get(opt: Dictionary<any>, path: string): any {
     const pathArr = path.split(',');
@@ -88,7 +87,7 @@ function compatBarItemStyle(option: Dictionary<any>) {
             if (itemStyle[oldName] != null) {
                 itemStyle[newName] = itemStyle[oldName];
                 if (__DEV__) {
-                    deprecateLog(`${oldName} has been changed to ${newName}.`);
+                    deprecateReplaceLog(oldName, newName);
                 }
             }
         }
@@ -101,9 +100,45 @@ function compatPieLabel(option: Dictionary<any>) {
     }
     if (option.alignTo === 'edge' && option.margin != null && option.edgeDistance == null) {
         if (__DEV__) {
-            deprecateLog('label.margin has been changed to label.edgeDistance in pie.');
+            deprecateReplaceLog('label.margin', 'label.edgeDistance', 'pie');
         }
         option.edgeDistance = option.margin;
+    }
+}
+
+function compatSunburstState(option: Dictionary<any>) {
+    if (!option) {
+        return;
+    }
+    if (option.downplay && !option.blur) {
+        option.blur = option.downplay;
+        if (__DEV__) {
+            deprecateReplaceLog('downplay', 'blur', 'sunburst');
+        }
+    }
+}
+
+function compatGraphFocus(option: Dictionary<any>) {
+    if (!option) {
+        return;
+    }
+    if (option.focusNodeAdjacency != null) {
+        option.emphasis = option.emphasis || {};
+        if (option.emphasis.focus == null) {
+            if (__DEV__) {
+                deprecateReplaceLog('focusNodeAdjacency', 'emphasis: { focus: \'adjacency\'}', 'graph/sankey');
+            }
+            option.emphasis.focus = 'adjacency';
+        }
+    }
+}
+
+function traverseTree(data: any[], cb: Function) {
+    if (data) {
+        for (let i = 0; i < data.length; i++) {
+            cb(data[i]);
+            data[i] && traverseTree(data[i].children, cb);
+        }
     }
 }
 
@@ -113,7 +148,7 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
     // Make sure series array for model initialization.
     option.series = normalizeToArray(option.series);
 
-    each(option.series, function (seriesOpt: SeriesOption) {
+    each(option.series, function (seriesOpt: any) {
         if (!isObject(seriesOpt)) {
             return;
         }
@@ -121,25 +156,35 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         const seriesType = seriesOpt.type;
 
         if (seriesType === 'line') {
-            // @ts-ignore
             if (seriesOpt.clipOverflow != null) {
-                // @ts-ignore
                 seriesOpt.clip = seriesOpt.clipOverflow;
-                deprecateLog('clipOverflow has been changed to clip.');
+                if (__DEV__) {
+                    deprecateReplaceLog('clipOverflow', 'clip', 'line');
+                }
             }
         }
         else if (seriesType === 'pie' || seriesType === 'gauge') {
-            // @ts-ignore
             if (seriesOpt.clockWise != null) {
-                // @ts-ignore
                 seriesOpt.clockwise = seriesOpt.clockWise;
-                deprecateLog('clockWise has been changed to clockwise.');
+                if (__DEV__) {
+                    deprecateReplaceLog('clockWise', 'clockwise');
+                }
             }
             compatPieLabel((seriesOpt as PieSeriesOption).label);
             const data = seriesOpt.data;
             if (data && !isTypedArray(data)) {
                 for (let i = 0; i < data.length; i++) {
                     compatPieLabel(data[i]);
+                }
+            }
+
+            if (seriesOpt.hoverOffset != null) {
+                seriesOpt.emphasis = seriesOpt.emphasis || {};
+                if (seriesOpt.emphasis.scaleSize = null) {
+                    if (__DEV__) {
+                        deprecateReplaceLog('hoverOffset', 'emphasis.scaleSize');
+                    }
+                    seriesOpt.emphasis.scaleSize = seriesOpt.hoverOffset;
                 }
             }
         }
@@ -151,7 +196,6 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
         else if (seriesType === 'bar') {
             compatBarItemStyle(seriesOpt);
             compatBarItemStyle((seriesOpt as BarSeriesOption).backgroundStyle);
-            // @ts-ignore
             compatBarItemStyle(seriesOpt.emphasis);
             const data = seriesOpt.data;
             if (data && !isTypedArray(data)) {
@@ -161,6 +205,50 @@ export default function (option: ECUnitOption, isTheme?: boolean) {
                         compatBarItemStyle(data[i] && data[i].emphasis);
                     }
                 }
+            }
+        }
+        else if (seriesType === 'sunburst') {
+            const highlightPolicy = seriesOpt.highlightPolicy;
+            if (highlightPolicy) {
+                seriesOpt.emphasis = seriesOpt.emphasis || {};
+                if (!seriesOpt.emphasis.focus) {
+                    seriesOpt.emphasis.focus = highlightPolicy;
+                    if (__DEV__) {
+                        deprecateReplaceLog('highlightPolicy', 'emphasis.focus', 'sunburst');
+                    }
+                }
+            }
+
+            compatSunburstState(seriesOpt);
+
+            traverseTree(seriesOpt.data, compatSunburstState);
+        }
+        else if (seriesType === 'graph' || seriesType === 'sankey') {
+            compatGraphFocus(seriesOpt);
+            // TODO nodes, edges?
+        }
+        else if (seriesType === 'map') {
+            if (seriesOpt.mapType && !seriesOpt.map) {
+                if (__DEV__) {
+                    deprecateReplaceLog('mapType', 'map', 'map');
+                }
+                seriesOpt.map = seriesOpt.mapType;
+            }
+            if (seriesOpt.mapLocation) {
+                if (__DEV__) {
+                    deprecateLog('`mapLocation` is not used anymore.');
+                }
+                defaults(seriesOpt, seriesOpt.mapLocation);
+            }
+        }
+
+        if (seriesOpt.hoverAnimation != null) {
+            seriesOpt.emphasis = seriesOpt.emphasis || {};
+            if (seriesOpt.emphasis && seriesOpt.emphasis.scale == null) {
+                if (__DEV__) {
+                    deprecateReplaceLog('hoverAnimation', 'emphasis.scale');
+                }
+                seriesOpt.emphasis.scale = seriesOpt.hoverAnimation;
             }
         }
 

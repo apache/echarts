@@ -78,20 +78,6 @@ class SunburstView extends ChartView {
 
         renderRollUp(virtualRoot, newRoot);
 
-        if (payload && payload.highlight && payload.highlight.piece) {
-            const highlightPolicy = seriesModel.getShallow('highlightPolicy');
-            payload.highlight.piece.onEmphasis(highlightPolicy);
-        }
-        else if (payload && payload.unhighlight) {
-            let piece = this.virtualPiece;
-            if (!piece && virtualRoot.children.length) {
-                piece = virtualRoot.children[0].piece;
-            }
-            if (piece) {
-                piece.onNormal();
-            }
-        }
-
         this._initEvents();
 
         this._oldChildren = newChildren;

@@ -26,7 +26,8 @@ import {
     ColorString,
     LabelOption,
     ItemStyleOption,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -47,16 +48,17 @@ interface PointerOption {
     width?: number
 }
 
-export interface GaugeDataItemOption {
+export interface GaugeStateOption {
+    itemStyle?: ItemStyleOption
+}
+
+export interface GaugeDataItemOption extends GaugeStateOption, StatesOptionMixin<GaugeStateOption> {
     name?: string
     value?: OptionDataValueNumeric
-    itemStyle?: ItemStyleOption
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-    }
     pointer?: PointerOption
 }
-export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin {
+export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, GaugeStateOption,
+    CircleLayoutOptionMixin {
     type?: 'gauge'
 
     // override radius
@@ -102,7 +104,6 @@ export interface GaugeSeriesOption extends SeriesOption, CircleLayoutOptionMixin
     }
 
     pointer?: PointerOption
-    itemStyle?: ItemStyleOption
 
     title?: LabelOption & {
         /**

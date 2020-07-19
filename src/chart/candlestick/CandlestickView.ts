@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel } from '../../util/states';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
@@ -31,7 +32,6 @@ import {CandlestickItemLayout} from './candlestickLayout';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 
-const EMPHASIS_ITEM_STYLE_PATH = ['emphasis', 'itemStyle'] as const;
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
 class CandlestickView extends ChartView {
@@ -280,8 +280,7 @@ function setBoxCommon(el: NormalBoxPath, data: List, dataIndex: number, isSimple
 
     el.__simpleBox = isSimpleBox;
 
-    const hoverStyle = itemModel.getModel(EMPHASIS_ITEM_STYLE_PATH).getItemStyle();
-    graphic.enableHoverEmphasis(el, hoverStyle);
+    setStatesStylesFromModel(el, itemModel);
 }
 
 function transInit(points: number[][], itemLayout: CandlestickItemLayout) {

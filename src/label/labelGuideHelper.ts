@@ -28,15 +28,14 @@ import { normalizeRadian } from 'zrender/src/contain/util';
 import { cubicProjectPoint, quadraticProjectPoint } from 'zrender/src/core/curve';
 import Element from 'zrender/src/Element';
 import { defaults, retrieve2 } from 'zrender/src/core/util';
-import { LabelLineOption } from '../util/types';
+import { LabelLineOption, DisplayState, StatesOptionMixin } from '../util/types';
 import Model from '../model/Model';
 import { invert } from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
+import { DISPLAY_STATES, SPECIAL_STATES } from '../util/states';
 
 const PI2 = Math.PI * 2;
 const CMD = PathProxy.CMD;
-
-const STATES = ['normal', 'emphasis'] as const;
 
 const DEFAULT_SEARCH_SPACE = ['top', 'right', 'bottom', 'left'] as const;
 
@@ -376,10 +375,12 @@ export function updateLabelLinePoints(
         // Transform to target coord space.
         pt1.transform(targetInversedTransform);
 
+        // Note: getBoundingRect will ensure the `path` being created.
+        const boundingRect = target.getBoundingRect();
         const dist = anchorPoint ? anchorPoint.distance(pt1)
             : (target instanceof Path
                 ? nearestPointOnPath(pt1, target.path, pt2)
-                : nearestPointOnRect(pt1, target.getBoundingRect(), pt2));
+                : nearestPointOnRect(pt1, boundingRect, pt2));
 
         // TODO pt2 is in the path
         if (dist < minDist) {
@@ -588,7 +589,7 @@ function buildLabelLinePath(path: CanvasRenderingContext2D, shape: Polyline['sha
  */
 export function setLabelLineStyle(
     targetEl: Element,
-    statesModels: Record<typeof STATES[number], LabelLineModel>,
+    statesModels: Record<DisplayState, LabelLineModel>,
     defaultStyle?: Polyline['style']
 ) {
     let labelLine = targetEl.getTextGuideLine();
@@ -605,8 +606,8 @@ export function setLabelLineStyle(
     const showNormal = normalModel.get('show');
     const labelIgnoreNormal = label.ignore;
 
-    for (let i = 0; i < STATES.length; i++) {
-        const stateName = STATES[i];
+    for (let i = 0; i < DISPLAY_STATES.length; i++) {
+        const stateName = DISPLAY_STATES[i];
         const stateModel = statesModels[stateName];
         const isNormal = stateName === 'normal';
         if (stateModel) {
@@ -632,6 +633,11 @@ export function setLabelLineStyle(
                 if (!isNormal && (labelIgnoreNormal || !showNormal)) {
                     setLabelLineState(labelLine, true, 'normal', statesModels.normal);
                 }
+
+                // Use same state proxy.
+                if (targetEl.stateProxy) {
+                    labelLine.stateProxy = targetEl.stateProxy;
+                }
             }
 
             setLabelLineState(labelLine, false, stateName, stateModel);
@@ -646,4 +652,20 @@ export function setLabelLineStyle(
         // Custom the buildPath.
         labelLine.buildPath = buildLabelLinePath;
     }
+}
+
+
+export function getLabelLineStatesModels<LabelName extends string = 'labelLine'>(
+    itemModel: Model<StatesOptionMixin<any> & Partial<Record<LabelName, any>>>,
+    labelLineName?: LabelName
+): Record<DisplayState, LabelLineModel> {
+    labelLineName = (labelLineName || 'labelLine') as LabelName;
+    const statesModels = {
+        normal: itemModel.getModel(labelLineName) as LabelLineModel
+    } as Record<DisplayState, LabelLineModel>;
+    for (let i = 0; i < SPECIAL_STATES.length; i++) {
+        const stateName = SPECIAL_STATES[i];
+        statesModels[stateName] = itemModel.getModel([stateName, labelLineName]);
+    }
+    return statesModels;
 }
