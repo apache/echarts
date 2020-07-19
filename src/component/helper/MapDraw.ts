@@ -29,7 +29,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import MapSeries from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
-import { Payload } from '../../util/types';
+import { Payload, ECElement } from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Region from '../../coord/geo/Region';
@@ -55,16 +55,6 @@ function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
 
     return itemStyle;
 }
-
-function updateMapSelected(mapOrGeoModel: GeoModel | MapSeries, regionsGroup: RegionsGroup) {
-    // FIXME
-    regionsGroup.eachChild(function (otherRegionEl) {
-        zrUtil.each((otherRegionEl as RegionsGroup).__regions, function (region) {
-            otherRegionEl.trigger(mapOrGeoModel.isSelected(region.name) ? 'emphasis' : 'normal');
-        });
-    });
-}
-
 class MapDraw {
 
     private uid: string;
@@ -332,6 +322,8 @@ class MapDraw {
                     local: true
                 });
 
+                (compoundPath as ECElement).disableLabelAnimation = true;
+
                 if (!isFirstDraw) {
                     // Text animation
                     graphic.updateProps(textEl, {
@@ -371,8 +363,6 @@ class MapDraw {
         this._updateController(mapOrGeoModel, ecModel, api);
 
         this._updateMapSelectHandler(mapOrGeoModel, regionsGroup, api, fromView);
-
-        updateMapSelected(mapOrGeoModel, regionsGroup);
     }
 
     remove(): void {

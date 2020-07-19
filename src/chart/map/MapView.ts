@@ -27,6 +27,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { Z2_EMPHASIS_LIFT } from '../../util/states';
 
 interface HighDownRecord {
     recordVersion: number;
@@ -139,7 +140,7 @@ class MapView extends ChartView {
                 },
                 silent: true,
                 // Do not overlap the first series, on which labels are displayed.
-                z2: 8 + (!offset ? graphic.Z2_EMPHASIS_LIFT + 1 : 0)
+                z2: 8 + (!offset ? Z2_EMPHASIS_LIFT + 1 : 0)
             });
 
             // Only the series that has the first value on the same region is in charge of rendering the label.

@@ -52,7 +52,6 @@ import {
     LabelOption,
     AnimationDelayCallbackParam,
     ZRRectLike,
-    ColorString,
     DataModel,
     ECEventData,
     ZRStyleProps,
@@ -80,29 +79,11 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 const mathMax = Math.max;
 const mathMin = Math.min;
 
-export const EMPTY_OBJ = {};
-
 const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
-
-export type TextCommonParams = {
-    /**
-     * Whether diable drawing box of block (outer most).
-     */
-    disableBox?: boolean
-    /**
-     * Specify a color when color is 'inherit',
-     * If inheritColor specified, it is used as default textFill.
-     */
-    inheritColor?: ColorString
-
-    defaultOutsidePosition?: LabelOption['position']
-
-    textStyle?: ZRStyleProps
-};
 
 /**
  * Extend shape with parameters

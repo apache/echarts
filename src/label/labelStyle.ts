@@ -9,12 +9,30 @@ import {
     ParsedValue,
     CallbackDataParams,
     StatesOptionMixin,
-    DisplayStateNonNormal
+    DisplayStateNonNormal,
+    ColorString,
+    ZRStyleProps
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
-import { TextCommonParams, EMPTY_OBJ } from '../util/graphic';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
+
+type TextCommonParams = {
+    /**
+     * Whether diable drawing box of block (outer most).
+     */
+    disableBox?: boolean
+    /**
+     * Specify a color when color is 'inherit',
+     * If inheritColor specified, it is used as default textFill.
+     */
+    inheritColor?: ColorString
+
+    defaultOutsidePosition?: LabelOption['position']
+
+    textStyle?: ZRStyleProps
+};
+const EMPTY_OBJ = {};
 
 interface SetLabelStyleOpt<LDI> extends TextCommonParams {
     defaultText?: string | ((labelDataIndex: LDI, opt: SetLabelStyleOpt<LDI>) => string);

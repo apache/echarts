@@ -168,7 +168,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // ---------------------------------------
     // Props about data selection
     // ---------------------------------------
-    private _selectedDataIndicesMap: Dictionary<number>;
+    private _selectedDataIndicesMap: Dictionary<number> = {};
 
     readonly preventUsingHoverLayer: boolean;
 
@@ -647,7 +647,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const dataIndices = [];
         for (let i = 0; i < nameOrIds.length; i++) {
             const dataIndex = selectedDataIndicesMap[nameOrIds[i]];
-            if (dataIndex > 0) {
+            if (dataIndex >= 0) {
                 dataIndices.push(dataIndex);
             }
         }
