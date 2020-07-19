@@ -34,7 +34,7 @@ function dataToCoordSize(this: Cartesian2D, dataSize: number[], dataItem: number
 }
 
 export default function (coordSys: Cartesian2D) {
-    const rect = coordSys.grid.getRect();
+    const rect = coordSys.master.getRect();
     return {
         coordSys: {
             // The name exposed to user is always 'cartesian2d' but not 'grid'.

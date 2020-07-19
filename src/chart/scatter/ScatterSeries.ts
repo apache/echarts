@@ -31,29 +31,31 @@ import {
     LabelOption,
     SeriesLargeOptionMixin,
     SeriesStackOptionMixin,
-    SymbolOptionMixin
+    SymbolOptionMixin,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-type ScatterDataValue = OptionDataValue | OptionDataValue[];
-
-export interface ScatterDataItemOption extends SymbolOptionMixin {
-    name?: string
-
-    value?: ScatterDataValue
-
+interface ScatterStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
+}
 
+interface ExtraStateOption {
     emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
+        scale?: boolean
     }
 }
 
-export interface ScatterSeriesOption extends SeriesOption,
+export interface ScatterDataItemOption extends SymbolOptionMixin,
+    ScatterStateOption, StatesOptionMixin<ScatterStateOption, ExtraStateOption>,
+    OptionDataItemObject<OptionDataValue> {
+}
+
+export interface ScatterSeriesOption extends SeriesOption<ScatterStateOption, ExtraStateOption>, ScatterStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SeriesLargeOptionMixin, SeriesStackOptionMixin,
@@ -62,20 +64,10 @@ export interface ScatterSeriesOption extends SeriesOption,
 
     coordinateSystem?: string
 
-    hoverAnimation?: boolean
-
     cursor?: string
     clip?: boolean
 
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-
-    data?: (ScatterDataItemOption | OptionDataValue)[]
+    data?: (ScatterDataItemOption | OptionDataValue | OptionDataValue[])[]
         | ArrayLike<number> // Can be a flattern array
 }
 
@@ -123,7 +115,6 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        hoverAnimation: true,
         symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
         // symbolRotate: null,  // 图形旋转控制
 
@@ -137,10 +128,19 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
             // color: 各异
         },
 
+        emphasis: {
+            scale: true
+        },
+
         // If clip the overflow graphics
         // Works on cartesian / polar series
-        clip: true
+        clip: true,
 
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
+        }
         // progressive: null
     };
 

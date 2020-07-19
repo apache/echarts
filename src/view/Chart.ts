@@ -22,7 +22,7 @@ import Group from 'zrender/src/graphic/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
-import * as graphicUtil from '../util/graphic';
+import { enterEmphasis, leaveEmphasis, getHighlightDigit } from '../util/states';
 import {createTask, TaskResetCallbackReturn} from '../stream/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import SeriesModel from '../model/Series';
@@ -202,8 +202,7 @@ class ChartView {
  */
 function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
     if (el) {
-        state === 'emphasis' ? graphicUtil.enterEmphasis(el, highlightDigit)
-            : graphicUtil.leaveEmphasis(el, highlightDigit);
+        (state === 'emphasis' ? enterEmphasis : leaveEmphasis)(el, highlightDigit);
     }
 }
 
@@ -211,7 +210,7 @@ function toggleHighlight(data: List, payload: Payload, state: DisplayState) {
     const dataIndex = modelUtil.queryDataIndex(data, payload);
 
     const highlightDigit = (payload && payload.highlightKey != null)
-        ? graphicUtil.getHighlightDigit(payload.highlightKey)
+        ? getHighlightDigit(payload.highlightKey)
         : null;
 
     if (dataIndex != null) {

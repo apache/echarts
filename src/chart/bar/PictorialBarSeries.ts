@@ -24,10 +24,17 @@ import {
     ItemStyleOption,
     LabelOption,
     AnimationOptionMixin,
-    SeriesStackOptionMixin
+    SeriesStackOptionMixin,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
+
+export interface PictorialBarStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
 
 interface PictorialBarSeriesSymbolOption {
     /**
@@ -82,40 +89,34 @@ interface PictorialBarSeriesSymbolOption {
     symbolPatternSize?: number
 }
 
-type PictorialBarValue = OptionDataValue;
+
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
 
 export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOption,
     // Pictorial bar support configure animation in each data item.
-    AnimationOptionMixin {
-    name?: string
-
-    value?: PictorialBarValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-
-    hoverAnimation?: boolean
+    AnimationOptionMixin,
+    PictorialBarStateOption, StatesOptionMixin<PictorialBarStateOption, ExtraStateOption>,
+    OptionDataItemObject<OptionDataValue> {
 
     z?: number
 
     cursor?: string
 }
 
-export interface PictorialBarSeriesOption extends BaseBarSeriesOption,
+export interface PictorialBarSeriesOption
+    extends BaseBarSeriesOption<PictorialBarStateOption, ExtraStateOption>, PictorialBarStateOption,
     PictorialBarSeriesSymbolOption,
     SeriesStackOptionMixin {
+
     type?: 'pictorialBar'
 
     coordinateSystem?: 'cartesian2d'
 
-    data?: (PictorialBarDataItemOption | PictorialBarValue)[]
-
-    hoverAnimation?: boolean
+    data?: (PictorialBarDataItemOption | OptionDataValue | OptionDataValue[])[]
 }
 
 class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOption> {
@@ -152,7 +153,16 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
 
         // Disable progressive
         progressive: 0,
-        hoverAnimation: false // Open only when needed.
+
+        emphasis: {
+            scale: false
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
+        }
     });
 
     getInitialData(option: PictorialBarSeriesOption) {

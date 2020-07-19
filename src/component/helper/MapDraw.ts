@@ -22,19 +22,21 @@ import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis, DISPLAY_STATES } from '../../util/states';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 import ExtensionAPI from '../../ExtensionAPI';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import MapSeries from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
-import { Payload } from '../../util/types';
+import { Payload, ECElement } from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Region from '../../coord/geo/Region';
 import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
 import Transformable from 'zrender/src/core/Transformable';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -53,16 +55,6 @@ function getFixedItemStyle(model: Model<GeoItemStyleOption>) {
 
     return itemStyle;
 }
-
-function updateMapSelected(mapOrGeoModel: GeoModel | MapSeries, regionsGroup: RegionsGroup) {
-    // FIXME
-    regionsGroup.eachChild(function (otherRegionEl) {
-        zrUtil.each((otherRegionEl as RegionsGroup).__regions, function (region) {
-            otherRegionEl.trigger(mapOrGeoModel.isSelected(region.name) ? 'emphasis' : 'normal');
-        });
-    });
-}
-
 class MapDraw {
 
     private uid: string;
@@ -161,10 +153,6 @@ class MapDraw {
 
         regionsGroup.removeAll();
 
-        const itemStyleAccessPath = 'itemStyle';
-        const hoverItemStyleAccessPath = ['emphasis', 'itemStyle'] as const;
-        const labelAccessPath = 'label';
-        const hoverLabelAccessPath = ['emphasis', 'label'] as const;
         const nameMap = zrUtil.createHashMap<RegionsGroup>();
 
 
@@ -192,19 +180,21 @@ class MapDraw {
             const regionModel = mapOrGeoModel.getRegionModel(region.name) || mapOrGeoModel;
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const itemStyleModel = regionModel.getModel(itemStyleAccessPath);
+            const itemStyleModel = regionModel.getModel('itemStyle');
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
+            const emphasisModel = regionModel.getModel('emphasis');
+            const emphasisItemStyleModel = emphasisModel.getModel('itemStyle');
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
+            const blurItemStyleModel = regionModel.getModel(['blur', 'itemStyle']);
+            // @ts-ignore FIXME:TS fix the "compatible with each other"?
+            const selectItemStyleModel = regionModel.getModel(['select', 'itemStyle']);
 
             // NOTE: DONT use 'style' in visual when drawing map.
             // This component is used for drawing underlying map for both geo component and map series.
             const itemStyle = getFixedItemStyle(itemStyleModel);
-            const hoverItemStyle = getFixedItemStyle(hoverItemStyleModel);
-
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const labelModel = regionModel.getModel(labelAccessPath);
-            // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            const hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
+            const emphasisItemStyle = getFixedItemStyle(emphasisItemStyleModel);
+            const blurItemStyle = getFixedItemStyle(blurItemStyleModel);
+            const selectItemStyle = getFixedItemStyle(selectItemStyleModel);
 
             let dataIdx;
             // Use the itemStyle in data if has data
@@ -265,21 +255,31 @@ class MapDraw {
             compoundPath.style.strokeNoScale = true;
             compoundPath.culling = true;
 
-            const compoundPathEmphasisState = compoundPath.ensureState('emphasis');
-            compoundPathEmphasisState.style = hoverItemStyle;
+            compoundPath.ensureState('emphasis').style = emphasisItemStyle;
+            compoundPath.ensureState('blur').style = blurItemStyle;
+            compoundPath.ensureState('select').style = selectItemStyle;
 
-            // Label
-            const showLabel = labelModel.get('show');
-            const hoverShowLabel = hoverLabelModel.get('show');
+            let showLabel = false;
+            for (let i = 0; i < DISPLAY_STATES.length; i++) {
+                const stateName = DISPLAY_STATES[i];
+                // @ts-ignore FIXME:TS fix the "compatible with each other"?
+                if (regionModel.get(
+                    stateName === 'normal' ? ['label', 'show'] : [stateName, 'label', 'show']
+                )) {
+                    showLabel = true;
+                    break;
+                }
+            }
 
             const isDataNaN = data && isNaN(data.get(data.mapDimension('value'), dataIdx) as number);
             const itemLayout = data && data.getItemLayout(dataIdx);
+
             // In the following cases label will be drawn
             // 1. In map series and data value is NaN
             // 2. In geo component
             // 4. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
             if (
-                (isGeo || isDataNaN && (showLabel || hoverShowLabel))
+                (isGeo || isDataNaN && (showLabel))
                 || (itemLayout && itemLayout.showLabel)
             ) {
                 const query = !isGeo ? dataIdx : region.name;
@@ -304,23 +304,25 @@ class MapDraw {
                     silent: true
                 });
 
-                graphic.setLabelStyle<typeof query>(
-                    textEl, labelModel, hoverLabelModel,
+                setLabelStyle<typeof query>(
+                    textEl, getLabelStatesModels(regionModel),
                     {
                         labelFetcher: labelFetcher,
                         labelDataIndex: query,
                         defaultText: region.name
                     },
-                    {
+                    { normal: {
                         align: 'center',
                         verticalAlign: 'middle'
-                    }
+                    } }
                 );
 
                 compoundPath.setTextContent(textEl);
                 compoundPath.setTextConfig({
                     local: true
                 });
+
+                (compoundPath as ECElement).disableLabelAnimation = true;
 
                 if (!isFirstDraw) {
                     // Text animation
@@ -353,7 +355,7 @@ class MapDraw {
 
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
             regionGroup.highDownSilentOnTouch = !!mapOrGeoModel.get('selectedMode');
-            graphic.enableHoverEmphasis(regionGroup);
+            enableHoverEmphasis(regionGroup, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 
             regionsGroup.add(regionGroup);
         });
@@ -361,8 +363,6 @@ class MapDraw {
         this._updateController(mapOrGeoModel, ecModel, api);
 
         this._updateMapSelectHandler(mapOrGeoModel, regionsGroup, api, fromView);
-
-        updateMapSelected(mapOrGeoModel, regionsGroup);
     }
 
     remove(): void {
@@ -458,7 +458,6 @@ class MapDraw {
     ): void {
         const mapDraw = this;
 
-        regionsGroup.off('click');
         regionsGroup.off('mousedown');
 
         // @ts-ignore FIXME:TS resolve type conflict
@@ -469,33 +468,10 @@ class MapDraw {
             });
 
             regionsGroup.on('click', function (e) {
-            if (!mapDraw._mouseDownFlag) {
-                return;
-            }
-            mapDraw._mouseDownFlag = false;
-
-                let el = e.target;
-                while (!(el as RegionsGroup).__regions) {
-                    el = el.parent;
-                }
-                if (!el) {
+                if (!mapDraw._mouseDownFlag) {
                     return;
                 }
-
-                const action = {
-                    type: (mapOrGeoModel.mainType === 'geo' ? 'geo' : 'map') + 'ToggleSelect',
-                    batch: zrUtil.map((el as RegionsGroup).__regions, function (region) {
-                        return {
-                            name: region.name,
-                            from: fromView.uid
-                        };
-                    })
-                } as Payload;
-                action[mapOrGeoModel.mainType + 'Id'] = mapOrGeoModel.id;
-
-                api.dispatchAction(action);
-
-                updateMapSelected(mapOrGeoModel, regionsGroup);
+                mapDraw._mouseDownFlag = false;
             });
         }
     }

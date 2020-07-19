@@ -20,6 +20,8 @@
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
+import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
 import TimelineAxis from './TimelineAxis';
@@ -398,7 +400,8 @@ class SliderTimelineView extends TimelineView {
                 onclick: bind(this._changeTimeline, this, value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
-            graphic.enableHoverEmphasis(el, hoverStyleModel.getItemStyle());
+            el.ensureState('emphasis').style = hoverStyleModel.getItemStyle();
+            enableHoverEmphasis(el);
 
             const ecData = graphic.getECData(el);
             if (itemModel.get('tooltip')) {
@@ -444,17 +447,17 @@ class SliderTimelineView extends TimelineView {
                 rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                 onclick: bind(this._changeTimeline, this, dataIndex),
                 silent: false,
-                style: graphic.createTextStyle(normalLabelModel, {
+                style: createTextStyle(normalLabelModel, {
                     text: labelItem.formattedLabel,
                     align: layoutInfo.labelAlign,
                     verticalAlign: layoutInfo.labelBaseline
                 })
             });
 
+            textEl.ensureState('emphasis').style = createTextStyle(hoverLabelModel);
+
             group.add(textEl);
-            graphic.enableHoverEmphasis(
-                textEl, graphic.createTextStyle(hoverLabelModel)
-            );
+            enableHoverEmphasis(textEl);
 
         }, this);
     }
@@ -512,8 +515,9 @@ class SliderTimelineView extends TimelineView {
                 onclick: onclick
             };
             const btn = makeControlIcon(timelineModel, iconPath, rect, opt);
+            btn.ensureState('emphasis').style = hoverStyle;
             group.add(btn);
-            graphic.enableHoverEmphasis(btn, hoverStyle);
+            enableHoverEmphasis(btn);
         }
     }
 

@@ -29,7 +29,9 @@ import {
     SymbolOptionMixin,
     ItemStyleOption,
     AreaStyleOption,
-    OptionDataValue
+    OptionDataValue,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -37,40 +39,26 @@ import Radar from '../../coord/radar/Radar';
 
 type RadarSeriesDataValue = OptionDataValue[];
 
-export interface RadarSeriesDataItemOption extends SymbolOptionMixin {
+export interface RadarSeriesStateOption {
     lineStyle?: LineStyleOption
     areaStyle?: AreaStyleOption
     label?: LabelOption
     itemStyle?: ItemStyleOption
-
-    emphasis?: {
-        lineStyle?: LineStyleOption
-        areaStyle?: AreaStyleOption
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-    }
-
-    value?: RadarSeriesDataValue
+}
+export interface RadarSeriesDataItemOption extends SymbolOptionMixin,
+    RadarSeriesStateOption, StatesOptionMixin<RadarSeriesStateOption>,
+    OptionDataItemObject<RadarSeriesDataValue> {
 }
 
-export interface RadarSeriesOption extends SeriesOption, SymbolOptionMixin {
+export interface RadarSeriesOption extends SeriesOption<RadarSeriesStateOption>, RadarSeriesStateOption,
+    SymbolOptionMixin {
     type?: 'radar'
     coordinateSystem: 'radar'
 
     radarIndex?: number
     radarId?: string
 
-    lineStyle?: LineStyleOption
-    areaStyle?: AreaStyleOption
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-
-    emphasis?: {
-        lineStyle?: LineStyleOption
-        areaStyle?: AreaStyleOption
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-    }
+    data?: RadarSeriesStateOption[]
 }
 
 class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {

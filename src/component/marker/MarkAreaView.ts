@@ -23,6 +23,7 @@ import * as colorUtil from 'zrender/src/tool/color';
 import List from '../../data/List';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
@@ -38,6 +39,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import MarkerModel from './MarkerModel';
 import { makeInner } from '../../util/model';
 import { getVisualFromData } from '../../visual/helper';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -289,13 +291,11 @@ class MarkAreaView extends MarkerView {
 
         areaData.eachItemGraphicEl(function (polygon: graphic.Polygon, idx) {
             const itemModel = areaData.getItemModel<MarkAreaMergedItemOption>(idx);
-            const labelModel = itemModel.getModel('label');
-            const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
             const style = areaData.getItemVisual(idx, 'style');
             polygon.useStyle(areaData.getItemVisual(idx, 'style'));
 
-            graphic.setLabelStyle(
-                polygon, labelModel, labelHoverModel,
+            setLabelStyle(
+                polygon, getLabelStatesModels(itemModel),
                 {
                     labelFetcher: maModel,
                     labelDataIndex: idx,
@@ -305,7 +305,9 @@ class MarkAreaView extends MarkerView {
                 }
             );
 
-            graphic.enableHoverEmphasis(polygon, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle());
+            setStatesStylesFromModel(polygon, itemModel);
+
+            enableHoverEmphasis(polygon);
 
             graphic.getECData(polygon).dataModel = maModel;
         });

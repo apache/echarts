@@ -18,13 +18,14 @@
 */
 
 import ComponentView from '../../view/Component';
-import { HashMap, createHashMap } from 'zrender/src/core/util';
+import { HashMap, createHashMap, each } from 'zrender/src/core/util';
 import MarkerModel from './MarkerModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { makeInner } from '../../util/model';
 import SeriesModel from '../../model/Series';
 import { Group } from 'zrender/src/export';
+import { enterBlur } from '../../util/states';
 
 const inner = makeInner<{
     keep: boolean
@@ -53,21 +54,35 @@ abstract class MarkerView extends ComponentView {
             inner(item).keep = false;
         });
 
-        ecModel.eachSeries(function (seriesModel) {
+        ecModel.eachSeries(seriesModel => {
             const markerModel = MarkerModel.getMarkerModelFromSeries(
                 seriesModel,
                 this.type as 'markPoint' | 'markLine' | 'markArea'
             );
             markerModel && this.renderSeries(seriesModel, markerModel, ecModel, api);
-        }, this);
+        });
 
-        markerGroupMap.each(function (item) {
+        markerGroupMap.each(item => {
             !inner(item).keep && this.group.remove(item.group);
-        }, this);
+        });
     }
 
     markKeep(drawGroup: MarkerDraw) {
         inner(drawGroup).keep = true;
+    }
+
+    blurSeries(seriesModelList: SeriesModel[]) {
+        each(seriesModelList, seriesModel => {
+            const markerModel = MarkerModel.getMarkerModelFromSeries(seriesModel, this.type as 'markPoint' | 'markLine' | 'markArea');
+            if (markerModel) {
+                const data = markerModel.getData();
+                data.eachItemGraphicEl(function (el) {
+                    if (el) {
+                        enterBlur(el);
+                    }
+                });
+            }
+        });
     }
 
     abstract renderSeries(

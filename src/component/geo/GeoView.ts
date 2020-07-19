@@ -23,7 +23,9 @@ import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import GeoModel from '../../coord/geo/GeoModel';
-import { Payload } from '../../util/types';
+import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
+import { getECData } from '../../util/graphic';
+import { enterSelect, leaveSelect } from '../../util/states';
 
 class GeoView extends ComponentView {
 
@@ -32,23 +34,22 @@ class GeoView extends ComponentView {
 
     private _mapDraw: MapDraw;
 
+    private _api: ExtensionAPI;
+
+    private _model: GeoModel;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const mapDraw = new MapDraw(api);
         this._mapDraw = mapDraw;
 
         this.group.add(mapDraw.group);
+
+        this._api = api;
     }
 
     render(
         geoModel: GeoModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload
     ): void {
-        // Not render if it is an toggleSelect action from self
-        if (payload && payload.type === 'geoToggleSelect'
-            && payload.from === this.uid
-        ) {
-            return;
-        }
-
         const mapDraw = this._mapDraw;
         if (geoModel.get('show')) {
             mapDraw.draw(geoModel, ecModel, api, this, payload);
@@ -57,7 +58,43 @@ class GeoView extends ComponentView {
             this._mapDraw.group.removeAll();
         }
 
-        this.group.silent = geoModel.get('silent');
+        mapDraw.group.on('click', this._handleRegionClick, this);
+        mapDraw.group.silent = geoModel.get('silent');
+
+        this._model = geoModel;
+
+        this.updateSelectStatus();
+    }
+
+    private _handleRegionClick(e: ZRElementEvent) {
+        let current = e.target;
+        let eventData: ECEventData;
+        // TODO extract a util function
+        while ((eventData = getECData(current).eventData) == null) {
+            current = current.__hostTarget || current.parent;
+        }
+
+        if (eventData) {
+            this._api.dispatchAction({
+                type: 'geoToggleSelect',
+                geoId: this._model.id,
+                // mark status to update
+                statusChanged: true,
+                name: eventData.name
+            });
+        }
+    }
+
+    updateSelectStatus() {
+        this._mapDraw.group.traverse((node) => {
+            const eventData = getECData(node).eventData;
+            if (eventData) {
+                this._model.isSelected(eventData.name)
+                    ? enterSelect(node) : leaveSelect(node);
+                // No need to traverse children.
+                return true;
+            }
+        });
     }
 
     dispose(): void {

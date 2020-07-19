@@ -31,7 +31,8 @@ import {
     RoamOptionMixin,
     // OptionDataValue,
     CallbackDataParams,
-    ColorString
+    ColorString,
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -52,6 +53,8 @@ interface TreemapSeriesLabelOption extends LabelOption {
 }
 
 interface TreemapSeriesItemStyleOption extends ItemStyleOption {
+    borderRadius?: number | number[]
+
     colorAlpha?: number
     colorSaturation?: number
 
@@ -68,6 +71,18 @@ interface TreePathInfo {
 
 interface TreemapSeriesCallbackDataParams extends CallbackDataParams {
     treePathInfo?: TreePathInfo[]
+}
+
+interface ExtraStateOption {
+    emphasis?: {
+        focus?: 'descendant' | 'ancestor'
+    }
+}
+
+export interface TreemapStateOption {
+    itemStyle?: TreemapSeriesItemStyleOption
+    label?: TreemapSeriesLabelOption
+    upperLabel?: TreemapSeriesLabelOption
 }
 
 export interface TreemapSeriesVisualOption {
@@ -97,33 +112,14 @@ export interface TreemapSeriesVisualOption {
     childrenVisibleMin?: number
 }
 
-
-export interface TreemapSeriesStyleSetOption {
-    itemStyle?: TreemapSeriesItemStyleOption
-    label?: TreemapSeriesLabelOption
-    upperLabel?: TreemapSeriesLabelOption
-
-    emphasis?: {
-        label?: TreemapSeriesLabelOption
-        upperLabel?: TreemapSeriesLabelOption
-        itemStyle?: TreemapSeriesItemStyleOption
-    }
-}
-export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption, TreemapSeriesStyleSetOption {
-    itemStyle?: TreemapSeriesItemStyleOption
-    label?: TreemapSeriesLabelOption
-    upperLabel?: TreemapSeriesLabelOption
-
-    emphasis?: {
-        label?: TreemapSeriesLabelOption
-        upperLabel?: TreemapSeriesLabelOption
-        itemStyle?: TreemapSeriesItemStyleOption
-    }
+export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
 
     color?: ColorString[] | 'none'
 }
 
-export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption, TreemapSeriesStyleSetOption {
+export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
     id?: string
     name?: string
 
@@ -134,11 +130,11 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption, 
     color?: ColorString[] | 'none'
 }
 
-export interface TreemapSeriesOption extends SeriesOption,
+export interface TreemapSeriesOption
+    extends SeriesOption<TreemapStateOption, ExtraStateOption>, TreemapStateOption,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
-    TreemapSeriesVisualOption,
-    TreemapSeriesStyleSetOption {
+    TreemapSeriesVisualOption {
 
     type?: 'treemap'
 
@@ -266,7 +262,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             position: 'inside', // Can be [5, '5%'] or position stirng like 'insideTopLeft', ...
             // formatter: null,
             color: '#fff',
-            ellipsis: true
+            overflow: 'truncate'
             // align
             // verticalAlign
         },
@@ -275,8 +271,8 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             position: [0, '50%'],
             height: 20,
             // formatter: null,
-            color: '#fff',
-            ellipsis: true,
+            // color: '#fff',
+            overflow: 'truncate',
             // align: null,
             verticalAlign: 'middle'
         },
@@ -295,7 +291,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             upperLabel: {
                 show: true,
                 position: [0, '50%'],
-                color: '#fff',
                 ellipsis: true,
                 verticalAlign: 'middle'
             }

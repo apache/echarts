@@ -20,41 +20,36 @@
 import MarkerModel, { MarkerOption, MarkerPositionOption } from './MarkerModel';
 import ComponentModel from '../../model/Component';
 import GlobalModel from '../../model/Global';
-import { SymbolOptionMixin, ItemStyleOption, LabelOption, CallbackDataParams } from '../../util/types';
+import {
+    SymbolOptionMixin,
+    ItemStyleOption,
+    LabelOption,
+    CallbackDataParams,
+    StatesOptionMixin
+} from '../../util/types';
 
 // interface MarkPointCallbackDataParams extends CallbackDataParams {
 //     componentType: 'markPoint'
 //     componentSubType: never
 // }
 
+interface MarkPointStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
 export interface MarkPointDataItemOption extends
+    MarkPointStateOption, StatesOptionMixin<MarkPointStateOption>,
     // TODO should not support callback in data
     SymbolOptionMixin<CallbackDataParams>,
     MarkerPositionOption {
     name: string
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-
 }
 
 export interface MarkPointOption extends MarkerOption,
-    SymbolOptionMixin<CallbackDataParams> {
+    SymbolOptionMixin<CallbackDataParams>,
+    StatesOptionMixin<MarkPointStateOption>, MarkPointStateOption {
 
     precision?: number
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 
     data?: MarkPointDataItemOption[]
 }
