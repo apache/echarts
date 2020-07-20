@@ -352,7 +352,8 @@ export default function (
         label.rotation = labelRotate;
 
         label.setStyle({
-            verticalAlign: 'middle'
+            verticalAlign: 'middle',
+            fill: sector.style.fill as string
         });
 
         // Not sectorShape the inside label
@@ -365,7 +366,6 @@ export default function (
             textRect.y -= margin / 2;
             textRect.width += margin;
             textRect.height += margin;
-
             labelLayoutList.push({
                 label,
                 labelLine,
