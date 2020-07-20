@@ -21,7 +21,6 @@ import makeStyleMapper from './makeStyleMapper';
 import Model from '../Model';
 import { ItemStyleOption } from '../../util/types';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
-import { map } from 'zrender/src/core/util';
 
 export const ITEM_STYLE_KEY_MAP = [
     ['fill', 'color'],
@@ -82,13 +81,7 @@ class ItemStyleMixin {
         if (dashArray != null && !isNaN(dashArray)) {
             dashArray = [+dashArray];
         }
-        return map<number, number, unknown>(
-            dashArray || (lineType === 'dashed' ? [5, 5] : [1, 1]),
-            function (raw): number {
-                // compute real dash array
-                return raw * 0.5 * lineWidth * 0.1;
-            }
-        );
+        return dashArray || (lineType === 'dashed' ? [5, 5] : [1, 1]);
     }
 }
 
