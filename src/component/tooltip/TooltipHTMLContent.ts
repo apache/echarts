@@ -39,16 +39,47 @@ const vendors = ['', '-webkit-', '-moz-', '-o-'];
 
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
+function mirrowPos(pos: string): string {
+    pos = pos === 'left'
+        ? 'right'
+        : pos === 'right'
+        ? 'left'
+        : pos === 'top'
+        ? 'bottom'
+        : 'top';
+    return pos;
+}
+
 function assembleArrow(
     backgroundColor: ColorString,
-    borderColor: ColorString,
-    arrowPosition: 'left' | 'right'
+    borderColor: ZRColor,
+    arrowPosition: TooltipOption['position']
 ) {
+    if (zrUtil.isObject(borderColor) && borderColor.type !== 'pattern') {
+        borderColor = borderColor.colorStops[0].color;
+    }
+    else if (zrUtil.isObject(borderColor) && (borderColor.type === 'pattern')) {
+        borderColor = 'transparent';
+    }
+    if (typeof arrowPosition !== 'string') {
+        return '';
+    }
+
+    const arrowPos = mirrowPos(arrowPosition);
+    let centerPos = '';
+    let rotate = 0;
+    if (['left', 'right'].includes(arrowPos)) {
+        centerPos = `position:absolute;${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
+        rotate = arrowPos === 'left' ? -45 : -225;
+    }
+    else {
+        centerPos = `position:absolute;${arrowPos}:-6px;left:50%;transform:translateX(-50%)`;
+        rotate = arrowPos === 'top' ? 45 : -135;
+    }
     const styleCss = [
-        'style="',
-        `position:absolute;${arrowPosition}:-6px;top:50%;transform:translateY(-50%) `,
-        `rotate(${arrowPosition === 'left' ? -45 : -225}deg);`,
-        'width:10px;height:10px;',
+        'style="position:absolute;width:10px;height:10px;',
+        `${centerPos}`,
+        `rotate(${rotate}deg);`,
         `border-top: ${borderColor} solid 1px;`,
         `border-left: ${borderColor} solid 1px;`,
         `background-color: ${backgroundColor};`,
@@ -319,11 +350,11 @@ class TooltipHTMLContent {
         content: string,
         markers: Dictionary<ColorString>,
         tooltipModel: Model<TooltipOption>,
-        borderColor?: ColorString,
-        arrowPosition?: 'left' | 'right'
+        borderColor?: ZRColor,
+        arrowPosition?: TooltipOption['position']
     ) {
         this.el.innerHTML = content == null ? '' : content;
-        this.el.innerHTML += tooltipModel.get('attachToPoint')
+        this.el.innerHTML += (typeof arrowPosition === 'string' && tooltipModel.get('trigger') === 'item')
             ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition) : '';
     }
 

@@ -64,9 +64,6 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     appendToBody?: boolean
 
-    // tooltip attach to point
-    attachToPoint?: boolean
-
     order?: 'value' | 'valueReverse' | 'legend' | 'legendReverse'
 }
 

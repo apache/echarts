@@ -795,7 +795,7 @@ class TooltipView extends ComponentView {
         else if (typeof formatter === 'function') {
             const callback = bind(function (cbTicket: string, html: string) {
                 if (cbTicket === this._ticket) {
-                    tooltipContent.setContent(html, markers, tooltipModel);
+                    tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
                     this._updatePosition(
                         tooltipModel, positionExpr, x, y, tooltipContent, params, el
                     );
@@ -808,7 +808,7 @@ class TooltipView extends ComponentView {
         this._updatePosition(
             tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
-        tooltipContent.setContent(html, markers, tooltipModel);
+        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
         tooltipContent.show(tooltipModel, nearPoint.color);
 
     }
@@ -858,9 +858,7 @@ class TooltipView extends ComponentView {
         y: number,  // Mouse y
         content: TooltipHTMLContent | TooltipRichContent,
         params: TooltipDataParams | TooltipDataParams[],
-        el?: Element,
-        nearPointY?: number,
-        nearPointX?: number
+        el?: Element
     ): [number, number] {
         const viewWidth = this._api.getWidth();
         const viewHeight = this._api.getHeight();
@@ -924,11 +922,6 @@ class TooltipView extends ComponentView {
             );
             x = pos[0];
             y = pos[1];
-        }
-
-        if (tooltipModel.get('attachToPoint')) {
-            y = nearPointY;
-            x = nearPointX;
         }
 
         content.moveTo(x, y);
@@ -1086,6 +1079,7 @@ function calcTooltipPosition(
     const domWidth = contentSize[0];
     const domHeight = contentSize[1];
     const gap = 5;
+    const offset = 10;
     let x = 0;
     let y = 0;
     const rectWidth = rect.width;
@@ -1101,15 +1095,15 @@ function calcTooltipPosition(
             break;
         case 'bottom':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y + rectHeight + gap;
+            y = rect.y + rectHeight + gap + 2.5 * offset;
             break;
         case 'left':
-            x = rect.x - domWidth - gap;
-            y = rect.y + rectHeight / 2 - domHeight / 2;
+            x = rect.x - domWidth - gap - offset;
+            y = rect.y + rectHeight / 2;
             break;
         case 'right':
-            x = rect.x + rectWidth + gap;
-            y = rect.y + rectHeight / 2 - domHeight / 2;
+            x = rect.x + rectWidth + gap + offset;
+            y = rect.y + rectHeight / 2;
     }
     return [x, y];
 }
