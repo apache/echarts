@@ -165,8 +165,11 @@ const timeAxis: AxisBaseOption = zrUtil.merge({
     scale: true,
     axisLabel: {
         // To eliminate labels that are not nice
-        showMinLabel: true,
+        showMinLabel: false,
         showMaxLabel: false
+    },
+    splitLine: {
+        show: false
     }
 }, valueAxis);
 

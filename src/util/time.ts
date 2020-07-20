@@ -6,24 +6,26 @@ import lang from '../lang';
 import {TimeScaleTick} from './types';
 
 export const defaultLeveledFormatter = {
-    millisecond: '{hh}:{mm}:{ss} {SSS}',
-    second: '{hh}:{mm}:{ss}',
-    minute: '{hh}:{mm}',
-    hour: '{hh}:{mm}',
-    day: '{d}',
-    week: '{d}',
+    year: '{yyyy}',
+    'half-year': '{MMM}',
+    quarter: '{MMM}',
     month: '{MMM}',
-    quarter: 'Q{Q}',
-    year: '{YYYY}',
-    none: '{YYYY}-{MM}-{dd} {hh}:{mm}'
+    week: '{d}',
+    day: '{d}',
+    hour: '{hh}:{mm}',
+    'half-day': '{hh}:{mm}',
+    minute: '{hh}:{mm}',
+    second: '{hh}:{mm}:{ss}',
+    millisecond: '{hh}:{mm}:{ss} {SSS}',
+    none: '{yyyy}-{MM}-{dd} {hh}:{mm}'
 };
 
 export type PrimaryTimeUnit = 'millisecond' | 'second' | 'minute' | 'hour'
-    | 'day' | 'month' | 'year';
-export type TimeUnit = PrimaryTimeUnit | 'week' | 'quarter';
+    | 'half-day' | 'day' | 'month' | 'half-year' | 'quarter' | 'year';
+export type TimeUnit = PrimaryTimeUnit | 'week';
 
 export const timeUnits: TimeUnit[] = [
-    'year', 'quarter', 'month', 'week', 'day',
+    'year', 'half-year', 'quarter', 'month', 'week', 'day', 'half-day',
     'hour', 'minute', 'second', 'millisecond'
 ];
 
@@ -84,17 +86,14 @@ export function leveledFormat(
     }
     else {
         const mergedFormatter = (formatter
-            ? (formatter.inherit
+            ? (formatter.inherit === false
                 ? formatter // Use formatter with bigger units
                 : zrUtil.defaults(formatter, defaultLeveledFormatter)
             )
             : defaultLeveledFormatter) as any;
 
         const unit = getUnitFromValue(tick.value, isUTC, true);
-        if (idx === 0 && mergedFormatter.first) {
-            template = mergedFormatter.first;
-        }
-        else if (mergedFormatter[unit]) {
+        if (mergedFormatter[unit]) {
             template = mergedFormatter[unit];
         }
         else if (mergedFormatter.inherit) {
@@ -110,9 +109,10 @@ export function leveledFormat(
         }
 
         if (zrUtil.isArray(template)) {
-            const levelId = tick.level == null
+            let levelId = tick.level == null
                 ? 0
                 : (tick.level >= 0 ? tick.level : template.length + tick.level);
+            levelId = Math.min(levelId, template.length - 1);
             template = template[levelId];
         }
     }
@@ -138,16 +138,21 @@ export function getUnitFromValue (
     const isSecond = S === 0;
     const isMinute = isSecond && s === 0;
     const isHour = isMinute && m === 0;
+    const isHalfDay = isHour && (h === 0 || h === 11);
     const isDay = isHour && h === 0;
     const isWeek = isDay && w === 0; // TODO: first day to be configured
     const isMonth = isDay && d === 1;
     const isQuarter = isMonth && (M % 3 === 1);
+    const isHalfYear = isMonth && (M % 6 === 1);
     const isYear = isMonth && M === 1;
 
     if (isYear) {
         return 'year';
     }
-    else if (isQuarter && !primaryOnly) {
+    else if (isHalfYear) {
+        return 'half-year';
+    }
+    else if (isQuarter) {
         return 'quarter';
     }
     else if (isMonth) {
@@ -158,6 +163,9 @@ export function getUnitFromValue (
     }
     else if (isDay) {
         return 'day';
+    }
+    else if (isHalfDay) {
+        return 'half-day';
     }
     else if (isHour) {
         return 'hour';
@@ -185,19 +193,25 @@ export function getUnitValue (
     const utc = isUTC ? 'UTC' : '';
 
     switch (unit) {
-        case 'millisecond':
-            return date['get' + utc + 'Milliseconds']();
-        case 'second':
-            return date['get' + utc + 'Seconds']();
-        case 'minute':
-            return date['get' + utc + 'Minutes']();
-        case 'hour':
-            return date['get' + utc + 'Hours']();
-        case 'day':
-            return date['get' + utc + 'Date']();
-        case 'month':
-            return date['get' + utc + 'Month']();
         case 'year':
             return date['get' + utc + 'FullYear']();
+        case 'half-year':
+            return date['get' + utc + 'Month']() >= 6 ? 1 : 0;
+        case 'quarter':
+            return Math.floor((date['get' + utc + 'Month']() + 1) / 4);
+        case 'month':
+            return date['get' + utc + 'Month']();
+        case 'day':
+            return date['get' + utc + 'Date']();
+        case 'half-day':
+            return date['get' + utc + 'Hours']() / 24;
+        case 'hour':
+            return date['get' + utc + 'Hours']();
+        case 'minute':
+            return date['get' + utc + 'Minutes']();
+        case 'second':
+            return date['get' + utc + 'Seconds']();
+        case 'millisecond':
+            return date['get' + utc + 'Milliseconds']();
     }
 }
