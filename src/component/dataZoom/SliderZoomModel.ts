@@ -53,7 +53,17 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
      */
     borderColor?: ZRColor
 
+    /**
+     * Border radius of the box.
+     */
+    borderRadius?: number | number[]
+
     dataBackground?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+    }
+
+    selectedDataBackground?: {
         lineStyle?: LineStyleOption
         areaStyle?: AreaStyleOption
     }
@@ -71,7 +81,8 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     handleIcon?: string
 
     /**
-     * Percent of the slider height
+     * number: height of icon. width will be calculated according to the aspect of icon.
+     * string: percent of the slider height. width will be calculated according to the aspect of icon.
      */
     handleSize?: string | number
 
@@ -88,6 +99,10 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     zoomLock?: boolean
 
     textStyle?: LabelOption
+
+    emphasis?: {
+        handleStyle?: ItemStyleOption
+    }
 }
 
 
@@ -109,37 +124,59 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         bottom: null, // Default align to grid rect.
 
         backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
+
         // dataBackgroundColor: '#ddd',
         dataBackground: {
             lineStyle: {
-                color: '#2f4554',
-                width: 0.5,
-                opacity: 0.3
+                color: '#d2dbee',
+                width: 1
             },
             areaStyle: {
-                color: 'rgba(47,69,84,0.3)',
-                opacity: 0.3
+                color: '#d2dbee',
+                opacity: 0.2
             }
         },
-        borderColor: '#ddd',
 
-        fillerColor: 'rgba(167,183,204,0.4)',     // Color of selected area.
-        // handleColor: 'rgba(89,170,216,0.95)',     // Color of handle.
-        // eslint-disable-next-line
-        handleIcon: 'M8.2,13.6V3.9H6.3v9.7H3.1v14.9h3.3v9.7h1.8v-9.7h3.3V13.6H8.2z M9.7,24.4H4.8v-1.4h4.9V24.4z M9.7,19.1H4.8v-1.4h4.9V19.1z',
+        selectedDataBackground: {
+            lineStyle: {
+                color: '#8fb0f7'
+            },
+            areaStyle: {
+                color: '#8fb0f7',
+                opacity: 0.2
+            }
+        },
+
+        borderColor: '#d2dbee',
+        borderRadius: 3,
+
+        fillerColor: 'rgba(135,175,274,0.2)',     // Color of selected area.
+        handleIcon: 'path://M-40.23,4.23h4.1c.56,0,1,.65,1,1.46V32.05c0,.81-.46,1.46-1,1.46h-4.1c-.57,0-1-.65-1-1.46V5.69C-41.26,4.88-40.8,4.23-40.23,4.23Zm2-4.85V4.23m0,29.28v4.84',
         // Percent of the slider height
         handleSize: '100%',
 
         handleStyle: {
-            color: '#a7b7cc'
+            color: '#fff',
+            borderColor: '#ACB8D1'
         },
 
         showDetail: true,
         showDataShadow: 'auto',                 // Default auto decision.
         realtime: true,
         zoomLock: false,                        // Whether disable zoom.
+
         textStyle: {
             color: '#333'
+        },
+
+        emphasis: {
+            handleStyle: {
+                borderColor: '#8FB0F7',
+                shadowBlur: 2,
+                shadowOffsetX: 1,
+                shadowOffsetY: 1,
+                shadowColor: 'rgba(0,0,0,0.1)'
+            }
         }
     });
 }

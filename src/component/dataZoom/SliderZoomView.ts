@@ -37,6 +37,7 @@ import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
+import { enableHoverEmphasis } from '../../util/states';
 
 const Rect = graphic.Rect;
 
@@ -52,9 +53,10 @@ const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
 type Icon = ReturnType<typeof graphic.createIcon>;
 interface Displayables {
-    barGroup: graphic.Group;
+    sliderGroup: graphic.Group;
     handles: [Icon, Icon];
     handleLabels: [graphic.Text, graphic.Text];
+    dataShadowSegs: graphic.Group[];
     filler: graphic.Rect;
 }
 class SliderZoomView extends DataZoomView {
@@ -157,7 +159,7 @@ class SliderZoomView extends DataZoomView {
         this._resetLocation();
         this._resetInterval();
 
-        const barGroup = this._displayables.barGroup = new graphic.Group();
+        const barGroup = this._displayables.sliderGroup = new graphic.Group();
 
         this._renderBackground();
 
@@ -225,11 +227,11 @@ class SliderZoomView extends DataZoomView {
         const targetAxisModel = this.dataZoomModel.getFirstTargetAxisModel();
         const inverse = targetAxisModel && targetAxisModel.get('inverse');
 
-        const barGroup = this._displayables.barGroup;
+        const sliderGroup = this._displayables.sliderGroup;
         const otherAxisInverse = (this._dataShadowInfo || {}).otherAxisInverse;
 
         // Transform barGroup.
-        barGroup.attr(
+        sliderGroup.attr(
             (orient === HORIZONTAL && !inverse)
             ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: 1 }
             : (orient === HORIZONTAL && inverse)
@@ -241,7 +243,7 @@ class SliderZoomView extends DataZoomView {
         );
 
         // Position barGroup
-        const rect = thisGroup.getBoundingRect([barGroup]);
+        const rect = thisGroup.getBoundingRect([sliderGroup]);
         thisGroup.x = location.x - rect.x;
         thisGroup.y = location.y - rect.y;
         thisGroup.markRedraw();
@@ -254,7 +256,7 @@ class SliderZoomView extends DataZoomView {
     private _renderBackground() {
         const dataZoomModel = this.dataZoomModel;
         const size = this._size;
-        const barGroup = this._displayables.barGroup;
+        const barGroup = this._displayables.sliderGroup;
 
         barGroup.add(new Rect({
             silent: true,
@@ -294,6 +296,8 @@ class SliderZoomView extends DataZoomView {
         const otherDim: string = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
+
+        this._displayables.dataShadowSegs = [];
 
         if (otherDim == null) {
             return;
@@ -352,22 +356,35 @@ class SliderZoomView extends DataZoomView {
         });
 
         const dataZoomModel = this.dataZoomModel;
+
+        function createDataShadowGroup(isSelectedArea?: boolean) {
+            const model = dataZoomModel.getModel(isSelectedArea ? 'selectedDataBackground' : 'dataBackground');
+            const group = new graphic.Group();
+            const polygon = new graphic.Polygon({
+                shape: {points: areaPoints},
+                segmentIgnoreThreshold: 1,
+                style: model.getModel('areaStyle').getAreaStyle(),
+                silent: true,
+                z2: -20
+            });
+            const polyline = new graphic.Polyline({
+                shape: {points: linePoints},
+                segmentIgnoreThreshold: 1,
+                style: model.getModel('lineStyle').getLineStyle(),
+                silent: true,
+                z2: -19
+            });
+            group.add(polygon);
+            group.add(polyline);
+            return group;
+        }
+
         // let dataBackgroundModel = dataZoomModel.getModel('dataBackground');
-        this._displayables.barGroup.add(new graphic.Polygon({
-            shape: {points: areaPoints},
-            style: defaults(
-                {fill: dataZoomModel.get('dataBackgroundColor' as any)},
-                dataZoomModel.getModel(['dataBackground', 'areaStyle']).getAreaStyle()
-            ),
-            silent: true,
-            z2: -20
-        }));
-        this._displayables.barGroup.add(new graphic.Polyline({
-            shape: {points: linePoints},
-            style: dataZoomModel.getModel(['dataBackground', 'lineStyle']).getLineStyle(),
-            silent: true,
-            z2: -19
-        }));
+        for (let i = 0; i < 3; i++) {
+            const group = createDataShadowGroup(i === 1);
+            this._displayables.sliderGroup.add(group);
+            this._displayables.dataShadowSegs.push(group);
+        }
     }
 
     private _prepareDataShadowInfo() {
@@ -431,11 +448,13 @@ class SliderZoomView extends DataZoomView {
         const displaybles = this._displayables;
         const handles: [graphic.Path, graphic.Path] = displaybles.handles = [null, null];
         const handleLabels: [graphic.Text, graphic.Text] = displaybles.handleLabels = [null, null];
-        const barGroup = this._displayables.barGroup;
+        const sliderGroup = this._displayables.sliderGroup;
         const size = this._size;
         const dataZoomModel = this.dataZoomModel;
 
-        barGroup.add(displaybles.filler = new Rect({
+        const borderRadius = dataZoomModel.get('borderRadius') || 0;
+
+        sliderGroup.add(displaybles.filler = new Rect({
             draggable: true,
             cursor: getCursor(this._orient),
             drift: bind(this._onDragMove, this, 'all'),
@@ -452,14 +471,15 @@ class SliderZoomView extends DataZoomView {
         }));
 
         // Frame border.
-        barGroup.add(new Rect({
+        sliderGroup.add(new Rect({
             silent: true,
             subPixelOptimize: true,
             shape: {
                 x: 0,
                 y: 0,
                 width: size[0],
-                height: size[1]
+                height: size[1],
+                r: borderRadius
             },
             style: {
                 stroke: dataZoomModel.get('dataBackgroundColor' as any) // deprecated option
@@ -484,17 +504,24 @@ class SliderZoomView extends DataZoomView {
             ) as graphic.Path;
 
             const bRect = path.getBoundingRect();
-            this._handleHeight = parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
+            const handleSize = dataZoomModel.get('handleSize');
+
+            this._handleHeight = parsePercent(handleSize, this._size[1]);
             this._handleWidth = bRect.width / bRect.height * this._handleHeight;
 
             path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
+            path.rectHover = true;
+
+            path.ensureState('emphasis').style = dataZoomModel.getModel(['emphasis', 'handleStyle']).getItemStyle();
+            enableHoverEmphasis(path);
+
             const handleColor = dataZoomModel.get('handleColor' as any); // deprecated option
             // Compatitable with previous version
             if (handleColor != null) {
                 path.style.fill = handleColor;
             }
 
-            barGroup.add(handles[handleIndex] = path);
+            sliderGroup.add(handles[handleIndex] = path);
 
             const textStyleModel = dataZoomModel.getModel('textStyle');
 
@@ -577,6 +604,25 @@ class SliderZoomView extends DataZoomView {
             width: handleInterval[1] - handleInterval[0],
             height: size[1]
         });
+
+        // update clip path of shadow.
+        const dataShadowSegs = displaybles.dataShadowSegs;
+        const segIntervals = [0, handleInterval[0], handleInterval[1], size[0]];
+
+        for (let i = 0; i < dataShadowSegs.length; i++) {
+            const segGroup = dataShadowSegs[i];
+            let clipPath = segGroup.getClipPath();
+            if (!clipPath) {
+                clipPath = new graphic.Rect();
+                segGroup.setClipPath(clipPath);
+            }
+            clipPath.setShape({
+                x: segIntervals[i],
+                y: 0,
+                width: segIntervals[i + 1] - segIntervals[i],
+                height: size[1]
+            });
+        }
 
         this._updateDataInfo(nonRealtime);
     }
@@ -687,7 +733,7 @@ class SliderZoomView extends DataZoomView {
         eventTool.stop(event.event);
 
         // Transform dx, dy to bar coordination.
-        const barTransform = this._displayables.barGroup.getLocalTransform();
+        const barTransform = this._displayables.sliderGroup.getLocalTransform();
         const vertex = graphic.applyTransform([dx, dy], barTransform, true);
 
         const changed = this._updateInterval(handleIndex, vertex[0]);
@@ -713,7 +759,7 @@ class SliderZoomView extends DataZoomView {
 
     private _onClickPanelClick(e: ZRElementEvent) {
         const size = this._size;
-        const localPoint = this._displayables.barGroup.transformCoordToLocal(e.offsetX, e.offsetY);
+        const localPoint = this._displayables.sliderGroup.transformCoordToLocal(e.offsetX, e.offsetY);
 
         if (localPoint[0] < 0 || localPoint[0] > size[0]
             || localPoint[1] < 0 || localPoint[1] > size[1]
