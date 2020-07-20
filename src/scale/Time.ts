@@ -117,7 +117,7 @@ class TimeScale extends IntervalScale {
 
         ticks.push({
             value: extent[0],
-            level: -1 // TODO:
+            level: 0
         });
 
         const useUTC = this.getSetting('useUTC');
@@ -137,7 +137,7 @@ class TimeScale extends IntervalScale {
 
         ticks.push({
             value: extent[1],
-            level: -1
+            level: 0
         });
 
         return ticks;
@@ -251,7 +251,7 @@ function isUnitValueSame(
     const isSameQuater = () => isSameYear() && isSame('quarter');
     const isSameMonth = () => isSameYear() && isSame('month');
     const isSameDay = () => isSameMonth() && isSame('day');
-    const isSameHalfDay = () => isSameDay && isSame('half-day');
+    const isSameHalfDay = () => isSameDay() && isSame('half-day');
     const isSameHour = () => isSameDay() && isSame('hour');
     const isSameMinute = () => isSameHour() && isSame('minute');
     const isSameSecond = () => isSameMinute() && isSame('second');
@@ -291,10 +291,18 @@ function getIntervalTicks(
     const utc = isUTC ? 'UTC' : '';
     const ticks: TimeScaleTick[] = [];
     const unitNames = timeUtil.timeUnits;
-    for (let i = 0, levelId = 0; i < unitNames.length; ++i) {
+    let levelId = 0;
+    for (let i = 0, hasTickInLevel = false; i < unitNames.length; ++i) {
         let date = new Date(extent[0]) as any;
 
         if (unitNames[i] === 'week') {
+            const endDate = new Date(extent[1]) as any;
+            if (date['get' + utc + 'FullYear']() === endDate['get' + utc + 'FullYear']()
+                && date['get' + utc + 'Month']() === endDate['get' + utc + 'Month']()
+            ) {
+                continue;
+            }
+
             date['set' + utc + 'Hours'](0);
             date['set' + utc + 'Minutes'](0);
             date['set' + utc + 'Seconds'](0);
@@ -305,9 +313,11 @@ function getIntervalTicks(
                     value: extent[0],
                     level: levelId
                 });
+                hasTickInLevel = true;
             }
 
             let isDateWithinExtent = true;
+            let hasWeekData = false;
             while (isDateWithinExtent) {
                 const dates = date['get' + utc + 'Month']() + 1 === 2
                     ? [8, 15, 22]
@@ -320,13 +330,18 @@ function getIntervalTicks(
                         break;
                     }
                     else if (dateTime >= extent[0]) {
+                        hasWeekData = true;
                         ticks.push({
                             value: dateTime,
                             level: levelId
                         });
+                        hasTickInLevel = true;
                     }
                 }
                 date['set' + utc + 'Month'](date['get' + utc + 'Month']() + 1);
+            }
+            if (hasWeekData) {
+                ++levelId;
             }
         }
         else if (!isUnitValueSame(
@@ -429,13 +444,18 @@ function getIntervalTicks(
                         value: dateValue,
                         level: levelId
                     });
+                    hasTickInLevel = true;
                 }
                 else if (dateValue > extent[1]) {
                     break;
                 }
                 isFirst = false;
             }
-            ++levelId;
+            if (hasTickInLevel
+                && (['half-year', 'quarter', 'half-day'].indexOf(unitNames[i]) < 0)
+            ) {
+                ++levelId;
+            }
         }
 
         if (unitNames[i] === unitName) {
@@ -444,17 +464,23 @@ function getIntervalTicks(
     }
 
     ticks.sort((a, b) => a.value - b.value);
-    if (ticks.length <= 1) {
-        return ticks;
+
+    let maxLevel = -Number.MAX_VALUE;
+    for (let i = 0; i < ticks.length; ++i) {
+        maxLevel = Math.max(maxLevel, ticks[i].level);
     }
 
     // Remove duplicates
-    const result = ticks.length ? [ticks[0]] : [];
-    for (let i = 1; i < ticks.length; ++i) {
-        if (ticks[i] !== ticks[i - 1]) {
-            result.push(ticks[i]);
+    const result = [];
+    for (let i = 0; i < ticks.length; ++i) {
+        if (i === 0 || ticks[i].value !== ticks[i - 1].value) {
+            result.push({
+                value: ticks[i].value,
+                level: maxLevel - ticks[i].level
+            });
         }
     }
+
     return result;
 }
 

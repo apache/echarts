@@ -85,12 +85,19 @@ export function leveledFormat(
         template = formatter(tick, idx);
     }
     else {
+        const defaults = zrUtil.extend({}, defaultLeveledFormatter);
+        if (tick.level > 0) {
+            for (let i = 0; i < timeUnits.length; ++i) {
+                defaults[timeUnits[i]] = `{primary|${defaults[timeUnits[i]]}}`;
+            }
+        }
+
         const mergedFormatter = (formatter
             ? (formatter.inherit === false
                 ? formatter // Use formatter with bigger units
-                : zrUtil.defaults(formatter, defaultLeveledFormatter)
+                : zrUtil.defaults(formatter, defaults)
             )
-            : defaultLeveledFormatter) as any;
+            : defaults) as any;
 
         const unit = getUnitFromValue(tick.value, isUTC, true);
         if (mergedFormatter[unit]) {
@@ -105,7 +112,7 @@ export function leveledFormat(
                     break;
                 }
             }
-            template = template || defaultLeveledFormatter.none;
+            template = template || defaults.none;
         }
 
         if (zrUtil.isArray(template)) {
@@ -117,6 +124,7 @@ export function leveledFormat(
         }
     }
 
+    // console.log(tick.level, new Date(tick.value), template);
     return format(new Date(tick.value), template, isUTC);
 }
 
