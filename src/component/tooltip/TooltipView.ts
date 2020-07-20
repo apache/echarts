@@ -859,7 +859,7 @@ class TooltipView extends ComponentView {
         content: TooltipHTMLContent | TooltipRichContent,
         params: TooltipDataParams | TooltipDataParams[],
         el?: Element
-    ): [number, number] {
+    ) {
         const viewWidth = this._api.getWidth();
         const viewHeight = this._api.getHeight();
 
@@ -925,8 +925,6 @@ class TooltipView extends ComponentView {
         }
 
         content.moveTo(x, y);
-
-        return [x, y];
     }
 
     // FIXME
