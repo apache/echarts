@@ -50,6 +50,7 @@ import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { CoordinateSystemHostModel, CoordinateSystem } from '../../coord/CoordinateSystem';
+import { isDimensionStacked } from '../../data/helper/dataStackHelper';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -532,11 +533,26 @@ class TooltipView extends ComponentView {
 
                 zrUtil.each(item.seriesDataIndices, function (idxItem) {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
+                    const data = series.getData();
                     const dataIndex = idxItem.dataIndexInside;
+                    const dims = zrUtil.map(series.coordinateSystem.dimensions, function (coordDim) {
+                        return data.mapDimension(coordDim);
+                    });
                     const dataParams = series && series.getDataParams(dataIndex) as TooltipDataParams;
+                    let isStacked = false;
+                    const stackResultDim = data.getCalculationInfo('stackResultDimension');
+                    if (isDimensionStacked(data, dims[0])) {
+                        isStacked = true;
+                        dims[0] = stackResultDim;
+                    }
+                    if (isDimensionStacked(data, dims[1])) {
+                        isStacked = true;
+                        dims[1] = stackResultDim;
+                    }
                     dataParams.position = findPointFromSeries({
                         seriesIndex: idxItem.seriesIndex,
-                        dataIndex: dataIndex
+                        dataIndex: dataIndex,
+                        isStacked
                     }, ecModel).point;
                     dataParams.axisDim = item.axisDim;
                     dataParams.axisIndex = item.axisIndex;

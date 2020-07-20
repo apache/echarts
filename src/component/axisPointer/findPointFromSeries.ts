@@ -33,6 +33,7 @@ export default function (finder: {
     dataIndex?: number | number[]
     dataIndexInside?: number | number[]
     name?: string | string[]
+    isStacked?: boolean
 }, ecModel: GlobalModel): {
     point: number[]
     el?: Element
@@ -57,7 +58,20 @@ export default function (finder: {
     const el = data.getItemGraphicEl(dataIndex);
     const coordSys = seriesModel.coordinateSystem;
 
-    if (seriesModel.getTooltipPosition) {
+    if (coordSys && coordSys.dataToPoint && finder.isStacked) {
+        const baseAxis = coordSys.getBaseAxis();
+        const valueAxis = coordSys.getOtherAxis(baseAxis as any);
+        const valueAxisDim = valueAxis.dim;
+        const baseAxisDim = baseAxis.dim;
+        const baseDataOffset = valueAxisDim === 'x' || valueAxisDim === 'radius' ? 1 : 0;
+        const baseDim = data.mapDimension(baseAxisDim);
+        const stackedData = [];
+        stackedData[baseDataOffset] = data.get(baseDim, dataIndex);
+        stackedData[1 - baseDataOffset] = data.get(data.getCalculationInfo('stackResultDimension'), dataIndex);
+        point = coordSys.dataToPoint(stackedData) || [];
+        console.log(11111111)
+    }
+    else if (seriesModel.getTooltipPosition) {
         point = seriesModel.getTooltipPosition(dataIndex) || [];
     }
     else if (coordSys && coordSys.dataToPoint) {
