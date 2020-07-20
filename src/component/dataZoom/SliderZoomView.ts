@@ -38,6 +38,7 @@ import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
 import { enableHoverEmphasis } from '../../util/states';
+import { createSymbol } from '../../util/symbol';
 
 const Rect = graphic.Rect;
 
@@ -51,10 +52,9 @@ const LABEL_GAP = 5;
 const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
 
-type Icon = ReturnType<typeof graphic.createIcon>;
 interface Displayables {
     sliderGroup: graphic.Group;
-    handles: [Icon, Icon];
+    handles: [graphic.Path, graphic.Path];
     handleLabels: [graphic.Text, graphic.Text];
     dataShadowSegs: graphic.Group[];
     filler: graphic.Rect;
@@ -285,6 +285,8 @@ class SliderZoomView extends DataZoomView {
     private _renderDataShadow() {
         const info = this._dataShadowInfo = this._prepareDataShadowInfo();
 
+        this._displayables.dataShadowSegs = [];
+
         if (!info) {
             return;
         }
@@ -296,8 +298,6 @@ class SliderZoomView extends DataZoomView {
         const otherDim: string = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
-
-        this._displayables.dataShadowSegs = [];
 
         if (otherDim == null) {
             return;
@@ -490,18 +490,18 @@ class SliderZoomView extends DataZoomView {
         }));
 
         each([0, 1] as const, function (handleIndex) {
-            const path = graphic.createIcon(
+            const path = createSymbol(
                 dataZoomModel.get('handleIcon'),
-                {
-                    cursor: getCursor(this._orient),
-                    draggable: true,
-                    drift: bind(this._onDragMove, this, handleIndex),
-                    ondragend: bind(this._onDragEnd, this),
-                    onmouseover: bind(this._showDataInfo, this, true),
-                    onmouseout: bind(this._showDataInfo, this, false)
-                },
-                {x: -1, y: 0, width: 2, height: 2}
+                -1, 0, 2, 2, null, true
             ) as graphic.Path;
+            path.attr({
+                cursor: getCursor(this._orient),
+                draggable: true,
+                drift: bind(this._onDragMove, this, handleIndex),
+                ondragend: bind(this._onDragEnd, this),
+                onmouseover: bind(this._showDataInfo, this, true),
+                onmouseout: bind(this._showDataInfo, this, false)
+            });
 
             const bRect = path.getBoundingRect();
             const handleSize = dataZoomModel.get('handleSize');
@@ -510,6 +510,7 @@ class SliderZoomView extends DataZoomView {
             this._handleWidth = bRect.width / bRect.height * this._handleHeight;
 
             path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
+            path.style.strokeNoScale = true;
             path.rectHover = true;
 
             path.ensureState('emphasis').style = dataZoomModel.getModel(['emphasis', 'handleStyle']).getItemStyle();

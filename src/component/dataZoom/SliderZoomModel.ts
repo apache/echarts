@@ -123,13 +123,16 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         left: null,   // Default align to grid rect.
         bottom: null, // Default align to grid rect.
 
+        borderColor: '#d2dbee',
+        borderRadius: 3,
+
         backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
 
         // dataBackgroundColor: '#ddd',
         dataBackground: {
             lineStyle: {
                 color: '#d2dbee',
-                width: 1
+                width: 0.5
             },
             areaStyle: {
                 color: '#d2dbee',
@@ -139,7 +142,8 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
         selectedDataBackground: {
             lineStyle: {
-                color: '#8fb0f7'
+                color: '#8fb0f7',
+                width: 0.5
             },
             areaStyle: {
                 color: '#8fb0f7',
@@ -147,11 +151,9 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             }
         },
 
-        borderColor: '#d2dbee',
-        borderRadius: 3,
 
         fillerColor: 'rgba(135,175,274,0.2)',     // Color of selected area.
-        handleIcon: 'path://M-40.23,4.23h4.1c.56,0,1,.65,1,1.46V32.05c0,.81-.46,1.46-1,1.46h-4.1c-.57,0-1-.65-1-1.46V5.69C-41.26,4.88-40.8,4.23-40.23,4.23Zm2-4.85V4.23m0,29.28v4.84',
+        handleIcon: 'path://M-9.35,34.56V42m0-40V9.5m-2,0h4a2,2,0,0,1,2,2v21a2,2,0,0,1-2,2h-4a2,2,0,0,1-2-2v-21A2,2,0,0,1-11.35,9.5Z',
         // Percent of the slider height
         handleSize: '100%',
 
@@ -172,10 +174,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         emphasis: {
             handleStyle: {
                 borderColor: '#8FB0F7',
-                shadowBlur: 2,
-                shadowOffsetX: 1,
-                shadowOffsetY: 1,
-                shadowColor: 'rgba(0,0,0,0.1)'
+                borderWidth: 2
             }
         }
     });

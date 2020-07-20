@@ -23,6 +23,7 @@ import * as numberUtil from '../../util/number';
 import ComponentModel from '../../model/Component';
 import { VisualMappingOption } from '../../visual/VisualMapping';
 import { inheritDefaultOption } from '../../util/component';
+import { ItemStyleOption } from '../../util/types';
 
 // Constant
 const DEFAULT_BAR_BOUND = [20, 140];
@@ -62,7 +63,21 @@ export interface ContinousVisualMapOption extends VisualMapOption {
      * Whether trigger hoverLink when hover handle.
      * If not specified, follow the value of `realtime`.
      */
-    hoverLinkOnHandle?: boolean
+    hoverLinkOnHandle?: boolean,
+
+    handleIcon?: string,
+    // Percent of the item width
+    handleSize?: string | number,
+    handleStyle?: ItemStyleOption
+
+    indicatorIcon?: string,
+    // Percent of the item width
+    indicatorSize?: string | number,
+    indicatorStyle?: ItemStyleOption
+
+    emphasis?: {
+        handleStyle?: ItemStyleOption
+    }
 }
 
 class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
@@ -264,7 +279,30 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         align: 'auto',           // 'auto', 'left', 'right', 'top', 'bottom'
         calculable: false,
         hoverLink: true,
-        realtime: true
+        realtime: true,
+
+        handleIcon: 'path://M-11.39,9.77h0a3.5,3.5,0,0,1-3.5,3.5h-22a3.5,3.5,0,0,1-3.5-3.5h0a3.5,3.5,0,0,1,3.5-3.5h22A3.5,3.5,0,0,1-11.39,9.77Z',
+        handleSize: '120%',
+
+        handleStyle: {
+            borderColor: '#fff',
+            borderWidth: 2
+        },
+
+        indicatorIcon: 'circle',
+        indicatorSize: '50%',
+        indicatorStyle: {
+            borderColor: '#fff',
+            borderWidth: 2
+        }
+        // emphasis: {
+        //     handleStyle: {
+        //         shadowBlur: 3,
+        //         shadowOffsetX: 1,
+        //         shadowOffsetY: 1,
+        //         shadowColor: 'rgba(0,0,0,0.2)'
+        //     }
+        // }
     }) as ContinousVisualMapOption;
 }
 
