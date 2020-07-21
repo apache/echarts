@@ -186,7 +186,7 @@ export function makeImage(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ) {
-    const path = new ZRImage({
+    const zrImg = new ZRImage({
         style: {
             image: imageUrl,
             x: rect.x,
@@ -200,11 +200,11 @@ export function makeImage(
                     width: img.width,
                     height: img.height
                 };
-                path.setStyle(centerGraphic(rect, boundingRect));
+                zrImg.setStyle(centerGraphic(rect, boundingRect));
             }
         }
     });
-    return path;
+    return zrImg;
 }
 
 /**

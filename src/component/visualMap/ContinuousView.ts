@@ -37,6 +37,7 @@ import { ColorString, Payload } from '../../util/types';
 import { parsePercent } from 'zrender/src/contain/text';
 import { setAsHighDownDispatcher, enterBlur, leaveBlur } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
+import ZRImage from 'zrender/src/graphic/Image';
 
 const linearMap = numberUtil.linearMap;
 const each = zrUtil.each;
@@ -336,7 +337,19 @@ class ContinuousView extends VisualMapView {
             silent: true,
             x: itemSize[0] / 2
         });
-        indicator.useStyle(visualMapModel.getModel('indicatorStyle').getItemStyle());
+        const indicatorStyle = visualMapModel.getModel('indicatorStyle').getItemStyle();
+        if (indicator instanceof ZRImage) {
+            const pathStyle = indicator.style;
+            indicator.useStyle(zrUtil.extend({
+                // TODO other properties like x, y ?
+                image: pathStyle.image,
+                x: pathStyle.x, y: pathStyle.y,
+                width: pathStyle.width, height: pathStyle.height
+            }, indicatorStyle));
+        }
+        else {
+            indicator.useStyle(indicatorStyle);
+        }
 
         mainGroup.add(indicator);
 
