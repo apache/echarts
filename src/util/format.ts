@@ -262,3 +262,6 @@ export function windowOpen(link: string, target: string): void {
         window.open(link, target);
     }
 }
+
+
+export {getTextRect} from '../legacy/getTextRect';
