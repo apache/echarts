@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
+import { __DEV__ } from '../../config';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
@@ -165,6 +165,8 @@ class HeatmapView extends ChartView {
         const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
         let width;
         let height;
+        let xAxisExtent;
+        let yAxisExtent;
 
         if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
             const xAxis = coordSys.getAxis('x');
@@ -181,6 +183,8 @@ class HeatmapView extends ChartView {
 
             width = xAxis.getBandWidth();
             height = yAxis.getBandWidth();
+            xAxisExtent = xAxis.scale.getExtent();
+            yAxisExtent = yAxis.scale.getExtent();
         }
 
         const group = this.group;
@@ -208,14 +212,18 @@ class HeatmapView extends ChartView {
             let rect;
 
             if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-                // Ignore empty data
-                if (isNaN(data.get(dataDims[2], idx) as number)) {
+                const dataDimX = data.get(dataDims[0], idx);
+                const dataDimY = data.get(dataDims[1], idx);
+
+                // Ignore empty data and out of extent data
+                if (isNaN(data.get(dataDims[2], idx) as number) || dataDimX < xAxisExtent[0] || dataDimX > xAxisExtent[1]
+                    || dataDimY < yAxisExtent[0] || dataDimY > yAxisExtent[1]) {
                     continue;
                 }
 
                 const point = coordSys.dataToPoint([
-                    data.get(dataDims[0], idx),
-                    data.get(dataDims[1], idx)
+                    dataDimX,
+                    dataDimY
                 ]);
 
                 rect = new graphic.Rect({
