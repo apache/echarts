@@ -799,7 +799,6 @@ export function createIcon(
     const style: ZRStyleProps = innerOpts.style = {strokeNoScale: true};
     rect = rect || {x: -1, y: -1, width: 2, height: 2};
 
-    // TODO support circle, rect?
     if (iconStr) {
         return iconStr.indexOf('image://') === 0
             ? (

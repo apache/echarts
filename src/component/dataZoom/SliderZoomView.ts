@@ -38,7 +38,9 @@ import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
 import { enableHoverEmphasis } from '../../util/states';
-import { createSymbol } from '../../util/symbol';
+import { createSymbol, symbolBuildProxies } from '../../util/symbol';
+import { deprecateLog } from '../../util/log';
+import { __DEV__ } from '../../config';
 
 const Rect = graphic.Rect;
 
@@ -490,8 +492,16 @@ class SliderZoomView extends DataZoomView {
         }));
 
         each([0, 1] as const, function (handleIndex) {
+            let iconStr = dataZoomModel.get('handleIcon');
+            if (!symbolBuildProxies[iconStr] && iconStr.indexOf('path://') < 0) {
+                // Compatitable with the old icon parsers. Which can use a path string without path://
+                iconStr = 'path://' + iconStr;
+                if (__DEV__) {
+                    deprecateLog('handleIcon now needs \'path://\' prefix when using a path string');
+                }
+            }
             const path = createSymbol(
-                dataZoomModel.get('handleIcon'),
+                iconStr,
                 -1, 0, 2, 2, null, true
             ) as graphic.Path;
             path.attr({

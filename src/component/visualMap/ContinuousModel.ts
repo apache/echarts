@@ -146,7 +146,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         zrUtil.each(this.stateList, function (state: VisualState) {
             const symbolSize = this.option.controller[state].symbolSize;
             if (symbolSize && symbolSize[0] !== symbolSize[1]) {
-                symbolSize[0] = 0; // For good looking.
+                symbolSize[0] = symbolSize[1] / 3; // For good looking.
             }
         }, this);
     }
@@ -286,14 +286,18 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
 
         handleStyle: {
             borderColor: '#fff',
-            borderWidth: 2
+            borderWidth: 1
         },
 
         indicatorIcon: 'circle',
         indicatorSize: '50%',
         indicatorStyle: {
             borderColor: '#fff',
-            borderWidth: 2
+            borderWidth: 2,
+            shadowBlur: 2,
+            shadowOffsetX: 1,
+            shadowOffsetY: 1,
+            shadowColor: 'rgba(0,0,0,0.2)'
         }
         // emphasis: {
         //     handleStyle: {

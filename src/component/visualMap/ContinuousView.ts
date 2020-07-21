@@ -35,7 +35,7 @@ import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
 import { ColorString, Payload } from '../../util/types';
 import { parsePercent } from 'zrender/src/contain/text';
-import { setAsHighDownDispatcher } from '../../util/states';
+import { setAsHighDownDispatcher, enterBlur, leaveBlur } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
 
 const linearMap = numberUtil.linearMap;
@@ -103,6 +103,8 @@ class ContinuousView extends VisualMapView {
     private _dragging: boolean;
 
     private _hovering: boolean;
+
+    private _firstShowIndicator: boolean;
 
 
     doRender(
@@ -250,10 +252,10 @@ class ContinuousView extends VisualMapView {
     ) {
         const onDrift = zrUtil.bind(this._dragHandle, this, handleIndex, false);
         const onDragEnd = zrUtil.bind(this._dragHandle, this, handleIndex, true);
-        const scale = parsePercent(visualMapModel.get('handleSize'), itemSize[0]);
+        const handleSize = parsePercent(visualMapModel.get('handleSize'), itemSize[0]);
         const handleThumb = createSymbol(
             visualMapModel.get('handleIcon'),
-            -scale / 2, -scale / 2, scale, scale,
+            -handleSize / 2, -handleSize / 2, handleSize, handleSize,
             null, true
         );
         handleThumb.attr({
@@ -265,7 +267,7 @@ class ContinuousView extends VisualMapView {
                 eventTool.stop(e.event);
             }
         });
-        handleThumb.x += itemSize[0] / 2;
+        handleThumb.x = itemSize[0] / 2;
 
         handleThumb.useStyle(visualMapModel.getModel('handleStyle').getItemStyle());
         (handleThumb as graphic.Path).setStyle({
@@ -298,16 +300,14 @@ class ContinuousView extends VisualMapView {
                 fill: textStyleModel.getTextColor()
             }
         });
+        handleLabel.ensureState('blur').style = {
+            opacity: 0.1
+        };
+        handleLabel.stateTransition = { duration: 200 };
+
         this.group.add(handleLabel);
 
-        const handleLabelPoint = [
-            orient === 'horizontal'
-                ? textSize / 2
-                : textSize * 1.5,
-            orient === 'horizontal'
-                ? (handleIndex === 0 ? -(textSize * 1.5) : (textSize * 1.5))
-                : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
-        ];
+        const handleLabelPoint = [handleSize, 0];
 
         const shapes = this._shapes;
         shapes.handleThumbs[handleIndex] = handleThumb;
@@ -351,7 +351,7 @@ class ContinuousView extends VisualMapView {
         this.group.add(indicatorLabel);
 
         const indicatorLabelPoint = [
-            (orient === 'horizontal' ? textSize / 2 : HOVER_LINK_OUT) + 8,
+            (orient === 'horizontal' ? textSize / 2 : HOVER_LINK_OUT) + itemSize[0] / 2,
             0
         ];
 
@@ -359,6 +359,8 @@ class ContinuousView extends VisualMapView {
         shapes.indicator = indicator;
         shapes.indicatorLabel = indicatorLabel;
         shapes.indicatorLabelPoint = indicatorLabelPoint;
+
+        this._firstShowIndicator = true;
     }
 
     private _dragHandle(
@@ -379,6 +381,7 @@ class ContinuousView extends VisualMapView {
             const vertex = this._applyTransform([dx as number, dy], this._shapes.mainGroup, true) as number[];
             this._updateInterval(handleIndex, vertex[1]);
 
+            this._hideIndicator();
             // Considering realtime, update view should be executed
             // before dispatch action.
             this._updateView();
@@ -576,11 +579,20 @@ class ContinuousView extends VisualMapView {
         const visualMapModel = this.visualMapModel;
         const handleThumbs = shapes.handleThumbs;
         const handleLabels = shapes.handleLabels;
+        const itemSize = visualMapModel.itemSize;
+        const dataExtent = visualMapModel.getExtent();
 
         each([0, 1], function (handleIndex) {
             const handleThumb = handleThumbs[handleIndex];
             handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
             handleThumb.y = handleEnds[handleIndex];
+
+            const val = linearMap(handleEnds[handleIndex], [0, itemSize[1]], dataExtent, true);
+            const symbolSize = this.getControllerVisual(val, 'symbolSize') as number;
+
+            const size = parsePercent(visualMapModel.get('handleSize'), symbolSize);
+            handleThumb.scaleX = handleThumb.scaleY = size / itemSize[0];
+            handleThumb.x = itemSize[0] - symbolSize / 2;
 
             // Update handle label position.
             const textPoint = graphic.applyTransform(
@@ -592,12 +604,10 @@ class ContinuousView extends VisualMapView {
                 y: textPoint[1],
                 text: visualMapModel.formatValueText(this._dataInterval[handleIndex]),
                 verticalAlign: 'middle',
-                align: this._applyTransform(
-                    this._orient === 'horizontal'
-                        ? (handleIndex === 0 ? 'bottom' : 'top')
-                        : 'left',
+                align: this._orient === 'vertical' ? this._applyTransform(
+                    'left',
                     shapes.mainGroup
-                ) as TextAlign
+                ) as TextAlign : 'center'
             });
         }, this);
     }
@@ -612,7 +622,6 @@ class ContinuousView extends VisualMapView {
         const dataExtent = visualMapModel.getExtent();
         const itemSize = visualMapModel.itemSize;
         const sizeExtent = [0, itemSize[1]];
-        const pos = linearMap(cursorValue, dataExtent, sizeExtent, true);
 
         const shapes = this._shapes;
         const indicator = shapes.indicator;
@@ -620,14 +629,18 @@ class ContinuousView extends VisualMapView {
             return;
         }
 
-        indicator.y = pos;
         indicator.attr('invisible', false);
 
         const opts = {convertOpacityToAlpha: true};
         const color = this.getControllerVisual(cursorValue, 'color', opts) as ColorString;
-        indicator.setStyle('fill', color);
+        const symbolSize = this.getControllerVisual(cursorValue, 'symbolSize') as number;
+        const y = linearMap(cursorValue, dataExtent, sizeExtent, true);
+        const x = itemSize[0] - symbolSize / 2;
 
+        const oldIndicatorPos = { x: indicator.x, y: indicator.y };
         // Update handle label position.
+        indicator.y = y;
+        indicator.x = x;
         const textPoint = graphic.applyTransform(
             shapes.indicatorLabelPoint,
             graphic.getTransform(indicator, this.group)
@@ -641,10 +654,49 @@ class ContinuousView extends VisualMapView {
         indicatorLabel.setStyle({
             text: (rangeSymbol ? rangeSymbol : '') + visualMapModel.formatValueText(textValue),
             verticalAlign: isHorizontal ? align as TextVerticalAlign : 'middle',
-            align: isHorizontal ? 'center' : align as TextAlign,
-            x: textPoint[0],
-            y: textPoint[1]
+            align: isHorizontal ? 'center' : align as TextAlign
         });
+
+        const indicatorNewProps = {
+            x: x,
+            y: y,
+            style: {
+                fill: color
+            }
+        };
+        const labelNewProps = {
+            style: {
+                x: textPoint[0],
+                y: textPoint[1]
+            }
+        };
+
+        if (visualMapModel.ecModel.isAnimationEnabled() && !this._firstShowIndicator) {
+            const animationCfg = {
+                duration: 100,
+                easing: 'cubicInOut',
+                additive: true
+            } as const;
+            indicator.x = oldIndicatorPos.x;
+            indicator.y = oldIndicatorPos.y;
+            indicator.animateTo(indicatorNewProps, animationCfg);
+            indicatorLabel.animateTo(labelNewProps, animationCfg);
+        }
+        else {
+            indicator.attr(indicatorNewProps);
+            indicatorLabel.attr(labelNewProps);
+        }
+
+        this._firstShowIndicator = false;
+
+        const handleLabels = this._shapes.handleLabels;
+        if (handleLabels) {
+            for (let i = 0; i < handleLabels.length; i++) {
+                // Fade out handle labels.
+                // TODO not do twice.
+                enterBlur(handleLabels[i]);
+            }
+        }
     }
 
     private _enableHoverLinkToSeries() {
@@ -774,6 +826,14 @@ class ContinuousView extends VisualMapView {
         const shapes = this._shapes;
         shapes.indicator && shapes.indicator.attr('invisible', true);
         shapes.indicatorLabel && shapes.indicatorLabel.attr('invisible', true);
+
+        const handleLabels = this._shapes.handleLabels;
+        if (handleLabels) {
+            for (let i = 0; i < handleLabels.length; i++) {
+                // Fade out handle labels.
+                leaveBlur(handleLabels[i]);
+            }
+        }
     }
 
     private _clearHoverLinkToSeries() {
