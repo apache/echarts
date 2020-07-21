@@ -681,6 +681,7 @@ class TooltipView extends ComponentView {
         if (tooltipTrigger != null && tooltipTrigger !== 'item') {
             return;
         }
+        const tooltipOrder = tooltipModel.get('order');
 
         const params = dataModel.getDataParams(dataIndex, dataType);
         params.marker = formatUtil.getTooltipMarker({
@@ -688,7 +689,7 @@ class TooltipView extends ComponentView {
             renderMode: this._renderMode
         });
 
-        const seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
+        const seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode, tooltipOrder);
         let defaultHtml: string;
         let markers: Dictionary<ColorString>;
         if (zrUtil.isObject(seriesTooltip)) {

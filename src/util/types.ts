@@ -270,6 +270,8 @@ export interface LoadingEffect extends Element {
 
 export type TooltipRenderMode = 'html' | 'richText';
 
+export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'legendAsc' | 'legendDesc';
+
 
 // ---------------------------------
 // Data and dimension related types

@@ -31,7 +31,9 @@ import {
     AreaStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    TooltipRenderMode,
+    TooltipOrderMode
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -93,11 +95,41 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         });
     }
 
-    formatTooltip(dataIndex: number) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries?: boolean,
+        dataType?: string,
+        renderMode?: TooltipRenderMode,
+        order?: TooltipOrderMode
+    ) {
         const data = this.getData();
         const coordSys = this.coordinateSystem;
         const indicatorAxes = coordSys.getIndicatorAxes();
         const name = this.getData().getName(dataIndex);
+        zrUtil.each(indicatorAxes, function (axis, idx) {
+            axis.value = data.get(data.mapDimension(axis.dim), dataIndex);
+        });
+        switch (order) {
+            case 'valueAsc':
+                indicatorAxes.sort(function (a, b) {
+                    return +(a.value) - +(b.value);
+                });
+                break;
+
+            case 'valueDesc':
+                indicatorAxes.sort(function (a, b) {
+                    return +(b.value) - +(a.value);
+                });
+                break;
+
+            case 'legendDesc':
+                indicatorAxes.reverse();
+                break;
+
+            case 'legendAsc':
+            default:
+                break;
+        }
         return encodeHTML(name === '' ? this.name : name) + '<br/>'
             + zrUtil.map(indicatorAxes, function (axis, idx) {
                 const val = data.get(data.mapDimension(axis.dim), dataIndex);

@@ -24,7 +24,8 @@ import {
     LineStyleOption,
     CommonTooltipOption,
     TooltipRenderMode,
-    CallbackDataParams
+    CallbackDataParams,
+    TooltipOrderMode
 } from '../../util/types';
 import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 
@@ -64,7 +65,7 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     appendToBody?: boolean
 
-    order?: 'valueAsc' | 'valueDesc' | 'legendAsc' | 'legendDesc'
+    order?: TooltipOrderMode
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
