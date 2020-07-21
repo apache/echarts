@@ -69,7 +69,6 @@ export default function (finder: {
         stackedData[baseDataOffset] = data.get(baseDim, dataIndex);
         stackedData[1 - baseDataOffset] = data.get(data.getCalculationInfo('stackResultDimension'), dataIndex);
         point = coordSys.dataToPoint(stackedData) || [];
-        console.log(11111111)
     }
     else if (seriesModel.getTooltipPosition) {
         point = seriesModel.getTooltipPosition(dataIndex) || [];
