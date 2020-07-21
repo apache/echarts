@@ -258,8 +258,9 @@ class ContinuousView extends VisualMapView {
             -handleSize / 2, -handleSize / 2, handleSize, handleSize,
             null, true
         );
+        const cursor = getCursor(this._orient);
         handleThumb.attr({
-            cursor: getCursor(this._orient),
+            cursor: cursor,
             draggable: true,
             drift: onDrift,
             ondragend: onDragEnd,
@@ -287,6 +288,7 @@ class ContinuousView extends VisualMapView {
         // group (according to handleLabelPoint) but not barGroup.
         const textStyleModel = this.visualMapModel.textStyleModel;
         const handleLabel = new graphic.Text({
+            cursor: cursor,
             draggable: true,
             drift: onDrift,
             onmousemove(e) {
@@ -590,8 +592,7 @@ class ContinuousView extends VisualMapView {
             const val = linearMap(handleEnds[handleIndex], [0, itemSize[1]], dataExtent, true);
             const symbolSize = this.getControllerVisual(val, 'symbolSize') as number;
 
-            const size = parsePercent(visualMapModel.get('handleSize'), symbolSize);
-            handleThumb.scaleX = handleThumb.scaleY = size / itemSize[0];
+            handleThumb.scaleX = handleThumb.scaleY = symbolSize / itemSize[0];
             handleThumb.x = itemSize[0] - symbolSize / 2;
 
             // Update handle label position.
