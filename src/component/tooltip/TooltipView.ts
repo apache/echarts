@@ -622,10 +622,12 @@ class TooltipView extends ComponentView {
                         + seriesDefaultHTML.reverse().join(newLine)
                     );
                 }
+                singleDefaultHTML.push('<br/>');
             });
         }, this);
 
         // In most case, the second axis is shown upper than the first one.
+        singleDefaultHTML.pop();
         const singleDefaultHTMLStr = singleDefaultHTML.join(this._newLine + this._newLine);
 
         const positionExpr = e.position;
