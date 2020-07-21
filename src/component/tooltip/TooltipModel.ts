@@ -64,7 +64,7 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     appendToBody?: boolean
 
-    order?: 'value' | 'valueReverse' | 'legend' | 'legendReverse'
+    order?: 'valueAsc' | 'valueDesc' | 'legendAsc' | 'legendDesc'
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
