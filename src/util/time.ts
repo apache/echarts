@@ -7,13 +7,9 @@ import {TimeScaleTick} from './types';
 
 export const defaultLeveledFormatter = {
     year: '{yyyy}',
-    'half-year': '{MMM}',
-    quarter: '{MMM}',
     month: '{MMM}',
-    week: '{d}',
     day: '{d}',
     hour: '{HH}:{mm}',
-    'half-day': '{HH}:{mm}',
     minute: '{HH}:{mm}',
     second: '{HH}:{mm}:{ss}',
     millisecond: '{hh}:{mm}:{ss} {SSS}',
@@ -68,7 +64,7 @@ export function format(time: Date, template: string, isUTC?: boolean): string {
     const s = (date as any)['get' + utc + 'Seconds']();
     const S = (date as any)['get' + utc + 'Milliseconds']();
 
-    return template
+    return (template || '')
         .replace('{yyyy}', y)
         .replace('{yy}', y % 100 + '')
         .replace('{Q}', q + '')
@@ -111,8 +107,8 @@ export function leveledFormat(
     else {
         const defaults = zrUtil.extend({}, defaultLeveledFormatter);
         if (tick.level > 0) {
-            for (let i = 0; i < timeUnits.length; ++i) {
-                defaults[timeUnits[i]] = `{primary|${defaults[timeUnits[i]]}}`;
+            for (let i = 0; i < primaryTimeUnits.length; ++i) {
+                defaults[primaryTimeUnits[i]] = `{primary|${defaults[primaryTimeUnits[i]]}}`;
             }
         }
 
@@ -123,7 +119,7 @@ export function leveledFormat(
             )
             : defaults) as any;
 
-        const unit = getUnitFromValue(tick.value, isUTC, true);
+        const unit = getUnitFromValue(tick.value, isUTC);
         if (mergedFormatter[unit]) {
             template = mergedFormatter[unit];
         }
@@ -148,19 +144,16 @@ export function leveledFormat(
         }
     }
 
-    // console.log(tick.level, new Date(tick.value), template);
     return format(new Date(tick.value), template, isUTC);
 }
 
 export function getUnitFromValue (
     value: number | string | Date,
-    isUTC: boolean,
-    primaryOnly: boolean
-): TimeUnit {
+    isUTC: boolean
+): PrimaryTimeUnit {
     const date = numberUtil.parseDate(value);
     const utc = isUTC ? 'UTC' : '';
     const M = (date as any)['get' + utc + 'Month']() + 1;
-    const w = (date as any)['get' + utc + 'Day']();
     const d = (date as any)['get' + utc + 'Date']();
     const h = (date as any)['get' + utc + 'Hours']();
     const m = (date as any)['get' + utc + 'Minutes']();
@@ -170,34 +163,18 @@ export function getUnitFromValue (
     const isSecond = S === 0;
     const isMinute = isSecond && s === 0;
     const isHour = isMinute && m === 0;
-    const isHalfDay = isHour && (h === 0 || h === 11);
     const isDay = isHour && h === 0;
-    const isWeek = isDay && w === 0; // TODO: first day to be configured
     const isMonth = isDay && d === 1;
-    const isQuarter = isMonth && (M % 3 === 1);
-    const isHalfYear = isMonth && (M % 6 === 1);
     const isYear = isMonth && M === 1;
 
     if (isYear) {
         return 'year';
     }
-    else if (isHalfYear) {
-        return 'half-year';
-    }
-    else if (isQuarter) {
-        return 'quarter';
-    }
     else if (isMonth) {
         return 'month';
     }
-    else if (isWeek && !primaryOnly) {
-        return 'week';
-    }
     else if (isDay) {
         return 'day';
-    }
-    else if (isHalfDay) {
-        return 'half-day';
     }
     else if (isHour) {
         return 'hour';
@@ -221,7 +198,7 @@ export function getUnitValue (
     const date = typeof value === 'number'
         ? numberUtil.parseDate(value) as any
         : value;
-    unit = unit || getUnitFromValue(value, isUTC, true);
+    unit = unit || getUnitFromValue(value, isUTC);
     const utc = isUTC ? 'UTC' : '';
 
     switch (unit) {

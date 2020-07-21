@@ -82,12 +82,9 @@ class TimeScale extends IntervalScale {
     _approxInterval: number;
 
     getLabel(tick: TimeScaleTick): string {
-        // const stepLvl = this._stepLvl;
-
         const labelFormatType = timeUtil.getUnitFromValue(
             tick.value,
-            this.getSetting('useUTC'),
-            false
+            this.getSetting('useUTC')
         );
         return formatUtil.formatTime(labelFormatType, tick.value);
     }
@@ -472,7 +469,6 @@ function getIntervalTicks(
 
     ticks.sort((a, b) => a.value - b.value);
 
-    console.log(ticks);
     let maxLevel = -Number.MAX_VALUE;
     for (let i = 0; i < ticks.length; ++i) {
         maxLevel = Math.max(maxLevel, ticks[i].level);

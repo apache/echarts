@@ -55,12 +55,6 @@ under the License.
         <div id="main5"></div>
 
 
-        <div id="main6"></div>
-
-
-        <div id="main7"></div>
-
-
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
@@ -247,6 +241,123 @@ under the License.
             });
         });
         </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [];
+            for (let i = 0; i < 30; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setMonth(time.getMonth() + 1);
+            }
+            // data.push([new Date('2020-09-10 11:00:00'), 200])
+
+            option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        formatter: {
+                            year: '{year|{yyyy}}\n{month|{MMM}}',
+                            month: '{month|{MMM}}'
+                        },
+                        rich: {
+                            year: {
+                                color: '#333',
+                                fontWeight: 'bold'
+                            },
+                            month: {
+                                color: '#999'
+                            }
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
+                title: [
+                    'Customed styles for levels'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+            // $.getJSON('./data/nutrients.json', function (data) {});
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [];
+            for (let i = 0; i < 30; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setMonth(time.getMonth() + 1);
+            }
+            // data.push([new Date('2020-09-10 11:00:00'), 200])
+
+            option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        formatter: function (param) {
+                            const date = new Date(param.value);
+                            if (echarts.time.getUnitFromValue(param.value) === 'year') {
+                                return '{year|' + date.getFullYear() + '}\n'
+                                    + '{month|' + (date.getMonth() + 1) + '月}';
+                            }
+                            else {
+                                return '{month|' + (date.getMonth() + 1) + '月}'
+                            }
+                        },
+                        rich: {
+                            year: {
+                                color: '#333',
+                                fontWeight: 'bold'
+                            },
+                            month: {
+                                color: '#999'
+                            }
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main5', {
+                title: [
+                    'Callback formatter'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
 
     </body>
 </html>
