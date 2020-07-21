@@ -224,8 +224,10 @@ const scaleIntervals: [timeUtil.TimeUnit, number][] = [
     ['second', ONE_SECOND],             // 1s
     ['minute', ONE_MINUTE],             // 1m
     ['hour', ONE_HOUR],                 // 1h
+    ['quarter-day', ONE_HOUR * 6],      // 6h
     ['half-day', ONE_HOUR * 12],        // 12h
     ['day', ONE_DAY * 1.2],             // 1d
+    ['half-week', ONE_DAY * 3.5],       // 3.5d
     ['week', ONE_DAY * 7],              // 7d
     ['month', ONE_DAY * 31],            // 1M
     ['quarter', ONE_DAY * 95],          // 3M
@@ -247,11 +249,11 @@ function isUnitValueSame(
             === timeUtil.getUnitValue(dateB, unit, isUTC);
     };
     const isSameYear = () => isSame('year');
-    const isSameHalfYear = () => isSameYear() && isSame('half-year');
-    const isSameQuater = () => isSameYear() && isSame('quarter');
+    // const isSameHalfYear = () => isSameYear() && isSame('half-year');
+    // const isSameQuater = () => isSameYear() && isSame('quarter');
     const isSameMonth = () => isSameYear() && isSame('month');
     const isSameDay = () => isSameMonth() && isSame('day');
-    const isSameHalfDay = () => isSameDay() && isSame('half-day');
+    // const isSameHalfDay = () => isSameDay() && isSame('half-day');
     const isSameHour = () => isSameDay() && isSame('hour');
     const isSameMinute = () => isSameHour() && isSame('minute');
     const isSameSecond = () => isSameMinute() && isSame('second');
@@ -260,16 +262,10 @@ function isUnitValueSame(
     switch (unit) {
         case 'year':
             return isSameYear();
-        case 'half-year':
-            return isSameHalfYear();
-        case 'quarter':
-            return isSameQuater();
         case 'month':
             return isSameMonth();
         case 'day':
             return isSameDay();
-        case 'half-day':
-            return isSameHalfDay();
         case 'hour':
             return isSameHour();
         case 'minute':
@@ -295,7 +291,7 @@ function getIntervalTicks(
     for (let i = 0, hasTickInLevel = false; i < unitNames.length; ++i) {
         let date = new Date(extent[0]) as any;
 
-        if (unitNames[i] === 'week') {
+        if (unitNames[i] === 'week' || unitNames[i] === 'half-week') {
             const endDate = new Date(extent[1]) as any;
             if (date['get' + utc + 'FullYear']() === endDate['get' + utc + 'FullYear']()
                 && date['get' + utc + 'Month']() === endDate['get' + utc + 'Month']()
@@ -319,9 +315,8 @@ function getIntervalTicks(
             let isDateWithinExtent = true;
             let hasWeekData = false;
             while (isDateWithinExtent) {
-                const dates = date['get' + utc + 'Month']() + 1 === 2
-                    ? [8, 15, 22]
-                    : [8, 16, 24];
+                const dates = approxInterval > ONE_DAY * 8 ? []
+                    : (approxInterval > ONE_DAY * 3.5 ? [8, 16, 24] : [4, 8, 12, 16, 20, 24, 28]);
                 for (let d = 0; d < dates.length; ++d) {
                     date['set' + utc + 'Date'](dates[d]);
                     const dateTime = (date as Date).getTime();
@@ -340,18 +335,15 @@ function getIntervalTicks(
                 }
                 date['set' + utc + 'Month'](date['get' + utc + 'Month']() + 1);
             }
-            if (hasWeekData) {
-                ++levelId;
-            }
         }
         else if (!isUnitValueSame(
-            unitNames[i] as timeUtil.PrimaryTimeUnit,
+            timeUtil.getPrimaryTimeUnit(unitNames[i]),
             extent[0], extent[1], isUTC
         )) {
             // Level value changes within extent
             let isFirst = true;
             while (true) {
-                switch (unitNames[i] as timeUtil.PrimaryTimeUnit) {
+                switch (unitNames[i]) {
                     case 'year':
                     case 'half-year':
                     case 'quarter':
@@ -365,7 +357,7 @@ function getIntervalTicks(
                         else {
                             const months = unitNames[i] === 'year'
                                 ? 12 : (unitNames[i] === 'half-year' ? 6 : 3);
-                            if (date['get' + utc + 'Month']() + 1 + months < 12) {
+                            if (unitNames[i] === 'half-year' || unitNames[i] === 'quarter') {
                                 date['set' + utc + 'Month'](date['get' + utc + 'Month']() + months);
                             }
                             else {
@@ -397,6 +389,7 @@ function getIntervalTicks(
 
                     case 'day':
                     case 'half-day':
+                    case 'quarter-day':
                         if (isFirst) {
                             date['set' + utc + 'Hours'](0);
                             date['set' + utc + 'Minutes'](0);
@@ -404,6 +397,9 @@ function getIntervalTicks(
                         }
                         else if (unitNames[i] === 'half-day') {
                             date['set' + utc + 'Hours'](date['get' + utc + 'Hours']() + 12);
+                        }
+                        else if (unitNames[i] === 'quarter-day') {
+                            date['set' + utc + 'Hours'](date['get' + utc + 'Hours']() + 6);
                         }
                         else {
                             date['set' + utc + 'Date'](date['get' + utc + 'Date']() + 1);
@@ -435,8 +431,19 @@ function getIntervalTicks(
                             date['set' + utc + 'Seconds'](date['get' + utc + 'Seconds']() + 1);
                         }
                         break;
+
+                    case 'millisecond':
+                        if (isFirst) {
+                            date['set' + utc + 'Milliseconds'](0);
+                        }
+                        else {
+                            date['set' + utc + 'MilliSeconds'](date['get' + utc + 'MilliSeconds']() + 100);
+                        }
+                        break;
                 }
-                date['set' + utc + 'Milliseconds'](0);
+                if (isFirst && unitNames[i] !== 'millisecond') {
+                    date['set' + utc + 'Milliseconds'](0);
+                }
 
                 const dateValue = (date as Date).getTime();
                 if (dateValue >= extent[0] && dateValue <= extent[1]) {
@@ -452,7 +459,7 @@ function getIntervalTicks(
                 isFirst = false;
             }
             if (hasTickInLevel
-                && (['half-year', 'quarter', 'half-day'].indexOf(unitNames[i]) < 0)
+                && timeUtil.isPrimaryTimeUnit(unitNames[i])
             ) {
                 ++levelId;
             }
@@ -465,6 +472,7 @@ function getIntervalTicks(
 
     ticks.sort((a, b) => a.value - b.value);
 
+    console.log(ticks);
     let maxLevel = -Number.MAX_VALUE;
     for (let i = 0; i < ticks.length; ++i) {
         maxLevel = Math.max(maxLevel, ticks[i].level);

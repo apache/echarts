@@ -12,22 +12,46 @@ export const defaultLeveledFormatter = {
     month: '{MMM}',
     week: '{d}',
     day: '{d}',
-    hour: '{hh}:{mm}',
-    'half-day': '{hh}:{mm}',
-    minute: '{hh}:{mm}',
-    second: '{hh}:{mm}:{ss}',
+    hour: '{HH}:{mm}',
+    'half-day': '{HH}:{mm}',
+    minute: '{HH}:{mm}',
+    second: '{HH}:{mm}:{ss}',
     millisecond: '{hh}:{mm}:{ss} {SSS}',
     none: '{yyyy}-{MM}-{dd} {hh}:{mm}'
 };
 
 export type PrimaryTimeUnit = 'millisecond' | 'second' | 'minute' | 'hour'
-    | 'half-day' | 'day' | 'month' | 'half-year' | 'quarter' | 'year';
-export type TimeUnit = PrimaryTimeUnit | 'week';
+    | 'day' | 'month' | 'year';
+export type TimeUnit = PrimaryTimeUnit | 'half-year' | 'quarter' | 'week'
+    | 'half-week' | 'half-day' | 'quarter-day';
 
-export const timeUnits: TimeUnit[] = [
-    'year', 'half-year', 'quarter', 'month', 'week', 'day', 'half-day',
-    'hour', 'minute', 'second', 'millisecond'
+export const primaryTimeUnits: PrimaryTimeUnit[] = [
+    'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'
 ];
+export const timeUnits: TimeUnit[] = [
+    'year', 'half-year', 'quarter', 'month', 'week', 'half-week', 'day',
+    'half-day', 'quarter-day', 'hour', 'minute', 'second', 'millisecond'
+];
+
+export function getPrimaryTimeUnit(timeUnit: TimeUnit): PrimaryTimeUnit {
+    switch (timeUnit) {
+        case 'half-year':
+        case 'quarter':
+            return 'month';
+        case 'week':
+        case 'half-week':
+            return 'day';
+        case 'half-day':
+        case 'quarter-day':
+            return 'hour';
+        default:
+            return timeUnit;
+    }
+}
+
+export function isPrimaryTimeUnit(timeUnit: TimeUnit): boolean {
+    return timeUnit === getPrimaryTimeUnit(timeUnit);
+}
 
 
 export function format(time: Date, template: string, isUTC?: boolean): string {
