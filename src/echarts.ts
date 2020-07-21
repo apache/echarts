@@ -1360,7 +1360,7 @@ class ECharts extends Eventful {
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighDownPayload(payload)) {
+                    if (isHighDownPayload(payload) && !payload.notBlur) {
                         if (model instanceof SeriesModel) {
                             toggleSeriesBlurStateFromPayload(model, payload, ecIns);
                         }

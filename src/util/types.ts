@@ -146,6 +146,16 @@ export interface Payload extends PayloadItem {
     batch?: PayloadItem[];
 }
 
+export interface HighlightPayload extends Payload {
+    type: 'highlight';
+    notBlur?: boolean
+}
+
+export interface DownplayPayload extends Payload {
+    type: 'downplay';
+    notBlur?: boolean
+}
+
 // Payload includes override anmation info
 export interface PayloadAnimationPart {
     duration?: number
