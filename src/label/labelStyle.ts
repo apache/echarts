@@ -434,21 +434,37 @@ function setTokenTextStyle(
     if (lineWidth != null) {
         textStyle.lineWidth = lineWidth;
     }
-    const lineType = retrieve2(textStyleModel.getShallow('textBorderType'), globalTextStyle.textBorderType);
-    if (!lineType || lineType === 'solid') {
+    const textBorderType = retrieve2(textStyleModel.getShallow('textBorderType'), globalTextStyle.textBorderType);
+    if (!textBorderType || textBorderType === 'solid') {
         textStyle.lineDash = [];
     }
     else {
-        let lineDashArray = retrieve2(textStyleModel.getShallow('textBorderDashArray'), globalTextStyle.textBorderDashArray);
+        let textBorderDashArray = retrieve2(textStyleModel.getShallow('textBorderDashArray'), globalTextStyle.textBorderDashArray);
         // compatible with single number
-        if (lineDashArray != null && !isNaN(lineDashArray as number)) {
-            lineDashArray = [+lineDashArray];
+        if (textBorderDashArray != null && !isNaN(textBorderDashArray as number)) {
+            textBorderDashArray = [+textBorderDashArray];
         }
-        textStyle.lineDash = lineDashArray as number[] || (lineType === 'dashed' ? [5, 5] : [1, 1]);
+        textStyle.lineDash = textBorderDashArray as number[] || (textBorderType === 'dashed' ? [5, 5] : [1, 1]);
     }
-    const lineDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
-    if (lineDashOffset != null) {
-        textStyle.lineDashOffset = lineDashOffset;
+    const textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
+    if (textBorderDashOffset != null) {
+        textStyle.lineDashOffset = textBorderDashOffset;
+    }
+    const borderType = retrieve2(textStyleModel.getShallow('borderType'), globalTextStyle.borderType);
+    if (!borderType || borderType === 'solid') {
+        textStyle.borderDash = [];
+    }
+    else {
+        let borderDashArray = retrieve2(textStyleModel.getShallow('borderDashArray'), globalTextStyle.borderDashArray);
+        // compatible with single number
+        if (borderDashArray != null && !isNaN(borderDashArray as number)) {
+            borderDashArray = [+borderDashArray];
+        }
+        textStyle.borderDash = borderDashArray as number[] || (textBorderType === 'dashed' ? [5, 5] : [1, 1]);
+    }
+    const borderDashOffset = retrieve2(textStyleModel.getShallow('borderDashOffset'), globalTextStyle.borderDashOffset);
+    if (borderDashOffset != null) {
+        textStyle.borderDashOffset = borderDashOffset;
     }
 
     // TODO
