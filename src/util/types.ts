@@ -270,7 +270,7 @@ export interface LoadingEffect extends Element {
 
 export type TooltipRenderMode = 'html' | 'richText';
 
-export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'legendAsc' | 'legendDesc';
+export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesDesc';
 
 
 // ---------------------------------
@@ -512,9 +512,9 @@ export interface CallbackDataParams {
     seriesName?: string;
     name: string;
     dataIndex: number;
-    data: any;
+    data: unknown;
     dataType?: string;
-    value: any;
+    value: unknown;
     color?: ZRColor;
     borderColor?: string;
     dimensionNames?: DimensionName[];

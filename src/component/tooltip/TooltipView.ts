@@ -588,21 +588,21 @@ class TooltipView extends ComponentView {
                 switch (singleTooltipModel.get('order')) {
                     case 'valueAsc':
                         singleParamsList.sort(function (a, b) {
-                            return a.data - b.data;
+                            return +(a.data) - +(b.data);
                         });
                         break;
 
                     case 'valueDesc':
                         singleParamsList.sort(function (a, b) {
-                            return b.data - a.data;
+                            return +(b.data) - +(a.data);
                         });
                         break;
 
-                    case 'legendDesc':
+                    case 'seriesDesc':
                         singleParamsList.reverse();
                         break;
 
-                    case 'legendAsc':
+                    case 'seriesAsc':
                     default:
                         break;
                 }
