@@ -113,7 +113,7 @@ export interface ECElement extends Element {
     hoverState?: 0 | 1 | 2;
     selected?: boolean;
 
-    style?: Dictionary<any>;
+    style?: Dictionary<unknown>;
 
     z2EmphasisLift?: number;
     z2SelectLift?: number;
@@ -1038,7 +1038,10 @@ export interface CommonTooltipOption<FormatterParams> {
     borderColor?: ColorString
     borderRadius?: number
     borderWidth?: number
-    boxShadow?: ColorString
+    shadowBlur?: number
+    shadowColor?: string
+    shadowOffsetX?: number
+    shadowOffsetY?: number
 
     /**
      * Padding between tooltip content and tooltip border.

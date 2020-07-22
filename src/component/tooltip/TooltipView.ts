@@ -493,6 +493,7 @@ class TooltipView extends ComponentView {
 
         const singleDefaultHTML: string[] = [];
         const singleParamsList: TooltipDataParams[] = [];
+        const htmlList: string[] = [];
         const singleTooltipModel = buildTooltipModel([
             e.tooltipOption,
             globalTooltipModel
@@ -579,7 +580,7 @@ class TooltipView extends ComponentView {
                     else {
                         html = seriesTooltip;
                     }
-                    dataParams.html = html;
+                    htmlList.push(html);
                 });
 
                 switch (singleTooltipModel.get('order')) {
@@ -604,8 +605,8 @@ class TooltipView extends ComponentView {
                         break;
                 }
 
-                singleParamsList.forEach(element => {
-                    seriesDefaultHTML.push(element.html);
+                zrUtil.each(htmlList, function (html) {
+                    seriesDefaultHTML.push(html);
                 });
 
                 // Default tooltip content
@@ -821,8 +822,6 @@ class TooltipView extends ComponentView {
         tooltipDataParams: TooltipDataParams | TooltipDataParams[],
         coord?: CoordinateSystem
     ): {
-        x: number;
-        y: number;
         color: ZRColor;
     } {
         let dim = '';
@@ -832,14 +831,10 @@ class TooltipView extends ComponentView {
         if (!zrUtil.isArray(tooltipDataParams)) {
             if (!tooltipDataParams.position) {
                 return {
-                    x: point[0],
-                    y: point[1],
                     color: tooltipDataParams.color || tooltipDataParams.borderColor
                 };
             }
             return {
-                x: point[0],
-                y: tooltipDataParams.position[1],
                 color: tooltipDataParams.color || tooltipDataParams.borderColor
             };
         }
@@ -848,8 +843,6 @@ class TooltipView extends ComponentView {
         const distanceArr = tooltipDataParams.map(params => Math.abs(params.position[posIndex] - point[posIndex]));
         const index = distanceArr.indexOf(Math.min(...distanceArr));
         return {
-            x: tooltipDataParams[index]?.position[0] || point[0],
-            y: tooltipDataParams[index]?.position[1] || point[1],
             color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor
         };
     }

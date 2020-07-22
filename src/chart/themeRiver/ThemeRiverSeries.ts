@@ -295,9 +295,9 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         if (isNaN(htmlValue as number) || htmlValue == null) {
             htmlValue = '-';
         }
-        return '<p style="margin: 8px 0 0;">'
+        return '<div style="margin: 8px 0 0;">'
             + concatTooltipHtml(htmlName, htmlValue)
-            + '</p>';
+            + '</div>';
     }
 
     static defaultOption: ThemeRiverSeriesOption = {

@@ -66,11 +66,11 @@ export function encodeHTML(source: string): string {
         });
 }
 
-export function concatTooltipHtml(html: string, value: unknown, dontEncodeHtml = false): string {
+export function concatTooltipHtml(html: string, value: unknown, dontEncodeHtml?: boolean): string {
     return (dontEncodeHtml ? html : encodeHTML(html))
-            + (value ? '<strong style="float:right;margin-left:20px;color:#000;">' : '')
+            + (value ? '<span style="float:right;margin-left:20px;color:#000;font-weight:900">' : '')
             + encodeHTML(value as string)
-            + (value ? '</strong>' : '');
+            + (value ? '</span>' : '');
 }
 
 const TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];

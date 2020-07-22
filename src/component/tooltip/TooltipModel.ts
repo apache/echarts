@@ -112,7 +112,11 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         backgroundColor: '#fff',
 
-        boxShadow: '0 0 5px',
+        // box shadow
+        shadowBlur: 5,
+        shadowColor: '#333',
+        shadowOffsetX: 0,
+        shadowOffsetY: 0,
 
         // tooltip border color
         borderColor: '#333',

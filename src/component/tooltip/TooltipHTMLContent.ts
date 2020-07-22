@@ -50,18 +50,29 @@ function mirrowPos(pos: string): string {
     return pos;
 }
 
+
+function getFinalColor(color: ZRColor): string {
+    let finalNearPointColor = '#fff';
+    if (zrUtil.isObject(color) && color.type !== 'pattern') {
+        finalNearPointColor = color.colorStops[0].color;
+    }
+    else if (zrUtil.isObject(color) && (color.type === 'pattern')) {
+        finalNearPointColor = 'transparent';
+    }
+    else if (zrUtil.isString(color)) {
+        finalNearPointColor = color;
+    }
+
+    return finalNearPointColor;
+}
+
 function assembleArrow(
     backgroundColor: ColorString,
     borderColor: ZRColor,
     arrowPosition: TooltipOption['position']
 ) {
-    if (zrUtil.isObject(borderColor) && borderColor.type !== 'pattern') {
-        borderColor = borderColor.colorStops[0].color;
-    }
-    else if (zrUtil.isObject(borderColor) && (borderColor.type === 'pattern')) {
-        borderColor = 'transparent';
-    }
-    if (typeof arrowPosition !== 'string') {
+    borderColor = getFinalColor(borderColor);
+    if (!zrUtil.isString(arrowPosition)) {
         return '';
     }
 
@@ -129,9 +140,13 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
-    const boxShadow = tooltipModel.get('boxShadow');
+    const shadowBlur = tooltipModel.get('shadowBlur');
+    const shadowColor = tooltipModel.get('shadowColor');
+    const shadowOffsetX = tooltipModel.get('shadowOffsetX');
+    const shadowOffsetY = tooltipModel.get('shadowOffsetY');
     const textStyleModel = tooltipModel.getModel('textStyle');
     const padding = tooltipModel.get('padding');
+    const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
 
     // Animation transition. Do not animate when transitionDuration is 0.
     transitionDuration
@@ -318,20 +333,14 @@ class TooltipHTMLContent {
         clearTimeout(this._hideTimeout);
         const el = this.el;
         const styleCoord = this._styleCoord;
-
         const offset = el.offsetHeight / 2;
-        if (zrUtil.isObject(nearPointColor) && nearPointColor.type !== 'pattern') {
-            nearPointColor = nearPointColor.colorStops[0].color;
-        }
-        else if (zrUtil.isObject(nearPointColor) && (nearPointColor.type === 'pattern')) {
-            nearPointColor = 'transparent';
-        }
+        nearPointColor = getFinalColor(nearPointColor);
         el.style.cssText = gCssText + assembleCssText(tooltipModel)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
             + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;'
-            + `border-color: ${nearPointColor}`
+            + `border-color: ${nearPointColor};`
             + (tooltipModel.get('extraCssText') || '');
 
         el.style.display = el.innerHTML ? 'block' : 'none';
