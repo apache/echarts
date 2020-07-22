@@ -19,7 +19,7 @@ import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 
 type TextCommonParams = {
     /**
-     * Whether diable drawing box of block (outer most).
+     * Whether disable drawing box of block (outer most).
      */
     disableBox?: boolean
     /**
@@ -430,9 +430,9 @@ function setTokenTextStyle(
     if (strokeColor != null) {
         textStyle.stroke = strokeColor;
     }
-    const lineWidth = retrieve2(textStyleModel.getShallow('textBorderWidth'), globalTextStyle.textBorderWidth);
-    if (lineWidth != null) {
-        textStyle.lineWidth = lineWidth;
+    const textBorderWidth = retrieve2(textStyleModel.getShallow('textBorderWidth'), globalTextStyle.textBorderWidth);
+    if (textBorderWidth != null) {
+        textStyle.lineWidth = textBorderWidth;
     }
     const textBorderType = retrieve2(textStyleModel.getShallow('textBorderType'), globalTextStyle.textBorderType);
     if (!textBorderType || textBorderType === 'solid') {
@@ -449,22 +449,6 @@ function setTokenTextStyle(
     const textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
     if (textBorderDashOffset != null) {
         textStyle.lineDashOffset = textBorderDashOffset;
-    }
-    const borderType = retrieve2(textStyleModel.getShallow('borderType'), globalTextStyle.borderType);
-    if (!borderType || borderType === 'solid') {
-        textStyle.borderDash = [];
-    }
-    else {
-        let borderDashArray = retrieve2(textStyleModel.getShallow('borderDashArray'), globalTextStyle.borderDashArray);
-        // compatible with single number
-        if (borderDashArray != null && !isNaN(borderDashArray as number)) {
-            borderDashArray = [+borderDashArray];
-        }
-        textStyle.borderDash = borderDashArray as number[] || (textBorderType === 'dashed' ? [5, 5] : [1, 1]);
-    }
-    const borderDashOffset = retrieve2(textStyleModel.getShallow('borderDashOffset'), globalTextStyle.borderDashOffset);
-    if (borderDashOffset != null) {
-        textStyle.borderDashOffset = borderDashOffset;
     }
 
     // TODO
@@ -510,6 +494,22 @@ function setTokenTextStyle(
             if (val != null) {
                 (textStyle as any)[key] = val;
             }
+        }
+        const borderType = retrieve2(textStyleModel.getShallow('borderType'), globalTextStyle.borderType);
+        if (!borderType || borderType === 'solid') {
+            textStyle.borderDash = [];
+        }
+        else {
+            let borderDashArray = retrieve2(textStyleModel.getShallow('borderDashArray'), globalTextStyle.borderDashArray);
+            // compatible with single number
+            if (borderDashArray != null && !isNaN(borderDashArray as number)) {
+                borderDashArray = [+borderDashArray];
+            }
+            textStyle.borderDash = borderDashArray as number[] || (borderType === 'dashed' ? [5, 5] : [1, 1]);
+        }
+        const borderDashOffset = retrieve2(textStyleModel.getShallow('borderDashOffset'), globalTextStyle.borderDashOffset);
+        if (borderDashOffset != null) {
+            textStyle.borderDashOffset = borderDashOffset;
         }
     }
 }

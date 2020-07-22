@@ -69,7 +69,7 @@ class LineStyleMixin {
 
     getLineDash(this: Model, lineWidth?: number): false | number[] {
         const lineType = this.get('type');
-        if (lineType === 'solid' || lineType == null) {
+        if (lineType == null || lineType === 'solid') {
             // Use `false` but not `null` for the solid line here, because `null` might be
             // ignored when assigning to `el.style`. e.g., when setting `lineStyle.type` as
             // `'dashed'` and `emphasis.lineStyle.type` as `'solid'` in graph series, the

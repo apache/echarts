@@ -68,10 +68,10 @@ class ItemStyleMixin {
         return style;
     }
 
-    getBorderLineDash(this: Model, lineWidth?: number): false | number[] {
+    getBorderLineDash(this: Model, lineWidth?: number): number[] {
         const lineType = this.get('borderType');
-        if (lineType === 'solid' || lineType == null) {
-            return false;
+        if (lineType == null || lineType === 'solid') {
+            return [];
         }
 
         lineWidth = lineWidth || 0;
