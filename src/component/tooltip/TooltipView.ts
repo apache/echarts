@@ -310,7 +310,7 @@ class TooltipView extends ComponentView {
         const dataByCoordSys = payload.dataByCoordSys;
 
         if (payload.tooltip && payload.x != null && payload.y != null) {
-            const el = proxyRect as ECElement;
+            const el = proxyRect as unknown as ECElement;
             el.x = payload.x;
             el.y = payload.y;
             el.update();
@@ -493,7 +493,6 @@ class TooltipView extends ComponentView {
 
         const singleDefaultHTML: string[] = [];
         const singleParamsList: TooltipDataParams[] = [];
-        const htmlList: string[] = [];
         const singleTooltipModel = buildTooltipModel([
             e.tooltipOption,
             globalTooltipModel
@@ -550,11 +549,6 @@ class TooltipView extends ComponentView {
                         isStacked = true;
                         dims[1] = stackResultDim;
                     }
-                    dataParams.position = findPointFromSeries({
-                        seriesIndex: idxItem.seriesIndex,
-                        dataIndex: dataIndex,
-                        isStacked
-                    }, ecModel).point;
                     dataParams.axisDim = item.axisDim;
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
@@ -580,7 +574,12 @@ class TooltipView extends ComponentView {
                     else {
                         html = seriesTooltip;
                     }
-                    htmlList.push(html);
+                    dataParams.html = html;
+                    dataParams.position = findPointFromSeries({
+                        seriesIndex: idxItem.seriesIndex,
+                        dataIndex: dataIndex,
+                        isStacked
+                    }, ecModel).point;
                 });
 
                 switch (singleTooltipModel.get('order')) {
@@ -605,8 +604,9 @@ class TooltipView extends ComponentView {
                         break;
                 }
 
-                zrUtil.each(htmlList, function (html) {
-                    seriesDefaultHTML.push(html);
+                zrUtil.each(singleParamsList, function (params) {
+                    seriesDefaultHTML.push(params.html);
+                    delete params.html;
                 });
 
                 // Default tooltip content
@@ -840,7 +840,11 @@ class TooltipView extends ComponentView {
         }
 
         const posIndex = +(dim === 'x');
-        const distanceArr = tooltipDataParams.map(params => Math.abs(params.position[posIndex] - point[posIndex]));
+        const distanceArr = tooltipDataParams.map(params => {
+            const distance = Math.abs(params.position[posIndex] - point[posIndex]);
+            delete params.position;
+            return distance;
+        });
         const index = distanceArr.indexOf(Math.min(...distanceArr));
         return {
             color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor
