@@ -75,6 +75,14 @@ under the License.
     <div id="main22" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
     <h1>Tooltip in Stacked Line Chart Horizontal</h1>
     <div id="main23" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <h1>Tooltip order valueAsc</h1>
+    <div id="main24" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <h1>Tooltip order valueDesc</h1>
+    <div id="main25" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <h1>Tooltip order seriesDesc</h1>
+    <div id="main26" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
+    <h1>Tooltip order seriesAsc</h1>
+    <div id="main27" style="width: 100vw;height:40vh;margin: 0 auto;"></div>
 
     <script>
         require([
@@ -101,6 +109,10 @@ under the License.
             var chart21 = echarts.init(document.getElementById('main21'));
             var chart22 = echarts.init(document.getElementById('main22'));
             var chart23 = echarts.init(document.getElementById('main23'));
+            var chart24 = echarts.init(document.getElementById('main24'));
+            var chart25 = echarts.init(document.getElementById('main25'));
+            var chart26 = echarts.init(document.getElementById('main26'));
+            var chart27 = echarts.init(document.getElementById('main27'));
 
             option1 = {
                 tooltip: {
@@ -378,7 +390,6 @@ under the License.
                     }
                 }]
             };
-
 
             option7 = {
                 tooltip: {},
@@ -1799,7 +1810,6 @@ under the License.
                 ]
             };
 
-
             option12 = {
                 tooltip: {
                     trigger: 'axis',
@@ -2413,7 +2423,6 @@ under the License.
                 }]
             }
 
-
             data = [
                 ["2000-06-05", 116],
                 ["2000-06-06", 129],
@@ -2539,7 +2548,6 @@ under the License.
             };
 
             var colors = ['#5793f3', '#d14a61', '#675bba'];
-
 
             option19 = {
                 color: colors,
@@ -2926,6 +2934,199 @@ under the License.
                 ]
             };
 
+            option24 = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    },
+                    order: 'valueAsc'
+                },
+                xAxis: [{
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                series: [
+                    {
+                        name: '邮件营销',
+                        type: 'line',
+                        data: [120, 132, 101, 134, 90, 230, 210]
+                    },
+                    {
+                        name: '联盟广告',
+                        type: 'line',
+                        data: [220, 182, 191, 234, 290, 630, 310]
+                    },
+                    {
+                        name: '视频广告',
+                        type: 'line',
+                        data: [150, 232, 201, 154, 190, 430, 410]
+                    },
+                    {
+                        name: '直接访问',
+                        type: 'line',
+                        data: [320, 332, 301, 334, 390, 330, 320]
+                    },
+                    {
+                        name: '搜索引擎',
+                        type: 'line',
+                        data: [820, 932, 901, 934, 1290, 1330, 1320]
+                    }
+                ]
+            };
+
+            option25 = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    },
+                    order: 'valueDesc'
+                },
+                xAxis: [{
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                series: [
+                    {
+                        name: '邮件营销',
+                        type: 'line',
+                        data: [120, 132, 101, 134, 90, 230, 210]
+                    },
+                    {
+                        name: '联盟广告',
+                        type: 'line',
+                        data: [220, 182, 191, 234, 290, 630, 310]
+                    },
+                    {
+                        name: '视频广告',
+                        type: 'line',
+                        data: [150, 232, 201, 154, 190, 430, 410]
+                    },
+                    {
+                        name: '直接访问',
+                        type: 'line',
+                        data: [320, 332, 301, 334, 390, 330, 320]
+                    },
+                    {
+                        name: '搜索引擎',
+                        type: 'line',
+                        data: [820, 932, 901, 934, 1290, 1330, 1320]
+                    }
+                ]
+            };
+
+            option26 = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    },
+                    order: 'seriesDesc'
+                },
+                xAxis: [{
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                series: [
+                    {
+                        name: '邮件营销',
+                        type: 'line',
+                        data: [120, 132, 101, 134, 90, 230, 210]
+                    },
+                    {
+                        name: '联盟广告',
+                        type: 'line',
+                        data: [220, 182, 191, 234, 290, 630, 310]
+                    },
+                    {
+                        name: '视频广告',
+                        type: 'line',
+                        data: [150, 232, 201, 154, 190, 430, 410]
+                    },
+                    {
+                        name: '直接访问',
+                        type: 'line',
+                        data: [320, 332, 301, 334, 390, 330, 320]
+                    },
+                    {
+                        name: '搜索引擎',
+                        type: 'line',
+                        data: [820, 932, 901, 934, 1290, 1330, 1320]
+                    }
+                ]
+            };
+
+            option27 = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    },
+                    order: 'seriesAsc'
+                },
+                xAxis: [{
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                series: [
+                    {
+                        name: '邮件营销',
+                        type: 'line',
+                        data: [120, 132, 101, 134, 90, 230, 210]
+                    },
+                    {
+                        name: '联盟广告',
+                        type: 'line',
+                        data: [220, 182, 191, 234, 290, 630, 310]
+                    },
+                    {
+                        name: '视频广告',
+                        type: 'line',
+                        data: [150, 232, 201, 154, 190, 430, 410]
+                    },
+                    {
+                        name: '直接访问',
+                        type: 'line',
+                        data: [320, 332, 301, 334, 390, 330, 320]
+                    },
+                    {
+                        name: '搜索引擎',
+                        type: 'line',
+                        data: [820, 932, 901, 934, 1290, 1330, 1320]
+                    }
+                ]
+            };
+
+
             chart1.setOption(option1);
             chart2.setOption(option2);
             chart3.setOption(option3);
@@ -2947,6 +3148,10 @@ under the License.
             chart21.setOption(option21);
             chart22.setOption(option22);
             chart23.setOption(option23);
+            chart24.setOption(option24);
+            chart25.setOption(option25);
+            chart26.setOption(option26);
+            chart27.setOption(option27);
 
 
         });
