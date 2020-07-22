@@ -1799,6 +1799,7 @@ class ECharts extends Eventful {
                 if (dispatcher) {
                     const ecData = getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
+                    // TODO. progressive mode.
                     toggleSeriesBlurState(
                         ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, true
                     );
@@ -1943,8 +1944,7 @@ class ECharts extends Eventful {
 
 
             // If use hover layer
-            // TODO
-            // updateHoverLayerStatus(ecIns, ecModel);
+            updateHoverLayerStatus(ecIns, ecModel);
 
             // Add aria
             aria(ecIns._zr.dom, ecModel);
@@ -2017,8 +2017,9 @@ class ECharts extends Eventful {
                     const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.__alive) {
                         chartView.group.traverse(function (el: ECElement) {
-                            // Don't switch back.
-                            el.useHoverLayer = true;
+                            if (el.states.emphasis) {
+                                el.states.emphasis.hoverLayer = true;
+                            }
                         });
                     }
                 });
@@ -2026,7 +2027,7 @@ class ECharts extends Eventful {
         };
 
         /**
-         * Update chart progressive and blend.
+         * Update chart and blend.
          */
         function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
