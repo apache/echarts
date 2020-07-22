@@ -84,6 +84,13 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
         checkpointStyle?: TimelineCheckpointStyle
     }
 
+    // Style in progress
+    progress?: {
+        lineStyle?: TimelineLineStyleOption
+        itemStyle?: ItemStyleOption
+        label?: TimelineLabelOption
+    }
+
     tooltip?: boolean
 }
 
@@ -136,6 +143,14 @@ export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, S
         itemStyle?: ItemStyleOption
         checkpointStyle?: TimelineCheckpointStyle
         controlStyle?: TimelineControlStyle
+        label?: TimelineLabelOption
+    }
+
+
+    // Style in progress
+    progress?: {
+        lineStyle?: TimelineLineStyleOption
+        itemStyle?: ItemStyleOption
         label?: TimelineLabelOption
     }
 

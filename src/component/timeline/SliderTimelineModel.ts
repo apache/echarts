@@ -48,13 +48,13 @@ class SliderTimelineModel extends TimelineModel {
             trigger: 'item'                 // data item may also have tootip attr.
         },
 
-        symbol: 'emptyCircle',
-        symbolSize: 10,
+        symbol: 'circle',
+        symbolSize: 12,
 
         lineStyle: {
             show: true,
             width: 2,
-            color: '#304654'
+            color: '#A4BED7'
         },
         label: {                            // 文本标签
             position: 'auto',           // auto left right top bottom
@@ -66,19 +66,24 @@ class SliderTimelineModel extends TimelineModel {
             rotate: 0,
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            color: '#304654'
+            color: '#A4BED7'
         },
         itemStyle: {
-            color: '#304654',
+            color: '#A4BED7',
             borderWidth: 1
         },
 
         checkpointStyle: {
             symbol: 'circle',
-            symbolSize: 13,
-            color: '#c23531',
-            borderWidth: 5,
-            borderColor: 'rgba(194,53,49, 0.5)',
+            symbolSize: 15,
+            color: '#316bf3',
+            borderColor: '#fff',
+            borderWidth: 2,
+            shadowBlur: 2,
+            shadowOffsetX: 1,
+            shadowOffsetY: 1,
+            shadowColor: 'rgba(0, 0, 0, 0.3)',
+            // borderColor: 'rgba(194,53,49, 0.5)',
             animation: true,
             animationDuration: 300,
             animationEasing: 'quinticInOut'
@@ -97,28 +102,37 @@ class SliderTimelineModel extends TimelineModel {
             nextIcon: 'path://M18.6,50.8l22.5-22.5c0.2-0.2,0.3-0.4,0.3-0.7c0-0.3-0.1-0.5-0.3-0.7L18.7,4.4c-0.1-0.1-0.2-0.3-0.2-0.5 c0-0.4,0.3-0.8,0.8-0.8c0.2,0,0.5,0.1,0.6,0.3l23.5,23.5l0,0c0.2,0.2,0.3,0.4,0.3,0.7c0,0.3-0.1,0.5-0.3,0.7l-0.1,0.1L19.7,52 c-0.1,0.1-0.3,0.2-0.5,0.2c-0.4,0-0.8-0.3-0.8-0.8C18.4,51.2,18.5,51,18.6,50.8z', // jshint ignore:line
             prevIcon: 'path://M43,52.8L20.4,30.3c-0.2-0.2-0.3-0.4-0.3-0.7c0-0.3,0.1-0.5,0.3-0.7L42.9,6.4c0.1-0.1,0.2-0.3,0.2-0.5 c0-0.4-0.3-0.8-0.8-0.8c-0.2,0-0.5,0.1-0.6,0.3L18.3,28.8l0,0c-0.2,0.2-0.3,0.4-0.3,0.7c0,0.3,0.1,0.5,0.3,0.7l0.1,0.1L41.9,54 c0.1,0.1,0.3,0.2,0.5,0.2c0.4,0,0.8-0.3,0.8-0.8C43.2,53.2,43.1,53,43,52.8z', // jshint ignore:line
 
-            color: '#304654',
-            borderColor: '#304654',
+            color: '#A4BED7',
+            borderColor: '#A4BED7',
             borderWidth: 1
         },
-
         emphasis: {
             label: {
                 show: true,
                 // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: '#c23531'
+                color: '#6f778d'
             },
 
             itemStyle: {
-                color: '#c23531'
+                color: '#316BF3'
             },
 
             controlStyle: {
-                color: '#c23531',
-                borderColor: '#c23531',
+                color: '#316BF3',
+                borderColor: '#316BF3',
                 borderWidth: 2
             }
         },
+
+        progress: {
+            lineStyle: {
+                color: '#316BF3'
+            },
+            itemStyle: {
+                color: '#316BF3'
+            }
+        },
+
         data: []
     });
 
