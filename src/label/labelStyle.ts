@@ -434,6 +434,23 @@ function setTokenTextStyle(
     if (lineWidth != null) {
         textStyle.lineWidth = lineWidth;
     }
+    const lineType = retrieve2(textStyleModel.getShallow('textBorderType'), globalTextStyle.textBorderType);
+    if (!lineType || lineType === 'solid') {
+        textStyle.lineDash = [];
+    }
+    else {
+        let lineDashArray = retrieve2(textStyleModel.getShallow('textBorderDashArray'), globalTextStyle.textBorderDashArray);
+        // compatible with single number
+        if (lineDashArray != null && !isNaN(lineDashArray as number)) {
+            lineDashArray = [+lineDashArray];
+        }
+        textStyle.lineDash = lineDashArray as number[] || (lineType === 'dashed' ? [5, 5] : [1, 1]);
+    }
+    const lineDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
+    if (lineDashOffset != null) {
+        textStyle.lineDashOffset = lineDashOffset;
+    }
+
     // TODO
     if (!isNotNormal && !isAttached) {
         // Set default finally.

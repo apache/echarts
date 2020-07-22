@@ -791,6 +791,9 @@ export interface TextCommonOption extends ShadowOptionMixin {
     }
     borderColor?: string
     borderWidth?: number
+    borderType?: ZRLineType
+    borderDashArray?: number | number[]
+    borderDashOffset?: number
     borderRadius?: number | number[]
     padding?: number | number[]
 
@@ -798,6 +801,9 @@ export interface TextCommonOption extends ShadowOptionMixin {
     height?: number
     textBorderColor?: string
     textBorderWidth?: number
+    textBorderType?: ZRLineType
+    textBorderDashArray?: number | number[]
+    textBorderDashOffset?: number
 
     textShadowBlur?: number
     textShadowColor?: string
