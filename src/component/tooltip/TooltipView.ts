@@ -847,7 +847,7 @@ class TooltipView extends ComponentView {
         });
         const index = distanceArr.indexOf(Math.min(...distanceArr));
         return {
-            color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor
+            color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor || '#fff'
         };
     }
 
