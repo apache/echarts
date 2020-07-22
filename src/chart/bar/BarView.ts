@@ -748,7 +748,7 @@ function updateStyle(
         (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
     }
 
-    el.useStyle(extend(style, itemModel.getModel('itemStyle').getItemStyle(['color'])));
+    el.useStyle(extend(extend({}, style), itemModel.getModel('itemStyle').getItemStyle(['color'])));
 
     el.ignore = isZeroOnPolar(layout as SectorLayout);
 
@@ -807,7 +807,7 @@ class LargePath extends Path<LargePathProps> {
     type = 'largeBar';
 
     shape: LagePathShape;
-
+;
     __startPoint: number[];
     __baseDimIdx: number;
     __largeDataIndices: ArrayLike<number>;
@@ -940,12 +940,10 @@ function setLargeStyle(
 ) {
     const globalStyle = data.getVisual('style');
 
-    console.log(globalStyle)
-
     el.useStyle(extend({}, globalStyle));
     // Use stroke instead of fill.
-    //el.style.fill = null;
-    //el.style.stroke = globalStyle.fill;
+    el.style.fill = null;
+    el.style.stroke = globalStyle.fill;
     el.style.lineWidth = data.getLayout('barWidth');
 }
 
