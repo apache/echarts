@@ -198,7 +198,7 @@ class Symbol extends graphic.Group {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
 
-
+        let itemStyle;
         let emphasisItemStyle;
         let blurItemStyle;
         let selectItemStyle;
@@ -213,6 +213,7 @@ class Symbol extends graphic.Group {
         let cursorStyle;
 
         if (seriesScope) {
+            itemStyle = seriesScope.itemStyle;
             emphasisItemStyle = seriesScope.emphasisItemStyle;
             blurItemStyle = seriesScope.blurItemStyle;
             selectItemStyle = seriesScope.selectItemStyle;
@@ -230,8 +231,9 @@ class Symbol extends graphic.Group {
         if (!seriesScope || data.hasItemOption) {
             const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
-
             const emphasisModel = itemModel.getModel('emphasis');
+
+            itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
             emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             selectItemStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
             blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
@@ -257,25 +259,11 @@ class Symbol extends graphic.Group {
         }
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
-
-        const symbolStyle = data.getItemVisual(idx, 'style');
+        const symbolStyle = extend(extend({}, data.getItemVisual(idx, 'style')), itemStyle);
         const visualColor = symbolStyle.fill;
-        if (symbolPath.__isEmptyBrush) {
-            // fill and stroke will be swapped if it's empty.
-            // So we cloned a new style to avoid it affecting the original style in visual storage.
-            // TODO Better implementation. No empty logic!
-            symbolPath.useStyle(extend({}, symbolStyle));
-        }
-        else {
-            symbolPath.useStyle(symbolStyle);
-        }
+        symbolPath.useStyle(symbolStyle);
         symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
         symbolPath.style.strokeNoScale = true;
-
-        const itemModel = (seriesScope && seriesScope.itemModel)
-            ? seriesScope.itemModel
-            : data.getItemModel<SymbolDrawItemModelOption>(idx);
-        symbolPath.style.lineDash = itemModel.getModel('itemStyle').getBorderLineDash(symbolStyle.lineWidth);
 
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;

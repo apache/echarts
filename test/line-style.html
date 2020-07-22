@@ -156,14 +156,26 @@ under the License.
                     {
                         name: 'lineStyle.dashArray is [10, 5]',
                         type: 'line',
-                        data: [7200, 7210, 7200, 7220, 7200, 7230],
+                        data: [{
+                            value: 7200,
+                            itemStyle: {
+                                color: 'cyan',
+                                //borderWidth: 10,
+                                borderType: 'solid',
+                                borderColor: 'red'
+                            },
+                            //symbolRotate: 45
+                        }, 7210, 7200, 7220, 7200, 7230],
                         symbolSize: 10,
                         smooth: true,
                         lineStyle: {
                             type: 'dashed',
                             dashArray: [10, 5]
                         },
+                        symbol: 'circle',
+                        //symbolRotate: 60,
                         itemStyle: {
+                            color: 'red',
                             borderType: 'dashed',
                             borderWidth: 1,
                             borderColor: 'cyan',
@@ -308,6 +320,11 @@ under the License.
                 ],
                 option: option
             });
+
+            setTimeout(function() {
+                option.series[0].symbol = 'emptyCircle';
+                chart2.setOption(option);
+            }, 2000);
         });
     </script>
 </body>

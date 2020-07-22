@@ -105,6 +105,7 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
 }
 
 export interface SymbolDrawSeriesScope {
+    itemStyle?: ZRStyleProps
     emphasisItemStyle?: ZRStyleProps
     blurItemStyle?: ZRStyleProps
     selectItemStyle?: ZRStyleProps
@@ -129,6 +130,7 @@ function makeSeriesScope(data: List): SymbolDrawSeriesScope {
     const seriesModel = data.hostModel as Model<ScatterSeriesOption>;
     const emphasisModel = seriesModel.getModel('emphasis');
     return {
+        itemStyle: seriesModel.getModel('itemStyle').getItemStyle(['color']),
         emphasisItemStyle: emphasisModel.getModel('itemStyle').getItemStyle(),
         blurItemStyle: seriesModel.getModel(['blur', 'itemStyle']).getItemStyle(),
         selectItemStyle: seriesModel.getModel(['select', 'itemStyle']).getItemStyle(),
