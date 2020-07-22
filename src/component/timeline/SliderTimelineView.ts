@@ -702,9 +702,9 @@ class SliderTimelineView extends TimelineView {
 
         for (let i = 0; i < len; i++) {
             tickSymbols && tickSymbols[i]
-                && tickSymbols[i].toggleState('progress', i <= currentIndex);
+                && tickSymbols[i].toggleState('progress', i < currentIndex);
             tickLabels && tickLabels[i]
-                && tickLabels[i].toggleState('progress', i <= currentIndex);
+                && tickLabels[i].toggleState('progress', i < currentIndex);
         }
     }
 }
