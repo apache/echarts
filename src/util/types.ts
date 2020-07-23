@@ -99,7 +99,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    useHoverLayer?: boolean;
     tooltip?: CommonTooltipOption<unknown> & {
         content?: string;
         formatterParams?: unknown;

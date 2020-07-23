@@ -500,7 +500,7 @@ class CustomSeriesView extends ChartView {
         function setIncrementalAndHoverLayer(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = true;
-                el.useHoverLayer = true;
+                el.ensureState('emphasis').hoverLayer = true;
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {

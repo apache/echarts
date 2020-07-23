@@ -39,7 +39,7 @@ import {
     ColorString
 } from '../../util/types';
 import Model from '../../model/Model';
-import Displayable from 'zrender/src/graphic/Displayable';
+import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 
@@ -585,6 +585,17 @@ function dispatchSelectAction(
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 
+function isUseHoverLayer(api: ExtensionAPI) {
+    const list = api.getZr().storage.getDisplayList();
+    let emphasisState: DisplayableState;
+    let i = 0;
+    const len = list.length;
+    while (!(emphasisState = list[i].states.emphasis) && i < len) {
+        i++;
+    }
+    return emphasisState && emphasisState.hoverLayer;
+}
+
 function dispatchHighlightAction(
     seriesName: string,
     dataName: string,
@@ -592,8 +603,7 @@ function dispatchHighlightAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    const el = api.getZr().storage.getDisplayList()[0];
-    if (!(el && el.useHoverLayer)) {
+    if (!isUseHoverLayer(api)) {
         api.dispatchAction({
             type: 'highlight',
             seriesName: seriesName,
@@ -610,8 +620,7 @@ function dispatchDownplayAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    const el = api.getZr().storage.getDisplayList()[0];
-    if (!(el && el.useHoverLayer)) {
+    if (!isUseHoverLayer(api)) {
         api.dispatchAction({
             type: 'downplay',
             seriesName: seriesName,
