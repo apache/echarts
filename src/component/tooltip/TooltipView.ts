@@ -733,7 +733,7 @@ class TooltipView extends ComponentView {
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
         let tooltipOpt = el.tooltip;
-        if (typeof tooltipOpt === 'string') {
+        if (zrUtil.isString(tooltipOpt)) {
             const content = tooltipOpt;
             tooltipOpt = {
                 content: content,
@@ -794,10 +794,10 @@ class TooltipView extends ComponentView {
             params
         );
 
-        if (formatter && typeof formatter === 'string') {
+        if (formatter && zrUtil.isString(formatter)) {
             html = formatUtil.formatTpl(formatter, params, true);
         }
-        else if (typeof formatter === 'function') {
+        else if (zrUtil.isFunction(formatter)) {
             const callback = bind(function (cbTicket: string, html: string) {
                 if (cbTicket === this._ticket) {
                     tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
@@ -872,7 +872,7 @@ class TooltipView extends ComponentView {
         const rect = el && el.getBoundingRect().clone();
         el && rect.applyTransform(el.transform);
 
-        if (typeof positionExpr === 'function') {
+        if (zrUtil.isFunction(positionExpr)) {
             // Callback of position can be an array or a string specify the position
             positionExpr = positionExpr([x, y], params, content.el, rect, {
                 viewSize: [viewWidth, viewHeight],
@@ -899,7 +899,7 @@ class TooltipView extends ComponentView {
             vAlign = null;
         }
         // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
-        else if (typeof positionExpr === 'string' && el) {
+        else if (zrUtil.isString(positionExpr) && el) {
             const pos = calcTooltipPosition(
                 positionExpr, rect, contentSize
             );
@@ -1008,7 +1008,7 @@ function buildTooltipModel(modelCascade: (TooltipModel | Model<TooltipableOption
             //  value: 10,
             //  tooltip: 'Something you need to know'
             // }
-            if (typeof tooltipOpt === 'string') {
+            if (zrUtil.isString(tooltipOpt)) {
                 tooltipOpt = {
                     formatter: tooltipOpt
                 };

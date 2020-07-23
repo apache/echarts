@@ -71,11 +71,11 @@ function assembleArrow(
     borderColor: ZRColor,
     arrowPosition: TooltipOption['position']
 ) {
-    borderColor = getFinalColor(borderColor);
-    if (!zrUtil.isString(arrowPosition)) {
+    if (!zrUtil.isString(arrowPosition) || arrowPosition === 'inside') {
         return '';
     }
 
+    borderColor = getFinalColor(borderColor);
     const arrowPos = mirrowPos(arrowPosition);
     let centerPos = '';
     let rotate = 0;
@@ -366,7 +366,11 @@ class TooltipHTMLContent {
             return;
         }
         this.el.innerHTML = content;
-        this.el.innerHTML += (typeof arrowPosition === 'string' && tooltipModel.get('trigger') === 'item')
+        this.el.innerHTML += (
+                zrUtil.isString(arrowPosition)
+                && tooltipModel.get('trigger') === 'item'
+                && !tooltipModel.get('confine')
+            )
             ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition) : '';
     }
 
