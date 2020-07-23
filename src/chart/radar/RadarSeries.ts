@@ -122,11 +122,11 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
                 });
                 break;
 
-            case 'legendDesc':
+            case 'seriesDesc':
                 indicatorAxes.reverse();
                 break;
 
-            case 'legendAsc':
+            case 'seriesAsc':
             default:
                 break;
         }
