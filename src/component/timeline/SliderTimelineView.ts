@@ -30,7 +30,7 @@ import * as numberUtil from '../../util/number';
 import {encodeHTML} from '../../util/format';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { merge, each, extend, clone, isString, bind, defaults } from 'zrender/src/core/util';
+import { merge, each, extend, clone, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import ComponentView from '../../view/Component';
 import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent } from '../../util/types';
@@ -43,7 +43,7 @@ import OrdinalScale from '../../scale/Ordinal';
 import TimeScale from '../../scale/Time';
 import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
-import ZRText from 'zrender/src/graphic/Text';
+import { parsePercent } from 'zrender/src/contain/text';
 
 const PI = Math.PI;
 
@@ -51,6 +51,7 @@ type TimelineSymbol = ReturnType<typeof createSymbol>;
 
 type RenderMethodName = '_renderAxisLine' | '_renderAxisTick' | '_renderControl' | '_renderCurrentPointer';
 
+type ControlName = 'play' | 'stop' | 'next' | 'prev';
 type ControlIconName = 'playIcon' | 'stopIcon' | 'nextIcon' | 'prevIcon';
 
 interface LayoutInfo {
@@ -506,36 +507,40 @@ class SliderTimelineView extends TimelineView {
 
         const itemStyle = timelineModel.getModel('controlStyle').getItemStyle();
         const hoverStyle = timelineModel.getModel(['emphasis', 'controlStyle']).getItemStyle();
-        const rect = [0, -controlSize / 2, controlSize, controlSize];
         const playState = timelineModel.getPlayState();
         const inverse = timelineModel.get('inverse', true);
 
         makeBtn(
             layoutInfo.nextBtnPosition,
-            'nextIcon',
+            'next',
             bind(this._changeTimeline, this, inverse ? '-' : '+')
         );
         makeBtn(
             layoutInfo.prevBtnPosition,
-            'prevIcon',
+            'prev',
             bind(this._changeTimeline, this, inverse ? '+' : '-')
         );
         makeBtn(
             layoutInfo.playPosition,
-            (playState ? 'stopIcon' : 'playIcon'),
+            (playState ? 'stop' : 'play'),
             bind(this._handlePlayClick, this, !playState),
             true
         );
 
         function makeBtn(
             position: number[],
-            iconPath: ControlIconName,
+            iconName: ControlName,
             onclick: () => void,
             willRotate?: boolean
         ) {
             if (!position) {
                 return;
             }
+            const iconSize = parsePercent(
+                retrieve2(timelineModel.get(['controlStyle', iconName + 'BtnSize' as any]), controlSize),
+                controlSize
+            );
+            const rect = [0, -iconSize / 2, iconSize, iconSize];
             const opt = {
                 position: position,
                 origin: [controlSize / 2, 0],
@@ -544,7 +549,7 @@ class SliderTimelineView extends TimelineView {
                 style: itemStyle,
                 onclick: onclick
             };
-            const btn = makeControlIcon(timelineModel, iconPath, rect, opt);
+            const btn = makeControlIcon(timelineModel, iconName + 'Icon' as ControlIconName, rect, opt);
             btn.ensureState('emphasis').style = hoverStyle;
             group.add(btn);
             enableHoverEmphasis(btn);
@@ -704,7 +709,7 @@ class SliderTimelineView extends TimelineView {
             tickSymbols && tickSymbols[i]
                 && tickSymbols[i].toggleState('progress', i < currentIndex);
             tickLabels && tickLabels[i]
-                && tickLabels[i].toggleState('progress', i < currentIndex);
+                && tickLabels[i].toggleState('progress', i <= currentIndex);
         }
     }
 }
