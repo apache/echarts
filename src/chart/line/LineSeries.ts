@@ -42,7 +42,8 @@ type LineDataValue = OptionDataValue | OptionDataValue[];
 
 interface ExtraStateOption {
     emphasis?: {
-        scale?: boolean
+        scale?: boolean,
+        bolder?: boolean
     }
 }
 
@@ -103,8 +104,6 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     showAllSymbol?: 'auto'
 
     data?: (LineDataValue | LineDataItemOption)[]
-
-    bolderWhenHover?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -148,7 +147,8 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         },
 
         emphasis: {
-            scale: true
+            scale: true,
+            bolder: true
         },
         // areaStyle: {
             // origin of areaStyle. Valid values:
@@ -184,9 +184,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         // Disable progressive
         progressive: 0,
-        hoverLayerThreshold: Infinity,
-
-        bolderWhenHover: true
+        hoverLayerThreshold: Infinity
     };
 }
 
