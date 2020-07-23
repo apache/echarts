@@ -388,6 +388,11 @@ export default function (
             label.setStyle({
                 align: textAlign
             });
+            const selectState = label.states.select;
+            if (selectState) {
+                selectState.x += label.x;
+                selectState.y += label.y;
+            }
         }
         sector.setTextConfig({
             inside: isLabelInside
