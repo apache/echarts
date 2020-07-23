@@ -198,7 +198,7 @@ class LegendView extends ComponentView {
             if (seriesModel) {
                 const data = seriesModel.getData();
                 const style = data.getVisual('style');
-                const color = style.fill;
+                const color = style[data.getVisual('drawType')] || style.fill;
                 const borderColor = style.stroke;
 
                 // Using rect symbol defaultly
