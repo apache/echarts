@@ -544,11 +544,21 @@ class LineView extends ChartView {
             {
                 fill: 'none',
                 stroke: visualColor,
-                lineJoin: 'bevel'
+                lineJoin: 'bevel' as CanvasLineJoin
             }
         ));
 
         setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
+
+        const bolderWhenHover = seriesModel.get('bolderWhenHover');
+        if (bolderWhenHover) {
+            const emphasisLineStyle = polyline.getState('emphasis').style;
+            // only bolder when `emphasis.lineStyle.width` is not specified
+            if (emphasisLineStyle.lineWidth == null) {
+                emphasisLineStyle.lineWidth = lineStyleModel.get('width') + 1;
+            }
+        }
+
         // Needs seriesIndex for focus
         graphic.getECData(polyline).seriesIndex = seriesModel.seriesIndex;
         enableHoverEmphasis(polyline, focus, blurScope);
@@ -569,7 +579,7 @@ class LineView extends ChartView {
                 {
                     fill: visualColor,
                     opacity: 0.7,
-                    lineJoin: 'bevel'
+                    lineJoin: 'bevel' as CanvasLineJoin
                 }
             ));
 

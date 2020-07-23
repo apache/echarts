@@ -103,6 +103,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     showAllSymbol?: 'auto'
 
     data?: (LineDataValue | LineDataItemOption)[]
+
+    bolderWhenHover?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -182,7 +184,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         // Disable progressive
         progressive: 0,
-        hoverLayerThreshold: Infinity
+        hoverLayerThreshold: Infinity,
+
+        bolderWhenHover: true
     };
 }
 
