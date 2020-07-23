@@ -1090,7 +1090,7 @@ function calcTooltipPosition(
             break;
         case 'top':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y - domHeight - gap;
+            y = rect.y - domHeight / 2 - offset;
             break;
         case 'bottom':
             x = rect.x + rectWidth / 2 - domWidth / 2;
