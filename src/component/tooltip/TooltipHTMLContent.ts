@@ -366,6 +366,8 @@ class TooltipHTMLContent {
             return;
         }
         this.el.innerHTML = content;
+        this.el.innerHTML += (typeof arrowPosition === 'string' && tooltipModel.get('trigger') === 'item')
+            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition) : '';
     }
 
     setEnterable(enterable: boolean) {
