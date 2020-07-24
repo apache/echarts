@@ -22,7 +22,7 @@ import * as modelHelper from './modelHelper';
 import findPointFromSeries from './findPointFromSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Dictionary, Payload, CommonAxisPointerOption } from '../../util/types';
+import { Dictionary, Payload, CommonAxisPointerOption, HighlightPayload, DownplayPayload } from '../../util/types';
 import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
 import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';
 import { ZRenderType } from 'zrender/src/zrender';
@@ -479,11 +479,19 @@ function dispatchHighDownActually(
     });
 
     toDownplay.length && api.dispatchAction({
-        type: 'downplay', escapeConnect: true, batch: toDownplay
-    });
+        type: 'downplay',
+        escapeConnect: true,
+        // Not blur others when highlight in axisPointer.
+        notBlur: true,
+        batch: toDownplay
+    } as DownplayPayload);
     toHighlight.length && api.dispatchAction({
-        type: 'highlight', escapeConnect: true, batch: toHighlight
-    });
+        type: 'highlight',
+        escapeConnect: true,
+        // Not blur others when highlight in axisPointer.
+        notBlur: true,
+        batch: toHighlight
+    } as HighlightPayload);
 }
 
 function findInputAxisInfo(
