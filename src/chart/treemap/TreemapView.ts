@@ -985,6 +985,8 @@ function renderNode(
         const textStyle = textEl.style;
         textStyle.truncateMinChar = 2;
         textStyle.width = width;
+        textStyle.height = height;
+        textStyle.lineOverflow = 'truncate';
 
         addDrillDownIcon(textStyle, upperLabelRect, thisLayout);
         const textEmphasisState = textEl.getState('emphasis');

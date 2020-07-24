@@ -154,7 +154,8 @@ class LineDraw {
     incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw) {
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup && !isEffectObject(el)) {
-                el.incremental = el.useHoverLayer = true;
+                el.incremental = true;
+                el.ensureState('emphasis').hoverLayer = true;
             }
         }
 

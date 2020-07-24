@@ -29,6 +29,7 @@ import { ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import ZRImage from 'zrender/src/graphic/Image';
 
 function normalizeSymbolSize(symbolSize: number | number[]) {
     if (!zrUtil.isArray(symbolSize)) {
@@ -223,8 +224,19 @@ class RadarView extends ChartView {
             const emphasisModel = itemModel.getModel('emphasis');
             const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
-                symbolPath.useStyle(itemStyle);
-                symbolPath.setColor(color);
+                if (symbolPath instanceof ZRImage) {
+                    const pathStyle = symbolPath.style;
+                    symbolPath.useStyle(zrUtil.extend({
+                        // TODO other properties like x, y ?
+                        image: pathStyle.image,
+                        x: pathStyle.x, y: pathStyle.y,
+                        width: pathStyle.width, height: pathStyle.height
+                    }, itemStyle));
+                }
+                else {
+                    symbolPath.useStyle(itemStyle);
+                    symbolPath.setColor(color);
+                }
 
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
                 pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
