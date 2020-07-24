@@ -618,14 +618,11 @@ function getViewRect(model, api) {
 }
 
 function makeIcon(timelineModel, objPath, rect, opts) {
-    var icon = graphic.makePath(
-        timelineModel.get(objPath).replace(/^path:\/\//, ''),
-        zrUtil.clone(opts || {}),
-        new BoundingRect(rect[0], rect[1], rect[2], rect[3]),
-        'center'
+    return graphic.createIcon(
+        timelineModel.get(objPath),
+        opts || {},
+        new BoundingRect(rect[0], rect[1], rect[2], rect[3])
     );
-
-    return icon;
 }
 
 /**
