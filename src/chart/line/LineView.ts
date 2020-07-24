@@ -550,8 +550,8 @@ class LineView extends ChartView {
 
         setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
 
-        const emphasisModel = seriesModel.getModel('emphasis');
-        if (emphasisModel.get('bolder')) {
+        const shouldBolder = seriesModel.get(['emphasis', 'bolder']);
+        if (shouldBolder) {
             const emphasisLineStyle = polyline.getState('emphasis').style;
             // only bolder when `emphasis.lineStyle.width` is not specified
             if (emphasisLineStyle.lineWidth == null) {
