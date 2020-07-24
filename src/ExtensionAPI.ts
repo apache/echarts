@@ -55,8 +55,6 @@ abstract class ExtensionAPI {
 
     // Implemented in echarts.js
     abstract getCoordinateSystems(): CoordinateSystemMaster[];
-
-    // Implemented in echarts.js
     abstract getComponentByElement(el: Element): ComponentModel;
 }
 

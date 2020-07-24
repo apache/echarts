@@ -68,6 +68,7 @@ class Polyline extends graphic.Group {
             hoverLineStyle = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
         }
         line.useStyle(lineData.getItemVisual(idx, 'style'));
+        line.style.fill = null;
         line.style.strokeNoScale = true;
 
         const lineEmphasisState = line.ensureState('emphasis');

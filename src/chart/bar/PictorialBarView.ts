@@ -38,6 +38,7 @@ import type Element from 'zrender/src/Element';
 import { getDefaultLabel } from '../helper/labelHelper';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import ZRImage from 'zrender/src/graphic/Image';
 
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
@@ -888,7 +889,18 @@ function updateCommon(
     const blurScope = emphasisModel.get('blurScope');
 
     eachPath(bar, function (path) {
-        path.useStyle(symbolMeta.style);
+        if (path instanceof ZRImage) {
+            const pathStyle = path.style;
+            path.useStyle(zrUtil.extend({
+                // TODO other properties like dx, dy ?
+                image: pathStyle.image,
+                x: pathStyle.x, y: pathStyle.y,
+                width: pathStyle.width, height: pathStyle.height
+            }, symbolMeta.style));
+        }
+        else {
+            path.useStyle(symbolMeta.style);
+        }
 
         const emphasisState = path.ensureState('emphasis');
         emphasisState.style = emphasisStyle;

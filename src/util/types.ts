@@ -99,7 +99,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    useHoverLayer?: boolean;
     tooltip?: CommonTooltipOption<unknown> & {
         content?: string;
         formatterParams?: unknown;
@@ -146,6 +145,16 @@ export interface Payload extends PayloadItem {
     escapeConnect?: boolean;
     statusChanged?: boolean;
     batch?: PayloadItem[];
+}
+
+export interface HighlightPayload extends Payload {
+    type: 'highlight';
+    notBlur?: boolean
+}
+
+export interface DownplayPayload extends Payload {
+    type: 'downplay';
+    notBlur?: boolean
 }
 
 // Payload includes override anmation info
