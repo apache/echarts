@@ -44,6 +44,7 @@ import TimeScale from '../../scale/Time';
 import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
 import { parsePercent } from 'zrender/src/contain/text';
+import { makeInner } from '../../util/model';
 
 const PI = Math.PI;
 
@@ -53,6 +54,10 @@ type RenderMethodName = '_renderAxisLine' | '_renderAxisTick' | '_renderControl'
 
 type ControlName = 'play' | 'stop' | 'next' | 'prev';
 type ControlIconName = 'playIcon' | 'stopIcon' | 'nextIcon' | 'prevIcon';
+
+const labelDataIndexStore = makeInner<{
+    dataIndex: number
+}, graphic.Text>();
 
 interface LayoutInfo {
     viewRect: BoundingRect
@@ -99,7 +104,6 @@ class SliderTimelineView extends TimelineView {
 
     private _tickSymbols: graphic.Path[];
     private _tickLabels: graphic.Text[];
-
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -491,6 +495,8 @@ class SliderTimelineView extends TimelineView {
             group.add(textEl);
             enableHoverEmphasis(textEl);
 
+            labelDataIndexStore(textEl).dataIndex = dataIndex;
+
             this._tickLabels.push(textEl);
 
         });
@@ -703,13 +709,13 @@ class SliderTimelineView extends TimelineView {
             return;
         }
 
-        const len = (tickSymbols || tickLabels).length;
-
-        for (let i = 0; i < len; i++) {
+        for (let i = 0; i < tickSymbols.length; i++) {
             tickSymbols && tickSymbols[i]
                 && tickSymbols[i].toggleState('progress', i < currentIndex);
+        }
+        for (let i = 0; i < tickLabels.length; i++) {
             tickLabels && tickLabels[i]
-                && tickLabels[i].toggleState('progress', i <= currentIndex);
+                && tickLabels[i].toggleState('progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex);
         }
     }
 }
