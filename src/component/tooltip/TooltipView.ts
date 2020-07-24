@@ -810,11 +810,11 @@ class TooltipView extends ComponentView {
             html = formatter(params, asyncTicket, callback);
         }
 
+        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
+        tooltipContent.show(tooltipModel, nearPoint.color);
         this._updatePosition(
             tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
-        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
-        tooltipContent.show(tooltipModel, nearPoint.color);
 
     }
 
@@ -1077,8 +1077,8 @@ function calcTooltipPosition(
 ): [number, number] {
     const domWidth = contentSize[0];
     const domHeight = contentSize[1];
-    const gap = 5;
-    const offset = 10;
+    const gap = 10;
+    const offset = 5;
     let x = 0;
     let y = 0;
     const rectWidth = rect.width;
@@ -1090,19 +1090,19 @@ function calcTooltipPosition(
             break;
         case 'top':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y - domHeight / 2 - offset;
+            y = rect.y - domHeight - gap;
             break;
         case 'bottom':
             x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y + rectHeight + gap + 2.5 * offset;
+            y = rect.y + rectHeight + gap;
             break;
         case 'left':
             x = rect.x - domWidth - gap - offset;
-            y = rect.y + rectHeight / 2;
+            y = rect.y + rectHeight / 2 - domHeight / 2;
             break;
         case 'right':
             x = rect.x + rectWidth + gap + offset;
-            y = rect.y + rectHeight / 2;
+            y = rect.y + rectHeight / 2 - domHeight / 2;
     }
     return [x, y];
 }
