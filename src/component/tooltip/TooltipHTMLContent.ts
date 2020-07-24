@@ -136,7 +136,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
 
 function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
-    const cssText = [];
+    const cssText: string[] = [];
 
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
@@ -148,6 +148,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
     const padding = tooltipModel.get('padding');
     const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
 
+    cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
     transitionDuration
         && cssText.push(assembleTransition(transitionDuration));
@@ -163,10 +164,6 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
             );
             cssText.push('filter:alpha(opacity=70)');
         }
-    }
-
-    if (boxShadow) {
-        cssText.push('box-shadow:' + boxShadow);
     }
 
     // Border style
