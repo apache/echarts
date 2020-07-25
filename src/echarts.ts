@@ -1360,7 +1360,7 @@ class ECharts extends Eventful {
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
-                    if (isHighDownPayload(payload)) {
+                    if (isHighDownPayload(payload) && !payload.notBlur) {
                         if (model instanceof SeriesModel) {
                             toggleSeriesBlurStateFromPayload(model, payload, ecIns);
                         }
@@ -1799,6 +1799,7 @@ class ECharts extends Eventful {
                 if (dispatcher) {
                     const ecData = getECData(dispatcher);
                     // Try blur all in the related series. Then emphasis the hoverred.
+                    // TODO. progressive mode.
                     toggleSeriesBlurState(
                         ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, true
                     );
@@ -1943,8 +1944,7 @@ class ECharts extends Eventful {
 
 
             // If use hover layer
-            // TODO
-            // updateHoverLayerStatus(ecIns, ecModel);
+            updateHoverLayerStatus(ecIns, ecModel);
 
             // Add aria
             aria(ecIns._zr.dom, ecModel);
@@ -1968,37 +1968,40 @@ class ECharts extends Eventful {
             }
 
             ecIns.getZr().storage.traverse(function (el: ECElement) {
-                const newStates = [];
-                const oldStates = el.currentStates;
-
                 // Not applied on removed elements, it may still in fading.
                 if (graphic.isElementRemoved(el)) {
                     return;
                 }
-
-                // Keep other states.
-                for (let i = 0; i < oldStates.length; i++) {
-                    const stateName = oldStates[i];
-                    if (!(stateName === 'emphasis' || stateName === 'blur' || stateName === 'select')) {
-                        newStates.push(stateName);
-                    }
-                }
-
-                // Only use states when it's exists.
-                if (el.selected && el.states.select) {
-                    newStates.push('select');
-                }
-                if (el.hoverState === HOVER_STATE_EMPHASIS && el.states.emphasis) {
-                    newStates.push('emphasis');
-                }
-                else if (el.hoverState === HOVER_STATE_BLUR && el.states.blur) {
-                    newStates.push('blur');
-                }
-                el.useStates(newStates);
+                applyElementStates(el);
             });
 
             ecIns[STATUS_NEEDS_UPDATE_KEY] = false;
         };
+
+        function applyElementStates(el: ECElement) {
+            const newStates = [];
+
+            const oldStates = el.currentStates;
+            // Keep other states.
+            for (let i = 0; i < oldStates.length; i++) {
+                const stateName = oldStates[i];
+                if (!(stateName === 'emphasis' || stateName === 'blur' || stateName === 'select')) {
+                    newStates.push(stateName);
+                }
+            }
+
+            // Only use states when it's exists.
+            if (el.selected && el.states.select) {
+                newStates.push('select');
+            }
+            if (el.hoverState === HOVER_STATE_EMPHASIS && el.states.emphasis) {
+                newStates.push('emphasis');
+            }
+            else if (el.hoverState === HOVER_STATE_BLUR && el.states.blur) {
+                newStates.push('blur');
+            }
+            el.useStates(newStates);
+        }
 
         function updateHoverLayerStatus(ecIns: ECharts, ecModel: GlobalModel): void {
             const zr = ecIns._zr;
@@ -2006,7 +2009,9 @@ class ECharts extends Eventful {
             let elCount = 0;
 
             storage.traverse(function (el) {
-                elCount++;
+                if (!el.isGroup) {
+                    elCount++;
+                }
             });
 
             if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
@@ -2017,8 +2022,9 @@ class ECharts extends Eventful {
                     const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.__alive) {
                         chartView.group.traverse(function (el: ECElement) {
-                            // Don't switch back.
-                            el.useHoverLayer = true;
+                            if (el.states.emphasis) {
+                                el.states.emphasis.hoverLayer = true;
+                            }
                         });
                     }
                 });
@@ -2026,7 +2032,7 @@ class ECharts extends Eventful {
         };
 
         /**
-         * Update chart progressive and blend.
+         * Update chart and blend.
          */
         function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
@@ -2158,14 +2164,7 @@ class ECharts extends Eventful {
 
                     // The use higlighted and selected flag to toggle states.
                     if (el.__dirty) {
-                        const states = [];
-                        if ((el as ECElement).selected) {
-                            states.push('select');
-                        }
-                        if ((el as ECElement).hoverState) {
-                            states.push('emphasis');
-                        }
-                        el.useStates(states);
+                        applyElementStates(el);
                     }
                 }
             });

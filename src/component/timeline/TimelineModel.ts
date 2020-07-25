@@ -52,6 +52,12 @@ export interface TimelineControlStyle extends ItemStyleOption {
     stopIcon?: string
     prevIcon?: string
     nextIcon?: string
+
+    // Can be a percent value relative to itemSize
+    playBtnSize: number | string
+    stopBtnSize: number | string
+    nextBtnSize: number | string
+    prevBtnSize: number | string
 }
 
 export interface TimelineCheckpointStyle extends ItemStyleOption,
@@ -82,6 +88,13 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
         itemStyle?: ItemStyleOption
         label?: TimelineLabelOption
         checkpointStyle?: TimelineCheckpointStyle
+    }
+
+    // Style in progress
+    progress?: {
+        lineStyle?: TimelineLineStyleOption
+        itemStyle?: ItemStyleOption
+        label?: TimelineLabelOption
     }
 
     tooltip?: boolean
@@ -136,6 +149,14 @@ export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, S
         itemStyle?: ItemStyleOption
         checkpointStyle?: TimelineCheckpointStyle
         controlStyle?: TimelineControlStyle
+        label?: TimelineLabelOption
+    }
+
+
+    // Style in progress
+    progress?: {
+        lineStyle?: TimelineLineStyleOption
+        itemStyle?: ItemStyleOption
         label?: TimelineLabelOption
     }
 

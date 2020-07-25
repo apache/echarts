@@ -272,8 +272,8 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             bandWidth: bandWidth,
             remainedWidth: bandWidth,
             autoWidthCount: 0,
-            categoryGap: '20%',
-            gap: '30%',
+            categoryGap: null,
+            gap: '20%',
             stacks: {}
         };
         const stacks = columnsOnAxis.stacks;
@@ -320,7 +320,15 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
 
         const stacks = columnsOnAxis.stacks;
         const bandWidth = columnsOnAxis.bandWidth;
-        const categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
+        let categoryGapPercent = columnsOnAxis.categoryGap;
+        if (categoryGapPercent == null) {
+            const columnCount = zrUtil.keys(stacks).length;
+            // More columns in one group
+            // the spaces between group is smaller. Or the column will be too thin.
+            categoryGapPercent = Math.max((35 - columnCount * 4), 15) + '%';
+        }
+
+        const categoryGap = parsePercent(categoryGapPercent, bandWidth);
         const barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
         let remainedWidth = columnsOnAxis.remainedWidth;

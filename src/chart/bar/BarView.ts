@@ -626,7 +626,6 @@ const elementCreator: {
             shape: extend({}, layout),
             z2: 1
         });
-        // rect.autoBatch = true;
 
         rect.name = 'item';
 
