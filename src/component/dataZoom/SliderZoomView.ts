@@ -107,6 +107,7 @@ class SliderZoomView extends DataZoomView {
     private _location: PointLike;
 
     private _brushStart: PointLike;
+    private _brushStartTime: number;
 
     private _dragging: boolean;
 
@@ -847,6 +848,8 @@ class SliderZoomView extends DataZoomView {
         this._brushStart = new graphic.Point(x, y);
 
         this._brushing = true;
+
+        this._brushStartTime = +new Date();
         // this._updateBrushRect(x, y);
     }
 
@@ -856,14 +859,25 @@ class SliderZoomView extends DataZoomView {
         }
 
         const brushRect = this._displayables.brushRect;
-        if (brushRect) {
-            brushRect.ignore = true;
-        }
         this._brushing = false;
+
+        if (!brushRect) {
+            return;
+        }
+
+        brushRect.attr('ignore', true);
+
+        const brushShape = brushRect.shape;
+
+        const brushEndTime = +new Date();
+        // console.log(brushEndTime - this._brushStartTime);
+        if (brushEndTime - this._brushStartTime < 200 && Math.abs(brushShape.width) < 5) {
+            // Will treat it as a click
+            return;
+        }
 
         const viewExtend = this._getViewExtent();
         const percentExtent = [0, 100];
-        const brushShape = brushRect.shape;
 
         this._range = asc([
             linearMap(brushShape.x, viewExtend, percentExtent, true),
