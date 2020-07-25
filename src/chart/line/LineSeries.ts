@@ -42,8 +42,7 @@ type LineDataValue = OptionDataValue | OptionDataValue[];
 
 interface ExtraStateOption {
     emphasis?: {
-        scale?: boolean,
-        bolder?: boolean
+        scale?: boolean
     }
 }
 
