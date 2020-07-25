@@ -88,6 +88,10 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
 
     handleStyle?: ItemStyleOption
 
+    moveHandleIcon?: string
+    moveHandleStyle?: ItemStyleOption
+    moveHandleSize?: number
+
     labelPrecision?: number | 'auto'
 
     labelFormatter?: string | ((value: number, valueStr: string) => string)
@@ -99,6 +103,13 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     zoomLock?: boolean
 
     textStyle?: LabelOption
+
+    /**
+     * If eable select by brushing
+     */
+    brushSelect?: boolean
+
+    brushStyle?: ItemStyleOption
 
     emphasis?: {
         handleStyle?: ItemStyleOption
@@ -169,6 +180,10 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
         textStyle: {
             color: '#333'
+        },
+
+        brushStyle: {
+            color: 'rgba(135,175,274,0.15)'
         },
 
         emphasis: {

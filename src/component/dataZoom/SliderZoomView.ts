@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {bind, each, defaults, isFunction, isString, indexOf} from 'zrender/src/core/util';
+import {bind, each, isFunction, isString, indexOf} from 'zrender/src/core/util';
 import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
@@ -41,6 +41,7 @@ import { enableHoverEmphasis } from '../../util/states';
 import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { __DEV__ } from '../../config';
+import { PointLike } from 'zrender/src/core/Point';
 
 const Rect = graphic.Rect;
 
@@ -53,6 +54,16 @@ const VERTICAL = 'vertical';
 const LABEL_GAP = 5;
 const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
+const REALTIME_ANIMATION_CONFIG = {
+    easing: 'cubicOut',
+    duration: 100
+} as const;
+
+// const NORMAL_ANIMATION_CONFIG = {
+//     easing: 'cubicInOut',
+//     duration: 200
+// } as const;
+
 
 interface Displayables {
     sliderGroup: graphic.Group;
@@ -60,6 +71,12 @@ interface Displayables {
     handleLabels: [graphic.Text, graphic.Text];
     dataShadowSegs: graphic.Group[];
     filler: graphic.Rect;
+
+    brushRect: graphic.Rect;
+
+    moveHandle: graphic.Group;
+    // invisible move zone.
+    moveZone: graphic.Rect;
 }
 class SliderZoomView extends DataZoomView {
     static type = 'dataZoom.slider';
@@ -87,9 +104,13 @@ class SliderZoomView extends DataZoomView {
 
     private _handleHeight: number;
 
-    private _location: {x: number, y: number};
+    private _location: PointLike;
+
+    private _brushStart: PointLike;
 
     private _dragging: boolean;
+
+    private _brushing: boolean;
 
     private _dataShadowInfo: {
         thisAxis: Axis
@@ -101,6 +122,10 @@ class SliderZoomView extends DataZoomView {
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
+
+        // A unique handler for each dataZoom component
+        this._onBrush = bind(this._onBrush, this);
+        this._onBrushEnd = bind(this._onBrushEnd, this);
     }
 
     render(
@@ -151,12 +176,18 @@ class SliderZoomView extends DataZoomView {
 
     private _clear() {
         throttle.clear(this, '_dispatchZoomAction');
+
+        const zr = this.api.getZr();
+        zr.off('mousemove', this._onBrush);
+        zr.off('mouseup', this._onBrushEnd);
     }
 
     private _buildView() {
         const thisGroup = this.group;
 
         thisGroup.removeAll();
+
+        this._brushing = false;
 
         this._resetLocation();
         this._resetInterval();
@@ -259,6 +290,7 @@ class SliderZoomView extends DataZoomView {
         const dataZoomModel = this.dataZoomModel;
         const size = this._size;
         const barGroup = this._displayables.sliderGroup;
+        const brushSelect = dataZoomModel.get('brushSelect');
 
         barGroup.add(new Rect({
             silent: true,
@@ -272,7 +304,7 @@ class SliderZoomView extends DataZoomView {
         }));
 
         // Click panel, over shadow, below handles.
-        barGroup.add(new Rect({
+        const clickPanel = new Rect({
             shape: {
                 x: 0, y: 0, width: size[0], height: size[1]
             },
@@ -280,8 +312,23 @@ class SliderZoomView extends DataZoomView {
                 fill: 'transparent'
             },
             z2: 0,
-            onclick: bind(this._onClickPanelClick, this)
-        }));
+            onclick: bind(this._onClickPanel, this)
+        });
+
+        const zr = this.api.getZr();
+        if (brushSelect) {
+            clickPanel.on('mousedown', this._onBrushStart, this);
+            clickPanel.cursor = 'crosshair';
+
+            zr.on('mousemove', this._onBrush);
+            zr.on('mouseup', this._onBrushEnd);
+        }
+        else {
+            zr.off('mousemove', this._onBrush);
+            zr.off('mouseup', this._onBrushEnd);
+        }
+
+        barGroup.add(clickPanel);
     }
 
     private _renderDataShadow() {
@@ -456,21 +503,29 @@ class SliderZoomView extends DataZoomView {
 
         const borderRadius = dataZoomModel.get('borderRadius') || 0;
 
-        sliderGroup.add(displaybles.filler = new Rect({
-            draggable: true,
-            cursor: getCursor(this._orient),
-            drift: bind(this._onDragMove, this, 'all'),
-            ondragstart: bind(this._showDataInfo, this, true),
-            ondragend: bind(this._onDragEnd, this),
-            onmouseover: bind(this._showDataInfo, this, true),
-            onmouseout: bind(this._showDataInfo, this, false),
+        const brushSelect = dataZoomModel.get('brushSelect');
+
+        const filler = displaybles.filler = new Rect({
+            silent: brushSelect,
             style: {
                 fill: dataZoomModel.get('fillerColor')
             },
             textConfig: {
                 position: 'inside'
             }
-        }));
+        });
+
+        filler.attr({
+            draggable: true,
+            cursor: getCursor(this._orient),
+            drift: bind(this._onDragMove, this, 'all'),
+            ondragstart: bind(this._showDataInfo, this, true),
+            ondragend: bind(this._onDragEnd, this),
+            onmouseover: bind(this._showDataInfo, this, true),
+            onmouseout: bind(this._showDataInfo, this, false)
+        });
+
+        sliderGroup.add(filler);
 
         // Frame border.
         sliderGroup.add(new Rect({
@@ -755,7 +810,7 @@ class SliderZoomView extends DataZoomView {
 
         // Avoid dispatch dataZoom repeatly but range not changed,
         // which cause bad visual effect when progressive enabled.
-        changed && realtime && this._dispatchZoomAction();
+        changed && realtime && this._dispatchZoomAction(true);
     }
 
     private _onDragEnd() {
@@ -765,10 +820,10 @@ class SliderZoomView extends DataZoomView {
         // While in realtime mode and stream mode, dispatch action when
         // drag end will cause the whole view rerender, which is unnecessary.
         const realtime = this.dataZoomModel.get('realtime');
-        !realtime && this._dispatchZoomAction();
+        !realtime && this._dispatchZoomAction(false);
     }
 
-    private _onClickPanelClick(e: ZRElementEvent) {
+    private _onClickPanel(e: ZRElementEvent) {
         const size = this._size;
         const localPoint = this._displayables.sliderGroup.transformCoordToLocal(e.offsetX, e.offsetY);
 
@@ -783,24 +838,93 @@ class SliderZoomView extends DataZoomView {
 
         const changed = this._updateInterval('all', localPoint[0] - center);
         this._updateView();
-        changed && this._dispatchZoomAction();
+        changed && this._dispatchZoomAction(false);
+    }
+
+    private _onBrushStart(e: ZRElementEvent) {
+        const x = e.offsetX;
+        const y = e.offsetY;
+        this._brushStart = new graphic.Point(x, y);
+
+        this._brushing = true;
+        // this._updateBrushRect(x, y);
+    }
+
+    private _onBrushEnd(e: ZRElementEvent) {
+        if (!this._brushing) {
+            return;
+        }
+
+        const brushRect = this._displayables.brushRect;
+        if (brushRect) {
+            brushRect.ignore = true;
+        }
+        this._brushing = false;
+
+        const viewExtend = this._getViewExtent();
+        const percentExtent = [0, 100];
+        const brushShape = brushRect.shape;
+
+        this._range = asc([
+            linearMap(brushShape.x, viewExtend, percentExtent, true),
+            linearMap(brushShape.x + brushShape.width, viewExtend, percentExtent, true)
+        ]);
+
+        this._handleEnds = [brushShape.x, brushShape.x + brushShape.width];
+
+        this._updateView();
+
+        this._dispatchZoomAction(false);
+    }
+
+    private _onBrush(e: ZRElementEvent) {
+        if (this._brushing) {
+            // For mobile device, prevent screen slider on the button.
+            eventTool.stop(e.event);
+
+            this._updateBrushRect(e.offsetX, e.offsetY);
+        }
+    }
+
+    private _updateBrushRect(mouseX: number, mouseY: number) {
+        const displayables = this._displayables;
+        const dataZoomModel = this.dataZoomModel;
+        let brushRect = displayables.brushRect;
+        if (!brushRect) {
+            brushRect = displayables.brushRect = new Rect({
+                silent: true,
+                style: dataZoomModel.getModel('brushStyle').getItemStyle()
+            });
+            displayables.sliderGroup.add(brushRect);
+        }
+        brushRect.ignore = false;
+
+        const brushStart = this._brushStart;
+
+        const sliderGroup = this._displayables.sliderGroup;
+
+        const endPoint = sliderGroup.transformCoordToLocal(mouseX, mouseY);
+        const startPoint = sliderGroup.transformCoordToLocal(brushStart.x, brushStart.y);
+
+        const size = this._size;
+
+        brushRect.setShape({
+            x: startPoint[0], y: 0,
+            width: endPoint[0] - startPoint[0], height: size[1]
+        });
     }
 
     /**
-     * @private
      * This action will be throttled.
      */
-    _dispatchZoomAction() {
+    _dispatchZoomAction(realtime: boolean) {
         const range = this._range;
 
         this.api.dispatchAction({
             type: 'dataZoom',
             from: this.uid,
             dataZoomId: this.dataZoomModel.id,
-            animation: {
-                easing: 'cubicOut',
-                duration: 100
-            },
+            animation: realtime ? REALTIME_ANIMATION_CONFIG : null,
             start: range[0],
             end: range[1]
         });
