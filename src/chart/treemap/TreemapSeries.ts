@@ -393,7 +393,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         const name = data.getName(dataIndex);
 
         if (renderMode === 'richText') {
-            return encodeHTML(name) + '\t' + formattedValue;
+            return encodeHTML(name) + ': ' + formattedValue;
         }
         return concatTooltipHtml(name, formattedValue);
     }

@@ -207,7 +207,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         if (renderMode === 'richText') {
             return seriesNames.join(', ') + (seriesNames.length ? '\n' : '')
-                + encodeHTML(name) + formattedValue;
+                + encodeHTML(name) + ': ' + formattedValue;
         }
 
         return seriesNames.join(', ') + (seriesNames.length ? '<br />' : '')

@@ -221,7 +221,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         }
 
         if (renderMode === 'richText') {
-            return encodeHTML(name) + '\t' + ((isNaN(value as number) || value == null) ? '' : value);
+            return encodeHTML(name) + ': ' + ((isNaN(value as number) || value == null) ? '' : value);
         }
 
         return concatTooltipHtml(name, (isNaN(value as number) || value == null) ? '' : value);

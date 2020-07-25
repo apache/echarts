@@ -41,7 +41,7 @@ class TooltipRichContent {
 
     private _hideDelay: number;
 
-    el: graphic.Group;
+    el: ZRText;
 
     constructor(api: ExtensionAPI) {
         this._zr = api.getZr();
@@ -106,12 +106,10 @@ class TooltipRichContent {
             }
 
             text = text.substr(endId + 1);
-            startId = text.indexOf('{marker');
+            startId = text.indexOf(prefix);
         }
 
-        this.el = new graphic.Group();
-
-        const textContent = new ZRText({
+        this.el = new ZRText({
             style: {
                 rich: markers,
                 text: content,
@@ -128,8 +126,6 @@ class TooltipRichContent {
             },
             z: tooltipModel.get('z')
         });
-        // this.el.add(container);
-        this.el.add(textContent);
         this._zr.add(this.el);
 
         const self = this;

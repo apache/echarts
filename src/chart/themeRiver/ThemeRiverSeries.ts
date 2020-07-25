@@ -303,7 +303,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         }
 
         if (renderMode === 'richText') {
-            return encodeHTML(htmlName) + htmlValue;
+            return encodeHTML(htmlName) + ': ' + htmlValue;
         }
         return '<div style="margin: 8px 0 0;">'
             + concatTooltipHtml(htmlName, htmlValue)

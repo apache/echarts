@@ -551,7 +551,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ' ')
             : '';
 
-        colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
+        colorStr = zrUtil.isString(colorEl) ? colorEl : colorEl.content;
         let html = '';
         if (!isRichText) {
             html = !multipleSeries
@@ -568,10 +568,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 ? seriesName + (seriesName ? '\n' : '') + ''
                     + colorStr
                     + (name
-                        ? `${encodeHTML(name)}${content}`
+                        ? `${encodeHTML(name)}: ${content}`
                         : content
                     ) + ''
-                : `${colorStr}${seriesName}${content}`;
+                : `${colorStr}${seriesName}: ${content}`;
         }
 
         return {html, markers};

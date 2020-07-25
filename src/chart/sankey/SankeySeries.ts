@@ -254,7 +254,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             const value = node.getLayout().value;
             const name = this.getDataParams(dataIndex, dataType).data.name;
             if (renderMode === 'richText') {
-                return encodeHTML(value ? name : '') + '\t' + (value || '');
+                return encodeHTML(value ? name : '') + ': ' + (value || '');
             }
             return concatTooltipHtml(value ? name : '', value || '');
         }
