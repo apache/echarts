@@ -526,13 +526,16 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : tooltipDimLen
             ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
-        const content = `<span style="float:right;margin-left:20px;color:#000;font-weight:900">${formattedValue.content}</span>`;
+        const content = isRichText
+            ? formattedValue.content
+            : '<span style="float:right;margin-left:20px;color:#000;font-weight:900">'
+                + formattedValue.content + '</span>';
 
         const markName = series.seriesIndex + 'at' + markerId;
         const colorEl = getTooltipMarker({
             color: colorStr,
             type: 'item',
-            renderMode: renderMode,
+            renderMode,
             markerId: markName
         });
         markers[markName] = colorStr;
@@ -549,14 +552,27 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : '';
 
         colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
-        const html = !multipleSeries
-            ? seriesName + (seriesName ? '<br/>' : '') + `<div style="margin: ${seriesName ? 8 : 0}px 0 0;">`
-                + colorStr
-                + (name
-                    ? `${encodeHTML(name)}${content}`
-                    : content
-                ) + '</div>'
-            : `<div style="margin: 8px 0 0;">${colorStr}${seriesName}${content}</div>`;
+        let html = '';
+        if (!isRichText) {
+            html = !multipleSeries
+                ? seriesName + (seriesName ? '<br/>' : '') + `<div style="margin: ${seriesName ? 8 : 0}px 0 0;">`
+                    + colorStr
+                    + (name
+                        ? `${encodeHTML(name)}${content}`
+                        : content
+                    ) + '</div>'
+                : `<div style="margin: 8px 0 0;">${colorStr}${seriesName}${content}</div>`;
+        }
+        else {
+            html = !multipleSeries
+                ? seriesName + (seriesName ? '\n' : '') + ''
+                    + colorStr
+                    + (name
+                        ? `${encodeHTML(name)}${content}`
+                        : content
+                    ) + ''
+                : `${colorStr}${seriesName}${content}`;
+        }
 
         return {html, markers};
     }

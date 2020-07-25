@@ -30,7 +30,8 @@ import {
     AnimationOptionMixin,
     Dictionary,
     CommonTooltipOption,
-    ScaleDataValue
+    ScaleDataValue,
+    TooltipRenderMode
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
@@ -198,7 +199,12 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         }
     }
 
-    formatTooltip(dataIndex: number) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ) {
         const data = this.getData();
         const value = this.getRawValue(dataIndex);
         const formattedValue = zrUtil.isArray(value)
@@ -206,13 +212,15 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         const name = encodeHTML(data.getName(dataIndex));
         let html = encodeHTML(this.name);
         if (value != null || name) {
-            html += '<br />';
+            html += renderMode === 'html' ? '<br />' : '\n';
         }
         if (name) {
             html += name;
         }
         if (value != null) {
-            html = concatTooltipHtml(html, formattedValue, true);
+            html = renderMode === 'html'
+                ? concatTooltipHtml(html, formattedValue, true)
+                : (html + formattedValue);
         }
         return html;
     }

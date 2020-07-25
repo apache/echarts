@@ -19,7 +19,7 @@
 
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
-import {concatTooltipHtml} from '../../util/format';
+import {concatTooltipHtml, encodeHTML} from '../../util/format';
 import Model from '../../model/Model';
 import { __DEV__ } from '../../config';
 import {
@@ -32,7 +32,8 @@ import {
     LayoutOrient,
     ColorString,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    TooltipRenderMode
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -233,20 +234,31 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     /**
      * @override
      */
-    formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: 'node' | 'edge') {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: 'node' | 'edge',
+        renderMode: TooltipRenderMode
+    ) {
         // dataType === 'node' or empty do not show tooltip by default
         if (dataType === 'edge') {
             const params = this.getDataParams(dataIndex, dataType);
             const rawDataOpt = params.data;
+            if (renderMode === 'richText') {
+                return encodeHTML(rawDataOpt.source + ' -- ' + rawDataOpt.target) + params.value;
+            }
             return concatTooltipHtml(rawDataOpt.source + ' -- ' + rawDataOpt.target, params.value || '');
         }
         else if (dataType === 'node') {
             const node = this.getGraph().getNodeByIndex(dataIndex);
             const value = node.getLayout().value;
             const name = this.getDataParams(dataIndex, dataType).data.name;
+            if (renderMode === 'richText') {
+                return encodeHTML(value ? name : '') + '\t' + (value || '');
+            }
             return concatTooltipHtml(value ? name : '', value || '');
         }
-        return super.formatTooltip(dataIndex, multipleSeries);
+        return super.formatTooltip(dataIndex, multipleSeries, dataType, renderMode);
     }
 
     optionUpdated() {

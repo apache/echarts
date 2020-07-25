@@ -521,9 +521,9 @@ export interface CallbackDataParams {
     seriesName?: string;
     name: string;
     dataIndex: number;
-    data: unknown;
+    data: any;
     dataType?: string;
-    value: unknown;
+    value: any;
     color?: ZRColor;
     borderColor?: string;
     dimensionNames?: DimensionName[];
@@ -974,7 +974,7 @@ interface PositionCallback {
          * Will be HTMLDivElement when renderMode is html
          * Otherwise it's graphic.Text
          */
-        el: HTMLDivElement | ZRText | null,
+        el: HTMLDivElement | ZRText | null | Group,
         /**
          * Rect of hover elements. Will be null if not hovered
          */
