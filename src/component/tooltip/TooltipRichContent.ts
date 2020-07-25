@@ -23,7 +23,7 @@ import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import * as graphic from '../../util/graphic';
 import { Dictionary } from 'zrender/src/core/types';
-import { ColorString } from '../../util/types';
+import { ColorString, ZRColor } from '../../util/types';
 import Model from '../../model/Model';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 
@@ -41,7 +41,7 @@ class TooltipRichContent {
 
     private _hideDelay: number;
 
-    el: graphic.Text;
+    el: graphic.Group;
 
     constructor(api: ExtensionAPI) {
         this._zr = api.getZr();
@@ -69,7 +69,9 @@ class TooltipRichContent {
     setContent(
         content: string,
         markerRich: Dictionary<ColorString>,
-        tooltipModel: Model<TooltipOption>
+        tooltipModel: Model<TooltipOption>,
+        borderColor: ZRColor,
+        arrowPosition: TooltipOption['position']
     ) {
         if (this.el) {
             this._zr.remove(this.el);
@@ -107,18 +109,27 @@ class TooltipRichContent {
             startId = text.indexOf('{marker');
         }
 
-        this.el = new ZRText({
+        this.el = new graphic.Group();
+
+        const textContent = new ZRText({
             style: {
                 rich: markers,
                 text: content,
                 lineHeight: 20,
                 backgroundColor: tooltipModel.get('backgroundColor'),
                 borderRadius: tooltipModel.get('borderRadius'),
+                borderWidth: 1,
+                borderColor: borderColor as string,
+                shadowBlur: tooltipModel.get('shadowBlur'),
+                shadowOffsetX: tooltipModel.get('shadowOffsetX'),
+                shadowOffsetY: tooltipModel.get('shadowOffsetY'),
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: tooltipModel.get('padding')
             },
             z: tooltipModel.get('z')
         });
+        // this.el.add(container);
+        this.el.add(textContent);
         this._zr.add(this.el);
 
         const self = this;
