@@ -561,7 +561,8 @@ class SliderZoomView extends DataZoomView {
                 drift: bind(this._onDragMove, this, handleIndex),
                 ondragend: bind(this._onDragEnd, this),
                 onmouseover: bind(this._showDataInfo, this, true),
-                onmouseout: bind(this._showDataInfo, this, false)
+                onmouseout: bind(this._showDataInfo, this, false),
+                z2: 5
             });
 
             const bRect = path.getBoundingRect();
