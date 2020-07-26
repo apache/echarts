@@ -183,8 +183,8 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         moveHandleSize: 7,
         moveHandleIcon: 'path://M15 15.984q0.797 0 1.406 0.609t0.609 1.406-0.609 1.406-1.406 0.609-1.406-0.609-0.609-1.406 0.609-1.406 1.406-0.609zM15 9.984q0.797 0 1.406 0.609t0.609 1.406-0.609 1.406-1.406 0.609-1.406-0.609-0.609-1.406 0.609-1.406 1.406-0.609zM15 8.016q-0.797 0-1.406-0.609t-0.609-1.406 0.609-1.406 1.406-0.609 1.406 0.609 0.609 1.406-0.609 1.406-1.406 0.609zM9 3.984q0.797 0 1.406 0.609t0.609 1.406-0.609 1.406-1.406 0.609-1.406-0.609-0.609-1.406 0.609-1.406 1.406-0.609zM9 9.984q0.797 0 1.406 0.609t0.609 1.406-0.609 1.406-1.406 0.609-1.406-0.609-0.609-1.406 0.609-1.406 1.406-0.609zM11.016 18q0 0.797-0.609 1.406t-1.406 0.609-1.406-0.609-0.609-1.406 0.609-1.406 1.406-0.609 1.406 0.609 0.609 1.406z',
         moveHandleStyle: {
-            color: '#D2DBEE',
-            opacity: 0.7
+            color: '#D2DBEE'
+            // opacity: 0.7
         },
 
         showDetail: true,
@@ -202,8 +202,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
         emphasis: {
             handleStyle: {
-                borderColor: '#8FB0F7',
-                borderWidth: 2
+                borderColor: '#8FB0F7'
             },
             moveHandleStyle: {
                 color: '#8FB0F7'
