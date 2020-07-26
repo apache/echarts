@@ -737,6 +737,8 @@ class SliderZoomView extends DataZoomView {
         if (displaybles.moveHandle) {
             displaybles.moveHandle.setShape(viewExtent);
             displaybles.moveZone.setShape(viewExtent);
+            // Force update path on the invisible object
+            displaybles.moveZone.getBoundingRect();
             displaybles.moveHandleIcon && displaybles.moveHandleIcon.attr('x', viewExtent.x + viewExtent.width / 2);
         }
 
