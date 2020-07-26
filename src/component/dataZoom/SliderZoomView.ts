@@ -996,6 +996,8 @@ class SliderZoomView extends DataZoomView {
 
         const size = this._size;
 
+        endPoint[0] = Math.max(Math.min(size[0], endPoint[0]), 0);
+
         brushRect.setShape({
             x: startPoint[0], y: 0,
             width: endPoint[0] - startPoint[0], height: size[1]
