@@ -124,7 +124,7 @@ class TooltipRichContent {
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: tooltipModel.get('padding'),
                 verticalAlign: 'middle',
-                align: 'center'
+                align: 'left'
             },
             z: tooltipModel.get('z')
         });
