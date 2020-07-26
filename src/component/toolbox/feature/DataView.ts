@@ -485,7 +485,7 @@ echarts.registerAction({
             const originalData = seriesModel.get('data');
             newSeriesOptList.push({
                 name: seriesOpt.name,
-                data: tryMergeDataOption(seriesOpt.data, originalData)
+                data: tryMergeDataOption(seriesOpt.data as DataList, originalData as DataList)
             });
         }
     });

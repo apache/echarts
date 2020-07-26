@@ -17,18 +17,28 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 /**
  * Link lists and struct (graph or tree)
  */
 
-import * as zrUtil from 'zrender/src/core/util';
+import { curry, each, assert, extend, map, keys } from 'zrender/src/core/util';
+import List from '../List';
+import { makeInner } from '../../util/model';
+import { SeriesDataType } from '../../util/types';
 
-const each = zrUtil.each;
+// That is: { dataType: data },
+// like: { node: nodeList, edge: edgeList }.
+// Should contain mainData.
+type Datas = { [key in SeriesDataType]?: List };
+type StructReferDataAttr = 'data' | 'edgeData';
+type StructAttr = 'tree' | 'graph';
 
-const DATAS = '\0__link_datas';
-const MAIN_DATA = '\0__link_mainData';
+const inner = makeInner<{
+    datas: Datas;
+    mainData: List;
+}, List>();
+
 
 // Caution:
 // In most case, either list or its shallow clones (see list.cloneShallow)
@@ -37,75 +47,79 @@ const MAIN_DATA = '\0__link_mainData';
 // But in some rare case, we have to keep old list (like do animation in chart). So
 // please take care that both the old list and the new list share the same tree/graph.
 
-/**
- * @param {Object} opt
- * @param {module:echarts/data/List} opt.mainData
- * @param {Object} [opt.struct] For example, instance of Graph or Tree.
- * @param {string} [opt.structAttr] designation: list[structAttr] = struct;
- * @param {Object} [opt.datas] {dataType: data},
- *                 like: {node: nodeList, edge: edgeList}.
- *                 Should contain mainData.
- * @param {Object} [opt.datasAttr] {dataType: attr},
- *                 designation: struct[datasAttr[dataType]] = list;
- */
-function linkList(opt) {
+type LinkListOpt = {
+    mainData: List;
+    // For example, instance of Graph or Tree.
+    struct: {
+        update: () => void;
+    } & {
+        [key in StructReferDataAttr]?: List
+    };
+    // Will designate: `mainData[structAttr] = struct;`
+    structAttr: StructAttr;
+    datas?: Datas;
+    // { dataType: attr },
+    // Will designate: `struct[datasAttr[dataType]] = list;`
+    datasAttr?: { [key in SeriesDataType]?: StructReferDataAttr };
+};
+
+function linkList(opt: LinkListOpt): void {
     const mainData = opt.mainData;
     let datas = opt.datas;
 
     if (!datas) {
-        datas = {main: mainData};
-        opt.datasAttr = {main: 'data'};
+        datas = { main: mainData };
+        opt.datasAttr = { main: 'data' };
     }
     opt.datas = opt.mainData = null;
 
     linkAll(mainData, datas, opt);
 
     // Porxy data original methods.
-    each(datas, function (data) {
+    each(datas, function (data: List) {
         each(mainData.TRANSFERABLE_METHODS, function (methodName) {
-            data.wrapMethod(methodName, zrUtil.curry(transferInjection, opt));
+            data.wrapMethod(methodName, curry(transferInjection, opt));
         });
-
     });
 
     // Beyond transfer, additional features should be added to `cloneShallow`.
-    mainData.wrapMethod('cloneShallow', zrUtil.curry(cloneShallowInjection, opt));
+    mainData.wrapMethod('cloneShallow', curry(cloneShallowInjection, opt));
 
     // Only mainData trigger change, because struct.update may trigger
     // another changable methods, which may bring about dead lock.
     each(mainData.CHANGABLE_METHODS, function (methodName) {
-        mainData.wrapMethod(methodName, zrUtil.curry(changeInjection, opt));
+        mainData.wrapMethod(methodName, curry(changeInjection, opt));
     });
 
     // Make sure datas contains mainData.
-    zrUtil.assert(datas[mainData.dataType] === mainData);
+    assert(datas[mainData.dataType] === mainData);
 }
 
-function transferInjection(opt, res) {
+function transferInjection(this: List, opt: LinkListOpt, res: List): unknown {
     if (isMainData(this)) {
         // Transfer datas to new main data.
-        const datas = zrUtil.extend({}, this[DATAS]);
+        const datas = extend({}, inner(this).datas);
         datas[this.dataType] = res;
         linkAll(res, datas, opt);
     }
     else {
         // Modify the reference in main data to point newData.
-        linkSingle(res, this.dataType, this[MAIN_DATA], opt);
+        linkSingle(res, this.dataType, inner(this).mainData, opt);
     }
     return res;
 }
 
-function changeInjection(opt, res) {
-    opt.struct && opt.struct.update(this);
+function changeInjection(opt: LinkListOpt, res: unknown): unknown {
+    opt.struct && opt.struct.update();
     return res;
 }
 
-function cloneShallowInjection(opt, res) {
+function cloneShallowInjection(opt: LinkListOpt, res: List): List {
     // cloneShallow, which brings about some fragilities, may be inappropriate
     // to be exposed as an API. So for implementation simplicity we can make
     // the restriction that cloneShallow of not-mainData should not be invoked
     // outside, but only be invoked here.
-    each(res[DATAS], function (data, dataType) {
+    each(inner(res).datas, function (data: List, dataType) {
         data !== res && linkSingle(data.cloneShallow(), dataType, res, opt);
     });
     return res;
@@ -115,49 +129,52 @@ function cloneShallowInjection(opt, res) {
  * Supplement method to List.
  *
  * @public
- * @param {string} [dataType] If not specified, return mainData.
- * @return {module:echarts/data/List}
+ * @param [dataType] If not specified, return mainData.
  */
-function getLinkedData(dataType) {
-    const mainData = this[MAIN_DATA];
+function getLinkedData(this: List, dataType?: SeriesDataType): List {
+    const mainData = inner(this).mainData;
     return (dataType == null || mainData == null)
         ? mainData
-        : mainData[DATAS][dataType];
+        : inner(mainData).datas[dataType];
 }
 
 /**
  * Get list of all linked data
  */
-function getLinkedDataAll() {
-    const mainData = this[MAIN_DATA];
+function getLinkedDataAll(this: List): {
+    data: List,
+    type?: SeriesDataType
+}[] {
+    const mainData = inner(this).mainData;
     return (mainData == null)
         ? [{ data: mainData }]
-        : zrUtil.map(zrUtil.keys(mainData[DATAS]), function (type) {
+        : map(keys(inner(mainData).datas), function (type) {
             return {
                 type,
-                data: mainData[DATAS][type]
+                data: inner(mainData).datas[type]
             };
         });
 }
 
-function isMainData(data) {
-    return data[MAIN_DATA] === data;
+function isMainData(data: List): boolean {
+    return inner(data).mainData === data;
 }
 
-function linkAll(mainData, datas, opt) {
-    mainData[DATAS] = {};
-    each(datas, function (data, dataType) {
+function linkAll(mainData: List, datas: Datas, opt: LinkListOpt): void {
+    inner(mainData).datas = {};
+    each(datas, function (data: List, dataType) {
         linkSingle(data, dataType, mainData, opt);
     });
 }
 
-function linkSingle(data, dataType, mainData, opt) {
-    mainData[DATAS][dataType] = data;
-    data[MAIN_DATA] = mainData;
+function linkSingle(data: List, dataType: SeriesDataType, mainData: List, opt: LinkListOpt): void {
+    inner(mainData).datas[dataType] = data;
+    inner(data).mainData = mainData;
+
     data.dataType = dataType;
 
     if (opt.struct) {
-        data[opt.structAttr] = opt.struct;
+        data[opt.structAttr] = opt.struct as any;
         opt.struct[opt.datasAttr[dataType]] = data;
     }
 

@@ -110,7 +110,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     seriesGroup: MapSeries[] = [];
 
 
-    getInitialData(option: MapSeriesOption): List {
+    getInitialData(this: MapSeries, option: MapSeriesOption): List {
         const data = createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)

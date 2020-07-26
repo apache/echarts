@@ -29,7 +29,7 @@ import {
     indexOf
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import GlobalModel, { QueryConditionKindB } from '../model/Global';
+import GlobalModel from '../model/Global';
 import ComponentModel, {ComponentModelConstructor} from '../model/Component';
 import List from '../data/List';
 import {

@@ -36,7 +36,8 @@ import {
     LabelLayoutOptionCallbackParams,
     LabelLineOption,
     Dictionary,
-    ECElement
+    ECElement,
+    SeriesDataType
 } from '../util/types';
 import { parsePercent } from '../util/number';
 import ChartView from '../view/Chart';
@@ -57,7 +58,7 @@ interface LabelDesc {
 
     seriesModel: SeriesModel
     dataIndex: number
-    dataType: string
+    dataType: SeriesDataType
 
     layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
     computedLayoutOption: LabelLayoutOption
@@ -188,7 +189,7 @@ class LabelManager {
      */
     private _addLabel(
         dataIndex: number,
-        dataType: string,
+        dataType: SeriesDataType,
         seriesModel: SeriesModel,
         label: ZRText,
         layoutOption: LabelDesc['layoutOption']

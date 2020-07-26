@@ -41,7 +41,9 @@ import {
     LabelFormatterCallback,
     Dictionary,
     LineLabelOption,
-    StatesOptionMixin
+    StatesOptionMixin,
+    GraphEdgeItemObject,
+    OptionDataValueNumeric
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -107,16 +109,10 @@ export interface GraphEdgeStateOption {
     lineStyle?: GraphEdgeLineStyleOption
     label?: LineLabelOption
 }
-export interface GraphEdgeItemOption
-    extends GraphEdgeStateOption, StatesOptionMixin<GraphEdgeStateOption, ExtraEdgeStateOption> {
-    /**
-     * Name or index of source node.
-     */
-    source?: string | number
-    /**
-     * Name or index of target node.
-     */
-    target?: string | number
+export interface GraphEdgeItemOption extends
+        GraphEdgeStateOption,
+        StatesOptionMixin<GraphEdgeStateOption, ExtraEdgeStateOption>,
+        GraphEdgeItemObject<OptionDataValueNumeric> {
 
     value?: number
 
@@ -272,7 +268,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         defaultEmphasis(option, 'edgeLabel', ['show']);
     }
 
-    getInitialData(option: GraphSeriesOption, ecModel: GlobalModel) {
+    getInitialData(option: GraphSeriesOption, ecModel: GlobalModel): List {
         const edges = option.edges || option.links || [];
         const nodes = option.data || option.nodes || [];
         const self = this;

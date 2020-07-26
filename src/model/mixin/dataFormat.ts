@@ -27,7 +27,8 @@ import {
     CallbackDataParams,
     ColorString,
     ZRColor,
-    OptionDataValue
+    OptionDataValue,
+    SeriesDataType
 } from '../../util/types';
 import GlobalModel from '../Global';
 
@@ -51,7 +52,7 @@ class DataFormatMixin {
      */
     getDataParams(
         dataIndex: number,
-        dataType?: string
+        dataType?: SeriesDataType
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
@@ -102,7 +103,7 @@ class DataFormatMixin {
     getFormattedLabel(
         dataIndex: number,
         status?: DisplayState,
-        dataType?: string,
+        dataType?: SeriesDataType,
         labelDimIndex?: number,
         formatter?: string | ((params: object) => string),
         extendParams?: Partial<CallbackDataParams>
@@ -154,7 +155,7 @@ class DataFormatMixin {
      */
     getRawValue(
         idx: number,
-        dataType?: string
+        dataType?: SeriesDataType
     ): unknown {
         return retrieveRawValue(this.getData(dataType), idx);
     }

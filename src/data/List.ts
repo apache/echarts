@@ -35,7 +35,7 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
-    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption
+    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption, SeriesDataType
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
@@ -180,16 +180,22 @@ class List<
 
     readonly hostModel: HostModel;
 
-    readonly dataType: string;
+    /**
+     * @readonly
+     */
+    dataType: SeriesDataType;
 
     /**
+     * @readonly
      * Host graph if List is used to store graph nodes / edges.
      */
-    readonly graph?: Graph;
+    graph?: Graph;
+
     /**
+     * @readonly
      * Host tree if List is used to store tree ndoes.
      */
-    readonly tree?: Tree;
+    tree?: Tree;
 
     // Indices stores the indices of data subset after filtered.
     // This data subset will be used in chart.
@@ -267,9 +273,9 @@ class List<
 
     // Methods that create a new list based on this list should be listed here.
     // Notice that those method should `RETURN` the new list.
-    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
+    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'] as const;
     // Methods that change indices of this list should be listed here.
-    CHANGABLE_METHODS = ['filterSelf', 'selectRange'];
+    CHANGABLE_METHODS = ['filterSelf', 'selectRange'] as const;
 
 
     /**
@@ -2188,6 +2194,11 @@ class List<
 
     })();
 
+}
+
+interface List {
+    getLinkedData(dataType?: SeriesDataType): List;
+    getLinkedDataAll(): { data: List, type?: SeriesDataType }[];
 }
 
 export default List;

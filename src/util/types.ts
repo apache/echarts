@@ -126,7 +126,7 @@ export interface ECElement extends Element {
 }
 
 export interface DataHost {
-    getData(dataType?: string): List;
+    getData(dataType?: SeriesDataType): List;
 }
 
 export interface DataModel extends DataHost, DataFormatMixin {}
@@ -161,7 +161,7 @@ export interface SelectChangedPayload extends Payload {
     fromActionPayload: Payload
     selected: {
         seriesIndex: number
-        dataType?: string
+        dataType?: SeriesDataType
         dataIndex: number[]
     }[]
 }
@@ -302,7 +302,7 @@ export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = ListDimensionType;
 
-export const VISUAL_DIMENSIONS = createHashMap([
+export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
     'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
@@ -318,11 +318,11 @@ export interface DataVisualDimensions {
 }
 
 export type DimensionDefinition = {
-    type?: string,
-    name: string,
+    type?: ListDimensionType,
+    name: DimensionName,
     displayName?: string
 };
-export type DimensionDefinitionLoose = DimensionDefinition['type'] | DimensionDefinition;
+export type DimensionDefinitionLoose = DimensionDefinition['name'] | DimensionDefinition;
 
 export const SOURCE_FORMAT_ORIGINAL = 'original' as const;
 export const SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows' as const;
@@ -343,7 +343,10 @@ export const SERIES_LAYOUT_BY_COLUMN = 'column' as const;
 export const SERIES_LAYOUT_BY_ROW = 'row' as const;
 
 export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYOUT_BY_ROW;
+// null/undefined/'auto': auto detect header, see "src/data/helper/sourceHelper".
+export type OptionSourceHeader = boolean | 'auto';
 
+export type SeriesDataType = 'main' | 'node' | 'edge';
 
 
 // --------------------------------------------
@@ -445,22 +448,56 @@ export type ECOption = ECUnitOption | {
 };
 
 // series.data or dataset.source
-export type OptionSourceData =
-    ArrayLike<OptionDataItem>
-    | Dictionary<ArrayLike<OptionDataItem>>; // Only for `SOURCE_FORMAT_KEYED_COLUMNS`.
+export type OptionSourceData<
+    VAL extends OptionDataValue = OptionDataValue,
+    ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
+> =
+    OptionSourceDataOriginal<VAL, ORIITEM>
+    | OptionSourceDataObjectRows<VAL>
+    | OptionSourceDataArrayRows<VAL>
+    | OptionSourceDataKeyedColumns<VAL>
+    | OptionSourceDataTypedArray;
+export type OptionDataItemOriginal<
+    VAL extends OptionDataValue = OptionDataValue
+> = VAL | VAL[] | OptionDataItemObject<VAL>;
+export type OptionSourceDataOriginal<
+    VAL extends OptionDataValue = OptionDataValue,
+    ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
+> = ArrayLike<ORIITEM>;
+export type OptionSourceDataObjectRows<VAL extends OptionDataValue = OptionDataValue> =
+    ArrayLike<Dictionary<VAL>>;
+export type OptionSourceDataArrayRows<VAL extends OptionDataValue = OptionDataValue> =
+    ArrayLike<ArrayLike<VAL>>;
+export type OptionSourceDataKeyedColumns<VAL extends OptionDataValue = OptionDataValue> =
+    Dictionary<ArrayLike<VAL>>;
+export type OptionSourceDataTypedArray = ArrayLike<number>;
+
 // See also `model.js#getDataItemValue`.
 export type OptionDataItem =
     OptionDataValue
     | Dictionary<OptionDataValue>
-    | ArrayLike<OptionDataValue>
+    | OptionDataValue[]
     // FIXME: In some case (markpoint in geo (geo-map.html)), dataItem is {coord: [...]}
     | OptionDataItemObject<OptionDataValue>;
 // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataItemObject<T> = {
-    name?: string
-    value?: T[] | T
+    id?: string | number;
+    name?: string;
+    value?: T[] | T;
     selected?: boolean;
 };
+export interface GraphEdgeItemObject<
+    VAL extends OptionDataValue
+> extends OptionDataItemObject<VAL> {
+    /**
+     * Name or index of source node.
+     */
+    source?: string | number
+    /**
+     * Name or index of target node.
+     */
+    target?: string | number
+}
 export type OptionDataValue = string | number | Date;
 
 export type OptionDataValueNumeric = number | '-';
@@ -490,7 +527,7 @@ export interface OptionEncodeVisualDimensions {
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue
 }
-export type OptionEncodeValue = DimensionIndex[] | DimensionIndex | DimensionName[] | DimensionName;
+export type OptionEncodeValue = DimensionLoose | DimensionLoose[];
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
 
 // TODO: TYPE Different callback param for different series
@@ -509,7 +546,7 @@ export interface CallbackDataParams {
     name: string;
     dataIndex: number;
     data: any;
-    dataType?: string;
+    dataType?: SeriesDataType;
     value: any;
     color?: ZRColor;
     borderColor?: string;
@@ -869,7 +906,7 @@ export interface LabelLineOption {
 
 export interface LabelLayoutOptionCallbackParams {
     dataIndex: number,
-    dataType: string,
+    dataType: SeriesDataType,
     seriesIndex: number,
     text: string
     align: ZRTextAlign
@@ -1234,7 +1271,7 @@ export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
     cursor?: string
 
     // Needs to be override
-    data?: any
+    data?: unknown
 
     legendHoverLink?: boolean
 
@@ -1327,6 +1364,7 @@ export interface SeriesSamplingOptionMixin {
 export interface SeriesEncodeOptionMixin {
     datasetIndex?: number;
     seriesLayoutBy?: SeriesLayoutBy;
-    dimensions?: DimensionName[];
+    sourceHeader?: OptionSourceHeader;
+    dimensions?: DimensionDefinitionLoose[];
     encode?: OptionEncode
 }

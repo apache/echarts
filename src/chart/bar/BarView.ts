@@ -787,7 +787,7 @@ function updateStyle(
 
 // In case width or height are too small.
 function getLineWidth(
-    itemModel: Model<BarSeriesOption>,
+    itemModel: Model<BarDataItemOption>,
     rawLayout: RectLayout
 ) {
     const lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;

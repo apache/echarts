@@ -50,7 +50,8 @@ import {
     DisplayState,
     ECElement,
     DisplayStateNonNormal,
-    BlurScope
+    BlurScope,
+    SeriesDataType
 } from '../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -411,7 +412,7 @@ class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
         return createListFromArray(this.getSource(), this);
     }
 
-    getDataParams(dataIndex: number, dataType?: string, el?: Element): CallbackDataParams & {
+    getDataParams(dataIndex: number, dataType?: SeriesDataType, el?: Element): CallbackDataParams & {
         info: CustomExtraElementInfo
     } {
         const params = super.getDataParams(dataIndex, dataType) as ReturnType<CustomSeriesModel['getDataParams']>;

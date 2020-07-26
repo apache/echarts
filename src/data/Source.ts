@@ -25,7 +25,8 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SOURCE_FORMAT_UNKNOWN,
     SOURCE_FORMAT_KEYED_COLUMNS,
-    SOURCE_FORMAT_TYPED_ARRAY
+    SOURCE_FORMAT_TYPED_ARRAY,
+    DimensionName
 } from '../util/types';
 
 /**
@@ -97,7 +98,7 @@ class Source {
      * can be null/undefined.
      * Might be specified outside.
      */
-    encodeDefine: HashMap<OptionEncodeValue>;
+    encodeDefine: HashMap<OptionEncodeValue, DimensionName>;
 
     /**
      * Not null/undefined, uint.
@@ -128,7 +129,8 @@ class Source {
         this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
         this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
         this.dimensionsDefine = fields.dimensionsDefine;
-        this.encodeDefine = fields.encodeDefine && createHashMap(fields.encodeDefine);
+        this.encodeDefine = fields.encodeDefine
+            && createHashMap<OptionEncodeValue, DimensionName>(fields.encodeDefine);
         this.startIndex = fields.startIndex || 0;
         this.dimensionsDetectCount = fields.dimensionsDetectCount;
     }

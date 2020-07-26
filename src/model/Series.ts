@@ -30,7 +30,7 @@ import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
     SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, ColorString, OptionDataItemObject
+    ScaleDataValue, Dictionary, ColorString, OptionDataItemObject, SeriesDataType
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
@@ -327,11 +327,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * data in the stream procedure. So we fetch data from upstream
      * each time `task.perform` called.
      */
-    getData(dataType?: string): List<this> {
+    getData(dataType?: SeriesDataType): List<this> {
         const task = getCurrentTask(this);
         if (task) {
             const data = task.context.data;
-            return dataType == null ? data : data.getLinkedData(dataType);
+            return (dataType == null ? data : data.getLinkedData(dataType)) as List<this>;
         }
         else {
             // When series is not alive (that may happen when click toolbox
@@ -344,12 +344,10 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     getAllData(): ({
         data: List,
-        type?: string
+        type?: SeriesDataType
     })[] {
         const mainData = this.getData();
-        // @ts-ignore
         return (mainData && mainData.getLinkedDataAll)
-            // @ts-ignore
             ? mainData.getLinkedDataAll()
             : [{ data: mainData }];
     }
@@ -419,7 +417,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     formatTooltip(
         dataIndex: number,
         multipleSeries?: boolean,
-        dataType?: string,
+        dataType?: SeriesDataType,
         renderMode?: TooltipRenderMode
     ): {
         html: string,
@@ -613,11 +611,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     // PENGING If selectedMode is null ?
-    select(innerDataIndices: number[], dataType?: string): void {
+    select(innerDataIndices: number[], dataType?: SeriesDataType): void {
         this._innerSelect(this.getData(dataType), innerDataIndices);
     }
 
-    unselect(innerDataIndices: number[], dataType?: string): void {
+    unselect(innerDataIndices: number[], dataType?: SeriesDataType): void {
         const selectedMap = this.option.selectedMap;
         if (!selectedMap) {
             return;
@@ -631,7 +629,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         }
     }
 
-    toggleSelect(innerDataIndices: number[], dataType?: string): void {
+    toggleSelect(innerDataIndices: number[], dataType?: SeriesDataType): void {
         const tmpArr: number[] = [];
         for (let i = 0; i < innerDataIndices.length; i++) {
             tmpArr[0] = innerDataIndices[i];
@@ -654,7 +652,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return dataIndices;
     }
 
-    isSelected(dataIndex: number, dataType?: string): boolean {
+    isSelected(dataIndex: number, dataType?: SeriesDataType): boolean {
         const selectedMap = this.option.selectedMap;
         if (!selectedMap) {
             return false;

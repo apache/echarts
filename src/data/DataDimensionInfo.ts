@@ -126,7 +126,7 @@ class DataDimensionInfo {
     /**
      * @param opt All of the fields will be shallow copied.
      */
-    constructor(opt: object | DataDimensionInfo) {
+    constructor(opt?: object | DataDimensionInfo) {
         if (opt != null) {
             zrUtil.extend(this, opt);
         }

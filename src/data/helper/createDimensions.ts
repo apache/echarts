@@ -22,16 +22,30 @@
  * `completeDimensions` is to be deprecated.
  */
 import completeDimensions from './completeDimensions';
-import { DimensionDefinitionLoose, OptionEncode, OptionEncodeValue, EncodeDefaulter } from '../../util/types';
+import {
+    DimensionDefinitionLoose, OptionEncode, OptionEncodeValue,
+    EncodeDefaulter, OptionSourceData, DimensionName, DimensionDefinition, DataVisualDimensions, DimensionIndex
+} from '../../util/types';
 import Source from '../Source';
 import List from '../List';
 import DataDimensionInfo from '../DataDimensionInfo';
 import { HashMap } from 'zrender/src/core/util';
+import OrdinalMeta from '../OrdinalMeta';
+
+
+export interface CoordDimensionDefinition extends DimensionDefinition {
+    dimsDef?: (DimensionName | { name: DimensionName, defaultTooltip?: boolean })[];
+    otherDims?: DataVisualDimensions;
+    ordinalMeta?: OrdinalMeta;
+    coordDim?: DimensionName;
+    coordDimIndex?: DimensionIndex;
+}
+export type CoordDimensionDefinitionLoose = CoordDimensionDefinition['name'] | CoordDimensionDefinition;
 
 export type CreateDimensionsParams = {
-    coordDimensions?: DimensionDefinitionLoose[],
+    coordDimensions?: CoordDimensionDefinitionLoose[],
     dimensionsDefine?: DimensionDefinitionLoose[],
-    encodeDefine?: HashMap<OptionEncodeValue> | OptionEncode,
+    encodeDefine?: HashMap<OptionEncodeValue, DimensionName> | OptionEncode,
     dimensionsCount?: number,
     encodeDefaulter?: EncodeDefaulter,
     generateCoord?: string,
@@ -46,7 +60,7 @@ export type CreateDimensionsParams = {
  */
 export default function (
     // TODO: TYPE completeDimensions type
-    source: Source | List | any[],
+    source: Source | List | OptionSourceData,
     opt?: CreateDimensionsParams
 ): DataDimensionInfo[] {
     opt = opt || {};

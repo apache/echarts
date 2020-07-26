@@ -58,7 +58,8 @@ import {
     ParsedValue,
     BlurScope,
     InnerFocus,
-    PayloadAnimationPart
+    PayloadAnimationPart,
+    SeriesDataType
 } from './types';
 import { makeInner } from './model';
 import {
@@ -897,7 +898,7 @@ export interface ECData {
     dataModel?: DataModel;
     eventData?: ECEventData;
     seriesIndex?: number;
-    dataType?: string;
+    dataType?: SeriesDataType;
 
     focus?: InnerFocus
     blurScope?: BlurScope

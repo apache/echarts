@@ -5,7 +5,7 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload, ZRColor } from './types';
+import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload, ZRColor, SeriesDataType } from './types';
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
 import { getECData } from './graphic';
 import * as colorTool from 'zrender/src/tool/color';
@@ -188,7 +188,7 @@ function getFromStateStyle(
 function createEmphasisDefaultState(
     el: Displayable,
     stateName: 'emphasis',
-    targetStates?: string[],
+    targetStates: string[],
     state: Displayable['states'][number]
 ) {
     const hasSelect = targetStates && indexOf(targetStates, 'select') >= 0;
@@ -436,7 +436,7 @@ export function toggleSeriesBlurState(
             else if (isObject(focus)) {
                 const dataTypes = keys(focus);
                 for (let d = 0; d < dataTypes.length; d++) {
-                    leaveBlurOfIndices(seriesModel.getData(dataTypes[d]), focus[dataTypes[d]]);
+                    leaveBlurOfIndices(seriesModel.getData(dataTypes[d] as SeriesDataType), focus[dataTypes[d]]);
                 }
             }
 
@@ -530,7 +530,7 @@ export function updateSeriesElementSelection(seriesModel: SeriesModel) {
 export function getAllSelectedIndices(ecModel: GlobalModel) {
     const ret: {
         seriesIndex: number
-        dataType?: string
+        dataType?: SeriesDataType
         dataIndex: number[]
     }[] = [];
     ecModel.eachSeries(function (seriesModel) {

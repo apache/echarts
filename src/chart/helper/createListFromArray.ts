@@ -27,10 +27,12 @@ import {getCoordSysInfoBySeries} from '../../model/referHelper';
 import Source from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
-import { SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition } from '../../util/types';
+import {
+    SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition, OptionSourceData
+} from '../../util/types';
 import SeriesModel from '../../model/Series';
 
-function createListFromArray(source: Source | any[], seriesModel: SeriesModel, opt?: {
+function createListFromArray(source: Source | OptionSourceData, seriesModel: SeriesModel, opt?: {
     generateCoord?: string
     useEncodeDefaulter?: boolean
 }): List {

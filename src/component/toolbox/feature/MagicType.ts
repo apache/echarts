@@ -100,7 +100,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         const newOption: ECUnitOption = {
             series: []
         };
-        const generateNewSeriesTypes = function (seriesModel: SeriesModel) {
+        const generateNewSeriesTypes = function (seriesModel: SeriesModel<MegicTypeSeriesOption>) {
             const seriesType = seriesModel.subType;
             const seriesId = seriesModel.id;
             const newSeriesOpt = seriesOptGenreator[type](
@@ -170,17 +170,18 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
     }
 }
 
+type MegicTypeSeriesOption = SeriesOption & {
+    // TODO: TYPE More specified series option
+    stack?: boolean | string
+    data?: unknown[]
+    markPoint?: unknown
+    markLine?: unknown
+};
 
 type SeriesOptGenreator = (
     seriesType: string,
     seriesId: string,
-    seriesModel: SeriesModel<SeriesOption & {
-        // TODO: TYPE More specified series option
-        stack?: boolean | string
-        data?: any[]
-        markPoint?: any
-        markLine?: any
-    }>,
+    seriesModel: SeriesModel<MegicTypeSeriesOption>,
     model: ToolboxFeatureModel<ToolboxMagicTypeFeatureOption>
 ) => SeriesOption;
 
