@@ -42,6 +42,7 @@ import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { __DEV__ } from '../../config';
 import { PointLike } from 'zrender/src/core/Point';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const Rect = graphic.Rect;
 
@@ -74,7 +75,8 @@ interface Displayables {
 
     brushRect: graphic.Rect;
 
-    moveHandle: graphic.Group;
+    moveHandle: graphic.Rect;
+    moveHandleIcon: graphic.Path;
     // invisible move zone.
     moveZone: graphic.Rect;
 }
@@ -495,18 +497,20 @@ class SliderZoomView extends DataZoomView {
     }
 
     private _renderHandle() {
-        const displaybles = this._displayables;
-        const handles: [graphic.Path, graphic.Path] = displaybles.handles = [null, null];
-        const handleLabels: [graphic.Text, graphic.Text] = displaybles.handleLabels = [null, null];
+        const thisGroup = this.group;
+        const displayables = this._displayables;
+        const handles: [graphic.Path, graphic.Path] = displayables.handles = [null, null];
+        const handleLabels: [graphic.Text, graphic.Text] = displayables.handleLabels = [null, null];
         const sliderGroup = this._displayables.sliderGroup;
         const size = this._size;
         const dataZoomModel = this.dataZoomModel;
+        const api = this.api;
 
         const borderRadius = dataZoomModel.get('borderRadius') || 0;
 
         const brushSelect = dataZoomModel.get('brushSelect');
 
-        const filler = displaybles.filler = new Rect({
+        const filler = displayables.filler = new Rect({
             silent: brushSelect,
             style: {
                 fill: dataZoomModel.get('fillerColor')
@@ -514,16 +518,6 @@ class SliderZoomView extends DataZoomView {
             textConfig: {
                 position: 'inside'
             }
-        });
-
-        filler.attr({
-            draggable: true,
-            cursor: getCursor(this._orient),
-            drift: bind(this._onDragMove, this, 'all'),
-            ondragstart: bind(this._showDataInfo, this, true),
-            ondragend: bind(this._onDragEnd, this),
-            onmouseover: bind(this._showDataInfo, this, true),
-            onmouseout: bind(this._showDataInfo, this, false)
         });
 
         sliderGroup.add(filler);
@@ -547,6 +541,7 @@ class SliderZoomView extends DataZoomView {
             }
         }));
 
+        // Left and right handle to resize
         each([0, 1] as const, function (handleIndex) {
             let iconStr = dataZoomModel.get('handleIcon');
             if (!symbolBuildProxies[iconStr] && iconStr.indexOf('path://') < 0) {
@@ -592,7 +587,7 @@ class SliderZoomView extends DataZoomView {
 
             const textStyleModel = dataZoomModel.getModel('textStyle');
 
-            this.group.add(
+            thisGroup.add(
                 handleLabels[handleIndex] = new graphic.Text({
                 silent: true,
                 invisible: true,
@@ -607,6 +602,53 @@ class SliderZoomView extends DataZoomView {
             }));
 
         }, this);
+
+        // Handle to move. Only visible when brushSelect is set true.
+        let actualMoveZone: Displayable = filler;
+        if (brushSelect) {
+            const moveHandleHeight = parsePercent(dataZoomModel.get('moveHandleSize'), size[1]);
+            const moveHandle = displayables.moveHandle = new graphic.Rect({
+                style: dataZoomModel.getModel('moveHandleStyle').getItemStyle(),
+                shape: {
+                    r: [0, 0, 2, 2],
+                    y: size[1],
+                    height: moveHandleHeight
+                }
+            });
+            moveHandle.ensureState('emphasis').style = dataZoomModel.getModel(
+                ['emphasis', 'moveHandleStyle']
+            ).getItemStyle();
+
+            const moveZoneExpandSize = Math.min(size[1] / 2, Math.max(moveHandleHeight, 15));
+            actualMoveZone = displayables.moveZone = new graphic.Rect({
+                invisible: true,
+                cursor: 'move',
+                shape: {
+                    y: size[1] - moveZoneExpandSize,
+                    height: moveHandleHeight + moveZoneExpandSize
+                }
+            });
+
+            actualMoveZone.on('mouseover', () => {
+                    api.enterEmphasis(moveHandle);
+                })
+                .on('mouseout', () => {
+                    api.leaveEmphasis(moveHandle);
+                });
+
+            sliderGroup.add(moveHandle);
+            sliderGroup.add(actualMoveZone);
+        }
+
+        actualMoveZone.attr({
+            draggable: true,
+            cursor: getCursor(this._orient),
+            drift: bind(this._onDragMove, this, 'all'),
+            ondragstart: bind(this._showDataInfo, this, true),
+            ondragend: bind(this._onDragEnd, this),
+            onmouseover: bind(this._showDataInfo, this, true),
+            onmouseout: bind(this._showDataInfo, this, false)
+        });
     }
 
     private _resetInterval() {
@@ -671,6 +713,16 @@ class SliderZoomView extends DataZoomView {
             width: handleInterval[1] - handleInterval[0],
             height: size[1]
         });
+
+        const viewExtent = {
+            x: handleInterval[0],
+            width: handleInterval[1] - handleInterval[0]
+        };
+        // Move handle
+        if (displaybles.moveHandle) {
+            displaybles.moveHandle.setShape(viewExtent);
+            displaybles.moveZone.setShape(viewExtent);
+        }
 
         // update clip path of shadow.
         const dataShadowSegs = displaybles.dataShadowSegs;

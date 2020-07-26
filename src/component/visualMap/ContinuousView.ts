@@ -711,7 +711,7 @@ class ContinuousView extends VisualMapView {
         if (handleLabels) {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
-                // TODO not do twice.
+                // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
                 this._api.enterBlur(handleLabels[i]);
             }
         }
@@ -849,6 +849,7 @@ class ContinuousView extends VisualMapView {
         if (handleLabels) {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
+                // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
                 this._api.leaveBlur(handleLabels[i]);
             }
         }

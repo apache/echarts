@@ -88,8 +88,11 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
 
     handleStyle?: ItemStyleOption
 
-    moveHandleIcon?: string
+    // moveHandleIcon?: string
     moveHandleStyle?: ItemStyleOption
+    /**
+     * Height of handle rect. Can be a percent string relative to the slider height.
+     */
     moveHandleSize?: number
 
     labelPrecision?: number | 'auto'
@@ -113,6 +116,7 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
 
     emphasis?: {
         handleStyle?: ItemStyleOption
+        moveHandleStyle?: ItemStyleOption
     }
 }
 
@@ -173,6 +177,11 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             borderColor: '#ACB8D1'
         },
 
+        moveHandleSize: 6,
+        moveHandleStyle: {
+            color: '#D2DBEE'
+        },
+
         showDetail: true,
         showDataShadow: 'auto',                 // Default auto decision.
         realtime: true,
@@ -190,6 +199,9 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             handleStyle: {
                 borderColor: '#8FB0F7',
                 borderWidth: 2
+            },
+            moveHandleStyle: {
+                color: '#8FB0F7'
             }
         }
     });
