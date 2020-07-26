@@ -43,6 +43,7 @@ import { deprecateLog } from '../../util/log';
 import { __DEV__ } from '../../config';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { hideOverlap } from '../../label/labelLayoutHelper';
 
 const Rect = graphic.Rect;
 
@@ -610,17 +611,28 @@ class SliderZoomView extends DataZoomView {
             const moveHandleHeight = parsePercent(dataZoomModel.get('moveHandleSize'), size[1]);
             const moveHandle = displayables.moveHandle = new graphic.Rect({
                 style: dataZoomModel.getModel('moveHandleStyle').getItemStyle(),
+                silent: true,
                 shape: {
                     r: [0, 0, 2, 2],
                     y: size[1],
                     height: moveHandleHeight
                 }
             });
+            const iconSize = moveHandleHeight * 0.8;
+            const moveHandleIcon = displayables.moveHandleIcon = createSymbol(
+                dataZoomModel.get('moveHandleIcon'),
+                -iconSize / 2, -iconSize / 2, iconSize, iconSize,
+                '#fff',
+                true
+            );
+            moveHandleIcon.silent = true;
+            moveHandleIcon.y = size[1] + moveHandleHeight / 2;
+
             moveHandle.ensureState('emphasis').style = dataZoomModel.getModel(
                 ['emphasis', 'moveHandleStyle']
             ).getItemStyle();
 
-            const moveZoneExpandSize = Math.min(size[1] / 2, Math.max(moveHandleHeight, 15));
+            const moveZoneExpandSize = Math.min(size[1] / 2, Math.max(moveHandleHeight, 10));
             actualMoveZone = displayables.moveZone = new graphic.Rect({
                 invisible: true,
                 cursor: 'move',
@@ -638,6 +650,7 @@ class SliderZoomView extends DataZoomView {
                 });
 
             sliderGroup.add(moveHandle);
+            sliderGroup.add(moveHandleIcon);
             sliderGroup.add(actualMoveZone);
         }
 
@@ -723,6 +736,7 @@ class SliderZoomView extends DataZoomView {
         if (displaybles.moveHandle) {
             displaybles.moveHandle.setShape(viewExtent);
             displaybles.moveZone.setShape(viewExtent);
+            displaybles.moveHandleIcon && displaybles.moveHandleIcon.attr('x', viewExtent.x + viewExtent.width / 2);
         }
 
         // update clip path of shadow.
@@ -840,10 +854,14 @@ class SliderZoomView extends DataZoomView {
     private _showDataInfo(showOrHide?: boolean) {
         // Always show when drgging.
         showOrHide = this._dragging || showOrHide;
-
-        const handleLabels = this._displayables.handleLabels;
+        const displayables = this._displayables;
+        const handleLabels = displayables.handleLabels;
         handleLabels[0].attr('invisible', !showOrHide);
         handleLabels[1].attr('invisible', !showOrHide);
+
+        // Highlight move handle
+        displayables.moveHandle
+            && this.api[showOrHide ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {

@@ -56,8 +56,8 @@ abstract class ExtensionAPI {
     // Implemented in echarts.js
     abstract getCoordinateSystems(): CoordinateSystemMaster[];
     abstract getComponentByElement(el: Element): ComponentModel;
-    abstract enterEmphasis(el: Element): void;
-    abstract leaveEmphasis(el: Element): void;
+    abstract enterEmphasis(el: Element, highlightDigit?: number): void;
+    abstract leaveEmphasis(el: Element, highlightDigit?: number): void;
     abstract enterSelect(el: Element): void;
     abstract leaveSelect(el: Element): void;
     abstract enterBlur(el: Element): void;

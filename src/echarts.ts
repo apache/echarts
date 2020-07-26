@@ -2188,12 +2188,12 @@ class ECharts extends Eventful {
                         el = el.parent;
                     }
                 }
-                enterEmphasis(el: Element) {
-                    enterEmphasis(el);
+                enterEmphasis(el: Element, highlightDigit?: number) {
+                    enterEmphasis(el, highlightDigit);
                     markStatusToUpdate(ecIns);
                 }
-                leaveEmphasis(el: Element) {
-                    leaveEmphasis(el);
+                leaveEmphasis(el: Element, highlightDigit?: number) {
+                    leaveEmphasis(el, highlightDigit);
                     markStatusToUpdate(ecIns);
                 }
                 enterBlur(el: Element) {
