@@ -43,7 +43,6 @@ import { deprecateLog } from '../../util/log';
 import { __DEV__ } from '../../config';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
-import { hideOverlap } from '../../label/labelLayoutHelper';
 
 const Rect = graphic.Rect;
 
@@ -51,6 +50,7 @@ const Rect = graphic.Rect;
 const DEFAULT_LOCATION_EDGE_GAP = 7;
 const DEFAULT_FRAME_BORDER_WIDTH = 1;
 const DEFAULT_FILLER_SIZE = 30;
+const DEFAULT_MOVE_HANDLE_SIZE = 7;
 const HORIZONTAL = 'horizontal';
 const VERTICAL = 'vertical';
 const LABEL_GAP = 5;
@@ -212,6 +212,8 @@ class SliderZoomView extends DataZoomView {
     private _resetLocation() {
         const dataZoomModel = this.dataZoomModel;
         const api = this.api;
+        const showMoveHandle = dataZoomModel.get('brushSelect');
+        const moveHandleSize = showMoveHandle ? DEFAULT_MOVE_HANDLE_SIZE : 0;
 
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
@@ -223,7 +225,7 @@ class SliderZoomView extends DataZoomView {
                 // Why using 'right', because right should be used in vertical,
                 // and it is better to be consistent for dealing with position param merge.
                 right: ecSize.width - coordRect.x - coordRect.width,
-                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP),
+                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
                 width: coordRect.width,
                 height: DEFAULT_FILLER_SIZE
             }
@@ -635,7 +637,6 @@ class SliderZoomView extends DataZoomView {
             const moveZoneExpandSize = Math.min(size[1] / 2, Math.max(moveHandleHeight, 10));
             actualMoveZone = displayables.moveZone = new graphic.Rect({
                 invisible: true,
-                cursor: 'move',
                 shape: {
                     y: size[1] - moveZoneExpandSize,
                     height: moveHandleHeight + moveZoneExpandSize

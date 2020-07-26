@@ -196,6 +196,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             color: '#333'
         },
 
+        brushSelect: true,
         brushStyle: {
             color: 'rgba(135,175,274,0.15)'
         },
