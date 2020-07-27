@@ -76,7 +76,7 @@ import {
     ActionHandler, ActionInfo, OptionPreprocessor, PostUpdater,
     LoadingEffect, LoadingEffectCreator, StageHandlerInternal,
     StageHandlerOverallReset, StageHandler,
-    ViewRootGroup, DimensionDefinitionLoose, ECEventData, ThemeOption,
+    ViewRootGroup, DimensionDefinitionLoose, ECEventData, ThemeOption, LocaleOption,
     ECOption,
     ECUnitOption,
     ZRColor,
@@ -274,6 +274,8 @@ class ECharts extends Eventful {
 
     private _theme: ThemeOption;
 
+    private _locale: LocaleOption;
+
     private _chartsViews: ChartView[] = [];
 
     private _chartsMap: {[viewId: string]: ChartView} = {};
@@ -310,6 +312,7 @@ class ECharts extends Eventful {
         dom: HTMLElement,
         // Theme name or themeOption.
         theme?: string | ThemeOption,
+        locale?: string | LocaleOption,
         opts?: {
             renderer?: RendererType,
             devicePixelRatio?: number,
@@ -349,6 +352,8 @@ class ECharts extends Eventful {
         theme && backwardCompat(theme as ECUnitOption, true);
 
         this._theme = theme;
+        this._locale = typeof locale === 'string' ? localeStorage[locale || 'ZH'] : zrUtil.clone(locale);
+        console.log(this._locale);
 
         this._coordSysMgr = new CoordinateSystemManager();
 
@@ -504,7 +509,7 @@ class ECharts extends Eventful {
             const theme = this._theme;
             const ecModel = this._model = new GlobalModel();
             ecModel.scheduler = this._scheduler;
-            ecModel.init(null, null, null, theme, optionManager);
+            ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
         this._model.setOption(option, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
@@ -2301,6 +2306,8 @@ const visualFuncs: StageHandlerInternal[] = [];
 
 const themeStorage: {[themeName: string]: ThemeOption} = {};
 
+const localeStorage: {[localeName: string]: LocaleOption} = {};
+
 const loadingEffects: {[effectName: string]: LoadingEffectCreator} = {};
 
 const instances: {[id: string]: ECharts} = {};
@@ -2322,6 +2329,7 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
 export function init(
     dom: HTMLElement,
     theme?: string | object,
+    locale?: string | object,
     opts?: {
         renderer?: RendererType,
         devicePixelRatio?: number,
@@ -2368,7 +2376,7 @@ export function init(
         }
     }
 
-    const chart = new ECharts(dom, theme, opts);
+    const chart = new ECharts(dom, theme, locale, opts);
     chart.id = 'ec_' + idBase++;
     instances[chart.id] = chart;
 
@@ -2457,6 +2465,11 @@ export function getInstanceById(key: string): ECharts {
  */
 export function registerTheme(name: string, theme: ThemeOption): void {
     themeStorage[name] = theme;
+}
+
+export function registerLocale(name: string, locale: LocaleOption): void {
+    localeStorage[name] = locale;
+    console.log('localeStorage', localeStorage);
 }
 
 /**

@@ -53,11 +53,12 @@ import {
     ThemeOption,
     ComponentOption,
     ComponentMainType,
-    ComponentSubType
+    ComponentSubType, LocaleOption
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
+import {Dictionary} from "zrender/src/core/types";
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -79,6 +80,8 @@ class GlobalModel extends Model<ECUnitOption> {
     option: ECUnitOption;
 
     private _theme: Model;
+
+    private _locale: object;
 
     private _optionManager: OptionManager;
 
@@ -119,11 +122,14 @@ class GlobalModel extends Model<ECUnitOption> {
         parentModel: Model,
         ecModel: GlobalModel,
         theme: object,
+        locale: object,
         optionManager: OptionManager
     ): void {
         theme = theme || {};
         this.option = null; // Mark as not initialized.
         this._theme = new Model(theme);
+        console.log('init', locale)
+        this._locale = locale;
         this._optionManager = optionManager;
     }
 
@@ -415,6 +421,25 @@ class GlobalModel extends Model<ECUnitOption> {
 
     getTheme(): Model {
         return this._theme;
+    }
+
+    getLocale(): LocaleOption {
+        return this._locale;
+    }
+
+    getWithLocale(localePosition: Array<string>, optionsPosition?: Array<string>, localeHandlerFn?: (text: string) => string): any {
+        console.log(optionsPosition, localePosition);
+        const locale = this.getLocale()
+        let localeText: string | any;
+        localePosition.map(t => {
+            localeText = localeText ? localeText[t] : locale[t];
+        })
+
+        if(localeHandlerFn) {
+            localeText =  localeHandlerFn(localeText);
+        }
+        console.log(localeText);
+        return localeText;
     }
 
     setUpdatePayload(payload: Payload) {

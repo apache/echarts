@@ -19,7 +19,6 @@
 
 import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import lang from '../../../lang';
 import {ToolboxFeature, ToolboxFeatureOption, ToolboxFeatureModel, registerFeature} from '../featureManager';
 import { SeriesOption, ECUnitOption } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
@@ -27,7 +26,6 @@ import ExtensionAPI from '../../../ExtensionAPI';
 import SeriesModel from '../../../model/Series';
 import { SINGLE_REFERRING } from '../../../util/model';
 
-const magicTypeLang = lang.toolbox.magicType;
 const INNER_STACK_KEYWORD = '__ec_magicType_stack__' as const;
 
 const ICON_TYPES = ['line', 'bar', 'stack'] as const;
@@ -74,21 +72,25 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         return icons;
     }
 
-    static defaultOption: ToolboxMagicTypeFeatureOption = {
-        show: true,
-        type: [],
-        // Icon group
-        icon: {
-            line: 'M4.1,28.9h7.1l9.3-22l7.4,38l9.7-19.7l3,12.8h14.9M4.1,58h51.4',
-            bar: 'M6.7,22.9h10V48h-10V22.9zM24.9,13h10v35h-10V13zM43.2,2h10v46h-10V2zM3.1,58h53.7',
-            // eslint-disable-next-line
-            stack: 'M8.2,38.4l-8.4,4.1l30.6,15.3L60,42.5l-8.1-4.1l-21.5,11L8.2,38.4z M51.9,30l-8.1,4.2l-13.4,6.9l-13.9-6.9L8.2,30l-8.4,4.2l8.4,4.2l22.2,11l21.5-11l8.1-4.2L51.9,30z M51.9,21.7l-8.1,4.2L35.7,30l-5.3,2.8L24.9,30l-8.4-4.1l-8.3-4.2l-8.4,4.2L8.2,30l8.3,4.2l13.9,6.9l13.4-6.9l8.1-4.2l8.1-4.1L51.9,21.7zM30.4,2.2L-0.2,17.5l8.4,4.1l8.3,4.2l8.4,4.2l5.5,2.7l5.3-2.7l8.1-4.2l8.1-4.2l8.1-4.1L30.4,2.2z' // jshint ignore:line
-        },
-        // `line`, `bar`, `stack`, `tiled`
-        title: zrUtil.clone(magicTypeLang.title),
-        option: {},
-        seriesIndex: {}
-    };
+    static getDefaultOption(ecModel: GlobalModel) {
+        const defaultOption: ToolboxMagicTypeFeatureOption = {
+            show: true,
+            type: [],
+            // Icon group
+            icon: {
+                line: 'M4.1,28.9h7.1l9.3-22l7.4,38l9.7-19.7l3,12.8h14.9M4.1,58h51.4',
+                bar: 'M6.7,22.9h10V48h-10V22.9zM24.9,13h10v35h-10V13zM43.2,2h10v46h-10V2zM3.1,58h53.7',
+                // eslint-disable-next-line
+                stack: 'M8.2,38.4l-8.4,4.1l30.6,15.3L60,42.5l-8.1-4.1l-21.5,11L8.2,38.4z M51.9,30l-8.1,4.2l-13.4,6.9l-13.9-6.9L8.2,30l-8.4,4.2l8.4,4.2l22.2,11l21.5-11l8.1-4.2L51.9,30z M51.9,21.7l-8.1,4.2L35.7,30l-5.3,2.8L24.9,30l-8.4-4.1l-8.3-4.2l-8.4,4.2L8.2,30l8.3,4.2l13.9,6.9l13.4-6.9l8.1-4.2l8.1-4.1L51.9,21.7zM30.4,2.2L-0.2,17.5l8.4,4.1l8.3,4.2l8.4,4.2l5.5,2.7l5.3-2.7l8.1-4.2l8.1-4.2l8.1-4.1L30.4,2.2z' // jshint ignore:line
+            },
+            // `line`, `bar`, `stack`, `tiled`
+            title: ecModel.getWithLocale(['toolbox', 'magicTypeLang', 'title']),
+            option: {},
+            seriesIndex: {}
+        }
+
+        return defaultOption;
+    }
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI, type: IconType) {
         const model = this.model;
@@ -153,11 +155,13 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         // Change title of stack
         if (type === 'stack') {
             const seriesOptions = newOption.series as (SeriesOption & { stack: string })[];
+            const titldLang = ecModel.getWithLocale(['toolbox', 'magicTypeLang', 'title', 'tiled']);
+            const titleLang = ecModel.getWithLocale(['toolbox', 'magicTypeLang', 'title']);
             const isStack = seriesOptions && seriesOptions[0]
                 && seriesOptions[0].stack === INNER_STACK_KEYWORD;
             newTitle = isStack
-                ? zrUtil.merge({ stack: magicTypeLang.title.tiled }, magicTypeLang.title)
-                : zrUtil.clone(magicTypeLang.title);
+                ? zrUtil.merge({ stack: titldLang }, titleLang)
+                : zrUtil.clone(titleLang);
         }
 
         api.dispatchAction({

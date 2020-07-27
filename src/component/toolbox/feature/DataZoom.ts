@@ -24,7 +24,6 @@ import BrushController, { BrushControllerEvents, BrushDimensionMinMax } from '..
 import BrushTargetManager, { BrushTargetInfoCartesian2D } from '../../helper/BrushTargetManager';
 import * as history from '../../dataZoom/history';
 import sliderMove from '../../helper/sliderMove';
-import lang from '../../../lang';
 // Use dataZoomSelect
 import '../../dataZoomSelect';
 import {
@@ -51,7 +50,6 @@ import { registerInternalOptionCreator } from '../../../model/internalComponentC
 import ComponentModel from '../../../model/Component';
 
 
-const dataZoomLang = lang.toolbox.dataZoom;
 const each = zrUtil.each;
 
 const DATA_ZOOM_ID_BASE = makeInternalComponentId('toolbox-dataZoom_');
@@ -206,17 +204,21 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         });
     }
 
-    static defaultOption: ToolboxDataZoomFeatureOption = {
-        show: true,
-        filterMode: 'filter',
-        // Icon group
-        icon: {
-            zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
-            back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
-        },
-        // `zoom`, `back`
-        title: zrUtil.clone(dataZoomLang.title)
-    };
+    static getDefaultOption(ecModel: GlobalModel) {
+        const defaultOption: ToolboxDataZoomFeatureOption = {
+            show: true,
+            filterMode: 'filter',
+            // Icon group
+            icon: {
+                zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
+                back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
+            },
+            // `zoom`, `back`
+            title: ecModel.getWithLocale(['toolbox', 'dataZoom', 'title']),
+        }
+
+        return defaultOption;
+    }
 }
 
 const handlers: { [key in IconType]: (this: DataZoomFeature) => void } = {

@@ -470,6 +470,7 @@ export type OptionDataValueDate = Date | string | number;
 // export type ModelOption = Dictionary<any> | any[] | string | number | boolean | ((...args: any) => any);
 export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
+export type LocaleOption = Dictionary<any>;
 
 export type DisplayState = 'normal' | 'emphasis' | 'blur' | 'select';
 export type DisplayStateNonNormal = Exclude<DisplayState, 'normal'>;
