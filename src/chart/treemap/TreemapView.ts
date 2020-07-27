@@ -982,18 +982,20 @@ function renderNode(
             });
             (textEl as ECElement).disableLabelLayout = true;
         }
-        else {
-            textEl.beforeUpdate = function () {
-                const width = Math.max(rectEl.shape.width - textPadding[1] - textPadding[3], 0);
-                const height = Math.max(rectEl.shape.height - textPadding[0] - textPadding[2], 0);
-                if (textStyle.width !== width || textStyle.height !== height) {
-                    textEl.setStyle({
-                        width,
-                        height
-                    });
-                }
-            };
-        }
+        textEl.beforeUpdate = function () {
+            const width = Math.max(
+                (upperLabelRect ? upperLabelRect.width : rectEl.shape.width) - textPadding[1] - textPadding[3], 0
+            );
+            const height = Math.max(
+                (upperLabelRect ? upperLabelRect.height : rectEl.shape.height) - textPadding[0] - textPadding[2], 0
+            );
+            if (textStyle.width !== width || textStyle.height !== height) {
+                textEl.setStyle({
+                    width,
+                    height
+                });
+            }
+        };
 
         textStyle.truncateMinChar = 2;
         textStyle.lineOverflow = 'truncate';
