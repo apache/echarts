@@ -21,7 +21,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
-import {encodeHTML, addCommas, concatTooltipHtml, encodeHTML, encodeHTML } from '../../util/format';
+import {encodeHTML, addCommas, concatTooltipHtml} from '../../util/format';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import {
