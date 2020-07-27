@@ -205,6 +205,8 @@ class RadarView extends ChartView {
             const areaStyleModel = itemModel.getModel('areaStyle');
             const polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
 
+            polygon.ignore = polygonIgnore;
+
             zrUtil.each(['emphasis', 'select', 'blur'] as const, function (stateName) {
                 const stateModel = itemModel.getModel([stateName, 'areaStyle']);
                 const stateIgnore = stateModel.isEmpty() && stateModel.parentModel.isEmpty();

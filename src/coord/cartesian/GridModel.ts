@@ -34,7 +34,7 @@ export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, Shado
     borderWidth?: number;
     borderColor?: ZRColor;
 
-    tooltop?: any; // FIXME:TS add this tooltip type
+    tooltip?: any; // FIXME:TS add this tooltip type
 }
 
 class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHostModel {
