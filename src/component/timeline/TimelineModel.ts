@@ -54,10 +54,10 @@ export interface TimelineControlStyle extends ItemStyleOption {
     nextIcon?: string
 
     // Can be a percent value relative to itemSize
-    playBtnSize: number | string
-    stopBtnSize: number | string
-    nextBtnSize: number | string
-    prevBtnSize: number | string
+    playBtnSize?: number | string
+    stopBtnSize?: number | string
+    nextBtnSize?: number | string
+    prevBtnSize?: number | string
 }
 
 export interface TimelineCheckpointStyle extends ItemStyleOption,
