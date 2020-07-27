@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {bind, each, indexOf, curry, extend, retrieve} from 'zrender/src/core/util';
+import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {
     isHighDownDispatcher,
@@ -56,7 +56,6 @@ import { ColorString, ECElement } from '../../util/types';
 import { windowOpen } from '../../util/format';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { rectCoordAxisHandleRemove } from '../../component/axis/axisSplitHelper';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
@@ -973,19 +972,32 @@ function renderNode(
             }
         );
 
+        const textEl = rectEl.getTextContent();
+        const textStyle = textEl.style;
+        const textPadding = normalizeCssArray(textStyle.padding || 0);
+
         if (upperLabelRect) {
             rectEl.setTextConfig({
                 layoutRect: upperLabelRect
             });
-            const textEl = rectEl.getTextContent();
             (textEl as ECElement).disableLabelLayout = true;
         }
+        textEl.beforeUpdate = function () {
+            const width = Math.max(
+                (upperLabelRect ? upperLabelRect.width : rectEl.shape.width) - textPadding[1] - textPadding[3], 0
+            );
+            const height = Math.max(
+                (upperLabelRect ? upperLabelRect.height : rectEl.shape.height) - textPadding[0] - textPadding[2], 0
+            );
+            if (textStyle.width !== width || textStyle.height !== height) {
+                textEl.setStyle({
+                    width,
+                    height
+                });
+            }
+        };
 
-        const textEl = rectEl.getTextContent();
-        const textStyle = textEl.style;
         textStyle.truncateMinChar = 2;
-        textStyle.width = width;
-        textStyle.height = height;
         textStyle.lineOverflow = 'truncate';
 
         addDrillDownIcon(textStyle, upperLabelRect, thisLayout);

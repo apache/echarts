@@ -616,7 +616,7 @@ class SliderZoomView extends DataZoomView {
                 silent: true,
                 shape: {
                     r: [0, 0, 2, 2],
-                    y: size[1],
+                    y: size[1] - 0.5,
                     height: moveHandleHeight
                 }
             });
@@ -628,7 +628,7 @@ class SliderZoomView extends DataZoomView {
                 true
             );
             moveHandleIcon.silent = true;
-            moveHandleIcon.y = size[1] + moveHandleHeight / 2;
+            moveHandleIcon.y = size[1] + moveHandleHeight / 2 - 0.5;
 
             moveHandle.ensureState('emphasis').style = dataZoomModel.getModel(
                 ['emphasis', 'moveHandleStyle']

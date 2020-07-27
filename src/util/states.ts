@@ -188,7 +188,7 @@ function getFromStateStyle(
 function createEmphasisDefaultState(
     el: Displayable,
     stateName: 'emphasis',
-    targetStates?: string[],
+    targetStates: string[],
     state: Displayable['states'][number]
 ) {
     const hasSelect = targetStates && indexOf(targetStates, 'select') >= 0;

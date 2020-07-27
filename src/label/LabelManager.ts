@@ -81,7 +81,7 @@ interface SavedLabelAttr {
         verticalAlign: ZRTextVerticalAlign
         width: number
         height: number
-        fontSize: number
+        fontSize: number | string
 
         x: number
         y: number

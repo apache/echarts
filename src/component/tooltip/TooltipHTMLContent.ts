@@ -124,6 +124,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     cssText.push('font:' + textStyleModel.getFont());
 
     fontSize
+        // @ts-ignore, leave it to the tooltip refactor.
         && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
 
     each(['decoration', 'align'] as const, function (name) {
