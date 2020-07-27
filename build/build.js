@@ -19,7 +19,6 @@
 * under the License.
 */
 
-const fsExtra = require('fs-extra');
 const fs = require('fs');
 const nodePath = require('path');
 const config = require('./config.js');
@@ -31,7 +30,6 @@ const prePublish = require('./pre-publish');
 const recheckDEV = require('./remove-dev').recheckDEV;
 const UglifyJS = require("uglify-js");
 const preamble = require('./preamble');
-
 
 async function run() {
 
@@ -83,10 +81,6 @@ async function run() {
             descIndent + '`--lang my/langDE.js` will use `<cwd>/my/langDE.js`. -o must be specified in this case.',
             descIndent + '`--lang /my/indexSW.js` will use `/my/indexSW.js`. -o must be specified in this case.'
         ].join('\n'))
-        .option(
-            '--release',
-            'Build all for release'
-        )
         .option(
             '--prepublish',
             'Build all for release'
@@ -148,62 +142,19 @@ async function run() {
     validateIO(opt.input, opt.output);
     validateLang(opt.lang, opt.output);
 
-    normalizeParams(opt);
-
-    // Clear `echarts/dist`
-    if (isRelease) {
-        fsExtra.removeSync(getPath('./dist'));
-    }
-
     if (isWatch) {
         watch(config.createECharts(opt));
     }
     else if (isPrePublish) {
         await prePublish();
     }
-    else if (isRelease) {
-        let configs = [];
-
-        [
-            {},
-            {lang: 'en'},
-            {lang: 'en'}
-        ].forEach(function (opt) {
-            ['', 'simple', 'common'].forEach(function (type) {
-                let singleOpt = Object.assign({type, clean: true}, opt);
-                normalizeParams(singleOpt);
-                let singleConfig = config.createECharts(singleOpt);
-                configs.push(singleConfig);
-            });
-        });
-
-        configs.push(
-            config.createBMap(),
-            config.createDataTool()
-        );
-
-        await build(configs);
-
-        checkBundleCode();
-
-        await prePublish();
-    }
     else {
         let cfg = config.createECharts(opt);
-        await build([cfg]);
+        await build([cfg], opt.min);
 
         if (opt.removeDev) {
             checkBundleCode(cfg);
         }
-    }
-}
-
-function normalizeParams(opt) {
-    if (opt.sourcemap == null) {
-        opt.sourcemap = !(opt.min || opt.type);
-    }
-    if (opt.removeDev == null) {
-        opt.removeDev = !!opt.min;
     }
 }
 
@@ -242,14 +193,6 @@ function validateLang(lang, output) {
 }
 
 /**
- * @param {string} relativePath Based on echarts directory.
- * @return {string} Absolute path.
- */
-function getPath(relativePath) {
-    return nodePath.resolve(__dirname, '../', relativePath);
-}
-
-/**
  * @param {Array.<Object>} configs A list of rollup configs:
  *  See: <https://rollupjs.org/#big-list-of-options>
  *  For example:
@@ -262,13 +205,14 @@ function getPath(relativePath) {
  *      ...
  *  ]
  */
-async function build(configs) {
+async function build(configs, min) {
 
     // ensureZRenderCode.prepare();
 
     for (let singleConfig of configs) {
+
         console.log(
-            chalk.cyan.dim('\nBundles '),
+            chalk.cyan.dim('\Bundling '),
             chalk.cyan(singleConfig.input),
             chalk.cyan.dim('=>'),
             chalk.cyan(singleConfig.output.file),
@@ -281,32 +225,41 @@ async function build(configs) {
 
         await bundle.write(singleConfig.output);
 
-        console.time('Minify');
-        const fileMinPath = singleConfig.output.file.replace(/.js$/, '.min.js');
-        const code = fs.readFileSync(singleConfig.output.file, 'utf-8');
-        const result = UglifyJS.minify(code, {
-            output: {
-                preamble: preamble.js
-            }
-        });
-        if (result.error) {
-            throw new Error(result.error);
-        }
-        fs.writeFileSync(fileMinPath, result.code, 'utf-8');
-
-        console.timeEnd('Minify');
-
         console.log(
             chalk.green.dim('Created '),
             chalk.green(singleConfig.output.file),
             chalk.green.dim(' successfully.')
         );
 
-        console.log(
-            chalk.green.dim('Created '),
-            chalk.green(fileMinPath),
-            chalk.green.dim(' successfully.')
-        );
+        if (min) {
+            const fileMinPath = singleConfig.output.file.replace(/.js$/, '.min.js');
+            console.log(
+                chalk.cyan.dim('Minifying '),
+                chalk.cyan(singleConfig.output.file),
+                chalk.cyan.dim('=>'),
+                chalk.cyan(fileMinPath),
+                chalk.cyan.dim(' ...')
+            )
+            console.time('Minify');
+            const code = fs.readFileSync(singleConfig.output.file, 'utf-8');
+            const result = UglifyJS.minify(code, {
+                output: {
+                    preamble: preamble.js
+                }
+            });
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            fs.writeFileSync(fileMinPath, result.code, 'utf-8');
+
+            console.timeEnd('Minify');
+            console.log(
+                chalk.green.dim('Created '),
+                chalk.green(fileMinPath),
+                chalk.green.dim(' successfully.')
+            );
+        }
+
     }
 
     // ensureZRenderCode.clear();
