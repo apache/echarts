@@ -705,17 +705,18 @@ class SliderTimelineView extends TimelineView {
         const currentIndex = this.model.getCurrentIndex();
         const tickSymbols = this._tickSymbols;
         const tickLabels = this._tickLabels;
-        if (!(tickSymbols || tickLabels)) {
-            return;
-        }
 
-        for (let i = 0; i < tickSymbols.length; i++) {
-            tickSymbols && tickSymbols[i]
-                && tickSymbols[i].toggleState('progress', i < currentIndex);
+        if (tickSymbols) {
+            for (let i = 0; i < tickSymbols.length; i++) {
+                tickSymbols && tickSymbols[i]
+                    && tickSymbols[i].toggleState('progress', i < currentIndex);
+            }
         }
-        for (let i = 0; i < tickLabels.length; i++) {
-            tickLabels && tickLabels[i]
-                && tickLabels[i].toggleState('progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex);
+        if (tickLabels) {
+            for (let i = 0; i < tickLabels.length; i++) {
+                tickLabels && tickLabels[i]
+                    && tickLabels[i].toggleState('progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex);
+            }
         }
     }
 }
