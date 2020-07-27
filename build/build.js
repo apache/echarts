@@ -29,7 +29,8 @@ const rollup = require('rollup');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const prePublish = require('./pre-publish');
 const recheckDEV = require('./remove-dev').recheckDEV;
-const assert = require('assert');
+const UglifyJS = require("uglify-js");
+const preamble = require('./preamble');
 
 
 async function run() {
@@ -162,37 +163,28 @@ async function run() {
     }
     else if (isRelease) {
         let configs = [];
-        let configForCheck;
 
         [
-            {min: false},
-            {min: true},
-            {min: false, lang: 'en'},
-            {min: true, lang: 'en'}
+            {},
+            {lang: 'en'},
+            {lang: 'en'}
         ].forEach(function (opt) {
-
             ['', 'simple', 'common'].forEach(function (type) {
-                let singleOpt = Object.assign({type}, opt);
+                let singleOpt = Object.assign({type, clean: true}, opt);
                 normalizeParams(singleOpt);
                 let singleConfig = config.createECharts(singleOpt);
                 configs.push(singleConfig);
-
-                if (singleOpt.min && singleOpt.type === '') {
-                    configForCheck = singleConfig;
-                }
             });
         });
 
         configs.push(
-            config.createBMap(false),
-            config.createBMap(true),
-            config.createDataTool(false),
-            config.createDataTool(true)
+            config.createBMap(),
+            config.createDataTool()
         );
 
         await build(configs);
 
-        checkBundleCode(configForCheck);
+        checkBundleCode();
 
         await prePublish();
     }
@@ -215,11 +207,12 @@ function normalizeParams(opt) {
     }
 }
 
-function checkBundleCode(singleConfig) {
+function checkBundleCode() {
+    const fullBundleDistPath = path.join(__dirname, '../dist/echarts.min.js');
     // Make sure __DEV__ is eliminated.
-    let code = fs.readFileSync(singleConfig.output.file, {encoding: 'utf-8'});
+    let code = fs.readFileSync(fullBundleDistPath, {encoding: 'utf-8'});
     if (!code) {
-        throw new Error(`${singleConfig.output.file} is empty`);
+        throw new Error(`${fullBundleDistPath} is empty`);
     }
     recheckDEV(code);
     console.log(chalk.green.dim('Check code: correct.'));
@@ -288,9 +281,30 @@ async function build(configs) {
 
         await bundle.write(singleConfig.output);
 
+        console.time('Minify');
+        const fileMinPath = singleConfig.output.file.replace(/.js$/, '.min.js');
+        const code = fs.readFileSync(singleConfig.output.file, 'utf-8');
+        const result = UglifyJS.minify(code, {
+            output: {
+                preamble: preamble.js
+            }
+        });
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        fs.writeFileSync(fileMinPath, result.code, 'utf-8');
+
+        console.timeEnd('Minify');
+
         console.log(
             chalk.green.dim('Created '),
             chalk.green(singleConfig.output.file),
+            chalk.green.dim(' successfully.')
+        );
+
+        console.log(
+            chalk.green.dim('Created '),
+            chalk.green(fileMinPath),
             chalk.green.dim(' successfully.')
         );
     }

@@ -19,18 +19,16 @@
 
 const assert = require('assert');
 const nodeResolvePlugin = require('rollup-plugin-node-resolve');
-const uglifyPlugin = require('rollup-plugin-uglify');
 const ecRemoveDevPlugin = require('./remove-dev-rollup-plugin');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const nodePath = require('path');
-const preamble = require('./preamble');
 const ecDir = nodePath.resolve(__dirname, '..');
 const typescriptPlugin = require('rollup-plugin-typescript2');
 const fs = require('fs');
 const progress = require('./progress');
 
 function preparePlugins(
-    {min, lang, sourcemap, removeDev, addBundleVersion, totalFiles, clean},
+    {lang, sourcemap, removeDev, addBundleVersion, totalFiles, clean},
     {include, exclude}
 ) {
     assert(include);
@@ -81,29 +79,12 @@ function preparePlugins(
         }
     });
 
-    min && plugins.push(uglifyPlugin({
-        compress: {
-            // Eliminate __DEV__ code.
-            // Currently, in uglify:
-            // `var vx; if(vx) {...}` can not be removed.
-            // `if (__DEV__) {...}` can be removed if `__DEV__` is defined as `false` in `global_defs`.
-            // 'global_defs': {
-            //     __DEV__: false
-            // },
-            'dead_code': true
-        },
-        output: {
-            preamble: preamble.js
-        }
-    }));
-
     return plugins;
 }
 
 /**
  * @param {Object} [opt]
  * @param {string} [opt.type=''] '' or 'simple' or 'common'
- * @param {boolean} [opt.min=false]
  * @param {string} [opt.lang=undefined] null/undefined/'' or 'en' or 'fi' or a file path.
  * @param {string} [opt.input=undefined] If set, `opt.output` is required too, and `opt.type` is ignored.
  * @param {string} [opt.output=undefined] If set, `opt.input` is required too, and `opt.type` is ignored.
@@ -114,10 +95,8 @@ function preparePlugins(
  * @param {Object} [opt.totalFiles] Total files to bundle
  */
 exports.createECharts = function (opt = {}) {
-    let min = opt.min;
     let srcType = opt.type ? '.' + opt.type : '.all';
     let postfixType = opt.type ? '.' + opt.type : '';
-    let postfixMin = min ? '.min' : '';
     let postfixLang = opt.lang ? '-' + opt.lang.toLowerCase() : '';
     let input = opt.input;
     let output = opt.output;
@@ -131,7 +110,7 @@ exports.createECharts = function (opt = {}) {
     }
     else {
         input = nodePath.resolve(ecDir, `echarts${srcType}.ts`);
-        output = nodePath.resolve(ecDir, `dist/echarts${postfixLang}${postfixType}${postfixMin}.js`);
+        output = nodePath.resolve(ecDir, `dist/echarts${postfixLang}${postfixType}.js`);
     }
 
     const include = [
@@ -182,15 +161,11 @@ exports.createECharts = function (opt = {}) {
     };
 };
 
-/**
- * @param {boolean} [min=false]
- */
-exports.createBMap = function (min) {
-    let postfix = min ? '.min' : '';
+exports.createBMap = function () {
     let input = nodePath.resolve(ecDir, `extension-src/bmap/bmap.ts`);
 
     return {
-        plugins: preparePlugins({min}, {
+        plugins: preparePlugins({}, {
             include: [
                 nodePath.resolve(ecDir, 'extension-src/bmap/**/*.ts')
             ]
@@ -201,13 +176,13 @@ exports.createBMap = function (min) {
         output: {
             name: 'bmap',
             format: 'umd',
-            sourcemap: !min,
+            sourcemap: true,
             legacy: true, // Must be declared both in inputOptions and outputOptions.
             globals: {
                 // For UMD `global.echarts`
                 echarts: 'echarts'
             },
-            file: nodePath.resolve(ecDir, `dist/extension/bmap${postfix}.js`)
+            file: nodePath.resolve(ecDir, `dist/extension/bmap.js`)
         },
         watch: {
             include: [nodePath.resolve(ecDir, 'extension-src/bmap/**')]
@@ -215,15 +190,11 @@ exports.createBMap = function (min) {
     };
 };
 
-/**
- * @param {boolean} [min=false]
- */
-exports.createDataTool = function (min) {
-    let postfix = min ? '.min' : '';
+exports.createDataTool = function () {
     let input = nodePath.resolve(ecDir, `extension-src/dataTool/index.ts`);
 
     return {
-        plugins: preparePlugins({min}, {
+        plugins: preparePlugins({}, {
             include: [
                 nodePath.resolve(ecDir, 'extension-src/dataTool/**/*.ts')
             ]
@@ -234,13 +205,13 @@ exports.createDataTool = function (min) {
         output: {
             name: 'dataTool',
             format: 'umd',
-            sourcemap: !min,
+            sourcemap: true,
             legacy: true, // Must be declared both in inputOptions and outputOptions.
             globals: {
                 // For UMD `global.echarts`
                 echarts: 'echarts'
             },
-            file: nodePath.resolve(ecDir, `dist/extension/dataTool${postfix}.js`)
+            file: nodePath.resolve(ecDir, `dist/extension/dataTool.js`)
         },
         watch: {
             include: [nodePath.resolve(ecDir, 'extension-src/dataTool/**')]

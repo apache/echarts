@@ -32,6 +32,7 @@
     "zrender": "4.3.1"
   },
   "devDependencies": {
+    "uglify-js": "^3.10.0",
     "@babel/core": "7.3.4",
     "@microsoft/api-extractor": "7.7.2",
     "@typescript-eslint/eslint-plugin": "^2.15.0",
@@ -61,7 +62,6 @@
     "rollup-plugin-commonjs": "8.4.1",
     "rollup-plugin-node-resolve": "3.0.0",
     "rollup-plugin-typescript2": "0.25.3",
-    "rollup-plugin-uglify": "6.0.4",
     "seedrandom": "3.0.3",
     "semver": "6.3.0",
     "serve-handler": "6.1.1",
