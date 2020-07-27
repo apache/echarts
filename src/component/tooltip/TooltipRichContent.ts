@@ -21,7 +21,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
-import * as graphic from '../../util/graphic';
 import { Dictionary } from 'zrender/src/core/types';
 import { ColorString, ZRColor } from '../../util/types';
 import Model from '../../model/Model';
