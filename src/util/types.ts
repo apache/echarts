@@ -974,7 +974,7 @@ interface PositionCallback {
          * Will be HTMLDivElement when renderMode is html
          * Otherwise it's graphic.Text
          */
-        el: HTMLDivElement | ZRText | null | Group,
+        el: HTMLDivElement | ZRText | null,
         /**
          * Rect of hover elements. Will be null if not hovered
          */
