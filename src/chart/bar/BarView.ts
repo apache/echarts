@@ -21,13 +21,13 @@ import {__DEV__} from '../../config';
 import {
     Rect,
     Sector,
-    getECData,
     updateProps,
     initProps,
     updateLabel,
     initLabel,
     removeElementWithFadeOut
 } from '../../util/graphic';
+import { getECData } from "../../util/ecData";
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';

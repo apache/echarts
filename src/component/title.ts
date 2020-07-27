@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
+import {getECData} from '../util/ecData';
 import {createTextStyle} from '../label/labelStyle';
 import {getLayoutRect} from '../util/layout';
 import ComponentModel from '../model/Component';
@@ -191,7 +192,7 @@ class TitleView extends ComponentView {
             });
         }
 
-        graphic.getECData(textEl).eventData = graphic.getECData(subTextEl).eventData = triggerEvent
+        getECData(textEl).eventData = getECData(subTextEl).eventData = triggerEvent
             ? {
                 componentType: 'title',
                 componentIndex: titleModel.componentIndex

@@ -52,15 +52,10 @@ import {
     LabelOption,
     AnimationDelayCallbackParam,
     ZRRectLike,
-    DataModel,
-    ECEventData,
     ZRStyleProps,
     ParsedValue,
-    BlurScope,
-    InnerFocus,
     PayloadAnimationPart
 } from './types';
-import { makeInner } from './model';
 import {
     extend,
     isArrayLike,
@@ -74,6 +69,7 @@ import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
 import { getLabelText } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
+import { getECData } from './ecData';
 
 
 const mathMax = Math.max;
@@ -888,22 +884,6 @@ function nearZero(val: number) {
     return val <= (1e-6) && val >= -(1e-6);
 }
 
-
-/**
- * ECData stored on graphic element
- */
-export interface ECData {
-    dataIndex?: number;
-    dataModel?: DataModel;
-    eventData?: ECEventData;
-    seriesIndex?: number;
-    dataType?: string;
-
-    focus?: InnerFocus
-    blurScope?: BlurScope
-}
-
-export const getECData = makeInner<ECData, Element>();
 
 // Register built-in shapes. These shapes might be overwirtten
 // by users, although we do not recommend that.

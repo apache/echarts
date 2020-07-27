@@ -20,7 +20,6 @@
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis } from '../../util/states';
 import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
@@ -45,6 +44,8 @@ import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
 import { parsePercent } from 'zrender/src/contain/text';
 import { makeInner } from '../../util/model';
+import { getECData } from '../../util/ecData';
+import { enableHoverEmphasis } from '../../util/states';
 
 const PI = Math.PI;
 
@@ -436,7 +437,7 @@ class SliderTimelineView extends TimelineView {
 
             enableHoverEmphasis(el);
 
-            const ecData = graphic.getECData(el);
+            const ecData = getECData(el);
             if (itemModel.get('tooltip')) {
                 ecData.dataIndex = value;
                 ecData.dataModel = timelineModel;
@@ -715,7 +716,9 @@ class SliderTimelineView extends TimelineView {
         if (tickLabels) {
             for (let i = 0; i < tickLabels.length; i++) {
                 tickLabels && tickLabels[i]
-                    && tickLabels[i].toggleState('progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex);
+                    && tickLabels[i].toggleState(
+                        'progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex
+                    );
             }
         }
     }
