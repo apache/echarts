@@ -1,3 +1,7 @@
 /dist
 /node_modules
 /build
+/extension-esm
+/extension
+/lib
+/esm
