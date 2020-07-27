@@ -945,7 +945,7 @@ const pointerHandlers: Dictionary<(this: BrushController, e: ElementEvent) => vo
     mousedown: function (e) {
         if (this._dragging) {
             // In case some browser do not support globalOut,
-            // and release mose out side the browser.
+            // and release mouse out side the browser.
             handleDragEnd(this, e);
         }
         else if (!e.target || !e.target.draggable) {
