@@ -92,7 +92,7 @@ async function run() {
         )
         .option(
             '--removedev',
-            'Remove __DEV__ code. If --min, __DEV__ always be removed.'
+            'Transform __DEV__ code into process.env="production".'
         )
         .option(
             '--min',
@@ -123,10 +123,6 @@ async function run() {
             '--clean',
             'If cleaning build without cache. Maybe useful if some unexpected happens.'
         )
-        // .option(
-        //     '--zrender <zrender>',
-        //     'Local zrender path. Used when you want to use develop version of zrender instead of npm version.'
-        // )
         .parse(process.argv);
 
     let isWatch = !!commander.watch;
@@ -373,83 +369,6 @@ function getTimeString() {
 }
 
 
-// Symbol link do not work currently. So have to copy code manually.
-// See: https://github.com/ezolenko/rollup-plugin-typescript2/issues/188
-var ensureZRenderCode = (function () {
-
-    const nodeModulesZr = getPath('./node_modules/zrender');
-    // const nodeModulesZrDirTmp = getPath('./node_modules/zrender-dir-tmp');
-    const nodeModulesZrSymlinkTmp = getPath('./node_modules/zrender-symlink-tmp');
-    const nodeModulesZrSrcDir = getPath('./node_modules/zrender/src');
-    const zrSrcDir = getPath('../zrender/src')
-
-    let stats = 'cleared';
-
-    function doClear() {
-        if (!fs.existsSync(nodeModulesZrSymlinkTmp)
-            || !fs.lstatSync(nodeModulesZrSymlinkTmp).isSymbolicLink()
-        ) {
-            return;
-        }
-
-        if (fs.existsSync(nodeModulesZr)
-            && fs.lstatSync(nodeModulesZr).isDirectory()
-        ) {
-            console.log(chalk.blue(`rm -rf dir: ${nodeModulesZr}`));
-            // ensure save for rm -rf.
-            assert(nodeModulesZr.includes('node_modules') && nodeModulesZr.includes('zrender'));
-            fsExtra.removeSync(nodeModulesZr);
-        }
-
-        // recover the symbollink so that vs code can continue to visit the zrender source code.
-        console.log(chalk.blue(`mv symbol link: ${nodeModulesZrSymlinkTmp} => ${nodeModulesZr}`));
-        fs.renameSync(nodeModulesZrSymlinkTmp, nodeModulesZr);
-    }
-
-    return {
-        prepare: function () {
-            // Calling guard
-            assert(stats === 'cleared');
-            stats = 'prepared';
-
-            console.time('ensure zr code cost');
-            // In case that the last build terminated manually.
-            doClear();
-
-            if (!fs.existsSync(nodeModulesZr)
-                || !fs.lstatSync(nodeModulesZr).isSymbolicLink()
-            ) {
-                return;
-            }
-
-            if (!fs.existsSync(zrSrcDir)
-                || !fs.lstatSync(zrSrcDir).isDirectory()
-            ) {
-                throw new Error(`${zrSrcDir} does not exist.`);
-            }
-
-            console.log(chalk.blue(`mv symbol link: ${nodeModulesZr} => ${nodeModulesZrSymlinkTmp}`));
-            fs.renameSync(nodeModulesZr, nodeModulesZrSymlinkTmp);
-
-            fsExtra.ensureDirSync(nodeModulesZr);
-            fsExtra.copySync(zrSrcDir, nodeModulesZrSrcDir);
-            console.log(chalk.blue(`copied: ${nodeModulesZrSrcDir} => ${zrSrcDir}`));
-
-            console.timeEnd('ensure zr code cost');
-        },
-
-        clear: function () {
-            // Calling guard
-            if (stats === 'cleared') {
-                return;
-            }
-            stats = 'cleared';
-            doClear();
-        }
-    }
-})();
-
-
 async function main() {
     try {
         await run();
@@ -473,8 +392,6 @@ async function main() {
             err.plugin != null && console.warn(chalk.red(`plugin: ${err.plugin}`));
         }
         // console.log(err);
-
-        // ensureZRenderCode.clear();
     }
 }
 
