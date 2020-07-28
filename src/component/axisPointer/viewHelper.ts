@@ -121,7 +121,7 @@ export function buildLabelElOption(
         // shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
         x: position[0],
         y: position[1],
-        // TODO: rich
+        // TODO: rich & borderType
         style: {
             text: text,
             textFont: font,

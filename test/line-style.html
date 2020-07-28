@@ -138,19 +138,162 @@ under the License.
             'echarts'
         ], function (echarts) {
             var option = {
+                title: {
+                    text: '这是标题~',
+                    borderColor: 'red',
+                    borderWidth: 1,
+                    borderType: 'dashed',
+                    textStyle: {
+                        textBorderWidth: 1,
+                        textBorderColor: 'red',
+                        textBorderType: 'dotted'
+                    },
+                    subtext: '这是副标题',
+                    subtextStyle: {
+                        textBorderWidth: 1,
+                        textBorderColor: 'cyan',
+                        textBorderType: 'dashed',
+                        textBorderDash: [15, 3, 3]
+                    }
+                },
                 legend: {
-                    left: 'center',
-                    bottom: 'bottom'
+                    left: '10%',
+                    bottom: '2%',
+                    right: '10%',
+                    borderWidth: 1,
+                    borderColor: 'blue',
+                    borderType: 'dotted',
+                    textStyle: {
+                        textBorderWidth: 1,
+                        textBorderColor: 'green',
+                        textBorderType: 'dotted'
+                    }
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                      dataZoom: {
+                        yAxisIndex: "none"
+                      },
+                      dataView: {
+                        readOnly: false
+                      },
+                      magicType: {
+                        type: ["line", "bar"]
+                      },
+                      restore: {},
+                      saveAsImage: {}
+                    },
+                    iconStyle: {
+                        borderType: 'dotted',
+                        borderWidth: 1,
+                        borderColor: 'cyan'
+                    }
+                },
+                axisPointer: {
+                    show: true,
+                    type: 'line',
+                    lineStyle: {
+                        type: 'dotted',
+                        color: 'cyan',
+                        width: 2
+                    },
+                    // TODO
+                    // label: {
+                    //     borderWidth: 1,
+                    //     borderColor: 'blue',
+                    //     borderType: 'dashed',
+                    //     backgroundColor: 'transparent'
+                    // }
                 },
                 xAxis: {
                     type: 'category',
                     data: [100, 200, 20, 30, 60, 89],
+                    name: 'X轴',
+                    nameTextStyle: {
+                        borderWidth: 1,
+                        borderColor: 'red',
+                        borderType: 'dashed',
+                        textBorderWidth: 1,
+                        textBorderColor: 'green',
+                        //textBorderType: 'dashed'
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            width: 2,
+                            type: 'dotted'
+                        }
+                    }
                 },
                 yAxis: {
                     type: 'value',
+                    name: 'Y轴',
+                    nameTextStyle: {
+                        borderWidth: 1,
+                        borderColor: 'black'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed',
+                            dashArray: [20, 5, 5]
+                        }
+                    }
+                },
+                graphic: {
+                    elements: [{
+                        type: 'group',
+                        left: '10%',
+                        top: 'center',
+                        children: [
+                            {
+                                type: 'rect',
+                                z: 100,
+                                left: 'center',
+                                top: 'middle',
+                                shape: {
+                                    width: 190,
+                                    height: 90
+                                },
+                                style: {
+                                    fill: '#fff',
+                                    stroke: '#555',
+                                    lineWidth: 2,
+                                    lineDash: [5, 5],
+                                    shadowBlur: 8,
+                                    shadowOffsetX: 3,
+                                    shadowOffsetY: 3,
+                                    shadowColor: 'rgba(0,0,0,0.3)'
+                                }
+                            },
+                            {
+                                type: 'text',
+                                z: 100,
+                                left: 'center',
+                                top: 'middle',
+                                style: {
+                                    fill: '#333',
+                                    text: [
+                                        '横轴表示温度，单位是°C',
+                                        '纵轴表示高度，单位是km',
+                                        '右上角有一个图片做的水印',
+                                        '这个文本块可以放在图中各',
+                                        '种位置'
+                                    ].join('\n'),
+                                    stroke: 'red',
+                                    lineDash: [2],
+                                    lineWidth: 1,
+                                    borderWidth: 2,
+                                    borderColor: 'blue',
+                                    borderDash: [5, 5],
+                                    font: '14px Microsoft YaHei'
+                                }
+                            }
+                        ]
+                    }]
                 },
                 grid: {
-                    bottom: 120
+                    bottom: 180
                 },
                 series: [
                     {
@@ -321,10 +464,10 @@ under the License.
                 option: option
             });
 
-            setTimeout(function() {
-                option.series[0].symbol = 'emptyCircle';
-                chart2.setOption(option);
-            }, 2000);
+            // setTimeout(function() {
+            //     option.series[0].symbol = 'emptyCircle';
+            //     chart2.setOption(option);
+            // }, 2000);
         });
     </script>
 </body>
