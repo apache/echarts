@@ -104,6 +104,12 @@ const compileWorkList = [
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
+
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
+
             fsExtra.removeSync(tmpDir);
         }
     },
@@ -136,6 +142,12 @@ const compileWorkList = [
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.common.js'), nodePath.resolve(ecDir, 'echarts.common.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.simple.js'), nodePath.resolve(ecDir, 'echarts.simple.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'esm'));
+
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.all.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.blank.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
+
             fsExtra.removeSync(tmpDir);
         }
     },
@@ -254,7 +266,18 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
         }
     });
     assert(!emitResult.emitSkipped, 'ts compile failed.');
+}
 
+/**
+ * Transform `src` root in the entry file to `esm` or `lib`
+ */
+async function transformRootFolderInEntry(entryFile, replacement) {
+    let code = fs.readFileSync(entryFile, 'utf-8');
+    // Simple regex replacement
+    // TODO More robust way?
+    code = code.replace(/([\"\'])\.\/src\//g, `$1./${replacement}/`)
+        .replace(/([\"\'])src\//g, `$1${replacement}/`);
+    fs.writeFileSync(entryFile, code, 'utf-8');
 }
 
 /**
@@ -267,8 +290,8 @@ async function transformCode({filesGlobby, preamble, removeDEV}) {
 
     let filePaths = await readFilePaths(filesGlobby);
 
-    await Promise.all(filePaths.map(async filePath => {
-        let code = await readFileAsync(filePath, {encoding: 'utf8'});
+    filePaths.map(filePath => {
+        let code = fs.readFileSync(filePath, 'utf8');
 
         if (removeDEV) {
             let result = removeDEVUtil.transform(code, false);
@@ -281,8 +304,8 @@ async function transformCode({filesGlobby, preamble, removeDEV}) {
             code = preamble + code;
         }
 
-        await writeFileAsync(filePath, code, {encoding: 'utf8'});
-    }));
+        fs.writeFileSync(filePath, code, 'utf8');
+    });
 }
 
 async function readFilePaths({patterns, cwd}) {
