@@ -118,11 +118,12 @@ class TitleModel extends ComponentModel<TitleOption> {
         itemGap: 10,
         textStyle: {
             fontSize: 18,
-            fontWeight: 'bolder',
-            color: '#333'
+            fontWeight: 'bold',
+            color: '#464646'
         },
         subtextStyle: {
-            color: '#aaa'
+            fontSize: 12,
+            color: '#6E7079'
         }
     };
 }

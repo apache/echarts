@@ -60,7 +60,7 @@ const defaultOption: AxisBaseOption = {
         onZero: true,
         onZeroAxisIndex: null,
         lineStyle: {
-            color: '#333',
+            color: '#6E7079',
             width: 1,
             type: 'solid'
         },
@@ -96,7 +96,7 @@ const defaultOption: AxisBaseOption = {
     splitLine: {
         show: true,
         lineStyle: {
-            color: ['#ECEFF5'],
+            color: ['#E0E6F1'],
             width: 1,
             type: 'solid'
         }

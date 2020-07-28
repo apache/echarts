@@ -98,9 +98,9 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
         animationDurationUpdate: 200,
 
         lineStyle: {
-            color: '#aaa',
+            color: '#B9BEC9',
             width: 1,
-            type: 'solid'
+            type: 'dashed'
         },
 
         shadowStyle: {
