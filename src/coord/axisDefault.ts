@@ -89,12 +89,14 @@ const defaultOption: AxisBaseOption = {
         showMaxLabel: null,
         margin: 8,
         // formatter: null,
-        fontSize: 12
+        fontSize: 12,
+
+        color: '#6E7079'
     },
     splitLine: {
         show: true,
         lineStyle: {
-            color: ['#ccc'],
+            color: ['#ECEFF5'],
             width: 1,
             type: 'solid'
         }
@@ -131,6 +133,15 @@ const categoryAxis: AxisBaseOption = zrUtil.merge({
 
 const valueAxis: AxisBaseOption = zrUtil.merge({
     boundaryGap: [0, 0],
+
+    axisLine: {
+        // Not shown when other axis is categoryAxis in cartesian
+        show: 'auto'
+    },
+    axisTick: {
+        // Not shown when other axis is categoryAxis in cartesian
+        show: 'auto'
+    },
 
     // TODO
     // min/max: [30, datamin, 60] or [20, datamin] or [datamin, 60]
