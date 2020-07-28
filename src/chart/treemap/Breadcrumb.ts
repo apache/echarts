@@ -24,7 +24,7 @@ import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } 
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { curry, defaults } from 'zrender/src/core/util';
-import { ZRElementEvent, BoxLayoutOptionMixin } from '../../util/types';
+import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/types';
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 
@@ -181,6 +181,7 @@ class Breadcrumb {
                 z: 10,
                 onclick: curry(onSelect, itemNode)
             });
+            (el as ECElement).disableLabelAnimation = true;
 
             this.group.add(el);
 

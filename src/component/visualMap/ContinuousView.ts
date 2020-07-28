@@ -35,7 +35,7 @@ import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
 import { ColorString, Payload } from '../../util/types';
 import { parsePercent } from 'zrender/src/contain/text';
-import { setAsHighDownDispatcher, enterBlur, leaveBlur } from '../../util/states';
+import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
 
@@ -107,6 +107,8 @@ class ContinuousView extends VisualMapView {
 
     private _firstShowIndicator: boolean;
 
+    private _api: ExtensionAPI;
+
 
     doRender(
         visualMapModel: ContinuousModel,
@@ -114,6 +116,8 @@ class ContinuousView extends VisualMapView {
         api: ExtensionAPI,
         payload: {type: string, from: string}
     ) {
+        this._api = api;
+
         if (!payload || payload.type !== 'selectDataRange' || payload.from !== this.uid) {
             this._buildView();
         }
@@ -707,8 +711,8 @@ class ContinuousView extends VisualMapView {
         if (handleLabels) {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
-                // TODO not do twice.
-                enterBlur(handleLabels[i]);
+                // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
+                this._api.enterBlur(handleLabels[i]);
             }
         }
     }
@@ -845,7 +849,8 @@ class ContinuousView extends VisualMapView {
         if (handleLabels) {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
-                leaveBlur(handleLabels[i]);
+                // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
+                this._api.leaveBlur(handleLabels[i]);
             }
         }
     }

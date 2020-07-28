@@ -786,7 +786,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
     fontStyle?: ZRFontStyle
     fontWeight?: ZRFontWeight
     fontFamily?: string
-    fontSize?: number
+    fontSize?: number | string
     align?: HorizontalAlign
     verticalAlign?: VerticalAlign
     // @deprecated

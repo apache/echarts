@@ -88,6 +88,16 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
 
     handleStyle?: ItemStyleOption
 
+    /**
+     * Icon to indicate it is a draggable panel.
+     */
+    moveHandleIcon?: string
+    moveHandleStyle?: ItemStyleOption
+    /**
+     * Height of handle rect. Can be a percent string relative to the slider height.
+     */
+    moveHandleSize?: number
+
     labelPrecision?: number | 'auto'
 
     labelFormatter?: string | ((value: number, valueStr: string) => string)
@@ -100,8 +110,16 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
 
     textStyle?: LabelOption
 
+    /**
+     * If eable select by brushing
+     */
+    brushSelect?: boolean
+
+    brushStyle?: ItemStyleOption
+
     emphasis?: {
         handleStyle?: ItemStyleOption
+        moveHandleStyle?: ItemStyleOption
     }
 }
 
@@ -151,8 +169,8 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             }
         },
 
-
-        fillerColor: 'rgba(135,175,274,0.2)',     // Color of selected area.
+        // Color of selected window.
+        fillerColor: 'rgba(135,175,274,0.2)',
         handleIcon: 'path://M-9.35,34.56V42m0-40V9.5m-2,0h4a2,2,0,0,1,2,2v21a2,2,0,0,1-2,2h-4a2,2,0,0,1-2-2v-21A2,2,0,0,1-11.35,9.5Z',
         // Percent of the slider height
         handleSize: '100%',
@@ -160,6 +178,13 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         handleStyle: {
             color: '#fff',
             borderColor: '#ACB8D1'
+        },
+
+        moveHandleSize: 7,
+        moveHandleIcon: 'path://M-320.9-50L-320.9-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-348-41-339-50-320.9-50z M-212.3-50L-212.3-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-239.4-41-230.4-50-212.3-50z M-103.7-50L-103.7-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-130.9-41-121.8-50-103.7-50z',
+        moveHandleStyle: {
+            color: '#D2DBEE',
+            opacity: 0.7
         },
 
         showDetail: true,
@@ -171,13 +196,20 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             color: '#333'
         },
 
+        brushSelect: true,
+        brushStyle: {
+            color: 'rgba(135,175,274,0.15)'
+        },
+
         emphasis: {
             handleStyle: {
-                borderColor: '#8FB0F7',
-                borderWidth: 2
+                borderColor: '#8FB0F7'
+            },
+            moveHandleStyle: {
+                color: '#8FB0F7'
             }
         }
-    });
+    } as SliderDataZoomOption);
 }
 
 ComponentModel.registerClass(SliderZoomModel);

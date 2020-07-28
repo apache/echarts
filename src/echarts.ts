@@ -56,7 +56,13 @@ import {
     SELECT_ACTION_TYPE,
     UNSELECT_ACTION_TYPE,
     TOGGLE_SELECT_ACTION_TYPE,
-    savePathStates
+    savePathStates,
+    enterEmphasis,
+    leaveEmphasis,
+    leaveBlur,
+    enterSelect,
+    leaveSelect,
+    enterBlur
 } from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
@@ -1677,8 +1683,6 @@ class ECharts extends Eventful {
                     updateDirectly(this, updateMethod, batchItem as Payload, 'series');
 
                     // Mark status to update
-                    // It can only be marked in echarts.ts.
-                    // So there is no chance that chart it self can trigger the highlight itself without action.
                     markStatusToUpdate(this);
                 }
                 else if (cptType) {
@@ -2183,6 +2187,30 @@ class ECharts extends Eventful {
                         }
                         el = el.parent;
                     }
+                }
+                enterEmphasis(el: Element, highlightDigit?: number) {
+                    enterEmphasis(el, highlightDigit);
+                    markStatusToUpdate(ecIns);
+                }
+                leaveEmphasis(el: Element, highlightDigit?: number) {
+                    leaveEmphasis(el, highlightDigit);
+                    markStatusToUpdate(ecIns);
+                }
+                enterBlur(el: Element) {
+                    enterBlur(el);
+                    markStatusToUpdate(ecIns);
+                }
+                leaveBlur(el: Element) {
+                    leaveBlur(el);
+                    markStatusToUpdate(ecIns);
+                }
+                enterSelect(el: Element) {
+                    enterSelect(el);
+                    markStatusToUpdate(ecIns);
+                }
+                leaveSelect(el: Element) {
+                    leaveSelect(el);
+                    markStatusToUpdate(ecIns);
                 }
             })(ecIns);
         };
