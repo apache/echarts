@@ -42,6 +42,7 @@ module.exports.transform = function (sourceCode, sourcemap, expr) {
         plugins: [ [transformDEVPlugin, {
             expr: expr || 'process.env.NODE_ENV !== \'production\''
         }] ],
+        compact: false,
         sourceMaps: sourcemap
     });
 

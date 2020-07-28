@@ -51,7 +51,7 @@
         }
     }
     if (!ecDistPath) {
-        ecDistPath = 'dist/echarts';
+        ecDistPath = 'dist/echarts.min';
     }
 
     if (typeof require !== 'undefined') {

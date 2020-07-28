@@ -25,10 +25,9 @@ const ecDir = nodePath.resolve(__dirname, '..');
 const typescriptPlugin = require('rollup-plugin-typescript2');
 const fs = require('fs');
 const progress = require('./progress');
-const transformDEV = require('./transform-dev');
 
 function preparePlugins(
-    {lang, sourcemap, removeDev, addBundleVersion, totalFiles, clean},
+    {lang, sourcemap, addBundleVersion, totalFiles, clean},
     {include, exclude}
 ) {
     assert(include);
@@ -72,12 +71,6 @@ function preparePlugins(
         })
     ];
 
-    plugins.push({
-        transform: function (sourceCode) {
-            return transformDEV.transform(sourceCode, sourcemap, removeDev ? 'false' : 'true')
-        }
-    });
-
     lang && plugins.push(
         ecLangPlugin({lang})
     );
@@ -98,7 +91,6 @@ function preparePlugins(
  * @param {string} [opt.input=undefined] If set, `opt.output` is required too, and `opt.type` is ignored.
  * @param {string} [opt.output=undefined] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.sourcemap] If set, `opt.input` is required too, and `opt.type` is ignored.
- * @param {boolean} [opt.removeDev]
  * @param {string} [opt.format='umd'] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
  * @param {Object} [opt.totalFiles] Total files to bundle

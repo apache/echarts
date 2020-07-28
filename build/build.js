@@ -26,10 +26,9 @@ const chalk = require('chalk');
 const rollup = require('rollup');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const prePublish = require('./pre-publish');
-const recheckDEV = require('./transform-dev').recheckDEV;
+const transformDEV = require('./transform-dev');
 const UglifyJS = require("uglify-js");
 const preamble = require('./preamble');
-const path = require('path');
 
 async function run() {
 
@@ -57,8 +56,6 @@ async function run() {
                 + '\n' + descIndent + '# Build all to `dist` folder.',
             egIndent + 'node build/build.js --prepublish'
                 + '\n' + descIndent + '# Only prepublish.',
-            egIndent + 'node build/build.js --removedev'
-                + '\n' + descIndent + '# Remove __DEV__ code. If --min, __DEV__ always be removed.',
             egIndent + 'node build/build.js --type ""'
                 + '\n' + descIndent + '# Only generate `dist/echarts.js`.',
             egIndent + 'node build/build.js --type common --min'
@@ -84,10 +81,6 @@ async function run() {
         .option(
             '--prepublish',
             'Build all for release'
-        )
-        .option(
-            '--removedev',
-            'Transform __DEV__ code into process.env="production".'
         )
         .option(
             '--min',
@@ -132,7 +125,6 @@ async function run() {
         output: commander.output,
         format: commander.format,
         sourcemap: commander.sourcemap,
-        removeDev: commander.removedev || commander.min,
         addBundleVersion: isWatch,
         // Force to disable cache in release build.
         // TODO npm run build also disable cache?
@@ -153,15 +145,12 @@ async function run() {
             config.createBMap(),
             config.createDataTool()
         ];
-        await build(cfgs, opt.min);
+        await build(cfgs, opt.min, opt.sourcemap);
     }
     else {
         const cfg = config.createECharts(opt);
-        await build([cfg], opt.min);
-
-        if (opt.removeDev) {
-            checkBundleCode(cfg);
-        }
+        await build([cfg], opt.min, opt.sourcemap);
+        checkBundleCode(cfg);
     }
 }
 
@@ -171,7 +160,7 @@ function checkBundleCode(cfg) {
     if (!code) {
         throw new Error(`${cfg.output.file} is empty`);
     }
-    recheckDEV(code);
+    transformDEV.recheckDEV(code);
     console.log(chalk.green.dim('Check code: correct.'));
 }
 
@@ -211,7 +200,7 @@ function validateLang(lang, output) {
  *      ...
  *  ]
  */
-async function build(configs, min) {
+async function build(configs, min, sourcemap) {
 
     // ensureZRenderCode.prepare();
 
@@ -230,6 +219,13 @@ async function build(configs, min) {
         console.timeEnd('rollup build');
 
         await bundle.write(singleConfig.output);
+        const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
+        // Convert __DEV__ to true;
+        const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
+        fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
+        if (transformResult.map) {
+            fs.writeFileSync(singleConfig.output.file + '.map', JSON.stringify(transformResult.map), 'utf-8');
+        }
 
         console.log(
             chalk.green.dim('Created '),
@@ -247,16 +243,19 @@ async function build(configs, min) {
                 chalk.cyan.dim(' ...')
             )
             console.time('Minify');
-            const code = fs.readFileSync(singleConfig.output.file, 'utf-8');
-            const result = UglifyJS.minify(code, {
-                output: {
-                    preamble: preamble.js
+            const uglifyResult = UglifyJS.minify(
+                // Convert __DEV__ to false and let uglify remove the dead code;
+                transformDEV.transform(sourceCode, false, 'false').code,
+                {
+                    output: {
+                        preamble: preamble.js
+                    }
                 }
-            });
-            if (result.error) {
-                throw new Error(result.error);
+            );
+            if (uglifyResult.error) {
+                throw new Error(uglifyResult.error);
             }
-            fs.writeFileSync(fileMinPath, result.code, 'utf-8');
+            fs.writeFileSync(fileMinPath, uglifyResult.code, 'utf-8');
 
             console.timeEnd('Minify');
             console.log(
