@@ -19,13 +19,13 @@
 
 const assert = require('assert');
 const nodeResolvePlugin = require('rollup-plugin-node-resolve');
-const ecTransformDevPlugin = require('./transform-dev-rollup-plugin');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const nodePath = require('path');
 const ecDir = nodePath.resolve(__dirname, '..');
 const typescriptPlugin = require('rollup-plugin-typescript2');
 const fs = require('fs');
 const progress = require('./progress');
+const transformDEV = require('./transform-dev');
 
 function preparePlugins(
     {lang, sourcemap, removeDev, addBundleVersion, totalFiles, clean},
@@ -72,9 +72,11 @@ function preparePlugins(
         })
     ];
 
-    removeDev && plugins.push(
-        ecTransformDevPlugin({sourcemap})
-    );
+    plugins.push({
+        transform: function (sourceCode) {
+            return transformDEV.transform(sourceCode, sourcemap, removeDev ? 'false' : 'true')
+        }
+    });
 
     lang && plugins.push(
         ecLangPlugin({lang})

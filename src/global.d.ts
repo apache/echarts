@@ -17,20 +17,4 @@
 * under the License.
 */
 
-const parser = require('@babel/parser');
-
-const replacedExpr = parser.parseExpression('process.env.NODE_ENV !== \'production\'');
-
-module.exports = function ({types, template}, options) {
-    return {
-        visitor: {
-            Identifier: {
-                enter(path) {
-                    if (path.isIdentifier({ name: '__DEV__' }) && path.scope.hasGlobal('__DEV__')) {
-                        path.replaceWith(replacedExpr);
-                    }
-                }
-            }
-        }
-    };
-};
+declare const __DEV__: boolean;

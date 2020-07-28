@@ -18,16 +18,30 @@
 */
 
 const babel = require('@babel/core');
-const removeDEVBabelPlugin = require('./transform-dev-babel-plugin');
+const parser = require('@babel/parser');
 
-/**
- * @param {string} sourceCode
- * @param {boolean} sourcemap
- * @return {Object} {code: string, map: string}
- */
-module.exports.transform = function (sourceCode, sourcemap) {
+function transformDEVPlugin ({types, template}) {
+    return {
+        visitor: {
+            Identifier: {
+                enter(path, state) {
+                    if (path.isIdentifier({ name: '__DEV__' }) && path.scope.hasGlobal('__DEV__')) {
+                        path.replaceWith(
+                            parser.parseExpression(state.opts.expr)
+                        );
+                    }
+                }
+            }
+        }
+    };
+};
+
+
+module.exports.transform = function (sourceCode, sourcemap, expr) {
     let {code, map} = babel.transformSync(sourceCode, {
-        plugins: [removeDEVBabelPlugin],
+        plugins: [ [transformDEVPlugin, {
+            expr: expr || 'process.env.NODE_ENV !== \'production\''
+        }] ],
         sourceMaps: sourcemap
     });
 
@@ -39,11 +53,5 @@ module.exports.transform = function (sourceCode, sourcemap) {
  * @throws {Error} If check failed.
  */
 module.exports.recheckDEV = function (code) {
-    let result = code.match(/.if\s*\([^()]*__DEV__/);
-    if (result
-        && result[0].indexOf('`if') < 0
-        && result[0].indexOf('if (typeof __DEV__') < 0
-    ) {
-        throw new Error('__DEV__ is not removed.');
-    }
+    return code.indexOf('process.env.NODE_ENV') >= 0;
 };

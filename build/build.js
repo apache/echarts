@@ -20,7 +20,6 @@
 */
 
 const fs = require('fs');
-const nodePath = require('path');
 const config = require('./config.js');
 const commander = require('commander');
 const chalk = require('chalk');
@@ -30,6 +29,7 @@ const prePublish = require('./pre-publish');
 const recheckDEV = require('./transform-dev').recheckDEV;
 const UglifyJS = require("uglify-js");
 const preamble = require('./preamble');
+const path = require('path');
 
 async function run() {
 
@@ -165,12 +165,11 @@ async function run() {
     }
 }
 
-function checkBundleCode() {
-    const fullBundleDistPath = path.join(__dirname, '../dist/echarts.min.js');
+function checkBundleCode(cfg) {
     // Make sure __DEV__ is eliminated.
-    let code = fs.readFileSync(fullBundleDistPath, {encoding: 'utf-8'});
+    let code = fs.readFileSync(cfg.output.file, {encoding: 'utf-8'});
     if (!code) {
-        throw new Error(`${fullBundleDistPath} is empty`);
+        throw new Error(`${cfg.output.file} is empty`);
     }
     recheckDEV(code);
     console.log(chalk.green.dim('Check code: correct.'));
