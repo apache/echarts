@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import {createHashMap, isString, isArray, each, assert} from 'zrender/src/core/util';
 import {parseXML} from 'zrender/src/tool/parseSVG';
 import { GeoSpecialAreas, GeoJSON, GeoJSONCompressed } from './geoTypes';

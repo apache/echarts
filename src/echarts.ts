@@ -16,8 +16,6 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
-import {__DEV__} from './config';
 import * as zrender from 'zrender/src/zrender';
 import * as zrUtil from 'zrender/src/core/util';
 import * as colorTool from 'zrender/src/tool/color';

@@ -27,7 +27,6 @@ import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
-import { __DEV__ } from '../../config';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';

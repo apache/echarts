@@ -35,11 +35,8 @@ const fsExtra = require('fs-extra');
 const chalk = require('chalk');
 const ts = require('typescript');
 const globby = require('globby');
-const removeDEVUtil = require('./remove-dev');
+const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
-const {promisify} = require('util');
-const readFileAsync = promisify(fs.readFile);
-const writeFileAsync = promisify(fs.writeFile);
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -88,7 +85,7 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
             preamble: preamble.js,
-            removeDEV: true
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(tmpDir);
@@ -126,7 +123,7 @@ const compileWorkList = [
             preamble: preamble.js,
             // esm do not remove DEV. Keep it them same with
             // the previous state before migrate to ts.
-            removeDEV: false
+            transformDEV: false
         },
         before: async function () {
             fsExtra.removeSync(tmpDir);
@@ -162,7 +159,7 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: extensionCJSDir},
             preamble: preamble.js,
-            removeDEV: true
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(extensionCJSDir);
@@ -179,7 +176,7 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: extensionESMDir},
             preamble: preamble.js,
-            removeDEV: false
+            transformDEV: false
         },
         before: async function () {
             fsExtra.removeSync(extensionESMDir);
@@ -284,17 +281,17 @@ async function transformRootFolderInEntry(entryFile, replacement) {
  * @param {Object} transformOptions
  * @param {Object} transformOptions.filesGlobby {patterns: string[], cwd: string}
  * @param {string} [transformOptions.preamble] See './preamble.js'
- * @param {boolean} [transformOptions.removeDEV]
+ * @param {boolean} [transformOptions.transformDEV]
  */
-async function transformCode({filesGlobby, preamble, removeDEV}) {
+async function transformCode({filesGlobby, preamble, transformDEV}) {
 
     let filePaths = await readFilePaths(filesGlobby);
 
     filePaths.map(filePath => {
         let code = fs.readFileSync(filePath, 'utf8');
 
-        if (removeDEV) {
-            let result = removeDEVUtil.transform(code, false);
+        if (transformDEV) {
+            let result = transformDEVUtil.transform(code, false);
             code = result.code;
         }
 

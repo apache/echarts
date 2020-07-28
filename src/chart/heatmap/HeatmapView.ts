@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import { __DEV__ } from '../../config';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';

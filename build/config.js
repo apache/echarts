@@ -19,7 +19,7 @@
 
 const assert = require('assert');
 const nodeResolvePlugin = require('rollup-plugin-node-resolve');
-const ecRemoveDevPlugin = require('./remove-dev-rollup-plugin');
+const ecTransformDevPlugin = require('./transform-dev-rollup-plugin');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const nodePath = require('path');
 const ecDir = nodePath.resolve(__dirname, '..');
@@ -73,7 +73,7 @@ function preparePlugins(
     ];
 
     removeDev && plugins.push(
-        ecRemoveDevPlugin({sourcemap})
+        ecTransformDevPlugin({sourcemap})
     );
 
     lang && plugins.push(

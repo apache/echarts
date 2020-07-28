@@ -27,7 +27,7 @@ const chalk = require('chalk');
 const rollup = require('rollup');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const prePublish = require('./pre-publish');
-const recheckDEV = require('./remove-dev').recheckDEV;
+const recheckDEV = require('./transform-dev').recheckDEV;
 const UglifyJS = require("uglify-js");
 const preamble = require('./preamble');
 
@@ -132,7 +132,7 @@ async function run() {
         output: commander.output,
         format: commander.format,
         sourcemap: commander.sourcemap,
-        removeDev: commander.removedev,
+        removeDev: commander.removedev || commander.min,
         addBundleVersion: isWatch,
         // Force to disable cache in release build.
         // TODO npm run build also disable cache?

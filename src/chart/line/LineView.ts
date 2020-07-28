@@ -19,7 +19,6 @@
 
 // FIXME step not support polar
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {fromPoints} from 'zrender/src/core/bbox';
 import SymbolDraw from '../helper/SymbolDraw';

@@ -38,4 +38,4 @@ if (typeof dev === 'undefined') {
     dev = true;
 }
 
-export const __DEV__ = dev;
+declare const __DEV__: boolean;

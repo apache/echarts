@@ -17,33 +17,20 @@
 * under the License.
 */
 
-const babel = require('@babel/core');
-const removeDEVBabelPlugin = require('./remove-dev-babel-plugin');
+const parser = require('@babel/parser');
 
-/**
- * @param {string} sourceCode
- * @param {boolean} sourcemap
- * @return {Object} {code: string, map: string}
- */
-module.exports.transform = function (sourceCode, sourcemap) {
-    let {code, map} = babel.transformSync(sourceCode, {
-        plugins: [removeDEVBabelPlugin],
-        sourceMaps: sourcemap
-    });
+const replacedExpr = parser.parseExpression('process.env.NODE_ENV !== \'production\'');
 
-    return {code, map};
-};
-
-/**
- * @param {string} code
- * @throws {Error} If check failed.
- */
-module.exports.recheckDEV = function (code) {
-    let result = code.match(/.if\s*\([^()]*__DEV__/);
-    if (result
-        && result[0].indexOf('`if') < 0
-        && result[0].indexOf('if (typeof __DEV__') < 0
-    ) {
-        throw new Error('__DEV__ is not removed.');
-    }
+module.exports = function ({types, template}, options) {
+    return {
+        visitor: {
+            Identifier: {
+                enter(path) {
+                    if (path.isIdentifier({ name: '__DEV__' }) && path.scope.hasGlobal('__DEV__')) {
+                        path.replaceWith(replacedExpr);
+                    }
+                }
+            }
+        }
+    };
 };

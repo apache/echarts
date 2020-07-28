@@ -18,20 +18,20 @@
 */
 
 /**
- * Remove the code of `if (__DEV__) { ... }`.
+ * Transform the code of `if (__DEV__) { ... }`. to `if (process.env.NODE_ENV !== 'production') { ... }`
  *
  * Usage:
  *
- * import ecRemoveDevPlugin from 'echats/build/rollup-plugin-ec-remove-dev';
+ * import ecTransformDevPlugin from 'echats/build/rollup-plugin-ec-transform-dev';
  * let rollupConfig = {
  *     plugins: [
- *         ecRemoveDevPlugin(),
+ *         ecTransformDevPlugin(),
  *         ...
  *     ]
  * };
  */
 
-const removeDEV = require('./remove-dev');
+const removeDEV = require('./transform-dev');
 
 /**
  * @param {Object} [opt]

@@ -17,20 +17,33 @@
 * under the License.
 */
 
-module.exports = function ({types, template}, options) {
-    return {
-        visitor: {
-            IfStatement: {
-                exit(path) {
-                    removeDEV(path);
-                }
-            }
-        }
-    };
+const babel = require('@babel/core');
+const removeDEVBabelPlugin = require('./transform-dev-babel-plugin');
+
+/**
+ * @param {string} sourceCode
+ * @param {boolean} sourcemap
+ * @return {Object} {code: string, map: string}
+ */
+module.exports.transform = function (sourceCode, sourcemap) {
+    let {code, map} = babel.transformSync(sourceCode, {
+        plugins: [removeDEVBabelPlugin],
+        sourceMaps: sourcemap
+    });
+
+    return {code, map};
 };
 
-function removeDEV(path) {
-    if (path.node.test.name === '__DEV__') {
-        path.remove();
+/**
+ * @param {string} code
+ * @throws {Error} If check failed.
+ */
+module.exports.recheckDEV = function (code) {
+    let result = code.match(/.if\s*\([^()]*__DEV__/);
+    if (result
+        && result[0].indexOf('`if') < 0
+        && result[0].indexOf('if (typeof __DEV__') < 0
+    ) {
+        throw new Error('__DEV__ is not removed.');
     }
-}
+};

@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../config';
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
 } from 'zrender/src/core/util';

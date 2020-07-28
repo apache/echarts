@@ -26,7 +26,6 @@
 // merge relevant logic to this file?
 // check: "modelHelper" of tooltip and "BrushTargetManager".
 
-import {__DEV__} from '../config';
 import {createHashMap, retrieve, each, HashMap} from 'zrender/src/core/util';
 import SeriesModel from './Series';
 import type PolarModel from '../coord/polar/PolarModel';

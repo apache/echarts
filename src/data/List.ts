@@ -23,7 +23,6 @@
  * List for data storage
  */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
