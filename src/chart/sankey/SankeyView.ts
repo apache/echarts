@@ -28,6 +28,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { getECData } from '../../util/ecData';
 
 interface FocusNodeAdjacencyPayload extends Payload {
     dataIndex?: number
@@ -136,7 +137,7 @@ class SankeyView extends ChartView {
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
             const curve = new SankeyPath();
-            const ecData = graphic.getECData(curve);
+            const ecData = getECData(curve);
             ecData.dataIndex = edge.dataIndex;
             ecData.seriesIndex = seriesModel.seriesIndex;
             ecData.dataType = 'edge';
@@ -234,7 +235,7 @@ class SankeyView extends ChartView {
                 emphasisModel.get('blurScope')
             );
 
-            graphic.getECData(curve).dataType = 'edge';
+            getECData(curve).dataType = 'edge';
         });
 
         // Generate a rect for each node
@@ -274,7 +275,7 @@ class SankeyView extends ChartView {
 
             nodeData.setItemGraphicEl(node.dataIndex, rect);
 
-            graphic.getECData(rect).dataType = 'node';
+            getECData(rect).dataType = 'node';
 
             const focus = emphasisModel.get('focus');
             enableHoverEmphasis(

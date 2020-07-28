@@ -40,6 +40,7 @@ import MarkerModel from './MarkerModel';
 import { makeInner } from '../../util/model';
 import { getVisualFromData } from '../../visual/helper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { getECData } from '../../util/ecData';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -309,7 +310,7 @@ class MarkAreaView extends MarkerView {
 
             enableHoverEmphasis(polygon);
 
-            graphic.getECData(polygon).dataModel = maModel;
+            getECData(polygon).dataModel = maModel;
         });
 
         inner(polygonGroup).data = areaData;

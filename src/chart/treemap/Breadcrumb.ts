@@ -18,6 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import * as layout from '../../util/layout';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
@@ -210,7 +211,7 @@ function makeItemPoints(x: number, y: number, itemWidth: number, itemHeight: num
 
 // Package custom mouse event.
 function packEventData(el: Element, seriesModel: TreemapSeriesModel, itemNode: TreeNode) {
-    graphic.getECData(el).eventData = {
+    getECData(el).eventData = {
         componentType: 'series',
         componentSubType: 'treemap',
         componentIndex: seriesModel.componentIndex,

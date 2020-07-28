@@ -94,7 +94,7 @@ If you wish to debug locally or make pull requests, please refer to [contributin
 
 + [Wordcloud 字符云](https://github.com/ecomfe/echarts-wordcloud)
 
-+ [Extension for Baidu Map 百度地图扩展](https://github.com/apache/incubator-echarts/tree/master/extension/bmap) An extension provides a wrapper of Baidu Map Service SDK. 
++ [Extension for Baidu Map 百度地图扩展](https://github.com/apache/incubator-echarts/tree/master/extension-src/bmap) An extension provides a wrapper of Baidu Map Service SDK.
 
 + [vue-echarts](https://github.com/ecomfe/vue-echarts) ECharts component for Vue.js
 

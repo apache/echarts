@@ -40,5 +40,5 @@ import './src/component/markArea';
 import './src/component/dataZoom';
 import './src/component/toolbox';
 
-import 'zrender/src/vml/vml';
+// import 'zrender/src/vml/vml';
 import 'zrender/src/svg/svg';

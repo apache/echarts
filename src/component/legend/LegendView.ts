@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';

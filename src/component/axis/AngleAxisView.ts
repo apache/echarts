@@ -29,6 +29,7 @@ import Polar from '../../coord/polar/Polar';
 import ComponentView from '../../view/Component';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
+import { getECData } from '../../util/ecData';
 
 const elementList = [
     'axisLine',
@@ -277,7 +278,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 const eventData = AxisBuilder.makeAxisEventDataBase(angleAxisModel);
                 eventData.targetType = 'axisLabel';
                 eventData.value = labelItem.rawLabel;
-                graphic.getECData(textEl).eventData = eventData;
+                getECData(textEl).eventData = eventData;
             }
 
         }, this);

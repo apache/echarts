@@ -33,7 +33,6 @@ import {
     getAxisMainType, DATA_ZOOM_AXIS_DIMENSIONS, DataZoomAxisDimension
 } from './helper';
 import SingleAxisModel from '../../coord/single/AxisModel';
-import { __DEV__ } from '../../config';
 import { MULTIPLE_REFERRING, SINGLE_REFERRING } from '../../util/model';
 
 

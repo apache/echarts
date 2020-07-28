@@ -22,7 +22,6 @@ import compatStyle from './helper/compatStyle';
 import {normalizeToArray} from '../util/model';
 import { Dictionary } from 'zrender/src/core/types';
 import { ECUnitOption } from '../util/types';
-import { __DEV__ } from '../config';
 import type { BarSeriesOption } from '../chart/bar/BarSeries';
 import type { PieSeriesOption } from '../chart/pie/PieSeries';
 import { deprecateLog, deprecateReplaceLog } from '../util/log';

@@ -22,11 +22,11 @@
 import {
     Text as ZRText,
     BoundingRect,
-    getECData,
     Polyline,
     updateProps,
     initProps
 } from '../util/graphic';
+import { getECData } from "../util/ecData";
 import ExtensionAPI from '../ExtensionAPI';
 import {
     ZRTextAlign,

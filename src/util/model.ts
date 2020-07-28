@@ -29,7 +29,7 @@ import {
     indexOf
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import GlobalModel, { QueryConditionKindB } from '../model/Global';
+import GlobalModel from '../model/Global';
 import ComponentModel, {ComponentModelConstructor} from '../model/Component';
 import List from '../data/List';
 import {
@@ -46,7 +46,6 @@ import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-import { __DEV__ } from '../config';
 import { isNumeric } from './number';
 
 /**
