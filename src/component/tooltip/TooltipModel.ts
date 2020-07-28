@@ -113,10 +113,10 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         backgroundColor: '#fff',
 
         // box shadow
-        shadowBlur: 5,
-        shadowColor: '#333',
-        shadowOffsetX: 0,
-        shadowOffsetY: 0,
+        shadowBlur: 10,
+        shadowColor: 'rgba(0, 0, 0, .2)',
+        shadowOffsetX: 1,
+        shadowOffsetY: 2,
 
         // tooltip border color
         borderColor: '#333',
@@ -129,7 +129,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css
-        padding: [8, 12],
+        padding: [4, 10, 10],
 
         // Extra css text
         extraCssText: '',

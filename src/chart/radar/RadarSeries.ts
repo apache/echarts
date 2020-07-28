@@ -138,7 +138,8 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
                     return encodeHTML(axis.name) + ': ' + val;
                 }).join('\n');
         }
-        return encodeHTML(name === '' ? this.name : name) + '<br/>'
+        return `<span style="font-size:12px;color:#6e7079;>${encodeHTML(name === '' ? this.name : name)}</span>`
+            + '<br/>'
             + zrUtil.map(indicatorAxes, function (axis) {
                 const val = data.get(data.mapDimension(axis.dim), dataIndex);
                 return '<div style="margin: 8px 0 0;">'

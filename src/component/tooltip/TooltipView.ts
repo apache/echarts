@@ -622,7 +622,7 @@ class TooltipView extends ComponentView {
                 }
                 else {
                     singleDefaultHTML.push(
-                        (firstLine ? formatUtil.encodeHTML(firstLine) + newLine : '')
+                        (firstLine ? `<span style="font-size:12px;color:#6e7079;">${formatUtil.encodeHTML(firstLine)}</span>` + newLine : '')
                         + seriesDefaultHTML.reverse().join(newLine)
                     );
                 }
@@ -791,7 +791,8 @@ class TooltipView extends ComponentView {
         let html = defaultHtml;
         const nearPoint = this._getNearestPoint(
             [x, y],
-            params
+            params,
+            tooltipModel.get('trigger')
         );
 
         if (formatter && zrUtil.isString(formatter)) {
@@ -820,10 +821,17 @@ class TooltipView extends ComponentView {
 
     _getNearestPoint(
         point: number[],
-        tooltipDataParams: TooltipDataParams | TooltipDataParams[]
+        tooltipDataParams: TooltipDataParams | TooltipDataParams[],
+        trigger: TooltipOption['trigger']
     ): {
         color: ZRColor;
     } {
+        if (trigger === 'axis') {
+            return {
+                color: '#fff'
+            };
+        }
+
         if (!zrUtil.isArray(tooltipDataParams)) {
             if (!tooltipDataParams.position) {
                 return {

@@ -554,11 +554,12 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         colorStr = zrUtil.isString(colorEl) ? colorEl : colorEl.content;
         let html = '';
         if (!isRichText) {
+            seriesName = seriesName ? `<span style="font-size:12px;color:#6e7079;">${seriesName}</span>` : '';
             html = !multipleSeries
                 ? seriesName + (seriesName ? '<br/>' : '') + `<div style="margin: ${seriesName ? 8 : 0}px 0 0;">`
                     + colorStr
                     + (name
-                        ? `${encodeHTML(name)}${content}`
+                        ? `<span style="font-size:12px;color:#6e7079;">${encodeHTML(name)}</span>${content}`
                         : content
                     ) + '</div>'
                 : `<div style="margin: 8px 0 0;">${colorStr}${seriesName}${content}</div>`;
