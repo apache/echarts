@@ -107,6 +107,8 @@ const compileWorkList = [
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
 
+            transformZRRootFolder(nodePath.resolve(ecDir, 'lib'), 'lib');
+
             fsExtra.removeSync(tmpDir);
         }
     },
@@ -143,6 +145,8 @@ const compileWorkList = [
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
 
+            await transformZRRootFolder(nodePath.resolve(ecDir, 'esm'), 'esm');
+
             fsExtra.removeSync(tmpDir);
         }
     },
@@ -161,6 +165,9 @@ const compileWorkList = [
         },
         before: async function () {
             fsExtra.removeSync(extensionCJSDir);
+        },
+        after: async function () {
+            await transformZRRootFolder(extensionCJSDir, 'lib');
         }
     },
     {
@@ -178,6 +185,9 @@ const compileWorkList = [
         },
         before: async function () {
             fsExtra.removeSync(extensionESMDir);
+        },
+        after: async function () {
+            await transformZRRootFolder(extensionESMDir, 'esm');
         }
     }
 ];
@@ -266,13 +276,35 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
 /**
  * Transform `src` root in the entry file to `esm` or `lib`
  */
-async function transformRootFolderInEntry(entryFile, replacement) {
+function transformRootFolderInEntry(entryFile, replacement) {
     let code = fs.readFileSync(entryFile, 'utf-8');
     // Simple regex replacement
     // TODO More robust way?
     code = code.replace(/([\"\'])\.\/src\//g, `$1./${replacement}/`)
         .replace(/([\"\'])src\//g, `$1${replacement}/`);
-    fs.writeFileSync(entryFile, code, 'utf-8');
+    fs.writeFileSync(
+        entryFile,
+        // Also transform zrender.
+        singleTransformZRRootFolder(code, replacement),
+        'utf-8'
+    );
+}
+
+/**
+ * Transform `zrender/src` to `zrender/esm` in all files
+ */
+async function transformZRRootFolder(rooltFolder, replacement) {
+    const files = await globby([rooltFolder + '/**/*.js']);
+    // Simple regex replacement
+    // TODO More robust way?
+    for (let fileName of files) {
+        let code = fs.readFileSync(fileName, 'utf-8');
+        fs.writeFileSync(fileName, singleTransformZRRootFolder(code, replacement), 'utf-8');
+    }
+}
+
+function singleTransformZRRootFolder(code, replacement) {
+    return code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`);
 }
 
 /**

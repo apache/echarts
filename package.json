@@ -7,6 +7,9 @@
     "visualization",
     "canvas"
   ],
+  "main": "index.js",
+  "module": "echarts.all.js",
+  "jsdelivr": "dist/echarts.min.js",
   "homepage": "http://echarts.apache.org",
   "repository": {
     "type": "git",
