@@ -121,9 +121,7 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
             preamble: preamble.js,
-            // esm do not remove DEV. Keep it them same with
-            // the previous state before migrate to ts.
-            transformDEV: false
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(tmpDir);
@@ -176,7 +174,7 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: extensionESMDir},
             preamble: preamble.js,
-            transformDEV: false
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(extensionESMDir);
