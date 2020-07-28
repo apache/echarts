@@ -44,7 +44,7 @@ function release() {
     [
         '', 'en'
     ].forEach(function (lang) {
-        ['', 'simple', 'common'].forEach(function (type) {
+        ['', 'simple', 'common', 'extension'].forEach(function (type) {
 
             const args = [
                 `--lang`,
@@ -55,6 +55,10 @@ function release() {
                 `--sourcemap`,
                 `--min`
             ];
+
+            if (lang === 'en' && type === 'extension') {
+                return;
+            }
 
             const p = spawn(path.join(__dirname, 'build.js'), args);
 

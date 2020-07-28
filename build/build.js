@@ -148,8 +148,15 @@ async function run() {
     else if (isPrePublish) {
         await prePublish();
     }
+    else if (opt.type === 'extension') {
+        const cfgs = [
+            config.createBMap(),
+            config.createDataTool()
+        ];
+        await build(cfgs, opt.min);
+    }
     else {
-        let cfg = config.createECharts(opt);
+        const cfg = config.createECharts(opt);
         await build([cfg], opt.min);
 
         if (opt.removeDev) {

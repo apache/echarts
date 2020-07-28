@@ -33,6 +33,13 @@ function preparePlugins(
 ) {
     assert(include);
 
+    // In case node_modules/zrender is a symlink
+    const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
+    const zrRealPath = fs.realpathSync(zrNodeModulePath);
+    if (zrRealPath !== zrNodeModulePath) {
+        include.push(zrRealPath + '/**/*.ts');
+    }
+
     if (clean) {
         console.log('Built in clean mode without cache.');
     }
@@ -117,12 +124,6 @@ exports.createECharts = function (opt = {}) {
         nodePath.resolve(ecDir, 'src/**/*.ts'),
         nodePath.resolve(ecDir, 'echarts*.ts')
     ];
-    // In case node_modules/zrender is a symlink
-    const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
-    const zrRealPath = fs.realpathSync(zrNodeModulePath);
-    if (zrRealPath !== zrNodeModulePath) {
-        include.push(zrRealPath + '/**/*.ts');
-    }
 
     return {
         plugins: preparePlugins(opt, {
@@ -165,7 +166,10 @@ exports.createBMap = function () {
     let input = nodePath.resolve(ecDir, `extension-src/bmap/bmap.ts`);
 
     return {
-        plugins: preparePlugins({}, {
+        plugins: preparePlugins({
+            // Always clean
+            clean: true
+        }, {
             include: [
                 nodePath.resolve(ecDir, 'extension-src/bmap/**/*.ts')
             ]
@@ -194,7 +198,9 @@ exports.createDataTool = function () {
     let input = nodePath.resolve(ecDir, `extension-src/dataTool/index.ts`);
 
     return {
-        plugins: preparePlugins({}, {
+        plugins: preparePlugins({
+            clean: true
+        }, {
             include: [
                 nodePath.resolve(ecDir, 'extension-src/dataTool/**/*.ts')
             ]
