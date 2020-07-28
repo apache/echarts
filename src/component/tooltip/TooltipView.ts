@@ -835,7 +835,7 @@ class TooltipView extends ComponentView {
             };
         }
 
-        const distanceArr = tooltipDataParams.map(params => {
+        const distanceArr = zrUtil.map(tooltipDataParams, function (params) {
             let dim = '';
             if (params.coordinateSystem && params.coordinateSystem.type === 'cartesian2d') {
                 dim = params.coordinateSystem.getBaseAxis().dim;
@@ -846,7 +846,8 @@ class TooltipView extends ComponentView {
             delete params.coordinateSystem;
             return distance;
         });
-        const index = distanceArr.indexOf(Math.min(...distanceArr));
+
+        const index = zrUtil.indexOf(distanceArr, Math.min(...distanceArr));
         return {
             color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor || '#fff'
         };

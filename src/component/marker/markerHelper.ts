@@ -81,9 +81,9 @@ function markerTypeCalculatorWithExtent(
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
 
-    const value = numCalculate(data, targetDataDim, markerType);
+    const value = numCalculate(data, calcDataDim, markerType);
 
-    const dataIndex = data.indicesOfNearest(targetDataDim, value)[0];
+    const dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
     coordArr[targetCoordIndex] = data.get(calcDataDim, dataIndex);
     const coordArrValue = data.get(targetDataDim, dataIndex);
