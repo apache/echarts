@@ -30,6 +30,7 @@ const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const prePublish = require('./pre-publish');
 const recheckDEV = require('./remove-dev').recheckDEV;
 const assert = require('assert');
+const {buildI18n} = require('./build-i18n')
 
 
 async function run() {
@@ -274,6 +275,8 @@ function getPath(relativePath) {
  *  ]
  */
 async function build(configs) {
+    // buildI18n JSON before build when build
+    buildI18n();
 
     // ensureZRenderCode.prepare();
 

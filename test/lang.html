@@ -39,11 +39,13 @@ under the License.
     }
 </style>
 
+<div id="main2" class="main"></div>
 <div id="main0" class="main"></div>
 <div id="main1" class="main"></div>
 
 <script>
-    require(['echarts', 'i18n/langZH'], function (echarts) {
+    // auto with default
+    require(['echarts'], function (echarts,) {
         var option = {
             xAxis: {},
             yAxis: {},
@@ -65,13 +67,16 @@ under the License.
             animation: false
         };
 
-        var chart = echarts.init(document.getElementById('main0'), null, 'ZH');
+        var chart = echarts.init(document.getElementById('main2'), null, {
+            locale: 'EN'
+        });
         chart.setOption(option);
     });
 </script>
 
 <script>
-    require(['echarts', 'i18n/langEN'], function (echarts) {
+    // auto register ZH lang
+    require(['echarts', 'i18n/langZH'], function (echarts,) {
         var option = {
             xAxis: {},
             yAxis: {},
@@ -93,7 +98,41 @@ under the License.
             animation: false
         };
 
-        var chart = echarts.init(document.getElementById('main1'), null, 'EN');
+        var chart = echarts.init(document.getElementById('main0'), null, {
+            locale: 'ZH'
+        });
+        chart.setOption(option);
+    });
+</script>
+
+<script>
+    // register lang
+    require(['echarts', 'i18n/langEN-obj'], function (echarts, {lang}) {
+        echarts.registerLocale('EN', lang);
+        var option = {
+            xAxis: {},
+            yAxis: {},
+            series: {
+                type: 'line',
+                data: [[11, 22], [33, 44]]
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    restore: {},
+                    saveAsImage: {},
+                    dataZoom: {},
+                    dataView: {}
+                },
+                orient: 'vertical',
+                right: 5
+            },
+            animation: false
+        };
+
+        var chart = echarts.init(document.getElementById('main1'), null, {
+            locale: 'EN'
+        });
         chart.setOption(option);
     });
 </script>

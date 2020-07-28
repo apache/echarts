@@ -128,7 +128,6 @@ class GlobalModel extends Model<ECUnitOption> {
         theme = theme || {};
         this.option = null; // Mark as not initialized.
         this._theme = new Model(theme);
-        console.log('init', locale)
         this._locale = locale;
         this._optionManager = optionManager;
     }
@@ -428,7 +427,7 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     getWithLocale(localePosition: Array<string>, optionsPosition?: Array<string>, localeHandlerFn?: (text: string) => string): any {
-        console.log(optionsPosition, localePosition);
+        // console.log(optionsPosition, localePosition);
         const locale = this.getLocale()
         let localeText: string | any;
         localePosition.map(t => {
@@ -438,7 +437,7 @@ class GlobalModel extends Model<ECUnitOption> {
         if(localeHandlerFn) {
             localeText =  localeHandlerFn(localeText);
         }
-        console.log(localeText);
+        // console.log(localeText);
         return localeText;
     }
 

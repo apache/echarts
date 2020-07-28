@@ -13,11 +13,12 @@
     "url": "https://github.com/apache/incubator-echarts.git"
   },
   "scripts": {
+    "buildi18n": "node build/build-i18n.js",
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js",
     "build:full": "node build/build.js --clean",
     "watch": "node build/build.js --watch",
-    "dev:fast": "node build/dev-fast.js",
+    "dev:fast": "node build/build-i18n.js && node build/dev-fast.js",
     "release": "node build/build.js --release",
     "help": "node build/build.js --help",
     "test:visual": "node test/runTest/server.js",

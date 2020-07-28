@@ -92,6 +92,9 @@ import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 import LabelManager from './label/LabelManager';
 import { deprecateLog } from './util/log';
 import { handleLegacySelectEvents } from './legacy/dataSelectAction';
+// default import ZH and EN lang
+import langEN from "../i18n/langEN";
+import langZH from "../i18n/langZH";
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
@@ -312,8 +315,8 @@ class ECharts extends Eventful {
         dom: HTMLElement,
         // Theme name or themeOption.
         theme?: string | ThemeOption,
-        locale?: string | LocaleOption,
         opts?: {
+            locale?: string | LocaleOption,
             renderer?: RendererType,
             devicePixelRatio?: number,
             width?: number,
@@ -352,8 +355,13 @@ class ECharts extends Eventful {
         theme && backwardCompat(theme as ECUnitOption, true);
 
         this._theme = theme;
-        this._locale = typeof locale === 'string' ? localeStorage[locale || 'ZH'] : zrUtil.clone(locale);
-        console.log(this._locale);
+
+        const {locale = 'ZH'} = opts;
+        //  set default lang package
+        localeStorage['ZH'] = localeStorage['ZH'] || langZH;
+        localeStorage['EN'] = localeStorage['EN'] || langEN;
+        this._locale = typeof locale === 'string' ? localeStorage[locale] : zrUtil.clone(locale);
+        console.log(this._locale)
 
         this._coordSysMgr = new CoordinateSystemManager();
 
@@ -2329,12 +2337,12 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
 export function init(
     dom: HTMLElement,
     theme?: string | object,
-    locale?: string | object,
     opts?: {
         renderer?: RendererType,
         devicePixelRatio?: number,
         width?: number,
-        height?: number
+        height?: number,
+        locale?: string | object,
     }
 ): ECharts {
     if (__DEV__) {
@@ -2376,7 +2384,7 @@ export function init(
         }
     }
 
-    const chart = new ECharts(dom, theme, locale, opts);
+    const chart = new ECharts(dom, theme, opts);
     chart.id = 'ec_' + idBase++;
     instances[chart.id] = chart;
 
