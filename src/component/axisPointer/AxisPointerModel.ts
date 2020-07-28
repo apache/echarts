@@ -117,12 +117,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
             backgroundColor: 'auto', // default: axis line color
             borderColor: null,
             borderWidth: 0,
-            shadowBlur: 3,
-            shadowColor: '#aaa'
-            // Considering applicability, common style should
-            // better not have shadowOffset.
-            // shadowOffsetX: 0,
-            // shadowOffsetY: 2
+            borderRadius: 3
         },
 
         handle: {
