@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import {each, createHashMap, HashMap} from 'zrender/src/core/util';
 import mapDataStorage, { MapRecord } from './mapDataStorage';
 import geoJSONLoader from './geoJSONLoader';

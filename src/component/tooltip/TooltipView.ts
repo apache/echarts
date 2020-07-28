@@ -51,6 +51,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { isDimensionStacked } from '../../data/helper/dataStackHelper';
+import { getECData } from '../../util/ecData';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -453,7 +454,7 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && graphic.getECData(el).dataIndex != null) {
+        else if (el && getECData(el).dataIndex != null) {
             this._lastDataByCoordSys = null;
             this._showSeriesItemTooltip(e, el, dispatchAction);
         }
@@ -622,7 +623,15 @@ class TooltipView extends ComponentView {
                 }
                 else {
                     singleDefaultHTML.push(
-                        (firstLine ? `<span style="font-size:12px;color:#6e7079;">${formatUtil.encodeHTML(firstLine)}</span>` + newLine : '')
+                        (
+                            firstLine
+                                ? (
+                                    '<span style="font-size:12px;color:#6e7079;">'
+                                    + formatUtil.encodeHTML(firstLine) + '</span>'
+                                    + newLine
+                                )
+                                : ''
+                        )
                         + seriesDefaultHTML.reverse().join(newLine)
                     );
                 }
@@ -663,7 +672,7 @@ class TooltipView extends ComponentView {
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
         const ecModel = this._ecModel;
-        const ecData = graphic.getECData(el);
+        const ecData = getECData(el);
         // Use dataModel in element if possible
         // Used when mouseover on a element like markPoint or edge
         // In which case, the data is not main data in series.

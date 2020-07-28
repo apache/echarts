@@ -21,7 +21,6 @@ import { Payload, SelectChangedPayload } from '../util/types';
 import SeriesModel from '../model/Series';
 import { extend, each, isArray } from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
-import { __DEV__ } from '../config';
 import { deprecateReplaceLog, deprecateLog } from '../util/log';
 import Eventful from 'zrender/src/core/Eventful';
 import type { EChartsType, registerAction } from '../echarts';

@@ -19,7 +19,6 @@
 
 // FIXME step not support polar
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {fromPoints} from 'zrender/src/core/bbox';
 import SymbolDraw from '../helper/SymbolDraw';
@@ -43,6 +42,7 @@ import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
+import { getECData } from '../../util/ecData';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;
@@ -557,7 +557,7 @@ class LineView extends ChartView {
         }
 
         // Needs seriesIndex for focus
-        graphic.getECData(polyline).seriesIndex = seriesModel.seriesIndex;
+        getECData(polyline).seriesIndex = seriesModel.seriesIndex;
         enableHoverEmphasis(polyline, focus, blurScope);
 
         const smooth = getSmooth(seriesModel.get('smooth'));
@@ -593,7 +593,7 @@ class LineView extends ChartView {
 
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
             // Needs seriesIndex for focus
-            graphic.getECData(polygon).seriesIndex = seriesModel.seriesIndex;
+            getECData(polygon).seriesIndex = seriesModel.seriesIndex;
             enableHoverEmphasis(polygon, focus, blurScope);
         }
 

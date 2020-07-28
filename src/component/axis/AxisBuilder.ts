@@ -19,6 +19,7 @@
 
 import {retrieve, defaults, extend, each, isObject} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
@@ -460,7 +461,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             const eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
             eventData.targetType = 'axisName';
             eventData.name = name;
-            graphic.getECData(textEl).eventData = eventData;
+            getECData(textEl).eventData = eventData;
         }
 
         // FIXME
@@ -810,7 +811,7 @@ function buildAxisLabel(
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
 
-            graphic.getECData(textEl).eventData = eventData;
+            getECData(textEl).eventData = eventData;
         }
 
         // FIXME

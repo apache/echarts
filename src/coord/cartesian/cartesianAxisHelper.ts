@@ -22,7 +22,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import GridModel from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
-import { __DEV__ } from '../../config';
 import { SINGLE_REFERRING } from '../../util/model';
 
 interface CartesianAxisLayout {

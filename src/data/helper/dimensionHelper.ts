@@ -20,7 +20,6 @@
 // @ts-nocheck
 
 import {each, createHashMap, assert} from 'zrender/src/core/util';
-import { __DEV__ } from '../../config';
 import List from '../List';
 import {
     DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput

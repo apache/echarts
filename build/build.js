@@ -19,18 +19,16 @@
 * under the License.
 */
 
-const fsExtra = require('fs-extra');
 const fs = require('fs');
-const nodePath = require('path');
 const config = require('./config.js');
 const commander = require('commander');
 const chalk = require('chalk');
 const rollup = require('rollup');
 const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const prePublish = require('./pre-publish');
-const recheckDEV = require('./remove-dev').recheckDEV;
-const assert = require('assert');
-
+const transformDEV = require('./transform-dev');
+const UglifyJS = require("uglify-js");
+const preamble = require('./preamble');
 
 async function run() {
 
@@ -58,8 +56,6 @@ async function run() {
                 + '\n' + descIndent + '# Build all to `dist` folder.',
             egIndent + 'node build/build.js --prepublish'
                 + '\n' + descIndent + '# Only prepublish.',
-            egIndent + 'node build/build.js --removedev'
-                + '\n' + descIndent + '# Remove __DEV__ code. If --min, __DEV__ always be removed.',
             egIndent + 'node build/build.js --type ""'
                 + '\n' + descIndent + '# Only generate `dist/echarts.js`.',
             egIndent + 'node build/build.js --type common --min'
@@ -83,16 +79,8 @@ async function run() {
             descIndent + '`--lang /my/indexSW.js` will use `/my/indexSW.js`. -o must be specified in this case.'
         ].join('\n'))
         .option(
-            '--release',
-            'Build all for release'
-        )
-        .option(
             '--prepublish',
             'Build all for release'
-        )
-        .option(
-            '--removedev',
-            'Remove __DEV__ code. If --min, __DEV__ always be removed.'
         )
         .option(
             '--min',
@@ -123,10 +111,6 @@ async function run() {
             '--clean',
             'If cleaning build without cache. Maybe useful if some unexpected happens.'
         )
-        // .option(
-        //     '--zrender <zrender>',
-        //     'Local zrender path. Used when you want to use develop version of zrender instead of npm version.'
-        // )
         .parse(process.argv);
 
     let isWatch = !!commander.watch;
@@ -141,7 +125,6 @@ async function run() {
         output: commander.output,
         format: commander.format,
         sourcemap: commander.sourcemap,
-        removeDev: commander.removedev,
         addBundleVersion: isWatch,
         // Force to disable cache in release build.
         // TODO npm run build also disable cache?
@@ -151,81 +134,33 @@ async function run() {
     validateIO(opt.input, opt.output);
     validateLang(opt.lang, opt.output);
 
-    normalizeParams(opt);
-
-    // Clear `echarts/dist`
-    if (isRelease) {
-        fsExtra.removeSync(getPath('./dist'));
-    }
-
     if (isWatch) {
         watch(config.createECharts(opt));
     }
     else if (isPrePublish) {
         await prePublish();
     }
-    else if (isRelease) {
-        let configs = [];
-        let configForCheck;
-
-        [
-            {min: false},
-            {min: true},
-            {min: false, lang: 'en'},
-            {min: true, lang: 'en'}
-        ].forEach(function (opt) {
-
-            ['', 'simple', 'common'].forEach(function (type) {
-                let singleOpt = Object.assign({type}, opt);
-                normalizeParams(singleOpt);
-                let singleConfig = config.createECharts(singleOpt);
-                configs.push(singleConfig);
-
-                if (singleOpt.min && singleOpt.type === '') {
-                    configForCheck = singleConfig;
-                }
-            });
-        });
-
-        configs.push(
-            config.createBMap(false),
-            config.createBMap(true),
-            config.createDataTool(false),
-            config.createDataTool(true)
-        );
-
-        await build(configs);
-
-        checkBundleCode(configForCheck);
-
-        await prePublish();
+    else if (opt.type === 'extension') {
+        const cfgs = [
+            config.createBMap(),
+            config.createDataTool()
+        ];
+        await build(cfgs, opt.min, opt.sourcemap);
     }
     else {
-        let cfg = config.createECharts(opt);
-        await build([cfg]);
-
-        if (opt.removeDev) {
-            checkBundleCode(cfg);
-        }
+        const cfg = config.createECharts(opt);
+        await build([cfg], opt.min, opt.sourcemap);
+        checkBundleCode(cfg);
     }
 }
 
-function normalizeParams(opt) {
-    if (opt.sourcemap == null) {
-        opt.sourcemap = !(opt.min || opt.type);
-    }
-    if (opt.removeDev == null) {
-        opt.removeDev = !!opt.min;
-    }
-}
-
-function checkBundleCode(singleConfig) {
+function checkBundleCode(cfg) {
     // Make sure __DEV__ is eliminated.
-    let code = fs.readFileSync(singleConfig.output.file, {encoding: 'utf-8'});
+    let code = fs.readFileSync(cfg.output.file, {encoding: 'utf-8'});
     if (!code) {
-        throw new Error(`${singleConfig.output.file} is empty`);
+        throw new Error(`${cfg.output.file} is empty`);
     }
-    recheckDEV(code);
+    transformDEV.recheckDEV(code);
     console.log(chalk.green.dim('Check code: correct.'));
 }
 
@@ -253,14 +188,6 @@ function validateLang(lang, output) {
 }
 
 /**
- * @param {string} relativePath Based on echarts directory.
- * @return {string} Absolute path.
- */
-function getPath(relativePath) {
-    return nodePath.resolve(__dirname, '../', relativePath);
-}
-
-/**
  * @param {Array.<Object>} configs A list of rollup configs:
  *  See: <https://rollupjs.org/#big-list-of-options>
  *  For example:
@@ -273,13 +200,14 @@ function getPath(relativePath) {
  *      ...
  *  ]
  */
-async function build(configs) {
+async function build(configs, min, sourcemap) {
 
     // ensureZRenderCode.prepare();
 
     for (let singleConfig of configs) {
+
         console.log(
-            chalk.cyan.dim('\nBundles '),
+            chalk.cyan.dim('\Bundling '),
             chalk.cyan(singleConfig.input),
             chalk.cyan.dim('=>'),
             chalk.cyan(singleConfig.output.file),
@@ -291,12 +219,52 @@ async function build(configs) {
         console.timeEnd('rollup build');
 
         await bundle.write(singleConfig.output);
+        const sourceCode = fs.readFileSync(singleConfig.output.file, 'utf-8');
+        // Convert __DEV__ to true;
+        const transformResult = transformDEV.transform(sourceCode, sourcemap, 'true');
+        fs.writeFileSync(singleConfig.output.file, transformResult.code, 'utf-8');
+        if (transformResult.map) {
+            fs.writeFileSync(singleConfig.output.file + '.map', JSON.stringify(transformResult.map), 'utf-8');
+        }
 
         console.log(
             chalk.green.dim('Created '),
             chalk.green(singleConfig.output.file),
             chalk.green.dim(' successfully.')
         );
+
+        if (min) {
+            const fileMinPath = singleConfig.output.file.replace(/.js$/, '.min.js');
+            console.log(
+                chalk.cyan.dim('Minifying '),
+                chalk.cyan(singleConfig.output.file),
+                chalk.cyan.dim('=>'),
+                chalk.cyan(fileMinPath),
+                chalk.cyan.dim(' ...')
+            )
+            console.time('Minify');
+            const uglifyResult = UglifyJS.minify(
+                // Convert __DEV__ to false and let uglify remove the dead code;
+                transformDEV.transform(sourceCode, false, 'false').code,
+                {
+                    output: {
+                        preamble: preamble.js
+                    }
+                }
+            );
+            if (uglifyResult.error) {
+                throw new Error(uglifyResult.error);
+            }
+            fs.writeFileSync(fileMinPath, uglifyResult.code, 'utf-8');
+
+            console.timeEnd('Minify');
+            console.log(
+                chalk.green.dim('Created '),
+                chalk.green(fileMinPath),
+                chalk.green.dim(' successfully.')
+            );
+        }
+
     }
 
     // ensureZRenderCode.clear();
@@ -373,83 +341,6 @@ function getTimeString() {
 }
 
 
-// Symbol link do not work currently. So have to copy code manually.
-// See: https://github.com/ezolenko/rollup-plugin-typescript2/issues/188
-var ensureZRenderCode = (function () {
-
-    const nodeModulesZr = getPath('./node_modules/zrender');
-    // const nodeModulesZrDirTmp = getPath('./node_modules/zrender-dir-tmp');
-    const nodeModulesZrSymlinkTmp = getPath('./node_modules/zrender-symlink-tmp');
-    const nodeModulesZrSrcDir = getPath('./node_modules/zrender/src');
-    const zrSrcDir = getPath('../zrender/src')
-
-    let stats = 'cleared';
-
-    function doClear() {
-        if (!fs.existsSync(nodeModulesZrSymlinkTmp)
-            || !fs.lstatSync(nodeModulesZrSymlinkTmp).isSymbolicLink()
-        ) {
-            return;
-        }
-
-        if (fs.existsSync(nodeModulesZr)
-            && fs.lstatSync(nodeModulesZr).isDirectory()
-        ) {
-            console.log(chalk.blue(`rm -rf dir: ${nodeModulesZr}`));
-            // ensure save for rm -rf.
-            assert(nodeModulesZr.includes('node_modules') && nodeModulesZr.includes('zrender'));
-            fsExtra.removeSync(nodeModulesZr);
-        }
-
-        // recover the symbollink so that vs code can continue to visit the zrender source code.
-        console.log(chalk.blue(`mv symbol link: ${nodeModulesZrSymlinkTmp} => ${nodeModulesZr}`));
-        fs.renameSync(nodeModulesZrSymlinkTmp, nodeModulesZr);
-    }
-
-    return {
-        prepare: function () {
-            // Calling guard
-            assert(stats === 'cleared');
-            stats = 'prepared';
-
-            console.time('ensure zr code cost');
-            // In case that the last build terminated manually.
-            doClear();
-
-            if (!fs.existsSync(nodeModulesZr)
-                || !fs.lstatSync(nodeModulesZr).isSymbolicLink()
-            ) {
-                return;
-            }
-
-            if (!fs.existsSync(zrSrcDir)
-                || !fs.lstatSync(zrSrcDir).isDirectory()
-            ) {
-                throw new Error(`${zrSrcDir} does not exist.`);
-            }
-
-            console.log(chalk.blue(`mv symbol link: ${nodeModulesZr} => ${nodeModulesZrSymlinkTmp}`));
-            fs.renameSync(nodeModulesZr, nodeModulesZrSymlinkTmp);
-
-            fsExtra.ensureDirSync(nodeModulesZr);
-            fsExtra.copySync(zrSrcDir, nodeModulesZrSrcDir);
-            console.log(chalk.blue(`copied: ${nodeModulesZrSrcDir} => ${zrSrcDir}`));
-
-            console.timeEnd('ensure zr code cost');
-        },
-
-        clear: function () {
-            // Calling guard
-            if (stats === 'cleared') {
-                return;
-            }
-            stats = 'cleared';
-            doClear();
-        }
-    }
-})();
-
-
 async function main() {
     try {
         await run();
@@ -473,8 +364,6 @@ async function main() {
             err.plugin != null && console.warn(chalk.red(`plugin: ${err.plugin}`));
         }
         // console.log(err);
-
-        // ensureZRenderCode.clear();
     }
 }
 

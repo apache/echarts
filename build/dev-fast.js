@@ -32,7 +32,12 @@ async function wrapUMDCode() {
         return;
     }
 
-    fs.writeFileSync(outFilePath, umdWrapperHead + code + umdWrapperTail, 'utf-8');
+    fs.writeFileSync(
+        outFilePath,
+        // Replaced __DEV__ with a same length string to avoid breaking source map
+        umdWrapperHead + code.replace(/__DEV__/g, "\'_DEV_\'") + umdWrapperTail,
+        'utf-8'
+    );
 
     const sourceMap = JSON.parse(fs.readFileSync(outFilePath + '.map', 'utf-8'));
     // Fast trick for fixing source map

@@ -9,7 +9,7 @@
         "sourceMap": true,
 
         // https://github.com/ezolenko/rollup-plugin-typescript2/issues/12#issuecomment-536173372
-        "moduleResolution": "Node",
+        "moduleResolution": "node",
 
         "declaration": true,
         "declarationMap": false,

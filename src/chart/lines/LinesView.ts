@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import LineDraw from '../helper/LineDraw';
 import EffectLine from '../helper/EffectLine';
 import Line from '../helper/Line';

@@ -40,7 +40,6 @@ import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
 import { enableHoverEmphasis } from '../../util/states';
 import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
-import { __DEV__ } from '../../config';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 

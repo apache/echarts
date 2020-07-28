@@ -16,8 +16,6 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
-import {__DEV__} from './config';
 import * as zrender from 'zrender/src/zrender';
 import * as zrUtil from 'zrender/src/core/util';
 import * as colorTool from 'zrender/src/tool/color';
@@ -38,6 +36,7 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
+import {getECData} from './util/ecData';
 import {
     enterEmphasisWhenMouseOver,
     leaveEmphasisWhenMouseOut,
@@ -109,8 +108,6 @@ const assert = zrUtil.assert;
 const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
-
-const getECData = graphic.getECData;
 
 export const version = '4.8.0';
 

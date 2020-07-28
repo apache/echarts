@@ -21,7 +21,6 @@ import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import {concatTooltipHtml, encodeHTML} from '../../util/format';
 import Model from '../../model/Model';
-import { __DEV__ } from '../../config';
 import {
     SeriesOption,
     BoxLayoutOptionMixin,
