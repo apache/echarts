@@ -224,7 +224,9 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
             return encodeHTML(name) + ': ' + ((isNaN(value as number) || value == null) ? '' : value);
         }
 
-        return concatTooltipHtml(name, (isNaN(value as number) || value == null) ? '' : value);
+        return '<div style="line-height:1">'
+            + concatTooltipHtml(name, (isNaN(value as number) || value == null) ? '' : value)
+            + '</div>';
     }
 
     static defaultOption: TreeSeriesOption = {

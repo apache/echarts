@@ -246,7 +246,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             if (renderMode === 'richText') {
                 return encodeHTML(rawDataOpt.source + ' -- ' + rawDataOpt.target) + params.value;
             }
-            return concatTooltipHtml(rawDataOpt.source + ' -- ' + rawDataOpt.target, params.value || '');
+            return '<div style="line-height:1">'
+                + concatTooltipHtml(rawDataOpt.source + ' -- ' + rawDataOpt.target, params.value || '')
+                + '</div>';
         }
         else if (dataType === 'node') {
             const node = this.getGraph().getNodeByIndex(dataIndex);
@@ -255,7 +257,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             if (renderMode === 'richText') {
                 return encodeHTML(value ? name : '') + ': ' + (value || '');
             }
-            return concatTooltipHtml(value ? name : '', value || '');
+            return '<div style="line-height:1">'
+                + concatTooltipHtml(value ? name : '', value || '')
+                + '</div>';
         }
         return super.formatTooltip(dataIndex, multipleSeries, dataType, renderMode);
     }

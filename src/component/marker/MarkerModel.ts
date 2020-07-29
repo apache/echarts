@@ -209,16 +209,16 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         const formattedValue = zrUtil.isArray(value)
             ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
         const name = encodeHTML(data.getName(dataIndex));
-        let html = encodeHTML(this.name);
+        let html = `<div style="font-size:12px;line-height:1;margin:0 0 8px 0;">${encodeHTML(this.name)}</div>`;
         if (value != null || name) {
-            html += renderMode === 'html' ? '<br />' : '\n';
+            html += renderMode === 'html' ? '' : '\n';
         }
         if (name) {
-            html += name;
+            html += `<div style="line-height:1"><span style="font-size:12px;color:#6e7079;">${name}</span>`;
         }
         if (value != null) {
             html = renderMode === 'html'
-                ? concatTooltipHtml(html, formattedValue, true)
+                ? concatTooltipHtml(html, formattedValue, true) + (name ? '</div>' : '')
                 : (html + formattedValue);
         }
         return html;

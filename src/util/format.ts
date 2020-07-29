@@ -68,7 +68,7 @@ export function encodeHTML(source: string): string {
 
 export function concatTooltipHtml(html: string, value: unknown, dontEncodeHtml?: boolean): string {
     return (dontEncodeHtml ? html : `<span style="font-size:12px;color:#6e7079;">${encodeHTML(html)}</span>`)
-            + (value ? '<span style="float:right;margin-left:20px;color:#464646;font-weight:900;font-size:14px";>' : '')
+            + (value ? '<span style="float:right;margin-left:20px;color:#464646;font-weight:900;font-size:14px;">' : '')
             + encodeHTML(value as string)
             + (value ? '</span>' : '');
 }

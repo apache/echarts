@@ -210,8 +210,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
                 + encodeHTML(name) + ': ' + formattedValue;
         }
 
-        return `<span style="font-size:12px;color:#6e7079;">${seriesNames.join(', ')}</span>`
-            + (seriesNames.length ? '<br />' : '')
+        return `<div style="font-size:12px;color:#6e7079;">${seriesNames.join(', ')}</div>`
             + concatTooltipHtml(name, formattedValue);
     }
 

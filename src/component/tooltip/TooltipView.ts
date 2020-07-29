@@ -626,8 +626,8 @@ class TooltipView extends ComponentView {
                         (
                             firstLine
                                 ? (
-                                    '<span style="font-size:12px;color:#6e7079;">'
-                                    + formatUtil.encodeHTML(firstLine) + '</span>'
+                                    '<div style="font-size:12px;color:#6e7079;line-height:1">'
+                                    + formatUtil.encodeHTML(firstLine) + '</div>'
                                     + newLine
                                 )
                                 : ''

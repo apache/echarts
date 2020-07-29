@@ -395,7 +395,9 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         if (renderMode === 'richText') {
             return encodeHTML(name) + ': ' + formattedValue;
         }
-        return concatTooltipHtml(name, formattedValue);
+        return '<div style="line-height:1">'
+            + concatTooltipHtml(name, formattedValue)
+            + '</div>';
     }
 
     /**
