@@ -562,7 +562,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         if (!isRichText) {
             seriesName = seriesName
                 ? !multipleSeries
-                ? `<div style="font-size:12px;color:#6e7079;line-height:1">${seriesName}</div>`
+                ? `<div style="font-size:12px;color:#6e7079;line-height:1;margin-top:-4px;">${seriesName}</div>`
                 : `<span style="font-size:12px;color:#6e7079;line-height:1">${seriesName}</span>`
                 : '';
             html = !multipleSeries
