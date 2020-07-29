@@ -94,7 +94,7 @@ export function formatTpl(
         return '';
     }
 
-    const isTimeAxis = paramsList[0].axisType.indexOf('time') >= 0;
+    const isTimeAxis = paramsList[0].axisType && paramsList[0].axisType.indexOf('time') >= 0;
     if (isTimeAxis) {
         const axisValue = paramsList[0].data[paramsList[0].axisIndex];
         const date = timeUtil.getDateFromStr(
