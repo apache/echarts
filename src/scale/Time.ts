@@ -39,7 +39,6 @@
 // as its original time, without any time difference.
 
 import * as numberUtil from '../util/number';
-import * as formatUtil from '../util/format';
 import * as timeUtil from '../util/time';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
@@ -82,11 +81,8 @@ class TimeScale extends IntervalScale {
     _approxInterval: number;
 
     getLabel(tick: TimeScaleTick): string {
-        const labelFormatType = timeUtil.getUnitFromValue(
-            tick.value,
-            this.getSetting('useUTC')
-        );
-        return formatUtil.formatTime(labelFormatType, tick.value);
+        const useUTC = this.getSetting('useUTC');
+        return timeUtil.format(tick.value, timeUtil.defaultLeveledFormatter.none, useUTC);
     }
 
     getFormattedLabel(
@@ -281,21 +277,15 @@ function getIntervalTicks(
     isUTC: boolean,
     extent: number[]
 ): TimeScaleTick[] {
+    const safeLimit = 10000;
     const utc = isUTC ? 'UTC' : '';
     const ticks: TimeScaleTick[] = [];
     const unitNames = timeUtil.timeUnits;
     let levelId = 0;
-    for (let i = 0, hasTickInLevel = false; i < unitNames.length; ++i) {
+    for (let i = 0, hasTickInLevel = false; i < unitNames.length && ticks.length < safeLimit; ++i) {
         let date = new Date(extent[0]) as any;
 
         if (unitNames[i] === 'week' || unitNames[i] === 'half-week') {
-            const endDate = new Date(extent[1]) as any;
-            if (date['get' + utc + 'FullYear']() === endDate['get' + utc + 'FullYear']()
-                && date['get' + utc + 'Month']() === endDate['get' + utc + 'Month']()
-            ) {
-                continue;
-            }
-
             date['set' + utc + 'Hours'](0);
             date['set' + utc + 'Minutes'](0);
             date['set' + utc + 'Seconds'](0);
@@ -310,8 +300,7 @@ function getIntervalTicks(
             }
 
             let isDateWithinExtent = true;
-            let hasWeekData = false;
-            while (isDateWithinExtent) {
+            while (isDateWithinExtent && ticks.length < safeLimit) {
                 const dates = approxInterval > ONE_DAY * 8 ? []
                     : (approxInterval > ONE_DAY * 3.5 ? [8, 16, 24] : [4, 8, 12, 16, 20, 24, 28]);
                 for (let d = 0; d < dates.length; ++d) {
@@ -322,7 +311,6 @@ function getIntervalTicks(
                         break;
                     }
                     else if (dateTime >= extent[0]) {
-                        hasWeekData = true;
                         ticks.push({
                             value: dateTime,
                             level: levelId
@@ -339,7 +327,7 @@ function getIntervalTicks(
         )) {
             // Level value changes within extent
             let isFirst = true;
-            while (true) {
+            while (ticks.length < safeLimit) {
                 switch (unitNames[i]) {
                     case 'year':
                     case 'half-year':
@@ -434,7 +422,7 @@ function getIntervalTicks(
                             date['set' + utc + 'Milliseconds'](0);
                         }
                         else {
-                            date['set' + utc + 'MilliSeconds'](date['get' + utc + 'MilliSeconds']() + 100);
+                            date['set' + utc + 'Milliseconds'](date['get' + utc + 'Milliseconds']() + 100);
                         }
                         break;
                 }

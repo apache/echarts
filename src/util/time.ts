@@ -13,7 +13,7 @@ export const defaultLeveledFormatter = {
     minute: '{HH}:{mm}',
     second: '{HH}:{mm}:{ss}',
     millisecond: '{hh}:{mm}:{ss} {SSS}',
-    none: '{yyyy}-{MM}-{dd} {hh}:{mm}'
+    none: '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss} {SSS}'
 };
 
 export type PrimaryTimeUnit = 'millisecond' | 'second' | 'minute' | 'hour'
@@ -50,7 +50,7 @@ export function isPrimaryTimeUnit(timeUnit: TimeUnit): boolean {
 }
 
 
-export function format(time: Date, template: string, isUTC?: boolean): string {
+export function format(time: Date | number, template: string, isUTC?: boolean): string {
     const date = numberUtil.parseDate(time);
     const utc = isUTC ? 'UTC' : '';
     const y = (date as any)['get' + utc + 'FullYear']();
@@ -222,5 +222,23 @@ export function getUnitValue (
             return date['get' + utc + 'Seconds']();
         case 'millisecond':
             return date['get' + utc + 'Milliseconds']();
+    }
+}
+
+/**
+ * Get Date instance from a date string
+ *
+ * @param {string} date should be in date string or second string
+ *                      e.g., 2020-01-01 or 2020-01-01 02:00:20
+ */
+export function getDateFromStr(date: string | Date): Date {
+    if (!date || date instanceof Date) {
+        return date as Date;
+    }
+    if (date.indexOf(':') < 0) {
+        return new Date(date + ' 00:00:00');
+    }
+    else {
+        return new Date(date);
     }
 }
