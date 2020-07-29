@@ -104,7 +104,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
         },
 
         shadowStyle: {
-            color: 'rgba(150,150,150,0.3)'
+            color: 'rgba(210,219,238,0.2)'
         },
 
         label: {
