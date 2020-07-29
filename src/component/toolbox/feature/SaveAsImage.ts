@@ -98,7 +98,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
          const defaultOption: ToolboxSaveAsImageFeatureOption = {
             show: true,
             icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
-            title: ecModel.getWithLocale(['toolbox', 'saveAsImage', 'title']),
+            title: ecModel.getWithLocale('toolbox.saveAsImage.title'),
             type: 'png',
             // Default use option.backgroundColor
             // backgroundColor: '#fff',
@@ -106,7 +106,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             name: '',
             excludeComponents: ['toolbox'],
             pixelRatio: 1,
-            lang: ecModel.getWithLocale(['toolbox', 'saveAsImage', 'lang'], null, (t) => t.slice())
+            lang: ecModel.getWithLocale('toolbox.saveAsImage.lang', null)
         }
 
         return defaultOption;

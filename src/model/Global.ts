@@ -53,7 +53,7 @@ import {
     ThemeOption,
     ComponentOption,
     ComponentMainType,
-    ComponentSubType, LocaleOption
+    ComponentSubType
 } from '../util/types';
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
@@ -80,7 +80,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
     private _theme: Model;
 
-    private _locale: object;
+    private _locale: Model;
 
     private _optionManager: OptionManager;
 
@@ -127,7 +127,7 @@ class GlobalModel extends Model<ECUnitOption> {
         theme = theme || {};
         this.option = null; // Mark as not initialized.
         this._theme = new Model(theme);
-        this._locale = locale;
+        this._locale = new Model(locale);
         this._optionManager = optionManager;
     }
 
@@ -421,23 +421,13 @@ class GlobalModel extends Model<ECUnitOption> {
         return this._theme;
     }
 
-    getLocale(): LocaleOption {
+    getLocale(): Model {
         return this._locale;
     }
 
-    getWithLocale(localePosition: Array<string>,
-                  optionsPosition?: Array<string>,
-                  localeHandlerFn?: (text: string) => string): any {
+    getWithLocale(localePosition: string, optionsPosition?: string): any {
         const locale = this.getLocale();
-        let localeText: string | any;
-        localePosition.map(t => {
-            localeText = localeText ? localeText[t] : locale[t];
-        });
-
-        if (localeHandlerFn) {
-            localeText = localeHandlerFn(localeText);
-        }
-        return localeText;
+        return clone(locale.get(optionsPosition || localePosition));
     }
 
     setUpdatePayload(payload: Payload) {

@@ -146,7 +146,7 @@ export default function (dom, ecModel) {
         const userConfig = ariaModel.get(path);
         if (userConfig == null) {
             const pathArr = path.split('.');
-            let result = ecModel.getWithLocale(['aria']);
+            let result = ecModel.getWithLocale('aria');
             for (let i = 0; i < pathArr.length; ++i) {
                 result = result[pathArr[i]];
             }
@@ -166,6 +166,6 @@ export default function (dom, ecModel) {
     }
 
     function getSeriesTypeName(type) {
-        return ecModel.getWithLocale(['series', 'typeNames'])[type] || '自定义图';
+        return ecModel.getWithLocale('series.typeNames')[type] || '自定义图';
     }
 }
