@@ -42,6 +42,7 @@ under the License.
 <div id="main2" class="main"></div>
 <div id="main0" class="main"></div>
 <div id="main1" class="main"></div>
+<div id="main3" class="main"></div>
 
 <script>
     window.option = {
@@ -99,6 +100,17 @@ under the License.
         echarts.registerLocale('EN', lang);
         var chart = echarts.init(document.getElementById('main1'), null, {
             locale: 'EN'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    // register neither zh or en lang
+    require(['echarts', 'i18n/langES-obj'], function (echarts, {lang}) {
+        echarts.registerLocale('ES', lang);
+        var chart = echarts.init(document.getElementById('main3'), null, {
+            locale: 'ES'
         });
         chart.setOption(window.option);
     });
