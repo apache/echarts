@@ -190,7 +190,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     }
 }
 
-function pad(str: string, len: number): string {
+export function pad(str: string, len: number): string {
     str += '';
     return '0000'.substr(0, len - str.length) + str;
 }
