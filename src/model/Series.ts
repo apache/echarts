@@ -466,17 +466,21 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
                 const dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
                 const valStr = (vertially
-                        ? dimHeadStr + encodeHTML(dimInfo.displayName || '-') + ': '
+                        ? '<span style="font-size:12px;color:#6e7079;">'
+                            + dimHeadStr + encodeHTML(dimInfo.displayName || '-')
+                            + '</span>'
                         : ''
                     )
                     // FIXME should not format time for raw data?
+                    + '<span style="float:right;margin-left:20px;color:#000;font-weight:900">'
                     + encodeHTML(dimType === 'ordinal'
                         ? val + ''
                         : dimType === 'time'
                         ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
                         : addCommas(val)
-                    );
-                valStr && result.push(valStr);
+                    )
+                    + '</span>';
+                valStr && result.push(`<div style="margin: 11px 0 0;line-height:1;">${valStr}</div>`);
 
                 if (isRichText) {
                     markers[markName] = colorStr;
@@ -485,7 +489,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             }
 
             const newLine = vertially ? (isRichText ? '\n' : '') : '';
-            const content = newLine + result.join(newLine || ', ');
+            const content = newLine + result.join(newLine || '');
             return {
                 renderMode: renderMode,
                 content: content,
@@ -527,6 +531,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : formatSingleValue(isValueArr ? value[0] : value);
         const content = isRichText
             ? formattedValue.content
+            : (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
+            ? '<div>'
+                + formattedValue.content + '</div>'
             : '<span style="float:right;margin-left:20px;color:#000;font-weight:900">'
                 + formattedValue.content + '</span>';
 
