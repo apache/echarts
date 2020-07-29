@@ -89,9 +89,7 @@ const defaultOption: AxisBaseOption = {
         showMaxLabel: null,
         margin: 8,
         // formatter: null,
-        fontSize: 12,
-
-        color: '#6E7079'
+        fontSize: 12
     },
     splitLine: {
         show: true,
