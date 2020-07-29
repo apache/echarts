@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const outFilePath = './i18n';
+const outFilePath = './src/i18n';
 const umdWrapperHead = `
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -41,7 +41,7 @@ const umdWrapperTail = `
 });`;
 
 async function buildI18nWrap() {
-    const targetDir = './i18n';
+    const targetDir = './src/i18n';
     const files = fs.readdirSync(targetDir);
     files.forEach(t => {
         if(!t.startsWith('lang') || !t.endsWith('json')) return;

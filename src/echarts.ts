@@ -93,8 +93,8 @@ import LabelManager from './label/LabelManager';
 import { deprecateLog } from './util/log';
 import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 // default import ZH and EN lang
-import langEN from "../i18n/langEN";
-import langZH from "../i18n/langZH";
+import langEN from "./i18n/langEN";
+import langZH from "./i18n/langZH";
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
@@ -361,7 +361,6 @@ class ECharts extends Eventful {
         localeStorage['ZH'] = localeStorage['ZH'] || langZH;
         localeStorage['EN'] = localeStorage['EN'] || langEN;
         this._locale = typeof locale === 'string' ? localeStorage[locale] : zrUtil.clone(locale);
-        console.log(this._locale)
 
         this._coordSysMgr = new CoordinateSystemManager();
 
@@ -2477,7 +2476,6 @@ export function registerTheme(name: string, theme: ThemeOption): void {
 
 export function registerLocale(name: string, locale: LocaleOption): void {
     localeStorage[name] = locale;
-    console.log('localeStorage', localeStorage);
 }
 
 /**

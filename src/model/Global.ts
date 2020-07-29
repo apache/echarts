@@ -58,7 +58,6 @@ import {
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
-import {Dictionary} from "zrender/src/core/types";
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -426,18 +425,18 @@ class GlobalModel extends Model<ECUnitOption> {
         return this._locale;
     }
 
-    getWithLocale(localePosition: Array<string>, optionsPosition?: Array<string>, localeHandlerFn?: (text: string) => string): any {
-        // console.log(optionsPosition, localePosition);
-        const locale = this.getLocale()
+    getWithLocale(localePosition: Array<string>,
+                  optionsPosition?: Array<string>,
+                  localeHandlerFn?: (text: string) => string): any {
+        const locale = this.getLocale();
         let localeText: string | any;
         localePosition.map(t => {
             localeText = localeText ? localeText[t] : locale[t];
-        })
+        });
 
-        if(localeHandlerFn) {
-            localeText =  localeHandlerFn(localeText);
+        if (localeHandlerFn) {
+            localeText = localeHandlerFn(localeText);
         }
-        // console.log(localeText);
         return localeText;
     }
 

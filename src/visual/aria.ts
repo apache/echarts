@@ -20,8 +20,9 @@
 // @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
-import lang from '../lang';
-import { retrieveRawValue } from '../data/helper/dataProvider';
+import { retrieveRawValue }
+
+from '../data/helper/dataProvider';
 
 export default function (dom, ecModel) {
     const ariaModel = ecModel.getModel('aria');
