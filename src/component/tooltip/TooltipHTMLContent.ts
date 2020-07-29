@@ -80,11 +80,11 @@ function assembleArrow(
     let centerPos = '';
     let rotate = 0;
     if (['left', 'right'].includes(arrowPos)) {
-        centerPos = `position:absolute;${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
+        centerPos = `${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
         rotate = arrowPos === 'left' ? -45 : -225;
     }
     else {
-        centerPos = `position:absolute;${arrowPos}:-6px;left:50%;transform:translateX(-50%)`;
+        centerPos = `${arrowPos}:-6px;left:50%;transform:translateX(-50%)`;
         rotate = arrowPos === 'top' ? 45 : -135;
     }
     const styleCss = [
@@ -94,6 +94,7 @@ function assembleArrow(
         `border-top: ${borderColor} solid 1px;`,
         `border-left: ${borderColor} solid 1px;`,
         `background-color: ${backgroundColor};`,
+        'box-shadow: -7px -7px 21px rgba(0, 0, 0, .4)',
         '"'
     ];
     return `<div ${styleCss.join('')}></div>`;
