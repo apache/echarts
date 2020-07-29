@@ -356,7 +356,11 @@ class ECharts extends Eventful {
 
         this._theme = theme;
 
-        const {locale = 'ZH'} = opts;
+        const browserLang: string = !env.browser ? 'ZH' : (() => {
+            const langStr = (document.documentElement.lang || navigator.language || (navigator as any).browserLanguage).toUpperCase();
+            return langStr.indexOf('ZH') > -1 ? 'ZH' : 'EN';
+        })();
+        const {locale = browserLang} = opts;
         //  set default lang package
         localeStorage['ZH'] = localeStorage['ZH'] || langZH;
         localeStorage['EN'] = localeStorage['EN'] || langEN;
