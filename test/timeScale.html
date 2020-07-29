@@ -142,6 +142,9 @@ under the License.
                             saveAsImage : {show: true}
                         }
                     },
+                    grid: {
+                        bottom: 100
+                    },
                     dataZoom : {
                         show : true,
                         realtime : true,
@@ -155,8 +158,10 @@ under the License.
                             axisLine: {onZero: false},
                             splitNumber: 20,
                             // minInterval: 3600 * 1000 * 24
-                            // min: 'dataMin',
-                            // max: 'dataMax'
+                            min: 'dataMin',
+                            max: 'dataMax',
+                            axisLabel: {
+                            }
                         }
                     ],
                     yAxis : [
