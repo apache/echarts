@@ -29,6 +29,7 @@ import {
 } from './axisHelper';
 import Axis from './Axis';
 import Model from '../model/Model';
+import {ScaleTick} from '../util/types';
 
 const inner = makeInner();
 
@@ -55,7 +56,7 @@ export function createAxisLabels(axis: Axis): {
  * }
  */
 export function createAxisTicks(axis: Axis, tickModel: Model): {
-    ticks: number[],
+    ticks: ScaleTick[],
     tickCategoryInterval?: number
 } {
     // Only ordinal scale support tick interval
@@ -142,15 +143,15 @@ function makeCategoryTicks(axis, tickModel) {
     });
 }
 
-function makeRealNumberLabels(axis) {
+function makeRealNumberLabels(axis: Axis) {
     const ticks = axis.scale.getTicks();
     const labelFormatter = makeLabelFormatter(axis);
     return {
-        labels: zrUtil.map(ticks, function (tickValue, idx) {
+        labels: zrUtil.map(ticks, function (tick, idx) {
             return {
-                formattedLabel: labelFormatter(tickValue, idx),
-                rawLabel: axis.scale.getLabel(tickValue),
-                tickValue: tickValue
+                formattedLabel: labelFormatter(tick, idx),
+                rawLabel: axis.scale.getLabel(tick),
+                tickValue: tick.value
             };
         })
     };

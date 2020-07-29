@@ -175,10 +175,12 @@ class Axis {
         const result = createAxisTicks(this, tickModel);
         const ticks = result.ticks;
 
-        const ticksCoords = map(ticks, function (tickValue) {
+        const ticksCoords = map(ticks, function (tick) {
             return {
-                coord: this.dataToCoord(tickValue),
-                tickValue: this.scale instanceof OrdinalScale ? this.scale.getCategoryIndex(tickValue) : tickValue
+                coord: this.dataToCoord(tick.value),
+                tickValue: this.scale instanceof OrdinalScale
+                    ? this.scale.getCategoryIndex(tick.value)
+                    : tick.value
             };
         }, this);
 
