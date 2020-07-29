@@ -44,64 +44,52 @@ under the License.
 <div id="main1" class="main"></div>
 
 <script>
+    window.option = {
+        xAxis: {},
+        yAxis: {},
+        series: {
+            type: 'line',
+            data: [[11, 22], [33, 44]],
+            label: {
+                show: true
+            }
+        },
+        toolbox: {
+            show: true,
+            feature: {
+                restore: {},
+                saveAsImage: {},
+                dataZoom: {},
+                dataView: {},
+                brush: ['rect']
+            },
+            orient: 'vertical',
+            right: 5
+        },
+        legend: {
+            selector: true
+        },
+        animation: false
+    }
+</script>
+
+<script>
     // auto with default
     require(['echarts'], function (echarts,) {
-        var option = {
-            xAxis: {},
-            yAxis: {},
-            series: {
-                type: 'line',
-                data: [[11, 22], [33, 44]]
-            },
-            toolbox: {
-                show: true,
-                feature: {
-                    restore: {},
-                    saveAsImage: {},
-                    dataZoom: {},
-                    dataView: {}
-                },
-                orient: 'vertical',
-                right: 5
-            },
-            animation: false
-        };
-
         var chart = echarts.init(document.getElementById('main2'), null, {
             locale: 'EN'
         });
-        chart.setOption(option);
+        chart.setOption(window.option);
     });
 </script>
 
 <script>
     // auto register ZH lang
     require(['echarts', 'i18n/langZH'], function (echarts,) {
-        var option = {
-            xAxis: {},
-            yAxis: {},
-            series: {
-                type: 'line',
-                data: [[11, 22], [33, 44]]
-            },
-            toolbox: {
-                show: true,
-                feature: {
-                    restore: {},
-                    saveAsImage: {},
-                    dataZoom: {},
-                    dataView: {}
-                },
-                orient: 'vertical',
-                right: 5
-            },
-            animation: false
-        };
-
         var chart = echarts.init(document.getElementById('main0'), null, {
             locale: 'ZH'
         });
-        chart.setOption(option);
+        chart.setOption(window.option);
     });
 </script>
 
@@ -109,31 +97,10 @@ under the License.
     // register lang
     require(['echarts', 'i18n/langEN-obj'], function (echarts, {lang}) {
         echarts.registerLocale('EN', lang);
-        var option = {
-            xAxis: {},
-            yAxis: {},
-            series: {
-                type: 'line',
-                data: [[11, 22], [33, 44]]
-            },
-            toolbox: {
-                show: true,
-                feature: {
-                    restore: {},
-                    saveAsImage: {},
-                    dataZoom: {},
-                    dataView: {}
-                },
-                orient: 'vertical',
-                right: 5
-            },
-            animation: false
-        };
-
         var chart = echarts.init(document.getElementById('main1'), null, {
             locale: 'EN'
         });
-        chart.setOption(option);
+        chart.setOption(window.option);
     });
 </script>
 
