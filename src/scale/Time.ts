@@ -39,19 +39,28 @@
 // as its original time, without any time difference.
 
 import * as numberUtil from '../util/number';
-import * as timeUtil from '../util/time';
+import {
+    ONE_SECOND,
+    ONE_MINUTE,
+    ONE_HOUR,
+    ONE_DAY,
+    ONE_YEAR,
+    format,
+    leveledFormat,
+    PrimaryTimeUnit,
+    TimeUnit,
+    getUnitValue,
+    timeUnits,
+    fullLeveledFormatter,
+    getPrimaryTimeUnit,
+    isPrimaryTimeUnit,
+    getDefaultFormatPrecisionOfInterval
+} from '../util/time';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 import Scale from './Scale';
 import {TimeScaleTick} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
-
-
-const ONE_SECOND = 1000;
-const ONE_MINUTE = ONE_SECOND * 60;
-const ONE_HOUR = ONE_MINUTE * 60;
-const ONE_DAY = ONE_HOUR * 24;
-const ONE_YEAR = ONE_DAY * 365;
 
 // FIXME 公用？
 const bisect = function (
@@ -80,9 +89,20 @@ class TimeScale extends IntervalScale {
 
     _approxInterval: number;
 
+    _intervalUnit: TimeUnit;
+
+    /**
+     * Get label is mainly for other components like dataZoom, tooltip.
+     */
     getLabel(tick: TimeScaleTick): string {
         const useUTC = this.getSetting('useUTC');
-        return timeUtil.format(tick.value, timeUtil.defaultLeveledFormatter.none, useUTC);
+        return format(
+            tick.value,
+            fullLeveledFormatter[
+                getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._intervalUnit))
+            ] || fullLeveledFormatter.second,
+            useUTC
+        );
     }
 
     getFormattedLabel(
@@ -91,7 +111,7 @@ class TimeScale extends IntervalScale {
         labelFormatter: TimeAxisLabelFormatterOption
     ): string {
         const isUTC = this.getSetting('useUTC');
-        return timeUtil.leveledFormat(tick, idx, labelFormatter, isUTC);
+        return leveledFormat(tick, idx, labelFormatter, isUTC);
     }
 
     /**
@@ -120,7 +140,7 @@ class TimeScale extends IntervalScale {
         const intervals = scaleIntervals[Math.min(idx, unitLen - 1)];
 
         const innerTicks = getIntervalTicks(
-            intervals[0] as timeUtil.PrimaryTimeUnit,
+            intervals[0] as PrimaryTimeUnit,
             this._approxInterval,
             useUTC,
             extent
@@ -180,10 +200,10 @@ class TimeScale extends IntervalScale {
         const idx = bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen);
 
         const intervals = scaleIntervals[Math.min(idx, scaleIntervalsLen - 1)];
-        let interval = intervals[1];
 
         // Interval will be used in getTicks
-        this._interval = interval;
+        this._interval = intervals[1];
+        this._intervalUnit = intervals[0];
     }
 
     parse(val: number | string | Date): number {
@@ -212,7 +232,7 @@ class TimeScale extends IntervalScale {
  * with some modifications made for this program.
  * See the license statement at the head of this file.
  */
-const scaleIntervals: [timeUtil.TimeUnit, number][] = [
+const scaleIntervals: [TimeUnit, number][] = [
     // Format                           interval
     ['second', ONE_SECOND],             // 1s
     ['minute', ONE_MINUTE],             // 1m
@@ -229,7 +249,7 @@ const scaleIntervals: [timeUtil.TimeUnit, number][] = [
 ];
 
 function isUnitValueSame(
-    unit: timeUtil.PrimaryTimeUnit,
+    unit: PrimaryTimeUnit,
     valueA: number,
     valueB: number,
     isUTC: boolean
@@ -237,9 +257,9 @@ function isUnitValueSame(
     const dateA = numberUtil.parseDate(valueA) as any;
     const dateB = numberUtil.parseDate(valueB) as any;
 
-    const isSame = (unit: timeUtil.PrimaryTimeUnit) => {
-        return timeUtil.getUnitValue(dateA, unit, isUTC)
-            === timeUtil.getUnitValue(dateB, unit, isUTC);
+    const isSame = (unit: PrimaryTimeUnit) => {
+        return getUnitValue(dateA, unit, isUTC)
+            === getUnitValue(dateB, unit, isUTC);
     };
     const isSameYear = () => isSame('year');
     // const isSameHalfYear = () => isSameYear() && isSame('half-year');
@@ -272,7 +292,7 @@ function isUnitValueSame(
 
 
 function getIntervalTicks(
-    unitName: timeUtil.TimeUnit,
+    unitName: TimeUnit,
     approxInterval: number,
     isUTC: boolean,
     extent: number[]
@@ -280,10 +300,10 @@ function getIntervalTicks(
     const safeLimit = 10000;
     const utc = isUTC ? 'UTC' : '';
     const ticks: TimeScaleTick[] = [];
-    const unitNames = timeUtil.timeUnits;
+    const unitNames = timeUnits;
     let levelId = 0;
     for (let i = 0, hasTickInLevel = false; i < unitNames.length && ticks.length < safeLimit; ++i) {
-        let date = new Date(extent[0]) as any;
+        const date = new Date(extent[0]) as any;
 
         if (unitNames[i] === 'week' || unitNames[i] === 'half-week') {
             date['set' + utc + 'Hours'](0);
@@ -322,7 +342,7 @@ function getIntervalTicks(
             }
         }
         else if (!isUnitValueSame(
-            timeUtil.getPrimaryTimeUnit(unitNames[i]),
+            getPrimaryTimeUnit(unitNames[i]),
             extent[0], extent[1], isUTC
         )) {
             // Level value changes within extent
@@ -444,7 +464,7 @@ function getIntervalTicks(
                 isFirst = false;
             }
             if (hasTickInLevel
-                && timeUtil.isPrimaryTimeUnit(unitNames[i])
+                && isPrimaryTimeUnit(unitNames[i])
             ) {
                 ++levelId;
             }
