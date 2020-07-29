@@ -19,7 +19,6 @@
 
 // TODO Axis scale
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Polar from './Polar';
 import {parsePercent} from '../../util/number';
@@ -39,6 +38,7 @@ import AngleAxis from './AngleAxis';
 import { PolarAxisModel, AngleAxisModel, RadiusAxisModel } from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
+import { SINGLE_REFERRING } from '../../util/model';
 
 /**
  * Resize method bound to the polar
@@ -164,11 +164,9 @@ const polarCreator = {
             polarId?: string
         }>) {
             if (seriesModel.get('coordinateSystem') === 'polar') {
-                const polarModel = ecModel.queryComponents({
-                    mainType: 'polar',
-                    index: seriesModel.get('polarIndex'),
-                    id: seriesModel.get('polarId')
-                })[0] as PolarModel;
+                const polarModel = seriesModel.getReferringComponents(
+                    'polar', SINGLE_REFERRING
+                ).models[0] as PolarModel;
 
                 if (__DEV__) {
                     if (!polarModel) {

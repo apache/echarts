@@ -22,7 +22,7 @@ import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
-import {groupData} from '../../util/model';
+import {groupData, SINGLE_REFERRING} from '../../util/model';
 import {encodeHTML} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
@@ -41,17 +41,17 @@ import Single from '../../coord/single/Single';
 
 const DATA_NAME_INDEX = 2;
 
-// export interface ThemeRiverSeriesDataItemOption {
-//     date: OptionDataValueDate
-//     value: OptionDataValueNumeric
-//     name: string
-// }
-
 interface ThemeRiverSeriesLabelOption extends LabelOption {
     margin?: number
 }
 
-export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
+export interface ThemeRiverStateOption {
+    label?: ThemeRiverSeriesLabelOption
+    itemStyle?: ItemStyleOption
+}
+
+export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOption>, ThemeRiverStateOption,
+    SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
     type?: 'themeRiver'
 
     color?: ZRColor[]
@@ -62,15 +62,6 @@ export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOpti
      * gap in axis's orthogonal orientation
      */
     boundaryGap: (string | number)[]
-
-    label?: ThemeRiverSeriesLabelOption
-    itemStyle?: ItemStyleOption
-
-    emphasis?: {
-        label?: ThemeRiverSeriesLabelOption
-        itemStyle?: ItemStyleOption
-    }
-
     /**
      * [date, value, name]
      */
@@ -83,7 +74,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
     static readonly dependencies = ['singleAxis'];
 
-    nameMap: zrUtil.HashMap<number>;
+    nameMap: zrUtil.HashMap<number, string>;
 
     coordinateSystem: Single;
 
@@ -172,11 +163,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      */
     getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): List {
 
-        const singleAxisModel = ecModel.queryComponents({
-            mainType: 'singleAxis',
-            index: this.get('singleAxisIndex'),
-            id: this.get('singleAxisId')
-        })[0];
+        const singleAxisModel = this.getReferringComponents('singleAxis', SINGLE_REFERRING).models[0];
 
         const axisType = singleAxisModel.get('type');
 
@@ -330,11 +317,11 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             margin: 4,
             show: true,
             position: 'left',
-            color: '#000',
             fontSize: 11
         },
 
         emphasis: {
+
             label: {
                 show: true
             }

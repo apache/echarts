@@ -19,7 +19,6 @@
 
 // FIXME step not support polar
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {fromPoints} from 'zrender/src/core/bbox';
 import SymbolDraw from '../helper/SymbolDraw';
@@ -38,10 +37,12 @@ import type ExtensionAPI from '../../ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
 import type List from '../../data/List';
-import type { Payload, Dictionary, ColorString } from '../../util/types';
+import type { Payload, Dictionary, ColorString, ECElement, DisplayState } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
+import { getECData } from '../../util/ecData';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;
@@ -385,7 +386,6 @@ class LineView extends ChartView {
     }
 
     render(seriesModel: LineSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-
         const coordSys = seriesModel.coordinateSystem;
         const group = this.group;
         const data = seriesModel.getData();
@@ -501,7 +501,7 @@ class LineView extends ChartView {
             // Stop symbol animation and sync with line points
             // FIXME performance?
             data.eachItemGraphicEl(function (el) {
-                el.stopAnimation(null, true);
+                el && el.stopAnimation(null, true);
             });
 
             // In the case data zoom triggerred refreshing frequently
@@ -535,6 +535,8 @@ class LineView extends ChartView {
 
         const visualColor = getVisualGradient(data, coordSys)
             || data.getVisual('style')[data.getVisual('drawType')];
+        const focus = seriesModel.get(['emphasis', 'focus']);
+        const blurScope = seriesModel.get(['emphasis', 'blurScope']);
 
         polyline.useStyle(zrUtil.defaults(
             // Use color in lineStyle first
@@ -542,9 +544,21 @@ class LineView extends ChartView {
             {
                 fill: 'none',
                 stroke: visualColor,
-                lineJoin: 'bevel'
+                lineJoin: 'bevel' as CanvasLineJoin
             }
         ));
+
+        setStatesStylesFromModel(polyline, seriesModel, 'lineStyle');
+
+        const shouldBolderOnEmphasis = seriesModel.get(['emphasis', 'lineStyle', 'width']) === 'bolder';
+        if (shouldBolderOnEmphasis) {
+            const emphasisLineStyle = polyline.getState('emphasis').style;
+            emphasisLineStyle.lineWidth = polyline.style.lineWidth + 1;
+        }
+
+        // Needs seriesIndex for focus
+        getECData(polyline).seriesIndex = seriesModel.seriesIndex;
+        enableHoverEmphasis(polyline, focus, blurScope);
 
         const smooth = getSmooth(seriesModel.get('smooth'));
         polyline.setShape({
@@ -562,7 +576,7 @@ class LineView extends ChartView {
                 {
                     fill: visualColor,
                     opacity: 0.7,
-                    lineJoin: 'bevel'
+                    lineJoin: 'bevel' as CanvasLineJoin
                 }
             ));
 
@@ -576,7 +590,21 @@ class LineView extends ChartView {
                 smoothMonotone: seriesModel.get('smoothMonotone'),
                 connectNulls: seriesModel.get('connectNulls')
             });
+
+            setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
+            // Needs seriesIndex for focus
+            getECData(polygon).seriesIndex = seriesModel.seriesIndex;
+            enableHoverEmphasis(polygon, focus, blurScope);
         }
+
+        const changePolyState = (toState: DisplayState) => {
+            this._changePolyState(toState);
+        };
+
+        data.eachItemGraphicEl(function (el) {
+            // Switch polyline / polygon state if element changed its state.
+            el && ((el as ECElement).onHoverStateChange = changePolyState);
+        });
 
         this._data = data;
         // Save the coordinate system for transition animation when data changed
@@ -597,6 +625,8 @@ class LineView extends ChartView {
     ) {
         const data = seriesModel.getData();
         const dataIndex = modelUtil.queryDataIndex(data, payload);
+
+        this._changePolyState('emphasis');
 
         if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
             let symbol = data.getItemGraphicEl(dataIndex) as SymbolClz;
@@ -644,6 +674,9 @@ class LineView extends ChartView {
     ) {
         const data = seriesModel.getData();
         const dataIndex = modelUtil.queryDataIndex(data, payload) as number;
+
+        this._changePolyState('normal');
+
         if (dataIndex != null && dataIndex >= 0) {
             const symbol = data.getItemGraphicEl(dataIndex) as SymbolExtended;
             if (symbol) {
@@ -666,6 +699,12 @@ class LineView extends ChartView {
         }
     }
 
+    _changePolyState(toState: DisplayState) {
+        const polygon = this._polygon;
+        setStatesFlag(this._polyline, toState);
+        polygon && setStatesFlag(polygon, toState);
+    }
+
     _newPolyline(points: number[][]) {
         let polyline = this._polyline;
         // Remove previous created polyline
@@ -678,7 +717,6 @@ class LineView extends ChartView {
                 points: points
             },
             segmentIgnoreThreshold: 2,
-            silent: true,
             z2: 10
         });
 
@@ -701,8 +739,7 @@ class LineView extends ChartView {
                 points: points,
                 stackedOnPoints: stackedOnPoints
             },
-            segmentIgnoreThreshold: 2,
-            silent: true
+            segmentIgnoreThreshold: 2
         });
 
         this._lineGroup.add(polygon);
@@ -780,17 +817,22 @@ class LineView extends ChartView {
 
         if (polygon) {
             polygon.setShape({
+                // Reuse the points with polyline.
                 points: current,
                 stackedOnPoints: stackedOnCurrent
             });
             polygon.stopAnimation();
             graphic.updateProps(polygon, {
                 shape: {
-                    points: next,
                     stackedOnPoints: stackedOnNext
                 }
             }, seriesModel);
+            // If use attr directly in updateProps.
+            if (polyline.shape.points !== polygon.shape.points) {
+                polygon.shape.points = polyline.shape.points;
+            }
         }
+
 
         const updatedDataInfo: {
             el: SymbolExtended,

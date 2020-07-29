@@ -23,9 +23,11 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as throttleUtil from '../util/throttle';
 import parallelPreprocessor from '../coord/parallel/parallelPreprocessor';
 import '../coord/parallel/parallelCreator';
-import '../coord/parallel/ParallelModel';
 import './parallelAxis';
 import GlobalModel from '../model/Global';
+
+// NOTE: DONT Remove this import, or GeoModel will be treeshaked.
+import '../coord/parallel/ParallelModel';
 import ParallelModel, { ParallelCoordinateSystemOption } from '../coord/parallel/ParallelModel';
 import ExtensionAPI from '../ExtensionAPI';
 import ComponentView from '../view/Component';
@@ -155,7 +157,9 @@ const handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
                 : {
                     axisExpandWindow: result.axisExpandWindow,
                     // Jumping uses animation, and sliding suppresses animation.
-                    animation: behavior === 'jump' ? null : false
+                    animation: behavior === 'jump' ? null : {
+                        duration: 0 // Disable animation.
+                    }
                 }
         );
     }

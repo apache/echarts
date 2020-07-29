@@ -17,33 +17,19 @@
 * under the License.
 */
 
-const babel = require('@babel/core');
-const removeDEVBabelPlugin = require('./remove-dev-babel-plugin');
-
+import Element from 'zrender/src/Element';
+import { DataModel, ECEventData, BlurScope, InnerFocus } from './types';
+import { makeInner } from './model';
 /**
- * @param {string} sourceCode
- * @param {boolean} sourcemap
- * @return {Object} {code: string, map: string}
+ * ECData stored on graphic element
  */
-module.exports.transform = function (sourceCode, sourcemap) {
-    let {code, map} = babel.transformSync(sourceCode, {
-        plugins: [removeDEVBabelPlugin],
-        sourceMaps: sourcemap
-    });
-
-    return {code, map};
-};
-
-/**
- * @param {string} code
- * @throws {Error} If check failed.
- */
-module.exports.recheckDEV = function (code) {
-    let result = code.match(/.if\s*\([^()]*__DEV__/);
-    if (result
-        && result[0].indexOf('`if') < 0
-        && result[0].indexOf('if (typeof __DEV__') < 0
-    ) {
-        throw new Error('__DEV__ is not removed.');
-    }
-};
+export interface ECData {
+    dataIndex?: number;
+    dataModel?: DataModel;
+    eventData?: ECEventData;
+    seriesIndex?: number;
+    dataType?: string;
+    focus?: InnerFocus;
+    blurScope?: BlurScope;
+}
+export const getECData = makeInner<ECData, Element>();

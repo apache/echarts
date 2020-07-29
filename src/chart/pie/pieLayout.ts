@@ -19,7 +19,6 @@
 
 import {parsePercent, linearMap} from '../../util/number';
 import * as layout from '../../util/layout';
-import labelLayout from './labelLayout';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -94,6 +93,8 @@ export default function (
         let currentAngle = startAngle;
         const dir = clockwise ? 1 : -1;
 
+        data.setLayout({ viewRect, r });
+
         data.each(valueDim, function (value: number, idx: number) {
             let angle;
             if (isNaN(value)) {
@@ -107,8 +108,7 @@ export default function (
                     r0: r0,
                     r: roseType
                         ? NaN
-                        : r,
-                    viewRect: viewRect
+                        : r
                 });
                 return;
             }
@@ -141,8 +141,7 @@ export default function (
                 r0: r0,
                 r: roseType
                     ? linearMap(value, extent, [r0, r])
-                    : r,
-                viewRect: viewRect
+                    : r
             });
 
             currentAngle = endAngle;
@@ -179,7 +178,5 @@ export default function (
                 });
             }
         }
-
-        labelLayout(seriesModel, r, viewRect.width, viewRect.height, viewRect.x, viewRect.y);
     });
 }

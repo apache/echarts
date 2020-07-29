@@ -19,23 +19,25 @@
 
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
+import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
 import List from '../../data/List';
-import { DisplayState, ColorString } from '../../util/types';
+import { ColorString, BlurScope } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend } from 'zrender/src/core/util';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import ZRImage from 'zrender/src/graphic/Image';
 
-// Update common properties
-const emphasisStyleAccessPath = ['emphasis', 'itemStyle'] as const;
-const normalLabelAccessPath = ['label'] as const;
-const emphasisLabelAccessPath = ['emphasis', 'label'] as const;
+type ECSymbol = ReturnType<typeof createSymbol>;
 
-type ECSymbol = ReturnType<typeof createSymbol> & {
-    onStateChange(fromState: DisplayState, toState: DisplayState): void
-};
+interface SymbolOpts {
+    useNameLabel?: boolean
+    symbolInnerColor?: string
+}
 
 class Symbol extends graphic.Group {
 
@@ -46,14 +48,14 @@ class Symbol extends graphic.Group {
     /**
      * Original scale
      */
-    private _scaleX: number;
-    private _scaleY: number;
+    private _sizeX: number;
+    private _sizeY: number;
 
     private _z2: number;
 
-    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
+    constructor(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         super();
-        this.updateData(data, idx, seriesScope);
+        this.updateData(data, idx, seriesScope, opts);
     }
 
     _createSymbol(
@@ -112,30 +114,17 @@ class Symbol extends graphic.Group {
     }
 
     /**
-     * Get scale(aka, current symbol size).
-     * Including the change caused by animation
-     */
-    getScale() {
-        const symbolPath = this.childAt(0);
-        return [symbolPath.scaleX, symbolPath.scaleY];
-    }
-
-    getOriginalScale() {
-        return [this._scaleX, this._scaleY];
-    }
-
-    /**
      * Highlight symbol
      */
     highlight() {
-        graphic.enterEmphasis(this.childAt(0));
+        enterEmphasis(this.childAt(0));
     }
 
     /**
      * Downplay symbol
      */
     downplay() {
-        graphic.leaveEmphasis(this.childAt(0));
+        leaveEmphasis(this.childAt(0));
     }
 
     /**
@@ -157,7 +146,7 @@ class Symbol extends graphic.Group {
     /**
      * Update symbol properties
      */
-    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope) {
+    updateData(data: List, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
         this.silent = false;
 
         const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
@@ -178,24 +167,22 @@ class Symbol extends graphic.Group {
             }, seriesModel, idx);
         }
 
-        this._updateCommon(data, idx, symbolSize, seriesScope);
+        this._updateCommon(data, idx, symbolSize, seriesScope, opts);
 
         if (isInit) {
             const symbolPath = this.childAt(0) as ECSymbol;
-            // Always fadeIn. Because it has fadeOut animation when symbol is removed..
-            // const fadeIn = seriesScope && seriesScope.fadeIn;
-            const fadeIn = true;
 
             const target: PathProps = {
-                scaleX: this._scaleX,
-                scaleY: this._scaleY
+                scaleX: this._sizeX,
+                scaleY: this._sizeY,
+                style: {
+                    // Always fadeIn. Because it has fadeOut animation when symbol is removed..
+                    opacity: symbolPath.style.opacity
+                }
             };
-            fadeIn && (target.style = {
-                opacity: symbolPath.style.opacity
-            });
 
             symbolPath.scaleX = symbolPath.scaleY = 0;
-            fadeIn && (symbolPath.style.opacity = 0);
+            symbolPath.style.opacity = 0;
 
             graphic.initProps(symbolPath, target, seriesModel, idx);
         }
@@ -207,29 +194,58 @@ class Symbol extends graphic.Group {
         data: List,
         idx: number,
         symbolSize: number[],
-        seriesScope?: SymbolDrawSeriesScope
+        seriesScope?: SymbolDrawSeriesScope,
+        opts?: SymbolOpts
     ) {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
 
-        let hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
-        let symbolOffset = seriesScope && seriesScope.symbolOffset;
-        let labelModel = seriesScope && seriesScope.labelModel;
-        let hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
-        let hoverAnimation = seriesScope && seriesScope.hoverAnimation;
-        let cursorStyle = seriesScope && seriesScope.cursorStyle;
+
+        let emphasisItemStyle;
+        let blurItemStyle;
+        let selectItemStyle;
+        let focus;
+        let blurScope: BlurScope;
+
+        let symbolOffset;
+
+        let labelStatesModels;
+
+        let hoverScale;
+        let cursorStyle;
+
+        if (seriesScope) {
+            emphasisItemStyle = seriesScope.emphasisItemStyle;
+            blurItemStyle = seriesScope.blurItemStyle;
+            selectItemStyle = seriesScope.selectItemStyle;
+            focus = seriesScope.focus;
+            blurScope = seriesScope.blurScope;
+
+            symbolOffset = seriesScope.symbolOffset;
+
+            labelStatesModels = seriesScope.labelStatesModels;
+
+            hoverScale = seriesScope.hoverScale;
+            cursorStyle = seriesScope.cursorStyle;
+        }
 
         if (!seriesScope || data.hasItemOption) {
             const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
 
-            hoverItemStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
+            const emphasisModel = itemModel.getModel('emphasis');
+            emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
+            selectItemStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
+            blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
+
+            focus = emphasisModel.get('focus');
+            blurScope = emphasisModel.get('blurScope');
 
             symbolOffset = itemModel.getShallow('symbolOffset');
 
-            labelModel = itemModel.getModel(normalLabelAccessPath);
-            hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
-            hoverAnimation = itemModel.getShallow('hoverAnimation');
+            labelStatesModels = getLabelStatesModels(itemModel);
+
+            hoverScale = emphasisModel.getShallow('scale');
             cursorStyle = itemModel.getShallow('cursor');
         }
 
@@ -244,21 +260,32 @@ class Symbol extends graphic.Group {
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
-        // PENDING setColor before setStyle!!!
         const symbolStyle = data.getItemVisual(idx, 'style');
         const visualColor = symbolStyle.fill;
-        if (symbolPath.__isEmptyBrush) {
-            // fill and stroke will be swapped if it's empty.
-            // So we cloned a new style to avoid it affecting the original style in visual storage.
-            // TODO Better implementation. No empty logic!
-            symbolPath.useStyle(extend({}, symbolStyle));
+
+        if (symbolPath instanceof ZRImage) {
+            const pathStyle = symbolPath.style;
+            symbolPath.useStyle(extend({
+                // TODO other properties like x, y ?
+                image: pathStyle.image,
+                x: pathStyle.x, y: pathStyle.y,
+                width: pathStyle.width, height: pathStyle.height
+            }, symbolStyle));
         }
         else {
-            symbolPath.useStyle(symbolStyle);
-        }
-        symbolPath.setColor(visualColor, seriesScope && seriesScope.symbolInnerColor);
-        symbolPath.style.strokeNoScale = true;
+            if (symbolPath.__isEmptyBrush) {
+                // fill and stroke will be swapped if it's empty.
+                // So we cloned a new style to avoid it affecting the original style in visual storage.
+                // TODO Better implementation. No empty logic!
+                symbolPath.useStyle(extend({}, symbolStyle));
+            }
+            else {
+                symbolPath.useStyle(symbolStyle);
+            }
+            symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
+            symbolPath.style.strokeNoScale = true;
 
+        }
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;
         if (liftZ != null) {
@@ -272,15 +299,15 @@ class Symbol extends graphic.Group {
             this._z2 = null;
         }
 
-        const useNameLabel = seriesScope && seriesScope.useNameLabel;
+        const useNameLabel = opts && opts.useNameLabel;
 
-        graphic.setLabelStyle(
-            symbolPath, labelModel, hoverLabelModel,
+        setLabelStyle(
+            symbolPath, labelStatesModels,
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: idx,
                 defaultText: getLabelDefaultText,
-                autoColor: visualColor as ColorString
+                inheritColor: visualColor as ColorString
             }
         );
 
@@ -289,13 +316,33 @@ class Symbol extends graphic.Group {
             return useNameLabel ? data.getName(idx) : getDefaultLabel(data, idx);
         }
 
-        this._scaleX = symbolSize[0] / 2;
-        this._scaleY = symbolSize[1] / 2;
-        symbolPath.onStateChange = (
-            hoverAnimation && seriesModel.isAnimationEnabled()
-        ) ? onStateChange : null;
+        this._sizeX = symbolSize[0] / 2;
+        this._sizeY = symbolSize[1] / 2;
 
-        graphic.enableHoverEmphasis(symbolPath, hoverItemStyle);
+        symbolPath.ensureState('emphasis').style = emphasisItemStyle;
+        symbolPath.ensureState('select').style = selectItemStyle;
+        symbolPath.ensureState('blur').style = blurItemStyle;
+
+        if (hoverScale) {
+            this.ensureState('emphasis');
+            this.setSymbolScale(1);
+        }
+        else {
+            this.states.emphasis = null;
+        }
+
+        enableHoverEmphasis(this, focus, blurScope);
+    }
+
+    setSymbolScale(scale: number) {
+        const emphasisState = this.states.emphasis;
+        if (emphasisState) {
+            const hoverScale = Math.max(scale * 1.1, 3 / this._sizeY + scale);
+            emphasisState.scaleX = hoverScale;
+            emphasisState.scaleY = hoverScale;
+        }
+
+        this.scaleX = this.scaleY = scale;
     }
 
     fadeOut(cb: () => void, opt?: {
@@ -307,7 +354,7 @@ class Symbol extends graphic.Group {
         // Not show text when animating
         !(opt && opt.keepLabel) && (symbolPath.removeTextContent());
 
-        graphic.updateProps(
+        graphic.removeElement(
             symbolPath,
             {
                 style: {
@@ -317,7 +364,7 @@ class Symbol extends graphic.Group {
                 scaleY: 0
             },
             this._seriesModel,
-            graphic.getECData(this).dataIndex,
+            getECData(this).dataIndex,
             cb
         );
     }
@@ -330,33 +377,6 @@ class Symbol extends graphic.Group {
     }
 }
 
-function onStateChange(this: ECSymbol, fromState: DisplayState, toState: DisplayState) {
-    // Do not support this hover animation util some scenario required.
-    // Animation can only be supported in hover layer when using `el.incremetal`.
-    if (this.incremental || this.useHoverLayer) {
-        return;
-    }
-
-    const scale = (this.parent as Symbol).getOriginalScale();
-    if (toState === 'emphasis') {
-        const ratio = scale[1] / scale[0];
-        const emphasisOpt = {
-            scaleX: Math.max(scale[0] * 1.1, scale[0] + 3),
-            scaleY: Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
-        };
-        // FIXME
-        // modify it after support stop specified animation.
-        // toState === fromState
-        //     ? (this.stopAnimation(), this.attr(emphasisOpt))
-        this.animateTo(emphasisOpt, { duration: 400, easing: 'elasticOut' });
-    }
-    else if (toState === 'normal') {
-        this.animateTo({
-            scaleX: scale[0],
-            scaleY: scale[1]
-        }, { duration: 400, easing: 'elasticOut' });
-    }
-}
 
 function driftSymbol(this: ECSymbol, dx: number, dy: number) {
     this.parent.drift(dx, dy);

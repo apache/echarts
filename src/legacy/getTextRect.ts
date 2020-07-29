@@ -17,20 +17,34 @@
 * under the License.
 */
 
-module.exports = function ({types, template}, options) {
-    return {
-        visitor: {
-            IfStatement: {
-                exit(path) {
-                    removeDEV(path);
-                }
-            }
-        }
-    };
-};
+import { Text } from '../util/graphic';
+import { deprecateLog } from '../util/log';
 
-function removeDEV(path) {
-    if (path.node.test.name === '__DEV__') {
-        path.remove();
-    }
+type TextStyleProps = Text['style'];
+export function getTextRect(
+    text: TextStyleProps['text'],
+    font?: TextStyleProps['font'],
+    align?: TextStyleProps['align'],
+    verticalAlign?: TextStyleProps['verticalAlign'],
+    padding?: TextStyleProps['padding'],
+    rich?: TextStyleProps['rich'],
+    truncate?: boolean,
+    lineHeight?: number
+) {
+    deprecateLog('getTextRect is deprecated.');
+
+    const textEl = new Text({
+        style: {
+            text,
+            font,
+            align,
+            verticalAlign,
+            padding,
+            rich,
+            overflow: truncate ? 'truncate' : null,
+            lineHeight
+        }
+    });
+
+    return textEl.getBoundingRect();
 }

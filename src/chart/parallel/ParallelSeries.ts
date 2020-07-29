@@ -28,32 +28,29 @@ import {
     LabelOption,
     SeriesTooltipOption,
     DimensionName,
-    OptionDataValue
+    OptionDataValue,
+    StatesOptionMixin
  } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
-import { ParallelActiveState } from '../../coord/parallel/AxisModel';
+import { ParallelActiveState, ParallelAxisOption } from '../../coord/parallel/AxisModel';
 import Parallel from '../../coord/parallel/Parallel';
 import Source from '../../data/Source';
 import ParallelModel from '../../coord/parallel/ParallelModel';
 
 type ParallelSeriesDataValue = OptionDataValue[];
 
-export interface ParallelSeriesDataItemOption {
-
-    value?: ParallelSeriesDataValue[]
-
+export interface ParallelStateOption {
     lineStyle?: LineStyleOption
     label?: LabelOption
+}
 
-    emphasis?: {
-        lineStyle?: LineStyleOption
-        label?: LabelOption
-    }
+export interface ParallelSeriesDataItemOption extends ParallelStateOption, StatesOptionMixin<ParallelStateOption> {
+    value?: ParallelSeriesDataValue[]
 }
 
 export interface ParallelSeriesOption extends
-    SeriesOption,
+    SeriesOption<ParallelStateOption>, ParallelStateOption,
     SeriesEncodeOptionMixin {
 
     type?: 'parallel';
@@ -62,15 +59,14 @@ export interface ParallelSeriesOption extends
     parallelIndex?: number;
     parallelId?: string;
 
-    label?: LabelOption;
-    lineStyle?: LineStyleOption;
-
     inactiveOpacity?: number;
     activeOpacity?: number;
 
     smooth?: boolean | number;
     realtime?: boolean;
     tooltip?: SeriesTooltipOption;
+
+    parallelAxisDefault?: ParallelAxisOption;
 
     emphasis?: {
         label?: LabelOption;

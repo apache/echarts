@@ -29,8 +29,8 @@ import {
     indexOf
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import GlobalModel, { QueryConditionKindB } from '../model/Global';
-import ComponentModel from '../model/Component';
+import GlobalModel from '../model/Global';
+import ComponentModel, {ComponentModelConstructor} from '../model/Component';
 import List from '../data/List';
 import {
     ComponentOption,
@@ -46,6 +46,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
+import { isNumeric } from './number';
 
 /**
  * Make the name displayable. But we should
@@ -53,6 +54,8 @@ import GridModel from '../coord/cartesian/GridModel';
  * specified name, so use '\0';
  */
 const DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
+
+const INTERNAL_COMPONENT_ID_PREFIX = '\0_ec_\0';
 
 /**
  * If value is not array, then translate it to array.
@@ -141,121 +144,282 @@ export function isDataItemOption(dataItem: OptionDataItem): boolean {
         // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
 }
 
-type MappingExistItem = {id?: string, name?: string} | ComponentModel;
-interface MappingResultItem<T> {
-    exist?: T;
-    option?: ComponentOption;
-    id?: string;
+// Compatible with previous definition: id could be number (but not recommanded).
+// number and string are trade the same when compare.
+// number id will not be converted to string in option.
+// number id will be converted to string in component instance id.
+export interface MappingExistingItem {
+    id?: string | number;
     name?: string;
-    keyInfo?: {
-        name?: string,
-        id?: string,
-        mainType?: ComponentMainType,
-        subType?: ComponentSubType
+};
+/**
+ * The array `MappingResult<T>[]` exactly represents the content of the result
+ * components array after merge.
+ * The indices are the same as the `existings`.
+ * Items will not be `null`/`undefined` even if the corresponding `existings` will be removed.
+ */
+type MappingResult<T> = MappingResultItem<T>[];
+interface MappingResultItem<T extends MappingExistingItem = MappingExistingItem> {
+    // Existing component instance.
+    existing: T;
+    // The mapped new component option.
+    newOption: ComponentOption;
+    // Mark that the new component has nothing to do with any of the old components.
+    // So they won't share view. Also see `__requireNewView`.
+    brandNew: boolean;
+    // keyInfo for new component.
+    // All of them will be assigned to a created component instance.
+    keyInfo: {
+        name: string,
+        id: string,
+        mainType: ComponentMainType,
+        subType: ComponentSubType
     };
 }
 
+type MappingToExistsMode = 'normalMerge' | 'replaceMerge' | 'replaceAll';
+
 /**
- * Mapping to exists for merge.
+ * Mapping to existings for merge.
  *
- * @public
- * @param exists
- * @param newCptOptions
- * @return Result, like [{exist: ..., option: ...}, {}],
- *                          index of which is the same as exists.
+ * Mode "normalMege":
+ *     The mapping result (merge result) will keep the order of the existing
+ *     component, rather than the order of new option. Because we should ensure
+ *     some specified index reference (like xAxisIndex) keep work.
+ *     And in most cases, "merge option" is used to update partial option but not
+ *     be expected to change the order.
+ *
+ * Mode "replaceMege":
+ *     (1) Only the id mapped components will be merged.
+ *     (2) Other existing components (except internal compoonets) will be removed.
+ *     (3) Other new options will be used to create new component.
+ *     (4) The index of the existing compoents will not be modified.
+ *     That means their might be "hole" after the removal.
+ *     The new components are created first at those available index.
+ *
+ * Mode "replaceAll":
+ *     This mode try to support that reproduce an echarts instance from another
+ *     echarts instance (via `getOption`) in some simple cases.
+ *     In this senario, the `result` index are exactly the consistent with the `newCmptOptions`,
+ *     which ensures the compoennt index referring (like `xAxisIndex: ?`) corrent. That is,
+ *     the "hole" in `newCmptOptions` will also be kept.
+ *     On the contrary, other modes try best to eliminate holes.
+ *     PENDING: This is an experimental mode yet.
+ *
+ * @return See the comment of <MappingResult>.
  */
-export function mappingToExists<T extends MappingExistItem>(
-    exists: T[],
-    newCptOptions: ComponentOption[]
-): MappingResultItem<T>[] {
-    // Mapping by the order by original option (but not order of
-    // new option) in merge mode. Because we should ensure
-    // some specified index (like xAxisIndex) is consistent with
-    // original option, which is easy to understand, espatially in
-    // media query. And in most case, merge option is used to
-    // update partial option but not be expected to change order.
-    newCptOptions = (newCptOptions || []).slice();
+export function mappingToExists<T extends MappingExistingItem>(
+    existings: T[],
+    newCmptOptions: ComponentOption[],
+    mode: MappingToExistsMode
+): MappingResult<T> {
 
-    const result: MappingResultItem<T>[] = map(exists || [], function (obj, index) {
-        return {exist: obj};
-    });
+    const isNormalMergeMode = mode === 'normalMerge';
+    const isReplaceMergeMode = mode === 'replaceMerge';
+    const isReplaceAllMode = mode === 'replaceAll';
+    existings = existings || [];
+    newCmptOptions = (newCmptOptions || []).slice();
+    const existingIdIdxMap = createHashMap<number>();
 
-    // Mapping by id or name if specified.
-    each(newCptOptions, function (cptOption, index) {
-        if (!isObject<ComponentOption>(cptOption)) {
+    // Validate id and name on user input option.
+    each(newCmptOptions, function (cmptOption, index) {
+        if (!isObject<ComponentOption>(cmptOption)) {
+            newCmptOptions[index] = null;
             return;
         }
-
-        // id has highest priority.
-        for (let i = 0; i < result.length; i++) {
-            if (!result[i].option // Consider name: two map to one.
-                && cptOption.id != null
-                && result[i].exist.id === cptOption.id + ''
-            ) {
-                result[i].option = cptOption;
-                newCptOptions[index] = null;
-                return;
-            }
-        }
-
-        for (let i = 0; i < result.length; i++) {
-            const exist = result[i].exist;
-            if (!result[i].option // Consider name: two map to one.
-                // Can not match when both ids exist but different.
-                && (exist.id == null || cptOption.id == null)
-                && cptOption.name != null
-                && !isIdInner(cptOption)
-                && !isIdInner(exist)
-                && exist.name === cptOption.name + ''
-            ) {
-                result[i].option = cptOption;
-                newCptOptions[index] = null;
-                return;
-            }
-        }
+        cmptOption.id == null || validateIdOrName(cmptOption.id);
+        cmptOption.name == null || validateIdOrName(cmptOption.name);
     });
 
-    // Otherwise mapping by index.
-    each(newCptOptions, function (cptOption, index) {
-        if (!isObject<ComponentOption>(cptOption)) {
-            return;
-        }
+    const result = prepareResult(existings, existingIdIdxMap, mode);
 
-        let i = 0;
-        for (; i < result.length; i++) {
-            const exist = result[i].exist;
-            if (!result[i].option
-                // Existing model that already has id should be able to
-                // mapped to (because after mapping performed model may
-                // be assigned with a id, whish should not affect next
-                // mapping), except those has inner id.
-                && !isIdInner(exist)
-                // Caution:
-                // Do not overwrite id. But name can be overwritten,
-                // because axis use name as 'show label text'.
-                // 'exist' always has id and name and we dont
-                // need to check it.
-                && cptOption.id == null
-            ) {
-                result[i].option = cptOption;
-                break;
-            }
-        }
+    if (isNormalMergeMode || isReplaceMergeMode) {
+        mappingById(result, existings, existingIdIdxMap, newCmptOptions);
+    }
 
-        if (i >= result.length) {
-            result.push({option: cptOption});
-        }
-    });
+    if (isNormalMergeMode) {
+        mappingByName(result, newCmptOptions);
+    }
 
+    if (isNormalMergeMode || isReplaceMergeMode) {
+        mappingByIndex(result, newCmptOptions, isReplaceMergeMode);
+    }
+    else if (isReplaceAllMode) {
+        mappingInReplaceAllMode(result, newCmptOptions);
+    }
+
+    makeIdAndName(result);
+
+    // The array `result` MUST NOT contain elided items, otherwise the
+    // forEach will ommit those items and result in incorrect result.
     return result;
+}
+
+function prepareResult<T extends MappingExistingItem>(
+    existings: T[],
+    existingIdIdxMap: HashMap<number>,
+    mode: MappingToExistsMode
+): MappingResultItem<T>[] {
+    const result: MappingResultItem<T>[] = [];
+
+    if (mode === 'replaceAll') {
+        return result;
+    }
+
+    // Do not use native `map` to in case that the array `existings`
+    // contains elided items, which will be ommited.
+    for (let index = 0; index < existings.length; index++) {
+        const existing = existings[index];
+        // Because of replaceMerge, `existing` may be null/undefined.
+        if (existing && existing.id != null) {
+            existingIdIdxMap.set(existing.id, index);
+        }
+        // For non-internal-componnets:
+        //     Mode "normalMerge": all existings kept.
+        //     Mode "replaceMerge": all existing removed unless mapped by id.
+        // For internal-components:
+        //     go with "replaceMerge" approach in both mode.
+        result.push({
+            existing: (mode === 'replaceMerge' || isComponentIdInternal(existing))
+                ? null
+                : existing,
+            newOption: null,
+            keyInfo: null,
+            brandNew: null
+        });
+    }
+    return result;
+}
+
+function mappingById<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    existings: T[],
+    existingIdIdxMap: HashMap<number>,
+    newCmptOptions: ComponentOption[]
+): void {
+    // Mapping by id if specified.
+    each(newCmptOptions, function (cmptOption, index) {
+        if (!cmptOption || cmptOption.id == null) {
+            return;
+        }
+        const optionId = makeComparableKey(cmptOption.id);
+        const existingIdx = existingIdIdxMap.get(optionId);
+        if (existingIdx != null) {
+            const resultItem = result[existingIdx];
+            assert(
+                !resultItem.newOption,
+                'Duplicated option on id "' + optionId + '".'
+            );
+            resultItem.newOption = cmptOption;
+            // In both mode, if id matched, new option will be merged to
+            // the existings rather than creating new component model.
+            resultItem.existing = existings[existingIdx];
+            newCmptOptions[index] = null;
+        }
+    });
+}
+
+function mappingByName<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    newCmptOptions: ComponentOption[]
+): void {
+    // Mapping by name if specified.
+    each(newCmptOptions, function (cmptOption, index) {
+        if (!cmptOption || cmptOption.name == null) {
+            return;
+        }
+        for (let i = 0; i < result.length; i++) {
+            const existing = result[i].existing;
+            if (!result[i].newOption // Consider name: two map to one.
+                // Can not match when both ids existing but different.
+                && existing
+                && (existing.id == null || cmptOption.id == null)
+                && !isComponentIdInternal(cmptOption)
+                && !isComponentIdInternal(existing)
+                && keyExistAndEqual('name', existing, cmptOption)
+            ) {
+                result[i].newOption = cmptOption;
+                newCmptOptions[index] = null;
+                return;
+            }
+        }
+    });
+}
+
+function mappingByIndex<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    newCmptOptions: ComponentOption[],
+    brandNew: boolean
+): void {
+    let nextIdx = 0;
+    each(newCmptOptions, function (cmptOption) {
+        if (!cmptOption) {
+            return;
+        }
+
+        // Find the first place that not mapped by id and not internal component (consider the "hole").
+        let resultItem;
+        while (
+            // Be `!resultItem` only when `nextIdx >= result.length`.
+            (resultItem = result[nextIdx])
+            // (1) Existing models that already have id should be able to mapped to. Because
+            // after mapping performed, model will always be assigned with an id if user not given.
+            // After that all models have id.
+            // (2) If new option has id, it can only set to a hole or append to the last. It should
+            // not be merged to the existings with different id. Because id should not be overwritten.
+            // (3) Name can be overwritten, because axis use name as 'show label text'.
+            && (
+                resultItem.newOption
+                || isComponentIdInternal(resultItem.existing)
+                || (
+                    // In mode "replaceMerge", here no not-mapped-non-internal-existing.
+                    resultItem.existing
+                    && cmptOption.id != null
+                    && !keyExistAndEqual('id', cmptOption, resultItem.existing)
+                )
+            )
+        ) {
+            nextIdx++;
+        }
+
+        if (resultItem) {
+            resultItem.newOption = cmptOption;
+            resultItem.brandNew = brandNew;
+        }
+        else {
+            result.push({
+                newOption: cmptOption,
+                brandNew: brandNew,
+                existing: null,
+                keyInfo: null
+            });
+        }
+        nextIdx++;
+    });
+}
+
+function mappingInReplaceAllMode<T extends MappingExistingItem>(
+    result: MappingResult<T>,
+    newCmptOptions: ComponentOption[]
+): void {
+    each(newCmptOptions, function (cmptOption) {
+        // The feature "reproduce" requires "hole" will also reproduced
+        // in case that compoennt index referring are broken.
+        result.push({
+            newOption: cmptOption,
+            brandNew: true,
+            existing: null,
+            keyInfo: null
+        });
+    });
 }
 
 /**
  * Make id and name for mapping result (result of mappingToExists)
  * into `keyInfo` field.
  */
-export function makeIdAndName(
-    mapResult: MappingResultItem<MappingExistItem>[]
+function makeIdAndName(
+    mapResult: MappingResult<MappingExistingItem>
 ): void {
     // We use this id to hash component models and view instances
     // in echarts. id can be specified by user, or auto generated.
@@ -271,27 +435,28 @@ export function makeIdAndName(
     // Ensure that each id is distinct.
     const idMap = createHashMap();
 
-    each(mapResult, function (item, index) {
-        const existCpt = item.exist;
-        existCpt && idMap.set(existCpt.id, item);
+    each(mapResult, function (item) {
+        const existing = item.existing;
+        existing && idMap.set(existing.id, item);
     });
 
-    each(mapResult, function (item, index) {
-        const opt = item.option;
+    each(mapResult, function (item) {
+        const opt = item.newOption;
 
+        // Force ensure id not duplicated.
         assert(
             !opt || opt.id == null || !idMap.get(opt.id) || idMap.get(opt.id) === item,
             'id duplicates: ' + (opt && opt.id)
         );
 
         opt && opt.id != null && idMap.set(opt.id, item);
-        !item.keyInfo && (item.keyInfo = {});
+        !item.keyInfo && (item.keyInfo = {} as MappingResultItem['keyInfo']);
     });
 
     // Make name and id.
     each(mapResult, function (item, index) {
-        const existCpt = item.exist;
-        const opt = item.option;
+        const existing = item.existing;
+        const opt = item.newOption;
         const keyInfo = item.keyInfo;
 
         if (!isObject<ComponentOption>(opt)) {
@@ -303,18 +468,18 @@ export function makeIdAndName(
         // only in that case: setOption with 'not merge mode' and view
         // instance will be recreated, which can be accepted.
         keyInfo.name = opt.name != null
-            ? opt.name + ''
-            : existCpt
-            ? existCpt.name
+            ? makeComparableKey(opt.name)
+            : existing
+            ? existing.name
             // Avoid diffferent series has the same name,
             // because name may be used like in color pallet.
             : DUMMY_COMPONENT_NAME_PREFIX + index;
 
-        if (existCpt) {
-            keyInfo.id = existCpt.id;
+        if (existing) {
+            keyInfo.id = makeComparableKey(existing.id);
         }
         else if (opt.id != null) {
-            keyInfo.id = opt.id + '';
+            keyInfo.id = makeComparableKey(opt.id);
         }
         else {
             // Consider this situatoin:
@@ -333,6 +498,38 @@ export function makeIdAndName(
     });
 }
 
+function keyExistAndEqual(attr: 'id' | 'name', obj1: MappingExistingItem, obj2: MappingExistingItem): boolean {
+    const key1 = obj1[attr];
+    const key2 = obj2[attr];
+    // See `MappingExistingItem`. `id` and `name` trade string equals to number.
+    return key1 != null && key2 != null && key1 + '' === key2 + '';
+}
+
+/**
+ * @return return null if not exist.
+ */
+function makeComparableKey(val: string | number): string {
+    if (__DEV__) {
+        if (val == null) {
+            throw new Error();
+        }
+    }
+    return val + '';
+}
+
+export function validateIdOrName(idOrName: unknown) {
+    if (__DEV__) {
+        assert(
+            isValidIdOrName(idOrName),
+            '`' + idOrName + '` is invalid id or name. Must be a string.'
+        );
+    }
+}
+
+function isValidIdOrName(idOrName: unknown): boolean {
+    return isString(idOrName) || isNumeric(idOrName);
+}
+
 export function isNameSpecified(componentModel: ComponentModel): boolean {
     const name = componentModel.name;
     // Is specified when `indexOf` get -1 or > 0.
@@ -341,14 +538,51 @@ export function isNameSpecified(componentModel: ComponentModel): boolean {
 
 /**
  * @public
- * @param {Object} cptOption
+ * @param {Object} cmptOption
  * @return {boolean}
  */
-export function isIdInner(cptOption: ComponentOption): boolean {
-    return isObject(cptOption)
-        && cptOption.id
-        && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
+export function isComponentIdInternal(cmptOption: MappingExistingItem): boolean {
+    return cmptOption
+        && cmptOption.id != null
+        && makeComparableKey(cmptOption.id).indexOf(INTERNAL_COMPONENT_ID_PREFIX) === 0;
 }
+
+export function makeInternalComponentId(idSuffix: string) {
+    return INTERNAL_COMPONENT_ID_PREFIX + idSuffix;
+}
+
+export function setComponentTypeToKeyInfo(
+    mappingResult: MappingResult<MappingExistingItem & { subType?: ComponentSubType }>,
+    mainType: ComponentMainType,
+    componentModelCtor: ComponentModelConstructor
+): void {
+    // Set mainType and complete subType.
+    each(mappingResult, function (item) {
+        const newOption = item.newOption;
+        if (isObject(newOption)) {
+            item.keyInfo.mainType = mainType;
+            item.keyInfo.subType = determineSubType(mainType, newOption, item.existing, componentModelCtor);
+        }
+    });
+}
+
+function determineSubType(
+    mainType: ComponentMainType,
+    newCmptOption: ComponentOption,
+    existComponent: { subType?: ComponentSubType },
+    componentModelCtor: ComponentModelConstructor
+): ComponentSubType {
+    const subType = newCmptOption.type
+        ? newCmptOption.type
+        : existComponent
+        ? existComponent.subType
+        // Use determineSubType only when there is no existComponent.
+        : (componentModelCtor as ComponentModelConstructor).determineSubType(mainType, newCmptOption);
+
+    // tooltip, markline, markpoint may always has no subType
+    return subType;
+}
+
 
 type BatchItem = {
     seriesId: string,
@@ -495,17 +729,21 @@ let innerUniqueIndex = Math.round(Math.random() * 5);
  * }
  * xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
  * If nothing or null/undefined specified, return nothing.
+ * If both `abcIndex`, `abcId`, `abcName` specified, only one work.
+ * The priority is: index > id > name, the same with `ecModel.queryComponents`.
  */
-export type ModelFinderIndexQuery = number | number[] | 'all' | 'none';
+export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
+export type ModelFinderIdQuery = number | number[] | string | string[];
+export type ModelFinderNameQuery = number | number[] | string | string[];
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
-    seriesIndex?: ModelFinderIndexQuery, seriesId?: string, seriesName?: string,
-    geoIndex?: ModelFinderIndexQuery, geoId?: string, geoName?: string,
-    bmapIndex?: ModelFinderIndexQuery, bmapId?: string, bmapName?: string,
-    xAxisIndex?: ModelFinderIndexQuery, xAxisId?: string, xAxisName?: string,
-    yAxisIndex?: ModelFinderIndexQuery, yAxisId?: string, yAxisName?: string,
-    gridIndex?: ModelFinderIndexQuery, gridId?: string, gridName?: string,
-    // ... (can be extended)
+    seriesIndex?: ModelFinderIndexQuery, seriesId?: ModelFinderIdQuery, seriesName?: ModelFinderNameQuery
+    geoIndex?: ModelFinderIndexQuery, geoId?: ModelFinderIdQuery, geoName?: ModelFinderNameQuery
+    bmapIndex?: ModelFinderIndexQuery, bmapId?: ModelFinderIdQuery, bmapName?: ModelFinderNameQuery
+    xAxisIndex?: ModelFinderIndexQuery, xAxisId?: ModelFinderIdQuery, xAxisName?: ModelFinderNameQuery
+    yAxisIndex?: ModelFinderIndexQuery, yAxisId?: ModelFinderIdQuery, yAxisName?: ModelFinderNameQuery
+    gridIndex?: ModelFinderIndexQuery, gridId?: ModelFinderIdQuery, gridName?: ModelFinderNameQuery
+       // ... (can be extended)
     [key: string]: unknown
 };
 /**
@@ -534,10 +772,13 @@ export type ParsedModelFinder = ParsedModelFinderKnown & {
     [key: string]: ComponentModel | ComponentModel[];
 };
 
+/**
+ * The same behavior as `component.getReferringComponents`.
+ */
 export function parseFinder(
     ecModel: GlobalModel,
     finderInput: ModelFinder,
-    opt?: {defaultMainType?: string, includeMainTypes?: string[]}
+    opt?: {defaultMainType?: ComponentMainType, includeMainTypes?: ComponentMainType[]}
 ): ParsedModelFinder {
     let finder: ModelFinderObject;
     if (isString(finderInput)) {
@@ -549,15 +790,8 @@ export function parseFinder(
         finder = finderInput;
     }
 
-    const defaultMainType = opt && opt.defaultMainType;
-    if (defaultMainType
-        && !has(finder, defaultMainType + 'Index')
-        && !has(finder, defaultMainType + 'Id')
-        && !has(finder, defaultMainType + 'Name')
-    ) {
-        finder[defaultMainType + 'Index'] = 0;
-    }
-
+    const defaultMainType = opt ? opt.defaultMainType : null;
+    const queryOptionMap = createHashMap<QueryReferringOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
@@ -569,32 +803,105 @@ export function parseFinder(
 
         const parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
         const mainType = parsedKey[1];
-        const queryType = (parsedKey[2] || '').toLowerCase() as ('id' | 'index' | 'name');
+        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringOption;
 
-        if (!mainType
+        if (
+            !mainType
             || !queryType
-            || value == null
-            || (queryType === 'index' && value === 'none')
+            || (mainType !== defaultMainType && value == null)
             || (opt && opt.includeMainTypes && indexOf(opt.includeMainTypes, mainType) < 0)
         ) {
             return;
         }
 
-        const queryParam = {mainType: mainType} as QueryConditionKindB;
-        if (queryType !== 'index' || value !== 'all') {
-            queryParam[queryType] = value as any;
-        }
+        const queryOption = queryOptionMap.get(mainType) || queryOptionMap.set(mainType, {});
+        queryOption[queryType] = value as any;
+    });
 
-        const models = ecModel.queryComponents(queryParam);
-        result[mainType + 'Models'] = models;
-        result[mainType + 'Model'] = models[0];
+    queryOptionMap.each(function (queryOption, mainType) {
+        const queryResult = queryReferringComponents(
+            ecModel,
+            mainType,
+            queryOption,
+            {
+                useDefault: mainType === defaultMainType,
+                enableAll: true,
+                enableNone: true
+            }
+        );
+        result[mainType + 'Models'] = queryResult.models;
+        result[mainType + 'Model'] = queryResult.models[0];
     });
 
     return result;
 }
 
-function has(obj: object, prop: string): boolean {
-    return obj && obj.hasOwnProperty(prop);
+type QueryReferringOption = {
+    index?: ModelFinderIndexQuery,
+    id?: ModelFinderIdQuery,
+    name?: ModelFinderNameQuery,
+};
+
+export const SINGLE_REFERRING: QueryReferringOpt = { useDefault: true, enableAll: false, enableNone: false };
+export const MULTIPLE_REFERRING: QueryReferringOpt = { useDefault: false, enableAll: true, enableNone: true };
+
+export type QueryReferringOpt = {
+    // Whether to use the first componet as the default if none of index/id/name are specified.
+    useDefault: boolean;
+    // Whether to enable `'all'` on index option.
+    enableAll: boolean;
+    // Whether to enable `'none'`/`false` on index option.
+    enableNone: boolean;
+};
+
+export function queryReferringComponents(
+    ecModel: GlobalModel,
+    mainType: ComponentMainType,
+    userOption: QueryReferringOption,
+    opt: QueryReferringOpt
+): {
+    // Always be array rather than null/undefined, which is convenient to use.
+    models: ComponentModel[];
+    // Whether there is indexOption/id/name specified
+    specified: boolean;
+} {
+    let indexOption = userOption.index;
+    let idOption = userOption.id;
+    let nameOption = userOption.name;
+
+    const result = {
+        models: null as ComponentModel[],
+        specified: indexOption != null || idOption != null || nameOption != null
+    };
+
+    if (!result.specified) {
+        // Use the first as default if `useDefault`.
+        let firstCmpt;
+        result.models = (
+            opt.useDefault && (firstCmpt = ecModel.getComponent(mainType))
+        ) ? [firstCmpt] : [];
+        return result;
+    }
+
+    if (indexOption === 'none' || indexOption === false) {
+        assert(opt.enableNone, '`"none"` or `false` is not a valid value on index option.');
+        result.models = [];
+        return result;
+    }
+
+    // `queryComponents` will return all components if
+    // both all of index/id/name are null/undefined.
+    if (indexOption === 'all') {
+        assert(opt.enableAll, '`"all"` is not a valid value on index option.');
+        indexOption = idOption = nameOption = null;
+    }
+    result.models = ecModel.queryComponents({
+        mainType: mainType,
+        index: indexOption as number | number[],
+        id: idOption,
+        name: nameOption
+    });
+    return result;
 }
 
 export function setAttribute(dom: HTMLElement, key: string, value: any) {
@@ -627,9 +934,9 @@ export function groupData<T, R extends string | number>(
     getKey: (item: T) => R // return key
 ): {
     keys: R[],
-    buckets: HashMap<T[]> // hasmap key: the key returned by `getKey`.
+    buckets: HashMap<T[], R> // hasmap key: the key returned by `getKey`.
 } {
-    const buckets = createHashMap<T[]>();
+    const buckets = createHashMap<T[], R>();
     const keys: R[] = [];
 
     each(array, function (item) {

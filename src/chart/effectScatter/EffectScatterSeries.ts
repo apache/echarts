@@ -29,7 +29,8 @@ import {
     SymbolOptionMixin,
     OptionDataValue,
     ItemStyleOption,
-    LabelOption
+    LabelOption,
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -38,25 +39,25 @@ import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[];
 
-export interface EffectScatterDataItemOption extends SymbolOptionMixin {
+export interface EffectScatterStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
+
+export interface EffectScatterDataItemOption extends SymbolOptionMixin,
+    EffectScatterStateOption,
+    StatesOptionMixin<EffectScatterStateOption> {
     name?: string
 
     value?: ScatterDataValue
 
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-
     rippleEffect?: SymbolDrawItemModelOption['rippleEffect']
 }
 
-export interface EffectScatterSeriesOption extends SeriesOption,
+export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterStateOption>, EffectScatterStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin {
+
     type?: 'effectScatter'
 
     coordinateSystem?: string

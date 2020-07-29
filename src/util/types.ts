@@ -99,14 +99,29 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    useHoverLayer?: boolean;
     tooltip?: CommonTooltipOption<unknown> & {
         content?: string;
         formatterParams?: unknown;
     };
     highDownSilentOnTouch?: boolean;
-    onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+    onHoverStateChange?: (toState: DisplayState) => void;
+
+    // 0: normal
+    // 1: blur
+    // 2: emphasis
+    hoverState?: 0 | 1 | 2;
+    selected?: boolean;
+
     z2EmphasisLift?: number;
+    z2SelectLift?: number;
+    /**
+     * Force disable animation on any condition
+     */
+    disableLabelAnimation?: boolean
+    /**
+     * Force disable overall layout
+     */
+    disableLabelLayout?: boolean
 }
 
 export interface DataHost {
@@ -119,13 +134,45 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 
 interface PayloadItem {
     excludeSeriesId?: string | string[];
+    animation?: PayloadAnimationPart
     [other: string]: any;
 }
 
 export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
+    statusChanged?: boolean;
     batch?: PayloadItem[];
+}
+
+export interface HighlightPayload extends Payload {
+    type: 'highlight';
+    notBlur?: boolean
+}
+
+export interface DownplayPayload extends Payload {
+    type: 'downplay';
+    notBlur?: boolean
+}
+
+// Payload includes override anmation info
+export interface PayloadAnimationPart {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
+}
+
+export interface SelectChangedPayload extends Payload {
+    type: 'selectchanged'
+    escapeConnect: boolean
+    isFromClick: boolean
+    fromAction: 'select' | 'unselect' | 'toggleSelected'
+    fromActionPayload: Payload
+    selected: {
+        seriesIndex: number
+        dataType?: string
+        dataIndex: number[]
+    }[]
 }
 
 export interface ViewRootGroup extends Group {
@@ -367,9 +414,15 @@ export type ECUnitOption = {
     baseOption?: never
     options?: never
     media?: never
+
     timeline?: ComponentOption | ComponentOption[]
-    [key: string]: ComponentOption | ComponentOption[] | Dictionary<any> | any
-} & AnimationOptionMixin;
+    backgroundColor?: ZRColor
+    darkMode?: boolean | 'auto'
+    textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+
+    [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
+
+} & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
  * [ECOption]:
@@ -432,6 +485,7 @@ export type OptionDataItem =
 export type OptionDataItemObject<T> = {
     name?: string
     value?: T[] | T
+    selected?: boolean;
 };
 export type OptionDataValue = string | number | Date;
 
@@ -443,8 +497,8 @@ export type OptionDataValueDate = Date | string | number;
 export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
-export type DisplayState = 'normal' | 'emphasis';
-export type DisplayStateNonNormal = 'emphasis';
+export type DisplayState = 'normal' | 'emphasis' | 'blur' | 'select';
+export type DisplayStateNonNormal = Exclude<DisplayState, 'normal'>;
 export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
     [key: string]: any
@@ -569,6 +623,11 @@ export type AnimationDelayCallbackParam = {
 export type AnimationDurationCallback = (idx: number) => number;
 export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
 
+export interface AnimationOption {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
+}
 /**
  * Mixin of option set to control the animation of series.
  */
@@ -734,7 +793,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
     fontStyle?: ZRFontStyle
     fontWeight?: ZRFontWeight
     fontFamily?: string
-    fontSize?: number
+    fontSize?: number | string
     align?: HorizontalAlign
     verticalAlign?: VerticalAlign
     // @deprecated
@@ -783,6 +842,12 @@ export interface LabelOption extends TextCommonOption {
     rotate?: number
     offset?: number[]
 
+    /**
+     * Min margin between labels. Used when label has layout.
+     */
+    // It's minMargin instead of margin is for not breaking the previous code using margin.
+    minMargin?: number
+
     overflow?: TextStyleProps['overflow']
     silent?: boolean
     precision?: number | 'auto'
@@ -818,13 +883,78 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
     distance?: number | number[]
 }
 
-export interface LabelGuideLineOption {
+export interface LabelLineOption {
     show?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
+    minTurnAngle?: number,
     lineStyle?: LineStyleOption
 }
+
+
+export interface LabelLayoutOptionCallbackParams {
+    dataIndex: number,
+    dataType: string,
+    seriesIndex: number,
+    text: string
+    align: ZRTextAlign
+    verticalAlign: ZRTextVerticalAlign
+    rect: RectLike
+    labelRect: RectLike
+    // Points of label line in pie/funnel
+    labelLinePoints?: number[][]
+    // x: number
+    // y: number
+};
+
+export interface LabelLayoutOption {
+    /**
+     * If move the overlapped label. If label is still overlapped after moved.
+     * It will determine if to hide this label with `hideOverlap` policy.
+     *
+     * shift-x/y will keep the order on x/y
+     * shuffle-x/y will move the label around the original position randomly.
+     */
+    moveOverlap?: 'shift-x'
+        | 'shift-y'
+        | 'shuffle-x'
+        | 'shuffle-y'
+    /**
+     * If hide the overlapped label. It will be handled after move.
+     * @default 'none'
+     */
+    hideOverlap?: boolean
+    /**
+     * If label is draggable.
+     */
+    draggable?: boolean
+    /**
+     * Can be absolute px number or percent string.
+     */
+    x?: number | string
+    y?: number | string
+    /**
+     * offset on x based on the original position.
+     */
+    dx?: number
+    /**
+     * offset on y based on the original position.
+     */
+    dy?: number
+    rotate?: number
+
+    align?: ZRTextAlign
+    verticalAlign?: ZRTextVerticalAlign
+    width?: number
+    height?: number
+    fontSize?: number
+
+    labelLinePoints?: number[][]
+}
+
+export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
+
 
 interface TooltipFormatterCallback<T> {
     /**
@@ -899,7 +1029,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Support to be a callback
      */
-    position?: number[] | string[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+    position?: (number | string)[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
 
     confine?: boolean
 
@@ -1062,10 +1192,61 @@ export interface ComponentOption {
     // FIXME:TS more
 }
 
-export interface SeriesOption extends
+export type BlurScope = 'coordinateSystem' | 'series' | 'global';
+
+/**
+ * can be array of data indices.
+ * Or may be an dictionary if have different types of data like in graph.
+ */
+export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+
+export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> {
+    /**
+     * Emphasis states
+     */
+    emphasis?: StateOption & {
+        /**
+         * self: Focus self and blur all others.
+         * series: Focus series and blur all other series.
+         */
+        focus?: 'none' | 'self' | 'series' |
+            (unknown extends ExtraStateOpts['emphasis']['focus']
+                ? never : ExtraStateOpts['emphasis']['focus'])
+
+        /**
+         * Scope of blurred element when focus.
+         *
+         * coordinateSystem: blur others in the same coordinateSystem
+         * series: blur others in the same series
+         * global: blur all others
+         *
+         * Default to be coordinate system.
+         */
+        blurScope?: BlurScope
+    } & Omit<ExtraStateOpts['emphasis'], 'focus'>
+    /**
+     * Select states
+     */
+    select?: StateOption & ExtraStateOpts['select']
+    /**
+     * Blur states.
+     */
+    blur?: StateOption & ExtraStateOpts['blur']
+}
+
+export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> extends
     ComponentOption,
     AnimationOptionMixin,
-    ColorPaletteOptionMixin
+    ColorPaletteOptionMixin,
+    StatesOptionMixin<StateOption, ExtraStateOpts>
 {
     name?: string
 
@@ -1103,6 +1284,25 @@ export interface SeriesOption extends
      * @default 'column'
      */
     seriesLayoutBy?: 'column' | 'row'
+
+    labelLine?: LabelLineOption
+
+    /**
+     * Overall label layout option in label layout stage.
+     */
+    labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
+
+    /**
+     * Animation config for state transition.
+     */
+    stateAnimation?: AnimationOption
+
+    /**
+     * Map of selected data
+     * key is name or index of data.
+     */
+    selectedMap?: Dictionary<boolean>
+    selectedMode?: 'single' | 'multiple' | boolean
 }
 
 export interface SeriesOnCartesianOptionMixin {

@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import {
     enableClassExtend,
@@ -33,8 +32,7 @@ import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
 import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
-
-const mixin = zrUtil.mixin;
+import { mixin, clone, merge } from 'zrender/src/core/util';
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';
@@ -56,20 +54,11 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     //   var c = new C();
     //   console.log(c.xxx); // expect 5 but always 1.
 
-    /**
-     * @readOnly
-     */
     parentModel: Model;
 
-    /**
-     * @readOnly
-     */
-    ecModel: GlobalModel;;
+    ecModel: GlobalModel;
 
-    /**
-     * @readOnly
-     */
-    option: Opt;
+    option: Opt;    // TODO Opt should only be object.
 
     constructor(option?: Opt, parentModel?: Model, ecModel?: GlobalModel) {
         this.parentModel = parentModel;
@@ -93,7 +82,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
      * Merge the input option to me.
      */
     mergeOption(option: Opt, ecModel?: GlobalModel): void {
-        zrUtil.merge(this.option, option, true);
+        merge(this.option, option, true);
     }
 
     // FIXME:TS consider there is parentModel,
@@ -176,6 +165,47 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     }
 
     /**
+     * Squash option stack into one.
+     * parentModel will be removed after squashed.
+     *
+     * NOTE: resolveParentPath will not be applied here for simplicity. DON'T use this function
+     * if resolveParentPath is modified.
+     *
+     * @param deepMerge If do deep merge. Default to be false.
+     */
+    // squash(
+    //     deepMerge?: boolean,
+    //     handleCallback?: (func: () => object) => object
+    // ) {
+    //     const optionStack = [];
+    //     let model: Model = this;
+    //     while (model) {
+    //         if (model.option) {
+    //             optionStack.push(model.option);
+    //         }
+    //         model = model.parentModel;
+    //     }
+
+    //     const newOption = {} as Opt;
+    //     let option;
+    //     while (option = optionStack.pop()) {    // Top down merge
+    //         if (isFunction(option) && handleCallback) {
+    //             option = handleCallback(option);
+    //         }
+    //         if (deepMerge) {
+    //             merge(newOption, option);
+    //         }
+    //         else {
+    //             extend(newOption, option);
+    //         }
+    //     }
+
+    //     // Remove parentModel
+    //     this.option = newOption;
+    //     this.parentModel = null;
+    // }
+
+    /**
      * If model has option
      */
     isEmpty(): boolean {
@@ -187,7 +217,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     // Pending
     clone(): Model<Opt> {
         const Ctor = this.constructor;
-        return new (Ctor as any)(zrUtil.clone(this.option));
+        return new (Ctor as any)(clone(this.option));
     }
 
     // setReadOnly(properties): void {
@@ -211,7 +241,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
 
     // FIXME:TS check whether put this method here
     isAnimationEnabled(): boolean {
-        if (!env.node) {
+        if (!env.node && this.option) {
             if (this.option.animation != null) {
                 return !!this.option.animation;
             }

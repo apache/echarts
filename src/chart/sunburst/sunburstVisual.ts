@@ -20,16 +20,41 @@
 import GlobalModel from '../../model/Global';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
 import { extend } from 'zrender/src/core/util';
+import { Dictionary, ColorString } from '../../util/types';
+import { TreeNode } from '../../data/Tree';
+import { lift } from 'zrender/src/tool/color';
 
 export default function (ecModel: GlobalModel) {
 
-    ecModel.eachSeriesByType('graph', function (seriesModel: SunburstSeriesModel) {
+    const paletteScope: Dictionary<ColorString> = {};
+
+    // Default color strategy
+    function pickColor(node: TreeNode, seriesModel: SunburstSeriesModel, treeHeight: number) {
+        // Choose color from palette based on the first level.
+        let current = node;
+        while (current && current.depth > 1) {
+            current = current.parentNode;
+        }
+        let color = seriesModel.getColorFromPalette((current.name || current.dataIndex + ''), paletteScope);
+        if (node.depth > 1 && typeof color === 'string') {
+            // Lighter on the deeper level.
+            color = lift(color, (node.depth - 1) / (treeHeight - 1) * 0.5);
+        }
+        return color;
+    }
+
+    ecModel.eachSeriesByType('sunburst', function (seriesModel: SunburstSeriesModel) {
         const data = seriesModel.getData();
         const tree = data.tree;
+
         tree.eachNode(function (node) {
             const model = node.getModel<SunburstSeriesNodeItemOption>();
-            // TODO Optimize
             const style = model.getModel('itemStyle').getItemStyle();
+
+            if (!style.fill) {
+                style.fill = pickColor(node, seriesModel, tree.root.height);
+            }
+
             const existsStyle = data.ensureUniqueItemVisual(node.dataIndex, 'style');
             extend(existsStyle, style);
         });

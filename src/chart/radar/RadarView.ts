@@ -18,15 +18,18 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import * as zrUtil from 'zrender/src/core/util';
 import * as symbolUtil from '../../util/symbol';
 import ChartView from '../../view/Chart';
 import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 import List from '../../data/List';
-import { DisplayState, ECElement, ColorString } from '../../util/types';
+import { ColorString } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import ZRImage from 'zrender/src/graphic/Image';
 
 function normalizeSymbolSize(symbolSize: number | number[]) {
     if (!zrUtil.isArray(symbolSize)) {
@@ -144,8 +147,6 @@ class RadarView extends ChartView {
             .update(function (newIdx, oldIdx) {
                 const itemGroup = oldData.getItemGraphicEl(oldIdx) as graphic.Group;
 
-                graphic.clearStates(itemGroup);
-
                 const polyline = itemGroup.childAt(0) as graphic.Polyline;
                 const polygon = itemGroup.childAt(1) as graphic.Polygon;
                 const symbolGroup = itemGroup.childAt(2) as graphic.Group;
@@ -197,16 +198,21 @@ class RadarView extends ChartView {
                     }
                 )
             );
-            const polylineEmphasisState = polyline.ensureState('emphasis');
-            polylineEmphasisState.style = itemModel.getModel(['emphasis', 'lineStyle']).getLineStyle();
+
+            setStatesStylesFromModel(polyline, itemModel, 'lineStyle');
+            setStatesStylesFromModel(polygon, itemModel, 'areaStyle');
 
             const areaStyleModel = itemModel.getModel('areaStyle');
-            const hoverAreaStyleModel = itemModel.getModel(['emphasis', 'areaStyle']);
             const polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
-            let hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
 
-            hoverPolygonIgnore = hoverPolygonIgnore && polygonIgnore;
             polygon.ignore = polygonIgnore;
+
+            zrUtil.each(['emphasis', 'select', 'blur'] as const, function (stateName) {
+                const stateModel = itemModel.getModel([stateName, 'areaStyle']);
+                const stateIgnore = stateModel.isEmpty() && stateModel.parentModel.isEmpty();
+                // Won't be ignore if normal state is not ignore.
+                polygon.ensureState(stateName).ignore = stateIgnore && polygonIgnore;
+            });
 
             polygon.useStyle(
                 zrUtil.defaults(
@@ -217,37 +223,41 @@ class RadarView extends ChartView {
                     }
                 )
             );
-            const polygonEmphasisState = polygon.ensureState('emphasis');
-            polygonEmphasisState.style = hoverAreaStyleModel.getAreaStyle();
-
-            const itemHoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
-            const labelModel = itemModel.getModel('label');
-            const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
+            const emphasisModel = itemModel.getModel('emphasis');
+            const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
-                symbolPath.useStyle(itemStyle);
-                symbolPath.setColor(color);
+                if (symbolPath instanceof ZRImage) {
+                    const pathStyle = symbolPath.style;
+                    symbolPath.useStyle(zrUtil.extend({
+                        // TODO other properties like x, y ?
+                        image: pathStyle.image,
+                        x: pathStyle.x, y: pathStyle.y,
+                        width: pathStyle.width, height: pathStyle.height
+                    }, itemStyle));
+                }
+                else {
+                    symbolPath.useStyle(itemStyle);
+                    symbolPath.setColor(color);
+                }
 
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
                 pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
                 let defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
-                graphic.setLabelStyle(
-                    symbolPath, labelModel, labelHoverModel,
+                setLabelStyle(
+                    symbolPath, getLabelStatesModels(itemModel),
                     {
                         labelFetcher: data.hostModel,
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
                         defaultText: defaultText as string,
-                        autoColor: color as ColorString
+                        inheritColor: color as ColorString
                     }
                 );
             });
 
-            (itemGroup as ECElement).onStateChange = function (fromState: DisplayState, toState: DisplayState) {
-                polygon.attr('ignore', toState === 'emphasis' ? hoverPolygonIgnore : polygonIgnore);
-            };
-            graphic.enableHoverEmphasis(itemGroup);
+            enableHoverEmphasis(itemGroup, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
         });
 
         this._data = data;

@@ -23,7 +23,6 @@
  * TODO Default cartesian
  */
 
-import {__DEV__} from '../../config';
 import {isObject, each, indexOf, retrieve3} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {
@@ -36,7 +35,7 @@ import {
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystemManager from '../../CoordinateSystem';
-import {ParsedModelFinder} from '../../util/model';
+import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import GridModel from './GridModel';
@@ -254,9 +253,9 @@ class Grid implements CoordinateSystemMaster {
     } {
         const seriesModel = finder.seriesModel;
         const xAxisModel = finder.xAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('xAxis', SINGLE_REFERRING).models[0]);
         const yAxisModel = finder.yAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('yAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('yAxis', SINGLE_REFERRING).models[0]);
         const gridModel = finder.gridModel;
         const coordsList = this._coordsList;
         let cartesian: Cartesian2D;
@@ -333,12 +332,12 @@ class Grid implements CoordinateSystemMaster {
         this._axesMap = axesMap;
 
         /// Create cartesian2d
-        each(axesMap.x, function (xAxis, xAxisIndex) {
-            each(axesMap.y, function (yAxis, yAxisIndex) {
+        each(axesMap.x, (xAxis, xAxisIndex) => {
+            each(axesMap.y, (yAxis, yAxisIndex) => {
                 const key = 'x' + xAxisIndex + 'y' + yAxisIndex;
                 const cartesian = new Cartesian2D(key);
 
-                cartesian.grid = this;
+                cartesian.master = this;
                 cartesian.model = gridModel;
 
                 this._coordsMap[key] = cartesian;
@@ -346,8 +345,8 @@ class Grid implements CoordinateSystemMaster {
 
                 cartesian.addAxis(xAxis);
                 cartesian.addAxis(yAxis);
-            }, this);
-        }, this);
+            });
+        });
 
         function createAxisCreator(dimName: Cartesian2DDimensionName) {
             return function (axisModel: CartesianAxisModel, idx: number): void {

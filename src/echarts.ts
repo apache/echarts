@@ -16,8 +16,6 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
-import {__DEV__} from './config';
 import * as zrender from 'zrender/src/zrender';
 import * as zrUtil from 'zrender/src/core/util';
 import * as colorTool from 'zrender/src/tool/color';
@@ -27,7 +25,7 @@ import Eventful from 'zrender/src/core/Eventful';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
-import GlobalModel, {QueryConditionKindA} from './model/Global';
+import GlobalModel, {QueryConditionKindA, GlobalModelSetOptionOpts} from './model/Global';
 import ExtensionAPI from './ExtensionAPI';
 import CoordinateSystemManager from './CoordinateSystem';
 import OptionManager from './model/OptionManager';
@@ -38,6 +36,33 @@ import SeriesModel, { SeriesModelConstructor } from './model/Series';
 import ComponentView, {ComponentViewConstructor} from './view/Component';
 import ChartView, {ChartViewConstructor} from './view/Chart';
 import * as graphic from './util/graphic';
+import {getECData} from './util/ecData';
+import {
+    enterEmphasisWhenMouseOver,
+    leaveEmphasisWhenMouseOut,
+    isHighDownDispatcher,
+    HOVER_STATE_EMPHASIS,
+    HOVER_STATE_BLUR,
+    toggleSeriesBlurState,
+    toggleSeriesBlurStateFromPayload,
+    toggleSelectionFromPayload,
+    updateSeriesElementSelection,
+    getAllSelectedIndices,
+    isSelectChangePayload,
+    isHighDownPayload,
+    HIGHLIGHT_ACTION_TYPE,
+    DOWNPLAY_ACTION_TYPE,
+    SELECT_ACTION_TYPE,
+    UNSELECT_ACTION_TYPE,
+    TOGGLE_SELECT_ACTION_TYPE,
+    savePathStates,
+    enterEmphasis,
+    leaveEmphasis,
+    leaveBlur,
+    enterSelect,
+    leaveSelect,
+    enterBlur
+} from './util/states';
 import * as modelUtil from './util/model';
 import {throttle} from './util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from './visual/style';
@@ -62,15 +87,19 @@ import {
     ZRColor,
     ComponentMainType,
     ComponentSubType,
-    ZRElementEvent
+    ColorString,
+    SelectChangedPayload
 } from './util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
+import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
+import { getVisualFromData, getItemVisualFromData } from './visual/helper';
+import LabelManager from './label/LabelManager';
+import { deprecateLog } from './util/log';
+import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
-import { seriesSymbolTask, dataSymbolTask } from './visual/symbol';
-import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -132,8 +161,9 @@ export const PRIORITY = {
 // dispatchAction with updateMethod "none" in main process.
 // This flag is used to carry out this rule.
 // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
-const IN_MAIN_PROCESS = '__flagInMainProcess' as const;
-const OPTION_UPDATED = '__optionUpdated' as const;
+const IN_MAIN_PROCESS_KEY = '__flagInMainProcess' as const;
+const OPTION_UPDATED_KEY = '__optionUpdated' as const;
+const STATUS_NEEDS_UPDATE_KEY = '__needsUpdateStatus' as const;
 const ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
 const CONNECT_STATUS_KEY = '__connectUpdateStatus' as const;
@@ -145,10 +175,13 @@ type ConnectStatus =
     | typeof CONNECT_STATUS_UPDATING
     | typeof CONNECT_STATUS_UPDATED;
 
-type SetOptionOpts = {
-    notMerge?: boolean,
-    lazyUpdate?: boolean,
-    silent?: boolean
+interface SetOptionOpts {
+    notMerge?: boolean;
+    lazyUpdate?: boolean;
+    silent?: boolean;
+    // Rule: only `id` mapped will be merged,
+    // other components of the certain `mainType` will be removed.
+    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
 };
 
 type EventMethodName = 'on' | 'off';
@@ -177,7 +210,6 @@ class MessageCenter extends Eventful {}
 const messageCenterProto = MessageCenter.prototype;
 messageCenterProto.on = createRegisterEventWithLowercaseMessageCenter('on');
 messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
-// messageCenterProto.one = createRegisterEventWithLowercaseMessageCenter('one');
 
 // ---------------------------------------
 // Internal method names for class ECharts
@@ -202,6 +234,7 @@ let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void
 let flushPendingActions: (this: ECharts, silent: boolean) => void;
 let triggerUpdatedEvent: (this: ECharts, silent: boolean) => void;
 let bindRenderedEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
+let bindMouseEvent: (zr: zrender.ZRenderType, ecIns: ECharts) => void;
 let clearColorPalette: (ecModel: GlobalModel) => void;
 let render: (ecIns: ECharts, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) => void;
 let renderComponents: (
@@ -215,12 +248,11 @@ let renderSeries: (
     dirtyMap?: {[uid: string]: any}
 ) => void;
 let performPostUpdateFuncs: (ecModel: GlobalModel, api: ExtensionAPI) => void;
-let updateHoverLayerStatus: (ecIns: ECharts, ecModel: GlobalModel) => void;
-let updateBlend: (seriesModel: SeriesModel, chartView: ChartView) => void;
-let updateZ: (model: ComponentModel, view: ComponentView | ChartView) => void;
-let updateHoverEmphasisHandler: (view: ComponentView | ChartView) => void;
 let createExtensionAPI: (ecIns: ECharts) => ExtensionAPI;
-let enableConnect: (chart: ECharts) => void;
+let enableConnect: (ecIns: ECharts) => void;
+
+let markStatusToUpdate: (ecIns: ECharts) => void;
+let applyChangedStates: (ecIns: ECharts) => void;
 
 class ECharts extends Eventful {
 
@@ -270,10 +302,12 @@ class ECharts extends Eventful {
 
     private _loadingFX: LoadingEffect;
 
-    private [OPTION_UPDATED]: boolean | {silent: boolean};
-    private [IN_MAIN_PROCESS]: boolean;
-    private [CONNECT_STATUS_KEY]: ConnectStatus;
+    private _labelManager: LabelManager;
 
+    private [OPTION_UPDATED_KEY]: boolean | {silent: boolean};
+    private [IN_MAIN_PROCESS_KEY]: boolean;
+    private [CONNECT_STATUS_KEY]: ConnectStatus;
+    private [STATUS_NEEDS_UPDATE_KEY]: boolean;
 
     constructor(
         dom: HTMLElement,
@@ -334,6 +368,8 @@ class ECharts extends Eventful {
 
         this._messageCenter = new MessageCenter();
 
+        this._labelManager = new LabelManager();
+
         // Init mouse events
         this._initEvents();
 
@@ -344,6 +380,8 @@ class ECharts extends Eventful {
 
         bindRenderedEvent(zr, this);
 
+        bindMouseEvent(zr, this);
+
         // ECharts instance can be used as value.
         zrUtil.setAsPrimitive(this);
     }
@@ -353,20 +391,22 @@ class ECharts extends Eventful {
             return;
         }
 
+        applyChangedStates(this);
+
         const scheduler = this._scheduler;
 
         // Lazy update
-        if (this[OPTION_UPDATED]) {
-            const silent = (this[OPTION_UPDATED] as any).silent;
+        if (this[OPTION_UPDATED_KEY]) {
+            const silent = (this[OPTION_UPDATED_KEY] as any).silent;
 
-            this[IN_MAIN_PROCESS] = true;
+            this[IN_MAIN_PROCESS_KEY] = true;
 
             prepare(this);
             updateMethods.update.call(this);
 
-            this[IN_MAIN_PROCESS] = false;
+            this[IN_MAIN_PROCESS_KEY] = false;
 
-            this[OPTION_UPDATED] = false;
+            this[OPTION_UPDATED_KEY] = false;
 
             flushPendingActions.call(this, silent);
 
@@ -378,7 +418,7 @@ class ECharts extends Eventful {
             let remainTime = TEST_FRAME_REMAIN_TIME;
             const ecModel = this._model;
             const api = this._api;
-            scheduler.unfinished = +false;
+            scheduler.unfinished = false;
             do {
                 const startTime = +new Date();
 
@@ -435,15 +475,16 @@ class ECharts extends Eventful {
      * });
      *
      * @param opts opts or notMerge.
-     * @param opts.notMerge Default `false`
+     * @param opts.notMerge Default `false`.
      * @param opts.lazyUpdate Default `false`. Useful when setOption frequently.
      * @param opts.silent Default `false`.
+     * @param opts.replaceMerge Default undefined.
      */
     setOption(option: ECOption, notMerge?: boolean, lazyUpdate?: boolean): void;
     setOption(option: ECOption, opts?: SetOptionOpts): void;
     setOption(option: ECOption, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
         if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
+            assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }
         if (this._disposed) {
             disposedWarning(this.id);
@@ -451,13 +492,15 @@ class ECharts extends Eventful {
         }
 
         let silent;
+        let replaceMerge;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
+            replaceMerge = notMerge.replaceMerge;
             notMerge = notMerge.notMerge;
         }
 
-        this[IN_MAIN_PROCESS] = true;
+        this[IN_MAIN_PROCESS_KEY] = true;
 
         if (!this._model || notMerge) {
             const optionManager = new OptionManager(this._api);
@@ -467,11 +510,11 @@ class ECharts extends Eventful {
             ecModel.init(null, null, null, theme, optionManager);
         }
 
-        this._model.setOption(option, optionPreprocessorFuncs);
+        this._model.setOption(option, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
 
         if (lazyUpdate) {
-            this[OPTION_UPDATED] = {silent: silent};
-            this[IN_MAIN_PROCESS] = false;
+            this[OPTION_UPDATED_KEY] = {silent: silent};
+            this[IN_MAIN_PROCESS_KEY] = false;
         }
         else {
             prepare(this);
@@ -482,8 +525,8 @@ class ECharts extends Eventful {
             // fetched after `setOption`.
             this._zr.flush();
 
-            this[OPTION_UPDATED] = false;
-            this[IN_MAIN_PROCESS] = false;
+            this[OPTION_UPDATED_KEY] = false;
+            this[IN_MAIN_PROCESS_KEY] = false;
 
             flushPendingActions.call(this, silent);
             triggerUpdatedEvent.call(this, silent);
@@ -838,14 +881,15 @@ class ECharts extends Eventful {
         return this._chartsMap[seriesModel.__viewId];
     }
 
+
     private _initEvents(): void {
-        each(MOUSE_EVENT_NAMES, function (eveName) {
+        each(MOUSE_EVENT_NAMES, (eveName) => {
             const handler = (e: ElementEvent) => {
                 const ecModel = this.getModel();
                 const el = e.target;
                 let params: ECEvent;
                 const isGlobalOut = eveName === 'globalout';
-                const ecData = el && graphic.getECData(el);
+                const ecData = el && getECData(el);
                 // no e.target when 'globalout'.
                 if (isGlobalOut) {
                     params = {} as ECEvent;
@@ -853,7 +897,7 @@ class ECharts extends Eventful {
                 else if (ecData && ecData.dataIndex != null) {
                     const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                     params = (
-                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
+                        dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
                     ) as ECEvent;
                 }
                 // If element has custom eventData of components
@@ -919,13 +963,26 @@ class ECharts extends Eventful {
             // cause problem if it is called previous other inner handlers.
             (handler as any).zrEventfulCallAtLast = true;
             this._zr.on(eveName, handler, this);
-        }, this);
+        });
 
-        each(eventActionMap, function (actionType, eventType) {
+        each(eventActionMap, (actionType, eventType) => {
             this._messageCenter.on(eventType, function (event) {
                 this.trigger(eventType, event);
             }, this);
-        }, this);
+        });
+
+        // Extra events
+        // TODO register?
+        each(
+            ['selectchanged'],
+            (eventType) => {
+                this._messageCenter.on(eventType, function (event) {
+                    this.trigger(eventType, event);
+                }, this);
+            }
+        );
+
+        handleLegacySelectEvents(this._messageCenter, this);
     }
 
     isDisposed(): boolean {
@@ -974,7 +1031,7 @@ class ECharts extends Eventful {
         silent?: boolean // by default false.
     }): void {
         if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
+            assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
         }
         if (this._disposed) {
             disposedWarning(this.id);
@@ -996,12 +1053,18 @@ class ECharts extends Eventful {
 
         const silent = opts && opts.silent;
 
-        this[IN_MAIN_PROCESS] = true;
+        this[IN_MAIN_PROCESS_KEY] = true;
 
         optionChanged && prepare(this);
-        updateMethods.update.call(this);
+        updateMethods.update.call(this, {
+            type: 'resize',
+            animation: {
+                // Disable animation
+                duration: 0
+            }
+        });
 
-        this[IN_MAIN_PROCESS] = false;
+        this[IN_MAIN_PROCESS_KEY] = false;
 
         flushPendingActions.call(this, silent);
 
@@ -1095,7 +1158,7 @@ class ECharts extends Eventful {
         }
 
         // May dispatchAction in rendering procedure
-        if (this[IN_MAIN_PROCESS]) {
+        if (this[IN_MAIN_PROCESS_KEY]) {
             this._pendingActions.push(payload);
             return;
         }
@@ -1119,6 +1182,13 @@ class ECharts extends Eventful {
         flushPendingActions.call(this, silent);
 
         triggerUpdatedEvent.call(this, silent);
+    }
+
+    updateLabelLayout() {
+        const labelManager = this._labelManager;
+        labelManager.updateLayoutConfig(this._api);
+        labelManager.layout(this._api);
+        labelManager.processLabelsOverall();
     }
 
     appendData(params: {
@@ -1148,7 +1218,7 @@ class ECharts extends Eventful {
         // graphic elements have to be changed, which make the usage of
         // `appendData` meaningless.
 
-        this._scheduler.unfinished = +true;
+        this._scheduler.unfinished = true;
     }
 
 
@@ -1190,9 +1260,18 @@ class ECharts extends Eventful {
                 : ecModel.eachSeries(doPrepare);
 
             function doPrepare(model: ComponentModel): void {
+                // By defaut view will be reused if possible for the case that `setOption` with "notMerge"
+                // mode and need to enable transition animation. (Usually, when they have the same id, or
+                // especially no id but have the same type & name & index. See the `model.id` generation
+                // rule in `makeIdAndName` and `viewId` generation rule here).
+                // But in `replaceMerge` mode, this feature should be able to disabled when it is clear that
+                // the new model has nothing to do with the old model.
+                const requireNewView = model.__requireNewView;
+                // This command should not work twice.
+                model.__requireNewView = false;
                 // Consider: id same and type changed.
                 const viewId = '_ec_' + model.id + '_' + model.type;
-                let view = viewMap[viewId];
+                let view = !requireNewView && viewMap[viewId];
                 if (!view) {
                     const classType = parseClassType(model.type);
                     const Clazz = isComponent
@@ -1203,7 +1282,6 @@ class ECharts extends Eventful {
                             // For backward compat, still support a chart type declared as only subType
                             // like "liquidfill", but recommend "series.liquidfill"
                             // But need a base class to make a type series.
-                            // ||
                             (ChartView as ChartViewConstructor).getClass(classType.sub)
                         );
 
@@ -1237,7 +1315,9 @@ class ECharts extends Eventful {
                     zr.remove(view.group);
                     view.dispose(ecModel, api);
                     viewList.splice(i, 1);
-                    delete viewMap[view.__id];
+                    if (viewMap[view.__id] === view) {
+                        delete viewMap[view.__id];
+                    }
                     view.__id = view.group.__ecComponentInfo = null;
                 }
                 else {
@@ -1254,6 +1334,8 @@ class ECharts extends Eventful {
             subType?: ComponentSubType
         ): void {
             const ecModel = ecIns._model;
+
+            ecModel.setUpdatePayload(payload);
 
             // broadcast
             if (!mainType) {
@@ -1273,7 +1355,7 @@ class ECharts extends Eventful {
             subType && (condition.subType = subType); // subType may be '' by parseClassType;
 
             const excludeSeriesId = payload.excludeSeriesId;
-            let excludeSeriesIdMap: zrUtil.HashMap<string[]>;
+            let excludeSeriesIdMap: zrUtil.HashMap<string[], string>;
             if (excludeSeriesId != null) {
                 excludeSeriesIdMap = zrUtil.createHashMap(modelUtil.normalizeToArray(excludeSeriesId));
             }
@@ -1281,6 +1363,20 @@ class ECharts extends Eventful {
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 if (!excludeSeriesIdMap || excludeSeriesIdMap.get(model.id) == null) {
+                    if (isHighDownPayload(payload) && !payload.notBlur) {
+                        if (model instanceof SeriesModel) {
+                            toggleSeriesBlurStateFromPayload(model, payload, ecIns);
+                        }
+                    }
+                    else if (isSelectChangePayload(payload)) {
+                        // TODO geo
+                        if (model instanceof SeriesModel) {
+                            toggleSelectionFromPayload(model, payload, ecIns);
+                            updateSeriesElementSelection(model);
+                            markStatusToUpdate(ecIns);
+                        }
+                    }
+
                     callView(ecIns[
                         mainType === 'series' ? '_chartsMap' : '_componentsMap'
                     ][model.__viewId]);
@@ -1315,6 +1411,8 @@ class ECharts extends Eventful {
                     return;
                 }
 
+                ecModel.setUpdatePayload(payload);
+
                 scheduler.restoreData(ecModel, payload);
 
                 scheduler.performSeriesTasks(ecModel);
@@ -1347,10 +1445,11 @@ class ECharts extends Eventful {
 
                 // Set background
                 let backgroundColor = ecModel.get('backgroundColor') || 'transparent';
+                const darkMode = ecModel.get('darkMode');
 
                 // In IE8
                 if (!env.canvasSupported) {
-                    const colorArr = colorTool.parse(backgroundColor);
+                    const colorArr = colorTool.parse(backgroundColor as ColorString);
                     backgroundColor = colorTool.stringify(colorArr, 'rgb');
                     if (colorArr[3] === 0) {
                         backgroundColor = 'transparent';
@@ -1358,6 +1457,11 @@ class ECharts extends Eventful {
                 }
                 else {
                     zr.setBackgroundColor(backgroundColor);
+
+                    // Force set dark mode.
+                    if (darkMode != null && darkMode !== 'auto') {
+                        zr.setDarkMode(darkMode);
+                    }
                 }
 
                 performPostUpdateFuncs(ecModel, api);
@@ -1374,10 +1478,16 @@ class ECharts extends Eventful {
                     return;
                 }
 
+                ecModel.setUpdatePayload(payload);
+
                 // ChartView.markUpdateMethod(payload, 'updateTransform');
 
                 const componentDirtyList = [];
                 ecModel.eachComponent((componentType, componentModel) => {
+                    if (componentType === 'series') {
+                        return;
+                    }
+
                     const componentView = this.getViewOfComponentModel(componentModel);
                     if (componentView && componentView.__alive) {
                         if (componentView.updateTransform) {
@@ -1424,6 +1534,8 @@ class ECharts extends Eventful {
                     return;
                 }
 
+                ecModel.setUpdatePayload(payload);
+
                 ChartView.markUpdateMethod(payload, 'updateView');
 
                 clearColorPalette(ecModel);
@@ -1446,6 +1558,8 @@ class ECharts extends Eventful {
                     return;
                 }
 
+                ecModel.setUpdatePayload(payload);
+
                 // clear all visual
                 ecModel.eachSeries(function (seriesModel) {
                     seriesModel.getData().clearAllVisual();
@@ -1460,9 +1574,11 @@ class ECharts extends Eventful {
                 this._scheduler.performVisualTasks(ecModel, payload, {visualType: 'visual', setDirty: true});
 
                 ecModel.eachComponent((componentType, componentModel) => {  // TODO componentType may be series.
-                    const componentView = this.getViewOfComponentModel(componentModel);
-                    componentView && componentView.__alive
-                        && componentView.updateVisual(componentModel, ecModel, this._api, payload);
+                    if (componentType !== 'series') {
+                        const componentView = this.getViewOfComponentModel(componentModel);
+                        componentView && componentView.__alive
+                            && componentView.updateVisual(componentModel, ecModel, this._api, payload);
+                    }
                 });
 
                 ecModel.eachSeries((seriesModel) => {
@@ -1475,23 +1591,6 @@ class ECharts extends Eventful {
 
             updateLayout: function (this: ECharts, payload: Payload): void {
                 updateMethods.update.call(this, payload);
-
-                // let ecModel = this._model;
-
-                // // update before setOption
-                // if (!ecModel) {
-                //     return;
-                // }
-
-                // ChartView.markUpdateMethod(payload, 'updateLayout');
-
-                // // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
-                // // this._scheduler.performVisualTasks(ecModel, payload, 'layout', true);
-                // this._scheduler.performVisualTasks(ecModel, payload, {setDirty: true});
-
-                // render(this, this._model, this._api, payload);
-
-                // performPostUpdateFuncs(ecModel, this._api);
             }
         };
 
@@ -1536,6 +1635,7 @@ class ECharts extends Eventful {
         };
 
         doDispatchAction = function (this: ECharts, payload: Payload, silent: boolean): void {
+            const ecModel = this.getModel();
             const payloadType = payload.type;
             const escapeConnect = payload.escapeConnect;
             const actionWrap = actions[payloadType];
@@ -1545,7 +1645,7 @@ class ECharts extends Eventful {
             const updateMethod = cptTypeTmp.pop();
             const cptType = cptTypeTmp[0] != null && parseClassType(cptTypeTmp[0]);
 
-            this[IN_MAIN_PROCESS] = true;
+            this[IN_MAIN_PROCESS_KEY] = true;
 
             let payloads: Payload[] = [payload];
             let batched = false;
@@ -1561,9 +1661,11 @@ class ECharts extends Eventful {
 
             const eventObjBatch: ECEventData[] = [];
             let eventObj: ECEvent;
-            const isHighDown = payloadType === 'highlight' || payloadType === 'downplay';
 
-            each(payloads, function (batchItem) {
+            const isSelectChange = isSelectChangePayload(payload);
+            const isStatusChange = isHighDownPayload(payload) || isSelectChange;
+
+            each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
                 eventObj = actionWrap.action(batchItem, this._model, this._api) as ECEvent;
                 // Emit event outside
@@ -1573,22 +1675,28 @@ class ECharts extends Eventful {
                 eventObjBatch.push(eventObj);
 
                 // light update does not perform data process, layout and visual.
-                if (isHighDown) {
+                if (isStatusChange) {
                     // method, payload, mainType, subType
                     updateDirectly(this, updateMethod, batchItem as Payload, 'series');
+
+                    // Mark status to update
+                    markStatusToUpdate(this);
                 }
                 else if (cptType) {
                     updateDirectly(this, updateMethod, batchItem as Payload, cptType.main, cptType.sub);
                 }
-            }, this);
+            });
 
-            if (updateMethod !== 'none' && !isHighDown && !cptType) {
+            if (payload.statusChanged) {
+                markStatusToUpdate(this);
+            }
+
+            if (updateMethod !== 'none' && !isStatusChange && !cptType) {
                 // Still dirty
-                if (this[OPTION_UPDATED]) {
-                    // FIXME Pass payload ?
+                if (this[OPTION_UPDATED_KEY]) {
                     prepare(this);
                     updateMethods.update.call(this, payload);
-                    this[OPTION_UPDATED] = false;
+                    this[OPTION_UPDATED_KEY] = false;
                 }
                 else {
                     updateMethods[updateMethod as keyof typeof updateMethods].call(this, payload);
@@ -1607,9 +1715,24 @@ class ECharts extends Eventful {
                 eventObj = eventObjBatch[0] as ECEvent;
             }
 
-            this[IN_MAIN_PROCESS] = false;
+            this[IN_MAIN_PROCESS_KEY] = false;
 
-            !silent && this._messageCenter.trigger(eventObj.type, eventObj);
+            if (!silent) {
+                const messageCenter = this._messageCenter;
+                messageCenter.trigger(eventObj.type, eventObj);
+                // Extra triggered 'selectchanged' event
+                if (isSelectChange) {
+                    const newObj: SelectChangedPayload = {
+                        type: 'selectchanged',
+                        escapeConnect: escapeConnect,
+                        selected: getAllSelectedIndices(ecModel),
+                        isFromClick: payload.isFromClick || false,
+                        fromAction: payload.type as 'select' | 'unselect' | 'toggleSelected',
+                        fromActionPayload: payload
+                    };
+                    messageCenter.trigger(newObj.type, newObj);
+                }
+            }
         };
 
         flushPendingActions = function (this: ECharts, silent: boolean): void {
@@ -1650,11 +1773,69 @@ class ECharts extends Eventful {
                     // and this checking is called on frame, we also check
                     // animation finished for robustness.
                     zr.animation.isFinished()
-                    && !ecIns[OPTION_UPDATED]
+                    && !ecIns[OPTION_UPDATED_KEY]
                     && !ecIns._scheduler.unfinished
                     && !ecIns._pendingActions.length
                 ) {
                     ecIns.trigger('finished');
+                }
+            });
+        };
+
+        bindMouseEvent = function (zr: zrender.ZRenderType, ecIns: ECharts): void {
+            function getDispatcher(target: Element, det: (target: Element) => boolean) {
+                while (target && !det(target)) {
+                    if (target.__hostTarget) {
+                        target = target.__hostTarget;
+                    }
+                    else {
+                        target = target.parent;
+                    }
+                }
+                return target;
+            }
+            zr.on('mouseover', function (e) {
+                const el = e.target;
+                const dispatcher = getDispatcher(el, isHighDownDispatcher);
+                if (dispatcher) {
+                    const ecData = getECData(dispatcher);
+                    // Try blur all in the related series. Then emphasis the hoverred.
+                    // TODO. progressive mode.
+                    toggleSeriesBlurState(
+                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, true
+                    );
+                    enterEmphasisWhenMouseOver(dispatcher, e);
+
+                    markStatusToUpdate(ecIns);
+                }
+            }).on('mouseout', function (e) {
+                const el = e.target;
+                const dispatcher = getDispatcher(el, isHighDownDispatcher);
+                if (dispatcher) {
+                    const ecData = getECData(dispatcher);
+                    toggleSeriesBlurState(
+                        ecData.seriesIndex, ecData.focus, ecData.blurScope, ecIns, false
+                    );
+
+                    leaveEmphasisWhenMouseOut(dispatcher, e);
+
+                    markStatusToUpdate(ecIns);
+                }
+            }).on('click', function (e) {
+                const el = e.target;
+                const dispatcher = getDispatcher(
+                    el, (target) => getECData(target).dataIndex != null
+                );
+                if (dispatcher) {
+                    const actionType = (dispatcher as ECElement).selected ? 'unselect' : 'select';
+                    const ecData = getECData(dispatcher);
+                    ecIns._api.dispatchAction({
+                        type: actionType,
+                        dataType: ecData.dataType,
+                        dataIndexInside: ecData.dataIndex,
+                        seriesIndex: ecData.seriesIndex,
+                        isFromClick: true
+                    });
                 }
             });
         };
@@ -1689,13 +1870,15 @@ class ECharts extends Eventful {
         ): void {
             each(dirtyList || ecIns._componentsViews, function (componentView: ComponentView) {
                 const componentModel = componentView.__model;
+                clearStates(componentModel, componentView);
+
                 componentView.render(componentModel, ecModel, api, payload);
 
-                componentView.group.markRedraw();
-
                 updateZ(componentModel, componentView);
-                updateHoverEmphasisHandler(componentView);
+
+                updateStates(componentModel, componentView);
             });
+
         };
 
         /**
@@ -1710,7 +1893,11 @@ class ECharts extends Eventful {
         ): void {
             // Render all charts
             const scheduler = ecIns._scheduler;
-            let unfinished: number;
+            const labelManager = ecIns._labelManager;
+
+            labelManager.clearLabels();
+
+            let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
                 const chartView = ecIns._chartsMap[seriesModel.__viewId];
                 chartView.__alive = true;
@@ -1718,11 +1905,15 @@ class ECharts extends Eventful {
                 const renderTask = chartView.renderTask;
                 scheduler.updatePayload(renderTask, payload);
 
+                // TODO states on marker.
+                clearStates(seriesModel, chartView);
+
                 if (dirtyMap && dirtyMap.get(seriesModel.uid)) {
                     renderTask.dirty();
                 }
-
-                unfinished |= +renderTask.perform(scheduler.getPerformArgs(renderTask));
+                if (renderTask.perform(scheduler.getPerformArgs(renderTask))) {
+                    unfinished = true;
+                }
 
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
@@ -1733,9 +1924,25 @@ class ECharts extends Eventful {
 
                 updateBlend(seriesModel, chartView);
 
-                updateHoverEmphasisHandler(chartView);
+                updateSeriesElementSelection(seriesModel);
+
+                // Add labels.
+                labelManager.addLabelsOfSeries(chartView);
             });
-            scheduler.unfinished |= unfinished;
+
+            scheduler.unfinished = unfinished || scheduler.unfinished;
+
+            labelManager.updateLayoutConfig(api);
+            labelManager.layout(api);
+            labelManager.processLabelsOverall();
+
+            ecModel.eachSeries(function (seriesModel) {
+                const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                // NOTE: Update states after label is updated.
+                // label should be in normal status when layouting.
+                updateStates(seriesModel, chartView);
+            });
+
 
             // If use hover layer
             updateHoverLayerStatus(ecIns, ecModel);
@@ -1750,13 +1957,62 @@ class ECharts extends Eventful {
             });
         };
 
-        updateHoverLayerStatus = function (ecIns: ECharts, ecModel: GlobalModel): void {
+        markStatusToUpdate = function (ecIns: ECharts): void {
+            ecIns[STATUS_NEEDS_UPDATE_KEY] = true;
+            // Wake up zrender if it's sleep. Let it update states in the next frame.
+            ecIns.getZr().wakeUp();
+        };
+
+        applyChangedStates = function (ecIns: ECharts): void {
+            if (!ecIns[STATUS_NEEDS_UPDATE_KEY]) {
+                return;
+            }
+
+            ecIns.getZr().storage.traverse(function (el: ECElement) {
+                // Not applied on removed elements, it may still in fading.
+                if (graphic.isElementRemoved(el)) {
+                    return;
+                }
+                applyElementStates(el);
+            });
+
+            ecIns[STATUS_NEEDS_UPDATE_KEY] = false;
+        };
+
+        function applyElementStates(el: ECElement) {
+            const newStates = [];
+
+            const oldStates = el.currentStates;
+            // Keep other states.
+            for (let i = 0; i < oldStates.length; i++) {
+                const stateName = oldStates[i];
+                if (!(stateName === 'emphasis' || stateName === 'blur' || stateName === 'select')) {
+                    newStates.push(stateName);
+                }
+            }
+
+            // Only use states when it's exists.
+            if (el.selected && el.states.select) {
+                newStates.push('select');
+            }
+            if (el.hoverState === HOVER_STATE_EMPHASIS && el.states.emphasis) {
+                newStates.push('emphasis');
+            }
+            else if (el.hoverState === HOVER_STATE_BLUR && el.states.blur) {
+                newStates.push('blur');
+            }
+            el.useStates(newStates);
+        }
+
+        function updateHoverLayerStatus(ecIns: ECharts, ecModel: GlobalModel): void {
             const zr = ecIns._zr;
             const storage = zr.storage;
             let elCount = 0;
 
             storage.traverse(function (el) {
-                elCount++;
+                if (!el.isGroup) {
+                    elCount++;
+                }
             });
 
             if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
@@ -1767,8 +2023,9 @@ class ECharts extends Eventful {
                     const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.__alive) {
                         chartView.group.traverse(function (el: ECElement) {
-                            // Don't switch back.
-                            // el.useHoverLayer = true;
+                            if (el.states.emphasis) {
+                                el.states.emphasis.hoverLayer = true;
+                            }
                         });
                     }
                 });
@@ -1776,9 +2033,9 @@ class ECharts extends Eventful {
         };
 
         /**
-         * Update chart progressive and blend.
+         * Update chart and blend.
          */
-        updateBlend = function (seriesModel: SeriesModel, chartView: ChartView): void {
+        function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
             if (__DEV__) {
                 if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
@@ -1788,20 +2045,18 @@ class ECharts extends Eventful {
             chartView.group.traverse(function (el: Displayable) {
                 // FIXME marker and other components
                 if (!el.isGroup) {
-                    // Only set if blendMode is changed. In case element is incremental and don't wan't to rerender.
-                    if (el.style.blend !== blendMode) {
-                        el.setStyle('blend', blendMode);
-                    }
+                    // DONT mark the element dirty. In case element is incremental and don't wan't to rerender.
+                    el.style.blend = blendMode;
                 }
                 if ((el as IncrementalDisplayable).eachPendingDisplayable) {
                     (el as IncrementalDisplayable).eachPendingDisplayable(function (displayable) {
-                        displayable.setStyle('blend', blendMode);
+                        displayable.style.blend = blendMode;
                     });
                 }
             });
         };
 
-        updateZ = function (model: ComponentModel, view: ComponentView | ChartView): void {
+        function updateZ(model: ComponentModel, view: ComponentView | ChartView): void {
             if (model.preventAutoZ) {
                 return;
             }
@@ -1809,44 +2064,111 @@ class ECharts extends Eventful {
             const zlevel = model.get('zlevel');
             // Set z and zlevel
             view.group.traverse(function (el: Displayable) {
-                if (el.type !== 'group') {
+                if (!el.isGroup) {
                     z != null && (el.z = z);
                     zlevel != null && (el.zlevel = zlevel);
 
                     // TODO if textContent is on group.
-                    const textContent = el.getTextContent();
-                    if (textContent) {
-                        textContent.z = el.z;
-                        textContent.zlevel = el.zlevel;
+                    const label = el.getTextContent();
+                    const labelLine = el.getTextGuideLine();
+                    if (label) {
+                        label.z = el.z;
+                        label.zlevel = el.zlevel;
                         // lift z2 of text content
                         // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                        textContent.z2 = el.z2 + 1;
+                        label.z2 = el.z2 + 1;
+                    }
+                    if (labelLine) {
+                        labelLine.z = el.z;
+                        labelLine.zlevel = el.zlevel;
+                        labelLine.z2 = el.z2 - 1;
                     }
                 }
             });
         };
 
-        function getHighDownDispatcher(target: Element) {
-            while (target && !graphic.isHighDownDispatcher(target)) {
-                target = target.parent;
-            }
-            return target;
+        // Clear states without animation.
+        // TODO States on component.
+        function clearStates(model: ComponentModel, view: ComponentView | ChartView): void {
+            view.group.traverse(function (el: Displayable) {
+                // Not applied on removed elements, it may still in fading.
+                if (graphic.isElementRemoved(el)) {
+                    return;
+                }
+
+                const textContent = el.getTextContent();
+                const textGuide = el.getTextGuideLine();
+                if (el.stateTransition) {
+                    el.stateTransition = null;
+                }
+                if (textContent && textContent.stateTransition) {
+                    textContent.stateTransition = null;
+                }
+                if (textGuide && textGuide.stateTransition) {
+                    textGuide.stateTransition = null;
+                }
+
+                // TODO If el is incremental.
+                if (el.hasState()) {
+                    el.prevStates = el.currentStates;
+                    el.clearStates();
+                }
+                else if (el.prevStates) {
+                    el.prevStates = null;
+                }
+            });
         }
-        function onMouseOver(e: ZRElementEvent) {
-            const dispatcher = getHighDownDispatcher(e.target);
-            if (dispatcher) {
-                graphic.enterEmphasisWhenMouseOver(dispatcher, e);
-            }
-        }
-        function onMouseOut(e: ZRElementEvent) {
-            const dispatcher = getHighDownDispatcher(e.target);
-            if (dispatcher) {
-                graphic.leaveEmphasisWhenMouseOut(dispatcher, e);
-            }
-        }
-        updateHoverEmphasisHandler = function (view: ComponentView | ChartView): void {
-            view.group.on('mouseover', onMouseOver)
-                .on('mouseout', onMouseOut);
+
+        function updateStates(model: ComponentModel, view: ComponentView | ChartView): void {
+            const stateAnimationModel = (model as SeriesModel).getModel('stateAnimation');
+            const enableAnimation = model.isAnimationEnabled();
+            const duration = stateAnimationModel.get('duration');
+            const stateTransition = duration > 0 ? {
+                duration,
+                delay: stateAnimationModel.get('delay'),
+                easing: stateAnimationModel.get('easing')
+            } : null;
+            view.group.traverse(function (el: Displayable) {
+                if (el.states && el.states.emphasis) {
+                    // Not applied on removed elements, it may still in fading.
+                    if (graphic.isElementRemoved(el)) {
+                        return;
+                    }
+
+                    if (el instanceof graphic.Path) {
+                        savePathStates(el);
+                    }
+
+                    // Only updated on changed element. In case element is incremental and don't wan't to rerender.
+                    // TODO, a more proper way?
+                    if (el.__dirty) {
+                        const prevStates = el.prevStates;
+                        // Restore states without animation
+                        if (prevStates) {
+                            el.useStates(prevStates);
+                        }
+                    }
+
+                    // Update state transition and enable animation again.
+                    if (enableAnimation) {
+                        el.stateTransition = stateTransition;
+                        const textContent = el.getTextContent();
+                        const textGuide = el.getTextGuideLine();
+                        // TODO Is it necessary to animate label?
+                        if (textContent) {
+                            textContent.stateTransition = stateTransition;
+                        }
+                        if (textGuide) {
+                            textGuide.stateTransition = stateTransition;
+                        }
+                    }
+
+                    // The use higlighted and selected flag to toggle states.
+                    if (el.__dirty) {
+                        applyElementStates(el);
+                    }
+                }
+            });
         };
 
         createExtensionAPI = function (ecIns: ECharts): ExtensionAPI {
@@ -1862,6 +2184,30 @@ class ECharts extends Eventful {
                         }
                         el = el.parent;
                     }
+                }
+                enterEmphasis(el: Element, highlightDigit?: number) {
+                    enterEmphasis(el, highlightDigit);
+                    markStatusToUpdate(ecIns);
+                }
+                leaveEmphasis(el: Element, highlightDigit?: number) {
+                    leaveEmphasis(el, highlightDigit);
+                    markStatusToUpdate(ecIns);
+                }
+                enterBlur(el: Element) {
+                    enterBlur(el);
+                    markStatusToUpdate(ecIns);
+                }
+                leaveBlur(el: Element) {
+                    leaveBlur(el);
+                    markStatusToUpdate(ecIns);
+                }
+                enterSelect(el: Element) {
+                    enterSelect(el);
+                    markStatusToUpdate(ecIns);
+                }
+                leaveSelect(el: Element) {
+                    leaveSelect(el);
+                    markStatusToUpdate(ecIns);
                 }
             })(ecIns);
         };
@@ -1907,11 +2253,19 @@ class ECharts extends Eventful {
 }
 
 
-
 const echartsProto = ECharts.prototype;
 echartsProto.on = createRegisterEventWithLowercaseECharts('on');
 echartsProto.off = createRegisterEventWithLowercaseECharts('off');
-// echartsProto.one = createRegisterEventWithLowercaseECharts('one');
+// @ts-ignore
+echartsProto.one = function (eventName: string, cb: Function, ctx?: any) {
+    const self = this;
+    deprecateLog('ECharts#one is deprecated.');
+    function wrapped(this: unknown, ...args2: any) {
+        cb && cb.apply && cb.apply(this, args2);
+        self.off(eventName, wrapped);
+    };
+    this.on.call(this, eventName, wrapped, ctx);
+};
 
 // /**
 //  * Encode visual infomation from data after data processing
@@ -2393,15 +2747,33 @@ registerLoading('default', loadingDefault);
 // Default actions
 
 registerAction({
-    type: 'highlight',
-    event: 'highlight',
-    update: 'highlight'
+    type: HIGHLIGHT_ACTION_TYPE,
+    event: HIGHLIGHT_ACTION_TYPE,
+    update: HIGHLIGHT_ACTION_TYPE
 }, zrUtil.noop);
 
 registerAction({
-    type: 'downplay',
-    event: 'downplay',
-    update: 'downplay'
+    type: DOWNPLAY_ACTION_TYPE,
+    event: DOWNPLAY_ACTION_TYPE,
+    update: DOWNPLAY_ACTION_TYPE
+}, zrUtil.noop);
+
+registerAction({
+    type: SELECT_ACTION_TYPE,
+    event: SELECT_ACTION_TYPE,
+    update: SELECT_ACTION_TYPE
+}, zrUtil.noop);
+
+registerAction({
+    type: UNSELECT_ACTION_TYPE,
+    event: UNSELECT_ACTION_TYPE,
+    update: UNSELECT_ACTION_TYPE
+}, zrUtil.noop);
+
+registerAction({
+    type: TOGGLE_SELECT_ACTION_TYPE,
+    event: TOGGLE_SELECT_ACTION_TYPE,
+    update: TOGGLE_SELECT_ACTION_TYPE
 }, zrUtil.noop);
 
 // Default theme

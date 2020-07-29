@@ -21,8 +21,6 @@ import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import {getPercentWithPrecision} from '../../util/number';
-import {DataSelectableMixin, SelectableTarget, DataSelectableOptionMixin} from '../../component/helper/selectableMixin';
-import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
@@ -30,58 +28,63 @@ import {
     SeriesOption,
     CallbackDataParams,
     CircleLayoutOptionMixin,
-    LabelGuideLineOption,
+    LabelLineOption,
     ItemStyleOption,
     LabelOption,
     BoxLayoutOptionMixin,
     OptionDataValueNumeric,
     SeriesEncodeOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    StatesOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 
-
+export interface PieStateOption {
+    // TODO: TYPE Color Callback
+    itemStyle?: ItemStyleOption
+    label?: PieLabelOption
+    labelLine?: PieLabelLineOption
+}
 interface PieLabelOption extends Omit<LabelOption, 'rotate' | 'position'> {
     rotate?: number
     alignTo?: 'none' | 'labelLine' | 'edge'
-    margin?: string | number
+    edgeDistance?: string | number
     bleedMargin?: number
     distanceToLabelLine?: number
 
     position?: LabelOption['position'] | 'outer' | 'inner' | 'center'
 }
 
-export interface PieDataItemOption extends
-    OptionDataItemObject<OptionDataValueNumeric>,
-    SelectableTarget {
+interface PieLabelLineOption extends LabelLineOption {
+    /**
+     * Max angle between labelLine and surface normal.
+     * 0 - 180
+     */
+    maxSurfaceAngle?: number
+}
 
-    itemStyle?: ItemStyleOption
-    label?: PieLabelOption
-    labelLine?: LabelGuideLineOption
-
+interface ExtraStateOption {
     emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: PieLabelOption
-        labelLine?: LabelGuideLineOption
+        scale?: boolean
+        scaleSize?: number
     }
 }
+
+export interface PieDataItemOption extends
+    OptionDataItemObject<OptionDataValueNumeric>,
+    PieStateOption, StatesOptionMixin<PieStateOption, ExtraStateOption> {
+
+    cursor?: string
+}
 export interface PieSeriesOption extends
-    SeriesOption,
-    DataSelectableOptionMixin,
+    Omit<SeriesOption<PieStateOption, ExtraStateOption>, 'labelLine'>, PieStateOption,
     CircleLayoutOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
     type: 'pie'
 
-    hoverAnimation?: boolean
-
     roseType?: 'radius' | 'area'
-
-    // TODO: TYPE Color Callback
-    itemStyle?: ItemStyleOption
-    label?: PieLabelOption
-    labelLine?: LabelGuideLineOption
 
     clockwise?: boolean
     startAngle?: number
@@ -89,18 +92,11 @@ export interface PieSeriesOption extends
     minShowLabelAngle?: number
 
     selectedOffset?: number
-    hoverOffset?: number
 
     avoidLabelOverlap?: boolean
     percentPrecision?: number
 
     stillShowZeroSum?: boolean
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: PieLabelOption
-        labelLine?: LabelGuideLineOption
-    }
 
     animationType?: 'expansion' | 'scale'
     animationTypeUpdate?: 'transition' | 'expansion'
@@ -126,8 +122,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
         );
 
-        this.updateSelectedMap(this._createSelectableList());
-
         this._defaultLabelLine(option);
     }
 
@@ -136,8 +130,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      */
     mergeOption(): void {
         super.mergeOption.apply(this, arguments as any);
-
-        this.updateSelectedMap(this._createSelectableList());
     }
 
     /**
@@ -148,20 +140,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-    }
-
-    private _createSelectableList(): SelectableTarget[] {
-        const data = this.getRawData();
-        const valueDim = data.mapDimension('value');
-        const targetList = [];
-        for (let i = 0, len = data.count(); i < len; i++) {
-            targetList.push({
-                name: data.getName(i),
-                value: data.get(valueDim, i),
-                selected: retrieveRawAttr(data, i, 'selected')
-            });
-        }
-        return targetList;
     }
 
     /**
@@ -205,7 +183,6 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        hoverAnimation: true,
         // 默认全局居中
         center: ['50%', '50%'],
         radius: [0, '75%'],
@@ -221,11 +198,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
         // 选中时扇区偏移量
         selectedOffset: 10,
-        // 高亮扇区偏移量
-        hoverOffset: 10,
 
-        // If use strategy to avoid label overlapping
-        avoidLabelOverlap: true,
         // 选择模式，默认关闭，可选single，multiple
         // selectedMode: false,
         // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
@@ -246,16 +219,18 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         height: null,
 
         label: {
+            // color: 'inherit',
             // If rotate around circle
             rotate: 0,
             show: true,
+            overflow: 'truncate',
             // 'outer', 'inside', 'center'
             position: 'outer',
             // 'none', 'labelLine', 'edge'. Works only when position is 'outer'
             alignTo: 'none',
             // Closest distance between label and chart edge.
             // Works only position is 'outer' and alignTo is 'edge'.
-            margin: '25%',
+            edgeDistance: '25%',
             // Works only position is 'outer' and alignTo is not 'edge'.
             bleedMargin: 10,
             // Distance between text and label line.
@@ -272,6 +247,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // 引导线两段中的第二段长度
             length2: 15,
             smooth: false,
+            minTurnAngle: 90,
+            maxSurfaceAngle: 90,
             lineStyle: {
                 // color: 各异,
                 width: 1,
@@ -282,19 +259,33 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             borderWidth: 1
         },
 
+        labelLayout: {
+            // Hide the overlapped label.
+            hideOverlap: true
+        },
+
+        emphasis: {
+            scale: true,
+            scaleSize: 5
+        },
+
+        // If use strategy to avoid label overlapping
+        avoidLabelOverlap: true,
+
         // Animation type. Valid values: expansion, scale
         animationType: 'expansion',
+
+        animationDuration: 1000,
 
         // Animation type when update. Valid values: transition, expansion
         animationTypeUpdate: 'transition',
 
-        animationEasing: 'cubicOut'
+        animationEasingUpdate: 'cubicInOut',
+        animationDurationUpdate: 500,
+        animationEasing: 'cubicInOut'
     };
 
 }
-
-interface PieSeriesModel extends DataSelectableMixin<PieSeriesOption> {}
-zrUtil.mixin(PieSeriesModel, DataSelectableMixin);
 
 SeriesModel.registerClass(PieSeriesModel);
 

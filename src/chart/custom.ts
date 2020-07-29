@@ -17,12 +17,12 @@
 * under the License.
 */
 
-
-import {__DEV__} from '../config';
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
+import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
+import * as labelStyleHelper from '../label/labelStyle';
 import {getDefaultLabel} from './helper/labelHelper';
 import createListFromArray from './helper/createListFromArray';
 import {getLayoutOnAxis} from '../layout/barGrid';
@@ -48,7 +48,8 @@ import {
     ZRStyleProps,
     DisplayState,
     ECElement,
-    DisplayStateNonNormal
+    DisplayStateNonNormal,
+    BlurScope
 } from '../util/types';
 import Element, { ElementProps, ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../coord/cartesian/prepareCustom';
@@ -135,6 +136,9 @@ interface CustomBaseElementOption extends Partial<Pick<
     extra?: TransitionAnyOption;
     // updateDuringAnimation
     during?(params: typeof customDuringAPI): void;
+
+    focus?: 'none' | 'self' | 'series' | ArrayLike<number>
+    blurScope?: BlurScope
 };
 interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     Displayable, 'zlevel' | 'z' | 'z2' | 'invisible'
@@ -143,6 +147,8 @@ interface CustomDisplayableOption extends CustomBaseElementOption, Partial<Pick<
     // `false` means remove emphasis trigger.
     styleEmphasis?: ZRStyleProps | false;
     emphasis?: CustomDisplayableOptionOnState;
+    blur?: CustomDisplayableOptionOnState;
+    select?: CustomDisplayableOptionOnState;
 }
 interface CustomDisplayableOptionOnState extends Partial<Pick<
     Displayable, TransformProps | 'textConfig' | 'z2'
@@ -156,7 +162,8 @@ interface CustomGroupOption extends CustomBaseElementOption {
     height?: number;
     // @deprecated
     diffChildrenByName?: boolean;
-    children: CustomElementOption[];
+    // Can only set focus, blur on the root element.
+    children: Omit<CustomElementOption, 'focus' | 'blurScope'>[];
     $mergeChildren: false | 'byName' | 'byIndex';
 }
 interface CustomZRPathOption extends CustomDisplayableOption {
@@ -180,6 +187,8 @@ interface CustomImageOption extends CustomDisplayableOption {
     type: 'image';
     style?: ImageStyleProps & TransitionAnyOption;
     emphasis?: CustomImageOptionOnState;
+    blur?: CustomImageOptionOnState;
+    select?: CustomImageOptionOnState;
 }
 interface CustomImageOptionOnState extends CustomDisplayableOptionOnState {
     style?: ImageStyleProps & TransitionAnyOption;
@@ -200,7 +209,7 @@ interface CustomSeriesRenderItemAPI extends
     visual(visualType: string, dataIndexInside?: number): ReturnType<List['getItemVisual']>;
     barLayout(opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>): ReturnType<typeof getLayoutOnAxis>;
     currentSeriesIndices(): ReturnType<GlobalModel['getCurrentSeriesIndices']>;
-    font(opt: Parameters<typeof graphicUtil.getFont>[0]): ReturnType<typeof graphicUtil.getFont>;
+    font(opt: Parameters<typeof labelStyleHelper.getFont>[0]): ReturnType<typeof labelStyleHelper.getFont>;
 }
 interface CustomSeriesRenderItemParamsCoordSys {
     type: string;
@@ -230,9 +239,13 @@ type CustomSeriesRenderItem = (
     api: CustomSeriesRenderItemAPI
 ) => CustomElementOption;
 
+interface CustomSeriesStateOption {
+    itemStyle?: ItemStyleOption;
+    label?: LabelOption;
+}
 
 interface CustomSeriesOption extends
-    SeriesOption,
+    SeriesOption<never>,    // don't support StateOption in custom series.
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
@@ -250,14 +263,10 @@ interface CustomSeriesOption extends
 
     // FIXME needed?
     tooltip?: SeriesTooltipOption;
-
-    itemStyle?: ItemStyleOption;
-    label?: LabelOption;
-    emphasis?: {
-        itemStyle?: ItemStyleOption;
-        label?: LabelOption;
-    };
 }
+
+interface LegacyCustomSeriesOption extends SeriesOption<CustomSeriesStateOption>, CustomSeriesStateOption {}
+
 
 interface LooseElementProps extends ElementProps {
     style?: ZRStyleProps;
@@ -282,13 +291,20 @@ const VISUAL_PROPS = {
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
+const BLUR = 'blur' as const;
+const SELECT = 'select' as const;
+const STATES = [NORMAL, EMPHASIS, BLUR, SELECT] as const;
 const PATH_ITEM_STYLE = {
     normal: ['itemStyle'],
-    emphasis: [EMPHASIS, 'itemStyle']
+    emphasis: [EMPHASIS, 'itemStyle'],
+    blur: [BLUR, 'itemStyle'],
+    select: [SELECT, 'itemStyle']
 } as const;
 const PATH_LABEL = {
     normal: ['label'],
-    emphasis: [EMPHASIS, 'label']
+    emphasis: [EMPHASIS, 'label'],
+    blur: [BLUR, 'label'],
+    select: [SELECT, 'label']
 } as const;
 // Use prefix to avoid index to be the same as el.name,
 // which will cause weird update animation.
@@ -304,16 +320,21 @@ type AttachedTxInfo = {
         cfg: ElementTextConfig;
         conOpt: CustomElementOptionOnState;
     };
+    blur: {
+        cfg: ElementTextConfig;
+        conOpt: CustomElementOptionOnState;
+    };
+    select: {
+        cfg: ElementTextConfig;
+        conOpt: CustomElementOptionOnState;
+    };
 };
 const attachedTxInfoTmp = {
     normal: {},
-    emphasis: {}
+    emphasis: {},
+    blur: {},
+    select: {}
 } as AttachedTxInfo;
-
-const Z2_SPECIFIED_BIT = {
-    normal: 0,
-    emphasis: 1
-} as const;
 
 const LEGACY_TRANSFORM_PROPS = {
     position: ['x', 'y'],
@@ -353,7 +374,7 @@ class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
 
     static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
 
-    preventAutoZ = true;
+    // preventAutoZ = true;
 
     currentZLevel: number;
     currentZ: number;
@@ -378,9 +399,6 @@ class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
 
         // Geo coordinate system
         // geoIndex: 0,
-
-        // label: {}
-        // itemStyle: {}
     };
 
     optionUpdated() {
@@ -392,10 +410,10 @@ class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
         return createListFromArray(this.getSource(), this);
     }
 
-    getDataParams(dataIndex: number, dataType: string, el: Element): CallbackDataParams & {
+    getDataParams(dataIndex: number, dataType?: string, el?: Element): CallbackDataParams & {
         info: CustomExtraElementInfo
     } {
-        const params = super.getDataParams(dataIndex, dataType, el) as ReturnType<CustomSeriesModel['getDataParams']>;
+        const params = super.getDataParams(dataIndex, dataType) as ReturnType<CustomSeriesModel['getDataParams']>;
         el && (params.info = inner(el).info);
         return params;
     }
@@ -481,7 +499,7 @@ class CustomSeriesView extends ChartView {
         function setIncrementalAndHoverLayer(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = true;
-                el.useHoverLayer = true;
+                el.ensureState('emphasis').hoverLayer = true;
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {
@@ -566,6 +584,7 @@ function createEl(elOption: CustomElementOption): Element {
     // some cases probably be broken: hierarchy layout along z, like circle packing,
     // where emphasis only intending to modify color/border rather than lift z2.
     (el as ECElement).z2EmphasisLift = 1;
+    (el as ECElement).z2SelectLift = 1;
 
     return el;
 }
@@ -1102,7 +1121,7 @@ function updateElOnState(
         }
         else {
             // style is needed to enable defaut emphasis.
-            stateObj.style = styleOpt || {};
+            stateObj.style = styleOpt || null;
         }
         // If `elOption.styleEmphasis` or `elOption.emphasis.style` is `false`,
         // remove hover style.
@@ -1112,11 +1131,7 @@ function updateElOnState(
             stateObj.textConfig = txCfgOpt;
         }
 
-        graphicUtil.enableElementHoverEmphasis(elDisplayable);
-    }
-
-    if (isRoot) {
-        graphicUtil.setAsHighDownDispatcher(el, styleOpt !== false);
+        setDefaultStateProxy(elDisplayable);
     }
 }
 
@@ -1141,21 +1156,14 @@ function updateZ(
     const optZ2 = elOption.z2;
     optZ2 != null && (elDisplayable.z2 = optZ2 || 0);
 
-    const textContent = elDisplayable.getTextContent();
-    if (textContent) {
-        textContent.z = currentZ;
-        textContent.zlevel = currentZLevel;
+    for (let i = 0; i < STATES.length; i++) {
+        updateZForEachState(elDisplayable, elOption, STATES[i]);
     }
-
-    updateZForEachState(elDisplayable, textContent, elOption, attachedTxInfo, NORMAL);
-    updateZForEachState(elDisplayable, textContent, elOption, attachedTxInfo, EMPHASIS);
 }
 
 function updateZForEachState(
     elDisplayable: Displayable,
-    textContent: Displayable,
     elOption: CustomDisplayableOption,
-    attachedTxInfo: AttachedTxInfo,
     state: DisplayState
 ): void {
     const isNormal = state === NORMAL;
@@ -1166,27 +1174,6 @@ function updateZForEachState(
         // Do not `ensureState` until required.
         stateObj = isNormal ? elDisplayable : elDisplayable.ensureState(state);
         stateObj.z2 = optZ2 || 0;
-    }
-
-    const txConOpt = attachedTxInfo[state].conOpt;
-    if (textContent) {
-        const innerEl = inner(elDisplayable);
-        const txConZ2Set = innerEl.txConZ2Set || 0;
-        const txOptZ2 = txConOpt ? txConOpt.z2 : null;
-        const z2SetMask = 1 << Z2_SPECIFIED_BIT[state];
-
-        // Set textContent z2 as hostEl.z2 + 1 only if
-        // textContent z2 is not specified.
-        if (txOptZ2 != null) {
-            // Do not `ensureState` until required.
-            (isNormal ? textContent : textContent.ensureState(state)).z2 = txOptZ2;
-            innerEl.txConZ2Set = txConZ2Set | z2SetMask;
-        }
-        // If stateObj exists, that means stateObj.z2 has been updated, where the textContent z2
-        // should be followed, no matter textContent or textContent.emphasis is specified in elOption.
-        else if (stateObj && (txConZ2Set & z2SetMask) === 0) {
-            (isNormal ? textContent : textContent.ensureState(state)).z2 = stateObj.z2 + 1;
-        }
     }
 }
 
@@ -1279,20 +1266,23 @@ function makeRenderItem(
 
     // Do not support call `api` asynchronously without dataIndexInside input.
     let currDataIndexInside: number;
-    let currItemModel: Model<CustomSeriesOption>;
-    let currItemStyleModels: Partial<Record<DisplayState, Model<CustomSeriesOption['itemStyle']>>> = {};
-    let currLabelModels: Partial<Record<DisplayState, Model<CustomSeriesOption['label']>>> = {};
+    let currItemModel: Model<LegacyCustomSeriesOption>;
+    let currItemStyleModels: Partial<Record<DisplayState, Model<LegacyCustomSeriesOption['itemStyle']>>> = {};
+    let currLabelModels: Partial<Record<DisplayState, Model<LegacyCustomSeriesOption['label']>>> = {};
 
-    const seriesItemStyleModels = {
-        normal: customSeries.getModel(PATH_ITEM_STYLE.normal),
-        emphasis: customSeries.getModel(PATH_ITEM_STYLE.emphasis)
-    } as Record<DisplayState, Model<CustomSeriesOption['label']>>;
-    const seriesLabelModels = {
-        normal: customSeries.getModel(PATH_LABEL.normal),
-        emphasis: customSeries.getModel(PATH_LABEL.emphasis)
-    } as Record<DisplayState, Model<CustomSeriesOption['label']>>;
+    const seriesItemStyleModels = {} as Record<DisplayState, Model<LegacyCustomSeriesOption['itemStyle']>>;
 
-    function getItemModel(dataIndexInside: number): Model<CustomSeriesOption> {
+    const seriesLabelModels = {} as Record<DisplayState, Model<LegacyCustomSeriesOption['label']>>;
+
+    for (let i = 0; i < STATES.length; i++) {
+        const stateName = STATES[i];
+        seriesItemStyleModels[stateName] = (customSeries as Model<LegacyCustomSeriesOption>)
+            .getModel(PATH_ITEM_STYLE[stateName]);
+        seriesLabelModels[stateName] = (customSeries as Model<LegacyCustomSeriesOption>)
+            .getModel(PATH_LABEL[stateName]);
+    }
+
+    function getItemModel(dataIndexInside: number): Model<LegacyCustomSeriesOption> {
         return dataIndexInside === currDataIndexInside
             ? (currItemModel || (currItemModel = data.getItemModel(dataIndexInside)))
             : data.getItemModel(dataIndexInside);
@@ -1377,19 +1367,19 @@ function makeRenderItem(
         visualColor != null && (itemStyle.fill = visualColor);
         opacity != null && (itemStyle.opacity = opacity);
 
-        const opt = {autoColor: isString(visualColor) ? visualColor : '#000'};
+        const opt = {inheritColor: isString(visualColor) ? visualColor : '#000'};
         const labelModel = getLabelModel(dataIndexInside, NORMAL);
         // Now that the feture of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in
         // `convertToEC4StyleForCustomSerise`.
-        const textStyle = graphicUtil.createTextStyle(labelModel, null, opt, false, true);
+        const textStyle = labelStyleHelper.createTextStyle(labelModel, null, opt, false, true);
         textStyle.text = labelModel.getShallow('show')
             ? retrieve2(
                 customSeries.getFormattedLabel(dataIndexInside, NORMAL),
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
-        const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, opt, false);
+        const textConfig = labelStyleHelper.createTextConfig(labelModel, opt, false);
 
         preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
@@ -1414,7 +1404,7 @@ function makeRenderItem(
 
         let itemStyle = getItemStyleModel(dataIndexInside, EMPHASIS).getItemStyle();
         const labelModel = getLabelModel(dataIndexInside, EMPHASIS);
-        const textStyle = graphicUtil.createTextStyle(labelModel, null, null, true, true);
+        const textStyle = labelStyleHelper.createTextStyle(labelModel, null, null, true, true);
         textStyle.text = labelModel.getShallow('show')
             ? retrieve3(
                 customSeries.getFormattedLabel(dataIndexInside, EMPHASIS),
@@ -1422,7 +1412,7 @@ function makeRenderItem(
                 getDefaultLabel(data, dataIndexInside)
             )
             : null;
-        const textConfig = graphicUtil.createTextConfig(textStyle, labelModel, null, true);
+        const textConfig = labelStyleHelper.createTextConfig(labelModel, null, true);
 
         preFetchFromExtra(userProps, itemStyle);
         itemStyle = convertToEC4StyleForCustomSerise(itemStyle, textStyle, textConfig);
@@ -1499,9 +1489,9 @@ function makeRenderItem(
      * @return font string
      */
     function font(
-        opt: Parameters<typeof graphicUtil.getFont>[0]
-    ): ReturnType<typeof graphicUtil.getFont> {
-        return graphicUtil.getFont(opt, ecModel);
+        opt: Parameters<typeof labelStyleHelper.getFont>[0]
+    ): ReturnType<typeof labelStyleHelper.getFont> {
+        return labelStyleHelper.getFont(opt, ecModel);
     }
 }
 
@@ -1541,6 +1531,8 @@ function createOrUpdateItem(
     el = doCreateOrUpdateEl(el, dataIndex, elOption, seriesModel, group, true);
     el && data.setItemGraphicEl(dataIndex, el);
 
+    enableHoverEmphasis(el, elOption.focus, elOption.blurScope);
+
     return el;
 }
 
@@ -1578,7 +1570,10 @@ function doCreateOrUpdateEl(
     }
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
-        attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt = null;
+        attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt =
+        attachedTxInfoTmp.blur.cfg = attachedTxInfoTmp.blur.conOpt =
+        attachedTxInfoTmp.select.cfg = attachedTxInfoTmp.select.conOpt = null;
+
     attachedTxInfoTmp.isLegacy = false;
 
     doCreateOrUpdateAttachedTx(
@@ -1589,18 +1584,21 @@ function doCreateOrUpdateEl(
         el, dataIndex, elOption, seriesModel, isInit
     );
 
-    const stateOptEmphasis = retrieveStateOption(elOption, EMPHASIS);
-    const styleOptEmphasis = retrieveStyleOptionOnState(elOption, stateOptEmphasis, EMPHASIS);
-
     updateElNormal(el, dataIndex, elOption, elOption.style, attachedTxInfoTmp, seriesModel, isInit, false);
-    updateElOnState(EMPHASIS, el, stateOptEmphasis, styleOptEmphasis, attachedTxInfoTmp, isRoot, false);
+
+    for (let i = 0; i < STATES.length; i++) {
+        const stateName = STATES[i];
+        if (stateName !== NORMAL) {
+            const otherStateOpt = retrieveStateOption(elOption, stateName);
+            const otherStyleOpt = retrieveStyleOptionOnState(elOption, otherStateOpt, stateName);
+            updateElOnState(stateName, el, otherStateOpt, otherStyleOpt, attachedTxInfoTmp, isRoot, false);
+        }
+    }
 
     updateZ(el, elOption, seriesModel, attachedTxInfoTmp);
 
     if (elOption.type === 'group') {
-        mergeChildren(
-            el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel
-        );
+        mergeChildren(el as graphicUtil.Group, dataIndex, elOption as CustomGroupOption, seriesModel);
     }
 
     if (toBeReplacedIdx >= 0) {
@@ -1703,14 +1701,10 @@ function doCreateOrUpdateAttachedTx(
     // `elOption.textContent.emphasis.style: false` means remove the style from emphasis state.
     let txConOptNormal = attachedTxInfo.normal.conOpt as CustomElementOption | false;
     const txConOptEmphasis = attachedTxInfo.emphasis.conOpt as CustomElementOptionOnState;
+    const txConOptBlur = attachedTxInfo.blur.conOpt as CustomElementOptionOnState;
+    const txConOptSelect = attachedTxInfo.select.conOpt as CustomElementOptionOnState;
 
-    if (txConOptEmphasis != null) {
-        // If textContent has emphasis state, el should auto has emphasis
-        // state, otherwise it can not be triggered.
-        el.ensureState(EMPHASIS);
-    }
-
-    if (txConOptNormal != null || txConOptEmphasis != null) {
+    if (txConOptNormal != null || txConOptEmphasis != null || txConOptSelect != null || txConOptBlur != null) {
         let textContent = el.getTextContent();
         if (txConOptNormal === false) {
             textContent && el.removeTextContent();
@@ -1731,8 +1725,19 @@ function doCreateOrUpdateAttachedTx(
             updateElNormal(
                 textContent, dataIndex, txConOptNormal, txConStlOptNormal, null, seriesModel, isInit, true
             );
-            const txConStlOptEmphasis = retrieveStyleOptionOnState(txConOptNormal, txConOptEmphasis, EMPHASIS);
-            updateElOnState(EMPHASIS, textContent, txConOptEmphasis, txConStlOptEmphasis, null, false, true);
+            for (let i = 0; i < STATES.length; i++) {
+                const stateName = STATES[i];
+                if (stateName !== NORMAL) {
+                    const txConOptOtherState = attachedTxInfo[stateName].conOpt as CustomElementOptionOnState;
+                    updateElOnState(
+                        stateName,
+                        textContent,
+                        txConOptOtherState,
+                        retrieveStyleOptionOnState(txConOptNormal, txConOptOtherState, stateName),
+                        null, false, true
+                    );
+                }
+            }
 
             txConStlOptNormal ? textContent.dirty() : textContent.markRedraw();
         }

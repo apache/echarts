@@ -21,7 +21,6 @@ import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import {encodeHTML} from '../../util/format';
 import Model from '../../model/Model';
-import { __DEV__ } from '../../config';
 import {
     SeriesOption,
     BoxLayoutOptionMixin,
@@ -30,24 +29,42 @@ import {
     ItemStyleOption,
     LineStyleOption,
     LayoutOrient,
-    ColorString
+    ColorString,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
 
-type SankeyDataValue = OptionDataValue | OptionDataValue[];
-
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
+
+export interface SankeyNodeStateOption {
+    label?: LabelOption
+    itemStyle?: ItemStyleOption
+}
+
+export interface SankeyEdgeStateOption {
+    lineStyle?: SankeyEdgeStyleOption
+}
+
+interface SankeyBothStateOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
+}
 
 interface SankeyEdgeStyleOption extends LineStyleOption {
     curveness?: number
 }
 
-export interface SankeyNodeItemOption {
+interface ExtraStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+    }
+}
+
+export interface SankeyNodeItemOption extends SankeyNodeStateOption,
+    StatesOptionMixin<SankeyNodeStateOption, ExtraStateOption>,
+    OptionDataItemObject<OptionDataValue> {
     id?: string
-    name?: string
-    value?: SankeyDataValue
 
     localX?: number
     localY?: number
@@ -57,16 +74,10 @@ export interface SankeyNodeItemOption {
     draggable?: boolean
 
     focusNodeAdjacency?: FocusNodeAdjacency
-
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-    }
 }
 
-export interface SankeyEdgeItemOption {
+export interface SankeyEdgeItemOption
+    extends SankeyEdgeStateOption, StatesOptionMixin<SankeyEdgeStateOption, ExtraStateOption> {
     /**
      * Name or index of source node.
      */
@@ -77,18 +88,15 @@ export interface SankeyEdgeItemOption {
     target?: string | number
 
     focusNodeAdjacency?: FocusNodeAdjacency
-
-    lineStyle?: SankeyEdgeStyleOption
-    emphasis?: {
-        lineStyle?: SankeyEdgeStyleOption
-    }
 }
 
 export interface SankeyLevelOption {
     depth: number
 }
 
-export interface SankeySeriesOption extends SeriesOption, BoxLayoutOptionMixin {
+export interface SankeySeriesOption
+    extends SeriesOption<SankeyBothStateOption, ExtraStateOption>, SankeyBothStateOption,
+    BoxLayoutOptionMixin {
     type?: 'sankey'
 
     /**
@@ -122,15 +130,6 @@ export interface SankeySeriesOption extends SeriesOption, BoxLayoutOptionMixin {
     layoutIterations?: number
 
     nodeAlign?: 'justify' | 'left' | 'right'    // TODO justify should be auto
-
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-    lineStyle?: SankeyEdgeStyleOption
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-        lineStyle?: SankeyEdgeStyleOption
-    }
 
     data?: SankeyNodeItemOption[]
     nodes?: SankeyNodeItemOption[]
@@ -322,6 +321,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             },
             lineStyle: {
                 opacity: 0.5
+            }
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
             }
         },
 

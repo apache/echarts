@@ -26,8 +26,11 @@ import * as helper from '../helper/treeHelper';
 import SunburstSeriesModel from './SunburstSeries';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../ExtensionAPI';
+import { extend } from 'zrender/src/core/util';
+import { deprecateReplaceLog } from '../../util/log';
 
-const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
+export const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 
 interface SunburstRootToNodePayload extends Payload {}
 
@@ -61,22 +64,31 @@ const HIGHLIGHT_ACTION = 'sunburstHighlight';
 interface SunburstHighlightPayload extends Payload {}
 
 echarts.registerAction(
-    {type: HIGHLIGHT_ACTION, update: 'updateView'},
-    function (payload: SunburstHighlightPayload, ecModel: GlobalModel) {
-
+    {type: HIGHLIGHT_ACTION, update: 'none'},
+    function (payload: SunburstHighlightPayload, ecModel: GlobalModel, api: ExtensionAPI) {
+        // Clone
+        payload = extend({}, payload);
         ecModel.eachComponent(
             {mainType: 'series', subType: 'sunburst', query: payload},
             handleHighlight
         );
 
-        function handleHighlight(model: SunburstSeriesModel, index: number) {
+        function handleHighlight(model: SunburstSeriesModel) {
             const targetInfo = helper
                 .retrieveTargetInfo(payload, [HIGHLIGHT_ACTION], model);
-
             if (targetInfo) {
-                payload.highlight = targetInfo.node;
+                payload.dataIndex = targetInfo.node.dataIndex;
             }
         }
+
+        if (__DEV__) {
+            deprecateReplaceLog('highlight', 'sunburstHighlight');
+        }
+
+        // Fast forward action
+        api.dispatchAction(extend(payload, {
+            type: 'highlight'
+        }));
     }
 );
 
@@ -87,15 +99,15 @@ interface SunburstUnhighlightPayload extends Payload {}
 
 echarts.registerAction(
     {type: UNHIGHLIGHT_ACTION, update: 'updateView'},
-    function (payload: SunburstUnhighlightPayload, ecModel: GlobalModel) {
+    function (payload: SunburstUnhighlightPayload, ecModel: GlobalModel, api: ExtensionAPI) {
+        payload = extend({}, payload);
 
-        ecModel.eachComponent(
-            {mainType: 'series', subType: 'sunburst', query: payload},
-            handleUnhighlight
-        );
-
-        function handleUnhighlight(model: SunburstSeriesModel, index: number) {
-            payload.unhighlight = true;
+        if (__DEV__) {
+            deprecateReplaceLog('downplay', 'sunburstUnhighlight');
         }
+
+        api.dispatchAction(extend(payload, {
+            type: 'downplay'
+        }));
     }
 );

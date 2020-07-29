@@ -261,7 +261,10 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         context?: Ctx
     ) {
         zrUtil.each(this.getTargetSeriesIndices(), function (seriesIndex) {
-            callback.call(context, this.ecModel.getSeriesByIndex(seriesIndex));
+            const seriesModel = this.ecModel.getSeriesByIndex(seriesIndex);
+            if (seriesModel) {
+                callback.call(context, seriesModel);
+            }
         }, this);
     }
 

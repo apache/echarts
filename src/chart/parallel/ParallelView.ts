@@ -18,9 +18,10 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import List from '../../data/List';
-import ParallelSeriesModel from './ParallelSeries';
+import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { StageHandlerProgressParams, ParsedValue, Payload } from '../../util/types';
@@ -53,9 +54,7 @@ class ParallelView extends ChartView {
         seriesModel: ParallelSeriesModel,
         ecModel: GlobalModel,
         api: ExtensionAPI,
-        payload: Payload & {
-            animation?: boolean
-        }
+        payload: Payload
     ) {
         const dataGroup = this._dataGroup;
         const data = seriesModel.getData();
@@ -77,12 +76,11 @@ class ParallelView extends ChartView {
 
         function update(newDataIndex: number, oldDataIndex: number) {
             const line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
-            graphic.clearStates(line);
 
             const points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);
-            const animationModel = (payload && payload.animation === false) ? null : seriesModel;
-            graphic.updateProps(line, {shape: {points: points}}, animationModel, newDataIndex);
+
+            graphic.updateProps(line, {shape: {points: points}}, seriesModel, newDataIndex);
 
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
@@ -176,7 +174,7 @@ function addEl(data: List, dataGroup: graphic.Group, dataIndex: number, dimensio
     const points = createLinePoints(data, dataIndex, dimensions, coordSys);
     const line = new graphic.Polyline({
         shape: {points: points},
-        silent: true,
+        // silent: true,
         z2: 10
     });
     dataGroup.add(line);
@@ -202,6 +200,12 @@ function updateElCommon(
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.fill = null;
     seriesScope.smooth && (el.shape.smooth = seriesScope.smooth);
+
+    const itemModel = data.getItemModel<ParallelSeriesDataItemOption>(dataIndex);
+    const emphasisModel = itemModel.getModel('emphasis');
+    setStatesStylesFromModel(el, itemModel, 'lineStyle', 'getLineStyle');
+
+    enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
 }
 
 // function simpleDiff(oldData, newData, dimensions) {

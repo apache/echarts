@@ -106,7 +106,7 @@ class Scheduler {
 
     // Shared with echarts.js, should only be modified by
     // this file and echarts.js
-    unfinished: number;
+    unfinished: boolean;
 
     private _dataProcessorHandlers: StageHandlerInternal[];
     private _visualHandlers: StageHandlerInternal[];
@@ -301,7 +301,7 @@ class Scheduler {
         opt?: PerformStageTaskOpt
     ): void {
         opt = opt || {};
-        let unfinished: number;
+        let unfinished: boolean = false;
         const scheduler = this;
 
         each(stageHandlers, function (stageHandler, idx) {
@@ -332,7 +332,9 @@ class Scheduler {
                 agentStubMap.each(function (stub) {
                     stub.perform(performArgs);
                 });
-                unfinished |= overallTask.perform(performArgs) as any;
+                if (overallTask.perform(performArgs)) {
+                    unfinished = true;
+                }
             }
             else if (seriesTaskMap) {
                 seriesTaskMap.each(function (task, pipelineId) {
@@ -351,7 +353,10 @@ class Scheduler {
                     performArgs.skip = !stageHandler.performRawSeries
                         && ecModel.isSeriesFiltered(task.context.model);
                     scheduler.updatePayload(task, payload);
-                    unfinished |= task.perform(performArgs) as any;
+
+                    if (task.perform(performArgs)) {
+                        unfinished = true;
+                    }
                 });
             }
         });
@@ -360,18 +365,18 @@ class Scheduler {
             return opt.setDirty && (!opt.dirtyMap || opt.dirtyMap.get(task.__pipeline.id));
         }
 
-        this.unfinished |= unfinished;
+        this.unfinished = unfinished || this.unfinished;
     }
 
     performSeriesTasks(ecModel: GlobalModel): void {
-        let unfinished: number;
+        let unfinished: boolean;
 
         ecModel.eachSeries(function (seriesModel) {
             // Progress to the end for dataInit and dataRestore.
-            unfinished |= seriesModel.dataTask.perform() as any;
+            unfinished = seriesModel.dataTask.perform() || unfinished;
         });
 
-        this.unfinished |= unfinished;
+        this.unfinished = unfinished || this.unfinished;
     }
 
     plan(): void {

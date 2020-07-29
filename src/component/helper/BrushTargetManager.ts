@@ -18,7 +18,6 @@
 */
 
 
-import {__DEV__} from '../../config';
 import { each, indexOf, curry, assert, map, createHashMap } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import * as brushHelper from './brushHelper';
@@ -286,10 +285,10 @@ function formatMinMax(minMax: BrushDimensionMinMax): BrushDimensionMinMax {
 }
 
 function parseFinder(
-    ecModel: GlobalModel, option: ModelFinder
+    ecModel: GlobalModel, finder: ModelFinder
 ): ParsedModelFinder {
     return modelUtilParseFinder(
-        ecModel, option, {includeMainTypes: INCLUDE_FINDER_MAIN_TYPES}
+        ecModel, finder, {includeMainTypes: INCLUDE_FINDER_MAIN_TYPES}
     );
 }
 
@@ -396,7 +395,7 @@ const panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
 
     grid: function (this: BrushTargetInfoCartesian2D) {
         // grid is not Transformable.
-        return this.coordSys.grid.getRect().clone();
+        return this.coordSys.master.getRect().clone();
     },
 
     geo: function (this: BrushTargetInfoGeo) {

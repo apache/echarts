@@ -25,10 +25,8 @@ import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSer
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
-import {windowOpen} from '../../util/format';
-
-
-const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
+import { ROOT_TO_NODE_ACTION } from './sunburstAction';
+import { windowOpen } from '../../util/format';
 
 interface DrawTreeNode extends TreeNode {
     parentNode: DrawTreeNode
@@ -80,20 +78,6 @@ class SunburstView extends ChartView {
 
         renderRollUp(virtualRoot, newRoot);
 
-        if (payload && payload.highlight && payload.highlight.piece) {
-            const highlightPolicy = seriesModel.getShallow('highlightPolicy');
-            payload.highlight.piece.onEmphasis(highlightPolicy);
-        }
-        else if (payload && payload.unhighlight) {
-            let piece = this.virtualPiece;
-            if (!piece && virtualRoot.children.length) {
-                piece = virtualRoot.children[0].piece;
-            }
-            if (piece) {
-                piece.onNormal();
-            }
-        }
-
         this._initEvents();
 
         this._oldChildren = newChildren;
@@ -132,7 +116,7 @@ class SunburstView extends ChartView {
                     if (newNode) {
                         // Update
                         oldNode.piece.updateData(
-                            false, newNode, 'normal', seriesModel, ecModel);
+                            false, newNode, seriesModel, ecModel);
 
                         // For tooltip
                         data.setItemGraphicEl(newNode.dataIndex, oldNode.piece);
@@ -174,7 +158,7 @@ class SunburstView extends ChartView {
                 if (self.virtualPiece) {
                     // Update
                     self.virtualPiece.updateData(
-                        false, virtualRoot, 'normal', seriesModel, ecModel);
+                        false, virtualRoot, seriesModel, ecModel);
                 }
                 else {
                     // Add
@@ -210,7 +194,7 @@ class SunburstView extends ChartView {
             const viewRoot = this.seriesModel.getViewRoot();
             viewRoot.eachNode((node: DrawTreeNode) => {
                 if (!targetFound
-                    && node.piece && node.piece.childAt(0) === e.target
+                    && node.piece && node.piece === e.target
                 ) {
                     const nodeClick = node.getModel<SunburstSeriesNodeItemOption>().get('nodeClick');
                     if (nodeClick === 'rootToNode') {

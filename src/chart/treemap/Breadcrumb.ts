@@ -18,13 +18,14 @@
 */
 
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import * as layout from '../../util/layout';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { curry, defaults } from 'zrender/src/core/util';
-import { ZRElementEvent, BoxLayoutOptionMixin } from '../../util/types';
+import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/types';
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 
@@ -181,6 +182,7 @@ class Breadcrumb {
                 z: 10,
                 onclick: curry(onSelect, itemNode)
             });
+            (el as ECElement).disableLabelAnimation = true;
 
             this.group.add(el);
 
@@ -209,7 +211,7 @@ function makeItemPoints(x: number, y: number, itemWidth: number, itemHeight: num
 
 // Package custom mouse event.
 function packEventData(el: Element, seriesModel: TreemapSeriesModel, itemNode: TreeNode) {
-    graphic.getECData(el).eventData = {
+    getECData(el).eventData = {
         componentType: 'series',
         componentSubType: 'treemap',
         componentIndex: seriesModel.componentIndex,

@@ -29,6 +29,7 @@ import ParallelModel from './ParallelModel';
 import { CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
 import CoordinateSystemManager from '../../CoordinateSystem';
+import { SINGLE_REFERRING } from '../../util/model';
 
 function create(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster[] {
     const coordSysList: CoordinateSystemMaster[] = [];
@@ -48,11 +49,9 @@ function create(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster
     // Inject the coordinateSystems into seriesModel
     ecModel.eachSeries(function (seriesModel) {
         if ((seriesModel as ParallelSeriesModel).get('coordinateSystem') === 'parallel') {
-            const parallelModel = ecModel.queryComponents({
-                mainType: 'parallel',
-                index: (seriesModel as ParallelSeriesModel).get('parallelIndex'),
-                id: (seriesModel as ParallelSeriesModel).get('parallelId')
-            })[0] as ParallelModel;
+            const parallelModel = seriesModel.getReferringComponents(
+                'parallel', SINGLE_REFERRING
+            ).models[0] as ParallelModel;
             seriesModel.coordinateSystem = parallelModel.coordinateSystem;
         }
     });

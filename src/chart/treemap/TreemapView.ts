@@ -17,8 +17,15 @@
 * under the License.
 */
 
-import {bind, each, indexOf, curry, extend, retrieve} from 'zrender/src/core/util';
+import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
+import {
+    isHighDownDispatcher,
+    setAsHighDownDispatcher,
+    setDefaultStateProxy,
+    enableHoverFocus
+} from '../../util/states';
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
@@ -46,23 +53,22 @@ import {
     TreemapRenderPayload,
     TreemapZoomToNodePayload
 } from './treemapAction';
-import { ColorString } from '../../util/types';
+import { ColorString, ECElement } from '../../util/types';
 import { windowOpen } from '../../util/format';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
 
 const DRAG_THRESHOLD = 3;
-const PATH_LABEL_NOAMAL = ['label'] as const;
-const PATH_LABEL_EMPHASIS = ['emphasis', 'label'] as const;
-const PATH_UPPERLABEL_NORMAL = ['upperLabel'] as const;
-const PATH_UPPERLABEL_EMPHASIS = ['emphasis', 'upperLabel'] as const;
+const PATH_LABEL_NOAMAL = 'label';
+const PATH_UPPERLABEL_NORMAL = 'upperLabel';
 const Z_BASE = 10; // Should bigger than every z.
 const Z_BG = 1;
 const Z_CONTENT = 2;
 
-const getItemStyleEmphasis = makeStyleMapper([
+const getStateItemStyle = makeStyleMapper([
     ['fill', 'color'],
     // `borderColor` and `borderWidth` has been occupied,
     // so use `stroke` to indicate the stroke of the rect.
@@ -75,7 +81,7 @@ const getItemStyleEmphasis = makeStyleMapper([
 ]);
 const getItemStyleNormal = function (model: Model<TreemapSeriesNodeItemOption['itemStyle']>): PathStyleProps {
     // Normal style props should include emphasis style props.
-    const itemStyle = getItemStyleEmphasis(model) as PathStyleProps;
+    const itemStyle = getStateItemStyle(model) as PathStyleProps;
     // Clear styles set by emphasis.
     itemStyle.stroke = itemStyle.fill = itemStyle.lineWidth = null;
     return itemStyle;
@@ -759,6 +765,9 @@ function renderNode(
     const isParent = thisViewChildren && thisViewChildren.length;
     const itemStyleNormalModel = nodeModel.getModel('itemStyle');
     const itemStyleEmphasisModel = nodeModel.getModel(['emphasis', 'itemStyle']);
+    const itemStyleBlurModel = nodeModel.getModel(['blur', 'itemStyle']);
+    const itemStyleSelectModel = nodeModel.getModel(['select', 'itemStyle']);
+    const borderRadius = itemStyleNormalModel.get('borderRadius') || 0;
 
     // End of closure ariables available in "Procedures in renderNode".
     // -----------------------------------------------------------------
@@ -786,30 +795,41 @@ function renderNode(
     const bg = giveGraphic('background', Rect, depth, Z_BG);
     bg && renderBackground(group, bg, isParent && thisLayout.upperLabelHeight);
 
+    const focus = nodeModel.get(['emphasis', 'focus']);
+    const blurScope = nodeModel.get(['emphasis', 'blurScope']);
+
+    const focusDataIndices: number[] = focus === 'ancestor'
+        ? thisNode.getAncestorsIndices()
+        : focus === 'descendant' ? thisNode.getDescendantIndices() : null;
+
     // No children, render content.
     if (isParent) {
         // Because of the implementation about "traverse" in graphic hover style, we
         // can not set hover listener on the "group" of non-leaf node. Otherwise the
         // hover event from the descendents will be listenered.
-        if (graphic.isHighDownDispatcher(group)) {
-            graphic.setAsHighDownDispatcher(group, false);
+        if (isHighDownDispatcher(group)) {
+            setAsHighDownDispatcher(group, false);
         }
         if (bg) {
-            graphic.setAsHighDownDispatcher(bg, true);
+            setAsHighDownDispatcher(bg, true);
             // Only for enabling highlight/downplay.
             data.setItemGraphicEl(thisNode.dataIndex, bg);
+
+            enableHoverFocus(bg, focusDataIndices || focus, blurScope);
         }
     }
     else {
         const content = giveGraphic('content', Rect, depth, Z_CONTENT);
         content && renderContent(group, content);
 
-        if (bg && graphic.isHighDownDispatcher(bg)) {
-            graphic.setAsHighDownDispatcher(bg, false);
+        if (bg && isHighDownDispatcher(bg)) {
+            setAsHighDownDispatcher(bg, false);
         }
-        graphic.setAsHighDownDispatcher(group, true);
+        setAsHighDownDispatcher(group, true);
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
+
+        enableHoverFocus(group, focusDataIndices || focus, blurScope);
     }
 
     return group;
@@ -819,12 +839,12 @@ function renderNode(
     // ----------------------------
 
     function renderBackground(group: graphic.Group, bg: graphic.Rect, useUpperLabel: boolean) {
-        const ecData = graphic.getECData(bg);
+        const ecData = getECData(bg);
         // For tooltip.
         ecData.dataIndex = thisNode.dataIndex;
         ecData.seriesIndex = seriesModel.seriesIndex;
 
-        bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
+        bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight, r: borderRadius});
 
         if (thisInvisible) {
             // If invisible, do not set visual, otherwise the element will
@@ -835,11 +855,14 @@ function renderNode(
         else {
             bg.invisible = false;
             const visualBorderColor = thisNode.getVisual('style').stroke;
-            const emphasisBorderColor = itemStyleEmphasisModel.get('borderColor');
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualBorderColor;
-            const emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
-            emphasisStyle.fill = emphasisBorderColor;
+            const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
+            emphasisStyle.fill = itemStyleEmphasisModel.get('borderColor');
+            const blurStyle = getStateItemStyle(itemStyleBlurModel);
+            blurStyle.fill = itemStyleBlurModel.get('borderColor');
+            const selectStyle = getStateItemStyle(itemStyleSelectModel);
+            selectStyle.fill = itemStyleSelectModel.get('borderColor');
 
             if (useUpperLabel) {
                 const upperLabelWidth = thisWidth - 2 * borderWidth;
@@ -855,14 +878,18 @@ function renderNode(
             }
 
             bg.setStyle(normalStyle);
-            graphic.enableElementHoverEmphasis(bg, emphasisStyle);
+
+            bg.ensureState('emphasis').style = emphasisStyle;
+            bg.ensureState('blur').style = blurStyle;
+            bg.ensureState('select').style = selectStyle;
+            setDefaultStateProxy(bg);
         }
 
         group.add(bg);
     }
 
     function renderContent(group: graphic.Group, content: graphic.Rect) {
-        const ecData = graphic.getECData(content);
+        const ecData = getECData(content);
         // For tooltip.
         ecData.dataIndex = thisNode.dataIndex;
         ecData.seriesIndex = seriesModel.seriesIndex;
@@ -875,7 +902,8 @@ function renderNode(
             x: borderWidth,
             y: borderWidth,
             width: contentWidth,
-            height: contentHeight
+            height: contentHeight,
+            r: borderRadius
         });
 
         if (thisInvisible) {
@@ -886,16 +914,20 @@ function renderNode(
         }
         else {
             content.invisible = false;
-            // TODO. Optimize.
             const visualColor = thisNode.getVisual('style').fill;
             const normalStyle = getItemStyleNormal(itemStyleNormalModel);
             normalStyle.fill = visualColor;
-            const emphasisStyle = getItemStyleEmphasis(itemStyleEmphasisModel);
+            const emphasisStyle = getStateItemStyle(itemStyleEmphasisModel);
+            const blurStyle = getStateItemStyle(itemStyleBlurModel);
+            const selectStyle = getStateItemStyle(itemStyleSelectModel);
 
             prepareText(content, visualColor, contentWidth, contentHeight);
 
             content.setStyle(normalStyle);
-            graphic.enableElementHoverEmphasis(content, emphasisStyle);
+            content.ensureState('emphasis').style = emphasisStyle;
+            content.ensureState('blur').style = blurStyle;
+            content.ensureState('select').style = selectStyle;
+            setDefaultStateProxy(content);
         }
 
         group.add(content);
@@ -914,48 +946,64 @@ function renderNode(
         height: number,
         upperLabelRect?: RectLike
     ) {
-        const defaultText = nodeModel.get('name');
-
         const normalLabelModel = nodeModel.getModel(
             upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL
         );
-        const emphasisLabelModel = nodeModel.getModel(
-            upperLabelRect ? PATH_UPPERLABEL_EMPHASIS : PATH_LABEL_EMPHASIS
+
+        let text = retrieve(
+            seriesModel.getFormattedLabel(
+                thisNode.dataIndex, 'normal', null, null, normalLabelModel.get('formatter')
+            ),
+            nodeModel.get('name')
         );
+        if (!upperLabelRect && thisLayout.isLeafRoot) {
+            const iconChar = seriesModel.get('drillDownIcon', true);
+            text = iconChar ? iconChar + ' ' + text : text;
+        }
 
         const isShow = normalLabelModel.getShallow('show');
 
-        graphic.setLabelStyle(
-            rectEl, normalLabelModel, emphasisLabelModel,
+        setLabelStyle(
+            rectEl, getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
             {
-                defaultText: isShow ? defaultText : null,
-                autoColor: visualColor,
+                defaultText: isShow ? text : null,
+                inheritColor: visualColor,
                 labelFetcher: seriesModel,
-                labelDataIndex: thisNode.dataIndex,
-                labelProp: upperLabelRect ? 'upperLabel' : 'label'
+                labelDataIndex: thisNode.dataIndex
             }
         );
 
         const textEl = rectEl.getTextContent();
         const textStyle = textEl.style;
-        textStyle.overflow = 'truncate';
+        const textPadding = normalizeCssArray(textStyle.padding || 0);
+
+        if (upperLabelRect) {
+            rectEl.setTextConfig({
+                layoutRect: upperLabelRect
+            });
+            (textEl as ECElement).disableLabelLayout = true;
+        }
+        textEl.beforeUpdate = function () {
+            const width = Math.max(
+                (upperLabelRect ? upperLabelRect.width : rectEl.shape.width) - textPadding[1] - textPadding[3], 0
+            );
+            const height = Math.max(
+                (upperLabelRect ? upperLabelRect.height : rectEl.shape.height) - textPadding[0] - textPadding[2], 0
+            );
+            if (textStyle.width !== width || textStyle.height !== height) {
+                textEl.setStyle({
+                    width,
+                    height
+                });
+            }
+        };
+
         textStyle.truncateMinChar = 2;
-        textStyle.width = width;
+        textStyle.lineOverflow = 'truncate';
 
         addDrillDownIcon(textStyle, upperLabelRect, thisLayout);
         const textEmphasisState = textEl.getState('emphasis');
         addDrillDownIcon(textEmphasisState ? textEmphasisState.style : null, upperLabelRect, thisLayout);
-
-        // TODOTODO
-        // upperLabelRect && (normalStyle.textRect = clone(upperLabelRect));
-
-        // normalStyle.truncate = (isShow && normalLabelModel.get('ellipsis'))
-        //     ? {
-        //         outerWidth: width,
-        //         outerHeight: height,
-        //         minChar: 2
-        //     }
-        //     : null;
     }
 
     function addDrillDownIcon(style: TextStyleProps, upperLabelRect: RectLike, thisLayout: any) {

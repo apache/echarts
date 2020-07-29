@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import * as axisPointerModelHelper from '../axisPointer/modelHelper';
 import ComponentView from '../../view/Component';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';

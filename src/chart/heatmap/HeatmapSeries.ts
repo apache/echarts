@@ -26,7 +26,8 @@ import {
     SeriesOnGeoOptionMixin,
     ItemStyleOption,
     LabelOption,
-    OptionDataValue
+    OptionDataValue,
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -35,40 +36,28 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 
 type HeatmapDataValue = OptionDataValue[];
-export interface HeatmapDataItemOption {
-    value: HeatmapDataValue
 
+export interface HeatmapStateOption {
+    // Available on cartesian2d coordinate system
     itemStyle?: ItemStyleOption
     label?: LabelOption
-
-    emphasis?: {
-        itemStyle: ItemStyleOption
-        label?: LabelOption
-    }
-
 }
 
-export interface HeatmapSeriesOption extends SeriesOption,
+export interface HeatmapDataItemOption extends HeatmapStateOption, StatesOptionMixin<HeatmapStateOption> {
+    value: HeatmapDataValue
+}
+
+export interface HeatmapSeriesOption extends SeriesOption<HeatmapStateOption>, HeatmapStateOption,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin {
     type?: 'heatmap'
 
     coordinateSystem?: 'cartesian2d' | 'geo' | 'calendar'
-
-    // Available on cartesian2d coordinate system
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 
     // Available on geo coordinate system
     blurSize?: number
     pointSize?: number
     maxOpacity?: number
     minOpacity?: number
-
 
     data?: (HeatmapDataItemOption | HeatmapDataValue)[]
 }
@@ -114,7 +103,13 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
 
         maxOpacity: 1,
 
-        minOpacity: 0
+        minOpacity: 0,
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
+        }
     };
 }
 

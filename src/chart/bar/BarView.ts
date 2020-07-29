@@ -17,22 +17,19 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
-import * as zrUtil from 'zrender/src/core/util';
 import {
     Rect,
     Sector,
-    getECData,
     updateProps,
     initProps,
-    enableHoverEmphasis,
-    setLabelStyle,
-    clearStates,
     updateLabel,
-    initLabel
+    initLabel,
+    removeElementWithFadeOut
 } from '../../util/graphic';
+import { getECData } from "../../util/ecData";
+import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
-import * as numberUtil from '../../util/number';
 import Group from 'zrender/src/graphic/Group';
 import {throttle} from '../../util/throttle';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
@@ -41,7 +38,15 @@ import ChartView from '../../view/Chart';
 import List, {DefaultDataVisual} from '../../data/List';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { StageHandlerProgressParams, ZRElementEvent, ColorString, OrdinalSortInfo, Payload, OrdinalNumber, OrdinalRawValue, DisplayState, ParsedValue } from '../../util/types';
+import {
+    StageHandlerProgressParams,
+    ZRElementEvent,
+    ColorString,
+    OrdinalSortInfo,
+    Payload,
+    OrdinalNumber,
+    ParsedValue
+} from '../../util/types';
 import BarSeriesModel, { BarSeriesOption, BarDataItemOption } from './BarSeries';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -52,6 +57,8 @@ import { getDefaultLabel } from '../helper/labelHelper';
 import OrdinalScale from '../../scale/Ordinal';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
+import { extend, map, defaults, each } from 'zrender/src/core/util';
+import SeriesModel from '../../model/Series';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
@@ -93,7 +100,6 @@ function getClipArea(coord: CoordSysOfBar, data: List) {
     return coordSysClipArea;
 }
 
-
 class BarView extends ChartView {
     static type = 'bar' as const;
     type = BarView.type;
@@ -106,7 +112,11 @@ class BarView extends ChartView {
 
     private _backgroundEls: (Rect | Sector)[];
 
+    private _model: BarSeriesModel;
+
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+        this._model = seriesModel;
+
         this._updateDrawMode(seriesModel);
 
         const coordinateSystemType = seriesModel.get('coordinateSystem');
@@ -272,7 +282,15 @@ class BarView extends ChartView {
                 }
 
                 const el = elementCreator[coord.type](
-                    seriesModel, data, dataIndex, layout, isHorizontalOrRadial, animationModel, false, getDuring(), roundCap
+                    seriesModel,
+                    data,
+                    dataIndex,
+                    layout,
+                    isHorizontalOrRadial,
+                    animationModel,
+                    false,
+                    getDuring(),
+                    roundCap
                 );
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
@@ -317,13 +335,12 @@ class BarView extends ChartView {
                 }
 
                 if (el) {
-                    clearStates(el);
-
                     if (coord.type === 'cartesian2d'
                         && baseAxis.type === 'category' && (baseAxis as Axis2D).model.get('sort')
                     ) {
                         const rect = layout as RectShape;
-                        let seriesShape, axisShape;
+                        let seriesShape;
+                        let axisShape;
                         if (baseAxis.dim === 'x') {
                             axisShape = {
                                 x: rect.x,
@@ -346,7 +363,14 @@ class BarView extends ChartView {
                         }
 
                         if (!isReorder) {
-                            updateProps(el as Path, { shape: seriesShape }, animationModel, newIndex, null, getDuring());
+                            updateProps(
+                                el as Path,
+                                { shape: seriesShape },
+                                animationModel,
+                                newIndex,
+                                null,
+                                getDuring()
+                            );
                         }
                         updateProps(el as Path, { shape: axisShape }, axisAnimationModel, newIndex, null);
                     }
@@ -363,7 +387,15 @@ class BarView extends ChartView {
                 }
                 else {
                     el = elementCreator[coord.type](
-                        seriesModel, data, newIndex, layout, isHorizontalOrRadial, animationModel, true, getDuring(), roundCap
+                        seriesModel,
+                        data,
+                        newIndex,
+                        layout,
+                        isHorizontalOrRadial,
+                        animationModel,
+                        true,
+                        getDuring(),
+                        roundCap
                     );
                 }
 
@@ -377,13 +409,8 @@ class BarView extends ChartView {
                 );
             })
             .remove(function (dataIndex) {
-                const el = oldData.getItemGraphicEl(dataIndex);
-                if (coord.type === 'cartesian2d') {
-                    el && removeRect(dataIndex, animationModel, el as Rect);
-                }
-                else {
-                    el && removeSector(dataIndex, animationModel, el as Sector);
-                }
+                const el = oldData.getItemGraphicEl(dataIndex) as Path;
+                el && removeElementWithFadeOut(el, seriesModel, dataIndex);
             })
             .execute();
 
@@ -425,7 +452,7 @@ class BarView extends ChartView {
 
     _dataSort(
         data: List<BarSeriesModel, DefaultDataVisual>,
-        map: ((idx: number) => number)
+        idxMap: ((idx: number) => number)
     ): OrdinalSortInfo[] {
         type SortValueInfo = {
             mappedValue: number,
@@ -435,7 +462,7 @@ class BarView extends ChartView {
         const info: SortValueInfo[] = [];
         data.each(idx => {
             info.push({
-                mappedValue: map(idx),
+                mappedValue: idxMap(idx),
                 ordinalNumber: idx,
                 beforeSortIndex: null
             });
@@ -450,7 +477,7 @@ class BarView extends ChartView {
             info[info[i].ordinalNumber].beforeSortIndex = i;
         }
 
-        return zrUtil.map(info, item => {
+        return map(info, item => {
             return {
                 ordinalNumber: item.ordinalNumber,
                 beforeSortIndex: item.beforeSortIndex
@@ -501,24 +528,19 @@ class BarView extends ChartView {
         }
     }
 
-    remove(ecModel?: GlobalModel) {
-        this._clear(ecModel);
+    remove() {
+        this._clear(this._model);
     }
 
-    private _clear(ecModel?: GlobalModel): void {
+    private _clear(model?: SeriesModel): void {
         const group = this.group;
         const data = this._data;
-        if (ecModel && ecModel.get('animation') && data && !this._isLargeDraw) {
+        if (model && model.isAnimationEnabled() && data && !this._isLargeDraw) {
             this._removeBackground();
             this._backgroundEls = [];
 
-            data.eachItemGraphicEl(function (el: Sector | Rect) {
-                if (el.type === 'sector') {
-                    removeSector(getECData(el).dataIndex, ecModel, el as (Sector));
-                }
-                else {
-                    removeRect(getECData(el).dataIndex, ecModel, el as (Rect));
-                }
+            data.eachItemGraphicEl(function (el: Path) {
+                removeElementWithFadeOut(el, model, getECData(el).dataIndex);
             });
         }
         else {
@@ -600,10 +622,9 @@ const elementCreator: {
         animationModel, isUpdate, during
     ) {
         const rect = new Rect({
-            shape: zrUtil.extend({}, layout),
+            shape: extend({}, layout),
             z2: 1
         });
-        // rect.autoBatch = true;
 
         rect.name = 'item';
 
@@ -624,7 +645,9 @@ const elementCreator: {
             };
 
             const labelModel = seriesModel.getModel('label');
-            (isUpdate ? updateLabel : initLabel)(rect, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter);
+            (isUpdate ? updateLabel : initLabel)(
+                rect, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter
+            );
         }
 
         return rect;
@@ -643,7 +666,7 @@ const elementCreator: {
         const ShapeClass = (!isRadial && roundCap) ? Sausage : Sector;
 
         const sector = new ShapeClass({
-            shape: zrUtil.defaults({clockwise: clockwise}, layout),
+            shape: defaults({clockwise: clockwise}, layout),
             z2: 1
         });
 
@@ -657,7 +680,7 @@ const elementCreator: {
             sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(sector, {
-                shape: animateTarget,
+                shape: animateTarget
                 // __value: typeof dataValue === 'string' ? parseInt(dataValue, 10) : dataValue
             }, animationModel);
         }
@@ -665,38 +688,6 @@ const elementCreator: {
         return sector;
     }
 };
-
-function removeRect(
-    dataIndex: number,
-    animationModel: BarSeriesModel | GlobalModel,
-    el: Rect
-) {
-    // Not show text when animating
-    el.removeTextContent();
-    updateProps(el, {
-        shape: {
-            width: 0
-        }
-    }, animationModel, dataIndex, function () {
-        el.parent && el.parent.remove(el);
-    });
-}
-
-function removeSector(
-    dataIndex: number,
-    animationModel: BarSeriesModel | GlobalModel,
-    el: Sector
-) {
-    // Not show text when animating
-    el.removeTextContent();
-    updateProps(el, {
-        shape: {
-            r: el.shape.r0
-        }
-    }, animationModel, dataIndex, function () {
-        el.parent && el.parent.remove(el);
-    });
-}
 
 interface GetLayout {
     (data: List, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
@@ -750,7 +741,6 @@ function updateStyle(
     isPolar: boolean
 ) {
     const style = data.getItemVisual(dataIndex, 'style');
-    const hoverStyle = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
 
     if (!isPolar) {
         (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
@@ -768,23 +758,29 @@ function updateStyle(
             ? ((layout as RectLayout).height > 0 ? 'bottom' as const : 'top' as const)
             : ((layout as RectLayout).width > 0 ? 'left' as const : 'right' as const);
 
-        const labelModel = itemModel.getModel('label');
-        const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
         setLabelStyle(
-            el, labelModel, hoverLabelModel,
+            el, getLabelStatesModels(itemModel),
             {
                 labelFetcher: seriesModel,
                 labelDataIndex: dataIndex,
                 defaultText: getDefaultLabel(seriesModel.getData(), dataIndex),
-                autoColor: style.fill as ColorString,
+                inheritColor: style.fill as ColorString,
                 defaultOutsidePosition: labelPositionOutside
             }
         );
     }
+
+    const emphasisModel = itemModel.getModel(['emphasis']);
+    enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+    setStatesStylesFromModel(el, itemModel);
+
     if (isZeroOnPolar(layout as SectorLayout)) {
-        hoverStyle.fill = hoverStyle.stroke = 'none';
+        each(el.states, (state) => {
+            if (state.style) {
+                state.style.fill = state.style.stroke = 'none';
+            }
+        });
     }
-    enableHoverEmphasis(el, hoverStyle);
 }
 
 // In case width or height are too small.
@@ -942,7 +938,7 @@ function setLargeStyle(
 ) {
     const globalStyle = data.getVisual('style');
 
-    el.useStyle(zrUtil.extend({}, globalStyle));
+    el.useStyle(extend({}, globalStyle));
     // Use stroke instead of fill.
     el.style.fill = null;
     el.style.stroke = globalStyle.fill;

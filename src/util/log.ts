@@ -17,4 +17,24 @@
 * under the License.
 */
 
-define('echarts', [], function () {return echarts;});
+import { Dictionary } from './types';
+
+const storedLogs: Dictionary<boolean> = {};
+
+export function deprecateLog(str: string) {
+    if (__DEV__) {
+        if (storedLogs[str]) {  // Not display duplicate message.
+            return;
+        }
+        if (typeof console !== 'undefined' && console.warn) {
+            storedLogs[str] = true;
+                console.warn('[ECharts] DEPRECATED: ' + str);
+        }
+    }
+}
+
+export function deprecateReplaceLog(oldOpt: string, newOpt: string, scope?: string) {
+    if (__DEV__) {
+        deprecateLog((scope ? `[${scope}]` : '') + `${oldOpt} is deprecated, use ${newOpt} instead.`);
+    }
+}

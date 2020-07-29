@@ -18,7 +18,6 @@
 */
 
 import { assert, isArray, eqNaN, isFunction } from 'zrender/src/core/util';
-import { __DEV__ } from '../config';
 import Scale from '../scale/Scale';
 import { AxisBaseModel } from './AxisBaseModel';
 import { parsePercent } from 'zrender/src/contain/text';

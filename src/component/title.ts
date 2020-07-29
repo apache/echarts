@@ -19,6 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
+import {getECData} from '../util/ecData';
+import {createTextStyle} from '../label/labelStyle';
 import {getLayoutRect} from '../util/layout';
 import ComponentModel from '../model/Component';
 import {
@@ -152,7 +154,7 @@ class TitleView extends ComponentView {
         );
 
         const textEl = new graphic.Text({
-            style: graphic.createTextStyle(textStyleModel, {
+            style: createTextStyle(textStyleModel, {
                 text: titleModel.get('text'),
                 fill: textStyleModel.getTextColor()
             }, {disableBox: true}),
@@ -163,7 +165,7 @@ class TitleView extends ComponentView {
 
         const subText = titleModel.get('subtext');
         const subTextEl = new graphic.Text({
-            style: graphic.createTextStyle(subtextStyleModel, {
+            style: createTextStyle(subtextStyleModel, {
                 text: subText,
                 fill: subtextStyleModel.getTextColor(),
                 y: textRect.height + titleModel.get('itemGap'),
@@ -190,7 +192,7 @@ class TitleView extends ComponentView {
             });
         }
 
-        graphic.getECData(textEl).eventData = graphic.getECData(subTextEl).eventData = triggerEvent
+        getECData(textEl).eventData = getECData(subTextEl).eventData = triggerEvent
             ? {
                 componentType: 'title',
                 componentIndex: titleModel.componentIndex
@@ -245,6 +247,7 @@ class TitleView extends ComponentView {
 
         group.x = layoutRect.x;
         group.y = layoutRect.y;
+        group.markRedraw();
         const alignStyle = {
             align: textAlign,
             verticalAlign: textVerticalAlign

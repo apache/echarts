@@ -19,107 +19,46 @@
 */
 
 
-import * as zrUtil from 'zrender/src/core/util';
+import { extend } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Payload, DisplayState, ECElement, ColorString } from '../../util/types';
+import { Payload, ColorString } from '../../util/types';
 import List from '../../data/List';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
-import { Dictionary } from 'zrender/src/core/types';
-import Element from 'zrender/src/Element';
-
-function updateDataSelected(
-    this: PiePiece,
-    uid: string,
-    seriesModel: PieSeriesModel,
-    hasAnimation: boolean,
-    api: ExtensionAPI
-): void {
-    const data = seriesModel.getData();
-    const dataIndex = graphic.getECData(this).dataIndex;
-    const name = data.getName(dataIndex);
-    const selectedOffset = seriesModel.get('selectedOffset');
-
-    api.dispatchAction({
-        type: 'pieToggleSelect',
-        from: uid,
-        name: name,
-        seriesId: seriesModel.id
-    });
-
-    data.each(function (idx) {
-        toggleItemSelected(
-            data.getItemGraphicEl(idx),
-            data.getItemLayout(idx),
-            seriesModel.isSelected(data.getName(idx)),
-            selectedOffset,
-            hasAnimation
-        );
-    });
-}
-
-function toggleItemSelected(
-    el: Element,
-    layout: Dictionary<any>, // FIXME:TS make a type.
-    isSelected: boolean,
-    selectedOffset: number,
-    hasAnimation: boolean
-): void {
-    const midAngle = (layout.startAngle + layout.endAngle) / 2;
-
-    const dx = Math.cos(midAngle);
-    const dy = Math.sin(midAngle);
-
-    const offset = isSelected ? selectedOffset : 0;
-    const obj = {
-        x: dx * offset,
-        y: dy * offset
-    };
-
-    hasAnimation
-        // animateTo will stop revious animation like update transition
-        ? el.animate()
-            .when(200, obj)
-            .start('bounceOut')
-        : el.attr(obj);
-}
-
+import labelLayout from './labelLayout';
+import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
-class PiePiece extends graphic.Group {
+class PiePiece extends graphic.Sector {
 
-    constructor(data: List, idx: number) {
+    constructor(data: List, idx: number, startAngle: number) {
         super();
 
-        const sector = new graphic.Sector({
-            z2: 2
-        });
+        this.z2 = 2;
 
         const polyline = new graphic.Polyline();
         const text = new graphic.Text();
-        this.add(sector);
-        this.add(polyline);
 
-        sector.setTextContent(text);
+        this.setTextGuideLine(polyline);
 
-        this.updateData(data, idx, true);
+        this.setTextContent(text);
+
+        this.updateData(data, idx, startAngle, true);
     }
 
-    updateData(data: List, idx: number, firstCreate?: boolean): void {
-        const sector = this.childAt(0) as graphic.Sector;
+    updateData(data: List, idx: number, startAngle?: number, firstCreate?: boolean): void {
+        const sector = this;
 
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
+        const emphasisModel = itemModel.getModel('emphasis');
         const layout = data.getItemLayout(idx);
-        const sectorShape = zrUtil.extend({}, layout);
-        // Not animate label
-        sectorShape.label = null;
-        sectorShape.viewRect = null;
-
-        const animationTypeUpdate = seriesModel.getShallow('animationTypeUpdate');
+        const sectorShape = extend({}, layout);
 
         if (firstCreate) {
             sector.setShape(sectorShape);
@@ -135,189 +74,122 @@ class PiePiece extends graphic.Group {
             }
             // Expansion
             else {
-                sector.shape.endAngle = layout.startAngle;
-                graphic.updateProps(sector, {
-                    shape: {
-                        endAngle: layout.endAngle
-                    }
-                }, seriesModel, idx);
+                if (startAngle != null) {
+                    sector.setShape({ startAngle, endAngle: startAngle });
+                    graphic.initProps(sector, {
+                        shape: {
+                            startAngle: layout.startAngle,
+                            endAngle: layout.endAngle
+                        }
+                    }, seriesModel, idx);
+                }
+                else {
+                    sector.shape.endAngle = layout.startAngle;
+                    graphic.updateProps(sector, {
+                        shape: {
+                            endAngle: layout.endAngle
+                        }
+                    }, seriesModel, idx);
+                }
             }
 
         }
         else {
-            if (animationTypeUpdate === 'expansion') {
-                // Sectors are set to be target shape and an overlaying clipPath is used for animation
-                sector.setShape(sectorShape);
-            }
-            else {
-                // Transition animation from the old shape
-                graphic.updateProps(sector, {
-                    shape: sectorShape
-                }, seriesModel, idx);
-            }
+            // Transition animation from the old shape
+            graphic.updateProps(sector, {
+                shape: sectorShape
+            }, seriesModel, idx);
         }
 
         sector.useStyle(data.getItemVisual(idx, 'style'));
-        const sectorEmphasisState = sector.ensureState('emphasis');
-        sectorEmphasisState.style = itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
+        setStatesStylesFromModel(sector, itemModel);
+
+        const midAngle = (layout.startAngle + layout.endAngle) / 2;
+        const offset = seriesModel.get('selectedOffset');
+        const dx = Math.cos(midAngle) * offset;
+        const dy = Math.sin(midAngle) * offset;
 
         const cursorStyle = itemModel.getShallow('cursor');
         cursorStyle && sector.attr('cursor', cursorStyle);
 
-        // Toggle selected
-        toggleItemSelected(
-            this,
-            data.getItemLayout(idx),
-            seriesModel.isSelected(data.getName(idx)),
-            seriesModel.get('selectedOffset'),
-            seriesModel.get('animation')
-        );
+        this._updateLabel(seriesModel, data, idx);
 
-        // Label and text animation should be applied only for transition type animation when update
-        const withAnimation = !firstCreate && animationTypeUpdate === 'transition';
-        this._updateLabel(data, idx, withAnimation);
 
-        (this as ECElement).onStateChange = !seriesModel.get('silent')
-            ? function (fromState: DisplayState, toState: DisplayState): void {
-                if (seriesModel.isAnimationEnabled() && itemModel.get('hoverAnimation')) {
-                    if (toState === 'emphasis') {
-                        // Sector may has animation of updating data. Force to move to the last frame
-                        // Or it may stopped on the wrong shape
-                        sector.stopAnimation(null, true);
-                        sector.animateTo({
-                            shape: {
-                                r: layout.r + seriesModel.get('hoverOffset')
-                            }
-                        }, { duration: 300, easing: 'elasticOut' });
-                    }
-                    else {
-                        sector.stopAnimation(null, true);
-                        sector.animateTo({
-                            shape: {
-                                r: layout.r
-                            }
-                        }, { duration: 300, easing: 'elasticOut' });
-                    }
-                }
-            }
-            : null;
+        sector.ensureState('emphasis').shape = {
+            r: layout.r + (emphasisModel.get('scale')
+                ? (emphasisModel.get('scaleSize') || 0) : 0)
+        };
+        extend(sector.ensureState('select'), {
+            x: dx,
+            y: dy
+        });
 
-        graphic.enableHoverEmphasis(this);
+        const labelLine = sector.getTextGuideLine();
+        const labelText = sector.getTextContent();
+
+        extend(labelLine.ensureState('select'), {
+            x: dx,
+            y: dy
+        });
+        // TODO: needs dx, dy in zrender?
+        extend(labelText.ensureState('select'), {
+            x: dx,
+            y: dy
+        });
+
+        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
     }
 
-    private _updateLabel(data: List, idx: number, withAnimation: boolean): void {
-        const sector = this.childAt(0);
-        const labelLine = this.childAt(1) as graphic.Polyline;
-        const labelText = sector.getTextContent() as graphic.Text;
+    private _updateLabel(seriesModel: PieSeriesModel, data: List, idx: number): void {
+        const sector = this;
+        const labelText = sector.getTextContent();
 
-        const seriesModel = data.hostModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
-        const layout = data.getItemLayout(idx);
-        const labelLayout = layout.label;
-        // let visualColor = data.getItemVisual(idx, 'color');
 
         const labelTextEmphasisState = labelText.ensureState('emphasis');
-        const labelLineEmphasisState = labelLine.ensureState('emphasis');
 
-        if (!labelLayout || isNaN(labelLayout.x) || isNaN(labelLayout.y)) {
-            labelText.ignore = labelTextEmphasisState.ignore = true;
-            labelLine.ignore = labelLineEmphasisState.ignore = true;
-            return;
-        }
-
-        const targetLineShape: {
-            points: number[][]
-        } = {
-            points: labelLayout.linePoints || [
-                [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
-            ]
-        };
         const labelModel = itemModel.getModel('label');
         const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
-        const labelLineModel = itemModel.getModel('labelLine');
-        const labelLineHoverModel = itemModel.getModel(['emphasis', 'labelLine']);
 
         const style = data.getItemVisual(idx, 'style');
         const visualColor = style && style.fill as ColorString;
 
-        graphic.setLabelStyle(
-            labelText,
-            labelModel,
-            labelHoverModel,
+        setLabelStyle(
+            sector,
+            getLabelStatesModels(itemModel),
             {
                 labelFetcher: data.hostModel as PieSeriesModel,
                 labelDataIndex: idx,
-                defaultText: labelLayout.text
+                inheritColor: visualColor,
+                defaultText: seriesModel.getFormattedLabel(idx, 'normal')
+                    || data.getName(idx)
             },
-            {
-                align: labelLayout.textAlign,
-                verticalAlign: labelLayout.verticalAlign,
+            { normal: {
                 opacity: style && style.opacity
-            }
+            } }
         );
 
         // Set textConfig on sector.
         sector.setTextConfig({
-            local: true,
-            inside: !!labelLayout.inside,
-            insideStroke: visualColor,
-            // insideFill: 'auto',
-            outsideFill: visualColor
+            // reset position, rotation
+            position: null,
+            rotation: null
         });
 
-        const targetTextStyle = {
-            x: labelLayout.x,
-            y: labelLayout.y
-        };
-        if (withAnimation) {
-            graphic.updateProps(labelLine, {
-                shape: targetLineShape
-            }, seriesModel, idx);
-
-            graphic.updateProps(labelText, {
-                style: targetTextStyle
-            }, seriesModel, idx);
-        }
-        else {
-            labelLine.attr({
-                shape: targetLineShape
-            });
-            // Make sure update style on labelText after setLabelStyle.
-            // Because setLabelStyle will replace a new style on it.
-            labelText.attr({
-                style: targetTextStyle
-            });
-        }
+        // Make sure update style on labelText after setLabelStyle.
+        // Because setLabelStyle will replace a new style on it.
 
         labelText.attr({
-            rotation: labelLayout.rotation,
-            originX: labelLayout.x,
-            originY: labelLayout.y,
             z2: 10
         });
 
         labelText.ignore = !labelModel.get('show');
         labelTextEmphasisState.ignore = !labelHoverModel.get('show');
 
-        labelLine.ignore = !labelLineModel.get('show');
-        labelLineEmphasisState.ignore = !labelLineHoverModel.get('show');
-
         // Default use item visual color
-        labelLine.setStyle({
+        setLabelLineStyle(this, getLabelLineStatesModels(itemModel), {
             stroke: visualColor,
             opacity: style && style.opacity
-        });
-        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
-
-        const lineEmphasisState = labelLine.ensureState('emphasis');
-        lineEmphasisState.style = labelLineHoverModel.getModel('lineStyle').getLineStyle();
-
-        let smooth = labelLineModel.get('smooth');
-        if (smooth && smooth === true) {
-            smooth = 0.4;
-        }
-        labelLine.setShape({
-            smooth: smooth as number
         });
     }
 }
@@ -328,6 +200,8 @@ class PieView extends ChartView {
 
     static type = 'pie';
 
+    ignoreLabelLineUpdate = true;
+
     private _sectorGroup: graphic.Group;
     private _data: List;
 
@@ -337,35 +211,28 @@ class PieView extends ChartView {
     }
 
     render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
-        if (payload && (payload.from === this.uid)) {
-            return;
-        }
-
         const data = seriesModel.getData();
+
         const oldData = this._data;
         const group = this.group;
 
         const hasAnimation = ecModel.get('animation');
-        const isFirstRender = !oldData;
-        const animationType = seriesModel.get('animationType');
-        const animationTypeUpdate = seriesModel.get('animationTypeUpdate');
 
-        const onSectorClick = zrUtil.curry(
-            updateDataSelected, this.uid, seriesModel, hasAnimation, api
-        );
+        let startAngle: number;
+        // First render
+        if (!oldData && data.count() > 0) {
+            let shape = data.getItemLayout(0) as graphic.Sector['shape'];
+            for (let s = 1; isNaN(shape && shape.startAngle) && s < data.count(); ++s) {
+                shape = data.getItemLayout(s);
+            }
+            if (shape) {
+                startAngle = shape.startAngle;
+            }
+        }
 
-        const selectedMode = seriesModel.get('selectedMode');
         data.diff(oldData)
             .add(function (idx) {
-                const piePiece = new PiePiece(data, idx);
-                // Default expansion animation
-                if (isFirstRender && animationType !== 'scale') {
-                    piePiece.eachChild(function (child) {
-                        child.stopAnimation(null, true);
-                    });
-                }
-
-                selectedMode && piePiece.on('click', onSectorClick);
+                const piePiece = new PiePiece(data, idx, startAngle);
 
                 data.setItemGraphicEl(idx, piePiece);
 
@@ -374,81 +241,28 @@ class PieView extends ChartView {
             .update(function (newIdx, oldIdx) {
                 const piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
 
-                graphic.clearStates(piePiece);
-
-                if (!isFirstRender && animationTypeUpdate !== 'transition') {
-                    piePiece.eachChild(function (child) {
-                        child.stopAnimation(null, true);
-                    });
-                }
-
-                piePiece.updateData(data, newIdx);
+                piePiece.updateData(data, newIdx, startAngle);
 
                 piePiece.off('click');
-                selectedMode && piePiece.on('click', onSectorClick);
+
                 group.add(piePiece);
                 data.setItemGraphicEl(newIdx, piePiece);
             })
             .remove(function (idx) {
                 const piePiece = oldData.getItemGraphicEl(idx);
-                group.remove(piePiece);
+                graphic.removeElementWithFadeOut(piePiece, seriesModel, idx);
             })
             .execute();
 
-        if (
-            hasAnimation && data.count() > 0
-            && (isFirstRender ? animationType !== 'scale' : animationTypeUpdate !== 'transition')
-        ) {
-            let shape = data.getItemLayout(0);
-            for (let s = 1; isNaN(shape.startAngle) && s < data.count(); ++s) {
-                shape = data.getItemLayout(s);
-            }
+        labelLayout(seriesModel);
 
-            const r = Math.max(api.getWidth(), api.getHeight()) / 2;
-
-            const removeClipPath = zrUtil.bind(group.removeClipPath, group);
-            group.setClipPath(this._createClipPath(
-                shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel, isFirstRender
-            ));
+        // Always use initial animation.
+        if (seriesModel.get('animationTypeUpdate') !== 'expansion') {
+            this._data = data;
         }
-        else {
-            // clipPath is used in first-time animation, so remove it when otherwise. See: #8994
-            group.removeClipPath();
-        }
-
-        this._data = data;
     }
 
     dispose() {}
-
-    _createClipPath(
-        cx: number, cy: number, r: number,
-        startAngle: number, clockwise: boolean,
-        // @ts-ignore FIXME:TS make type in util.grpahic
-        cb,
-        seriesModel: PieSeriesModel, isFirstRender: boolean
-    ): graphic.Sector {
-        const clipPath = new graphic.Sector({
-            shape: {
-                cx: cx,
-                cy: cy,
-                r0: 0,
-                r: r,
-                startAngle: startAngle,
-                endAngle: startAngle,
-                clockwise: clockwise
-            }
-        });
-
-        const initOrUpdate = isFirstRender ? graphic.initProps : graphic.updateProps;
-        initOrUpdate(clipPath, {
-            shape: {
-                endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
-            }
-        }, seriesModel, cb);
-
-        return clipPath;
-    }
 
     containPoint(point: number[], seriesModel: PieSeriesModel): boolean {
         const data = seriesModel.getData();

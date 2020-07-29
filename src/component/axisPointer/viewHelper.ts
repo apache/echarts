@@ -126,7 +126,6 @@ export function buildLabelElOption(
             text: text,
             textFont: font,
             fill: labelModel.getTextColor(),
-            align: 'center',
             padding: paddings,
             backgroundColor: bgColor as ColorString,
             borderColor: labelModel.get('borderColor') || 'transparent',

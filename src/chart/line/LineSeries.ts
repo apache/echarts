@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import createListFromArray from '../helper/createListFromArray';
 import SeriesModel from '../../model/Series';
 import {
@@ -31,7 +30,8 @@ import {
     AreaStyleOption,
     OptionDataValue,
     SymbolOptionMixin,
-    SeriesSamplingOptionMixin
+    SeriesSamplingOptionMixin,
+    StatesOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -39,21 +39,37 @@ import type Polar from '../../coord/polar/Polar';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
-export interface LineDataItemOption extends SymbolOptionMixin {
-    name?: string
-
-    value?: LineDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
+interface ExtraStateOption {
     emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
+        scale?: boolean
     }
 }
 
-export interface LineSeriesOption extends SeriesOption,
+export interface LineStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
+
+export interface LineDataItemOption extends SymbolOptionMixin,
+    LineStateOption, StatesOptionMixin<LineStateOption, ExtraStateOption> {
+    name?: string
+
+    value?: LineDataValue
+}
+
+
+export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
+    emphasis?: {
+        lineStyle?: LineStyleOption | {
+            width?: 'bolder'
+        }
+        areaStyle?: AreaStyleOption
+    }
+    blur?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+    }
+}>, LineStateOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     SeriesStackOptionMixin,
@@ -63,16 +79,12 @@ export interface LineSeriesOption extends SeriesOption,
 
     coordinateSystem?: 'cartesian2d' | 'polar'
 
-    hoverAnimation?: boolean
-
     // If clip the overflow value
     clip?: boolean
 
     label?: LabelOption
 
     lineStyle?: LineStyleOption
-
-    itemStyle?: ItemStyleOption
 
     areaStyle?: AreaStyleOption & {
         origin?: 'auto' | 'start' | 'end'
@@ -85,7 +97,6 @@ export interface LineSeriesOption extends SeriesOption,
     smoothMonotone?: 'x' | 'y' | 'none'
 
     connectNulls?: boolean
-
 
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.
@@ -124,8 +135,6 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         clip: true,
 
         label: {
@@ -135,6 +144,13 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         lineStyle: {
             width: 2,
             type: 'solid'
+        },
+
+        emphasis: {
+            scale: true,
+            lineStyle: {
+                width: 'bolder'
+            }
         },
         // areaStyle: {
             // origin of areaStyle. Valid values:

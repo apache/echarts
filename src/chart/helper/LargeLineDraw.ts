@@ -27,6 +27,7 @@ import { PathProps } from 'zrender/src/graphic/Path';
 import List from '../../data/List';
 import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../util/types';
 import Model from '../../model/Model';
+import { getECData } from '../../util/ecData';
 
 class LargeLinesPathShape {
     polyline = false;
@@ -268,7 +269,7 @@ class LargeLineDraw {
         lineEl.setStyle('fill', null);
 
         if (!isIncremental) {
-            const ecData = graphic.getECData(lineEl);
+            const ecData = getECData(lineEl);
             // Enable tooltip
             // PENDING May have performance issue when path is extremely large
             ecData.seriesIndex = hostModel.seriesIndex;

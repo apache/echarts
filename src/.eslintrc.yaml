@@ -25,6 +25,7 @@ env:
 globals:
     jQuery: true
     Promise: true
+    __DEV__: true
 rules:
     # Check the rules in: node_modules/@typescript-eslint/eslint-plugin/README.md
     no-console:

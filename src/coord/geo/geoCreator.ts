@@ -18,7 +18,6 @@
 */
 
 
-import {__DEV__} from '../../config';
 import * as echarts from '../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import Geo from './Geo';

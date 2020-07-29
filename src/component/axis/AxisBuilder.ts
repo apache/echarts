@@ -19,6 +19,8 @@
 
 import {retrieve, defaults, extend, each, isObject} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
+import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol} from '../../util/symbol';
@@ -427,7 +429,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             y: pos[1],
             rotation: labelLayout.rotation,
             silent: AxisBuilder.isLabelSilent(axisModel),
-            style: graphic.createTextStyle(textStyleModel, {
+            style: createTextStyle(textStyleModel, {
                 text: name,
                 font: textFont,
                 overflow: 'truncate',
@@ -459,7 +461,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             const eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
             eventData.targetType = 'axisName';
             eventData.name = name;
-            graphic.getECData(textEl).eventData = eventData;
+            getECData(textEl).eventData = eventData;
         }
 
         // FIXME
@@ -774,7 +776,7 @@ function buildAxisLabel(
             rotation: labelLayout.rotation,
             silent: silent,
             z2: 10,
-            style: graphic.createTextStyle(itemLabelModel, {
+            style: createTextStyle(itemLabelModel, {
                 text: formattedLabel,
                 align: itemLabelModel.getShallow('align', true)
                     || labelLayout.textAlign,
@@ -809,7 +811,7 @@ function buildAxisLabel(
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
 
-            graphic.getECData(textEl).eventData = eventData;
+            getECData(textEl).eventData = eventData;
         }
 
         // FIXME

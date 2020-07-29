@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as graphic from '../../util/graphic';
+import { enterEmphasis, leaveEmphasis } from '../../util/states';
 import Model from '../../model/Model';
 import DataDiffer from '../../data/DataDiffer';
 import * as listComponentHelper from '../helper/listComponent';
@@ -143,8 +144,9 @@ class ToolboxView extends ComponentView {
                 const iconPaths = this.iconPaths;
                 option.iconStatus = option.iconStatus || {};
                 option.iconStatus[iconName] = status;
-                // FIXME
-                iconPaths[iconName] && iconPaths[iconName].trigger(status);
+                if (iconPaths[iconName]) {
+                    (status === 'emphasis' ? enterEmphasis : leaveEmphasis)(iconPaths[iconName]);
+                }
             };
 
             if (feature instanceof ToolboxFeature) {
@@ -240,31 +242,36 @@ class ToolboxView extends ComponentView {
                     }, tooltipModel.option);
                 }
 
-                graphic.enableHoverEmphasis(path);
+                // graphic.enableHoverEmphasis(path);
 
-                if (toolboxModel.get('showTitle')) {
-                    (path as ExtendedPath).__title = titlesMap[iconName];
-                    (path as graphic.Path).on('mouseover', function () {
-                        // Should not reuse above hoverStyle, which might be modified.
-                        const hoverStyle = iconStyleEmphasisModel.getItemStyle();
-                        const defaultTextPosition = toolboxModel.get('orient') === 'vertical'
-                            ? (toolboxModel.get('right') == null ? 'right' as const : 'left' as const)
-                            : (toolboxModel.get('bottom') == null ? 'bottom' as const : 'top' as const);
-                        textContent.setStyle({
-                            fill: (iconStyleEmphasisModel.get('textFill')
-                                || hoverStyle.fill || hoverStyle.stroke || '#000') as string,
-                            backgroundColor: iconStyleEmphasisModel.get('textBackgroundColor')
-                        });
-                        path.setTextConfig({
-                            position: iconStyleEmphasisModel.get('textPosition') || defaultTextPosition
-                        });
-                        textContent.ignore = false;
-                    })
-                    .on('mouseout', function () {
-                        textContent.ignore = true;
+                (path as ExtendedPath).__title = titlesMap[iconName];
+                (path as graphic.Path).on('mouseover', function () {
+                    // Should not reuse above hoverStyle, which might be modified.
+                    const hoverStyle = iconStyleEmphasisModel.getItemStyle();
+                    const defaultTextPosition = toolboxModel.get('orient') === 'vertical'
+                        ? (toolboxModel.get('right') == null ? 'right' as const : 'left' as const)
+                        : (toolboxModel.get('bottom') == null ? 'bottom' as const : 'top' as const);
+                    textContent.setStyle({
+                        fill: (iconStyleEmphasisModel.get('textFill')
+                            || hoverStyle.fill || hoverStyle.stroke || '#000') as string,
+                        backgroundColor: iconStyleEmphasisModel.get('textBackgroundColor')
                     });
-                }
-                path.trigger(featureModel.get(['iconStatus', iconName]) || 'normal');
+                    path.setTextConfig({
+                        position: iconStyleEmphasisModel.get('textPosition') || defaultTextPosition
+                    });
+                    textContent.ignore = !toolboxModel.get('showTitle');
+
+                    // Use enterEmphasis and leaveEmphasis provide by ec.
+                    // There are flags managed by the echarts.
+                    enterEmphasis(this);
+                })
+                .on('mouseout', function () {
+                    if (featureModel.get(['iconStatus', iconName]) !== 'emphasis') {
+                        leaveEmphasis(this);
+                    }
+                    textContent.hide();
+                });
+                (featureModel.get(['iconStatus', iconName]) === 'emphasis' ? enterEmphasis : leaveEmphasis)(path);
 
                 group.add(path);
                 (path as graphic.Path).on('click', zrUtil.bind(

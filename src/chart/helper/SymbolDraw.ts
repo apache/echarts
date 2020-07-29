@@ -30,10 +30,15 @@ import {
     ItemStyleOption,
     ZRColor,
     AnimationOptionMixin,
-    ZRStyleProps
+    ZRStyleProps,
+    StatesOptionMixin,
+    BlurScope,
+    DisplayState
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
+import { ScatterSeriesOption } from '../scatter/ScatterSeries';
+import { getLabelStatesModels } from '../../label/labelStyle';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -78,15 +83,21 @@ interface RippleEffectOption {
     color?: ZRColor
 }
 
-// TODO Separate series and item?
-export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object> {
+interface SymbolDrawStateOption {
     itemStyle?: ItemStyleOption
     label?: LabelOption
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-    hoverAnimation?: boolean
+}
+
+// TODO Separate series and item?
+export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
+    StatesOptionMixin<SymbolDrawStateOption, {
+        emphasis?: {
+            focus?: string
+            scale?: boolean
+        }
+    }>,
+    SymbolDrawStateOption {
+
     cursor?: string
 
     // If has ripple effect
@@ -94,28 +105,43 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object> {
 }
 
 export interface SymbolDrawSeriesScope {
-    hoverItemStyle?: ZRStyleProps
+    emphasisItemStyle?: ZRStyleProps
+    blurItemStyle?: ZRStyleProps
+    selectItemStyle?: ZRStyleProps
+
+    focus?: string
+    blurScope?: BlurScope
+
     symbolRotate?: number
     symbolOffset?: number[]
-    labelModel?: Model<LabelOption>
-    hoverLabelModel?: Model<LabelOption>
-    hoverAnimation?: boolean
+
+    labelStatesModels: Record<DisplayState, Model<LabelOption>>
+
     itemModel?: Model<SymbolDrawItemModelOption>
-    symbolInnerColor?: ColorString
+
+    hoverScale?: boolean
+
     cursorStyle?: string
     fadeIn?: boolean
-    useNameLabel?: boolean
 }
 
 function makeSeriesScope(data: List): SymbolDrawSeriesScope {
-    const seriesModel = data.hostModel;
+    const seriesModel = data.hostModel as Model<ScatterSeriesOption>;
+    const emphasisModel = seriesModel.getModel('emphasis');
     return {
-        hoverItemStyle: seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle(),
+        emphasisItemStyle: emphasisModel.getModel('itemStyle').getItemStyle(),
+        blurItemStyle: seriesModel.getModel(['blur', 'itemStyle']).getItemStyle(),
+        selectItemStyle: seriesModel.getModel(['select', 'itemStyle']).getItemStyle(),
+
+        focus: emphasisModel.get('focus'),
+        blurScope: emphasisModel.get('blurScope'),
+
         symbolRotate: seriesModel.get('symbolRotate'),
         symbolOffset: seriesModel.get('symbolOffset'),
-        hoverAnimation: seriesModel.get('hoverAnimation'),
-        labelModel: seriesModel.getModel('label'),
-        hoverLabelModel: seriesModel.getModel(['emphasis', 'label']),
+        hoverScale: emphasisModel.get('scale'),
+
+        labelStatesModels: getLabelStatesModels(seriesModel),
+
         cursorStyle: seriesModel.get('cursor')
     };
 }
@@ -177,8 +203,6 @@ class SymbolDraw {
                     symbolEl.setPosition(point);
                 }
                 else {
-                    graphic.clearStates(symbolEl);
-
                     symbolEl.updateData(data, newIdx, seriesScope);
                     graphic.updateProps(symbolEl, {
                         x: point[0],
@@ -232,7 +256,8 @@ class SymbolDraw {
 
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup) {
-                el.incremental = el.useHoverLayer = true;
+                el.incremental = true;
+                el.ensureState('emphasis').hoverLayer = true;
             }
         }
         for (let idx = taskParams.start; idx < taskParams.end; idx++) {

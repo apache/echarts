@@ -21,7 +21,6 @@ import { Dictionary, ZRStyleProps } from './types';
 import { ElementTextConfig } from 'zrender/src/Element';
 import { TextStyleProps, TextStylePropsPart, TextProps } from 'zrender/src/graphic/Text';
 import { each, hasOwn } from 'zrender/src/core/util';
-import { __DEV__ } from '../config';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 
 export interface LegacyStyleProps {
@@ -249,7 +248,7 @@ export function warnDeprecated(deprecated: string, insteadApproach: string): voi
     if (__DEV__) {
         const key = deprecated + '^_^' + insteadApproach;
         if (!deprecatedLogs[key]) {
-            console.warn(`DEPRECATED: "${deprecated}" has been deprecated. ${insteadApproach}`);
+            console.warn(`[ECharts] DEPRECATED: "${deprecated}" has been deprecated. ${insteadApproach}`);
             deprecatedLogs[key] = true;
         }
     }

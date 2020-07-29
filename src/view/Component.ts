@@ -25,6 +25,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
 import Element from 'zrender/src/Element';
+import SeriesModel from '../model/Series';
 
 interface ComponentView {
     /**
@@ -87,6 +88,14 @@ class ComponentView {
 
     updateVisual(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         // Do nothing;
+    }
+
+    /**
+     * Hook for blur target series.
+     * Can be used in marker for blur the markers
+     */
+    blurSeries(seriesModels: SeriesModel[], ecModel: GlobalModel): void {
+         // Do nothing;
     }
 
     static registerClass: clazzUtil.ClassManager['registerClass'];

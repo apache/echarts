@@ -22,7 +22,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import GridModel from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
-import { __DEV__ } from '../../config';
+import { SINGLE_REFERRING } from '../../util/model';
 
 interface CartesianAxisLayout {
     position: [number, number];
@@ -112,7 +112,9 @@ export function findAxisModels(seriesModel: SeriesModel): {
     } as ReturnType<typeof findAxisModels>;
     zrUtil.each(axisModelMap, function (v, key) {
         const axisType = key.replace(/Model$/, '');
-        const axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
+        const axisModel = seriesModel.getReferringComponents(
+            axisType, SINGLE_REFERRING
+        ).models[0] as CartesianAxisModel;
 
         if (__DEV__) {
             if (!axisModel) {

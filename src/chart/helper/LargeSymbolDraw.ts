@@ -30,6 +30,7 @@ import PathProxy from 'zrender/src/core/PathProxy';
 import SeriesModel from '../../model/Series';
 import { StageHandlerProgressParams } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import { getECData } from '../../util/ecData';
 
 const BOOST_SIZE_THRESHOLD = 4;
 
@@ -291,7 +292,7 @@ class LargeSymbolDraw {
         }
 
         if (!isIncremental) {
-            const ecData = graphic.getECData(symbolEl);
+            const ecData = getECData(symbolEl);
             // Enable tooltip
             // PENDING May have performance issue when path is extremely large
             ecData.seriesIndex = (hostModel as SeriesModel).seriesIndex;

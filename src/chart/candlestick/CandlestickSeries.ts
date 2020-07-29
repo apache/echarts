@@ -29,52 +29,49 @@ import {
     ColorString,
     LabelOption,
     SeriesLargeOptionMixin,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    StatesOptionMixin
 } from '../../util/types';
 import List from '../../data/List';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type CandlestickDataValue = OptionDataValueNumeric[];
-export interface CandlestickDataItemOption {
-    value: CandlestickDataValue
-
-    itemStyle?: CandlestickItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle: CandlestickItemStyleOption
-        label?: LabelOption
-    }
-
-}
 
 interface CandlestickItemStyleOption extends ItemStyleOption {
     color0?: ZRColor
     borderColor0?: ColorString
 }
+export interface CandlestickStateOption {
+    itemStyle?: CandlestickItemStyleOption
+    label?: LabelOption
+}
+export interface CandlestickDataItemOption
+    extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption, ExtraStateOption> {
+    value: CandlestickDataValue
+}
 
-export interface CandlestickSeriesOption extends SeriesOption, SeriesOnCartesianOptionMixin, SeriesLargeOptionMixin {
+interface ExtraStateOption {
+    emphasis?: {
+        scale?: boolean
+    }
+}
+
+export interface CandlestickSeriesOption
+    extends SeriesOption<CandlestickStateOption, ExtraStateOption>, CandlestickStateOption,
+    SeriesOnCartesianOptionMixin,
+    SeriesLargeOptionMixin {
 
     type?: 'candlestick'
 
     coordinateSystem?: 'cartesian2d'
 
-    hoverAnimation?: boolean
     layout?: LayoutOrient
     clip?: boolean
 
     barMaxWidth?: number | string
     barMinWidth?: number | string
     barWidth?: number | string
-
-    itemStyle?: CandlestickItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: CandlestickItemStyleOption
-        label?: LabelOption
-    }
 
     data?: (CandlestickDataValue | CandlestickDataItemOption)[]
 }
@@ -103,8 +100,6 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,
 
-        hoverAnimation: true,
-
         // xAxisIndex: 0,
         // yAxisIndex: 0,
 
@@ -123,6 +118,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         },
 
         emphasis: {
+            scale: true,
             itemStyle: {
                 borderWidth: 2
             }
