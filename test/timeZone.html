@@ -95,8 +95,12 @@ under the License.
                         type: 'time',
                         splitNumber: 7,
                         axisLabel: {
-                            formatter: function (value) {
-                                return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', value, useUTC);
+                            formatter: function (tick) {
+                                return echarts.time.format(
+                                    tick.value,
+                                    '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
+                                    useUTC
+                                );
                             },
                             rotate: 10
                         },
@@ -118,7 +122,14 @@ under the License.
                             normal: {
                                 show: true,
                                 formatter: function (params) {
-                                    return echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', params.value[0], useUTC);
+                                    var date = typeof params.value[0] === 'string'
+                                        ? new Date(params.value[0] + ' 00:00:00')
+                                        : new Date(params.value[0]);
+                                    return echarts.time.format(
+                                        date,
+                                        '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
+                                        useUTC
+                                    );
                                 }
                             }
                         }
