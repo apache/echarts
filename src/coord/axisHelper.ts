@@ -219,7 +219,7 @@ export function ifAxisCrossZero(axis: Axis) {
  *                         If category axis, this param is not requied.
  *         return: {string} label string.
  */
-export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx: number) => string {
+export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) => string {
     const labelFormatter = axis.getLabelModel().get('formatter');
     const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
@@ -227,7 +227,7 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx: number) =
         return (function (tpl) {
             return function (tick: ScaleTick, idx: number) {
                 return (axis.scale as TimeScale).getFormattedLabel(tick, idx, tpl);
-            }
+            };
         })(labelFormatter as TimeAxisLabelFormatterOption);
     }
     else if (typeof labelFormatter === 'string') {
