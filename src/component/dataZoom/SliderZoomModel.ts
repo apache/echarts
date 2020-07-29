@@ -193,7 +193,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         zoomLock: false,                        // Whether disable zoom.
 
         textStyle: {
-            color: '#333'
+            color: '#6E7079'
         },
 
         brushSelect: true,
