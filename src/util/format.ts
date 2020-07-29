@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from './number';
+import * as timeUtil from './time';
 import {TooltipRenderMode, ColorString} from './types';
 import { Dictionary } from 'zrender/src/core/types';
 
@@ -100,21 +101,30 @@ export function formatTpl(
         return '';
     }
 
-    const $vars = paramsList[0].$vars || [];
-    for (let i = 0; i < $vars.length; i++) {
-        const alias = TPL_VAR_ALIAS[i];
-        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
+    const isTimeAxis = paramsList[0].axisType.indexOf('time') >= 0;
+    if (isTimeAxis) {
+        const axisValue = paramsList[0].data[paramsList[0].axisIndex];
+        const date = timeUtil.getDateFromStr(
+            typeof axisValue === 'number' ? new Date(axisValue) : axisValue
+        );
+        return timeUtil.format(date, tpl);
     }
-    for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-        for (let k = 0; k < $vars.length; k++) {
-            const val = paramsList[seriesIdx][$vars[k]];
-            tpl = tpl.replace(
-                wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                encode ? encodeHTML(val) : val
-            );
+    else {
+        const $vars = paramsList[0].$vars || [];
+        for (let i = 0; i < $vars.length; i++) {
+            const alias = TPL_VAR_ALIAS[i];
+            tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
+        }
+        for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+            for (let k = 0; k < $vars.length; k++) {
+                const val = paramsList[seriesIdx][$vars[k]];
+                tpl = tpl.replace(
+                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
+                    encode ? encodeHTML(val) : val
+                );
+            }
         }
     }
-
     return tpl;
 }
 
@@ -190,7 +200,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     }
 }
 
-function pad(str: string, len: number): string {
+export function pad(str: string, len: number): string {
     str += '';
     return '0000'.substr(0, len - str.length) + str;
 }

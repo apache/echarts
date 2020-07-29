@@ -33,11 +33,11 @@ import Model from '../model/Model';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
 import Axis from './Axis';
-import { AxisBaseOption } from './axisCommonTypes';
+import { AxisBaseOption, TimeAxisLabelFormatterOption } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
 import List from '../data/List';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, ScaleDataValue, DimensionName } from '../util/types';
+import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
 
 
@@ -219,23 +219,32 @@ export function ifAxisCrossZero(axis: Axis) {
  *                         If category axis, this param is not requied.
  *         return: {string} label string.
  */
-export function makeLabelFormatter(axis: Axis) {
+export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) => string {
     const labelFormatter = axis.getLabelModel().get('formatter');
     const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
-    if (typeof labelFormatter === 'string') {
+    if (axis.scale.type === 'time') {
         return (function (tpl) {
-            return function (val: number | string) {
+            return function (tick: ScaleTick, idx: number) {
+                return (axis.scale as TimeScale).getFormattedLabel(tick, idx, tpl);
+            };
+        })(labelFormatter as TimeAxisLabelFormatterOption);
+    }
+    else if (typeof labelFormatter === 'string') {
+        return (function (tpl) {
+            return function (tick: ScaleTick) {
                 // For category axis, get raw value; for numeric axis,
                 // get foramtted label like '1,333,444'.
-                val = axis.scale.getLabel(val);
-                return tpl.replace('{value}', val != null ? val : '');
+                const label = axis.scale.getLabel(tick);
+                const text = tpl.replace('{value}', label != null ? label : '');
+
+                return text;
             };
         })(labelFormatter);
     }
     else if (typeof labelFormatter === 'function') {
         return (function (cb) {
-            return function (tickValue: number, idx: number) {
+            return function (tick: ScaleTick, idx: number) {
                 // The original intention of `idx` is "the index of the tick in all ticks".
                 // But the previous implementation of category axis do not consider the
                 // `axisLabel.interval`, which cause that, for example, the `interval` is
@@ -243,24 +252,27 @@ export function makeLabelFormatter(axis: Axis) {
                 // corresponding `idx` are `0`, `2`, `4`, but not `0`, `1`, `2`. So we keep
                 // the definition here for back compatibility.
                 if (categoryTickStart != null) {
-                    idx = tickValue - categoryTickStart;
+                    idx = tick.value - categoryTickStart;
                 }
-                return cb(getAxisRawValue(axis, tickValue), idx);
+                return cb(
+                    getAxisRawValue(axis, tick) as (TimeScaleTick & string) | (TimeScaleTick & number),
+                    idx
+                );
             };
         })(labelFormatter);
     }
     else {
-        return function (tick: number) {
+        return function (tick: ScaleTick) {
             return axis.scale.getLabel(tick);
         };
     }
 }
 
-export function getAxisRawValue(axis: Axis, value: number | string): number | string {
+export function getAxisRawValue(axis: Axis, tick: ScaleTick): number | string {
     // In category axis with data zoom, tick is not the original
     // index of axis.data. So tick should not be exposed to user
     // in category axis.
-    return axis.type === 'category' ? axis.scale.getLabel(value) : value;
+    return axis.type === 'category' ? axis.scale.getLabel(tick) : tick.value;
 }
 
 /**
@@ -275,7 +287,7 @@ export function estimateLabelUnionRect(axis: Axis) {
         return;
     }
 
-    let realNumberScaleTicks;
+    let realNumberScaleTicks: ScaleTick[];
     let tickCount;
     const categoryScaleExtent = scale.getExtent();
 
@@ -298,8 +310,12 @@ export function estimateLabelUnionRect(axis: Axis) {
         step = Math.ceil(tickCount / 40);
     }
     for (let i = 0; i < tickCount; i += step) {
-        const tickValue = realNumberScaleTicks ? realNumberScaleTicks[i] : categoryScaleExtent[0] + i;
-        const label = labelFormatter(tickValue, i);
+        const tick = realNumberScaleTicks
+            ? realNumberScaleTicks[i]
+            : {
+                value: categoryScaleExtent[0] + i
+            };
+        const label = labelFormatter(tick, i);
         const unrotatedSingleRect = axisLabelModel.getTextRect(label);
         const singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
 
