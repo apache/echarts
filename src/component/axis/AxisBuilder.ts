@@ -32,6 +32,7 @@ import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
+import OrdinalScale from '../../scale/Ordinal';
 
 
 const PI = Math.PI;
@@ -751,7 +752,9 @@ function buildAxisLabel(
     const triggerEvent = axisModel.get('triggerEvent');
 
     each(labels, function (labelItem, index) {
-        const tickValue = labelItem.tickValue;
+        const tickValue = axis.scale.type === 'ordinal'
+            ? (axis.scale as OrdinalScale).getRawIndex(labelItem.tickValue)
+            : labelItem.tickValue;
         const formattedLabel = labelItem.formattedLabel;
         const rawLabel = labelItem.rawLabel;
 

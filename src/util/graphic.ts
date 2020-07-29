@@ -70,6 +70,7 @@ import List from '../data/List';
 import { getLabelText } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { getECData } from './ecData';
+import {makeInner} from './model';
 
 
 const mathMax = Math.max;
@@ -80,6 +81,10 @@ const _customShapeMap: Dictionary<{ new(): Path }> = {};
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
 
+const innerLabel = makeInner<{
+    startValue: number | (string | number)[],
+    nextValue: number | (string | number)[]
+}, ZRText>();
 
 /**
  * Extend shape with parameters
@@ -544,7 +549,9 @@ function animateOrSetLabel<Props extends PathProps>(
     const valueAnimationEnabled = labelModel && labelModel.get('valueAnimation');
     if (valueAnimationEnabled) {
         const precisionOption = labelModel.get('precision');
-        const precision: number = precisionOption === 'auto' ? 0 : precisionOption;
+        const precision: number = !precisionOption || precisionOption === 'auto'
+            ? 0
+            : precisionOption;
 
         let interpolateValues: (number | string)[] | (number | string);
         const rawValues = seriesModel.getRawValue(dataIndex);
@@ -563,10 +570,23 @@ function animateOrSetLabel<Props extends PathProps>(
             }
         }
 
+        const text = el.getTextContent();
+        const host = text && innerLabel(text);
+        host && (host.startValue = host.nextValue);
+
         const during = (percent: number) => {
+            const text = el.getTextContent();
+            if (!text || !host) {
+                return;
+            }
+
             let interpolated;
             if (isRawValueNumber) {
-                const value = interpolateNumber(0, interpolateValues as number, percent);
+                const value = interpolateNumber(
+                    host.startValue as number || 0,
+                    interpolateValues as number,
+                    percent
+                );
                 interpolated = numberUtil.round(value, precision);
             }
             else {
@@ -578,23 +598,26 @@ function animateOrSetLabel<Props extends PathProps>(
                         interpolated[i] = (rawValues as [])[i];
                     }
                     else {
-                        const value = interpolateNumber(0, (interpolateValues as number[])[i], percent);
+                        const value = interpolateNumber(
+                            (host.startValue as number[])[i] || 0,
+                            (interpolateValues as number[])[i],
+                            percent
+                        );
                         interpolated[i] = numberUtil.round(value), precision;
                     }
                 }
             }
-            const text = el.getTextContent();
-            if (text) {
-                const labelText = getLabelText({
-                    labelDataIndex: dataIndex,
-                    labelFetcher: seriesModel,
-                    defaultText: defaultTextGetter
-                        ? defaultTextGetter(interpolated)
-                        : interpolated + ''
-                }, {normal: labelModel}, interpolated);
-                text.style.text = labelText.normal;
-                text.dirty();
-            }
+            host.nextValue = interpolated;
+
+            const labelText = getLabelText({
+                labelDataIndex: dataIndex,
+                labelFetcher: seriesModel,
+                defaultText: defaultTextGetter
+                    ? defaultTextGetter(interpolated)
+                    : interpolated + ''
+            }, {normal: labelModel}, interpolated);
+            text.style.text = labelText.normal;
+            text.dirty();
         };
 
         const props: ElementProps = {};

@@ -136,7 +136,7 @@ function calculateFilteredExtent(
         // For duplication removal.
         const condDimMap: Dictionary<boolean> = {};
         const tarDimMap: Dictionary<boolean> = {};
-        let condAxisExtent: number[];
+        let condAxis: Axis;
         let tarAxisRecord: AxisRecord;
 
         function addCondition(axis: Axis, axisRecord: AxisRecord) {
@@ -150,7 +150,7 @@ function calculateFilteredExtent(
                 each(getDataDimensionsOnAxis(data, axis.dim), function (dataDim) {
                     if (!hasOwn(condDimMap, dataDim)) {
                         condDimMap[dataDim] = true;
-                        condAxisExtent = [rawExtentResult.min, rawExtentResult.max];
+                        condAxis = axis;
                     }
                 });
             }
@@ -196,7 +196,7 @@ function calculateFilteredExtent(
         if (singleCondDim && singleTarDim) {
             for (let dataIdx = 0; dataIdx < dataLen; dataIdx++) {
                 const condVal = data.get(singleCondDim, dataIdx) as number;
-                if (condVal >= condAxisExtent[0] && condVal <= condAxisExtent[1]) {
+                if (condAxis.scale.isInExtentRange(condVal)) {
                     unionExtent(tarDimExtents[0], data.get(singleTarDim, dataIdx) as number);
                 }
             }
@@ -205,7 +205,7 @@ function calculateFilteredExtent(
             for (let dataIdx = 0; dataIdx < dataLen; dataIdx++) {
                 for (let j = 0; j < condDimsLen; j++) {
                     const condVal = data.get(condDims[j], dataIdx) as number;
-                    if (condVal >= condAxisExtent[0] && condVal <= condAxisExtent[1]) {
+                    if (condAxis.scale.isInExtentRange(condVal)) {
                         for (let k = 0; k < tarDimsLen; k++) {
                             unionExtent(tarDimExtents[k], data.get(tarDims[k], dataIdx) as number);
                         }
