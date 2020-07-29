@@ -158,7 +158,7 @@ export type AxisLabelFormatterOption = string | ((value: OrdinalRawValue | numbe
 type TimeAxisLabelUnitFormatter = AxisLabelFormatterOption | string[];
 
 export type TimeAxisLabelFormatterOption = string
-    | ((value: TimeScaleTick, index: number) => string)
+    | ((value: number, index: number, extra: {level: number}) => string)
     | {
         year?: TimeAxisLabelUnitFormatter,
         month?: TimeAxisLabelUnitFormatter,

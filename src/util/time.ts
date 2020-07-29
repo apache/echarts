@@ -102,7 +102,9 @@ export function leveledFormat(
     }
     else if (typeof formatter === 'function') {
         // Callback formatter
-        template = formatter(tick, idx);
+        template = formatter(tick.value, idx, {
+            level: tick.level
+        });
     }
     else {
         const defaults = zrUtil.extend({}, defaultLeveledFormatter);
@@ -147,7 +149,7 @@ export function leveledFormat(
     return format(new Date(tick.value), template, isUTC);
 }
 
-export function getUnitFromValue (
+export function getUnitFromValue(
     value: number | string | Date,
     isUTC: boolean
 ): PrimaryTimeUnit {
@@ -190,7 +192,7 @@ export function getUnitFromValue (
     }
 }
 
-export function getUnitValue (
+export function getUnitValue(
     value: number | Date,
     unit?: TimeUnit,
     isUTC?: boolean

@@ -589,7 +589,7 @@ function isUseHoverLayer(api: ExtensionAPI) {
     let emphasisState: DisplayableState;
     let i = 0;
     const len = list.length;
-    while (!(emphasisState = list[i].states.emphasis) && i < len) {
+    while (i < len && !(emphasisState = list[i].states.emphasis)) {
         i++;
     }
     return emphasisState && emphasisState.hoverLayer;
