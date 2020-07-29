@@ -358,7 +358,7 @@ class ECharts extends Eventful {
 
         const browserLang: string = !env.browser ? 'ZH' : (() => {
             const langStr = (document.documentElement.lang || navigator.language || (navigator as any).browserLanguage).toUpperCase();
-            return langStr.indexOf('ZH') > -1 ? 'ZH' : 'EN';
+            return langStr.indexOf('EN') > -1 ? 'EN' : 'ZH';
         })();
         const {locale = browserLang} = opts;
         //  set default lang package
