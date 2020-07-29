@@ -152,7 +152,10 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
-    transitionDuration && !(['top', 'left', 'bottom', 'right'].includes(tooltipModel.get('position') as string))
+    // If tooltip show arrow, then disable transition
+    transitionDuration
+        && !(['top', 'left', 'bottom', 'right'].includes(tooltipModel.get('position') as string))
+        && tooltipModel.get('trigger') !== 'item'
         && cssText.push(assembleTransition(transitionDuration));
 
     if (backgroundColor) {
