@@ -247,12 +247,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             emptyItemWidth: 25,             // Width of empty node.
             itemStyle: {
                 color: 'rgba(0,0,0,0.7)', //'#5793f3',
-                borderColor: 'rgba(255,255,255,0.7)',
-                borderWidth: 1,
-                shadowColor: 'rgba(150,150,150,1)',
-                shadowBlur: 3,
-                shadowOffsetX: 0,
-                shadowOffsetY: 0,
                 textStyle: {
                     color: '#fff'
                 }
