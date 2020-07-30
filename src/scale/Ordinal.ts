@@ -92,7 +92,7 @@ class OrdinalScale extends Scale {
 
         while (rank <= extent[1]) {
             ticks.push({
-                value: rank
+                value: this.getCategoryIndex(rank)
             });
             rank++;
         }
@@ -113,6 +113,11 @@ class OrdinalScale extends Scale {
         return this._categorySortInfo;
     }
 
+    /**
+     * Get display order after sort
+     *
+     * @param {OrdinalNumber} n index of raw data
+     */
     getCategoryIndex(n: OrdinalNumber): OrdinalNumber {
         if (this._categorySortInfo.length) {
             return this._categorySortInfo[n].beforeSortIndex;
@@ -123,11 +128,26 @@ class OrdinalScale extends Scale {
     }
 
     /**
+     * Get raw data index
+     *
+     * @param {OrdinalNumber} displayIndex index of display
+     */
+    getRawIndex(displayIndex: OrdinalNumber): OrdinalNumber {
+        if (this._categorySortInfo.length) {
+            return this._categorySortInfo[displayIndex].ordinalNumber;
+        }
+        else {
+            return displayIndex;
+        }
+    }
+
+    /**
      * Get item on rank n
      */
     getLabel(tick: ScaleTick): string {
         if (!this.isBlank()) {
-            const cateogry = this._ordinalMeta.categories[tick.value];
+            const rawIndex = this.getRawIndex(tick.value);
+            const cateogry = this._ordinalMeta.categories[rawIndex];
             // Note that if no data, ordinalMeta.categories is an empty array.
             // Return empty if it's not exist.
             return cateogry == null ? '' : cateogry + '';
@@ -140,6 +160,15 @@ class OrdinalScale extends Scale {
 
     unionExtentFromData(data: List, dim: DimensionLoose) {
         this.unionExtent(data.getApproximateExtent(dim));
+    }
+
+    /**
+     * @override
+     * If value is in extent range
+     */
+    isInExtentRange(value: number): boolean {
+        value = this.getCategoryIndex(value);
+        return this._extent[0] <= value && this._extent[1] >= value;
     }
 
     getOrdinalMeta(): OrdinalMeta {
