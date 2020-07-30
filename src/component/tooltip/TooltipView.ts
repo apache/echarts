@@ -50,7 +50,7 @@ import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
-import { isDimensionStacked } from '../../data/helper/dataStackHelper';
+// import { isDimensionStacked } from '../../data/helper/dataStackHelper';
 import { getECData } from '../../util/ecData';
 
 const bind = zrUtil.bind;
@@ -536,23 +536,8 @@ class TooltipView extends ComponentView {
 
                 zrUtil.each(item.seriesDataIndices, function (idxItem) {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
-                    const data = series.getData();
                     const dataIndex = idxItem.dataIndexInside;
-                    const dims = zrUtil.map(series.coordinateSystem.dimensions, function (coordDim) {
-                        return data.mapDimension(coordDim);
-                    });
                     const dataParams = series && series.getDataParams(dataIndex) as TooltipDataParams;
-                    let isStacked = false;
-                    const stackResultDim = data.getCalculationInfo('stackResultDimension');
-                    if (isDimensionStacked(data, dims[0])) {
-                        isStacked = true;
-                        dims[0] = stackResultDim;
-                    }
-                    if (isDimensionStacked(data, dims[1])) {
-                        isStacked = true;
-                        dims[1] = stackResultDim;
-                    }
-                    dataParams.coordinateSystem = series.coordinateSystem;
                     dataParams.axisDim = item.axisDim;
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
@@ -579,11 +564,26 @@ class TooltipView extends ComponentView {
                         html = seriesTooltip;
                     }
                     dataParams.html = html;
-                    dataParams.position = findPointFromSeries({
-                        seriesIndex: idxItem.seriesIndex,
-                        dataIndex: dataIndex,
-                        isStacked
-                    }, ecModel).point;
+                    // const data = series.getData();
+                    // const dims = zrUtil.map(series.coordinateSystem.dimensions, function (coordDim) {
+                    //     return data.mapDimension(coordDim);
+                    // });
+                    // let isStacked = false;
+                    // const stackResultDim = data.getCalculationInfo('stackResultDimension');
+                    // if (isDimensionStacked(data, dims[0])) {
+                    //     isStacked = true;
+                    //     dims[0] = stackResultDim;
+                    // }
+                    // if (isDimensionStacked(data, dims[1])) {
+                    //     isStacked = true;
+                    //     dims[1] = stackResultDim;
+                    // }
+                    // dataParams.coordinateSystem = series.coordinateSystem;
+                    // dataParams.position = findPointFromSeries({
+                    //     seriesIndex: idxItem.seriesIndex,
+                    //     dataIndex: dataIndex,
+                    //     isStacked
+                    // }, ecModel).point;
                 });
 
                 switch (singleTooltipModel.get('order')) {
@@ -835,39 +835,45 @@ class TooltipView extends ComponentView {
     ): {
         color: ZRColor;
     } {
-        if (trigger === 'axis') {
+        if (trigger === 'axis' || zrUtil.isArray(tooltipDataParams)) {
             return {
                 color: '#fff'
             };
         }
 
         if (!zrUtil.isArray(tooltipDataParams)) {
-            if (!tooltipDataParams.position) {
-                return {
-                    color: tooltipDataParams.color || tooltipDataParams.borderColor
-                };
-            }
             return {
                 color: tooltipDataParams.color || tooltipDataParams.borderColor
             };
         }
 
-        const distanceArr = zrUtil.map(tooltipDataParams, function (params) {
-            let dim = '';
-            if (params.coordinateSystem && params.coordinateSystem.type === 'cartesian2d') {
-                dim = params.coordinateSystem.getBaseAxis().dim;
-            }
-            const posIndex = +(dim === 'x');
-            const distance = Math.abs(params.position[posIndex] - point[posIndex]);
-            delete params.position;
-            delete params.coordinateSystem;
-            return distance;
-        });
+        // if (!zrUtil.isArray(tooltipDataParams)) {
+        //     if (!tooltipDataParams.position) {
+        //         return {
+        //             color: tooltipDataParams.color || tooltipDataParams.borderColor
+        //         };
+        //     }
+        //     return {
+        //         color: tooltipDataParams.color || tooltipDataParams.borderColor
+        //     };
+        // }
 
-        const index = zrUtil.indexOf(distanceArr, Math.min(...distanceArr));
-        return {
-            color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor || '#fff'
-        };
+        // const distanceArr = zrUtil.map(tooltipDataParams, function (params) {
+        //     let dim = '';
+        //     if (params.coordinateSystem && params.coordinateSystem.type === 'cartesian2d') {
+        //         dim = params.coordinateSystem.getBaseAxis().dim;
+        //     }
+        //     const posIndex = +(dim === 'x');
+        //     const distance = Math.abs(params.position[posIndex] - point[posIndex]);
+        //     delete params.position;
+        //     delete params.coordinateSystem;
+        //     return distance;
+        // });
+
+        // const index = zrUtil.indexOf(distanceArr, Math.min(...distanceArr));
+        // return {
+        //     color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor || '#fff'
+        // };
     }
 
     _updatePosition(
