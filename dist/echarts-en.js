@@ -25874,7 +25874,7 @@ var lang = {
             withName: 'the data for {name} is {value}',
             withoutName: '{value}',
             separator: {
-                middle: ', ',
+                middle: ',',
                 end: '.'
             }
         }
