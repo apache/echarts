@@ -356,7 +356,7 @@ class ECharts extends Eventful {
 
         this._theme = theme;
 
-        const browserLang: string = !env.browser ? 'ZH' : (() => {
+        const browserLang: string = !env.domSupported ? 'ZH' : (() => {
             const langStr = (document.documentElement.lang || navigator.language || (navigator as any).browserLanguage).toUpperCase();
             return langStr.indexOf('EN') > -1 ? 'EN' : 'ZH';
         })();
@@ -2345,7 +2345,7 @@ export function init(
         devicePixelRatio?: number,
         width?: number,
         height?: number,
-        locale?: string | object,
+        locale?: string | object
     }
 ): ECharts {
     if (__DEV__) {

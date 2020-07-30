@@ -46,7 +46,6 @@ async function buildI18nWrap() {
     files.forEach(t => {
         if(!t.startsWith('lang') || !t.endsWith('json')) return;
         const fileName = t.substring(0, t.length - 5);
-        console.log(fileName + ' is building...');
         const type = t.substr(-7, 2);
         const echartsRegister = `
         echarts.registerLocale('${type}', lang);
@@ -58,8 +57,8 @@ async function buildI18nWrap() {
         fs.writeFileSync(outFilePath + '/' + fileName + '.js', umdWrapperHeadWithEcharts + code + echartsRegister + umdWrapperTail, 'utf-8');
         fs.writeFileSync(outFilePath + '/' + fileName + '-obj.js', umdWrapperHead + code + pureExports + umdWrapperTail, 'utf-8');
         fs.writeFileSync(outFilePath + '/' + fileName + '.ts', 'export default ' + code, 'utf-8');
-        console.log(fileName + ' done');
     })
+    console.log('i18n build completed');
 }
 
 buildI18nWrap();
