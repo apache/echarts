@@ -90,10 +90,12 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
 
         zrUtil.each(this.option.feature, function (featureOpt, featureName) {
             const Feature = featureManager.getFeature(featureName);
-            if (Feature.getDefaultOption) {
-                Feature.defaultOption = Feature.getDefaultOption(ecModel);
+            if (Feature) {
+                if (Feature.getDefaultOption) {
+                    Feature.defaultOption = Feature.getDefaultOption(ecModel);
+                }
+                zrUtil.merge(featureOpt, Feature.defaultOption);
             }
-            Feature && zrUtil.merge(featureOpt, Feature.defaultOption);
         });
     }
 
