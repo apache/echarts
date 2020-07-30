@@ -534,7 +534,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
             ? '<div>'
                 + formattedValue.content + '</div>'
-            : '<span style="float:right;margin-left:20px;color:#000;font-weight:900">'
+            : '<span style="float:right;margin-left:20px;color:#464646;font-weight:bold">'
                 + formattedValue.content + '</span>';
 
         const markName = series.seriesIndex + 'at' + markerId;

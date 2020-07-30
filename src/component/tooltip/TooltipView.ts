@@ -542,7 +542,7 @@ class TooltipView extends ComponentView {
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
                     dataParams.axisId = item.axisId;
-                    dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
+                    dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, { value: axisValue as number });
                     dataParams.axisValueLabel = valueLabel;
                     dataParams.marker = formatUtil.getTooltipMarker({
                         color: dataParams.color as ColorString,

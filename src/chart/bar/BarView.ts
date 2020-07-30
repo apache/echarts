@@ -276,7 +276,6 @@ class BarView extends ChartView {
                     // And return a boolean to determine if the shape are fully clipped.
                     const isClipped = clip[coord.type](coordSysClipArea, layout);
                     if (isClipped) {
-                        // group.remove(el);
                         return;
                     }
                 }
