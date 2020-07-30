@@ -2,7 +2,6 @@ import * as zrUtil from 'zrender/src/core/util';
 import {TimeAxisLabelFormatterOption} from './../coord/axisCommonTypes';
 import * as numberUtil from './number';
 import {pad} from './format';
-import lang from '../lang';
 import {TimeScaleTick} from './types';
 
 export const ONE_SECOND = 1000;
