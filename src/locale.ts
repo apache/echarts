@@ -29,7 +29,7 @@ export type LocaleOption = typeof langEN;
 
 const LOCALE_ZH = 'ZH';
 const LOCALE_EN = 'EN';
-const DEFAULT_LOCALE = LOCALE_ZH;
+const DEFAULT_LOCALE = LOCALE_EN;
 
 const localeStorage: Dictionary<LocaleOption> = {};
 const localeModels: Dictionary<Model> = {};

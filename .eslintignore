@@ -1,7 +1,7 @@
 /dist
 /node_modules
 /build
-/src/i18n
+/i18n
 /extension-esm
 /extension
 /lib

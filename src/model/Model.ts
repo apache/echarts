@@ -114,11 +114,6 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
         );
     }
 
-    getWithLocale(localePosition: Parameters<Model<LocaleOption>['get']>[0]): any {
-        const locale = this.getLocale();
-        return locale.get(localePosition);
-    }
-
     getShallow<R extends keyof Opt>(
         key: R, ignoreParent?: boolean
     ): Opt[R] {

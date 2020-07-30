@@ -145,7 +145,7 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
             },
             // `rect`, `polygon`, `lineX`, `lineY`, `keep`, `clear`
             title: ecModel.getLocale(['toolbox', 'brush', 'title'])
-        }
+        };
 
         return defaultOption;
     }

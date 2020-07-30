@@ -1,7 +1,13 @@
 const fs = require('fs');
+const preamble = require('./preamble');
+const ts = require('typescript');
+const path = require('path');
 
-const outFilePath = './i18n';
 const umdWrapperHead = `
+${preamble.js}
+/**
+ * AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -17,9 +23,13 @@ const umdWrapperHead = `
         factory({});
     }
 })(this, function(exports) {
-var lang =`;
+`;
 
 const umdWrapperHeadWithEcharts = `
+${preamble.js}
+/**
+ * AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -35,28 +45,41 @@ const umdWrapperHeadWithEcharts = `
         factory({}, root.echarts);
     }
 })(this, function(exports, echarts) {
-var lang =`;
+`;
 
 const umdWrapperTail = `
 });`;
 
 async function buildI18nWrap() {
-    const targetDir = './src/i18n';
-    const files = fs.readdirSync(targetDir);
+    const targetDir = path.join(__dirname, '../i18n');
+    const sourceDir = path.join(__dirname, '../src/i18n');
+    const files = fs.readdirSync(sourceDir);
     files.forEach(t => {
-        if(!t.startsWith('lang') || !t.endsWith('json')) return;
-        const fileName = t.substring(0, t.length - 5);
-        const type = t.substr(-7, 2);
+        if(!t.startsWith('lang')) {
+            return;
+        }
+        const fileName = t.replace(/\.ts$/, '');
+        const type = fileName.replace(/^lang/, '');
         const echartsRegister = `
-        echarts.registerLocale('${type}', lang);
+    echarts.registerLocale('${type}', localeObj);
         `;
         const pureExports = `
-            exports.lang = lang;
+    for (var key in localeObj) {
+        if (localeObj.hasOwnProperty(key)) {
+            exports[key] = localeObj[key];
+        }
+    }
         `;
-        const code = fs.readFileSync(targetDir + '/' + t, 'utf-8');
-        fs.writeFileSync(outFilePath + '/' + fileName + '.js', umdWrapperHeadWithEcharts + code + echartsRegister + umdWrapperTail, 'utf-8');
-        fs.writeFileSync(outFilePath + '/' + fileName + '-obj.js', umdWrapperHead + code + pureExports + umdWrapperTail, 'utf-8');
-        fs.writeFileSync(targetDir + '/' + fileName + '.ts', 'export default ' + code, 'utf-8');
+        const code = fs.readFileSync(path.join(sourceDir, t), 'utf-8');
+        // const outputText = ts.transpileModule(code, {
+        //     module: ts.ModuleKind.CommonJS,
+        // }).outputText;
+        // Simple regexp replace is enough
+        const outputCode = code.replace(/export\s+?default/, 'var localeObj =')
+            .replace(/\/\*([\w\W]*?)\*\//, '');
+
+        fs.writeFileSync(path.join(targetDir, fileName + '.js'), umdWrapperHeadWithEcharts + outputCode + echartsRegister + umdWrapperTail, 'utf-8');
+        fs.writeFileSync(path.join(targetDir, fileName + '-obj.js'), umdWrapperHead + outputCode + pureExports + umdWrapperTail, 'utf-8');
     })
     console.log('i18n build completed');
 }

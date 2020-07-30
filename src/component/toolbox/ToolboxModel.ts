@@ -31,7 +31,6 @@ import {
     CommonTooltipOption,
     Dictionary
 } from '../../util/types';
-import GlobalModel from "../../model/Global";
 
 
 export interface ToolboxTooltipFormatterParams {
@@ -91,8 +90,8 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
 
         zrUtil.each(this.option.feature, function (featureOpt, featureName) {
             const Feature = featureManager.getFeature(featureName);
-            if(Feature.getDefaultOption) {
-                Feature.defaultOption = Feature.getDefaultOption(ecModel)
+            if (Feature.getDefaultOption) {
+                Feature.defaultOption = Feature.getDefaultOption(ecModel);
             }
             Feature && zrUtil.merge(featureOpt, Feature.defaultOption);
         });
