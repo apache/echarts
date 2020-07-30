@@ -464,7 +464,10 @@ export function initProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
+    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, percent => {
+        // console.log(dataIndex, el.shape.width, percent);
+        during && during(percent);
+    });
 }
 
 /**

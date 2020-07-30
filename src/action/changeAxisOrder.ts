@@ -41,9 +41,7 @@ echarts.registerAction({
     ecModel.eachComponent(
         { mainType: componentType, query: payload },
         function (componentModel) {
-            // console.log('in action')
             if (payload.sortInfo) {
-                // console.log(payload.sortInfo);
                 componentModel.axis.setCategorySortInfo(payload.sortInfo);
             }
         }

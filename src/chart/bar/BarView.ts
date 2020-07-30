@@ -19,7 +19,7 @@
 
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
-import {extend, map, defaults, each} from 'zrender/src/core/util';
+import {extend, map, defaults, each, find} from 'zrender/src/core/util';
 import type {RectLike} from 'zrender/src/core/BoundingRect';
 import {
     Rect,
@@ -204,7 +204,7 @@ class BarView extends ChartView {
             return;
         }
 
-        const needsClip = seriesModel.get('clip', true);
+        const needsClip = seriesModel.get('clip', true) || realtimeSort;
         const coordSysClipArea = getClipArea(coord, data);
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
@@ -219,20 +219,6 @@ class BarView extends ChartView {
 
         const bgEls: BarView['_backgroundEls'] = [];
         const oldBgEls = this._backgroundEls;
-
-        const realtimeDuring = () => {
-            const orderMap = (idx: number) => {
-                const el = (data.getItemGraphicEl(idx) as Rect);
-                if (el) {
-                    const shape = el.shape;
-                    return isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width;
-                }
-                else {
-                    return 0;
-                }
-            };
-            that._updateSort(data, orderMap, baseAxis as Axis2D, api);
-        };
 
         data.diff(oldData)
             .add(function (dataIndex) {
@@ -255,14 +241,11 @@ class BarView extends ChartView {
                     return;
                 }
 
+                let isClipped = false;
                 if (needsClip) {
                     // Clip will modify the layout params.
                     // And return a boolean to determine if the shape are fully clipped.
-                    const isClipped = clip[coord.type](coordSysClipArea, layout);
-                    if (isClipped) {
-                        // group.remove(el);
-                        return;
-                    }
+                    isClipped = clip[coord.type](coordSysClipArea, layout);
                 }
 
                 const el = elementCreator[coord.type](
@@ -283,7 +266,7 @@ class BarView extends ChartView {
                 );
 
                 if (realtimeSort) {
-                    (el as ECElement).disableLabelAnimation = true;
+                    (el as unknown as ECElement).disableLabelAnimation = true;
 
                     const animator = updateRealtimeAnimation(
                         seriesModel,
@@ -304,6 +287,9 @@ class BarView extends ChartView {
 
                 data.setItemGraphicEl(dataIndex, el);
                 group.add(el);
+                if (isClipped) {
+                    el.hide();
+                }
             })
             .update(function (newIndex, oldIndex) {
                 const itemModel = data.getItemModel(newIndex);
@@ -329,14 +315,13 @@ class BarView extends ChartView {
                 if (!data.hasValue(newIndex)) {
                     group.remove(el);
                     el = null;
-                    return;
                 }
 
+                let isClipped = false;
                 if (needsClip) {
-                    const isClipped = clip[coord.type](coordSysClipArea, layout);
+                    isClipped = clip[coord.type](coordSysClipArea, layout);
                     if (isClipped) {
                         group.remove(el);
-                        return;
                     }
                 }
 
@@ -360,7 +345,7 @@ class BarView extends ChartView {
                 );
 
                 if (realtimeSort) {
-                    (el as ECElement).disableLabelAnimation = true;
+                    (el as unknown as ECElement).disableLabelAnimation = true;
 
                     const animator = updateRealtimeAnimation(
                         seriesModel,
@@ -371,7 +356,7 @@ class BarView extends ChartView {
                         data,
                         newIndex,
                         isHorizontalOrRadial,
-                        false
+                        true
                     );
                     animator && (lastAnimator = animator);
                 }
@@ -381,6 +366,9 @@ class BarView extends ChartView {
 
                 data.setItemGraphicEl(newIndex, el);
                 // Add back
+                if (isClipped) {
+                    el.hide();
+                }
                 group.add(el);
             })
             .remove(function (dataIndex) {
@@ -401,7 +389,19 @@ class BarView extends ChartView {
         this._data = data;
 
         if (lastAnimator) {
-            lastAnimator.during(realtimeDuring);
+            lastAnimator.during(percent => {
+                const orderMap = (idx: number) => {
+                    const el = (data.getItemGraphicEl(idx) as Rect);
+                    if (el) {
+                        const shape = el.shape;
+                        return isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width;
+                    }
+                    else {
+                        return 0;
+                    }
+                };
+                that._updateSort(data, orderMap, baseAxis as Axis2D, api);
+            });
         }
     }
 
@@ -590,6 +590,8 @@ const clip: {
             layout.y += layout.height;
             layout.height = -layout.height;
         }
+        layout.width = Math.max(layout.width, 0);
+        layout.height = Math.max(layout.height, 0);
 
         return clipped;
     },
@@ -622,6 +624,7 @@ const elementCreator: {
             shape: extend({}, layout),
             z2: 1
         });
+        (rect as any).__dataIndex = newIndex;
 
         rect.name = 'item';
 
@@ -710,7 +713,7 @@ function updateRealtimeAnimation(
         }, seriesModel, newIndex, null);
 
         const lastAnimator = el.animators.length
-            ? el.animators[el.animators.length - 1]
+            ? find(el.animators, animator => animator.targetName === 'shape' && !!animator.getTrack('width'))
             : null;
 
         (isUpdate ? updateProps : initProps)(el, {
