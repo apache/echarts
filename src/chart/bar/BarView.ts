@@ -121,7 +121,7 @@ class BarView extends ChartView {
 
     private _model: BarSeriesModel;
 
-    constructor () {
+    constructor() {
         super();
         this._isFirstFrame = true;
     }
@@ -286,10 +286,9 @@ class BarView extends ChartView {
                 }
 
                 data.setItemGraphicEl(dataIndex, el);
+
                 group.add(el);
-                if (isClipped) {
-                    el.hide();
-                }
+                el.ignore = isClipped;
             })
             .update(function (newIndex, oldIndex) {
                 const itemModel = data.getItemModel(newIndex);
@@ -365,10 +364,7 @@ class BarView extends ChartView {
                 }
 
                 data.setItemGraphicEl(newIndex, el);
-                // Add back
-                if (isClipped) {
-                    el.hide();
-                }
+                el.ignore = isClipped;
                 group.add(el);
             })
             .remove(function (dataIndex) {
