@@ -18,7 +18,6 @@
 */
 
 import {assert, isArray} from 'zrender/src/core/util';
-import { __DEV__ } from '../config';
 import SeriesModel from '../model/Series';
 import { Pipeline } from './Scheduler';
 import { Payload } from '../util/types';

@@ -21,7 +21,11 @@ import * as zrUtil from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import Tree, { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
-import {encodeHTML, addCommas} from '../../util/format';
+import {
+    addCommas,
+    concatTooltipHtml,
+    encodeHTML
+} from '../../util/format';
 import {wrapTreePathInfo} from '../helper/treeHelper';
 import {
     SeriesOption,
@@ -29,7 +33,7 @@ import {
     ItemStyleOption,
     LabelOption,
     RoamOptionMixin,
-    // OptionDataValue,
+    TooltipRenderMode,
     CallbackDataParams,
     ColorString,
     StatesOptionMixin
@@ -243,12 +247,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             emptyItemWidth: 25,             // Width of empty node.
             itemStyle: {
                 color: 'rgba(0,0,0,0.7)', //'#5793f3',
-                borderColor: 'rgba(255,255,255,0.7)',
-                borderWidth: 1,
-                shadowColor: 'rgba(150,150,150,1)',
-                shadowBlur: 3,
-                shadowOffsetX: 0,
-                shadowOffsetY: 0,
                 textStyle: {
                     color: '#fff'
                 }
@@ -376,14 +374,24 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
      * @param {number} dataIndex
      * @param {boolean} [mutipleSeries=false]
      */
-    formatTooltip(dataIndex: number) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ) {
         const data = this.getData();
         const value = this.getRawValue(dataIndex) as TreemapSeriesDataValue;
         const formattedValue = zrUtil.isArray(value)
             ? addCommas(value[0] as number) : addCommas(value as number);
         const name = data.getName(dataIndex);
 
-        return encodeHTML(name + ': ' + formattedValue);
+        if (renderMode === 'richText') {
+            return encodeHTML(name) + ': ' + formattedValue;
+        }
+        return '<div style="line-height:1">'
+            + concatTooltipHtml(name, formattedValue)
+            + '</div>';
     }
 
     /**

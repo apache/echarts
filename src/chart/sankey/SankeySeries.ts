@@ -19,9 +19,8 @@
 
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
-import {encodeHTML} from '../../util/format';
+import {concatTooltipHtml, encodeHTML} from '../../util/format';
 import Model from '../../model/Model';
-import { __DEV__ } from '../../config';
 import {
     SeriesOption,
     BoxLayoutOptionMixin,
@@ -32,7 +31,8 @@ import {
     LayoutOrient,
     ColorString,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    TooltipRenderMode
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
@@ -233,25 +233,35 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     /**
      * @override
      */
-    formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: 'node' | 'edge') {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: 'node' | 'edge',
+        renderMode: TooltipRenderMode
+    ) {
         // dataType === 'node' or empty do not show tooltip by default
         if (dataType === 'edge') {
             const params = this.getDataParams(dataIndex, dataType);
             const rawDataOpt = params.data;
-            let html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
-            if (params.value) {
-                html += ' : ' + params.value;
+            if (renderMode === 'richText') {
+                return encodeHTML(rawDataOpt.source + ' -- ' + rawDataOpt.target) + params.value;
             }
-            return encodeHTML(html);
+            return '<div style="line-height:1">'
+                + concatTooltipHtml(rawDataOpt.source + ' -- ' + rawDataOpt.target, params.value || '')
+                + '</div>';
         }
         else if (dataType === 'node') {
             const node = this.getGraph().getNodeByIndex(dataIndex);
             const value = node.getLayout().value;
             const name = this.getDataParams(dataIndex, dataType).data.name;
-            const html = value ? name + ' : ' + value : '';
-            return encodeHTML(html);
+            if (renderMode === 'richText') {
+                return encodeHTML(value ? name : '') + ': ' + (value || '');
+            }
+            return '<div style="line-height:1">'
+                + concatTooltipHtml(value ? name : '', value || '')
+                + '</div>';
         }
-        return super.formatTooltip(dataIndex, multipleSeries);
+        return super.formatTooltip(dataIndex, multipleSeries, dataType, renderMode);
     }
 
     optionUpdated() {

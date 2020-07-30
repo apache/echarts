@@ -19,6 +19,7 @@
 
 import {bind, each, indexOf, curry, extend, retrieve, normalizeCssArray} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import {
     isHighDownDispatcher,
     setAsHighDownDispatcher,
@@ -838,7 +839,7 @@ function renderNode(
     // ----------------------------
 
     function renderBackground(group: graphic.Group, bg: graphic.Rect, useUpperLabel: boolean) {
-        const ecData = graphic.getECData(bg);
+        const ecData = getECData(bg);
         // For tooltip.
         ecData.dataIndex = thisNode.dataIndex;
         ecData.seriesIndex = seriesModel.seriesIndex;
@@ -888,7 +889,7 @@ function renderNode(
     }
 
     function renderContent(group: graphic.Group, content: graphic.Rect) {
-        const ecData = graphic.getECData(content);
+        const ecData = getECData(content);
         // For tooltip.
         ecData.dataIndex = thisNode.dataIndex;
         ecData.seriesIndex = seriesModel.seriesIndex;

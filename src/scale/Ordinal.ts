@@ -28,7 +28,7 @@ import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
 import List from '../data/List';
 import * as scaleHelper from './helper';
-import { OrdinalRawValue, OrdinalNumber, DimensionLoose, OrdinalSortInfo } from '../util/types';
+import { OrdinalRawValue, OrdinalNumber, DimensionLoose, OrdinalSortInfo, OrdinalScaleTick, ScaleTick } from '../util/types';
 import { AxisBaseOption } from '../coord/axisCommonTypes';
 import { isArray } from 'zrender/src/core/util';
 
@@ -85,13 +85,15 @@ class OrdinalScale extends Scale {
         return Math.round(scaleHelper.scale(val, this._extent));
     }
 
-    getTicks(): OrdinalNumber[] {
+    getTicks(): OrdinalScaleTick[] {
         const ticks = [];
         const extent = this._extent;
         let rank = extent[0];
 
         while (rank <= extent[1]) {
-            ticks.push(rank);
+            ticks.push({
+                value: rank
+            });
             rank++;
         }
 
@@ -123,9 +125,9 @@ class OrdinalScale extends Scale {
     /**
      * Get item on rank n
      */
-    getLabel(n: OrdinalNumber): string {
+    getLabel(tick: ScaleTick): string {
         if (!this.isBlank()) {
-            const cateogry = this._ordinalMeta.categories[n];
+            const cateogry = this._ordinalMeta.categories[tick.value];
             // Note that if no data, ordinalMeta.categories is an empty array.
             // Return empty if it's not exist.
             return cateogry == null ? '' : cateogry + '';

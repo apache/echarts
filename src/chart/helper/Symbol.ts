@@ -19,6 +19,7 @@
 
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
@@ -365,7 +366,7 @@ class Symbol extends graphic.Group {
                 scaleY: 0
             },
             this._seriesModel,
-            graphic.getECData(this).dataIndex,
+            getECData(this).dataIndex,
             cb
         );
     }

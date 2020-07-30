@@ -18,7 +18,6 @@
 */
 
 
-import {__DEV__} from '../../config';
 import {curry, each, map, bind, merge, clone, defaults, assert} from 'zrender/src/core/util';
 import Eventful from 'zrender/src/core/Eventful';
 import * as graphic from '../../util/graphic';

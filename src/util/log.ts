@@ -18,7 +18,6 @@
 */
 
 import { Dictionary } from './types';
-import { __DEV__ } from '../config';
 
 const storedLogs: Dictionary<boolean> = {};
 

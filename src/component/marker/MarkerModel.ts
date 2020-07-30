@@ -17,10 +17,9 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import * as formatUtil from '../../util/format';
+import {addCommas, concatTooltipHtml, encodeHTML} from '../../util/format';
 import DataFormatMixin from '../../model/mixin/dataFormat';
 import ComponentModel from '../../model/Component';
 import SeriesModel from '../../model/Series';
@@ -30,15 +29,13 @@ import {
     AnimationOptionMixin,
     Dictionary,
     CommonTooltipOption,
-    ScaleDataValue
+    ScaleDataValue,
+    TooltipRenderMode
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { makeInner, defaultEmphasis } from '../../util/model';
-
-const addCommas = formatUtil.addCommas;
-const encodeHTML = formatUtil.encodeHTML;
 
 function fillLabel(opt: DisplayStateHostOption) {
     defaultEmphasis(opt, 'label', ['show']);
@@ -201,24 +198,28 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         }
     }
 
-    formatTooltip(dataIndex: number) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ) {
         const data = this.getData();
         const value = this.getRawValue(dataIndex);
         const formattedValue = zrUtil.isArray(value)
             ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
-        const name = data.getName(dataIndex);
-        let html = encodeHTML(this.name);
+        const name = encodeHTML(data.getName(dataIndex));
+        let html = `<div style="font-size:12px;line-height:1;margin:0 0 8px 0;">${encodeHTML(this.name)}</div>`;
         if (value != null || name) {
-            html += '<br />';
+            html += renderMode === 'html' ? '' : '\n';
         }
         if (name) {
-            html += encodeHTML(name);
-            if (value != null) {
-                html += ' : ';
-            }
+            html += `<div style="line-height:1"><span style="font-size:12px;color:#6e7079;">${name}</span>`;
         }
         if (value != null) {
-            html += encodeHTML(formattedValue);
+            html = renderMode === 'html'
+                ? concatTooltipHtml(html, formattedValue, true) + (name ? '</div>' : '')
+                : (html + formattedValue);
         }
         return html;
     }

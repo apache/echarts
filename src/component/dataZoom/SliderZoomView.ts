@@ -40,7 +40,6 @@ import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
 import { enableHoverEmphasis } from '../../util/states';
 import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
-import { __DEV__ } from '../../config';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 
@@ -840,7 +839,9 @@ class SliderZoomView extends DataZoomView {
             ? ''
             // FIXME Glue code
             : (axis.type === 'category' || axis.type === 'time')
-                ? axis.scale.getLabel(Math.round(value as number))
+                ? axis.scale.getLabel({
+                    value: Math.round(value as number)
+                })
                 // param of toFixed should less then 20.
                 : (value as number).toFixed(Math.min(labelPrecision as number, 20));
 

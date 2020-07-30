@@ -16,7 +16,6 @@ import {
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
-import { __DEV__ } from '../config';
 import { deprecateReplaceLog } from '../util/log';
 
 type TextCommonParams = {

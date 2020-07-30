@@ -27,6 +27,7 @@ import GlobalModel from '../../model/Global';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
+import { getECData } from '../../util/ecData';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -52,7 +53,7 @@ class SunburstPiece extends graphic.Sector {
             inside: true
         };
 
-        graphic.getECData(this).seriesIndex = seriesModel.seriesIndex;
+        getECData(this).seriesIndex = seriesModel.seriesIndex;
 
         const text = new graphic.Text({
             z2: DEFAULT_TEXT_Z,
@@ -77,7 +78,7 @@ class SunburstPiece extends graphic.Sector {
         ecModel = ecModel || this._ecModel;
 
         const sector = this;
-        graphic.getECData(sector).dataIndex = node.dataIndex;
+        getECData(sector).dataIndex = node.dataIndex;
 
         const itemModel = node.getModel<SunburstSeriesNodeItemOption>();
         const emphasisModel = itemModel.getModel('emphasis');

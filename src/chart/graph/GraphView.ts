@@ -35,6 +35,7 @@ import View from '../../coord/View';
 import Symbol from '../helper/Symbol';
 import List from '../../data/List';
 import Line from '../helper/Line';
+import { getECData } from '../../util/ecData';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -149,7 +150,7 @@ class GraphView extends ChartView {
             const focus = itemModel.get(['emphasis', 'focus']);
 
             if (focus === 'adjacency') {
-                graphic.getECData(el).focus = node.getAdjacentDataIndices();
+                getECData(el).focus = node.getAdjacentDataIndices();
             }
         });
 
@@ -158,7 +159,7 @@ class GraphView extends ChartView {
             const focus = edge.getModel<GraphEdgeItemOption>().get(['emphasis', 'focus']);
 
             if (focus === 'adjacency') {
-                graphic.getECData(el).focus = {
+                getECData(el).focus = {
                     edge: [edge.dataIndex],
                     node: [edge.node1.dataIndex, edge.node2.dataIndex]
                 };

@@ -23,7 +23,6 @@
  * TODO Default cartesian
  */
 
-import {__DEV__} from '../../config';
 import {isObject, each, indexOf, retrieve3} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {

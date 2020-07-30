@@ -21,9 +21,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
-import * as graphic from '../../util/graphic';
 import { Dictionary } from 'zrender/src/core/types';
-import { ColorString } from '../../util/types';
+import { ColorString, ZRColor } from '../../util/types';
 import Model from '../../model/Model';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 
@@ -41,7 +40,7 @@ class TooltipRichContent {
 
     private _hideDelay: number;
 
-    el: graphic.Text;
+    el: ZRText;
 
     constructor(api: ExtensionAPI) {
         this._zr = api.getZr();
@@ -69,7 +68,9 @@ class TooltipRichContent {
     setContent(
         content: string,
         markerRich: Dictionary<ColorString>,
-        tooltipModel: Model<TooltipOption>
+        tooltipModel: Model<TooltipOption>,
+        borderColor: ZRColor,
+        arrowPosition: TooltipOption['position']
     ) {
         if (this.el) {
             this._zr.remove(this.el);
@@ -104,7 +105,7 @@ class TooltipRichContent {
             }
 
             text = text.substr(endId + 1);
-            startId = text.indexOf('{marker');
+            startId = text.indexOf(prefix);
         }
 
         this.el = new ZRText({
@@ -114,8 +115,15 @@ class TooltipRichContent {
                 lineHeight: 20,
                 backgroundColor: tooltipModel.get('backgroundColor'),
                 borderRadius: tooltipModel.get('borderRadius'),
+                borderWidth: 1,
+                borderColor: borderColor as string,
+                shadowBlur: tooltipModel.get('shadowBlur'),
+                shadowOffsetX: tooltipModel.get('shadowOffsetX'),
+                shadowOffsetY: tooltipModel.get('shadowOffsetY'),
                 fill: tooltipModel.get(['textStyle', 'color']),
-                padding: tooltipModel.get('padding')
+                padding: tooltipModel.get('padding'),
+                verticalAlign: 'middle',
+                align: 'left'
             },
             z: tooltipModel.get('z')
         });

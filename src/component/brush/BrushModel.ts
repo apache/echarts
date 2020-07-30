@@ -18,7 +18,6 @@
 */
 
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import * as visualSolution from '../../visual/visualSolution';
 import Model from '../../model/Model';

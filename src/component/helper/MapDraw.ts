@@ -37,6 +37,7 @@ import Geo from '../../coord/geo/Geo';
 import Model from '../../model/Model';
 import Transformable from 'zrender/src/core/Transformable';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { getECData } from '../../util/ecData';
 
 
 interface RegionsGroup extends graphic.Group {
@@ -341,7 +342,7 @@ class MapDraw {
             else {
                 const regionModel = mapOrGeoModel.getRegionModel(region.name);
                 // Package custom mouse event for geo component
-                graphic.getECData(compoundPath).eventData = {
+                getECData(compoundPath).eventData = {
                     componentType: 'geo',
                     componentIndex: mapOrGeoModel.componentIndex,
                     geoIndex: mapOrGeoModel.componentIndex,

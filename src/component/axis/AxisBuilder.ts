@@ -19,6 +19,7 @@
 
 import {retrieve, defaults, extend, each, isObject} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
@@ -61,7 +62,7 @@ type AxisLabelText = graphic.Text & {
     __truncatedText: string
 } & ECElement;
 
-interface AxisBuilderCfg {
+export interface AxisBuilderCfg {
     position?: number[]
     rotation?: number
     /**
@@ -95,6 +96,8 @@ interface AxisBuilderCfg {
     nameTruncateMaxWidth?: number
 
     silent?: boolean
+
+    handleAutoShown?(elementType: 'axisLine' | 'axisTick'): boolean
 }
 
 interface TickCoord {
@@ -148,7 +151,8 @@ class AxisBuilder {
                 nameDirection: 1,
                 tickDirection: 1,
                 labelDirection: 1,
-                silent: true
+                silent: true,
+                handleAutoShown: () => true
             } as AxisBuilderCfg
         );
 
@@ -243,7 +247,11 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
     axisLine(opt, axisModel, group, transformGroup) {
 
-        if (!axisModel.get(['axisLine', 'show'])) {
+        let shown = axisModel.get(['axisLine', 'show']);
+        if (shown === 'auto' && opt.handleAutoShown) {
+            shown = opt.handleAutoShown('axisLine');
+        }
+        if (!shown) {
             return;
         }
 
@@ -343,7 +351,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
     axisTickLabel(opt, axisModel, group, transformGroup) {
 
-        const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt.tickDirection);
+        const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
         const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
 
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
@@ -460,7 +468,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             const eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
             eventData.targetType = 'axisName';
             eventData.name = name;
-            graphic.getECData(textEl).eventData = eventData;
+            getECData(textEl).eventData = eventData;
         }
 
         // FIXME
@@ -649,18 +657,22 @@ function buildAxisMajorTicks(
     group: graphic.Group,
     transformGroup: graphic.Group,
     axisModel: AxisBaseModel,
-    tickDirection: number
+    opt: AxisBuilderCfg
 ) {
     const axis = axisModel.axis;
 
     const tickModel = axisModel.getModel('axisTick');
 
-    if (!tickModel.get('show') || axis.scale.isBlank()) {
+    let shown = tickModel.get('show');
+    if (shown === 'auto' && opt.handleAutoShown) {
+        shown = opt.handleAutoShown('axisTick');
+    }
+    if (!shown || axis.scale.isBlank()) {
         return;
     }
 
     const lineStyleModel = tickModel.getModel('lineStyle');
-    const tickEndCoord = tickDirection * tickModel.get('length');
+    const tickEndCoord = opt.tickDirection * tickModel.get('length');
 
     const ticksCoords = axis.getTicksCoords();
 
@@ -810,7 +822,7 @@ function buildAxisLabel(
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
 
-            graphic.getECData(textEl).eventData = eventData;
+            getECData(textEl).eventData = eventData;
         }
 
         // FIXME

@@ -21,7 +21,7 @@
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
-import { DimensionName, ScaleDataValue, OptionDataValue, DimensionLoose } from '../util/types';
+import { DimensionName, ScaleDataValue, OptionDataValue, DimensionLoose, ScaleTick, ParsedValue } from '../util/types';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 
 
@@ -154,9 +154,9 @@ abstract class Scale {
     /**
      * @return label of the tick.
      */
-    abstract getLabel(tick: any): string;
+    abstract getLabel(tick: ScaleTick): string;
 
-    abstract getTicks(expandToNicedExtent?: boolean): number[];
+    abstract getTicks(expandToNicedExtent?: boolean): ScaleTick[];
 
     abstract getMinorTicks(splitNumber: number): number[][];
 

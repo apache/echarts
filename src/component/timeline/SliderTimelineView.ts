@@ -20,7 +20,6 @@
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis } from '../../util/states';
 import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
@@ -33,7 +32,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { merge, each, extend, clone, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import ComponentView from '../../view/Component';
-import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent } from '../../util/types';
+import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent, ScaleTick } from '../../util/types';
 import TimelineModel, { TimelineDataItemOption, TimelineCheckpointStyle } from './TimelineModel';
 import { TimelineChangePayload, TimelinePlayChangePayload } from './timelineAction';
 import Model from '../../model/Model';
@@ -45,6 +44,8 @@ import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
 import { parsePercent } from 'zrender/src/contain/text';
 import { makeInner } from '../../util/model';
+import { getECData } from '../../util/ecData';
+import { enableHoverEmphasis } from '../../util/states';
 
 const PI = Math.PI;
 
@@ -128,7 +129,7 @@ class SliderTimelineView extends TimelineView {
             const axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
             timelineModel.formatTooltip = function (dataIndex: number) {
-                return encodeHTML(axis.scale.getLabel(dataIndex));
+                return encodeHTML(axis.scale.getLabel({value: dataIndex}));
             };
 
             each(
@@ -343,7 +344,7 @@ class SliderTimelineView extends TimelineView {
         // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {
             return data.mapArray(['value'], function (value: number) {
-                return value;
+                return {value};
             });
         };
 
@@ -419,16 +420,16 @@ class SliderTimelineView extends TimelineView {
         this._tickSymbols = [];
 
         // The value is dataIndex, see the costomized scale.
-        each(ticks, (value) => {
-            const tickCoord = axis.dataToCoord(value);
-            const itemModel = data.getItemModel<TimelineDataItemOption>(value);
+        each(ticks, (tick: ScaleTick) => {
+            const tickCoord = axis.dataToCoord(tick.value);
+            const itemModel = data.getItemModel<TimelineDataItemOption>(tick.value);
             const itemStyleModel = itemModel.getModel('itemStyle');
             const hoverStyleModel = itemModel.getModel(['emphasis', 'itemStyle']);
             const progressStyleModel = itemModel.getModel(['progress', 'itemStyle']);
 
             const symbolOpt = {
                 position: [tickCoord, 0],
-                onclick: bind(this._changeTimeline, this, value)
+                onclick: bind(this._changeTimeline, this, tick.value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
             el.ensureState('emphasis').style = hoverStyleModel.getItemStyle();
@@ -436,9 +437,9 @@ class SliderTimelineView extends TimelineView {
 
             enableHoverEmphasis(el);
 
-            const ecData = graphic.getECData(el);
+            const ecData = getECData(el);
             if (itemModel.get('tooltip')) {
-                ecData.dataIndex = value;
+                ecData.dataIndex = tick.value;
                 ecData.dataModel = timelineModel;
             }
             else {
@@ -715,7 +716,9 @@ class SliderTimelineView extends TimelineView {
         if (tickLabels) {
             for (let i = 0; i < tickLabels.length; i++) {
                 tickLabels && tickLabels[i]
-                    && tickLabels[i].toggleState('progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex);
+                    && tickLabels[i].toggleState(
+                        'progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex
+                    );
             }
         }
     }

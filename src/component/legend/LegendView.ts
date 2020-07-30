@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
@@ -590,7 +589,7 @@ function isUseHoverLayer(api: ExtensionAPI) {
     let emphasisState: DisplayableState;
     let i = 0;
     const len = list.length;
-    while (!(emphasisState = list[i].states.emphasis) && i < len) {
+    while (i < len && !(emphasisState = list[i].states.emphasis)) {
         i++;
     }
     return emphasisState && emphasisState.hoverLayer;
