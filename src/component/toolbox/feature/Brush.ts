@@ -144,7 +144,7 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
                 /* eslint-enable */
             },
             // `rect`, `polygon`, `lineX`, `lineY`, `keep`, `clear`
-            title: ecModel.getWithLocale('toolbox.brush.title')
+            title: ecModel.getLocale(['toolbox', 'brush', 'title'])
         }
 
         return defaultOption;

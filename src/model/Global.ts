@@ -57,6 +57,7 @@ import {
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
+import { LocaleOption } from '../locale';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -420,13 +421,13 @@ class GlobalModel extends Model<ECUnitOption> {
         return this._theme;
     }
 
-    getLocale(): Model {
+    getLocaleModel(): Model<LocaleOption> {
         return this._locale;
     }
 
-    getWithLocale(localePosition: string, optionsPosition?: string): any {
-        const locale = this.getLocale();
-        return clone(locale.get(optionsPosition || localePosition));
+    getLocale(localePosition: Parameters<Model<LocaleOption>['get']>[0]): any {
+        const locale = this.getLocaleModel();
+        return locale.get(localePosition as any);
     }
 
     setUpdatePayload(payload: Payload) {

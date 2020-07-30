@@ -192,6 +192,7 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
                 });
             case 'time':
                 return new TimeScale({
+                    locale: model.ecModel.getLocaleModel(),
                     useUTC: model.ecModel.get('useUTC')
                 });
             default:

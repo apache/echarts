@@ -39,19 +39,19 @@ type LegendDefaultSelectorOptionsProps = {
     title: string;
 };
 const getDefaultSelectorOptions = function (ecModel: GlobalModel, type: string): LegendDefaultSelectorOptionsProps {
-    if(type === 'all') {
+    if (type === 'all') {
         return {
             type: 'all',
-            title: ecModel.getWithLocale('legend.selector.all')
-        }
-    } else if(type === 'inverse') {
+            title: ecModel.getLocale(['legend', 'selector', 'all'])
+        };
+    }
+    else if (type === 'inverse') {
         return {
             type: 'inverse',
-            title: ecModel.getWithLocale('legend.selector.inverse')
-        }
+            title: ecModel.getLocale(['legend', 'selector', 'inverse'])
+        };
     }
-}
-
+};
 
 type SelectorType = 'all' | 'inverse';
 export interface LegendSelectorButtonOption {

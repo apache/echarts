@@ -61,9 +61,9 @@ import IntervalScale from './Interval';
 import Scale from './Scale';
 import {TimeScaleTick} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
-import { log, warn } from '../util/log';
-import { isForInStatement } from '@babel/types';
-import { getDataItemValue } from '../util/model';
+import { warn } from '../util/log';
+import { LocaleOption } from '../locale';
+import Model from '../model/Model';
 
 // FIXME 公用？
 const bisect = function (
@@ -84,6 +84,12 @@ const bisect = function (
     return lo;
 };
 
+interface TimeScale {
+    constructor(settings?: {
+        locale: Model<LocaleOption>,
+        useUTC: boolean
+    }): void
+}
 
 class TimeScale extends IntervalScale {
 
@@ -114,7 +120,8 @@ class TimeScale extends IntervalScale {
         labelFormatter: TimeAxisLabelFormatterOption
     ): string {
         const isUTC = this.getSetting('useUTC');
-        return leveledFormat(tick, idx, labelFormatter, isUTC);
+        const lang = this.getSetting('locale');
+        return leveledFormat(tick, idx, labelFormatter, lang, isUTC);
     }
 
     /**

@@ -81,7 +81,7 @@ import {
     ActionHandler, ActionInfo, OptionPreprocessor, PostUpdater,
     LoadingEffect, LoadingEffectCreator, StageHandlerInternal,
     StageHandlerOverallReset, StageHandler,
-    ViewRootGroup, DimensionDefinitionLoose, ECEventData, ThemeOption, LocaleOption,
+    ViewRootGroup, DimensionDefinitionLoose, ECEventData, ThemeOption,
     ECOption,
     ECUnitOption,
     ZRColor,
@@ -97,12 +97,10 @@ import { getVisualFromData, getItemVisualFromData } from './visual/helper';
 import LabelManager from './label/LabelManager';
 import { deprecateLog } from './util/log';
 import { handleLegacySelectEvents } from './legacy/dataSelectAction';
-// default import ZH and EN lang
-import langEN from "./i18n/langEN";
-import langZH from "./i18n/langZH";
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
+import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -359,27 +357,7 @@ class ECharts extends Eventful {
 
         this._theme = theme;
 
-        const defaultLocale = 'EN';
-        const browserLang: string = !env.domSupported ? defaultLocale : (() => {
-            const langStr = (document.documentElement.lang || navigator.language || (navigator as any).browserLanguage).toUpperCase();
-            return langStr.indexOf('ZH') > -1 ? 'ZH' : defaultLocale;
-        })();
-        const {locale = browserLang} = opts;
-        // set default lang package
-        localeStorage['ZH'] = localeStorage['ZH'] || langZH;
-        localeStorage['EN'] = localeStorage['EN'] || langEN;
-        this._locale = ((locale) => {
-            if (zrUtil.isString(locale)) {
-                const localeObj = localeStorage[locale.toUpperCase()] || {};
-                if (locale === 'ZH' || locale === 'EN') {
-                    return zrUtil.clone(localeObj);
-                } else {
-                    return zrUtil.merge(zrUtil.clone(localeObj), zrUtil.clone(localeStorage[defaultLocale]), false);
-                }
-            } else {
-                return zrUtil.merge(zrUtil.clone(locale), zrUtil.clone(localeStorage[defaultLocale]), false);
-            }
-        })(locale);
+        this._locale = createLocaleObject(opts.locale || SYSTEM_LANG);
 
         this._coordSysMgr = new CoordinateSystemManager();
 
@@ -2353,8 +2331,6 @@ const visualFuncs: StageHandlerInternal[] = [];
 
 const themeStorage: {[themeName: string]: ThemeOption} = {};
 
-const localeStorage: {[localeName: string]: LocaleOption} = {};
-
 const loadingEffects: {[effectName: string]: LoadingEffectCreator} = {};
 
 const instances: {[id: string]: ECharts} = {};
@@ -2381,7 +2357,7 @@ export function init(
         devicePixelRatio?: number,
         width?: number,
         height?: number,
-        locale?: string | object
+        locale?: string | LocaleOption
     }
 ): ECharts {
     if (__DEV__) {
@@ -2514,10 +2490,6 @@ export function registerTheme(name: string, theme: ThemeOption): void {
     themeStorage[name] = theme;
 }
 
-export function registerLocale(name: string, locale: LocaleOption): void {
-    localeStorage[name] = locale;
-}
-
 /**
  * Register option preprocessor
  */
@@ -2609,6 +2581,8 @@ export function getCoordinateSystemDimensions(type: string): DimensionDefinition
             : coordSysCreator.dimensions.slice();
     }
 }
+
+export {registerLocale} from './locale';
 
 /**
  * Layout is a special stage of visual encoding
