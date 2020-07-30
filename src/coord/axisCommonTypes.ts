@@ -127,7 +127,7 @@ interface AxisNameTextStyleOption extends TextCommonOption {
 }
 
 interface AxisLineOption {
-    show?: boolean,
+    show?: boolean | 'auto',
     onZero?: boolean,
     onZeroAxisIndex?: number,
     // The arrow at both ends the the axis.
@@ -138,7 +138,7 @@ interface AxisLineOption {
 }
 
 interface AxisTickOption {
-    show?: boolean,
+    show?: boolean | 'auto',
     // Whether axisTick is inside the grid or outside the grid.
     inside?: boolean,
     // The length of axisTick.
@@ -158,7 +158,7 @@ export type AxisLabelFormatterOption = string | ((value: OrdinalRawValue | numbe
 type TimeAxisLabelUnitFormatter = AxisLabelFormatterOption | string[];
 
 export type TimeAxisLabelFormatterOption = string
-    | ((value: TimeScaleTick, index: number) => string)
+    | ((value: number, index: number, extra: {level: number}) => string)
     | {
         year?: TimeAxisLabelUnitFormatter,
         month?: TimeAxisLabelUnitFormatter,

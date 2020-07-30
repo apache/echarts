@@ -112,6 +112,8 @@ export interface ECElement extends Element {
     hoverState?: 0 | 1 | 2;
     selected?: boolean;
 
+    style?: Dictionary<unknown>;
+
     z2EmphasisLift?: number;
     z2SelectLift?: number;
     /**
@@ -276,6 +278,8 @@ export interface LoadingEffect extends Element {
 }
 
 export type TooltipRenderMode = 'html' | 'richText';
+
+export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesDesc';
 
 
 // ---------------------------------
@@ -1060,6 +1064,10 @@ export interface CommonTooltipOption<FormatterParams> {
     borderColor?: ColorString
     borderRadius?: number
     borderWidth?: number
+    shadowBlur?: number
+    shadowColor?: string
+    shadowOffsetX?: number
+    shadowOffsetY?: number
 
     /**
      * Padding between tooltip content and tooltip border.

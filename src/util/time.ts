@@ -5,6 +5,12 @@ import {pad} from './format';
 import lang from '../lang';
 import {TimeScaleTick} from './types';
 
+export const ONE_SECOND = 1000;
+export const ONE_MINUTE = ONE_SECOND * 60;
+export const ONE_HOUR = ONE_MINUTE * 60;
+export const ONE_DAY = ONE_HOUR * 24;
+export const ONE_YEAR = ONE_DAY * 365;
+
 export const defaultLeveledFormatter = {
     year: '{yyyy}',
     month: '{MMM}',
@@ -13,7 +19,19 @@ export const defaultLeveledFormatter = {
     minute: '{HH}:{mm}',
     second: '{HH}:{mm}:{ss}',
     millisecond: '{hh}:{mm}:{ss} {SSS}',
-    none: '{yyyy}-{MM}-{dd} {hh}:{mm}'
+    none: '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss} {SSS}'
+};
+
+const fullDayFormatter = '{yyyy}-{MM}-{dd}';
+
+export const fullLeveledFormatter = {
+    year: '{yyyy}',
+    month: '{yyyy}:{MM}',
+    day: fullDayFormatter,
+    hour: fullDayFormatter + defaultLeveledFormatter.hour,
+    minute: fullDayFormatter + defaultLeveledFormatter.minute,
+    second: fullDayFormatter + defaultLeveledFormatter.second,
+    millisecond: defaultLeveledFormatter.none
 };
 
 export type PrimaryTimeUnit = 'millisecond' | 'second' | 'minute' | 'hour'
@@ -49,8 +67,20 @@ export function isPrimaryTimeUnit(timeUnit: TimeUnit): boolean {
     return timeUnit === getPrimaryTimeUnit(timeUnit);
 }
 
+export function getDefaultFormatPrecisionOfInterval(timeUnit: PrimaryTimeUnit): PrimaryTimeUnit {
+    switch (timeUnit) {
+        case 'year':
+        case 'month':
+            return 'day';
+        case 'millisecond':
+            return 'millisecond';
+        default:
+            // Also for day, hour, minute, second
+            return 'second';
+    }
+}
 
-export function format(time: Date, template: string, isUTC?: boolean): string {
+export function format(time: Date | number, template: string, isUTC?: boolean): string {
     const date = numberUtil.parseDate(time);
     const utc = isUTC ? 'UTC' : '';
     const y = (date as any)['get' + utc + 'FullYear']();
@@ -65,28 +95,28 @@ export function format(time: Date, template: string, isUTC?: boolean): string {
     const S = (date as any)['get' + utc + 'Milliseconds']();
 
     return (template || '')
-        .replace('{yyyy}', y)
-        .replace('{yy}', y % 100 + '')
-        .replace('{Q}', q + '')
-        .replace('{MMMM}', lang.time.month[M - 1])
-        .replace('{MMM}', lang.time.monthAbbr[M - 1])
-        .replace('{MM}', pad(M, 2))
-        .replace('{M}', M)
-        .replace('{dd}', pad(d, 2))
-        .replace('{d}', d)
-        .replace('{eeee}', lang.time.dayOfWeek[e])
-        .replace('{ee}', lang.time.dayOfWeekAbbr[e])
-        .replace('{e}', e)
-        .replace('{HH}', pad(H, 2))
-        .replace('{H}', H)
-        .replace('{hh}', pad(h + '', 2))
-        .replace('{h}', h + '')
-        .replace('{mm}', pad(m, 2))
-        .replace('{m}', m)
-        .replace('{ss}', pad(s, 2))
-        .replace('{s}', s)
-        .replace('{SSS}', pad(S, 3))
-        .replace('{S}', S);
+        .replace(/{yyyy}/g, y)
+        .replace(/{yy}/g, y % 100 + '')
+        .replace(/{Q}/g, q + '')
+        .replace(/{MMMM}/g, lang.time.month[M - 1])
+        .replace(/{MMM}/g, lang.time.monthAbbr[M - 1])
+        .replace(/{MM}/g, pad(M, 2))
+        .replace(/{M}/g, M)
+        .replace(/{dd}/g, pad(d, 2))
+        .replace(/{d}/g, d)
+        .replace(/{eeee}/g, lang.time.dayOfWeek[e])
+        .replace(/{ee}/g, lang.time.dayOfWeekAbbr[e])
+        .replace(/{e}/g, e)
+        .replace(/{HH}/g, pad(H, 2))
+        .replace(/{H}/g, H)
+        .replace(/{hh}/g, pad(h + '', 2))
+        .replace(/{h}/g, h + '')
+        .replace(/{mm}/g, pad(m, 2))
+        .replace(/{m}/g, m)
+        .replace(/{ss}/g, pad(s, 2))
+        .replace(/{s}/g, s)
+        .replace(/{SSS}/g, pad(S, 3))
+        .replace(/{S}/g, S);
 }
 
 export function leveledFormat(
@@ -102,7 +132,9 @@ export function leveledFormat(
     }
     else if (typeof formatter === 'function') {
         // Callback formatter
-        template = formatter(tick, idx);
+        template = formatter(tick.value, idx, {
+            level: tick.level
+        });
     }
     else {
         const defaults = zrUtil.extend({}, defaultLeveledFormatter);
@@ -147,7 +179,7 @@ export function leveledFormat(
     return format(new Date(tick.value), template, isUTC);
 }
 
-export function getUnitFromValue (
+export function getUnitFromValue(
     value: number | string | Date,
     isUTC: boolean
 ): PrimaryTimeUnit {
@@ -190,7 +222,7 @@ export function getUnitFromValue (
     }
 }
 
-export function getUnitValue (
+export function getUnitValue(
     value: number | Date,
     unit?: TimeUnit,
     isUTC?: boolean
@@ -222,5 +254,23 @@ export function getUnitValue (
             return date['get' + utc + 'Seconds']();
         case 'millisecond':
             return date['get' + utc + 'Milliseconds']();
+    }
+}
+
+/**
+ * Get Date instance from a date string
+ *
+ * @param {string} date should be in date string or second string
+ *                      e.g., 2020-01-01 or 2020-01-01 02:00:20
+ */
+export function getDateFromStr(date: string | Date): Date {
+    if (!date || date instanceof Date) {
+        return date as Date;
+    }
+    if (date.indexOf(':') < 0) {
+        return new Date(date + ' 00:00:00');
+    }
+    else {
+        return new Date(date);
     }
 }

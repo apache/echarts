@@ -24,7 +24,8 @@ import {
     LineStyleOption,
     CommonTooltipOption,
     TooltipRenderMode,
-    CallbackDataParams
+    CallbackDataParams,
+    TooltipOrderMode
 } from '../../util/types';
 import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 
@@ -63,6 +64,8 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      * Only available when renderMode is html
      */
     appendToBody?: boolean
+
+    order?: TooltipOrderMode
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
@@ -78,7 +81,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         show: true,
 
-        // tooltip主体内容
+        // tooltip main content
         showContent: true,
 
         // 'trigger' only works on coordinate system.
@@ -94,46 +97,53 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
 
-        // 是否约束 content 在 viewRect 中。默认 false 是为了兼容以前版本。
+        // whether restraint content inside viewRect
+        // For compatibility reason, default is false
         confine: false,
 
         showDelay: 0,
 
         hideDelay: 100,
 
-        // 动画变换时间，单位s
+        // Animation transition time, unit is second
         transitionDuration: 0.4,
 
         enterable: false,
 
-        backgroundColor: 'rgba(50,50,50,0.7)',
+        backgroundColor: '#fff',
 
-        // 提示边框颜色
+        // box shadow
+        shadowBlur: 10,
+        shadowColor: 'rgba(0, 0, 0, .2)',
+        shadowOffsetX: 1,
+        shadowOffsetY: 2,
+
+        // tooltip border color
         borderColor: '#333',
 
-        // 提示边框圆角，单位px，默认为4
+        // tooltip border radius, unit is px, default is 4
         borderRadius: 4,
 
-        // 提示边框线宽，单位px，默认为0（无边框）
-        borderWidth: 0,
+        // tooltip border width, unit is px, default is 0 (no border)
+        borderWidth: 1,
 
-        // 提示内边距，单位px，默认各方向内边距为5，
-        // 接受数组分别设定上右下左边距，同css
-        padding: 5,
+        // Tooltip inside padding, default is 5 for all direction
+        // Array is allowed to set up, right, bottom, left, same with css
+        padding: 10,
 
         // Extra css text
         extraCssText: '',
 
-        // 坐标轴指示器，坐标轴触发有效
+        // axis indicator, trigger by axis
         axisPointer: {
-            // 默认为直线
-            // 可选为：'line' | 'shadow' | 'cross'
+            // default is line
+            // legal values: 'line' | 'shadow' | 'cross'
             type: 'line',
 
-            // type 为 line 的时候有效，指定 tooltip line 所在的轴，可选
-            // 可选 'x' | 'y' | 'angle' | 'radius' | 'auto'
-            // 默认 'auto'，会选择类型为 category 的轴，对于双数值轴，笛卡尔坐标系会默认选择 x 轴
-            // 极坐标系会默认选择 angle 轴
+            // Valid when type is line, appoint tooltip line locate on which line. Optional
+            // legal values: 'x' | 'y' | 'angle' | 'radius' | 'auto'
+            // default is 'auto', chose the axis which type is category.
+            // for multiply y axis, cartesian coord chose x axis, polar chose angle axis
             axis: 'auto',
 
             animation: 'auto',
@@ -153,7 +163,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             // otherwise it will always override those styles on option.axisPointer.
         },
         textStyle: {
-            color: '#fff',
+            color: '#666',
             fontSize: 14
         }
     };
