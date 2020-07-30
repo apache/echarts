@@ -256,21 +256,3 @@ export function getUnitValue(
             return date['get' + utc + 'Milliseconds']();
     }
 }
-
-/**
- * Get Date instance from a date string
- *
- * @param {string} date should be in date string or second string
- *                      e.g., 2020-01-01 or 2020-01-01 02:00:20
- */
-export function getDateFromStr(date: string | Date): Date {
-    if (!date || date instanceof Date) {
-        return date as Date;
-    }
-    if (date.indexOf(':') < 0) {
-        return new Date(date + ' 00:00:00');
-    }
-    else {
-        return new Date(date);
-    }
-}
