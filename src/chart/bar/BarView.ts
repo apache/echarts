@@ -599,8 +599,6 @@ const clip: {
             layout.y += layout.height;
             layout.height = -layout.height;
         }
-        layout.width = Math.max(layout.width, 0);
-        layout.height = Math.max(layout.height, 0);
 
         return clipped;
     },
