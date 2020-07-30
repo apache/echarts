@@ -601,8 +601,9 @@ function animateOrSetLabel<Props extends PathProps>(
                         interpolated[i] = (rawValues as [])[i];
                     }
                     else {
+                        const startValues = host.startValue as number[];
                         const value = interpolateNumber(
-                            (host.startValue as number[])[i] || 0,
+                            startValues && startValues[i] ? startValues[i] : 0,
                             (interpolateValues as number[])[i],
                             percent
                         );

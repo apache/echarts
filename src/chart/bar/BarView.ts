@@ -394,7 +394,8 @@ class BarView extends ChartView {
                     const el = (data.getItemGraphicEl(idx) as Rect);
                     if (el) {
                         const shape = el.shape;
-                        return isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width;
+                        // If data is NaN, shape.xxx may be NaN, so use || 0 here in case
+                        return (isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width) || 0;
                     }
                     else {
                         return 0;
@@ -494,13 +495,25 @@ class BarView extends ChartView {
         const oldOrder = (baseAxis.scale as OrdinalScale).getCategorySortInfo();
         const isOrderChanged = this._isDataOrderChanged(data, orderMap, oldOrder);
         if (isOrderChanged) {
-            const action = {
-                type: 'changeAxisOrder',
-                componentType: baseAxis.dim + 'Axis',
-                axisId: baseAxis.index,
-                sortInfo: this._dataSort(data, orderMap)
-            } as Payload;
-            api.dispatchAction(action);
+            const newOrder = this._dataSort(data, orderMap);
+            const extent = baseAxis.scale.getExtent();
+            for (let i = extent[0]; i < extent[1]; ++i) {
+                /**
+                 * Consider the case when A and B changed order, whose representing
+                 * bars are both out of sight, we don't wish to trigger reorder action
+                 * as long as the order in the view doesn't change.
+                 */
+                if (oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
+                    const action = {
+                        type: 'changeAxisOrder',
+                        componentType: baseAxis.dim + 'Axis',
+                        axisId: baseAxis.index,
+                        sortInfo: newOrder
+                    } as Payload;
+                    api.dispatchAction(action);
+                    break;
+                }
+            }
         }
     }
 
@@ -516,7 +529,7 @@ class BarView extends ChartView {
             axisId: baseAxis.index,
             sortInfo: this._dataSort(
                 data,
-                idx => parseInt(data.get(isHorizontal ? 'y' : 'x', idx) as string, 10)
+                idx => parseInt(data.get(isHorizontal ? 'y' : 'x', idx) as string, 10) || 0
             )
         } as Payload;
         api.dispatchAction(action);
