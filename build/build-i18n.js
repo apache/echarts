@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const outFilePath = './src/i18n';
+const outFilePath = './i18n';
 const umdWrapperHead = `
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -56,7 +56,7 @@ async function buildI18nWrap() {
         const code = fs.readFileSync(targetDir + '/' + t, 'utf-8');
         fs.writeFileSync(outFilePath + '/' + fileName + '.js', umdWrapperHeadWithEcharts + code + echartsRegister + umdWrapperTail, 'utf-8');
         fs.writeFileSync(outFilePath + '/' + fileName + '-obj.js', umdWrapperHead + code + pureExports + umdWrapperTail, 'utf-8');
-        fs.writeFileSync(outFilePath + '/' + fileName + '.ts', 'export default ' + code, 'utf-8');
+        fs.writeFileSync(targetDir + '/' + fileName + '.ts', 'export default ' + code, 'utf-8');
     })
     console.log('i18n build completed');
 }

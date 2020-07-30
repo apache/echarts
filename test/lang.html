@@ -84,7 +84,7 @@ under the License.
 
 <script>
     // auto register ZH lang
-    require(['echarts', 'src/i18n/langZH'], function (echarts,) {
+    require(['echarts', 'i18n/langZH'], function (echarts,) {
         var chart = echarts.init(document.getElementById('main0'), null, {
             locale: 'ZH'
         });
@@ -94,7 +94,7 @@ under the License.
 
 <script>
     // register lang
-    require(['echarts', 'src/i18n/langEN-obj'], function (echarts, {lang}) {
+    require(['echarts', 'i18n/langEN-obj'], function (echarts, {lang}) {
         echarts.registerLocale('EN', lang);
         var chart = echarts.init(document.getElementById('main1'), null, {
             locale: 'EN'
@@ -105,7 +105,7 @@ under the License.
 
 <script>
     // register neither zh or en lang
-    require(['echarts', 'src/i18n/langES-obj'], function (echarts, {lang}) {
+    require(['echarts', 'i18n/langES-obj'], function (echarts, {lang}) {
         echarts.registerLocale('ES', lang);
         var chart = echarts.init(document.getElementById('main3'), null, {
             locale: 'ES'
