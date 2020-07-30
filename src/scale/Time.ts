@@ -324,7 +324,7 @@ function getIntervalTicks(
     let iter = 0;
 
     for (let i = 0, hasTickInLevel = false; i < unitNames.length && iter++ < safeLimit; ++i) {
-        const date = new Date(extent[0]);
+        let date = new Date(extent[0]);
 
         if (unitNames[i] === 'week' || unitNames[i] === 'half-week') {
             date[setHoursMethodName](0);
@@ -341,18 +341,19 @@ function getIntervalTicks(
             }
 
             outer: while (iter++ < safeLimit) {
-                const dateInterval = approxInterval > ONE_DAY * 16 ? 15
+                const tmpDate = new Date(date);
+                tmpDate[setDateMethodName](1);
+                tmpDate[setMonthMethodName](tmpDate[getMonthMethodName]() + 1);
+                tmpDate[setDateMethodName](0);  // Set day to 0 to return the last day of last month.
+                const daysInMonth = tmpDate.getDate();
+
+                const dateInterval = approxInterval > ONE_DAY * 16 ? Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick betwen two month.
                     : approxInterval > ONE_DAY * 8 ? 8
                         : approxInterval > ONE_DAY * 3.5 ? 4
                             : approxInterval > ONE_DAY * 1.5 ? 2 : 1;
 
                 // const dates = approxInterval > ONE_DAY * 8 ? [15]
                 //     : (approxInterval > ONE_DAY * 3.5 ? [8, 16, 24] : [4, 8, 12, 16, 20, 24, 28]);
-
-                const tmpDate = new Date(date);
-                tmpDate[setMonthMethodName](tmpDate[getMonthMethodName]() + 2);
-                tmpDate[setDateMethodName](0);  // Set day to 0 to return the last day of last month.
-                const daysInMonth = tmpDate.getDate();
 
                 for (let d = dateInterval; d < daysInMonth; d += dateInterval) {
 
@@ -372,8 +373,6 @@ function getIntervalTicks(
 
                 // Reset date to 0. The date may be 30, and days of next month may be 29. Which will excced
                 date[setDateMethodName](1);
-
-                // Move to next month. Add 2 because getMonth starts with 0, setMonth starts with 1.
                 date[setMonthMethodName](date[getMonthMethodName]() + 1);
             }
         }
