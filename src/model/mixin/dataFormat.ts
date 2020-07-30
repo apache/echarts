@@ -27,7 +27,8 @@ import {
     CallbackDataParams,
     ColorString,
     ZRColor,
-    OptionDataValue
+    OptionDataValue,
+    TooltipOrderMode
 } from '../../util/types';
 import GlobalModel from '../Global';
 
@@ -174,7 +175,8 @@ class DataFormatMixin {
         dataIndex: number,
         multipleSeries?: boolean,
         dataType?: string,
-        renderMode?: TooltipRenderMode
+        renderMode?: TooltipRenderMode,
+        order?: TooltipOrderMode
     ): string | {html: string, markers: {[markName: string]: string}} {
         // Empty function
         return;

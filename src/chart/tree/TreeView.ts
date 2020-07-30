@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import SymbolClz from '../helper/Symbol';
 import {radialCoordinate} from './layoutHelper';
 import * as bbox from 'zrender/src/core/bbox';
@@ -26,7 +27,6 @@ import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
-import { __DEV__ } from '../../config';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
@@ -35,7 +35,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import List from '../../data/List';
-import { getLabelStatesModels } from '../../label/labelStyle';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
 import { ECElement } from '../../util/types';
 
@@ -488,7 +487,7 @@ function updateNode(
 
     if (focusDataIndices) {
         // Modify the focus to data indices.
-        graphic.getECData(symbolEl).focus = focusDataIndices;
+        getECData(symbolEl).focus = focusDataIndices;
     }
 
     drawEdge(

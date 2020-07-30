@@ -5,9 +5,19 @@ import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
-import { DisplayState, ECElement, ColorString, BlurScope, InnerFocus, Payload, ZRColor } from './types';
+import {
+    DisplayState,
+    ECElement,
+    ColorString,
+    BlurScope,
+    InnerFocus,
+    Payload,
+    ZRColor,
+    HighlightPayload,
+    DownplayPayload
+} from './types';
 import { extend, indexOf, isArrayLike, isObject, keys, isArray, each } from 'zrender/src/core/util';
-import { getECData } from './graphic';
+import { getECData } from './ecData';
 import * as colorTool from 'zrender/src/tool/color';
 import { EChartsType } from '../echarts';
 import List from '../data/List';
@@ -188,7 +198,7 @@ function getFromStateStyle(
 function createEmphasisDefaultState(
     el: Displayable,
     stateName: 'emphasis',
-    targetStates?: string[],
+    targetStates: string[],
     state: Displayable['states'][number]
 ) {
     const hasSelect = targetStates && indexOf(targetStates, 'select') >= 0;
@@ -669,7 +679,7 @@ export function isSelectChangePayload(payload: Payload) {
         || payloadType === TOGGLE_SELECT_ACTION_TYPE;
 }
 
-export function isHighDownPayload(payload: Payload) {
+export function isHighDownPayload(payload: Payload): payload is HighlightPayload | DownplayPayload {
     const payloadType = payload.type;
     return payloadType === HIGHLIGHT_ACTION_TYPE
         || payloadType === DOWNPLAY_ACTION_TYPE;

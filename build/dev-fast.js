@@ -3,11 +3,12 @@ const path = require('path');
 const {build} = require('esbuild');
 const fs = require('fs');
 const debounce = require('lodash.debounce');
-// const sourceMap = require('source-map');
 
 const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 
+const umdMark = '// ------------- WRAPPED UMD --------------- //';
 const umdWrapperHead = `
+${umdMark}
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -26,19 +27,17 @@ const umdWrapperTail = `
 }));`;
 
 async function wrapUMDCode() {
-    // const consumer = await new sourceMap.SourceMapConsumer(fs.readFileSync(outFilePath + '.map', 'utf8'));
-    // const node = sourceMap.SourceNode.fromStringWithSourceMap(fs.readFileSync(outFilePath, 'utf-8'), consumer);
-    // // add six empty lines
-    // node.prepend(umdWrapperHead);
-    // node.add(umdWrapperTail);
-    // const res = node.toStringWithSourceMap({
-    //     file: outFilePath
-    // });
-    // fs.writeFileSync(outFilePath, res.code, 'utf-8');
-    // fs.writeFileSync(outFilePath + '.map', res.map.toString(), 'utf-8');
-
     const code = fs.readFileSync(outFilePath, 'utf-8');
-    fs.writeFileSync(outFilePath, umdWrapperHead + code + umdWrapperTail, 'utf-8');
+    if (code.indexOf(umdMark) >= 0) {
+        return;
+    }
+
+    fs.writeFileSync(
+        outFilePath,
+        // Replaced __DEV__ with a same length string to avoid breaking source map
+        umdWrapperHead + code.replace(/__DEV__/g, "\'_DEV_\'") + umdWrapperTail,
+        'utf-8'
+    );
 
     const sourceMap = JSON.parse(fs.readFileSync(outFilePath + '.map', 'utf-8'));
     // Fast trick for fixing source map

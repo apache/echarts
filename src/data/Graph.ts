@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import { Dictionary } from 'zrender/src/core/types';
 import List from './List';

@@ -19,7 +19,6 @@
 
 /* global Uint32Array, Float64Array, Float32Array */
 
-import {__DEV__} from '../../config';
 import SeriesModel from '../../model/Series';
 import List from '../../data/List';
 import { concatArray, mergeAll, map } from 'zrender/src/core/util';
@@ -35,7 +34,8 @@ import {
     LineStyleOption,
     OptionDataValue,
     LineLabelOption,
-    StatesOptionMixin
+    StatesOptionMixin,
+    TooltipRenderMode
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import type { LineDrawModelOption } from '../helper/LineDraw';
@@ -321,7 +321,12 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         return lineData;
     }
 
-    formatTooltip(dataIndex: number) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ) {
         const data = this.getData();
         const itemModel = data.getItemModel<LinesDataItemOption>(dataIndex);
         const name = itemModel.get('name');

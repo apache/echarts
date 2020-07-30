@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import VisualMapModel, { VisualMapOption, VisualMeta } from './VisualMapModel';
 import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';

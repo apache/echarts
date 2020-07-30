@@ -20,7 +20,6 @@
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis } from '../../util/states';
 import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
@@ -30,19 +29,23 @@ import * as numberUtil from '../../util/number';
 import {encodeHTML} from '../../util/format';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { merge, each, extend, clone, isString, bind } from 'zrender/src/core/util';
+import { merge, each, extend, clone, isString, bind, defaults, retrieve2 } from 'zrender/src/core/util';
 import SliderTimelineModel from './SliderTimelineModel';
 import ComponentView from '../../view/Component';
-import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent } from '../../util/types';
+import { LayoutOrient, ZRTextAlign, ZRTextVerticalAlign, ZRElementEvent, ScaleTick } from '../../util/types';
 import TimelineModel, { TimelineDataItemOption, TimelineCheckpointStyle } from './TimelineModel';
 import { TimelineChangePayload, TimelinePlayChangePayload } from './timelineAction';
 import Model from '../../model/Model';
-import { PathProps } from 'zrender/src/graphic/Path';
+import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import Scale from '../../scale/Scale';
 import OrdinalScale from '../../scale/Ordinal';
 import TimeScale from '../../scale/Time';
 import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
+import { parsePercent } from 'zrender/src/contain/text';
+import { makeInner } from '../../util/model';
+import { getECData } from '../../util/ecData';
+import { enableHoverEmphasis } from '../../util/states';
 
 const PI = Math.PI;
 
@@ -50,7 +53,12 @@ type TimelineSymbol = ReturnType<typeof createSymbol>;
 
 type RenderMethodName = '_renderAxisLine' | '_renderAxisTick' | '_renderControl' | '_renderCurrentPointer';
 
+type ControlName = 'play' | 'stop' | 'next' | 'prev';
 type ControlIconName = 'playIcon' | 'stopIcon' | 'nextIcon' | 'prevIcon';
+
+const labelDataIndexStore = makeInner<{
+    dataIndex: number
+}, graphic.Text>();
 
 interface LayoutInfo {
     viewRect: BoundingRect
@@ -89,10 +97,14 @@ class SliderTimelineView extends TimelineView {
 
     private _currentPointer: TimelineSymbol;
 
+    private _progressLine: graphic.Line;
+
     private _mainGroup: graphic.Group;
 
     private _labelGroup: graphic.Group;
 
+    private _tickSymbols: graphic.Path[];
+    private _tickLabels: graphic.Text[];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -117,7 +129,7 @@ class SliderTimelineView extends TimelineView {
             const axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
             timelineModel.formatTooltip = function (dataIndex: number) {
-                return encodeHTML(axis.scale.getLabel(dataIndex));
+                return encodeHTML(axis.scale.getLabel({value: dataIndex}));
             };
 
             each(
@@ -133,6 +145,8 @@ class SliderTimelineView extends TimelineView {
         }
 
         this._doPlayStop();
+
+        this._updateTicksStatus();
     }
 
     /**
@@ -150,7 +164,7 @@ class SliderTimelineView extends TimelineView {
         this._clearTimer();
     }
 
-    _layout(timelineModel: SliderTimelineModel, api: ExtensionAPI): LayoutInfo {
+    private _layout(timelineModel: SliderTimelineModel, api: ExtensionAPI): LayoutInfo {
         const labelPosOpt = timelineModel.get(['label', 'position']);
         const orient = timelineModel.get('orient');
         const viewRect = getViewRect(timelineModel, api);
@@ -250,7 +264,7 @@ class SliderTimelineView extends TimelineView {
         };
     }
 
-    _position(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
+    private _position(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
         // Position is be called finally, because bounding rect is needed for
         // adapt content to fill viewRect (auto adapt offset).
 
@@ -321,7 +335,7 @@ class SliderTimelineView extends TimelineView {
         }
     }
 
-    _createAxis(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
+    private _createAxis(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
         const data = timelineModel.getData();
         const axisType = timelineModel.get('axisType');
 
@@ -330,7 +344,7 @@ class SliderTimelineView extends TimelineView {
         // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {
             return data.mapArray(['value'], function (value: number) {
-                return value;
+                return {value};
             });
         };
 
@@ -344,13 +358,13 @@ class SliderTimelineView extends TimelineView {
         return axis;
     }
 
-    _createGroup(key: '_mainGroup' | '_labelGroup') {
+    private _createGroup(key: '_mainGroup' | '_labelGroup') {
         const newGroup = this[key] = new graphic.Group();
         this.group.add(newGroup);
         return newGroup;
     }
 
-    _renderAxisLine(
+    private _renderAxisLine(
         layoutInfo: LayoutInfo,
         group: graphic.Group,
         axis: TimelineAxis,
@@ -362,7 +376,7 @@ class SliderTimelineView extends TimelineView {
             return;
         }
 
-        group.add(new graphic.Line({
+        const line = new graphic.Line({
             shape: {
                 x1: axisExtent[0], y1: 0,
                 x2: axisExtent[1], y2: 0
@@ -373,13 +387,27 @@ class SliderTimelineView extends TimelineView {
             ),
             silent: true,
             z2: 1
-        }));
+        });
+        group.add(line);
+
+        const progressLine = this._progressLine = new graphic.Line({
+            shape: {
+                x1: axisExtent[0],
+                x2: this._currentPointer
+                    ? this._currentPointer.x : axisExtent[0],
+                y1: 0, y2: 0
+            },
+            style: defaults(
+                { lineCap: 'round', lineWidth: line.style.lineWidth } as PathStyleProps,
+                timelineModel.getModel(['progress', 'lineStyle']).getLineStyle()
+            ),
+            silent: true,
+            z2: 1
+        });
+        group.add(progressLine);
     }
 
-    /**
-     * @private
-     */
-    _renderAxisTick(
+    private _renderAxisTick(
         layoutInfo: LayoutInfo,
         group: graphic.Group,
         axis: TimelineAxis,
@@ -389,36 +417,40 @@ class SliderTimelineView extends TimelineView {
         // Show all ticks, despite ignoring strategy.
         const ticks = axis.scale.getTicks();
 
+        this._tickSymbols = [];
+
         // The value is dataIndex, see the costomized scale.
-        each(ticks, function (value) {
-            const tickCoord = axis.dataToCoord(value);
-            const itemModel = data.getItemModel<TimelineDataItemOption>(value);
+        each(ticks, (tick: ScaleTick) => {
+            const tickCoord = axis.dataToCoord(tick.value);
+            const itemModel = data.getItemModel<TimelineDataItemOption>(tick.value);
             const itemStyleModel = itemModel.getModel('itemStyle');
             const hoverStyleModel = itemModel.getModel(['emphasis', 'itemStyle']);
+            const progressStyleModel = itemModel.getModel(['progress', 'itemStyle']);
+
             const symbolOpt = {
                 position: [tickCoord, 0],
-                onclick: bind(this._changeTimeline, this, value)
+                onclick: bind(this._changeTimeline, this, tick.value)
             };
             const el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
             el.ensureState('emphasis').style = hoverStyleModel.getItemStyle();
+            el.ensureState('progress').style = progressStyleModel.getItemStyle();
+
             enableHoverEmphasis(el);
 
-            const ecData = graphic.getECData(el);
+            const ecData = getECData(el);
             if (itemModel.get('tooltip')) {
-                ecData.dataIndex = value;
+                ecData.dataIndex = tick.value;
                 ecData.dataModel = timelineModel;
             }
             else {
                 ecData.dataIndex = ecData.dataModel = null;
             }
 
-        }, this);
+            this._tickSymbols.push(el);
+        });
     }
 
-    /**
-     * @private
-     */
-    _renderAxisLabel(
+    private _renderAxisLabel(
         layoutInfo: LayoutInfo,
         group: graphic.Group,
         axis: TimelineAxis,
@@ -433,13 +465,17 @@ class SliderTimelineView extends TimelineView {
         const data = timelineModel.getData();
         const labels = axis.getViewLabels();
 
-        each(labels, function (labelItem) {
+        this._tickLabels = [];
+
+        each(labels, (labelItem) => {
             // The tickValue is dataIndex, see the costomized scale.
             const dataIndex = labelItem.tickValue;
 
             const itemModel = data.getItemModel<TimelineDataItemOption>(dataIndex);
             const normalLabelModel = itemModel.getModel('label');
             const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
+            const progressLabelModel = itemModel.getModel(['progress', 'label']);
+
             const tickCoord = axis.dataToCoord(labelItem.tickValue);
             const textEl = new graphic.Text({
                 x: tickCoord,
@@ -455,17 +491,19 @@ class SliderTimelineView extends TimelineView {
             });
 
             textEl.ensureState('emphasis').style = createTextStyle(hoverLabelModel);
+            textEl.ensureState('progress').style = createTextStyle(progressLabelModel);
 
             group.add(textEl);
             enableHoverEmphasis(textEl);
 
-        }, this);
+            labelDataIndexStore(textEl).dataIndex = dataIndex;
+
+            this._tickLabels.push(textEl);
+
+        });
     }
 
-    /**
-     * @private
-     */
-    _renderControl(
+    private _renderControl(
         layoutInfo: LayoutInfo,
         group: graphic.Group,
         axis: TimelineAxis,
@@ -476,36 +514,40 @@ class SliderTimelineView extends TimelineView {
 
         const itemStyle = timelineModel.getModel('controlStyle').getItemStyle();
         const hoverStyle = timelineModel.getModel(['emphasis', 'controlStyle']).getItemStyle();
-        const rect = [0, -controlSize / 2, controlSize, controlSize];
         const playState = timelineModel.getPlayState();
         const inverse = timelineModel.get('inverse', true);
 
         makeBtn(
             layoutInfo.nextBtnPosition,
-            'nextIcon',
+            'next',
             bind(this._changeTimeline, this, inverse ? '-' : '+')
         );
         makeBtn(
             layoutInfo.prevBtnPosition,
-            'prevIcon',
+            'prev',
             bind(this._changeTimeline, this, inverse ? '+' : '-')
         );
         makeBtn(
             layoutInfo.playPosition,
-            (playState ? 'stopIcon' : 'playIcon'),
+            (playState ? 'stop' : 'play'),
             bind(this._handlePlayClick, this, !playState),
             true
         );
 
         function makeBtn(
             position: number[],
-            iconPath: ControlIconName,
+            iconName: ControlName,
             onclick: () => void,
             willRotate?: boolean
         ) {
             if (!position) {
                 return;
             }
+            const iconSize = parsePercent(
+                retrieve2(timelineModel.get(['controlStyle', iconName + 'BtnSize' as any]), controlSize),
+                controlSize
+            );
+            const rect = [0, -iconSize / 2, iconSize, iconSize];
             const opt = {
                 position: position,
                 origin: [controlSize / 2, 0],
@@ -514,14 +556,14 @@ class SliderTimelineView extends TimelineView {
                 style: itemStyle,
                 onclick: onclick
             };
-            const btn = makeControlIcon(timelineModel, iconPath, rect, opt);
+            const btn = makeControlIcon(timelineModel, iconName + 'Icon' as ControlIconName, rect, opt);
             btn.ensureState('emphasis').style = hoverStyle;
             group.add(btn);
             enableHoverEmphasis(btn);
         }
     }
 
-    _renderCurrentPointer(
+    private _renderCurrentPointer(
         layoutInfo: LayoutInfo,
         group: graphic.Group,
         axis: TimelineAxis,
@@ -538,10 +580,10 @@ class SliderTimelineView extends TimelineView {
                 pointer.draggable = true;
                 pointer.drift = bind(me._handlePointerDrag, me);
                 pointer.ondragend = bind(me._handlePointerDragend, me);
-                pointerMoveTo(pointer, currentIndex, axis, timelineModel, true);
+                pointerMoveTo(pointer, me._progressLine, currentIndex, axis, timelineModel, true);
             },
             onUpdate(pointer: TimelineSymbol) {
-                pointerMoveTo(pointer, currentIndex, axis, timelineModel);
+                pointerMoveTo(pointer, me._progressLine, currentIndex, axis, timelineModel);
             }
         };
 
@@ -551,7 +593,7 @@ class SliderTimelineView extends TimelineView {
         );
     }
 
-    _handlePlayClick(nextState: boolean) {
+    private _handlePlayClick(nextState: boolean) {
         this._clearTimer();
         this.api.dispatchAction({
             type: 'timelinePlayChange',
@@ -560,16 +602,16 @@ class SliderTimelineView extends TimelineView {
         } as TimelinePlayChangePayload);
     }
 
-    _handlePointerDrag(dx: number, dy: number, e: ZRElementEvent) {
+    private _handlePointerDrag(dx: number, dy: number, e: ZRElementEvent) {
         this._clearTimer();
         this._pointerChangeTimeline([e.offsetX, e.offsetY]);
     }
 
-    _handlePointerDragend(e: ZRElementEvent) {
+    private _handlePointerDragend(e: ZRElementEvent) {
         this._pointerChangeTimeline([e.offsetX, e.offsetY], true);
     }
 
-    _pointerChangeTimeline(mousePos: number[], trigger?: boolean) {
+    private _pointerChangeTimeline(mousePos: number[], trigger?: boolean) {
         let toCoord = this._toAxisCoord(mousePos)[0];
 
         const axis = this._axis;
@@ -580,6 +622,9 @@ class SliderTimelineView extends TimelineView {
 
         this._currentPointer.x = toCoord;
         this._currentPointer.markRedraw();
+
+        this._progressLine.shape.x2 = toCoord;
+        this._progressLine.dirty();
 
         const targetDataIndex = this._findNearestTick(toCoord);
         const timelineModel = this.model;
@@ -592,7 +637,7 @@ class SliderTimelineView extends TimelineView {
         }
     }
 
-    _doPlayStop() {
+    private _doPlayStop() {
         this._clearTimer();
 
         if (this.model.getPlayState()) {
@@ -610,12 +655,12 @@ class SliderTimelineView extends TimelineView {
         }
     }
 
-    _toAxisCoord(vertex: number[]) {
+    private _toAxisCoord(vertex: number[]) {
         const trans = this._mainGroup.getLocalTransform();
         return graphic.applyTransform(vertex, trans, true);
     }
 
-    _findNearestTick(axisCoord: number) {
+    private _findNearestTick(axisCoord: number) {
         const data = this.model.getData();
         let dist = Infinity;
         let targetDataIndex;
@@ -633,14 +678,14 @@ class SliderTimelineView extends TimelineView {
         return targetDataIndex;
     }
 
-    _clearTimer() {
+    private _clearTimer() {
         if (this._timer) {
             clearTimeout(this._timer);
             this._timer = null;
         }
     }
 
-    _changeTimeline(nextIndex: number | '+' | '-') {
+    private _changeTimeline(nextIndex: number | '+' | '-') {
         const currentIndex = this.model.getCurrentIndex();
 
         if (nextIndex === '+') {
@@ -657,6 +702,26 @@ class SliderTimelineView extends TimelineView {
         } as TimelineChangePayload);
     }
 
+    private _updateTicksStatus() {
+        const currentIndex = this.model.getCurrentIndex();
+        const tickSymbols = this._tickSymbols;
+        const tickLabels = this._tickLabels;
+
+        if (tickSymbols) {
+            for (let i = 0; i < tickSymbols.length; i++) {
+                tickSymbols && tickSymbols[i]
+                    && tickSymbols[i].toggleState('progress', i < currentIndex);
+            }
+        }
+        if (tickLabels) {
+            for (let i = 0; i < tickLabels.length; i++) {
+                tickLabels && tickLabels[i]
+                    && tickLabels[i].toggleState(
+                        'progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex
+                    );
+            }
+        }
+    }
 }
 
 function createScaleByModel(model: SliderTimelineModel, axisType?: string): Scale {
@@ -782,6 +847,7 @@ function giveSymbol(
 
 function pointerMoveTo(
     pointer: TimelineSymbol,
+    progressLine: graphic.Line,
     dataIndex: number,
     axis: TimelineAxis,
     timelineModel: SliderTimelineModel,
@@ -795,20 +861,28 @@ function pointerMoveTo(
     const toCoord = axis.dataToCoord(timelineModel.getData().get('value', dataIndex));
 
     if (noAnimation || !pointerModel.get('animation', true)) {
-        pointer.x = toCoord;
-        pointer.y = 0;
+        pointer.attr({
+            x: toCoord,
+            y: 0
+        });
+        progressLine && progressLine.attr({
+            shape: { x2: toCoord }
+        });
     }
     else {
+        const animationCfg = {
+            duration: pointerModel.get('animationDuration', true),
+            easing: pointerModel.get('animationEasing', true)
+        };
         pointer.stopAnimation(null, true);
         pointer.animateTo({
             x: toCoord,
             y: 0
-        }, {
-                duration: pointerModel.get('animationDuration', true),
-                easing: pointerModel.get('animationEasing', true)
-        });
+        }, animationCfg);
+        progressLine && progressLine.animateTo({
+            shape: { x2: toCoord }
+        }, animationCfg);
     }
-    pointer.markRedraw();
 }
 
 

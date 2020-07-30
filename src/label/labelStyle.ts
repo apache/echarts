@@ -16,6 +16,7 @@ import {
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
+import { deprecateReplaceLog } from '../util/log';
 
 type TextCommonParams = {
     /**
@@ -29,6 +30,11 @@ type TextCommonParams = {
     inheritColor?: ColorString
 
     defaultOutsidePosition?: LabelOption['position']
+
+    /**
+     * If support legacy 'auto' for 'inherit' usage.
+     */
+    // supportLegacyAuto?: boolean
 
     textStyle?: ZRStyleProps
 };
@@ -406,7 +412,12 @@ function setTokenTextStyle(
     const inheritColor = opt && opt.inheritColor;
     let fillColor = textStyleModel.getShallow('color');
     let strokeColor = textStyleModel.getShallow('textBorderColor');
-    if (fillColor === 'inherit') {
+    if (fillColor === 'inherit' || fillColor === 'auto') {
+        if (__DEV__) {
+            if (fillColor === 'auto') {
+                deprecateReplaceLog('color: \'auto\'', 'color: \'inherit\'');
+            }
+        }
         if (inheritColor) {
             fillColor = inheritColor;
         }
@@ -414,12 +425,17 @@ function setTokenTextStyle(
             fillColor = null;
         }
     }
-    if (strokeColor === 'inherit' && inheritColor) {
+    if (strokeColor === 'inherit' || (strokeColor === 'auto')) {
+        if (__DEV__) {
+            if (strokeColor === 'auto') {
+                deprecateReplaceLog('color: \'auto\'', 'color: \'inherit\'');
+            }
+        }
         if (inheritColor) {
             strokeColor = inheritColor;
         }
         else {
-            strokeColor = inheritColor;
+            strokeColor = null;
         }
     }
     fillColor = fillColor || globalTextStyle.color;
@@ -465,18 +481,29 @@ function setTokenTextStyle(
         }
     }
     if (!isBlock || !opt.disableBox) {
-        if (textStyle.backgroundColor === 'auto' && inheritColor) {
-            textStyle.backgroundColor = inheritColor;
-        }
-        if (textStyle.borderColor === 'auto' && inheritColor) {
-            textStyle.borderColor = inheritColor;
-        }
         for (let i = 0; i < TEXT_PROPS_BOX.length; i++) {
             const key = TEXT_PROPS_BOX[i];
             const val = textStyleModel.getShallow(key);
             if (val != null) {
                 (textStyle as any)[key] = val;
             }
+        }
+
+        if ((textStyle.backgroundColor === 'auto' || textStyle.backgroundColor === 'inherit') && inheritColor) {
+            if (__DEV__) {
+                if (textStyle.backgroundColor === 'auto') {
+                    deprecateReplaceLog('backgroundColor: \'auto\'', 'backgroundColor: \'inherit\'');
+                }
+            }
+            textStyle.backgroundColor = inheritColor;
+        }
+        if ((textStyle.borderColor === 'auto' || textStyle.borderColor === 'inherit') && inheritColor) {
+            if (__DEV__) {
+                if (textStyle.borderColor === 'auto') {
+                    deprecateReplaceLog('borderColor: \'auto\'', 'borderColor: \'inherit\'');
+                }
+            }
+            textStyle.borderColor = inheritColor;
         }
     }
 }

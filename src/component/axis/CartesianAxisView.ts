@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import AxisBuilder from './AxisBuilder';
+import AxisBuilder, {AxisBuilderCfg} from './AxisBuilder';
 import AxisView from './AxisView';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
@@ -66,7 +66,20 @@ class CartesianAxisView extends AxisView {
 
         const layout = cartesianAxisHelper.layout(gridModel, axisModel);
 
-        const axisBuilder = new AxisBuilder(axisModel, layout);
+        const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
+            handleAutoShown(elementType) {
+                const cartesians = gridModel.coordinateSystem.getCartesians();
+                for (let i = 0; i < cartesians.length; i++) {
+                    const otherAxisType = cartesians[i].getOtherAxis(axisModel.axis).type;
+                    if (otherAxisType === 'value' || otherAxisType === 'log') {
+                        // Still show axis tick or axisLine if other axis is value / log
+                        return true;
+                    }
+                }
+                // Not show axisTick or axisLine if other axis is category / time
+                return false;
+            }
+        } as AxisBuilderCfg, layout));
 
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 

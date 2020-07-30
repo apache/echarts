@@ -21,7 +21,6 @@
 // ??? refactor? check the outer usage of data provider.
 // merge with defaultDimValueGetter?
 
-import {__DEV__} from '../../config';
 import {isTypedArray, extend, assert, each, isObject} from 'zrender/src/core/util';
 import {getDataItemValue} from '../../util/model';
 import Source from '../Source';

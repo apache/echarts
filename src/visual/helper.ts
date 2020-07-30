@@ -25,7 +25,6 @@
  *  'style', 'symbol', 'symbolSize'...
  */
 import List from '../data/List';
-import { __DEV__ } from '../config';
 
 
 export function getItemVisualFromData(data: List, dataIndex: number, key: string) {

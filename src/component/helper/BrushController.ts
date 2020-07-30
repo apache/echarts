@@ -18,7 +18,6 @@
 */
 
 
-import {__DEV__} from '../../config';
 import {curry, each, map, bind, merge, clone, defaults, assert} from 'zrender/src/core/util';
 import Eventful from 'zrender/src/core/Eventful';
 import * as graphic from '../../util/graphic';
@@ -945,7 +944,7 @@ const pointerHandlers: Dictionary<(this: BrushController, e: ElementEvent) => vo
     mousedown: function (e) {
         if (this._dragging) {
             // In case some browser do not support globalOut,
-            // and release mose out side the browser.
+            // and release mouse out side the browser.
             handleDragEnd(this, e);
         }
         else if (!e.target || !e.target.draggable) {

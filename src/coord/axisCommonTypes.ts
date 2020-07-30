@@ -127,7 +127,7 @@ interface AxisNameTextStyleOption extends TextCommonOption {
 }
 
 interface AxisLineOption {
-    show?: boolean,
+    show?: boolean | 'auto',
     onZero?: boolean,
     onZeroAxisIndex?: number,
     // The arrow at both ends the the axis.
@@ -138,7 +138,7 @@ interface AxisLineOption {
 }
 
 interface AxisTickOption {
-    show?: boolean,
+    show?: boolean | 'auto',
     // Whether axisTick is inside the grid or outside the grid.
     inside?: boolean,
     // The length of axisTick.
@@ -153,6 +153,24 @@ interface AxisTickOption {
     interval?: 'auto' | number | ((index: number, value: string) => boolean)
 }
 
+export type AxisLabelFormatterOption = string | ((value: OrdinalRawValue | number, index: number) => string);
+
+type TimeAxisLabelUnitFormatter = AxisLabelFormatterOption | string[];
+
+export type TimeAxisLabelFormatterOption = string
+    | ((value: number, index: number, extra: {level: number}) => string)
+    | {
+        year?: TimeAxisLabelUnitFormatter,
+        month?: TimeAxisLabelUnitFormatter,
+        week?: TimeAxisLabelUnitFormatter,
+        day?: TimeAxisLabelUnitFormatter,
+        hour?: TimeAxisLabelUnitFormatter,
+        minute?: TimeAxisLabelUnitFormatter,
+        second?: TimeAxisLabelUnitFormatter,
+        millisecond?: TimeAxisLabelUnitFormatter,
+        inherit?: boolean
+    };
+
 interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
@@ -164,7 +182,7 @@ interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     showMaxLabel?: boolean,
     margin?: number,
     // value is supposed to be OptionDataPrimitive but for time axis, it is time stamp.
-    formatter?: string | ((value: OrdinalRawValue | number, index: number) => string),
+    formatter?: AxisLabelFormatterOption | TimeAxisLabelFormatterOption,
 
     // --------------------------------------------
     // [Properties below only for 'category' axis]:

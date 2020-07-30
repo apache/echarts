@@ -27,7 +27,8 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
-import { ZRRawEvent } from 'zrender/src/core/types';
+import { ZRRawEvent, Dictionary } from 'zrender/src/core/types';
+import { ColorString, ZRColor } from '../../util/types';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 
@@ -37,6 +38,67 @@ const toCamelCase = formatUtil.toCamelCase;
 const vendors = ['', '-webkit-', '-moz-', '-o-'];
 
 const gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
+
+function mirrowPos(pos: string): string {
+    pos = pos === 'left'
+        ? 'right'
+        : pos === 'right'
+        ? 'left'
+        : pos === 'top'
+        ? 'bottom'
+        : 'top';
+    return pos;
+}
+
+
+function getFinalColor(color: ZRColor): string {
+    let finalNearPointColor = '#fff';
+    if (zrUtil.isObject(color) && color.type !== 'pattern') {
+        finalNearPointColor = color.colorStops[0].color;
+    }
+    else if (zrUtil.isObject(color) && (color.type === 'pattern')) {
+        finalNearPointColor = 'transparent';
+    }
+    else if (zrUtil.isString(color)) {
+        finalNearPointColor = color;
+    }
+
+    return finalNearPointColor;
+}
+
+function assembleArrow(
+    backgroundColor: ColorString,
+    borderColor: ZRColor,
+    arrowPosition: TooltipOption['position']
+) {
+    if (!zrUtil.isString(arrowPosition) || arrowPosition === 'inside') {
+        return '';
+    }
+
+    borderColor = getFinalColor(borderColor);
+    const arrowPos = mirrowPos(arrowPosition);
+    let centerPos = '';
+    let rotate = 0;
+    if (['left', 'right'].includes(arrowPos)) {
+        centerPos = `${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
+        rotate = arrowPos === 'left' ? -225 : -45;
+    }
+    else {
+        centerPos = `${arrowPos}:-6px;left:50%;transform:translateX(-50%)`;
+        rotate = arrowPos === 'top' ? 225 : 45;
+    }
+    const styleCss = [
+        'style="position:absolute;width:10px;height:10px;',
+        `${centerPos}`,
+        `rotate(${rotate}deg);`,
+        `border-bottom: ${borderColor} solid 1px;`,
+        `border-right: ${borderColor} solid 1px;`,
+        `background-color: ${backgroundColor};`,
+        'box-shadow: 8px 8px 16px -3px #000',
+        '"'
+    ];
+    return `<div ${styleCss.join('')}></div>`;
+}
 
 function assembleTransition(duration: number): string {
     const transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
@@ -63,6 +125,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     cssText.push('font:' + textStyleModel.getFont());
 
     fontSize
+        // @ts-ignore, leave it to the tooltip refactor.
         && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
 
     each(['decoration', 'align'] as const, function (name) {
@@ -75,15 +138,24 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
 
 function assembleCssText(tooltipModel: Model<TooltipOption>) {
 
-    const cssText = [];
+    const cssText: string[] = [];
 
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
+    const shadowBlur = tooltipModel.get('shadowBlur');
+    const shadowColor = tooltipModel.get('shadowColor');
+    const shadowOffsetX = tooltipModel.get('shadowOffsetX');
+    const shadowOffsetY = tooltipModel.get('shadowOffsetY');
     const textStyleModel = tooltipModel.getModel('textStyle');
     const padding = tooltipModel.get('padding');
+    const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
 
+    cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
+    // If tooltip show arrow, then disable transition
     transitionDuration
+        && !(['top', 'left', 'bottom', 'right'].includes(tooltipModel.get('position') as string))
+        && tooltipModel.get('trigger') !== 'item'
         && cssText.push(assembleTransition(transitionDuration));
 
     if (backgroundColor) {
@@ -259,16 +331,18 @@ class TooltipHTMLContent {
         // this.hide();
     }
 
-    show(tooltipModel: Model<TooltipOption>) {
+    show(tooltipModel: Model<TooltipOption>, nearPointColor: ZRColor) {
         clearTimeout(this._hideTimeout);
         const el = this.el;
         const styleCoord = this._styleCoord;
-
+        const offset = el.offsetHeight / 2;
+        nearPointColor = getFinalColor(nearPointColor);
         el.style.cssText = gCssText + assembleCssText(tooltipModel)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
-            + ';left:' + styleCoord[0] + 'px;top:' + styleCoord[1] + 'px;'
+            + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;'
+            + `border-color: ${nearPointColor};`
             + (tooltipModel.get('extraCssText') || '');
 
         el.style.display = el.innerHTML ? 'block' : 'none';
@@ -283,8 +357,23 @@ class TooltipHTMLContent {
         this._show = true;
     }
 
-    setContent(content: string) {
-        this.el.innerHTML = content == null ? '' : content;
+    setContent(
+        content: string,
+        markers: Dictionary<ColorString>,
+        tooltipModel: Model<TooltipOption>,
+        borderColor?: ZRColor,
+        arrowPosition?: TooltipOption['position']
+    ) {
+        if (content == null) {
+            return;
+        }
+        this.el.innerHTML = content;
+        this.el.innerHTML += (
+                zrUtil.isString(arrowPosition)
+                && tooltipModel.get('trigger') === 'item'
+                && !tooltipModel.get('confine')
+            )
+            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition) : '';
     }
 
     setEnterable(enterable: boolean) {

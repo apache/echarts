@@ -17,4 +17,34 @@
 * under the License.
 */
 
-define('echarts', [], function () {return echarts;});
+import { Text } from '../util/graphic';
+import { deprecateLog } from '../util/log';
+
+type TextStyleProps = Text['style'];
+export function getTextRect(
+    text: TextStyleProps['text'],
+    font?: TextStyleProps['font'],
+    align?: TextStyleProps['align'],
+    verticalAlign?: TextStyleProps['verticalAlign'],
+    padding?: TextStyleProps['padding'],
+    rich?: TextStyleProps['rich'],
+    truncate?: boolean,
+    lineHeight?: number
+) {
+    deprecateLog('getTextRect is deprecated.');
+
+    const textEl = new Text({
+        style: {
+            text,
+            font,
+            align,
+            verticalAlign,
+            padding,
+            rich,
+            overflow: truncate ? 'truncate' : null,
+            lineHeight
+        }
+    });
+
+    return textEl.getBoundingRect();
+}

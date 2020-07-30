@@ -33,7 +33,6 @@
  * `mergeOption` in module:echarts/model/OptionManager.
  */
 
-import {__DEV__} from '../config';
 import {
     each, filter, isArray, isObject, isString,
     createHashMap, assert, clone, merge, extend, mixin, HashMap, isFunction

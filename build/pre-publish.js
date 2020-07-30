@@ -35,11 +35,8 @@ const fsExtra = require('fs-extra');
 const chalk = require('chalk');
 const ts = require('typescript');
 const globby = require('globby');
-const removeDEVUtil = require('./remove-dev');
+const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
-const {promisify} = require('util');
-const readFileAsync = promisify(fs.readFile);
-const writeFileAsync = promisify(fs.writeFile);
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');
@@ -88,8 +85,7 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
             preamble: preamble.js,
-            removeDEV: true,
-            cjsEntryCompat: cjsEntryCompat
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(tmpDir);
@@ -105,6 +101,14 @@ const compileWorkList = [
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.common.js'), nodePath.resolve(ecDir, 'index.common.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.simple.js'), nodePath.resolve(ecDir, 'index.simple.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'lib'));
+
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.blank.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
+
+            transformZRRootFolder(nodePath.resolve(ecDir, 'lib'), 'lib');
+
             fsExtra.removeSync(tmpDir);
         }
     },
@@ -119,9 +123,7 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: tmpDir},
             preamble: preamble.js,
-            // esm do not remove DEV. Keep it them same with
-            // the previous state before migrate to ts.
-            removeDEV: false
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(tmpDir);
@@ -137,12 +139,20 @@ const compileWorkList = [
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.common.js'), nodePath.resolve(ecDir, 'echarts.common.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'echarts.simple.js'), nodePath.resolve(ecDir, 'echarts.simple.js'));
             fs.renameSync(nodePath.resolve(tmpDir, 'src'), nodePath.resolve(ecDir, 'esm'));
+
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.all.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.blank.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
+            transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
+
+            await transformZRRootFolder(nodePath.resolve(ecDir, 'esm'), 'esm');
+
             fsExtra.removeSync(tmpDir);
         }
     },
     {
         logLabel: 'extension ts -> js-cjs',
-        compilerOptions: {
+        compilerOptionsOverride: {
             module: 'CommonJS',
             rootDir: extensionSrcDir,
             outDir: extensionCJSDir
@@ -151,16 +161,18 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: extensionCJSDir},
             preamble: preamble.js,
-            removeDEV: true,
-            cjsEntryCompat: cjsEntryCompat
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(extensionCJSDir);
+        },
+        after: async function () {
+            await transformZRRootFolder(extensionCJSDir, 'lib');
         }
     },
     {
         logLabel: 'extension ts -> js-esm',
-        compilerOptions: {
+        compilerOptionsOverride: {
             module: 'ES2015',
             rootDir: extensionSrcDir,
             outDir: extensionESMDir
@@ -169,10 +181,13 @@ const compileWorkList = [
         transformOptions: {
             filesGlobby: {patterns: ['**/*.js'], cwd: extensionESMDir},
             preamble: preamble.js,
-            removeDEV: false
+            transformDEV: true
         },
         before: async function () {
             fsExtra.removeSync(extensionESMDir);
+        },
+        after: async function () {
+            await transformZRRootFolder(extensionESMDir, 'esm');
         }
     }
 ];
@@ -208,7 +223,7 @@ module.exports = async function () {
         process.stdout.write(chalk.green.dim(` done \n`));
     }
 
-    console.log(chalk.green.bright('All done.'));
+    console.log(chalk.green.dim('All done.'));
 };
 
 async function tsCompile(compilerOptionsOverride, srcPathList) {
@@ -259,27 +274,55 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
 }
 
 /**
+ * Transform `src` root in the entry file to `esm` or `lib`
+ */
+function transformRootFolderInEntry(entryFile, replacement) {
+    let code = fs.readFileSync(entryFile, 'utf-8');
+    // Simple regex replacement
+    // TODO More robust way?
+    code = code.replace(/([\"\'])\.\/src\//g, `$1./${replacement}/`)
+        .replace(/([\"\'])src\//g, `$1${replacement}/`);
+    fs.writeFileSync(
+        entryFile,
+        // Also transform zrender.
+        singleTransformZRRootFolder(code, replacement),
+        'utf-8'
+    );
+}
+
+/**
+ * Transform `zrender/src` to `zrender/esm` in all files
+ */
+async function transformZRRootFolder(rooltFolder, replacement) {
+    const files = await globby([rooltFolder + '/**/*.js']);
+    // Simple regex replacement
+    // TODO More robust way?
+    for (let fileName of files) {
+        let code = fs.readFileSync(fileName, 'utf-8');
+        fs.writeFileSync(fileName, singleTransformZRRootFolder(code, replacement), 'utf-8');
+    }
+}
+
+function singleTransformZRRootFolder(code, replacement) {
+    return code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`);
+}
+
+/**
  * @param {Object} transformOptions
  * @param {Object} transformOptions.filesGlobby {patterns: string[], cwd: string}
  * @param {string} [transformOptions.preamble] See './preamble.js'
- * @param {Function} [transformOptions.cjsEntryCompat]
- * @param {boolean} [transformOptions.removeDEV]
+ * @param {boolean} [transformOptions.transformDEV]
  */
-async function transformCode({filesGlobby, preamble, cjsEntryCompat, removeDEV}) {
+async function transformCode({filesGlobby, preamble, transformDEV}) {
 
-    let filePaths = readFilePaths(filesGlobby);
+    let filePaths = await readFilePaths(filesGlobby);
 
-    await Promise.all(filePaths.map(async filePath => {
-        let code = await readFileAsync(filePath, {encoding: 'utf8'});
+    filePaths.map(filePath => {
+        let code = fs.readFileSync(filePath, 'utf8');
 
-        if (removeDEV) {
-            let result = removeDEVUtil.transform(code, false);
+        if (transformDEV) {
+            let result = transformDEVUtil.transform(code, false);
             code = result.code;
-            removeDEVPlugin.recheckDEV(code);
-        }
-
-        if (cjsEntryCompat) {
-            code = cjsEntryCompat({code, filePath});
         }
 
         code = autoGeneratedFileAlert + code;
@@ -288,27 +331,8 @@ async function transformCode({filesGlobby, preamble, cjsEntryCompat, removeDEV})
             code = preamble + code;
         }
 
-        await writeFileAsync(filePath, code, {encoding: 'utf8'});
-    }));
-}
-
-function cjsEntryCompat({code, filePath}) {
-    if (filePath === nodePath.resolve(ecDir, 'src/echarts.js')) {
-        // For backward compat.
-        // Using `echarts/echarts.blank.js` to overwrite `echarts/lib/echarts.js`
-        // for including exports API.
-        code += `
-var ___ec_export = require("./export");
-(function () {
-for (var key in ___ec_export) {
-    if (___ec_export.hasOwnProperty(key)) {
-        exports[key] = ___ec_export[key];
-    }
-}
-})();`;
-    }
-
-    return code;
+        fs.writeFileSync(filePath, code, 'utf8');
+    });
 }
 
 async function readFilePaths({patterns, cwd}) {

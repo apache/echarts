@@ -53,8 +53,10 @@ module.exports = function progress(options = {}) {
         },
 
         buildEnd() {
-            process.stdout.clearLine();
-            process.stdout.cursorTo(0);
+            if (process.stdout.isTTY) {
+                process.stdout.clearLine();
+                process.stdout.cursorTo(0);
+            }
         }
     };
 };

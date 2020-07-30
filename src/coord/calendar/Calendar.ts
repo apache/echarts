@@ -33,7 +33,6 @@ import {
 } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
-import { __DEV__ } from '../../config';
 import SeriesModel from '../../model/Series';
 import CoordinateSystemManager from '../../CoordinateSystem';
 import { RectLike } from 'zrender/src/core/BoundingRect';

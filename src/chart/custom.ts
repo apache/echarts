@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../config';
 import {
     hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
 } from 'zrender/src/core/util';
@@ -500,7 +499,7 @@ class CustomSeriesView extends ChartView {
         function setIncrementalAndHoverLayer(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = true;
-                el.useHoverLayer = true;
+                el.ensureState('emphasis').hoverLayer = true;
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {

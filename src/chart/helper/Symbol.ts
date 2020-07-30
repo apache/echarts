@@ -19,6 +19,7 @@
 
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import {getECData} from '../../util/ecData';
 import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
 import {parsePercent} from '../../util/number';
 import {getDefaultLabel} from './labelHelper';
@@ -29,6 +30,7 @@ import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import ZRImage from 'zrender/src/graphic/Image';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -260,18 +262,30 @@ class Symbol extends graphic.Group {
 
         const symbolStyle = data.getItemVisual(idx, 'style');
         const visualColor = symbolStyle.fill;
-        if (symbolPath.__isEmptyBrush) {
-            // fill and stroke will be swapped if it's empty.
-            // So we cloned a new style to avoid it affecting the original style in visual storage.
-            // TODO Better implementation. No empty logic!
-            symbolPath.useStyle(extend({}, symbolStyle));
+
+        if (symbolPath instanceof ZRImage) {
+            const pathStyle = symbolPath.style;
+            symbolPath.useStyle(extend({
+                // TODO other properties like x, y ?
+                image: pathStyle.image,
+                x: pathStyle.x, y: pathStyle.y,
+                width: pathStyle.width, height: pathStyle.height
+            }, symbolStyle));
         }
         else {
-            symbolPath.useStyle(symbolStyle);
-        }
-        symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
-        symbolPath.style.strokeNoScale = true;
+            if (symbolPath.__isEmptyBrush) {
+                // fill and stroke will be swapped if it's empty.
+                // So we cloned a new style to avoid it affecting the original style in visual storage.
+                // TODO Better implementation. No empty logic!
+                symbolPath.useStyle(extend({}, symbolStyle));
+            }
+            else {
+                symbolPath.useStyle(symbolStyle);
+            }
+            symbolPath.setColor(visualColor, opts && opts.symbolInnerColor);
+            symbolPath.style.strokeNoScale = true;
 
+        }
         const liftZ = data.getItemVisual(idx, 'liftZ');
         const z2Origin = this._z2;
         if (liftZ != null) {
@@ -350,7 +364,7 @@ class Symbol extends graphic.Group {
                 scaleY: 0
             },
             this._seriesModel,
-            graphic.getECData(this).dataIndex,
+            getECData(this).dataIndex,
             cb
         );
     }

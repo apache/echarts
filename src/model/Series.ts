@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import {
@@ -428,7 +427,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         const series = this;
         renderMode = renderMode || 'html';
-        const newLine = renderMode === 'html' ? '<br/>' : '\n';
+        const newLine = renderMode === 'html' ? '' : '\n';
         const isRichText = renderMode === 'richText';
         const markers: Dictionary<ColorString> = {};
         let markerId = 0;
@@ -467,17 +466,21 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
                 const dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
                 const valStr = (vertially
-                        ? dimHeadStr + encodeHTML(dimInfo.displayName || '-') + ': '
+                        ? '<span style="font-size:12px;color:#6e7079;">'
+                            + dimHeadStr + encodeHTML(dimInfo.displayName || '-')
+                            + '</span>'
                         : ''
                     )
                     // FIXME should not format time for raw data?
+                    + '<span style="float:right;margin-left:20px;color:#000;font-weight:900">'
                     + encodeHTML(dimType === 'ordinal'
                         ? val + ''
                         : dimType === 'time'
                         ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
                         : addCommas(val)
-                    );
-                valStr && result.push(valStr);
+                    )
+                    + '</span>';
+                valStr && result.push(`<div style="margin: 11px 0 0;line-height:1;">${valStr}</div>`);
 
                 if (isRichText) {
                     markers[markName] = colorStr;
@@ -485,8 +488,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 }
             }
 
-            const newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
-            const content = newLine + result.join(newLine || ', ');
+            const newLine = vertially ? (isRichText ? '\n' : '') : '';
+            const content = newLine + result.join(newLine || '');
             return {
                 renderMode: renderMode,
                 content: content,
@@ -526,13 +529,19 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             : tooltipDimLen
             ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
             : formatSingleValue(isValueArr ? value[0] : value);
-        const content = formattedValue.content;
+        const content = isRichText
+            ? formattedValue.content
+            : (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
+            ? '<div>'
+                + formattedValue.content + '</div>'
+            : '<span style="float:right;margin-left:20px;color:#464646;font-weight:bold">'
+                + formattedValue.content + '</span>';
 
         const markName = series.seriesIndex + 'at' + markerId;
         const colorEl = getTooltipMarker({
             color: colorStr,
             type: 'item',
-            renderMode: renderMode,
+            renderMode,
             markerId: markName
         });
         markers[markName] = colorStr;
@@ -545,22 +554,38 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             seriesName = '';
         }
         seriesName = seriesName
-            ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ': ')
+            ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ' ')
             : '';
 
-        colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
-        const html = !multipleSeries
-            ? seriesName + colorStr
-                + (name
-                    ? encodeHTML(name) + ': ' + content
-                    : content
-                )
-            : colorStr + seriesName + content;
+        colorStr = zrUtil.isString(colorEl) ? colorEl : colorEl.content;
+        let html = '';
+        if (!isRichText) {
+            seriesName = seriesName
+                ? !multipleSeries
+                ? `<div style="font-size:12px;color:#6e7079;line-height:1;margin-top:-4px;">${seriesName}</div>`
+                : `<span style="font-size:12px;color:#6e7079;line-height:1">${seriesName}</span>`
+                : '';
+            html = !multipleSeries
+                ? seriesName + `<div style="margin: ${seriesName ? 8 : 0}px 0 0;line-height:1">`
+                    + colorStr
+                    + (name
+                        ? `<span style="font-size:12px;color:#6e7079;">${encodeHTML(name)}</span>${content}`
+                        : content
+                    ) + '</div>'
+                : `<div style="margin: 11px 0 0;line-height:1;">${colorStr}${seriesName}${content}</div>`;
+        }
+        else {
+            html = !multipleSeries
+                ? seriesName + (seriesName ? '\n' : '') + ''
+                    + colorStr
+                    + (name
+                        ? `${encodeHTML(name)}: ${content}`
+                        : content
+                    ) + ''
+                : `${colorStr}${seriesName}: ${content}`;
+        }
 
-        return {
-            html: html,
-            markers: markers
-        };
+        return {html, markers};
     }
 
     isAnimationEnabled(): boolean {

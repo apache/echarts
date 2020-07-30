@@ -40,7 +40,8 @@ import {
     TooltipRenderMode,
     ECElement,
     ColorString,
-    CommonTooltipOption
+    CommonTooltipOption,
+    ZRColor
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -48,6 +49,9 @@ import TooltipModel, {TooltipOption} from './TooltipModel';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import { CoordinateSystem } from '../../coord/CoordinateSystem';
+// import { isDimensionStacked } from '../../data/helper/dataStackHelper';
+import { getECData } from '../../util/ecData';
 
 const bind = zrUtil.bind;
 const each = zrUtil.each;
@@ -132,6 +136,10 @@ type TooltipDataParams = CallbackDataParams & {
     axisValue?: string | number
     axisValueLabel?: string
     marker?: formatUtil.TooltipMarker
+    // params below should not be exposed to callback
+    html?: string
+    position?: number[]
+    coordinateSystem?: CoordinateSystem
 };
 class TooltipView extends ComponentView {
     static type = 'tooltip' as const;
@@ -139,7 +147,7 @@ class TooltipView extends ComponentView {
 
     private _renderMode: TooltipRenderMode;
 
-    private _newLine: '<br/>' | '\n';
+    private _newLine: '' | '\n';
 
     private _tooltipModel: TooltipModel;
 
@@ -176,7 +184,7 @@ class TooltipView extends ComponentView {
             tooltipContent = new TooltipHTMLContent(api.getDom(), api, {
                 appendToBody: tooltipModel.get('appendToBody', true)
             });
-            this._newLine = '<br/>';
+            this._newLine = '';
         }
         else {
             tooltipContent = new TooltipRichContent(api);
@@ -305,7 +313,7 @@ class TooltipView extends ComponentView {
         const dataByCoordSys = payload.dataByCoordSys;
 
         if (payload.tooltip && payload.x != null && payload.y != null) {
-            const el = proxyRect as ECElement;
+            const el = proxyRect as unknown as ECElement;
             el.x = payload.x;
             el.y = payload.y;
             el.update();
@@ -446,7 +454,7 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         // Always show item tooltip if mouse is on the element with dataIndex
-        else if (el && graphic.getECData(el).dataIndex != null) {
+        else if (el && getECData(el).dataIndex != null) {
             this._lastDataByCoordSys = null;
             this._showSeriesItemTooltip(e, el, dispatchAction);
         }
@@ -534,30 +542,75 @@ class TooltipView extends ComponentView {
                     dataParams.axisIndex = item.axisIndex;
                     dataParams.axisType = item.axisType;
                     dataParams.axisId = item.axisId;
-                    dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, axisValue);
+                    dataParams.axisValue = axisHelper.getAxisRawValue(axisModel.axis, { value: axisValue as number });
                     dataParams.axisValueLabel = valueLabel;
                     dataParams.marker = formatUtil.getTooltipMarker({
                         color: dataParams.color as ColorString,
                         renderMode
                     });
 
-                    if (dataParams) {
-                        singleParamsList.push(dataParams);
-                        const seriesTooltip = series.formatTooltip(
-                            dataIndex, true, null, renderMode as TooltipRenderMode
-                        );
+                    singleParamsList.push(dataParams);
+                    const seriesTooltip = series.formatTooltip(
+                        dataIndex, true, null, renderMode as TooltipRenderMode
+                    );
 
-                        let html;
-                        if (zrUtil.isObject(seriesTooltip)) {
-                            html = seriesTooltip.html;
-                            const newMarkers = seriesTooltip.markers;
-                            zrUtil.merge(markers, newMarkers);
-                        }
-                        else {
-                            html = seriesTooltip;
-                        }
-                        seriesDefaultHTML.push(html);
+                    let html;
+                    if (zrUtil.isObject(seriesTooltip)) {
+                        html = seriesTooltip.html;
+                        const newMarkers = seriesTooltip.markers;
+                        zrUtil.merge(markers, newMarkers);
                     }
+                    else {
+                        html = seriesTooltip;
+                    }
+                    dataParams.html = html;
+                    // const data = series.getData();
+                    // const dims = zrUtil.map(series.coordinateSystem.dimensions, function (coordDim) {
+                    //     return data.mapDimension(coordDim);
+                    // });
+                    // let isStacked = false;
+                    // const stackResultDim = data.getCalculationInfo('stackResultDimension');
+                    // if (isDimensionStacked(data, dims[0])) {
+                    //     isStacked = true;
+                    //     dims[0] = stackResultDim;
+                    // }
+                    // if (isDimensionStacked(data, dims[1])) {
+                    //     isStacked = true;
+                    //     dims[1] = stackResultDim;
+                    // }
+                    // dataParams.coordinateSystem = series.coordinateSystem;
+                    // dataParams.position = findPointFromSeries({
+                    //     seriesIndex: idxItem.seriesIndex,
+                    //     dataIndex: dataIndex,
+                    //     isStacked
+                    // }, ecModel).point;
+                });
+
+                switch (singleTooltipModel.get('order')) {
+                    case 'valueAsc':
+                        singleParamsList.sort(function (a, b) {
+                            return +(a.data) - +(b.data);
+                        });
+                        break;
+
+                    case 'valueDesc':
+                        singleParamsList.sort(function (a, b) {
+                            return +(b.data) - +(a.data);
+                        });
+                        break;
+
+                    case 'seriesDesc':
+                        singleParamsList.reverse();
+                        break;
+
+                    case 'seriesAsc':
+                    default:
+                        break;
+                }
+
+                zrUtil.each(singleParamsList, function (params) {
+                    seriesDefaultHTML.push(params.html);
+                    delete params.html;
                 });
 
                 // Default tooltip content
@@ -570,15 +623,24 @@ class TooltipView extends ComponentView {
                 }
                 else {
                     singleDefaultHTML.push(
-                        (firstLine ? formatUtil.encodeHTML(firstLine) + newLine : '')
-                        + seriesDefaultHTML.join(newLine)
+                        (
+                            firstLine
+                                ? (
+                                    '<div style="font-size:12px;color:#6e7079;line-height:1;margin-top:-4px;">'
+                                    + formatUtil.encodeHTML(firstLine) + '</div>'
+                                    + newLine
+                                )
+                                : ''
+                        )
+                        + seriesDefaultHTML.reverse().join(newLine)
                     );
                 }
+                singleDefaultHTML.push('<br/>');
             });
         }, this);
 
         // In most case, the second axis is shown upper than the first one.
-        singleDefaultHTML.reverse();
+        singleDefaultHTML.pop();
         const singleDefaultHTMLStr = singleDefaultHTML.join(this._newLine + this._newLine);
 
         const positionExpr = e.position;
@@ -610,7 +672,7 @@ class TooltipView extends ComponentView {
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
         const ecModel = this._ecModel;
-        const ecData = graphic.getECData(el);
+        const ecData = getECData(el);
         // Use dataModel in element if possible
         // Used when mouseover on a element like markPoint or edge
         // In which case, the data is not main data in series.
@@ -634,6 +696,7 @@ class TooltipView extends ComponentView {
         if (tooltipTrigger != null && tooltipTrigger !== 'item') {
             return;
         }
+        const tooltipOrder = tooltipModel.get('order');
 
         const params = dataModel.getDataParams(dataIndex, dataType);
         params.marker = formatUtil.getTooltipMarker({
@@ -641,7 +704,7 @@ class TooltipView extends ComponentView {
             renderMode: this._renderMode
         });
 
-        const seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode);
+        const seriesTooltip = dataModel.formatTooltip(dataIndex, false, dataType, this._renderMode, tooltipOrder);
         let defaultHtml: string;
         let markers: Dictionary<ColorString>;
         if (zrUtil.isObject(seriesTooltip)) {
@@ -679,7 +742,7 @@ class TooltipView extends ComponentView {
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
         let tooltipOpt = el.tooltip;
-        if (typeof tooltipOpt === 'string') {
+        if (zrUtil.isString(tooltipOpt)) {
             const content = tooltipOpt;
             tooltipOpt = {
                 content: content,
@@ -720,7 +783,7 @@ class TooltipView extends ComponentView {
         x: number,
         y: number,
         positionExpr: TooltipOption['position'],
-        el: ECElement,
+        el?: ECElement,
         markers?: Dictionary<ColorString>
     ) {
         // Reset ticket
@@ -735,14 +798,19 @@ class TooltipView extends ComponentView {
         const formatter = tooltipModel.get('formatter');
         positionExpr = positionExpr || tooltipModel.get('position');
         let html = defaultHtml;
+        const nearPoint = this._getNearestPoint(
+            [x, y],
+            params,
+            tooltipModel.get('trigger')
+        );
 
-        if (formatter && typeof formatter === 'string') {
+        if (formatter && zrUtil.isString(formatter)) {
             html = formatUtil.formatTpl(formatter, params, true);
         }
-        else if (typeof formatter === 'function') {
+        else if (zrUtil.isFunction(formatter)) {
             const callback = bind(function (cbTicket: string, html: string) {
                 if (cbTicket === this._ticket) {
-                    tooltipContent.setContent(html, markers, tooltipModel);
+                    tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
                     this._updatePosition(
                         tooltipModel, positionExpr, x, y, tooltipContent, params, el
                     );
@@ -752,12 +820,60 @@ class TooltipView extends ComponentView {
             html = formatter(params, asyncTicket, callback);
         }
 
-        tooltipContent.setContent(html, markers, tooltipModel);
-        tooltipContent.show(tooltipModel);
-
+        tooltipContent.setContent(html, markers, tooltipModel, nearPoint.color, positionExpr);
+        tooltipContent.show(tooltipModel, nearPoint.color);
         this._updatePosition(
             tooltipModel, positionExpr, x, y, tooltipContent, params, el
         );
+
+    }
+
+    _getNearestPoint(
+        point: number[],
+        tooltipDataParams: TooltipDataParams | TooltipDataParams[],
+        trigger: TooltipOption['trigger']
+    ): {
+        color: ZRColor;
+    } {
+        if (trigger === 'axis' || zrUtil.isArray(tooltipDataParams)) {
+            return {
+                color: this._renderMode === 'html' ? '#fff' : 'none'
+            };
+        }
+
+        if (!zrUtil.isArray(tooltipDataParams)) {
+            return {
+                color: tooltipDataParams.color || tooltipDataParams.borderColor
+            };
+        }
+
+        // if (!zrUtil.isArray(tooltipDataParams)) {
+        //     if (!tooltipDataParams.position) {
+        //         return {
+        //             color: tooltipDataParams.color || tooltipDataParams.borderColor
+        //         };
+        //     }
+        //     return {
+        //         color: tooltipDataParams.color || tooltipDataParams.borderColor
+        //     };
+        // }
+
+        // const distanceArr = zrUtil.map(tooltipDataParams, function (params) {
+        //     let dim = '';
+        //     if (params.coordinateSystem && params.coordinateSystem.type === 'cartesian2d') {
+        //         dim = params.coordinateSystem.getBaseAxis().dim;
+        //     }
+        //     const posIndex = +(dim === 'x');
+        //     const distance = Math.abs(params.position[posIndex] - point[posIndex]);
+        //     delete params.position;
+        //     delete params.coordinateSystem;
+        //     return distance;
+        // });
+
+        // const index = zrUtil.indexOf(distanceArr, Math.min(...distanceArr));
+        // return {
+        //     color: tooltipDataParams[index]?.color || tooltipDataParams[index]?.borderColor || '#fff'
+        // };
     }
 
     _updatePosition(
@@ -780,7 +896,7 @@ class TooltipView extends ComponentView {
         const rect = el && el.getBoundingRect().clone();
         el && rect.applyTransform(el.transform);
 
-        if (typeof positionExpr === 'function') {
+        if (zrUtil.isFunction(positionExpr)) {
             // Callback of position can be an array or a string specify the position
             positionExpr = positionExpr([x, y], params, content.el, rect, {
                 viewSize: [viewWidth, viewHeight],
@@ -807,7 +923,7 @@ class TooltipView extends ComponentView {
             vAlign = null;
         }
         // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
-        else if (typeof positionExpr === 'string' && el) {
+        else if (zrUtil.isString(positionExpr) && el) {
             const pos = calcTooltipPosition(
                 positionExpr, rect, contentSize
             );
@@ -916,7 +1032,7 @@ function buildTooltipModel(modelCascade: (TooltipModel | Model<TooltipableOption
             //  value: 10,
             //  tooltip: 'Something you need to know'
             // }
-            if (typeof tooltipOpt === 'string') {
+            if (zrUtil.isString(tooltipOpt)) {
                 tooltipOpt = {
                     formatter: tooltipOpt
                 };
@@ -985,7 +1101,8 @@ function calcTooltipPosition(
 ): [number, number] {
     const domWidth = contentSize[0];
     const domHeight = contentSize[1];
-    const gap = 5;
+    const gap = 10;
+    const offset = 5;
     let x = 0;
     let y = 0;
     const rectWidth = rect.width;
@@ -1004,11 +1121,11 @@ function calcTooltipPosition(
             y = rect.y + rectHeight + gap;
             break;
         case 'left':
-            x = rect.x - domWidth - gap;
+            x = rect.x - domWidth - gap - offset;
             y = rect.y + rectHeight / 2 - domHeight / 2;
             break;
         case 'right':
-            x = rect.x + rectWidth + gap;
+            x = rect.x + rectWidth + gap + offset;
             y = rect.y + rectHeight / 2 - domHeight / 2;
     }
     return [x, y];

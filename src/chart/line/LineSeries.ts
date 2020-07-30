@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import createListFromArray from '../helper/createListFromArray';
 import SeriesModel from '../../model/Series';
 import {
@@ -61,7 +60,9 @@ export interface LineDataItemOption extends SymbolOptionMixin,
 
 export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
     emphasis?: {
-        lineStyle?: LineStyleOption
+        lineStyle?: LineStyleOption | {
+            width?: 'bolder'
+        }
         areaStyle?: AreaStyleOption
     }
     blur?: {
@@ -146,7 +147,10 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         },
 
         emphasis: {
-            scale: true
+            scale: true,
+            lineStyle: {
+                width: 'bolder'
+            }
         },
         // areaStyle: {
             // origin of areaStyle. Valid values:

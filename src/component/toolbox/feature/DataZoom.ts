@@ -246,13 +246,15 @@ function makeAxisFinder(dzFeatureModel: ToolboxDataZoomFeatureModel): ModelFinde
         yAxisId: dzFeatureModel.get('yAxisId', true)
     } as ModelFinderObject;
 
-    // If not specified, it means use all axes.
-    if (setting.xAxisIndex == null
-        && setting.yAxisIndex == null
-        && setting.xAxisId == null
-        && setting.yAxisId == null
-    ) {
-        setting.xAxisIndex = setting.yAxisIndex = 'all';
+    // If both `xAxisIndex` `xAxisId` not set, it means 'all'.
+    // If both `yAxisIndex` `yAxisId` not set, it means 'all'.
+    // Some old cases set like this below to close yAxis control but leave xAxis control:
+    // `{ feature: { dataZoom: { yAxisIndex: false } }`.
+    if (setting.xAxisIndex == null && setting.xAxisId == null) {
+        setting.xAxisIndex = 'all';
+    }
+    if (setting.yAxisIndex == null && setting.yAxisId == null) {
+        setting.yAxisIndex = 'all';
     }
 
     return setting;

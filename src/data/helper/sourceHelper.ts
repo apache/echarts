@@ -19,7 +19,6 @@
 
 // @ts-nocheck
 
-import {__DEV__} from '../../config';
 import {makeInner, getDataItemValue} from '../../util/model';
 import {
     createHashMap,
