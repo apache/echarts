@@ -264,7 +264,9 @@ class GaugeView extends ChartView {
                         y: unitY * (r - splitLineLen - distance) + cy,
                         verticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                         align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
-                    }, {inheritColor: autoColor}),
+                    }, {
+                        inheritColor: autoColor
+                    }),
                     silent: true
                 }));
             }

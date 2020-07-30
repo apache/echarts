@@ -52,16 +52,10 @@ import {
     LabelOption,
     AnimationDelayCallbackParam,
     ZRRectLike,
-    DataModel,
-    ECEventData,
     ZRStyleProps,
     ParsedValue,
-    BlurScope,
-    InnerFocus,
-    PayloadAnimationPart,
-    SeriesDataType
+    PayloadAnimationPart
 } from './types';
-import { makeInner } from './model';
 import {
     extend,
     isArrayLike,
@@ -75,6 +69,7 @@ import {interpolateNumber} from 'zrender/src/animation/Animator';
 import List from '../data/List';
 import { getLabelText } from '../label/labelStyle';
 import { AnimationEasing } from 'zrender/src/animation/easing';
+import { getECData } from './ecData';
 
 
 const mathMax = Math.max;
@@ -187,7 +182,7 @@ export function makeImage(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ) {
-    const path = new ZRImage({
+    const zrImg = new ZRImage({
         style: {
             image: imageUrl,
             x: rect.x,
@@ -201,11 +196,11 @@ export function makeImage(
                     width: img.width,
                     height: img.height
                 };
-                path.setStyle(centerGraphic(rect, boundingRect));
+                zrImg.setStyle(centerGraphic(rect, boundingRect));
             }
         }
     });
-    return path;
+    return zrImg;
 }
 
 /**
@@ -889,22 +884,6 @@ function nearZero(val: number) {
     return val <= (1e-6) && val >= -(1e-6);
 }
 
-
-/**
- * ECData stored on graphic element
- */
-export interface ECData {
-    dataIndex?: number;
-    dataModel?: DataModel;
-    eventData?: ECEventData;
-    seriesIndex?: number;
-    dataType?: SeriesDataType;
-
-    focus?: InnerFocus
-    blurScope?: BlurScope
-}
-
-export const getECData = makeInner<ECData, Element>();
 
 // Register built-in shapes. These shapes might be overwirtten
 // by users, although we do not recommend that.

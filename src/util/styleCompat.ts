@@ -21,7 +21,6 @@ import { Dictionary, ZRStyleProps } from './types';
 import { ElementTextConfig } from 'zrender/src/Element';
 import { TextStyleProps, TextStylePropsPart, TextProps } from 'zrender/src/graphic/Text';
 import { each, hasOwn } from 'zrender/src/core/util';
-import { __DEV__ } from '../config';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 
 export interface LegacyStyleProps {

@@ -99,7 +99,6 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    useHoverLayer?: boolean;
     tooltip?: CommonTooltipOption<unknown> & {
         content?: string;
         formatterParams?: unknown;
@@ -144,6 +143,16 @@ export interface Payload extends PayloadItem {
     escapeConnect?: boolean;
     statusChanged?: boolean;
     batch?: PayloadItem[];
+}
+
+export interface HighlightPayload extends Payload {
+    type: 'highlight';
+    notBlur?: boolean
+}
+
+export interface DownplayPayload extends Payload {
+    type: 'downplay';
+    notBlur?: boolean
 }
 
 // Payload includes override anmation info
@@ -268,6 +277,8 @@ export interface LoadingEffect extends Element {
 
 export type TooltipRenderMode = 'html' | 'richText';
 
+export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesDesc';
+
 
 // ---------------------------------
 // Data and dimension related types
@@ -291,6 +302,23 @@ export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // This is not `OptionDataPrimitive` because the "dataProvider parse"
 // will not be performed. But "scale parse" will be performed.
 export type ScaleDataValue = ParsedValue | Date;
+export interface ScaleTick {
+    value: number
+};
+export interface TimeScaleTick extends ScaleTick {
+    /**
+     * Level information is used for label formatting.
+     * For example, a time axis may contain labels like: Jan, 8th, 16th, 23th,
+     * Feb, and etc. In this case, month labels like Jan and Feb should be
+     * displayed in a more significant way than days.
+     * `level` is set to be 0 when it's the most significant level, like month
+     * labels in the above case.
+     */
+    level?: number
+};
+export interface OrdinalScaleTick extends ScaleTick {
+    value: OrdinalNumber
+};
 
 // Can only be string or index, because it is used in object key in some code.
 // Making the type alias here just intending to show the meaning clearly in code.
@@ -804,7 +832,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
     fontStyle?: ZRFontStyle
     fontWeight?: ZRFontWeight
     fontFamily?: string
-    fontSize?: number
+    fontSize?: number | string
     align?: HorizontalAlign
     verticalAlign?: VerticalAlign
     // @deprecated
@@ -1071,6 +1099,10 @@ export interface CommonTooltipOption<FormatterParams> {
     borderColor?: ColorString
     borderRadius?: number
     borderWidth?: number
+    shadowBlur?: number
+    shadowColor?: string
+    shadowOffsetX?: number
+    shadowOffsetY?: number
 
     /**
      * Padding between tooltip content and tooltip border.

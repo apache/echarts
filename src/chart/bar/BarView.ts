@@ -17,17 +17,16 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import {
     Rect,
     Sector,
-    getECData,
     updateProps,
     initProps,
     updateLabel,
     initLabel,
     removeElementWithFadeOut
 } from '../../util/graphic';
+import { getECData } from '../../util/ecData';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
@@ -277,7 +276,6 @@ class BarView extends ChartView {
                     // And return a boolean to determine if the shape are fully clipped.
                     const isClipped = clip[coord.type](coordSysClipArea, layout);
                     if (isClipped) {
-                        // group.remove(el);
                         return;
                     }
                 }
@@ -626,7 +624,6 @@ const elementCreator: {
             shape: extend({}, layout),
             z2: 1
         });
-        // rect.autoBatch = true;
 
         rect.name = 'item';
 

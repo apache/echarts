@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from './number';
+import * as timeUtil from './time';
 import {TooltipRenderMode, ColorString} from './types';
 import { Dictionary } from 'zrender/src/core/types';
 
@@ -66,6 +67,13 @@ export function encodeHTML(source: string): string {
         });
 }
 
+export function concatTooltipHtml(html: string, value: unknown, dontEncodeHtml?: boolean): string {
+    return (dontEncodeHtml ? html : `<span style="font-size:12px;color:#6e7079;">${encodeHTML(html)}</span>`)
+            + (value ? '<span style="float:right;margin-left:20px;color:#464646;font-weight:900;font-size:14px;">' : '')
+            + encodeHTML(value as string)
+            + (value ? '</span>' : '');
+}
+
 const TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
 const wrapVar = function (varName: string, seriesIdx?: number): string {
@@ -93,21 +101,30 @@ export function formatTpl(
         return '';
     }
 
-    const $vars = paramsList[0].$vars || [];
-    for (let i = 0; i < $vars.length; i++) {
-        const alias = TPL_VAR_ALIAS[i];
-        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
+    const isTimeAxis = paramsList[0].axisType && paramsList[0].axisType.indexOf('time') >= 0;
+    if (isTimeAxis) {
+        const axisValue = paramsList[0].data[paramsList[0].axisIndex];
+        const date = timeUtil.getDateFromStr(
+            typeof axisValue === 'number' ? new Date(axisValue) : axisValue
+        );
+        return timeUtil.format(date, tpl);
     }
-    for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-        for (let k = 0; k < $vars.length; k++) {
-            const val = paramsList[seriesIdx][$vars[k]];
-            tpl = tpl.replace(
-                wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                encode ? encodeHTML(val) : val
-            );
+    else {
+        const $vars = paramsList[0].$vars || [];
+        for (let i = 0; i < $vars.length; i++) {
+            const alias = TPL_VAR_ALIAS[i];
+            tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
+        }
+        for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+            for (let k = 0; k < $vars.length; k++) {
+                const val = paramsList[seriesIdx][$vars[k]];
+                tpl = tpl.replace(
+                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
+                    encode ? encodeHTML(val) : val
+                );
+            }
         }
     }
-
     return tpl;
 }
 
@@ -167,7 +184,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
             + 'border-radius:4px;width:4px;height:4px;background-color:'
             // Only support string
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
-        : '<span style="display:inline-block;margin-right:5px;'
+        : '<span style="display:inline-block;margin-right:4px;'
             + 'border-radius:10px;width:10px;height:10px;background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     }
@@ -183,7 +200,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     }
 }
 
-function pad(str: string, len: number): string {
+export function pad(str: string, len: number): string {
     str += '';
     return '0000'.substr(0, len - str.length) + str;
 }
@@ -262,3 +279,6 @@ export function windowOpen(link: string, target: string): void {
         window.open(link, target);
     }
 }
+
+
+export {getTextRect} from '../legacy/getTextRect';

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {bind, each, defaults, isFunction, isString, indexOf} from 'zrender/src/core/util';
+import {bind, each, isFunction, isString, indexOf} from 'zrender/src/core/util';
 import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
@@ -37,6 +37,11 @@ import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
+import { enableHoverEmphasis } from '../../util/states';
+import { createSymbol, symbolBuildProxies } from '../../util/symbol';
+import { deprecateLog } from '../../util/log';
+import { PointLike } from 'zrender/src/core/Point';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const Rect = graphic.Rect;
 
@@ -44,18 +49,36 @@ const Rect = graphic.Rect;
 const DEFAULT_LOCATION_EDGE_GAP = 7;
 const DEFAULT_FRAME_BORDER_WIDTH = 1;
 const DEFAULT_FILLER_SIZE = 30;
+const DEFAULT_MOVE_HANDLE_SIZE = 7;
 const HORIZONTAL = 'horizontal';
 const VERTICAL = 'vertical';
 const LABEL_GAP = 5;
 const SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
+const REALTIME_ANIMATION_CONFIG = {
+    easing: 'cubicOut',
+    duration: 100
+} as const;
 
-type Icon = ReturnType<typeof graphic.createIcon>;
+// const NORMAL_ANIMATION_CONFIG = {
+//     easing: 'cubicInOut',
+//     duration: 200
+// } as const;
+
+
 interface Displayables {
-    barGroup: graphic.Group;
-    handles: [Icon, Icon];
+    sliderGroup: graphic.Group;
+    handles: [graphic.Path, graphic.Path];
     handleLabels: [graphic.Text, graphic.Text];
+    dataShadowSegs: graphic.Group[];
     filler: graphic.Rect;
+
+    brushRect: graphic.Rect;
+
+    moveHandle: graphic.Rect;
+    moveHandleIcon: graphic.Path;
+    // invisible move zone.
+    moveZone: graphic.Rect;
 }
 class SliderZoomView extends DataZoomView {
     static type = 'dataZoom.slider';
@@ -83,9 +106,14 @@ class SliderZoomView extends DataZoomView {
 
     private _handleHeight: number;
 
-    private _location: {x: number, y: number};
+    private _location: PointLike;
+
+    private _brushStart: PointLike;
+    private _brushStartTime: number;
 
     private _dragging: boolean;
+
+    private _brushing: boolean;
 
     private _dataShadowInfo: {
         thisAxis: Axis
@@ -97,6 +125,10 @@ class SliderZoomView extends DataZoomView {
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
+
+        // A unique handler for each dataZoom component
+        this._onBrush = bind(this._onBrush, this);
+        this._onBrushEnd = bind(this._onBrushEnd, this);
     }
 
     render(
@@ -147,6 +179,10 @@ class SliderZoomView extends DataZoomView {
 
     private _clear() {
         throttle.clear(this, '_dispatchZoomAction');
+
+        const zr = this.api.getZr();
+        zr.off('mousemove', this._onBrush);
+        zr.off('mouseup', this._onBrushEnd);
     }
 
     private _buildView() {
@@ -154,10 +190,12 @@ class SliderZoomView extends DataZoomView {
 
         thisGroup.removeAll();
 
+        this._brushing = false;
+
         this._resetLocation();
         this._resetInterval();
 
-        const barGroup = this._displayables.barGroup = new graphic.Group();
+        const barGroup = this._displayables.sliderGroup = new graphic.Group();
 
         this._renderBackground();
 
@@ -173,6 +211,8 @@ class SliderZoomView extends DataZoomView {
     private _resetLocation() {
         const dataZoomModel = this.dataZoomModel;
         const api = this.api;
+        const showMoveHandle = dataZoomModel.get('brushSelect');
+        const moveHandleSize = showMoveHandle ? DEFAULT_MOVE_HANDLE_SIZE : 0;
 
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
@@ -184,7 +224,7 @@ class SliderZoomView extends DataZoomView {
                 // Why using 'right', because right should be used in vertical,
                 // and it is better to be consistent for dealing with position param merge.
                 right: ecSize.width - coordRect.x - coordRect.width,
-                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP),
+                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
                 width: coordRect.width,
                 height: DEFAULT_FILLER_SIZE
             }
@@ -225,11 +265,11 @@ class SliderZoomView extends DataZoomView {
         const targetAxisModel = this.dataZoomModel.getFirstTargetAxisModel();
         const inverse = targetAxisModel && targetAxisModel.get('inverse');
 
-        const barGroup = this._displayables.barGroup;
+        const sliderGroup = this._displayables.sliderGroup;
         const otherAxisInverse = (this._dataShadowInfo || {}).otherAxisInverse;
 
         // Transform barGroup.
-        barGroup.attr(
+        sliderGroup.attr(
             (orient === HORIZONTAL && !inverse)
             ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: 1 }
             : (orient === HORIZONTAL && inverse)
@@ -241,7 +281,7 @@ class SliderZoomView extends DataZoomView {
         );
 
         // Position barGroup
-        const rect = thisGroup.getBoundingRect([barGroup]);
+        const rect = thisGroup.getBoundingRect([sliderGroup]);
         thisGroup.x = location.x - rect.x;
         thisGroup.y = location.y - rect.y;
         thisGroup.markRedraw();
@@ -254,7 +294,8 @@ class SliderZoomView extends DataZoomView {
     private _renderBackground() {
         const dataZoomModel = this.dataZoomModel;
         const size = this._size;
-        const barGroup = this._displayables.barGroup;
+        const barGroup = this._displayables.sliderGroup;
+        const brushSelect = dataZoomModel.get('brushSelect');
 
         barGroup.add(new Rect({
             silent: true,
@@ -268,7 +309,7 @@ class SliderZoomView extends DataZoomView {
         }));
 
         // Click panel, over shadow, below handles.
-        barGroup.add(new Rect({
+        const clickPanel = new Rect({
             shape: {
                 x: 0, y: 0, width: size[0], height: size[1]
             },
@@ -276,12 +317,29 @@ class SliderZoomView extends DataZoomView {
                 fill: 'transparent'
             },
             z2: 0,
-            onclick: bind(this._onClickPanelClick, this)
-        }));
+            onclick: bind(this._onClickPanel, this)
+        });
+
+        const zr = this.api.getZr();
+        if (brushSelect) {
+            clickPanel.on('mousedown', this._onBrushStart, this);
+            clickPanel.cursor = 'crosshair';
+
+            zr.on('mousemove', this._onBrush);
+            zr.on('mouseup', this._onBrushEnd);
+        }
+        else {
+            zr.off('mousemove', this._onBrush);
+            zr.off('mouseup', this._onBrushEnd);
+        }
+
+        barGroup.add(clickPanel);
     }
 
     private _renderDataShadow() {
         const info = this._dataShadowInfo = this._prepareDataShadowInfo();
+
+        this._displayables.dataShadowSegs = [];
 
         if (!info) {
             return;
@@ -352,22 +410,35 @@ class SliderZoomView extends DataZoomView {
         });
 
         const dataZoomModel = this.dataZoomModel;
+
+        function createDataShadowGroup(isSelectedArea?: boolean) {
+            const model = dataZoomModel.getModel(isSelectedArea ? 'selectedDataBackground' : 'dataBackground');
+            const group = new graphic.Group();
+            const polygon = new graphic.Polygon({
+                shape: {points: areaPoints},
+                segmentIgnoreThreshold: 1,
+                style: model.getModel('areaStyle').getAreaStyle(),
+                silent: true,
+                z2: -20
+            });
+            const polyline = new graphic.Polyline({
+                shape: {points: linePoints},
+                segmentIgnoreThreshold: 1,
+                style: model.getModel('lineStyle').getLineStyle(),
+                silent: true,
+                z2: -19
+            });
+            group.add(polygon);
+            group.add(polyline);
+            return group;
+        }
+
         // let dataBackgroundModel = dataZoomModel.getModel('dataBackground');
-        this._displayables.barGroup.add(new graphic.Polygon({
-            shape: {points: areaPoints},
-            style: defaults(
-                {fill: dataZoomModel.get('dataBackgroundColor' as any)},
-                dataZoomModel.getModel(['dataBackground', 'areaStyle']).getAreaStyle()
-            ),
-            silent: true,
-            z2: -20
-        }));
-        this._displayables.barGroup.add(new graphic.Polyline({
-            shape: {points: linePoints},
-            style: dataZoomModel.getModel(['dataBackground', 'lineStyle']).getLineStyle(),
-            silent: true,
-            z2: -19
-        }));
+        for (let i = 0; i < 3; i++) {
+            const group = createDataShadowGroup(i === 1);
+            this._displayables.sliderGroup.add(group);
+            this._displayables.dataShadowSegs.push(group);
+        }
     }
 
     private _prepareDataShadowInfo() {
@@ -428,38 +499,41 @@ class SliderZoomView extends DataZoomView {
     }
 
     private _renderHandle() {
-        const displaybles = this._displayables;
-        const handles: [graphic.Path, graphic.Path] = displaybles.handles = [null, null];
-        const handleLabels: [graphic.Text, graphic.Text] = displaybles.handleLabels = [null, null];
-        const barGroup = this._displayables.barGroup;
+        const thisGroup = this.group;
+        const displayables = this._displayables;
+        const handles: [graphic.Path, graphic.Path] = displayables.handles = [null, null];
+        const handleLabels: [graphic.Text, graphic.Text] = displayables.handleLabels = [null, null];
+        const sliderGroup = this._displayables.sliderGroup;
         const size = this._size;
         const dataZoomModel = this.dataZoomModel;
+        const api = this.api;
 
-        barGroup.add(displaybles.filler = new Rect({
-            draggable: true,
-            cursor: getCursor(this._orient),
-            drift: bind(this._onDragMove, this, 'all'),
-            ondragstart: bind(this._showDataInfo, this, true),
-            ondragend: bind(this._onDragEnd, this),
-            onmouseover: bind(this._showDataInfo, this, true),
-            onmouseout: bind(this._showDataInfo, this, false),
+        const borderRadius = dataZoomModel.get('borderRadius') || 0;
+
+        const brushSelect = dataZoomModel.get('brushSelect');
+
+        const filler = displayables.filler = new Rect({
+            silent: brushSelect,
             style: {
                 fill: dataZoomModel.get('fillerColor')
             },
             textConfig: {
                 position: 'inside'
             }
-        }));
+        });
+
+        sliderGroup.add(filler);
 
         // Frame border.
-        barGroup.add(new Rect({
+        sliderGroup.add(new Rect({
             silent: true,
             subPixelOptimize: true,
             shape: {
                 x: 0,
                 y: 0,
                 width: size[0],
-                height: size[1]
+                height: size[1],
+                r: borderRadius
             },
             style: {
                 stroke: dataZoomModel.get('dataBackgroundColor' as any) // deprecated option
@@ -469,36 +543,54 @@ class SliderZoomView extends DataZoomView {
             }
         }));
 
+        // Left and right handle to resize
         each([0, 1] as const, function (handleIndex) {
-            const path = graphic.createIcon(
-                dataZoomModel.get('handleIcon'),
-                {
-                    cursor: getCursor(this._orient),
-                    draggable: true,
-                    drift: bind(this._onDragMove, this, handleIndex),
-                    ondragend: bind(this._onDragEnd, this),
-                    onmouseover: bind(this._showDataInfo, this, true),
-                    onmouseout: bind(this._showDataInfo, this, false)
-                },
-                {x: -1, y: 0, width: 2, height: 2}
+            let iconStr = dataZoomModel.get('handleIcon');
+            if (!symbolBuildProxies[iconStr] && iconStr.indexOf('path://') < 0) {
+                // Compatitable with the old icon parsers. Which can use a path string without path://
+                iconStr = 'path://' + iconStr;
+                if (__DEV__) {
+                    deprecateLog('handleIcon now needs \'path://\' prefix when using a path string');
+                }
+            }
+            const path = createSymbol(
+                iconStr,
+                -1, 0, 2, 2, null, true
             ) as graphic.Path;
+            path.attr({
+                cursor: getCursor(this._orient),
+                draggable: true,
+                drift: bind(this._onDragMove, this, handleIndex),
+                ondragend: bind(this._onDragEnd, this),
+                onmouseover: bind(this._showDataInfo, this, true),
+                onmouseout: bind(this._showDataInfo, this, false),
+                z2: 5
+            });
 
             const bRect = path.getBoundingRect();
-            this._handleHeight = parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
+            const handleSize = dataZoomModel.get('handleSize');
+
+            this._handleHeight = parsePercent(handleSize, this._size[1]);
             this._handleWidth = bRect.width / bRect.height * this._handleHeight;
 
             path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
+            path.style.strokeNoScale = true;
+            path.rectHover = true;
+
+            path.ensureState('emphasis').style = dataZoomModel.getModel(['emphasis', 'handleStyle']).getItemStyle();
+            enableHoverEmphasis(path);
+
             const handleColor = dataZoomModel.get('handleColor' as any); // deprecated option
             // Compatitable with previous version
             if (handleColor != null) {
                 path.style.fill = handleColor;
             }
 
-            barGroup.add(handles[handleIndex] = path);
+            sliderGroup.add(handles[handleIndex] = path);
 
             const textStyleModel = dataZoomModel.getModel('textStyle');
 
-            this.group.add(
+            thisGroup.add(
                 handleLabels[handleIndex] = new graphic.Text({
                 silent: true,
                 invisible: true,
@@ -513,6 +605,64 @@ class SliderZoomView extends DataZoomView {
             }));
 
         }, this);
+
+        // Handle to move. Only visible when brushSelect is set true.
+        let actualMoveZone: Displayable = filler;
+        if (brushSelect) {
+            const moveHandleHeight = parsePercent(dataZoomModel.get('moveHandleSize'), size[1]);
+            const moveHandle = displayables.moveHandle = new graphic.Rect({
+                style: dataZoomModel.getModel('moveHandleStyle').getItemStyle(),
+                silent: true,
+                shape: {
+                    r: [0, 0, 2, 2],
+                    y: size[1] - 0.5,
+                    height: moveHandleHeight
+                }
+            });
+            const iconSize = moveHandleHeight * 0.8;
+            const moveHandleIcon = displayables.moveHandleIcon = createSymbol(
+                dataZoomModel.get('moveHandleIcon'),
+                -iconSize / 2, -iconSize / 2, iconSize, iconSize,
+                '#fff',
+                true
+            );
+            moveHandleIcon.silent = true;
+            moveHandleIcon.y = size[1] + moveHandleHeight / 2 - 0.5;
+
+            moveHandle.ensureState('emphasis').style = dataZoomModel.getModel(
+                ['emphasis', 'moveHandleStyle']
+            ).getItemStyle();
+
+            const moveZoneExpandSize = Math.min(size[1] / 2, Math.max(moveHandleHeight, 10));
+            actualMoveZone = displayables.moveZone = new graphic.Rect({
+                invisible: true,
+                shape: {
+                    y: size[1] - moveZoneExpandSize,
+                    height: moveHandleHeight + moveZoneExpandSize
+                }
+            });
+
+            actualMoveZone.on('mouseover', () => {
+                    api.enterEmphasis(moveHandle);
+                })
+                .on('mouseout', () => {
+                    api.leaveEmphasis(moveHandle);
+                });
+
+            sliderGroup.add(moveHandle);
+            sliderGroup.add(moveHandleIcon);
+            sliderGroup.add(actualMoveZone);
+        }
+
+        actualMoveZone.attr({
+            draggable: true,
+            cursor: getCursor(this._orient),
+            drift: bind(this._onDragMove, this, 'all'),
+            ondragstart: bind(this._showDataInfo, this, true),
+            ondragend: bind(this._onDragEnd, this),
+            onmouseover: bind(this._showDataInfo, this, true),
+            onmouseout: bind(this._showDataInfo, this, false)
+        });
     }
 
     private _resetInterval() {
@@ -577,6 +727,38 @@ class SliderZoomView extends DataZoomView {
             width: handleInterval[1] - handleInterval[0],
             height: size[1]
         });
+
+        const viewExtent = {
+            x: handleInterval[0],
+            width: handleInterval[1] - handleInterval[0]
+        };
+        // Move handle
+        if (displaybles.moveHandle) {
+            displaybles.moveHandle.setShape(viewExtent);
+            displaybles.moveZone.setShape(viewExtent);
+            // Force update path on the invisible object
+            displaybles.moveZone.getBoundingRect();
+            displaybles.moveHandleIcon && displaybles.moveHandleIcon.attr('x', viewExtent.x + viewExtent.width / 2);
+        }
+
+        // update clip path of shadow.
+        const dataShadowSegs = displaybles.dataShadowSegs;
+        const segIntervals = [0, handleInterval[0], handleInterval[1], size[0]];
+
+        for (let i = 0; i < dataShadowSegs.length; i++) {
+            const segGroup = dataShadowSegs[i];
+            let clipPath = segGroup.getClipPath();
+            if (!clipPath) {
+                clipPath = new graphic.Rect();
+                segGroup.setClipPath(clipPath);
+            }
+            clipPath.setShape({
+                x: segIntervals[i],
+                y: 0,
+                width: segIntervals[i + 1] - segIntervals[i],
+                height: size[1]
+            });
+        }
 
         this._updateDataInfo(nonRealtime);
     }
@@ -657,7 +839,9 @@ class SliderZoomView extends DataZoomView {
             ? ''
             // FIXME Glue code
             : (axis.type === 'category' || axis.type === 'time')
-                ? axis.scale.getLabel(Math.round(value as number))
+                ? axis.scale.getLabel({
+                    value: Math.round(value as number)
+                })
                 // param of toFixed should less then 20.
                 : (value as number).toFixed(Math.min(labelPrecision as number, 20));
 
@@ -674,10 +858,14 @@ class SliderZoomView extends DataZoomView {
     private _showDataInfo(showOrHide?: boolean) {
         // Always show when drgging.
         showOrHide = this._dragging || showOrHide;
-
-        const handleLabels = this._displayables.handleLabels;
+        const displayables = this._displayables;
+        const handleLabels = displayables.handleLabels;
         handleLabels[0].attr('invisible', !showOrHide);
         handleLabels[1].attr('invisible', !showOrHide);
+
+        // Highlight move handle
+        displayables.moveHandle
+            && this.api[showOrHide ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
@@ -687,7 +875,7 @@ class SliderZoomView extends DataZoomView {
         eventTool.stop(event.event);
 
         // Transform dx, dy to bar coordination.
-        const barTransform = this._displayables.barGroup.getLocalTransform();
+        const barTransform = this._displayables.sliderGroup.getLocalTransform();
         const vertex = graphic.applyTransform([dx, dy], barTransform, true);
 
         const changed = this._updateInterval(handleIndex, vertex[0]);
@@ -698,7 +886,7 @@ class SliderZoomView extends DataZoomView {
 
         // Avoid dispatch dataZoom repeatly but range not changed,
         // which cause bad visual effect when progressive enabled.
-        changed && realtime && this._dispatchZoomAction();
+        changed && realtime && this._dispatchZoomAction(true);
     }
 
     private _onDragEnd() {
@@ -708,12 +896,12 @@ class SliderZoomView extends DataZoomView {
         // While in realtime mode and stream mode, dispatch action when
         // drag end will cause the whole view rerender, which is unnecessary.
         const realtime = this.dataZoomModel.get('realtime');
-        !realtime && this._dispatchZoomAction();
+        !realtime && this._dispatchZoomAction(false);
     }
 
-    private _onClickPanelClick(e: ZRElementEvent) {
+    private _onClickPanel(e: ZRElementEvent) {
         const size = this._size;
-        const localPoint = this._displayables.barGroup.transformCoordToLocal(e.offsetX, e.offsetY);
+        const localPoint = this._displayables.sliderGroup.transformCoordToLocal(e.offsetX, e.offsetY);
 
         if (localPoint[0] < 0 || localPoint[0] > size[0]
             || localPoint[1] < 0 || localPoint[1] > size[1]
@@ -726,24 +914,108 @@ class SliderZoomView extends DataZoomView {
 
         const changed = this._updateInterval('all', localPoint[0] - center);
         this._updateView();
-        changed && this._dispatchZoomAction();
+        changed && this._dispatchZoomAction(false);
+    }
+
+    private _onBrushStart(e: ZRElementEvent) {
+        const x = e.offsetX;
+        const y = e.offsetY;
+        this._brushStart = new graphic.Point(x, y);
+
+        this._brushing = true;
+
+        this._brushStartTime = +new Date();
+        // this._updateBrushRect(x, y);
+    }
+
+    private _onBrushEnd(e: ZRElementEvent) {
+        if (!this._brushing) {
+            return;
+        }
+
+        const brushRect = this._displayables.brushRect;
+        this._brushing = false;
+
+        if (!brushRect) {
+            return;
+        }
+
+        brushRect.attr('ignore', true);
+
+        const brushShape = brushRect.shape;
+
+        const brushEndTime = +new Date();
+        // console.log(brushEndTime - this._brushStartTime);
+        if (brushEndTime - this._brushStartTime < 200 && Math.abs(brushShape.width) < 5) {
+            // Will treat it as a click
+            return;
+        }
+
+        const viewExtend = this._getViewExtent();
+        const percentExtent = [0, 100];
+
+        this._range = asc([
+            linearMap(brushShape.x, viewExtend, percentExtent, true),
+            linearMap(brushShape.x + brushShape.width, viewExtend, percentExtent, true)
+        ]);
+
+        this._handleEnds = [brushShape.x, brushShape.x + brushShape.width];
+
+        this._updateView();
+
+        this._dispatchZoomAction(false);
+    }
+
+    private _onBrush(e: ZRElementEvent) {
+        if (this._brushing) {
+            // For mobile device, prevent screen slider on the button.
+            eventTool.stop(e.event);
+
+            this._updateBrushRect(e.offsetX, e.offsetY);
+        }
+    }
+
+    private _updateBrushRect(mouseX: number, mouseY: number) {
+        const displayables = this._displayables;
+        const dataZoomModel = this.dataZoomModel;
+        let brushRect = displayables.brushRect;
+        if (!brushRect) {
+            brushRect = displayables.brushRect = new Rect({
+                silent: true,
+                style: dataZoomModel.getModel('brushStyle').getItemStyle()
+            });
+            displayables.sliderGroup.add(brushRect);
+        }
+        brushRect.ignore = false;
+
+        const brushStart = this._brushStart;
+
+        const sliderGroup = this._displayables.sliderGroup;
+
+        const endPoint = sliderGroup.transformCoordToLocal(mouseX, mouseY);
+        const startPoint = sliderGroup.transformCoordToLocal(brushStart.x, brushStart.y);
+
+        const size = this._size;
+
+        endPoint[0] = Math.max(Math.min(size[0], endPoint[0]), 0);
+
+        brushRect.setShape({
+            x: startPoint[0], y: 0,
+            width: endPoint[0] - startPoint[0], height: size[1]
+        });
     }
 
     /**
-     * @private
      * This action will be throttled.
      */
-    _dispatchZoomAction() {
+    _dispatchZoomAction(realtime: boolean) {
         const range = this._range;
 
         this.api.dispatchAction({
             type: 'dataZoom',
             from: this.uid,
             dataZoomId: this.dataZoomModel.id,
-            animation: {
-                easing: 'cubicOut',
-                duration: 100
-            },
+            animation: realtime ? REALTIME_ANIMATION_CONFIG : null,
             start: range[0],
             end: range[1]
         });

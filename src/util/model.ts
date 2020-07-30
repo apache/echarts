@@ -46,7 +46,6 @@ import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-import { __DEV__ } from '../config';
 import { isNumeric } from './number';
 
 /**

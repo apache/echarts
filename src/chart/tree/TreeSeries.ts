@@ -19,7 +19,7 @@
 
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
-import {encodeHTML} from '../../util/format';
+import { concatTooltipHtml, encodeHTML } from '../../util/format';
 import {
     SeriesOption,
     SymbolOptionMixin,
@@ -30,7 +30,8 @@ import {
     LabelOption,
     OptionDataValue,
     StatesOptionMixin,
-    OptionDataItemObject
+    OptionDataItemObject,
+    TooltipRenderMode
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
@@ -203,7 +204,12 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     /**
      * @override
      */
-    formatTooltip(dataIndex: number): string {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ): string {
         const tree = this.getData().tree;
         const realRoot = tree.root.children[0];
         let node = tree.getNodeByDataIndex(dataIndex);
@@ -213,9 +219,14 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
             name = node.parentNode.name + '.' + name;
             node = node.parentNode;
         }
-        return encodeHTML(name + (
-            (isNaN(value as number) || value == null) ? '' : ' : ' + value
-        ));
+
+        if (renderMode === 'richText') {
+            return encodeHTML(name) + ': ' + ((isNaN(value as number) || value == null) ? '' : value);
+        }
+
+        return '<div style="line-height:1">'
+            + concatTooltipHtml(name, (isNaN(value as number) || value == null) ? '' : value)
+            + '</div>';
     }
 
     static defaultOption: TreeSeriesOption = {

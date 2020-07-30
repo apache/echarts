@@ -43,7 +43,8 @@ import {
     LineLabelOption,
     StatesOptionMixin,
     GraphEdgeItemObject,
-    OptionDataValueNumeric
+    OptionDataValueNumeric,
+    TooltipRenderMode
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -335,7 +336,12 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     /**
      * @override
      */
-    formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: string) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ) {
         if (dataType === 'edge') {
             const nodeData = this.getData();
             const params = this.getDataParams(dataIndex, dataType);

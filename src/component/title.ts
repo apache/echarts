@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
+import {getECData} from '../util/ecData';
 import {createTextStyle} from '../label/labelStyle';
 import {getLayoutRect} from '../util/layout';
 import ComponentModel from '../model/Component';
@@ -117,11 +118,12 @@ class TitleModel extends ComponentModel<TitleOption> {
         itemGap: 10,
         textStyle: {
             fontSize: 18,
-            fontWeight: 'bolder',
-            color: '#333'
+            fontWeight: 'bold',
+            color: '#464646'
         },
         subtextStyle: {
-            color: '#aaa'
+            fontSize: 12,
+            color: '#6E7079'
         }
     };
 }
@@ -191,7 +193,7 @@ class TitleView extends ComponentView {
             });
         }
 
-        graphic.getECData(textEl).eventData = graphic.getECData(subTextEl).eventData = triggerEvent
+        getECData(textEl).eventData = getECData(subTextEl).eventData = triggerEvent
             ? {
                 componentType: 'title',
                 componentIndex: titleModel.componentIndex

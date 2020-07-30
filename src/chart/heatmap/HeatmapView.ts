@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import { __DEV__ } from '../../config';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
@@ -289,7 +288,7 @@ class HeatmapView extends ChartView {
             // PENDING
             if (incremental) {
                 // Rect must use hover layer if it's incremental.
-                rect.useHoverLayer = true;
+                rect.states.emphasis.hoverLayer = true;
             }
 
             group.add(rect);

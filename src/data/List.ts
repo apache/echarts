@@ -23,7 +23,6 @@
  * List for data storage
  */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
@@ -39,7 +38,7 @@ import {
 } from '../util/types';
 import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
-import { getECData } from '../util/graphic';
+import { getECData } from '../util/ecData';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';

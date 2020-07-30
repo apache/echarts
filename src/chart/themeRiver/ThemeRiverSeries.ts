@@ -23,7 +23,7 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData, SINGLE_REFERRING} from '../../util/model';
-import {encodeHTML} from '../../util/format';
+import {concatTooltipHtml, encodeHTML} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
@@ -33,7 +33,8 @@ import {
     OptionDataValueNumeric,
     ItemStyleOption,
     BoxLayoutOptionMixin,
-    ZRColor
+    ZRColor,
+    TooltipRenderMode
 } from '../../util/types';
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
@@ -288,14 +289,25 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      * @override
      * @param {number} dataIndex  index of data
      */
-    formatTooltip(dataIndex: number): string {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ): string {
         const data = this.getData();
         const htmlName = data.getName(dataIndex);
         let htmlValue = data.get(data.mapDimension('value'), dataIndex);
         if (isNaN(htmlValue as number) || htmlValue == null) {
             htmlValue = '-';
         }
-        return encodeHTML(htmlName + ' : ' + htmlValue);
+
+        if (renderMode === 'richText') {
+            return encodeHTML(htmlName) + ': ' + htmlValue;
+        }
+        return '<div style="margin: 11px 0 0;line-height:1">'
+            + concatTooltipHtml(htmlName, htmlValue)
+            + '</div>';
     }
 
     static defaultOption: ThemeRiverSeriesOption = {

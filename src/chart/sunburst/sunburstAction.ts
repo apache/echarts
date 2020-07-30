@@ -29,7 +29,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
 import { extend } from 'zrender/src/core/util';
 import { deprecateReplaceLog } from '../../util/log';
-import { __DEV__ } from '../../config';
 
 export const ROOT_TO_NODE_ACTION = 'sunburstRootToNode';
 

@@ -53,7 +53,17 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
      */
     borderColor?: ZRColor
 
+    /**
+     * Border radius of the box.
+     */
+    borderRadius?: number | number[]
+
     dataBackground?: {
+        lineStyle?: LineStyleOption
+        areaStyle?: AreaStyleOption
+    }
+
+    selectedDataBackground?: {
         lineStyle?: LineStyleOption
         areaStyle?: AreaStyleOption
     }
@@ -71,11 +81,22 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     handleIcon?: string
 
     /**
-     * Percent of the slider height
+     * number: height of icon. width will be calculated according to the aspect of icon.
+     * string: percent of the slider height. width will be calculated according to the aspect of icon.
      */
     handleSize?: string | number
 
     handleStyle?: ItemStyleOption
+
+    /**
+     * Icon to indicate it is a draggable panel.
+     */
+    moveHandleIcon?: string
+    moveHandleStyle?: ItemStyleOption
+    /**
+     * Height of handle rect. Can be a percent string relative to the slider height.
+     */
+    moveHandleSize?: number
 
     labelPrecision?: number | 'auto'
 
@@ -88,6 +109,18 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     zoomLock?: boolean
 
     textStyle?: LabelOption
+
+    /**
+     * If eable select by brushing
+     */
+    brushSelect?: boolean
+
+    brushStyle?: ItemStyleOption
+
+    emphasis?: {
+        handleStyle?: ItemStyleOption
+        moveHandleStyle?: ItemStyleOption
+    }
 }
 
 
@@ -108,40 +141,75 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         left: null,   // Default align to grid rect.
         bottom: null, // Default align to grid rect.
 
+        borderColor: '#d2dbee',
+        borderRadius: 3,
+
         backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
+
         // dataBackgroundColor: '#ddd',
         dataBackground: {
             lineStyle: {
-                color: '#2f4554',
-                width: 0.5,
-                opacity: 0.3
+                color: '#d2dbee',
+                width: 0.5
             },
             areaStyle: {
-                color: 'rgba(47,69,84,0.3)',
-                opacity: 0.3
+                color: '#d2dbee',
+                opacity: 0.2
             }
         },
-        borderColor: '#ddd',
 
-        fillerColor: 'rgba(167,183,204,0.4)',     // Color of selected area.
-        // handleColor: 'rgba(89,170,216,0.95)',     // Color of handle.
-        // eslint-disable-next-line
-        handleIcon: 'M8.2,13.6V3.9H6.3v9.7H3.1v14.9h3.3v9.7h1.8v-9.7h3.3V13.6H8.2z M9.7,24.4H4.8v-1.4h4.9V24.4z M9.7,19.1H4.8v-1.4h4.9V19.1z',
+        selectedDataBackground: {
+            lineStyle: {
+                color: '#8fb0f7',
+                width: 0.5
+            },
+            areaStyle: {
+                color: '#8fb0f7',
+                opacity: 0.2
+            }
+        },
+
+        // Color of selected window.
+        fillerColor: 'rgba(135,175,274,0.2)',
+        handleIcon: 'path://M-9.35,34.56V42m0-40V9.5m-2,0h4a2,2,0,0,1,2,2v21a2,2,0,0,1-2,2h-4a2,2,0,0,1-2-2v-21A2,2,0,0,1-11.35,9.5Z',
         // Percent of the slider height
         handleSize: '100%',
 
         handleStyle: {
-            color: '#a7b7cc'
+            color: '#fff',
+            borderColor: '#ACB8D1'
+        },
+
+        moveHandleSize: 7,
+        moveHandleIcon: 'path://M-320.9-50L-320.9-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-348-41-339-50-320.9-50z M-212.3-50L-212.3-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-239.4-41-230.4-50-212.3-50z M-103.7-50L-103.7-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-130.9-41-121.8-50-103.7-50z',
+        moveHandleStyle: {
+            color: '#D2DBEE',
+            opacity: 0.7
         },
 
         showDetail: true,
         showDataShadow: 'auto',                 // Default auto decision.
         realtime: true,
         zoomLock: false,                        // Whether disable zoom.
+
         textStyle: {
-            color: '#333'
+            color: '#6E7079'
+        },
+
+        brushSelect: true,
+        brushStyle: {
+            color: 'rgba(135,175,274,0.15)'
+        },
+
+        emphasis: {
+            handleStyle: {
+                borderColor: '#8FB0F7'
+            },
+            moveHandleStyle: {
+                color: '#8FB0F7'
+            }
         }
-    });
+    } as SliderDataZoomOption);
 }
 
 ComponentModel.registerClass(SliderZoomModel);

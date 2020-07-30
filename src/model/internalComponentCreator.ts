@@ -20,7 +20,6 @@
 import GlobalModel from './Global';
 import { ComponentOption, ComponentMainType } from '../util/types';
 import { createHashMap, assert } from 'zrender/src/core/util';
-import { __DEV__ } from '../config';
 import { isComponentIdInternal } from '../util/model';
 
 // PNEDING:

@@ -99,6 +99,7 @@ export function createWrap() {
                     duration: item.time,
                     delay: item.delay,
                     easing: item.easing,
+                    setToFinal: true,
                     done
                 });
             }
