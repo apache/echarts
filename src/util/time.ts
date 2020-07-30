@@ -28,9 +28,9 @@ export const fullLeveledFormatter = {
     year: '{yyyy}',
     month: '{yyyy}:{MM}',
     day: fullDayFormatter,
-    hour: fullDayFormatter + defaultLeveledFormatter.hour,
-    minute: fullDayFormatter + defaultLeveledFormatter.minute,
-    second: fullDayFormatter + defaultLeveledFormatter.second,
+    hour: fullDayFormatter + ' ' + defaultLeveledFormatter.hour,
+    minute: fullDayFormatter + ' ' + defaultLeveledFormatter.minute,
+    second: fullDayFormatter + ' ' + defaultLeveledFormatter.second,
     millisecond: defaultLeveledFormatter.none
 };
 

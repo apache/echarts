@@ -117,6 +117,7 @@ class TooltipRichContent {
                 borderRadius: tooltipModel.get('borderRadius'),
                 borderWidth: 1,
                 borderColor: borderColor as string,
+                shadowColor: tooltipModel.get('shadowColor'),
                 shadowBlur: tooltipModel.get('shadowBlur'),
                 shadowOffsetX: tooltipModel.get('shadowOffsetX'),
                 shadowOffsetY: tooltipModel.get('shadowOffsetY'),

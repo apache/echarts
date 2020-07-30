@@ -178,7 +178,6 @@ const timeAxis: AxisBaseOption = zrUtil.merge({
         showMaxLabel: false,
         rich: {
             primary: {
-                color: '#000',
                 fontWeight: 'bold'
             }
         }

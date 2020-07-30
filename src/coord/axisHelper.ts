@@ -255,8 +255,11 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                     idx = tick.value - categoryTickStart;
                 }
                 return cb(
-                    getAxisRawValue(axis, tick) as (TimeScaleTick & string) | (TimeScaleTick & number),
-                    idx
+                    getAxisRawValue(axis, tick) as number,
+                    idx,
+                    (tick as TimeScaleTick).level != null ? {
+                        level: (tick as TimeScaleTick).level
+                    } : null
                 );
             };
         })(labelFormatter);

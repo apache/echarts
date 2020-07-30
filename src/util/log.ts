@@ -19,16 +19,34 @@
 
 import { Dictionary } from './types';
 
+const ECHARTS_PREFIX = '[ECharts] ';
 const storedLogs: Dictionary<boolean> = {};
+
+const hasConsole = typeof console !== 'undefined'
+    // eslint-disable-next-line
+    && console.warn && console.log;
+
+export function log(str: string) {
+    if (hasConsole) {
+        // eslint-disable-next-line
+        console.log(ECHARTS_PREFIX + str);
+    }
+}
+
+export function warn(str: string) {
+    if (hasConsole) {
+        console.warn(ECHARTS_PREFIX + str);
+    }
+}
 
 export function deprecateLog(str: string) {
     if (__DEV__) {
         if (storedLogs[str]) {  // Not display duplicate message.
             return;
         }
-        if (typeof console !== 'undefined' && console.warn) {
+        if (hasConsole) {
             storedLogs[str] = true;
-                console.warn('[ECharts] DEPRECATED: ' + str);
+                console.warn(ECHARTS_PREFIX + 'DEPRECATED: ' + str);
         }
     }
 }
