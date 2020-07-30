@@ -356,15 +356,27 @@ class ECharts extends Eventful {
 
         this._theme = theme;
 
-        const browserLang: string = !env.domSupported ? 'ZH' : (() => {
+        const defaultLocale = 'EN';
+        const browserLang: string = !env.domSupported ? defaultLocale : (() => {
             const langStr = (document.documentElement.lang || navigator.language || (navigator as any).browserLanguage).toUpperCase();
-            return langStr.indexOf('EN') > -1 ? 'EN' : 'ZH';
+            return langStr.indexOf('ZH') > -1 ? 'ZH' : defaultLocale;
         })();
         const {locale = browserLang} = opts;
-        //  set default lang package
+        // set default lang package
         localeStorage['ZH'] = localeStorage['ZH'] || langZH;
         localeStorage['EN'] = localeStorage['EN'] || langEN;
-        this._locale = typeof locale === 'string' ? localeStorage[locale] : zrUtil.clone(locale);
+        this._locale = ((locale) => {
+            if (zrUtil.isString(locale)) {
+                const localeObj = localeStorage[locale.toUpperCase()] || {};
+                if (locale === 'ZH' || locale === 'EN') {
+                    return zrUtil.clone(localeObj);
+                } else {
+                    return zrUtil.merge(zrUtil.clone(localeObj), zrUtil.clone(localeStorage[defaultLocale]), false);
+                }
+            } else {
+                return zrUtil.merge(zrUtil.clone(locale), zrUtil.clone(localeStorage[defaultLocale]), false);
+            }
+        })(locale);
 
         this._coordSysMgr = new CoordinateSystemManager();
 
