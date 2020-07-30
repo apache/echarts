@@ -26,7 +26,7 @@ import {
     initLabel,
     removeElementWithFadeOut
 } from '../../util/graphic';
-import { getECData } from "../../util/ecData";
+import { getECData } from '../../util/ecData';
 import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Path, { PathProps } from 'zrender/src/graphic/Path';

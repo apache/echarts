@@ -21,7 +21,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
-import {encodeHTML, addCommas} from '../../util/format';
+import {encodeHTML, addCommas, concatTooltipHtml} from '../../util/format';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import {
@@ -34,7 +34,8 @@ import {
     OptionDataValueNumeric,
     ParsedValue,
     SeriesOnGeoOptionMixin,
-    StatesOptionMixin
+    StatesOptionMixin,
+    TooltipRenderMode
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -181,7 +182,12 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     /**
      * Map tooltip formatter
      */
-    formatTooltip(dataIndex: number): string {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string,
+        renderMode: TooltipRenderMode
+    ): string {
         // FIXME orignalData and data is a bit confusing
         const data = this.getData();
         const formattedValue = addCommas(this.getRawValue(dataIndex));
@@ -199,8 +205,13 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             }
         }
 
-        return seriesNames.join(', ') + '<br />'
-            + encodeHTML(name + ' : ' + formattedValue);
+        if (renderMode === 'richText') {
+            return seriesNames.join(', ') + (seriesNames.length ? '\n' : '')
+                + encodeHTML(name) + ': ' + formattedValue;
+        }
+
+        return `<div style="font-size:12px;color:#6e7079;">${seriesNames.join(', ')}</div>`
+            + concatTooltipHtml(name, formattedValue);
     }
 
     getTooltipPosition = function (this: MapSeries, dataIndex: number): number[] {

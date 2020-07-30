@@ -67,6 +67,13 @@ export function encodeHTML(source: string): string {
         });
 }
 
+export function concatTooltipHtml(html: string, value: unknown, dontEncodeHtml?: boolean): string {
+    return (dontEncodeHtml ? html : `<span style="font-size:12px;color:#6e7079;">${encodeHTML(html)}</span>`)
+            + (value ? '<span style="float:right;margin-left:20px;color:#464646;font-weight:900;font-size:14px;">' : '')
+            + encodeHTML(value as string)
+            + (value ? '</span>' : '');
+}
+
 const TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
 const wrapVar = function (varName: string, seriesIdx?: number): string {
@@ -177,7 +184,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
             + 'border-radius:4px;width:4px;height:4px;background-color:'
             // Only support string
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
-        : '<span style="display:inline-block;margin-right:5px;'
+        : '<span style="display:inline-block;margin-right:4px;'
             + 'border-radius:10px;width:10px;height:10px;background-color:'
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     }
