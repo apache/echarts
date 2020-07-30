@@ -41,40 +41,31 @@ function release() {
             }
         }
     }
-    [
-        '', 'en'
-    ].forEach(function (lang) {
-        ['', 'simple', 'common', 'extension'].forEach(function (type) {
 
-            const args = [
-                `--lang`,
-                lang,
-                `--type`,
-                type,
-                `--clean`,
-                `--sourcemap`,
-                `--min`
-            ];
+    ['', 'simple', 'common', 'extension'].forEach(function (type) {
 
-            if (lang === 'en' && type === 'extension') {
-                return;
+        const args = [
+            `--type`,
+            type,
+            `--clean`,
+            `--sourcemap`,
+            `--min`
+        ];
+
+        const p = spawn(path.join(__dirname, 'build.js'), args);
+
+        const scope = `[${type || 'all'}]`;
+
+        function createOnDataHandler(idx)  {
+            return function (data) {
+                logs[idx] = `${chalk.gray(scope)}: ${data}`;
+                updateLog();
             }
+        }
 
-            const p = spawn(path.join(__dirname, 'build.js'), args);
+        p.stdout.on('data', createOnDataHandler(idx));
 
-            const scope = `[${lang || 'zh'}] [${type || 'all'}]`;
-
-            function createOnDataHandler(idx)  {
-                return function (data) {
-                    logs[idx] = `${chalk.gray(scope)}: ${data}`;
-                    updateLog();
-                }
-            }
-
-            p.stdout.on('data', createOnDataHandler(idx));
-
-            idx++;
-        });
+        idx++;
     });
 }
 

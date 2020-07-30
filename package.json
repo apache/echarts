@@ -18,9 +18,10 @@
   "scripts": {
     "prepublish": "node build/build.js --prepublish",
     "build": "node build/build.js",
+    "build:i18n": "node build/build-i18n.js",
     "build:full": "node build/build.js --clean",
     "watch": "node build/build.js --watch",
-    "dev:fast": "node build/dev-fast.js",
+    "dev:fast": "node build/build-i18n.js && node build/dev-fast.js",
     "release": "node build/release.js",
     "help": "node build/build.js --help",
     "test:visual": "node test/runTest/server.js",

@@ -100,6 +100,7 @@ import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
+import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
@@ -277,6 +278,8 @@ class ECharts extends Eventful {
 
     private _theme: ThemeOption;
 
+    private _locale: LocaleOption;
+
     private _chartsViews: ChartView[] = [];
 
     private _chartsMap: {[viewId: string]: ChartView} = {};
@@ -314,6 +317,7 @@ class ECharts extends Eventful {
         // Theme name or themeOption.
         theme?: string | ThemeOption,
         opts?: {
+            locale?: string | LocaleOption,
             renderer?: RendererType,
             devicePixelRatio?: number,
             width?: number,
@@ -352,6 +356,8 @@ class ECharts extends Eventful {
         theme && backwardCompat(theme as ECUnitOption, true);
 
         this._theme = theme;
+
+        this._locale = createLocaleObject(opts.locale || SYSTEM_LANG);
 
         this._coordSysMgr = new CoordinateSystemManager();
 
@@ -507,7 +513,7 @@ class ECharts extends Eventful {
             const theme = this._theme;
             const ecModel = this._model = new GlobalModel();
             ecModel.scheduler = this._scheduler;
-            ecModel.init(null, null, null, theme, optionManager);
+            ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
         this._model.setOption(option, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
@@ -2350,7 +2356,8 @@ export function init(
         renderer?: RendererType,
         devicePixelRatio?: number,
         width?: number,
-        height?: number
+        height?: number,
+        locale?: string | LocaleOption
     }
 ): ECharts {
     if (__DEV__) {
@@ -2574,6 +2581,8 @@ export function getCoordinateSystemDimensions(type: string): DimensionDefinition
             : coordSysCreator.dimensions.slice();
     }
 }
+
+export {registerLocale} from './locale';
 
 /**
  * Layout is a special stage of visual encoding

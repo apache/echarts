@@ -19,7 +19,6 @@
 
 const assert = require('assert');
 const nodeResolvePlugin = require('rollup-plugin-node-resolve');
-const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const nodePath = require('path');
 const ecDir = nodePath.resolve(__dirname, '..');
 const typescriptPlugin = require('rollup-plugin-typescript2');
@@ -27,7 +26,7 @@ const fs = require('fs');
 const progress = require('./progress');
 
 function preparePlugins(
-    {lang, sourcemap, addBundleVersion, totalFiles, clean},
+    {sourcemap, addBundleVersion, totalFiles, clean},
     {include, exclude}
 ) {
     assert(include);
@@ -70,10 +69,6 @@ function preparePlugins(
             }
         })
     ];
-
-    lang && plugins.push(
-        ecLangPlugin({lang})
-    );
 
     addBundleVersion && plugins.push({
         outro: function () {
