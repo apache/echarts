@@ -89,7 +89,9 @@ under the License.
                 return {
                     useUTC: useUTC,
                     tooltip: {
-                        trigger: 'axis'
+                        trigger: 'axis',
+                        // test in Safari (NaN-NaN-NaN NaN:NaN:NaN)
+                        formatter: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}'
                     },
                     xAxis: [{
                         type: 'time',
