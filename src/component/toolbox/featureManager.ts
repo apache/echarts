@@ -106,7 +106,8 @@ type ToolboxFeatureCtor = {
     /**
      * Static defaultOption property
      */
-    defaultOption: ToolboxFeatureOption
+    defaultOption?: ToolboxFeatureOption
+    getDefaultOption?: (ecModel: GlobalModel) => ToolboxFeatureOption
 };
 
 const features: Dictionary<ToolboxFeatureCtor> = {};

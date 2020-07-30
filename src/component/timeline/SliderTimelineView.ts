@@ -736,6 +736,7 @@ function createScaleByModel(model: SliderTimelineModel, axisType?: string): Scal
                 });
             case 'time':
                 return new TimeScale({
+                    lang: model.ecModel.getLocaleModel(),
                     useUTC: model.ecModel.get('useUTC')
                 });
             default:
