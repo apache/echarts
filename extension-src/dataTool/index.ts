@@ -21,14 +21,14 @@
 import * as echarts from 'echarts';
 import * as gexf from './gexf';
 import prepareBoxplotData from './prepareBoxplotData';
-import { boxplotTransform } from './boxplotTransform';
+// import { boxplotTransform } from './boxplotTransform';
 
 export const version = '1.0.0';
 
 export {gexf};
 
 export {prepareBoxplotData};
-export {boxplotTransform};
+// export {boxplotTransform};
 
 // For backward compatibility, where the namespace `dataTool` will
 // be mounted on `echarts` is the extension `dataTool` is imported.
@@ -38,5 +38,5 @@ if (echarts.dataTool) {
     echarts.dataTool.version = version;
     echarts.dataTool.gexf = gexf;
     echarts.dataTool.prepareBoxplotData = prepareBoxplotData;
-    echarts.dataTool.boxplotTransform = boxplotTransform;
+    // echarts.dataTool.boxplotTransform = boxplotTransform;
 }
