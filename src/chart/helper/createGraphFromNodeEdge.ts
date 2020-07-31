@@ -17,7 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
 import List from '../../data/List';
@@ -26,8 +25,19 @@ import linkList from '../../data/helper/linkList';
 import createDimensions from '../../data/helper/createDimensions';
 import CoordinateSystem from '../../CoordinateSystem';
 import createListFromArray from './createListFromArray';
+import {
+    OptionSourceDataOriginal, GraphEdgeItemObject, OptionDataValue,
+    OptionDataItemObject
+} from '../../util/types';
+import SeriesModel from '../../model/Series';
 
-export default function (nodes, edges, seriesModel, directed, beforeLink) {
+export default function (
+    nodes: OptionSourceDataOriginal<OptionDataValue, OptionDataItemObject<OptionDataValue>>,
+    edges: OptionSourceDataOriginal<OptionDataValue, GraphEdgeItemObject<OptionDataValue>>,
+    seriesModel: SeriesModel,
+    directed: boolean,
+    beforeLink: (nodeData: List, edgeData: List) => void
+): Graph {
     // ??? TODO
     // support dataset?
     const graph = new Graph(directed);
@@ -48,7 +58,10 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
         // addEdge may fail when source or target not exists
         if (graph.addEdge(source, target, linkCount)) {
             validEdges.push(link);
-            linkNameList.push(zrUtil.retrieve(link.id, source + ' > ' + target));
+            linkNameList.push(zrUtil.retrieve(
+                link.id != null ? link.id + '' : null,
+                source + ' > ' + target
+            ));
             linkCount++;
         }
     }
@@ -60,7 +73,7 @@ export default function (nodes, edges, seriesModel, directed, beforeLink) {
     }
     else {
         const coordSysCtor = CoordinateSystem.get(coordSys);
-        const coordDimensions = (coordSysCtor && coordSysCtor.type !== 'view')
+        const coordDimensions = coordSysCtor
             ? (coordSysCtor.dimensions || []) : [];
         // FIXME: Some geo do not need `value` dimenson, whereas `calendar` needs
         // `value` dimension, but graph need `value` dimension. It's better to

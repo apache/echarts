@@ -18,7 +18,7 @@
 */
 
 
-import {each, createHashMap} from 'zrender/src/core/util';
+import {each, bind} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import createListFromArray from '../helper/createListFromArray';
 import {
@@ -29,13 +29,15 @@ import {
     SeriesTooltipOption,
     DimensionName,
     OptionDataValue,
-    StatesOptionMixin
+    StatesOptionMixin,
+    OptionEncodeValue,
+    Dictionary,
+    OptionEncode
  } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { ParallelActiveState, ParallelAxisOption } from '../../coord/parallel/AxisModel';
 import Parallel from '../../coord/parallel/Parallel';
-import Source from '../../data/Source';
 import ParallelModel from '../../coord/parallel/ParallelModel';
 
 type ParallelSeriesDataValue = OptionDataValue[];
@@ -89,12 +91,10 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
     coordinateSystem: Parallel;
 
 
-    getInitialData(option: ParallelSeriesOption, ecModel: GlobalModel): List {
-        const source = this.getSource();
-
-        setEncodeAndDimensions(source, this);
-
-        return createListFromArray(source, this);
+    getInitialData(this: ParallelSeriesModel, option: ParallelSeriesOption, ecModel: GlobalModel): List {
+        return createListFromArray(this.getSource(), this, {
+            useEncodeDefaulter: bind(makeDefaultEncode, null, this)
+        });
     }
 
     /**
@@ -151,17 +151,13 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
 
 SeriesModel.registerClass(ParallelSeriesModel);
 
-function setEncodeAndDimensions(source: Source, seriesModel: ParallelSeriesModel): void {
+function makeDefaultEncode(seriesModel: ParallelSeriesModel): OptionEncode {
     // The mapping of parallelAxis dimension to data dimension can
     // be specified in parallelAxis.option.dim. For example, if
     // parallelAxis.option.dim is 'dim3', it mapping to the third
     // dimension of data. But `data.encode` has higher priority.
     // Moreover, parallelModel.dimension should not be regarded as data
     // dimensions. Consider dimensions = ['dim4', 'dim2', 'dim6'];
-
-    if (source.encodeDefine) {
-        return;
-    }
 
     const parallelModel = seriesModel.ecModel.getComponent(
         'parallel', seriesModel.get('parallelIndex')
@@ -170,11 +166,13 @@ function setEncodeAndDimensions(source: Source, seriesModel: ParallelSeriesModel
         return;
     }
 
-    const encodeDefine = source.encodeDefine = createHashMap();
+    const encodeDefine: Dictionary<OptionEncodeValue> = {};
     each(parallelModel.dimensions, function (axisDim) {
         const dataDimIndex = convertDimNameToNumber(axisDim);
-        encodeDefine.set(axisDim, dataDimIndex);
+        encodeDefine[axisDim] = dataDimIndex;
     });
+
+    return encodeDefine;
 }
 
 function convertDimNameToNumber(dimName: DimensionName): number {

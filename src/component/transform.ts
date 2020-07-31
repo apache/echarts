@@ -18,13 +18,8 @@
 */
 
 import * as echarts from '../echarts';
-import './boxplot/BoxplotSeries';
-import './boxplot/BoxplotView';
-import boxplotVisual from './boxplot/boxplotVisual';
-import boxplotLayout from './boxplot/boxplotLayout';
-import { boxplotTransform } from './boxplot/boxplotTransform';
+import {filterTransform} from './transform/filterTransform';
+import {sortTransform} from './transform/sortTransform';
 
-echarts.registerVisual(boxplotVisual);
-echarts.registerLayout(boxplotLayout);
-echarts.registerTransform(boxplotTransform);
-
+echarts.registerTransform(filterTransform);
+echarts.registerTransform(sortTransform);

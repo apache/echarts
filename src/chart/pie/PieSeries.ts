@@ -135,7 +135,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     /**
      * @overwrite
      */
-    getInitialData(): List {
+    getInitialData(this: PieSeriesModel): List {
         return createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)

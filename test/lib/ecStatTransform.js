@@ -17,14 +17,32 @@
 * under the License.
 */
 
-import * as echarts from '../echarts';
-import './boxplot/BoxplotSeries';
-import './boxplot/BoxplotView';
-import boxplotVisual from './boxplot/boxplotVisual';
-import boxplotLayout from './boxplot/boxplotLayout';
-import { boxplotTransform } from './boxplot/boxplotTransform';
+(function (root) {
 
-echarts.registerVisual(boxplotVisual);
-echarts.registerLayout(boxplotLayout);
-echarts.registerTransform(boxplotTransform);
+    root.ecStatTransform = function (ecStat) {
 
+        var regression = {
+
+            type: 'ecStat:regression',
+
+            transform: function transform(params) {
+                var source = params.source;
+                var config = params.config || {};
+                var method = config.method || 'linear';
+                var result = ecStat.regression(method, source.data);
+
+                return [{
+                    data: result.points
+                }, {
+                    data: [[result.expression]]
+                }];
+            }
+        };
+
+
+        return {
+            regression: regression
+        }
+    };
+
+})(window);

@@ -67,7 +67,7 @@ class Graph {
     /**
      * Add a new node
      */
-    addNode(id: string, dataIndex?: number): GraphNode {
+    addNode(id: string | number, dataIndex?: number): GraphNode {
         id = id == null ? ('' + dataIndex) : ('' + id);
 
         const nodesMap = this._nodesMap;

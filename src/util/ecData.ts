@@ -18,7 +18,7 @@
 */
 
 import Element from 'zrender/src/Element';
-import { DataModel, ECEventData, BlurScope, InnerFocus } from './types';
+import { DataModel, ECEventData, BlurScope, InnerFocus, SeriesDataType } from './types';
 import { makeInner } from './model';
 /**
  * ECData stored on graphic element
@@ -28,7 +28,7 @@ export interface ECData {
     dataModel?: DataModel;
     eventData?: ECEventData;
     seriesIndex?: number;
-    dataType?: string;
+    dataType?: SeriesDataType;
     focus?: InnerFocus;
     blurScope?: BlurScope;
 }

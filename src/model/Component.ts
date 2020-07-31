@@ -29,7 +29,9 @@ import {
     ClassManager,
     mountExtend
 } from '../util/clazz';
-import {makeInner, ModelFinderIndexQuery, queryReferringComponents, ModelFinderIdQuery, QueryReferringOpt} from '../util/model';
+import {
+    makeInner, ModelFinderIndexQuery, queryReferringComponents, ModelFinderIdQuery, QueryReferringOpt
+} from '../util/model';
 import * as layout from '../util/layout';
 import GlobalModel from './Global';
 import {

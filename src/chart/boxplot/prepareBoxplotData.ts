@@ -17,21 +17,9 @@
 * under the License.
 */
 
+import { quantile, asc } from '../../util/number';
 
-function asc<T extends number[]>(arr: T): T {
-    arr.sort(function (a, b) {
-        return a - b;
-    });
-    return arr;
-}
 
-function quantile(ascArr: number[], p: number): number {
-    const H = (ascArr.length - 1) * p + 1;
-    const h = Math.floor(H);
-    const v = +ascArr[h - 1];
-    const e = H - h;
-    return e ? v + e * (ascArr[h] - v) : v;
-}
 /**
  * See:
  *  <https://en.wikipedia.org/wiki/Box_plot#cite_note-frigge_hoaglin_iglewicz-2>
@@ -39,24 +27,17 @@ function quantile(ascArr: number[], p: number): number {
  *
  * Helper method for preparing data.
  *
- * @param {Array.<number>} rawData like
+ * @param rawData like
  *        [
  *            [12,232,443], (raw data set for the first box)
  *            [3843,5545,1232], (raw datat set for the second box)
  *            ...
  *        ]
- * @param {Object} [opt]
- *
- * @param {(number|string)} [opt.boundIQR=1.5] Data less than min bound is outlier.
+ * @param opt.boundIQR=1.5 Data less than min bound is outlier.
  *      default 1.5, means Q1 - 1.5 * (Q3 - Q1).
  *      If 'none'/0 passed, min bound will not be used.
- * @param {(number|string)} [opt.layout='horizontal']
+ * @param opt.layout='horizontal'
  *      Box plot layout, can be 'horizontal' or 'vertical'
- * @return {Object} {
- *      boxData: Array.<Array.<number>>
- *      outliers: Array.<Array.<number>>
- *      axisData: Array.<string>
- * }
  */
 export default function (
     rawData: number[][],
@@ -67,17 +48,14 @@ export default function (
 ): {
     boxData: number[][]
     outliers: number[][]
-    axisData: string[]
 } {
     opt = opt || {};
     const boxData = [];
     const outliers = [];
-    const axisData: string[] = [];
     const boundIQR = opt.boundIQR;
     const useExtreme = boundIQR === 'none' || boundIQR === 0;
 
     for (let i = 0; i < rawData.length; i++) {
-        axisData.push(i + '');
         const ascList = asc(rawData[i].slice());
 
         const Q1 = quantile(ascList, 0.25);
@@ -95,7 +73,7 @@ export default function (
             ? max
             : Math.min(max, Q3 + bound);
 
-        boxData.push([low, Q1, Q2, Q3, high]);
+        boxData.push([i, low, Q1, Q2, Q3, high]);
 
         for (let j = 0; j < ascList.length; j++) {
             const dataItem = ascList[j];
@@ -108,7 +86,6 @@ export default function (
     }
     return {
         boxData: boxData,
-        outliers: outliers,
-        axisData: axisData
+        outliers: outliers
     };
 }

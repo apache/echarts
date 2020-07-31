@@ -97,7 +97,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
     static readonly dimensions = ['time', 'value'];
     static getDimensionsInfo() {
         return [{
-            name: 'time', type: 'time'
+            name: 'time', type: 'time' as const
         }, 'value'];
     }
 

@@ -17,12 +17,11 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 import {each, createHashMap, assert} from 'zrender/src/core/util';
-import List from '../List';
+import List, { ListDimensionType } from '../List';
 import {
-    DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput
+    DimensionName, VISUAL_DIMENSIONS, DimensionType, DimensionUserOuput, DimensionUserOuputEncode, DimensionIndex
 } from '../../util/types';
 
 export type DimensionSummaryEncode = {
@@ -44,9 +43,9 @@ export type DimensionSummary = {
 export function summarizeDimensions(data: List): DimensionSummary {
     const summary: DimensionSummary = {} as DimensionSummary;
     const encode = summary.encode = {} as DimensionSummaryEncode;
-    const notExtraCoordDimMap = createHashMap();
-    let defaultedLabel = [];
-    let defaultedTooltip = [];
+    const notExtraCoordDimMap = createHashMap<1, DimensionName>();
+    let defaultedLabel = [] as DimensionName[];
+    let defaultedTooltip = [] as DimensionName[];
 
     // See the comment of `List.js#userOutput`.
     const userOutput = summary.userOutput = {
@@ -60,7 +59,7 @@ export function summarizeDimensions(data: List): DimensionSummary {
         const coordDim = dimItem.coordDim;
         if (coordDim) {
             if (__DEV__) {
-                assert(VISUAL_DIMENSIONS.get(coordDim) == null);
+                assert(VISUAL_DIMENSIONS.get(coordDim as any) == null);
             }
 
             const coordDimIndex = dimItem.coordDimIndex;
@@ -96,8 +95,8 @@ export function summarizeDimensions(data: List): DimensionSummary {
         });
     });
 
-    let dataDimsOnCoord = [];
-    const encodeFirstDimNotExtra = {};
+    let dataDimsOnCoord = [] as DimensionName[];
+    const encodeFirstDimNotExtra = {} as {[coordDim: string]: DimensionName};
 
     notExtraCoordDimMap.each(function (v, coordDim) {
         const dimArr = encode[coordDim];
@@ -135,8 +134,8 @@ export function summarizeDimensions(data: List): DimensionSummary {
 }
 
 function getOrCreateEncodeArr(
-    encode: DimensionSummaryEncode, dim: DimensionName
-): DimensionName[] {
+    encode: DimensionSummaryEncode | DimensionUserOuputEncode, dim: DimensionName
+): (DimensionIndex | DimensionName)[] {
     if (!encode.hasOwnProperty(dim)) {
         encode[dim] = [];
     }
@@ -144,7 +143,7 @@ function getOrCreateEncodeArr(
 }
 
 // FIXME:TS should be type `AxisType`
-export function getDimensionTypeByAxis(axisType: string) {
+export function getDimensionTypeByAxis(axisType: string): ListDimensionType {
     return axisType === 'category'
         ? 'ordinal'
         : axisType === 'time'

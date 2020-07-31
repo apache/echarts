@@ -21,10 +21,11 @@ import {assert, isArray} from 'zrender/src/core/util';
 import SeriesModel from '../model/Series';
 import { Pipeline } from './Scheduler';
 import { Payload } from '../util/types';
+import List from '../data/List';
 
 export interface TaskContext {
-    outputData?: any;
-    data?: any;
+    outputData?: List;
+    data?: List;
     payload?: Payload;
     model?: SeriesModel;
 };

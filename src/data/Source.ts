@@ -17,15 +17,18 @@
 * under the License.
 */
 
-import {createHashMap, isTypedArray, HashMap} from 'zrender/src/core/util';
+import {isTypedArray, HashMap} from 'zrender/src/core/util';
 import {
     SourceFormat, SeriesLayoutBy, DimensionDefinition,
-    OptionEncodeValue, OptionSourceData, OptionEncode,
+    OptionEncodeValue, OptionSourceData,
     SOURCE_FORMAT_ORIGINAL,
     SERIES_LAYOUT_BY_COLUMN,
     SOURCE_FORMAT_UNKNOWN,
     SOURCE_FORMAT_KEYED_COLUMNS,
-    SOURCE_FORMAT_TYPED_ARRAY
+    SOURCE_FORMAT_TYPED_ARRAY,
+    DimensionName,
+    OptionSourceHeader,
+    DimensionDefinitionLoose
 } from '../util/types';
 
 /**
@@ -64,13 +67,16 @@ import {
  * + "unknown"
  */
 
-class Source {
+export interface SourceMetaRawOption {
+    seriesLayoutBy: SeriesLayoutBy;
+    sourceHeader: OptionSourceHeader;
+    dimensions: DimensionDefinitionLoose[];
+}
 
-    readonly fromDataset: boolean;
+class Source {
 
     /**
      * Not null/undefined.
-     * @type {Array|Object}
      */
     readonly data: OptionSourceData;
 
@@ -97,7 +103,7 @@ class Source {
      * can be null/undefined.
      * Might be specified outside.
      */
-    encodeDefine: HashMap<OptionEncodeValue>;
+    readonly encodeDefine: HashMap<OptionEncodeValue, DimensionName>;
 
     /**
      * Not null/undefined, uint.
@@ -109,28 +115,43 @@ class Source {
      */
     readonly dimensionsDetectCount: number;
 
+    /**
+     * Raw props from user option.
+     */
+    readonly metaRawOption: SourceMetaRawOption;
+
 
     constructor(fields: {
-        fromDataset: boolean,
-        data?: OptionSourceData,
-        sourceFormat?: SourceFormat, // default: SOURCE_FORMAT_UNKNOWN
+        data: OptionSourceData,
+        sourceFormat: SourceFormat, // default: SOURCE_FORMAT_UNKNOWN
+
+        // Visit config are optional:
         seriesLayoutBy?: SeriesLayoutBy, // default: 'column'
         dimensionsDefine?: DimensionDefinition[],
-        encodeDefine?: OptionEncode,
         startIndex?: number, // default: 0
-        dimensionsDetectCount?: number
+        dimensionsDetectCount?: number,
+
+        metaRawOption?: SourceMetaRawOption,
+
+        // [Caveat]
+        // This is the raw user defined `encode` in `series`.
+        // If user not defined, DO NOT make a empty object or hashMap here.
+        // An empty object or hashMap will prevent from auto generating encode.
+        encodeDefine?: HashMap<OptionEncodeValue, DimensionName>
     }) {
 
-        this.fromDataset = fields.fromDataset;
         this.data = fields.data || (
             fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []
         );
         this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
+
+        // Visit config
         this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
-        this.dimensionsDefine = fields.dimensionsDefine;
-        this.encodeDefine = fields.encodeDefine && createHashMap(fields.encodeDefine);
         this.startIndex = fields.startIndex || 0;
+        this.dimensionsDefine = fields.dimensionsDefine;
         this.dimensionsDetectCount = fields.dimensionsDetectCount;
+        this.encodeDefine = fields.encodeDefine;
+        this.metaRawOption = fields.metaRawOption;
     }
 
     /**
@@ -141,8 +162,7 @@ class Source {
             data: data,
             sourceFormat: isTypedArray(data)
                 ? SOURCE_FORMAT_TYPED_ARRAY
-                : SOURCE_FORMAT_ORIGINAL,
-            fromDataset: false
+                : SOURCE_FORMAT_ORIGINAL
         });
     };
 }

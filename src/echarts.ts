@@ -100,6 +100,7 @@ import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
+import { registerExternalTransform } from './data/helper/transform';
 import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 declare let global: any;
@@ -2716,6 +2717,8 @@ export function getMap(mapName: string) {
         specialAreas: records[0].specialAreas
     };
 }
+
+export const registerTransform = registerExternalTransform;
 
 /**
  * Globa dispatchAction to a specified chart instance.

@@ -28,22 +28,33 @@
 
 import ComponentModel from '../model/Component';
 import ComponentView from '../view/Component';
-import {detectSourceFormat} from '../data/helper/sourceHelper';
 import {
-    SERIES_LAYOUT_BY_COLUMN, ComponentOption, SeriesEncodeOptionMixin, OptionSourceData, SeriesLayoutBy
+    SERIES_LAYOUT_BY_COLUMN, ComponentOption, SeriesEncodeOptionMixin,
+    OptionSourceData, SeriesLayoutBy, OptionSourceHeader
 } from '../util/types';
+import { DataTransformOption, PipedDataTransformOption } from '../data/helper/transform';
+import GlobalModel from '../model/Global';
+import Model from '../model/Model';
+import { disableTransformOptionMerge, SourceManager } from '../data/helper/sourceManager';
 
 
-interface DatasetOption extends
+export interface DatasetOption extends
         Pick<ComponentOption, 'type' | 'id' | 'name'>,
         Pick<SeriesEncodeOptionMixin, 'dimensions'> {
     seriesLayoutBy?: SeriesLayoutBy;
-    // null/undefined/'auto': auto detect header, see "src/data/helper/sourceHelper".
-    sourceHeader?: boolean | 'auto';
-    data?: OptionSourceData;
+    sourceHeader?: OptionSourceHeader;
+    source?: OptionSourceData;
+
+    fromDatasetIndex?: number;
+    fromDatasetId?: string;
+    transform?: DataTransformOption | PipedDataTransformOption;
+    // When a transform result more than on results, the results can be referenced only by:
+    // Using `fromDatasetIndex`/`fromDatasetId` and `transfromResultIndex` to retrieve
+    // the results from other dataset.
+    fromTransformResult?: number;
 }
 
-class DatasetModel extends ComponentModel {
+export class DatasetModel<Opts extends DatasetOption = DatasetOption> extends ComponentModel<Opts> {
 
     type = 'dataset';
     static type = 'dataset';
@@ -52,13 +63,29 @@ class DatasetModel extends ComponentModel {
         seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN
     };
 
+    private _sourceManager: SourceManager;
+
+    init(option: Opts, parentModel: Model, ecModel: GlobalModel): void {
+        super.init(option, parentModel, ecModel);
+        this._sourceManager = new SourceManager(this);
+        disableTransformOptionMerge(this);
+    }
+
+    mergeOption(newOption: Opts, ecModel: GlobalModel): void {
+        super.mergeOption(newOption, ecModel);
+        disableTransformOptionMerge(this);
+    }
+
     optionUpdated() {
-        detectSourceFormat(this);
+        this._sourceManager.dirty();
+    }
+
+    getSourceManager() {
+        return this._sourceManager;
     }
 }
 
 ComponentModel.registerClass(DatasetModel);
-
 
 class DatasetView extends ComponentView {
     static type = 'dataset';
@@ -66,4 +93,3 @@ class DatasetView extends ComponentView {
 }
 
 ComponentView.registerClass(DatasetView);
-
