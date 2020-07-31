@@ -110,10 +110,10 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 
-export const version = '4.8.0';
+export const version = '5.0.0-alpha.1';
 
 export const dependencies = {
-    zrender: '4.3.1'
+    zrender: '5.0.0-alpha.1'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -2363,16 +2363,6 @@ export function init(
     }
 ): ECharts {
     if (__DEV__) {
-        // Check version
-        if (+zrender.version.replace('.', '') < +dependencies.zrender.replace('.', '')) {
-            throw new Error(
-                'zrender/src ' + zrender.version
-                + ' is too old for ECharts ' + version
-                + '. Current version need ZRender '
-                + dependencies.zrender + '+'
-            );
-        }
-
         if (!dom) {
             throw new Error('Initialize failed: invalid dom.');
         }
