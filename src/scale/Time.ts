@@ -386,7 +386,7 @@ function getMonthInterval(approxInterval: number) {
 
 function getHourInterval(approxInterval: number) {
     approxInterval /= ONE_HOUR;
-    return approxInterval > 12 ? 11
+    return approxInterval > 12 ? 12
             : approxInterval > 6 ? 6
             : approxInterval > 3.5 ? 4
             : approxInterval > 2 ? 2 : 1;
