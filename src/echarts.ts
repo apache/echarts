@@ -1225,6 +1225,8 @@ class ECharts extends Eventful {
         // `appendData` meaningless.
 
         this._scheduler.unfinished = true;
+
+        this.getZr().wakeUp();
     }
 
 
