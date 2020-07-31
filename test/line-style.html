@@ -190,6 +190,9 @@ under the License.
                         borderColor: 'cyan'
                     }
                 },
+                tooltip: {
+                    formatter: '{c}'
+                },
                 axisPointer: {
                     show: true,
                     type: 'line',
@@ -199,12 +202,45 @@ under the License.
                         width: 2
                     },
                     // TODO
-                    // label: {
-                    //     borderWidth: 1,
-                    //     borderColor: 'blue',
-                    //     borderType: 'dashed',
-                    //     backgroundColor: 'transparent'
-                    // }
+                    label: {
+                        //show: false,
+                        fontWeight: 'bold',
+                        precision: 2,
+                        fontSize: '1rem',
+                        textShadowBlur: 10,
+                        //textShadowOffsetX: 2,
+                        //textShadowOffsetY: 2,
+                        textShadowColor: 'red',
+                        textBorderColor: 'cyan',
+                        textBorderWidth: 2,
+                        textBorderType: 'dotted',
+                        //textBorderDashArray: [5, 5],
+                        borderWidth: 1,
+                        borderColor: 'black',
+                        borderType: 'dashed',
+                        borderDashArray: [15, 3, 3],
+                        borderRadius: 20,
+                        backgroundColor: 'yellow',
+                        padding: 10,
+                        shadowColor: 'green',
+                        shadowBlur: 5,
+                        //shadowOffsetX: 10,
+                        //shadowOffsetY: 10,
+                        color: '#fff',
+                        fontFamily: 'SimHei',
+                        rich: {
+                            name: {
+                                textBorderColor: 'purple',
+                                fontSize: 12,
+                                fontFamily: 'Courier New'
+                            }
+                        },
+                        //formatter: '{name|{value}}',
+                        //width: 120,
+                        //height: 30,
+                        //lineHeight: 30
+                        //opacity: 0.5
+                    }
                 },
                 xAxis: {
                     type: 'category',
