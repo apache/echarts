@@ -103,5 +103,5 @@ var localeObj = {
 };
 
     echarts.registerLocale('TH', localeObj);
-
+        
 });
