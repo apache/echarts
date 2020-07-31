@@ -164,7 +164,7 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
         show: false,
 
         lineStyle: {
-            color: '#eee',
+            color: '#F4F7FD',
             width: 1
         }
     }
@@ -172,6 +172,7 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
 
 const timeAxis: AxisBaseOption = zrUtil.merge({
     scale: true,
+    splitNumber: 6,
     axisLabel: {
         // To eliminate labels that are not nice
         showMinLabel: false,

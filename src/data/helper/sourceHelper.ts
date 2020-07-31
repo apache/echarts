@@ -17,9 +17,8 @@
 * under the License.
 */
 
-// @ts-nocheck
 
-import {makeInner, getDataItemValue} from '../../util/model';
+import {makeInner, getDataItemValue, queryReferringComponents, SINGLE_REFERRING} from '../../util/model';
 import {
     createHashMap,
     each,
@@ -30,9 +29,14 @@ import {
     isTypedArray,
     isArrayLike,
     extend,
-    assert
+    assert,
+    hasOwn,
+    HashMap,
+    isNumber,
+    clone,
+    defaults
 } from 'zrender/src/core/util';
-import Source from '../Source';
+import Source, { SourceMetaRawOption } from '../Source';
 
 import {
     SOURCE_FORMAT_ORIGINAL,
@@ -41,8 +45,29 @@ import {
     SERIES_LAYOUT_BY_ROW,
     SOURCE_FORMAT_KEYED_COLUMNS,
     SOURCE_FORMAT_TYPED_ARRAY,
-    SOURCE_FORMAT_UNKNOWN
+    SOURCE_FORMAT_UNKNOWN,
+    SourceFormat,
+    Dictionary,
+    OptionSourceData,
+    SeriesLayoutBy,
+    OptionSourceHeader,
+    DimensionName,
+    DimensionDefinition,
+    DimensionDefinitionLoose,
+    OptionSourceDataArrayRows,
+    OptionDataValue,
+    OptionSourceDataKeyedColumns,
+    OptionSourceDataOriginal,
+    OptionSourceDataObjectRows,
+    OptionEncode,
+    DimensionIndex,
+    SeriesEncodableModel,
+    OptionEncodeValue
 } from '../../util/types';
+import { DatasetModel, DatasetOption } from '../../component/dataset';
+import SeriesModel from '../../model/Series';
+import GlobalModel from '../../model/Global';
+import { CoordDimensionDefinition } from './createDimensions';
 
 // The result of `guessOrdinal`.
 export const BE_ORDINAL = {
@@ -50,17 +75,24 @@ export const BE_ORDINAL = {
     Might: 2, // Encounter string but number-like.
     Not: 3 // Other cases
 };
+type BeOrdinalValue = (typeof BE_ORDINAL)[keyof typeof BE_ORDINAL];
 
-const inner = makeInner();
+const innerGlobalModel = makeInner<{
+    datasetMap: HashMap<DatasetRecord, string>
+}, GlobalModel>();
 
-/**
- * @see {module:echarts/data/Source}
- * @param {module:echarts/component/dataset/DatasetModel} datasetModel
- * @return {string} sourceFormat
- */
-export function detectSourceFormat(datasetModel) {
-    const data = datasetModel.option.source;
-    let sourceFormat = SOURCE_FORMAT_UNKNOWN;
+
+interface DatasetRecord {
+    categoryWayDim: number;
+    valueWayDim: number;
+}
+
+type SeriesEncodeInternal = {
+    [key in keyof OptionEncode]: DimensionIndex[];
+};
+
+export function detectSourceFormat(data: DatasetOption['source']): SourceFormat {
+    let sourceFormat: SourceFormat = SOURCE_FORMAT_UNKNOWN;
 
     if (isTypedArray(data)) {
         sourceFormat = SOURCE_FORMAT_TYPED_ARRAY;
@@ -89,7 +121,7 @@ export function detectSourceFormat(datasetModel) {
     }
     else if (isObject(data)) {
         for (const key in data) {
-            if (data.hasOwnProperty(key) && isArrayLike(data[key])) {
+            if (hasOwn(data, key) && isArrayLike((data as Dictionary<unknown>)[key])) {
                 sourceFormat = SOURCE_FORMAT_KEYED_COLUMNS;
                 break;
             }
@@ -99,114 +131,106 @@ export function detectSourceFormat(datasetModel) {
         throw new Error('Invalid data');
     }
 
-    inner(datasetModel).sourceFormat = sourceFormat;
-}
-
-/**
- * [Scenarios]:
- * (1) Provide source data directly:
- *     series: {
- *         encode: {...},
- *         dimensions: [...]
- *         seriesLayoutBy: 'row',
- *         data: [[...]]
- *     }
- * (2) Refer to datasetModel.
- *     series: [{
- *         encode: {...}
- *         // Ignore datasetIndex means `datasetIndex: 0`
- *         // and the dimensions defination in dataset is used
- *     }, {
- *         encode: {...},
- *         seriesLayoutBy: 'column',
- *         datasetIndex: 1
- *     }]
- *
- * Get data from series itself or datset.
- * @return {module:echarts/data/Source} source
- */
-export function getSource(seriesModel) {
-    return inner(seriesModel).source;
+    return sourceFormat;
 }
 
 /**
  * MUST be called before mergeOption of all series.
- * @param {module:echarts/model/Global} ecModel
  */
-export function resetSourceDefaulter(ecModel) {
+export function resetSourceDefaulter(ecModel: GlobalModel): void {
     // `datasetMap` is used to make default encode.
-    inner(ecModel).datasetMap = createHashMap();
+    innerGlobalModel(ecModel).datasetMap = createHashMap();
+}
+
+export function createSource(
+    sourceData: OptionSourceData,
+    thisMetaRawOption: SourceMetaRawOption,
+    // can be null. If not provided, auto detect it from `sourceData`.
+    sourceFormat: SourceFormat,
+    encodeDefine: OptionEncode  // can be null
+): Source {
+    sourceFormat = sourceFormat || detectSourceFormat(sourceData);
+    const dimInfo = determineSourceDimensions(
+        sourceData,
+        sourceFormat,
+        thisMetaRawOption.seriesLayoutBy,
+        thisMetaRawOption.sourceHeader,
+        thisMetaRawOption.dimensions
+    );
+    const source = new Source({
+        data: sourceData,
+        sourceFormat: sourceFormat,
+
+        seriesLayoutBy: thisMetaRawOption.seriesLayoutBy,
+        dimensionsDefine: dimInfo.dimensionsDefine,
+        startIndex: dimInfo.startIndex,
+        dimensionsDetectCount: dimInfo.dimensionsDetectCount,
+        encodeDefine: makeEncodeDefine(encodeDefine),
+        metaRawOption: clone(thisMetaRawOption)
+    });
+
+    return source;
+}
+
+// See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
+export function inheritSourceMetaRawOption(opt: {
+    parent: SourceMetaRawOption, // Can be null/undefined
+    thisNew: SourceMetaRawOption // Must be object
+}) {
+    return defaults(opt.thisNew, opt.parent);
 }
 
 /**
- * [Caution]:
- * MUST be called after series option merged and
- * before "series.getInitailData()" called.
- *
- * [The rule of making default encode]:
- * Category axis (if exists) alway map to the first dimension.
- * Each other axis occupies a subsequent dimension.
- *
- * [Why make default encode]:
- * Simplify the typing of encode in option, avoiding the case like that:
- * series: [{encode: {x: 0, y: 1}}, {encode: {x: 0, y: 2}}, {encode: {x: 0, y: 3}}],
- * where the "y" have to be manually typed as "1, 2, 3, ...".
- *
- * @param {module:echarts/model/Series} seriesModel
+ * Clone except source data.
  */
-export function prepareSource(seriesModel) {
-    const seriesOption = seriesModel.option;
+export function cloneSourceShallow(source: Source) {
+    return new Source({
+        data: source.data,
+        sourceFormat: source.sourceFormat,
 
-    let data = seriesOption.data;
-    let sourceFormat = isTypedArray(data)
-        ? SOURCE_FORMAT_TYPED_ARRAY : SOURCE_FORMAT_ORIGINAL;
-    let fromDataset = false;
-
-    let seriesLayoutBy = seriesOption.seriesLayoutBy;
-    let sourceHeader = seriesOption.sourceHeader;
-    let dimensionsDefine = seriesOption.dimensions;
-
-    const datasetModel = getDatasetModel(seriesModel);
-    if (datasetModel) {
-        const datasetOption = datasetModel.option;
-
-        data = datasetOption.source;
-        sourceFormat = inner(datasetModel).sourceFormat;
-        fromDataset = true;
-
-        // These settings from series has higher priority.
-        seriesLayoutBy = seriesLayoutBy || datasetOption.seriesLayoutBy;
-        sourceHeader == null && (sourceHeader = datasetOption.sourceHeader);
-        dimensionsDefine = dimensionsDefine || datasetOption.dimensions;
-    }
-
-    const completeResult = completeBySourceData(
-        data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine
-    );
-
-    inner(seriesModel).source = new Source({
-        data: data,
-        fromDataset: fromDataset,
-        seriesLayoutBy: seriesLayoutBy,
-        sourceFormat: sourceFormat,
-        dimensionsDefine: completeResult.dimensionsDefine,
-        startIndex: completeResult.startIndex,
-        dimensionsDetectCount: completeResult.dimensionsDetectCount,
-        // Note: dataset option does not have `encode`.
-        encodeDefine: seriesOption.encode
+        seriesLayoutBy: source.seriesLayoutBy,
+        dimensionsDefine: clone(source.dimensionsDefine),
+        startIndex: source.startIndex,
+        dimensionsDetectCount: source.dimensionsDetectCount,
+        encodeDefine: makeEncodeDefine(source.encodeDefine)
     });
 }
 
+function makeEncodeDefine(
+    encodeDefine: OptionEncode | HashMap<OptionEncodeValue, DimensionName>
+): HashMap<OptionEncodeValue, DimensionName> {
+    // null means user not specify `series.encode`.
+    return encodeDefine
+        ? createHashMap<OptionEncodeValue, DimensionName>(encodeDefine)
+        : null;
+}
+
+
 // return {startIndex, dimensionsDefine, dimensionsCount}
-function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine) {
+export function determineSourceDimensions(
+    data: OptionSourceData,
+    sourceFormat: SourceFormat,
+    seriesLayoutBy: SeriesLayoutBy,
+    sourceHeader: OptionSourceHeader,
+    dimensionsDefine: DimensionDefinitionLoose[]
+): {
+    dimensionsDefine: DimensionDefinition[];
+    startIndex: number;
+    dimensionsDetectCount: number;
+} {
+    let dimensionsDetectCount;
+    let startIndex: number;
+
     if (!data) {
-        return {dimensionsDefine: normalizeDimensionsDefine(dimensionsDefine)};
+        return {
+            dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
+            startIndex,
+            dimensionsDetectCount
+        };
     }
 
-    let dimensionsDetectCount;
-    let startIndex;
-
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
+        const dataArrayRows = data as OptionSourceDataArrayRows;
         // Rule: Most of the first line are string: it is header.
         // Caution: consider a line with 5 string and 1 number,
         // it still can not be sure it is a head, because the
@@ -223,42 +247,42 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
                     }
                 }
             // 10 is an experience number, avoid long loop.
-            }, seriesLayoutBy, data, 10);
+            }, seriesLayoutBy, dataArrayRows, 10);
         }
         else {
-            startIndex = sourceHeader ? 1 : 0;
+            startIndex = isNumber(sourceHeader) ? sourceHeader : sourceHeader ? 1 : 0;
         }
 
         if (!dimensionsDefine && startIndex === 1) {
             dimensionsDefine = [];
             arrayRowsTravelFirst(function (val, index) {
-                dimensionsDefine[index] = val != null ? val : '';
-            }, seriesLayoutBy, data);
+                dimensionsDefine[index] = (val != null ? val + '' : '') as DimensionName;
+            }, seriesLayoutBy, dataArrayRows, Infinity);
         }
 
         dimensionsDetectCount = dimensionsDefine
             ? dimensionsDefine.length
             : seriesLayoutBy === SERIES_LAYOUT_BY_ROW
-            ? data.length
-            : data[0]
-            ? data[0].length
+            ? dataArrayRows.length
+            : dataArrayRows[0]
+            ? dataArrayRows[0].length
             : null;
     }
     else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
         if (!dimensionsDefine) {
-            dimensionsDefine = objectRowsCollectDimensions(data);
+            dimensionsDefine = objectRowsCollectDimensions(data as OptionSourceDataObjectRows);
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
         if (!dimensionsDefine) {
             dimensionsDefine = [];
-            each(data, function (colArr, key) {
+            each(data as OptionSourceDataKeyedColumns, function (colArr, key) {
                 dimensionsDefine.push(key);
             });
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        const value0 = getDataItemValue(data[0]);
+        const value0 = getDataItemValue((data as OptionSourceDataOriginal)[0]);
         dimensionsDetectCount = isArray(value0) && value0.length || 1;
     }
     else if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
@@ -269,7 +293,7 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
 
     return {
         startIndex: startIndex,
-        dimensionsDefine: normalizeDimensionsDefine(dimensionsDefine),
+        dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
         dimensionsDetectCount: dimensionsDetectCount
     };
 }
@@ -277,12 +301,12 @@ function completeBySourceData(data, sourceFormat, seriesLayoutBy, sourceHeader, 
 // Consider dimensions defined like ['A', 'price', 'B', 'price', 'C', 'price'],
 // which is reasonable. But dimension name is duplicated.
 // Returns undefined or an array contains only object without null/undefiend or string.
-function normalizeDimensionsDefine(dimensionsDefine) {
+function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[]): DimensionDefinition[] {
     if (!dimensionsDefine) {
         // The meaning of null/undefined is different from empty array.
         return;
     }
-    const nameMap = createHashMap();
+    const nameMap = createHashMap<{ count: number }, string>();
     return map(dimensionsDefine, function (item, index) {
         item = extend({}, isObject(item) ? item : {name: item});
 
@@ -316,8 +340,12 @@ function normalizeDimensionsDefine(dimensionsDefine) {
     });
 }
 
-function arrayRowsTravelFirst(cb, seriesLayoutBy, data, maxLoop) {
-    maxLoop == null && (maxLoop = Infinity);
+function arrayRowsTravelFirst(
+    cb: (val: OptionDataValue, idx: number) => void,
+    seriesLayoutBy: SeriesLayoutBy,
+    data: OptionSourceDataArrayRows,
+    maxLoop: number
+): void {
     if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
         for (let i = 0; i < data.length && i < maxLoop; i++) {
             cb(data[i] ? data[i][0] : null, i);
@@ -331,12 +359,12 @@ function arrayRowsTravelFirst(cb, seriesLayoutBy, data, maxLoop) {
     }
 }
 
-function objectRowsCollectDimensions(data) {
+function objectRowsCollectDimensions(data: OptionSourceDataObjectRows): DimensionDefinitionLoose[] {
     let firstIndex = 0;
     let obj;
     while (firstIndex < data.length && !(obj = data[firstIndex++])) {} // jshint ignore: line
     if (obj) {
-        const dimensions = [];
+        const dimensions: DimensionDefinitionLoose[] = [];
         each(obj, function (value, key) {
             dimensions.push(key);
         });
@@ -357,35 +385,38 @@ function objectRowsCollectDimensions(data) {
  *     The result of data arrengment of data dimensions like:
  *     | ser_shared_x | ser0_y | ser1_y | ser2_y |
  *
- * @param {Array.<Object|string>} coordDimensions [{name: <string>, type: <string>, dimsDef: <Array>}, ...]
- * @param {module:model/Series} seriesModel
- * @param {module:data/Source} source
- * @return {Object} encode Never be `null/undefined`.
+ * @return encode Never be `null/undefined`.
  */
-export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, source) {
-    const encode = {};
+export function makeSeriesEncodeForAxisCoordSys(
+    coordDimensions: (DimensionName | CoordDimensionDefinition)[],
+    seriesModel: SeriesModel,
+    source: Source
+): SeriesEncodeInternal {
+    const encode: SeriesEncodeInternal = {};
 
-    const datasetModel = getDatasetModel(seriesModel);
+    const datasetModel = querySeriesUpstreamDatasetModel(seriesModel);
     // Currently only make default when using dataset, util more reqirements occur.
     if (!datasetModel || !coordDimensions) {
         return encode;
     }
 
-    const encodeItemName = [];
-    const encodeSeriesName = [];
+    const encodeItemName: DimensionIndex[] = [];
+    const encodeSeriesName: DimensionIndex[] = [];
 
     const ecModel = seriesModel.ecModel;
-    const datasetMap = inner(ecModel).datasetMap;
+    const datasetMap = innerGlobalModel(ecModel).datasetMap;
     const key = datasetModel.uid + '_' + source.seriesLayoutBy;
 
-    let baseCategoryDimIndex;
+    let baseCategoryDimIndex: number;
     let categoryWayValueDimStart;
     coordDimensions = coordDimensions.slice();
-    each(coordDimensions, function (coordDimInfo, coordDimIdx) {
-        !isObject(coordDimInfo) && (coordDimensions[coordDimIdx] = {name: coordDimInfo});
+    each(coordDimensions, function (coordDimInfoLoose, coordDimIdx) {
+        const coordDimInfo: CoordDimensionDefinition = isObject(coordDimInfoLoose)
+            ? coordDimInfoLoose
+            : (coordDimensions[coordDimIdx] = { name: coordDimInfoLoose as DimensionName });
         if (coordDimInfo.type === 'ordinal' && baseCategoryDimIndex == null) {
             baseCategoryDimIndex = coordDimIdx;
-            categoryWayValueDimStart = getDataDimCountOnCoordDim(coordDimensions[coordDimIdx]);
+            categoryWayValueDimStart = getDataDimCountOnCoordDim(coordDimInfo);
         }
         encode[coordDimInfo.name] = [];
     });
@@ -395,7 +426,7 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
 
     // TODO
     // Auto detect first time axis and do arrangement.
-    each(coordDimensions, function (coordDimInfo, coordDimIdx) {
+    each(coordDimensions, function (coordDimInfo: CoordDimensionDefinition, coordDimIdx) {
         const coordDimName = coordDimInfo.name;
         const count = getDataDimCountOnCoordDim(coordDimInfo);
 
@@ -427,13 +458,13 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
         }
     });
 
-    function pushDim(dimIdxArr, idxFrom, idxCount) {
+    function pushDim(dimIdxArr: DimensionIndex[], idxFrom: number, idxCount: number) {
         for (let i = 0; i < idxCount; i++) {
             dimIdxArr.push(idxFrom + i);
         }
     }
 
-    function getDataDimCountOnCoordDim(coordDimInfo) {
+    function getDataDimCountOnCoordDim(coordDimInfo: CoordDimensionDefinition) {
         const dimsDef = coordDimInfo.dimsDef;
         return dimsDef ? dimsDef.length : 1;
     }
@@ -447,14 +478,16 @@ export function makeSeriesEncodeForAxisCoordSys(coordDimensions, seriesModel, so
 /**
  * Work for data like [{name: ..., value: ...}, ...].
  *
- * @param {module:model/Series} seriesModel
- * @param {module:data/Source} source
- * @return {Object} encode Never be `null/undefined`.
+ * @return encode Never be `null/undefined`.
  */
-export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
-    const encode = {};
+export function makeSeriesEncodeForNameBased(
+    seriesModel: SeriesModel,
+    source: Source,
+    dimCount: number
+): SeriesEncodeInternal {
+    const encode: SeriesEncodeInternal = {};
 
-    const datasetModel = getDatasetModel(seriesModel);
+    const datasetModel = querySeriesUpstreamDatasetModel(seriesModel);
     // Currently only make default when using dataset, util more reqirements occur.
     if (!datasetModel) {
         return encode;
@@ -472,11 +505,12 @@ export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
         });
     }
 
-    // idxResult: {v, n}.
+    type IdxResult = { v: number, n: number };
+
     const idxResult = (function () {
 
-        const idxRes0 = {};
-        const idxRes1 = {};
+        const idxRes0 = {} as IdxResult;
+        const idxRes1 = {} as IdxResult;
         const guessRecords = [];
 
         // 5 is an experience value.
@@ -520,7 +554,7 @@ export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
             }
         }
 
-        function fulfilled(idxResult) {
+        function fulfilled(idxResult: IdxResult) {
             return idxResult.v != null && idxResult.n != null;
         }
 
@@ -528,7 +562,7 @@ export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
     })();
 
     if (idxResult) {
-        encode.value = idxResult.v;
+        encode.value = [idxResult.v];
         // `potentialNameDimIndex` has highest priority.
         const nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n;
         // By default, label use itemName in charts.
@@ -541,31 +575,61 @@ export function makeSeriesEncodeForNameBased(seriesModel, source, dimCount) {
 }
 
 /**
- * If return null/undefined, indicate that should not use datasetModel.
+ * @return If return null/undefined, indicate that should not use datasetModel.
  */
-function getDatasetModel(seriesModel) {
-    const option = seriesModel.option;
+export function querySeriesUpstreamDatasetModel(
+    seriesModel: SeriesEncodableModel
+): DatasetModel {
     // Caution: consider the scenario:
     // A dataset is declared and a series is not expected to use the dataset,
     // and at the beginning `setOption({series: { noData })` (just prepare other
     // option but no data), then `setOption({series: {data: [...]}); In this case,
     // the user should set an empty array to avoid that dataset is used by default.
-    const thisData = option.data;
+    const thisData = seriesModel.get('data', true);
     if (!thisData) {
-        return seriesModel.ecModel.getComponent('dataset', option.datasetIndex || 0);
+        return queryReferringComponents(
+            seriesModel.ecModel,
+            'dataset',
+            {
+                index: seriesModel.get('datasetIndex', true),
+                id: seriesModel.get('datasetId', true)
+            },
+            SINGLE_REFERRING
+        ).models[0] as DatasetModel;
     }
+}
+
+/**
+ * @return Always return an array event empty.
+ */
+export function queryDatasetUpstreamDatasetModels(
+    datasetModel: DatasetModel
+): DatasetModel[] {
+    // Only these attributes declared, we by defualt reference to `datasetIndex: 0`.
+    // Otherwise, no reference.
+    if (!datasetModel.get('transform', true)
+        && !datasetModel.get('fromTransformResult', true)
+    ) {
+        return [];
+    }
+
+    return queryReferringComponents(
+        datasetModel.ecModel,
+        'dataset',
+        {
+            index: datasetModel.get('fromDatasetIndex', true),
+            id: datasetModel.get('fromDatasetId', true)
+        },
+        SINGLE_REFERRING
+    ).models as DatasetModel[];
 }
 
 /**
  * The rule should not be complex, otherwise user might not
  * be able to known where the data is wrong.
  * The code is ugly, but how to make it neat?
- *
- * @param {module:echars/data/Source} source
- * @param {number} dimIndex
- * @return {BE_ORDINAL} guess result.
  */
-export function guessOrdinal(source, dimIndex) {
+export function guessOrdinal(source: Source, dimIndex: DimensionIndex): BeOrdinalValue {
     return doGuessOrdinal(
         source.data,
         source.sourceFormat,
@@ -579,8 +643,13 @@ export function guessOrdinal(source, dimIndex) {
 // dimIndex may be overflow source data.
 // return {BE_ORDINAL}
 function doGuessOrdinal(
-    data, sourceFormat, seriesLayoutBy, dimensionsDefine, startIndex, dimIndex
-) {
+    data: Source['data'],
+    sourceFormat: Source['sourceFormat'],
+    seriesLayoutBy: Source['seriesLayoutBy'],
+    dimensionsDefine: Source['dimensionsDefine'],
+    startIndex: Source['startIndex'],
+    dimIndex: DimensionIndex
+): BeOrdinalValue {
     let result;
     // Experience value.
     const maxLoop = 5;
@@ -609,8 +678,9 @@ function doGuessOrdinal(
     }
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
+        const dataArrayRows = data as OptionSourceDataArrayRows;
         if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
-            const sample = data[dimIndex];
+            const sample = dataArrayRows[dimIndex];
             for (let i = 0; i < (sample || []).length && i < maxLoop; i++) {
                 if ((result = detectValue(sample[startIndex + i])) != null) {
                     return result;
@@ -618,8 +688,8 @@ function doGuessOrdinal(
             }
         }
         else {
-            for (let i = 0; i < data.length && i < maxLoop; i++) {
-                const row = data[startIndex + i];
+            for (let i = 0; i < dataArrayRows.length && i < maxLoop; i++) {
+                const row = dataArrayRows[startIndex + i];
                 if (row && (result = detectValue(row[dimIndex])) != null) {
                     return result;
                 }
@@ -627,21 +697,23 @@ function doGuessOrdinal(
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
+        const dataObjectRows = data as OptionSourceDataObjectRows;
         if (!dimName) {
             return BE_ORDINAL.Not;
         }
-        for (let i = 0; i < data.length && i < maxLoop; i++) {
-            const item = data[i];
+        for (let i = 0; i < dataObjectRows.length && i < maxLoop; i++) {
+            const item = dataObjectRows[i];
             if (item && (result = detectValue(item[dimName])) != null) {
                 return result;
             }
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
+        const dataKeyedColumns = data as OptionSourceDataKeyedColumns;
         if (!dimName) {
             return BE_ORDINAL.Not;
         }
-        const sample = data[dimName];
+        const sample = dataKeyedColumns[dimName];
         if (!sample || isTypedArray(sample)) {
             return BE_ORDINAL.Not;
         }
@@ -652,8 +724,9 @@ function doGuessOrdinal(
         }
     }
     else if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        for (let i = 0; i < data.length && i < maxLoop; i++) {
-            const item = data[i];
+        const dataOriginal = data as OptionSourceDataOriginal;
+        for (let i = 0; i < dataOriginal.length && i < maxLoop; i++) {
+            const item = dataOriginal[i];
             const val = getDataItemValue(item);
             if (!isArray(val)) {
                 return BE_ORDINAL.Not;
@@ -664,11 +737,11 @@ function doGuessOrdinal(
         }
     }
 
-    function detectValue(val) {
+    function detectValue(val: OptionDataValue): BeOrdinalValue {
         const beStr = isString(val);
         // Consider usage convenience, '1', '2' will be treated as "number".
         // `isFinit('')` get `true`.
-        if (val != null && isFinite(val) && val !== '') {
+        if (val != null && isFinite(val as number) && val !== '') {
             return beStr ? BE_ORDINAL.Might : BE_ORDINAL.Not;
         }
         else if (beStr && val !== '-') {

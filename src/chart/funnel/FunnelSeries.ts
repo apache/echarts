@@ -99,7 +99,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         this._defaultLabelLine(option);
     }
 
-    getInitialData(option: FunnelSeriesOption, ecModel: GlobalModel): List {
+    getInitialData(this: FunnelSeriesModel, option: FunnelSeriesOption, ecModel: GlobalModel): List {
         return createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)

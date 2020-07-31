@@ -6,6 +6,7 @@ import { GradientObject } from 'zrender/src/graphic/Gradient';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
+    SeriesDataType,
     DisplayState,
     ECElement,
     ColorString,
@@ -446,7 +447,7 @@ export function toggleSeriesBlurState(
             else if (isObject(focus)) {
                 const dataTypes = keys(focus);
                 for (let d = 0; d < dataTypes.length; d++) {
-                    leaveBlurOfIndices(seriesModel.getData(dataTypes[d]), focus[dataTypes[d]]);
+                    leaveBlurOfIndices(seriesModel.getData(dataTypes[d] as SeriesDataType), focus[dataTypes[d]]);
                 }
             }
 
@@ -540,7 +541,7 @@ export function updateSeriesElementSelection(seriesModel: SeriesModel) {
 export function getAllSelectedIndices(ecModel: GlobalModel) {
     const ret: {
         seriesIndex: number
-        dataType?: string
+        dataType?: SeriesDataType
         dataIndex: number[]
     }[] = [];
     ecModel.eachSeries(function (seriesModel) {

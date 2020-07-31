@@ -17,18 +17,22 @@
 * under the License.
 */
 
-// @ts-nocheck
 /**
  * @deprecated
  * Use `echarts/data/helper/createDimensions` instead.
  */
 
-import {createHashMap, each, isString, defaults, extend, isObject, clone} from 'zrender/src/core/util';
+import {createHashMap, each, isString, defaults, extend, isObject, clone, HashMap} from 'zrender/src/core/util';
 import {normalizeToArray} from '../../util/model';
 import {guessOrdinal, BE_ORDINAL} from './sourceHelper';
 import Source from '../Source';
-import {VISUAL_DIMENSIONS} from '../../util/types';
+import {
+    VISUAL_DIMENSIONS, DimensionDefinitionLoose, OptionSourceData,
+    EncodeDefaulter, OptionEncodeValue, OptionEncode, DimensionName, DimensionIndex, DataVisualDimensions
+} from '../../util/types';
 import DataDimensionInfo from '../DataDimensionInfo';
+import List from '../List';
+import { CoordDimensionDefinition, CoordDimensionDefinitionLoose } from './createDimensions';
 
 /**
  * @see {module:echarts/test/ut/spec/data/completeDimensions}
@@ -69,25 +73,37 @@ import DataDimensionInfo from '../DataDimensionInfo';
  * @param {number} [opt.dimCount] If not specified, guess by the first data item.
  * @return {Array.<module:data/DataDimensionInfo>}
  */
-function completeDimensions(sysDims, source, opt) {
+function completeDimensions(
+    sysDims: CoordDimensionDefinitionLoose[],
+    source: Source | List | OptionSourceData,
+    opt: {
+        dimsDef?: DimensionDefinitionLoose[];
+        encodeDef?: HashMap<OptionEncodeValue, DimensionName> | OptionEncode;
+        dimCount?: number;
+        encodeDefaulter?: EncodeDefaulter;
+        generateCoord?: string;
+        generateCoordCount?: number;
+    }
+): DataDimensionInfo[] {
     if (!(source instanceof Source)) {
-        source = Source.seriesDataToSource(source);
+        source = Source.seriesDataToSource(source as OptionSourceData);
     }
 
     opt = opt || {};
     sysDims = (sysDims || []).slice();
     const dimsDef = (opt.dimsDef || []).slice();
-    const dataDimNameMap = createHashMap();
-    const coordDimNameMap = createHashMap();
+    const dataDimNameMap = createHashMap<DimensionIndex, DimensionName>();
+    const coordDimNameMap = createHashMap<true, DimensionName>();
     // let valueCandidate;
-    const result = [];
+    const result: DataDimensionInfo[] = [];
 
     const dimCount = getDimCount(source, sysDims, dimsDef, opt.dimCount);
 
     // Apply user defined dims (`name` and `type`) and init result.
     for (let i = 0; i < dimCount; i++) {
+        const dimDefItemRaw = dimsDef[i];
         const dimDefItem = dimsDef[i] = extend(
-            {}, isObject(dimsDef[i]) ? dimsDef[i] : {name: dimsDef[i]}
+            {}, isObject(dimDefItemRaw) ? dimDefItemRaw : { name: dimDefItemRaw }
         );
         const userDimName = dimDefItem.name;
         const resultItem = result[i] = new DataDimensionInfo();
@@ -107,24 +123,26 @@ function completeDimensions(sysDims, source, opt) {
     if (!encodeDef && opt.encodeDefaulter) {
         encodeDef = opt.encodeDefaulter(source, dimCount);
     }
-    encodeDef = createHashMap(encodeDef);
+    const encodeDefMap = createHashMap<DimensionIndex[] | false, DimensionName>(encodeDef as any);
 
-    // Set `coordDim` and `coordDimIndex` by `encodeDef` and normalize `encodeDef`.
-    encodeDef.each(function (dataDims, coordDim) {
-        dataDims = normalizeToArray(dataDims).slice();
+    // Set `coordDim` and `coordDimIndex` by `encodeDefMap` and normalize `encodeDefMap`.
+    encodeDefMap.each(function (dataDimsRaw, coordDim) {
+        const dataDims = normalizeToArray(dataDimsRaw as []).slice();
 
         // Note: It is allowed that `dataDims.length` is `0`, e.g., options is
         // `{encode: {x: -1, y: 1}}`. Should not filter anything in
         // this case.
         if (dataDims.length === 1 && !isString(dataDims[0]) && dataDims[0] < 0) {
-            encodeDef.set(coordDim, false);
+            encodeDefMap.set(coordDim, false);
             return;
         }
 
-        const validDataDims = encodeDef.set(coordDim, []);
-        each(dataDims, function (resultDimIdx, idx) {
+        const validDataDims = encodeDefMap.set(coordDim, []) as DimensionIndex[];
+        each(dataDims, function (resultDimIdxOrName, idx) {
             // The input resultDimIdx can be dim name or index.
-            isString(resultDimIdx) && (resultDimIdx = dataDimNameMap.get(resultDimIdx));
+            const resultDimIdx = isString(resultDimIdxOrName)
+                ? dataDimNameMap.get(resultDimIdxOrName)
+                : resultDimIdxOrName;
             if (resultDimIdx != null && resultDimIdx < dimCount) {
                 validDataDims[idx] = resultDimIdx;
                 applyDim(result[resultDimIdx], coordDim, idx);
@@ -134,15 +152,17 @@ function completeDimensions(sysDims, source, opt) {
 
     // Apply templetes and default order from `sysDims`.
     let availDimIdx = 0;
-    each(sysDims, function (sysDimItem, sysDimIndex) {
-        let coordDim;
-        let sysDimItemDimsDef;
-        let sysDimItemOtherDims;
-        if (isString(sysDimItem)) {
-            coordDim = sysDimItem;
-            sysDimItem = {};
+    each(sysDims, function (sysDimItemRaw) {
+        let coordDim: DimensionName;
+        let sysDimItemDimsDef: CoordDimensionDefinition['dimsDef'];
+        let sysDimItemOtherDims: CoordDimensionDefinition['otherDims'];
+        let sysDimItem: CoordDimensionDefinition;
+        if (isString(sysDimItemRaw)) {
+            coordDim = sysDimItemRaw;
+            sysDimItem = {} as CoordDimensionDefinition;
         }
         else {
+            sysDimItem = sysDimItemRaw;
             coordDim = sysDimItem.name;
             const ordinalMeta = sysDimItem.ordinalMeta;
             sysDimItem.ordinalMeta = null;
@@ -155,7 +175,7 @@ function completeDimensions(sysDims, source, opt) {
                 sysDimItem.dimsDef = sysDimItem.otherDims = null;
         }
 
-        let dataDims = encodeDef.get(coordDim);
+        let dataDims = encodeDefMap.get(coordDim);
 
         // negative resultDimIdx means no need to mapping.
         if (dataDims === false) {
@@ -189,9 +209,9 @@ function completeDimensions(sysDims, source, opt) {
         });
     });
 
-    function applyDim(resultItem, coordDim, coordDimIndex) {
-        if (VISUAL_DIMENSIONS.get(coordDim) != null) {
-            resultItem.otherDims[coordDim] = coordDimIndex;
+    function applyDim(resultItem: DataDimensionInfo, coordDim: DimensionName, coordDimIndex: DimensionIndex) {
+        if (VISUAL_DIMENSIONS.get(coordDim as keyof DataVisualDimensions) != null) {
+            resultItem.otherDims[coordDim as keyof DataVisualDimensions] = coordDimIndex;
         }
         else {
             resultItem.coordDim = coordDim;
@@ -224,13 +244,12 @@ function completeDimensions(sysDims, source, opt) {
         }
 
         resultItem.name == null && (resultItem.name = genName(
-            resultItem.coordDim,
-            dataDimNameMap
+            resultItem.coordDim, dataDimNameMap, false
         ));
 
         if (resultItem.type == null
             && (
-                guessOrdinal(source, resultDimIdx, resultItem.name) === BE_ORDINAL.Must
+                guessOrdinal(source, resultDimIdx) === BE_ORDINAL.Must
                 // Consider the case:
                 // {
                 //    dataset: {source: [
@@ -267,7 +286,12 @@ function completeDimensions(sysDims, source, opt) {
 // (2) sometimes user need to calcualte bubble size or use visualMap
 // on other dimensions besides coordSys needed.
 // So, dims that is not used by system, should be shared in storage?
-function getDimCount(source, sysDims, dimsDef, optDimCount) {
+function getDimCount(
+    source: Source,
+    sysDims: CoordDimensionDefinitionLoose[],
+    dimsDef: DimensionDefinitionLoose[],
+    optDimCount: number
+): number {
     // Note that the result dimCount should not small than columns count
     // of data, otherwise `dataDimNameMap` checking will be incorrect.
     let dimCount = Math.max(
@@ -277,13 +301,19 @@ function getDimCount(source, sysDims, dimsDef, optDimCount) {
         optDimCount || 0
     );
     each(sysDims, function (sysDimItem) {
-        const sysDimItemDimsDef = sysDimItem.dimsDef;
-        sysDimItemDimsDef && (dimCount = Math.max(dimCount, sysDimItemDimsDef.length));
+        let sysDimItemDimsDef;
+        if (isObject(sysDimItem) && (sysDimItemDimsDef = sysDimItem.dimsDef)) {
+            dimCount = Math.max(dimCount, sysDimItemDimsDef.length);
+        }
     });
     return dimCount;
 }
 
-function genName(name, map, fromZero) {
+function genName(
+    name: DimensionName,
+    map: HashMap<unknown, DimensionName>,
+    fromZero: boolean
+): DimensionName {
     if (fromZero || map.get(name) != null) {
         let i = 0;
         while (map.get(name + i) != null) {

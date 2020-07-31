@@ -286,7 +286,8 @@ export function isRadianAroundZero(val: number): boolean {
 const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d{1,2})(?::(\d{1,2})(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
 
 /**
- * @param value These values can be accepted:
+ * @param value valid type: number | string | Date, otherwise return `new Date(NaN)`
+ *   These values can be accepted:
  *   + An instance of Date, represent a time in its own time zone.
  *   + Or string in a subset of ISO 8601, only including:
  *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
@@ -298,9 +299,9 @@ const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(
  *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
  *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
  *   + a timestamp, which represent a time in UTC.
- * @return date
+ * @return date Never be null/undefined. If invalid, return `new Date(NaN)`.
  */
-export function parseDate(value: number | string | Date): Date {
+export function parseDate(value: unknown): Date {
     if (value instanceof Date) {
         return value;
     }
@@ -358,7 +359,7 @@ export function parseDate(value: number | string | Date): Date {
         return new Date(NaN);
     }
 
-    return new Date(Math.round(value));
+    return new Date(Math.round(value as number));
 }
 
 /**

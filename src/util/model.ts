@@ -26,7 +26,8 @@ import {
     map,
     assert,
     isString,
-    indexOf
+    indexOf,
+    isStringSafe
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -527,7 +528,7 @@ export function validateIdOrName(idOrName: unknown) {
 }
 
 function isValidIdOrName(idOrName: unknown): boolean {
-    return isString(idOrName) || isNumeric(idOrName);
+    return isStringSafe(idOrName) || isNumeric(idOrName);
 }
 
 export function isNameSpecified(componentModel: ComponentModel): boolean {
@@ -791,7 +792,7 @@ export function parseFinder(
     }
 
     const defaultMainType = opt ? opt.defaultMainType : null;
-    const queryOptionMap = createHashMap<QueryReferringOption, ComponentMainType>();
+    const queryOptionMap = createHashMap<QueryReferringUserOption, ComponentMainType>();
     const result = {} as ParsedModelFinder;
 
     each(finder, function (value, key) {
@@ -803,7 +804,7 @@ export function parseFinder(
 
         const parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
         const mainType = parsedKey[1];
-        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringOption;
+        const queryType = (parsedKey[2] || '').toLowerCase() as keyof QueryReferringUserOption;
 
         if (
             !mainType
@@ -836,7 +837,7 @@ export function parseFinder(
     return result;
 }
 
-type QueryReferringOption = {
+export type QueryReferringUserOption = {
     index?: ModelFinderIndexQuery,
     id?: ModelFinderIdQuery,
     name?: ModelFinderNameQuery,
@@ -857,7 +858,7 @@ export type QueryReferringOpt = {
 export function queryReferringComponents(
     ecModel: GlobalModel,
     mainType: ComponentMainType,
-    userOption: QueryReferringOption,
+    userOption: QueryReferringUserOption,
     opt: QueryReferringOpt
 ): {
     // Always be array rather than null/undefined, which is convenient to use.

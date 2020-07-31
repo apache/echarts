@@ -32,6 +32,8 @@ import {
     ColorString,
     StatesOptionMixin,
     OptionDataItemObject,
+    GraphEdgeItemObject,
+    OptionDataValueNumeric,
     TooltipRenderMode
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -77,17 +79,10 @@ export interface SankeyNodeItemOption extends SankeyNodeStateOption,
     focusNodeAdjacency?: FocusNodeAdjacency
 }
 
-export interface SankeyEdgeItemOption
-    extends SankeyEdgeStateOption, StatesOptionMixin<SankeyEdgeStateOption, ExtraStateOption> {
-    /**
-     * Name or index of source node.
-     */
-    source?: string | number
-    /**
-     * Name or index of target node.
-     */
-    target?: string | number
-
+export interface SankeyEdgeItemOption extends
+        SankeyEdgeStateOption,
+        StatesOptionMixin<SankeyEdgeStateOption, ExtraStateOption>,
+        GraphEdgeItemObject<OptionDataValueNumeric> {
     focusNodeAdjacency?: FocusNodeAdjacency
 }
 

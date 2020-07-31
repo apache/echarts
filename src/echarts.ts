@@ -100,6 +100,7 @@ import { handleLegacySelectEvents } from './legacy/dataSelectAction';
 
 // At least canvas renderer.
 import 'zrender/src/canvas/canvas';
+import { registerExternalTransform } from './data/helper/transform';
 import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 declare let global: any;
@@ -110,10 +111,10 @@ const each = zrUtil.each;
 const isFunction = zrUtil.isFunction;
 const isObject = zrUtil.isObject;
 
-export const version = '4.8.0';
+export const version = '5.0.0-alpha.1';
 
 export const dependencies = {
-    zrender: '4.3.1'
+    zrender: '5.0.0-alpha.1'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -1225,6 +1226,8 @@ class ECharts extends Eventful {
         // `appendData` meaningless.
 
         this._scheduler.unfinished = true;
+
+        this.getZr().wakeUp();
     }
 
 
@@ -2361,16 +2364,6 @@ export function init(
     }
 ): ECharts {
     if (__DEV__) {
-        // Check version
-        if (+zrender.version.replace('.', '') < +dependencies.zrender.replace('.', '')) {
-            throw new Error(
-                'zrender/src ' + zrender.version
-                + ' is too old for ECharts ' + version
-                + '. Current version need ZRender '
-                + dependencies.zrender + '+'
-            );
-        }
-
         if (!dom) {
             throw new Error('Initialize failed: invalid dom.');
         }
@@ -2724,6 +2717,8 @@ export function getMap(mapName: string) {
         specialAreas: records[0].specialAreas
     };
 }
+
+export const registerTransform = registerExternalTransform;
 
 /**
  * Globa dispatchAction to a specified chart instance.

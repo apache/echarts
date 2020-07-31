@@ -34,9 +34,10 @@ function preparePlugins(
     // In case node_modules/zrender is a symlink
     const zrNodeModulePath = nodePath.resolve(ecDir, 'node_modules/zrender');
     const zrRealPath = fs.realpathSync(zrNodeModulePath);
-    if (zrRealPath !== zrNodeModulePath) {
-        include.push(zrRealPath + '/**/*.ts');
-    }
+    // if (zrRealPath !== zrNodeModulePath) {
+    //     include.push(zrRealPath + '/**/*.ts');
+    // }
+    include.push(zrRealPath + '/**/*.ts');
 
     if (clean) {
         console.log('Built in clean mode without cache.');

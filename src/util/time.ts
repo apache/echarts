@@ -66,9 +66,9 @@ export const timeUnits: TimeUnit[] = [
     'half-day', 'quarter-day', 'hour', 'minute', 'second', 'millisecond'
 ];
 
-export function pad(str: string, len: number): string {
+export function pad(str: string | number, len: number): string {
     str += '';
-    return '0000'.substr(0, len - str.length) + str;
+    return '0000'.substr(0, len - (str as string).length) + str;
 }
 
 export function getPrimaryTimeUnit(timeUnit: TimeUnit): PrimaryTimeUnit {
@@ -83,6 +83,7 @@ export function getPrimaryTimeUnit(timeUnit: TimeUnit): PrimaryTimeUnit {
         case 'quarter-day':
             return 'hour';
         default:
+            // year, minutes, second, milliseconds
             return timeUnit;
     }
 }
@@ -108,17 +109,16 @@ export function format(
     time: Date | number, template: string, lang?: string | Model<LocaleOption>, isUTC?: boolean
 ): string {
     const date = numberUtil.parseDate(time);
-    const utc = isUTC ? 'UTC' : '';
-    const y = (date as any)['get' + utc + 'FullYear']();
-    const M = (date as any)['get' + utc + 'Month']() + 1;
+    const y = date[fullYearGetterName(isUTC)]();
+    const M = date[monthGetterName(isUTC)]() + 1;
     const q = Math.floor((M - 1) / 4) + 1;
-    const d = (date as any)['get' + utc + 'Date']();
-    const e = (date as any)['get' + utc + 'Day']();
-    const H = (date as any)['get' + utc + 'Hours']();
+    const d = date[dateGetterName(isUTC)]();
+    const e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
+    const H = date[hoursGetterName(isUTC)]();
     const h = (H - 1) % 12 + 1;
-    const m = (date as any)['get' + utc + 'Minutes']();
-    const s = (date as any)['get' + utc + 'Seconds']();
-    const S = (date as any)['get' + utc + 'Milliseconds']();
+    const m = date[minutesGetterName(isUTC)]();
+    const s = date[secondsGetterName(isUTC)]();
+    const S = date[millisecondsGetterName(isUTC)]();
 
 
     const localeModel = lang instanceof Model ? lang
@@ -130,28 +130,28 @@ export function format(
     const dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
 
     return (template || '')
-        .replace(/{yyyy}/g, y)
+        .replace(/{yyyy}/g, y + '')
         .replace(/{yy}/g, y % 100 + '')
         .replace(/{Q}/g, q + '')
         .replace(/{MMMM}/g, month[M - 1])
         .replace(/{MMM}/g, monthAbbr[M - 1])
         .replace(/{MM}/g, pad(M, 2))
-        .replace(/{M}/g, M)
+        .replace(/{M}/g, M + '')
         .replace(/{dd}/g, pad(d, 2))
-        .replace(/{d}/g, d)
+        .replace(/{d}/g, d + '')
         .replace(/{eeee}/g, dayOfWeek[e])
         .replace(/{ee}/g, dayOfWeekAbbr[e])
-        .replace(/{e}/g, e)
+        .replace(/{e}/g, e + '')
         .replace(/{HH}/g, pad(H, 2))
-        .replace(/{H}/g, H)
+        .replace(/{H}/g, H + '')
         .replace(/{hh}/g, pad(h + '', 2))
         .replace(/{h}/g, h + '')
         .replace(/{mm}/g, pad(m, 2))
-        .replace(/{m}/g, m)
+        .replace(/{m}/g, m + '')
         .replace(/{ss}/g, pad(s, 2))
-        .replace(/{s}/g, s)
+        .replace(/{s}/g, s + '')
         .replace(/{SSS}/g, pad(S, 3))
-        .replace(/{S}/g, S);
+        .replace(/{S}/g, S + '');
 }
 
 export function leveledFormat(
@@ -220,13 +220,12 @@ export function getUnitFromValue(
     isUTC: boolean
 ): PrimaryTimeUnit {
     const date = numberUtil.parseDate(value);
-    const utc = isUTC ? 'UTC' : '';
-    const M = (date as any)['get' + utc + 'Month']() + 1;
-    const d = (date as any)['get' + utc + 'Date']();
-    const h = (date as any)['get' + utc + 'Hours']();
-    const m = (date as any)['get' + utc + 'Minutes']();
-    const s = (date as any)['get' + utc + 'Seconds']();
-    const S = (date as any)['get' + utc + 'Milliseconds']();
+    const M = (date as any)[monthGetterName(isUTC)]() + 1;
+    const d = (date as any)[dateGetterName(isUTC)]();
+    const h = (date as any)[hoursGetterName(isUTC)]();
+    const m = (date as any)[minutesGetterName(isUTC)]();
+    const s = (date as any)[secondsGetterName(isUTC)]();
+    const S = (date as any)[millisecondsGetterName(isUTC)]();
 
     const isSecond = S === 0;
     const isMinute = isSecond && s === 0;
@@ -264,31 +263,86 @@ export function getUnitValue(
     isUTC?: boolean
 ) : number {
     const date = typeof value === 'number'
-        ? numberUtil.parseDate(value) as any
+        ? numberUtil.parseDate(value)
         : value;
     unit = unit || getUnitFromValue(value, isUTC);
-    const utc = isUTC ? 'UTC' : '';
 
     switch (unit) {
         case 'year':
-            return date['get' + utc + 'FullYear']();
+            return date[fullYearGetterName(isUTC)]();
         case 'half-year':
-            return date['get' + utc + 'Month']() >= 6 ? 1 : 0;
+            return date[monthGetterName(isUTC)]() >= 6 ? 1 : 0;
         case 'quarter':
-            return Math.floor((date['get' + utc + 'Month']() + 1) / 4);
+            return Math.floor((date[monthGetterName(isUTC)]() + 1) / 4);
         case 'month':
-            return date['get' + utc + 'Month']();
+            return date[monthGetterName(isUTC)]();
         case 'day':
-            return date['get' + utc + 'Date']();
+            return date[dateGetterName(isUTC)]();
         case 'half-day':
-            return date['get' + utc + 'Hours']() / 24;
+            return date[hoursGetterName(isUTC)]() / 24;
         case 'hour':
-            return date['get' + utc + 'Hours']();
+            return date[hoursGetterName(isUTC)]();
         case 'minute':
-            return date['get' + utc + 'Minutes']();
+            return date[minutesGetterName(isUTC)]();
         case 'second':
-            return date['get' + utc + 'Seconds']();
+            return date[secondsGetterName(isUTC)]();
         case 'millisecond':
-            return date['get' + utc + 'Milliseconds']();
+            return date[millisecondsGetterName(isUTC)]();
     }
+}
+
+export function fullYearGetterName(isUTC?: boolean) {
+    return isUTC ? 'getUTCFullYear' : 'getFullYear';
+}
+
+export function monthGetterName(isUTC?: boolean) {
+    return isUTC ? 'getUTCMonth' : 'getMonth';
+}
+
+export function dateGetterName(isUTC?: boolean) {
+    return isUTC ? 'getUTCDate' : 'getDate';
+}
+
+export function hoursGetterName(isUTC?: boolean) {
+    return isUTC ? 'getUTCHours' : 'getHours';
+}
+
+export function minutesGetterName(isUTC?: boolean) {
+    return isUTC ? 'getUTCMinutes' : 'getMinutes';
+}
+
+export function secondsGetterName(isUTC?: boolean) {
+    return isUTC ? 'getUTCSeconds' : 'getSeconds';
+}
+
+export function millisecondsGetterName(isUTC?: boolean) {
+    return isUTC ? 'getUTCSeconds' : 'getSeconds';
+}
+
+export function fullYearSetterName(isUTC?: boolean) {
+    return isUTC ? 'setUTCFullYear' : 'setFullYear';
+}
+
+export function monthSetterName(isUTC?: boolean) {
+    return isUTC ? 'setUTCMonth' : 'setMonth';
+}
+
+export function dateSetterName(isUTC?: boolean) {
+    return isUTC ? 'setUTCDate' : 'setDate';
+}
+
+export function hoursSetterName(isUTC?: boolean) {
+    return isUTC ? 'setUTCHours' : 'setHours';
+}
+
+export function minutesSetterName(isUTC?: boolean) {
+    return isUTC ? 'setUTCMinutes' : 'setMinutes';
+}
+
+export function secondsSetterName(isUTC?: boolean) {
+    return isUTC ? 'setUTCSeconds' : 'setSeconds';
+}
+
+export function millisecondsSetterName(isUTC?: boolean) {
+    return isUTC ? 'setUTCSeconds' : 'setSeconds';
 }
