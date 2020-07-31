@@ -18,6 +18,22 @@
  */
 
 export default {
+    time: {
+        month: [
+            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+        ],
+        monthAbbr: [
+            'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+            'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+        ],
+        dayOfWeek: [
+            'domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'
+        ],
+        dayOfWeekAbbr: [
+            'dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sáb'
+        ]
+    },
     legend: {
         selector: {
             all: "Todas",

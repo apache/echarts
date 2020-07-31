@@ -41,6 +41,22 @@
 
 
 var localeObj = {
+    time: {
+        month: [
+            'tammikuuta', 'helmikuuta', 'maaliskuuta', 'huhtikuuta', 'toukokuuta', 'kesäkuuta',
+            'heinäkuuta', 'elokuuta', 'syyskuuta', 'lokakuuta', 'marraskuuta', 'joulukuuta'
+        ],
+        monthAbbr: [
+            'tammik', 'helmik', 'maalisk', 'huhtik', 'toukok', 'kesäk',
+            'heinäk', 'elok', 'syysk', 'lokak', 'marrask', 'jouluk'
+        ],
+        dayOfWeek: [
+            'sunnuntaina', 'maanantaina', 'tiistaina', 'keskiviikkona', 'torstaina', 'perjantaina', 'lauantaina'
+        ],
+        dayOfWeekAbbr: [
+            'su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'
+        ]
+    },
     legend: {
         selector: {
             all: "Kaikki",
