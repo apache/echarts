@@ -57,8 +57,6 @@ import type Model from '../../model/Model';
 import { isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { getDefaultLabel } from '../helper/labelHelper';
 import OrdinalScale from '../../scale/Ordinal';
-import AngleAxis from '../../coord/polar/AngleAxis';
-import RadiusAxis from '../../coord/polar/RadiusAxis';
 import SeriesModel from '../../model/Series';
 import {AngleAxisModel, RadiusAxisModel} from '../../coord/polar/AxisModel';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
@@ -359,7 +357,7 @@ class BarView extends ChartView {
                     );
                     animator && (lastAnimator = animator);
                 }
-                else if (coord.type === 'cartesian2d') {
+                else {
                     updateProps(el, {shape: layout}, seriesModel, newIndex, null);
                 }
 
