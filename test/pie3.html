@@ -79,9 +79,11 @@ under the License.
                             return '<div class="tooltip-content">\
                                 <h4>' + params.name + '</h4>\
                                 <h5>' + (params.percent * 100).toFixed(1) + '%</h5>\
-                                </div>\
+                                </div><script>console.log(1111)<\/script>\
                             ';
-                        }
+                        },
+                        borderWidth: 0,
+                        shadowColor: 'trasparent'
                     },
                     series: [{
                         name: 'pie',
@@ -130,7 +132,9 @@ under the License.
                                 <h5>' + (params.percent * 100).toFixed(1) + '%</h5>\
                                 </div>\
                             ';
-                        }
+                        },
+                        borderWidth: 0,
+                        shadowColor: 'trasparent'
                     },
                     series: [{
                         name: 'pie',
