@@ -22,6 +22,9 @@ import './boxplot/BoxplotSeries';
 import './boxplot/BoxplotView';
 import boxplotVisual from './boxplot/boxplotVisual';
 import boxplotLayout from './boxplot/boxplotLayout';
+import { boxplotTransform } from './boxplot/boxplotTransform';
 
 echarts.registerVisual(boxplotVisual);
 echarts.registerLayout(boxplotLayout);
+echarts.registerTransform(boxplotTransform);
+
