@@ -19,8 +19,8 @@
 
 import { DatasetModel } from '../../component/dataset';
 import SeriesModel from '../../model/Series';
-import { setAsPrimitive, map, isTypedArray, defaults, assert, each } from 'zrender/src/core/util';
-import Source from '../Source';
+import { setAsPrimitive, map, isTypedArray, assert, each } from 'zrender/src/core/util';
+import Source, { SourceMetaRawOption } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
@@ -28,7 +28,7 @@ import {
 } from '../../util/types';
 import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels,
-    createSource, SourceMetaRawOption, cloneSourceShallow, inheritSourceMetaRawOption
+    createSource, cloneSourceShallow, inheritSourceMetaRawOption
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
 
