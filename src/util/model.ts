@@ -26,7 +26,8 @@ import {
     map,
     assert,
     isString,
-    indexOf
+    indexOf,
+    isStringSafe
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -527,7 +528,7 @@ export function validateIdOrName(idOrName: unknown) {
 }
 
 function isValidIdOrName(idOrName: unknown): boolean {
-    return isString(idOrName) || isNumeric(idOrName);
+    return isStringSafe(idOrName) || isNumeric(idOrName);
 }
 
 export function isNameSpecified(componentModel: ComponentModel): boolean {
