@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main_boxplot"></div>
+
+
+
+
+        <script>
+        require(['echarts', 'data/Michelson-Morley.json', 'extension/dataTool'], function (echarts, rawData, dataTool) {
+            var boxplotTransform = dataTool.boxplotTransform;
+
+            echarts.registerTransform(boxplotTransform);
+
+            var option = {
+                dataset: [{
+                    source: rawData
+                }, {
+                    transform: {
+                        type: 'echarts-extension:boxplot'
+                    }
+                }, {
+                    fromDatasetIndex: 1,
+                    fromTransformResult: 1
+                }],
+                title: [
+                    {
+                        text: 'Michelson-Morley Experiment',
+                        left: 'center'
+                    },
+                    {
+                        text: 'upper: Q3 + 1.5 * IRQ \nlower: Q1 - 1.5 * IRQ',
+                        borderColor: '#999',
+                        borderWidth: 1,
+                        textStyle: {
+                            fontSize: 14
+                        },
+                        left: '10%',
+                        top: '90%'
+                    }
+                ],
+                legend: {
+                    bottom: 20
+                },
+                tooltip: {
+                },
+                grid: {
+                    bottom: 80
+                },
+                xAxis: {
+                    type: 'category',
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'km/s minus 299,000',
+                },
+                series: [{
+                    name: 'boxplot',
+                    type: 'boxplot',
+                    datasetIndex: 1
+                }, {
+                    name: 'outlier',
+                    type: 'scatter',
+                    datasetIndex: 2
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_boxplot', {
+                title: [
+                    'Boxplot',
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+
