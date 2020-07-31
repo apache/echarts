@@ -144,8 +144,6 @@ class BarView extends ChartView {
         else if (__DEV__) {
             console.warn('Only cartesian2d and polar supported for bar.');
         }
-
-        this._isFirstFrame = false;
     }
 
     incrementalPrepareRender(seriesModel: BarSeriesModel): void {
@@ -199,8 +197,11 @@ class BarView extends ChartView {
         const axisSort = coord.type === 'cartesian2d' && axis2DModel.get('sort')
             && axis2DModel.get('sortSeriesIndex') === seriesModel.seriesIndex;
         const realtimeSort = axisSort && axis2DModel.get('realtimeSort');
-        if (realtimeSort && this._isFirstFrame) {
+
+        // If no data in the first frame, wait for data to initSort
+        if (realtimeSort && this._isFirstFrame && data.count()) {
             this._initSort(data, isHorizontalOrRadial, baseAxis as Axis2D, api);
+            this._isFirstFrame = false;
             return;
         }
 
@@ -385,7 +386,7 @@ class BarView extends ChartView {
         this._data = data;
 
         if (lastAnimator) {
-            lastAnimator.during(percent => {
+            lastAnimator.during(() => {
                 const orderMap = (idx: number) => {
                     const el = (data.getItemGraphicEl(idx) as Rect);
                     if (el) {
@@ -499,7 +500,7 @@ class BarView extends ChartView {
                  * bars are both out of sight, we don't wish to trigger reorder action
                  * as long as the order in the view doesn't change.
                  */
-                if (oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
+                if (!oldOrder[i] || oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
                     const action = {
                         type: 'changeAxisOrder',
                         componentType: baseAxis.dim + 'Axis',
@@ -525,7 +526,7 @@ class BarView extends ChartView {
             axisId: baseAxis.index,
             sortInfo: this._dataSort(
                 data,
-                idx => parseInt(data.get(isHorizontal ? 'y' : 'x', idx) as string, 10) || 0
+                idx => parseFloat(data.get(isHorizontal ? 'y' : 'x', idx) as string) || 0
             )
         } as Payload;
         api.dispatchAction(action);

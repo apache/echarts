@@ -601,12 +601,19 @@ function animateOrSetLabel<Props extends PathProps>(
                         interpolated[i] = (rawValues as [])[i];
                     }
                     else {
+                        /**
+                         * startValues may be undefined if no data in last setOption but
+                         * have data in this setOption. Use the data in this setOption
+                         * as interpolated value.
+                         */
                         const startValues = host.startValue as number[];
-                        const value = interpolateNumber(
-                            startValues && startValues[i] ? startValues[i] : 0,
-                            (interpolateValues as number[])[i],
-                            percent
-                        );
+                        const value = startValues == null
+                            ? (rawValues as [])[i]
+                            : interpolateNumber(
+                                startValues && startValues[i] ? startValues[i] : 0,
+                                (interpolateValues as number[])[i],
+                                percent
+                            );
                         interpolated[i] = numberUtil.round(value), precision;
                     }
                 }
