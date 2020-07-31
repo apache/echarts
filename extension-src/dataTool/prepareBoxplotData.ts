@@ -17,7 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
 
 function asc<T extends number[]>(arr: T): T {
     arr.sort(function (a, b) {
@@ -59,11 +58,21 @@ function quantile(ascArr: number[], p: number): number {
  *      axisData: Array.<string>
  * }
  */
-export default function (rawData, opt) {
-    opt = opt || [];
+export default function (
+    rawData: number[][],
+    opt: {
+        boundIQR?: number | 'none',
+        layout?: 'horizontal' | 'vertical'
+    }
+): {
+    boxData: number[][]
+    outliers: number[][]
+    axisData: string[]
+} {
+    opt = opt || {};
     const boxData = [];
     const outliers = [];
-    const axisData = [];
+    const axisData: string[] = [];
     const boundIQR = opt.boundIQR;
     const useExtreme = boundIQR === 'none' || boundIQR === 0;
 
@@ -77,7 +86,7 @@ export default function (rawData, opt) {
         const min = ascList[0];
         const max = ascList[ascList.length - 1];
 
-        const bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
+        const bound = (boundIQR == null ? 1.5 : boundIQR as number) * (Q3 - Q1);
 
         const low = useExtreme
             ? min
