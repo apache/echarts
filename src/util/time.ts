@@ -1,9 +1,28 @@
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 import * as zrUtil from 'zrender/src/core/util';
 import {TimeAxisLabelFormatterOption} from './../coord/axisCommonTypes';
 import * as numberUtil from './number';
-import {pad} from './format';
-import lang from '../lang';
 import {TimeScaleTick} from './types';
+import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../locale';
+import Model from '../model/Model';
 
 export const ONE_SECOND = 1000;
 export const ONE_MINUTE = ONE_SECOND * 60;
@@ -47,6 +66,11 @@ export const timeUnits: TimeUnit[] = [
     'half-day', 'quarter-day', 'hour', 'minute', 'second', 'millisecond'
 ];
 
+export function pad(str: string, len: number): string {
+    str += '';
+    return '0000'.substr(0, len - str.length) + str;
+}
+
 export function getPrimaryTimeUnit(timeUnit: TimeUnit): PrimaryTimeUnit {
     switch (timeUnit) {
         case 'half-year':
@@ -80,7 +104,9 @@ export function getDefaultFormatPrecisionOfInterval(timeUnit: PrimaryTimeUnit): 
     }
 }
 
-export function format(time: Date | number, template: string, isUTC?: boolean): string {
+export function format(
+    time: Date | number, template: string, lang?: string | Model<LocaleOption>, isUTC?: boolean
+): string {
     const date = numberUtil.parseDate(time);
     const utc = isUTC ? 'UTC' : '';
     const y = (date as any)['get' + utc + 'FullYear']();
@@ -94,18 +120,27 @@ export function format(time: Date | number, template: string, isUTC?: boolean): 
     const s = (date as any)['get' + utc + 'Seconds']();
     const S = (date as any)['get' + utc + 'Milliseconds']();
 
+
+    const localeModel = lang instanceof Model ? lang
+        : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
+    const timeModel = localeModel.getModel('time');
+    const month = timeModel.get('month');
+    const monthAbbr = timeModel.get('monthAbbr');
+    const dayOfWeek = timeModel.get('dayOfWeek');
+    const dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
+
     return (template || '')
         .replace(/{yyyy}/g, y)
         .replace(/{yy}/g, y % 100 + '')
         .replace(/{Q}/g, q + '')
-        .replace(/{MMMM}/g, lang.time.month[M - 1])
-        .replace(/{MMM}/g, lang.time.monthAbbr[M - 1])
+        .replace(/{MMMM}/g, month[M - 1])
+        .replace(/{MMM}/g, monthAbbr[M - 1])
         .replace(/{MM}/g, pad(M, 2))
         .replace(/{M}/g, M)
         .replace(/{dd}/g, pad(d, 2))
         .replace(/{d}/g, d)
-        .replace(/{eeee}/g, lang.time.dayOfWeek[e])
-        .replace(/{ee}/g, lang.time.dayOfWeekAbbr[e])
+        .replace(/{eeee}/g, dayOfWeek[e])
+        .replace(/{ee}/g, dayOfWeekAbbr[e])
         .replace(/{e}/g, e)
         .replace(/{HH}/g, pad(H, 2))
         .replace(/{H}/g, H)
@@ -123,6 +158,7 @@ export function leveledFormat(
     tick: TimeScaleTick,
     idx: number,
     formatter: TimeAxisLabelFormatterOption,
+    lang: string | Model<LocaleOption>,
     isUTC?: boolean
 ) {
     let template = null;
@@ -176,7 +212,7 @@ export function leveledFormat(
         }
     }
 
-    return format(new Date(tick.value), template, isUTC);
+    return format(new Date(tick.value), template, lang, isUTC);
 }
 
 export function getUnitFromValue(
@@ -254,23 +290,5 @@ export function getUnitValue(
             return date['get' + utc + 'Seconds']();
         case 'millisecond':
             return date['get' + utc + 'Milliseconds']();
-    }
-}
-
-/**
- * Get Date instance from a date string
- *
- * @param {string} date should be in date string or second string
- *                      e.g., 2020-01-01 or 2020-01-01 02:00:20
- */
-export function getDateFromStr(date: string | Date): Date {
-    if (!date || date instanceof Date) {
-        return date as Date;
-    }
-    if (date.indexOf(':') < 0) {
-        return new Date(date + ' 00:00:00');
-    }
-    else {
-        return new Date(date);
     }
 }

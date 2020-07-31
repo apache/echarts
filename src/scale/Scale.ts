@@ -110,6 +110,13 @@ abstract class Scale {
     }
 
     /**
+     * If value is in extent range
+     */
+    isInExtentRange(value: number): boolean {
+        return this._extent[0] <= value && this._extent[1] >= value;
+    }
+
+    /**
      * When axis extent depends on data and no data exists,
      * axis ticks should not be drawn, which is named 'blank'.
      */
