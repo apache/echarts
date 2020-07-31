@@ -28,7 +28,7 @@ import {
 } from '../../util/types';
 import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels,
-    createSource, SourceMetaRawOption, cloneSourceShallow
+    createSource, SourceMetaRawOption, cloneSourceShallow, inheritSourceMetaRawOption
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
 
@@ -52,6 +52,27 @@ import { applyDataTransform } from './transform';
  * "sourceVisitConfig" are calculated from `metaRawOption` and `data`.
  * They will not be calculated until `source` is about to be visited (to prevent from
  * duplicate calcuation). `source` is visited only in series and input to transforms.
+ *
+ * [DIMENSION_INHERIT_RULE]:
+ * By default the dimensions are inherited from ancestors, unless a transform return
+ * a new dimensions definition.
+ * Consider the case:
+ * ```js
+ * dataset: [{
+ *     source: [ ['Product', 'Sales', 'Prise'], ['Cookies', 321, 44.21], ...]
+ * }, {
+ *     transform: { type: 'filter', ... }
+ * }]
+ *
+ * dataset: [{
+ *     dimension: ['Product', 'Sales', 'Prise'],
+ *     source: [ ['Cookies', 321, 44.21], ...]
+ * }, {
+ *     transform: { type: 'filter', ... }
+ * }]
+ * ```
+ * The two types of option should have the same behavior after transform.
+ *
  *
  * [SCENARIO]:
  * (1) Provide source data directly:
@@ -172,16 +193,15 @@ export class SourceManager {
             const seriesModel = sourceHost as SeriesEncodableModel;
             let data;
             let sourceFormat: SourceFormat;
-            let upMetaRawOption;
+            let upSource;
 
             // Has upstream dataset
             if (hasUpstream) {
                 const upSourceMgr = upSourceMgrList[0];
                 upSourceMgr.prepareSource();
-                const upSource = upSourceMgr.getSource();
+                upSource = upSourceMgr.getSource();
                 data = upSource.data;
                 sourceFormat = upSource.sourceFormat;
-                upMetaRawOption = upSourceMgr._getSourceMetaRawOption();
                 upstreamSignList = [upSourceMgr._getVersionSign()];
             }
             // Series data is from own.
@@ -192,11 +212,12 @@ export class SourceManager {
                 upstreamSignList = [];
             }
 
-            const thisMetaRawOption = defaults(
-                this._getSourceMetaRawOption(),
-                // See [REQUIREMENT MEMO], merge settings on series and parent dataset if it is root.
-                upMetaRawOption
-            );
+            // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
+            const thisMetaRawOption = inheritSourceMetaRawOption({
+                parent: upSource ? upSource.metaRawOption : null,
+                thisNew: this._createSourceMetaRawOption()
+            });
+
             resultSourceList = [createSource(
                 data,
                 thisMetaRawOption,
@@ -218,7 +239,7 @@ export class SourceManager {
                 const sourceData = datasetModel.get('source', true);
                 resultSourceList = [createSource(
                     sourceData,
-                    this._getSourceMetaRawOption(),
+                    this._createSourceMetaRawOption(),
                     null,
                     // Note: dataset option does not have `encode`.
                     null
@@ -329,7 +350,7 @@ export class SourceManager {
         }
     }
 
-    private _getSourceMetaRawOption(): SourceMetaRawOption {
+    private _createSourceMetaRawOption(): SourceMetaRawOption {
         const sourceHost = this._sourceHost;
         let seriesLayoutBy: SeriesLayoutBy;
         let sourceHeader: OptionSourceHeader;
@@ -339,7 +360,7 @@ export class SourceManager {
             sourceHeader = sourceHost.get('sourceHeader', true);
             dimensions = sourceHost.get('dimensions', true);
         }
-        // See [REQUIREMENT MEMO], `non-root-dataset` do not support them.
+        // See [REQUIREMENT_MEMO], `non-root-dataset` do not support them.
         else if (!this._getUpstreamSourceManagers().length) {
             const model = sourceHost as DatasetModel;
             seriesLayoutBy = model.get('seriesLayoutBy', true);

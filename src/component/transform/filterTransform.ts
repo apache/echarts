@@ -65,7 +65,7 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
                     if (__DEV__) {
                         errMsg = makePrintable(
                             'Can not find dimension info via: "' + dimLoose + '".\n',
-                            'Existing dimensions: ', source.dimensions, '.\n',
+                            'Existing dimensions: ', source.getDimensionInfoAll(), '.\n',
                             'Illegal condition:', exprOption, '.\n'
                         );
                     }
@@ -93,9 +93,7 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
         }
 
         return {
-            data: resultData,
-            dimensions: source.dimensions,
-            sourceHeader: sourceHeaderCount
+            data: resultData
         };
     }
 };

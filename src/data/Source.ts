@@ -17,16 +17,18 @@
 * under the License.
 */
 
-import {createHashMap, isTypedArray, HashMap} from 'zrender/src/core/util';
+import {isTypedArray, HashMap} from 'zrender/src/core/util';
 import {
     SourceFormat, SeriesLayoutBy, DimensionDefinition,
-    OptionEncodeValue, OptionSourceData, OptionEncode,
+    OptionEncodeValue, OptionSourceData,
     SOURCE_FORMAT_ORIGINAL,
     SERIES_LAYOUT_BY_COLUMN,
     SOURCE_FORMAT_UNKNOWN,
     SOURCE_FORMAT_KEYED_COLUMNS,
     SOURCE_FORMAT_TYPED_ARRAY,
-    DimensionName
+    DimensionName,
+    OptionSourceHeader,
+    DimensionDefinitionLoose
 } from '../util/types';
 
 /**
@@ -64,6 +66,12 @@ import {
  *
  * + "unknown"
  */
+
+export interface SourceMetaRawOption {
+    seriesLayoutBy: SeriesLayoutBy;
+    sourceHeader: OptionSourceHeader;
+    dimensions: DimensionDefinitionLoose[];
+}
 
 class Source {
 
@@ -107,6 +115,11 @@ class Source {
      */
     readonly dimensionsDetectCount: number;
 
+    /**
+     * Raw props from user option.
+     */
+    readonly metaRawOption: SourceMetaRawOption;
+
 
     constructor(fields: {
         data: OptionSourceData,
@@ -117,6 +130,8 @@ class Source {
         dimensionsDefine?: DimensionDefinition[],
         startIndex?: number, // default: 0
         dimensionsDetectCount?: number,
+
+        metaRawOption?: SourceMetaRawOption,
 
         // [Caveat]
         // This is the raw user defined `encode` in `series`.
@@ -136,6 +151,7 @@ class Source {
         this.dimensionsDefine = fields.dimensionsDefine;
         this.dimensionsDetectCount = fields.dimensionsDetectCount;
         this.encodeDefine = fields.encodeDefine;
+        this.metaRawOption = fields.metaRawOption;
     }
 
     /**

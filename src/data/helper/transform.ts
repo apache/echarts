@@ -32,7 +32,7 @@ import {
     getRawSourceItemGetter, getRawSourceDataCounter, getRawSourceValueGetter
 } from './dataProvider';
 import { parseDataValue } from './parseDataValue';
-import { createSource } from './sourceHelper';
+import { createSource, inheritSourceMetaRawOption } from './sourceHelper';
 import { consoleLog, makePrintable } from '../../util/log';
 
 
@@ -76,7 +76,7 @@ export interface ExternalDataTransformResultItem {
     dimensions?: DimensionDefinitionLoose[];
     sourceHeader?: OptionSourceHeader;
 }
-export interface ExternalDimensionDefinition extends DimensionDefinition {
+interface ExternalDimensionDefinition extends DimensionDefinition {
     // Mandatory
     index: DimensionIndex;
 }
@@ -95,10 +95,13 @@ class ExternalSource {
 
     data: OptionSourceData;
     sourceFormat: SourceFormat;
-    dimensions: ExternalDimensionDefinition[];
     sourceHeaderCount: number;
 
     getDimensionInfo(dim: DimensionLoose): ExternalDimensionDefinition {
+        return;
+    }
+
+    getDimensionInfoAll(): ExternalDimensionDefinition[] {
         return;
     }
 
@@ -140,8 +143,13 @@ function createExternalSource(
     extSource.sourceFormat = sourceFormat;
     extSource.sourceHeaderCount = sourceHeaderCount;
 
+    // [MEMO]
     // Create a new dimensions structure for exposing.
-    const dimensions = extSource.dimensions = [] as ExternalDimensionDefinition[];
+    // Do not expose all dimension info to users directly.
+    // Becuase the dimension is probably auto detected from data and not might reliable.
+    // Should not lead the transformers to think that is relialbe and return it.
+    // See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
+    const dimensions = [] as ExternalDimensionDefinition[];
     const dimsByName = {} as Dictionary<ExternalDimensionDefinition>;
     each(dimsDef, function (dimDef, idx) {
         const name = dimDef.name;
@@ -179,7 +187,7 @@ function createExternalSource(
         if (rawItem == null) {
             return;
         }
-        const dimDef = extSource.dimensions[dimIndex];
+        const dimDef = dimensions[dimIndex];
         // When `dimIndex` is `null`, `rawValueGetter` return the whole item.
         if (dimDef) {
             return rawValueGetter(rawItem, dimIndex, dimDef.name) as OptionDataValue;
@@ -187,6 +195,7 @@ function createExternalSource(
     };
 
     extSource.getDimensionInfo = bind(getDimensionInfo, null, dimensions, dimsByName);
+    extSource.getDimensionInfoAll = bind(getDimensionInfoAll, null, dimensions);
 
     return extSource;
 }
@@ -210,6 +219,12 @@ function getDimensionInfo(
     else if (hasOwn(dimsByName, dim)) {
         return dimsByName[dim as DimensionName];
     }
+}
+
+function getDimensionInfoAll(
+    dimensions: ExternalDimensionDefinition[]
+): ExternalDimensionDefinition[] {
+    return dimensions;
 }
 
 
@@ -241,21 +256,12 @@ export function applyDataTransform(
 
     for (let i = 0, len = pipedTransOption.length; i < len; i++) {
         const transOption = pipedTransOption[i];
-        sourceList = applySingleDataTransform(transOption, sourceList);
+        const isFinal = i === len - 1;
+        sourceList = applySingleDataTransform(transOption, sourceList, infoForPrint, isFinal);
         // piped transform only support single input, except the fist one.
         // piped transform only support single output, except the last one.
-        if (i < len - 1) {
+        if (!isFinal) {
             sourceList.length = Math.max(sourceList.length, 1);
-        }
-
-        if (__DEV__) {
-            if (transOption.print) {
-                const printStrArr = map(sourceList, source => {
-                    return '--- datasetIndex: ' + infoForPrint.datasetIndex + ', transform result: ---\n'
-                        + makePrintable(source.data);
-                }).join('\n');
-                consoleLog(printStrArr);
-            }
         }
     }
 
@@ -264,7 +270,9 @@ export function applyDataTransform(
 
 function applySingleDataTransform(
     rawTransOption: DataTransformOption,
-    upSourceList: Source[]
+    upSourceList: Source[],
+    infoForPrint: { datasetIndex: number },
+    isFinal: boolean
 ): Source[] {
     assert(upSourceList.length, 'Must have at least one upstream dataset.');
 
@@ -292,6 +300,23 @@ function applySingleDataTransform(
         })
     );
 
+    if (__DEV__) {
+        if (isFinal && transOption.print) {
+            const printStrArr = map(resultList, extSource => {
+                return [
+                    '--- datasetIndex: ' + infoForPrint.datasetIndex + '---',
+                    '- transform result data:',
+                    makePrintable(extSource.data),
+                    '- transform result dimensions:',
+                    makePrintable(extSource.dimensions),
+                    '- transform result sourceHeader: ' + extSource.sourceHeader,
+                    '------'
+                ].join('\n');
+            }).join('\n');
+            consoleLog(printStrArr);
+        }
+    }
+
     return map(resultList, function (result) {
         assert(
             isObject(result),
@@ -302,13 +327,18 @@ function applySingleDataTransform(
             'Result data should be object or array in data transform.'
         );
 
-        return createSource(
-            result.data,
-            {
+        const resultMetaRawOption = inheritSourceMetaRawOption({
+            parent: upSourceList[0].metaRawOption,
+            thisNew: {
                 seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
                 sourceHeader: result.sourceHeader,
                 dimensions: result.dimensions
-            },
+            }
+        });
+
+        return createSource(
+            result.data,
+            resultMetaRawOption,
             null,
             null
         );

@@ -33,9 +33,10 @@ import {
     hasOwn,
     HashMap,
     isNumber,
-    clone
+    clone,
+    defaults
 } from 'zrender/src/core/util';
-import Source from '../Source';
+import Source, { SourceMetaRawOption } from '../Source';
 
 import {
     SOURCE_FORMAT_ORIGINAL,
@@ -89,12 +90,6 @@ interface DatasetRecord {
 type SeriesEncodeInternal = {
     [key in keyof OptionEncode]: DimensionIndex[];
 };
-
-export interface SourceMetaRawOption {
-    seriesLayoutBy: SeriesLayoutBy;
-    sourceHeader: OptionSourceHeader;
-    dimensions: DimensionDefinitionLoose[];
-}
 
 export function detectSourceFormat(data: DatasetOption['source']): SourceFormat {
     let sourceFormat: SourceFormat = SOURCE_FORMAT_UNKNOWN;
@@ -170,10 +165,19 @@ export function createSource(
         dimensionsDefine: dimInfo.dimensionsDefine,
         startIndex: dimInfo.startIndex,
         dimensionsDetectCount: dimInfo.dimensionsDetectCount,
-        encodeDefine: makeEncodeDefine(encodeDefine)
+        encodeDefine: makeEncodeDefine(encodeDefine),
+        metaRawOption: clone(thisMetaRawOption)
     });
 
     return source;
+}
+
+// See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
+export function inheritSourceMetaRawOption(opt: {
+    parent: SourceMetaRawOption, // Can be null/undefined
+    thisNew: SourceMetaRawOption // Must be object
+}) {
+    return defaults(opt.thisNew, opt.parent);
 }
 
 /**

@@ -37,10 +37,12 @@ under the License.
 
 
 
-        <!-- <div id="main_simplest_pies"></div>
+        <div id="main_simplest_pies"></div>
         <div id="main_pies_encode_price"></div>
-        <div id="main_cartesian_parse_trim_time_reg"></div> -->
+        <div id="main_cartesian_parse_trim_time_reg"></div>
         <div id="main_cartesian_sort"></div>
+        <div id="main_update_condition"></div>
+        <div id="main_update_source_no_dim_inside_data"></div>
 
 
 
@@ -652,6 +654,145 @@ under the License.
         });
         </script>
 
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var currentYear = 2011
+            var option = {
+                title: {
+                    text: currentYear,
+                    left: 'center'
+                },
+                dataset: [{
+                    source: FOOD_SALES_PRICE_WITH_HEADER
+                }, {
+                    id: 'one_year',
+                    transform: {
+                        type: 'filter',
+                        config: { dimension: 'Year', value: currentYear }
+                    }
+                }],
+                tooltip: {},
+                xAxis: { type: 'category' },
+                yAxis: {},
+                series: [{
+                    name: 'one year',
+                    type: 'bar',
+                    datasetIndex: 1,
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_update_condition', {
+                title: [
+                    'click "next year", check the bar change.'
+                ],
+                height: 300,
+                option: option,
+                buttons: [{
+                    text: 'next year',
+                    onclick: function () {
+                        currentYear++;
+                        if (currentYear >= 2014) {
+                            currentYear = 2011
+                        }
+                        chart.setOption({
+                            title: {
+                                text: currentYear
+                            },
+                            dataset: {
+                                id: 'one_year',
+                                transform: {
+                                    type: 'filter',
+                                    config: { dimension: 'Year', value: currentYear }
+                                }
+                            }
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var currData = FOOD_SALES_PRICE_NO_HEADER;
+
+            var option = {
+                dataset: [{
+                    id: 'all_data',
+                    dimensions: FOOD_SALES_PRICE_HEADER,
+                    source: currData
+                }, {
+                    transform: {
+                        type: 'filter',
+                        print: true,
+                        config: { dimension: 'Price', '<': 40 }
+                    }
+                }],
+                tooltip: {},
+                legend: {},
+                xAxis: { type: 'category' },
+                yAxis: { scale: true },
+                series: [{
+                    name: 'all data',
+                    type: 'scatter',
+                    symbolSize: 15,
+                    encode: {
+                        itemId: 'Product',
+                        y: 'Price',
+                        label: [0, 1, 2, 3]
+                    },
+                    itemStyle: {
+                        color: '#999'
+                    }
+                }, {
+                    name: 'Price < 40',
+                    type: 'scatter',
+                    encode: {
+                        itemId: 'Product',
+                        x: 0,
+                        y: 'Price',
+                        label: [0, 1, 2, 3]
+                    },
+                    datasetIndex: 1
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_update_source_no_dim_inside_data', {
+                title: [
+                    'Init: all items that Price < 40',
+                    'click "add price 10", check the bar change.'
+                ],
+                height: 300,
+                option: option,
+                buttons: [{
+                    text: 'add price 10',
+                    onclick: function () {
+                        currData = echarts.util.clone(currData);
+                        echarts.util.each(currData, function (line) {
+                            line[2] += 10;
+                        });
+
+                        chart.setOption({
+                            dataset: {
+                                id: 'all_data',
+                                source: currData
+                            }
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
 
 
 

@@ -124,7 +124,7 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
                 if (__DEV__) {
                     errMsg = makePrintable(
                         'Can not find dimension info via: "' + dimLoose + '".\n',
-                        'Existing dimensions: ', source.dimensions, '.\n',
+                        'Existing dimensions: ', source.getDimensionInfoAll(), '.\n',
                         'Illegal config:', orderExpr, '.\n'
                     );
                 }
@@ -214,9 +214,7 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
         }
 
         return {
-            data: resultData,
-            dimensions: source.dimensions,
-            sourceHeader: sourceHeaderCount
+            data: resultData
         };
     }
 };
