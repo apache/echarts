@@ -28,13 +28,13 @@ import Source from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
 import {
-    SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition, OptionSourceData
+    SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition, OptionSourceData, EncodeDefaulter
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 
 function createListFromArray(source: Source | OptionSourceData, seriesModel: SeriesModel, opt?: {
     generateCoord?: string
-    useEncodeDefaulter?: boolean
+    useEncodeDefaulter?: boolean | EncodeDefaulter
 }): List {
     opt = opt || {};
 
@@ -73,10 +73,13 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
         )) || ['x', 'y'];
     }
 
+    const useEncodeDefaulter = opt.useEncodeDefaulter;
     const dimInfoList = createDimensions(source, {
         coordDimensions: coordSysDimDefs,
         generateCoord: opt.generateCoord,
-        encodeDefaulter: opt.useEncodeDefaulter
+        encodeDefaulter: zrUtil.isFunction(useEncodeDefaulter)
+            ? useEncodeDefaulter
+            : useEncodeDefaulter
             ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
             : null
     });

@@ -372,7 +372,9 @@ export const SERIES_LAYOUT_BY_ROW = 'row' as const;
 
 export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYOUT_BY_ROW;
 // null/undefined/'auto': auto detect header, see "src/data/helper/sourceHelper".
-export type OptionSourceHeader = boolean | 'auto';
+// If number, means header lines count, or say, `startIndex`.
+// Like `sourceHeader: 2`, means line 0 and line 1 are header, data start from line 2.
+export type OptionSourceHeader = boolean | 'auto' | number;
 
 export type SeriesDataType = 'main' | 'node' | 'edge';
 
@@ -1395,8 +1397,11 @@ export interface SeriesSamplingOptionMixin {
 
 export interface SeriesEncodeOptionMixin {
     datasetIndex?: number;
+    datasetId?: string | number;
     seriesLayoutBy?: SeriesLayoutBy;
     sourceHeader?: OptionSourceHeader;
     dimensions?: DimensionDefinitionLoose[];
     encode?: OptionEncode
 }
+
+export type SeriesEncodableModel = SeriesModel<SeriesOption & SeriesEncodeOptionMixin>;

@@ -36,13 +36,13 @@ import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
     ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption, SeriesDataType
 } from '../util/types';
-import {parseDate} from '../util/number';
 import {isDataItemOption} from '../util/model';
 import { getECData } from '../util/ecData';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
+import { parseDataValue } from './helper/parseDataValue';
 
 
 const isObject = zrUtil.isObject;
@@ -1916,7 +1916,7 @@ class List<
             objectRows: function (
                 this: List, dataItem: Dictionary<any>, dimName: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
-                return convertDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
+                return parseDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
             },
 
             keyedColumns: getDimValueSimply,
@@ -1934,7 +1934,7 @@ class List<
                 if (!this._rawData.pure && isDataItemOption(dataItem)) {
                     this.hasItemOption = true;
                 }
-                return convertDataValue(
+                return parseDataValue(
                     (value instanceof Array)
                         ? value[dimIndex]
                         // If value is a single number or something else not array.
@@ -1954,43 +1954,8 @@ class List<
         function getDimValueSimply(
             this: List, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
         ): ParsedValue {
-            return convertDataValue(dataItem[dimIndex], this._dimensionInfos[dimName]);
+            return parseDataValue(dataItem[dimIndex], this._dimensionInfos[dimName]);
         }
-
-        /**
-         * Convert raw the value in to inner value in List.
-         * [Caution]: this is the key logic of user value parser.
-         * For backward compatibiliy, do not modify it until have to.
-         */
-        function convertDataValue(value: any, dimInfo: DataDimensionInfo): ParsedValue {
-            // Performance sensitive.
-            const dimType = dimInfo && dimInfo.type;
-            if (dimType === 'ordinal') {
-                // If given value is a category string
-                const ordinalMeta = dimInfo && dimInfo.ordinalMeta;
-                return ordinalMeta
-                    ? ordinalMeta.parseAndCollect(value)
-                    : value;
-            }
-
-            if (dimType === 'time'
-                // spead up when using timestamp
-                && typeof value !== 'number'
-                && value != null
-                && value !== '-'
-            ) {
-                value = +parseDate(value);
-            }
-
-            // dimType defaults 'number'.
-            // If dimType is not ordinal and value is null or undefined or NaN or '-',
-            // parse to NaN.
-            return (value == null || value === '')
-                ? NaN
-                // If string (like '-'), using '+' parse to NaN
-                // If object, also parse to NaN
-                : +value;
-        };
 
         prepareInvertedIndex = function (list: List): void {
             const invertedIndicesMap = list._invertedIndicesMap;

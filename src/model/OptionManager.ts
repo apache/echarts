@@ -36,6 +36,7 @@ import {
     each, clone, map, isTypedArray, setAsPrimitive
     // , HashMap , createHashMap, extend, merge,
 } from 'zrender/src/core/util';
+import { DatasetOption } from '../component/dataset';
 
 const QUERY_REG = /^(min|max)?(.+)$/;
 
@@ -97,6 +98,9 @@ class OptionManager {
             // That set dat primitive is dangerous if user reuse the data when setOption again.
             each(normalizeToArray((rawOption as ECUnitOption).series), function (series: SeriesOption) {
                 series && series.data && isTypedArray(series.data) && setAsPrimitive(series.data);
+            });
+            each(normalizeToArray((rawOption as ECUnitOption).dataset), function (dataset: DatasetOption) {
+                dataset && dataset.source && isTypedArray(dataset.source) && setAsPrimitive(dataset.source);
             });
         }
 

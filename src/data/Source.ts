@@ -67,11 +67,8 @@ import {
 
 class Source {
 
-    readonly fromDataset: boolean;
-
     /**
      * Not null/undefined.
-     * @type {Array|Object}
      */
     readonly data: OptionSourceData;
 
@@ -98,7 +95,7 @@ class Source {
      * can be null/undefined.
      * Might be specified outside.
      */
-    encodeDefine: HashMap<OptionEncodeValue, DimensionName>;
+    readonly encodeDefine: HashMap<OptionEncodeValue, DimensionName>;
 
     /**
      * Not null/undefined, uint.
@@ -112,27 +109,33 @@ class Source {
 
 
     constructor(fields: {
-        fromDataset: boolean,
-        data?: OptionSourceData,
-        sourceFormat?: SourceFormat, // default: SOURCE_FORMAT_UNKNOWN
+        data: OptionSourceData,
+        sourceFormat: SourceFormat, // default: SOURCE_FORMAT_UNKNOWN
+
+        // Visit config are optional:
         seriesLayoutBy?: SeriesLayoutBy, // default: 'column'
         dimensionsDefine?: DimensionDefinition[],
-        encodeDefine?: OptionEncode,
         startIndex?: number, // default: 0
-        dimensionsDetectCount?: number
+        dimensionsDetectCount?: number,
+
+        // [Caveat]
+        // This is the raw user defined `encode` in `series`.
+        // If user not defined, DO NOT make a empty object or hashMap here.
+        // An empty object or hashMap will prevent from auto generating encode.
+        encodeDefine?: HashMap<OptionEncodeValue, DimensionName>
     }) {
 
-        this.fromDataset = fields.fromDataset;
         this.data = fields.data || (
             fields.sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS ? {} : []
         );
         this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
+
+        // Visit config
         this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
-        this.dimensionsDefine = fields.dimensionsDefine;
-        this.encodeDefine = fields.encodeDefine
-            && createHashMap<OptionEncodeValue, DimensionName>(fields.encodeDefine);
         this.startIndex = fields.startIndex || 0;
+        this.dimensionsDefine = fields.dimensionsDefine;
         this.dimensionsDetectCount = fields.dimensionsDetectCount;
+        this.encodeDefine = fields.encodeDefine;
     }
 
     /**
@@ -143,8 +146,7 @@ class Source {
             data: data,
             sourceFormat: isTypedArray(data)
                 ? SOURCE_FORMAT_TYPED_ARRAY
-                : SOURCE_FORMAT_ORIGINAL,
-            fromDataset: false
+                : SOURCE_FORMAT_ORIGINAL
         });
     };
 }

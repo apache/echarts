@@ -17,19 +17,9 @@
 * under the License.
 */
 
-import Element from 'zrender/src/Element';
-import { DataModel, ECEventData, BlurScope, InnerFocus, SeriesDataType } from './types';
-import { makeInner } from './model';
-/**
- * ECData stored on graphic element
- */
-export interface ECData {
-    dataIndex?: number;
-    dataModel?: DataModel;
-    eventData?: ECEventData;
-    seriesIndex?: number;
-    dataType?: SeriesDataType;
-    focus?: InnerFocus;
-    blurScope?: BlurScope;
-}
-export const getECData = makeInner<ECData, Element>();
+import * as echarts from '../echarts';
+import {filterTransform} from './transform/filterTransform';
+import {sortTransform} from './transform/sortTransform';
+
+echarts.registerTransform(filterTransform);
+echarts.registerTransform(sortTransform);

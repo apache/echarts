@@ -18,7 +18,7 @@
 */
 
 
-import {makeInner, getDataItemValue} from '../../util/model';
+import {makeInner, getDataItemValue, queryReferringComponents, SINGLE_REFERRING} from '../../util/model';
 import {
     createHashMap,
     each,
@@ -31,7 +31,9 @@ import {
     extend,
     assert,
     hasOwn,
-    HashMap
+    HashMap,
+    isNumber,
+    clone
 } from 'zrender/src/core/util';
 import Source from '../Source';
 
@@ -45,8 +47,6 @@ import {
     SOURCE_FORMAT_UNKNOWN,
     SourceFormat,
     Dictionary,
-    SeriesEncodeOptionMixin,
-    SeriesOption,
     OptionSourceData,
     SeriesLayoutBy,
     OptionSourceHeader,
@@ -59,9 +59,11 @@ import {
     OptionSourceDataOriginal,
     OptionSourceDataObjectRows,
     OptionEncode,
-    DimensionIndex
+    DimensionIndex,
+    SeriesEncodableModel,
+    OptionEncodeValue
 } from '../../util/types';
-import { DatasetModel } from '../../component/dataset';
+import { DatasetModel, DatasetOption } from '../../component/dataset';
 import SeriesModel from '../../model/Series';
 import GlobalModel from '../../model/Global';
 import { CoordDimensionDefinition } from './createDimensions';
@@ -74,15 +76,10 @@ export const BE_ORDINAL = {
 };
 type BeOrdinalValue = (typeof BE_ORDINAL)[keyof typeof BE_ORDINAL];
 
-const innerDatasetModel = makeInner<{
-    sourceFormat: SourceFormat;
-}, DatasetModel>();
-const innerSeriesModel = makeInner<{
-    source: Source;
-}, SeriesModel>();
 const innerGlobalModel = makeInner<{
     datasetMap: HashMap<DatasetRecord, string>
 }, GlobalModel>();
+
 
 interface DatasetRecord {
     categoryWayDim: number;
@@ -93,11 +90,13 @@ type SeriesEncodeInternal = {
     [key in keyof OptionEncode]: DimensionIndex[];
 };
 
-type SeriesEncodableModel = SeriesModel<SeriesOption & SeriesEncodeOptionMixin>;
+export interface SourceMetaRawOption {
+    seriesLayoutBy: SeriesLayoutBy;
+    sourceHeader: OptionSourceHeader;
+    dimensions: DimensionDefinitionLoose[];
+}
 
-
-export function detectSourceFormat(datasetModel: DatasetModel): void {
-    const data = datasetModel.option.source;
+export function detectSourceFormat(data: DatasetOption['source']): SourceFormat {
     let sourceFormat: SourceFormat = SOURCE_FORMAT_UNKNOWN;
 
     if (isTypedArray(data)) {
@@ -137,33 +136,7 @@ export function detectSourceFormat(datasetModel: DatasetModel): void {
         throw new Error('Invalid data');
     }
 
-    innerDatasetModel(datasetModel).sourceFormat = sourceFormat;
-}
-
-/**
- * [Scenarios]:
- * (1) Provide source data directly:
- *     series: {
- *         encode: {...},
- *         dimensions: [...]
- *         seriesLayoutBy: 'row',
- *         data: [[...]]
- *     }
- * (2) Refer to datasetModel.
- *     series: [{
- *         encode: {...}
- *         // Ignore datasetIndex means `datasetIndex: 0`
- *         // and the dimensions defination in dataset is used
- *     }, {
- *         encode: {...},
- *         seriesLayoutBy: 'column',
- *         datasetIndex: 1
- *     }]
- *
- * Get data from series itself or datset.
- */
-export function getSource(seriesModel: SeriesModel): Source {
-    return innerSeriesModel(seriesModel).source;
+    return sourceFormat;
 }
 
 /**
@@ -174,65 +147,63 @@ export function resetSourceDefaulter(ecModel: GlobalModel): void {
     innerGlobalModel(ecModel).datasetMap = createHashMap();
 }
 
-/**
- * [Caution]:
- * MUST be called after series option merged and
- * before "series.getInitailData()" called.
- *
- * [The rule of making default encode]:
- * Category axis (if exists) alway map to the first dimension.
- * Each other axis occupies a subsequent dimension.
- *
- * [Why make default encode]:
- * Simplify the typing of encode in option, avoiding the case like that:
- * series: [{encode: {x: 0, y: 1}}, {encode: {x: 0, y: 2}}, {encode: {x: 0, y: 3}}],
- * where the "y" have to be manually typed as "1, 2, 3, ...".
- */
-export function prepareSource(seriesModel: SeriesEncodableModel): void {
-    const seriesOption = seriesModel.option;
-
-    let data = seriesOption.data as OptionSourceData;
-    let sourceFormat: SourceFormat = isTypedArray(data)
-        ? SOURCE_FORMAT_TYPED_ARRAY : SOURCE_FORMAT_ORIGINAL;
-    let fromDataset = false;
-
-    let seriesLayoutBy = seriesOption.seriesLayoutBy;
-    let sourceHeader = seriesOption.sourceHeader;
-    let dimensionsDefine = seriesOption.dimensions;
-
-    const datasetModel = getDatasetModel(seriesModel);
-    if (datasetModel) {
-        const datasetOption = datasetModel.option;
-
-        data = datasetOption.source;
-        sourceFormat = innerDatasetModel(datasetModel).sourceFormat;
-        fromDataset = true;
-
-        // These settings from series has higher priority.
-        seriesLayoutBy = seriesLayoutBy || datasetOption.seriesLayoutBy;
-        sourceHeader == null && (sourceHeader = datasetOption.sourceHeader);
-        dimensionsDefine = dimensionsDefine || datasetOption.dimensions;
-    }
-
-    const completeResult = completeBySourceData(
-        data, sourceFormat, seriesLayoutBy, sourceHeader, dimensionsDefine
+export function createSource(
+    sourceData: OptionSourceData,
+    thisMetaRawOption: SourceMetaRawOption,
+    // can be null. If not provided, auto detect it from `sourceData`.
+    sourceFormat: SourceFormat,
+    encodeDefine: OptionEncode  // can be null
+): Source {
+    sourceFormat = sourceFormat || detectSourceFormat(sourceData);
+    const dimInfo = determineSourceDimensions(
+        sourceData,
+        sourceFormat,
+        thisMetaRawOption.seriesLayoutBy,
+        thisMetaRawOption.sourceHeader,
+        thisMetaRawOption.dimensions
     );
-
-    innerSeriesModel(seriesModel).source = new Source({
-        data: data,
-        fromDataset: fromDataset,
-        seriesLayoutBy: seriesLayoutBy,
+    const source = new Source({
+        data: sourceData,
         sourceFormat: sourceFormat,
-        dimensionsDefine: completeResult.dimensionsDefine,
-        startIndex: completeResult.startIndex,
-        dimensionsDetectCount: completeResult.dimensionsDetectCount,
-        // Note: dataset option does not have `encode`.
-        encodeDefine: seriesOption.encode
+
+        seriesLayoutBy: thisMetaRawOption.seriesLayoutBy,
+        dimensionsDefine: dimInfo.dimensionsDefine,
+        startIndex: dimInfo.startIndex,
+        dimensionsDetectCount: dimInfo.dimensionsDetectCount,
+        encodeDefine: makeEncodeDefine(encodeDefine)
+    });
+
+    return source;
+}
+
+/**
+ * Clone except source data.
+ */
+export function cloneSourceShallow(source: Source) {
+    return new Source({
+        data: source.data,
+        sourceFormat: source.sourceFormat,
+
+        seriesLayoutBy: source.seriesLayoutBy,
+        dimensionsDefine: clone(source.dimensionsDefine),
+        startIndex: source.startIndex,
+        dimensionsDetectCount: source.dimensionsDetectCount,
+        encodeDefine: makeEncodeDefine(source.encodeDefine)
     });
 }
 
+function makeEncodeDefine(
+    encodeDefine: OptionEncode | HashMap<OptionEncodeValue, DimensionName>
+): HashMap<OptionEncodeValue, DimensionName> {
+    // null means user not specify `series.encode`.
+    return encodeDefine
+        ? createHashMap<OptionEncodeValue, DimensionName>(encodeDefine)
+        : null;
+}
+
+
 // return {startIndex, dimensionsDefine, dimensionsCount}
-function completeBySourceData(
+export function determineSourceDimensions(
     data: OptionSourceData,
     sourceFormat: SourceFormat,
     seriesLayoutBy: SeriesLayoutBy,
@@ -248,7 +219,7 @@ function completeBySourceData(
 
     if (!data) {
         return {
-            dimensionsDefine: normalizeDimensionsDefine(dimensionsDefine),
+            dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
             startIndex,
             dimensionsDetectCount
         };
@@ -275,7 +246,7 @@ function completeBySourceData(
             }, seriesLayoutBy, dataArrayRows, 10);
         }
         else {
-            startIndex = sourceHeader ? 1 : 0;
+            startIndex = isNumber(sourceHeader) ? sourceHeader : sourceHeader ? 1 : 0;
         }
 
         if (!dimensionsDefine && startIndex === 1) {
@@ -318,7 +289,7 @@ function completeBySourceData(
 
     return {
         startIndex: startIndex,
-        dimensionsDefine: normalizeDimensionsDefine(dimensionsDefine),
+        dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
         dimensionsDetectCount: dimensionsDetectCount
     };
 }
@@ -326,7 +297,7 @@ function completeBySourceData(
 // Consider dimensions defined like ['A', 'price', 'B', 'price', 'C', 'price'],
 // which is reasonable. But dimension name is duplicated.
 // Returns undefined or an array contains only object without null/undefiend or string.
-function normalizeDimensionsDefine(dimensionsDefine: DimensionDefinitionLoose[]): DimensionDefinition[] {
+function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[]): DimensionDefinition[] {
     if (!dimensionsDefine) {
         // The meaning of null/undefined is different from empty array.
         return;
@@ -419,7 +390,7 @@ export function makeSeriesEncodeForAxisCoordSys(
 ): SeriesEncodeInternal {
     const encode: SeriesEncodeInternal = {};
 
-    const datasetModel = getDatasetModel(seriesModel);
+    const datasetModel = querySeriesUpstreamDatasetModel(seriesModel);
     // Currently only make default when using dataset, util more reqirements occur.
     if (!datasetModel || !coordDimensions) {
         return encode;
@@ -512,7 +483,7 @@ export function makeSeriesEncodeForNameBased(
 ): SeriesEncodeInternal {
     const encode: SeriesEncodeInternal = {};
 
-    const datasetModel = getDatasetModel(seriesModel);
+    const datasetModel = querySeriesUpstreamDatasetModel(seriesModel);
     // Currently only make default when using dataset, util more reqirements occur.
     if (!datasetModel) {
         return encode;
@@ -600,19 +571,53 @@ export function makeSeriesEncodeForNameBased(
 }
 
 /**
- * If return null/undefined, indicate that should not use datasetModel.
+ * @return If return null/undefined, indicate that should not use datasetModel.
  */
-function getDatasetModel(seriesModel: SeriesEncodableModel): DatasetModel {
-    const option = seriesModel.option;
+export function querySeriesUpstreamDatasetModel(
+    seriesModel: SeriesEncodableModel
+): DatasetModel {
     // Caution: consider the scenario:
     // A dataset is declared and a series is not expected to use the dataset,
     // and at the beginning `setOption({series: { noData })` (just prepare other
     // option but no data), then `setOption({series: {data: [...]}); In this case,
     // the user should set an empty array to avoid that dataset is used by default.
-    const thisData = option.data;
+    const thisData = seriesModel.get('data', true);
     if (!thisData) {
-        return seriesModel.ecModel.getComponent('dataset', option.datasetIndex || 0) as DatasetModel;
+        return queryReferringComponents(
+            seriesModel.ecModel,
+            'dataset',
+            {
+                index: seriesModel.get('datasetIndex', true),
+                id: seriesModel.get('datasetId', true)
+            },
+            SINGLE_REFERRING
+        ).models[0] as DatasetModel;
     }
+}
+
+/**
+ * @return Always return an array event empty.
+ */
+export function queryDatasetUpstreamDatasetModels(
+    datasetModel: DatasetModel
+): DatasetModel[] {
+    // Only these attributes declared, we by defualt reference to `datasetIndex: 0`.
+    // Otherwise, no reference.
+    if (!datasetModel.get('transform', true)
+        && !datasetModel.get('fromTransformResult', true)
+    ) {
+        return [];
+    }
+
+    return queryReferringComponents(
+        datasetModel.ecModel,
+        'dataset',
+        {
+            index: datasetModel.get('fromDatasetIndex', true),
+            id: datasetModel.get('fromDatasetId', true)
+        },
+        SINGLE_REFERRING
+    ).models as DatasetModel[];
 }
 
 /**

@@ -28,6 +28,7 @@ import ComponentModel from '../../model/Component';
 import { inheritDefaultOption } from '../../util/component';
 
 
+// TODO: use `relationExpression.ts` instead
 interface VisualPiece extends VisualOptionPiecewise {
     min?: number
     max?: number

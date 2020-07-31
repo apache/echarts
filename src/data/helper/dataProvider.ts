@@ -21,7 +21,7 @@
 // ??? refactor? check the outer usage of data provider.
 // merge with defaultDimValueGetter?
 
-import {isTypedArray, extend, assert, each, isObject} from 'zrender/src/core/util';
+import {isTypedArray, extend, assert, each, isObject, bind} from 'zrender/src/core/util';
 import {getDataItemValue} from '../../util/model';
 import Source from '../Source';
 import {ArrayLike, Dictionary} from 'zrender/src/core/types';
@@ -34,7 +34,7 @@ import {
     SERIES_LAYOUT_BY_COLUMN,
     SERIES_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    DimensionIndexLoose, OptionDataItem, OptionDataValue
+    DimensionIndexLoose, OptionDataItem, OptionDataValue, DimensionDefinition, SourceFormat, SeriesLayoutBy
 } from '../../util/types';
 import List from '../List';
 
@@ -54,6 +54,7 @@ export interface DataProvider {
 
 
 let providerMethods: Dictionary<any>;
+let mountMethods: (provider: DefaultDataProvider, data: OptionSourceData, source: Source) => void;
 
 /**
  * If normal array used, mutable chunk size is supported.
@@ -90,12 +91,10 @@ export class DefaultDataProvider implements DataProvider {
 
         // declare source is Source;
         this._source = source;
-
         const data = this._data = source.data;
-        const sourceFormat = source.sourceFormat;
 
         // Typed array. TODO IE10+?
-        if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
+        if (source.sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
             if (__DEV__) {
                 if (dimSize == null) {
                     throw new Error('Typed array data must specify dimension size');
@@ -106,17 +105,7 @@ export class DefaultDataProvider implements DataProvider {
             this._data = data;
         }
 
-        const methods = providerMethods[
-            sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
-            ? sourceFormat + '_' + source.seriesLayoutBy
-            : sourceFormat
-        ];
-
-        if (__DEV__) {
-            assert(methods, 'Invalide sourceFormat: ' + sourceFormat);
-        }
-
-        extend(this, methods);
+        mountMethods(this, data, source);
     }
 
     getSource(): Source {
@@ -127,7 +116,7 @@ export class DefaultDataProvider implements DataProvider {
         return 0;
     }
 
-    getItem(idx: number): OptionDataItem {
+    getItem(idx: number, out?: ArrayLike<number>): OptionDataItem {
         return;
     }
 
@@ -139,35 +128,58 @@ export class DefaultDataProvider implements DataProvider {
 
     private static internalField = (function () {
 
+        mountMethods = function (provider, data, source) {
+            const sourceFormat = source.sourceFormat;
+            const seriesLayoutBy = source.seriesLayoutBy;
+            const startIndex = source.startIndex;
+            const dimsDef = source.dimensionsDefine;
+
+            const methods = providerMethods[getMethodMapKey(sourceFormat, seriesLayoutBy)];
+            if (__DEV__) {
+                assert(methods, 'Invalide sourceFormat: ' + sourceFormat);
+            }
+
+            extend(provider, methods);
+
+            if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
+                provider.getItem = getItemForTypedArray;
+                provider.count = countForTypedArray;
+            }
+            else {
+                const rawItemGetter = getRawSourceItemGetter(sourceFormat, seriesLayoutBy);
+                provider.getItem = bind(rawItemGetter, null, data, startIndex, dimsDef);
+                const rawCounter = getRawSourceDataCounter(sourceFormat, seriesLayoutBy);
+                provider.count = bind(rawCounter, null, data, startIndex, dimsDef);
+            }
+        };
+
+        const getItemForTypedArray: DefaultDataProvider['getItem'] = function (
+            this: DefaultDataProvider, idx: number, out: ArrayLike<number>
+        ): ArrayLike<number> {
+            idx = idx - this._offset;
+            out = out || [];
+            const offset = this._dimSize * idx;
+            for (let i = 0; i < this._dimSize; i++) {
+                out[i] = (this._data as ArrayLike<number>)[offset + i];
+            }
+            return out;
+        };
+
+        const countForTypedArray: DefaultDataProvider['count'] = function (
+            this: DefaultDataProvider
+        ) {
+            return this._data ? ((this._data as ArrayLike<number>).length / this._dimSize) : 0;
+        };
+
         providerMethods = {
 
             [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: {
                 pure: true,
-                count: function (this: DefaultDataProvider): number {
-                    return Math.max(0, (this._data as OptionDataItem[][]).length - this._source.startIndex);
-                },
-                getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
-                    return (this._data as OptionDataValue[][])[idx + this._source.startIndex];
-                },
                 appendData: appendDataSimply
             },
 
             [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: {
                 pure: true,
-                count: function (this: DefaultDataProvider): number {
-                    const row = (this._data as OptionDataValue[][])[0];
-                    return row ? Math.max(0, row.length - this._source.startIndex) : 0;
-                },
-                getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
-                    idx += this._source.startIndex;
-                    const item = [];
-                    const data = this._data as OptionDataValue[][];
-                    for (let i = 0; i < data.length; i++) {
-                        const row = data[i];
-                        item.push(row ? row[idx] : null);
-                    }
-                    return item;
-                },
                 appendData: function () {
                     throw new Error('Do not support appendData when set seriesLayoutBy: "row".');
                 }
@@ -175,27 +187,11 @@ export class DefaultDataProvider implements DataProvider {
 
             [SOURCE_FORMAT_OBJECT_ROWS]: {
                 pure: true,
-                count: countSimply,
-                getItem: getItemSimply,
                 appendData: appendDataSimply
             },
 
             [SOURCE_FORMAT_KEYED_COLUMNS]: {
                 pure: true,
-                count: function (this: DefaultDataProvider): number {
-                    const dimName = this._source.dimensionsDefine[0].name;
-                    const col = (this._data as Dictionary<OptionDataValue[]>)[dimName];
-                    return col ? col.length : 0;
-                },
-                getItem: function (this: DefaultDataProvider, idx: number): OptionDataValue[] {
-                    const item = [];
-                    const dims = this._source.dimensionsDefine;
-                    for (let i = 0; i < dims.length; i++) {
-                        const col = (this._data as Dictionary<OptionDataValue[]>)[dims[i].name];
-                        item.push(col ? col[idx] : null);
-                    }
-                    return item;
-                },
                 appendData: function (this: DefaultDataProvider, newData: Dictionary<OptionDataValue[]>) {
                     const data = this._data as Dictionary<OptionDataValue[]>;
                     each(newData, function (newCol, key) {
@@ -208,26 +204,12 @@ export class DefaultDataProvider implements DataProvider {
             },
 
             [SOURCE_FORMAT_ORIGINAL]: {
-                count: countSimply,
-                getItem: getItemSimply,
                 appendData: appendDataSimply
             },
 
             [SOURCE_FORMAT_TYPED_ARRAY]: {
                 persistent: false,
                 pure: true,
-                count: function (this: DefaultDataProvider): number {
-                    return this._data ? ((this._data as ArrayLike<number>).length / this._dimSize) : 0;
-                },
-                getItem: function (this: DefaultDataProvider, idx: number, out: ArrayLike<number>): ArrayLike<number> {
-                    idx = idx - this._offset;
-                    out = out || [];
-                    const offset = this._dimSize * idx;
-                    for (let i = 0; i < this._dimSize; i++) {
-                        out[i] = (this._data as ArrayLike<number>)[offset + i];
-                    }
-                    return out;
-                },
                 appendData: function (this: DefaultDataProvider, newData: ArrayLike<number>): void {
                     if (__DEV__) {
                         assert(
@@ -235,7 +217,6 @@ export class DefaultDataProvider implements DataProvider {
                             'Added data must be TypedArray if data in initialization is TypedArray'
                         );
                     }
-
                     this._data = newData;
                 },
 
@@ -248,12 +229,6 @@ export class DefaultDataProvider implements DataProvider {
             }
         };
 
-        function countSimply(this: DefaultDataProvider): number {
-            return (this._data as []).length;
-        }
-        function getItemSimply(this: DefaultDataProvider, idx: number): OptionDataItem {
-            return (this._data as [])[idx];
-        }
         function appendDataSimply(this: DefaultDataProvider, newData: ArrayLike<OptionDataItem>): void {
             for (let i = 0; i < newData.length; i++) {
                 (this._data as any[]).push(newData[i]);
@@ -262,23 +237,136 @@ export class DefaultDataProvider implements DataProvider {
 
     })();
 }
+
+
+
+type RawSourceItemGetter = (
+    rawData: OptionSourceData,
+    startIndex: number,
+    dimsDef: DimensionDefinition[],
+    idx: number
+) => OptionDataItem;
+
+const getItemSimply: RawSourceItemGetter = function (
+    rawData, startIndex, dimsDef, idx
+): OptionDataItem {
+    return (rawData as [])[idx];
+};
+
+const rawSourceItemGetterMap: Dictionary<RawSourceItemGetter> = {
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: function (
+        rawData, startIndex, dimsDef, idx
+    ): OptionDataValue[] {
+        return (rawData as OptionDataValue[][])[idx + startIndex];
+    },
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: function (
+        rawData, startIndex, dimsDef, idx
+    ): OptionDataValue[] {
+        idx += startIndex;
+        const item = [];
+        const data = rawData as OptionDataValue[][];
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            item.push(row ? row[idx] : null);
+        }
+        return item;
+    },
+    [SOURCE_FORMAT_OBJECT_ROWS]: getItemSimply,
+    [SOURCE_FORMAT_KEYED_COLUMNS]: function (
+        rawData, startIndex, dimsDef, idx
+    ): OptionDataValue[] {
+        const item = [];
+        for (let i = 0; i < dimsDef.length; i++) {
+            const col = (rawData as Dictionary<OptionDataValue[]>)[dimsDef[i].name];
+            item.push(col ? col[idx] : null);
+        }
+        return item;
+    },
+    [SOURCE_FORMAT_ORIGINAL]: getItemSimply
+};
+
+export function getRawSourceItemGetter(
+    sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayoutBy
+): RawSourceItemGetter {
+    const method = rawSourceItemGetterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
+    if (__DEV__) {
+        assert(method, 'Do not suppport get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+    }
+    return method;
+}
+
+
+
+
+type RawSourceDataCounter = (
+    rawData: OptionSourceData,
+    startIndex: number,
+    dimsDef: DimensionDefinition[]
+) => number;
+
+const countSimply: RawSourceDataCounter = function (
+    rawData, startIndex, dimsDef
+) {
+    return (rawData as []).length;
+};
+
+const rawSourceDataCounterMap: Dictionary<RawSourceDataCounter> = {
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: function (
+        rawData, startIndex, dimsDef
+    ) {
+        return Math.max(0, (rawData as OptionDataItem[][]).length - startIndex);
+    },
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: function (
+        rawData, startIndex, dimsDef
+    ) {
+        const row = (rawData as OptionDataValue[][])[0];
+        return row ? Math.max(0, row.length - startIndex) : 0;
+    },
+    [SOURCE_FORMAT_OBJECT_ROWS]: countSimply,
+    [SOURCE_FORMAT_KEYED_COLUMNS]: function (
+        rawData, startIndex, dimsDef
+    ) {
+        const dimName = dimsDef[0].name;
+        const col = (rawData as Dictionary<OptionDataValue[]>)[dimName];
+        return col ? col.length : 0;
+    },
+    [SOURCE_FORMAT_ORIGINAL]: countSimply
+};
+
+export function getRawSourceDataCounter(
+    sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayoutBy
+): RawSourceDataCounter {
+    const method = rawSourceDataCounterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
+    if (__DEV__) {
+        assert(method, 'Do not suppport count on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+    }
+    return method;
+}
+
+
+
 // TODO
 // merge it to dataProvider?
-type RawValueGetter = (
+type RawSourceValueGetter = (
     dataItem: OptionDataItem,
-    dataIndex: number,
     dimIndex: DimensionIndex,
     dimName: DimensionName
     // If dimIndex not provided, return OptionDataItem.
     // If dimIndex provided, return OptionDataPrimitive.
 ) => OptionDataValue | OptionDataItem;
 
-const rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
+const getRawValueSimply = function (
+    dataItem: ArrayLike<OptionDataValue>, dimIndex: number, dimName: string
+): OptionDataValue | ArrayLike<OptionDataValue> {
+    return dimIndex != null ? dataItem[dimIndex] : dataItem;
+};
+
+const rawSourceValueGetterMap: {[sourceFormat: string]: RawSourceValueGetter} = {
 
     [SOURCE_FORMAT_ARRAY_ROWS]: getRawValueSimply,
 
     [SOURCE_FORMAT_OBJECT_ROWS]: function (
-        dataItem: Dictionary<OptionDataValue>, dataIndex: number, dimIndex: number, dimName: string
+        dataItem: Dictionary<OptionDataValue>, dimIndex: number, dimName: string
     ): OptionDataValue | Dictionary<OptionDataValue> {
         return dimIndex != null ? dataItem[dimName] : dataItem;
     },
@@ -286,7 +374,7 @@ const rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
     [SOURCE_FORMAT_KEYED_COLUMNS]: getRawValueSimply,
 
     [SOURCE_FORMAT_ORIGINAL]: function (
-        dataItem: OptionDataItem, dataIndex: number, dimIndex: number, dimName: string
+        dataItem: OptionDataItem, dimIndex: number, dimName: string
     ): OptionDataValue | OptionDataItem {
         // FIXME: In some case (markpoint in geo (geo-map.html)),
         // dataItem is {coord: [...]}
@@ -299,11 +387,21 @@ const rawValueGetters: {[sourceFormat: string]: RawValueGetter} = {
     [SOURCE_FORMAT_TYPED_ARRAY]: getRawValueSimply
 };
 
-function getRawValueSimply(
-    dataItem: ArrayLike<OptionDataValue>, dataIndex: number, dimIndex: number, dimName: string
-): OptionDataValue | ArrayLike<OptionDataValue> {
-    return dimIndex != null ? dataItem[dimIndex] : dataItem;
+export function getRawSourceValueGetter(sourceFormat: SourceFormat): RawSourceValueGetter {
+    const method = rawSourceValueGetterMap[sourceFormat];
+    if (__DEV__) {
+        assert(method, 'Do not suppport get value on "' + sourceFormat + '".');
+    }
+    return method;
 }
+
+
+function getMethodMapKey(sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayoutBy): string {
+    return sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
+        ? sourceFormat + '_' + seriesLayoutBy
+        : sourceFormat;
+}
+
 
 // ??? FIXME can these logic be more neat: getRawValue, getRawDataItem,
 // Consider persistent.
@@ -336,8 +434,9 @@ export function retrieveRawValue(
         dimIndex = dimInfo.index;
     }
 
-    return rawValueGetters[sourceFormat](dataItem, dataIndex, dimIndex, dimName);
+    return getRawSourceValueGetter(sourceFormat)(dataItem, dimIndex, dimName);
 }
+
 
 /**
  * Compatible with some cases (in pie, map) like:

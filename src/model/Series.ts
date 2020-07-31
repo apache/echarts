@@ -41,10 +41,6 @@ import {
     fetchLayoutMode
 } from '../util/layout';
 import {createTask} from '../stream/task';
-import {
-    prepareSource,
-    getSource
-} from '../data/helper/sourceHelper';
 import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from './Global';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
@@ -57,10 +53,12 @@ import Axis from '../coord/Axis';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
 import makeStyleMapper from './mixin/makeStyleMapper';
+import { SourceManager } from '../data/helper/sourceManager';
 
 const inner = modelUtil.makeInner<{
     data: List
     dataBeforeProcessed: List
+    sourceManager: SourceManager
 }, SeriesModel>();
 
 function getSelectionKey(data: List, dataIndex: number): string {
@@ -139,7 +137,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Injected outside
     pipelineContext: PipelineContext;
 
-
     // ---------------------------------------
     // Props to tell visual/style.ts about how to do visual encoding.
     // ---------------------------------------
@@ -197,7 +194,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         this.mergeDefaultAndTheme(option, ecModel);
 
-        prepareSource(this);
+        const sourceManager = inner(this).sourceManager = new SourceManager(this);
+        sourceManager.prepareSource();
 
         const data = this.getInitialData(option, ecModel);
         wrapData(data, this);
@@ -273,7 +271,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             );
         }
 
-        prepareSource(this);
+        const sourceManager = inner(this).sourceManager;
+        sourceManager.dirty();
+        sourceManager.prepareSource();
 
         const data = this.getInitialData(newSeriesOption, ecModel);
         wrapData(data, this);
@@ -377,7 +377,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     getSource(): Source {
-        return getSource(this);
+        return inner(this).sourceManager.getSource();
     }
 
     /**
