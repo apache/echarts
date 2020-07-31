@@ -164,7 +164,7 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
         show: false,
 
         lineStyle: {
-            color: '#eee',
+            color: '#F4F7FD',
             width: 1
         }
     }
