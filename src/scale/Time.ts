@@ -164,7 +164,6 @@ class TimeScale extends IntervalScale {
         const innerTicks = getIntervalTicks(
             this._minLevelUnit,
             this._approxInterval,
-            this._interval,
             useUTC,
             extent
         );
@@ -372,7 +371,7 @@ function getDateInterval(approxInterval: number, daysInMonth: number) {
     approxInterval /= ONE_DAY;
     return approxInterval > 16 ? 16
                 // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick betwen two month.
-            : approxInterval > 7.5 ? 7
+            : approxInterval > 7.5 ? 7  // TODO week 7 or day 8?
             : approxInterval > 3.5 ? 4
             : approxInterval > 1.5 ? 2 : 1;
 }
@@ -380,9 +379,9 @@ function getDateInterval(approxInterval: number, daysInMonth: number) {
 function getMonthInterval(approxInterval: number) {
     const APPROX_ONE_MONTH = 30 * ONE_DAY;
     approxInterval /= APPROX_ONE_MONTH;
-    return approxInterval > 5 ? 5
-            : approxInterval > 3 ? 2
-            : approxInterval > 2.5 ? 2 : 1;
+    return approxInterval > 6 ? 6
+            : approxInterval > 3 ? 3
+            : approxInterval > 2 ? 2 : 1;
 }
 
 function getHourInterval(approxInterval: number) {
@@ -429,7 +428,6 @@ function getFirstTimestampOfUnit(date: Date, unitName: TimeUnit, isUTC: boolean)
 function getIntervalTicks(
     bottomUnitName: TimeUnit,
     approxInterval: number,
-    interval: number,
     isUTC: boolean,
     extent: number[]
 ): TimeScaleTick[] {
@@ -451,10 +449,6 @@ function getIntervalTicks(
         isDate: boolean,
         out: InnerTimeTick[]
     ) {
-        // if (maxTimestamp <= minTimestamp) {
-        //     // Failed
-        //     return true;
-        // }
         const date = new Date(minTimestamp) as any;
         let dateTime = minTimestamp;
         let d = date[getMethodName]();
@@ -561,7 +555,15 @@ function getIntervalTicks(
             addTicksInSpan(
                 interval, startTick, endTick, getterName, setterName, isDate, newAddedTicks
             );
+
+            if (unitName === 'year' && levelTicks.length > 1 && i === 0) {
+                // Add nearest years to the left extent.
+                levelTicks.unshift({
+                    value: levelTicks[0].value - interval
+                });
+            }
         }
+
         for (let i = 0; i < newAddedTicks.length; i++) {
             levelTicks.push(newAddedTicks[i]);
         }
@@ -573,6 +575,7 @@ function getIntervalTicks(
     let currentLevelTicks: InnerTimeTick[] = [];
 
     let tickCount = 0;
+    let lastLevelTickCount = 0;
     for (let i = 0; i < unitNames.length && iter++ < safeLimit; ++i) {
         const primaryTimeUnit = getPrimaryTimeUnit(unitNames[i]);
         if (!isPrimaryTimeUnit(unitNames[i])) { // TODO
@@ -583,6 +586,7 @@ function getIntervalTicks(
         const nextPrimaryTimeUnit: PrimaryTimeUnit = unitNames[i + 1] ? getPrimaryTimeUnit(unitNames[i + 1]) : null;
         if (primaryTimeUnit !== nextPrimaryTimeUnit) {
             if (currentLevelTicks.length) {
+                lastLevelTickCount = tickCount;
                 // Remove the duplicate so the tick count can be precisely.
                 currentLevelTicks.sort((a, b) => a.value - b.value);
                 const levelTicksRemoveDuplicated = [];
@@ -596,10 +600,16 @@ function getIntervalTicks(
                     }
                 }
 
+                const targetTickNum = (extent[1] - extent[0]) / approxInterval;
+                // Added too much in this level and not too less in last level
+                if (tickCount > targetTickNum * 1.5 && lastLevelTickCount > targetTickNum / 1.5) {
+                    break;
+                }
+
                 // Only treat primary time unit as one level.
                 levelsTicks.push(levelTicksRemoveDuplicated);
 
-                if (tickCount > (extent[1] - extent[0]) / approxInterval || bottomUnitName === unitNames[i]) {
+                if (tickCount > targetTickNum || bottomUnitName === unitNames[i]) {
                     break;
                 }
 
