@@ -41,6 +41,22 @@
 
 
 var localeObj = {
+    time: {
+        month: [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ],
+        monthAbbr: [
+            'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+            'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+        ],
+        dayOfWeek: [
+            'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
+        ],
+        dayOfWeekAbbr: [
+            'Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sáb'
+        ]
+    },
     legend: {
         selector: {
             all: "Todas",
@@ -91,5 +107,5 @@ var localeObj = {
             exports[key] = localeObj[key];
         }
     }
-        
+
 });
