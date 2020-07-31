@@ -54,20 +54,36 @@ import {
     fullLeveledFormatter,
     getPrimaryTimeUnit,
     isPrimaryTimeUnit,
-    getDefaultFormatPrecisionOfInterval
+    getDefaultFormatPrecisionOfInterval,
+    fullYearGetterName,
+    monthSetterName,
+    fullYearSetterName,
+    dateSetterName,
+    hoursGetterName,
+    hoursSetterName,
+    minutesSetterName,
+    secondsSetterName,
+    millisecondsSetterName,
+    monthGetterName,
+    dateGetterName,
+    minutesGetterName,
+    secondsGetterName,
+    millisecondsGetterName
 } from '../util/time';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 import Scale from './Scale';
-import {TimeScaleTick} from '../util/types';
+import {TimeScaleTick, ScaleTick} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
 import { LocaleOption } from '../locale';
 import Model from '../model/Model';
+import { filter, map, extend } from 'zrender/src/core/util';
+import { unionTypeAnnotation } from '@babel/types';
 
 // FIXME 公用？
 const bisect = function (
-    a: [string, number][],
+    a: [string | number, number][],
     x: number,
     lo: number,
     hi: number
@@ -98,7 +114,7 @@ class TimeScale extends IntervalScale {
 
     _approxInterval: number;
 
-    _intervalUnit: TimeUnit;
+    _minLevelUnit: TimeUnit;
 
     /**
      * Get label is mainly for other components like dataZoom, tooltip.
@@ -108,7 +124,7 @@ class TimeScale extends IntervalScale {
         return format(
             tick.value,
             fullLeveledFormatter[
-                getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._intervalUnit))
+                getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))
             ] || fullLeveledFormatter.second,
             useUTC
         );
@@ -146,7 +162,7 @@ class TimeScale extends IntervalScale {
         const useUTC = this.getSetting('useUTC');
 
         const innerTicks = getIntervalTicks(
-            this._intervalUnit,
+            this._minLevelUnit,
             this._approxInterval,
             this._interval,
             useUTC,
@@ -204,15 +220,16 @@ class TimeScale extends IntervalScale {
         }
 
         const scaleIntervalsLen = scaleIntervals.length;
-        const idx = bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen) - 1;
+        const idx = Math.min(
+            bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen),
+            scaleIntervalsLen - 1
+        );
 
-        const intervals = scaleIntervals[
-            Math.max(Math.min(idx, scaleIntervalsLen - 1), 0
-        )];
-
-        // Interval will be used in getTicks
-        this._interval = intervals[1];
-        this._intervalUnit = intervals[0];
+        // Interval that can be used to calculate ticks
+        this._interval = scaleIntervals[idx][1];
+        // Min level used when picking ticks from top down.
+        // We check one more level to avoid the ticks are to sparse in some case.
+        this._minLevelUnit = scaleIntervals[Math.max(idx - 1, 0)][0];
     }
 
     parse(val: number | string | Date): number {
@@ -299,267 +316,330 @@ function isUnitValueSame(
     }
 }
 
+// const primaryUnitGetters = {
+//     year: fullYearGetterName(),
+//     month: monthGetterName(),
+//     day: dateGetterName(),
+//     hour: hoursGetterName(),
+//     minute: minutesGetterName(),
+//     second: secondsGetterName(),
+//     millisecond: millisecondsGetterName()
+// };
+
+// const primaryUnitUTCGetters = {
+//     year: fullYearGetterName(true),
+//     month: monthGetterName(true),
+//     day: dateGetterName(true),
+//     hour: hoursGetterName(true),
+//     minute: minutesGetterName(true),
+//     second: secondsGetterName(true),
+//     millisecond: millisecondsGetterName(true)
+// };
+
+function moveTick(date: Date, unitName: TimeUnit, step: number, isUTC?: boolean) {
+    step = step || 1;
+    switch (getPrimaryTimeUnit(unitName)) {
+        case 'year':
+            date[fullYearSetterName(isUTC)](date[fullYearGetterName(isUTC)]() + step);
+            break;
+        case 'month':
+            date[monthSetterName(isUTC)](date[monthGetterName(isUTC)]() + step);
+            break;
+        case 'day':
+            date[dateSetterName(isUTC)](date[dateGetterName(isUTC)]() + step);
+            break;
+        case 'hour':
+            date[hoursSetterName(isUTC)](date[hoursGetterName(isUTC)]() + step);
+            break;
+        case 'minute':
+            date[minutesSetterName(isUTC)](date[minutesGetterName(isUTC)]() + step);
+            break;
+        case 'second':
+            date[secondsSetterName(isUTC)](date[secondsGetterName(isUTC)]() + step);
+            break;
+        case 'millisecond':
+            date[millisecondsSetterName(isUTC)](date[millisecondsGetterName(isUTC)]() + step);
+            break;
+    }
+    return date.getTime();
+}
+
+// const DATE_INTERVALS = [[8, 7.5], [4, 3.5], [2, 1.5]];
+// const MONTH_INTERVALS = [[6, 5.5], [3, 2.5], [2, 1.5]];
+// const MINUTES_SECONDS_INTERVALS = [[30, 30], [20, 20], [15, 15], [10, 10], [5, 5], [2, 2]];
+
+function getDateInterval(approxInterval: number, daysInMonth: number) {
+    approxInterval /= ONE_DAY;
+    return approxInterval > 16 ? 16
+                // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick betwen two month.
+            : approxInterval > 7.5 ? 7
+            : approxInterval > 3.5 ? 4
+            : approxInterval > 1.5 ? 2 : 1;
+}
+
+function getMonthInterval(approxInterval: number) {
+    const APPROX_ONE_MONTH = 30 * ONE_DAY;
+    approxInterval /= APPROX_ONE_MONTH;
+    return approxInterval > 5 ? 5
+            : approxInterval > 3 ? 2
+            : approxInterval > 2.5 ? 2 : 1;
+}
+
+function getHourInterval(approxInterval: number) {
+    approxInterval /= ONE_HOUR;
+    return approxInterval > 12 ? 11
+            : approxInterval > 6 ? 6
+            : approxInterval > 3.5 ? 4
+            : approxInterval > 2 ? 2 : 1;
+}
+
+function getMinutesAndSecondsInterval(approxInterval: number, isMinutes?: boolean) {
+    approxInterval /= isMinutes ? ONE_MINUTE : ONE_SECOND;
+    return approxInterval > 30 ? 30
+            : approxInterval > 20 ? 20
+            : approxInterval > 15 ? 15
+            : approxInterval > 10 ? 10
+            : approxInterval > 5 ? 5
+            : approxInterval > 2 ? 2 : 1;
+}
+
+function getMillisecondsInterval(approxInterval: number) {
+    return numberUtil.nice(approxInterval, true);
+}
+
+function getFirstTimestampOfUnit(date: Date, unitName: TimeUnit, isUTC: boolean) {
+    const outDate = new Date(date);
+    switch (getPrimaryTimeUnit(unitName)) {
+        case 'year':
+        case 'month':
+            outDate[monthSetterName(isUTC)](0);
+        case 'day':
+            outDate[dateSetterName(isUTC)](1);
+        case 'hour':
+            outDate[hoursSetterName(isUTC)](0);
+        case 'minute':
+            outDate[minutesSetterName(isUTC)](0);
+        case 'second':
+            outDate[secondsSetterName(isUTC)](0);
+            outDate[millisecondsSetterName(isUTC)](0);
+    }
+    return outDate.getTime();
+}
+
 function getIntervalTicks(
-    unitName: TimeUnit,
+    bottomUnitName: TimeUnit,
     approxInterval: number,
     interval: number,
     isUTC: boolean,
     extent: number[]
 ): TimeScaleTick[] {
     const safeLimit = 10000;
-    const utc = isUTC ? 'UTC' : '';
-    const ticks: TimeScaleTick[] = [];
     const unitNames = timeUnits;
-    let levelId = 0;
+    // const bottomPrimaryUnitName = getPrimaryTimeUnit(bottomUnitName);
 
-    const setFullYearMethodName = 'set' + utc + 'FullYear' as 'setFullYear' | 'setUTCFullYear';
-    const setMonthMethodName = 'set' + utc + 'Month' as 'setMonth' | 'setUTCMonth';
-    const setDateMethodName = 'set' + utc + 'Date' as 'setDate' | 'setUTCDate';
-    const setHoursMethodName = 'set' + utc + 'Hours' as 'setHours' | 'setUTCHours';
-    const setMinutesMethodName = 'set' + utc + 'Minutes' as 'setMinutes' | 'setUTCMinutes';
-    const setSecondsMethodName = 'set' + utc + 'Seconds' as 'setSeconds' | 'setUTCSeconds';
-    const setMillisecondsMethodName = 'set' + utc + 'Milliseconds' as 'setMilliseconds' | 'setUTCMilliseconds';
-
-    const getFullYearMethodName = 'get' + utc + 'FullYear' as 'getFullYear' | 'getUTCFullYear';
-    const getMonthMethodName = 'get' + utc + 'Month' as 'getMonth' | 'getUTCMonth';
-    const getDateMethodName = 'get' + utc + 'Date' as 'getDate' | 'getUTCDate';
-    const getHoursMethodName = 'get' + utc + 'Hours' as 'getHours' | 'getUTCHours';
-    const getMinutesMethodName = 'get' + utc + 'Minutes' as 'getMinutes' | 'getUTCMinutes';
-    const getSecondsMethodName = 'get' + utc + 'Seconds' as 'getSeconds' | 'getUTCSeconds';
-    const getMillisecondsMethodName = 'get' + utc + 'Milliseconds' as 'getMilliseconds' | 'getUTCMilliseconds';
+    interface InnerTimeTick extends TimeScaleTick {
+        notAdd?: boolean
+    }
 
     let iter = 0;
 
-    for (let i = 0, hasTickInLevel = false; i < unitNames.length && iter++ < safeLimit; ++i) {
-        let date = new Date(extent[0]);
+    function addTicksInSpan(
+        interval: number,
+        minTimestamp: number, maxTimestamp: number,
+        getMethodName: string,
+        setMethodName: string,
+        isDate: boolean,
+        out: InnerTimeTick[]
+    ) {
+        // if (maxTimestamp <= minTimestamp) {
+        //     // Failed
+        //     return true;
+        // }
+        const date = new Date(minTimestamp) as any;
+        let dateTime = minTimestamp;
+        let d = date[getMethodName]();
 
-        if (unitNames[i] === 'week' || unitNames[i] === 'half-week') {
-            date[setHoursMethodName](0);
-            date[setMinutesMethodName](0);
-            date[setSecondsMethodName](0);
-            date[setMillisecondsMethodName](0);
+        // if (isDate) {
+        //     d -= 1; // Starts with 0;   PENDING
+        // }
 
-            if (extent[0] === date.getTime()) {
-                ticks.push({
-                    value: extent[0],
-                    level: levelId
-                });
-                hasTickInLevel = true;
-            }
+        while (dateTime < maxTimestamp && dateTime <= extent[1]) {
+            out.push({
+                value: dateTime
+            });
 
-            outer: while (iter++ < safeLimit) {
-                const tmpDate = new Date(date);
-                tmpDate[setDateMethodName](1);
-                tmpDate[setMonthMethodName](tmpDate[getMonthMethodName]() + 1);
-                tmpDate[setDateMethodName](0);  // Set day to 0 to return the last day of last month.
-                const daysInMonth = tmpDate.getDate();
-
-                const dateInterval = approxInterval > ONE_DAY * 16 ? Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick betwen two month.
-                    : approxInterval > ONE_DAY * 8 ? 8
-                        : approxInterval > ONE_DAY * 3.5 ? 4
-                            : approxInterval > ONE_DAY * 1.5 ? 2 : 1;
-
-                // const dates = approxInterval > ONE_DAY * 8 ? [15]
-                //     : (approxInterval > ONE_DAY * 3.5 ? [8, 16, 24] : [4, 8, 12, 16, 20, 24, 28]);
-
-                for (let d = dateInterval; d < daysInMonth; d += dateInterval) {
-
-                    date[setDateMethodName](d);
-                    const dateTime = date.getTime();
-                    if (dateTime > extent[1]) {
-                        break outer;
-                    }
-                    else if (dateTime >= extent[0]) {
-                        ticks.push({
-                            value: dateTime,
-                            level: levelId
-                        });
-                        hasTickInLevel = true;
-                    }
-                }
-
-                // Reset date to 0. The date may be 30, and days of next month may be 29. Which will excced
-                date[setDateMethodName](1);
-                date[setMonthMethodName](date[getMonthMethodName]() + 1);
-            }
+            d += interval;
+            date[setMethodName](d);
+            dateTime = date.getTime();
         }
-        else if (!isUnitValueSame(
-            getPrimaryTimeUnit(unitNames[i]),
-            extent[0], extent[1], isUTC
-        )) {
-            // Level value changes within extent
-            let isFirst = true;
-            while (iter++ < safeLimit) {
-                switch (unitNames[i]) {
-                    case 'year':
-                    case 'half-year':
-                    case 'quarter':
-                        if (isFirst) {
-                            date[setMonthMethodName](0);
-                            date[setDateMethodName](1);
-                            date[setHoursMethodName](0);
-                            date[setMinutesMethodName](0);
-                            date[setSecondsMethodName](0);
-                        }
-                        else {
-                            const months = unitNames[i] === 'year'
-                                ? 12 : (unitNames[i] === 'half-year' ? 6 : 3);
-                            if (unitNames[i] === 'half-year' || unitNames[i] === 'quarter') {
-                                date[setMonthMethodName](date[getMonthMethodName]() + months);
-                            }
-                            else {
-                                const yearSpan = Math.max(1, Math.round(approxInterval / ONE_DAY / 365));
-                                date[setFullYearMethodName](date[getFullYearMethodName]() + yearSpan);
-                                if (date.getTime() > extent[1] && yearSpan > 1) {
-                                    // For the last data
-                                    date[setFullYearMethodName](date[getFullYearMethodName]() - yearSpan + 1);
-                                    if (date.getTime() < extent[1]) {
-                                        // The last data is not in year unit, make it invalid by larger than extent[1]
-                                        date[setFullYearMethodName](date[getFullYearMethodName]() + yearSpan);
-                                    }
-                                }
-                            }
-                        }
-                        break;
 
-                    case 'month':
-                        if (isFirst) {
-                            date[setDateMethodName](1);
-                            date[setHoursMethodName](0);
-                            date[setMinutesMethodName](0);
-                            date[setSecondsMethodName](0);
-                        }
-                        else {
-                            date[setMonthMethodName](date[getMonthMethodName]() + 1);
-                        }
-                        break;
+        // This extra tick is for calcuating ticks of next level. Will not been added to the final result
+        out.push({
+            value: dateTime,
+            notAdd: true
+        });
+    }
 
-                    case 'day':
-                    case 'half-day':
-                    case 'quarter-day':
-                        if (isFirst) {
-                            date[setHoursMethodName](0);
-                            date[setMinutesMethodName](0);
-                            date[setSecondsMethodName](0);
-                        }
-                        else if (unitNames[i] === 'half-day') {
-                            date[setHoursMethodName](date[getHoursMethodName]() + 12);
-                        }
-                        else if (unitNames[i] === 'quarter-day') {
-                            date[setHoursMethodName](date[getHoursMethodName]() + 6);
-                        }
-                        else {
-                            date[setDateMethodName](date[getDateMethodName]() + 1);
-                        }
-                        break;
+    function addLevelTicks(
+        unitName: TimeUnit,
+        lastLevelTicks: InnerTimeTick[],
+        levelTicks: InnerTimeTick[]
+    ) {
+        const newAddedTicks: ScaleTick[] = [];
+        const isFirstLevel = !lastLevelTicks.length;
 
-                    case 'hour':
-                        if (isFirst) {
-                            date[setMinutesMethodName](0);
-                            date[setSecondsMethodName](0);
-                        }
-                        else {
-                            // date = new Date(+date + interval);
-                            date[setHoursMethodName](date[getHoursMethodName]() + 1);
-                        }
-                        break;
+        if (isUnitValueSame(getPrimaryTimeUnit(unitName), extent[0], extent[1], isUTC)) {
+            return;
+        }
 
-                    case 'minute':
-                        if (isFirst) {
-                            date[setMinutesMethodName](0);
-                            date[setSecondsMethodName](0);
-                        }
-                        else {
-                            // date = new Date(+date + interval);
-                            date[setMinutesMethodName](date[getMinutesMethodName]() + 1);
-                        }
-                        break;
+        if (isFirstLevel) {
+            lastLevelTicks = [{
+                // TODO Optimize. Not include so may ticks.
+                value: getFirstTimestampOfUnit(new Date(extent[0]), unitName, isUTC)
+            }, {
+                value: extent[1]
+            }];
+        }
 
-                    case 'second':
-                        if (!isFirst) {
-                            // date = new Date(+date + interval);
-                            date[setSecondsMethodName](date[getSecondsMethodName]() + 1);
-                        }
-                        break;
+        for (let i = 0; i < lastLevelTicks.length - 1; i++) {
+            const startTick = lastLevelTicks[i].value;
+            const endTick = lastLevelTicks[i + 1].value;
+            if (startTick === endTick) {
+                continue;
+            }
 
-                    case 'millisecond':
-                        if (isFirst) {
-                            date[setMillisecondsMethodName](0);
+            let interval: number;
+            let getterName;
+            let setterName;
+            let isDate = false;
+
+            switch (unitName) {
+                case 'year':
+                    interval = Math.max(1, Math.round(approxInterval / ONE_DAY / 365));
+                    getterName = fullYearGetterName(isUTC);
+                    setterName = fullYearSetterName(isUTC);
+                    break;
+                case 'half-year':
+                case 'quarter':
+                case 'month':
+                    interval = getMonthInterval(approxInterval);
+                    getterName = monthGetterName(isUTC);
+                    setterName = monthSetterName(isUTC);
+                    break;
+                case 'week':    // PENDING If week is added. Ignore day.
+                case 'half-week':
+                case 'day':
+                    interval = getDateInterval(approxInterval, 31); // Use 32 days and let interval been 16
+                    getterName = dateGetterName(isUTC);
+                    setterName = dateSetterName(isUTC);
+                    isDate = true;
+                    break;
+                case 'half-day':
+                case 'quarter-day':
+                case 'hour':
+                    interval = getHourInterval(approxInterval);
+                    getterName = hoursGetterName(isUTC);
+                    setterName = hoursSetterName(isUTC);
+                    break;
+                case 'minute':
+                    interval = getMinutesAndSecondsInterval(approxInterval, true);
+                    getterName = minutesGetterName(isUTC);
+                    setterName = minutesSetterName(isUTC);
+                    break;
+                case 'second':
+                    interval = getMinutesAndSecondsInterval(approxInterval, false);
+                    getterName = secondsGetterName(isUTC);
+                    setterName = secondsSetterName(isUTC);
+                    break;
+                case 'millisecond':
+                    interval = getMillisecondsInterval(approxInterval);
+                    getterName = millisecondsGetterName(isUTC);
+                    setterName = millisecondsSetterName(isUTC);
+                    break;
+            }
+
+            addTicksInSpan(
+                interval, startTick, endTick, getterName, setterName, isDate, newAddedTicks
+            );
+        }
+        for (let i = 0; i < newAddedTicks.length; i++) {
+            levelTicks.push(newAddedTicks[i]);
+        }
+        // newAddedTicks.length && console.log(unitName, newAddedTicks);
+        return newAddedTicks;
+    }
+
+    const levelsTicks: InnerTimeTick[][] = [];
+    let currentLevelTicks: InnerTimeTick[] = [];
+
+    let tickCount = 0;
+    for (let i = 0; i < unitNames.length && iter++ < safeLimit; ++i) {
+        const primaryTimeUnit = getPrimaryTimeUnit(unitNames[i]);
+        if (!isPrimaryTimeUnit(unitNames[i])) { // TODO
+            continue;
+        }
+        addLevelTicks(unitNames[i], levelsTicks[levelsTicks.length - 1] || [], currentLevelTicks);
+
+        const nextPrimaryTimeUnit: PrimaryTimeUnit = unitNames[i + 1] ? getPrimaryTimeUnit(unitNames[i + 1]) : null;
+        if (primaryTimeUnit !== nextPrimaryTimeUnit) {
+            if (currentLevelTicks.length) {
+                // Remove the duplicate so the tick count can be precisely.
+                currentLevelTicks.sort((a, b) => a.value - b.value);
+                const levelTicksRemoveDuplicated = [];
+                for (let i = 0; i < currentLevelTicks.length; ++i) {
+                    const tickValue = currentLevelTicks[i].value;
+                    if (i === 0 || currentLevelTicks[i - 1].value !== tickValue) {
+                        levelTicksRemoveDuplicated.push(currentLevelTicks[i]);
+                        if (tickValue >= extent[0] && tickValue <= extent[1]) {
+                            tickCount++;
                         }
-                        else {
-                            // date = new Date(+date + interval);
-                            date[setMillisecondsMethodName](date[getMillisecondsMethodName]() + 100);
-                        }
-                        break;
+                    }
                 }
-                if (isFirst && unitNames[i] !== 'millisecond') {
-                    date[setMillisecondsMethodName](0);
-                }
 
-                const dateValue = date.getTime();
-                if (dateValue >= extent[0] && dateValue <= extent[1]) {
-                    ticks.push({
-                        value: dateValue,
-                        level: levelId
-                    });
-                    hasTickInLevel = true;
-                }
-                else if (dateValue > extent[1]) {
+                // Only treat primary time unit as one level.
+                levelsTicks.push(levelTicksRemoveDuplicated);
+
+                if (tickCount > (extent[1] - extent[0]) / approxInterval || bottomUnitName === unitNames[i]) {
                     break;
                 }
-                isFirst = false;
+
             }
-            if (hasTickInLevel
-                && isPrimaryTimeUnit(unitNames[i])
-            ) {
-                ++levelId;
-            }
+            // Reset if next unitName is primary
+            currentLevelTicks = [];
         }
 
-        if (__DEV__) {
-            if (iter >= safeLimit) {
-                warn('Exceed safe limit.');
-            }
-        }
-
-        // Remove the duplicate so the tick count can be precisely.
-        ticks.sort((a, b) => a.value - b.value);
-        let tickCount = 0;
-        const tickLen = ticks.length;
-        if (tickLen) {
-            let prev = ticks[0].value;
-            for (let i = 1; i < tickLen; ++i) {
-                if (prev !== ticks[i].value) {
-                    prev = ticks[i].value;
-                    tickCount++;
-                }
-            }
-        }
-
-        if (tickCount > (extent[1] - extent[0]) / approxInterval || unitNames[i] === unitName) {
-            break;
-        }
-        // if (unitNames[i] === unitName) {
-        //     break;
-        // }
     }
 
-    let maxLevel = -Number.MAX_VALUE;
-    for (let i = 0; i < ticks.length; ++i) {
-        maxLevel = Math.max(maxLevel, ticks[i].level);
+    if (__DEV__) {
+        if (iter >= safeLimit) {
+            warn('Exceed safe limit.');
+        }
     }
 
-    // Remove duplicates
-    const result = [];
-    for (let i = 0; i < ticks.length; ++i) {
-        if (i === 0 || ticks[i].value !== ticks[i - 1].value) {
-            result.push({
-                value: ticks[i].value,
-                level: maxLevel - ticks[i].level
+    const levelsTicksInExtent = filter(map(levelsTicks, levelTicks => {
+        return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1] && !tick.notAdd);
+    }), levelTicks => levelTicks.length > 0);
+
+    const ticks: TimeScaleTick[] = [];
+    const maxLevel = levelsTicksInExtent.length - 1;
+    for (let i = 0; i < levelsTicksInExtent.length; ++i) {
+        const levelTicks = levelsTicksInExtent[i];
+        for (let k = 0; k < levelTicks.length; ++k) {
+            ticks.push({
+                value: levelTicks[k].value,
+                level: maxLevel - i
             });
         }
     }
 
+    ticks.sort((a, b) => a.value - b.value);
+    // Remove duplicates
+    const result: TimeScaleTick[] = [];
+    for (let i = 0; i < ticks.length; ++i) {
+        if (i === 0 || ticks[i].value !== ticks[i - 1].value) {
+            result.push(ticks[i]);
+        }
+    }
 
     return result;
 }
