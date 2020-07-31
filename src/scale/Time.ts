@@ -61,6 +61,9 @@ import IntervalScale from './Interval';
 import Scale from './Scale';
 import {TimeScaleTick} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
+import { warn } from '../util/log';
+import { LocaleOption } from '../locale';
+import Model from '../model/Model';
 
 // FIXME 公用？
 const bisect = function (
@@ -81,6 +84,12 @@ const bisect = function (
     return lo;
 };
 
+interface TimeScale {
+    constructor(settings?: {
+        locale: Model<LocaleOption>,
+        useUTC: boolean
+    }): void
+}
 
 class TimeScale extends IntervalScale {
 
@@ -111,7 +120,8 @@ class TimeScale extends IntervalScale {
         labelFormatter: TimeAxisLabelFormatterOption
     ): string {
         const isUTC = this.getSetting('useUTC');
-        return leveledFormat(tick, idx, labelFormatter, isUTC);
+        const lang = this.getSetting('locale');
+        return leveledFormat(tick, idx, labelFormatter, lang, isUTC);
     }
 
     /**
@@ -135,13 +145,10 @@ class TimeScale extends IntervalScale {
 
         const useUTC = this.getSetting('useUTC');
 
-        const unitLen = scaleIntervals.length;
-        const idx = bisect(scaleIntervals, this._interval, 0, unitLen);
-        const intervals = scaleIntervals[Math.min(idx, unitLen - 1)];
-
         const innerTicks = getIntervalTicks(
-            intervals[0] as PrimaryTimeUnit,
+            this._intervalUnit,
             this._approxInterval,
+            this._interval,
             useUTC,
             extent
         );
@@ -197,9 +204,11 @@ class TimeScale extends IntervalScale {
         }
 
         const scaleIntervalsLen = scaleIntervals.length;
-        const idx = bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen);
+        const idx = bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen) - 1;
 
-        const intervals = scaleIntervals[Math.min(idx, scaleIntervalsLen - 1)];
+        const intervals = scaleIntervals[
+            Math.max(Math.min(idx, scaleIntervalsLen - 1), 0
+        )];
 
         // Interval will be used in getTicks
         this._interval = intervals[1];
@@ -290,10 +299,10 @@ function isUnitValueSame(
     }
 }
 
-
 function getIntervalTicks(
     unitName: TimeUnit,
     approxInterval: number,
+    interval: number,
     isUTC: boolean,
     extent: number[]
 ): TimeScaleTick[] {
@@ -319,8 +328,10 @@ function getIntervalTicks(
     const getSecondsMethodName = 'get' + utc + 'Seconds' as 'getSeconds' | 'getUTCSeconds';
     const getMillisecondsMethodName = 'get' + utc + 'Milliseconds' as 'getMilliseconds' | 'getUTCMilliseconds';
 
-    for (let i = 0, hasTickInLevel = false; i < unitNames.length && ticks.length < safeLimit; ++i) {
-        const date = new Date(extent[0]);
+    let iter = 0;
+
+    for (let i = 0, hasTickInLevel = false; i < unitNames.length && iter++ < safeLimit; ++i) {
+        let date = new Date(extent[0]);
 
         if (unitNames[i] === 'week' || unitNames[i] === 'half-week') {
             date[setHoursMethodName](0);
@@ -336,16 +347,27 @@ function getIntervalTicks(
                 hasTickInLevel = true;
             }
 
-            let isDateWithinExtent = true;
-            while (isDateWithinExtent && ticks.length < safeLimit) {
-                const dates = approxInterval > ONE_DAY * 8 ? []
-                    : (approxInterval > ONE_DAY * 3.5 ? [8, 16, 24] : [4, 8, 12, 16, 20, 24, 28]);
-                for (let d = 0; d < dates.length; ++d) {
-                    date[setDateMethodName](dates[d]);
-                    const dateTime = (date as Date).getTime();
+            outer: while (iter++ < safeLimit) {
+                const tmpDate = new Date(date);
+                tmpDate[setDateMethodName](1);
+                tmpDate[setMonthMethodName](tmpDate[getMonthMethodName]() + 1);
+                tmpDate[setDateMethodName](0);  // Set day to 0 to return the last day of last month.
+                const daysInMonth = tmpDate.getDate();
+
+                const dateInterval = approxInterval > ONE_DAY * 16 ? Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick betwen two month.
+                    : approxInterval > ONE_DAY * 8 ? 8
+                        : approxInterval > ONE_DAY * 3.5 ? 4
+                            : approxInterval > ONE_DAY * 1.5 ? 2 : 1;
+
+                // const dates = approxInterval > ONE_DAY * 8 ? [15]
+                //     : (approxInterval > ONE_DAY * 3.5 ? [8, 16, 24] : [4, 8, 12, 16, 20, 24, 28]);
+
+                for (let d = dateInterval; d < daysInMonth; d += dateInterval) {
+
+                    date[setDateMethodName](d);
+                    const dateTime = date.getTime();
                     if (dateTime > extent[1]) {
-                        isDateWithinExtent = false;
-                        break;
+                        break outer;
                     }
                     else if (dateTime >= extent[0]) {
                         ticks.push({
@@ -355,6 +377,9 @@ function getIntervalTicks(
                         hasTickInLevel = true;
                     }
                 }
+
+                // Reset date to 0. The date may be 30, and days of next month may be 29. Which will excced
+                date[setDateMethodName](1);
                 date[setMonthMethodName](date[getMonthMethodName]() + 1);
             }
         }
@@ -364,7 +389,7 @@ function getIntervalTicks(
         )) {
             // Level value changes within extent
             let isFirst = true;
-            while (ticks.length < safeLimit) {
+            while (iter++ < safeLimit) {
                 switch (unitNames[i]) {
                     case 'year':
                     case 'half-year':
@@ -434,6 +459,7 @@ function getIntervalTicks(
                             date[setSecondsMethodName](0);
                         }
                         else {
+                            // date = new Date(+date + interval);
                             date[setHoursMethodName](date[getHoursMethodName]() + 1);
                         }
                         break;
@@ -444,12 +470,14 @@ function getIntervalTicks(
                             date[setSecondsMethodName](0);
                         }
                         else {
+                            // date = new Date(+date + interval);
                             date[setMinutesMethodName](date[getMinutesMethodName]() + 1);
                         }
                         break;
 
                     case 'second':
                         if (!isFirst) {
+                            // date = new Date(+date + interval);
                             date[setSecondsMethodName](date[getSecondsMethodName]() + 1);
                         }
                         break;
@@ -459,6 +487,7 @@ function getIntervalTicks(
                             date[setMillisecondsMethodName](0);
                         }
                         else {
+                            // date = new Date(+date + interval);
                             date[setMillisecondsMethodName](date[getMillisecondsMethodName]() + 100);
                         }
                         break;
@@ -467,7 +496,7 @@ function getIntervalTicks(
                     date[setMillisecondsMethodName](0);
                 }
 
-                const dateValue = (date as Date).getTime();
+                const dateValue = date.getTime();
                 if (dateValue >= extent[0] && dateValue <= extent[1]) {
                     ticks.push({
                         value: dateValue,
@@ -487,12 +516,33 @@ function getIntervalTicks(
             }
         }
 
-        if (unitNames[i] === unitName) {
+        if (__DEV__) {
+            if (iter >= safeLimit) {
+                warn('Exceed safe limit.');
+            }
+        }
+
+        // Remove the duplicate so the tick count can be precisely.
+        ticks.sort((a, b) => a.value - b.value);
+        let tickCount = 0;
+        const tickLen = ticks.length;
+        if (tickLen) {
+            let prev = ticks[0].value;
+            for (let i = 1; i < tickLen; ++i) {
+                if (prev !== ticks[i].value) {
+                    prev = ticks[i].value;
+                    tickCount++;
+                }
+            }
+        }
+
+        if (tickCount > (extent[1] - extent[0]) / approxInterval || unitNames[i] === unitName) {
             break;
         }
+        // if (unitNames[i] === unitName) {
+        //     break;
+        // }
     }
-
-    ticks.sort((a, b) => a.value - b.value);
 
     let maxLevel = -Number.MAX_VALUE;
     for (let i = 0; i < ticks.length; ++i) {
@@ -509,6 +559,7 @@ function getIntervalTicks(
             });
         }
     }
+
 
     return result;
 }

@@ -89,7 +89,9 @@ under the License.
                 return {
                     useUTC: useUTC,
                     tooltip: {
-                        trigger: 'axis'
+                        trigger: 'axis',
+                        // test in Safari (NaN-NaN-NaN NaN:NaN:NaN)
+                        formatter: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}'
                     },
                     xAxis: [{
                         type: 'time',
@@ -122,11 +124,8 @@ under the License.
                             normal: {
                                 show: true,
                                 formatter: function (params) {
-                                    var date = typeof params.value[0] === 'string'
-                                        ? new Date(params.value[0] + ' 00:00:00')
-                                        : new Date(params.value[0]);
                                     return echarts.time.format(
-                                        date,
+                                        params.value[0],
                                         '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}',
                                         useUTC
                                     );

@@ -57,6 +57,7 @@ import {
 import OptionManager from './OptionManager';
 import Scheduler from '../stream/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
+import { LocaleOption } from '../locale';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -78,6 +79,8 @@ class GlobalModel extends Model<ECUnitOption> {
     option: ECUnitOption;
 
     private _theme: Model;
+
+    private _locale: Model;
 
     private _optionManager: OptionManager;
 
@@ -118,11 +121,13 @@ class GlobalModel extends Model<ECUnitOption> {
         parentModel: Model,
         ecModel: GlobalModel,
         theme: object,
+        locale: object,
         optionManager: OptionManager
     ): void {
         theme = theme || {};
         this.option = null; // Mark as not initialized.
         this._theme = new Model(theme);
+        this._locale = new Model(locale);
         this._optionManager = optionManager;
     }
 
@@ -414,6 +419,15 @@ class GlobalModel extends Model<ECUnitOption> {
 
     getTheme(): Model {
         return this._theme;
+    }
+
+    getLocaleModel(): Model<LocaleOption> {
+        return this._locale;
+    }
+
+    getLocale(localePosition: Parameters<Model<LocaleOption>['get']>[0]): any {
+        const locale = this.getLocaleModel();
+        return locale.get(localePosition as any);
     }
 
     setUpdatePayload(payload: Payload) {

@@ -41,6 +41,9 @@ echarts.registerAction({
     ecModel.eachComponent(
         { mainType: componentType, query: payload },
         function (componentModel) {
+            if (payload.sortInfo) {
+                componentModel.axis.setCategorySortInfo(payload.sortInfo);
+            }
         }
     );
 });

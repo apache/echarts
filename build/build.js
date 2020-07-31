@@ -24,11 +24,11 @@ const config = require('./config.js');
 const commander = require('commander');
 const chalk = require('chalk');
 const rollup = require('rollup');
-const ecLangPlugin = require('./ec-lang-rollup-plugin');
 const prePublish = require('./pre-publish');
 const transformDEV = require('./transform-dev');
 const UglifyJS = require("uglify-js");
 const preamble = require('./preamble');
+const {buildI18n} = require('./build-i18n')
 
 async function run() {
 
@@ -60,23 +60,15 @@ async function run() {
                 + '\n' + descIndent + '# Only generate `dist/echarts.js`.',
             egIndent + 'node build/build.js --type common --min'
                 + '\n' + descIndent + '# Only generate `dist/echarts.common.min.js`.',
-            egIndent + 'node build/build.js --type simple --min --lang en'
+            egIndent + 'node build/build.js --type simple --min'
                 + '\n' + descIndent + '# Only generate `dist/echarts-en.simple.min.js`.',
-            egIndent + 'node build/build.js --lang "my/lang.js" -i "my/index.js" -o "my/bundle.js"'
+            egIndent + 'node build/build.js -i "my/index.js" -o "my/bundle.js"'
                 + '\n' + descIndent + '# Take `<cwd>/my/index.js` as input and generate `<cwd>/my/bundle.js`,'
-                + '\n' + descIndent + 'where `<cwd>/my/lang.js` is used as language file.',
         ].join('\n'))
         .option(
             '-w, --watch', [
             'Watch modifications of files and auto-compile to dist file. For example,',
             descIndent + '`echarts/dist/echarts.js`.'
-        ].join('\n'))
-        .option(
-            '--lang <language file path or shortcut>', [
-            'Use the specified file instead of `echarts/src/lang.js`. For example:',
-            descIndent + '`--lang en` will use `echarts/src/langEN.js`.',
-            descIndent + '`--lang my/langDE.js` will use `<cwd>/my/langDE.js`. -o must be specified in this case.',
-            descIndent + '`--lang /my/indexSW.js` will use `/my/indexSW.js`. -o must be specified in this case.'
         ].join('\n'))
         .option(
             '--prepublish',
@@ -118,7 +110,6 @@ async function run() {
     let isPrePublish = !!commander.prepublish;
 
     let opt = {
-        lang: commander.lang,
         min: commander.min,
         type: commander.type || '',
         input: commander.input,
@@ -132,7 +123,6 @@ async function run() {
     };
 
     validateIO(opt.input, opt.output);
-    validateLang(opt.lang, opt.output);
 
     if (isWatch) {
         watch(config.createECharts(opt));
@@ -172,21 +162,6 @@ function validateIO(input, output) {
     }
 }
 
-function validateLang(lang, output) {
-    if (!lang) {
-        return;
-    }
-
-    let langInfo = ecLangPlugin.getLangFileInfo(lang);
-
-    if (langInfo.isOuter && !output) {
-        throw new Error('`-o` or `--output` must be specified if using a file path in `--lang`.');
-    }
-    if (!langInfo.absolutePath || !fs.statSync(langInfo.absolutePath).isFile()) {
-        throw new Error(`File ${langInfo.absolutePath} does not exist yet. Contribution is welcome!`);
-    }
-}
-
 /**
  * @param {Array.<Object>} configs A list of rollup configs:
  *  See: <https://rollupjs.org/#big-list-of-options>
@@ -201,6 +176,8 @@ function validateLang(lang, output) {
  *  ]
  */
 async function build(configs, min, sourcemap) {
+    // buildI18n JSON before build when build
+    buildI18n();
 
     // ensureZRenderCode.prepare();
 

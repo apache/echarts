@@ -112,8 +112,6 @@ export interface ECElement extends Element {
     hoverState?: 0 | 1 | 2;
     selected?: boolean;
 
-    style?: Dictionary<unknown>;
-
     z2EmphasisLift?: number;
     z2SelectLift?: number;
     /**

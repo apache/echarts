@@ -1,3 +1,5 @@
+
+
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -17,11 +19,28 @@
 * under the License.
 */
 
-/**
- * Language: (Simplified) Chinese.
- */
 
-export default {
+/**
+ * AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+(function(root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['exports', 'echarts'], factory);
+    } else if (
+        typeof exports === 'object' &&
+        typeof exports.nodeName !== 'string'
+    ) {
+        // CommonJS
+        factory(exports, require('echarts'));
+    } else {
+        // Browser globals
+        factory({}, root.echarts);
+    }
+})(this, function(exports, echarts) {
+
+
+var localeObj = {
     time: {
         month: [
             '一月', '二月', '三月', '四月', '五月', '六月',
@@ -140,3 +159,6 @@ export default {
         }
     }
 };
+    echarts.registerLocale('ZH', localeObj);
+        
+});

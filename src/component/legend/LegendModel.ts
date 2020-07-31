@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../../model/Model';
 import {isNameSpecified} from '../../util/model';
-import lang from '../../lang';
 import ComponentModel from '../../model/Component';
 import {
     ComponentOption,
@@ -35,16 +34,22 @@ import {
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 
-const langSelector = lang.legend.selector;
-
-const defaultSelectorOption = {
-    all: {
-        type: 'all',
-        title: zrUtil.clone(langSelector.all)
-    },
-    inverse: {
-        type: 'inverse',
-        title: zrUtil.clone(langSelector.inverse)
+type LegendDefaultSelectorOptionsProps = {
+    type: string;
+    title: string;
+};
+const getDefaultSelectorOptions = function (ecModel: GlobalModel, type: string): LegendDefaultSelectorOptionsProps {
+    if (type === 'all') {
+        return {
+            type: 'all',
+            title: ecModel.getLocale(['legend', 'selector', 'all'])
+        };
+    }
+    else if (type === 'inverse') {
+        return {
+            type: 'inverse',
+            title: ecModel.getLocale(['legend', 'selector', 'inverse'])
+        };
     }
 };
 
@@ -201,6 +206,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
     _updateSelector(option: Ops) {
         let selector = option.selector;
+        const {ecModel} = this;
         if (selector === true) {
             selector = option.selector = ['all', 'inverse'];
         }
@@ -208,7 +214,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             zrUtil.each(selector, function (item, index) {
                 zrUtil.isString(item) && (item = {type: item});
                 (selector as LegendSelectorButtonOption[])[index] = zrUtil.merge(
-                    item, defaultSelectorOption[item.type]
+                    item, getDefaultSelectorOptions(ecModel, item.type)
                 );
             });
         }

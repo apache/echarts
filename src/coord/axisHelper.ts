@@ -192,6 +192,7 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
                 });
             case 'time':
                 return new TimeScale({
+                    locale: model.ecModel.getLocaleModel(),
                     useUTC: model.ecModel.get('useUTC')
                 });
             default:
@@ -255,8 +256,11 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                     idx = tick.value - categoryTickStart;
                 }
                 return cb(
-                    getAxisRawValue(axis, tick) as (TimeScaleTick & string) | (TimeScaleTick & number),
-                    idx
+                    getAxisRawValue(axis, tick) as number,
+                    idx,
+                    (tick as TimeScaleTick).level != null ? {
+                        level: (tick as TimeScaleTick).level
+                    } : null
                 );
             };
         })(labelFormatter);

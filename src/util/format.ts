@@ -18,10 +18,10 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import * as numberUtil from './number';
-import * as timeUtil from './time';
-import {TooltipRenderMode, ColorString} from './types';
+import { parseDate } from './number';
+import { TooltipRenderMode, ColorString } from './types';
 import { Dictionary } from 'zrender/src/core/types';
+import { format, pad } from './time';
 
 /**
  * Add a comma each three digit.
@@ -104,10 +104,8 @@ export function formatTpl(
     const isTimeAxis = paramsList[0].axisType && paramsList[0].axisType.indexOf('time') >= 0;
     if (isTimeAxis) {
         const axisValue = paramsList[0].data[paramsList[0].axisIndex];
-        const date = timeUtil.getDateFromStr(
-            typeof axisValue === 'number' ? new Date(axisValue) : axisValue
-        );
-        return timeUtil.format(date, tpl);
+        const date = parseDate(axisValue);
+        return format(date, tpl);
     }
     else {
         const $vars = paramsList[0].$vars || [];
@@ -200,11 +198,6 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     }
 }
 
-export function pad(str: string, len: number): string {
-    str += '';
-    return '0000'.substr(0, len - str.length) + str;
-}
-
 
 /**
  * ISO Date format
@@ -225,7 +218,7 @@ export function formatTime(tpl: string, value: number | string | Date, isUTC?: b
         tpl = 'MM-dd\nyyyy';
     }
 
-    const date = numberUtil.parseDate(value);
+    const date = parseDate(value);
     const utc = isUTC ? 'UTC' : '';
     const y = (date as any)['get' + utc + 'FullYear']();
     const M = (date as any)['get' + utc + 'Month']() + 1;
