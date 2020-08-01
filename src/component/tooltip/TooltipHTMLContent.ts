@@ -136,10 +136,8 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     return cssText.join(';');
 }
 
-function assembleCssText(tooltipModel: Model<TooltipOption>) {
-
+function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolean) {
     const cssText: string[] = [];
-
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
     const shadowBlur = tooltipModel.get('shadowBlur');
@@ -153,7 +151,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
     // If tooltip show arrow, then disable transition
-    transitionDuration
+    !isFirstShow && transitionDuration
         && !(['top', 'left', 'bottom', 'right'].includes(tooltipModel.get('position') as string))
         && tooltipModel.get('trigger') !== 'item'
         && cssText.push(assembleTransition(transitionDuration));
@@ -246,6 +244,7 @@ class TooltipHTMLContent {
     private _hideDelay: number;
 
     private _inContent: boolean;
+    private _firstShow = true;
 
 
     constructor(
@@ -337,7 +336,7 @@ class TooltipHTMLContent {
         const styleCoord = this._styleCoord;
         const offset = el.offsetHeight / 2;
         nearPointColor = getFinalColor(nearPointColor);
-        el.style.cssText = gCssText + assembleCssText(tooltipModel)
+        el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
@@ -355,6 +354,7 @@ class TooltipHTMLContent {
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
         this._show = true;
+        this._firstShow && (this._firstShow = false);
     }
 
     setContent(
