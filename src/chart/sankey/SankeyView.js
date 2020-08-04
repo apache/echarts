@@ -190,6 +190,10 @@ export default echarts.extendChartView({
             var dragX2 = node2Model.get('localX');
             var dragY2 = node2Model.get('localY');
             var edgeLayout = edge.getLayout();
+            var n1lengthmin = Math.min(n1lengthin, n1lengthout);
+            var n1lengthmax = Math.max(n1lengthin, n1lengthout);
+            var n2lengthmin = Math.min(n2lengthin, n2lengthout);
+            var n2lengthmax = Math.max(n2lengthin, n2lengthout);
             var x1;
             var y1;
             var x2;
@@ -206,24 +210,24 @@ export default echarts.extendChartView({
             curve.shape.mode = mode;
 
             if (orient === 'vertical') {
-                x1 = (dragX1 != null ? dragX1 * width : n1Layout.x / n1lengthin) + edgeLayout.sy / n1lengthout;
-                y1 = (dragY1 != null ? dragY1 * height : n1Layout.y) + n1Layout.dy;
-                x2 = (dragX2 != null ? dragX2 * width : n2Layout.x / n2lengthout) + edgeLayout.ty / n2lengthin;
-                y2 = dragY2 != null ? dragY2 * height : n2Layout.y;
-                cpx1 = x1;
-                cpy1 = y1 * (1 - curvature) + y2 * curvature;
-                cpx2 = x2;
-                cpy2 = y1 * curvature + y2 * (1 - curvature);
+              x1 = (dragX1 != null ? dragX1 * width : n1Layout.x / n1lengthmin) + edgeLayout.sy / n1lengthmax;
+              y1 = (dragY1 != null ? dragY1 * height : n1Layout.y) + n1Layout.dy;
+              x2 = (dragX2 != null ? dragX2 * width : n2Layout.x / n2lengthmin) + edgeLayout.ty / n2lengthmax;
+              y2 = dragY2 != null ? dragY2 * height : n2Layout.y;
+              cpx1 = x1;
+              cpy1 = y1 * (1 - curvature) + y2 * curvature;
+              cpx2 = x2;
+              cpy2 = y1 * curvature + y2 * (1 - curvature);
             }
             else {
-                x1 = (dragX1 != null ? dragX1 * width : n1Layout.x) + n1Layout.dx;
-                y1 = (dragY1 != null ? dragY1 * height : n1Layout.y / n1lengthin) + edgeLayout.sy / n1lengthout;
-                x2 = dragX2 != null ? dragX2 * width : n2Layout.x;
-                y2 = (dragY2 != null ? dragY2 * height : n2Layout.y / n2lengthout) + edgeLayout.ty / n2lengthin;
-                cpx1 = x1 * (1 - curvature) + x2 * curvature;
-                cpy1 = y1;
-                cpx2 = x1 * curvature + x2 * (1 - curvature);
-                cpy2 = y2;
+              x1 = (dragX1 != null ? dragX1 * width : n1Layout.x) + n1Layout.dx;
+              y1 = (dragY1 != null ? dragY1 * height : n1Layout.y / n1lengthmin) + edgeLayout.sy / n1lengthmax;
+              x2 = dragX2 != null ? dragX2 * width : n2Layout.x;
+              y2 = (dragY2 != null ? dragY2 * height : n2Layout.y / n2lengthmin) + edgeLayout.ty / n2lengthmax;
+              cpx1 = x1 * (1 - curvature) + x2 * curvature;
+              cpy1 = y1;
+              cpx2 = x1 * curvature + x2 * (1 - curvature);
+              cpy2 = y2;
             }
 
             curve.setShape({
