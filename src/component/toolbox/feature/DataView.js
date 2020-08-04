@@ -441,9 +441,9 @@ function tryMergeDataOption(newData, originalData) {
             // original data has name but new data has no name
             var shouldDeleteName = original.name != null && newVal.name == null;
             // Original data has option
-            var mergedVal = zrUtil.defaults(newVal, original);
+            newVal = zrUtil.defaults(newVal, original);
             shouldDeleteName && (delete newVal.name);
-            return mergedVal;
+            return newVal;
         }
         else {
             return newVal;
