@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/esl.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            option = {
+                series: [
+                    {
+                        name:'treemap',
+                        type:'treemap',
+                        label: {
+                            position: 'insideRight'
+                        },
+                        breadcrumb: {
+                        },
+                        itemStyle: {
+                            color: 'blue'
+                        },
+                        levels: [{
+                            itemStyle: {
+                                borderWidth: 15,
+                                gapWidth: 30,
+                                borderColor: 'pink'
+                            }
+                        }, {
+                            itemStyle: {
+                                borderWidth: 15,
+                                gapWidth: 40,
+                                borderColor: '#333'
+                            }
+                        }, {
+                            itemStyle: {
+                                color: 'green',
+                                borderWidth: 10,
+                                borderColor: '#555570'
+                            }
+                        }],
+                        data:[{
+                            name: '三星',
+                            value: 2,
+                        }, {
+                            name: '小米',
+                            value: 4,
+                            children: [{
+                                name: '小米0',
+                                value: 10,
+                                children: [{
+                                    itemStyle: {
+                                        color: 'orange'
+                                    },
+                                    name: '小尺',
+                                    value: 300
+                                }, {
+                                    name: '小寸',
+                                    value: 200
+                                }, {
+                                    name: '小光年',
+                                    value: 200
+                                }]
+                            }, {
+                                name: '小米1',
+                                value: 4
+                            }]
+                        }, {
+                            name: '三曰生',
+                            value: 1
+                        }]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Test priority of visual:',
+                    'bg of "小米1" are **green** (in level2 and levels[2].color: "green")',
+                    'bg of "小寸" "小光年" are **green** (in level3 and use designate visual)',
+                    'bg of "小尺" are **orange** (data itemStyle.color: "orange")',
+                    'bg of "三星" "三曰生" are **blue** (in level1, series.itemStyle.color: "blue")',
+                ],
+                option: option,
+                height: 500
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

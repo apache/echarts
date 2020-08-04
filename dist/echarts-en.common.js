@@ -10252,6 +10252,10 @@ Painter.prototype = {
             if (this._layerConfig[zlevel]) {
                 merge(layer, this._layerConfig[zlevel], true);
             }
+            // TODO Remove EL_AFTER_INCREMENTAL_INC magic number
+            else if (this._layerConfig[zlevel - EL_AFTER_INCREMENTAL_INC]) {
+                merge(layer, this._layerConfig[zlevel - EL_AFTER_INCREMENTAL_INC], true);
+            }
 
             if (virtual) {
                 layer.virtual = virtual;
@@ -10404,12 +10408,26 @@ Painter.prototype = {
 
         var prevLayer = null;
         var incrementalLayerCount = 0;
+        var prevZlevel;
         for (var i = 0; i < list.length; i++) {
             var el = list[i];
             var zlevel = el.zlevel;
             var layer;
-            // PENDING If change one incremental element style ?
-            // TODO Where there are non-incremental elements between incremental elements.
+
+            if (prevZlevel !== zlevel) {
+                prevZlevel = zlevel;
+                incrementalLayerCount = 0;
+            }
+
+            // TODO Not use magic number on zlevel.
+
+            // Each layer with increment element can be separated to 3 layers.
+            //          (Other Element drawn after incremental element)
+            // -----------------zlevel + EL_AFTER_INCREMENTAL_INC--------------------
+            //                      (Incremental element)
+            // ----------------------zlevel + INCREMENTAL_INC------------------------
+            //              (Element drawn before incremental element)
+            // --------------------------------zlevel--------------------------------
             if (el.incremental) {
                 layer = this.getLayer(zlevel + INCREMENTAL_INC, this._needsManuallyCompositing);
                 layer.incremental = true;
@@ -10504,6 +10522,7 @@ Painter.prototype = {
 
             for (var i = 0; i < this._zlevelList.length; i++) {
                 var _zlevel = this._zlevelList[i];
+                // TODO Remove EL_AFTER_INCREMENTAL_INC magic number
                 if (_zlevel === zlevel || _zlevel === zlevel + EL_AFTER_INCREMENTAL_INC) {
                     var layer = this._layers[_zlevel];
                     merge(layer, layerConfig[zlevel], true);
@@ -11576,7 +11595,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.3.0';
+var version$1 = '4.3.1';
 
 /**
  * Initializing a zrender instance
@@ -17782,11 +17801,13 @@ function getHighlightDigit(highlightKey) {
  * @param {Object} opt Check `opt` of `setTextStyleCommon` to find other props.
  * @param {string|Function} [opt.defaultText]
  * @param {module:echarts/model/Model} [opt.labelFetcher] Fetch text by
- *      `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
- * @param {module:echarts/model/Model} [opt.labelDataIndex] Fetch text by
- *      `opt.textFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
- * @param {module:echarts/model/Model} [opt.labelDimIndex] Fetch text by
- *      `opt.textFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex)`
+ *      `opt.labelFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp)`
+ * @param {number} [opt.labelDataIndex] Fetch text by
+ *      `opt.textFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp)`
+ * @param {number} [opt.labelDimIndex] Fetch text by
+ *      `opt.textFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp)`
+ * @param {string} [opt.labelProp] Fetch text by
+ *      `opt.textFetcher.getFormattedLabel(opt.labelDataIndex, 'normal'/'emphasis', null, opt.labelDimIndex, opt.labelProp)`
  * @param {Object} [normalSpecified]
  * @param {Object} [emphasisSpecified]
  */
@@ -17800,6 +17821,7 @@ function setLabelStyle(
     var labelFetcher = opt.labelFetcher;
     var labelDataIndex = opt.labelDataIndex;
     var labelDimIndex = opt.labelDimIndex;
+    var labelProp = opt.labelProp;
 
     // This scenario, `label.normal.show = true; label.emphasis.show = false`,
     // is not supported util someone requests.
@@ -17813,7 +17835,7 @@ function setLabelStyle(
     var baseText;
     if (showNormal || showEmphasis) {
         if (labelFetcher) {
-            baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex);
+            baseText = labelFetcher.getFormattedLabel(labelDataIndex, 'normal', null, labelDimIndex, labelProp);
         }
         if (baseText == null) {
             baseText = isFunction$1(opt.defaultText) ? opt.defaultText(labelDataIndex, opt) : opt.defaultText;
@@ -17823,7 +17845,7 @@ function setLabelStyle(
     var emphasisStyleText = showEmphasis
         ? retrieve2(
             labelFetcher
-                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex)
+                ? labelFetcher.getFormattedLabel(labelDataIndex, 'emphasis', null, labelDimIndex, labelProp)
                 : null,
             baseText
         )
@@ -19734,7 +19756,7 @@ var number = (Object.freeze || Object)({
 // import Text from 'zrender/src/graphic/Text';
 
 /**
- * 每三位默认加,格式化
+ * add commas after every three numbers
  * @param {string|number} x
  * @return {string}
  */
@@ -19987,6 +20009,22 @@ function getTextRect(
     );
 }
 
+/**
+ * open new tab
+ * @param {string} link url
+ * @param {string} target blank or self
+ */
+function windowOpen(link, target) {
+    if (target === '_blank' || target === 'blank') {
+        var blank = window.open();
+        blank.opener = null;
+        blank.location = link;
+    }
+    else {
+        window.open(link, target);
+    }
+}
+
 
 var format = (Object.freeze || Object)({
 	addCommas: addCommas,
@@ -20000,7 +20038,8 @@ var format = (Object.freeze || Object)({
 	capitalFirst: capitalFirst,
 	truncateText: truncateText$1,
 	getTextBoundingRect: getTextBoundingRect,
-	getTextRect: getTextRect
+	getTextRect: getTextRect,
+	windowOpen: windowOpen
 });
 
 /*
@@ -24981,7 +25020,7 @@ function dataTaskReset(context) {
 
 function dataTaskProgress(param, context) {
     // Avoid repead cloneShallow when data just created in reset.
-    if (param.end > context.outputData.count()) {
+    if (context.outputData && param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
     }
 }
@@ -25703,6 +25742,32 @@ var lang = {
             lang: ['Right Click to Save Image']
         }
     },
+    series: {
+        typeNames: {
+            pie: 'Pie chart',
+            bar: 'Bar chart',
+            line: 'Line chart',
+            scatter: 'Scatter plot',
+            effectScatter: 'Ripple scatter plot',
+            radar: 'Radar chart',
+            tree: 'Tree',
+            treemap: 'Treemap',
+            boxplot: 'Boxplot',
+            candlestick: 'Candlestick',
+            k: 'K line chart',
+            heatmap: 'Heat map',
+            map: 'Map',
+            parallel: 'Parallel coordinate map',
+            lines: 'Line graph',
+            graph: 'Relationship graph',
+            sankey: 'Sankey diagram',
+            funnel: 'Funnel chart',
+            gauge: 'Guage',
+            pictorialBar: 'Pictorial bar',
+            themeRiver: 'Theme River Map',
+            sunburst: 'Sunburst'
+        }
+    },
     aria: {
         general: {
             withTitle: 'This is a chart about "{title}"',
@@ -25935,11 +26000,16 @@ var loadingDefault = function (api, opts) {
     opts = opts || {};
     defaults(opts, {
         text: 'loading',
-        color: '#c23531',
         textColor: '#000',
+        fontSize: '12px',
         maskColor: 'rgba(255, 255, 255, 0.8)',
+        showSpinner: true,
+        color: '#c23531',
+        spinnerRadius: 10,
+        lineWidth: 5,
         zlevel: 0
     });
+    var group = new Group();
     var mask = new Rect({
         style: {
             fill: opts.maskColor
@@ -25947,24 +26017,13 @@ var loadingDefault = function (api, opts) {
         zlevel: opts.zlevel,
         z: 10000
     });
-    var arc = new Arc({
-        shape: {
-            startAngle: -PI$1 / 2,
-            endAngle: -PI$1 / 2 + 0.1,
-            r: 10
-        },
-        style: {
-            stroke: opts.color,
-            lineCap: 'round',
-            lineWidth: 5
-        },
-        zlevel: opts.zlevel,
-        z: 10001
-    });
+    group.add(mask);
+    var font = opts.fontSize + ' sans-serif';
     var labelRect = new Rect({
         style: {
             fill: 'none',
             text: opts.text,
+            font: font,
             textPosition: 'right',
             textDistance: 10,
             textFill: opts.textColor
@@ -25972,32 +26031,49 @@ var loadingDefault = function (api, opts) {
         zlevel: opts.zlevel,
         z: 10001
     });
-
-    arc.animateShape(true)
-        .when(1000, {
-            endAngle: PI$1 * 3 / 2
-        })
-        .start('circularInOut');
-    arc.animateShape(true)
-        .when(1000, {
-            startAngle: PI$1 * 3 / 2
-        })
-        .delay(300)
-        .start('circularInOut');
-
-    var group = new Group();
-    group.add(arc);
     group.add(labelRect);
-    group.add(mask);
+    if (opts.showSpinner) {
+        var arc = new Arc({
+            shape: {
+                startAngle: -PI$1 / 2,
+                endAngle: -PI$1 / 2 + 0.1,
+                r: opts.spinnerRadius
+            },
+            style: {
+                stroke: opts.color,
+                lineCap: 'round',
+                lineWidth: opts.lineWidth
+            },
+            zlevel: opts.zlevel,
+            z: 10001
+        });
+        arc.animateShape(true)
+            .when(1000, {
+                endAngle: PI$1 * 3 / 2
+            })
+            .start('circularInOut');
+        arc.animateShape(true)
+            .when(1000, {
+                startAngle: PI$1 * 3 / 2
+            })
+            .delay(300)
+            .start('circularInOut');
+        group.add(arc);
+    }
     // Inject resize
     group.resize = function () {
-        var cx = api.getWidth() / 2;
+        var textWidth = getWidth(opts.text, font);
+        var r = opts.showSpinner ? opts.spinnerRadius : 0;
+        // cx = (containerWidth - arcDiameter - textDistance - textWidth) / 2
+        // textDistance needs to be calculated when both animation and text exist
+        var cx = (api.getWidth() - r * 2 - (opts.showSpinner && textWidth ? 10 : 0) - textWidth) / 2
+               // only show the text
+               - (opts.showSpinner ? 0 : textWidth / 2);
         var cy = api.getHeight() / 2;
-        arc.setShape({
+        opts.showSpinner && arc.setShape({
             cx: cx,
             cy: cy
         });
-        var r = arc.shape.r;
         labelRect.setShape({
             x: cx - r,
             y: cy - r,
@@ -27653,10 +27729,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.7.0';
+var version = '4.8.0';
 
 var dependencies = {
-    zrender: '4.3.0'
+    zrender: '4.3.1'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -28075,7 +28151,7 @@ echartsProto.getRenderedCanvas = function (opts) {
  * Get svg data url
  * @return {string}
  */
-echartsProto.getSvgDataUrl = function () {
+echartsProto.getSvgDataURL = function () {
     if (!env$1.svgSupported) {
         return;
     }
@@ -28087,7 +28163,7 @@ echartsProto.getSvgDataUrl = function () {
         el.stopAnimation(true);
     });
 
-    return zr.painter.pathToDataUrl();
+    return zr.painter.toDataURL();
 };
 
 /**
@@ -28123,7 +28199,7 @@ echartsProto.getDataURL = function (opts) {
     });
 
     var url = this._zr.painter.getType() === 'svg'
-        ? this.getSvgDataUrl()
+        ? this.getSvgDataURL()
         : this.getRenderedCanvas(opts).toDataURL(
             'image/' + (opts && opts.type || 'png')
         );
@@ -28152,6 +28228,7 @@ echartsProto.getConnectedDataURL = function (opts) {
     if (!env$1.canvasSupported) {
         return;
     }
+    var isSvg = opts.type === 'svg';
     var groupId = this.group;
     var mathMin = Math.min;
     var mathMax = Math.max;
@@ -28166,9 +28243,9 @@ echartsProto.getConnectedDataURL = function (opts) {
 
         each$1(instances, function (chart, id) {
             if (chart.group === groupId) {
-                var canvas = chart.getRenderedCanvas(
-                    clone(opts)
-                );
+                var canvas = isSvg
+                    ? chart.getZr().painter.getSvgDom().innerHTML
+                    : chart.getRenderedCanvas(clone(opts));
                 var boundingRect = chart.getDom().getBoundingClientRect();
                 left = mathMin(boundingRect.left, left);
                 top = mathMin(boundingRect.top, top);
@@ -28189,38 +28266,61 @@ echartsProto.getConnectedDataURL = function (opts) {
         var width = right - left;
         var height = bottom - top;
         var targetCanvas = createCanvas();
-        targetCanvas.width = width;
-        targetCanvas.height = height;
-        var zr = init$1(targetCanvas);
-
-        // Background between the charts
-        if (opts.connectedBackgroundColor) {
-            zr.add(new Rect({
-                shape: {
-                    x: 0,
-                    y: 0,
-                    width: width,
-                    height: height
-                },
-                style: {
-                    fill: opts.connectedBackgroundColor
-                }
-            }));
-        }
-
-        each(canvasList, function (item) {
-            var img = new ZImage({
-                style: {
-                    x: item.left * dpr - left,
-                    y: item.top * dpr - top,
-                    image: item.dom
-                }
-            });
-            zr.add(img);
+        var zr = init$1(targetCanvas, {
+            renderer: isSvg ? 'svg' : 'canvas'
         });
-        zr.refreshImmediately();
+        zr.resize({
+            width: width,
+            height: height
+        });
 
-        return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+        if (isSvg) {
+            var content = '';
+            each(canvasList, function (item) {
+                var x = item.left - left;
+                var y = item.top - top;
+                content += '<g transform="translate(' + x + ','
+                    + y + ')">' + item.dom + '</g>';
+            });
+            zr.painter.getSvgRoot().innerHTML = content;
+
+            if (opts.connectedBackgroundColor) {
+                zr.painter.setBackgroundColor(opts.connectedBackgroundColor);
+            }
+
+            zr.refreshImmediately();
+            return zr.painter.toDataURL();
+        }
+        else {
+            // Background between the charts
+            if (opts.connectedBackgroundColor) {
+                zr.add(new Rect({
+                    shape: {
+                        x: 0,
+                        y: 0,
+                        width: width,
+                        height: height
+                    },
+                    style: {
+                        fill: opts.connectedBackgroundColor
+                    }
+                }));
+            }
+
+            each(canvasList, function (item) {
+                var img = new ZImage({
+                    style: {
+                        x: item.left * dpr - left,
+                        y: item.top * dpr - top,
+                        image: item.dom
+                    }
+                });
+                zr.add(img);
+            });
+
+            zr.refreshImmediately();
+            return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+        }
     }
     else {
         return this.getDataURL(opts);
@@ -34628,9 +34728,11 @@ var largeLayout = {
 
                 coord = cartesian.dataToPoint(valuePair, null, coord);
                 // Data index might not be in order, depends on `progressiveChunkMode`.
-                largeBackgroundPoints[pointsOffset] = valueAxisHorizontal ? coordLayout.x + coordLayout.width : coord[0];
+                largeBackgroundPoints[pointsOffset] = valueAxisHorizontal
+                    ? coordLayout.x + coordLayout.width : coord[0];
                 largePoints[pointsOffset++] = coord[0];
-                largeBackgroundPoints[pointsOffset] = valueAxisHorizontal ? coord[1] : coordLayout.y + coordLayout.height;
+                largeBackgroundPoints[pointsOffset] = valueAxisHorizontal
+                    ? coord[1] : coordLayout.y + coordLayout.height;
                 largePoints[pointsOffset++] = coord[1];
                 largeDataIndices[idxOffset++] = dataIndex;
             }
@@ -35120,8 +35222,6 @@ function getScaleExtent(scale, model) {
 
     var min = model.getMin();
     var max = model.getMax();
-    var fixMin = min != null;
-    var fixMax = max != null;
     var originalExtent = scale.getExtent();
 
     var axisDataLen;
@@ -35165,17 +35265,6 @@ function getScaleExtent(scale, model) {
     // (2) When `needCrossZero` and all data is positive/negative, should it be ensured
     // that the results processed by boundaryGap are positive/negative?
 
-    if (min == null) {
-        min = scaleType === 'ordinal'
-            ? (axisDataLen ? 0 : NaN)
-            : originalExtent[0] - boundaryGap[0] * span;
-    }
-    if (max == null) {
-        max = scaleType === 'ordinal'
-            ? (axisDataLen ? axisDataLen - 1 : NaN)
-            : originalExtent[1] + boundaryGap[1] * span;
-    }
-
     if (min === 'dataMin') {
         min = originalExtent[0];
     }
@@ -35194,6 +35283,20 @@ function getScaleExtent(scale, model) {
             min: originalExtent[0],
             max: originalExtent[1]
         });
+    }
+
+    var fixMin = min != null;
+    var fixMax = max != null;
+
+    if (min == null) {
+        min = scaleType === 'ordinal'
+            ? (axisDataLen ? 0 : NaN)
+            : originalExtent[0] - boundaryGap[0] * span;
+    }
+    if (max == null) {
+        max = scaleType === 'ordinal'
+            ? (axisDataLen ? axisDataLen - 1 : NaN)
+            : originalExtent[1] + boundaryGap[1] * span;
     }
 
     (min == null || !isFinite(min)) && (min = NaN);
@@ -35246,7 +35349,13 @@ function getScaleExtent(scale, model) {
         }
     }
 
-    return [min, max];
+    return {
+        extent: [min, max],
+        // "fix" means "fixed", the value should not be
+        // changed in the subsequent steps.
+        fixMin: fixMin,
+        fixMax: fixMax
+    };
 }
 
 function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
@@ -35285,9 +35394,9 @@ function adjustScaleForOverflow(min, max, model, barWidthAndOffset) {
 }
 
 function niceScaleExtent(scale, model) {
-    var extent = getScaleExtent(scale, model);
-    var fixMin = model.getMin() != null;
-    var fixMax = model.getMax() != null;
+    var extentInfo = getScaleExtent(scale, model);
+    var extent = extentInfo.extent;
+
     var splitNumber = model.get('splitNumber');
 
     if (scale.type === 'log') {
@@ -35298,8 +35407,8 @@ function niceScaleExtent(scale, model) {
     scale.setExtent(extent[0], extent[1]);
     scale.niceExtent({
         splitNumber: splitNumber,
-        fixMin: fixMin,
-        fixMax: fixMax,
+        fixMin: extentInfo.fixMin,
+        fixMax: extentInfo.fixMax,
         minInterval: (scaleType === 'interval' || scaleType === 'time')
             ? model.get('minInterval') : null,
         maxInterval: (scaleType === 'interval' || scaleType === 'time')
@@ -36332,9 +36441,10 @@ function decodePolygon(coordinate, encodeOffsets, encodeScale) {
 /**
  * @alias module:echarts/coord/geo/parseGeoJson
  * @param {Object} geoJson
+ * @param {string} nameProperty
  * @return {module:zrender/container/Group}
  */
-var parseGeoJSON = function (geoJson) {
+var parseGeoJSON = function (geoJson, nameProperty) {
 
     decode(geoJson);
 
@@ -36372,7 +36482,7 @@ var parseGeoJSON = function (geoJson) {
         }
 
         var region = new Region(
-            properties.name,
+            properties[nameProperty || 'name'],
             geometries,
             properties.cp
         );
@@ -37569,7 +37679,6 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
 
     var itemStyle = seriesScope && seriesScope.itemStyle;
     var hoverItemStyle = seriesScope && seriesScope.hoverItemStyle;
-    var symbolRotate = seriesScope && seriesScope.symbolRotate;
     var symbolOffset = seriesScope && seriesScope.symbolOffset;
     var labelModel = seriesScope && seriesScope.labelModel;
     var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
@@ -37585,7 +37694,6 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
         itemStyle = itemModel.getModel(normalStyleAccessPath).getItemStyle(['color']);
         hoverItemStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
-        symbolRotate = itemModel.getShallow('symbolRotate');
         symbolOffset = itemModel.getShallow('symbolOffset');
 
         labelModel = itemModel.getModel(normalLabelAccessPath);
@@ -37598,6 +37706,8 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     }
 
     var elStyle = symbolPath.style;
+
+    var symbolRotate = data.getItemVisual(idx, 'symbolRotate');
 
     symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
@@ -38654,6 +38764,10 @@ function createGridClipPath(cartesian, hasAnimation, seriesModel) {
     width += lineWidth;
     height += lineWidth;
 
+    // fix: https://github.com/apache/incubator-echarts/issues/11369
+    x = Math.floor(x);
+    width = Math.round(width);
+
     var clipPath = new Rect({
         shape: {
             x: x,
@@ -38749,6 +38863,26 @@ function isPointsSame(points1, points2) {
         }
     }
     return true;
+}
+
+function getBoundingDiff(points1, points2) {
+    var min1 = [];
+    var max1 = [];
+
+    var min2 = [];
+    var max2 = [];
+
+    fromPoints(points1, min1, max1);
+    fromPoints(points2, min2, max2);
+
+    // Get a max value from each corner of two boundings.
+    return Math.max(
+        Math.abs(min1[0] - min2[0]),
+        Math.abs(min1[1] - min2[1]),
+
+        Math.abs(max1[0] - max2[0]),
+        Math.abs(max1[1] - max2[1])
+    );
 }
 
 function getSmooth(smooth) {
@@ -39363,6 +39497,24 @@ Chart.extend({
             next = turnPointsIntoStep(diff.next, coordSys, step);
             stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
         }
+        // Don't apply animation if diff is large.
+        // For better result and avoid memory explosion problems like
+        // https://github.com/apache/incubator-echarts/issues/12229
+        if (getBoundingDiff(current, next) > 3000
+            || (polygon && getBoundingDiff(stackedOnCurrent, stackedOnNext) > 3000)
+        ) {
+            polyline.setShape({
+                points: next
+            });
+            if (polygon) {
+                polygon.setShape({
+                    points: next,
+                    stackedOnPoints: stackedOnNext
+                });
+            }
+            return;
+        }
+
         // `diff.current` is subset of `current` (which should be ensured by
         // turnPointsIntoStep), so points in `__points` can be updated when
         // points in `current` are update during animation.
@@ -39469,13 +39621,14 @@ var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
             var symbolType = seriesModel.get('symbol');
             var symbolSize = seriesModel.get('symbolSize');
             var keepAspect = seriesModel.get('symbolKeepAspect');
+            var symbolRotate = seriesModel.get('symbolRotate');
 
             var hasSymbolTypeCallback = isFunction$1(symbolType);
             var hasSymbolSizeCallback = isFunction$1(symbolSize);
-            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback;
+            var hasSymbolRotateCallback = isFunction$1(symbolRotate);
+            var hasCallback = hasSymbolTypeCallback || hasSymbolSizeCallback || hasSymbolRotateCallback;
             var seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : defaultSymbolType;
             var seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
-
             data.setVisual({
                 legendSymbol: legendSymbol || seriesSymbol,
                 // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
@@ -39484,7 +39637,8 @@ var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
                 // some cases but generally it is not recommanded.
                 symbol: seriesSymbol,
                 symbolSize: seriesSymbolSize,
-                symbolKeepAspect: keepAspect
+                symbolKeepAspect: keepAspect,
+                symbolRotate: symbolRotate
             });
 
             // Only visible series has each data be visual encoded
@@ -39498,12 +39652,14 @@ var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
                     var params = seriesModel.getDataParams(idx);
                     hasSymbolTypeCallback && data.setItemVisual(idx, 'symbol', symbolType(rawValue, params));
                     hasSymbolSizeCallback && data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
+                    hasSymbolRotateCallback && data.setItemVisual(idx, 'symbolRotate', symbolRotate(rawValue, params));
                 }
 
                 if (data.hasItemOption) {
                     var itemModel = data.getItemModel(idx);
                     var itemSymbolType = itemModel.getShallow('symbol', true);
                     var itemSymbolSize = itemModel.getShallow('symbolSize', true);
+                    var itemSymbolRotate = itemModel.getShallow('symbolRotate', true);
                     var itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
 
                     // If has item symbol
@@ -39513,6 +39669,9 @@ var visualSymbol = function (seriesType, defaultSymbolType, legendSymbol) {
                     if (itemSymbolSize != null) {
                         // PENDING Transform symbolSize ?
                         data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
+                    }
+                    if (itemSymbolRotate != null) {
+                         data.setItemVisual(idx, 'symbolRotate', itemSymbolRotate);
                     }
                     if (itemSymbolKeepAspect != null) {
                         data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
@@ -43389,6 +43548,7 @@ extendChartView({
 
         var drawBackground = seriesModel.get('showBackground', true);
         var backgroundModel = seriesModel.getModel('backgroundStyle');
+        var barBorderRadius = backgroundModel.get('barBorderRadius') || 0;
 
         var bgEls = [];
         var oldBgEls = this._backgroundEls || [];
@@ -43399,8 +43559,13 @@ extendChartView({
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, layout);
+                    var bgLayout = getLayout[coord.type](data, dataIndex);
+                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
+                    // Only cartesian2d support borderRadius.
+                    if (coord.type === 'cartesian2d') {
+                        bgEl.setShape('r', barBorderRadius);
+                    }
                     bgEls[dataIndex] = bgEl;
                 }
 
@@ -43437,9 +43602,14 @@ extendChartView({
                 if (drawBackground) {
                     var bgEl = oldBgEls[oldIndex];
                     bgEl.useStyle(backgroundModel.getBarItemStyle());
+                    // Only cartesian2d support borderRadius.
+                    if (coord.type === 'cartesian2d') {
+                        bgEl.setShape('r', barBorderRadius);
+                    }
                     bgEls[newIndex] = bgEl;
 
-                    var shape = createBackgroundShape(isHorizontalOrRadial, layout, coord);
+                    var bgLayout = getLayout[coord.type](data, newIndex);
+                    var shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
                     updateProps(bgEl, { shape: shape }, animationModel, newIndex);
                 }
 
@@ -43689,9 +43859,11 @@ function removeSector(dataIndex, animationModel, el) {
 }
 
 var getLayout = {
+    // itemModel is only used to get borderWidth, which is not needed
+    // when calculating bar background layout.
     cartesian2d: function (data, dataIndex, itemModel) {
         var layout = data.getItemLayout(dataIndex);
-        var fixedLineWidth = getLineWidth(itemModel, layout);
+        var fixedLineWidth = itemModel ? getLineWidth(itemModel, layout) : 0;
 
         // fix layout with lineWidth
         var signX = layout.width > 0 ? 1 : -1;
@@ -44565,31 +44737,36 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
     var withAnimation = !firstCreate && animationTypeUpdate === 'transition';
     this._updateLabel(data, idx, withAnimation);
 
-    this.highDownOnUpdate = (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled())
+    this.highDownOnUpdate = !seriesModel.get('silent')
         ? function (fromState, toState) {
+            var hasAnimation = seriesModel.isAnimationEnabled() && itemModel.get('hoverAnimation');
             if (toState === 'emphasis') {
                 labelLine.ignore = labelLine.hoverIgnore;
                 labelText.ignore = labelText.hoverIgnore;
 
                 // Sector may has animation of updating data. Force to move to the last frame
                 // Or it may stopped on the wrong shape
-                sector.stopAnimation(true);
-                sector.animateTo({
-                    shape: {
-                        r: layout.r + seriesModel.get('hoverOffset')
-                    }
-                }, 300, 'elasticOut');
+                if (hasAnimation) {
+                    sector.stopAnimation(true);
+                    sector.animateTo({
+                        shape: {
+                            r: layout.r + seriesModel.get('hoverOffset')
+                        }
+                    }, 300, 'elasticOut');
+                }
             }
             else {
                 labelLine.ignore = labelLine.normalIgnore;
                 labelText.ignore = labelText.normalIgnore;
 
-                sector.stopAnimation(true);
-                sector.animateTo({
-                    shape: {
-                        r: layout.r
-                    }
-                }, 300, 'elasticOut');
+                if (hasAnimation) {
+                    sector.stopAnimation(true);
+                    sector.animateTo({
+                        shape: {
+                            r: layout.r
+                        }
+                    }, 300, 'elasticOut');
+                }
             }
         }
         : null;
@@ -49549,7 +49726,7 @@ extendComponentView({
         var dataModel = el.dataModel || seriesModel;
         var dataIndex = el.dataIndex;
         var dataType = el.dataType;
-        var data = dataModel.getData();
+        var data = dataModel.getData(dataType);
 
         var tooltipModel = buildTooltipModel([
             data.getItemModel(dataIndex),
@@ -51894,12 +52071,12 @@ extendComponentView({
 
         if (link) {
             textEl.on('click', function () {
-                window.open(link, '_' + titleModel.get('target'));
+                windowOpen(link, '_' + titleModel.get('target'));
             });
         }
         if (sublink) {
             subTextEl.on('click', function () {
-                window.open(sublink, '_' + titleModel.get('subtarget'));
+                windowOpen(link, '_' + titleModel.get('subtarget'));
             });
         }
 
@@ -53389,9 +53566,13 @@ lineDrawProto.incrementalPrepareUpdate = function (lineData) {
     this.group.removeAll();
 };
 
+function isEffectObject(el) {
+    return el.animators && el.animators.length > 0;
+}
+
 lineDrawProto.incrementalUpdate = function (taskParams, lineData) {
     function updateIncrementalAndHover(el) {
-        if (!el.isGroup) {
+        if (!el.isGroup && !isEffectObject(el)) {
             el.incremental = el.useHoverLayer = true;
         }
     }
@@ -57899,7 +58080,7 @@ extendComponentView({
             var feature;
 
             // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
-            if (payload && payload.newTitle != null) {
+            if (payload && payload.newTitle != null && payload.featureName === featureName) {
                 featureOpt.title = payload.newTitle;
             }
 
@@ -58172,7 +58353,8 @@ var proto$2 = SaveAsImage.prototype;
 proto$2.onclick = function (ecModel, api) {
     var model = this.model;
     var title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
-    var type = model.get('type', true) || 'png';
+    var isSvg = api.getZr().painter.getType() === 'svg';
+    var type = isSvg ? 'svg' : model.get('type', true) || 'png';
     var url = api.getConnectedDataURL({
         type: type,
         backgroundColor: model.get('backgroundColor', true)
@@ -58399,7 +58581,8 @@ proto$3.onclick = function (ecModel, api, type) {
         type: 'changeMagicType',
         currentType: type,
         newOption: newOption,
-        newTitle: newTitle
+        newTitle: newTitle,
+        featureName: 'magicType'
     });
 };
 
@@ -63928,11 +64111,16 @@ var SVGPainter = function (root, storage, opts, zrId) {
     this.storage = storage;
     this._opts = opts = extend({}, opts || {});
 
-    var svgRoot = createElement('svg');
-    svgRoot.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    svgRoot.setAttribute('version', '1.1');
-    svgRoot.setAttribute('baseProfile', 'full');
-    svgRoot.style.cssText = 'user-select:none;position:absolute;left:0;top:0;';
+    var svgDom = createElement('svg');
+    svgDom.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svgDom.setAttribute('version', '1.1');
+    svgDom.setAttribute('baseProfile', 'full');
+    svgDom.style.cssText = 'user-select:none;position:absolute;left:0;top:0;';
+
+    var bgRoot = createElement('g');
+    svgDom.appendChild(bgRoot);
+    var svgRoot = createElement('g');
+    svgDom.appendChild(svgRoot);
 
     this.gradientManager = new GradientManager(zrId, svgRoot);
     this.clipPathManager = new ClippathManager(zrId, svgRoot);
@@ -63941,11 +64129,13 @@ var SVGPainter = function (root, storage, opts, zrId) {
     var viewport = document.createElement('div');
     viewport.style.cssText = 'overflow:hidden;position:relative';
 
+    this._svgDom = svgDom;
     this._svgRoot = svgRoot;
+    this._backgroundRoot = bgRoot;
     this._viewport = viewport;
 
     root.appendChild(viewport);
-    viewport.appendChild(svgRoot);
+    viewport.appendChild(svgDom);
 
     this.resize(opts.width, opts.height);
 
@@ -63962,6 +64152,14 @@ SVGPainter.prototype = {
 
     getViewportRoot: function () {
         return this._viewport;
+    },
+
+    getSvgDom: function () {
+        return this._svgDom;
+    },
+
+    getSvgRoot: function () {
+        return this._svgRoot;
     },
 
     getViewportRootOffset: function () {
@@ -63983,7 +64181,21 @@ SVGPainter.prototype = {
 
     setBackgroundColor: function (backgroundColor) {
         // TODO gradient
-        this._viewport.style.background = backgroundColor;
+        // Insert a bg rect instead of setting background to viewport.
+        // Otherwise, the exported SVG don't have background.
+        if (this._backgroundRoot && this._backgroundNode) {
+            this._backgroundRoot.removeChild(this._backgroundNode);
+        }
+
+        var bgNode = createElement('rect');
+        bgNode.setAttribute('width', this.getWidth());
+        bgNode.setAttribute('height', this.getHeight());
+        bgNode.setAttribute('x', 0);
+        bgNode.setAttribute('y', 0);
+        bgNode.setAttribute('id', 0);
+        bgNode.style.fill = backgroundColor;
+        this._backgroundRoot.appendChild(bgNode);
+        this._backgroundNode = bgNode;
     },
 
     _paintList: function (list) {
@@ -64113,8 +64325,8 @@ SVGPainter.prototype = {
     },
 
     _getDefs: function (isForceCreating) {
-        var svgRoot = this._svgRoot;
-        var defs = this._svgRoot.getElementsByTagName('defs');
+        var svgRoot = this._svgDom;
+        var defs = svgRoot.getElementsByTagName('defs');
         if (defs.length === 0) {
             // Not exist
             if (isForceCreating) {
@@ -64171,10 +64383,15 @@ SVGPainter.prototype = {
             viewportStyle.width = width + 'px';
             viewportStyle.height = height + 'px';
 
-            var svgRoot = this._svgRoot;
+            var svgRoot = this._svgDom;
             // Set width by 'svgRoot.width = width' is invalid
             svgRoot.setAttribute('width', width);
             svgRoot.setAttribute('height', height);
+        }
+
+        if (this._backgroundNode) {
+            this._backgroundNode.setAttribute('width', width);
+            this._backgroundNode.setAttribute('height', height);
         }
     },
 
@@ -64217,10 +64434,13 @@ SVGPainter.prototype = {
     dispose: function () {
         this.root.innerHTML = '';
 
-        this._svgRoot =
-            this._viewport =
-            this.storage =
-            null;
+        this._svgRoot
+            = this._backgroundRoot
+            = this._svgDom
+            = this._backgroundNode
+            = this._viewport
+            = this.storage
+            = null;
     },
 
     clear: function () {
@@ -64229,9 +64449,9 @@ SVGPainter.prototype = {
         }
     },
 
-    pathToDataUrl: function () {
+    toDataURL: function () {
         this.refresh();
-        var html = this._svgRoot.outerHTML;
+        var html = encodeURIComponent(this._svgDom.outerHTML.replace(/></g, '>\n\r<'));
         return 'data:image/svg+xml;charset=UTF-8,' + html;
     }
 };
@@ -64247,7 +64467,7 @@ function createMethodNotSupport$1(method) {
 each$1([
     'getLayer', 'insertLayer', 'eachLayer', 'eachBuiltinLayer',
     'eachOtherLayer', 'getLayers', 'modLayer', 'delLayer', 'clearLayer',
-    'toDataURL', 'pathToImage'
+    'pathToImage'
 ], function (name) {
     SVGPainter.prototype[name] = createMethodNotSupport$1(name);
 });

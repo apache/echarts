@@ -182,7 +182,7 @@ piePieceProto.updateData = function (data, idx, firstCreate) {
 
     this.highDownOnUpdate = !seriesModel.get('silent')
         ? function (fromState, toState) {
-            const hasAnimation = seriesModel.isAnimationEnabled() && itemModel.get('hoverAnimation');
+            var hasAnimation = seriesModel.isAnimationEnabled() && itemModel.get('hoverAnimation');
             if (toState === 'emphasis') {
                 labelLine.ignore = labelLine.hoverIgnore;
                 labelText.ignore = labelText.hoverIgnore;

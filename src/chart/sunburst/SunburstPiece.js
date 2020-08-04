@@ -203,9 +203,13 @@ SunburstPieceProto._updateLabel = function (seriesModel, visualColor, state) {
         : itemModel.getModel(state + '.label');
     var labelHoverModel = itemModel.getModel('emphasis.label');
 
+    var labelFormatter = labelModel.get('formatter');
+    // Use normal formatter if no state formatter is defined
+    var labelState = labelFormatter ? state : 'normal';
+
     var text = zrUtil.retrieve(
         seriesModel.getFormattedLabel(
-            this.node.dataIndex, state, null, null, 'label'
+            this.node.dataIndex, labelState, null, null, 'label'
         ),
         this.node.name
     );

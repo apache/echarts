@@ -149,7 +149,7 @@ echarts.extendComponentView({
         }
         if (sublink) {
             subTextEl.on('click', function () {
-                windowOpen(link, '_' + titleModel.get('subtarget'));
+                windowOpen(sublink, '_' + titleModel.get('subtarget'));
             });
         }
 

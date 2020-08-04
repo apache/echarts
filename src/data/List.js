@@ -406,7 +406,7 @@ listProto.mapDimension = function (coordDim, idx) {
  * Initialize from data
  * @param {Array.<Object|number|Array>} data source or data or data provider.
  * @param {Array.<string>} [nameLIst] The name of a datum is used on data diff and
- *        defualt label/tooltip.
+ *        default label/tooltip.
  *        A name can be specified in encode.itemName,
  *        or dataItem.name (only for series option data),
  *        or provided in nameList from outside.
