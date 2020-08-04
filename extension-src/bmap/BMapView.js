@@ -67,12 +67,10 @@ export default echarts.extendComponentView({
         }
 
         bmap.removeEventListener('moving', this._oldMoveHandler);
-        // FIXME
-        // Moveend may be triggered by centerAndZoom method when creating coordSys next time
-        // bmap.removeEventListener('moveend', this._oldMoveHandler);
+        bmap.removeEventListener('moveend', this._oldMoveHandler);
         bmap.removeEventListener('zoomend', this._oldZoomEndHandler);
         bmap.addEventListener('moving', moveHandler);
-        // bmap.addEventListener('moveend', moveHandler);
+        bmap.addEventListener('moveend', moveHandler);
         bmap.addEventListener('zoomend', zoomEndHandler);
 
         this._oldMoveHandler = moveHandler;

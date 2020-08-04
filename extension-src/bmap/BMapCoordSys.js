@@ -201,8 +201,13 @@ BMapCoordSys.create = function (ecModel, api) {
         var center = bmapModel.get('center');
         var zoom = bmapModel.get('zoom');
         if (center && zoom) {
-            var pt = new BMap.Point(center[0], center[1]);
-            bmap.centerAndZoom(pt, zoom);
+            var bmapCenter = bmap.getCenter();
+            var bmapZoom = bmap.getZoom();
+            var centerOrZoomChanged = bmapModel.centerOrZoomChanged([bmapCenter.lng, bmapCenter.lat], bmapZoom);
+            if (centerOrZoomChanged) {
+                var pt = new BMap.Point(center[0], center[1]);
+                bmap.centerAndZoom(pt, zoom);
+            }
         }
 
         bmapCoordSys = new BMapCoordSys(bmap, api);
