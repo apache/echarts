@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 // import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';
+import * as graphicUtil from '../../util/graphic';
 
 
 function makeStyleCoord(out, zr, zrX, zrY) {
@@ -131,16 +132,23 @@ TooltipRichContent.prototype = {
             startId = text.indexOf('{marker');
         }
 
+        var textStyleModel = tooltipModel.getModel('textStyle');
+        var fontSize = textStyleModel.get('fontSize');
+        var lineHeight = tooltipModel.get('textLineHeight');
+        if (lineHeight == null) {
+            lineHeight = Math.round(fontSize * 3 / 2);
+        }
+
         this.el = new Text({
-            style: {
+            style: graphicUtil.setTextStyle({}, textStyleModel, {
                 rich: markers,
                 text: content,
-                textLineHeight: 20,
                 textBackgroundColor: tooltipModel.get('backgroundColor'),
                 textBorderRadius: tooltipModel.get('borderRadius'),
                 textFill: tooltipModel.get('textStyle.color'),
-                textPadding: tooltipModel.get('padding')
-            },
+                textPadding: tooltipModel.get('padding'),
+                textLineHeight: lineHeight
+            }),
             z: tooltipModel.get('z')
         });
         this._zr.add(this.el);

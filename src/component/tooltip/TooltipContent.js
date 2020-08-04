@@ -60,8 +60,21 @@ function assembleFont(textStyleModel) {
 
     cssText.push('font:' + textStyleModel.getFont());
 
+    var lineHeight = textStyleModel.get('lineHeight');
+    if (lineHeight == null) {
+        lineHeight = Math.round(fontSize * 3 / 2);
+    }
+
     fontSize
-        && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
+        && cssText.push('line-height:' + lineHeight + 'px');
+
+    var shadowColor = textStyleModel.get('textShadowColor');
+    var shadowBlur = textStyleModel.get('textShadowBlur') || 0;
+    var shadowOffsetX = textStyleModel.get('textShadowOffsetX') || 0;
+    var shadowOffsetY = textStyleModel.get('textShadowOffsetY') || 0;
+    shadowBlur
+        && cssText.push('text-shadow:' + shadowOffsetX + 'px ' + shadowOffsetY + 'px '
+            + shadowBlur + 'px ' + shadowColor);
 
     each(['decoration', 'align'], function (name) {
         var val = textStyleModel.get(name);

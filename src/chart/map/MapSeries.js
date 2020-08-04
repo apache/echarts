@@ -131,7 +131,7 @@ var MapSeries = SeriesModel.extend({
      *
      * @param {number} dataIndex
      */
-    formatTooltip: function (dataIndex) {
+    formatTooltip: function (dataIndex, multipleSeries, dataType, renderMode) {
         // FIXME orignalData and data is a bit confusing
         var data = this.getData();
         var formattedValue = addCommas(this.getRawValue(dataIndex));
@@ -149,7 +149,8 @@ var MapSeries = SeriesModel.extend({
             }
         }
 
-        return seriesNames.join(', ') + '<br />'
+        var newLine = renderMode === 'html' ? '<br/>' : '\n';
+        return seriesNames.join(', ') + newLine
             + encodeHTML(name + ' : ' + formattedValue);
     },
 
