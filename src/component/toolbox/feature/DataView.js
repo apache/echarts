@@ -93,7 +93,8 @@ function assembleSeriesWithCategoryAxis(series) {
         }));
         var columns = [categoryAxis.model.getCategories()];
         zrUtil.each(group.series, function (series) {
-            columns.push(series.getRawData().mapArray(valueAxisDim, function (val) {
+            var rawData = series.getRawData();
+            columns.push(series.getRawData().mapArray(rawData.mapDimension(valueAxisDim), function (val) {
                 return val;
             }));
         });
