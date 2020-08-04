@@ -439,11 +439,11 @@ function tryMergeDataOption(newData, originalData) {
                 };
             }
             // original data has name but new data has no name
-            if (original.name != null && newVal.name == null) {
-                delete original.name;
-            }
+            var shouldDeleteName = original.name != null && newVal.name == null;
             // Original data has option
-            return zrUtil.defaults(newVal, original);
+            var mergedVal = zrUtil.defaults(newVal, original);
+            shouldDeleteName && (delete newVal.name);
+            return mergedVal;
         }
         else {
             return newVal;
