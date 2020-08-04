@@ -212,7 +212,13 @@ function parseListContents(str) {
 
     var data = [];
     for (var i = 0; i < lines.length; i++) {
-        var items = trim(lines[i]).split(itemSplitRegex);
+        // if line is empty, ignore it.
+        // there is a case that a user forgot to delete `\n`.
+        var line = trim(lines[i]);
+        if (!line) {
+            continue;
+        }
+        var items = line.split(itemSplitRegex);
         var name = '';
         var value;
         var hasName = false;
@@ -427,13 +433,18 @@ function tryMergeDataOption(newData, originalData) {
     return zrUtil.map(newData, function (newVal, idx) {
         var original = originalData && originalData[idx];
         if (zrUtil.isObject(original) && !zrUtil.isArray(original)) {
-            if (zrUtil.isObject(newVal) && !zrUtil.isArray(newVal)) {
-                newVal = newVal.value;
+            var newValIsObject = zrUtil.isObject(newVal) && !zrUtil.isArray(newVal);
+            if (!newValIsObject) {
+                newVal = {
+                    value: newVal
+                };
             }
+            // original data has name but new data has no name
+            var shouldDeleteName = original.name != null && newVal.name == null;
             // Original data has option
-            return zrUtil.defaults({
-                value: newVal
-            }, original);
+            newVal = zrUtil.defaults(newVal, original);
+            shouldDeleteName && (delete newVal.name);
+            return newVal;
         }
         else {
             return newVal;
