@@ -240,28 +240,10 @@ function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
             zoomActive
             ? {
                 brushType: 'auto',
-                brushStyle: mapBrushStyle(featureModel.option.brushStyle)
+                brushStyle: featureModel.getModel('brushStyle').getItemStyle()
             }
             : false
         );
-}
-
-function mapBrushStyle(brushStyle) {
-    var properties = [
-        ['fill', 'color'],
-        ['lineWidth', 'borderWidth'],
-        ['stroke', 'borderColor'],
-        ['opacity', 'opacity']
-    ];
-    var style = {};
-    for (var i = 0; i < properties.length; i++) {
-        var propName = properties[i][1];
-        var val = brushStyle[propName];
-        if (val != null) {
-            style[properties[i][0]] = val;
-        }
-    }
-    return style;
 }
 
 
