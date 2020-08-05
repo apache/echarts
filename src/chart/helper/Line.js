@@ -57,8 +57,8 @@ function createSymbol(name, lineData, idx) {
     );
 
     // rotate by default if symbolRotate is not specified or NaN
-    symbolPath.rotation = symbolRotate == null || isNaN(symbolRotate)
-        ? undefined
+    symbolPath.__specifiedRotation = symbolRotate == null || isNaN(symbolRotate)
+        ? void 0
         : +symbolRotate * Math.PI / 180 || 0;
     symbolPath.name = name;
 
@@ -131,12 +131,15 @@ function updateSymbolAndLabelBeforeLineUpdate() {
         // when symbol is set to be 'arrow' in markLine,
         // symbolRotate value will be ignored, and compulsively use tangent angle.
         // rotate by default if symbol rotation is not specified
-        if (symbolFrom.rotation == null
-            || (symbolFrom.shape && symbolFrom.shape.symbolType === 'arrow')) {
+        var specifiedRotation = symbolFrom.__specifiedRotation;
+        if (specifiedRotation == null) {
             var tangent = line.tangentAt(0);
             symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
+        }
+        else {
+            symbolFrom.attr('rotation', specifiedRotation);
         }
         symbolFrom.attr('scale', [invScale * percent, invScale * percent]);
     }
@@ -146,12 +149,15 @@ function updateSymbolAndLabelBeforeLineUpdate() {
         // when symbol is set to be 'arrow' in markLine,
         // symbolRotate value will be ignored, and compulsively use tangent angle.
         // rotate by default if symbol rotation is not specified
-        if (symbolTo.rotation == null
-            || (symbolTo.shape && symbolTo.shape.symbolType === 'arrow')) {
+        var specifiedRotation = symbolTo.__specifiedRotation;
+        if (specifiedRotation == null) {
             var tangent = line.tangentAt(1);
             symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
+        }
+        else {
+            symbolTo.attr('rotation', specifiedRotation);
         }
         symbolTo.attr('scale', [invScale * percent, invScale * percent]);
     }
