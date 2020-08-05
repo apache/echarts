@@ -220,15 +220,9 @@ MarkerView.extend({
                 }
                 var xValue = areaData.get(dim[0], idx);
                 var yValue = areaData.get(dim[1], idx);
-                var xScale = coordSys.getAxis('x').scale;
-                var yScale = coordSys.getAxis('y').scale;
-                var xExtent = xScale.getExtent();
-                var yExtent = yScale.getExtent();
-                var x = xScale.parse(xValue);
-                var y = yScale.parse(yValue);
                 // If is infinity, the axis should be considered not clipped
-                if ((isInifinity(x) || x >= xExtent[0] && x <= xExtent[1])
-                    && (isInifinity(y) || y >= yExtent[0] && y <= yExtent[1])
+                if ((isInifinity(xValue) || coordSys.getAxis('x').containData(xValue))
+                    && (isInifinity(yValue) || coordSys.getAxis('y').containData(yValue))
                 ) {
                     allClipped = false;
                 }
