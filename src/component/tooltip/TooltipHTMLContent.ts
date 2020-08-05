@@ -79,7 +79,7 @@ function assembleArrow(
     const arrowPos = mirrowPos(arrowPosition);
     let centerPos = '';
     let rotate = 0;
-    if (['left', 'right'].includes(arrowPos)) {
+    if (zrUtil.indexOf(['left', 'right'], arrowPos) > -1) {
         centerPos = `${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
         rotate = arrowPos === 'left' ? -225 : -45;
     }
@@ -152,7 +152,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
     // Animation transition. Do not animate when transitionDuration is 0.
     // If tooltip show arrow, then disable transition
     !isFirstShow && transitionDuration
-        && !(['top', 'left', 'bottom', 'right'].includes(tooltipModel.get('position') as string))
+        && zrUtil.indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position') as string) > -1
         && tooltipModel.get('trigger') !== 'item'
         && cssText.push(assembleTransition(transitionDuration));
 
