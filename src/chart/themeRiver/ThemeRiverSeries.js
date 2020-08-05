@@ -74,7 +74,7 @@ var ThemeRiverSeries = SeriesModel.extend({
 
         // grouped data by name
         var groupResult = groupData(data, function (item) {
-            if (!timeValueKeys[item[0]]) {
+            if (!timeValueKeys.hasOwnProperty(item[0])) {
                 timeValueKeys[item[0]] = -1;
             }
             return item[2];
@@ -93,7 +93,7 @@ var ThemeRiverSeries = SeriesModel.extend({
             }
 
             for (var timeValue in timeValueKeys) {
-                if (timeValueKeys[timeValue] !== k) {
+                if (timeValueKeys.hasOwnProperty(timeValue) && timeValueKeys[timeValue] !== k) {
                     timeValueKeys[timeValue] = k;
                     data[rawDataLength] = [];
                     data[rawDataLength][0] = timeValue;
