@@ -354,7 +354,7 @@ class TooltipHTMLContent {
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
         this._show = true;
-        this._firstShow && (this._firstShow = false);
+        this._firstShow = false;
     }
 
     setContent(
