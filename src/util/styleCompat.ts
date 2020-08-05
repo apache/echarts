@@ -215,7 +215,7 @@ function convertToEC4RichItem(out: Dictionary<unknown>, richItem: TextStyleProps
     hasOwn(richItem, 'stroke') && (out.textStroke = richItem.fill);
 
     hasOwn(richItem, 'lineWidth') && (out.textStrokeWidth = richItem.lineWidth);
-    hasOwn(richItem, 'font') && (out.textStrokeWidth = richItem.font);
+    hasOwn(richItem, 'font') && (out.font = richItem.font);
     hasOwn(richItem, 'fontStyle') && (out.fontStyle = richItem.fontStyle);
     hasOwn(richItem, 'fontWeight') && (out.fontWeight = richItem.fontWeight);
     hasOwn(richItem, 'fontSize') && (out.fontSize = richItem.fontSize);

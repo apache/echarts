@@ -46,7 +46,10 @@ export default echarts.extendComponentView({
             bMapModel.__mapOffset = mapOffset;
 
             api.dispatchAction({
-                type: 'bmapRoam'
+                type: 'bmapRoam',
+                animation: {
+                    duration: 0
+                }
             });
         };
 
@@ -55,7 +58,10 @@ export default echarts.extendComponentView({
                 return;
             }
             api.dispatchAction({
-                type: 'bmapRoam'
+                type: 'bmapRoam',
+                animation: {
+                    duration: 0
+                }
             });
         }
 
