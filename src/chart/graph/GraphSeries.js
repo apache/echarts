@@ -25,6 +25,7 @@ import Model from '../../model/Model';
 import {encodeHTML} from '../../util/format';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
 
 var GraphSeries = echarts.extendSeriesModel({
 
@@ -66,7 +67,13 @@ var GraphSeries = echarts.extendSeriesModel({
         var self = this;
 
         if (nodes && edges) {
-            return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
+            // auto curveness
+            initCurvenessList(this);
+            var graph = createGraphFromNodeEdge(nodes, edges, this, true, beforeLink);
+            zrUtil.each(graph.edges, function (edge) {
+                createEdgeMapForCurveness(edge.node1, edge.node2, this, edge.dataIndex);
+            }, this);
+            return graph.data;
         }
 
         function beforeLink(nodeData, edgeData) {
@@ -278,7 +285,6 @@ var GraphSeries = echarts.extendSeriesModel({
         lineStyle: {
             color: '#aaa',
             width: 1,
-            curveness: 0,
             opacity: 0.5
         },
         emphasis: {

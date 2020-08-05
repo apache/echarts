@@ -294,8 +294,10 @@ export default MarkerView.extend({
             ]);
 
             lineData.setItemVisual(idx, {
+                'fromSymbolRotate': fromData.getItemVisual(idx, 'symbolRotate'),
                 'fromSymbolSize': fromData.getItemVisual(idx, 'symbolSize'),
                 'fromSymbol': fromData.getItemVisual(idx, 'symbol'),
+                'toSymbolRotate': toData.getItemVisual(idx, 'symbolRotate'),
                 'toSymbolSize': toData.getItemVisual(idx, 'symbolSize'),
                 'toSymbol': toData.getItemVisual(idx, 'symbol')
             });
@@ -317,8 +319,8 @@ export default MarkerView.extend({
             updateSingleMarkerEndLayout(
                 data, idx, isFrom, seriesModel, api
             );
-
             data.setItemVisual(idx, {
+                symbolRotate: itemModel.get('symbolRotate'),
                 symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
                 symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
                 color: itemModel.get('itemStyle.color') || seriesData.getVisual('color')

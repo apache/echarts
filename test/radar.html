@@ -90,7 +90,12 @@ under the License.
                                 value: ['-', 8000, 20000, 20000, 40000, 10000],
                                 name: '第一个元素是 null'
                             }
-                        ]
+                        ],
+                        symbol: 'triangle',
+                        symbolSize: 20,
+                        symbolRotate: function(value, params) {
+                            return ~~(360 * Math.random());
+                        }
                     }]
                 });
                 var theIndex = 2;

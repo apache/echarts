@@ -52,12 +52,14 @@ export default echarts.extendChartView({
             var symbolPath = symbolUtil.createSymbol(
                 symbolType, -1, -1, 2, 2, color
             );
+            var symbolRotate = data.getItemVisual(idx, 'symbolRotate') || 0;
             symbolPath.attr({
                 style: {
                     strokeNoScale: true
                 },
                 z2: 100,
-                scale: [symbolSize[0] / 2, symbolSize[1] / 2]
+                scale: [symbolSize[0] / 2, symbolSize[1] / 2],
+                rotation: symbolRotate * Math.PI / 180 || 0
             });
             return symbolPath;
         }

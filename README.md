@@ -39,7 +39,7 @@ You may choose one of the following methods:
 ## Get Help
 
 + [GitHub Issues](https://github.com/apache/incubator-echarts/issues) for bug report and feature requests
-+ Email [dev@echarts.apache.org](dev@echarts.apache.org) for general questions
++ Email [dev@echarts.apache.org](mailto:dev@echarts.apache.org) for general questions
 + Subscribe [mailing list](https://echarts.apache.org/en/maillist.html) to get updated with the project
 
 ## Build
