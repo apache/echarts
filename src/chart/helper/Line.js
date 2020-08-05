@@ -37,22 +37,29 @@ function makeSymbolTypeKey(symbolCategory) {
  * @inner
  */
 function createSymbol(name, lineData, idx) {
-    var color = lineData.getItemVisual(idx, 'color');
     var symbolType = lineData.getItemVisual(idx, name);
-    var symbolSize = lineData.getItemVisual(idx, name + 'Size');
 
     if (!symbolType || symbolType === 'none') {
         return;
     }
 
+    var color = lineData.getItemVisual(idx, 'color');
+    var symbolSize = lineData.getItemVisual(idx, name + 'Size');
+    var symbolRotate = lineData.getItemVisual(idx, name + 'Rotate');
+
     if (!zrUtil.isArray(symbolSize)) {
         symbolSize = [symbolSize, symbolSize];
     }
+
     var symbolPath = symbolUtil.createSymbol(
         symbolType, -symbolSize[0] / 2, -symbolSize[1] / 2,
         symbolSize[0], symbolSize[1], color
     );
 
+    // rotate by default if symbolRotate is not specified or NaN
+    symbolPath.rotation = symbolRotate == null || isNaN(symbolRotate)
+        ? undefined
+        : +symbolRotate * Math.PI / 180 || 0;
     symbolPath.name = name;
 
     return symbolPath;
@@ -120,18 +127,32 @@ function updateSymbolAndLabelBeforeLineUpdate() {
 
     if (symbolFrom) {
         symbolFrom.attr('position', fromPos);
-        var tangent = line.tangentAt(0);
-        symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
-            tangent[1], tangent[0]
-        ));
+        // Fix #12388
+        // when symbol is set to be 'arrow' in markLine,
+        // symbolRotate value will be ignored, and compulsively use tangent angle.
+        // rotate by default if symbol rotation is not specified
+        if (symbolFrom.rotation == null
+            || (symbolFrom.shape && symbolFrom.shape.symbolType === 'arrow')) {
+            var tangent = line.tangentAt(0);
+            symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
+                tangent[1], tangent[0]
+            ));
+        }
         symbolFrom.attr('scale', [invScale * percent, invScale * percent]);
     }
     if (symbolTo) {
         symbolTo.attr('position', toPos);
-        var tangent = line.tangentAt(1);
-        symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
-            tangent[1], tangent[0]
-        ));
+        // Fix #12388
+        // when symbol is set to be 'arrow' in markLine,
+        // symbolRotate value will be ignored, and compulsively use tangent angle.
+        // rotate by default if symbol rotation is not specified
+        if (symbolTo.rotation == null
+            || (symbolTo.shape && symbolTo.shape.symbolType === 'arrow')) {
+            var tangent = line.tangentAt(1);
+            symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
+                tangent[1], tangent[0]
+            ));
+        }
         symbolTo.attr('scale', [invScale * percent, invScale * percent]);
     }
 

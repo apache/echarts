@@ -18,7 +18,15 @@
 */
 
 import * as echarts from 'echarts';
-import { clone } from 'zrender/src/core/util';
+
+function isEmptyObject(obj) {
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 export default echarts.extendComponentView({
     type: 'bmap',
@@ -59,12 +67,10 @@ export default echarts.extendComponentView({
         }
 
         bmap.removeEventListener('moving', this._oldMoveHandler);
-        // FIXME
-        // Moveend may be triggered by centerAndZoom method when creating coordSys next time
-        // bmap.removeEventListener('moveend', this._oldMoveHandler);
+        bmap.removeEventListener('moveend', this._oldMoveHandler);
         bmap.removeEventListener('zoomend', this._oldZoomEndHandler);
         bmap.addEventListener('moving', moveHandler);
-        // bmap.addEventListener('moveend', moveHandler);
+        bmap.addEventListener('moveend', moveHandler);
         bmap.addEventListener('zoomend', zoomEndHandler);
 
         this._oldMoveHandler = moveHandler;
@@ -96,8 +102,8 @@ export default echarts.extendComponentView({
         var mapStyleStr = JSON.stringify(newMapStyle);
         if (JSON.stringify(originalStyle) !== mapStyleStr) {
             // FIXME May have blank tile when dragging if setMapStyle
-            if (Object.keys(newMapStyle).length) {
-                bmap.setMapStyle(clone(newMapStyle));
+            if (!isEmptyObject(newMapStyle2)) {
+                bmap.setMapStyle(echarts.util.clone(newMapStyle));
             }
             bMapModel.__mapStyle = JSON.parse(mapStyleStr);
         }
@@ -110,8 +116,8 @@ export default echarts.extendComponentView({
         var mapStyleStr2 = JSON.stringify(newMapStyle2);
         if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
             // FIXME May have blank tile when dragging if setMapStyle
-            if (Object.keys(newMapStyle2).length) {
-                bmap.setMapStyleV2(clone(newMapStyle2));
+            if (!isEmptyObject(newMapStyle2)) {
+                bmap.setMapStyleV2(echarts.util.clone(newMapStyle2));
             }
             bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);
         }

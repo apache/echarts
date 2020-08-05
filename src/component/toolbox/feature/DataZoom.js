@@ -61,7 +61,11 @@ DataZoom.defaultOption = {
         back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
     },
     // `zoom`, `back`
-    title: zrUtil.clone(dataZoomLang.title)
+    title: zrUtil.clone(dataZoomLang.title),
+    brushStyle: {
+        borderWidth: 0,
+        color: 'rgba(0,0,0,0.2)'
+    }
 };
 
 var proto = DataZoom.prototype;
@@ -236,11 +240,7 @@ function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
             zoomActive
             ? {
                 brushType: 'auto',
-                brushStyle: {
-                    // FIXME user customized?
-                    lineWidth: 0,
-                    fill: 'rgba(0,0,0,0.2)'
-                }
+                brushStyle: featureModel.getModel('brushStyle').getItemStyle()
             }
             : false
         );

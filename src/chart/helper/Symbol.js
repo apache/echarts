@@ -238,7 +238,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     }
     else {
         symbolPath.setStyle({
-            opacity: null,
+            opacity: 1,
             shadowBlur: null,
             shadowOffsetX: null,
             shadowOffsetY: null,

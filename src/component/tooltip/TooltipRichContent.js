@@ -20,6 +20,15 @@
 import * as zrUtil from 'zrender/src/core/util';
 // import Group from 'zrender/src/container/Group';
 import Text from 'zrender/src/graphic/Text';
+import * as graphicUtil from '../../util/graphic';
+
+
+function makeStyleCoord(out, zr, zrX, zrY) {
+    out[0] = zrX;
+    out[1] = zrY;
+    out[2] = out[0] / zr.getWidth(); // The ratio of left to width
+    out[3] = out[1] / zr.getHeight(); // The ratio of top to height
+}
 
 /**
  * @alias module:echarts/component/tooltip/TooltipRichContent
@@ -27,7 +36,11 @@ import Text from 'zrender/src/graphic/Text';
  */
 function TooltipRichContent(api) {
 
-    this._zr = api.getZr();
+    var zr = this._zr = api.getZr();
+
+    this._styleCoord = [0, 0, 0, 0]; // [left, top, left/width, top/height]
+
+    makeStyleCoord(this._styleCoord, zr, api.getWidth() / 2, api.getHeight() / 2);
 
     this._show = false;
 
@@ -50,8 +63,21 @@ TooltipRichContent.prototype = {
     /**
      * Update when tooltip is rendered
      */
-    update: function () {
-        // noop
+    update: function (tooltipModel) {
+        var alwaysShowContent = tooltipModel.get('alwaysShowContent');
+        alwaysShowContent && this._moveTooltipIfResized();
+    },
+
+    /**
+     * when `alwaysShowContent` is true,
+     * we should move the tooltip after chart resized
+     */
+    _moveTooltipIfResized: function () {
+        var ratioX = this._styleCoord[2]; // The ratio of left to width
+        var ratioY = this._styleCoord[3]; // The ratio of top to height
+        var realX = ratioX * this._zr.getWidth();
+        var realY = ratioY * this._zr.getHeight();
+        this.moveTo(realX, realY);
     },
 
     show: function (tooltipModel) {
@@ -106,16 +132,23 @@ TooltipRichContent.prototype = {
             startId = text.indexOf('{marker');
         }
 
+        var textStyleModel = tooltipModel.getModel('textStyle');
+        var fontSize = textStyleModel.get('fontSize');
+        var lineHeight = tooltipModel.get('textLineHeight');
+        if (lineHeight == null) {
+            lineHeight = Math.round(fontSize * 3 / 2);
+        }
+
         this.el = new Text({
-            style: {
+            style: graphicUtil.setTextStyle({}, textStyleModel, {
                 rich: markers,
                 text: content,
-                textLineHeight: 20,
                 textBackgroundColor: tooltipModel.get('backgroundColor'),
                 textBorderRadius: tooltipModel.get('borderRadius'),
                 textFill: tooltipModel.get('textStyle.color'),
-                textPadding: tooltipModel.get('padding')
-            },
+                textPadding: tooltipModel.get('padding'),
+                textLineHeight: lineHeight
+            }),
             z: tooltipModel.get('z')
         });
         this._zr.add(this.el);
@@ -150,7 +183,9 @@ TooltipRichContent.prototype = {
 
     moveTo: function (x, y) {
         if (this.el) {
-            this.el.attr('position', [x, y]);
+            var styleCoord = this._styleCoord;
+            makeStyleCoord(styleCoord, this._zr, x, y);
+            this.el.attr('position', [styleCoord[0], styleCoord[1]]);
         }
     },
 
@@ -165,7 +200,7 @@ TooltipRichContent.prototype = {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
             }
@@ -177,6 +212,14 @@ TooltipRichContent.prototype = {
 
     isShow: function () {
         return this._show;
+    },
+
+    dispose: function () {
+        clearTimeout(this._hideTimeout);
+
+        if (this.el) {
+            this._zr.remove(this.el);
+        }
     },
 
     getOuterSize: function () {

@@ -49,16 +49,17 @@ var RadarSeries = SeriesModel.extend({
         });
     },
 
-    formatTooltip: function (dataIndex) {
+    formatTooltip: function (dataIndex, multipleSeries, dataType, renderMode) {
         var data = this.getData();
         var coordSys = this.coordinateSystem;
         var indicatorAxes = coordSys.getIndicatorAxes();
         var name = this.getData().getName(dataIndex);
-        return encodeHTML(name === '' ? this.name : name) + '<br/>'
+        var newLine = renderMode === 'html' ? '<br/>' : '\n';
+        return encodeHTML(name === '' ? this.name : name) + newLine
             + zrUtil.map(indicatorAxes, function (axis, idx) {
                 var val = data.get(data.mapDimension(axis.dim), dataIndex);
                 return encodeHTML(axis.name + ' : ' + val);
-            }).join('<br />');
+            }).join(newLine);
     },
 
     /**

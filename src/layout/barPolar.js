@@ -82,8 +82,9 @@ function barLayoutPolar(seriesType, ecModel, api) {
         var clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        var valueAxisStart = valueAxis.getExtent()[0];
-
+        var valueAxisStart = valueAxis.dim === 'radius'
+            ? valueAxis.dataToRadius(0)
+            : valueAxis.dataToAngle(0);
         for (var idx = 0, len = data.count(); idx < len; idx++) {
             var value = data.get(valueDim, idx);
             var baseValue = data.get(baseDim, idx);
@@ -95,6 +96,7 @@ function barLayoutPolar(seriesType, ecModel, api) {
             // stackResultDimension directly.
             // Only ordinal axis can be stacked.
             if (stacked) {
+
                 if (!lastStackCoords[stackId][baseValue]) {
                     lastStackCoords[stackId][baseValue] = {
                         p: valueAxisStart, // Positive stack
