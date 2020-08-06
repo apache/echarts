@@ -51,10 +51,10 @@ var isFunction = zrUtil.isFunction;
 var isObject = zrUtil.isObject;
 var parseClassType = ComponentModel.parseClassType;
 
-export var version = '4.8.0';
+export var version = '4.9.0';
 
 export var dependencies = {
-    zrender: '4.3.1'
+    zrender: '4.3.2'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
