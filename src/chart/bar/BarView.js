@@ -135,7 +135,7 @@ export default echarts.extendChartView({
         var bgEls = [];
         var oldBgEls = this._backgroundEls || [];
 
-        var createBackground = dataIndex => {
+        var createBackground = function (dataIndex) {
             var bgLayout = getLayout[coord.type](data, dataIndex);
             var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
             bgEl.useStyle(backgroundModel.getBarItemStyle());
