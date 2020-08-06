@@ -18,17 +18,14 @@
 */
 
 import { DataTransformOption, ExternalDataTransform } from '../../data/helper/transform';
-import prepareBoxplotData from './prepareBoxplotData';
+import prepareBoxplotData, { PrepareBoxplotDataOpt } from './prepareBoxplotData';
 import { isArray } from 'zrender/src/core/util';
 import { throwError, makePrintable } from '../../util/log';
 
 
 export interface BoxplotTransformOption extends DataTransformOption {
     type: 'boxplot';
-    config: {
-        boundIQR?: number | 'none',
-        layout?: 'horizontal' | 'vertical'
-    }
+    config: PrepareBoxplotDataOpt;
 }
 
 export const boxplotTransform: ExternalDataTransform<BoxplotTransformOption> = {
@@ -37,8 +34,6 @@ export const boxplotTransform: ExternalDataTransform<BoxplotTransformOption> = {
 
     transform: function transform(params) {
         const source = params.source;
-        const config = params.config || {};
-
         const sourceData = source.data;
         if (
             !isArray(sourceData)
@@ -56,7 +51,7 @@ export const boxplotTransform: ExternalDataTransform<BoxplotTransformOption> = {
 
         const result = prepareBoxplotData(
             source.data as number[][],
-            config
+            params.config
         );
 
         return [{

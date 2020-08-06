@@ -70,9 +70,6 @@ under the License.
                         splitArea: {
                             show: false
                         },
-                        axisLabel: {
-                            formatter: 'expr {value}'
-                        },
                         splitLine: {
                             show: false
                         }
@@ -94,7 +91,7 @@ under the License.
                         }, {
                             transform: {
                                 type: 'boxplot',
-                                layout: layout
+                                config: { itemNameFormatter: 'expr {value}' }
                             }
                         }, {
                             fromDatasetIndex: 1,
