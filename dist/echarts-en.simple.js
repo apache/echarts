@@ -11289,7 +11289,7 @@ var painterCtors = {
 /**
  * @type {string}
  */
-var version$1 = '4.3.1';
+var version$1 = '4.3.2';
 
 /**
  * Initializing a zrender instance
@@ -25578,7 +25578,7 @@ var proto = Scheduler.prototype;
  * @param {Object} payload
  */
 proto.restoreData = function (ecModel, payload) {
-    // TODO: Only restroe needed series and components, but not all components.
+    // TODO: Only restore needed series and components, but not all components.
     // Currently `restoreData` of all of the series and component will be called.
     // But some independent components like `title`, `legend`, `graphic`, `toolbox`,
     // `tooltip`, `axisPointer`, etc, do not need series refresh when `setOption`,
@@ -27155,10 +27155,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.8.0';
+var version = '4.9.0';
 
 var dependencies = {
-    zrender: '4.3.1'
+    zrender: '4.3.2'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -30401,7 +30401,7 @@ listProto.mapDimension = function (coordDim, idx) {
  * Initialize from data
  * @param {Array.<Object|number|Array>} data source or data or data provider.
  * @param {Array.<string>} [nameLIst] The name of a datum is used on data diff and
- *        defualt label/tooltip.
+ *        default label/tooltip.
  *        A name can be specified in encode.itemName,
  *        or dataItem.name (only for series option data),
  *        or provided in nameList from outside.
@@ -33594,7 +33594,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     }
     else {
         symbolPath.setStyle({
-            opacity: null,
+            opacity: 1,
             shadowBlur: null,
             shadowOffsetX: null,
             shadowOffsetY: null,
@@ -35779,7 +35779,7 @@ var dataSample = function (seriesType) {
                 var valueAxis = coordSys.getOtherAxis(baseAxis);
                 var extent = baseAxis.getExtent();
                 // Coordinste system has been resized
-                var size = extent[1] - extent[0];
+                var size = Math.abs(extent[1] - extent[0]);
                 var rate = Math.round(data.count() / size);
                 if (rate > 1) {
                     var sampler;
@@ -37945,8 +37945,8 @@ function rotateTextRect(textRect, rotate) {
     var boundingBox = textRect.plain();
     var beforeWidth = boundingBox.width;
     var beforeHeight = boundingBox.height;
-    var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
-    var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians)) + Math.abs(beforeHeight * Math.sin(rotateRadians));
+    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians)) + Math.abs(beforeHeight * Math.cos(rotateRadians));
     var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
 
     return rotatedRect;
@@ -39141,7 +39141,7 @@ var defaultOption = {
     name: '',
     // 'start' | 'middle' | 'end'
     nameLocation: 'end',
-    // By degree. By defualt auto rotate by nameLocation.
+    // By degree. By default auto rotate by nameLocation.
     nameRotate: null,
     nameTruncate: {
         maxWidth: null,
@@ -42231,20 +42231,25 @@ extendChartView({
         var bgEls = [];
         var oldBgEls = this._backgroundEls || [];
 
+        var createBackground = function (dataIndex) {
+            var bgLayout = getLayout[coord.type](data, dataIndex);
+            var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
+            bgEl.useStyle(backgroundModel.getBarItemStyle());
+            // Only cartesian2d support borderRadius.
+            if (coord.type === 'cartesian2d') {
+                bgEl.setShape('r', barBorderRadius);
+            }
+            bgEls[dataIndex] = bgEl;
+            return bgEl;
+        };
+
         data.diff(oldData)
             .add(function (dataIndex) {
                 var itemModel = data.getItemModel(dataIndex);
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgLayout = getLayout[coord.type](data, dataIndex);
-                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
-                    bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    // Only cartesian2d support borderRadius.
-                    if (coord.type === 'cartesian2d') {
-                        bgEl.setShape('r', barBorderRadius);
-                    }
-                    bgEls[dataIndex] = bgEl;
+                    createBackground(dataIndex);
                 }
 
                 // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
@@ -42278,13 +42283,19 @@ extendChartView({
                 var layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = oldBgEls[oldIndex];
-                    bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    // Only cartesian2d support borderRadius.
-                    if (coord.type === 'cartesian2d') {
-                        bgEl.setShape('r', barBorderRadius);
+                    var bgEl;
+                    if (oldBgEls.length === 0) {
+                        bgEl = createBackground(oldIndex);
                     }
-                    bgEls[newIndex] = bgEl;
+                    else {
+                        bgEl = oldBgEls[oldIndex];
+                        bgEl.useStyle(backgroundModel.getBarItemStyle());
+                        // Only cartesian2d support borderRadius.
+                        if (coord.type === 'cartesian2d') {
+                            bgEl.setShape('r', barBorderRadius);
+                        }
+                        bgEls[newIndex] = bgEl;
+                    }
 
                     var bgLayout = getLayout[coord.type](data, newIndex);
                     var shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
@@ -42444,8 +42455,31 @@ var clip = {
         return clipped;
     },
 
-    polar: function (coordSysClipArea) {
-        return false;
+    polar: function (coordSysClipArea, layout) {
+        var signR = layout.r0 <= layout.r ? 1 : -1;
+        // Make sure r is larger than r0
+        if (signR < 0) {
+            var r = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = r;
+        }
+
+        var r = mathMin$4(layout.r, coordSysClipArea.r);
+        var r0 = mathMax$4(layout.r0, coordSysClipArea.r0);
+
+        layout.r = r;
+        layout.r0 = r0;
+
+        var clipped = r - r0 < 0;
+
+        // Reverse back
+        if (signR < 0) {
+            var r = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = r;
+        }
+
+        return clipped;
     }
 };
 

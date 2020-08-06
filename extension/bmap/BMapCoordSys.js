@@ -204,8 +204,12 @@ BMapCoordSys.create = function (ecModel, api) {
       bmapRoot.style.cssText = 'width:100%;height:100%'; // Not support IE8
 
       bmapRoot.classList.add('ec-extension-bmap');
-      root.appendChild(bmapRoot);
-      var bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
+      root.appendChild(bmapRoot); // initialize bmap
+
+      var mapOptions = bmapModel.get('mapOptions') || {}; // Not support `mapType`, use `bmap.setMapType(MapType)` instead.
+
+      delete mapOptions.mapType;
+      var bmap = bmapModel.__bmap = new BMap.Map(bmapRoot, mapOptions);
       var overlay = new Overlay(viewportRoot);
       bmap.addOverlay(overlay); // Override
 
@@ -224,8 +228,14 @@ BMapCoordSys.create = function (ecModel, api) {
     var zoom = bmapModel.get('zoom');
 
     if (center && zoom) {
-      var pt = new BMap.Point(center[0], center[1]);
-      bmap.centerAndZoom(pt, zoom);
+      var bmapCenter = bmap.getCenter();
+      var bmapZoom = bmap.getZoom();
+      var centerOrZoomChanged = bmapModel.centerOrZoomChanged([bmapCenter.lng, bmapCenter.lat], bmapZoom);
+
+      if (centerOrZoomChanged) {
+        var pt = new BMap.Point(center[0], center[1]);
+        bmap.centerAndZoom(pt, zoom);
+      }
     }
 
     bmapCoordSys = new BMapCoordSys(bmap, api);

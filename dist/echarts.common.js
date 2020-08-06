@@ -11595,7 +11595,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.3.1';
+var version$1 = '4.3.2';
 
 /**
  * Initializing a zrender instance
@@ -26152,7 +26152,7 @@ var proto = Scheduler.prototype;
  * @param {Object} payload
  */
 proto.restoreData = function (ecModel, payload) {
-    // TODO: Only restroe needed series and components, but not all components.
+    // TODO: Only restore needed series and components, but not all components.
     // Currently `restoreData` of all of the series and component will be called.
     // But some independent components like `title`, `legend`, `graphic`, `toolbox`,
     // `tooltip`, `axisPointer`, etc, do not need series refresh when `setOption`,
@@ -27729,10 +27729,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.8.0';
+var version = '4.9.0';
 
 var dependencies = {
-    zrender: '4.3.1'
+    zrender: '4.3.2'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -30975,7 +30975,7 @@ listProto.mapDimension = function (coordDim, idx) {
  * Initialize from data
  * @param {Array.<Object|number|Array>} data source or data or data provider.
  * @param {Array.<string>} [nameLIst] The name of a datum is used on data diff and
- *        defualt label/tooltip.
+ *        default label/tooltip.
  *        A name can be specified in encode.itemName,
  *        or dataItem.name (only for series option data),
  *        or provided in nameList from outside.
@@ -35567,8 +35567,8 @@ function rotateTextRect(textRect, rotate) {
     var boundingBox = textRect.plain();
     var beforeWidth = boundingBox.width;
     var beforeHeight = boundingBox.height;
-    var afterWidth = beforeWidth * Math.cos(rotateRadians) + beforeHeight * Math.sin(rotateRadians);
-    var afterHeight = beforeWidth * Math.sin(rotateRadians) + beforeHeight * Math.cos(rotateRadians);
+    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians)) + Math.abs(beforeHeight * Math.sin(rotateRadians));
+    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians)) + Math.abs(beforeHeight * Math.cos(rotateRadians));
     var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
 
     return rotatedRect;
@@ -37669,7 +37669,7 @@ symbolProto._updateCommon = function (data, idx, symbolSize, seriesScope) {
     }
     else {
         symbolPath.setStyle({
-            opacity: null,
+            opacity: 1,
             shadowBlur: null,
             shadowOffsetX: null,
             shadowOffsetY: null,
@@ -39854,7 +39854,7 @@ var dataSample = function (seriesType) {
                 var valueAxis = coordSys.getOtherAxis(baseAxis);
                 var extent = baseAxis.getExtent();
                 // Coordinste system has been resized
-                var size = extent[1] - extent[0];
+                var size = Math.abs(extent[1] - extent[0]);
                 var rate = Math.round(data.count() / size);
                 if (rate > 1) {
                     var sampler;
@@ -40310,7 +40310,7 @@ var defaultOption = {
     name: '',
     // 'start' | 'middle' | 'end'
     nameLocation: 'end',
-    // By degree. By defualt auto rotate by nameLocation.
+    // By degree. By default auto rotate by nameLocation.
     nameRotate: null,
     nameTruncate: {
         maxWidth: null,
@@ -43553,20 +43553,25 @@ extendChartView({
         var bgEls = [];
         var oldBgEls = this._backgroundEls || [];
 
+        var createBackground = function (dataIndex) {
+            var bgLayout = getLayout[coord.type](data, dataIndex);
+            var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
+            bgEl.useStyle(backgroundModel.getBarItemStyle());
+            // Only cartesian2d support borderRadius.
+            if (coord.type === 'cartesian2d') {
+                bgEl.setShape('r', barBorderRadius);
+            }
+            bgEls[dataIndex] = bgEl;
+            return bgEl;
+        };
+
         data.diff(oldData)
             .add(function (dataIndex) {
                 var itemModel = data.getItemModel(dataIndex);
                 var layout = getLayout[coord.type](data, dataIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgLayout = getLayout[coord.type](data, dataIndex);
-                    var bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
-                    bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    // Only cartesian2d support borderRadius.
-                    if (coord.type === 'cartesian2d') {
-                        bgEl.setShape('r', barBorderRadius);
-                    }
-                    bgEls[dataIndex] = bgEl;
+                    createBackground(dataIndex);
                 }
 
                 // If dataZoom in filteMode: 'empty', the baseValue can be set as NaN in "axisProxy".
@@ -43600,13 +43605,19 @@ extendChartView({
                 var layout = getLayout[coord.type](data, newIndex, itemModel);
 
                 if (drawBackground) {
-                    var bgEl = oldBgEls[oldIndex];
-                    bgEl.useStyle(backgroundModel.getBarItemStyle());
-                    // Only cartesian2d support borderRadius.
-                    if (coord.type === 'cartesian2d') {
-                        bgEl.setShape('r', barBorderRadius);
+                    var bgEl;
+                    if (oldBgEls.length === 0) {
+                        bgEl = createBackground(oldIndex);
                     }
-                    bgEls[newIndex] = bgEl;
+                    else {
+                        bgEl = oldBgEls[oldIndex];
+                        bgEl.useStyle(backgroundModel.getBarItemStyle());
+                        // Only cartesian2d support borderRadius.
+                        if (coord.type === 'cartesian2d') {
+                            bgEl.setShape('r', barBorderRadius);
+                        }
+                        bgEls[newIndex] = bgEl;
+                    }
 
                     var bgLayout = getLayout[coord.type](data, newIndex);
                     var shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
@@ -43766,8 +43777,31 @@ var clip = {
         return clipped;
     },
 
-    polar: function (coordSysClipArea) {
-        return false;
+    polar: function (coordSysClipArea, layout) {
+        var signR = layout.r0 <= layout.r ? 1 : -1;
+        // Make sure r is larger than r0
+        if (signR < 0) {
+            var r = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = r;
+        }
+
+        var r = mathMin$4(layout.r, coordSysClipArea.r);
+        var r0 = mathMax$4(layout.r0, coordSysClipArea.r0);
+
+        layout.r = r;
+        layout.r0 = r0;
+
+        var clipped = r - r0 < 0;
+
+        // Reverse back
+        if (signR < 0) {
+            var r = layout.r;
+            layout.r = layout.r0;
+            layout.r0 = r;
+        }
+
+        return clipped;
     }
 };
 
@@ -47110,7 +47144,7 @@ function processOnAxis(axisInfo, newValue, updaters, dontSnap, outputFinder) {
     var snapToValue = payloadInfo.snapToValue;
 
     // Fill content of event obj for echarts.connect.
-    // By defualt use the first involved series data as a sample to connect.
+    // By default use the first involved series data as a sample to connect.
     if (payloadBatch[0] && outputFinder.seriesIndex == null) {
         extend(outputFinder, payloadBatch[0]);
     }
@@ -48788,8 +48822,21 @@ function assembleFont(textStyleModel) {
 
     cssText.push('font:' + textStyleModel.getFont());
 
+    var lineHeight = textStyleModel.get('lineHeight');
+    if (lineHeight == null) {
+        lineHeight = Math.round(fontSize * 3 / 2);
+    }
+
     fontSize
-        && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
+        && cssText.push('line-height:' + lineHeight + 'px');
+
+    var shadowColor = textStyleModel.get('textShadowColor');
+    var shadowBlur = textStyleModel.get('textShadowBlur') || 0;
+    var shadowOffsetX = textStyleModel.get('textShadowOffsetX') || 0;
+    var shadowOffsetY = textStyleModel.get('textShadowOffsetY') || 0;
+    shadowBlur
+        && cssText.push('text-shadow:' + shadowOffsetX + 'px ' + shadowOffsetY + 'px '
+            + shadowBlur + 'px ' + shadowColor);
 
     each$10(['decoration', 'align'], function (name) {
         var val = textStyleModel.get(name);
@@ -48873,6 +48920,8 @@ function makeStyleCoord(out, zr, appendToBody, zrX, zrY) {
             out[1] += viewportRootOffset.offsetTop;
         }
     }
+    out[2] = out[0] / zr.getWidth(); // The ratio of left to width
+    out[3] = out[1] / zr.getHeight(); // The ratio of top to height
 }
 
 /**
@@ -48897,7 +48946,7 @@ function TooltipContent(container, api, opt) {
     var zr = this._zr = api.getZr();
     var appendToBody = this._appendToBody = opt && opt.appendToBody;
 
-    this._styleCoord = [0, 0];
+    this._styleCoord = [0, 0, 0, 0]; // [left, top, left/width, top/height]
 
     makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
 
@@ -48968,7 +49017,7 @@ TooltipContent.prototype = {
     /**
      * Update when tooltip is rendered
      */
-    update: function () {
+    update: function (tooltipModel) {
         // FIXME
         // Move this logic to ec main?
         var container = this._container;
@@ -48978,9 +49027,23 @@ TooltipContent.prototype = {
         if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
             domStyle.position = 'relative';
         }
+        var alwaysShowContent = tooltipModel.get('alwaysShowContent');
+        alwaysShowContent && this._moveTooltipIfResized();
         // Hide the tooltip
         // PENDING
         // this.hide();
+    },
+
+    /**
+     * when `alwaysShowContent` is true,
+     * we should move the tooltip after chart resized
+     */
+    _moveTooltipIfResized: function () {
+        var ratioX = this._styleCoord[2]; // The ratio of left to width
+        var ratioY = this._styleCoord[3]; // The ratio of top to height
+        var realX = ratioX * this._zr.getWidth();
+        var realY = ratioY * this._zr.getHeight();
+        this.moveTo(realX, realY);
     },
 
     show: function (tooltipModel) {
@@ -48997,10 +49060,10 @@ TooltipContent.prototype = {
 
         el.style.display = el.innerHTML ? 'block' : 'none';
 
-        // If mouse occsionally move over the tooltip, a mouseout event will be
-        // triggered by canvas, and cuase some unexpectable result like dragging
+        // If mouse occasionally move over the tooltip, a mouseout event will be
+        // triggered by canvas, and cause some unexpectable result like dragging
         // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
-        // it. Although it is not suppored by IE8~IE10, fortunately it is a rare
+        // it. Although it is not supported by IE8~IE10, fortunately it is a rare
         // scenario.
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
@@ -49038,7 +49101,7 @@ TooltipContent.prototype = {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(bind(this.hide, this), time);
             }
@@ -49095,13 +49158,24 @@ TooltipContent.prototype = {
 */
 
 // import Group from 'zrender/src/container/Group';
+function makeStyleCoord$1(out, zr, zrX, zrY) {
+    out[0] = zrX;
+    out[1] = zrY;
+    out[2] = out[0] / zr.getWidth(); // The ratio of left to width
+    out[3] = out[1] / zr.getHeight(); // The ratio of top to height
+}
+
 /**
  * @alias module:echarts/component/tooltip/TooltipRichContent
  * @constructor
  */
 function TooltipRichContent(api) {
 
-    this._zr = api.getZr();
+    var zr = this._zr = api.getZr();
+
+    this._styleCoord = [0, 0, 0, 0]; // [left, top, left/width, top/height]
+
+    makeStyleCoord$1(this._styleCoord, zr, api.getWidth() / 2, api.getHeight() / 2);
 
     this._show = false;
 
@@ -49124,8 +49198,21 @@ TooltipRichContent.prototype = {
     /**
      * Update when tooltip is rendered
      */
-    update: function () {
-        // noop
+    update: function (tooltipModel) {
+        var alwaysShowContent = tooltipModel.get('alwaysShowContent');
+        alwaysShowContent && this._moveTooltipIfResized();
+    },
+
+    /**
+     * when `alwaysShowContent` is true,
+     * we should move the tooltip after chart resized
+     */
+    _moveTooltipIfResized: function () {
+        var ratioX = this._styleCoord[2]; // The ratio of left to width
+        var ratioY = this._styleCoord[3]; // The ratio of top to height
+        var realX = ratioX * this._zr.getWidth();
+        var realY = ratioY * this._zr.getHeight();
+        this.moveTo(realX, realY);
     },
 
     show: function (tooltipModel) {
@@ -49180,16 +49267,23 @@ TooltipRichContent.prototype = {
             startId = text.indexOf('{marker');
         }
 
+        var textStyleModel = tooltipModel.getModel('textStyle');
+        var fontSize = textStyleModel.get('fontSize');
+        var lineHeight = tooltipModel.get('textLineHeight');
+        if (lineHeight == null) {
+            lineHeight = Math.round(fontSize * 3 / 2);
+        }
+
         this.el = new Text({
-            style: {
+            style: setTextStyle({}, textStyleModel, {
                 rich: markers,
                 text: content,
-                textLineHeight: 20,
                 textBackgroundColor: tooltipModel.get('backgroundColor'),
                 textBorderRadius: tooltipModel.get('borderRadius'),
                 textFill: tooltipModel.get('textStyle.color'),
-                textPadding: tooltipModel.get('padding')
-            },
+                textPadding: tooltipModel.get('padding'),
+                textLineHeight: lineHeight
+            }),
             z: tooltipModel.get('z')
         });
         this._zr.add(this.el);
@@ -49224,7 +49318,9 @@ TooltipRichContent.prototype = {
 
     moveTo: function (x, y) {
         if (this.el) {
-            this.el.attr('position', [x, y]);
+            var styleCoord = this._styleCoord;
+            makeStyleCoord$1(styleCoord, this._zr, x, y);
+            this.el.attr('position', [styleCoord[0], styleCoord[1]]);
         }
     },
 
@@ -49239,7 +49335,7 @@ TooltipRichContent.prototype = {
         if (this._show && !(this._inContent && this._enterable)) {
             if (time) {
                 this._hideDelay = time;
-                // Set show false to avoid invoke hideLater mutiple times
+                // Set show false to avoid invoke hideLater multiple times
                 this._show = false;
                 this._hideTimeout = setTimeout(bind(this.hide, this), time);
             }
@@ -49251,6 +49347,14 @@ TooltipRichContent.prototype = {
 
     isShow: function () {
         return this._show;
+    },
+
+    dispose: function () {
+        clearTimeout(this._hideTimeout);
+
+        if (this.el) {
+            this._zr.remove(this.el);
+        }
     },
 
     getOuterSize: function () {
@@ -49357,7 +49461,7 @@ extendComponentView({
         this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         var tooltipContent = this._tooltipContent;
-        tooltipContent.update();
+        tooltipContent.update(tooltipModel);
         tooltipContent.setEnterable(tooltipModel.get('enterable'));
 
         this._initGlobalListener();
@@ -49587,7 +49691,7 @@ extendComponentView({
     _showOrMove: function (tooltipModel, cb) {
         // showDelay is used in this case: tooltip.enterable is set
         // as true. User intent to move mouse into tooltip and click
-        // something. `showDelay` makes it easyer to enter the content
+        // something. `showDelay` makes it easier to enter the content
         // but tooltip do not move immediately.
         var delay = tooltipModel.get('showDelay');
         cb = bind(cb, this);
@@ -49672,7 +49776,7 @@ extendComponentView({
 
                 // Default tooltip content
                 // FIXME
-                // (1) shold be the first data which has name?
+                // (1) should be the first data which has name?
                 // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
                 var firstLine = valueLabel;
                 if (renderMode !== 'html') {
@@ -49788,7 +49892,7 @@ extendComponentView({
         var asyncTicket = Math.random();
 
         // Do not check whether `trigger` is 'none' here, because `trigger`
-        // only works on cooridinate system. In fact, we have not found case
+        // only works on coordinate system. In fact, we have not found case
         // that requires setting `trigger` nothing on component yet.
 
         this._showOrMove(subTooltipModel, function () {
@@ -51834,7 +51938,7 @@ var ScrollableLegendView = LegendView.extend({
             var legendDataIdx = child.__legendDataIndex;
             // FIXME
             // If the given targetDataIndex (from model) is illegal,
-            // we use defualtIndex. But the index on the legend model and
+            // we use defaultIndex. But the index on the legend model and
             // action payload is still illegal. That case will not be
             // changed until some scenario requires.
             if (defaultIndex == null && legendDataIdx != null) {
@@ -52076,7 +52180,7 @@ extendComponentView({
         }
         if (sublink) {
             subTextEl.on('click', function () {
-                windowOpen(link, '_' + titleModel.get('subtarget'));
+                windowOpen(sublink, '_' + titleModel.get('subtarget'));
             });
         }
 
@@ -52277,15 +52381,16 @@ var MarkerModel = extendComponentModel({
         }
     },
 
-    formatTooltip: function (dataIndex) {
+    formatTooltip: function (dataIndex, multipleSeries, dataType, renderMode) {
         var data = this.getData();
         var value = this.getRawValue(dataIndex);
         var formattedValue = isArray(value)
             ? map(value, addCommas$1).join(', ') : addCommas$1(value);
         var name = data.getName(dataIndex);
         var html = encodeHTML$1(this.name);
+        var newLine = renderMode === 'html' ? '<br/>' : '\n';
         if (value != null || name) {
-            html += '<br />';
+            html += newLine;
         }
         if (name) {
             html += encodeHTML$1(name);
@@ -52750,10 +52855,12 @@ MarkerView.extend({
             var itemModel = mpData.getItemModel(idx);
             var symbol = itemModel.getShallow('symbol');
             var symbolSize = itemModel.getShallow('symbolSize');
+            var symbolRotate = itemModel.getShallow('symbolRotate');
             var isFnSymbol = isFunction$1(symbol);
             var isFnSymbolSize = isFunction$1(symbolSize);
+            var isFnSymbolRotate = isFunction$1(symbolRotate);
 
-            if (isFnSymbol || isFnSymbolSize) {
+            if (isFnSymbol || isFnSymbolSize || isFnSymbolRotate) {
                 var rawIdx = mpModel.getRawValue(idx);
                 var dataParams = mpModel.getDataParams(idx);
                 if (isFnSymbol) {
@@ -52763,11 +52870,15 @@ MarkerView.extend({
                     // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
                     symbolSize = symbolSize(rawIdx, dataParams);
                 }
+                if (isFnSymbolRotate) {
+                    symbolRotate = symbolRotate(rawIdx, dataParams);
+                }
             }
 
             mpData.setItemVisual(idx, {
                 symbol: symbol,
                 symbolSize: symbolSize,
+                symbolRotate: symbolRotate,
                 color: itemModel.get('itemStyle.color')
                     || seriesData.getVisual('color')
             });
@@ -53019,22 +53130,29 @@ function makeSymbolTypeKey(symbolCategory) {
  * @inner
  */
 function createSymbol$1(name, lineData, idx) {
-    var color = lineData.getItemVisual(idx, 'color');
     var symbolType = lineData.getItemVisual(idx, name);
-    var symbolSize = lineData.getItemVisual(idx, name + 'Size');
 
     if (!symbolType || symbolType === 'none') {
         return;
     }
 
+    var color = lineData.getItemVisual(idx, 'color');
+    var symbolSize = lineData.getItemVisual(idx, name + 'Size');
+    var symbolRotate = lineData.getItemVisual(idx, name + 'Rotate');
+
     if (!isArray(symbolSize)) {
         symbolSize = [symbolSize, symbolSize];
     }
+
     var symbolPath = createSymbol(
         symbolType, -symbolSize[0] / 2, -symbolSize[1] / 2,
         symbolSize[0], symbolSize[1], color
     );
 
+    // rotate by default if symbolRotate is not specified or NaN
+    symbolPath.__specifiedRotation = symbolRotate == null || isNaN(symbolRotate)
+        ? void 0
+        : +symbolRotate * Math.PI / 180 || 0;
     symbolPath.name = name;
 
     return symbolPath;
@@ -53102,18 +53220,38 @@ function updateSymbolAndLabelBeforeLineUpdate() {
 
     if (symbolFrom) {
         symbolFrom.attr('position', fromPos);
-        var tangent = line.tangentAt(0);
-        symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
-            tangent[1], tangent[0]
-        ));
+        // Fix #12388
+        // when symbol is set to be 'arrow' in markLine,
+        // symbolRotate value will be ignored, and compulsively use tangent angle.
+        // rotate by default if symbol rotation is not specified
+        var specifiedRotation = symbolFrom.__specifiedRotation;
+        if (specifiedRotation == null) {
+            var tangent = line.tangentAt(0);
+            symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
+                tangent[1], tangent[0]
+            ));
+        }
+        else {
+            symbolFrom.attr('rotation', specifiedRotation);
+        }
         symbolFrom.attr('scale', [invScale * percent, invScale * percent]);
     }
     if (symbolTo) {
         symbolTo.attr('position', toPos);
-        var tangent = line.tangentAt(1);
-        symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
-            tangent[1], tangent[0]
-        ));
+        // Fix #12388
+        // when symbol is set to be 'arrow' in markLine,
+        // symbolRotate value will be ignored, and compulsively use tangent angle.
+        // rotate by default if symbol rotation is not specified
+        var specifiedRotation = symbolTo.__specifiedRotation;
+        if (specifiedRotation == null) {
+            var tangent = line.tangentAt(1);
+            symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
+                tangent[1], tangent[0]
+            ));
+        }
+        else {
+            symbolTo.attr('rotation', specifiedRotation);
+        }
         symbolTo.attr('scale', [invScale * percent, invScale * percent]);
     }
 
@@ -53909,8 +54047,10 @@ MarkerView.extend({
             ]);
 
             lineData.setItemVisual(idx, {
+                'fromSymbolRotate': fromData.getItemVisual(idx, 'symbolRotate'),
                 'fromSymbolSize': fromData.getItemVisual(idx, 'symbolSize'),
                 'fromSymbol': fromData.getItemVisual(idx, 'symbol'),
+                'toSymbolRotate': toData.getItemVisual(idx, 'symbolRotate'),
                 'toSymbolSize': toData.getItemVisual(idx, 'symbolSize'),
                 'toSymbol': toData.getItemVisual(idx, 'symbol')
             });
@@ -53932,8 +54072,8 @@ MarkerView.extend({
             updateSingleMarkerEndLayout(
                 data, idx, isFrom, seriesModel, api
             );
-
             data.setItemVisual(idx, {
+                symbolRotate: itemModel.get('symbolRotate'),
                 symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
                 symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
                 color: itemModel.get('itemStyle.color') || seriesData.getVisual('color')
@@ -54292,9 +54432,29 @@ MarkerView.extend({
         // Update visual and layout of line
         areaData.each(function (idx) {
             // Layout
-            areaData.setItemLayout(idx, map(dimPermutations, function (dim) {
+            var points = map(dimPermutations, function (dim) {
                 return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
-            }));
+            });
+            // If none of the area is inside coordSys, allClipped is set to be true
+            // in layout so that label will not be displayed. See #12591
+            var allClipped = true;
+            each$1(dimPermutations, function (dim) {
+                if (!allClipped) {
+                    return;
+                }
+                var xValue = areaData.get(dim[0], idx);
+                var yValue = areaData.get(dim[1], idx);
+                // If is infinity, the axis should be considered not clipped
+                if ((isInifinity$1(xValue) || coordSys.getAxis('x').containData(xValue))
+                    && (isInifinity$1(yValue) || coordSys.getAxis('y').containData(yValue))
+                ) {
+                    allClipped = false;
+                }
+            });
+            areaData.setItemLayout(idx, {
+                points: points,
+                allClipped: allClipped
+            });
 
             // Visual
             areaData.setItemVisual(idx, {
@@ -54305,23 +54465,41 @@ MarkerView.extend({
 
         areaData.diff(polygonGroup.__data)
             .add(function (idx) {
-                var polygon = new Polygon({
-                    shape: {
-                        points: areaData.getItemLayout(idx)
-                    }
-                });
-                areaData.setItemGraphicEl(idx, polygon);
-                polygonGroup.group.add(polygon);
+                var layout = areaData.getItemLayout(idx);
+                if (!layout.allClipped) {
+                    var polygon = new Polygon({
+                        shape: {
+                            points: layout.points
+                        }
+                    });
+                    areaData.setItemGraphicEl(idx, polygon);
+                    polygonGroup.group.add(polygon);
+                }
             })
             .update(function (newIdx, oldIdx) {
                 var polygon = polygonGroup.__data.getItemGraphicEl(oldIdx);
-                updateProps(polygon, {
-                    shape: {
-                        points: areaData.getItemLayout(newIdx)
+                var layout = areaData.getItemLayout(newIdx);
+                if (!layout.allClipped) {
+                    if (polygon) {
+                        updateProps(polygon, {
+                            shape: {
+                                points: layout.points
+                            }
+                        }, maModel, newIdx);
                     }
-                }, maModel, newIdx);
-                polygonGroup.group.add(polygon);
-                areaData.setItemGraphicEl(newIdx, polygon);
+                    else {
+                        polygon = new Polygon({
+                            shape: {
+                                points: layout.points
+                            }
+                        });
+                    }
+                    areaData.setItemGraphicEl(newIdx, polygon);
+                    polygonGroup.group.add(polygon);
+                }
+                else if (polygon) {
+                    polygonGroup.group.remove(polygon);
+                }
             })
             .remove(function (idx) {
                 var polygon = polygonGroup.__data.getItemGraphicEl(idx);
@@ -58370,7 +58548,8 @@ proto$2.onclick = function (ecModel, api) {
         $a.target = '_blank';
         $a.href = url;
         var evt = new MouseEvent('click', {
-            view: window,
+            // some micro front-end framework， window maybe is a Proxy
+            view: document.defaultView,
             bubbles: true,
             cancelable: false
         });
@@ -58685,7 +58864,8 @@ function assembleSeriesWithCategoryAxis(series) {
         }));
         var columns = [categoryAxis.model.getCategories()];
         each$1(group.series, function (series) {
-            columns.push(series.getRawData().mapArray(valueAxisDim, function (val) {
+            var rawData = series.getRawData();
+            columns.push(series.getRawData().mapArray(rawData.mapDimension(valueAxisDim), function (val) {
                 return val;
             }));
         });
@@ -58803,7 +58983,13 @@ function parseListContents(str) {
 
     var data = [];
     for (var i = 0; i < lines.length; i++) {
-        var items = trim$1(lines[i]).split(itemSplitRegex);
+        // if line is empty, ignore it.
+        // there is a case that a user forgot to delete `\n`.
+        var line = trim$1(lines[i]);
+        if (!line) {
+            continue;
+        }
+        var items = line.split(itemSplitRegex);
         var name = '';
         var value;
         var hasName = false;
@@ -59018,13 +59204,18 @@ function tryMergeDataOption(newData, originalData) {
     return map(newData, function (newVal, idx) {
         var original = originalData && originalData[idx];
         if (isObject$1(original) && !isArray(original)) {
-            if (isObject$1(newVal) && !isArray(newVal)) {
-                newVal = newVal.value;
+            var newValIsObject = isObject$1(newVal) && !isArray(newVal);
+            if (!newValIsObject) {
+                newVal = {
+                    value: newVal
+                };
             }
+            // original data has name but new data has no name
+            var shouldDeleteName = original.name != null && newVal.name == null;
             // Original data has option
-            return defaults({
-                value: newVal
-            }, original);
+            newVal = defaults(newVal, original);
+            shouldDeleteName && (delete newVal.name);
+            return newVal;
         }
         else {
             return newVal;
@@ -60855,7 +61046,11 @@ DataZoom.defaultOption = {
         back: 'M22,1.4L9.9,13.5l12.3,12.3 M10.3,13.5H54.9v44.6 H10.3v-26'
     },
     // `zoom`, `back`
-    title: clone(dataZoomLang.title)
+    title: clone(dataZoomLang.title),
+    brushStyle: {
+        borderWidth: 0,
+        color: 'rgba(0,0,0,0.2)'
+    }
 };
 
 var proto$4 = DataZoom.prototype;
@@ -61030,11 +61225,7 @@ function updateZoomBtnStatus(featureModel, ecModel, view, payload, api) {
             zoomActive
             ? {
                 brushType: 'auto',
-                brushStyle: {
-                    // FIXME user customized?
-                    lineWidth: 0,
-                    fill: 'rgba(0,0,0,0.2)'
-                }
+                brushStyle: featureModel.getModel('brushStyle').getItemStyle()
             }
             : false
         );
@@ -63616,7 +63807,7 @@ GradientManager.prototype.updateDom = function (gradient, dom) {
         stop.setAttribute('offset', colors[i].offset * 100 + '%');
 
         var color = colors[i].color;
-        if (color.indexOf('rgba' > -1)) {
+        if (color.indexOf('rgba') > -1) {
             // Fix Safari bug that stop-color not recognizing alpha #9014
             var opacity = parse(color)[3];
             var hex = toHex(color);
