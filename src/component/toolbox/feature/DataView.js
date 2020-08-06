@@ -382,7 +382,7 @@ DataView.prototype.onclick = function (ecModel, api) {
             if (typeof contentToOption === 'function') {
                 newOption = contentToOption(viewMain, api.getOption());
             }
-            else {
+            else if (typeof contentToOption !== 'undefined') {
                 newOption = parseContents(textarea.value, blockMetaList);
             }
         }
