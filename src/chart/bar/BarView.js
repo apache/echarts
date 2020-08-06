@@ -192,7 +192,7 @@ export default echarts.extendChartView({
                         bgEl = createBackground(oldIndex);
                     }
                     else {
-                        var bgEl = oldBgEls[oldIndex];
+                        bgEl = oldBgEls[oldIndex];
                         bgEl.useStyle(backgroundModel.getBarItemStyle());
                         // Only cartesian2d support borderRadius.
                         if (coord.type === 'cartesian2d') {
