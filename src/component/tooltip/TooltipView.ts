@@ -212,9 +212,6 @@ class TooltipView extends ComponentView {
 
         this._api = api;
 
-        // Should be cleaned when render.
-        this._lastDataByCoordSys = null;
-
         /**
          * @private
          * @type {boolean}
@@ -272,7 +269,8 @@ class TooltipView extends ComponentView {
                 // FIXME
                 !api.isDisposed() && self.manuallyShowTip(tooltipModel, ecModel, api, {
                     x: self._lastX,
-                    y: self._lastY
+                    y: self._lastY,
+                    dataByCoordSys: self._lastDataByCoordSys
                 });
             });
         }
@@ -382,7 +380,7 @@ class TooltipView extends ComponentView {
             tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
 
-        this._lastX = this._lastY = null;
+        this._lastX = this._lastY = this._lastDataByCoordSys = null;
 
         if (payload.from !== this.uid) {
             this._hide(makeDispatchAction(payload, api));
