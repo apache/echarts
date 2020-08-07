@@ -130,8 +130,8 @@ class BrushModel extends ComponentModel<BrushOption> {
         transformable: true,
         brushStyle: {
             borderWidth: 1,
-            color: 'rgba(120,140,180,0.3)',
-            borderColor: 'rgba(120,140,180,0.8)'
+            color: 'rgba(210,219,238,0.3)',
+            borderColor: '#D2DBEE'
         },
         throttleType: 'fixRate',
         throttleDelay: 0,

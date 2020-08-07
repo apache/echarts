@@ -311,7 +311,7 @@ function updateZoomBtnStatus(
                 brushStyle: {
                     // FIXME user customized?
                     lineWidth: 0,
-                    fill: 'rgba(0,0,0,0.2)'
+                    fill: 'rgba(210,219,238,0.2)'
                 }
             }
             : false
