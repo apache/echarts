@@ -438,8 +438,12 @@ function setTokenTextStyle(
             strokeColor = null;
         }
     }
-    fillColor = fillColor || globalTextStyle.color;
-    strokeColor = strokeColor || globalTextStyle.textBorderColor;
+    if (!isAttached) {
+        // Only use default global textStyle.color if text is individual.
+        // Otherwise it will use the strategy of attached text color because text may be on a path.
+        fillColor = fillColor || globalTextStyle.color;
+        strokeColor = strokeColor || globalTextStyle.textBorderColor;
+    }
     if (fillColor != null) {
         textStyle.fill = fillColor;
     }
