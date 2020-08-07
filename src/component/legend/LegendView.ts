@@ -35,14 +35,10 @@ import {
     ZRRectLike,
     ECElement,
     CommonTooltipOption,
-    ColorString,
-    SeriesOption
 } from '../../util/types';
 import Model from '../../model/Model';
 import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
-import { parse, stringify } from 'zrender/src/tool/color';
-import SeriesModel from '../../model/Series';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -210,7 +206,7 @@ class LegendView extends ComponentView {
                     name, dataIndex, itemModel, legendModel,
                     legendSymbolType, symbolType,
                     itemAlign, dataParams.color, borderColor,
-                    selectMode, seriesModel
+                    selectMode
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -246,7 +242,7 @@ class LegendView extends ComponentView {
                             name, dataIndex, itemModel, legendModel,
                             legendSymbolType, null,
                             itemAlign, dataParams.color, borderColor,
-                            selectMode, seriesModel
+                            selectMode
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -328,9 +324,7 @@ class LegendView extends ComponentView {
         color: ZRColor,
         borderColor: ZRColor,
         selectMode: LegendOption['selectedMode'],
-        seriesModel: SeriesModel<SeriesOption<any, unknown>>,
     ) {
-        // legendModel.ecModel.option.series[0].itemStyle.color
         const itemWidth = legendModel.get('itemWidth');
         const itemHeight = legendModel.get('itemHeight');
         const inactiveColor = legendModel.get('inactiveColor');
