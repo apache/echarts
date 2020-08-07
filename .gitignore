@@ -184,9 +184,11 @@ todo
 /echarts.common.js
 /echarts.blank.js
 /lib
+/types
 /index.js
 /index.simple.js
 /index.common.js
 /index.blank.js
 /extension-esm
 /extension
+*.tgz

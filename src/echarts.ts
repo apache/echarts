@@ -103,6 +103,8 @@ import 'zrender/src/canvas/canvas';
 import { registerExternalTransform } from './data/helper/transform';
 import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
+import type {EChartsFullOption} from './option';
+
 declare let global: any;
 type ModelFinder = modelUtil.ModelFinder;
 
@@ -255,7 +257,6 @@ let enableConnect: (ecIns: ECharts) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
-
 class ECharts extends Eventful {
 
     /**
@@ -487,9 +488,10 @@ class ECharts extends Eventful {
      * @param opts.silent Default `false`.
      * @param opts.replaceMerge Default undefined.
      */
-    setOption(option: ECOption, notMerge?: boolean, lazyUpdate?: boolean): void;
-    setOption(option: ECOption, opts?: SetOptionOpts): void;
-    setOption(option: ECOption, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
+    // Expose to user full option.
+    setOption(option: EChartsFullOption, notMerge?: boolean, lazyUpdate?: boolean): void;
+    setOption(option: EChartsFullOption, opts?: SetOptionOpts): void;
+    setOption(option: EChartsFullOption, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
         if (__DEV__) {
             assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
         }
@@ -517,7 +519,7 @@ class ECharts extends Eventful {
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
-        this._model.setOption(option, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
+        this._model.setOption(option as ECOption, {replaceMerge: replaceMerge}, optionPreprocessorFuncs);
 
         if (lazyUpdate) {
             this[OPTION_UPDATED_KEY] = {silent: silent};
@@ -551,8 +553,8 @@ class ECharts extends Eventful {
         return this._model;
     }
 
-    getOption(): ECUnitOption {
-        return this._model && this._model.getOption();
+    getOption(): EChartsFullOption {
+        return this._model && this._model.getOption() as EChartsFullOption;
     }
 
     getWidth(): number {
