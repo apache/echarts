@@ -200,7 +200,6 @@ class Symbol extends graphic.Group {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
 
-        let itemStyle;
         let emphasisItemStyle;
         let blurItemStyle;
         let selectItemStyle;
@@ -215,7 +214,6 @@ class Symbol extends graphic.Group {
         let cursorStyle;
 
         if (seriesScope) {
-            itemStyle = seriesScope.itemStyle;
             emphasisItemStyle = seriesScope.emphasisItemStyle;
             blurItemStyle = seriesScope.blurItemStyle;
             selectItemStyle = seriesScope.selectItemStyle;
@@ -235,7 +233,6 @@ class Symbol extends graphic.Group {
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
             const emphasisModel = itemModel.getModel('emphasis');
 
-            itemStyle = itemModel.getModel('itemStyle').getItemStyle(['color']);
             emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             selectItemStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
             blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
@@ -262,7 +259,7 @@ class Symbol extends graphic.Group {
 
         cursorStyle && symbolPath.attr('cursor', cursorStyle);
 
-        const symbolStyle = extend(extend({}, data.getItemVisual(idx, 'style')), itemStyle);
+        const symbolStyle = data.getItemVisual(idx, 'style');
         const visualColor = symbolStyle.fill;
 
         if (symbolPath instanceof ZRImage) {

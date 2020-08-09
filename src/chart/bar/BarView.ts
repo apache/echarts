@@ -797,7 +797,7 @@ function updateStyle(
         (el as Rect).setShape('r', itemModel.get(BAR_BORDER_RADIUS_QUERY) || 0);
     }
 
-    el.useStyle(extend(extend({}, style), itemModel.getModel('itemStyle').getItemStyle(['color'])));
+    el.useStyle(style);
 
     el.ignore = isZeroOnPolar(layout as SectorLayout);
 
