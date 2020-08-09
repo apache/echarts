@@ -418,9 +418,9 @@ export type SeriesDataType = 'main' | 'node' | 'edge';
  */
 export type ECUnitOption = {
     // Exclude these reserverd word for `ECOption` to avoid to infer to "any".
-    baseOption?: never
-    options?: never
-    media?: never
+    baseOption?: unknown
+    options?: unknown
+    media?: unknown
 
     timeline?: ComponentOption | ComponentOption[]
     backgroundColor?: ZRColor
@@ -470,7 +470,7 @@ export type ECUnitOption = {
  * };
  * ```
  */
-export type ECOption = ECUnitOption | {
+export interface ECOption extends ECUnitOption {
     baseOption?: ECUnitOption,
     timeline?: ComponentOption,
     options?: ECUnitOption[],

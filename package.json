@@ -10,6 +10,7 @@
   "main": "index.js",
   "module": "echarts.all.js",
   "jsdelivr": "dist/echarts.min.js",
+  "types": "index.d.ts",
   "homepage": "http://echarts.apache.org",
   "repository": {
     "type": "git",

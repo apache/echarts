@@ -157,8 +157,8 @@ const CURSOR_MAP = {
 const DEFAULT_BRUSH_OPT = {
     brushStyle: {
         lineWidth: 2,
-        stroke: 'rgba(0,0,0,0.3)',
-        fill: 'rgba(0,0,0,0.1)'
+        stroke: 'rgba(210,219,238,0.3)',
+        fill: '#D2DBEE'
     },
     transformable: true,
     brushMode: 'single',

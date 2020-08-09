@@ -47,7 +47,7 @@ export function deprecateLog(str: string) {
         }
         if (hasConsole) {
             storedLogs[str] = true;
-                console.warn(ECHARTS_PREFIX + 'DEPRECATED: ' + str);
+            console.warn(ECHARTS_PREFIX + 'DEPRECATED: ' + str);
         }
     }
 }

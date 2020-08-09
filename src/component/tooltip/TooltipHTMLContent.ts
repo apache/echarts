@@ -79,7 +79,7 @@ function assembleArrow(
     const arrowPos = mirrowPos(arrowPosition);
     let centerPos = '';
     let rotate = 0;
-    if (['left', 'right'].includes(arrowPos)) {
+    if (zrUtil.indexOf(['left', 'right'], arrowPos) > -1) {
         centerPos = `${arrowPos}:-6px;top:50%;transform:translateY(-50%)`;
         rotate = arrowPos === 'left' ? -225 : -45;
     }
@@ -136,10 +136,8 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     return cssText.join(';');
 }
 
-function assembleCssText(tooltipModel: Model<TooltipOption>) {
-
+function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolean) {
     const cssText: string[] = [];
-
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
     const shadowBlur = tooltipModel.get('shadowBlur');
@@ -153,8 +151,8 @@ function assembleCssText(tooltipModel: Model<TooltipOption>) {
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration is 0.
     // If tooltip show arrow, then disable transition
-    transitionDuration
-        && !(['top', 'left', 'bottom', 'right'].includes(tooltipModel.get('position') as string))
+    !isFirstShow && transitionDuration
+        && zrUtil.indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position') as string) > -1
         && tooltipModel.get('trigger') !== 'item'
         && cssText.push(assembleTransition(transitionDuration));
 
@@ -246,6 +244,7 @@ class TooltipHTMLContent {
     private _hideDelay: number;
 
     private _inContent: boolean;
+    private _firstShow = true;
 
 
     constructor(
@@ -337,7 +336,7 @@ class TooltipHTMLContent {
         const styleCoord = this._styleCoord;
         const offset = el.offsetHeight / 2;
         nearPointColor = getFinalColor(nearPointColor);
-        el.style.cssText = gCssText + assembleCssText(tooltipModel)
+        el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
             // we should set initial value to `left` and `top`.
@@ -355,6 +354,7 @@ class TooltipHTMLContent {
         el.style.pointerEvents = this._enterable ? 'auto' : 'none';
 
         this._show = true;
+        this._firstShow = false;
     }
 
     setContent(

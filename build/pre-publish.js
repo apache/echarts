@@ -71,6 +71,9 @@ const extensionSrcDir = nodePath.resolve(ecDir, 'extension-src');
 const extensionCJSDir = nodePath.resolve(ecDir, 'extension');
 const extensionESMDir = nodePath.resolve(ecDir, 'extension-esm');
 
+const typesDir = nodePath.resolve(ecDir, 'types');
+
+
 const compileWorkList = [
     {
         logLabel: 'main ts -> js-cjs',
@@ -117,7 +120,10 @@ const compileWorkList = [
         compilerOptionsOverride: {
             module: 'ES2015',
             rootDir: ecDir,
-            outDir: tmpDir
+            outDir: tmpDir,
+            // Generate types when buidling esm
+            declaration: true,
+            declarationDir: typesDir
         },
         srcGlobby: mainSrcGlobby,
         transformOptions: {
@@ -237,9 +243,7 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
     let compilerOptions = {
         ...tsConfig.compilerOptions,
         ...compilerOptionsOverride,
-        sourceMap: false,
-        // Use the esm d.ts
-        declaration: false
+        sourceMap: false
     };
 
     // Must do it. becuase the value in tsconfig.json might be different from the inner representation.

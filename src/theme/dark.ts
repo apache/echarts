@@ -17,7 +17,8 @@
 * under the License.
 */
 
-const contrastColor = '#eee';
+const contrastColor = '#aaacbc';
+const backgroundColor = '#181432';
 const axisCommon = function () {
     return {
         axisLine: {
@@ -25,39 +26,40 @@ const axisCommon = function () {
                 color: contrastColor
             }
         },
-        axisTick: {
-            lineStyle: {
-                color: contrastColor
-            }
-        },
-        axisLabel: {
-            textStyle: {
-                color: contrastColor
-            }
-        },
         splitLine: {
             lineStyle: {
-                type: 'dashed',
-                color: '#aaa'
+                color: '#33324A'
             }
         },
         splitArea: {
             areaStyle: {
-                color: contrastColor
+                color: ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.05)']
+            }
+        },
+        minorSplitLine: {
+            lineStyle: {
+                color: '#20203B'
             }
         }
     };
 };
 
 const colorPalette = [
-    '#dd6b66', '#759aa0', '#e69d87', '#8dc1a9', '#ea7e53',
-    '#eedd78', '#73a373', '#73b9bc', '#7289ab', '#91ca8c', '#f49f42'
+    '#4992ff',
+    '#7cffb2',
+    '#fddd60',
+    '#ff6e76',
+    '#58d9f9',
+    '#05c091',
+    '#ff8a45',
+    '#8d48e3',
+    '#dd79ff'
 ];
 const theme = {
     darkMode: true,
 
     color: colorPalette,
-    backgroundColor: '#333',
+    backgroundColor: backgroundColor,
     tooltip: {
         axisPointer: {
             lineStyle: {
@@ -81,7 +83,10 @@ const theme = {
     },
     title: {
         textStyle: {
-            color: contrastColor
+            color: '#dae0f1'
+        },
+        subtextStyle: {
+            color: '#aaacbc'
         }
     },
     toolbox: {
@@ -122,6 +127,20 @@ const theme = {
                 color: contrastColor,
                 borderColor: contrastColor
             }
+        }
+    },
+    calendar: {
+        itemStyle: {
+            color: backgroundColor
+        },
+        dayLabel: {
+            color: contrastColor
+        },
+        monthLabel: {
+            color: contrastColor
+        },
+        yearLabel: {
+            color: contrastColor
         }
     },
     timeAxis: axisCommon(),

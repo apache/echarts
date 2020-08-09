@@ -18,6 +18,13 @@
 */
 
 import { quantile, asc } from '../../util/number';
+import { isFunction, isString } from 'zrender/src/core/util';
+
+export interface PrepareBoxplotDataOpt {
+    boundIQR?: number | 'none';
+    // Like "expriment{value}" produce: "expriment0", "expriment1", ...
+    itemNameFormatter?: string | ((params: { value: number }) => string);
+}
 
 
 /**
@@ -36,18 +43,13 @@ import { quantile, asc } from '../../util/number';
  * @param opt.boundIQR=1.5 Data less than min bound is outlier.
  *      default 1.5, means Q1 - 1.5 * (Q3 - Q1).
  *      If 'none'/0 passed, min bound will not be used.
- * @param opt.layout='horizontal'
- *      Box plot layout, can be 'horizontal' or 'vertical'
  */
 export default function (
     rawData: number[][],
-    opt: {
-        boundIQR?: number | 'none',
-        layout?: 'horizontal' | 'vertical'
-    }
+    opt: PrepareBoxplotDataOpt
 ): {
-    boxData: number[][]
-    outliers: number[][]
+    boxData: (number | string)[][];
+    outliers: (number | string)[][];
 } {
     opt = opt || {};
     const boxData = [];
@@ -73,13 +75,19 @@ export default function (
             ? max
             : Math.min(max, Q3 + bound);
 
-        boxData.push([i, low, Q1, Q2, Q3, high]);
+        const itemNameFormatter = opt.itemNameFormatter;
+        const itemName = isFunction(itemNameFormatter)
+            ? itemNameFormatter({ value: i })
+            : isString(itemNameFormatter)
+            ? itemNameFormatter.replace('{value}', i + '')
+            : i + '';
+
+        boxData.push([itemName, low, Q1, Q2, Q3, high]);
 
         for (let j = 0; j < ascList.length; j++) {
             const dataItem = ascList[j];
             if (dataItem < low || dataItem > high) {
-                const outlier = [i, dataItem];
-                opt.layout === 'vertical' && outlier.reverse();
+                const outlier = [itemName, dataItem];
                 outliers.push(outlier);
             }
         }
