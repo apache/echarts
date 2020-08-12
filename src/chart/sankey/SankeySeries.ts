@@ -302,18 +302,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         label: {
             show: true,
             position: 'right',
-            color: '#000',
             fontSize: 12
         },
 
         levels: [],
 
         nodeAlign: 'justify',
-
-        itemStyle: {
-            borderWidth: 1,
-            borderColor: '#333'
-        },
 
         lineStyle: {
             color: '#314656',
