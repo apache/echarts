@@ -19,10 +19,13 @@
 
 import { OptionDataValue, DimensionLoose, Dictionary } from './types';
 import {
-    createHashMap, keys, isArray, map, isObject, isString, trim, HashMap, isRegExp, isArrayLike
+    keys, isArray, map, isObject, isString, HashMap, isRegExp, isArrayLike, hasOwn
 } from 'zrender/src/core/util';
 import { throwError, makePrintable } from './log';
-import { parseDate } from './number';
+import {
+    RawValueParserType, getRawValueParser, isRelationalOperator,
+    createRelationalComparator, RelationalOperator, UnaryExpression
+} from '../data/helper/dataValueHelper';
 
 
 // PENDING:
@@ -82,6 +85,18 @@ import { parseDate } from './number';
  *     parse: 'time',
  *     lt: '2012-12-12'
  * }
+ * // Normalize number-like string and make '-' to Null.
+ * {
+ *     parse: 'time',
+ *     lt: '2012-12-12'
+ * }
+ * // Normalize to number:
+ * // + number-like string (like '  123  ') can be converted to a number.
+ * // + where null/undefined or other string will be converted to NaN.
+ * {
+ *     parse: 'number',
+ *     eq: 2011
+ * }
  * // RegExp, include the feature in SQL: `like '%xxx%'`.
  * {
  *     reg: /^asdf$/
@@ -118,35 +133,10 @@ import { parseDate } from './number';
 /**
  * Date string and ordinal string can be accepted.
  */
-interface RelationalExpressionOptionByOp {
-    lt?: OptionDataValue; // less than
-    lte?: OptionDataValue; // less than or equal
-    gt?: OptionDataValue; // greater than
-    gte?: OptionDataValue; // greater than or equal
-    eq?: OptionDataValue; // equal
-    ne?: OptionDataValue; // not equal
+interface RelationalExpressionOptionByOp extends Record<RelationalOperator, OptionDataValue> {
     reg?: RegExp | string; // RegExp
 };
-interface RelationalExpressionOptionByOpAlias {
-    value?: RelationalExpressionOptionByOp['eq'];
-
-    '<'?: OptionDataValue; // lt
-    '<='?: OptionDataValue; // lte
-    '>'?: OptionDataValue; // gt
-    '>='?: OptionDataValue; // gte
-    '='?: OptionDataValue; // eq
-    '!='?: OptionDataValue; // ne
-    '<>'?: OptionDataValue; // ne (SQL style)
-
-    // '=='?: OptionDataValue; // eq
-    // '==='?: OptionDataValue; // eq
-    // '!=='?: OptionDataValue; // eq
-
-    // ge: RelationalExpressionOptionByOp['gte'];
-    // le: RelationalExpressionOptionByOp['lte'];
-    // neq: RelationalExpressionOptionByOp['ne'];
-};
-const aliasToOpMap = createHashMap<RelationalExpressionOp, RelationalExpressionOpAlias>({
+const RELATIONAL_EXPRESSION_OP_ALIAS_MAP = {
     value: 'eq',
 
     // PENDING: not good for literal semantic?
@@ -168,67 +158,44 @@ const aliasToOpMap = createHashMap<RelationalExpressionOp, RelationalExpressionO
     // ge: 'gte',
     // le: 'lte',
     // neq: 'ne',
-});
-
-type RelationalExpressionOp = keyof RelationalExpressionOptionByOp;
-type RelationalExpressionOpAlias = keyof RelationalExpressionOptionByOpAlias;
+} as const;
+type RelationalExpressionOptionByOpAlias = Record<keyof typeof RELATIONAL_EXPRESSION_OP_ALIAS_MAP, OptionDataValue>;
 
 interface RelationalExpressionOption extends
         RelationalExpressionOptionByOp, RelationalExpressionOptionByOpAlias {
     dimension?: DimensionLoose;
-    parse?: RelationalExpressionValueParserType;
+    parse?: RawValueParserType;
 }
 
 type RelationalExpressionOpEvaluate = (tarVal: unknown, condVal: unknown) => boolean;
 
-const relationalOpEvaluateMap = createHashMap<RelationalExpressionOpEvaluate, RelationalExpressionOp>({
-    // PENDING: should keep supporting string compare?
-    lt: function (tarVal, condVal) {
-        return tarVal < condVal;
-    },
-    lte: function (tarVal, condVal) {
-        return tarVal <= condVal;
-    },
-    gt: function (tarVal, condVal) {
-        return tarVal > condVal;
-    },
-    gte: function (tarVal, condVal) {
-        return tarVal >= condVal;
-    },
-    eq: function (tarVal, condVal) {
-        // eq is probably most used, DO NOT use JS ==,
-        // the rule is too complicated.
-        return tarVal === condVal;
-    },
-    ne: function (tarVal, condVal) {
-        return tarVal !== condVal;
-    },
-    reg: function (tarVal, condVal: RegExp) {
-        const type = typeof tarVal;
-        return type === 'string' ? condVal.test(tarVal as string)
-            : type === 'number' ? condVal.test(tarVal + '')
+
+class RegExpEvaluator implements UnaryExpression {
+    private _condVal: RegExp;
+
+    constructor(rVal: unknown) {
+        // Support condVal: RegExp | string
+        const condValue = this._condVal = isString(rVal) ? new RegExp(rVal)
+            : isRegExp(rVal) ? rVal as RegExp
+            : null;
+        if (condValue == null) {
+            let errMsg = '';
+            if (__DEV__) {
+                errMsg = makePrintable('Illegal regexp', rVal, 'in');
+            }
+            throwError(errMsg);
+        }
+    }
+
+    evaluate(lVal: unknown): boolean {
+        const type = typeof lVal;
+        return type === 'string' ? this._condVal.test(lVal as string)
+            : type === 'number' ? this._condVal.test(lVal + '')
             : false;
     }
-});
-
-function parseRegCond(condVal: unknown): RegExp {
-    // Support condVal: RegExp | string
-    return isString(condVal) ? new RegExp(condVal)
-        : isRegExp(condVal) ? condVal as RegExp
-        : null;
 }
 
-type RelationalExpressionValueParserType = 'time' | 'trim';
-type RelationalExpressionValueParser = (val: unknown) => unknown;
-const valueParserMap = createHashMap<RelationalExpressionValueParser, RelationalExpressionValueParserType>({
-    time: function (val): number {
-        // return timestamp.
-        return +parseDate(val);
-    },
-    trim: function (val) {
-        return typeof val === 'string' ? trim(val) : val;
-    }
-});
+
 
 
 // --------------------------------------------------
@@ -309,30 +276,21 @@ class NotConditionInternal implements ParsedConditionInternal {
 }
 class RelationalConditionInternal implements ParsedConditionInternal {
     valueGetterParam: ValueGetterParam;
-    valueParser: RelationalExpressionValueParser;
+    valueParser: ReturnType<typeof getRawValueParser>;
     // If no parser, be null/undefined.
     getValue: ConditionalExpressionValueGetter;
-    subCondList: {
-        condValue: unknown;
-        evaluate: RelationalExpressionOpEvaluate;
-    }[];
+    subCondList: UnaryExpression[];
 
     evaluate() {
-        const getValue = this.getValue;
         const needParse = !!this.valueParser;
         // Call getValue with no `this`.
+        const getValue = this.getValue;
         const tarValRaw = getValue(this.valueGetterParam);
         const tarValParsed = needParse ? this.valueParser(tarValRaw) : null;
 
         // Relational cond follow "and" logic internally.
         for (let i = 0; i < this.subCondList.length; i++) {
-            const subCond = this.subCondList[i];
-            if (
-                !subCond.evaluate(
-                    needParse ? tarValParsed : tarValRaw,
-                    subCond.condValue
-                )
-            ) {
+            if (!this.subCondList[i].evaluate(needParse ? tarValParsed : tarValRaw)) {
                 return false;
             }
         }
@@ -435,7 +393,7 @@ function parseRelationalOption(
     const exprKeys = keys(exprOption);
 
     const parserName = exprOption.parse;
-    const valueParser = parserName ? valueParserMap.get(parserName) : null;
+    const valueParser = parserName ? getRawValueParser(parserName) : null;
 
     for (let i = 0; i < exprKeys.length; i++) {
         const keyRaw = exprKeys[i];
@@ -443,11 +401,19 @@ function parseRelationalOption(
             continue;
         }
 
-        const op: RelationalExpressionOp = aliasToOpMap.get(keyRaw as RelationalExpressionOpAlias)
-            || (keyRaw as RelationalExpressionOp);
-        const evaluateHandler = relationalOpEvaluateMap.get(op);
+        const op: keyof RelationalExpressionOptionByOp = hasOwn(RELATIONAL_EXPRESSION_OP_ALIAS_MAP, keyRaw)
+            ? RELATIONAL_EXPRESSION_OP_ALIAS_MAP[keyRaw as keyof RelationalExpressionOptionByOpAlias]
+            : (keyRaw as keyof RelationalExpressionOptionByOp);
+        const condValueRaw = exprOption[keyRaw];
+        const condValueParsed = valueParser ? valueParser(condValueRaw) : condValueRaw;
+        const evaluator =
+            isRelationalOperator(op)
+            ? createRelationalComparator(op, true, condValueParsed)
+            : op === 'reg'
+            ? new RegExpEvaluator(condValueParsed)
+            : null;
 
-        if (!evaluateHandler) {
+        if (!evaluator) {
             if (__DEV__) {
                 errMsg = makePrintable(
                     'Illegal relational operation: "' + keyRaw + '" in condition:', exprOption
@@ -456,28 +422,7 @@ function parseRelationalOption(
             throwError(errMsg);
         }
 
-        const condValueRaw = exprOption[keyRaw];
-        let condValue;
-        if (keyRaw === 'reg') {
-            condValue = parseRegCond(condValueRaw);
-            if (condValue == null) {
-                let errMsg = '';
-                if (__DEV__) {
-                    errMsg = makePrintable('Illegal regexp', condValueRaw, 'in', exprOption);
-                }
-                throwError(errMsg);
-            }
-        }
-        else {
-            // At present, all other operators are applicable `RelationalExpressionValueParserType`.
-            // But if adding new parser, we should check it again.
-            condValue = valueParser ? valueParser(condValueRaw) : condValueRaw;
-        }
-
-        subCondList.push({
-            condValue: condValue,
-            evaluate: evaluateHandler
-        });
+        subCondList.push(evaluator);
     }
 
     if (!subCondList.length) {

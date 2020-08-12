@@ -31,7 +31,7 @@ import {
 import {
     getRawSourceItemGetter, getRawSourceDataCounter, getRawSourceValueGetter
 } from './dataProvider';
-import { parseDataValue } from './parseDataValue';
+import { parseDataValue } from './dataValueHelper';
 import { createSource, inheritSourceMetaRawOption } from './sourceHelper';
 import { consoleLog, makePrintable } from '../../util/log';
 

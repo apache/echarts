@@ -536,10 +536,35 @@ export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
 }
 
 /**
- * parseFloat NaNs numeric-cast false positives (null|true|false|"")
- * ...but misinterprets leading-number strings, particularly hex literals ("0x...")
- * subtraction forces infinities to NaN
+ * [Numberic is defined as]:
+ *     `parseFloat(val) == val`
+ * For example:
+ * numeric:
+ *     typeof number except NaN, '-123', '123', '2e3', '-2e3', '011', 'Infinity', Infinity,
+ *     and they rounded by white-spaces or line-terminal like ' -123 \n ' (see es spec)
+ * not-numeric:
+ *     null, undefined, [], {}, true, false, 'NaN', NaN, '123ab',
+ *     empty string, string with only white-spaces or line-terminal (see es spec),
+ *     0x12, '0x12', '-0x12', 012, '012', '-012',
+ *     non-string, ...
+ *
+ * @test See full test cases in `test/ut/spec/util/number.js`.
  */
-export function isNumeric(v: any): v is number {
-    return v - parseFloat(v) >= 0;
+export function numericToNumber(val: unknown): number {
+    const valFloat = parseFloat(val as string);
+    return isNumericHavingParseFloat(val, valFloat) ? valFloat : NaN;
+}
+
+/**
+ * Definition of "numeric": see `numericToNumber`.
+ */
+export function isNumeric(val: unknown): val is number {
+    return isNumericHavingParseFloat(val, parseFloat(val as string));
+}
+
+function isNumericHavingParseFloat(val: unknown, valFloat: number): val is number {
+    return (
+        valFloat == val // eslint-disable-line eqeqeq
+        && (valFloat !== 0 || typeof val !== 'string' || val.indexOf('x') <= 0) // For case ' 0x0 '.
+    );
 }

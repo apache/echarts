@@ -24,7 +24,9 @@ import {
 import { makePrintable, throwError } from '../../util/log';
 import { isArray, each, hasOwn } from 'zrender/src/core/util';
 import { normalizeToArray } from '../../util/model';
-import { parseDate } from '../../util/number';
+import {
+    RawValueParserType, getRawValueParser, createRelationalComparator
+} from '../../data/helper/dataValueHelper';
 
 /**
  * @usage
@@ -53,7 +55,7 @@ export interface SortTransformOption extends DataTransformOption {
 type OrderExpression = {
     dimension: DimensionLoose;
     order: SortOrder;
-    parse?: 'time'
+    parse?: RawValueParserType;
 };
 
 type SortOrder = 'asc' | 'desc';
@@ -65,12 +67,8 @@ if (__DEV__) {
         'Valid config is like:',
         '{ dimension: "age", order: "asc" }',
         'or [{ dimension: "age", order: "asc"], { dimension: "date", order: "desc" }]'
-    ].join('');
+    ].join(' ');
 }
-
-const timeParser = function (val: OptionDataValue): number {
-    return +parseDate(val);
-};
 
 
 export const sortTransform: ExternalDataTransform<SortTransformOption> = {
@@ -98,7 +96,7 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
         const orderDefList: {
             dimIdx: DimensionIndex;
             orderReturn: -1 | 1;
-            parser: (val: OptionDataValue) => number;
+            parser: ReturnType<typeof getRawValueParser>;
         }[] = [];
         each(orderExprList, function (orderExpr) {
             const dimLoose = orderExpr.dimension;
@@ -131,18 +129,15 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
                 throwError(errMsg);
             }
 
-            let parser;
-            if (parserName) {
-                if (parserName !== 'time') {
-                    if (__DEV__) {
-                        errMsg = makePrintable(
-                            'Invalid parser name' + parserName + '.\n',
-                            'Illegal config:', orderExpr, '.\n'
-                        );
-                    }
-                    throwError(errMsg);
+            const parser = parserName ? getRawValueParser(parserName) : null;
+            if (parserName && !parser) {
+                if (__DEV__) {
+                    errMsg = makePrintable(
+                        'Invalid parser name ' + parserName + '.\n',
+                        'Illegal config:', orderExpr, '.\n'
+                    );
                 }
-                parser = timeParser;
+                throwError(errMsg);
             }
 
             orderDefList.push({
@@ -175,6 +170,9 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
             resultData.push(source.getRawDataItem(i));
         }
 
+        const lt = createRelationalComparator('lt');
+        const gt = createRelationalComparator('gt');
+
         resultData.sort(function (item0, item1) {
             if (item0 === headerPlaceholder) {
                 return -1;
@@ -196,13 +194,13 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
                 let val0 = source.retrieveItemValue(item0, orderDef.dimIdx);
                 let val1 = source.retrieveItemValue(item1, orderDef.dimIdx);
                 if (orderDef.parser) {
-                    val0 = orderDef.parser(val0);
-                    val1 = orderDef.parser(val1);
+                    val0 = orderDef.parser(val0) as OptionDataValue;
+                    val1 = orderDef.parser(val1) as OptionDataValue;
                 }
-                if (val0 < val1) {
+                if (lt.evaluate(val0, val1)) {
                     return orderDef.orderReturn;
                 }
-                else if (val0 > val1) {
+                else if (gt.evaluate(val0, val1)) {
                     return -orderDef.orderReturn;
                 }
             }
