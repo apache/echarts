@@ -549,22 +549,19 @@ export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
  *     non-string, ...
  *
  * @test See full test cases in `test/ut/spec/util/number.js`.
+ * @return Must be a typeof number. If not numeric, return NaN.
  */
 export function numericToNumber(val: unknown): number {
     const valFloat = parseFloat(val as string);
-    return isNumericHavingParseFloat(val, valFloat) ? valFloat : NaN;
+    return (
+        valFloat == val // eslint-disable-line eqeqeq
+        && (valFloat !== 0 || typeof val !== 'string' || val.indexOf('x') <= 0) // For case ' 0x0 '.
+    ) ? valFloat : NaN;
 }
 
 /**
  * Definition of "numeric": see `numericToNumber`.
  */
 export function isNumeric(val: unknown): val is number {
-    return isNumericHavingParseFloat(val, parseFloat(val as string));
-}
-
-function isNumericHavingParseFloat(val: unknown, valFloat: number): val is number {
-    return (
-        valFloat == val // eslint-disable-line eqeqeq
-        && (valFloat !== 0 || typeof val !== 'string' || val.indexOf('x') <= 0) // For case ' 0x0 '.
-    );
+    return !isNaN(numericToNumber(val));
 }

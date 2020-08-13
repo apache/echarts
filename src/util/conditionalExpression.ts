@@ -23,13 +23,13 @@ import {
 } from 'zrender/src/core/util';
 import { throwError, makePrintable } from './log';
 import {
-    RawValueParserType, getRawValueParser, isRelationalOperator,
-    createRelationalComparator, RelationalOperator, UnaryExpression
+    RawValueParserType, getRawValueParser,
+    RelationalOperator, FilterComparator, createFilterComparator
 } from '../data/helper/dataValueHelper';
 
 
 // PENDING:
-// (1) Support more parser like: `parse: 'trim'`, `parse: 'lowerCase'`, `parse: 'year'`, `parse: 'dayOfWeek'`?
+// (1) Support more parser like: `parser: 'trim'`, `parser: 'lowerCase'`, `parser: 'year'`, `parser: 'dayOfWeek'`?
 // (2) Support piped parser ?
 // (3) Support callback parser or callback condition?
 // (4) At present do not support string expression yet but only stuctured expression.
@@ -77,24 +77,24 @@ import {
  * ```js
  * // Trim if string
  * {
- *     parse: 'trim',
+ *     parser: 'trim',
  *     eq: 'Flowers'
  * }
  * // Parse as time and enable arithmetic relation comparison.
  * {
- *     parse: 'time',
+ *     parser: 'time',
  *     lt: '2012-12-12'
  * }
  * // Normalize number-like string and make '-' to Null.
  * {
- *     parse: 'time',
+ *     parser: 'time',
  *     lt: '2012-12-12'
  * }
  * // Normalize to number:
  * // + number-like string (like '  123  ') can be converted to a number.
  * // + where null/undefined or other string will be converted to NaN.
  * {
- *     parse: 'number',
+ *     parser: 'number',
  *     eq: 2011
  * }
  * // RegExp, include the feature in SQL: `like '%xxx%'`.
@@ -164,13 +164,13 @@ type RelationalExpressionOptionByOpAlias = Record<keyof typeof RELATIONAL_EXPRES
 interface RelationalExpressionOption extends
         RelationalExpressionOptionByOp, RelationalExpressionOptionByOpAlias {
     dimension?: DimensionLoose;
-    parse?: RawValueParserType;
+    parser?: RawValueParserType;
 }
 
 type RelationalExpressionOpEvaluate = (tarVal: unknown, condVal: unknown) => boolean;
 
 
-class RegExpEvaluator implements UnaryExpression {
+class RegExpEvaluator implements FilterComparator {
     private _condVal: RegExp;
 
     constructor(rVal: unknown) {
@@ -279,7 +279,7 @@ class RelationalConditionInternal implements ParsedConditionInternal {
     valueParser: ReturnType<typeof getRawValueParser>;
     // If no parser, be null/undefined.
     getValue: ConditionalExpressionValueGetter;
-    subCondList: UnaryExpression[];
+    subCondList: FilterComparator[];
 
     evaluate() {
         const needParse = !!this.valueParser;
@@ -392,12 +392,12 @@ function parseRelationalOption(
     const subCondList = [] as RelationalConditionInternal['subCondList'];
     const exprKeys = keys(exprOption);
 
-    const parserName = exprOption.parse;
+    const parserName = exprOption.parser;
     const valueParser = parserName ? getRawValueParser(parserName) : null;
 
     for (let i = 0; i < exprKeys.length; i++) {
         const keyRaw = exprKeys[i];
-        if (keyRaw === 'parse' || getters.valueGetterAttrMap.get(keyRaw)) {
+        if (keyRaw === 'parser' || getters.valueGetterAttrMap.get(keyRaw)) {
             continue;
         }
 
@@ -406,12 +406,8 @@ function parseRelationalOption(
             : (keyRaw as keyof RelationalExpressionOptionByOp);
         const condValueRaw = exprOption[keyRaw];
         const condValueParsed = valueParser ? valueParser(condValueRaw) : condValueRaw;
-        const evaluator =
-            isRelationalOperator(op)
-            ? createRelationalComparator(op, true, condValueParsed)
-            : op === 'reg'
-            ? new RegExpEvaluator(condValueParsed)
-            : null;
+        const evaluator = createFilterComparator(op, condValueParsed)
+            || (op === 'reg' && new RegExpEvaluator(condValueParsed));
 
         if (!evaluator) {
             if (__DEV__) {

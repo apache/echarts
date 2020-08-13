@@ -21,6 +21,7 @@ import { ParsedValue, DimensionType } from '../../util/types';
 import OrdinalMeta from '../OrdinalMeta';
 import { parseDate, numericToNumber } from '../../util/number';
 import { createHashMap, trim, hasOwn } from 'zrender/src/core/util';
+import { throwError } from '../../util/log';
 
 
 /**
@@ -99,51 +100,99 @@ export function getRawValueParser(type: RawValueParserType): RawValueParser {
 
 
 
-export interface UnaryExpression {
-    evaluate(val: unknown): unknown;
-}
-export interface BinaryExpression {
-    evaluate(lval: unknown, rval: unknown): unknown;
+export interface FilterComparator {
+    evaluate(val: unknown): boolean;
 }
 
-class OrderComparatorUnary implements UnaryExpression {
-    _rval: unknown;
-    _rvalTypeof: string; // typeof rval
-    _rvalFloat: number;
-    _rvalIsNumeric: boolean;
-    _opFn: (lval: unknown, rval: unknown) => boolean;
+const ORDER_COMPARISON_OP_MAP: {
+    [key in OrderRelationOperator]: ((lval: unknown, rval: unknown) => boolean)
+} = {
+    lt: (lval, rval) => lval < rval,
+    lte: (lval, rval) => lval <= rval,
+    gt: (lval, rval) => lval > rval,
+    gte: (lval, rval) => lval >= rval
+};
+
+class FilterOrderComparator implements FilterComparator {
+    private _rvalFloat: number;
+    private _opFn: (lval: unknown, rval: unknown) => boolean;
+    constructor(op: OrderRelationOperator, rval: unknown) {
+        if (typeof rval !== 'number') {
+            let errMsg = '';
+            if (__DEV__) {
+                errMsg = 'rvalue of "<", ">", "<=", ">=" can only be number in filter.';
+            }
+            throwError(errMsg);
+        }
+        this._opFn = ORDER_COMPARISON_OP_MAP[op];
+        this._rvalFloat = numericToNumber(rval);
+    }
     // Performance sensitive.
     evaluate(lval: unknown): boolean {
         // Most cases is 'number', and typeof maybe 10 times faseter than parseFloat.
-        const lvalIsNumber = typeof lval === 'number';
-        return (lvalIsNumber && this._rvalIsNumeric)
+        return typeof lval === 'number'
             ? this._opFn(lval, this._rvalFloat)
-            : (lvalIsNumber || this._rvalTypeof === 'number')
-            ? this._opFn(numericToNumber(lval), this._rvalFloat)
-            : false;
-    }
-}
-class OrderComparatorBinary implements BinaryExpression {
-    _opFn: (lval: unknown, rval: unknown) => boolean;
-    // Performance sensitive.
-    evaluate(lval: unknown, rval: unknown): boolean {
-        // Most cases is 'number', and typeof maybe 10 times faseter than parseFloat.
-        const lvalIsNumber = typeof lval === 'number';
-        const rvalIsNumber = typeof rval === 'number';
-        return (lvalIsNumber && rvalIsNumber)
-            ? this._opFn(lval, rval)
-            : (lvalIsNumber || rvalIsNumber)
-            ? this._opFn(numericToNumber(lval), numericToNumber(rval))
-            : false;
+            : this._opFn(numericToNumber(lval), this._rvalFloat);
     }
 }
 
-class EqualityComparatorUnary implements UnaryExpression {
-    _rval: unknown;
-    _rvalTypeof: string; // typeof rval
-    _rvalFloat: number;
-    _rvalIsNumeric: boolean;
-    _isEq: boolean;
+export class SortOrderComparator {
+    private _incomparable: number;
+    private _resultLT: -1 | 1;
+    /**
+     * @param order by defualt: 'asc'
+     * @param incomparable by defualt: Always on the tail.
+     *        That is, if 'asc' => 'max', if 'desc' => 'min'
+     */
+    constructor(order: 'asc' | 'desc', incomparable: 'min' | 'max') {
+        const isDesc = order === 'desc';
+        this._resultLT = isDesc ? 1 : -1;
+        if (incomparable == null) {
+            incomparable = isDesc ? 'min' : 'max';
+        }
+        this._incomparable = incomparable === 'min' ? -Infinity : Infinity;
+    }
+    // Performance sensitive.
+    evaluate(lval: unknown, rval: unknown): -1 | 0 | 1 {
+        // Most cases is 'number', and typeof maybe 10 times faseter than parseFloat.
+        const lvalTypeof = typeof lval;
+        const rvalTypeof = typeof rval;
+        let lvalFloat = lvalTypeof === 'number' ? lval : numericToNumber(lval);
+        let rvalFloat = rvalTypeof === 'number' ? rval : numericToNumber(rval);
+        const lvalIncmpr = isNaN(lvalFloat as number);
+        const rvalIncmpr = isNaN(rvalFloat as number);
+        if (lvalIncmpr) {
+            lvalFloat = this._incomparable;
+        }
+        if (rvalIncmpr) {
+            rvalFloat = this._incomparable;
+        }
+        // In most cases, pure string sort has no meanings. But it can exists when need to
+        // group two categories (and order by anthor dimension meanwhile).
+        // But if we support string sort, we still need to avoid the misleading of `'2' > '12'`,
+        // and support '-' means empty, and trade `'abc' > 2` as incomparable.
+        // So we support string comparison only if both lval and rval are string and not numeric.
+        if (lvalIncmpr && rvalIncmpr && lvalTypeof === 'string' && rvalTypeof === 'string') {
+            lvalFloat = lval;
+            rvalFloat = rval;
+        }
+        return lvalFloat < rvalFloat ? this._resultLT
+            : lvalFloat > rvalFloat ? (-this._resultLT as -1 | 1)
+            : 0;
+    }
+}
+
+class FilterEqualityComparator implements FilterComparator {
+    private _isEQ: boolean;
+    private _rval: unknown;
+    private _rvalTypeof: string;
+    private _rvalFloat: number;
+    constructor(isEq: boolean, rval: unknown) {
+        this._rval = rval;
+        this._isEQ = isEq;
+        this._rvalTypeof = typeof rval;
+        this._rvalFloat = numericToNumber(rval);
+    }
     // Performance sensitive.
     evaluate(lval: unknown): boolean {
         let eqResult = lval === this._rval;
@@ -153,80 +202,47 @@ class EqualityComparatorUnary implements UnaryExpression {
                 eqResult = numericToNumber(lval) === this._rvalFloat;
             }
         }
-        return this._isEq ? eqResult : !eqResult;
+        return this._isEQ ? eqResult : !eqResult;
     }
 }
 
-class EqualityComparatorBinary implements BinaryExpression {
-    _isEq: boolean;
-    // Performance sensitive.
-    evaluate(lval: unknown, rval: unknown): boolean {
-        let eqResult = lval === rval;
-        if (!eqResult) {
-            const lvalTypeof = typeof lval;
-            const rvalTypeof = typeof rval;
-            if (lvalTypeof !== rvalTypeof && (lvalTypeof === 'number' || rvalTypeof === 'number')) {
-                eqResult = numericToNumber(lval) === numericToNumber(rval);
-            }
-        }
-        return this._isEq ? eqResult : !eqResult;
-    }
-}
-
-const ORDER_COMPARISON_OP_MAP = {
-    lt: (tarVal: unknown, condVal: unknown) => tarVal < condVal,
-    lte: (tarVal: unknown, condVal: unknown) => tarVal <= condVal,
-    gt: (tarVal: unknown, condVal: unknown) => tarVal > condVal,
-    gte: (tarVal: unknown, condVal: unknown) => tarVal >= condVal
-} as const;
-
-export type RelationalOperator = 'lt' | 'lte' | 'gt' | 'gte' | 'eq' | 'ne';
+type OrderRelationOperator = 'lt' | 'lte' | 'gt' | 'gte';
+export type RelationalOperator = OrderRelationOperator | 'eq' | 'ne';
 
 /**
- * [COMPARISON_RULE]
- * `lt`, `lte`, `gt`, `gte`:
- * + If two "number" or a "number" and a "numeric": convert to number and compare.
- * + Else return `false`.
+ * [FILTER_COMPARISON_RULE]
+ * `lt`|`lte`|`gt`|`gte`:
+ * + rval must be a number. And lval will be converted to number (`numericToNumber`) to compare.
  * `eq`:
- * + If same type, compare with ===.
- * + If two "number" or a "number" and a "numeric": convert to number and compare.
+ * + If same type, compare with `===`.
+ * + If there is one number, convert to number (`numericToNumber`) to compare.
  * + Else return `false`.
  * `ne`:
  * + Not `eq`.
  *
- * Definition of "numeric": see `util/number.ts#numericToNumber`.
+ * [SORT_COMPARISON_RULE]
+ * Only `lt`|`gt`.
+ * Always convert to number (`numericToNumer`) to compare.
+ * (e.g., consider case: [12, " 13 ", " 14 ", null, 15])
  *
- * [MEMO]
- * + Do not support string comparison until required. And also need to consider the
- *   misleading of "2" > "12".
- * + JS bad case considered: null <= 0, [] <= 0, ' ' <= 0, ...
+ * [CHECK_LIST_OF_THE_RULE_DESIGN]
+ * + Do not support string comparison until required. And also need to
+ *   void the misleading of "2" > "12".
+ * + Should avoid the misleading case:
+ *   `" 22 " gte "22"` is `true` but `" 22 " eq "22"` is `false`.
+ * + JS bad case should be avoided: null <= 0, [] <= 0, ' ' <= 0, ...
+ * + Only "numeric" can be converted to comparable number, otherwise converted to NaN.
+ *   See `util/number.ts#numericToNumber`.
+ *
+ * @return If `op` is not `RelationalOperator`, return null;
  */
-export function createRelationalComparator(op: RelationalOperator): BinaryExpression;
-export function createRelationalComparator(op: RelationalOperator, isUnary: true, rval: unknown): UnaryExpression;
-export function createRelationalComparator(
-    op: RelationalOperator,
-    isUnary?: true,
+export function createFilterComparator(
+    op: string,
     rval?: unknown
-): UnaryExpression | BinaryExpression {
-    let comparator;
-    if (op === 'eq' || op === 'ne') {
-        comparator = isUnary ? new EqualityComparatorUnary() : new EqualityComparatorBinary();
-        comparator._isEq = op === 'eq';
-    }
-    else {
-        comparator = isUnary ? new OrderComparatorUnary() : new OrderComparatorBinary();
-        comparator._opFn = ORDER_COMPARISON_OP_MAP[op];
-    }
-    if (isUnary) {
-        const unaryComp = comparator as OrderComparatorUnary | EqualityComparatorUnary;
-        unaryComp._rval = rval;
-        unaryComp._rvalTypeof = typeof rval;
-        const rvalFloat = unaryComp._rvalFloat = numericToNumber(rval);
-        unaryComp._rvalIsNumeric = !isNaN(rvalFloat); // eslint-disable-line eqeqeq
-    }
-    return comparator;
-}
-
-export function isRelationalOperator(op: string): op is RelationalOperator {
-    return hasOwn(ORDER_COMPARISON_OP_MAP, op) || op === 'eq' || op === 'ne';
+): FilterComparator {
+    return (op === 'eq' || op === 'ne')
+        ? new FilterEqualityComparator(op === 'eq', rval)
+        : hasOwn(ORDER_COMPARISON_OP_MAP, op)
+        ? new FilterOrderComparator(op as OrderRelationOperator, rval)
+        : null;
 }
