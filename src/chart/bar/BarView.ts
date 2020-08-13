@@ -195,9 +195,7 @@ class BarView extends ChartView {
         const animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
 
         const axis2DModel = (baseAxis as Axis2D).model;
-        const axisSort = coord.type === 'cartesian2d' && axis2DModel.get('sort')
-            && axis2DModel.get('sortSeriesIndex') === seriesModel.seriesIndex;
-        const realtimeSort = axisSort && axis2DModel.get('realtimeSort');
+        const realtimeSort = seriesModel.get('realtimeSort');
 
         // If no data in the first frame, wait for data to initSort
         if (realtimeSort && data.count()) {

@@ -122,10 +122,6 @@ under the License.
                         },
                         yAxis: {
                             type: 'category',
-                            // data: categories,
-                            sort: true,
-                            realtimeSort: true,
-                            sortSeriesIndex: 0,
                             inverse: true,
                             max: 10,
                             axisLabel: {
@@ -135,6 +131,7 @@ under the License.
                             animationDurationUpdate: 300
                         },
                         series: [{
+                            realtimeSort: true,
                             seriesLayoutBy: 'column',
                             type: 'bar',
                             encode: {
@@ -233,9 +230,6 @@ under the License.
                     yAxis: {
                         type: 'category',
                         data: ['A', 'B', 'C', 'D'],
-                        sort: true,
-                        realtimeSort: true,
-                        sortSeriesIndex: 0,
                         inverse: true,
                         axisLabel: {
                             formatter: function (label, id) {
@@ -247,6 +241,7 @@ under the License.
                         max: 2
                     },
                     series: [{
+                        realtimeSort: true,
                         name: 'X',
                         type: 'bar',
                         data: [{
