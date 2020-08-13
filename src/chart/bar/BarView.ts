@@ -112,6 +112,7 @@ class BarView extends ChartView {
     private _isLargeDraw: boolean;
 
     private _isFirstFrame: boolean; // First frame after series added
+    private _onRendered: Function;
 
     private _backgroundGroup: Group;
 
@@ -126,6 +127,8 @@ class BarView extends ChartView {
 
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
         this._model = seriesModel;
+
+        this.removeOnRenderedListener(api);
 
         this._updateDrawMode(seriesModel);
 
@@ -197,10 +200,30 @@ class BarView extends ChartView {
         const realtimeSort = axisSort && axis2DModel.get('realtimeSort');
 
         // If no data in the first frame, wait for data to initSort
-        if (realtimeSort && this._isFirstFrame && data.count()) {
-            this._initSort(data, isHorizontalOrRadial, baseAxis as Axis2D, api);
-            this._isFirstFrame = false;
-            return;
+        if (realtimeSort && data.count()) {
+            if (this._isFirstFrame) {
+                this._initSort(data, isHorizontalOrRadial, baseAxis as Axis2D, api);
+
+                this._isFirstFrame = false;
+                return;
+            }
+            else {
+                this._onRendered = () => {
+                    const orderMap = (idx: number) => {
+                        const el = (data.getItemGraphicEl(idx) as Rect);
+                        if (el) {
+                            const shape = el.shape;
+                            // If data is NaN, shape.xxx may be NaN, so use || 0 here in case
+                            return (isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width) || 0;
+                        }
+                        else {
+                            return 0;
+                        }
+                    };
+                    this._updateSort(data, orderMap, baseAxis as Axis2D, api);
+                };
+                api.getZr().on('rendered', this._onRendered as any);
+            }
         }
 
         const needsClip = seriesModel.get('clip', true) || realtimeSort;
@@ -382,23 +405,6 @@ class BarView extends ChartView {
         this._backgroundEls = bgEls;
 
         this._data = data;
-
-        if (lastAnimator) {
-            lastAnimator.during(() => {
-                const orderMap = (idx: number) => {
-                    const el = (data.getItemGraphicEl(idx) as Rect);
-                    if (el) {
-                        const shape = el.shape;
-                        // If data is NaN, shape.xxx may be NaN, so use || 0 here in case
-                        return (isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width) || 0;
-                    }
-                    else {
-                        return 0;
-                    }
-                };
-                that._updateSort(data, orderMap, baseAxis as Axis2D, api);
-            });
-        }
     }
 
     private _renderLarge(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI): void {
@@ -499,6 +505,8 @@ class BarView extends ChartView {
                  * as long as the order in the view doesn't change.
                  */
                 if (!oldOrder[i] || oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
+                    this.removeOnRenderedListener(api);
+
                     const action = {
                         type: 'changeAxisOrder',
                         componentType: baseAxis.dim + 'Axis',
@@ -532,6 +540,13 @@ class BarView extends ChartView {
 
     remove() {
         this._clear(this._model);
+    }
+
+    removeOnRenderedListener(api: ExtensionAPI) {
+        if (this._onRendered) {
+            api.getZr().off('rendered', this._onRendered as any);
+            this._onRendered = null;
+        }
     }
 
     private _clear(model?: SeriesModel): void {
