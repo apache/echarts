@@ -61,7 +61,7 @@ import SeriesModel from '../../model/Series';
 import {AngleAxisModel, RadiusAxisModel} from '../../coord/polar/AxisModel';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import {LayoutRect} from '../../util/layout';
-import Animator from 'zrender/src/animation/Animator';
+import {EventCallback} from 'zrender/src/core/Eventful';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 const BAR_BORDER_RADIUS_QUERY = ['itemStyle', 'borderRadius'] as const;
@@ -112,7 +112,7 @@ class BarView extends ChartView {
     private _isLargeDraw: boolean;
 
     private _isFirstFrame: boolean; // First frame after series added
-    private _onRendered: Function;
+    private _onRendered: EventCallback<unknown, unknown>;
 
     private _backgroundGroup: Group;
 
@@ -183,8 +183,6 @@ class BarView extends ChartView {
         const baseAxis = coord.getBaseAxis();
         let isHorizontalOrRadial: boolean;
 
-        let lastAnimator: Animator<any> = null;
-
         if (coord.type === 'cartesian2d') {
             isHorizontalOrRadial = (baseAxis as Axis2D).isHorizontal();
         }
@@ -207,7 +205,6 @@ class BarView extends ChartView {
             }
             else {
                 this._onRendered = () => {
-                    console.log('on rendered');
                     const orderMap = (idx: number) => {
                         const el = (data.getItemGraphicEl(idx) as Rect);
                         if (el) {
@@ -289,7 +286,7 @@ class BarView extends ChartView {
                 if (realtimeSort) {
                     (el as unknown as ECElement).disableLabelAnimation = true;
 
-                    const animator = updateRealtimeAnimation(
+                    updateRealtimeAnimation(
                         seriesModel,
                         axis2DModel,
                         animationModel,
@@ -300,7 +297,6 @@ class BarView extends ChartView {
                         isHorizontalOrRadial,
                         false
                     );
-                    animator && (lastAnimator = animator);
                 }
                 else if (coord.type === 'cartesian2d') {
                     initProps(el, {shape: layout} as any, seriesModel, dataIndex);
@@ -367,7 +363,7 @@ class BarView extends ChartView {
                 if (realtimeSort) {
                     (el as unknown as ECElement).disableLabelAnimation = true;
 
-                    const animator = updateRealtimeAnimation(
+                    updateRealtimeAnimation(
                         seriesModel,
                         axis2DModel,
                         animationModel,
@@ -378,7 +374,6 @@ class BarView extends ChartView {
                         isHorizontalOrRadial,
                         true
                     );
-                    animator && (lastAnimator = animator);
                 }
                 else {
                     updateProps(el, {shape: layout}, seriesModel, newIndex, null);
@@ -548,7 +543,7 @@ class BarView extends ChartView {
 
     removeOnRenderedListener(api: ExtensionAPI) {
         if (this._onRendered) {
-            api.getZr().off('rendered', this._onRendered as any);
+            api.getZr().off('rendered', this._onRendered);
             this._onRendered = null;
         }
     }
@@ -737,10 +732,6 @@ function updateRealtimeAnimation(
             shape: seriesTarget
         }, seriesModel, newIndex, null);
 
-        const lastAnimator = el.animators.length
-            ? find(el.animators, animator => animator.targetName === 'shape' && !!animator.getTrack('width'))
-            : null;
-
         (isUpdate ? updateProps : initProps)(el, {
             shape: axisTarget
         }, axisModel, newIndex);
@@ -753,9 +744,6 @@ function updateRealtimeAnimation(
         (isUpdate ? updateLabel : initLabel)(
             el, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter
         );
-
-        // TODO:
-        return lastAnimator;
     }
 }
 
