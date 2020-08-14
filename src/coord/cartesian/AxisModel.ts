@@ -31,7 +31,7 @@ import { SINGLE_REFERRING } from '../../util/model';
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
-interface CartesianAxisOption extends AxisBaseOption {
+export interface CartesianAxisOption extends AxisBaseOption {
     gridIndex?: number;
     gridId?: string;
     position?: CartesianAxisPosition;

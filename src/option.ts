@@ -20,6 +20,8 @@
 import type {GridOption} from './coord/cartesian/GridModel';
 import type {PolarOption} from './coord/polar/PolarModel';
 import type {GeoOption} from './coord/geo/GeoModel';
+import type {RadiusAxisOption, AngleAxisOption} from './coord/polar/AxisModel';
+import type {CartesianAxisOption} from './coord/cartesian/AxisModel';
 import type {SingleAxisOption} from './coord/single/AxisModel';
 import type {ParallelAxisOption} from './coord/parallel/AxisModel';
 import type {ParallelCoordinateSystemOption} from './coord/parallel/ParallelModel';
@@ -72,6 +74,10 @@ export interface EChartsFullOption extends ECOption {
     grid?: GridOption | GridOption[]
     polar?: PolarOption | PolarOption[]
     geo?: GeoOption | GeoOption[]
+    angleAxis?: AngleAxisOption | AngleAxisOption[]
+    radiusAxis?: RadiusAxisOption | RadiusAxisOption[]
+    xAxis?: CartesianAxisOption | CartesianAxisOption[]
+    yAxis?: CartesianAxisOption | CartesianAxisOption[]
     singleAxis?: SingleAxisOption | SingleAxisOption[]
     parallel?: ParallelCoordinateSystemOption | ParallelCoordinateSystemOption[]
     parallelAxis?: ParallelAxisOption | ParallelAxisOption[]

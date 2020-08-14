@@ -1003,7 +1003,7 @@ class ECharts extends Eventful {
             disposedWarning(this.id);
             return;
         }
-        this.setOption({ series: [] }, true);
+        this.setOption({ series: [] } as EChartsFullOption, true);
     }
 
     dispose(): void {

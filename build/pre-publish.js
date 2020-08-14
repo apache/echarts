@@ -152,6 +152,7 @@ const compileWorkList = [
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
 
             await transformZRRootFolder(nodePath.resolve(ecDir, 'esm'), 'esm');
+            await transformZRRootFolder(nodePath.resolve(ecDir, 'types'), 'esm');
 
             fsExtra.removeSync(tmpDir);
         }
@@ -298,7 +299,10 @@ function transformRootFolderInEntry(entryFile, replacement) {
  * Transform `zrender/src` to `zrender/esm` in all files
  */
 async function transformZRRootFolder(rooltFolder, replacement) {
-    const files = await globby([rooltFolder + '/**/*.js']);
+    const files = await globby([
+        rooltFolder + '/**/*.js',
+        rooltFolder + '/**/*.d.ts',
+    ]);
     // Simple regex replacement
     // TODO More robust way?
     for (let fileName of files) {
