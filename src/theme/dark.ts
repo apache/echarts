@@ -17,8 +17,8 @@
 * under the License.
 */
 
-const contrastColor = '#aaacbc';
-const backgroundColor = '#181432';
+const contrastColor = '#B9B8CE';
+const backgroundColor = '#100C2A';
 const axisCommon = function () {
     return {
         axisLine: {
@@ -28,7 +28,7 @@ const axisCommon = function () {
         },
         splitLine: {
             lineStyle: {
-                color: '#33324A'
+                color: '#484753'
             }
         },
         splitArea: {
@@ -60,17 +60,16 @@ const theme = {
 
     color: colorPalette,
     backgroundColor: backgroundColor,
-    tooltip: {
-        axisPointer: {
-            lineStyle: {
-                color: contrastColor
-            },
-            crossStyle: {
-                color: contrastColor
-            },
-            label: {
-                color: '#000'
-            }
+    axisPointer: {
+        lineStyle: {
+            color: '#817f91'
+        },
+        crossStyle: {
+            color: '#817f91'
+        },
+        label: {
+            // TODO Contrast of label backgorundColor
+            color: '#fff'
         }
     },
     legend: {
@@ -83,10 +82,10 @@ const theme = {
     },
     title: {
         textStyle: {
-            color: '#dae0f1'
+            color: '#EEF1FA'
         },
         subtextStyle: {
-            color: '#aaacbc'
+            color: '#B9B8CE'
         }
     },
     toolbox: {
@@ -97,8 +96,48 @@ const theme = {
         }
     },
     dataZoom: {
+        borderColor: '#71708A',
         textStyle: {
             color: contrastColor
+        },
+        brushStyle: {
+            color: 'rgba(135,163,206,0.3)'
+        },
+        handleStyle: {
+            color: '#353450',
+            borderColor: '#C5CBE3'
+        },
+        moveHandleStyle: {
+            color: '#B0B6C3',
+            opacity: 0.3
+        },
+        fillerColor: 'rgba(135,163,206,0.2)',
+        emphasis: {
+            handleStyle: {
+                borderColor: '#91B7F2',
+                color: '#4D587D'
+            },
+            moveHandleStyle: {
+                color: '#636D9A',
+                opacity: 0.7
+            }
+        },
+        dataBackground: {
+            lineStyle: {
+                color: '#71708A',
+                width: 1
+            },
+            areaStyle: {
+                color: '#71708A'
+            }
+        },
+        selectedDataBackground: {
+            lineStyle: {
+                color: '#87A3CE'
+            },
+            areaStyle: {
+                color: '#87A3CE'
+            }
         }
     },
     visualMap: {
@@ -110,23 +149,14 @@ const theme = {
         lineStyle: {
             color: contrastColor
         },
-        itemStyle: {
-            normal: {
-                color: colorPalette[1]
-            }
-        },
         label: {
-            normal: {
-                textStyle: {
-                    color: contrastColor
-                }
+            textStyle: {
+                color: contrastColor
             }
         },
         controlStyle: {
-            normal: {
-                color: contrastColor,
-                borderColor: contrastColor
-            }
+            color: contrastColor,
+            borderColor: contrastColor
         }
     },
     calendar: {
