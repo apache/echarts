@@ -207,6 +207,7 @@ class BarView extends ChartView {
             }
             else {
                 this._onRendered = () => {
+                    console.log('on rendered');
                     const orderMap = (idx: number) => {
                         const el = (data.getItemGraphicEl(idx) as Rect);
                         if (el) {
@@ -536,8 +537,13 @@ class BarView extends ChartView {
         api.dispatchAction(action);
     }
 
-    remove() {
+    remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._clear(this._model);
+        this.removeOnRenderedListener(api);
+    }
+
+    dispose(ecModel: GlobalModel, api: ExtensionAPI) {
+        this.removeOnRenderedListener(api);
     }
 
     removeOnRenderedListener(api: ExtensionAPI) {
