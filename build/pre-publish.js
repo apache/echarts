@@ -110,7 +110,7 @@ const compileWorkList = [
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.common.js'), 'lib');
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'index.simple.js'), 'lib');
 
-            transformZRRootFolder(nodePath.resolve(ecDir, 'lib'), 'lib');
+            transformDistributionFiles(nodePath.resolve(ecDir, 'lib'), 'lib');
 
             fsExtra.removeSync(tmpDir);
         }
@@ -151,8 +151,8 @@ const compileWorkList = [
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.common.js'), 'esm');
             transformRootFolderInEntry(nodePath.resolve(ecDir, 'echarts.simple.js'), 'esm');
 
-            await transformZRRootFolder(nodePath.resolve(ecDir, 'esm'), 'esm');
-            await transformZRRootFolder(nodePath.resolve(ecDir, 'types'), 'esm');
+            await transformDistributionFiles(nodePath.resolve(ecDir, 'esm'), 'esm');
+            await transformDistributionFiles(nodePath.resolve(ecDir, 'types'), 'esm');
 
             fsExtra.removeSync(tmpDir);
         }
@@ -174,7 +174,7 @@ const compileWorkList = [
             fsExtra.removeSync(extensionCJSDir);
         },
         after: async function () {
-            await transformZRRootFolder(extensionCJSDir, 'lib');
+            await transformDistributionFiles(extensionCJSDir, 'lib');
         }
     },
     {
@@ -194,7 +194,7 @@ const compileWorkList = [
             fsExtra.removeSync(extensionESMDir);
         },
         after: async function () {
-            await transformZRRootFolder(extensionESMDir, 'esm');
+            await transformDistributionFiles(extensionESMDir, 'esm');
         }
     }
 ];
@@ -298,7 +298,7 @@ function transformRootFolderInEntry(entryFile, replacement) {
 /**
  * Transform `zrender/src` to `zrender/esm` in all files
  */
-async function transformZRRootFolder(rooltFolder, replacement) {
+async function transformDistributionFiles(rooltFolder, replacement) {
     const files = await globby([
         rooltFolder + '/**/*.js',
         rooltFolder + '/**/*.d.ts',
@@ -307,12 +307,22 @@ async function transformZRRootFolder(rooltFolder, replacement) {
     // TODO More robust way?
     for (let fileName of files) {
         let code = fs.readFileSync(fileName, 'utf-8');
-        fs.writeFileSync(fileName, singleTransformZRRootFolder(code, replacement), 'utf-8');
+        code = singleTransformZRRootFolder(code, replacement);
+        // For lower ts version, not use import type
+        // TODO Use https://github.com/sandersn/downlevel-dts ?
+        if (fileName.endsWith('.d.ts')) {
+            code = singleTransformImportType(code);
+        }
+        fs.writeFileSync(fileName, code, 'utf-8');
     }
 }
 
 function singleTransformZRRootFolder(code, replacement) {
     return code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`);
+}
+
+function singleTransformImportType(code) {
+    return code.replace(/import\s+type\s+/g, 'import ');
 }
 
 /**
