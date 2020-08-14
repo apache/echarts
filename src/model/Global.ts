@@ -864,7 +864,7 @@ interface EachComponentInMainTypeCallback {
 
 function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean {
     if (payload) {
-        const index = payload.seiresIndex;
+        const index = payload.seriesIndex;
         const id = payload.seriesId;
         const name = payload.seriesName;
         return (index != null && seriesModel.componentIndex !== index)

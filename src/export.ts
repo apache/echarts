@@ -41,7 +41,6 @@ export {default as Model} from './model/Model';
 export {default as Axis} from './coord/Axis';
 export {numberUtil as number};
 export {formatUtil as format};
-export {timeUtil as time};
 export {throttle};
 export {ecHelper as helper};
 export {matrix};
@@ -51,6 +50,11 @@ export {default as env} from 'zrender/src/core/env';
 
 export {parseGeoJSON};
 export const parseGeoJson = parseGeoJSON;
+
+export const time = {
+    parse: numberUtil.parseDate,
+    format: timeUtil.format
+};
 
 const ecUtil = {};
 zrUtil.each(
