@@ -25,29 +25,29 @@ const NO_SUCH_CASE = 'NO_SUCH_CASE';
 // Tags for relational comparison cases.
 // LT: less than, GT: greater than, INCMPR: incomparable
 const TAG = {
-    ONE_OR_TWO_NUMBER_L_LT_R: 'ONE_OR_TWO_NUMBER_L_LT_R',
-    ONE_OR_TWO_NUMBER_L_GT_R: 'ONE_OR_TWO_NUMBER_L_GT_R',
-    TWO_STRING_L_LT_R: 'TWO_STRING_L_LT_R',
-    TWO_STRING_L_GT_R: 'TWO_STRING_L_GT_R',
-    TWO_STRING_ONLY_NUMERIC_EQ: 'TWO_STRING_ONLY_NUMERIC_EQ',
-    STRICT_EQ: 'STRICT_EQ',
-    ONE_NUMBER_NUMERIC_EQ: 'ONE_NUMBER_NUMERIC_EQ',
-    BOTH_INCMPR_NOT_EQ: 'BOTH_INCMPR_NOT_EQ',
-    ONLY_L_INCMPR: 'ONLY_L_INCMPR',
-    ONLY_R_INCMPR: 'ONLY_R_INCMPR'
+    BothNumeric_AtLeastOneNumber_L_LT_R: 'BothNumeric_AtLeastOneNumber_L_LT_R',
+    BothNumeric_AtLeastOneNumber_L_GT_R: 'BothNumeric_AtLeastOneNumber_L_GT_R',
+    BothString_L_LT_R: 'BothString_L_LT_R',
+    BothString_L_GT_R: 'BothString_L_GT_R',
+    BothNumericString_NotStrictEQ_BeNumericEQ: 'BothNumericString_NotStrictEQ_BeNumericEQ',
+    Strict_EQ: 'Strict_EQ',
+    BothNumeric_OneNumber_NumericEQ: 'BothNumeric_OneNumber_NumericEQ',
+    BothIncmpr_NotEQ: 'BothIncmpr_NotEQ',
+    L_Incmpr_R_NumberOrString: 'L_Incmpr_R_NumberOrString',
+    R_Incmpr_L_NumberOrString: 'R_Incmpr_L_NumberOrString'
 };
 const tagRevertPairs = [
-    ['ONE_OR_TWO_NUMBER_L_LT_R', 'ONE_OR_TWO_NUMBER_L_GT_R'],
-    ['TWO_STRING_L_LT_R', 'TWO_STRING_L_GT_R'],
-    ['TWO_STRING_ONLY_NUMERIC_EQ', 'TWO_STRING_ONLY_NUMERIC_EQ'],
-    ['STRICT_EQ', 'STRICT_EQ'],
-    ['ONE_NUMBER_NUMERIC_EQ', 'ONE_NUMBER_NUMERIC_EQ'],
-    ['BOTH_INCMPR_NOT_EQ', 'BOTH_INCMPR_NOT_EQ'],
-    ['ONLY_L_INCMPR', 'ONLY_R_INCMPR']
+    ['BothNumeric_AtLeastOneNumber_L_LT_R', 'BothNumeric_AtLeastOneNumber_L_GT_R'],
+    ['BothString_L_LT_R', 'BothString_L_GT_R'],
+    ['BothNumericString_NotStrictEQ_BeNumericEQ', 'BothNumericString_NotStrictEQ_BeNumericEQ'],
+    ['Strict_EQ', 'Strict_EQ'],
+    ['BothNumeric_OneNumber_NumericEQ', 'BothNumeric_OneNumber_NumericEQ'],
+    ['BothIncmpr_NotEQ', 'BothIncmpr_NotEQ'],
+    ['L_Incmpr_R_NumberOrString', 'R_Incmpr_L_NumberOrString']
 ];
 
 const filterResultMap = {
-    ONE_OR_TWO_NUMBER_L_LT_R: {
+    BothNumeric_AtLeastOneNumber_L_LT_R: {
         lt: true,
         lte: true,
         gt: false,
@@ -55,7 +55,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     },
-    ONE_OR_TWO_NUMBER_L_GT_R: {
+    BothNumeric_AtLeastOneNumber_L_GT_R: {
         lt: false,
         lte: false,
         gt: true,
@@ -63,7 +63,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     },
-    TWO_STRING_L_LT_R: {
+    BothString_L_LT_R: {
         lt: NO_SUCH_CASE,
         lte: NO_SUCH_CASE,
         gt: NO_SUCH_CASE,
@@ -71,7 +71,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     },
-    TWO_STRING_L_GT_R: {
+    BothString_L_GT_R: {
         lt: NO_SUCH_CASE,
         lte: NO_SUCH_CASE,
         gt: NO_SUCH_CASE,
@@ -79,7 +79,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     },
-    TWO_STRING_ONLY_NUMERIC_EQ: {
+    BothNumericString_NotStrictEQ_BeNumericEQ: {
         lt: NO_SUCH_CASE,
         lte: NO_SUCH_CASE,
         gt: NO_SUCH_CASE,
@@ -87,7 +87,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     },
-    STRICT_EQ: {
+    Strict_EQ: {
         lt: false,
         lte: true,
         gt: false,
@@ -95,7 +95,7 @@ const filterResultMap = {
         eq: true,
         ne: false
     },
-    ONE_NUMBER_NUMERIC_EQ: {
+    BothNumeric_OneNumber_NumericEQ: {
         lt: false,
         lte: true,
         gt: false,
@@ -103,7 +103,7 @@ const filterResultMap = {
         eq: true,
         ne: false
     },
-    BOTH_INCMPR_NOT_EQ: {
+    BothIncmpr_NotEQ: {
         lt: false,
         lte: false,
         gt: false,
@@ -111,7 +111,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     },
-    ONLY_L_INCMPR: {
+    L_Incmpr_R_NumberOrString: {
         lt: false,
         lte: false,
         gt: false,
@@ -119,7 +119,7 @@ const filterResultMap = {
         eq: false,
         ne: true
     },
-    ONLY_R_INCMPR: {
+    R_Incmpr_L_NumberOrString: {
         lt: false,
         lte: false,
         gt: false,
@@ -130,61 +130,61 @@ const filterResultMap = {
 };
 
 const sortResultMap = {
-    ONE_OR_TWO_NUMBER_L_LT_R: {
+    BothNumeric_AtLeastOneNumber_L_LT_R: {
         asc_incmprmin: -1,
         asc_incmprmax: -1,
         desc_incmprmin: 1,
         desc_incmprmax: 1
     },
-    ONE_OR_TWO_NUMBER_L_GT_R: {
+    BothNumeric_AtLeastOneNumber_L_GT_R: {
         asc_incmprmin: 1,
         asc_incmprmax: 1,
         desc_incmprmin: -1,
         desc_incmprmax: -1
     },
-    TWO_STRING_L_LT_R: {
+    BothString_L_LT_R: {
         asc_incmprmin: -1,
         asc_incmprmax: -1,
         desc_incmprmin: 1,
         desc_incmprmax: 1
     },
-    TWO_STRING_L_GT_R: {
+    BothString_L_GT_R: {
         asc_incmprmin: 1,
         asc_incmprmax: 1,
         desc_incmprmin: -1,
         desc_incmprmax: -1
     },
-    TWO_STRING_ONLY_NUMERIC_EQ: {
+    BothNumericString_NotStrictEQ_BeNumericEQ: {
         asc_incmprmin: 0,
         asc_incmprmax: 0,
         desc_incmprmin: 0,
         desc_incmprmax: 0
     },
-    STRICT_EQ: {
+    Strict_EQ: {
         asc_incmprmin: 0,
         asc_incmprmax: 0,
         desc_incmprmin: 0,
         desc_incmprmax: 0
     },
-    ONE_NUMBER_NUMERIC_EQ: {
+    BothNumeric_OneNumber_NumericEQ: {
         asc_incmprmin: 0,
         asc_incmprmax: 0,
         desc_incmprmin: 0,
         desc_incmprmax: 0
     },
-    BOTH_INCMPR_NOT_EQ: {
+    BothIncmpr_NotEQ: {
         asc_incmprmin: 0,
         asc_incmprmax: 0,
         desc_incmprmin: 0,
         desc_incmprmax: 0
     },
-    ONLY_L_INCMPR: {
+    L_Incmpr_R_NumberOrString: {
         asc_incmprmin: -1,
         asc_incmprmax: 1,
         desc_incmprmin: 1,
         desc_incmprmax: -1
     },
-    ONLY_R_INCMPR: {
+    R_Incmpr_L_NumberOrString: {
         asc_incmprmin: 1,
         asc_incmprmax: -1,
         desc_incmprmin: -1,
@@ -201,100 +201,101 @@ function eachRelationalComparisonCase(evalFn) {
 
     const testerMap = {
         notEqualAndHasOrder: function () {
-            expectDual(123, 555, TAG.ONE_OR_TWO_NUMBER_L_LT_R);
-            expectDual(-123, -555, TAG.ONE_OR_TWO_NUMBER_L_GT_R);
-            expectDual(-123, 123, TAG.ONE_OR_TWO_NUMBER_L_LT_R);
+            expectDual(123, 555, TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
+            expectDual(-123, -555, TAG.BothNumeric_AtLeastOneNumber_L_GT_R);
+            expectDual(-123, 123, TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
 
-            expectDual(Infinity, 123, TAG.ONE_OR_TWO_NUMBER_L_GT_R);
-            expectDual(-Infinity, -123, TAG.ONE_OR_TWO_NUMBER_L_LT_R);
-            expectDual('Infinity', 123, TAG.ONE_OR_TWO_NUMBER_L_GT_R);
-            expectDual('-Infinity', 123, TAG.ONE_OR_TWO_NUMBER_L_LT_R);
-            expectDual(123, '555', TAG.ONE_OR_TWO_NUMBER_L_LT_R);
-            expectDual(555, '555.6', TAG.ONE_OR_TWO_NUMBER_L_LT_R);
-            expectDual('-555', -555.6, TAG.ONE_OR_TWO_NUMBER_L_GT_R);
-            expectDual(123, ' 555 ', TAG.ONE_OR_TWO_NUMBER_L_LT_R);
-            expectDual(' -555 ', 123, TAG.ONE_OR_TWO_NUMBER_L_LT_R);
-            expectDual(123, ' \r \n 555 \t ' + FULL_WIDTH_SPACE, TAG.ONE_OR_TWO_NUMBER_L_LT_R);
+            expectDual(Infinity, 123, TAG.BothNumeric_AtLeastOneNumber_L_GT_R);
+            expectDual(-Infinity, -123, TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
+            expectDual('Infinity', 123, TAG.BothNumeric_AtLeastOneNumber_L_GT_R);
+            expectDual('-Infinity', 123, TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
+            expectDual(123, '555', TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
+            expectDual(555, '555.6', TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
+            expectDual('-555', -555.6, TAG.BothNumeric_AtLeastOneNumber_L_GT_R);
+            expectDual(123, ' 555 ', TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
+            expectDual(' -555 ', 123, TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
+            expectDual(123, ' \r \n 555 \t ' + FULL_WIDTH_SPACE, TAG.BothNumeric_AtLeastOneNumber_L_LT_R);
         },
 
         notEqualAndNoOrder: function () {
             const makeDate = () => new Date(2012, 5, 12);
             const makeFn = () => function () {};
 
-            expectDual(NaN, NaN, TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual(NaN, -NaN, TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual(NaN, 0, TAG.ONLY_L_INCMPR);
-            expectDual(NaN, 2, TAG.ONLY_L_INCMPR);
-            expectDual('NaN', NaN, TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual('NaN', 0, TAG.ONLY_L_INCMPR);
-            expectDual('NaN', 2, TAG.ONLY_L_INCMPR);
-            expectDual('-NaN', -NaN, TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual('-NaN', 0, TAG.ONLY_L_INCMPR);
-            expectDual('-NaN', 2, TAG.ONLY_L_INCMPR);
-            expectDual(true, 0, TAG.ONLY_L_INCMPR);
-            expectDual(false, 1, TAG.ONLY_L_INCMPR);
-            expectDual('true', 0, TAG.ONLY_L_INCMPR);
-            expectDual('false', 1, TAG.ONLY_L_INCMPR);
-            expectDual(undefined, 2, TAG.ONLY_L_INCMPR);
-            expectDual(undefined, 0, TAG.ONLY_L_INCMPR);
-            expectDual(null, 2, TAG.ONLY_L_INCMPR);
-            expectDual(null, 0, TAG.ONLY_L_INCMPR);
-            expectDual(makeDate(), 0, TAG.ONLY_L_INCMPR);
-            expectDual(makeDate(), makeDate(), TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual(makeDate(), +makeDate(), TAG.ONLY_L_INCMPR);
-            expectDual([], 1, TAG.ONLY_L_INCMPR);
-            expectDual([], 0, TAG.ONLY_L_INCMPR);
-            expectDual({}, 1, TAG.ONLY_L_INCMPR);
-            expectDual([], '0', TAG.ONLY_L_INCMPR);
-            expectDual({}, '1', TAG.ONLY_L_INCMPR);
-            expectDual({}, 0, TAG.ONLY_L_INCMPR);
-            expectDual({}, '1', TAG.ONLY_L_INCMPR);
-            expectDual({}, '0', TAG.ONLY_L_INCMPR);
-            expectDual(/1/, 0, TAG.ONLY_L_INCMPR);
-            expectDual(/0/, 0, TAG.ONLY_L_INCMPR);
-            expectDual('555a', 123, TAG.ONLY_L_INCMPR);
-            expectDual('abc', 123, TAG.ONLY_L_INCMPR);
-            expectDual('abc', '123', TAG.ONLY_L_INCMPR);
-            expectDual('abc', 'abcde', TAG.TWO_STRING_L_LT_R);
-            expectDual('abc', 'abc', TAG.STRICT_EQ);
-            expectDual('2', '12', TAG.TWO_STRING_L_LT_R); // '2' > '12' in JS but should not happen here.
-            expectDual(' ', '', TAG.TWO_STRING_L_GT_R);
-            expectDual(0.5, '0. 5', TAG.ONLY_R_INCMPR);
-            expectDual('0.5', '0. 5', TAG.ONLY_R_INCMPR);
-            expectDual('- 5', -5, TAG.ONLY_L_INCMPR);
-            expectDual('-123.5', ' -123.5 ', TAG.TWO_STRING_ONLY_NUMERIC_EQ);
-            expectDual('0x11', 17, TAG.ONLY_L_INCMPR); // not 17 in int16.
-            expectDual('0x11', 0, TAG.ONLY_L_INCMPR);
-            expectDual('0x0', 0, TAG.ONLY_L_INCMPR);
-            expectDual('0. 5', 0.5, TAG.ONLY_L_INCMPR);
-            expectDual('0 .5', 0.5, TAG.ONLY_L_INCMPR);
-            expectDual('', 2, TAG.ONLY_L_INCMPR);
-            expectDual('', 0, TAG.ONLY_L_INCMPR);
-            expectDual(' ', 2, TAG.ONLY_L_INCMPR);
-            expectDual(' ', 0, TAG.ONLY_L_INCMPR);
-            expectDual(' \n', '\n', TAG.TWO_STRING_L_GT_R);
-            expectDual('\n', 0, TAG.ONLY_L_INCMPR);
-            expectDual('\n', 2, TAG.ONLY_L_INCMPR);
-            expectDual({}, {}, TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual({}, [], TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual(makeFn(), makeFn(), TAG.BOTH_INCMPR_NOT_EQ);
-            expectDual(makeFn(), 0, TAG.ONLY_L_INCMPR);
-            expectDual(makeFn(), 1, TAG.ONLY_L_INCMPR);
-            expectDual(makeFn(), makeFn().toString(), TAG.BOTH_INCMPR_NOT_EQ);
+            expectDual(NaN, NaN, TAG.BothIncmpr_NotEQ);
+            expectDual(NaN, -NaN, TAG.BothIncmpr_NotEQ);
+            expectDual(NaN, 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(NaN, 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('NaN', NaN, TAG.R_Incmpr_L_NumberOrString);
+            expectDual('NaN', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('NaN', 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('-NaN', -NaN, TAG.R_Incmpr_L_NumberOrString);
+            expectDual('-NaN', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('-NaN', 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(true, 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(false, 1, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('true', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('false', 1, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(undefined, 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(undefined, 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(null, 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(null, 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(makeDate(), 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(makeDate(), makeDate(), TAG.BothIncmpr_NotEQ);
+            expectDual(makeDate(), +makeDate(), TAG.L_Incmpr_R_NumberOrString);
+            expectDual([], 1, TAG.L_Incmpr_R_NumberOrString);
+            expectDual([], 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual({}, 1, TAG.L_Incmpr_R_NumberOrString);
+            expectDual([], '0', TAG.L_Incmpr_R_NumberOrString);
+            expectDual({}, '1', TAG.L_Incmpr_R_NumberOrString);
+            expectDual({}, 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual({}, '1', TAG.L_Incmpr_R_NumberOrString);
+            expectDual({}, '0', TAG.L_Incmpr_R_NumberOrString);
+            expectDual(/1/, 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(/0/, 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('555a', 123, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('abc', 123, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('abc', null, TAG.R_Incmpr_L_NumberOrString); // See [SORT_COMPARISON_RULE]
+            expectDual('abc', '123', TAG.L_Incmpr_R_NumberOrString);
+            expectDual('abc', 'abcde', TAG.BothString_L_LT_R);
+            expectDual('abc', 'abc', TAG.Strict_EQ);
+            expectDual('2', '12', TAG.BothString_L_LT_R); // '2' > '12' in JS but should not happen here.
+            expectDual(' ', '', TAG.BothString_L_GT_R);
+            expectDual(0.5, '0. 5', TAG.R_Incmpr_L_NumberOrString);
+            expectDual('0.5', '0. 5', TAG.R_Incmpr_L_NumberOrString);
+            expectDual('- 5', -5, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('-123.5', ' -123.5 ', TAG.BothNumericString_NotStrictEQ_BeNumericEQ);
+            expectDual('0x11', 17, TAG.L_Incmpr_R_NumberOrString); // not 17 in int16.
+            expectDual('0x11', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('0x0', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('0. 5', 0.5, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('0 .5', 0.5, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('', 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(' ', 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(' ', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(' \n', '\n', TAG.BothString_L_GT_R);
+            expectDual('\n', 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual('\n', 2, TAG.L_Incmpr_R_NumberOrString);
+            expectDual({}, {}, TAG.BothIncmpr_NotEQ);
+            expectDual({}, [], TAG.BothIncmpr_NotEQ);
+            expectDual(makeFn(), makeFn(), TAG.BothIncmpr_NotEQ);
+            expectDual(makeFn(), 0, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(makeFn(), 1, TAG.L_Incmpr_R_NumberOrString);
+            expectDual(makeFn(), makeFn().toString(), TAG.L_Incmpr_R_NumberOrString);
         },
 
         equalNumeric: function () {
-            expectDual(123, 123, TAG.STRICT_EQ);
-            expectDual(1e3, 1000, TAG.STRICT_EQ);
-            expectDual(-1e3, -1000, TAG.STRICT_EQ);
-            expectDual('1e3', 1000, TAG.ONE_NUMBER_NUMERIC_EQ);
-            expectDual('-1e3', -1000, TAG.ONE_NUMBER_NUMERIC_EQ);
-            expectDual(123, '123', TAG.ONE_NUMBER_NUMERIC_EQ);
-            expectDual(123, ' 123 ', TAG.ONE_NUMBER_NUMERIC_EQ);
-            expectDual(123.5, ' \n \r 123.5 \t ', TAG.ONE_NUMBER_NUMERIC_EQ);
-            expectDual(123.5, 123.5 + FULL_WIDTH_SPACE, TAG.ONE_NUMBER_NUMERIC_EQ);
-            expectDual(' -123.5 ', -123.5, TAG.ONE_NUMBER_NUMERIC_EQ);
-            expectDual('011', 11, TAG.ONE_NUMBER_NUMERIC_EQ); // not 9 in int8.
+            expectDual(123, 123, TAG.Strict_EQ);
+            expectDual(1e3, 1000, TAG.Strict_EQ);
+            expectDual(-1e3, -1000, TAG.Strict_EQ);
+            expectDual('1e3', 1000, TAG.BothNumeric_OneNumber_NumericEQ);
+            expectDual('-1e3', -1000, TAG.BothNumeric_OneNumber_NumericEQ);
+            expectDual(123, '123', TAG.BothNumeric_OneNumber_NumericEQ);
+            expectDual(123, ' 123 ', TAG.BothNumeric_OneNumber_NumericEQ);
+            expectDual(123.5, ' \n \r 123.5 \t ', TAG.BothNumeric_OneNumber_NumericEQ);
+            expectDual(123.5, 123.5 + FULL_WIDTH_SPACE, TAG.BothNumeric_OneNumber_NumericEQ);
+            expectDual(' -123.5 ', -123.5, TAG.BothNumeric_OneNumber_NumericEQ);
+            expectDual('011', 11, TAG.BothNumeric_OneNumber_NumericEQ); // not 9 in int8.
         },
 
         equalOtherTypes: function () {
@@ -302,10 +303,10 @@ function eachRelationalComparisonCase(evalFn) {
             const emptyArr = [];
             const date = new Date(2012, 5, 12);
             const fn = function () {};
-            expectDual(emptyObj, emptyObj, TAG.STRICT_EQ);
-            expectDual(emptyArr, emptyArr, TAG.STRICT_EQ);
-            expectDual(date, date, TAG.STRICT_EQ);
-            expectDual(fn, fn, TAG.STRICT_EQ);
+            expectDual(emptyObj, emptyObj, TAG.Strict_EQ);
+            expectDual(emptyArr, emptyArr, TAG.Strict_EQ);
+            expectDual(date, date, TAG.Strict_EQ);
+            expectDual(fn, fn, TAG.Strict_EQ);
         }
     };
 

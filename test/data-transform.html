@@ -78,26 +78,27 @@ under the License.
             var NAME_SCORE_DIM = {
                 Name: 0,
                 Age: 1,
-                Sex: 2,
+                Profession: 2,
                 Score: 3,
                 Date: 4,
                 DirtyNumber: 5,
                 Numeric: 6,
-                HasEmpty: 7
+                HasEmpty: 7,
+                Percent: 8
             };
             var NAME_SCORE_DIRTY_DATA_HEADER =
-                ['Name', 'Age', 'Sex', 'Score', 'Date', 'DirtyNumber', 'Numeric', 'HasEmpty'];
+                ['Name', 'Age', 'Profession', 'Score', 'Date', 'DirtyNumber', 'Numeric', 'HasEmpty', 'Percent'];
             var NAME_SCORE_DIRTY_DATA_NO_HEADER = [
                 // This is for trim testing.
-                [' Jobs Mat ', 41, 'male', 314, '2011-02-12', '13', ' 91000 ', 45 ],
+                [' Jobs Mat ', 41, 'Designer', 314, '2011-02-12', '13', ' 91000 ', 45, ' 12% ' ],
                 // This is for edge testing (03-01, 20)
-                ['Hottlyuipe Xu ', 20, 'female', 351, '2011-03-01', 44, ' 83000 ', 13 ],
-                [' Jone Mat ', 52, 'male', 287, '2011-02-14', null, ' 43000 ', null ],
-                ['Uty Xu', 19, 'male', 219, '2011-02-18', undefined, ' 63000 ', 81 ],
-                ['Tatum von Godden', 25, 'female', 301, '2011-04-02', '-', ' 13000 ', undefined ],
-                ['Must Godden', 31, 'female', 235, '2011-03-19', ' 454', '-', 32 ],
-                ['Caoas Xu', 71, 'male', 318, '2011-02-24', NaN, ' 73000 ', '-' ],
-                ['Malise Mat', 67, 'female', 366, '2011-03-12', '232a', ' 23000 ', 19 ]
+                ['Hottlyuipe Xu ', 20, 'Engineer', 351, '2011-03-01', 44, ' 83000 ', 13, '44%' ],
+                [' Jone Mat ', 52, 'Designer', 287, '2011-02-14', null, ' 43000 ', null, '15%' ],
+                ['Uty Xu', 19, 'Designer', 219, '2011-02-18', undefined, ' 63000 ', 81, '94%' ],
+                ['Tatum von Godden', 25, null, 301, '2011-04-02', '-', ' 13000 ', undefined, '61%' ],
+                ['Must Godden', 31, 'Engineer', 235, '2011-03-19', ' 454', '-', 32, '' ],
+                ['Caoas Xu', 71, 'Designer', 318, '2011-02-24', NaN, ' 73000 ', '-', '76%' ],
+                ['Malise Mat', 67, 'Engineer', 366, '2011-03-12', '232a', ' 23000 ', 19, '26%' ]
             ];
             var NAME_SCORE_DIRTY_DATA_WITH_HEADER =
                 [NAME_SCORE_DIRTY_DATA_HEADER]
@@ -289,7 +290,7 @@ under the License.
                         NAME_SCORE_DIM.Name,
                         NAME_SCORE_DIM.Date,
                         NAME_SCORE_DIM.Score,
-                        NAME_SCORE_DIM.Sex,
+                        NAME_SCORE_DIM.Profession,
                         NAME_SCORE_DIM.Age,
                         NAME_SCORE_DIM.DirtyNumber
                     ]
@@ -363,15 +364,15 @@ under the License.
                 transform: {
                     type: 'filter',
                     // print: true,
-                    config: { dimension: NAME_SCORE_DIM.Sex, ne: 'male', parser: 'trim' }
+                    config: { dimension: NAME_SCORE_DIM.Profession, ne: 'Designer', parser: 'trim' }
                 }
             });
             addCartesian({
                 series: {
                     datasetId: 'e',
-                    encode: { label: [NAME_SCORE_DIM.Sex] }
+                    encode: { label: [NAME_SCORE_DIM.Profession] }
                 },
-                xAxis: { name: 'Show four points\n!male' }
+                xAxis: { name: 'Show four points\n!Designer' }
             });
 
             option.dataset.push({
@@ -381,7 +382,7 @@ under the License.
                     // print: true,
                     config: {
                         and: [
-                            { dimension: NAME_SCORE_DIM.Sex, eq: 'male', parser: 'trim' },
+                            { dimension: NAME_SCORE_DIM.Profession, eq: 'Designer', parser: 'trim' },
                             { dimension: NAME_SCORE_DIM.Score, '>': 300 }
                         ]
                     }
@@ -390,9 +391,9 @@ under the License.
             addCartesian({
                 series: {
                     datasetId: 'f',
-                    encode: { label: [NAME_SCORE_DIM.Sex] }
+                    encode: { label: [NAME_SCORE_DIM.Profession] }
                 },
-                xAxis: { name: 'Show two points\nmale > 300' }
+                xAxis: { name: 'Show two points\nDesigner > 300' }
             });
 
 
@@ -403,7 +404,7 @@ under the License.
                     // print: true,
                     config: {
                         and: [
-                            { dimension: NAME_SCORE_DIM.Sex, eq: 'female' },
+                            { dimension: NAME_SCORE_DIM.Profession, eq: 'Engineer' },
                             {
                                 or: [
                                     { dimension: NAME_SCORE_DIM.Age, '>=': 20, '<=': 30 },
@@ -417,9 +418,9 @@ under the License.
             addCartesian({
                 series: {
                     datasetId: 'g',
-                    encode: { label: [NAME_SCORE_DIM.Sex] }
+                    encode: { label: [NAME_SCORE_DIM.Profession] }
                 },
-                xAxis: { name: 'Show three points\nfemale && (20-30 || 60)' }
+                xAxis: { name: 'Show three points\nEngineer && (20-30 || 60)' }
             });
 
             option.dataset.push({
@@ -430,7 +431,7 @@ under the License.
                     config: {
                         not: {
                             and: [
-                                { dimension: NAME_SCORE_DIM.Sex, eq: 'female' },
+                                { dimension: NAME_SCORE_DIM.Profession, eq: 'Engineer' },
                                 {
                                     or: [
                                         { dimension: NAME_SCORE_DIM.Age, '>=': 20, '<=': 30 },
@@ -445,9 +446,9 @@ under the License.
             addCartesian({
                 series: {
                     datasetId: 'h',
-                    encode: { label: [NAME_SCORE_DIM.Sex] }
+                    encode: { label: [NAME_SCORE_DIM.Profession] }
                 },
-                xAxis: { name: 'Show five points\n!(female && (20-30 || 60))' }
+                xAxis: { name: 'Show six points\n!(Engineer && (20-30 || 60))' }
             });
 
 
@@ -462,7 +463,7 @@ under the License.
             addCartesian({
                 series: {
                     datasetId: 'i',
-                    encode: { label: [NAME_SCORE_DIM.Sex] }
+                    encode: { label: [NAME_SCORE_DIM.Profession] }
                 },
                 xAxis: { name: 'Show all eight points\nconfig: true' }
             });
@@ -580,11 +581,12 @@ under the License.
                         NAME_SCORE_DIM.Name,
                         NAME_SCORE_DIM.Date,
                         NAME_SCORE_DIM.Score,
-                        NAME_SCORE_DIM.Sex,
+                        NAME_SCORE_DIM.Profession,
                         NAME_SCORE_DIM.Age,
                         NAME_SCORE_DIM.DirtyNumber,
                         NAME_SCORE_DIM.Numeric,
-                        NAME_SCORE_DIM.HasEmpty
+                        NAME_SCORE_DIM.HasEmpty,
+                        NAME_SCORE_DIM.Percent,
                     ]
                 };
                 option.series.push(series);
@@ -629,7 +631,7 @@ under the License.
                     type: 'sort',
                     // print: true,
                     config: [
-                        { dimension: NAME_SCORE_DIM.Sex, order: 'asc' },
+                        { dimension: NAME_SCORE_DIM.Profession, order: 'asc' },
                         { dimension: NAME_SCORE_DIM.Score, order: 'desc' }
                     ]
                 }
@@ -637,9 +639,15 @@ under the License.
             addCartesian({
                 series: {
                     datasetId: 'c',
-                    encode: { label: [NAME_SCORE_DIM.Sex, NAME_SCORE_DIM.Score] }
+                    encode: { label: [NAME_SCORE_DIM.Profession, NAME_SCORE_DIM.Score] }
                 },
-                xAxis: { name: 'Show all eight bars\nSex asc (all female left)\nScore desc in each Sex' }
+                xAxis: {
+                    name: [
+                        'Show eight bars (empty Profession last)',
+                        'Profession asc (all Engineer left)',
+                        'Score desc in each Profession'
+                    ].join('\n')
+                }
             });
 
             option.dataset.push({
@@ -752,6 +760,24 @@ under the License.
             });
 
 
+            option.dataset.push({
+                id: 'j',
+                transform: {
+                    type: 'sort',
+                    config: [
+                        { dimension: NAME_SCORE_DIM.Percent, order: 'desc', parse: 'number' }
+                    ]
+                }
+            });
+            addCartesian({
+                series: {
+                    encode: { label: NAME_SCORE_DIM.Percent },
+                    datasetId: 'j'
+                },
+                xAxis: { name: 'Show all eight bars\nOrder by Percent desc\nempty at right' }
+            });
+
+
             var chart = testHelper.create(echarts, 'main_cartesian_sort', {
                 title: [
                     'Test sort transform. Check each cartesians.',
@@ -759,7 +785,7 @@ under the License.
                     'Ordered dimension is on **bar label **'
                 ],
                 width: chartWidth,
-                height: 600,
+                height: 800,
                 option: option
             });
         });

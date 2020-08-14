@@ -56,8 +56,8 @@ type OrderExpression = {
     dimension: DimensionLoose;
     order: 'asc' | 'desc';
     parser?: RawValueParserType;
-    // Value that is not comparable (like null/undefined) will be
-    // put to head or tail.
+    // The meansing of "incomparable": see [SORT_COMPARISON_RULE]
+    // in `data/helper/dataValueHelper.ts`
     incomparable?: 'min' | 'max';
 };
 

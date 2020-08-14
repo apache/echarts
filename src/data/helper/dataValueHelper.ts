@@ -82,7 +82,10 @@ export type RawValueParserType = 'number' | 'time' | 'trim';
 type RawValueParser = (val: unknown) => unknown;
 const valueParserMap = createHashMap<RawValueParser, RawValueParserType>({
     'number': function (val): number {
-        return numericToNumber(val);
+        // Do not use `numericToNumber` here. We have by defualt `numericToNumber`.
+        // Here the number parser can have loose rule:
+        // enable to cut suffix: "120px" => 120, "14%" => 14.
+        return parseFloat(val as string);
     },
     'time': function (val): number {
         // return timestamp.
@@ -143,6 +146,7 @@ export class SortOrderComparator {
      * @param order by defualt: 'asc'
      * @param incomparable by defualt: Always on the tail.
      *        That is, if 'asc' => 'max', if 'desc' => 'min'
+     *        See the definition of "incomparable" in [SORT_COMPARISON_RULE]
      */
     constructor(order: 'asc' | 'desc', incomparable: 'min' | 'max') {
         const isDesc = order === 'desc';
@@ -152,6 +156,7 @@ export class SortOrderComparator {
         }
         this._incomparable = incomparable === 'min' ? -Infinity : Infinity;
     }
+    // See [SORT_COMPARISON_RULE].
     // Performance sensitive.
     evaluate(lval: unknown, rval: unknown): -1 | 0 | 1 {
         // Most cases is 'number', and typeof maybe 10 times faseter than parseFloat.
@@ -159,23 +164,26 @@ export class SortOrderComparator {
         const rvalTypeof = typeof rval;
         let lvalFloat = lvalTypeof === 'number' ? lval : numericToNumber(lval);
         let rvalFloat = rvalTypeof === 'number' ? rval : numericToNumber(rval);
-        const lvalIncmpr = isNaN(lvalFloat as number);
-        const rvalIncmpr = isNaN(rvalFloat as number);
-        if (lvalIncmpr) {
+        const lvalNotNumeric = isNaN(lvalFloat as number);
+        const rvalNotNumeric = isNaN(rvalFloat as number);
+
+        if (lvalNotNumeric) {
             lvalFloat = this._incomparable;
         }
-        if (rvalIncmpr) {
+        if (rvalNotNumeric) {
             rvalFloat = this._incomparable;
         }
-        // In most cases, pure string sort has no meanings. But it can exists when need to
-        // group two categories (and order by anthor dimension meanwhile).
-        // But if we support string sort, we still need to avoid the misleading of `'2' > '12'`,
-        // and support '-' means empty, and trade `'abc' > 2` as incomparable.
-        // So we support string comparison only if both lval and rval are string and not numeric.
-        if (lvalIncmpr && rvalIncmpr && lvalTypeof === 'string' && rvalTypeof === 'string') {
-            lvalFloat = lval;
-            rvalFloat = rval;
+        if (lvalNotNumeric && rvalNotNumeric) {
+            const lvalIsStr = lvalTypeof === 'string';
+            const rvalIsStr = rvalTypeof === 'string';
+            if (lvalIsStr) {
+                lvalFloat = rvalIsStr ? lval : 0;
+            }
+            if (rvalIsStr) {
+                rvalFloat = lvalIsStr ? rval : 0;
+            }
         }
+
         return lvalFloat < rvalFloat ? this._resultLT
             : lvalFloat > rvalFloat ? (-this._resultLT as -1 | 1)
             : 0;
@@ -220,10 +228,24 @@ export type RelationalOperator = OrderRelationOperator | 'eq' | 'ne';
  * `ne`:
  * + Not `eq`.
  *
+ *
  * [SORT_COMPARISON_RULE]
- * Only `lt`|`gt`.
- * Always convert to number (`numericToNumer`) to compare.
- * (e.g., consider case: [12, " 13 ", " 14 ", null, 15])
+ * All the values are grouped into three categories:
+ * + "numeric" (number and numeric string)
+ * + "non-numeric-string" (string that excluding numeric string)
+ * + "others"
+ * "numeric" vs "numeric": values are ordered by number order.
+ * "non-numeric-string" vs "non-numeric-string": values are ordered by ES spec (#sec-abstract-relational-comparison).
+ * "others" vs "others": do not change order (always return 0).
+ * "numeric" vs "non-numeric-string": "non-numeric-string" is treated as "incomparable".
+ * "number" vs "others": "others" is treated as "incomparable".
+ * "non-numeric-string" vs "others": "others" is treated as "incomparable".
+ * "incomparable" will be seen as -Infinity or Infinity (depends on the settings).
+ * MEMO:
+ *   non-numeric string sort make sence when need to put the items with the same tag together.
+ *   But if we support string sort, we still need to avoid the misleading like `'2' > '12'`,
+ *   So we treat "numeric-string" sorted by number order rather than string comparison.
+ *
  *
  * [CHECK_LIST_OF_THE_RULE_DESIGN]
  * + Do not support string comparison until required. And also need to
