@@ -250,6 +250,7 @@ describe('util/number', function () {
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123+08:00')).toEqual(1330808767123);
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123-0700')).toEqual(1330862767123);
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123-07:00')).toEqual(1330862767123);
+            expect(+numberUtil.parseDate('2012-03-04T5:6:7.123-07:00')).toEqual(1330862767123);
 
             // Other string
             expect(+numberUtil.parseDate('2012')).toEqual(+new Date('2012-01-01T00:00:00'));

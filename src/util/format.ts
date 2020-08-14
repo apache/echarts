@@ -200,6 +200,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
 
 
 /**
+ * @deprecated Use `time/format` instead.
  * ISO Date format
  * @param {string} tpl
  * @param {number} value
