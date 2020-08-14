@@ -80,21 +80,24 @@ under the License.
                 Age: 1,
                 Sex: 2,
                 Score: 3,
-                Date: 4
+                Date: 4,
+                DirtyNumber: 5,
+                Numeric: 6,
+                HasEmpty: 7
             };
             var NAME_SCORE_DIRTY_DATA_HEADER =
-                ['Name', 'Age', 'Sex', 'Score', 'Date'];
+                ['Name', 'Age', 'Sex', 'Score', 'Date', 'DirtyNumber', 'Numeric', 'HasEmpty'];
             var NAME_SCORE_DIRTY_DATA_NO_HEADER = [
                 // This is for trim testing.
-                [' Jobs Mat ', 41, 'male', 314, '2011-02-12'],
+                [' Jobs Mat ', 41, 'male', 314, '2011-02-12', '13', ' 91000 ', 45 ],
                 // This is for edge testing (03-01, 20)
-                ['Hottlyuipe Xu ', 20, 'female', 351, '2011-03-01'],
-                [' Jone Mat ', 52, 'male', 287, '2011-02-14'],
-                ['Uty Xu', 19, 'male', 219, '2011-02-18'],
-                ['Tatum von Godden', 25, 'female', 301, '2011-04-02'],
-                ['Must Godden', 31, 'female', 235, '2011-03-19'],
-                ['Caoas Xu', 71, 'male', 318, '2011-02-24'],
-                ['Malise Mat', 67, 'female', 366, '2011-03-12'],
+                ['Hottlyuipe Xu ', 20, 'female', 351, '2011-03-01', 44, ' 83000 ', 13 ],
+                [' Jone Mat ', 52, 'male', 287, '2011-02-14', null, ' 43000 ', null ],
+                ['Uty Xu', 19, 'male', 219, '2011-02-18', undefined, ' 63000 ', 81 ],
+                ['Tatum von Godden', 25, 'female', 301, '2011-04-02', '-', ' 13000 ', undefined ],
+                ['Must Godden', 31, 'female', 235, '2011-03-19', ' 454', '-', 32 ],
+                ['Caoas Xu', 71, 'male', 318, '2011-02-24', NaN, ' 73000 ', '-' ],
+                ['Malise Mat', 67, 'female', 366, '2011-03-12', '232a', ' 23000 ', 19 ]
             ];
             var NAME_SCORE_DIRTY_DATA_WITH_HEADER =
                 [NAME_SCORE_DIRTY_DATA_HEADER]
@@ -287,7 +290,8 @@ under the License.
                         NAME_SCORE_DIM.Date,
                         NAME_SCORE_DIM.Score,
                         NAME_SCORE_DIM.Sex,
-                        NAME_SCORE_DIM.Age
+                        NAME_SCORE_DIM.Age,
+                        NAME_SCORE_DIM.DirtyNumber
                     ]
                 };
                 option.series.push(series);
@@ -299,7 +303,7 @@ under the License.
                 transform: {
                     type: 'filter',
                     // print: true,
-                    config: { dimension: NAME_SCORE_DIM.Name, eq: 'Jobs Mat', parse: 'trim' }
+                    config: { dimension: NAME_SCORE_DIM.Name, eq: 'Jobs Mat', parser: 'trim' }
                 }
             });
             addCartesian({
@@ -314,7 +318,7 @@ under the License.
                 transform: {
                     type: 'filter',
                     // print: true,
-                    config: { dimension: NAME_SCORE_DIM.Date, lt: '2011-03', gte: '2011-02', parse: 'time' }
+                    config: { dimension: NAME_SCORE_DIM.Date, lt: '2011-03', gte: '2011-02', parser: 'time' }
                 }
             });
             addCartesian({
@@ -329,7 +333,7 @@ under the License.
                 transform: {
                     type: 'filter',
                     // print: true,
-                    config: { dimension: NAME_SCORE_DIM.Date, lte: '2011-03', gte: '2011-02-29', parse: 'time' }
+                    config: { dimension: NAME_SCORE_DIM.Date, lte: '2011-03', gte: '2011-02-29', parser: 'time' }
                 }
             });
             addCartesian({
@@ -344,7 +348,7 @@ under the License.
                 transform: {
                     type: 'filter',
                     // print: true,
-                    config: { dimension: NAME_SCORE_DIM.Name, reg: /\sXu$/, parse: 'trim' }
+                    config: { dimension: NAME_SCORE_DIM.Name, reg: /\sXu$/, parser: 'trim' }
                 }
             });
             addCartesian({
@@ -359,7 +363,7 @@ under the License.
                 transform: {
                     type: 'filter',
                     // print: true,
-                    config: { dimension: NAME_SCORE_DIM.Sex, ne: 'male', parse: 'trim' }
+                    config: { dimension: NAME_SCORE_DIM.Sex, ne: 'male', parser: 'trim' }
                 }
             });
             addCartesian({
@@ -377,7 +381,7 @@ under the License.
                     // print: true,
                     config: {
                         and: [
-                            { dimension: NAME_SCORE_DIM.Sex, eq: 'male', parse: 'trim' },
+                            { dimension: NAME_SCORE_DIM.Sex, eq: 'male', parser: 'trim' },
                             { dimension: NAME_SCORE_DIM.Score, '>': 300 }
                         ]
                     }
@@ -464,6 +468,30 @@ under the License.
             });
 
 
+            option.dataset.push({
+                id: 'j',
+                transform: {
+                    type: 'filter',
+                    // print: true,
+                    config: {
+                        or: [{
+                            dimension: NAME_SCORE_DIM.DirtyNumber,
+                            eq: 454
+                        }, {
+                            dimension: NAME_SCORE_DIM.DirtyNumber,
+                            eq: 232
+                        }]
+                    }
+                }
+            });
+            addCartesian({
+                series: {
+                    datasetId: 'j',
+                    encode: { label: [NAME_SCORE_DIM.DirtyNumber] }
+                },
+                xAxis: { name: 'Show only "Must Godden"' }
+            });
+
 
 
             var chart = testHelper.create(echarts, 'main_cartesian_parse_trim_time_reg', {
@@ -501,7 +529,7 @@ under the License.
             var leftStart = 50;
             var leftBase = leftStart;
             var topBase = 30;
-            var gridWidth = 100;
+            var gridWidth = 200;
             var gridHeight = 100;
             var gapWidth = 70;
             var gapHeight = 80;
@@ -537,7 +565,13 @@ under the License.
                 series.type = 'bar';
                 series.xAxisIndex = option.xAxis.length - 1;
                 series.yAxisIndex = option.yAxis.length - 1;
-                series.label = { show: true, position: 'top' };
+                series.label = {
+                    show: true,
+                    position: 'insideBottom',
+                    rotate: 90,
+                    align: 'left',
+                    verticalAlign: 'middle'
+                };
                 series.encode = {
                     x: NAME_SCORE_DIM.Date,
                     y: NAME_SCORE_DIM.Score,
@@ -547,7 +581,10 @@ under the License.
                         NAME_SCORE_DIM.Date,
                         NAME_SCORE_DIM.Score,
                         NAME_SCORE_DIM.Sex,
-                        NAME_SCORE_DIM.Age
+                        NAME_SCORE_DIM.Age,
+                        NAME_SCORE_DIM.DirtyNumber,
+                        NAME_SCORE_DIM.Numeric,
+                        NAME_SCORE_DIM.HasEmpty
                     ]
                 };
                 option.series.push(series);
@@ -564,9 +601,10 @@ under the License.
             });
             addCartesian({
                 series: {
+                    encode: { label: NAME_SCORE_DIM.Score },
                     datasetId: 'a'
                 },
-                xAxis: { name: 'Show all eight\norder by Score asc' }
+                xAxis: { name: 'Show all eight bars\norder by Score asc' }
             });
 
             option.dataset.push({
@@ -582,7 +620,7 @@ under the License.
                     datasetId: 'b',
                     encode: { label: NAME_SCORE_DIM.Age }
                 },
-                xAxis: { name: 'Show all eight\norder by Age desc' }
+                xAxis: { name: 'Show all eight bars\norder by Age desc' }
             });
 
             option.dataset.push({
@@ -599,9 +637,9 @@ under the License.
             addCartesian({
                 series: {
                     datasetId: 'c',
-                    encode: { label: NAME_SCORE_DIM.Sex }
+                    encode: { label: [NAME_SCORE_DIM.Sex, NAME_SCORE_DIM.Score] }
                 },
-                xAxis: { name: 'Show all eight\nSex asc, Score desc' }
+                xAxis: { name: 'Show all eight bars\nSex asc (all female left)\nScore desc in each Sex' }
             });
 
             option.dataset.push({
@@ -610,15 +648,16 @@ under the License.
                     type: 'sort',
                     // print: true,
                     config: [
-                        { dimension: NAME_SCORE_DIM.Date, order: 'asc', parse: 'time' }
+                        { dimension: NAME_SCORE_DIM.Date, order: 'asc', parser: 'time' }
                     ]
                 }
             });
             addCartesian({
                 series: {
+                    encode: { label: NAME_SCORE_DIM.Date },
                     datasetId: 'd'
                 },
-                xAxis: { name: 'Show all eight\nDate asc' }
+                xAxis: { name: 'Show all eight bars\nDate asc' }
             });
 
 
@@ -626,26 +665,98 @@ under the License.
                 id: 'e',
                 transform: [{
                     type: 'filter',
-                    // print: true,
                     config: { dimension: NAME_SCORE_DIM.Age, lte: 40, gte: 20 }
                 }, {
                     type: 'sort',
-                    // print: true,
                     config: { dimension: NAME_SCORE_DIM.Score, order: 'asc' }
                 }]
             });
             addCartesian({
                 series: {
+                    encode: { label: [NAME_SCORE_DIM.Age, NAME_SCORE_DIM.Score] },
                     datasetId: 'e'
                 },
-                xAxis: { name: 'Show three ponits\nFilter by Age 20-40\nOrder by Score' }
+                xAxis: { name: 'Show three bars\nFilter by Age 20-40\nOrder by Score asc' }
+            });
+
+
+            option.dataset.push({
+                id: 'f',
+                transform: {
+                    type: 'sort',
+                    config: [
+                        { dimension: NAME_SCORE_DIM.DirtyNumber, order: 'desc', parser: 'number' }
+                    ]
+                }
+            });
+            addCartesian({
+                series: {
+                    encode: { label: NAME_SCORE_DIM.DirtyNumber },
+                    datasetId: 'f'
+                },
+                xAxis: { name: 'Show all eight bars\nOrder by DirtyNumber desc' }
+            });
+
+
+            option.dataset.push({
+                id: 'g',
+                transform: {
+                    type: 'sort',
+                    config: [
+                        { dimension: NAME_SCORE_DIM.Numeric, order: 'asc' }
+                    ]
+                }
+            });
+            addCartesian({
+                series: {
+                    encode: { label: NAME_SCORE_DIM.Numeric },
+                    datasetId: 'g'
+                },
+                xAxis: { name: 'Show all eight bars\nOrder by Numeric asc\nOnly one empty at right' }
+            });
+
+
+            option.dataset.push({
+                id: 'h',
+                transform: {
+                    type: 'sort',
+                    config: [
+                        { dimension: NAME_SCORE_DIM.HasEmpty, order: 'desc' }
+                    ]
+                }
+            });
+            addCartesian({
+                series: {
+                    encode: { label: NAME_SCORE_DIM.HasEmpty },
+                    datasetId: 'h'
+                },
+                xAxis: { name: 'Show all eight bars\nOrder by HasEmpty desc\nempty at right' }
+            });
+
+
+            option.dataset.push({
+                id: 'i',
+                transform: {
+                    type: 'sort',
+                    config: [
+                        { dimension: NAME_SCORE_DIM.HasEmpty, order: 'desc', incomparable: 'max' }
+                    ]
+                }
+            });
+            addCartesian({
+                series: {
+                    encode: { label: NAME_SCORE_DIM.HasEmpty },
+                    datasetId: 'i'
+                },
+                xAxis: { name: 'Show all eight bars\nOrder by HasEmpty desc\nempty at left' }
             });
 
 
             var chart = testHelper.create(echarts, 'main_cartesian_sort', {
                 title: [
-                    'Check each cartesians.',
-                    'The expectationa are below each cartesian.'
+                    'Test sort transform. Check each cartesians.',
+                    'The expectationa are below each cartesian.',
+                    'Ordered dimension is on **bar label **'
                 ],
                 width: chartWidth,
                 height: 600,
