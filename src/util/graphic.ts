@@ -577,6 +577,12 @@ function animateOrSetLabel<Props extends PathProps>(
         const host = text && innerLabel(text);
         host && (host.startValue = host.nextValue);
 
+        const duration = animatableModel.get('animationDuration');
+        if (!duration) {
+            // No animation for the first frame
+            host.nextValue = interpolateValues;
+        }
+
         const during = (percent: number) => {
             const text = el.getTextContent();
             if (!text || !host) {

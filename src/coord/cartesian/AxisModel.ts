@@ -37,9 +37,6 @@ interface CartesianAxisOption extends AxisBaseOption {
     position?: CartesianAxisPosition;
     // Offset is for multiple axis on the same position.
     offset?: number;
-    sort?: boolean;
-    realtimeSort?: boolean;
-    sortSeriesIndex?: number;
     categorySortInfo?: OrdinalSortInfo[];
 }
 
@@ -64,9 +61,6 @@ const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
     offset: 0,
-    sort: false,
-    realtimeSort: false,
-    sortSeriesIndex: null,
     categorySortInfo: []
 };
 

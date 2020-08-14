@@ -74,6 +74,8 @@ export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, Ba
     emphasis?: BarStateOption
     blur?: BarStateOption
     select?: BarStateOption
+
+    realtimeSort?: boolean
 }
 
 class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
@@ -136,7 +138,9 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
             itemStyle: {
                 borderColor: '#212121'
             }
-        }
+        },
+
+        realtimeSort: false
     });
 
 }
