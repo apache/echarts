@@ -86,7 +86,7 @@ export interface SankeyEdgeItemOption extends
     focusNodeAdjacency?: FocusNodeAdjacency
 }
 
-export interface SankeyLevelOption {
+export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
     depth: number
 }
 

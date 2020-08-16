@@ -56,7 +56,7 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 type GraphDataValue = OptionDataValue | OptionDataValue[];
 
 interface GraphEdgeLineStyleOption extends LineStyleOption {
-    curveness: number
+    curveness?: number
 }
 
 export interface GraphNodeStateOption {
@@ -149,8 +149,8 @@ export interface GraphSeriesOption extends SeriesOption,
 
     layout?: 'none' | 'force' | 'circular'
 
-    data?: GraphNodeItemOption[]
-    nodes?: GraphNodeItemOption[]
+    data?: (GraphNodeItemOption | GraphDataValue)[]
+    nodes?: (GraphNodeItemOption | GraphDataValue)[]
 
     edges?: GraphEdgeItemOption[]
     links?: GraphEdgeItemOption[]
@@ -275,7 +275,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         const self = this;
 
         if (nodes && edges) {
-            return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
+            return createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink).data;
         }
 
         function beforeLink(nodeData: List, edgeData: List) {

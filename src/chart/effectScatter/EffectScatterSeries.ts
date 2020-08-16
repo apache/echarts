@@ -74,7 +74,7 @@ export interface EffectScatterSeriesOption extends SeriesOption<EffectScatterSta
      */
     rippleEffect?: SymbolDrawItemModelOption['rippleEffect']
 
-    data?: (EffectScatterDataItemOption | OptionDataValue)[]
+    data?: (EffectScatterDataItemOption | ScatterDataValue)[]
 }
 class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
     static readonly type = 'series.effectScatter';
