@@ -71,10 +71,6 @@ export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, Ba
 
     data?: (BarDataItemOption | OptionDataValue | OptionDataValue[])[]
 
-    emphasis?: BarStateOption
-    blur?: BarStateOption
-    select?: BarStateOption
-
     realtimeSort?: boolean
 }
 
