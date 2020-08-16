@@ -66,6 +66,7 @@ import type {HeatmapSeriesOption} from './chart/heatmap/HeatmapSeries';
 import type {PictorialBarSeriesOption} from './chart/bar/PictorialBarSeries';
 import type {ThemeRiverSeriesOption} from './chart/themeRiver/ThemeRiverSeries';
 import type {SunburstSeriesOption} from './chart/sunburst/SunburstSeries';
+import type {CustomSeriesOption} from './chart/custom';
 import { ECOption } from './util/types';
 
 
@@ -110,7 +111,8 @@ export interface EChartsFullOption extends ECOption {
         | HeatmapSeriesOption
         | PictorialBarSeriesOption
         | ThemeRiverSeriesOption
-        | SunburstSeriesOption)[]
+        | SunburstSeriesOption
+        | CustomSeriesOption)[]
 
     options?: EChartsFullOption[]
     baseOption?: EChartsFullOption

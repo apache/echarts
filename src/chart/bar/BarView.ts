@@ -19,7 +19,7 @@
 
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
-import {extend, map, defaults, each, find} from 'zrender/src/core/util';
+import {extend, map, defaults, each} from 'zrender/src/core/util';
 import type {RectLike} from 'zrender/src/core/BoundingRect';
 import {
     Rect,

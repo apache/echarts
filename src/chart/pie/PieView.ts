@@ -216,8 +216,6 @@ class PieView extends ChartView {
         const oldData = this._data;
         const group = this.group;
 
-        const hasAnimation = ecModel.get('animation');
-
         let startAngle: number;
         // First render
         if (!oldData && data.count() > 0) {
