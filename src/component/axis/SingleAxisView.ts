@@ -146,7 +146,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             group.add(graphic.mergePath(splitLines[i], {
                 style: {
                     stroke: lineColors[i % lineColors.length],
-                    lineDash: lineStyleModel.getLineDash(lineWidth),
+                    // PENDING
+                    //lineDash: lineStyleModel.getLineDash(lineWidth),
                     lineWidth: lineWidth
                 },
                 silent: true

@@ -143,7 +143,7 @@ under the License.
                 //     textBorderWidth: 5,
                 //     textBorderColor: 'red',
                 //     textBorderType: 'dashed',
-                //     textBorderDash: [2, 2]
+                //     textBorderType: [2, 2]
                 // },
                 title: {
                     text: '这是标题~',
@@ -159,8 +159,7 @@ under the License.
                     subtextStyle: {
                         textBorderWidth: 1,
                         textBorderColor: 'cyan',
-                        textBorderType: 'dashed',
-                        textBorderDash: [15, 3, 3]
+                        textBorderType: [15, 3, 3]
                     }
                 },
                 legend: {
@@ -201,7 +200,7 @@ under the License.
                     formatter: '{c}'
                 },
                 axisPointer: {
-                    show: true,
+                    show: false,
                     type: 'line',
                     lineStyle: {
                         type: 'dotted',
@@ -220,11 +219,10 @@ under the License.
                         textBorderColor: 'cyan',
                         textBorderWidth: 2,
                         textBorderType: 'dotted',
-                        //textBorderDashArray: [5, 5],
+                        //textBorderType: [5, 5],
                         borderWidth: 1,
                         borderColor: 'black',
-                        borderType: 'dashed',
-                        borderDashArray: [15, 3, 3],
+                        borderType: [15, 3, 3],
                         borderRadius: 20,
                         backgroundColor: 'yellow',
                         padding: 10,
@@ -277,8 +275,7 @@ under the License.
                     },
                     splitLine: {
                         lineStyle: {
-                            type: 'dashed',
-                            dashArray: [20, 5, 5]
+                            type: [20, 5, 5]
                         }
                     }
                 },
@@ -339,7 +336,7 @@ under the License.
                 },
                 series: [
                     {
-                        name: 'lineStyle.dashArray is [10, 5]',
+                        name: 'lineStyle.type is [10, 5]',
                         type: 'line',
                         data: [{
                             value: 7200,
@@ -354,8 +351,7 @@ under the License.
                         symbolSize: 10,
                         smooth: true,
                         lineStyle: {
-                            type: 'dashed',
-                            dashArray: [10, 5]
+                            type: [10, 5]
                         },
                         symbol: 'circle',
                         //symbolRotate: 60,
@@ -363,72 +359,68 @@ under the License.
                             color: 'red',
                             borderType: 'dashed',
                             borderWidth: 1,
-                            borderColor: 'cyan',
-                            borderDashArray: [2, 2]
+                            borderColor: 'purple'
                         },
                         emphasis: {
+                            lineStyle: {
+                                type: 'dotted'
+                            },
                             itemStyle: {
-                                borderType: 'dashed',
+                                borderType: [12, 3, 3],
                                 borderWidth: 2,
-                                borderColor: '#000',
-                                borderDashArray: [12, 3, 3]
+                                borderColor: '#000'
                             }
                         }
                     },
                     {
-                        name: 'lineStyle.dashArray is [12, 3, 3]',
+                        name: 'lineStyle.type is [12, 3, 3]',
                         type: 'line',
                         data: [6200, 6210, 6200, 6220, 6200, 6230],
                         symbolSize: 10,
                         smooth: true,
                         lineStyle: {
-                            type: 'dashed',
-                            dashArray: [12, 3, 3]
+                            type: [12, 3, 3]
                         }
                     },
                     {
-                        name: 'lineStyle.dashArray is [20, 3, 3, 3, 3, 3, 3, 3]',
+                        name: 'lineStyle.type is [20, 3, 3, 3, 3, 3, 3, 3]',
                         type: 'line',
                         data: [5200, 5210, 5200, 5220, 5200, 5230],
                         symbolSize: 10,
                         smooth: true,
                         lineStyle: {
-                            type: 'dashed',
-                            dashArray: [20, 3, 3, 3, 3, 3, 3, 3]
+                            type: [20, 3, 3, 3, 3, 3, 3, 3]
                         }
                     },
                     {
-                        name: 'lineStyle.dashArray is [20, 3, 3, 3, 3, 3, 3, 3]\nlineStyle.dashOffset is 20',
+                        name: 'lineStyle.type is [20, 3, 3, 3, 3, 3, 3, 3]\nlineStyle.dashOffset is 20',
                         type: 'line',
                         data: [4200, 4210, 4200, 4220, 4200, 4230],
                         symbolSize: 10,
                         smooth: true,
                         lineStyle: {
-                            type: 'dashed',
-                            dashArray: [20, 3, 3, 3, 3, 3, 3, 3],
+                            type: [20, 3, 3, 3, 3, 3, 3, 3],
                             dashOffset: 20
                         }
                     },
                     {
-                        name: 'lineStyle.dashArray is [2, 6]\nlineStyle.type is dotted',
+                        name: 'lineStyle.type is [2, 6]',
                         type: 'line',
                         data: [3250, 3260, 3250, 3270, 3250, 3280],
                         symbolSize: 10,
                         smooth: true,
                         lineStyle: {
-                            type: 'dotted',
-                            dashArray: [2, 6]
+                            type: [2, 6]
                         }
                     },
                     {
-                        name: 'lineStyle.dashArray is [2, 2]\nlineStyle.type is dotted',
+                        name: 'lineStyle.type is [2, 2]',
                         type: 'line',
                         data: [2200, 2210, 2200, 2220, 2200, 2230],
                         symbolSize: 10,
                         smooth: true,
                         lineStyle: {
-                            type: 'dotted',
-                            dashArray: [2, 2]
+                            type: [2, 2]
                         }
                     },
                     {

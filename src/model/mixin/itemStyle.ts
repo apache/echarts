@@ -31,7 +31,7 @@ export const ITEM_STYLE_KEY_MAP = [
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['shadowColor'],
-    ['lineDash', 'borderDashArray'],
+    ['lineDash', 'borderType'],
     ['lineDashOffset', 'borderDashOffset'],
     ['lineCap', 'borderCap'],
     ['lineJoin', 'borderJoin'],
@@ -63,26 +63,9 @@ class ItemStyleMixin {
         excludes?: readonly (keyof ItemStyleOption)[],
         includes?: readonly (keyof ItemStyleOption)[]
     ): ItemStyleProps {
-        const style = getItemStyle(this, excludes, includes);
-        style.lineDash = this.getBorderLineDash(style.lineWidth);
-        return style;
+        return getItemStyle(this, excludes, includes);
     }
 
-    getBorderLineDash(this: Model, lineWidth?: number): number[] {
-        const lineType = this.get('borderType');
-        if (lineType == null || lineType === 'solid') {
-            return [];
-        }
-
-        lineWidth = lineWidth || 0;
-
-        let dashArray = this.get('borderDashArray');
-        // compatible with single number
-        if (dashArray != null && !isNaN(dashArray)) {
-            dashArray = [+dashArray];
-        }
-        return dashArray || (lineType === 'dashed' ? [5, 5] : [1, 1]);
-    }
 }
 
 export {ItemStyleMixin};

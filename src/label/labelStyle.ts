@@ -393,7 +393,7 @@ const TEXT_PROPS_SELF = [
     'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'
 ] as const;
 const TEXT_PROPS_BOX = [
-    'padding', 'borderWidth', 'borderRadius',
+    'padding', 'borderWidth', 'borderRadius', 'borderDashOffset',
     'backgroundColor', 'borderColor',
     'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
 ] as const;
@@ -455,16 +455,8 @@ function setTokenTextStyle(
         textStyle.lineWidth = textBorderWidth;
     }
     const textBorderType = retrieve2(textStyleModel.getShallow('textBorderType'), globalTextStyle.textBorderType);
-    if (!textBorderType || textBorderType === 'solid') {
-        textStyle.lineDash = [];
-    }
-    else {
-        let textBorderDashArray = retrieve2(textStyleModel.getShallow('textBorderDashArray'), globalTextStyle.textBorderDashArray);
-        // compatible with single number
-        if (textBorderDashArray != null && !isNaN(textBorderDashArray as number)) {
-            textBorderDashArray = [+textBorderDashArray];
-        }
-        textStyle.lineDash = textBorderDashArray as number[] || (textBorderType === 'dashed' ? [5, 5] : [1, 1]);
+    if (textBorderType != null) {
+        textStyle.lineDash = textBorderType as any;
     }
     const textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
     if (textBorderDashOffset != null) {
@@ -510,21 +502,9 @@ function setTokenTextStyle(
             }
         }
 
-        const borderType = retrieve2(textStyleModel.getShallow('borderType'), globalTextStyle.borderType);
-        if (!borderType || borderType === 'solid') {
-            textStyle.borderDash = [];
-        }
-        else {
-            let borderDashArray = retrieve2(textStyleModel.getShallow('borderDashArray'), globalTextStyle.borderDashArray);
-            // compatible with single number
-            if (borderDashArray != null && !isNaN(borderDashArray as number)) {
-                borderDashArray = [+borderDashArray];
-            }
-            textStyle.borderDash = borderDashArray as number[] || (borderType === 'dashed' ? [5, 5] : [1, 1]);
-        }
-        const borderDashOffset = retrieve2(textStyleModel.getShallow('borderDashOffset'), globalTextStyle.borderDashOffset);
-        if (borderDashOffset != null) {
-            textStyle.borderDashOffset = borderDashOffset;
+        const borderType = textStyleModel.getShallow('borderType');
+        if (borderType != null) {
+            textStyle.borderDash = borderType as any;
         }
 
         if ((textStyle.backgroundColor === 'auto' || textStyle.backgroundColor === 'inherit') && inheritColor) {

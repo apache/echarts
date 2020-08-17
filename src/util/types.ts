@@ -64,7 +64,7 @@ export type VerticalAlign = 'top' | 'middle' | 'bottom';
 // Types from zrender
 export type ColorString = string;
 export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject;
-export type ZRLineType = 'solid' | 'dotted' | 'dashed';
+export type ZRLineType = 'solid' | 'dotted' | 'dashed' | number | number[];
 
 export type ZRFontStyle = 'normal' | 'italic' | 'oblique';
 export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number;
@@ -657,7 +657,6 @@ export interface BorderOptionMixin {
     borderType?: ZRLineType
     borderCap?: CanvasLineCap
     borderJoin?: CanvasLineJoin
-    borderDashArray?: number | number[]
     borderDashOffset?: number
     borderMiterLimit?: number
 }
@@ -784,7 +783,6 @@ export interface LineStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     type?: ZRLineType
     cap?: CanvasLineCap
     join?: CanvasLineJoin
-    dashArray?: number | number[]
     dashOffset?: number
     miterLimit?: number
 }
@@ -859,7 +857,6 @@ export interface TextCommonOption extends ShadowOptionMixin {
     borderColor?: string
     borderWidth?: number
     borderType?: ZRLineType
-    borderDashArray?: number | number[]
     borderDashOffset?: number
     borderRadius?: number | number[]
     padding?: number | number[]
@@ -869,7 +866,6 @@ export interface TextCommonOption extends ShadowOptionMixin {
     textBorderColor?: string
     textBorderWidth?: number
     textBorderType?: ZRLineType
-    textBorderDashArray?: number | number[]
     textBorderDashOffset?: number
 
     textShadowBlur?: number

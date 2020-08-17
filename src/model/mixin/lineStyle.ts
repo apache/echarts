@@ -30,7 +30,7 @@ export const LINE_STYLE_KEY_MAP = [
     ['shadowOffsetX'],
     ['shadowOffsetY'],
     ['shadowColor'],
-    ['lineDash', 'dashArray'],
+    ['lineDash', 'type'],
     ['lineDashOffset', 'dashOffset'],
     ['lineCap', 'cap'],
     ['lineJoin', 'join'],
@@ -60,35 +60,9 @@ class LineStyleMixin {
         this: Model,
         excludes?: readonly (keyof LineStyleOption)[]
     ): LineStyleProps {
-        const style = getLineStyle(this, excludes);
-        // Always set lineDash whether dashed, otherwise we can not
-        // erase the previous style when assigning to el.style.
-        style.lineDash = this.getLineDash(style.lineWidth);
-        return style;
+        return getLineStyle(this, excludes);
     }
 
-    getLineDash(this: Model, lineWidth?: number): false | number[] {
-        const lineType = this.get('type');
-        if (lineType == null || lineType === 'solid') {
-            // Use `false` but not `null` for the solid line here, because `null` might be
-            // ignored when assigning to `el.style`. e.g., when setting `lineStyle.type` as
-            // `'dashed'` and `emphasis.lineStyle.type` as `'solid'` in graph series, the
-            // `lineDash` gotten form the latter one is not able to erase that from the former
-            // one if using `null` here according to the emhpsis strategy in `util/graphic.js`.
-            return false;
-        }
-        if (lineWidth == null) {
-            lineWidth = 1;
-        }
-        let dashArray = this.get('dashArray');
-        // compatible with single number
-        if (dashArray != null && !isNaN(dashArray)) {
-            dashArray = [+dashArray];
-        }
-        return lineType === 'dashed'
-            ? dashArray || [lineWidth * 4]
-            : dashArray || [Math.max(lineWidth, 2)];
-    }
 };
 
 export {LineStyleMixin};
