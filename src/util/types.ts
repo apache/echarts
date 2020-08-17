@@ -929,16 +929,16 @@ export interface LabelLineOption {
     length?: number
     length2?: number
     smooth?: boolean | number
-    minTurnAngle?: number,
-    lineStyle?: LineStyleOption,
-    z: number
+    minTurnAngle?: number
+    lineStyle?: LineStyleOption
+    z?: number
 }
 
 
 export interface LabelLayoutOptionCallbackParams {
-    dataIndex: number,
-    dataType: SeriesDataType,
-    seriesIndex: number,
+    dataIndex: number
+    dataType: SeriesDataType
+    seriesIndex: number
     text: string
     align: ZRTextAlign
     verticalAlign: ZRTextVerticalAlign
