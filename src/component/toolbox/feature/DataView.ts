@@ -326,9 +326,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         const textarea = document.createElement('textarea');
         viewMain.style.cssText = 'display:block;width:100%;overflow:auto;';
 
-        // function
         const optionToContent = model.get('optionToContent');
-        // undefined
         const contentToOption = model.get('contentToOption');
         const result = getContentFromModel(ecModel);
         if (typeof optionToContent === 'function') {
