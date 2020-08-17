@@ -708,9 +708,7 @@
 
   function noop() {}
 
-  var zrUtil =
-  /*#__PURE__*/
-  Object.freeze({
+  var zrUtil = /*#__PURE__*/Object.freeze({
     __proto__: null,
     $override: $override,
     guid: guid,
@@ -901,9 +899,7 @@
     return out;
   }
 
-  var vector =
-  /*#__PURE__*/
-  Object.freeze({
+  var vector = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create,
     copy: copy,
@@ -1442,7 +1438,7 @@
 
   function removeEventListener(el, name, handler, opt) {
     if (isDomLevel2) {
-      el.removeEventListener(name, handler);
+      el.removeEventListener(name, handler, opt);
     } else {
       el.detachEvent('on' + name, handler);
     }
@@ -2697,13 +2693,9 @@
 
   var requestAnimationFrame;
 
-  if (typeof window !== 'undefined') {
-    requestAnimationFrame = window.requestAnimationFrame && window.requestAnimationFrame.bind(window) || window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window) || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
-  } else {
-    requestAnimationFrame = function (func) {
-      return setTimeout(func, 16);
-    };
-  }
+  requestAnimationFrame = typeof window !== 'undefined' && window.requestAnimationFrame && window.requestAnimationFrame.bind(window) || window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window) || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function (func) {
+    return setTimeout(func, 16);
+  };
 
   var requestAnimationFrame$1 = requestAnimationFrame;
   var easing = {
@@ -3649,9 +3641,7 @@
     return 'rgb(' + r + ',' + g + ',' + b + ')';
   }
 
-  var color =
-  /*#__PURE__*/
-  Object.freeze({
+  var color = /*#__PURE__*/Object.freeze({
     __proto__: null,
     parse: parse,
     lift: lift,
@@ -4157,7 +4147,7 @@
         return;
       }
 
-      this._additiveAnimator = additiveTo;
+      this._additiveAnimators = additiveTo;
     }
 
     Animator.prototype.getTarget = function () {
@@ -4183,7 +4173,7 @@
           track = tracks[propName] = new Track(propName);
           var initialValue = void 0;
 
-          var additiveTrack = this._additiveAnimator && this._additiveAnimator.getTrack(propName);
+          var additiveTrack = this._getAdditiveTrack(propName);
 
           if (additiveTrack) {
             var lastFinalKf = additiveTrack.keyframes[additiveTrack.keyframes.length - 1];
@@ -4247,6 +4237,23 @@
       }
     };
 
+    Animator.prototype._getAdditiveTrack = function (trackName) {
+      var additiveTrack;
+      var additiveAnimators = this._additiveAnimators;
+
+      if (additiveAnimators) {
+        for (var i = 0; i < additiveAnimators.length; i++) {
+          var track = additiveAnimators[i].getTrack(trackName);
+
+          if (track) {
+            additiveTrack = track;
+          }
+        }
+      }
+
+      return additiveTrack;
+    };
+
     Animator.prototype.start = function (easing, forceAnimate) {
       if (this._started > 0) {
         return;
@@ -4260,7 +4267,7 @@
         var propName = this._trackKeys[i];
         var track = this._tracks[propName];
 
-        var additiveTrack = this._additiveAnimator && this._additiveAnimator.getTrack(propName);
+        var additiveTrack = this._getAdditiveTrack(propName);
 
         var kfs = track.keyframes;
         track.prepare(additiveTrack);
@@ -4283,9 +4290,21 @@
           delay: this._delay,
           onframe: function (percent) {
             self._started = 2;
+            var additiveAnimators = self._additiveAnimators;
 
-            if (self._additiveAnimator && !self._additiveAnimator._clip) {
-              self._additiveAnimator = null;
+            if (additiveAnimators) {
+              var stillHasAdditiveAnimator = false;
+
+              for (var i = 0; i < additiveAnimators.length; i++) {
+                if (additiveAnimators[i]._clip) {
+                  stillHasAdditiveAnimator = true;
+                  break;
+                }
+              }
+
+              if (!stillHasAdditiveAnimator) {
+                self._additiveAnimators = null;
+              }
             }
 
             for (var i = 0; i < tracks.length; i++) {
@@ -4620,6 +4639,7 @@
 
     Animation.prototype.animate = function (target, options) {
       options = options || {};
+      this.start();
       var animator = new Animator(target, options.loop);
       this.addAnimator(animator);
       return animator;
@@ -4923,21 +4943,21 @@
       _this.__pointerCapturing = false;
       _this.dom = dom;
       _this.painterRoot = painterRoot;
-      _this.__localHandlerScope = new DOMHandlerScope(dom, localDOMHandlers);
+      _this._localHandlerScope = new DOMHandlerScope(dom, localDOMHandlers);
 
       if (globalEventSupported) {
-        _this.__globalHandlerScope = new DOMHandlerScope(document, globalDOMHandlers);
+        _this._globalHandlerScope = new DOMHandlerScope(document, globalDOMHandlers);
       }
 
-      mountLocalDOMEventListeners(_this, _this.__localHandlerScope);
+      mountLocalDOMEventListeners(_this, _this._localHandlerScope);
       return _this;
     }
 
     HandlerDomProxy.prototype.dispose = function () {
-      unmountDOMEventListeners(this.__localHandlerScope);
+      unmountDOMEventListeners(this._localHandlerScope);
 
       if (globalEventSupported) {
-        unmountDOMEventListeners(this.__globalHandlerScope);
+        unmountDOMEventListeners(this._globalHandlerScope);
       }
     };
 
@@ -4950,7 +4970,7 @@
 
       if (globalEventSupported && +this.__pointerCapturing ^ +isPointerCapturing) {
         this.__pointerCapturing = isPointerCapturing;
-        var globalHandlerScope = this.__globalHandlerScope;
+        var globalHandlerScope = this._globalHandlerScope;
         isPointerCapturing ? mountGlobalDOMEventListeners(this, globalHandlerScope) : unmountDOMEventListeners(globalHandlerScope);
       }
     };
@@ -5067,9 +5087,7 @@
     return b;
   }
 
-  var matrix =
-  /*#__PURE__*/
-  Object.freeze({
+  var matrix = /*#__PURE__*/Object.freeze({
     __proto__: null,
     create: create$1,
     identity: identity,
@@ -5942,7 +5960,7 @@
   var dpr = 1;
 
   if (typeof window !== 'undefined') {
-    dpr = Math.max(window.devicePixelRatio || 1, 1);
+    dpr = Math.max(window.devicePixelRatio || window.screen.deviceXDPI / window.screen.logicalXDPI || 1, 1);
   }
 
   var devicePixelRatio = dpr;
@@ -6804,6 +6822,8 @@
       if (zr) {
         zr.animation.addAnimator(animator);
       }
+
+      zr && zr.wakeUp();
     };
 
     Element.prototype.updateDuringAnimation = function (key) {
@@ -6912,7 +6932,7 @@
         }
       }
 
-      if (Object.defineProperty) {
+      if (Object.defineProperty && (!env.browser.ie || env.browser.version > 8)) {
         createLegacyProperty('position', '_legacyPos', 'x', 'y');
         createLegacyProperty('scale', '_legacyScale', 'scaleX', 'scaleY');
         createLegacyProperty('origin', '_legacyOrigin', 'originX', 'originY');
@@ -7036,20 +7056,22 @@
 
     if (keyLen > 0 || cfg.force) {
       var existsAnimators = animatable.animators;
-      var lastAnimator = void 0;
+      var existsAnimatorsOnSameTarget = [];
 
       for (var i = 0; i < existsAnimators.length; i++) {
         if (existsAnimators[i].targetName === topKey) {
-          lastAnimator = existsAnimators[i];
+          existsAnimatorsOnSameTarget.push(existsAnimators[i]);
         }
       }
 
-      if (!additive && lastAnimator) {
-        var allAborted = lastAnimator.stopTracks(changedKeys);
+      if (!additive && existsAnimatorsOnSameTarget.length) {
+        for (var i = 0; i < existsAnimatorsOnSameTarget.length; i++) {
+          var allAborted = existsAnimatorsOnSameTarget[i].stopTracks(changedKeys);
 
-        if (allAborted) {
-          var idx = indexOf(existsAnimators, lastAnimator);
-          existsAnimators.splice(idx, 1);
+          if (allAborted) {
+            var idx = indexOf(existsAnimators, existsAnimatorsOnSameTarget[i]);
+            existsAnimators.splice(idx, 1);
+          }
         }
       }
 
@@ -7084,7 +7106,7 @@
         }
       }
 
-      var animator = new Animator(source, false, additive ? lastAnimator : null);
+      var animator = new Animator(source, false, additive ? existsAnimatorsOnSameTarget : null);
       animator.targetName = topKey;
 
       if (cfg.scope) {
@@ -13878,6 +13900,8 @@
 
   var ZRender = function () {
     function ZRender(id, dom, opts) {
+      var _this = this;
+
       this._stillFrameAccum = 0;
       this._needsRefresh = true;
       this._needsRefreshHover = true;
@@ -13909,7 +13933,9 @@
       this.handler = new Handler(storage, painter, handerProxy, painter.root);
       this.animation = new Animation({
         stage: {
-          update: bind(this.flush, this)
+          update: function () {
+            return _this._flush(true);
+          }
         }
       });
       this.animation.start();
@@ -13918,13 +13944,13 @@
     ZRender.prototype.add = function (el) {
       this.storage.addRoot(el);
       el.addSelfToZr(this);
-      this._needsRefresh = true;
+      this.refresh();
     };
 
     ZRender.prototype.remove = function (el) {
       this.storage.delRoot(el);
       el.removeSelfFromZr(this);
-      this._needsRefresh = true;
+      this.refresh();
     };
 
     ZRender.prototype.configLayer = function (zLevel, config) {
@@ -13932,7 +13958,7 @@
         this.painter.configLayer(zLevel, config);
       }
 
-      this._needsRefresh = true;
+      this.refresh();
     };
 
     ZRender.prototype.setBackgroundColor = function (backgroundColor) {
@@ -13940,7 +13966,7 @@
         this.painter.setBackgroundColor(backgroundColor);
       }
 
-      this._needsRefresh = true;
+      this.refresh();
       this._backgroundColor = backgroundColor;
       this._darkMode = isDarkMode(backgroundColor);
     };
@@ -13973,11 +13999,15 @@
     };
 
     ZRender.prototype.flush = function () {
+      this._flush(false);
+    };
+
+    ZRender.prototype._flush = function (fromInside) {
       var triggerRendered;
 
       if (this._needsRefresh) {
         triggerRendered = true;
-        this.refreshImmediately(true);
+        this.refreshImmediately(fromInside);
       }
 
       if (this._needsRefreshHover) {
@@ -14119,10 +14149,8 @@
     painterCtors[name] = Ctor;
   }
 
-  var version = '5.0.0-alpha.1';
-  var zrender =
-  /*#__PURE__*/
-  Object.freeze({
+  var version = '5.0.0-alpha.2';
+  var zrender = /*#__PURE__*/Object.freeze({
     __proto__: null,
     init: init,
     dispose: dispose,
@@ -14443,13 +14471,16 @@
     }
   }
 
-  function isNumeric(v) {
-    return v - parseFloat(v) >= 0;
+  function numericToNumber(val) {
+    var valFloat = parseFloat(val);
+    return valFloat == val && (valFloat !== 0 || typeof val !== 'string' || val.indexOf('x') <= 0) ? valFloat : NaN;
   }
 
-  var number =
-  /*#__PURE__*/
-  Object.freeze({
+  function isNumeric(val) {
+    return !isNaN(numericToNumber(val));
+  }
+
+  var number = /*#__PURE__*/Object.freeze({
     __proto__: null,
     linearMap: linearMap,
     parsePercent: parsePercent$2,
@@ -14468,6 +14499,7 @@
     nice: nice,
     quantile: quantile,
     reformIntervals: reformIntervals,
+    numericToNumber: numericToNumber,
     isNumeric: isNumeric
   });
   var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
@@ -16025,8 +16057,10 @@
       }
     }
 
-    fillColor = fillColor || globalTextStyle.color;
-    strokeColor = strokeColor || globalTextStyle.textBorderColor;
+    if (!isAttached) {
+      fillColor = fillColor || globalTextStyle.color;
+      strokeColor = strokeColor || globalTextStyle.textBorderColor;
+    }
 
     if (fillColor != null) {
       textStyle.fill = fillColor;
@@ -16964,42 +16998,6 @@
     return isUTC ? 'setUTCSeconds' : 'setSeconds';
   }
 
-  var time =
-  /*#__PURE__*/
-  Object.freeze({
-    __proto__: null,
-    ONE_SECOND: ONE_SECOND,
-    ONE_MINUTE: ONE_MINUTE,
-    ONE_HOUR: ONE_HOUR,
-    ONE_DAY: ONE_DAY,
-    ONE_YEAR: ONE_YEAR,
-    defaultLeveledFormatter: defaultLeveledFormatter,
-    fullLeveledFormatter: fullLeveledFormatter,
-    primaryTimeUnits: primaryTimeUnits,
-    timeUnits: timeUnits,
-    pad: pad,
-    getPrimaryTimeUnit: getPrimaryTimeUnit,
-    isPrimaryTimeUnit: isPrimaryTimeUnit,
-    getDefaultFormatPrecisionOfInterval: getDefaultFormatPrecisionOfInterval,
-    format: format,
-    leveledFormat: leveledFormat,
-    getUnitFromValue: getUnitFromValue,
-    getUnitValue: getUnitValue,
-    fullYearGetterName: fullYearGetterName,
-    monthGetterName: monthGetterName,
-    dateGetterName: dateGetterName,
-    hoursGetterName: hoursGetterName,
-    minutesGetterName: minutesGetterName,
-    secondsGetterName: secondsGetterName,
-    millisecondsGetterName: millisecondsGetterName,
-    fullYearSetterName: fullYearSetterName,
-    monthSetterName: monthSetterName,
-    dateSetterName: dateSetterName,
-    hoursSetterName: hoursSetterName,
-    minutesSetterName: minutesSetterName,
-    secondsSetterName: secondsSetterName,
-    millisecondsSetterName: millisecondsSetterName
-  });
   var mathMax$3 = Math.max;
   var mathMin$3 = Math.min;
   var _customShapeMap = {};
@@ -17272,6 +17270,11 @@
       var text = el.getTextContent();
       var host_1 = text && innerLabel(text);
       host_1 && (host_1.startValue = host_1.nextValue);
+      var duration = animatableModel.get('animationDuration');
+
+      if (!duration) {
+        host_1.nextValue = interpolateValues_1;
+      }
 
       var during = function (percent) {
         var text = el.getTextContent();
@@ -17513,9 +17516,7 @@
   registerShape('line', Line);
   registerShape('bezierCurve', BezierCurve);
   registerShape('arc', Arc);
-  var graphic =
-  /*#__PURE__*/
-  Object.freeze({
+  var graphic = /*#__PURE__*/Object.freeze({
     __proto__: null,
     extendShape: extendShape,
     extendPath: extendPath,
@@ -17734,9 +17735,7 @@
     }
   }
 
-  var format$1 =
-  /*#__PURE__*/
-  Object.freeze({
+  var format$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     addCommas: addCommas,
     toCamelCase: toCamelCase,
@@ -18184,7 +18183,7 @@
 
   var globalDefault = {
     darkMode: 'auto',
-    color: ['#5470c6', '#91cc75', '#ffbf25', '#ef6868', '#ffa086', '#b25790', '#fe719b', '#59d9d2', '#46a9ee'],
+    color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
     gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
     textStyle: {
       fontFamily: platform.match(/^Win/) ? 'Microsoft YaHei' : 'sans-serif',
@@ -19268,7 +19267,7 @@
 
   function isNotTargetSeries(seriesModel, payload) {
     if (payload) {
-      var index = payload.seiresIndex;
+      var index = payload.seriesIndex;
       var id = payload.seriesId;
       var name_1 = payload.seriesName;
       return index != null && seriesModel.componentIndex !== index || id != null && seriesModel.id !== id || name_1 != null && seriesModel.name !== name_1;
@@ -20796,6 +20795,136 @@
     return value == null || value === '' ? NaN : +value;
   }
 
+  var valueParserMap = createHashMap({
+    'number': function (val) {
+      return parseFloat(val);
+    },
+    'time': function (val) {
+      return +parseDate(val);
+    },
+    'trim': function (val) {
+      return typeof val === 'string' ? trim(val) : val;
+    }
+  });
+
+  function getRawValueParser(type) {
+    return valueParserMap.get(type);
+  }
+
+  var ORDER_COMPARISON_OP_MAP = {
+    lt: function (lval, rval) {
+      return lval < rval;
+    },
+    lte: function (lval, rval) {
+      return lval <= rval;
+    },
+    gt: function (lval, rval) {
+      return lval > rval;
+    },
+    gte: function (lval, rval) {
+      return lval >= rval;
+    }
+  };
+
+  var FilterOrderComparator = function () {
+    function FilterOrderComparator(op, rval) {
+      if (typeof rval !== 'number') {
+        var errMsg = '';
+
+        if (true) {
+          errMsg = 'rvalue of "<", ">", "<=", ">=" can only be number in filter.';
+        }
+
+        throwError(errMsg);
+      }
+
+      this._opFn = ORDER_COMPARISON_OP_MAP[op];
+      this._rvalFloat = numericToNumber(rval);
+    }
+
+    FilterOrderComparator.prototype.evaluate = function (lval) {
+      return typeof lval === 'number' ? this._opFn(lval, this._rvalFloat) : this._opFn(numericToNumber(lval), this._rvalFloat);
+    };
+
+    return FilterOrderComparator;
+  }();
+
+  var SortOrderComparator = function () {
+    function SortOrderComparator(order, incomparable) {
+      var isDesc = order === 'desc';
+      this._resultLT = isDesc ? 1 : -1;
+
+      if (incomparable == null) {
+        incomparable = isDesc ? 'min' : 'max';
+      }
+
+      this._incomparable = incomparable === 'min' ? -Infinity : Infinity;
+    }
+
+    SortOrderComparator.prototype.evaluate = function (lval, rval) {
+      var lvalTypeof = typeof lval;
+      var rvalTypeof = typeof rval;
+      var lvalFloat = lvalTypeof === 'number' ? lval : numericToNumber(lval);
+      var rvalFloat = rvalTypeof === 'number' ? rval : numericToNumber(rval);
+      var lvalNotNumeric = isNaN(lvalFloat);
+      var rvalNotNumeric = isNaN(rvalFloat);
+
+      if (lvalNotNumeric) {
+        lvalFloat = this._incomparable;
+      }
+
+      if (rvalNotNumeric) {
+        rvalFloat = this._incomparable;
+      }
+
+      if (lvalNotNumeric && rvalNotNumeric) {
+        var lvalIsStr = lvalTypeof === 'string';
+        var rvalIsStr = rvalTypeof === 'string';
+
+        if (lvalIsStr) {
+          lvalFloat = rvalIsStr ? lval : 0;
+        }
+
+        if (rvalIsStr) {
+          rvalFloat = lvalIsStr ? rval : 0;
+        }
+      }
+
+      return lvalFloat < rvalFloat ? this._resultLT : lvalFloat > rvalFloat ? -this._resultLT : 0;
+    };
+
+    return SortOrderComparator;
+  }();
+
+  var FilterEqualityComparator = function () {
+    function FilterEqualityComparator(isEq, rval) {
+      this._rval = rval;
+      this._isEQ = isEq;
+      this._rvalTypeof = typeof rval;
+      this._rvalFloat = numericToNumber(rval);
+    }
+
+    FilterEqualityComparator.prototype.evaluate = function (lval) {
+      var eqResult = lval === this._rval;
+
+      if (!eqResult) {
+        var lvalTypeof = typeof lval;
+
+        if (lvalTypeof !== this._rvalTypeof && (lvalTypeof === 'number' || this._rvalTypeof === 'number')) {
+          eqResult = numericToNumber(lval) === this._rvalFloat;
+        }
+      }
+
+      return this._isEQ ? eqResult : !eqResult;
+    };
+
+    return FilterEqualityComparator;
+  }();
+
+  function createFilterComparator(op, rval) {
+    return op === 'eq' || op === 'ne' ? new FilterEqualityComparator(op === 'eq', rval) : hasOwn(ORDER_COMPARISON_OP_MAP, op) ? new FilterOrderComparator(op, rval) : null;
+  }
+
   var ExternalSource = function () {
     function ExternalSource() {}
 
@@ -22210,7 +22339,7 @@
       fontSize: '12px',
       maskColor: 'rgba(255, 255, 255, 0.8)',
       showSpinner: true,
-      color: '#c23531',
+      color: '#5470c6',
       spinnerRadius: 10,
       lineWidth: 5,
       zlevel: 0
@@ -22709,7 +22838,8 @@
     color: colorAll,
     colorLayer: [['#37A2DA', '#ffd85c', '#fd7b5f'], ['#37A2DA', '#67E0E3', '#FFDB5C', '#ff9f7f', '#E062AE', '#9d96f5'], ['#37A2DA', '#32C5E9', '#9FE6B8', '#FFDB5C', '#ff9f7f', '#fb7293', '#e7bcf3', '#8378EA', '#96BFFF'], colorAll]
   };
-  var contrastColor = '#eee';
+  var contrastColor = '#B9B8CE';
+  var backgroundColor = '#100C2A';
 
   var axisCommon = function () {
     return {
@@ -22718,46 +22848,38 @@
           color: contrastColor
         }
       },
-      axisTick: {
-        lineStyle: {
-          color: contrastColor
-        }
-      },
-      axisLabel: {
-        textStyle: {
-          color: contrastColor
-        }
-      },
       splitLine: {
         lineStyle: {
-          type: 'dashed',
-          color: '#aaa'
+          color: '#484753'
         }
       },
       splitArea: {
         areaStyle: {
-          color: contrastColor
+          color: ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.05)']
+        }
+      },
+      minorSplitLine: {
+        lineStyle: {
+          color: '#20203B'
         }
       }
     };
   };
 
-  var colorPalette = ['#dd6b66', '#759aa0', '#e69d87', '#8dc1a9', '#ea7e53', '#eedd78', '#73a373', '#73b9bc', '#7289ab', '#91ca8c', '#f49f42'];
+  var colorPalette = ['#4992ff', '#7cffb2', '#fddd60', '#ff6e76', '#58d9f9', '#05c091', '#ff8a45', '#8d48e3', '#dd79ff'];
   var theme = {
     darkMode: true,
     color: colorPalette,
-    backgroundColor: '#333',
-    tooltip: {
-      axisPointer: {
-        lineStyle: {
-          color: contrastColor
-        },
-        crossStyle: {
-          color: contrastColor
-        },
-        label: {
-          color: '#000'
-        }
+    backgroundColor: backgroundColor,
+    axisPointer: {
+      lineStyle: {
+        color: '#817f91'
+      },
+      crossStyle: {
+        color: '#817f91'
+      },
+      label: {
+        color: '#fff'
       }
     },
     legend: {
@@ -22770,7 +22892,10 @@
     },
     title: {
       textStyle: {
-        color: contrastColor
+        color: '#EEF1FA'
+      },
+      subtextStyle: {
+        color: '#B9B8CE'
       }
     },
     toolbox: {
@@ -22781,8 +22906,48 @@
       }
     },
     dataZoom: {
+      borderColor: '#71708A',
       textStyle: {
         color: contrastColor
+      },
+      brushStyle: {
+        color: 'rgba(135,163,206,0.3)'
+      },
+      handleStyle: {
+        color: '#353450',
+        borderColor: '#C5CBE3'
+      },
+      moveHandleStyle: {
+        color: '#B0B6C3',
+        opacity: 0.3
+      },
+      fillerColor: 'rgba(135,163,206,0.2)',
+      emphasis: {
+        handleStyle: {
+          borderColor: '#91B7F2',
+          color: '#4D587D'
+        },
+        moveHandleStyle: {
+          color: '#636D9A',
+          opacity: 0.7
+        }
+      },
+      dataBackground: {
+        lineStyle: {
+          color: '#71708A',
+          width: 1
+        },
+        areaStyle: {
+          color: '#71708A'
+        }
+      },
+      selectedDataBackground: {
+        lineStyle: {
+          color: '#87A3CE'
+        },
+        areaStyle: {
+          color: '#87A3CE'
+        }
       }
     },
     visualMap: {
@@ -22794,23 +22959,28 @@
       lineStyle: {
         color: contrastColor
       },
-      itemStyle: {
-        normal: {
-          color: colorPalette[1]
-        }
-      },
       label: {
-        normal: {
-          textStyle: {
-            color: contrastColor
-          }
+        textStyle: {
+          color: contrastColor
         }
       },
       controlStyle: {
-        normal: {
-          color: contrastColor,
-          borderColor: contrastColor
-        }
+        color: contrastColor,
+        borderColor: contrastColor
+      }
+    },
+    calendar: {
+      itemStyle: {
+        color: backgroundColor
+      },
+      dayLabel: {
+        color: contrastColor
+      },
+      monthLabel: {
+        color: contrastColor
+      },
+      yearLabel: {
+        color: contrastColor
       }
     },
     timeAxis: axisCommon(),
@@ -24207,10 +24377,10 @@
       var height = api.getHeight();
       var labelList = prepareLayoutList(this._labelList);
       var labelsNeedsAdjustOnX = filter(labelList, function (item) {
-        return item.layoutOption.moveOverlap === 'shift-x';
+        return item.layoutOption.moveOverlap === 'shiftX';
       });
       var labelsNeedsAdjustOnY = filter(labelList, function (item) {
-        return item.layoutOption.moveOverlap === 'shift-y';
+        return item.layoutOption.moveOverlap === 'shiftY';
       });
       shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
       shiftLayoutOnY(labelsNeedsAdjustOnY, 0, height);
@@ -26059,9 +26229,9 @@
   var each$3 = each;
   var isFunction$1 = isFunction;
   var isObject$2 = isObject;
-  var version$1 = '5.0.0-alpha.1';
+  var version$1 = '5.0.0-alpha.2';
   var dependencies = {
-    zrender: '5.0.0-alpha.1'
+    zrender: '5.0.0-alpha.2'
   };
   var TEST_FRAME_REMAIN_TIME = 1;
   var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -32293,9 +32463,7 @@
     mixin(Model, AxisModelCommonMixin);
   }
 
-  var helper =
-  /*#__PURE__*/
-  Object.freeze({
+  var helper = /*#__PURE__*/Object.freeze({
     __proto__: null,
     createList: createList,
     getLayoutRect: getLayoutRect,
@@ -33016,6 +33184,10 @@
   }
 
   var parseGeoJson$1 = parseGeoJson;
+  var time = {
+    parse: parseDate,
+    format: format
+  };
   var ecUtil = {};
   each(['map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter', 'bind', 'curry', 'isArray', 'isString', 'isObject', 'isFunction', 'extend', 'defaults', 'clone', 'merge'], function (name) {
     ecUtil[name] = zrUtil[name];
@@ -33025,7 +33197,7 @@
   each(GRAPHIC_KEYS, function (name) {
     graphic$1[name] = graphic[name];
   });
-  var aliasToOpMap = createHashMap({
+  var RELATIONAL_EXPRESSION_OP_ALIAS_MAP = {
     value: 'eq',
     '<': 'lt',
     '<=': 'lte',
@@ -33034,44 +33206,30 @@
     '=': 'eq',
     '!=': 'ne',
     '<>': 'ne'
-  });
-  var relationalOpEvaluateMap = createHashMap({
-    lt: function (tarVal, condVal) {
-      return tarVal < condVal;
-    },
-    lte: function (tarVal, condVal) {
-      return tarVal <= condVal;
-    },
-    gt: function (tarVal, condVal) {
-      return tarVal > condVal;
-    },
-    gte: function (tarVal, condVal) {
-      return tarVal >= condVal;
-    },
-    eq: function (tarVal, condVal) {
-      return tarVal === condVal;
-    },
-    ne: function (tarVal, condVal) {
-      return tarVal !== condVal;
-    },
-    reg: function (tarVal, condVal) {
-      var type = typeof tarVal;
-      return type === 'string' ? condVal.test(tarVal) : type === 'number' ? condVal.test(tarVal + '') : false;
-    }
-  });
+  };
 
-  function parseRegCond(condVal) {
-    return isString(condVal) ? new RegExp(condVal) : isRegExp(condVal) ? condVal : null;
-  }
+  var RegExpEvaluator = function () {
+    function RegExpEvaluator(rVal) {
+      var condValue = this._condVal = isString(rVal) ? new RegExp(rVal) : isRegExp(rVal) ? rVal : null;
 
-  var valueParserMap = createHashMap({
-    time: function (val) {
-      return +parseDate(val);
-    },
-    trim: function (val) {
-      return typeof val === 'string' ? trim(val) : val;
+      if (condValue == null) {
+        var errMsg = '';
+
+        if (true) {
+          errMsg = makePrintable('Illegal regexp', rVal, 'in');
+        }
+
+        throwError(errMsg);
+      }
     }
-  });
+
+    RegExpEvaluator.prototype.evaluate = function (lVal) {
+      var type = typeof lVal;
+      return type === 'string' ? this._condVal.test(lVal) : type === 'number' ? this._condVal.test(lVal + '') : false;
+    };
+
+    return RegExpEvaluator;
+  }();
 
   var ConstConditionInternal = function () {
     function ConstConditionInternal() {}
@@ -33133,15 +33291,13 @@
     function RelationalConditionInternal() {}
 
     RelationalConditionInternal.prototype.evaluate = function () {
-      var getValue = this.getValue;
       var needParse = !!this.valueParser;
+      var getValue = this.getValue;
       var tarValRaw = getValue(this.valueGetterParam);
       var tarValParsed = needParse ? this.valueParser(tarValRaw) : null;
 
       for (var i = 0; i < this.subCondList.length; i++) {
-        var subCond = this.subCondList[i];
-
-        if (!subCond.evaluate(needParse ? tarValParsed : tarValRaw, subCond.condValue)) {
+        if (!this.subCondList[i].evaluate(needParse ? tarValParsed : tarValRaw)) {
           return false;
         }
       }
@@ -33235,20 +33391,22 @@
     var valueGetterParam = getters.prepareGetValue(exprOption);
     var subCondList = [];
     var exprKeys = keys(exprOption);
-    var parserName = exprOption.parse;
-    var valueParser = parserName ? valueParserMap.get(parserName) : null;
+    var parserName = exprOption.parser;
+    var valueParser = parserName ? getRawValueParser(parserName) : null;
 
     for (var i = 0; i < exprKeys.length; i++) {
       var keyRaw = exprKeys[i];
 
-      if (keyRaw === 'parse' || getters.valueGetterAttrMap.get(keyRaw)) {
+      if (keyRaw === 'parser' || getters.valueGetterAttrMap.get(keyRaw)) {
         continue;
       }
 
-      var op = aliasToOpMap.get(keyRaw) || keyRaw;
-      var evaluateHandler = relationalOpEvaluateMap.get(op);
+      var op = hasOwn(RELATIONAL_EXPRESSION_OP_ALIAS_MAP, keyRaw) ? RELATIONAL_EXPRESSION_OP_ALIAS_MAP[keyRaw] : keyRaw;
+      var condValueRaw = exprOption[keyRaw];
+      var condValueParsed = valueParser ? valueParser(condValueRaw) : condValueRaw;
+      var evaluator = createFilterComparator(op, condValueParsed) || op === 'reg' && new RegExpEvaluator(condValueParsed);
 
-      if (!evaluateHandler) {
+      if (!evaluator) {
         if (true) {
           errMsg = makePrintable('Illegal relational operation: "' + keyRaw + '" in condition:', exprOption);
         }
@@ -33256,29 +33414,7 @@
         throwError(errMsg);
       }
 
-      var condValueRaw = exprOption[keyRaw];
-      var condValue = void 0;
-
-      if (keyRaw === 'reg') {
-        condValue = parseRegCond(condValueRaw);
-
-        if (condValue == null) {
-          var errMsg_1 = '';
-
-          if (true) {
-            errMsg_1 = makePrintable('Illegal regexp', condValueRaw, 'in', exprOption);
-          }
-
-          throwError(errMsg_1);
-        }
-      } else {
-        condValue = valueParser ? valueParser(condValueRaw) : condValueRaw;
-      }
-
-      subCondList.push({
-        condValue: condValue,
-        evaluate: evaluateHandler
-      });
+      subCondList.push(evaluator);
     }
 
     if (!subCondList.length) {
@@ -33376,19 +33512,11 @@
       };
     }
   };
-  var SortOrderValidMap = {
-    asc: true,
-    desc: true
-  };
   var sampleLog = '';
 
   if (true) {
-    sampleLog = ['Valid config is like:', '{ dimension: "age", order: "asc" }', 'or [{ dimension: "age", order: "asc"], { dimension: "date", order: "desc" }]'].join('');
+    sampleLog = ['Valid config is like:', '{ dimension: "age", order: "asc" }', 'or [{ dimension: "age", order: "asc"], { dimension: "date", order: "desc" }]'].join(' ');
   }
-
-  var timeParser = function (val) {
-    return +parseDate(val);
-  };
 
   var sortTransform = {
     type: 'echarts:sort',
@@ -33410,7 +33538,8 @@
       each(orderExprList, function (orderExpr) {
         var dimLoose = orderExpr.dimension;
         var order = orderExpr.order;
-        var parserName = orderExpr.parse;
+        var parserName = orderExpr.parser;
+        var incomparable = orderExpr.incomparable;
 
         if (dimLoose == null) {
           if (true) {
@@ -33420,12 +33549,32 @@
           throwError(errMsg);
         }
 
-        if (!hasOwn(SortOrderValidMap, order)) {
+        if (order !== 'asc' && order !== 'desc') {
           if (true) {
             errMsg = 'Sort transform config must has "order" specified.' + sampleLog;
           }
 
           throwError(errMsg);
+        }
+
+        if (incomparable && incomparable !== 'min' && incomparable !== 'max') {
+          var errMsg_1 = '';
+
+          if (true) {
+            errMsg_1 = 'incomparable must be "min" or "max" rather than "' + incomparable + '".';
+          }
+
+          throwError(errMsg_1);
+        }
+
+        if (order !== 'asc' && order !== 'desc') {
+          var errMsg_2 = '';
+
+          if (true) {
+            errMsg_2 = 'order must be "asc" or "desc" rather than "' + order + '".';
+          }
+
+          throwError(errMsg_2);
         }
 
         var dimInfo = source.getDimensionInfo(dimLoose);
@@ -33438,24 +33587,20 @@
           throwError(errMsg);
         }
 
-        var parser;
+        var parser = parserName ? getRawValueParser(parserName) : null;
 
-        if (parserName) {
-          if (parserName !== 'time') {
-            if (true) {
-              errMsg = makePrintable('Invalid parser name' + parserName + '.\n', 'Illegal config:', orderExpr, '.\n');
-            }
-
-            throwError(errMsg);
+        if (parserName && !parser) {
+          if (true) {
+            errMsg = makePrintable('Invalid parser name ' + parserName + '.\n', 'Illegal config:', orderExpr, '.\n');
           }
 
-          parser = timeParser;
+          throwError(errMsg);
         }
 
         orderDefList.push({
           dimIdx: dimInfo.index,
-          orderReturn: order === 'asc' ? -1 : 1,
-          parser: parser
+          parser: parser,
+          comparator: new SortOrderComparator(order, incomparable)
         });
       });
 
@@ -33488,14 +33633,6 @@
           return 1;
         }
 
-        if (item0 == null) {
-          return 1;
-        }
-
-        if (item1 == null) {
-          return -1;
-        }
-
         for (var i = 0; i < orderDefList.length; i++) {
           var orderDef = orderDefList[i];
           var val0 = source.retrieveItemValue(item0, orderDef.dimIdx);
@@ -33506,10 +33643,10 @@
             val1 = orderDef.parser(val1);
           }
 
-          if (val0 < val1) {
-            return orderDef.orderReturn;
-          } else if (val0 > val1) {
-            return -orderDef.orderReturn;
+          var result = orderDef.comparator.evaluate(val0, val1);
+
+          if (result !== 0) {
+            return result;
           }
         }
 
@@ -35566,9 +35703,6 @@
   mixin(CartesianAxisModel, AxisModelCommonMixin);
   var extraOption = {
     offset: 0,
-    sort: false,
-    realtimeSort: false,
-    sortSeriesIndex: null,
     categorySortInfo: []
   };
   axisModelCreator('x', CartesianAxisModel, extraOption);
@@ -37633,7 +37767,8 @@
         itemStyle: {
           borderColor: '#212121'
         }
-      }
+      },
+      realtimeSort: false
     });
     return BarSeriesModel;
   }(BaseBarSeriesModel);
@@ -37750,6 +37885,7 @@
 
     BarView.prototype.render = function (seriesModel, ecModel, api, payload) {
       this._model = seriesModel;
+      this.removeOnRenderedListener(api);
 
       this._updateDrawMode(seriesModel);
 
@@ -37786,14 +37922,14 @@
     };
 
     BarView.prototype._renderNormal = function (seriesModel, ecModel, api, isReorder) {
-      var that = this;
+      var _this = this;
+
       var group = this.group;
       var data = seriesModel.getData();
       var oldData = this._data;
       var coord = seriesModel.coordinateSystem;
       var baseAxis = coord.getBaseAxis();
       var isHorizontalOrRadial;
-      var lastAnimator = null;
 
       if (coord.type === 'cartesian2d') {
         isHorizontalOrRadial = baseAxis.isHorizontal();
@@ -37803,14 +37939,32 @@
 
       var animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
       var axis2DModel = baseAxis.model;
-      var axisSort = coord.type === 'cartesian2d' && axis2DModel.get('sort') && axis2DModel.get('sortSeriesIndex') === seriesModel.seriesIndex;
-      var realtimeSort = axisSort && axis2DModel.get('realtimeSort');
+      var realtimeSort = seriesModel.get('realtimeSort');
 
-      if (realtimeSort && this._isFirstFrame && data.count()) {
-        this._initSort(data, isHorizontalOrRadial, baseAxis, api);
+      if (realtimeSort && data.count()) {
+        if (this._isFirstFrame) {
+          this._initSort(data, isHorizontalOrRadial, baseAxis, api);
 
-        this._isFirstFrame = false;
-        return;
+          this._isFirstFrame = false;
+          return;
+        } else {
+          this._onRendered = function () {
+            var orderMap = function (idx) {
+              var el = data.getItemGraphicEl(idx);
+
+              if (el) {
+                var shape = el.shape;
+                return (isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width) || 0;
+              } else {
+                return 0;
+              }
+            };
+
+            _this._updateSort(data, orderMap, baseAxis, api);
+          };
+
+          api.getZr().on('rendered', this._onRendered);
+        }
       }
 
       var needsClip = seriesModel.get('clip', true) || realtimeSort;
@@ -37853,8 +38007,7 @@
 
         if (realtimeSort) {
           el.disableLabelAnimation = true;
-          var animator = updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, dataIndex, isHorizontalOrRadial, false);
-          animator && (lastAnimator = animator);
+          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, dataIndex, isHorizontalOrRadial, false);
         } else if (coord.type === 'cartesian2d') {
           initProps(el, {
             shape: layout
@@ -37909,8 +38062,7 @@
 
         if (realtimeSort) {
           el.disableLabelAnimation = true;
-          var animator = updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, newIndex, isHorizontalOrRadial, true);
-          animator && (lastAnimator = animator);
+          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, newIndex, isHorizontalOrRadial, true);
         } else {
           updateProps(el, {
             shape: layout
@@ -37934,23 +38086,6 @@
       group.add(bgGroup);
       this._backgroundEls = bgEls;
       this._data = data;
-
-      if (lastAnimator) {
-        lastAnimator.during(function () {
-          var orderMap = function (idx) {
-            var el = data.getItemGraphicEl(idx);
-
-            if (el) {
-              var shape = el.shape;
-              return (isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width) || 0;
-            } else {
-              return 0;
-            }
-          };
-
-          that._updateSort(data, orderMap, baseAxis, api);
-        });
-      }
     };
 
     BarView.prototype._renderLarge = function (seriesModel, ecModel, api) {
@@ -38036,6 +38171,7 @@
 
         for (var i = extent[0]; i < extent[1]; ++i) {
           if (!oldOrder[i] || oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
+            this.removeOnRenderedListener(api);
             var action = {
               type: 'changeAxisOrder',
               componentType: baseAxis.dim + 'Axis',
@@ -38061,8 +38197,21 @@
       api.dispatchAction(action);
     };
 
-    BarView.prototype.remove = function () {
+    BarView.prototype.remove = function (ecModel, api) {
       this._clear(this._model);
+
+      this.removeOnRenderedListener(api);
+    };
+
+    BarView.prototype.dispose = function (ecModel, api) {
+      this.removeOnRenderedListener(api);
+    };
+
+    BarView.prototype.removeOnRenderedListener = function (api) {
+      if (this._onRendered) {
+        api.getZr().off('rendered', this._onRendered);
+        this._onRendered = null;
+      }
     };
 
     BarView.prototype._clear = function (model) {
@@ -38205,9 +38354,6 @@
       (isUpdate ? updateProps : initProps)(el, {
         shape: seriesTarget
       }, seriesModel, newIndex, null);
-      var lastAnimator = el.animators.length ? find(el.animators, function (animator) {
-        return animator.targetName === 'shape' && !!animator.getTrack('width');
-      }) : null;
       (isUpdate ? updateProps : initProps)(el, {
         shape: axisTarget
       }, axisModel, newIndex);
@@ -38218,7 +38364,6 @@
 
       var labelModel = seriesModel.getModel('label');
       (isUpdate ? updateLabel : initLabel)(el, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter);
-      return lastAnimator;
     }
   }
 
@@ -39147,7 +39292,6 @@
       var data = seriesModel.getData();
       var oldData = this._data;
       var group = this.group;
-      var hasAnimation = ecModel.get('animation');
       var startAngle;
 
       if (!oldData && data.count() > 0) {
@@ -49934,8 +50078,8 @@
   var DEFAULT_BRUSH_OPT = {
     brushStyle: {
       lineWidth: 2,
-      stroke: 'rgba(0,0,0,0.3)',
-      fill: 'rgba(0,0,0,0.1)'
+      stroke: 'rgba(210,219,238,0.3)',
+      fill: '#D2DBEE'
     },
     transformable: true,
     brushMode: 'single',
@@ -51313,15 +51457,10 @@
       label: {
         show: true,
         position: 'right',
-        color: '#000',
         fontSize: 12
       },
       levels: [],
       nodeAlign: 'justify',
-      itemStyle: {
-        borderWidth: 1,
-        borderColor: '#333'
-      },
       lineStyle: {
         color: '#314656',
         opacity: 0.2,
@@ -52566,14 +52705,17 @@
       var bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
       var low = useExtreme ? min : Math.max(min, Q1 - bound);
       var high = useExtreme ? max : Math.min(max, Q3 + bound);
-      boxData.push([i, low, Q1, Q2, Q3, high]);
+      var itemNameFormatter = opt.itemNameFormatter;
+      var itemName = isFunction(itemNameFormatter) ? itemNameFormatter({
+        value: i
+      }) : isString(itemNameFormatter) ? itemNameFormatter.replace('{value}', i + '') : i + '';
+      boxData.push([itemName, low, Q1, Q2, Q3, high]);
 
       for (var j = 0; j < ascList.length; j++) {
         var dataItem = ascList[j];
 
         if (dataItem < low || dataItem > high) {
-          var outlier = [i, dataItem];
-          opt.layout === 'vertical' && outlier.reverse();
+          var outlier = [itemName, dataItem];
           outliers.push(outlier);
         }
       }
@@ -52589,7 +52731,6 @@
     type: 'echarts:boxplot',
     transform: function transform(params) {
       var source = params.source;
-      var config = params.config || {};
       var sourceData = source.data;
 
       if (!isArray(sourceData) || sourceData[0] && !isArray(sourceData[0])) {
@@ -52602,7 +52743,7 @@
         throwError(errMsg);
       }
 
-      var result = prepareBoxplotData(source.data, config);
+      var result = prepareBoxplotData(source.data, params.config);
       return [{
         data: result.boxData
       }, {
@@ -58803,7 +58944,7 @@
     hasOwn(richItem, 'fill') && (out.textFill = richItem.fill);
     hasOwn(richItem, 'stroke') && (out.textStroke = richItem.fill);
     hasOwn(richItem, 'lineWidth') && (out.textStrokeWidth = richItem.lineWidth);
-    hasOwn(richItem, 'font') && (out.textStrokeWidth = richItem.font);
+    hasOwn(richItem, 'font') && (out.font = richItem.font);
     hasOwn(richItem, 'fontStyle') && (out.fontStyle = richItem.fontStyle);
     hasOwn(richItem, 'fontWeight') && (out.fontWeight = richItem.fontWeight);
     hasOwn(richItem, 'fontSize') && (out.fontSize = richItem.fontSize);
@@ -64858,7 +64999,7 @@
       brushType: 'auto',
       brushStyle: {
         lineWidth: 0,
-        fill: 'rgba(0,0,0,0.2)'
+        fill: 'rgba(210,219,238,0.2)'
       }
     } : false);
   }
@@ -65026,7 +65167,7 @@
     var centerPos = '';
     var rotate = 0;
 
-    if (['left', 'right'].includes(arrowPos)) {
+    if (indexOf(['left', 'right'], arrowPos) > -1) {
       centerPos = arrowPos + ":-6px;top:50%;transform:translateY(-50%)";
       rotate = arrowPos === 'left' ? -225 : -45;
     } else {
@@ -65060,7 +65201,7 @@
     return cssText.join(';');
   }
 
-  function assembleCssText(tooltipModel) {
+  function assembleCssText(tooltipModel, isFirstShow) {
     var cssText = [];
     var transitionDuration = tooltipModel.get('transitionDuration');
     var backgroundColor = tooltipModel.get('backgroundColor');
@@ -65072,7 +65213,7 @@
     var padding = tooltipModel.get('padding');
     var boxShadow = shadowOffsetX + "px " + shadowOffsetY + "px " + shadowBlur + "px " + shadowColor;
     cssText.push('box-shadow:' + boxShadow);
-    transitionDuration && !['top', 'left', 'bottom', 'right'].includes(tooltipModel.get('position')) && tooltipModel.get('trigger') !== 'item' && cssText.push(assembleTransition(transitionDuration));
+    !isFirstShow && transitionDuration && indexOf(['top', 'left', 'bottom', 'right'], tooltipModel.get('position')) > -1 && tooltipModel.get('trigger') !== 'item' && cssText.push(assembleTransition(transitionDuration));
 
     if (backgroundColor) {
       if (env.canvasSupported) {
@@ -65124,6 +65265,7 @@
       this._show = false;
       this._styleCoord = [0, 0];
       this._enterable = true;
+      this._firstShow = true;
 
       if (env.wxa) {
         return null;
@@ -65192,10 +65334,11 @@
       var styleCoord = this._styleCoord;
       var offset = el.offsetHeight / 2;
       nearPointColor = getFinalColor(nearPointColor);
-      el.style.cssText = gCssText + assembleCssText(tooltipModel) + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;' + ("border-color: " + nearPointColor + ";") + (tooltipModel.get('extraCssText') || '');
+      el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow) + ';left:' + styleCoord[0] + 'px;top:' + (styleCoord[1] - offset) + 'px;' + ("border-color: " + nearPointColor + ";") + (tooltipModel.get('extraCssText') || '');
       el.style.display = el.innerHTML ? 'block' : 'none';
       el.style.pointerEvents = this._enterable ? 'auto' : 'none';
       this._show = true;
+      this._firstShow = false;
     };
 
     TooltipHTMLContent.prototype.setContent = function (content, markers, tooltipModel, borderColor, arrowPosition) {
@@ -66634,8 +66777,8 @@
       transformable: true,
       brushStyle: {
         borderWidth: 1,
-        color: 'rgba(120,140,180,0.3)',
-        borderColor: 'rgba(120,140,180,0.8)'
+        color: 'rgba(210,219,238,0.3)',
+        borderColor: '#D2DBEE'
       },
       throttleType: 'fixRate',
       throttleDelay: 0,
