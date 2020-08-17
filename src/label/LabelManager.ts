@@ -411,10 +411,10 @@ class LabelManager {
 
         const labelList = prepareLayoutList(this._labelList);
         const labelsNeedsAdjustOnX = filter(labelList, function (item) {
-            return item.layoutOption.moveOverlap === 'shift-x';
+            return item.layoutOption.moveOverlap === 'shiftX';
         });
         const labelsNeedsAdjustOnY = filter(labelList, function (item) {
-            return item.layoutOption.moveOverlap === 'shift-y';
+            return item.layoutOption.moveOverlap === 'shiftY';
         });
 
         shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
