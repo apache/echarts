@@ -57,7 +57,7 @@ const DATA_ZOOM_ID_BASE = makeInternalComponentId('toolbox-dataZoom_');
 const ICON_TYPES = ['zoom', 'back'] as const;
 type IconType = typeof ICON_TYPES[number];
 
-interface ToolboxDataZoomFeatureOption extends ToolboxFeatureOption {
+export interface ToolboxDataZoomFeatureOption extends ToolboxFeatureOption {
     type?: IconType[]
     icon?: {[key in IconType]?: string}
     title?: {[key in IconType]?: string}

@@ -57,12 +57,12 @@ export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOpti
 
     color?: ZRColor[]
 
-    coordinateSystem: 'singleAxis'
+    coordinateSystem?: 'singleAxis'
 
     /**
      * gap in axis's orthogonal orientation
      */
-    boundaryGap: (string | number)[]
+    boundaryGap?: (string | number)[]
     /**
      * [date, value, name]
      */

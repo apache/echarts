@@ -42,7 +42,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
-import { parseDataValue } from './helper/parseDataValue';
+import { parseDataValue } from './helper/dataValueHelper';
 
 
 const isObject = zrUtil.isObject;

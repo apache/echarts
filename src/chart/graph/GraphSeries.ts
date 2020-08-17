@@ -56,7 +56,7 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 type GraphDataValue = OptionDataValue | OptionDataValue[];
 
 interface GraphEdgeLineStyleOption extends LineStyleOption {
-    curveness: number
+    curveness?: number
 }
 
 export interface GraphNodeStateOption {
@@ -149,8 +149,8 @@ export interface GraphSeriesOption extends SeriesOption,
 
     layout?: 'none' | 'force' | 'circular'
 
-    data?: GraphNodeItemOption[]
-    nodes?: GraphNodeItemOption[]
+    data?: (GraphNodeItemOption | GraphDataValue)[]
+    nodes?: (GraphNodeItemOption | GraphDataValue)[]
 
     edges?: GraphEdgeItemOption[]
     links?: GraphEdgeItemOption[]
@@ -162,12 +162,12 @@ export interface GraphSeriesOption extends SeriesOption,
     /**
      * Symbol size scale ratio in roam
      */
-    nodeScaleRatio: 0.6,
+    nodeScaleRatio?: 0.6,
 
     draggable?: boolean
 
-    edgeSymbol: string | string[]
-    edgeSymbolSize: number | number[]
+    edgeSymbol?: string | string[]
+    edgeSymbolSize?: number | number[]
 
     edgeLabel?: LineLabelOption & {
         formatter?: LabelFormatterCallback | string
@@ -208,18 +208,18 @@ export interface GraphSeriesOption extends SeriesOption,
     }
 
     // Configuration of force directed layout
-    force: {
-        initLayout: 'circular' | 'none'
+    force?: {
+        initLayout?: 'circular' | 'none'
         // Node repulsion. Can be an array to represent range.
-        repulsion: number | number[]
-        gravity: number
+        repulsion?: number | number[]
+        gravity?: number
         // Initial friction
-        friction: number
+        friction?: number
 
         // Edge length. Can be an array to represent range.
-        edgeLength: number | number[]
+        edgeLength?: number | number[]
 
-        layoutAnimation: boolean
+        layoutAnimation?: boolean
     }
 }
 
@@ -275,7 +275,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         const self = this;
 
         if (nodes && edges) {
-            return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
+            return createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink).data;
         }
 
         function beforeLink(nodeData: List, edgeData: List) {

@@ -82,7 +82,7 @@ export interface PieSeriesOption extends
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
-    type: 'pie'
+    type?: 'pie'
 
     roseType?: 'radius' | 'area'
 

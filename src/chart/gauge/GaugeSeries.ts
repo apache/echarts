@@ -120,7 +120,7 @@ export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption>, Gauge
         formatter?: LabelFormatter | string
     }
 
-    data?: OptionDataValueNumeric | GaugeDataItemOption
+    data?: (OptionDataValueNumeric | GaugeDataItemOption)[]
 }
 
 class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {

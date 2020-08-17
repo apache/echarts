@@ -54,7 +54,7 @@ export default function (
         fontSize: '12px',
         maskColor: 'rgba(255, 255, 255, 0.8)',
         showSpinner: true,
-        color: '#c23531',
+        color: '#5470c6',
         spinnerRadius: 10,
         lineWidth: 5,
         zlevel: 0

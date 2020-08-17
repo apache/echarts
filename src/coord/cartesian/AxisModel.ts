@@ -31,15 +31,12 @@ import { SINGLE_REFERRING } from '../../util/model';
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
-interface CartesianAxisOption extends AxisBaseOption {
+export interface CartesianAxisOption extends AxisBaseOption {
     gridIndex?: number;
     gridId?: string;
     position?: CartesianAxisPosition;
     // Offset is for multiple axis on the same position.
     offset?: number;
-    sort?: boolean;
-    realtimeSort?: boolean;
-    sortSeriesIndex?: number;
     categorySortInfo?: OrdinalSortInfo[];
 }
 
@@ -64,9 +61,6 @@ const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
     offset: 0,
-    sort: false,
-    realtimeSort: false,
-    sortSeriesIndex: null,
     categorySortInfo: []
 };
 

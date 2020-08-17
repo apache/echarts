@@ -281,7 +281,7 @@ function parseContents(str: string, blockMetaList: SeriesGroupMeta[]) {
     return newOption;
 }
 
-interface ToolboxDataViewFeatureOption extends ToolboxFeatureOption {
+export interface ToolboxDataViewFeatureOption extends ToolboxFeatureOption {
     readOnly?: boolean
 
     optionToContent?: (option: ECUnitOption) => string | HTMLElement

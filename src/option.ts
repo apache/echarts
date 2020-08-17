@@ -20,6 +20,8 @@
 import type {GridOption} from './coord/cartesian/GridModel';
 import type {PolarOption} from './coord/polar/PolarModel';
 import type {GeoOption} from './coord/geo/GeoModel';
+import type {RadiusAxisOption, AngleAxisOption} from './coord/polar/AxisModel';
+import type {CartesianAxisOption} from './coord/cartesian/AxisModel';
 import type {SingleAxisOption} from './coord/single/AxisModel';
 import type {ParallelAxisOption} from './coord/parallel/AxisModel';
 import type {ParallelCoordinateSystemOption} from './coord/parallel/ParallelModel';
@@ -47,6 +49,7 @@ import type {PiecewiseVisualMapOption} from './component/visualMap/PiecewiseMode
 import type {LineSeriesOption} from './chart/line/LineSeries';
 import type {BarSeriesOption} from './chart/bar/BarSeries';
 import type {ScatterSeriesOption} from './chart/scatter/ScatterSeries';
+import type {PieSeriesOption} from './chart/pie/PieSeries';
 import type {RadarSeriesOption} from './chart/radar/RadarSeries';
 import type {MapSeriesOption} from './chart/map/MapSeries';
 import type {TreeSeriesOption} from './chart/tree/TreeSeries';
@@ -64,47 +67,84 @@ import type {HeatmapSeriesOption} from './chart/heatmap/HeatmapSeries';
 import type {PictorialBarSeriesOption} from './chart/bar/PictorialBarSeries';
 import type {ThemeRiverSeriesOption} from './chart/themeRiver/ThemeRiverSeries';
 import type {SunburstSeriesOption} from './chart/sunburst/SunburstSeries';
+import type {CustomSeriesOption} from './chart/custom';
+
+import {ToolboxBrushFeatureOption} from './component/toolbox/feature/Brush';
+import {ToolboxDataViewFeatureOption} from './component/toolbox/feature/DataView';
+import {ToolboxDataZoomFeatureOption} from './component/toolbox/feature/DataZoom';
+import {ToolboxMagicTypeFeatureOption} from './component/toolbox/feature/MagicType';
+import {ToolboxRestoreFeatureOption} from './component/toolbox/feature/Restore';
+import {ToolboxSaveAsImageFeatureOption} from './component/toolbox/feature/SaveAsImage';
+import {ToolboxFeatureOption} from './component/toolbox/featureManager';
+
+
 import { ECOption } from './util/types';
 
+interface ToolboxFullOptionWithFeatures extends ToolboxOption {
+    feature?: {
+        brush?: ToolboxBrushFeatureOption
+        dataView?: ToolboxDataViewFeatureOption
+        dataZoom?: ToolboxDataZoomFeatureOption
+        magicType?: ToolboxMagicTypeFeatureOption
+        restore?: ToolboxRestoreFeatureOption
+        saveAsImage?: ToolboxSaveAsImageFeatureOption
+        // custom feature
+        [key: string]: ToolboxFeatureOption | {
+            [key: string]: any
+        }
+    }
+}
+
+type SeriesOption = LineSeriesOption
+    | BarSeriesOption
+    | ScatterSeriesOption
+    | PieSeriesOption
+    | RadarSeriesOption
+    | MapSeriesOption
+    | TreeSeriesOption
+    | TreemapSeriesOption
+    | GraphSeriesOption
+    | GaugeSeriesOption
+    | FunnelSeriesOption
+    | ParallelSeriesOption
+    | SankeySeriesOption
+    | BoxplotSeriesOption
+    | CandlestickSeriesOption
+    | EffectScatterSeriesOption
+    | LinesSeriesOption
+    | HeatmapSeriesOption
+    | PictorialBarSeriesOption
+    | ThemeRiverSeriesOption
+    | SunburstSeriesOption
+    | CustomSeriesOption;
 
 export interface EChartsFullOption extends ECOption {
     title?: TitleOption | TitleOption[]
     grid?: GridOption | GridOption[]
     polar?: PolarOption | PolarOption[]
     geo?: GeoOption | GeoOption[]
+    angleAxis?: AngleAxisOption | AngleAxisOption[]
+    radiusAxis?: RadiusAxisOption | RadiusAxisOption[]
+    xAxis?: CartesianAxisOption | CartesianAxisOption[]
+    yAxis?: CartesianAxisOption | CartesianAxisOption[]
     singleAxis?: SingleAxisOption | SingleAxisOption[]
     parallel?: ParallelCoordinateSystemOption | ParallelCoordinateSystemOption[]
     parallelAxis?: ParallelAxisOption | ParallelAxisOption[]
     calendar?: CalendarOption | CalendarOption[]
-    toolbox?: ToolboxOption | ToolboxOption[]
+    toolbox?: ToolboxFullOptionWithFeatures | ToolboxFullOptionWithFeatures[]
     tooltip?: TooltipOption | TooltipOption[]
     axisPointer?: AxisPointerOption | AxisPointerOption[]
     brush?: BrushOption | BrushOption[]
     timeline?: TimelineOption | SliderTimelineOption
     legend?: LegendOption | ScrollableLegendOption | (LegendOption | ScrollableLegendOption)[]
     dataZoom?: SliderDataZoomOption | InsideDataZoomOption | (SliderDataZoomOption | InsideDataZoomOption)[]
-    visualMap?: (ContinousVisualMapOption | PiecewiseVisualMapOption)[]
+    visualMap?: ContinousVisualMapOption | PiecewiseVisualMapOption
+        | (ContinousVisualMapOption | PiecewiseVisualMapOption)[]
 
-    series?: (LineSeriesOption
-        | BarSeriesOption
-        | ScatterSeriesOption
-        | RadarSeriesOption
-        | MapSeriesOption
-        | TreeSeriesOption
-        | TreemapSeriesOption
-        | GraphSeriesOption
-        | GaugeSeriesOption
-        | FunnelSeriesOption
-        | ParallelSeriesOption
-        | SankeySeriesOption
-        | BoxplotSeriesOption
-        | CandlestickSeriesOption
-        | EffectScatterSeriesOption
-        | LinesSeriesOption
-        | HeatmapSeriesOption
-        | PictorialBarSeriesOption
-        | ThemeRiverSeriesOption
-        | SunburstSeriesOption)[]
+    // TODO Generally we support specify a single object on series.
+    // But in practice we found the error hint in monaco editor is not clear if we also support
+    // single object in type.
+    series?: SeriesOption | SeriesOption[]
 
     options?: EChartsFullOption[]
     baseOption?: EChartsFullOption

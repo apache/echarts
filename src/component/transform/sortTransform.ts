@@ -22,9 +22,11 @@ import {
     DimensionLoose, SOURCE_FORMAT_KEYED_COLUMNS, DimensionIndex, OptionDataValue
 } from '../../util/types';
 import { makePrintable, throwError } from '../../util/log';
-import { isArray, each, hasOwn } from 'zrender/src/core/util';
+import { isArray, each } from 'zrender/src/core/util';
 import { normalizeToArray } from '../../util/model';
-import { parseDate } from '../../util/number';
+import {
+    RawValueParserType, getRawValueParser, SortOrderComparator
+} from '../../data/helper/dataValueHelper';
 
 /**
  * @usage
@@ -52,12 +54,13 @@ export interface SortTransformOption extends DataTransformOption {
 // PENDING: whether support { dimension: 'score', order: 'asc' } ?
 type OrderExpression = {
     dimension: DimensionLoose;
-    order: SortOrder;
-    parse?: 'time'
+    order: 'asc' | 'desc';
+    parser?: RawValueParserType;
+    // The meansing of "incomparable": see [SORT_COMPARISON_RULE]
+    // in `data/helper/dataValueHelper.ts`
+    incomparable?: 'min' | 'max';
 };
 
-type SortOrder = 'asc' | 'desc';
-const SortOrderValidMap = { asc: true, desc: true } as const;
 
 let sampleLog = '';
 if (__DEV__) {
@@ -65,12 +68,8 @@ if (__DEV__) {
         'Valid config is like:',
         '{ dimension: "age", order: "asc" }',
         'or [{ dimension: "age", order: "asc"], { dimension: "date", order: "desc" }]'
-    ].join('');
+    ].join(' ');
 }
-
-const timeParser = function (val: OptionDataValue): number {
-    return +parseDate(val);
-};
 
 
 export const sortTransform: ExternalDataTransform<SortTransformOption> = {
@@ -97,13 +96,14 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
 
         const orderDefList: {
             dimIdx: DimensionIndex;
-            orderReturn: -1 | 1;
-            parser: (val: OptionDataValue) => number;
+            parser: ReturnType<typeof getRawValueParser>;
+            comparator: SortOrderComparator
         }[] = [];
         each(orderExprList, function (orderExpr) {
             const dimLoose = orderExpr.dimension;
             const order = orderExpr.order;
-            const parserName = orderExpr.parse;
+            const parserName = orderExpr.parser;
+            const incomparable = orderExpr.incomparable;
 
             if (dimLoose == null) {
                 if (__DEV__) {
@@ -112,9 +112,24 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
                 throwError(errMsg);
             }
 
-            if (!hasOwn(SortOrderValidMap, order)) {
+            if (order !== 'asc' && order !== 'desc') {
                 if (__DEV__) {
                     errMsg = 'Sort transform config must has "order" specified.' + sampleLog;
+                }
+                throwError(errMsg);
+            }
+
+            if (incomparable && (incomparable !== 'min' && incomparable !== 'max')) {
+                let errMsg = '';
+                if (__DEV__) {
+                    errMsg = 'incomparable must be "min" or "max" rather than "' + incomparable + '".';
+                }
+                throwError(errMsg);
+            }
+            if (order !== 'asc' && order !== 'desc') {
+                let errMsg = '';
+                if (__DEV__) {
+                    errMsg = 'order must be "asc" or "desc" rather than "' + order + '".';
                 }
                 throwError(errMsg);
             }
@@ -131,24 +146,21 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
                 throwError(errMsg);
             }
 
-            let parser;
-            if (parserName) {
-                if (parserName !== 'time') {
-                    if (__DEV__) {
-                        errMsg = makePrintable(
-                            'Invalid parser name' + parserName + '.\n',
-                            'Illegal config:', orderExpr, '.\n'
-                        );
-                    }
-                    throwError(errMsg);
+            const parser = parserName ? getRawValueParser(parserName) : null;
+            if (parserName && !parser) {
+                if (__DEV__) {
+                    errMsg = makePrintable(
+                        'Invalid parser name ' + parserName + '.\n',
+                        'Illegal config:', orderExpr, '.\n'
+                    );
                 }
-                parser = timeParser;
+                throwError(errMsg);
             }
 
             orderDefList.push({
                 dimIdx: dimInfo.index,
-                orderReturn: order === 'asc' ? -1 : 1,
-                parser: parser
+                parser: parser,
+                comparator: new SortOrderComparator(order, incomparable)
             });
         });
 
@@ -182,28 +194,17 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
             if (item1 === headerPlaceholder) {
                 return 1;
             }
-            // FIXME: check other empty?
-            // Always put empty item last?
-            if (item0 == null) {
-                return 1;
-            }
-            if (item1 == null) {
-                return -1;
-            }
-            // TODO Optimize a little: manually loop unrolling?
             for (let i = 0; i < orderDefList.length; i++) {
                 const orderDef = orderDefList[i];
                 let val0 = source.retrieveItemValue(item0, orderDef.dimIdx);
                 let val1 = source.retrieveItemValue(item1, orderDef.dimIdx);
                 if (orderDef.parser) {
-                    val0 = orderDef.parser(val0);
-                    val1 = orderDef.parser(val1);
+                    val0 = orderDef.parser(val0) as OptionDataValue;
+                    val1 = orderDef.parser(val1) as OptionDataValue;
                 }
-                if (val0 < val1) {
-                    return orderDef.orderReturn;
-                }
-                else if (val0 > val1) {
-                    return -orderDef.orderReturn;
+                const result = orderDef.comparator.evaluate(val0, val1);
+                if (result !== 0) {
+                    return result;
                 }
             }
             return 0;

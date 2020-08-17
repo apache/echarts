@@ -245,7 +245,7 @@ interface CustomSeriesStateOption {
     label?: LabelOption;
 }
 
-interface CustomSeriesOption extends
+export interface CustomSeriesOption extends
     SeriesOption<never>,    // don't support StateOption in custom series.
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,
@@ -253,6 +253,8 @@ interface CustomSeriesOption extends
     SeriesOnSingleOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnCalendarOptionMixin {
+
+    type?: 'custom'
 
     // If set as 'none', do not depends on coord sys.
     coordinateSystem?: string | 'none';
