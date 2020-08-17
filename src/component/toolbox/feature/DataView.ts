@@ -326,7 +326,9 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         const textarea = document.createElement('textarea');
         viewMain.style.cssText = 'display:block;width:100%;overflow:auto;';
 
+        // function
         const optionToContent = model.get('optionToContent');
+        // undefined
         const contentToOption = model.get('contentToOption');
         const result = getContentFromModel(ecModel);
         if (typeof optionToContent === 'function') {
@@ -371,6 +373,13 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         addEventListener(closeButton, 'click', close);
 
         addEventListener(refreshButton, 'click', function () {
+            if ((typeof contentToOption === 'undefined' && typeof optionToContent !== 'undefined') ||
+            (typeof contentToOption !== 'undefined' && typeof optionToContent === 'undefined')) {
+                console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.')
+                close();
+                return;
+            }
+
             let newOption;
             try {
                 if (typeof contentToOption === 'function') {
