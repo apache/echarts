@@ -930,7 +930,8 @@ export interface LabelLineOption {
     length2?: number
     smooth?: boolean | number
     minTurnAngle?: number,
-    lineStyle?: LineStyleOption
+    lineStyle?: LineStyleOption,
+    z: number
 }
 
 

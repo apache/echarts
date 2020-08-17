@@ -396,6 +396,7 @@ export function updateLabelLinePoints(
     }
 
     limitTurnAngle(points, labelLineModel.get('minTurnAngle'));
+    labelLine.z = labelLineModel.get('z');
 
     labelLine.setShape({ points });
 }
