@@ -471,10 +471,10 @@ export type ECUnitOption = {
  * ```
  */
 export interface ECOption extends ECUnitOption {
-    baseOption?: ECUnitOption,
-    timeline?: ComponentOption,
-    options?: ECUnitOption[],
-    media?: MediaUnit[],
+    baseOption?: ECUnitOption;
+    timeline?: ComponentOption | ComponentOption[];
+    options?: ECUnitOption[];
+    media?: MediaUnit[];
 };
 
 // series.data or dataset.source

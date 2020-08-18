@@ -235,34 +235,105 @@ class OptionManager {
 
 }
 
+/**
+ * [RAW_OPTION_PATTERNS]
+ * (Note: "series: []" represents all other props in `ECUnitOption`)
+ *
+ * (1) No prop "baseOption" declared:
+ * Root option is used as "baseOption" (except prop "options" and "media").
+ * ```js
+ * option = {
+ *     series: [],
+ *     timeline: {},
+ *     options: [],
+ * };
+ * option = {
+ *     series: [],
+ *     media: {},
+ * };
+ * option = {
+ *     series: [],
+ *     timeline: {},
+ *     options: [],
+ *     media: {},
+ * }
+ * ```
+ *
+ * (2) Prop "baseOption" declared:
+ * If "baseOption" declared, `ECUnitOption` props can only be declared
+ * inside "baseOption" except prop "timeline" (compat ec2).
+ * ```js
+ * option = {
+ *     baseOption: {
+ *         timeline: {},
+ *         series: [],
+ *     },
+ *     options: []
+ * };
+ * option = {
+ *     baseOption: {
+ *         series: [],
+ *     },
+ *     media: []
+ * };
+ * option = {
+ *     baseOption: {
+ *         timeline: {},
+ *         series: [],
+ *     },
+ *     options: []
+ *     media: []
+ * };
+ * option = {
+ *     // ec3 compat ec2: allow (only) `timeline` declared
+ *     // outside baseOption. Keep this setting for compat.
+ *     timeline: {},
+ *     baseOption: {
+ *         series: [],
+ *     },
+ *     options: [],
+ *     media: []
+ * };
+ * ```
+ */
 function parseRawOption(
+    // `rawOption` May be modified
     rawOption: ECOption,
     optionPreprocessorFuncs: OptionPreprocessor[],
     isNew: boolean
 ): ParsedRawOption {
-    let timelineOptions: ECUnitOption[] = [];
     const mediaList: MediaUnit[] = [];
     let mediaDefault: MediaUnit;
     let baseOption: ECUnitOption;
 
-    // Compatible with ec2.
-    const timelineOpt = rawOption.timeline;
+    const declaredBaseOption = rawOption.baseOption;
+    // Compatible with ec2, [RAW_OPTION_PATTERNS] above.
+    const timelineOnRoot = rawOption.timeline;
+    const timelineOptionsOnRoot = rawOption.options;
+    const mediaOnRoot = rawOption.media;
+    const hasMedia = !!rawOption.media;
+    const hasTimeline = !!(
+        timelineOptionsOnRoot || timelineOnRoot || (declaredBaseOption && declaredBaseOption.timeline)
+    );
 
-    if (rawOption.baseOption) {
-        baseOption = rawOption.baseOption;
+    if (declaredBaseOption) {
+        baseOption = declaredBaseOption;
+        // For merge option.
+        if (!baseOption.timeline) {
+            baseOption.timeline = timelineOnRoot;
+        }
+    }
+    // For convenience, enable to use the root option as the `baseOption`:
+    // `{ ...normalOptionProps, media: [{ ... }, { ... }] }`
+    else {
+        if (hasTimeline || hasMedia) {
+            rawOption.options = rawOption.media = null;
+        }
+        baseOption = rawOption;
     }
 
-    // For timeline
-    if (timelineOpt || rawOption.options) {
-        baseOption = baseOption || {} as ECUnitOption;
-        timelineOptions = (rawOption.options || []).slice();
-    }
-
-    // For media query
-    if (rawOption.media) {
-        baseOption = baseOption || {} as ECUnitOption;
-        const media = rawOption.media;
-        each(media, function (singleMedia) {
+    if (hasMedia) {
+        each(mediaOnRoot, function (singleMedia) {
             if (singleMedia && singleMedia.option) {
                 if (singleMedia.query) {
                     mediaList.push(singleMedia);
@@ -275,32 +346,19 @@ function parseRawOption(
         });
     }
 
-    // For normal option
-    if (!baseOption) {
-        baseOption = rawOption as ECUnitOption;
-    }
+    doPreprocess(baseOption);
+    each(timelineOptionsOnRoot, option => doPreprocess(option));
+    each(mediaList, media => doPreprocess(media.option));
 
-    // Set timelineOpt to baseOption in ec3,
-    // which is convenient for merge option.
-    if (!baseOption.timeline) {
-        baseOption.timeline = timelineOpt;
+    function doPreprocess(option: ECUnitOption) {
+        each(optionPreprocessorFuncs, function (preProcess) {
+            preProcess(option, isNew);
+        });
     }
-
-    // Preprocess.
-    each([baseOption].concat(timelineOptions)
-        .concat(map(mediaList, function (media) {
-            return media.option;
-        })),
-        function (option) {
-            each(optionPreprocessorFuncs, function (preProcess) {
-                preProcess(option, isNew);
-            });
-        }
-    );
 
     return {
         baseOption: baseOption,
-        timelineOptions: timelineOptions,
+        timelineOptions: timelineOptionsOnRoot || [],
         mediaDefault: mediaDefault,
         mediaList: mediaList
     };
