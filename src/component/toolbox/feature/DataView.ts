@@ -371,9 +371,11 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         addEventListener(closeButton, 'click', close);
 
         addEventListener(refreshButton, 'click', function () {
-            if ((typeof contentToOption === 'undefined' && typeof optionToContent !== 'undefined') ||
-                (typeof contentToOption !== 'undefined' && typeof optionToContent === 'undefined')) {
-                console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.')
+            if ((contentToOption == null && optionToContent != null) ||
+                (contentToOption != null && optionToContent == null)) {
+                if (__DEV__) {
+                    console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.')
+                }
                 close();
                 return;
             }
