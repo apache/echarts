@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "5.0.0-alpha.1",
+  "version": "5.0.0-alpha.2",
   "description": "A powerful charting and visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
@@ -28,13 +28,14 @@
     "test:visual": "node test/runTest/server.js",
     "test:visual:report": "node test/runTest/genReport.js",
     "test": "node build/build.js --prepublish && jest --config test/ut/jest.config.js",
+    "test:single": "jest --config test/ut/jest.config.js --coverage=false -t",
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "lint": "./node_modules/.bin/eslint src/**/*.ts extension-src/**/*.ts",
     "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
-    "zrender": "5.0.0-alpha.1"
+    "zrender": "5.0.0-alpha.2"
   },
   "devDependencies": {
     "@babel/core": "7.3.4",

@@ -318,7 +318,10 @@
         coordSys.setMapOffset(mapOffset);
         bMapModel.__mapOffset = mapOffset;
         api.dispatchAction({
-          type: 'bmapRoam'
+          type: 'bmapRoam',
+          animation: {
+            duration: 0
+          }
         });
       };
 
@@ -328,7 +331,10 @@
         }
 
         api.dispatchAction({
-          type: 'bmapRoam'
+          type: 'bmapRoam',
+          animation: {
+            duration: 0
+          }
         });
       }
 

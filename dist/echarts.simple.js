@@ -424,18 +424,6 @@
     }
   }
 
-  function find(arr, cb, context) {
-    if (!(arr && cb)) {
-      return;
-    }
-
-    for (var i = 0, len = arr.length; i < len; i++) {
-      if (cb.call(context, arr[i], i, arr)) {
-        return arr[i];
-      }
-    }
-  }
-
   function keys(obj) {
     if (!obj) {
       return [];
@@ -1293,7 +1281,7 @@
 
   function removeEventListener(el, name, handler, opt) {
     if (isDomLevel2) {
-      el.removeEventListener(name, handler);
+      el.removeEventListener(name, handler, opt);
     } else {
       el.detachEvent('on' + name, handler);
     }
@@ -2544,13 +2532,9 @@
 
   var requestAnimationFrame;
 
-  if (typeof window !== 'undefined') {
-    requestAnimationFrame = window.requestAnimationFrame && window.requestAnimationFrame.bind(window) || window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window) || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
-  } else {
-    requestAnimationFrame = function (func) {
-      return setTimeout(func, 16);
-    };
-  }
+  requestAnimationFrame = typeof window !== 'undefined' && window.requestAnimationFrame && window.requestAnimationFrame.bind(window) || window.msRequestAnimationFrame && window.msRequestAnimationFrame.bind(window) || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function (func) {
+    return setTimeout(func, 16);
+  };
 
   var requestAnimationFrame$1 = requestAnimationFrame;
   var easing = {
@@ -3844,7 +3828,7 @@
         return;
       }
 
-      this._additiveAnimator = additiveTo;
+      this._additiveAnimators = additiveTo;
     }
 
     Animator.prototype.getTarget = function () {
@@ -3870,7 +3854,7 @@
           track = tracks[propName] = new Track(propName);
           var initialValue = void 0;
 
-          var additiveTrack = this._additiveAnimator && this._additiveAnimator.getTrack(propName);
+          var additiveTrack = this._getAdditiveTrack(propName);
 
           if (additiveTrack) {
             var lastFinalKf = additiveTrack.keyframes[additiveTrack.keyframes.length - 1];
@@ -3934,6 +3918,23 @@
       }
     };
 
+    Animator.prototype._getAdditiveTrack = function (trackName) {
+      var additiveTrack;
+      var additiveAnimators = this._additiveAnimators;
+
+      if (additiveAnimators) {
+        for (var i = 0; i < additiveAnimators.length; i++) {
+          var track = additiveAnimators[i].getTrack(trackName);
+
+          if (track) {
+            additiveTrack = track;
+          }
+        }
+      }
+
+      return additiveTrack;
+    };
+
     Animator.prototype.start = function (easing, forceAnimate) {
       if (this._started > 0) {
         return;
@@ -3947,7 +3948,7 @@
         var propName = this._trackKeys[i];
         var track = this._tracks[propName];
 
-        var additiveTrack = this._additiveAnimator && this._additiveAnimator.getTrack(propName);
+        var additiveTrack = this._getAdditiveTrack(propName);
 
         var kfs = track.keyframes;
         track.prepare(additiveTrack);
@@ -3970,9 +3971,21 @@
           delay: this._delay,
           onframe: function (percent) {
             self._started = 2;
+            var additiveAnimators = self._additiveAnimators;
 
-            if (self._additiveAnimator && !self._additiveAnimator._clip) {
-              self._additiveAnimator = null;
+            if (additiveAnimators) {
+              var stillHasAdditiveAnimator = false;
+
+              for (var i = 0; i < additiveAnimators.length; i++) {
+                if (additiveAnimators[i]._clip) {
+                  stillHasAdditiveAnimator = true;
+                  break;
+                }
+              }
+
+              if (!stillHasAdditiveAnimator) {
+                self._additiveAnimators = null;
+              }
             }
 
             for (var i = 0; i < tracks.length; i++) {
@@ -4307,6 +4320,7 @@
 
     Animation.prototype.animate = function (target, options) {
       options = options || {};
+      this.start();
       var animator = new Animator(target, options.loop);
       this.addAnimator(animator);
       return animator;
@@ -4610,21 +4624,21 @@
       _this.__pointerCapturing = false;
       _this.dom = dom;
       _this.painterRoot = painterRoot;
-      _this.__localHandlerScope = new DOMHandlerScope(dom, localDOMHandlers);
+      _this._localHandlerScope = new DOMHandlerScope(dom, localDOMHandlers);
 
       if (globalEventSupported) {
-        _this.__globalHandlerScope = new DOMHandlerScope(document, globalDOMHandlers);
+        _this._globalHandlerScope = new DOMHandlerScope(document, globalDOMHandlers);
       }
 
-      mountLocalDOMEventListeners(_this, _this.__localHandlerScope);
+      mountLocalDOMEventListeners(_this, _this._localHandlerScope);
       return _this;
     }
 
     HandlerDomProxy.prototype.dispose = function () {
-      unmountDOMEventListeners(this.__localHandlerScope);
+      unmountDOMEventListeners(this._localHandlerScope);
 
       if (globalEventSupported) {
-        unmountDOMEventListeners(this.__globalHandlerScope);
+        unmountDOMEventListeners(this._globalHandlerScope);
       }
     };
 
@@ -4637,7 +4651,7 @@
 
       if (globalEventSupported && +this.__pointerCapturing ^ +isPointerCapturing) {
         this.__pointerCapturing = isPointerCapturing;
-        var globalHandlerScope = this.__globalHandlerScope;
+        var globalHandlerScope = this._globalHandlerScope;
         isPointerCapturing ? mountGlobalDOMEventListeners(this, globalHandlerScope) : unmountDOMEventListeners(globalHandlerScope);
       }
     };
@@ -5609,7 +5623,7 @@
   var dpr = 1;
 
   if (typeof window !== 'undefined') {
-    dpr = Math.max(window.devicePixelRatio || 1, 1);
+    dpr = Math.max(window.devicePixelRatio || window.screen.deviceXDPI / window.screen.logicalXDPI || 1, 1);
   }
 
   var devicePixelRatio = dpr;
@@ -6471,6 +6485,8 @@
       if (zr) {
         zr.animation.addAnimator(animator);
       }
+
+      zr && zr.wakeUp();
     };
 
     Element.prototype.updateDuringAnimation = function (key) {
@@ -6579,7 +6595,7 @@
         }
       }
 
-      if (Object.defineProperty) {
+      if (Object.defineProperty && (!env.browser.ie || env.browser.version > 8)) {
         createLegacyProperty('position', '_legacyPos', 'x', 'y');
         createLegacyProperty('scale', '_legacyScale', 'scaleX', 'scaleY');
         createLegacyProperty('origin', '_legacyOrigin', 'originX', 'originY');
@@ -6703,20 +6719,22 @@
 
     if (keyLen > 0 || cfg.force) {
       var existsAnimators = animatable.animators;
-      var lastAnimator = void 0;
+      var existsAnimatorsOnSameTarget = [];
 
       for (var i = 0; i < existsAnimators.length; i++) {
         if (existsAnimators[i].targetName === topKey) {
-          lastAnimator = existsAnimators[i];
+          existsAnimatorsOnSameTarget.push(existsAnimators[i]);
         }
       }
 
-      if (!additive && lastAnimator) {
-        var allAborted = lastAnimator.stopTracks(changedKeys);
+      if (!additive && existsAnimatorsOnSameTarget.length) {
+        for (var i = 0; i < existsAnimatorsOnSameTarget.length; i++) {
+          var allAborted = existsAnimatorsOnSameTarget[i].stopTracks(changedKeys);
 
-        if (allAborted) {
-          var idx = indexOf(existsAnimators, lastAnimator);
-          existsAnimators.splice(idx, 1);
+          if (allAborted) {
+            var idx = indexOf(existsAnimators, existsAnimatorsOnSameTarget[i]);
+            existsAnimators.splice(idx, 1);
+          }
         }
       }
 
@@ -6751,7 +6769,7 @@
         }
       }
 
-      var animator = new Animator(source, false, additive ? lastAnimator : null);
+      var animator = new Animator(source, false, additive ? existsAnimatorsOnSameTarget : null);
       animator.targetName = topKey;
 
       if (cfg.scope) {
@@ -12911,6 +12929,8 @@
 
   var ZRender = function () {
     function ZRender(id, dom, opts) {
+      var _this = this;
+
       this._stillFrameAccum = 0;
       this._needsRefresh = true;
       this._needsRefreshHover = true;
@@ -12942,7 +12962,9 @@
       this.handler = new Handler(storage, painter, handerProxy, painter.root);
       this.animation = new Animation({
         stage: {
-          update: bind(this.flush, this)
+          update: function () {
+            return _this._flush(true);
+          }
         }
       });
       this.animation.start();
@@ -12951,13 +12973,13 @@
     ZRender.prototype.add = function (el) {
       this.storage.addRoot(el);
       el.addSelfToZr(this);
-      this._needsRefresh = true;
+      this.refresh();
     };
 
     ZRender.prototype.remove = function (el) {
       this.storage.delRoot(el);
       el.removeSelfFromZr(this);
-      this._needsRefresh = true;
+      this.refresh();
     };
 
     ZRender.prototype.configLayer = function (zLevel, config) {
@@ -12965,7 +12987,7 @@
         this.painter.configLayer(zLevel, config);
       }
 
-      this._needsRefresh = true;
+      this.refresh();
     };
 
     ZRender.prototype.setBackgroundColor = function (backgroundColor) {
@@ -12973,7 +12995,7 @@
         this.painter.setBackgroundColor(backgroundColor);
       }
 
-      this._needsRefresh = true;
+      this.refresh();
       this._backgroundColor = backgroundColor;
       this._darkMode = isDarkMode(backgroundColor);
     };
@@ -13006,11 +13028,15 @@
     };
 
     ZRender.prototype.flush = function () {
+      this._flush(false);
+    };
+
+    ZRender.prototype._flush = function (fromInside) {
       var triggerRendered;
 
       if (this._needsRefresh) {
         triggerRendered = true;
-        this.refreshImmediately(true);
+        this.refreshImmediately(fromInside);
       }
 
       if (this._needsRefreshHover) {
@@ -13375,8 +13401,13 @@
     return exponent >= -20 ? +val.toFixed(exponent < 0 ? -exponent : 0) : val;
   }
 
-  function isNumeric(v) {
-    return v - parseFloat(v) >= 0;
+  function numericToNumber(val) {
+    var valFloat = parseFloat(val);
+    return valFloat == val && (valFloat !== 0 || typeof val !== 'string' || val.indexOf('x') <= 0) ? valFloat : NaN;
+  }
+
+  function isNumeric(val) {
+    return !isNaN(numericToNumber(val));
   }
 
   var DUMMY_COMPONENT_NAME_PREFIX = 'series\0';
@@ -14854,8 +14885,10 @@
       }
     }
 
-    fillColor = fillColor || globalTextStyle.color;
-    strokeColor = strokeColor || globalTextStyle.textBorderColor;
+    if (!isAttached) {
+      fillColor = fillColor || globalTextStyle.color;
+      strokeColor = strokeColor || globalTextStyle.textBorderColor;
+    }
 
     if (fillColor != null) {
       textStyle.fill = fillColor;
@@ -16028,6 +16061,11 @@
       var text = el.getTextContent();
       var host_1 = text && innerLabel(text);
       host_1 && (host_1.startValue = host_1.nextValue);
+      var duration = animatableModel.get('animationDuration');
+
+      if (!duration) {
+        host_1.nextValue = interpolateValues_1;
+      }
 
       var during = function (percent) {
         var text = el.getTextContent();
@@ -16614,7 +16652,7 @@
 
   var globalDefault = {
     darkMode: 'auto',
-    color: ['#5470c6', '#91cc75', '#ffbf25', '#ef6868', '#ffa086', '#b25790', '#fe719b', '#59d9d2', '#46a9ee'],
+    color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
     gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
     textStyle: {
       fontFamily: platform.match(/^Win/) ? 'Microsoft YaHei' : 'sans-serif',
@@ -17693,7 +17731,7 @@
 
   function isNotTargetSeries(seriesModel, payload) {
     if (payload) {
-      var index = payload.seiresIndex;
+      var index = payload.seriesIndex;
       var id = payload.seriesId;
       var name_1 = payload.seriesName;
       return index != null && seriesModel.componentIndex !== index || id != null && seriesModel.id !== id || name_1 != null && seriesModel.name !== name_1;
@@ -19221,6 +19259,18 @@
     return value == null || value === '' ? NaN : +value;
   }
 
+  var valueParserMap = createHashMap({
+    'number': function (val) {
+      return parseFloat(val);
+    },
+    'time': function (val) {
+      return +parseDate(val);
+    },
+    'trim': function (val) {
+      return typeof val === 'string' ? trim(val) : val;
+    }
+  });
+
   var ExternalSource = function () {
     function ExternalSource() {}
 
@@ -20599,7 +20649,7 @@
       fontSize: '12px',
       maskColor: 'rgba(255, 255, 255, 0.8)',
       showSpinner: true,
-      color: '#c23531',
+      color: '#5470c6',
       spinnerRadius: 10,
       lineWidth: 5,
       zlevel: 0
@@ -21098,7 +21148,8 @@
     color: colorAll,
     colorLayer: [['#37A2DA', '#ffd85c', '#fd7b5f'], ['#37A2DA', '#67E0E3', '#FFDB5C', '#ff9f7f', '#E062AE', '#9d96f5'], ['#37A2DA', '#32C5E9', '#9FE6B8', '#FFDB5C', '#ff9f7f', '#fb7293', '#e7bcf3', '#8378EA', '#96BFFF'], colorAll]
   };
-  var contrastColor = '#eee';
+  var contrastColor = '#B9B8CE';
+  var backgroundColor = '#100C2A';
 
   var axisCommon = function () {
     return {
@@ -21107,46 +21158,38 @@
           color: contrastColor
         }
       },
-      axisTick: {
-        lineStyle: {
-          color: contrastColor
-        }
-      },
-      axisLabel: {
-        textStyle: {
-          color: contrastColor
-        }
-      },
       splitLine: {
         lineStyle: {
-          type: 'dashed',
-          color: '#aaa'
+          color: '#484753'
         }
       },
       splitArea: {
         areaStyle: {
-          color: contrastColor
+          color: ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.05)']
+        }
+      },
+      minorSplitLine: {
+        lineStyle: {
+          color: '#20203B'
         }
       }
     };
   };
 
-  var colorPalette = ['#dd6b66', '#759aa0', '#e69d87', '#8dc1a9', '#ea7e53', '#eedd78', '#73a373', '#73b9bc', '#7289ab', '#91ca8c', '#f49f42'];
+  var colorPalette = ['#4992ff', '#7cffb2', '#fddd60', '#ff6e76', '#58d9f9', '#05c091', '#ff8a45', '#8d48e3', '#dd79ff'];
   var theme = {
     darkMode: true,
     color: colorPalette,
-    backgroundColor: '#333',
-    tooltip: {
-      axisPointer: {
-        lineStyle: {
-          color: contrastColor
-        },
-        crossStyle: {
-          color: contrastColor
-        },
-        label: {
-          color: '#000'
-        }
+    backgroundColor: backgroundColor,
+    axisPointer: {
+      lineStyle: {
+        color: '#817f91'
+      },
+      crossStyle: {
+        color: '#817f91'
+      },
+      label: {
+        color: '#fff'
       }
     },
     legend: {
@@ -21159,7 +21202,10 @@
     },
     title: {
       textStyle: {
-        color: contrastColor
+        color: '#EEF1FA'
+      },
+      subtextStyle: {
+        color: '#B9B8CE'
       }
     },
     toolbox: {
@@ -21170,8 +21216,48 @@
       }
     },
     dataZoom: {
+      borderColor: '#71708A',
       textStyle: {
         color: contrastColor
+      },
+      brushStyle: {
+        color: 'rgba(135,163,206,0.3)'
+      },
+      handleStyle: {
+        color: '#353450',
+        borderColor: '#C5CBE3'
+      },
+      moveHandleStyle: {
+        color: '#B0B6C3',
+        opacity: 0.3
+      },
+      fillerColor: 'rgba(135,163,206,0.2)',
+      emphasis: {
+        handleStyle: {
+          borderColor: '#91B7F2',
+          color: '#4D587D'
+        },
+        moveHandleStyle: {
+          color: '#636D9A',
+          opacity: 0.7
+        }
+      },
+      dataBackground: {
+        lineStyle: {
+          color: '#71708A',
+          width: 1
+        },
+        areaStyle: {
+          color: '#71708A'
+        }
+      },
+      selectedDataBackground: {
+        lineStyle: {
+          color: '#87A3CE'
+        },
+        areaStyle: {
+          color: '#87A3CE'
+        }
       }
     },
     visualMap: {
@@ -21183,23 +21269,28 @@
       lineStyle: {
         color: contrastColor
       },
-      itemStyle: {
-        normal: {
-          color: colorPalette[1]
-        }
-      },
       label: {
-        normal: {
-          textStyle: {
-            color: contrastColor
-          }
+        textStyle: {
+          color: contrastColor
         }
       },
       controlStyle: {
-        normal: {
-          color: contrastColor,
-          borderColor: contrastColor
-        }
+        color: contrastColor,
+        borderColor: contrastColor
+      }
+    },
+    calendar: {
+      itemStyle: {
+        color: backgroundColor
+      },
+      dayLabel: {
+        color: contrastColor
+      },
+      monthLabel: {
+        color: contrastColor
+      },
+      yearLabel: {
+        color: contrastColor
       }
     },
     timeAxis: axisCommon(),
@@ -22570,10 +22661,10 @@
       var height = api.getHeight();
       var labelList = prepareLayoutList(this._labelList);
       var labelsNeedsAdjustOnX = filter(labelList, function (item) {
-        return item.layoutOption.moveOverlap === 'shift-x';
+        return item.layoutOption.moveOverlap === 'shiftX';
       });
       var labelsNeedsAdjustOnY = filter(labelList, function (item) {
-        return item.layoutOption.moveOverlap === 'shift-y';
+        return item.layoutOption.moveOverlap === 'shiftY';
       });
       shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
       shiftLayoutOnY(labelsNeedsAdjustOnY, 0, height);
@@ -24422,9 +24513,9 @@
   var each$3 = each;
   var isFunction$1 = isFunction;
   var isObject$2 = isObject;
-  var version = '5.0.0-alpha.1';
+  var version = '5.0.0-alpha.2';
   var dependencies = {
-    zrender: '5.0.0-alpha.1'
+    zrender: '5.0.0-alpha.2'
   };
   var TEST_FRAME_REMAIN_TIME = 1;
   var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -30787,9 +30878,6 @@
   mixin(CartesianAxisModel, AxisModelCommonMixin);
   var extraOption = {
     offset: 0,
-    sort: false,
-    realtimeSort: false,
-    sortSeriesIndex: null,
     categorySortInfo: []
   };
   axisModelCreator('x', CartesianAxisModel, extraOption);
@@ -35004,7 +35092,8 @@
         itemStyle: {
           borderColor: '#212121'
         }
-      }
+      },
+      realtimeSort: false
     });
     return BarSeriesModel;
   }(BaseBarSeriesModel);
@@ -35121,6 +35210,7 @@
 
     BarView.prototype.render = function (seriesModel, ecModel, api, payload) {
       this._model = seriesModel;
+      this.removeOnRenderedListener(api);
 
       this._updateDrawMode(seriesModel);
 
@@ -35157,14 +35247,14 @@
     };
 
     BarView.prototype._renderNormal = function (seriesModel, ecModel, api, isReorder) {
-      var that = this;
+      var _this = this;
+
       var group = this.group;
       var data = seriesModel.getData();
       var oldData = this._data;
       var coord = seriesModel.coordinateSystem;
       var baseAxis = coord.getBaseAxis();
       var isHorizontalOrRadial;
-      var lastAnimator = null;
 
       if (coord.type === 'cartesian2d') {
         isHorizontalOrRadial = baseAxis.isHorizontal();
@@ -35174,14 +35264,32 @@
 
       var animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
       var axis2DModel = baseAxis.model;
-      var axisSort = coord.type === 'cartesian2d' && axis2DModel.get('sort') && axis2DModel.get('sortSeriesIndex') === seriesModel.seriesIndex;
-      var realtimeSort = axisSort && axis2DModel.get('realtimeSort');
+      var realtimeSort = seriesModel.get('realtimeSort');
 
-      if (realtimeSort && this._isFirstFrame && data.count()) {
-        this._initSort(data, isHorizontalOrRadial, baseAxis, api);
+      if (realtimeSort && data.count()) {
+        if (this._isFirstFrame) {
+          this._initSort(data, isHorizontalOrRadial, baseAxis, api);
 
-        this._isFirstFrame = false;
-        return;
+          this._isFirstFrame = false;
+          return;
+        } else {
+          this._onRendered = function () {
+            var orderMap = function (idx) {
+              var el = data.getItemGraphicEl(idx);
+
+              if (el) {
+                var shape = el.shape;
+                return (isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width) || 0;
+              } else {
+                return 0;
+              }
+            };
+
+            _this._updateSort(data, orderMap, baseAxis, api);
+          };
+
+          api.getZr().on('rendered', this._onRendered);
+        }
       }
 
       var needsClip = seriesModel.get('clip', true) || realtimeSort;
@@ -35224,8 +35332,7 @@
 
         if (realtimeSort) {
           el.disableLabelAnimation = true;
-          var animator = updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, dataIndex, isHorizontalOrRadial, false);
-          animator && (lastAnimator = animator);
+          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, dataIndex, isHorizontalOrRadial, false);
         } else if (coord.type === 'cartesian2d') {
           initProps(el, {
             shape: layout
@@ -35280,8 +35387,7 @@
 
         if (realtimeSort) {
           el.disableLabelAnimation = true;
-          var animator = updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, newIndex, isHorizontalOrRadial, true);
-          animator && (lastAnimator = animator);
+          updateRealtimeAnimation(seriesModel, axis2DModel, animationModel, el, layout, data, newIndex, isHorizontalOrRadial, true);
         } else {
           updateProps(el, {
             shape: layout
@@ -35305,23 +35411,6 @@
       group.add(bgGroup);
       this._backgroundEls = bgEls;
       this._data = data;
-
-      if (lastAnimator) {
-        lastAnimator.during(function () {
-          var orderMap = function (idx) {
-            var el = data.getItemGraphicEl(idx);
-
-            if (el) {
-              var shape = el.shape;
-              return (isHorizontalOrRadial ? shape.y + shape.height : shape.x + shape.width) || 0;
-            } else {
-              return 0;
-            }
-          };
-
-          that._updateSort(data, orderMap, baseAxis, api);
-        });
-      }
     };
 
     BarView.prototype._renderLarge = function (seriesModel, ecModel, api) {
@@ -35407,6 +35496,7 @@
 
         for (var i = extent[0]; i < extent[1]; ++i) {
           if (!oldOrder[i] || oldOrder[i].ordinalNumber !== newOrder[i].ordinalNumber) {
+            this.removeOnRenderedListener(api);
             var action = {
               type: 'changeAxisOrder',
               componentType: baseAxis.dim + 'Axis',
@@ -35432,8 +35522,21 @@
       api.dispatchAction(action);
     };
 
-    BarView.prototype.remove = function () {
+    BarView.prototype.remove = function (ecModel, api) {
       this._clear(this._model);
+
+      this.removeOnRenderedListener(api);
+    };
+
+    BarView.prototype.dispose = function (ecModel, api) {
+      this.removeOnRenderedListener(api);
+    };
+
+    BarView.prototype.removeOnRenderedListener = function (api) {
+      if (this._onRendered) {
+        api.getZr().off('rendered', this._onRendered);
+        this._onRendered = null;
+      }
     };
 
     BarView.prototype._clear = function (model) {
@@ -35576,9 +35679,6 @@
       (isUpdate ? updateProps : initProps)(el, {
         shape: seriesTarget
       }, seriesModel, newIndex, null);
-      var lastAnimator = el.animators.length ? find(el.animators, function (animator) {
-        return animator.targetName === 'shape' && !!animator.getTrack('width');
-      }) : null;
       (isUpdate ? updateProps : initProps)(el, {
         shape: axisTarget
       }, axisModel, newIndex);
@@ -35589,7 +35689,6 @@
 
       var labelModel = seriesModel.getModel('label');
       (isUpdate ? updateLabel : initLabel)(el, data, newIndex, labelModel, seriesModel, animationModel, defaultTextGetter);
-      return lastAnimator;
     }
   }
 
@@ -36518,7 +36617,6 @@
       var data = seriesModel.getData();
       var oldData = this._data;
       var group = this.group;
-      var hasAnimation = ecModel.get('animation');
       var startAngle;
 
       if (!oldData && data.count() > 0) {
