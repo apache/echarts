@@ -396,7 +396,15 @@ export function updateLabelLinePoints(
     }
 
     limitTurnAngle(points, labelLineModel.get('minTurnAngle'));
-    labelLine.z = labelLineModel.get('z') || 0;
+
+    if (labelLineModel.get('alwaysOnTop')) {
+        labelLine.zlevel = Infinity;
+        labelLine.z = Infinity;
+    }
+    else {
+        labelLine.zlevel = labelLineModel.get('zlevel') || 0;
+        labelLine.z = labelLineModel.get('z') || 0;
+    }
 
     labelLine.setShape({ points });
 }

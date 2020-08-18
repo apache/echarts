@@ -932,6 +932,8 @@ export interface LabelLineOption {
     minTurnAngle?: number
     lineStyle?: LineStyleOption
     z?: number
+    zlevel?: number
+    alwaysOnTop?: boolean
 }
 
 
