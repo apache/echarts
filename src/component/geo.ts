@@ -28,6 +28,7 @@ import { ActionInfo } from '../util/types';
 
 // NOTE: DONT Remove this import, or GeoModel will be treeshaked.
 import '../coord/geo/GeoModel';
+/* eslint-disable-next-line */
 import GeoModel from '../coord/geo/GeoModel';
 
 function makeAction(

@@ -32,6 +32,7 @@
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "lint": "./node_modules/.bin/eslint src/**/*.ts extension-src/**/*.ts",
+    "lint:fix": "./node_modules/.bin/eslint --fix src/**/*.ts extension-src/**/*.ts",
     "lint:dist": "echo 'It might take a while. Please wait ...' && ./node_modules/.bin/jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
