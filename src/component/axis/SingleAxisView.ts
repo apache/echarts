@@ -142,14 +142,12 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             }));
         }
 
+        const lineStyle = lineStyleModel.getLineStyle(['color']);
         for (let i = 0; i < splitLines.length; ++i) {
             group.add(graphic.mergePath(splitLines[i], {
-                style: {
-                    stroke: lineColors[i % lineColors.length],
-                    // PENDING
-                    lineDash: lineStyleModel.get('type') as any,
-                    lineWidth: lineWidth
-                },
+                style: zrUtil.defaults({
+                    stroke: lineColors[i % lineColors.length]
+                }, lineStyle),
                 silent: true
             }));
         }
