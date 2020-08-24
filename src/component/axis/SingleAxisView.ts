@@ -93,7 +93,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const splitLineModel = axisModel.getModel('splitLine');
         const lineStyleModel = splitLineModel.getModel('lineStyle');
-        const lineWidth = lineStyleModel.get('width');
         let lineColors = lineStyleModel.get('color');
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
@@ -134,9 +133,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     y1: p1[1],
                     x2: p2[0],
                     y2: p2[1]
-                },
-                style: {
-                    lineWidth: lineWidth
                 },
                 silent: true
             }));
