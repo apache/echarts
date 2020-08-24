@@ -234,9 +234,7 @@
     return children;
   }
 
-  var gexf =
-  /*#__PURE__*/
-  Object.freeze({
+  var gexf = /*#__PURE__*/Object.freeze({
     __proto__: null,
     parse: parse
   });

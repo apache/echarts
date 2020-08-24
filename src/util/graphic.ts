@@ -578,7 +578,7 @@ function animateOrSetLabel<Props extends PathProps>(
         host && (host.startValue = host.nextValue);
 
         const duration = animatableModel.get('animationDuration');
-        if (!duration) {
+        if (!duration && host) {
             // No animation for the first frame
             host.nextValue = interpolateValues;
         }
