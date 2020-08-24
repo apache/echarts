@@ -28,7 +28,14 @@ import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
 import List from '../data/List';
 import * as scaleHelper from './helper';
-import { OrdinalRawValue, OrdinalNumber, DimensionLoose, OrdinalSortInfo, OrdinalScaleTick, ScaleTick } from '../util/types';
+import {
+    OrdinalRawValue,
+    OrdinalNumber,
+    DimensionLoose,
+    OrdinalSortInfo,
+    OrdinalScaleTick,
+    ScaleTick
+} from '../util/types';
 import { AxisBaseOption } from '../coord/axisCommonTypes';
 import { isArray } from 'zrender/src/core/util';
 
