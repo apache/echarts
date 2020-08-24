@@ -147,7 +147,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 style: {
                     stroke: lineColors[i % lineColors.length],
                     // PENDING
-                    //lineDash: lineStyleModel.getLineDash(lineWidth),
+                    lineDash: lineStyleModel.get('type') as any,
                     lineWidth: lineWidth
                 },
                 silent: true
