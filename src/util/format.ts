@@ -18,7 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { parseDate } from './number';
+import { parseDate, isNumeric } from './number';
 import { TooltipRenderMode, ColorString } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import { format, pad } from './time';
@@ -27,8 +27,8 @@ import { format, pad } from './time';
  * Add a comma each three digit.
  */
 export function addCommas(x: string | number): string {
-    if (isNaN(x as number)) {
-        return '-';
+    if (!isNumeric(x)) {
+        return zrUtil.isString(x) ? x : '-';
     }
     const parts = (x + '').split('.');
     return parts[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
