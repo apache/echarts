@@ -33,6 +33,7 @@ import Model from '../model/Model';
 import { invert } from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import { DISPLAY_STATES, SPECIAL_STATES } from '../util/states';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 const PI2 = Math.PI * 2;
 const CMD = PathProxy.CMD;
@@ -396,14 +397,9 @@ export function updateLabelLinePoints(
     }
 
     limitTurnAngle(points, labelLineModel.get('minTurnAngle'));
-
     if (labelLineModel.get('alwaysOnTop')) {
-        labelLine.zlevel = Infinity;
-        labelLine.z = Infinity;
-    }
-    else {
-        labelLine.zlevel = labelLineModel.get('zlevel') || 0;
-        labelLine.z = labelLineModel.get('z') || 0;
+        labelLine.z = (target as Displayable).z;
+        labelLine.zlevel = (target as Displayable).zlevel;
     }
 
     labelLine.setShape({ points });
