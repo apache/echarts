@@ -22,7 +22,6 @@ import {
     SourceFormat, DimensionDefinition, OptionDataItem, DimensionIndex,
     OptionDataValue, DimensionLoose, DimensionName, ParsedValue, SERIES_LAYOUT_BY_COLUMN
 } from '../../util/types';
-import Source from '../Source';
 import { normalizeToArray } from '../../util/model';
 import {
     assert, createHashMap, bind, each, hasOwn, map, clone, isObject,
@@ -32,8 +31,9 @@ import {
     getRawSourceItemGetter, getRawSourceDataCounter, getRawSourceValueGetter
 } from './dataProvider';
 import { parseDataValue } from './dataValueHelper';
-import { createSource, inheritSourceMetaRawOption } from './sourceHelper';
+import { inheritSourceMetaRawOption } from './sourceHelper';
 import { consoleLog, makePrintable } from '../../util/log';
+import { createSource, Source } from '../Source';
 
 
 export type PipedDataTransformOption = DataTransformOption[];
@@ -76,7 +76,7 @@ export interface ExternalDataTransformResultItem {
     dimensions?: DimensionDefinitionLoose[];
     sourceHeader?: OptionSourceHeader;
 }
-interface ExternalDimensionDefinition extends DimensionDefinition {
+interface ExternalDimensionDefinition extends Partial<DimensionDefinition> {
     // Mandatory
     index: DimensionIndex;
 }
@@ -131,17 +131,12 @@ class ExternalSource {
     }
 }
 
-function createExternalSource(
-    data: OptionSourceData,
-    sourceFormat: SourceFormat,
-    dimsDef: DimensionDefinition[],
-    sourceHeaderCount: number
-): ExternalSource {
+function createExternalSource(internalSource: Source): ExternalSource {
     const extSource = new ExternalSource();
 
-    extSource.data = data;
-    extSource.sourceFormat = sourceFormat;
-    extSource.sourceHeaderCount = sourceHeaderCount;
+    const data = extSource.data = internalSource.data;
+    const sourceFormat = extSource.sourceFormat = internalSource.sourceFormat;
+    const sourceHeaderCount = extSource.sourceHeaderCount = internalSource.startIndex;
 
     // [MEMO]
     // Create a new dimensions structure for exposing.
@@ -151,24 +146,37 @@ function createExternalSource(
     // See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
     const dimensions = [] as ExternalDimensionDefinition[];
     const dimsByName = {} as Dictionary<ExternalDimensionDefinition>;
-    each(dimsDef, function (dimDef, idx) {
-        const name = dimDef.name;
-        const dimDefExt = {
-            index: idx,
-            name: name,
-            displayName: dimDef.displayName
-        };
-        dimensions.push(dimDefExt);
-        // Users probably not sepcify dimension name. For simplicity, data transform
-        // do not generate dimension name.
-        if (name != null) {
-            // Dimension name should not be duplicated.
-            // For simplicity, data transform forbid name duplication, do not generate
-            // new name like module `completeDimensions.ts` did, but just tell users.
-            assert(!hasOwn(dimsByName, name), 'dimension name "' + name + '" duplicated.');
-            dimsByName[name] = dimDefExt;
+
+    const dimsDef = internalSource.dimensionsDefine;
+    if (dimsDef) {
+        each(dimsDef, function (dimDef, idx) {
+            const name = dimDef.name;
+            const dimDefExt = {
+                index: idx,
+                name: name,
+                displayName: dimDef.displayName
+            };
+            dimensions.push(dimDefExt);
+            // Users probably not sepcify dimension name. For simplicity, data transform
+            // do not generate dimension name.
+            if (name != null) {
+                // Dimension name should not be duplicated.
+                // For simplicity, data transform forbid name duplication, do not generate
+                // new name like module `completeDimensions.ts` did, but just tell users.
+                assert(!hasOwn(dimsByName, name), 'dimension name "' + name + '" duplicated.');
+                dimsByName[name] = dimDefExt;
+            }
+        });
+    }
+    // If dimension definitions are not defined and can not be detected.
+    // e.g., pure data `[[11, 22], ...]`.
+    else {
+        for (let i = 0; i < internalSource.dimensionsDetectedCount || 0; i++) {
+            // Do not generete name or anything others. The consequence process in
+            // `transform` or `series` probably have there own name generation strategry.
+            dimensions.push({ index: i });
         }
-    });
+    }
 
     // Implement public methods:
     const rawItemGetter = getRawSourceItemGetter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
@@ -283,14 +291,7 @@ function applySingleDataTransform(
     assert(externalTransform, 'Can not find transform on type "' + transType + '".');
 
     // Prepare source
-    const sourceList = map(upSourceList, function (source) {
-        return createExternalSource(
-            source.data,
-            source.sourceFormat,
-            source.dimensionsDefine,
-            source.startIndex
-        );
-    });
+    const sourceList = map(upSourceList, createExternalSource);
 
     const resultList = normalizeToArray(
         externalTransform.transform({

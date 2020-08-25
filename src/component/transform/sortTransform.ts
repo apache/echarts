@@ -138,7 +138,7 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
             if (!dimInfo) {
                 if (__DEV__) {
                     errMsg = makePrintable(
-                        'Can not find dimension info via: "' + dimLoose + '".\n',
+                        'Can not find dimension info via: ' + dimLoose + '.\n',
                         'Existing dimensions: ', source.getDimensionInfoAll(), '.\n',
                         'Illegal config:', orderExpr, '.\n'
                     );

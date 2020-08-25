@@ -22,21 +22,14 @@ import {makeInner, getDataItemValue, queryReferringComponents, SINGLE_REFERRING}
 import {
     createHashMap,
     each,
-    map,
     isArray,
     isString,
     isObject,
     isTypedArray,
-    isArrayLike,
-    extend,
-    assert,
-    hasOwn,
     HashMap,
-    isNumber,
-    clone,
     defaults
 } from 'zrender/src/core/util';
-import Source, { SourceMetaRawOption } from '../Source';
+import { SourceMetaRawOption, Source } from '../Source';
 
 import {
     SOURCE_FORMAT_ORIGINAL,
@@ -44,16 +37,7 @@ import {
     SOURCE_FORMAT_OBJECT_ROWS,
     SERIES_LAYOUT_BY_ROW,
     SOURCE_FORMAT_KEYED_COLUMNS,
-    SOURCE_FORMAT_TYPED_ARRAY,
-    SOURCE_FORMAT_UNKNOWN,
-    SourceFormat,
-    Dictionary,
-    OptionSourceData,
-    SeriesLayoutBy,
-    OptionSourceHeader,
     DimensionName,
-    DimensionDefinition,
-    DimensionDefinitionLoose,
     OptionSourceDataArrayRows,
     OptionDataValue,
     OptionSourceDataKeyedColumns,
@@ -61,10 +45,9 @@ import {
     OptionSourceDataObjectRows,
     OptionEncode,
     DimensionIndex,
-    SeriesEncodableModel,
-    OptionEncodeValue
+    SeriesEncodableModel
 } from '../../util/types';
-import { DatasetModel, DatasetOption } from '../../component/dataset';
+import { DatasetModel } from '../../component/dataset';
 import SeriesModel from '../../model/Series';
 import GlobalModel from '../../model/Global';
 import { CoordDimensionDefinition } from './createDimensions';
@@ -91,49 +74,6 @@ type SeriesEncodeInternal = {
     [key in keyof OptionEncode]: DimensionIndex[];
 };
 
-export function detectSourceFormat(data: DatasetOption['source']): SourceFormat {
-    let sourceFormat: SourceFormat = SOURCE_FORMAT_UNKNOWN;
-
-    if (isTypedArray(data)) {
-        sourceFormat = SOURCE_FORMAT_TYPED_ARRAY;
-    }
-    else if (isArray(data)) {
-        // FIXME Whether tolerate null in top level array?
-        if (data.length === 0) {
-            sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
-        }
-
-        for (let i = 0, len = data.length; i < len; i++) {
-            const item = data[i];
-
-            if (item == null) {
-                continue;
-            }
-            else if (isArray(item)) {
-                sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
-                break;
-            }
-            else if (isObject(item)) {
-                sourceFormat = SOURCE_FORMAT_OBJECT_ROWS;
-                break;
-            }
-        }
-    }
-    else if (isObject(data)) {
-        for (const key in data) {
-            if (hasOwn(data, key) && isArrayLike((data as Dictionary<unknown>)[key])) {
-                sourceFormat = SOURCE_FORMAT_KEYED_COLUMNS;
-                break;
-            }
-        }
-    }
-    else if (data != null) {
-        throw new Error('Invalid data');
-    }
-
-    return sourceFormat;
-}
-
 /**
  * MUST be called before mergeOption of all series.
  */
@@ -142,234 +82,12 @@ export function resetSourceDefaulter(ecModel: GlobalModel): void {
     innerGlobalModel(ecModel).datasetMap = createHashMap();
 }
 
-export function createSource(
-    sourceData: OptionSourceData,
-    thisMetaRawOption: SourceMetaRawOption,
-    // can be null. If not provided, auto detect it from `sourceData`.
-    sourceFormat: SourceFormat,
-    encodeDefine: OptionEncode  // can be null
-): Source {
-    sourceFormat = sourceFormat || detectSourceFormat(sourceData);
-    const dimInfo = determineSourceDimensions(
-        sourceData,
-        sourceFormat,
-        thisMetaRawOption.seriesLayoutBy,
-        thisMetaRawOption.sourceHeader,
-        thisMetaRawOption.dimensions
-    );
-    const source = new Source({
-        data: sourceData,
-        sourceFormat: sourceFormat,
-
-        seriesLayoutBy: thisMetaRawOption.seriesLayoutBy,
-        dimensionsDefine: dimInfo.dimensionsDefine,
-        startIndex: dimInfo.startIndex,
-        dimensionsDetectCount: dimInfo.dimensionsDetectCount,
-        encodeDefine: makeEncodeDefine(encodeDefine),
-        metaRawOption: clone(thisMetaRawOption)
-    });
-
-    return source;
-}
-
 // See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
 export function inheritSourceMetaRawOption(opt: {
     parent: SourceMetaRawOption, // Can be null/undefined
     thisNew: SourceMetaRawOption // Must be object
 }) {
     return defaults(opt.thisNew, opt.parent);
-}
-
-/**
- * Clone except source data.
- */
-export function cloneSourceShallow(source: Source) {
-    return new Source({
-        data: source.data,
-        sourceFormat: source.sourceFormat,
-
-        seriesLayoutBy: source.seriesLayoutBy,
-        dimensionsDefine: clone(source.dimensionsDefine),
-        startIndex: source.startIndex,
-        dimensionsDetectCount: source.dimensionsDetectCount,
-        encodeDefine: makeEncodeDefine(source.encodeDefine)
-    });
-}
-
-function makeEncodeDefine(
-    encodeDefine: OptionEncode | HashMap<OptionEncodeValue, DimensionName>
-): HashMap<OptionEncodeValue, DimensionName> {
-    // null means user not specify `series.encode`.
-    return encodeDefine
-        ? createHashMap<OptionEncodeValue, DimensionName>(encodeDefine)
-        : null;
-}
-
-
-// return {startIndex, dimensionsDefine, dimensionsCount}
-export function determineSourceDimensions(
-    data: OptionSourceData,
-    sourceFormat: SourceFormat,
-    seriesLayoutBy: SeriesLayoutBy,
-    sourceHeader: OptionSourceHeader,
-    dimensionsDefine: DimensionDefinitionLoose[]
-): {
-    dimensionsDefine: DimensionDefinition[];
-    startIndex: number;
-    dimensionsDetectCount: number;
-} {
-    let dimensionsDetectCount;
-    let startIndex: number;
-
-    if (!data) {
-        return {
-            dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
-            startIndex,
-            dimensionsDetectCount
-        };
-    }
-
-    if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
-        const dataArrayRows = data as OptionSourceDataArrayRows;
-        // Rule: Most of the first line are string: it is header.
-        // Caution: consider a line with 5 string and 1 number,
-        // it still can not be sure it is a head, because the
-        // 5 string may be 5 values of category columns.
-        if (sourceHeader === 'auto' || sourceHeader == null) {
-            arrayRowsTravelFirst(function (val) {
-                // '-' is regarded as null/undefined.
-                if (val != null && val !== '-') {
-                    if (isString(val)) {
-                        startIndex == null && (startIndex = 1);
-                    }
-                    else {
-                        startIndex = 0;
-                    }
-                }
-            // 10 is an experience number, avoid long loop.
-            }, seriesLayoutBy, dataArrayRows, 10);
-        }
-        else {
-            startIndex = isNumber(sourceHeader) ? sourceHeader : sourceHeader ? 1 : 0;
-        }
-
-        if (!dimensionsDefine && startIndex === 1) {
-            dimensionsDefine = [];
-            arrayRowsTravelFirst(function (val, index) {
-                dimensionsDefine[index] = (val != null ? val + '' : '') as DimensionName;
-            }, seriesLayoutBy, dataArrayRows, Infinity);
-        }
-
-        dimensionsDetectCount = dimensionsDefine
-            ? dimensionsDefine.length
-            : seriesLayoutBy === SERIES_LAYOUT_BY_ROW
-            ? dataArrayRows.length
-            : dataArrayRows[0]
-            ? dataArrayRows[0].length
-            : null;
-    }
-    else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
-        if (!dimensionsDefine) {
-            dimensionsDefine = objectRowsCollectDimensions(data as OptionSourceDataObjectRows);
-        }
-    }
-    else if (sourceFormat === SOURCE_FORMAT_KEYED_COLUMNS) {
-        if (!dimensionsDefine) {
-            dimensionsDefine = [];
-            each(data as OptionSourceDataKeyedColumns, function (colArr, key) {
-                dimensionsDefine.push(key);
-            });
-        }
-    }
-    else if (sourceFormat === SOURCE_FORMAT_ORIGINAL) {
-        const value0 = getDataItemValue((data as OptionSourceDataOriginal)[0]);
-        dimensionsDetectCount = isArray(value0) && value0.length || 1;
-    }
-    else if (sourceFormat === SOURCE_FORMAT_TYPED_ARRAY) {
-        if (__DEV__) {
-            assert(!!dimensionsDefine, 'dimensions must be given if data is TypedArray.');
-        }
-    }
-
-    return {
-        startIndex: startIndex,
-        dimensionsDefine: normalizeDimensionsOption(dimensionsDefine),
-        dimensionsDetectCount: dimensionsDetectCount
-    };
-}
-
-// Consider dimensions defined like ['A', 'price', 'B', 'price', 'C', 'price'],
-// which is reasonable. But dimension name is duplicated.
-// Returns undefined or an array contains only object without null/undefiend or string.
-function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[]): DimensionDefinition[] {
-    if (!dimensionsDefine) {
-        // The meaning of null/undefined is different from empty array.
-        return;
-    }
-    const nameMap = createHashMap<{ count: number }, string>();
-    return map(dimensionsDefine, function (item, index) {
-        item = extend({}, isObject(item) ? item : {name: item});
-
-        // User can set null in dimensions.
-        // We dont auto specify name, othewise a given name may
-        // cause it be refered unexpectedly.
-        if (item.name == null) {
-            return item;
-        }
-
-        // Also consider number form like 2012.
-        item.name += '';
-        // User may also specify displayName.
-        // displayName will always exists except user not
-        // specified or dim name is not specified or detected.
-        // (A auto generated dim name will not be used as
-        // displayName).
-        if (item.displayName == null) {
-            item.displayName = item.name;
-        }
-
-        const exist = nameMap.get(item.name);
-        if (!exist) {
-            nameMap.set(item.name, {count: 1});
-        }
-        else {
-            item.name += '-' + exist.count++;
-        }
-
-        return item;
-    });
-}
-
-function arrayRowsTravelFirst(
-    cb: (val: OptionDataValue, idx: number) => void,
-    seriesLayoutBy: SeriesLayoutBy,
-    data: OptionSourceDataArrayRows,
-    maxLoop: number
-): void {
-    if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
-        for (let i = 0; i < data.length && i < maxLoop; i++) {
-            cb(data[i] ? data[i][0] : null, i);
-        }
-    }
-    else {
-        const value0 = data[0] || [];
-        for (let i = 0; i < value0.length && i < maxLoop; i++) {
-            cb(value0[i], i);
-        }
-    }
-}
-
-function objectRowsCollectDimensions(data: OptionSourceDataObjectRows): DimensionDefinitionLoose[] {
-    let firstIndex = 0;
-    let obj;
-    while (firstIndex < data.length && !(obj = data[firstIndex++])) {} // jshint ignore: line
-    if (obj) {
-        const dimensions: DimensionDefinitionLoose[] = [];
-        each(obj, function (value, key) {
-            dimensions.push(key);
-        });
-        return dimensions;
-    }
 }
 
 /**

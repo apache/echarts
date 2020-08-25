@@ -24,7 +24,7 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysInfoBySeries} from '../../model/referHelper';
-import Source from '../../data/Source';
+import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
 import {
@@ -38,8 +38,8 @@ function createListFromArray(source: Source | OptionSourceData, seriesModel: Ser
 }): List {
     opt = opt || {};
 
-    if (!(source instanceof Source)) {
-        source = Source.seriesDataToSource(source);
+    if (!isSourceInstance(source)) {
+        source = createSourceFromSeriesDataOption(source);
     }
 
     const coordSysName = seriesModel.get('coordinateSystem');

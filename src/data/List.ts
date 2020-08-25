@@ -26,7 +26,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
-import Source from './Source';
 import {DefaultDataProvider, DataProvider} from './helper/dataProvider';
 import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
 import DataDimensionInfo from './DataDimensionInfo';
@@ -43,6 +42,7 @@ import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import { parseDataValue } from './helper/dataValueHelper';
+import { isSourceInstance } from './Source';
 
 
 const isObject = zrUtil.isObject;
@@ -418,7 +418,7 @@ class List<
         dimValueGetter?: DimValueGetter
     ): void {
 
-        const notProvider = data instanceof Source || zrUtil.isArrayLike(data);
+        const notProvider = isSourceInstance(data) || zrUtil.isArrayLike(data);
         if (notProvider) {
             data = new DefaultDataProvider(data, this.dimensions.length);
         }

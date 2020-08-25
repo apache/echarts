@@ -20,7 +20,7 @@
 import { DatasetModel } from '../../component/dataset';
 import SeriesModel from '../../model/Series';
 import { setAsPrimitive, map, isTypedArray, assert, each } from 'zrender/src/core/util';
-import Source, { SourceMetaRawOption } from '../Source';
+import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '../Source';
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
@@ -28,7 +28,7 @@ import {
 } from '../../util/types';
 import {
     querySeriesUpstreamDatasetModel, queryDatasetUpstreamDatasetModels,
-    createSource, cloneSourceShallow, inheritSourceMetaRawOption
+    inheritSourceMetaRawOption
 } from './sourceHelper';
 import { applyDataTransform } from './transform';
 
