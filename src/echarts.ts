@@ -338,19 +338,18 @@ class ECharts extends Eventful {
 
         this._dom = dom;
 
+        const root = (
+            typeof window === 'undefined' ? global : window
+        ) as any;
+
         let defaultRenderer = 'canvas';
         if (__DEV__) {
-            defaultRenderer = ((
-                typeof window === 'undefined' ? global : window
-            ) as any).__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+            defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
         }
 
         let defaultUseDirtyRect = false;
         if (__DEV__) {
-            const devUseDirtyRect = ((
-                typeof window === 'undefined' ? global : window
-            ) as any).__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
-
+            const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
             defaultUseDirtyRect = devUseDirtyRect == null
                 ? defaultUseDirtyRect
                 : devUseDirtyRect;
