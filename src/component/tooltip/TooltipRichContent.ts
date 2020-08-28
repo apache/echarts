@@ -123,7 +123,7 @@ class TooltipRichContent {
                 shadowOffsetY: tooltipModel.get('shadowOffsetY'),
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: tooltipModel.get('padding'),
-                verticalAlign: 'middle',
+                verticalAlign: 'top',
                 align: 'left'
             },
             z: tooltipModel.get('z')
