@@ -371,6 +371,15 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         addEventListener(closeButton, 'click', close);
 
         addEventListener(refreshButton, 'click', function () {
+            if ((contentToOption == null && optionToContent != null) ||
+                (contentToOption != null && optionToContent == null)) {
+                if (__DEV__) {
+                    console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.')
+                }
+                close();
+                return;
+            }
+
             let newOption;
             try {
                 if (typeof contentToOption === 'function') {
