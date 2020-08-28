@@ -24,7 +24,7 @@ import {
 } from '../../util/types';
 import { normalizeToArray } from '../../util/model';
 import {
-    assert, createHashMap, bind, each, hasOwn, map, clone, isObject,
+    createHashMap, bind, each, hasOwn, map, clone, isObject,
     isArrayLike
 } from 'zrender/src/core/util';
 import {
@@ -32,7 +32,7 @@ import {
 } from './dataProvider';
 import { parseDataValue } from './dataValueHelper';
 import { inheritSourceMetaRawOption } from './sourceHelper';
-import { consoleLog, makePrintable } from '../../util/log';
+import { consoleLog, makePrintable, throwError } from '../../util/log';
 import { createSource, Source } from '../Source';
 
 
@@ -163,7 +163,13 @@ function createExternalSource(internalSource: Source): ExternalSource {
                 // Dimension name should not be duplicated.
                 // For simplicity, data transform forbid name duplication, do not generate
                 // new name like module `completeDimensions.ts` did, but just tell users.
-                assert(!hasOwn(dimsByName, name), 'dimension name "' + name + '" duplicated.');
+                let errMsg = '';
+                if (hasOwn(dimsByName, name)) {
+                    if (__DEV__) {
+                        errMsg = 'dimension name "' + name + '" duplicated.';
+                    }
+                    throwError(errMsg);
+                }
                 dimsByName[name] = dimDefExt;
             }
         });
@@ -244,9 +250,20 @@ export function registerExternalTransform(
 ): void {
     externalTransform = clone(externalTransform);
     let type = externalTransform.type;
-    assert(type, 'Must have a `type` when `registerTransform`.');
+    let errMsg = '';
+    if (!type) {
+        if (__DEV__) {
+            errMsg = 'Must have a `type` when `registerTransform`.';
+        }
+        throwError(errMsg);
+    }
     const typeParsed = type.split(':');
-    assert(typeParsed.length === 2, 'Name must include namespace like "ns:regression".');
+    if (typeParsed.length !== 2) {
+        if (__DEV__) {
+            errMsg = 'Name must include namespace like "ns:regression".';
+        }
+        throwError(errMsg);
+    }
     // Namespace 'echarts:xxx' is official namespace, where the transforms should
     // be called directly via 'xxx' rather than 'echarts:xxx'.
     if (typeParsed[0] === 'echarts') {
@@ -261,14 +278,22 @@ export function applyDataTransform(
     infoForPrint: { datasetIndex: number }
 ): Source[] {
     const pipedTransOption: PipedDataTransformOption = normalizeToArray(rawTransOption);
+    const pipeLen = pipedTransOption.length;
 
-    for (let i = 0, len = pipedTransOption.length; i < len; i++) {
+    let errMsg = '';
+    if (!pipeLen) {
+        if (__DEV__) {
+            errMsg = 'If `transform` declared, it should at least contain one transform.';
+        }
+        throwError(errMsg);
+    }
+
+    for (let i = 0, len = pipeLen; i < len; i++) {
         const transOption = pipedTransOption[i];
-        const isFinal = i === len - 1;
-        sourceList = applySingleDataTransform(transOption, sourceList, infoForPrint, isFinal);
+        sourceList = applySingleDataTransform(transOption, sourceList, infoForPrint, pipeLen === 1 ? null : i);
         // piped transform only support single input, except the fist one.
         // piped transform only support single output, except the last one.
-        if (!isFinal) {
+        if (i !== len - 1) {
             sourceList.length = Math.max(sourceList.length, 1);
         }
     }
@@ -277,18 +302,35 @@ export function applyDataTransform(
 }
 
 function applySingleDataTransform(
-    rawTransOption: DataTransformOption,
+    transOption: DataTransformOption,
     upSourceList: Source[],
     infoForPrint: { datasetIndex: number },
-    isFinal: boolean
+    // If `pipeIndex` is null/undefined, no piped transform.
+    pipeIndex: number
 ): Source[] {
-    assert(upSourceList.length, 'Must have at least one upstream dataset.');
+    let errMsg = '';
+    if (!upSourceList.length) {
+        if (__DEV__) {
+            errMsg = 'Must have at least one upstream dataset.';
+        }
+        throwError(errMsg);
+    }
+    if (!isObject(transOption)) {
+        if (__DEV__) {
+            errMsg = 'transform declaration must be an object rather than ' + typeof transOption + '.';
+        }
+        throwError(errMsg);
+    }
 
-    const transOption = rawTransOption;
     const transType = transOption.type;
     const externalTransform = externalTransformMap.get(transType);
 
-    assert(externalTransform, 'Can not find transform on type "' + transType + '".');
+    if (!externalTransform) {
+        if (__DEV__) {
+            errMsg = 'Can not find transform on type "' + transType + '".';
+        }
+        throwError(errMsg);
+    }
 
     // Prepare source
     const sourceList = map(upSourceList, createExternalSource);
@@ -302,16 +344,17 @@ function applySingleDataTransform(
     );
 
     if (__DEV__) {
-        if (isFinal && transOption.print) {
+        if (transOption.print) {
             const printStrArr = map(resultList, extSource => {
+                const pipeIndexStr = pipeIndex != null ? ' === pipe index: ' + pipeIndex : '';
                 return [
-                    '--- datasetIndex: ' + infoForPrint.datasetIndex + '---',
+                    '=== dataset index: ' + infoForPrint.datasetIndex + pipeIndexStr + ' ===',
                     '- transform result data:',
                     makePrintable(extSource.data),
                     '- transform result dimensions:',
                     makePrintable(extSource.dimensions),
-                    '- transform result sourceHeader: ' + extSource.sourceHeader,
-                    '------'
+                    '- transform result sourceHeader: ',
+                    makePrintable(extSource.sourceHeader)
                 ].join('\n');
             }).join('\n');
             consoleLog(printStrArr);
@@ -319,14 +362,19 @@ function applySingleDataTransform(
     }
 
     return map(resultList, function (result) {
-        assert(
-            isObject(result),
-            'A transform should not return some empty results.'
-        );
-        assert(
-            isObject(result.data) || isArrayLike(result.data),
-            'Result data should be object or array in data transform.'
-        );
+        let errMsg = '';
+        if (!isObject(result)) {
+            if (__DEV__) {
+                errMsg = 'A transform should not return some empty results.';
+            }
+            throwError(errMsg);
+        }
+        if (!isObject(result.data) && !isArrayLike(result.data)) {
+            if (__DEV__) {
+                errMsg = 'Result data should be object or array in data transform.';
+            }
+            throwError(errMsg);
+        }
 
         const resultMetaRawOption = inheritSourceMetaRawOption({
             parent: upSourceList[0].metaRawOption,
