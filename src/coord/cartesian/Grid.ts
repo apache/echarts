@@ -86,6 +86,20 @@ class Grid implements CoordinateSystemMaster {
         return this._rect;
     }
 
+    recalAxisExtent(axes: Axis2D[], sectionNum: number[], maxSplitNumber: number) {
+        each(axes, function (axis, index) {
+            if (!(maxSplitNumber - sectionNum[index]) || axis.type !== 'value') {
+                return;
+            };
+
+            const extent = axis.scale.getExtent();
+            niceScaleExtent(axis.scale, axis.model, [
+                extent[0],
+                extent[1] + (maxSplitNumber - sectionNum[index]) * (axis.scale as IntervalScale).getInterval()
+            ], maxSplitNumber);
+        });
+    }
+
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
 
         const axesMap = this._axesMap;
@@ -111,32 +125,8 @@ class Grid implements CoordinateSystemMaster {
             sectionNumY.push((extent[1] - extent[0]) / (yAxis.scale as IntervalScale).getInterval());
         });
 
-        const maxSplitNumberY = Math.max(...sectionNumY);
-        const maxSplitNumberX = Math.max(...sectionNumX);
-
-        each(axesMap.y, function (yAxis, index) {
-            if (!(maxSplitNumberY - sectionNumY[index]) || yAxis.type !== 'value') {
-                return;
-            };
-
-            const extent = yAxis.scale.getExtent();
-            niceScaleExtent(yAxis.scale, yAxis.model, [
-                extent[0],
-                extent[1] + (maxSplitNumberY - sectionNumY[index]) * (yAxis.scale as IntervalScale).getInterval()
-            ]);
-        });
-
-        each(axesMap.x, function (xAxis, index) {
-            if (!(maxSplitNumberX - sectionNumX[index]) || xAxis.type !== 'value') {
-                return;
-            };
-
-            const extent = xAxis.scale.getExtent();
-            niceScaleExtent(xAxis.scale, xAxis.model, [
-                extent[0],
-                extent[1] + (maxSplitNumberX - sectionNumX[index]) * (xAxis.scale as IntervalScale).getInterval()
-            ]);
-        });
+        this.recalAxisExtent(axesMap.y, sectionNumY, Math.max(...sectionNumY));
+        this.recalAxisExtent(axesMap.x, sectionNumX, Math.max(...sectionNumX));
 
         // Key: axisDim_axisIndex, value: boolean, whether onZero target.
         const onZeroRecords = {} as Dictionary<boolean>;
