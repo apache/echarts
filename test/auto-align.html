@@ -1,0 +1,162 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        .chart {
+            width: 100vw;
+            height: 50vh;
+        }
+    </style>
+    <div id="main1" class="chart"></div>
+    <div id="main2" class="chart"></div>
+    <div id="main3" class="chart"></div>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var chart1 = echarts.init(document.getElementById('main1'));
+
+            chart1.setOption({
+                tooltip: {},
+                "yAxis": [{
+                    "data": ["test", 'test2']
+                }],
+                "xAxis": [{
+                        "name": "A",
+                    },
+                    {
+                        "name": "B",
+                    }
+                ],
+                "series": [{
+                        "name": "A",
+                        "type": "bar",
+                        "data": [
+                            998,
+                            101
+                        ],
+                        "xAxisIndex": 1
+                    },
+                    {
+                        "name": "B",
+                        "type": "bar",
+                        "data": [
+                            6,
+                            13
+                        ],
+                        "xAxisIndex": 0
+                    }
+                ]
+            });
+        
+            var chart2 = echarts.init(document.getElementById('main2'));
+
+            chart2.setOption({
+                tooltip: {},
+                "xAxis": [{
+                    "data": ["test", 'test2']
+                }],
+                "yAxis": [{
+                        "name": "A",
+                    },
+                    {
+                        "name": "B",
+                    }
+                ],
+                "series": [{
+                        "name": "A",
+                        "type": "bar",
+                        "data": [
+                            998,
+                            101
+                        ],
+                        "yAxisIndex": 1
+                    },
+                    {
+                        "name": "B",
+                        "type": "bar",
+                        "data": [
+                            6,
+                            13
+                        ],
+                        "yAxisIndex": 0
+                    }
+                ]
+            });
+            
+            var chart3= echarts.init(document.getElementById('main3'));
+
+            chart3.setOption({
+                tooltip: {},
+                "xAxis": [{
+                    "data": ["test", 'test2']
+                }],
+                "yAxis": [{
+                        "name": "A",
+                        splitNumber: 7
+                    },
+                    {
+                        "name": "B",
+                        splitNumber: 6
+                    }
+                ],
+                "series": [{
+                        "name": "A",
+                        "type": "bar",
+                        "data": [
+                            12,
+                            7
+                        ],
+                        "yAxisIndex": 1
+                    },
+                    {
+                        "name": "B",
+                        "type": "bar",
+                        "data": [
+                            6,
+                            23
+                        ],
+                        "yAxisIndex": 0
+                    }
+                ]
+            });
+        
+        
+        });
+
+    </script>
+</body>
+
+</html>
