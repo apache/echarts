@@ -143,9 +143,9 @@ function adjustScaleForOverflow(
 // Precondition of calling this method:
 // The scale extent has been initailized using series data extent via
 // `scale.setExtent` or `scale.unionExtentFromData`;
-export function niceScaleExtent(scale: Scale, model: AxisBaseModel) {
+export function niceScaleExtent(scale: Scale, model: AxisBaseModel, extent?: number[]) {
     const extentInfo = getScaleExtent(scale, model);
-    const extent = extentInfo.extent;
+    extent = extent || extentInfo.extent;
     const splitNumber = model.get('splitNumber');
 
     if (scale instanceof LogScale) {

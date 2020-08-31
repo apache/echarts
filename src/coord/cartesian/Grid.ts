@@ -32,6 +32,7 @@ import {
     estimateLabelUnionRect,
     getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
+import IntervalScale from '../../scale/Interval';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystemManager from '../../CoordinateSystem';
@@ -91,11 +92,50 @@ class Grid implements CoordinateSystemMaster {
 
         this._updateScale(ecModel, this.model);
 
+        const sectionNumY: number[] = [];
+        const sectionNumX: number[] = [];
         each(axesMap.x, function (xAxis) {
             niceScaleExtent(xAxis.scale, xAxis.model);
+            if (xAxis.type !== 'value') {
+                return;
+            }
+            const extent = xAxis.scale.getExtent();
+            sectionNumX.push((extent[1] - extent[0]) / (xAxis.scale as IntervalScale).getInterval());
         });
         each(axesMap.y, function (yAxis) {
             niceScaleExtent(yAxis.scale, yAxis.model);
+            if (yAxis.type !== 'value') {
+                return;
+            }
+            const extent = yAxis.scale.getExtent();
+            sectionNumY.push((extent[1] - extent[0]) / (yAxis.scale as IntervalScale).getInterval());
+        });
+
+        const maxSplitNumberY = Math.max(...sectionNumY);
+        const maxSplitNumberX = Math.max(...sectionNumX);
+
+        each(axesMap.y, function (yAxis, index) {
+            if (!(maxSplitNumberY - sectionNumY[index]) || yAxis.type !== 'value') {
+                return;
+            };
+
+            const extent = yAxis.scale.getExtent();
+            niceScaleExtent(yAxis.scale, yAxis.model, [
+                extent[0],
+                extent[1] + (maxSplitNumberY - sectionNumY[index]) * (yAxis.scale as IntervalScale).getInterval()
+            ]);
+        });
+
+        each(axesMap.x, function (xAxis, index) {
+            if (!(maxSplitNumberX - sectionNumX[index]) || xAxis.type !== 'value') {
+                return;
+            };
+
+            const extent = xAxis.scale.getExtent();
+            niceScaleExtent(xAxis.scale, xAxis.model, [
+                extent[0],
+                extent[1] + (maxSplitNumberX - sectionNumX[index]) * (xAxis.scale as IntervalScale).getInterval()
+            ]);
         });
 
         // Key: axisDim_axisIndex, value: boolean, whether onZero target.
