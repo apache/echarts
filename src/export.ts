@@ -39,8 +39,6 @@ export {zrender};
 export {default as List} from './data/List';
 export {default as Model} from './model/Model';
 export {default as Axis} from './coord/Axis';
-export {numberUtil as number};
-export {formatUtil as format};
 export {throttle};
 export {ecHelper as helper};
 export {matrix};
@@ -50,6 +48,55 @@ export {default as env} from 'zrender/src/core/env';
 
 export {parseGeoJSON};
 export const parseGeoJson = parseGeoJSON;
+
+
+export const number = {};
+zrUtil.each(
+    [
+        'linearMap',
+        'round',
+        'asc',
+        'getPrecision',
+        'getPrecisionSafe',
+        'getPixelPrecision',
+        'getPercentWithPrecision',
+        'MAX_SAFE_INTEGER',
+        'remRadian',
+        'isRadianAroundZero',
+        'parseDate',
+        'quantity',
+        'quantityExponent',
+        'nice',
+        'quantile',
+        'reformIntervals',
+        'isNumeric',
+        'numericToNumber'
+    ],
+    function (name) {
+        (number as any)[name] = (numberUtil as any)[name];
+    }
+);
+
+
+export const format = {};
+zrUtil.each(
+    [
+        'addCommas',
+        'toCamelCase',
+        'normalizeCssArray',
+        'encodeHTML',
+        'formatTpl',
+        'getTooltipMarker',
+        'formatTime',
+        'capitalFirst',
+        'truncateText',
+        'getTextRect'
+    ],
+    function (name) {
+        (format as any)[name] = (formatUtil as any)[name];
+    }
+);
+
 
 export const time = {
     parse: numberUtil.parseDate,
@@ -98,11 +145,10 @@ const GRAPHIC_KEYS = [
     'BoundingRect'
 ] as const;
 
-const graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
+export const graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
 zrUtil.each(
     GRAPHIC_KEYS,
     function (name) {
         (graphic as any)[name] = (graphicUtil as any)[name];
     }
 );
-export {graphic};
