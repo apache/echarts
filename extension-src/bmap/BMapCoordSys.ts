@@ -181,7 +181,16 @@ BMapCoordSys.create = function (ecModel, api) {
             // Not support IE8
             bmapRoot.classList.add('ec-extension-bmap');
             root.appendChild(bmapRoot);
-            bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
+
+            // initializes bmap
+            let mapOptions = bmapModel.get('mapOptions');
+            if (mapOptions) {
+                mapOptions = zrUtil.clone(mapOptions);
+                // Not support `mapType`, use `bmap.setMapType(MapType)` instead.
+                delete mapOptions.mapType;
+            }
+
+            bmap = bmapModel.__bmap = new BMap.Map(bmapRoot, mapOptions);
 
             const overlay = new Overlay(viewportRoot);
             bmap.addOverlay(overlay);
@@ -198,8 +207,13 @@ BMapCoordSys.create = function (ecModel, api) {
         const center = bmapModel.get('center');
         const zoom = bmapModel.get('zoom');
         if (center && zoom) {
-            const pt = new BMap.Point(center[0], center[1]);
-            bmap.centerAndZoom(pt, zoom);
+            const bmapCenter = bmap.getCenter();
+            const bmapZoom = bmap.getZoom();
+            const centerOrZoomChanged = bmapModel.centerOrZoomChanged([bmapCenter.lng, bmapCenter.lat], bmapZoom);
+            if (centerOrZoomChanged) {
+                const pt = new BMap.Point(center[0], center[1]);
+                bmap.centerAndZoom(pt, zoom);
+            }
         }
 
         bmapCoordSys = new BMapCoordSys(bmap, api);
