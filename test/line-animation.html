@@ -42,10 +42,7 @@ under the License.
                 font-size: 14px;
             }
             .chart {
-                height: 500px;
-            }
-            #main0, #main1 {
-                height: 300px;
+                height: 600px;
             }
             button {
                 font-size: 16px;
@@ -81,7 +78,7 @@ under the License.
                 var data = [];
                 var value = 200;
                 var positive = 1;
-                for (let i = 0; i < 10; ++i) {
+                for (let i = 0; i < 100; ++i) {
                     xData.push(i + '');
                     value = positive * Math.round(Math.random() * 50) + value;
                     data.push(value);
@@ -92,22 +89,95 @@ under the License.
                 }
 
                 option = {
-                    title: {
-                        text: 'Default Line Animation',
-                        subtext: 'Symbol and text should sync with line clipPath'
-                    },
-                    xAxis: {
+                    title: [{
+                        text: 'Default Line Animation, all should be left-to-right, bottom-to top',
+                        subtext: 'Symbol and text should sync with line clipPath\n\naxis not inversed',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: 0
+                    }, {
+                        subtext: '(axis inversed)',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: '52%'
+                    }],
+                    xAxis: [{
                         data: xData
-                    },
-                    yAxis: {},
+                    }, {
+                        gridIndex: 1
+                    }, {
+                        data: xData,
+                        inverse: true,
+                        gridIndex: 2
+                    }, {
+                        gridIndex: 3,
+                        inverse: true
+                    }],
+                    yAxis: [{
+                    }, {
+                        data: xData,
+                        gridIndex: 1
+                    }, {
+                        inverse: true,
+                        gridIndex: 2
+                    }, {
+                        data: xData,
+                        gridIndex: 3,
+                        inverse: true
+                    }],
+                    grid: [{
+                        left: 80,
+                        top: 100,
+                        right: '52%',
+                        bottom: '55%'
+                    }, {
+                        left: '52%',
+                        top: 100,
+                        right: 50,
+                        bottom: '55%'
+                    }, {
+                        left: 80,
+                        right: '52%',
+                        top: '60%',
+                        bottom: 30
+                    }, {
+                        left: '52%',
+                        right: 50,
+                        top: '60%',
+                        bottom: 30
+                    }],
                     series: [{
                         type: 'line',
                         data: data,
                         label: {
                             show: true
                         }
+                    }, {
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }, {
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        xAxisIndex: 2,
+                        yAxisIndex: 2
+                    }, {
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        xAxisIndex: 3,
+                        yAxisIndex: 3
                     }],
-                    animationDuration: 3000,
+                    animationDuration: 10000,
                     animationDurationUpdate: 1000
                 };
                 chart.setOption(option);
@@ -132,7 +202,7 @@ under the License.
                 var data = [];
                 var value = 200;
                 var positive = 1;
-                for (let i = 0; i < 10; ++i) {
+                for (let i = 0; i < 100; ++i) {
                     xData.push(i + '');
                     value = positive * Math.round(Math.random() * 50) + value;
                     data.push(value);
@@ -142,6 +212,7 @@ under the License.
                     }
                 }
 
+                var duration = 10000;
                 option = {
                     title: {
                         text: 'Label Animation with animationDelay callback',
@@ -164,11 +235,11 @@ under the License.
                             }
                             else {
                                 // cubicIn is x=t^3 so t=x^(1/3)
-                                return (Math.pow((i + 0.5) / data.length, 1 / 3)) * 3000;
+                                return (Math.pow((i + 0.5) / data.length, 1 / 3)) * duration;
                             }
                         }
                     }],
-                    animationDuration: 3000,
+                    animationDuration: duration,
                     animationDurationUpdate: 1000
                 };
                 chart.setOption(option);

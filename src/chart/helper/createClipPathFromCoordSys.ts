@@ -34,7 +34,6 @@ function createGridClipPath(
     seriesModel: SeriesModelWithLineWidth
 ) {
     const rect = cartesian.getArea();
-    const isHorizontal = cartesian.getBaseAxis().isHorizontal();
 
     let x = rect.x;
     let y = rect.y;
@@ -62,11 +61,19 @@ function createGridClipPath(
     });
 
     if (hasAnimation) {
-        clipPath.shape[isHorizontal ? 'width' : 'height'] = 0;
+        const isHorizontal = cartesian.getBaseAxis().isHorizontal();
+        if (isHorizontal) {
+            clipPath.shape.width = 0;
+        }
+        else {
+            clipPath.shape.y = y + height;
+            clipPath.shape.height = 0;
+        }
         graphic.initProps(clipPath, {
             shape: {
                 width: width,
-                height: height
+                height: height,
+                y: y
             }
         }, seriesModel);
     }
@@ -82,12 +89,14 @@ function createPolarClipPath(
     const sectorArea = polar.getArea();
     // Avoid float number rounding error for symbol on the edge of axis extent.
 
+    const r0 = round(sectorArea.r0, 1);
+    const r = round(sectorArea.r, 1);
     const clipPath = new graphic.Sector({
         shape: {
             cx: round(polar.cx, 1),
             cy: round(polar.cy, 1),
-            r0: round(sectorArea.r0, 1),
-            r: round(sectorArea.r, 1),
+            r0: r0,
+            r: r,
             startAngle: sectorArea.startAngle,
             endAngle: sectorArea.endAngle,
             clockwise: sectorArea.clockwise
@@ -95,10 +104,18 @@ function createPolarClipPath(
     });
 
     if (hasAnimation) {
-        clipPath.shape.endAngle = sectorArea.startAngle;
+        const isRadial = polar.getBaseAxis().dim === 'angle';
+
+        if (isRadial) {
+            clipPath.shape.endAngle = sectorArea.startAngle;
+        }
+        else {
+            clipPath.shape.r = r0;
+        }
         graphic.initProps(clipPath, {
             shape: {
-                endAngle: sectorArea.endAngle
+                endAngle: sectorArea.endAngle,
+                r: r
             }
         }, seriesModel);
     }

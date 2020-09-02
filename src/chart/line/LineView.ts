@@ -461,7 +461,12 @@ class LineView extends ChartView {
                 isIgnore: isIgnoreFunc,
                 clipShape: clipShapeForSymbol
             });
-            this._initAnimation(data, isCoordSysPolar, clipShapeForSymbol);
+
+            this._initAnimation(
+                data,
+                coordSys,
+                clipShapeForSymbol
+            );
 
             if (step) {
                 // TODO If stacked series is not step
@@ -752,9 +757,21 @@ class LineView extends ChartView {
 
     _initAnimation(
         data: List,
-        isCoordSysPolar: boolean,
+        coordSys: Polar | Cartesian2D,
         clipShape: PolarArea | Cartesian2DArea
     ) {
+        let isHorizontalOrRadial: boolean;
+        let isCoordSysPolar: boolean;
+        const baseAxis = coordSys.getBaseAxis();
+        if (coordSys.type === 'cartesian2d') {
+            isHorizontalOrRadial = (baseAxis as Axis2D).isHorizontal();
+            isCoordSysPolar = false;
+        }
+        else if (coordSys.type === 'polar') {
+            isHorizontalOrRadial = baseAxis.dim === 'angle';
+            isCoordSysPolar = true;
+        }
+
         const seriesModel = data.hostModel;
         let seriesDuration = seriesModel.get('animationDuration');
         if (typeof seriesDuration === 'function') {
@@ -768,6 +785,47 @@ class LineView extends ChartView {
         data.eachItemGraphicEl(function (symbol, idx) {
             const el = (symbol as SymbolClz).childAt(0) as Displayable;
             if (el) {
+                const point = [symbol.x, symbol.y];
+                let start, end, current;
+                if (isCoordSysPolar) {
+                    const polarClip = clipShape as PolarArea;
+                    const coord = (coordSys as Polar).pointToCoord(point);
+                    if (isHorizontalOrRadial) {
+                        start = polarClip.startAngle;
+                        end = polarClip.endAngle;
+                        current = -coord[1] / 180 * Math.PI;
+                    }
+                    else {
+                        start = polarClip.r0;
+                        end = polarClip.r;
+                        current = coord[0];
+                    }
+                }
+                else {
+                    const gridClip = clipShape as Cartesian2DArea;
+                    if (isHorizontalOrRadial) {
+                        start = gridClip.x;
+                        end =  gridClip.x + gridClip.width;
+                        current = symbol.x;
+                    }
+                    else {
+                        start = gridClip.y + gridClip.height;
+                        end = gridClip.y;
+                        current = symbol.y;
+                    }
+                }
+                const ratio = end === start ? 0 : (current - start) / (end - start);
+
+                let delay;
+                if (typeof seriesDalay === 'function') {
+                    delay = seriesDalay(idx);
+                }
+                else {
+                    delay = (seriesDuration * ratio) + seriesDalayValue;
+                }
+
+                el.stopAnimation();
+
                 const symbolSize = data.getItemVisual(
                     idx,
                     'symbolSize'
@@ -775,27 +833,6 @@ class LineView extends ChartView {
                 const symbolSizeArr = zrUtil.isArray(symbolSize)
                     ? symbolSize : [symbolSize, symbolSize];
                 const lineWidth = el.style.lineWidth;
-
-                const total = isCoordSysPolar
-                    ? 0
-                    : (clipShape as Cartesian2DArea).width;
-                const start = isCoordSysPolar
-                    ? 0
-                    : (clipShape as Cartesian2DArea).x;
-
-                let delay;
-                if (typeof seriesDalay === 'function') {
-                    delay = seriesDalay(idx);
-                }
-                else {
-                    delay = (
-                        total === 0
-                            ? 0
-                            : seriesDuration / total * (symbol.x - start)
-                    ) + seriesDalayValue;
-                }
-
-                el.stopAnimation();
 
                 el.attr({
                     scaleX: 1,
@@ -816,8 +853,10 @@ class LineView extends ChartView {
                 });
 
                 const text = el.getTextContent();
-                const textOpacity = text.style.opacity == null ? 1 : text.style.opacity;
                 if (text) {
+                    const textOpacity = !text.style || text.style.opacity == null
+                        ? 1
+                        : text.style.opacity;
                     text.stopAnimation();
                     text.attr({
                         style: {
