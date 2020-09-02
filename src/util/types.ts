@@ -695,7 +695,7 @@ export interface AnimationOptionMixin {
      * Delay of initialize animation
      * Can be a callback to specify duration of each element
      */
-    animationDelay?: AnimationDelayCallback
+    animationDelay?: number | AnimationDelayCallback
     // For update animation
     /**
      * Delay of data update animation.

@@ -43,6 +43,7 @@ import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 import { getECData } from '../../util/ecData';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 
 type PolarArea = ReturnType<Polar['getArea']>;
@@ -460,6 +461,7 @@ class LineView extends ChartView {
                 isIgnore: isIgnoreFunc,
                 clipShape: clipShapeForSymbol
             });
+            this._initAnimation(data, isCoordSysPolar, clipShapeForSymbol);
 
             if (step) {
                 // TODO If stacked series is not step
@@ -746,6 +748,88 @@ class LineView extends ChartView {
 
         this._polygon = polygon;
         return polygon;
+    }
+
+    _initAnimation(
+        data: List,
+        isCoordSysPolar: boolean,
+        clipShape: PolarArea | Cartesian2DArea
+    ) {
+        const seriesModel = data.hostModel;
+        let seriesDuration = seriesModel.get('animationDuration');
+        if (typeof seriesDuration === 'function') {
+            seriesDuration = seriesDuration(null);
+        }
+        let seriesDalay = seriesModel.get('animationDelay') || 0;
+        if (typeof seriesDalay === 'function') {
+            seriesDalay = seriesDalay(null);
+        }
+
+        data.eachItemGraphicEl(function (symbol, idx) {
+            const el = (symbol as SymbolClz).childAt(0) as Displayable;
+            if (el) {
+                const symbolSize = data.getItemVisual(
+                    idx,
+                    'symbolSize'
+                );
+                const symbolSizeArr = zrUtil.isArray(symbolSize)
+                    ? symbolSize : [symbolSize, symbolSize];
+                const lineWidth = el.style.lineWidth;
+
+                const total = isCoordSysPolar
+                    ? 0
+                    : (clipShape as Cartesian2DArea).width;
+                const start = isCoordSysPolar
+                    ? 0
+                    : (clipShape as Cartesian2DArea).x;
+                const delay = (
+                    total === 0
+                        ? 0
+                        : seriesDuration / total * (symbol.x - start)
+                ) + seriesDalay;
+
+                el.stopAnimation();
+
+                el.attr({
+                    scaleX: 1,
+                    scaleY: 1,
+                    style: {
+                        lineWidth: 0
+                    }
+                });
+                el.animateTo({
+                    scaleX: symbolSizeArr[0] / 2,
+                    scaleY: symbolSizeArr[1] / 2,
+                    style: {
+                        lineWidth: lineWidth
+                    }
+                }, {
+                    duration: 200,
+                    delay: delay
+                });
+
+                const text = el.getTextContent();
+                const textOpacity = text.style.opacity == null ? 1 : text.style.opacity;
+                if (text) {
+                    text.stopAnimation();
+                    text.attr({
+                        style: {
+                            opacity: 0
+                        }
+                    });
+                    text.animateTo({
+                        style: {
+                            opacity: textOpacity
+                        }
+                    }, {
+                        duration: 300,
+                        delay: delay
+                    });
+                }
+
+                (el as ECElement).disableLabelAnimation = true;
+            }
+        });
     }
 
     /**
