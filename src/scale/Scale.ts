@@ -160,7 +160,8 @@ abstract class Scale {
             fixMin?: boolean,
             fixMax?: boolean,
             minInterval?: number,
-            maxInterval?: number
+            maxInterval?: number,
+            interval?: number
         }
     ): void;
 

@@ -35,13 +35,14 @@ export function intervalScaleNiceTicks(
     extent: [number, number],
     splitNumber: number,
     minInterval?: number,
-    maxInterval?: number
+    maxInterval?: number,
+    interval?: number
 ): intervalScaleNiceTicksResult {
 
     const result = {} as intervalScaleNiceTicksResult;
 
     const span = extent[1] - extent[0];
-    let interval = result.interval = numberUtil.nice(span / splitNumber, true);
+    interval = result.interval = interval || numberUtil.nice(span / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }

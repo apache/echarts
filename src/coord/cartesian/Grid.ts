@@ -86,16 +86,32 @@ class Grid implements CoordinateSystemMaster {
         return this._rect;
     }
 
-    recalAxisExtent(axes: Axis2D[], sectionNum: number[], maxSplitNumber: number) {
+    calAxisSplitNumber(axes: Axis2D[]) {
+        const splitNumber: number[] = [];
+        each(axes, axis => {
+            niceScaleExtent(axis.scale, axis.model);
+            if (axis.type !== 'value') {
+                return;
+            }
+            const extent = axis.scale.getExtent();
+            splitNumber.push(
+                Math.ceil((extent[1] - extent[0]) / (axis.scale as IntervalScale).getInterval())
+            );
+        });
+
+        return splitNumber;
+    }
+
+    resetAxisExtent(axes: Axis2D[], splitNumber: number[], maxSplitNumber: number) {
         each(axes, function (axis, index) {
-            if (!(maxSplitNumber - sectionNum[index]) || axis.type !== 'value') {
+            if (!(maxSplitNumber - splitNumber[index]) || axis.type !== 'value') {
                 return;
             };
 
             const extent = axis.scale.getExtent();
             niceScaleExtent(axis.scale, axis.model, [
                 extent[0],
-                extent[1] + (maxSplitNumber - sectionNum[index]) * (axis.scale as IntervalScale).getInterval()
+                extent[1] + (maxSplitNumber - splitNumber[index]) * (axis.scale as IntervalScale).getInterval()
             ], maxSplitNumber);
         });
     }
@@ -106,27 +122,10 @@ class Grid implements CoordinateSystemMaster {
 
         this._updateScale(ecModel, this.model);
 
-        const sectionNumY: number[] = [];
-        const sectionNumX: number[] = [];
-        each(axesMap.x, function (xAxis) {
-            niceScaleExtent(xAxis.scale, xAxis.model);
-            if (xAxis.type !== 'value') {
-                return;
-            }
-            const extent = xAxis.scale.getExtent();
-            sectionNumX.push((extent[1] - extent[0]) / (xAxis.scale as IntervalScale).getInterval());
-        });
-        each(axesMap.y, function (yAxis) {
-            niceScaleExtent(yAxis.scale, yAxis.model);
-            if (yAxis.type !== 'value') {
-                return;
-            }
-            const extent = yAxis.scale.getExtent();
-            sectionNumY.push((extent[1] - extent[0]) / (yAxis.scale as IntervalScale).getInterval());
-        });
-
-        this.recalAxisExtent(axesMap.y, sectionNumY, Math.max(...sectionNumY));
-        this.recalAxisExtent(axesMap.x, sectionNumX, Math.max(...sectionNumX));
+        const splitNumberX = this.calAxisSplitNumber(axesMap.x);
+        const splitNumberY = this.calAxisSplitNumber(axesMap.y);
+        this.resetAxisExtent(axesMap.y, splitNumberY, Math.max(...splitNumberY));
+        this.resetAxisExtent(axesMap.x, splitNumberX, Math.max(...splitNumberX));
 
         // Key: axisDim_axisIndex, value: boolean, whether onZero target.
         const onZeroRecords = {} as Dictionary<boolean>;

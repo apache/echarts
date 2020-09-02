@@ -158,6 +158,7 @@ export function niceScaleExtent(
     }
 
     const scaleType = scale.type;
+    const interval = model.get('interval');
     scale.setExtent(extent[0], extent[1]);
     scale.niceExtent({
         splitNumber: splitNumber,
@@ -166,7 +167,8 @@ export function niceScaleExtent(
         minInterval: (scaleType === 'interval' || scaleType === 'time')
             ? model.get('minInterval') : null,
         maxInterval: (scaleType === 'interval' || scaleType === 'time')
-            ? model.get('maxInterval') : null
+            ? model.get('maxInterval') : null,
+        interval
     });
 
     // If some one specified the min, max. And the default calculated interval
@@ -174,7 +176,6 @@ export function niceScaleExtent(
     // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
     // to be 60.
     // FIXME
-    const interval = model.get('interval');
     if (interval != null) {
         (scale as IntervalScale).setInterval && (scale as IntervalScale).setInterval(interval);
     }
