@@ -32,7 +32,7 @@ under the License.
     </head>
     <body>
         <style>
-            h1 {
+            h2 {
                 line-height: 60px;
                 height: 60px;
                 background: #146402;
@@ -44,13 +44,139 @@ under the License.
             .chart {
                 height: 500px;
             }
+            #main0, #main1 {
+                height: 300px;
+            }
             button {
                 font-size: 16px;
             }
         </style>
 
+        <h2>Default Label Animation</h2>
+        <div class="chart" id="main0"></div>
+
+
+        <h2>Label Animation with animationDelay callback</h2>
+        <div class="chart" id="main1"></div>
+
+
+        <h2>dataZoom Animation</h2>
         <button onclick="change()">CHANGE</button>
-        <div class="chart" id="main"></div>
+        <div class="chart" id="main2"></div>
+
+
+
+        <script>
+
+            var echarts;
+            var chart;
+
+            require([
+                'echarts'
+            ], function (ec) {
+                echarts = ec;
+                chart = myChart = echarts.init(document.getElementById('main0'));
+
+                var xData = [];
+                var data = [];
+                var value = 200;
+                var positive = 1;
+                for (let i = 0; i < 10; ++i) {
+                    xData.push(i + '');
+                    value = positive * Math.round(Math.random() * 50) + value;
+                    data.push(value);
+
+                    if (Math.random() > 0.7) {
+                        positive = -1 * positive;
+                    }
+                }
+
+                option = {
+                    title: {
+                        text: 'Default Line Animation',
+                        subtext: 'Symbol and text should sync with line clipPath'
+                    },
+                    xAxis: {
+                        data: xData
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        }
+                    }],
+                    animationDuration: 3000,
+                    animationDurationUpdate: 1000
+                };
+                chart.setOption(option);
+
+            });
+
+        </script>
+
+
+        <script>
+
+            var echarts;
+            var chart;
+
+            require([
+                'echarts'
+            ], function (ec) {
+                echarts = ec;
+                chart = myChart = echarts.init(document.getElementById('main1'));
+
+                var xData = [];
+                var data = [];
+                var value = 200;
+                var positive = 1;
+                for (let i = 0; i < 10; ++i) {
+                    xData.push(i + '');
+                    value = positive * Math.round(Math.random() * 50) + value;
+                    data.push(value);
+
+                    if (Math.random() > 0.7) {
+                        positive = -1 * positive;
+                    }
+                }
+
+                option = {
+                    title: {
+                        text: 'Label Animation with animationDelay callback',
+                        subtext: 'Symbol and text should sync with line clipPath'
+                    },
+                    xAxis: {
+                        data: xData
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        label: {
+                            show: true
+                        },
+                        animationEasing: 'cubicIn',
+                        animationDelay: function (i) {
+                            if (i == null) {
+                                return null;
+                            }
+                            else {
+                                // cubicIn is x=t^3 so t=x^(1/3)
+                                return (Math.pow((i + 0.5) / data.length, 1 / 3)) * 3000;
+                            }
+                        }
+                    }],
+                    animationDuration: 3000,
+                    animationDurationUpdate: 1000
+                };
+                chart.setOption(option);
+
+            });
+
+        </script>
+
 
 
 
@@ -64,25 +190,9 @@ under the License.
 
             require([
                 'echarts'
-                // 'echarts/chart/line',
-                // 'echarts/chart/bar',
-                // 'echarts/chart/pie',
-                // 'echarts/chart/scatter',
-                // 'echarts/chart/map',
-                // 'echarts/chart/parallel',
-                // 'echarts/chart/radar',
-                // 'echarts/component/grid',
-                // 'echarts/component/polar',
-                // 'echarts/component/geo',
-                // 'echarts/component/singleAxis',
-                // 'echarts/component/legend',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/toolbox',
-                // 'echarts/component/visualMap',
-                // 'echarts/component/dataZoom'
             ], function (ec) {
                 echarts = ec;
-                chart = myChart = echarts.init(document.getElementById('main'));
+                chart = myChart = echarts.init(document.getElementById('main2'));
 
                 var base = +new Date(1968, 9, 3);
                 var oneDay = 24 * 3600 * 1000;

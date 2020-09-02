@@ -760,10 +760,10 @@ class LineView extends ChartView {
         if (typeof seriesDuration === 'function') {
             seriesDuration = seriesDuration(null);
         }
-        let seriesDalay = seriesModel.get('animationDelay') || 0;
-        if (typeof seriesDalay === 'function') {
-            seriesDalay = seriesDalay(null);
-        }
+        const seriesDalay = seriesModel.get('animationDelay') || 0;
+        const seriesDalayValue = typeof seriesDalay === 'function'
+            ? seriesDalay(null)
+            : seriesDalay;
 
         data.eachItemGraphicEl(function (symbol, idx) {
             const el = (symbol as SymbolClz).childAt(0) as Displayable;
@@ -782,11 +782,18 @@ class LineView extends ChartView {
                 const start = isCoordSysPolar
                     ? 0
                     : (clipShape as Cartesian2DArea).x;
-                const delay = (
-                    total === 0
-                        ? 0
-                        : seriesDuration / total * (symbol.x - start)
-                ) + seriesDalay;
+
+                let delay;
+                if (typeof seriesDalay === 'function') {
+                    delay = seriesDalay(idx);
+                }
+                else {
+                    delay = (
+                        total === 0
+                            ? 0
+                            : seriesDuration / total * (symbol.x - start)
+                    ) + seriesDalayValue;
+                }
 
                 el.stopAnimation();
 
