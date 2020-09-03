@@ -618,11 +618,17 @@ function getViewRect(model, api) {
 }
 
 function makeIcon(timelineModel, objPath, rect, opts) {
-    return graphic.createIcon(
+    var style = opts.style;
+    var icon = graphic.createIcon(
         timelineModel.get(objPath),
         opts || {},
         new BoundingRect(rect[0], rect[1], rect[2], rect[3])
     );
+    // TODO createIcon won't use style in opt.
+    if (style) {
+        icon.setStyle(style);
+    }
+    return icon;
 }
 
 /**
