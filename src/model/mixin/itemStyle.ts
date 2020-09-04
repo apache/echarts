@@ -30,7 +30,12 @@ export const ITEM_STYLE_KEY_MAP = [
     ['shadowBlur'],
     ['shadowOffsetX'],
     ['shadowOffsetY'],
-    ['shadowColor']
+    ['shadowColor'],
+    ['lineDash', 'borderType'],
+    ['lineDashOffset', 'borderDashOffset'],
+    ['lineCap', 'borderCap'],
+    ['lineJoin', 'borderJoin'],
+    ['miterLimit', 'borderMiterLimit']
 ];
 
 const getItemStyle = makeStyleMapper(ITEM_STYLE_KEY_MAP);
@@ -42,7 +47,12 @@ type ItemStyleKeys = 'fill'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
-    | 'shadowColor';
+    | 'shadowColor'
+    | 'lineDash'
+    | 'lineDashOffset'
+    | 'lineCap'
+    | 'lineJoin'
+    | 'miterLimit';
 
 export type ItemStyleProps = Pick<PathStyleProps, ItemStyleKeys>;
 
@@ -53,17 +63,9 @@ class ItemStyleMixin {
         excludes?: readonly (keyof ItemStyleOption)[],
         includes?: readonly (keyof ItemStyleOption)[]
     ): ItemStyleProps {
-        const style = getItemStyle(this, excludes, includes);
-        const lineDash = this.getBorderLineDash();
-        lineDash && (style.lineDash = lineDash);
-        return style;
+        return getItemStyle(this, excludes, includes);
     }
 
-    getBorderLineDash(this: Model): number[] {
-        const lineType = this.get('borderType');
-        return (lineType === 'solid' || lineType == null) ? null
-            : (lineType === 'dashed' ? [5, 5] : [1, 1]);
-    }
 }
 
 export {ItemStyleMixin};

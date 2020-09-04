@@ -29,7 +29,12 @@ export const LINE_STYLE_KEY_MAP = [
     ['shadowBlur'],
     ['shadowOffsetX'],
     ['shadowOffsetY'],
-    ['shadowColor']
+    ['shadowColor'],
+    ['lineDash', 'type'],
+    ['lineDashOffset', 'dashOffset'],
+    ['lineCap', 'cap'],
+    ['lineJoin', 'join'],
+    ['miterLimit']
 ];
 
 const getLineStyle = makeStyleMapper(LINE_STYLE_KEY_MAP);
@@ -40,38 +45,24 @@ type LineStyleKeys = 'lineWidth'
     | 'shadowBlur'
     | 'shadowOffsetX'
     | 'shadowOffsetY'
-    | 'shadowColor';
+    | 'shadowColor'
+    | 'lineDash'
+    | 'lineDashOffset'
+    | 'lineCap'
+    | 'lineJoin'
+    | 'miterLimit';
 
 type LineStyleProps = Pick<PathStyleProps, LineStyleKeys>;
 
 class LineStyleMixin {
 
-    getLineStyle(this: Model, excludes?: readonly (keyof LineStyleOption)[]): LineStyleProps {
-        const style = getLineStyle(this, excludes);
-        // Always set lineDash whether dashed, otherwise we can not
-        // erase the previous style when assigning to el.style.
-        (style as any).lineDash = this.getLineDash((style as any).lineWidth);
-        return style;
+    getLineStyle(
+        this: Model,
+        excludes?: readonly (keyof LineStyleOption)[]
+    ): LineStyleProps {
+        return getLineStyle(this, excludes);
     }
 
-    getLineDash(this: Model, lineWidth?: number) {
-        if (lineWidth == null) {
-            lineWidth = 1;
-        }
-        const lineType = this.get('type');
-        const dotSize = Math.max(lineWidth, 2);
-        const dashSize = lineWidth * 4;
-        return (lineType === 'solid' || lineType == null)
-            // Use `false` but not `null` for the solid line here, because `null` might be
-            // ignored when assigning to `el.style`. e.g., when setting `lineStyle.type` as
-            // `'dashed'` and `emphasis.lineStyle.type` as `'solid'` in graph series, the
-            // `lineDash` gotten form the latter one is not able to erase that from the former
-            // one if using `null` here according to the emhpsis strategy in `util/graphic.js`.
-            ? false
-            : lineType === 'dashed'
-            ? [dashSize, dashSize]
-            : [dotSize, dotSize];
-    }
 };
 
 export {LineStyleMixin};

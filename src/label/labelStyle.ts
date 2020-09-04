@@ -20,7 +20,7 @@ import { deprecateReplaceLog } from '../util/log';
 
 type TextCommonParams = {
     /**
-     * Whether diable drawing box of block (outer most).
+     * Whether disable drawing box of block (outer most).
      */
     disableBox?: boolean
     /**
@@ -394,7 +394,7 @@ const TEXT_PROPS_SELF = [
     'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'
 ] as const;
 const TEXT_PROPS_BOX = [
-    'padding', 'borderWidth', 'borderRadius',
+    'padding', 'borderWidth', 'borderRadius', 'borderDashOffset',
     'backgroundColor', 'borderColor',
     'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
 ] as const;
@@ -451,10 +451,19 @@ function setTokenTextStyle(
     if (strokeColor != null) {
         textStyle.stroke = strokeColor;
     }
-    const lineWidth = retrieve2(textStyleModel.getShallow('textBorderWidth'), globalTextStyle.textBorderWidth);
-    if (lineWidth != null) {
-        textStyle.lineWidth = lineWidth;
+    const textBorderWidth = retrieve2(textStyleModel.getShallow('textBorderWidth'), globalTextStyle.textBorderWidth);
+    if (textBorderWidth != null) {
+        textStyle.lineWidth = textBorderWidth;
     }
+    const textBorderType = retrieve2(textStyleModel.getShallow('textBorderType'), globalTextStyle.textBorderType);
+    if (textBorderType != null) {
+        textStyle.lineDash = textBorderType as any;
+    }
+    const textBorderDashOffset = retrieve2(textStyleModel.getShallow('textBorderDashOffset'), globalTextStyle.textBorderDashOffset);
+    if (textBorderDashOffset != null) {
+        textStyle.lineDashOffset = textBorderDashOffset;
+    }
+
     // TODO
     if (!isNotNormal && !isAttached) {
         // Set default finally.
@@ -494,6 +503,11 @@ function setTokenTextStyle(
             }
         }
 
+        const borderType = textStyleModel.getShallow('borderType');
+        if (borderType != null) {
+            textStyle.borderDash = borderType as any;
+        }
+
         if ((textStyle.backgroundColor === 'auto' || textStyle.backgroundColor === 'inherit') && inheritColor) {
             if (__DEV__) {
                 if (textStyle.backgroundColor === 'auto') {
@@ -512,6 +526,7 @@ function setTokenTextStyle(
         }
     }
 }
+
 export function getFont(
     opt: Pick<TextCommonOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>,
     ecModel: GlobalModel

@@ -200,7 +200,6 @@ class Symbol extends graphic.Group {
         const symbolPath = this.childAt(0) as ECSymbol;
         const seriesModel = data.hostModel as SeriesModel;
 
-
         let emphasisItemStyle;
         let blurItemStyle;
         let selectItemStyle;
@@ -232,8 +231,8 @@ class Symbol extends graphic.Group {
         if (!seriesScope || data.hasItemOption) {
             const itemModel = (seriesScope && seriesScope.itemModel)
                 ? seriesScope.itemModel : data.getItemModel<SymbolDrawItemModelOption>(idx);
-
             const emphasisModel = itemModel.getModel('emphasis');
+
             emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             selectItemStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
             blurItemStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
