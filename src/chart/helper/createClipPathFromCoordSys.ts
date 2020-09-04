@@ -31,7 +31,9 @@ type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
 function createGridClipPath(
     cartesian: Cartesian2D,
     hasAnimation: boolean,
-    seriesModel: SeriesModelWithLineWidth
+    seriesModel: SeriesModelWithLineWidth,
+    done?: () => void,
+    during?: (percent: number, clipRect: graphic.Rect) => void
 ) {
     const rect = cartesian.getArea();
 
@@ -69,13 +71,20 @@ function createGridClipPath(
             clipPath.shape.y = y + height;
             clipPath.shape.height = 0;
         }
+
+        const duringCb = typeof during === 'function'
+            ? (percent: number) => {
+                during(percent, clipPath);
+            }
+            : null;
+
         graphic.initProps(clipPath, {
             shape: {
                 width: width,
                 height: height,
                 y: y
             }
-        }, seriesModel);
+        }, seriesModel, null, done, duringCb);
     }
 
     return clipPath;
@@ -112,6 +121,7 @@ function createPolarClipPath(
         else {
             clipPath.shape.r = r0;
         }
+
         graphic.initProps(clipPath, {
             shape: {
                 endAngle: sectorArea.endAngle,
@@ -125,7 +135,9 @@ function createPolarClipPath(
 function createClipPath(
     coordSys: CoordinateSystem,
     hasAnimation: boolean,
-    seriesModel: SeriesModelWithLineWidth
+    seriesModel: SeriesModelWithLineWidth,
+    done?: () => void,
+    during?: (percent: number) => void
 ) {
     if (!coordSys) {
         return null;
@@ -134,7 +146,7 @@ function createClipPath(
         return createPolarClipPath(coordSys as Polar, hasAnimation, seriesModel);
     }
     else if (coordSys.type === 'cartesian2d') {
-        return createGridClipPath(coordSys as Cartesian2D, hasAnimation, seriesModel);
+        return createGridClipPath(coordSys as Cartesian2D, hasAnimation, seriesModel, done, during);
     }
     return null;
 }

@@ -82,7 +82,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     // If clip the overflow value
     clip?: boolean
 
-    label?: LabelOption
+    label?: LabelOption & {showDuringLabel: boolean}
 
     lineStyle?: LineStyleOption
 
@@ -138,7 +138,8 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         clip: true,
 
         label: {
-            position: 'top'
+            position: 'top',
+            showDuringLabel: false
         },
 
         lineStyle: {

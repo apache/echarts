@@ -37,14 +37,19 @@ import type ExtensionAPI from '../../ExtensionAPI';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Polar from '../../coord/polar/Polar';
 import type List from '../../data/List';
-import type { Payload, Dictionary, ColorString, ECElement, DisplayState } from '../../util/types';
+import type { Payload, Dictionary, ColorString, ECElement, DisplayState, ComponentOption } from '../../util/types';
 import type OrdinalScale from '../../scale/Ordinal';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '../../util/states';
 import { getECData } from '../../util/ecData';
 import Displayable from 'zrender/src/graphic/Displayable';
+import {makeInner} from '../../util/model';
+import ComponentModel from '../../model/Component';
 
+const inner = makeInner<{
+    defaultOption: ComponentOption
+}, graphic.Text>();
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -326,13 +331,29 @@ function canShowAllSymbolForCategory(
 }
 
 function createLineClipPath(
+    lineView: LineView,
     coordSys: Cartesian2D | Polar,
     hasAnimation: boolean,
     seriesModel: LineSeriesModel
 ) {
     if (coordSys.type === 'cartesian2d') {
+        const labelModel = seriesModel.getModel('label');
+        let showDuringLabel = labelModel.get('showDuringLabel');
+
+        const done = showDuringLabel
+            ? () => {
+
+            }
+            : null;
+
+        const during = showDuringLabel
+            ? (percent: number, clipRect: graphic.Rect) => {
+                lineView._updateDuringLabel(percent, clipRect, lineView._data);
+            }
+            : null;
+
         const isHorizontal = coordSys.getBaseAxis().isHorizontal();
-        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel);
+        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, done, during);
         // Expand clip shape to avoid clipping when line value exceeds axis
         if (!seriesModel.get('clip', true)) {
             const rectShape = clipPath.shape;
@@ -349,6 +370,8 @@ function createLineClipPath(
         return clipPath;
     }
     else {
+        const labelModel = seriesModel.getModel('label');
+        const showDuringLabel = labelModel.get('showDuringLabel');
         return createPolarClipPath(coordSys, hasAnimation, seriesModel);
     }
 
@@ -362,6 +385,8 @@ class LineView extends ChartView {
 
     _lineGroup: graphic.Group;
     _coordSys: Cartesian2D | Polar;
+
+    _duringLabel: graphic.Text;
 
     _polyline: ECPolyline;
     _polygon: ECPolygon;
@@ -468,6 +493,8 @@ class LineView extends ChartView {
                 clipShapeForSymbol
             );
 
+            this._initDuringLabel(seriesModel, data, true);
+
             if (step) {
                 // TODO If stacked series is not step
                 points = turnPointsIntoStep(points, coordSys, step);
@@ -480,7 +507,9 @@ class LineView extends ChartView {
                     points, stackedOnPoints
                 );
             }
-            lineGroup.setClipPath(createLineClipPath(coordSys, true, seriesModel));
+            lineGroup.setClipPath(
+                createLineClipPath(this, coordSys, true, seriesModel)
+            );
         }
         else {
             if (isAreaChart && !polygon) {
@@ -496,7 +525,9 @@ class LineView extends ChartView {
             }
 
             // Update clipPath
-            lineGroup.setClipPath(createLineClipPath(coordSys, false, seriesModel));
+            lineGroup.setClipPath(
+                createLineClipPath(this, coordSys, false, seriesModel)
+            );
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed
@@ -876,6 +907,59 @@ class LineView extends ChartView {
                 (el as ECElement).disableLabelAnimation = true;
             }
         });
+    }
+
+    _initDuringLabel(
+        seriesModel: LineSeriesModel,
+        data: List,
+        isUpdate: boolean
+    ) {
+        const labelModel = seriesModel.getModel('label');
+        const showDuringLabel = labelModel.get('showDuringLabel');
+
+        if (showDuringLabel) {
+            if (!this._duringLabel) {
+                this._duringLabel = new graphic.Text({
+                    style: {
+                        text: 'abcd'
+                    }
+                });
+                this.group.add(this._duringLabel);
+            }
+
+            // const defaultTextGetter = (values: ParsedValue | ParsedValue[]) => {
+            //     return getDefaultLabel(seriesModel.getData(), 0, values);
+            // };
+
+            // (isUpdate ? updateLabel : initLabel)(
+            //     this._duringLabel, data, 0, labelModel, seriesModel, seriesModel, defaultTextGetter
+            // );
+        }
+    }
+
+    _updateDuringLabel(
+        percent: number,
+        clipRect: graphic.Rect,
+        data: List
+    ) {
+        console.log(percent, clipRect.shape)
+        if (this._duringLabel) {
+            this._duringLabel.attr({
+                x: clipRect.shape.x + clipRect.shape.width + 10,
+                y: 0
+            });
+
+            const baseAxis = this._coordSys.getBaseAxis();
+
+            let splitFound = false;
+            let left = null;
+            data.each(function (idx) {
+                const right = data.getValues(idx);
+                console.log(right);
+            });
+
+            const host = inner(this._duringLabel);
+        }
     }
 
     /**

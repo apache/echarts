@@ -62,6 +62,7 @@ interface SetLabelStyleOpt<LDI> extends TextCommonParams {
 }
 type LabelModel = Model<LabelOption & {
     formatter?: string | ((params: any) => string);
+    showDuringLabel?: boolean // Currently only supported by line charts
 }>;
 type LabelModelForText = Model<Omit<
     // Remove
