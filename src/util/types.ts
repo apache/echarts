@@ -27,7 +27,7 @@
 
 import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
-import DataFormatMixin from '../model/mixin/dataFormat';
+import { DataFormatMixin } from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import SeriesModel from '../model/Series';
@@ -275,6 +275,12 @@ export interface LoadingEffect extends Element {
     resize: () => void;
 }
 
+/**
+ * 'html' is used for rendering tooltip in extra DOM form, and the result
+ * string is used as DOM HTML content.
+ * 'richText' is used for rendering tooltip in rich text form, for those where
+ * DOM operation is not supported.
+ */
 export type TooltipRenderMode = 'html' | 'richText';
 
 export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesDesc';

@@ -18,10 +18,12 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { parseDate, isNumeric } from './number';
-import { TooltipRenderMode, ColorString } from './types';
+import { parseDate, isNumeric, numericToNumber } from './number';
+import { TooltipRenderMode, ColorString, ZRColor, DimensionType } from './types';
 import { Dictionary } from 'zrender/src/core/types';
-import { format, pad } from './time';
+import { GradientObject } from 'zrender/src/graphic/Gradient';
+import { format as timeFormat, pad } from './time';
+import { deprecateReplaceLog } from './log';
 
 /**
  * Add a comma each three digit.
@@ -67,12 +69,57 @@ export function encodeHTML(source: string): string {
         });
 }
 
-export function concatTooltipHtml(html: string, value: unknown, dontEncodeHtml?: boolean): string {
-    return (dontEncodeHtml ? html : `<span style="font-size:12px;color:#6e7079;">${encodeHTML(html)}</span>`)
-            + (value ? '<span style="float:right;margin-left:20px;color:#464646;font-weight:900;font-size:14px;">' : '')
-            + encodeHTML(value as string)
-            + (value ? '</span>' : '');
+
+/**
+ * Make value user readable for tooltip and label.
+ * "User readable":
+ *     Try to not print programmer-specific text like NaN, Infinity, null, undefined.
+ *     Avoid to display an empty string, which users can not recognize there is
+ *     a value and it might look like a bug.
+ */
+export function makeValueReadable(
+    value: unknown,
+    valueType?: DimensionType
+): string {
+    const USER_READABLE_DEFUALT_TIME_PATTERN = 'yyyy-MM-dd hh:mm:ss';
+
+    function stringToUserReadable(str: string): string {
+        return (str && zrUtil.trim(str)) ? str : '-';
+    }
+    function isNumberUserReadable(num: number): boolean {
+        return !!(num != null && !isNaN(num) && isFinite(num));
+    }
+
+    const isTypeTime = valueType === 'time';
+    const isValueDate = value instanceof Date;
+    if (isTypeTime || isValueDate) {
+        const date = isTypeTime ? parseDate(value) : value;
+        if (!isNaN(+date)) {
+            // PENDING: add param `useUTC`?
+            return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN);
+        }
+        else if (isValueDate) {
+            return '-';
+        }
+        // In other cases, continue to try to display the value in the following code.
+    }
+
+    if (valueType === 'ordinal') {
+        return zrUtil.isStringSafe(value)
+            ? stringToUserReadable(value)
+            : zrUtil.isNumber(value)
+            ? (isNumberUserReadable(value) ? value + '' : '-')
+            : '-';
+    }
+    // By default.
+    const numericResult = numericToNumber(value);
+    return isNumberUserReadable(numericResult)
+        ? addCommas(numericResult)
+        : zrUtil.isStringSafe(value)
+        ? stringToUserReadable(value)
+        : '-';
 }
+
 
 const TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
 
@@ -105,7 +152,7 @@ export function formatTpl(
     if (isTimeAxis) {
         const axisValue = paramsList[0].data[paramsList[0].axisIndex];
         const date = parseDate(axisValue);
-        return format(date, tpl);
+        return timeFormat(date, tpl);
     }
     else {
         const $vars = paramsList[0].$vars || [];
@@ -142,20 +189,18 @@ export function formatTplSimple(tpl: string, param: Dictionary<any>, encode?: bo
 interface RichTextTooltipMarker {
     renderMode: TooltipRenderMode;
     content: string;
-    style: {
-        color: ColorString
-        [key: string]: any
-    };
+    style: Dictionary<unknown>;
 }
 export type TooltipMarker = string | RichTextTooltipMarker;
+export type TooltipMarkerType = 'item' | 'subItem';
 interface GetTooltipMarkerOpt {
     color?: ColorString;
     extraCssText?: string;
     // By default: 'item'
-    type?: 'item' | 'subItem';
+    type?: TooltipMarkerType;
     renderMode?: TooltipRenderMode;
     // id name for marker. If only one marker is in a rich text, this can be omitted.
-    // By default: 'X'
+    // By default: 'markerX'
     markerId?: string;
 }
 // Only support color string
@@ -170,7 +215,6 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     const type = opt.type;
     extraCssText = opt.extraCssText;
     const renderMode = opt.renderMode || 'html';
-    const markerId = opt.markerId || 'X';
 
     if (!color) {
         return '';
@@ -187,13 +231,27 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
             + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     }
     else {
-        // Space for rich element marker
+        // Should better not to auto generate style name by auto-increment number here.
+        // Because this util is usually called in tooltip formatter, which is probably
+        // called repeatly when mouse move and the auto-increment number increases fast.
+        // Users can make their own style name by theirselves, make it unique and readable.
+        const markerId = opt.markerId || 'markerX';
         return {
             renderMode: renderMode,
-            content: '{marker' + markerId + '|}  ',
-            style: {
-                color: color
-            }
+            content: '{' + markerId + '|}  ',
+            style: type === 'subItem'
+                ? {
+                    width: 4,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: color
+                }
+                : {
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: color
+                }
         };
     }
 }
@@ -209,7 +267,11 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
  *           and `module:echarts/util/number#parseDate`.
  * @inner
  */
-export function formatTime(tpl: string, value: number | string | Date, isUTC?: boolean) {
+export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
+    if (__DEV__) {
+        deprecateReplaceLog('echarts.format.formatTime', 'echarts.time.format');
+    }
+
     if (tpl === 'week'
         || tpl === 'month'
         || tpl === 'quarter'
@@ -255,6 +317,21 @@ export function capitalFirst(str: string): string {
     return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
 }
 
+/**
+ * @return Never be null/undefined.
+ */
+export function convertToColorString(color: ZRColor, defaultColor?: ColorString): ColorString {
+    defaultColor = defaultColor || 'transparent';
+    return zrUtil.isString(color)
+        ? color
+        : zrUtil.isObject(color)
+        ? (
+            (color as GradientObject).colorStops
+            && ((color as GradientObject).colorStops[0] || {}).color
+            || defaultColor
+        )
+        : defaultColor;
+}
 
 export {truncateText} from 'zrender/src/graphic/helper/parseText';
 

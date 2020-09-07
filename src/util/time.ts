@@ -106,7 +106,7 @@ export function getDefaultFormatPrecisionOfInterval(timeUnit: PrimaryTimeUnit): 
 }
 
 export function format(
-    time: Date | number, template: string, lang?: string | Model<LocaleOption>, isUTC?: boolean
+    time: unknown, template: string, lang?: string | Model<LocaleOption>, isUTC?: boolean
 ): string {
     const date = numberUtil.parseDate(time);
     const y = date[fullYearGetterName(isUTC)]();

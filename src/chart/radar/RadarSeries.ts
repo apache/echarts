@@ -20,7 +20,6 @@
 import SeriesModel from '../../model/Series';
 import createListSimply from '../helper/createListSimply';
 import * as zrUtil from 'zrender/src/core/util';
-import {encodeHTML, concatTooltipHtml} from '../../util/format';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
@@ -31,13 +30,12 @@ import {
     AreaStyleOption,
     OptionDataValue,
     StatesOptionMixin,
-    OptionDataItemObject,
-    TooltipRenderMode,
-    TooltipOrderMode
+    OptionDataItemObject
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import Radar from '../../coord/radar/Radar';
+import { createTooltipMarkup, retrieveVisualColorForTooltipMarker as retrieveVisualColorForTooltip } from '../../component/tooltip/tooltipMarkup';
 
 type RadarSeriesDataValue = OptionDataValue[];
 
@@ -98,60 +96,31 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
     formatTooltip(
         dataIndex: number,
         multipleSeries?: boolean,
-        dataType?: string,
-        renderMode?: TooltipRenderMode,
-        order?: TooltipOrderMode
+        dataType?: string
     ) {
         const data = this.getData();
         const coordSys = this.coordinateSystem;
         const indicatorAxes = coordSys.getIndicatorAxes();
         const name = this.getData().getName(dataIndex);
-        zrUtil.each(indicatorAxes, function (axis, idx) {
-            axis.value = data.get(data.mapDimension(axis.dim), dataIndex);
-        });
-        switch (order) {
-            case 'valueAsc':
-                indicatorAxes.sort(function (a, b) {
-                    return +(a.value) - +(b.value);
-                });
-                break;
+        const nameToDisplay = name === '' ? this.name : name;
+        const markerColor = retrieveVisualColorForTooltip(this, dataIndex);
 
-            case 'valueDesc':
-                indicatorAxes.sort(function (a, b) {
-                    return +(b.value) - +(a.value);
-                });
-                break;
-
-            case 'seriesDesc':
-                indicatorAxes.reverse();
-                break;
-
-            case 'seriesAsc':
-            default:
-                break;
-        }
-
-        if (renderMode === 'richText') {
-            return encodeHTML(name === '' ? this.name : name) + '\n'
-                + zrUtil.map(indicatorAxes, function (axis) {
-                    const val = data.get(data.mapDimension(axis.dim), dataIndex);
-                    return encodeHTML(axis.name) + ': ' + val;
-                }).join('\n');
-        }
-        return '<div style="font-size:12px;color:#6e7079;line-height:1;margin-top:-4px;">'
-            + encodeHTML(name === '' ? this.name : name)
-            + '</div>'
-            + zrUtil.map(indicatorAxes, function (axis) {
+        return createTooltipMarkup('section', {
+            header: nameToDisplay,
+            sortBlocks: true,
+            blocks: zrUtil.map(indicatorAxes, axis => {
                 const val = data.get(data.mapDimension(axis.dim), dataIndex);
-                return '<div style="margin: 11px 0 0;line-height:1">'
-                    + concatTooltipHtml(axis.name, val)
-                    + '</div>';
-            }).join('');
+                return createTooltipMarkup('nameValue', {
+                    markerType: 'subItem',
+                    markerColor: markerColor,
+                    name: axis.name,
+                    value: val,
+                    sortParam: val
+                });
+            })
+        });
     }
 
-    /**
-     * @implement
-     */
     getTooltipPosition(dataIndex: number) {
         if (dataIndex != null) {
             const data = this.getData();

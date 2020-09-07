@@ -47,7 +47,7 @@ import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
-import { isNumeric } from './number';
+import { isNumeric, getRandomIdBase } from './number';
 
 /**
  * Make the name displayable. But we should
@@ -706,8 +706,7 @@ export function makeInner<T, Host extends object>() {
         return (hostObj as any)[key] || ((hostObj as any)[key] = {});
     };
 }
-// A random start point.
-let innerUniqueIndex = Math.round(Math.random() * 5);
+let innerUniqueIndex = getRandomIdBase();
 
 /**
  * If string, e.g., 'geo', means {geoIndex: 0}.
