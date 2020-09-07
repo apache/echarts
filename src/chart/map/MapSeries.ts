@@ -21,7 +21,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
-import {encodeHTML, addCommas, concatTooltipHtml} from '../../util/format';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import {
@@ -34,14 +33,14 @@ import {
     OptionDataValueNumeric,
     ParsedValue,
     SeriesOnGeoOptionMixin,
-    StatesOptionMixin,
-    TooltipRenderMode
+    StatesOptionMixin
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import List from '../../data/List';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 export interface MapStateOption {
     itemStyle?: GeoItemStyleOption
@@ -185,12 +184,11 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: string,
-        renderMode: TooltipRenderMode
-    ): string {
+        dataType: string
+    ) {
         // FIXME orignalData and data is a bit confusing
         const data = this.getData();
-        const formattedValue = addCommas(this.getRawValue(dataIndex));
+        const value = this.getRawValue(dataIndex);
         const name = data.getName(dataIndex);
 
         const seriesGroup = this.seriesGroup;
@@ -199,19 +197,17 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             const otherIndex = seriesGroup[i].originalData.indexOfName(name);
             const valueDim = data.mapDimension('value');
             if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex) as number)) {
-                seriesNames.push(
-                    encodeHTML(seriesGroup[i].name)
-                );
+                seriesNames.push(seriesGroup[i].name);
             }
         }
 
-        if (renderMode === 'richText') {
-            return seriesNames.join(', ') + (seriesNames.length ? '\n' : '')
-                + encodeHTML(name) + ': ' + formattedValue;
-        }
-
-        return `<div style="font-size:12px;color:#6e7079;">${seriesNames.join(', ')}</div>`
-            + concatTooltipHtml(name, formattedValue);
+        return createTooltipMarkup('section', {
+            header: seriesNames.join(', '),
+            noHeader: !seriesNames.length,
+            blocks: [createTooltipMarkup('nameValue', {
+                name: name, value: value
+            })]
+        });
     }
 
     getTooltipPosition = function (this: MapSeries, dataIndex: number): number[] {
