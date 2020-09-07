@@ -92,33 +92,38 @@ under the License.
         require([
             'echarts'
         ], function (echarts) {
-            var chart1 = echarts.init(document.getElementById('main1'));
-            var chart2 = echarts.init(document.getElementById('main2'));
-            var chart3 = echarts.init(document.getElementById('main3'));
-            var chart4 = echarts.init(document.getElementById('main4'));
-            var chart5 = echarts.init(document.getElementById('main5'));
-            var chart7 = echarts.init(document.getElementById('main7'));
-            var chart8 = echarts.init(document.getElementById('main8'));
-            var chart9 = echarts.init(document.getElementById('main9'));
-            var chart10 = echarts.init(document.getElementById('main10'));
-            var chart11 = echarts.init(document.getElementById('main11'));
-            var chart12 = echarts.init(document.getElementById('main12'));
-            var chart13 = echarts.init(document.getElementById('main13'));
-            var chart14 = echarts.init(document.getElementById('main14'));
-            var chart16 = echarts.init(document.getElementById('main16'));
-            var chart17 = echarts.init(document.getElementById('main17'));
-            var chart18 = echarts.init(document.getElementById('main18'));
-            var chart19 = echarts.init(document.getElementById('main19'));
-            var chart20 = echarts.init(document.getElementById('main20'));
-            var chart21 = echarts.init(document.getElementById('main21'));
-            var chart22 = echarts.init(document.getElementById('main22'));
-            var chart23 = echarts.init(document.getElementById('main23'));
-            var chart24 = echarts.init(document.getElementById('main24'));
-            var chart25 = echarts.init(document.getElementById('main25'));
-            var chart26 = echarts.init(document.getElementById('main26'));
-            var chart27 = echarts.init(document.getElementById('main27'));
-            var chart28 = echarts.init(document.getElementById('main28'));
-            var chart29 = echarts.init(document.getElementById('main29'));
+            function createChart(domId) {
+                // Make some of the html able to be commented.
+                var dom = document.getElementById(domId);
+                return dom ? echarts.init(dom) : null;
+            }
+            var chart1 = createChart('main1');
+            var chart2 = createChart('main2');
+            var chart3 = createChart('main3');
+            var chart4 = createChart('main4');
+            var chart5 = createChart('main5');
+            var chart7 = createChart('main7');
+            var chart8 = createChart('main8');
+            var chart9 = createChart('main9');
+            var chart10 = createChart('main10');
+            var chart11 = createChart('main11');
+            var chart12 = createChart('main12');
+            var chart13 = createChart('main13');
+            var chart14 = createChart('main14');
+            var chart16 = createChart('main16');
+            var chart17 = createChart('main17');
+            var chart18 = createChart('main18');
+            var chart19 = createChart('main19');
+            var chart20 = createChart('main20');
+            var chart21 = createChart('main21');
+            var chart22 = createChart('main22');
+            var chart23 = createChart('main23');
+            var chart24 = createChart('main24');
+            var chart25 = createChart('main25');
+            var chart26 = createChart('main26');
+            var chart27 = createChart('main27');
+            var chart28 = createChart('main28');
+            var chart29 = createChart('main29');
 
             option1 = {
                 tooltip: {
@@ -3138,7 +3143,7 @@ under the License.
                 },
                 tooltip: {
                     order: 'valueAsc',
-                    position: 'top',
+                    // position: 'top',
                     renderMode: 'richText'
                 },
                 radar: {
@@ -3243,33 +3248,33 @@ under the License.
                 ]
             };
 
-            chart1.setOption(option1);
-            chart2.setOption(option2);
-            chart3.setOption(option3);
-            chart4.setOption(option4);
-            chart5.setOption(option5);
-            chart7.setOption(option7);
-            chart8.setOption(option8);
-            chart9.setOption(option9);
-            chart10.setOption(option10);
-            chart11.setOption(option11);
-            chart12.setOption(option12);
-            chart13.setOption(option13);
-            chart14.setOption(option14);
-            chart16.setOption(option16);
-            chart17.setOption(option17);
-            chart18.setOption(option18);
-            chart19.setOption(option19);
-            chart20.setOption(option20);
-            chart21.setOption(option21);
-            chart22.setOption(option22);
-            chart23.setOption(option23);
-            chart24.setOption(option24);
-            chart25.setOption(option25);
-            chart26.setOption(option26);
-            chart27.setOption(option27);
-            chart28.setOption(option28);
-            chart29.setOption(option29);
+            chart1 && chart1.setOption(option1);
+            chart2 && chart2.setOption(option2);
+            chart3 && chart3.setOption(option3);
+            chart4 && chart4.setOption(option4);
+            chart5 && chart5.setOption(option5);
+            chart7 && chart7.setOption(option7);
+            chart8 && chart8.setOption(option8);
+            chart9 && chart9.setOption(option9);
+            chart10 && chart10.setOption(option10);
+            chart11 && chart11.setOption(option11);
+            chart12 && chart12.setOption(option12);
+            chart13 && chart13.setOption(option13);
+            chart14 && chart14.setOption(option14);
+            chart16 && chart16.setOption(option16);
+            chart17 && chart17.setOption(option17);
+            chart18 && chart18.setOption(option18);
+            chart19 && chart19.setOption(option19);
+            chart20 && chart20.setOption(option20);
+            chart21 && chart21.setOption(option21);
+            chart22 && chart22.setOption(option22);
+            chart23 && chart23.setOption(option23);
+            chart24 && chart24.setOption(option24);
+            chart25 && chart25.setOption(option25);
+            chart26 && chart26.setOption(option26);
+            chart27 && chart27.setOption(option27);
+            chart28 && chart28.setOption(option28);
+            chart29 && chart29.setOption(option29);
 
 
         });

@@ -43,6 +43,8 @@ under the License.
         <div id="main_cartesian_sort"></div>
         <div id="main_update_condition"></div>
         <div id="main_update_source_no_dim_inside_data"></div>
+        <div id="main_no_dimension_defined"></div>
+        <div id="main_fromTransformResult"></div>
 
 
 
@@ -930,6 +932,115 @@ under the License.
             });
         });
         </script>
+
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                dataset: [{
+                    source: FOOD_SALES_PRICE_NO_HEADER
+                }, {
+                    transform: {
+                        type: 'filter',
+                        config: { dimension: 3, value: 2011 }
+                    }
+                }, {
+                    transform: [{
+                        type: 'filter',
+                        config: { dimension: 3, value: 2012 }
+                    }, {
+                        type: 'sort',
+                        config: { dimension: 2, order: 'asc' }
+                    }]
+                }],
+                tooltip: {},
+                series: [{
+                    type: 'pie',
+                    datasetIndex: 1,
+                    radius: 50,
+                    center: ['35%', '50%']
+                }, {
+                    type: 'pie',
+                    datasetIndex: 2,
+                    radius: 50,
+                    center: ['65%', '50%']
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_no_dimension_defined', {
+                title: [
+                    '**2 pies** should shoud **Sales data** (interger about hundreds)',
+                ],
+                height: 300,
+                option: option
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts', 'data/Michelson-Morley.json'], function (echarts, rawData) {
+            var option = {
+                dataset: [{
+                    source: rawData
+                }, {
+                    transform: {
+                        type: 'boxplot',
+                        config: { itemNameFormatter: 'expr {value}' }
+                    }
+                }, {
+                    fromDatasetIndex: 1,
+                    fromTransformResult: 1
+                }, {
+                    fromDatasetIndex: 1,
+                    fromTransformResult: 1,
+                    transform: {
+                        type: 'sort',
+                        config: { dimension: 0, order: 'desc' }
+                    }
+                }],
+                tooltip: {},
+                xAxis: {
+                    type: 'category'
+                },
+                yAxis: {
+                },
+                series: [{
+                    type: 'boxplot',
+                    datasetIndex: 1
+                }, {
+                    type: 'scatter',
+                    symbolSize: 30,
+                    datasetIndex: 2
+                }, {
+                    type: 'line',
+                    z: 100,
+                    datasetIndex: 3
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_fromTransformResult', {
+                title: [
+                    '**boxplot** and **outlier scatter (green)** and **line** (yellow) should be displayed.',
+                ],
+                height: 400,
+                option: option
+            });
+        });
+        </script>
+
+
+
 
 
 

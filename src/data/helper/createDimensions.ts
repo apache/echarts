@@ -26,11 +26,11 @@ import {
     DimensionDefinitionLoose, OptionEncode, OptionEncodeValue,
     EncodeDefaulter, OptionSourceData, DimensionName, DimensionDefinition, DataVisualDimensions, DimensionIndex
 } from '../../util/types';
-import Source from '../Source';
 import List from '../List';
 import DataDimensionInfo from '../DataDimensionInfo';
 import { HashMap } from 'zrender/src/core/util';
 import OrdinalMeta from '../OrdinalMeta';
+import { Source } from '../Source';
 
 
 export interface CoordDimensionDefinition extends DimensionDefinition {

@@ -48,12 +48,12 @@ import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
-import Source from '../data/Source';
 import Axis from '../coord/Axis';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
 import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
 import makeStyleMapper from './mixin/makeStyleMapper';
 import { SourceManager } from '../data/helper/sourceManager';
+import { Source } from '../data/Source';
 
 const inner = modelUtil.makeInner<{
     data: List
