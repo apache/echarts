@@ -27,10 +27,12 @@ import ExtensionAPI from '../../ExtensionAPI';
 import { ZRenderType } from 'zrender/src/zrender';
 import { TooltipOption } from './TooltipModel';
 import Model from '../../model/Model';
-import { ZRRawEvent, Dictionary } from 'zrender/src/core/types';
+import { ZRRawEvent } from 'zrender/src/core/types';
 import { ColorString, ZRColor } from '../../util/types';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
+import { shouldTooltipConfine } from './helper';
+import { getPaddingFromTooltipModel } from './tooltipMarkup';
 
 const each = zrUtil.each;
 const toCamelCase = formatUtil.toCamelCase;
@@ -50,22 +52,6 @@ function mirrowPos(pos: string): string {
     return pos;
 }
 
-
-function getFinalColor(color: ZRColor): string {
-    let finalNearPointColor = '#fff';
-    if (zrUtil.isObject(color) && color.type !== 'pattern') {
-        finalNearPointColor = color.colorStops[0].color;
-    }
-    else if (zrUtil.isObject(color) && (color.type === 'pattern')) {
-        finalNearPointColor = 'transparent';
-    }
-    else if (zrUtil.isString(color)) {
-        finalNearPointColor = color;
-    }
-
-    return finalNearPointColor;
-}
-
 function assembleArrow(
     backgroundColor: ColorString,
     borderColor: ZRColor,
@@ -75,7 +61,7 @@ function assembleArrow(
         return '';
     }
 
-    borderColor = getFinalColor(borderColor);
+    borderColor = formatUtil.convertToColorString(borderColor);
     const arrowPos = mirrowPos(arrowPosition);
     let centerPos = '';
     let rotate = 0;
@@ -145,7 +131,7 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, isFirstShow: boolea
     const shadowOffsetX = tooltipModel.get('shadowOffsetX');
     const shadowOffsetY = tooltipModel.get('shadowOffsetY');
     const textStyleModel = tooltipModel.getModel('textStyle');
-    const padding = tooltipModel.get('padding');
+    const padding = getPaddingFromTooltipModel(tooltipModel, 'html');
     const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
 
     cssText.push('box-shadow:' + boxShadow);
@@ -335,7 +321,7 @@ class TooltipHTMLContent {
         const el = this.el;
         const styleCoord = this._styleCoord;
         const offset = el.offsetHeight / 2;
-        nearPointColor = getFinalColor(nearPointColor);
+        nearPointColor = formatUtil.convertToColorString(nearPointColor);
         el.style.cssText = gCssText + assembleCssText(tooltipModel, this._firstShow)
             // Because of the reason described in:
             // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
@@ -359,7 +345,7 @@ class TooltipHTMLContent {
 
     setContent(
         content: string,
-        markers: Dictionary<ColorString>,
+        markers: unknown,
         tooltipModel: Model<TooltipOption>,
         borderColor?: ZRColor,
         arrowPosition?: TooltipOption['position']
@@ -369,11 +355,12 @@ class TooltipHTMLContent {
         }
         this.el.innerHTML = content;
         this.el.innerHTML += (
-                zrUtil.isString(arrowPosition)
-                && tooltipModel.get('trigger') === 'item'
-                && !tooltipModel.get('confine')
-            )
-            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition) : '';
+            zrUtil.isString(arrowPosition)
+            && tooltipModel.get('trigger') === 'item'
+            && !shouldTooltipConfine(tooltipModel)
+        )
+            ? assembleArrow(tooltipModel.get('backgroundColor'), borderColor, arrowPosition)
+            : '';
     }
 
     setEnterable(enterable: boolean) {
@@ -389,9 +376,13 @@ class TooltipHTMLContent {
         const styleCoord = this._styleCoord;
         makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
 
-        const style = this.el.style;
-        style.left = styleCoord[0] + 'px';
-        style.top = styleCoord[1] + 'px';
+        if (styleCoord[0] != null && styleCoord[1] != null) {
+            const style = this.el.style;
+            // If using float on style, the final width of the dom might
+            // keep changing slightly while mouse move. So `toFixed(0)` them.
+            style.left = styleCoord[0].toFixed(0) + 'px';
+            style.top = styleCoord[1].toFixed(0) + 'px';
+        }
     }
 
     hide() {

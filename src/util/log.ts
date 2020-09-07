@@ -77,7 +77,7 @@ export function consoleLog(...args: unknown[]) {
  * @param hintInfo anything about the current execution context to hint users.
  * @throws Error
  */
-export function makePrintable(...hintInfo: unknown[]) {
+export function makePrintable(...hintInfo: unknown[]): string {
     let msg = '';
 
     if (__DEV__) {

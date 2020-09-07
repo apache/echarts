@@ -565,3 +565,12 @@ export function numericToNumber(val: unknown): number {
 export function isNumeric(val: unknown): val is number {
     return !isNaN(numericToNumber(val));
 }
+
+/**
+ * Use random base to prevent users hard code depending on
+ * this auto generated marker id.
+ * @return An positive integer.
+ */
+export function getRandomIdBase(): number {
+    return Math.round(Math.random() * 9);
+}

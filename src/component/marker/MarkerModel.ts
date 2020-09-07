@@ -19,8 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import {addCommas, concatTooltipHtml, encodeHTML} from '../../util/format';
-import DataFormatMixin from '../../model/mixin/dataFormat';
+import { DataFormatMixin } from '../../model/mixin/dataFormat';
 import ComponentModel from '../../model/Component';
 import SeriesModel from '../../model/Series';
 import {
@@ -29,13 +28,13 @@ import {
     AnimationOptionMixin,
     Dictionary,
     CommonTooltipOption,
-    ScaleDataValue,
-    TooltipRenderMode
+    ScaleDataValue
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { makeInner, defaultEmphasis } from '../../util/model';
+import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 
 function fillLabel(opt: DisplayStateHostOption) {
     defaultEmphasis(opt, 'label', ['show']);
@@ -201,27 +200,21 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
-        dataType: string,
-        renderMode: TooltipRenderMode
+        dataType: string
     ) {
         const data = this.getData();
         const value = this.getRawValue(dataIndex);
-        const formattedValue = zrUtil.isArray(value)
-            ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
-        const name = encodeHTML(data.getName(dataIndex));
-        let html = `<div style="font-size:12px;line-height:1;margin:0 0 8px 0;">${encodeHTML(this.name)}</div>`;
-        if (value != null || name) {
-            html += renderMode === 'html' ? '' : '\n';
-        }
-        if (name) {
-            html += `<div style="line-height:1"><span style="font-size:12px;color:#6e7079;">${name}</span>`;
-        }
-        if (value != null) {
-            html = renderMode === 'html'
-                ? concatTooltipHtml(html, formattedValue, true) + (name ? '</div>' : '')
-                : (html + formattedValue);
-        }
-        return html;
+        const itemName = data.getName(dataIndex);
+
+        return createTooltipMarkup('section', {
+            header: this.name,
+            blocks: [createTooltipMarkup('nameValue', {
+                name: itemName,
+                value: value,
+                noName: !itemName,
+                noValue: value == null
+            })]
+        });
     }
 
     getData(): List<this> {

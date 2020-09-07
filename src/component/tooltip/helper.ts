@@ -17,25 +17,13 @@
 * under the License.
 */
 
-import Axis from '../Axis';
-import Scale from '../../scale/Scale';
-import { OptionAxisType } from '../axisCommonTypes';
-import { AxisBaseModel } from '../AxisBaseModel';
-import { InnerIndicatorAxisOption } from './RadarModel';
+import { TooltipOption } from './TooltipModel';
+import Model from '../../model/Model';
 
-class IndicatorAxis extends Axis {
-
-    type: OptionAxisType = 'value';
-
-    angle = 0;
-
-    name = '';
-
-    model: AxisBaseModel<InnerIndicatorAxisOption>;
-
-    constructor(dim: string, scale: Scale, radiusExtent?: [number, number]) {
-        super(dim, scale, radiusExtent);
-    }
+export function shouldTooltipConfine(tooltipModel: Model<TooltipOption>): boolean {
+    const confineOption = tooltipModel.get('confine');
+    return confineOption != null
+        ? !!confineOption
+        // In richText mode, the outside part can not be visible.
+        : tooltipModel.get('renderMode') === 'richText';
 }
-
-export default IndicatorAxis;
