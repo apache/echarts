@@ -33,9 +33,10 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
-    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption, SeriesDataType
+    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
+    ModelOption, SeriesDataType, OrdinalRawValue
 } from '../util/types';
-import {isDataItemOption} from '../util/model';
+import {isDataItemOption, convertOptionIdName} from '../util/model';
 import { getECData } from '../util/ecData';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
@@ -144,12 +145,21 @@ export interface DefaultDataVisual {
     colorFromPalette?: boolean
 }
 
+export interface DataCalculationInfo<SERIES_MODEL> {
+    stackedDimension: string;
+    stackedByDimension: string;
+    isStackedByIndex: boolean;
+    stackedOverDimension: string;
+    stackResultDimension: string;
+    stackedOnSeries?: SERIES_MODEL;
+}
+
 // -----------------------------
 // Internal method declarations:
 // -----------------------------
 let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
 let prepareInvertedIndex: (list: List) => void;
-let getRawValueFromStore: (list: List, dimIndex: number, rawIndex: number) => any;
+let getRawValueFromStore: (list: List, dimIndex: number, rawIndex: number) => ParsedValue | OrdinalRawValue;
 let getIndicesCtor: (list: List) => DataArrayLikeConstructor;
 let prepareChunks: (
     storage: DataStorage, dimInfo: DataDimensionInfo, chunkSize: number, chunkCount: number, end: number
@@ -245,7 +255,7 @@ class List<
 
     private _invertedIndicesMap: {[dimName: string]: ArrayLike<number>};
 
-    private _calculationInfo: {[key: string]: any} = {};
+    private _calculationInfo: DataCalculationInfo<HostModel> = {} as DataCalculationInfo<HostModel>;
 
     // User output info of this data.
     // DO NOT use it in other places!
@@ -628,7 +638,7 @@ class List<
             // ??? FIXME not check by pure but sourceFormat?
             // TODO refactor these logic.
             if (!rawData.pure) {
-                let name: any = nameList[idx];
+                let name: string = nameList[idx];
 
                 if (dataItem && name == null) {
                     // If dataItem is {name: ...}, it has highest priority.
@@ -636,24 +646,26 @@ class List<
                     if ((dataItem as any).name != null) {
                         // There is no other place to persistent dataItem.name,
                         // so save it to nameList.
-                        nameList[idx] = name = (dataItem as any).name;
+                        nameList[idx] = name = convertOptionIdName((dataItem as any).name, null);
                     }
                     else if (nameDimIdx != null) {
                         const nameDim = dimensions[nameDimIdx];
                         const nameDimChunk = storage[nameDim][chunkIndex];
                         if (nameDimChunk) {
-                            name = nameDimChunk[chunkOffset];
                             const ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
-                            if (ordinalMeta && ordinalMeta.categories.length) {
-                                name = ordinalMeta.categories[name];
-                            }
+                            name = convertOptionIdName(
+                                (ordinalMeta && ordinalMeta.categories.length)
+                                    ? ordinalMeta.categories[nameDimChunk[chunkOffset] as number]
+                                    : nameDimChunk[chunkOffset],
+                                null
+                            );
                         }
                     }
                 }
 
                 // Try using the id in option
                 // id or name is used on dynamical data, mapping old and new items.
-                let id = dataItem == null ? null : (dataItem as any).id;
+                let id: string = dataItem == null ? null : convertOptionIdName((dataItem as any).id, null);
 
                 if (id == null && name != null) {
                     // Use name as id and add counter to avoid same name
@@ -908,17 +920,29 @@ class List<
         this._approximateExtent[dim] = extent.slice() as [number, number];
     }
 
-    getCalculationInfo(key: string): any {
+    getCalculationInfo<CALC_INFO_KEY extends keyof DataCalculationInfo<HostModel>>(
+        key: CALC_INFO_KEY
+    ): DataCalculationInfo<HostModel>[CALC_INFO_KEY] {
         return this._calculationInfo[key];
     }
 
     /**
      * @param key or k-v object
      */
-    setCalculationInfo(key: string | object, value?: any) {
+    setCalculationInfo(
+        key: DataCalculationInfo<HostModel>
+    ): void;
+    setCalculationInfo<CALC_INFO_KEY extends keyof DataCalculationInfo<HostModel>>(
+        key: CALC_INFO_KEY,
+        value: DataCalculationInfo<HostModel>[CALC_INFO_KEY]
+    ): void;
+    setCalculationInfo(
+        key: (keyof DataCalculationInfo<HostModel>) | DataCalculationInfo<HostModel>,
+        value?: DataCalculationInfo<HostModel>[keyof DataCalculationInfo<HostModel>]
+    ): void {
         isObject(key)
             ? zrUtil.extend(this._calculationInfo, key as object)
-            : (this._calculationInfo[key] = value);
+            : ((this._calculationInfo as any)[key] = value);
     }
 
     /**
@@ -1140,13 +1164,25 @@ class List<
         }
     }
 
+    /**
+     * @return Never be null/undefined. `number` will be converted to string. Becuase:
+     * In most cases, name is used in display, where returning a string is more convenient.
+     * In other cases, name is used in query (see `indexOfName`), where we can keep the
+     * rule that name `2` equals to name `'2'`.
+     */
     getName(idx: number): string {
         const rawIndex = this.getRawIndex(idx);
         return this._nameList[rawIndex]
-            || getRawValueFromStore(this, this._nameDimIdx, rawIndex)
+            || convertOptionIdName(getRawValueFromStore(this, this._nameDimIdx, rawIndex), '')
             || '';
     }
 
+    /**
+     * @return Never null/undefined. `number` will be converted to string. Becuase:
+     * In all cases having encountered at present, id is used in making diff comparison, which
+     * are usually based on hash map. We can keep the rule that the internal id are always string
+     * (treat `2` is the same as `'2'`) to make the related logic simple.
+     */
     getId(idx: number): string {
         return getId(this, this.getRawIndex(idx));
     }
@@ -1981,7 +2017,9 @@ class List<
             });
         };
 
-        getRawValueFromStore = function (list: List, dimIndex: number, rawIndex: number): any {
+        getRawValueFromStore = function (
+            list: List, dimIndex: number, rawIndex: number
+        ): ParsedValue | OrdinalRawValue {
             let val;
             if (dimIndex != null) {
                 const chunkSize = list._chunkSize;
@@ -2043,10 +2081,13 @@ class List<
             return -1;
         };
 
+        /**
+         * @see the comment of `List['getId']`.
+         */
         getId = function (list: List, rawIndex: number): string {
             let id = list._idList[rawIndex];
             if (id == null) {
-                id = getRawValueFromStore(list, list._idDimIdx, rawIndex);
+                id = convertOptionIdName(getRawValueFromStore(list, list._idDimIdx, rawIndex), null);
             }
             if (id == null) {
                 // FIXME Check the usage in graph, should not use prefix.

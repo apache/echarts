@@ -517,11 +517,15 @@ export type OptionDataItem =
     | OptionDataItemObject<OptionDataValue>;
 // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataItemObject<T> = {
-    id?: string | number;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
     value?: T[] | T;
     selected?: boolean;
 };
+// Compat number because it is usually used and not easy to
+// restrict it in practise.
+export type OptionId = string | number;
+export type OptionName = string | number;
 export interface GraphEdgeItemObject<
     VAL extends OptionDataValue
 > extends OptionDataItemObject<VAL> {
@@ -1247,8 +1251,8 @@ export interface CommonAxisPointerOption {
 export interface ComponentOption {
     type?: string;
 
-    id?: string;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
 
     z?: number;
     zlevel?: number;

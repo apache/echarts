@@ -41,7 +41,9 @@ import {
     OptionDataItem,
     OptionDataValue,
     TooltipRenderMode,
-    Payload
+    Payload,
+    OptionId,
+    OptionName
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
@@ -150,7 +152,7 @@ export function isDataItemOption(dataItem: OptionDataItem): boolean {
 // number id will not be converted to string in option.
 // number id will be converted to string in component instance id.
 export interface MappingExistingItem {
-    id?: string | number;
+    id?: OptionId;
     name?: string;
 };
 /**
@@ -499,7 +501,11 @@ function makeIdAndName(
     });
 }
 
-function keyExistAndEqual(attr: 'id' | 'name', obj1: MappingExistingItem, obj2: MappingExistingItem): boolean {
+function keyExistAndEqual(
+    attr: 'id' | 'name',
+    obj1: { id?: OptionId, name?: OptionName },
+    obj2: { id?: OptionId, name?: OptionName }
+): boolean {
     const key1 = obj1[attr];
     const key2 = obj2[attr];
     // See `MappingExistingItem`. `id` and `name` trade string equals to number.
@@ -509,13 +515,22 @@ function keyExistAndEqual(attr: 'id' | 'name', obj1: MappingExistingItem, obj2: 
 /**
  * @return return null if not exist.
  */
-function makeComparableKey(val: string | number): string {
+function makeComparableKey(val: unknown): string {
     if (__DEV__) {
         if (val == null) {
             throw new Error();
         }
     }
-    return val + '';
+    return convertOptionIdName(val, '');
+}
+
+export function convertOptionIdName(idOrName: unknown, defaultValue: string): string {
+    const type = typeof idOrName;
+    return type === 'string'
+        ? idOrName as string
+        : (type === 'number' || isStringSafe(idOrName))
+        ? idOrName + ''
+        : defaultValue;
 }
 
 export function validateIdOrName(idOrName: unknown) {
@@ -542,7 +557,7 @@ export function isNameSpecified(componentModel: ComponentModel): boolean {
  * @param {Object} cmptOption
  * @return {boolean}
  */
-export function isComponentIdInternal(cmptOption: MappingExistingItem): boolean {
+export function isComponentIdInternal(cmptOption: { id?: MappingExistingItem['id'] }): boolean {
     return cmptOption
         && cmptOption.id != null
         && makeComparableKey(cmptOption.id).indexOf(INTERNAL_COMPONENT_ID_PREFIX) === 0;
@@ -733,8 +748,8 @@ let innerUniqueIndex = getRandomIdBase();
  * The priority is: index > id > name, the same with `ecModel.queryComponents`.
  */
 export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
-export type ModelFinderIdQuery = number | number[] | string | string[];
-export type ModelFinderNameQuery = number | number[] | string | string[];
+export type ModelFinderIdQuery = OptionId | OptionId[];
+export type ModelFinderNameQuery = OptionId | OptionId[];
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {
     seriesIndex?: ModelFinderIndexQuery, seriesId?: ModelFinderIdQuery, seriesName?: ModelFinderNameQuery

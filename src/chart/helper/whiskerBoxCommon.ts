@@ -25,7 +25,6 @@ import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '.
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import type DataDimensionInfo from '../../data/DataDimensionInfo';
 import type List from '../../data/List';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordDimensionDefinition } from '../../data/helper/createDimensions';

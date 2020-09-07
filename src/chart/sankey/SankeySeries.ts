@@ -38,7 +38,7 @@ import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
-import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
+
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
 
