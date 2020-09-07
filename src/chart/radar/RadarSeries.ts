@@ -35,7 +35,9 @@ import {
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import Radar from '../../coord/radar/Radar';
-import { createTooltipMarkup, retrieveVisualColorForTooltipMarker as retrieveVisualColorForTooltip } from '../../component/tooltip/tooltipMarkup';
+import {
+    createTooltipMarkup, retrieveVisualColorForTooltipMarker
+} from '../../component/tooltip/tooltipMarkup';
 
 type RadarSeriesDataValue = OptionDataValue[];
 
@@ -103,7 +105,7 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         const indicatorAxes = coordSys.getIndicatorAxes();
         const name = this.getData().getName(dataIndex);
         const nameToDisplay = name === '' ? this.name : name;
-        const markerColor = retrieveVisualColorForTooltip(this, dataIndex);
+        const markerColor = retrieveVisualColorForTooltipMarker(this, dataIndex);
 
         return createTooltipMarkup('section', {
             header: nameToDisplay,
