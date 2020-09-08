@@ -63,12 +63,20 @@ function createGridClipPath(
     });
 
     if (hasAnimation) {
-        const isHorizontal = cartesian.getBaseAxis().isHorizontal();
+        const baseAxis = cartesian.getBaseAxis();
+        const isHorizontal = baseAxis.isHorizontal();
+        const isAxisInversed = baseAxis.inverse;
+
         if (isHorizontal) {
+            if (isAxisInversed) {
+                clipPath.shape.x += width;
+            }
             clipPath.shape.width = 0;
         }
         else {
-            clipPath.shape.y = y + height;
+            if (!isAxisInversed) {
+                clipPath.shape.y += height;
+            }
             clipPath.shape.height = 0;
         }
 
@@ -82,6 +90,7 @@ function createGridClipPath(
             shape: {
                 width: width,
                 height: height,
+                x: x,
                 y: y
             }
         }, seriesModel, null, done, duringCb);

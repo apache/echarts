@@ -57,6 +57,10 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     value?: LineDataValue
 }
 
+interface LineEndLabelOption extends LabelOption {
+    valueAnimation: boolean
+}
+
 
 export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraStateOption & {
     emphasis?: {
@@ -82,7 +86,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption, ExtraSta
     // If clip the overflow value
     clip?: boolean
 
-    label?: LabelOption & {showDuringLabel: boolean}
+    label?: LabelOption
+    endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption
 
@@ -138,8 +143,12 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         clip: true,
 
         label: {
-            position: 'top',
-            showDuringLabel: false
+            position: 'top'
+        },
+
+        endLabel: {
+            show: false,
+            valueAnimation: false
         },
 
         lineStyle: {
