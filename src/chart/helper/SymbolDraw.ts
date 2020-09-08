@@ -42,16 +42,17 @@ import { getLabelStatesModels } from '../../label/labelStyle';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
-    clipShape?: CoordinateSystemClipArea
+    clipShape?: CoordinateSystemClipArea,
+    forceUseUpdateAnimation?: boolean
 }
 
 interface SymbolLike extends graphic.Group {
-    updateData(data: List, idx: number, scope?: SymbolDrawSeriesScope): void
+    updateData(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
     fadeOut?(cb: () => void): void
 }
 
 interface SymbolLikeCtor {
-    new(data: List, idx: number, scope?: SymbolDrawSeriesScope): SymbolLike
+    new(data: List, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
 }
 
 function symbolNeedsDraw(data: List, point: number[], idx: number, opt: UpdateOpt) {
@@ -184,7 +185,9 @@ class SymbolDraw {
             .add(function (newIdx) {
                 const point = data.getItemLayout(newIdx) as number[];
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
-                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope);
+                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope, {
+                        forceUseUpdateAnimation: opt.forceUseUpdateAnimation
+                    });
                     symbolEl.setPosition(point);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);

@@ -46,6 +46,7 @@ import { setStatesStylesFromModel, setStatesFlag, enableHoverEmphasis } from '..
 import { getECData } from '../../util/ecData';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {makeInner} from '../../util/model';
+import Model from '../../model/Model';
 
 const inner = makeInner<{
     lastSplitId: number,
@@ -396,6 +397,45 @@ function getDataItemDetail(coordSys: Cartesian2D, data: List, idx: number) {
     };
 }
 
+function setEndLabelStyle(
+    endLabel: graphic.Text,
+    x: number,
+    y: number,
+    text: string,
+    coordSys: Cartesian2D,
+    seriesModel: Model
+) {
+    if (!endLabel) {
+        return;
+    }
+
+    const baseAxis = coordSys.getBaseAxis();
+    const isHorizontal = baseAxis.isHorizontal();
+    const isBaseInversed = baseAxis.inverse;
+
+    const align = isHorizontal
+        ? isBaseInversed ? 'right' : 'left'
+        : 'center';
+    const verticalAlign = isHorizontal
+        ? 'middle'
+        : (isBaseInversed ? 'top' : 'bottom');
+
+    const labelModel = seriesModel.getModel('endLabel');
+    const distance = labelModel.get('distance') || 0;
+
+    endLabel.attr({
+        x: x,
+        y: y,
+        style: {
+            text: text,
+            align: align,
+            verticalAlign: verticalAlign,
+            padding: distance
+        },
+        ignore: false
+    });
+}
+
 class LineView extends ChartView {
 
     static readonly type = 'line';
@@ -479,7 +519,7 @@ class LineView extends ChartView {
         group.add(lineGroup);
 
         if (!isCoordSysPolar) {
-            this._initEndLabel(seriesModel, coordSys as Cartesian2D, data, !!oldData);
+            this._initOrUpdateEndLabel(seriesModel, coordSys as Cartesian2D, data, !!oldData);
         }
 
         // FIXME step not support polar
@@ -510,7 +550,7 @@ class LineView extends ChartView {
                 clipShape: clipShapeForSymbol
             });
 
-            this._initAnimation(
+            this._initEndLabelAnimation(
                 data,
                 coordSys,
                 clipShapeForSymbol
@@ -554,7 +594,8 @@ class LineView extends ChartView {
             // because points are not changed
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
-                clipShape: clipShapeForSymbol
+                clipShape: clipShapeForSymbol,
+                forceUseUpdateAnimation: true
             });
 
             // Stop symbol animation and sync with line points
@@ -807,7 +848,7 @@ class LineView extends ChartView {
         return polygon;
     }
 
-    _initAnimation(
+    _initEndLabelAnimation(
         data: List,
         coordSys: Polar | Cartesian2D,
         clipShape: PolarArea | Cartesian2DArea
@@ -934,7 +975,11 @@ class LineView extends ChartView {
         });
     }
 
-    _initEndLabel(
+    _updateEndLabelAnimation() {
+
+    }
+
+    _initOrUpdateEndLabel(
         seriesModel: LineSeriesModel,
         coordSys: Cartesian2D,
         data: List,
@@ -947,8 +992,7 @@ class LineView extends ChartView {
             if (!this._endLabel) {
                 this._endLabel = new graphic.Text({
                     style: {
-                        text: '',
-                        verticalAlign: 'middle'
+                        text: ''
                     },
                     ignore: true,
                     z2: 200 // should be higher than item symbol
@@ -965,24 +1009,20 @@ class LineView extends ChartView {
             host.isStopped = false;
 
             if (isUpdate) {
-                let duration = seriesModel.get('animationDurationUpdate');
-                if (typeof duration === 'function') {
-                    duration = duration(null);
-                }
-
                 // Find last non-NaN data to display data
                 let lastFound = false;
                 for (let idx = data.count() - 1; idx >= 0; --idx) {
                     const info = getDataItemDetail(coordSys, data, idx);
                     if (!isNaN(info.value)) {
-                        this._endLabel.attr({
-                            x: info.x + 10,
-                            y: info.y,
-                            style: {
-                                text: numberUtil.round(info.value, precision) + ''
-                            },
-                            ignore: false
-                        });
+                        const text = numberUtil.round(info.value, precision) + '';
+                        setEndLabelStyle(
+                            this._endLabel,
+                            info.x,
+                            info.y,
+                            text,
+                            coordSys,
+                            seriesModel
+                        );
                         lastFound = true;
                         break;
                     }
@@ -994,6 +1034,10 @@ class LineView extends ChartView {
                     });
                 }
             }
+        }
+        else if (this._endLabel) {
+            this.group.remove(this._endLabel);
+            this._endLabel = null;
         }
     }
 
@@ -1071,41 +1115,38 @@ class LineView extends ChartView {
                 const splitValue = ratio * (rValue - lValue) + lValue;
                 const splitStr = numberUtil.round(splitValue, host.precision) + '';
                 const textX = isHorizontal
-                    ? (clipPos + 10 * (isBaseInversed ? -1 : 1))
+                    ? clipPos
                     : (ratio * (rx - lx) + lx);
                 const textY = isHorizontal
                     ? (ratio * (ry - ly) + ly)
-                    : (clipPos + 10 * (isBaseInversed ? -1 : 1));
-                const align = isHorizontal
-                    ? isBaseInversed ? 'right' : 'left'
-                    : 'center';
-                const verticalAlign = isHorizontal
-                    ? 'middle'
-                    : (isBaseInversed ? 'bottom' : 'top');
+                    : clipPos;
 
                 const isAnimationNotStarted = idx === 0
-                && (isHorizontal
-                    ? (isBaseInversed ? rx < clipPos : rx > clipPos)
-                    : (isBaseInversed ? ry > clipPos : ry < clipPos)
-                );
+                    && (isHorizontal
+                        ? (isBaseInversed ? rx < clipPos : rx > clipPos)
+                        : (isBaseInversed ? ry > clipPos : ry < clipPos)
+                    );
+                if (isAnimationNotStarted) {
+                    splitFound = true;
+                    return;
+                }
+
                 const isAnimationFinished = idx === lastNonNullId
                     && (isHorizontal
                         ? (isBaseInversed ? rx > clipPos : rx < clipPos)
                         : (isBaseInversed ? ry < clipPos : ry > clipPos)
                     );
 
-                if (inClipRange || isAnimationFinished || isAnimationNotStarted) {
+                if (inClipRange || isAnimationFinished) {
                     if (connectNulls || !isNaN(lValue) && !isNaN(rValue)) {
-                        that._endLabel.attr({
-                            x: textX,
-                            y: textY,
-                            style: {
-                                text: splitStr,
-                                align: align,
-                                verticalAlign: verticalAlign
-                            },
-                            ignore: false
-                        });
+                        setEndLabelStyle(
+                            that._endLabel,
+                            textX,
+                            textY,
+                            splitStr,
+                            coordSys,
+                            seriesModel
+                        );
                     }
 
                     splitFound = true;

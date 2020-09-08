@@ -36,7 +36,8 @@ type ECSymbol = ReturnType<typeof createSymbol>;
 
 interface SymbolOpts {
     useNameLabel?: boolean
-    symbolInnerColor?: string
+    symbolInnerColor?: string,
+    forceUseUpdateAnimation?: boolean
 }
 
 class Symbol extends graphic.Group {
@@ -184,7 +185,9 @@ class Symbol extends graphic.Group {
             symbolPath.scaleX = symbolPath.scaleY = 0;
             symbolPath.style.opacity = 0;
 
-            graphic.initProps(symbolPath, target, seriesModel, idx);
+            const initOrUpdateProps = opts && opts.forceUseUpdateAnimation
+                ? graphic.updateProps : graphic.initProps;
+            initOrUpdateProps(symbolPath, target, seriesModel, idx);
         }
 
         this._seriesModel = seriesModel;

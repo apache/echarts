@@ -148,7 +148,8 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         endLabel: {
             show: false,
-            valueAnimation: false
+            valueAnimation: false,
+            distance: 8
         },
 
         lineStyle: {
