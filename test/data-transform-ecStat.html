@@ -27,8 +27,9 @@ under the License.
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="../dist/echarts.js"></script>
-        <script src="lib/ecStat-1.1.1.min.js"></script>
-        <script src="lib/ecStatTransform.js"></script>
+        <script src="../../echarts-stat/dist/ecStat.js"></script>
+        <!-- <script src="lib/ecStat-1.1.1.min.js"></script> -->
+        <!-- <script src="lib/ecStatTransform.js"></script> -->
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -45,7 +46,7 @@ under the License.
 
         <script>
 
-            echarts.registerTransform(ecStatTransform(ecStat).regression);
+            echarts.registerTransform(ecStat.transform.regression);
 
             var rawData = [
                 [1, 4862.4],

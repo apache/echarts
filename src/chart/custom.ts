@@ -18,7 +18,7 @@
 */
 
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind, eqNaN
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
@@ -80,6 +80,7 @@ import {
 import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
+import { warn } from '../util/log';
 
 
 const inner = makeInner<{
@@ -1004,6 +1005,11 @@ const customDuringAPI = {
         }
         const style = (tmpDuringScope.el as Displayable).style;
         if (style) {
+            if (__DEV__) {
+                if (eqNaN(val)) {
+                    warn('style.' + key + ' must not be assigned with NaN.');
+                }
+            }
             style[key] = val;
             tmpDuringScope.isStyleDirty = true;
         }
