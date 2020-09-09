@@ -27,7 +27,7 @@
 
 import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
-import DataFormatMixin from '../model/mixin/dataFormat';
+import { DataFormatMixin } from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import SeriesModel from '../model/Series';
@@ -36,7 +36,6 @@ import { TaskPlanCallbackReturn, TaskProgressParams } from '../stream/task';
 import List, {ListDimensionType} from '../data/List';
 import { Dictionary, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
-import Source from '../data/Source';
 import { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
@@ -46,6 +45,7 @@ import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
+import { Source } from '../data/Source';
 
 
 
@@ -64,7 +64,7 @@ export type VerticalAlign = 'top' | 'middle' | 'bottom';
 // Types from zrender
 export type ColorString = string;
 export type ZRColor = ColorString | LinearGradientObject | RadialGradientObject | PatternObject;
-export type ZRLineType = 'solid' | 'dotted' | 'dashed';
+export type ZRLineType = 'solid' | 'dotted' | 'dashed' | number | number[];
 
 export type ZRFontStyle = 'normal' | 'italic' | 'oblique';
 export type ZRFontWeight = 'normal' | 'bold' | 'bolder' | 'lighter' | number;
@@ -99,17 +99,33 @@ export interface ComponentTypeInfo {
 }
 
 export interface ECElement extends Element {
-    useHoverLayer?: boolean;
     tooltip?: CommonTooltipOption<unknown> & {
         content?: string;
         formatterParams?: unknown;
     };
     highDownSilentOnTouch?: boolean;
-    onStateChange?: (fromState: 'normal' | 'emphasis', toState: 'normal' | 'emphasis') => void;
+    onHoverStateChange?: (toState: DisplayState) => void;
+
+    // 0: normal
+    // 1: blur
+    // 2: emphasis
+    hoverState?: 0 | 1 | 2;
+    selected?: boolean;
+
+    z2EmphasisLift?: number;
+    z2SelectLift?: number;
+    /**
+     * Force disable animation on any condition
+     */
+    disableLabelAnimation?: boolean
+    /**
+     * Force disable overall layout
+     */
+    disableLabelLayout?: boolean
 }
 
 export interface DataHost {
-    getData(dataType?: string): List;
+    getData(dataType?: SeriesDataType): List;
 }
 
 export interface DataModel extends DataHost, DataFormatMixin {}
@@ -118,13 +134,45 @@ export interface DataModel extends DataHost, DataFormatMixin {}
 
 interface PayloadItem {
     excludeSeriesId?: string | string[];
+    animation?: PayloadAnimationPart
     [other: string]: any;
 }
 
 export interface Payload extends PayloadItem {
     type: string;
     escapeConnect?: boolean;
+    statusChanged?: boolean;
     batch?: PayloadItem[];
+}
+
+export interface HighlightPayload extends Payload {
+    type: 'highlight';
+    notBlur?: boolean
+}
+
+export interface DownplayPayload extends Payload {
+    type: 'downplay';
+    notBlur?: boolean
+}
+
+// Payload includes override anmation info
+export interface PayloadAnimationPart {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
+}
+
+export interface SelectChangedPayload extends Payload {
+    type: 'selectchanged'
+    escapeConnect: boolean
+    isFromClick: boolean
+    fromAction: 'select' | 'unselect' | 'toggleSelected'
+    fromActionPayload: Payload
+    selected: {
+        seriesIndex: number
+        dataType?: SeriesDataType
+        dataIndex: number[]
+    }[]
 }
 
 export interface ViewRootGroup extends Group {
@@ -227,7 +275,15 @@ export interface LoadingEffect extends Element {
     resize: () => void;
 }
 
+/**
+ * 'html' is used for rendering tooltip in extra DOM form, and the result
+ * string is used as DOM HTML content.
+ * 'richText' is used for rendering tooltip in rich text form, for those where
+ * DOM operation is not supported.
+ */
 export type TooltipRenderMode = 'html' | 'richText';
+
+export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesDesc';
 
 
 // ---------------------------------
@@ -242,12 +298,33 @@ export type TooltipRenderMode = 'html' | 'richText';
 // Check `convertDataValue` for more details.
 export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
+export type OrdinalSortInfo = {
+    ordinalNumber: OrdinalNumber,
+    beforeSortIndex: number
+};
 export type ParsedValueNumeric = number | OrdinalNumber;
 export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 // FIXME:TS better name?
 // This is not `OptionDataPrimitive` because the "dataProvider parse"
 // will not be performed. But "scale parse" will be performed.
 export type ScaleDataValue = ParsedValue | Date;
+export interface ScaleTick {
+    value: number
+};
+export interface TimeScaleTick extends ScaleTick {
+    /**
+     * Level information is used for label formatting.
+     * For example, a time axis may contain labels like: Jan, 8th, 16th, 23th,
+     * Feb, and etc. In this case, month labels like Jan and Feb should be
+     * displayed in a more significant way than days.
+     * `level` is set to be 0 when it's the most significant level, like month
+     * labels in the above case.
+     */
+    level?: number
+};
+export interface OrdinalScaleTick extends ScaleTick {
+    value: OrdinalNumber
+};
 
 // Can only be string or index, because it is used in object key in some code.
 // Making the type alias here just intending to show the meaning clearly in code.
@@ -259,7 +336,7 @@ export type DimensionName = string;
 export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = ListDimensionType;
 
-export const VISUAL_DIMENSIONS = createHashMap([
+export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
     'tooltip', 'label', 'itemName', 'itemId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
@@ -275,11 +352,11 @@ export interface DataVisualDimensions {
 }
 
 export type DimensionDefinition = {
-    type?: string,
-    name: string,
+    type?: ListDimensionType,
+    name: DimensionName,
     displayName?: string
 };
-export type DimensionDefinitionLoose = DimensionDefinition['type'] | DimensionDefinition;
+export type DimensionDefinitionLoose = DimensionDefinition['name'] | DimensionDefinition;
 
 export const SOURCE_FORMAT_ORIGINAL = 'original' as const;
 export const SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows' as const;
@@ -300,7 +377,12 @@ export const SERIES_LAYOUT_BY_COLUMN = 'column' as const;
 export const SERIES_LAYOUT_BY_ROW = 'row' as const;
 
 export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYOUT_BY_ROW;
+// null/undefined/'auto': auto detect header, see "src/data/helper/sourceHelper".
+// If number, means header lines count, or say, `startIndex`.
+// Like `sourceHeader: 2`, means line 0 and line 1 are header, data start from line 2.
+export type OptionSourceHeader = boolean | 'auto' | number;
 
+export type SeriesDataType = 'main' | 'node' | 'edge';
 
 
 // --------------------------------------------
@@ -342,12 +424,18 @@ export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYO
  */
 export type ECUnitOption = {
     // Exclude these reserverd word for `ECOption` to avoid to infer to "any".
-    baseOption?: never
-    options?: never
-    media?: never
+    baseOption?: unknown
+    options?: unknown
+    media?: unknown
+
     timeline?: ComponentOption | ComponentOption[]
-    [key: string]: ComponentOption | ComponentOption[] | Dictionary<any> | any
-} & AnimationOptionMixin;
+    backgroundColor?: ZRColor
+    darkMode?: boolean | 'auto'
+    textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+
+    [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
+
+} & AnimationOptionMixin & ColorPaletteOptionMixin;
 
 /**
  * [ECOption]:
@@ -388,29 +476,68 @@ export type ECUnitOption = {
  * };
  * ```
  */
-export type ECOption = ECUnitOption | {
-    baseOption?: ECUnitOption,
-    timeline?: ComponentOption,
-    options?: ECUnitOption[],
-    media?: MediaUnit[],
+export interface ECOption extends ECUnitOption {
+    baseOption?: ECUnitOption;
+    timeline?: ComponentOption | ComponentOption[];
+    options?: ECUnitOption[];
+    media?: MediaUnit[];
 };
 
 // series.data or dataset.source
-export type OptionSourceData =
-    ArrayLike<OptionDataItem>
-    | Dictionary<ArrayLike<OptionDataItem>>; // Only for `SOURCE_FORMAT_KEYED_COLUMNS`.
+export type OptionSourceData<
+    VAL extends OptionDataValue = OptionDataValue,
+    ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
+> =
+    OptionSourceDataOriginal<VAL, ORIITEM>
+    | OptionSourceDataObjectRows<VAL>
+    | OptionSourceDataArrayRows<VAL>
+    | OptionSourceDataKeyedColumns<VAL>
+    | OptionSourceDataTypedArray;
+export type OptionDataItemOriginal<
+    VAL extends OptionDataValue = OptionDataValue
+> = VAL | VAL[] | OptionDataItemObject<VAL>;
+export type OptionSourceDataOriginal<
+    VAL extends OptionDataValue = OptionDataValue,
+    ORIITEM extends OptionDataItemOriginal<VAL> = OptionDataItemOriginal<VAL>
+> = ArrayLike<ORIITEM>;
+export type OptionSourceDataObjectRows<VAL extends OptionDataValue = OptionDataValue> =
+    ArrayLike<Dictionary<VAL>>;
+export type OptionSourceDataArrayRows<VAL extends OptionDataValue = OptionDataValue> =
+    ArrayLike<ArrayLike<VAL>>;
+export type OptionSourceDataKeyedColumns<VAL extends OptionDataValue = OptionDataValue> =
+    Dictionary<ArrayLike<VAL>>;
+export type OptionSourceDataTypedArray = ArrayLike<number>;
+
 // See also `model.js#getDataItemValue`.
 export type OptionDataItem =
     OptionDataValue
     | Dictionary<OptionDataValue>
-    | ArrayLike<OptionDataValue>
+    | OptionDataValue[]
     // FIXME: In some case (markpoint in geo (geo-map.html)), dataItem is {coord: [...]}
     | OptionDataItemObject<OptionDataValue>;
 // Only for `SOURCE_FORMAT_KEYED_ORIGINAL`
 export type OptionDataItemObject<T> = {
-    name?: string
-    value?: T[] | T
+    id?: OptionId;
+    name?: OptionName;
+    value?: T[] | T;
+    selected?: boolean;
 };
+// Compat number because it is usually used and not easy to
+// restrict it in practise.
+export type OptionId = string | number;
+export type OptionName = string | number;
+export interface GraphEdgeItemObject<
+    VAL extends OptionDataValue
+> extends OptionDataItemObject<VAL> {
+    /**
+     * Name or index of source node.
+     */
+    source?: string | number
+    /**
+     * Name or index of target node.
+     */
+    target?: string | number
+}
 export type OptionDataValue = string | number | Date;
 
 export type OptionDataValueNumeric = number | '-';
@@ -421,7 +548,8 @@ export type OptionDataValueDate = Date | string | number;
 export type ModelOption = any;
 export type ThemeOption = Dictionary<any>;
 
-export type DisplayState = 'normal' | 'emphasis';
+export type DisplayState = 'normal' | 'emphasis' | 'blur' | 'select';
+export type DisplayStateNonNormal = Exclude<DisplayState, 'normal'>;
 export type DisplayStateHostOption = {
     emphasis?: Dictionary<any>,
     [key: string]: any
@@ -439,7 +567,7 @@ export interface OptionEncodeVisualDimensions {
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue
 }
-export type OptionEncodeValue = DimensionIndex[] | DimensionIndex | DimensionName[] | DimensionName;
+export type OptionEncodeValue = DimensionLoose | DimensionLoose[];
 export type EncodeDefaulter = (source: Source, dimCount: number) => OptionEncode;
 
 // TODO: TYPE Different callback param for different series
@@ -458,7 +586,7 @@ export interface CallbackDataParams {
     name: string;
     dataIndex: number;
     data: any;
-    dataType?: string;
+    dataType?: SeriesDataType;
     value: any;
     color?: ZRColor;
     borderColor?: string;
@@ -537,6 +665,10 @@ export interface BorderOptionMixin {
     borderColor?: string
     borderWidth?: number
     borderType?: ZRLineType
+    borderCap?: CanvasLineCap
+    borderJoin?: CanvasLineJoin
+    borderDashOffset?: number
+    borderMiterLimit?: number
 }
 
 export type AnimationDelayCallbackParam = {
@@ -546,6 +678,11 @@ export type AnimationDelayCallbackParam = {
 export type AnimationDurationCallback = (idx: number) => number;
 export type AnimationDelayCallback = (idx: number, params?: AnimationDelayCallbackParam) => number;
 
+export interface AnimationOption {
+    duration?: number
+    easing?: AnimationEasing
+    delay?: number
+}
 /**
  * Mixin of option set to control the animation of series.
  */
@@ -613,6 +750,7 @@ export interface RoamOptionMixin {
 // TODO: TYPE value type?
 export type SymbolSizeCallback<T> = (rawValue: any, params: T) => number | number[];
 export type SymbolCallback<T> = (rawValue: any, params: T) => string;
+export type SymbolRotateCallback<T> = (rawValue: any, params: T) => number;
 /**
  * Mixin of option set to control the element symbol.
  * Include type of symbol, and size of symbol.
@@ -627,7 +765,8 @@ export interface SymbolOptionMixin<T = unknown> {
      */
     symbolSize?: number | number[] | (unknown extends T ? never : SymbolSizeCallback<T>)
 
-    symbolRotate?: number
+    symbolRotate?: number | (unknown extends T ? never : SymbolRotateCallback<T>)
+
     symbolKeepAspect?: boolean
 
     symbolOffset?: number[]
@@ -652,6 +791,10 @@ export interface LineStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
     color?: Clr
     opacity?: number
     type?: ZRLineType
+    cap?: CanvasLineCap
+    join?: CanvasLineJoin
+    dashOffset?: number
+    miterLimit?: number
 }
 
 /**
@@ -709,7 +852,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
     fontStyle?: ZRFontStyle
     fontWeight?: ZRFontWeight
     fontFamily?: string
-    fontSize?: number
+    fontSize?: number | string
     align?: HorizontalAlign
     verticalAlign?: VerticalAlign
     // @deprecated
@@ -723,6 +866,8 @@ export interface TextCommonOption extends ShadowOptionMixin {
     }
     borderColor?: string
     borderWidth?: number
+    borderType?: ZRLineType
+    borderDashOffset?: number
     borderRadius?: number | number[]
     padding?: number | number[]
 
@@ -730,6 +875,8 @@ export interface TextCommonOption extends ShadowOptionMixin {
     height?: number
     textBorderColor?: string
     textBorderWidth?: number
+    textBorderType?: ZRLineType
+    textBorderDashOffset?: number
 
     textShadowBlur?: number
     textShadowColor?: string
@@ -758,7 +905,16 @@ export interface LabelOption extends TextCommonOption {
     rotate?: number
     offset?: number[]
 
+    /**
+     * Min margin between labels. Used when label has layout.
+     */
+    // It's minMargin instead of margin is for not breaking the previous code using margin.
+    minMargin?: number
+
     overflow?: TextStyleProps['overflow']
+    silent?: boolean
+    precision?: number | 'auto'
+    valueAnimation?: boolean
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)
@@ -790,13 +946,78 @@ export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'positio
     distance?: number | number[]
 }
 
-export interface LabelGuideLineOption {
+export interface LabelLineOption {
     show?: boolean
     length?: number
     length2?: number
     smooth?: boolean | number
+    minTurnAngle?: number,
     lineStyle?: LineStyleOption
 }
+
+
+export interface LabelLayoutOptionCallbackParams {
+    dataIndex: number,
+    dataType: SeriesDataType,
+    seriesIndex: number,
+    text: string
+    align: ZRTextAlign
+    verticalAlign: ZRTextVerticalAlign
+    rect: RectLike
+    labelRect: RectLike
+    // Points of label line in pie/funnel
+    labelLinePoints?: number[][]
+    // x: number
+    // y: number
+};
+
+export interface LabelLayoutOption {
+    /**
+     * If move the overlapped label. If label is still overlapped after moved.
+     * It will determine if to hide this label with `hideOverlap` policy.
+     *
+     * shiftX/Y will keep the order on x/y
+     * shuffleX/y will move the label around the original position randomly.
+     */
+    moveOverlap?: 'shiftX'
+        | 'shiftY'
+        | 'shuffleX'
+        | 'shuffleY'
+    /**
+     * If hide the overlapped label. It will be handled after move.
+     * @default 'none'
+     */
+    hideOverlap?: boolean
+    /**
+     * If label is draggable.
+     */
+    draggable?: boolean
+    /**
+     * Can be absolute px number or percent string.
+     */
+    x?: number | string
+    y?: number | string
+    /**
+     * offset on x based on the original position.
+     */
+    dx?: number
+    /**
+     * offset on y based on the original position.
+     */
+    dy?: number
+    rotate?: number
+
+    align?: ZRTextAlign
+    verticalAlign?: ZRTextVerticalAlign
+    width?: number
+    height?: number
+    fontSize?: number
+
+    labelLinePoints?: number[][]
+}
+
+export type LabelLayoutOptionCallback = (params: LabelLayoutOptionCallbackParams) => LabelLayoutOption;
+
 
 interface TooltipFormatterCallback<T> {
     /**
@@ -871,7 +1092,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Support to be a callback
      */
-    position?: number[] | string[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
+    position?: (number | string)[] | TooltipBuiltinPosition | PositionCallback | TooltipBoxLayoutOption
 
     confine?: boolean
 
@@ -902,6 +1123,10 @@ export interface CommonTooltipOption<FormatterParams> {
     borderColor?: ColorString
     borderRadius?: number
     borderWidth?: number
+    shadowBlur?: number
+    shadowColor?: string
+    shadowOffsetX?: number
+    shadowOffsetY?: number
 
     /**
      * Padding between tooltip content and tooltip border.
@@ -1026,18 +1251,69 @@ export interface CommonAxisPointerOption {
 export interface ComponentOption {
     type?: string;
 
-    id?: string;
-    name?: string;
+    id?: OptionId;
+    name?: OptionName;
 
     z?: number;
     zlevel?: number;
     // FIXME:TS more
 }
 
-export interface SeriesOption extends
+export type BlurScope = 'coordinateSystem' | 'series' | 'global';
+
+/**
+ * can be array of data indices.
+ * Or may be an dictionary if have different types of data like in graph.
+ */
+export type InnerFocus = string | ArrayLike<number> | Dictionary<ArrayLike<number>>;
+
+export interface StatesOptionMixin<StateOption = unknown, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> {
+    /**
+     * Emphasis states
+     */
+    emphasis?: StateOption & {
+        /**
+         * self: Focus self and blur all others.
+         * series: Focus series and blur all other series.
+         */
+        focus?: 'none' | 'self' | 'series' |
+            (unknown extends ExtraStateOpts['emphasis']['focus']
+                ? never : ExtraStateOpts['emphasis']['focus'])
+
+        /**
+         * Scope of blurred element when focus.
+         *
+         * coordinateSystem: blur others in the same coordinateSystem
+         * series: blur others in the same series
+         * global: blur all others
+         *
+         * Default to be coordinate system.
+         */
+        blurScope?: BlurScope
+    } & Omit<ExtraStateOpts['emphasis'], 'focus'>
+    /**
+     * Select states
+     */
+    select?: StateOption & ExtraStateOpts['select']
+    /**
+     * Blur states.
+     */
+    blur?: StateOption & ExtraStateOpts['blur']
+}
+
+export interface SeriesOption<StateOption=any, ExtraStateOpts extends {
+    emphasis?: any
+    select?: any
+    blur?: any
+} = unknown> extends
     ComponentOption,
     AnimationOptionMixin,
-    ColorPaletteOptionMixin
+    ColorPaletteOptionMixin,
+    StatesOptionMixin<StateOption, ExtraStateOpts>
 {
     name?: string
 
@@ -1051,7 +1327,7 @@ export interface SeriesOption extends
     cursor?: string
 
     // Needs to be override
-    data?: any
+    data?: unknown
 
     legendHoverLink?: boolean
 
@@ -1075,6 +1351,25 @@ export interface SeriesOption extends
      * @default 'column'
      */
     seriesLayoutBy?: 'column' | 'row'
+
+    labelLine?: LabelLineOption
+
+    /**
+     * Overall label layout option in label layout stage.
+     */
+    labelLayout?: LabelLayoutOption | LabelLayoutOptionCallback
+
+    /**
+     * Animation config for state transition.
+     */
+    stateAnimation?: AnimationOption
+
+    /**
+     * Map of selected data
+     * key is name or index of data.
+     */
+    selectedMap?: Dictionary<boolean>
+    selectedMode?: 'single' | 'multiple' | boolean
 }
 
 export interface SeriesOnCartesianOptionMixin {
@@ -1124,7 +1419,11 @@ export interface SeriesSamplingOptionMixin {
 
 export interface SeriesEncodeOptionMixin {
     datasetIndex?: number;
+    datasetId?: string | number;
     seriesLayoutBy?: SeriesLayoutBy;
-    dimentions?: DimensionName[];
+    sourceHeader?: OptionSourceHeader;
+    dimensions?: DimensionDefinitionLoose[];
     encode?: OptionEncode
 }
+
+export type SeriesEncodableModel = SeriesModel<SeriesOption & SeriesEncodeOptionMixin>;

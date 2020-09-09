@@ -46,8 +46,6 @@ echarts.registerAction(actionInfo, function (payload: ParallelAxisAreaSelectPayl
 
 export interface ParallelAxisExpandPayload extends Payload {
     axisExpandWindow?: number[];
-    // Jumping uses animation, and sliding suppresses animation.
-    animation?: boolean;
 }
 
 /**

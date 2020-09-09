@@ -23,11 +23,9 @@
  * List for data storage
  */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
-import Source from './Source';
 import {DefaultDataProvider, DataProvider} from './helper/dataProvider';
 import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
 import DataDimensionInfo from './DataDimensionInfo';
@@ -35,15 +33,17 @@ import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/typ
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
-    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput, ModelOption, ItemStyleOption, LineStyleOption
+    ParsedValue, ParsedValueNumeric, OrdinalNumber, DimensionUserOuput,
+    ModelOption, SeriesDataType, OrdinalRawValue, ItemStyleOption
 } from '../util/types';
-import {parseDate} from '../util/number';
-import {isDataItemOption} from '../util/model';
-import { getECData } from '../util/graphic';
+import {isDataItemOption, convertOptionIdName} from '../util/model';
+import { getECData } from '../util/ecData';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
+import { parseDataValue } from './helper/dataValueHelper';
+import { isSourceInstance } from './Source';
 
 
 const isObject = zrUtil.isObject;
@@ -131,6 +131,7 @@ export interface DefaultDataVisual {
 
     symbol?: string
     symbolSize?: number | number[]
+    symbolRotate?: number
     symbolKeepAspect?: boolean
 
     liftZ?: number
@@ -140,7 +141,40 @@ export interface DefaultDataVisual {
 
     // visualMap will inject visualMeta data
     visualMeta?: VisualMeta[]
+
+    // If color is encoded from palette
+    colorFromPalette?: boolean
 }
+
+export interface DataCalculationInfo<SERIES_MODEL> {
+    stackedDimension: string;
+    stackedByDimension: string;
+    isStackedByIndex: boolean;
+    stackedOverDimension: string;
+    stackResultDimension: string;
+    stackedOnSeries?: SERIES_MODEL;
+}
+
+// -----------------------------
+// Internal method declarations:
+// -----------------------------
+let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
+let prepareInvertedIndex: (list: List) => void;
+let getRawValueFromStore: (list: List, dimIndex: number, rawIndex: number) => ParsedValue | OrdinalRawValue;
+let getIndicesCtor: (list: List) => DataArrayLikeConstructor;
+let prepareChunks: (
+    storage: DataStorage, dimInfo: DataDimensionInfo, chunkSize: number, chunkCount: number, end: number
+) => void;
+let getRawIndexWithoutIndices: (this: List, idx: number) => number;
+let getRawIndexWithIndices: (this: List, idx: number) => number;
+let getId: (list: List, rawIndex: number) => string;
+let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
+let validateDimensions: (list: List, dims: DimensionName[]) => void;
+let cloneListForMapAndSample: (original: List, excludeDimensions: DimensionName[]) => List;
+let cloneDimStore: (originalDimStore: DataValueChunk[]) => DataValueChunk[];
+let getInitialExtent: () => [number, number];
+let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
+let transferProperties: (target: List, source: List) => void;
 
 class List<
     HostModel extends Model = Model,
@@ -156,16 +190,22 @@ class List<
 
     readonly hostModel: HostModel;
 
-    readonly dataType: string;
+    /**
+     * @readonly
+     */
+    dataType: SeriesDataType;
 
     /**
+     * @readonly
      * Host graph if List is used to store graph nodes / edges.
      */
-    readonly graph?: Graph;
+    graph?: Graph;
+
     /**
+     * @readonly
      * Host tree if List is used to store tree ndoes.
      */
-    readonly tree?: Tree;
+    tree?: Tree;
 
     // Indices stores the indices of data subset after filtered.
     // This data subset will be used in chart.
@@ -216,7 +256,7 @@ class List<
 
     private _invertedIndicesMap: {[dimName: string]: ArrayLike<number>};
 
-    private _calculationInfo: {[key: string]: any} = {};
+    private _calculationInfo: DataCalculationInfo<HostModel> = {} as DataCalculationInfo<HostModel>;
 
     // User output info of this data.
     // DO NOT use it in other places!
@@ -243,9 +283,9 @@ class List<
 
     // Methods that create a new list based on this list should be listed here.
     // Notice that those method should `RETURN` the new list.
-    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
+    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'] as const;
     // Methods that change indices of this list should be listed here.
-    CHANGABLE_METHODS = ['filterSelf', 'selectRange'];
+    CHANGABLE_METHODS = ['filterSelf', 'selectRange'] as const;
 
 
     /**
@@ -352,16 +392,12 @@ class List<
     /**
      * @param coordDim
      * @param idx A coordDim may map to more than one data dim.
-     *        If idx is `true`, return a array of all mapped dims.
-     *        If idx is not specified, return the first dim not extra.
-     * @return concrete data dim.
-     *        If idx is number, and not found, return null/undefined.
-     *        If idx is `true`, and not found, return empty array (always return array).
+     *        If not specified, return the first dim not extra.
+     * @return concrete data dim. If not found, return null/undefined
      */
     mapDimension(coordDim: DimensionName): DimensionName;
-    mapDimension(coordDim: DimensionName, idx: true): DimensionName[];
     mapDimension(coordDim: DimensionName, idx: number): DimensionName;
-    mapDimension(coordDim: DimensionName, idx?: true | number): DimensionName | DimensionName[] {
+    mapDimension(coordDim: DimensionName, idx?: number): DimensionName {
         const dimensionsSummary = this._dimensionsSummary;
 
         if (idx == null) {
@@ -369,10 +405,13 @@ class List<
         }
 
         const dims = dimensionsSummary.encode[coordDim];
-        return idx === true
-            // always return array if idx is `true`
-            ? (dims || []).slice()
-            : (dims ? dims[idx as number] as any : null);
+        return dims ? dims[idx as number] as any : null;
+    }
+
+    mapDimensionsAll(coordDim: DimensionName): DimensionName[] {
+        const dimensionsSummary = this._dimensionsSummary;
+        const dims = dimensionsSummary.encode[coordDim];
+        return (dims || []).slice();
     }
 
     /**
@@ -390,7 +429,7 @@ class List<
         dimValueGetter?: DimValueGetter
     ): void {
 
-        const notProvider = data instanceof Source || zrUtil.isArrayLike(data);
+        const notProvider = isSourceInstance(data) || zrUtil.isArrayLike(data);
         if (notProvider) {
             data = new DefaultDataProvider(data, this.dimensions.length);
         }
@@ -600,7 +639,7 @@ class List<
             // ??? FIXME not check by pure but sourceFormat?
             // TODO refactor these logic.
             if (!rawData.pure) {
-                let name: any = nameList[idx];
+                let name: string = nameList[idx];
 
                 if (dataItem && name == null) {
                     // If dataItem is {name: ...}, it has highest priority.
@@ -608,24 +647,26 @@ class List<
                     if ((dataItem as any).name != null) {
                         // There is no other place to persistent dataItem.name,
                         // so save it to nameList.
-                        nameList[idx] = name = (dataItem as any).name;
+                        nameList[idx] = name = convertOptionIdName((dataItem as any).name, null);
                     }
                     else if (nameDimIdx != null) {
                         const nameDim = dimensions[nameDimIdx];
                         const nameDimChunk = storage[nameDim][chunkIndex];
                         if (nameDimChunk) {
-                            name = nameDimChunk[chunkOffset];
                             const ordinalMeta = dimensionInfoMap[nameDim].ordinalMeta;
-                            if (ordinalMeta && ordinalMeta.categories.length) {
-                                name = ordinalMeta.categories[name];
-                            }
+                            name = convertOptionIdName(
+                                (ordinalMeta && ordinalMeta.categories.length)
+                                    ? ordinalMeta.categories[nameDimChunk[chunkOffset] as number]
+                                    : nameDimChunk[chunkOffset],
+                                null
+                            );
                         }
                     }
                 }
 
                 // Try using the id in option
                 // id or name is used on dynamical data, mapping old and new items.
-                let id = dataItem == null ? null : (dataItem as any).id;
+                let id: string = dataItem == null ? null : convertOptionIdName((dataItem as any).id, null);
 
                 if (id == null && name != null) {
                     // Use name as id and add counter to avoid same name
@@ -853,6 +894,14 @@ class List<
     }
 
     /**
+     * PENDING: In fact currently this function is only used to short-circuit
+     * the calling of `scale.unionExtentFromData` when data have been filtered by modules
+     * like "dataZoom". `scale.unionExtentFromData` is used to calculate data extent for series on
+     * an axis, but if a "axis related data filter module" is used, the extent of the axis have
+     * been fixed and no need to calling `scale.unionExtentFromData` actually.
+     * But if we add "custom data filter" in future, which is not "axis related", this method may
+     * be still needed.
+     *
      * Optimize for the scenario that data is filtered by a given extent.
      * Consider that if data amount is more than hundreds of thousand,
      * extent calculation will cost more than 10ms and the cache will
@@ -860,25 +909,41 @@ class List<
      */
     getApproximateExtent(dim: DimensionLoose): [number, number] {
         dim = this.getDimension(dim);
-        return this._approximateExtent[dim] || this.getDataExtent(dim /*, stack */);
+        return this._approximateExtent[dim] || this.getDataExtent(dim);
     }
 
+    /**
+     * Calculate extent on a filtered data might be time consuming.
+     * Approximate extent is only used for: calculte extent of filtered data outside.
+     */
     setApproximateExtent(extent: [number, number], dim: DimensionLoose): void {
         dim = this.getDimension(dim);
         this._approximateExtent[dim] = extent.slice() as [number, number];
     }
 
-    getCalculationInfo(key: string): any {
+    getCalculationInfo<CALC_INFO_KEY extends keyof DataCalculationInfo<HostModel>>(
+        key: CALC_INFO_KEY
+    ): DataCalculationInfo<HostModel>[CALC_INFO_KEY] {
         return this._calculationInfo[key];
     }
 
     /**
      * @param key or k-v object
      */
-    setCalculationInfo(key: string | object, value?: any) {
+    setCalculationInfo(
+        key: DataCalculationInfo<HostModel>
+    ): void;
+    setCalculationInfo<CALC_INFO_KEY extends keyof DataCalculationInfo<HostModel>>(
+        key: CALC_INFO_KEY,
+        value: DataCalculationInfo<HostModel>[CALC_INFO_KEY]
+    ): void;
+    setCalculationInfo(
+        key: (keyof DataCalculationInfo<HostModel>) | DataCalculationInfo<HostModel>,
+        value?: DataCalculationInfo<HostModel>[keyof DataCalculationInfo<HostModel>]
+    ): void {
         isObject(key)
             ? zrUtil.extend(this._calculationInfo, key as object)
-            : (this._calculationInfo[key] = value);
+            : ((this._calculationInfo as any)[key] = value);
     }
 
     /**
@@ -1100,13 +1165,25 @@ class List<
         }
     }
 
+    /**
+     * @return Never be null/undefined. `number` will be converted to string. Becuase:
+     * In most cases, name is used in display, where returning a string is more convenient.
+     * In other cases, name is used in query (see `indexOfName`), where we can keep the
+     * rule that name `2` equals to name `'2'`.
+     */
     getName(idx: number): string {
         const rawIndex = this.getRawIndex(idx);
         return this._nameList[rawIndex]
-            || getRawValueFromStore(this, this._nameDimIdx, rawIndex)
+            || convertOptionIdName(getRawValueFromStore(this, this._nameDimIdx, rawIndex), '')
             || '';
     }
 
+    /**
+     * @return Never null/undefined. `number` will be converted to string. Becuase:
+     * In all cases having encountered at present, id is used in making diff comparison, which
+     * are usually based on hash map. We can keep the rule that the internal id are always string
+     * (treat `2` is the same as `'2'`) to make the related logic simple.
+     */
     getId(idx: number): string {
         return getId(this, this.getRawIndex(idx));
     }
@@ -1602,10 +1679,10 @@ class List<
         return new DataDiffer(
             otherList ? otherList.getIndices() : [],
             this.getIndices(),
-            function (idx) {
+            function (idx: number) {
                 return getId(otherList, idx);
             },
-            function (idx) {
+            function (idx: number) {
                 return getId(thisList, idx);
             }
         );
@@ -1782,6 +1859,8 @@ class List<
             ecData.dataIndex = idx;
             ecData.dataType = this.dataType;
             ecData.seriesIndex = hostModel && (hostModel as any).seriesIndex;
+
+            // TODO: not store dataIndex on children.
             if (el.type === 'group') {
                 el.traverse(setItemDataAndSeriesIndex, el);
             }
@@ -1874,7 +1953,7 @@ class List<
             objectRows: function (
                 this: List, dataItem: Dictionary<any>, dimName: string, dataIndex: number, dimIndex: number
             ): ParsedValue {
-                return convertDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
+                return parseDataValue(dataItem[dimName], this._dimensionInfos[dimName]);
             },
 
             keyedColumns: getDimValueSimply,
@@ -1892,7 +1971,7 @@ class List<
                 if (!this._rawData.pure && isDataItemOption(dataItem)) {
                     this.hasItemOption = true;
                 }
-                return convertDataValue(
+                return parseDataValue(
                     (value instanceof Array)
                         ? value[dimIndex]
                         // If value is a single number or something else not array.
@@ -1912,43 +1991,8 @@ class List<
         function getDimValueSimply(
             this: List, dataItem: any, dimName: string, dataIndex: number, dimIndex: number
         ): ParsedValue {
-            return convertDataValue(dataItem[dimIndex], this._dimensionInfos[dimName]);
+            return parseDataValue(dataItem[dimIndex], this._dimensionInfos[dimName]);
         }
-
-        /**
-         * Convert raw the value in to inner value in List.
-         * [Caution]: this is the key logic of user value parser.
-         * For backward compatibiliy, do not modify it until have to.
-         */
-        function convertDataValue(value: any, dimInfo: DataDimensionInfo): ParsedValue {
-            // Performance sensitive.
-            const dimType = dimInfo && dimInfo.type;
-            if (dimType === 'ordinal') {
-                // If given value is a category string
-                const ordinalMeta = dimInfo && dimInfo.ordinalMeta;
-                return ordinalMeta
-                    ? ordinalMeta.parseAndCollect(value)
-                    : value;
-            }
-
-            if (dimType === 'time'
-                // spead up when using timestamp
-                && typeof value !== 'number'
-                && value != null
-                && value !== '-'
-            ) {
-                value = +parseDate(value);
-            }
-
-            // dimType defaults 'number'.
-            // If dimType is not ordinal and value is null or undefined or NaN or '-',
-            // parse to NaN.
-            return (value == null || value === '')
-                ? NaN
-                // If string (like '-'), using '+' parse to NaN
-                // If object, also parse to NaN
-                : +value;
-        };
 
         prepareInvertedIndex = function (list: List): void {
             const invertedIndicesMap = list._invertedIndicesMap;
@@ -1974,7 +2018,9 @@ class List<
             });
         };
 
-        getRawValueFromStore = function (list: List, dimIndex: number, rawIndex: number): any {
+        getRawValueFromStore = function (
+            list: List, dimIndex: number, rawIndex: number
+        ): ParsedValue | OrdinalRawValue {
             let val;
             if (dimIndex != null) {
                 const chunkSize = list._chunkSize;
@@ -2036,10 +2082,13 @@ class List<
             return -1;
         };
 
+        /**
+         * @see the comment of `List['getId']`.
+         */
         getId = function (list: List, rawIndex: number): string {
             let id = list._idList[rawIndex];
             if (id == null) {
-                id = getRawValueFromStore(list, list._idDimIdx, rawIndex);
+                id = convertOptionIdName(getRawValueFromStore(list, list._idDimIdx, rawIndex), null);
             }
             if (id == null) {
                 // FIXME Check the usage in graph, should not use prefix.
@@ -2153,26 +2202,9 @@ class List<
 
 }
 
-// -----------------------------
-// Internal method declarations:
-// -----------------------------
-let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
-let prepareInvertedIndex: (list: List) => void;
-let getRawValueFromStore: (list: List, dimIndex: number, rawIndex: number) => any;
-let getIndicesCtor: (list: List) => DataArrayLikeConstructor;
-let prepareChunks: (
-    storage: DataStorage, dimInfo: DataDimensionInfo, chunkSize: number, chunkCount: number, end: number
-) => void;
-let getRawIndexWithoutIndices: (this: List, idx: number) => number;
-let getRawIndexWithIndices: (this: List, idx: number) => number;
-let getId: (list: List, rawIndex: number) => string;
-let normalizeDimensions: (dimensions: ItrParamDims) => Array<DimensionLoose>;
-let validateDimensions: (list: List, dims: DimensionName[]) => void;
-let cloneListForMapAndSample: (original: List, excludeDimensions: DimensionName[]) => List;
-let cloneDimStore: (originalDimStore: DataValueChunk[]) => DataValueChunk[];
-let getInitialExtent: () => [number, number];
-let setItemDataAndSeriesIndex: (this: Element, child: Element) => void;
-let transferProperties: (target: List, source: List) => void;
-
+interface List {
+    getLinkedData(dataType?: SeriesDataType): List;
+    getLinkedDataAll(): { data: List, type?: SeriesDataType }[];
+}
 
 export default List;

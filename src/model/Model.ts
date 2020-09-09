@@ -17,9 +17,7 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import {makeInner} from '../util/model';
 import {
     enableClassExtend,
     ExtendableConstructor,
@@ -34,11 +32,7 @@ import {ItemStyleMixin} from './mixin/itemStyle';
 import GlobalModel from './Global';
 import { ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
-
-const mixin = zrUtil.mixin;
-const inner = makeInner<{
-    getParent(path: string | string[]): Model
-}, Model>();
+import { mixin, clone, merge } from 'zrender/src/core/util';
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';
@@ -50,26 +44,21 @@ type Value<Opt, R> = Opt extends Dictionary<any>
 
 class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown insteadof any?
 
-    // [Caution]: for compat the previous "class extend"
-    // publich and protected fields must be initialized on
-    // prototype rather than in constructor. Otherwise the
-    // subclass overrided filed will be overwritten by this
-    // class. That is, they should not be initialized here.
+    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // the class members must not be initialized in constructor or declaration place.
+    // Otherwise there is bad case:
+    //   class A {xxx = 1;}
+    //   enableClassExtend(A);
+    //   class B extends A {}
+    //   var C = B.extend({xxx: 5});
+    //   var c = new C();
+    //   console.log(c.xxx); // expect 5 but always 1.
 
-    /**
-     * @readOnly
-     */
     parentModel: Model;
 
-    /**
-     * @readOnly
-     */
-    ecModel: GlobalModel;;
+    ecModel: GlobalModel;
 
-    /**
-     * @readOnly
-     */
-    option: Opt;
+    option: Opt;    // TODO Opt should only be object.
 
     constructor(option?: Opt, parentModel?: Model, ecModel?: GlobalModel) {
         this.parentModel = parentModel;
@@ -93,7 +82,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
      * Merge the input option to me.
      */
     mergeOption(option: Opt, ecModel?: GlobalModel): void {
-        zrUtil.merge(this.option, option, true);
+        merge(this.option, option, true);
     }
 
     // FIXME:TS consider there is parentModel,
@@ -119,10 +108,9 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
             return this.option;
         }
 
-        return doGet(
-            this.option,
+        return this._doGet(
             this.parsePath(path),
-            !ignoreParent && getParent(this, path)
+            !ignoreParent && this.parentModel
         );
     }
 
@@ -133,7 +121,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
 
         let val = option == null ? option : option[key];
         if (val == null && !ignoreParent) {
-            const parentModel = getParent(this, key as string);
+            const parentModel = this.parentModel;
             if (parentModel) {
                 // FIXME:TS do not know how to make it works
                 val = parentModel.getShallow(key);
@@ -152,6 +140,9 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     getModel<R extends keyof Opt, S extends keyof Opt[R]>(
         path: readonly [R, S], parentModel?: Model
     ): Model<Opt[R][S]>;
+    getModel<Ra extends keyof Opt, Rb extends keyof Opt, S extends keyof Opt[Rb]>(
+        path: readonly [Ra] | readonly [Rb, S], parentModel?: Model
+    ): Model<Opt[Ra]> | Model<Opt[Rb][S]>;
     getModel<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
         path: readonly [R, S, T], parentModel?: Model
     ): Model<Opt[R][S][T]>;
@@ -162,17 +153,57 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
         const hasPath = path != null;
         const pathFinal = hasPath ? this.parsePath(path) : null;
         const obj = hasPath
-            ? doGet(this.option, pathFinal)
+            ? this._doGet(pathFinal)
             : this.option;
 
-        let thisParentModel;
         parentModel = parentModel || (
-            (thisParentModel = getParent(this, pathFinal))
-                && thisParentModel.getModel(pathFinal as readonly [string])
+            this.parentModel
+                && this.parentModel.getModel(this.resolveParentPath(pathFinal) as [string])
         );
 
         return new Model(obj, parentModel, this.ecModel);
     }
+
+    /**
+     * Squash option stack into one.
+     * parentModel will be removed after squashed.
+     *
+     * NOTE: resolveParentPath will not be applied here for simplicity. DON'T use this function
+     * if resolveParentPath is modified.
+     *
+     * @param deepMerge If do deep merge. Default to be false.
+     */
+    // squash(
+    //     deepMerge?: boolean,
+    //     handleCallback?: (func: () => object) => object
+    // ) {
+    //     const optionStack = [];
+    //     let model: Model = this;
+    //     while (model) {
+    //         if (model.option) {
+    //             optionStack.push(model.option);
+    //         }
+    //         model = model.parentModel;
+    //     }
+
+    //     const newOption = {} as Opt;
+    //     let option;
+    //     while (option = optionStack.pop()) {    // Top down merge
+    //         if (isFunction(option) && handleCallback) {
+    //             option = handleCallback(option);
+    //         }
+    //         if (deepMerge) {
+    //             merge(newOption, option);
+    //         }
+    //         else {
+    //             extend(newOption, option);
+    //         }
+    //     }
+
+    //     // Remove parentModel
+    //     this.option = newOption;
+    //     this.parentModel = null;
+    // }
 
     /**
      * If model has option
@@ -186,7 +217,7 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
     // Pending
     clone(): Model<Opt> {
         const Ctor = this.constructor;
-        return new (Ctor as any)(zrUtil.clone(this.option));
+        return new (Ctor as any)(clone(this.option));
     }
 
     // setReadOnly(properties): void {
@@ -201,15 +232,16 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
         return path;
     }
 
-    customizeGetParent(
-        getParentMethod: (path: string | string[]) => Model
-    ): void {
-        inner(this).getParent = getParentMethod;
+    // Resolve path for parent. Perhaps useful when parent use a different property.
+    // Default to be a identity resolver.
+    // Can be modified to a different resolver.
+    resolveParentPath(path: readonly string[]): string[] {
+        return path as string[];
     }
 
     // FIXME:TS check whether put this method here
     isAnimationEnabled(): boolean {
-        if (!env.node) {
+        if (!env.node && this.option) {
             if (this.option.animation != null) {
                 return !!this.option.animation;
             }
@@ -219,32 +251,33 @@ class Model<Opt extends ModelOption = ModelOption> {    // TODO: TYPE use unkown
         }
     }
 
+    private _doGet(pathArr: readonly string[], parentModel?: Model<Dictionary<any>>) {
+        let obj = this.option;
+        if (!pathArr) {
+            return obj;
+        }
+
+        for (let i = 0; i < pathArr.length; i++) {
+            // Ignore empty
+            if (!pathArr[i]) {
+                continue;
+            }
+            // obj could be number/string/... (like 0)
+            obj = (obj && typeof obj === 'object') ? obj[pathArr[i] as keyof ModelOption] : null;
+            if (obj == null) {
+                break;
+            }
+        }
+        if (obj == null && parentModel) {
+            obj = parentModel._doGet(
+                this.resolveParentPath(pathArr) as [string],
+                parentModel.parentModel
+            ) as any;
+        }
+
+        return obj;
+    }
 };
-
-function doGet(obj: ModelOption, pathArr: readonly string[], parentModel?: Model<Dictionary<any>>) {
-    for (let i = 0; i < pathArr.length; i++) {
-        // Ignore empty
-        if (!pathArr[i]) {
-            continue;
-        }
-        // obj could be number/string/... (like 0)
-        obj = (obj && typeof obj === 'object') ? obj[pathArr[i] as keyof ModelOption] : null;
-        if (obj == null) {
-            break;
-        }
-    }
-    if (obj == null && parentModel) {
-        // TODO At most 3 items array. support string[]?
-        obj = parentModel.get(pathArr as [string]);
-    }
-    return obj;
-}
-
-// `path` can be null/undefined
-function getParent(model: Model, path: string | readonly string[]): Model {
-    const getParentMethod = inner(model).getParent;
-    return getParentMethod ? getParentMethod.call(model, path) : model.parentModel;
-}
 
 type ModelConstructor = typeof Model
     & ExtendableConstructor

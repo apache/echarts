@@ -20,8 +20,9 @@
 // @ts-nocheck
 
 import * as zrUtil from 'zrender/src/core/util';
-import lang from '../lang';
-import { retrieveRawValue } from '../data/helper/dataProvider';
+import { retrieveRawValue }
+
+from '../data/helper/dataProvider';
 
 export default function (dom, ecModel) {
     const ariaModel = ecModel.getModel('aria');
@@ -145,7 +146,7 @@ export default function (dom, ecModel) {
         const userConfig = ariaModel.get(path);
         if (userConfig == null) {
             const pathArr = path.split('.');
-            let result = lang.aria;
+            let result = ecModel.getLocale('aria');
             for (let i = 0; i < pathArr.length; ++i) {
                 result = result[pathArr[i]];
             }
@@ -165,6 +166,6 @@ export default function (dom, ecModel) {
     }
 
     function getSeriesTypeName(type) {
-        return lang.series.typeNames[type] || '自定义图';
+        return ecModel.getLocale(['series', 'typeNames'])[type] || '自定义图';
     }
 }

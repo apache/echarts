@@ -19,16 +19,15 @@
 
 // TODO Axis scale
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import Polar from './Polar';
 import {parsePercent} from '../../util/number';
 import {
     createScaleByModel,
-    niceScaleExtent
+    niceScaleExtent,
+    getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 import CoordinateSystem from '../../CoordinateSystem';
-import {getStackedDimension} from '../../data/helper/dataStackHelper';
 
 import PolarModel from './PolarModel';
 import ExtensionAPI from '../../ExtensionAPI';
@@ -39,6 +38,7 @@ import AngleAxis from './AngleAxis';
 import { PolarAxisModel, AngleAxisModel, RadiusAxisModel } from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
+import { SINGLE_REFERRING } from '../../util/model';
 
 /**
  * Resize method bound to the polar
@@ -86,15 +86,11 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     ecModel.eachSeries(function (seriesModel) {
         if (seriesModel.coordinateSystem === polar) {
             const data = seriesModel.getData();
-            zrUtil.each(data.mapDimension('radius', true), function (dim) {
-                radiusAxis.scale.unionExtentFromData(
-                    data, getStackedDimension(data, dim)
-                );
+            zrUtil.each(getDataDimensionsOnAxis(data, 'radius'), function (dim) {
+                radiusAxis.scale.unionExtentFromData(data, dim);
             });
-            zrUtil.each(data.mapDimension('angle', true), function (dim) {
-                angleAxis.scale.unionExtentFromData(
-                    data, getStackedDimension(data, dim)
-                );
+            zrUtil.each(getDataDimensionsOnAxis(data, 'angle'), function (dim) {
+                angleAxis.scale.unionExtentFromData(data, dim);
             });
         }
     });
@@ -168,11 +164,9 @@ const polarCreator = {
             polarId?: string
         }>) {
             if (seriesModel.get('coordinateSystem') === 'polar') {
-                const polarModel = ecModel.queryComponents({
-                    mainType: 'polar',
-                    index: seriesModel.get('polarIndex'),
-                    id: seriesModel.get('polarId')
-                })[0] as PolarModel;
+                const polarModel = seriesModel.getReferringComponents(
+                    'polar', SINGLE_REFERRING
+                ).models[0] as PolarModel;
 
                 if (__DEV__) {
                     if (!polarModel) {

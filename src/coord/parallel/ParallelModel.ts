@@ -153,11 +153,15 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
         const dimensions = this.dimensions = [] as DimensionName[];
         const parallelAxisIndex = this.parallelAxisIndex = [] as number[];
 
-        const axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel: ParallelAxisModel) {
-            // Can not use this.contains here, because
-            // initialization has not been completed yet.
-            return (axisModel.get('parallelIndex') || 0) === this.componentIndex;
-        }, this);
+        const axisModels = zrUtil.filter(
+            this.ecModel.queryComponents({ mainType: 'parallelAxis' }),
+            function (axisModel: ParallelAxisModel) {
+                // Can not use this.contains here, because
+                // initialization has not been completed yet.
+                return (axisModel.get('parallelIndex') || 0) === this.componentIndex;
+            },
+            this
+        );
 
         zrUtil.each(axisModels, function (axisModel: ParallelAxisModel) {
             dimensions.push('dim' + axisModel.get('dim'));

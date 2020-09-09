@@ -100,7 +100,7 @@ function decodePolygon(
     return result;
 }
 
-export default function (geoJson: GeoJSON | GeoJSONCompressed): Region[] {
+export default function (geoJson: GeoJSON | GeoJSONCompressed, nameProperty: string): Region[] {
 
     geoJson = decode(geoJson);
 
@@ -138,7 +138,7 @@ export default function (geoJson: GeoJSON | GeoJSONCompressed): Region[] {
         }
 
         const region = new Region(
-            properties.name,
+            properties[nameProperty || 'name'],
             geometries,
             properties.cp
         );

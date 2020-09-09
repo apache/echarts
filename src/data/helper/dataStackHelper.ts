@@ -20,16 +20,9 @@
 import {each, isString} from 'zrender/src/core/util';
 import DataDimensionInfo from '../DataDimensionInfo';
 import SeriesModel from '../../model/Series';
-import List from '../List';
-import type { SeriesOption, SeriesStackOptionMixin } from '../../util/types';
+import List, { DataCalculationInfo } from '../List';
+import type { SeriesOption, SeriesStackOptionMixin, DimensionName } from '../../util/types';
 
-interface DataStackResult {
-    stackedDimension: string
-    stackedByDimension: string
-    isStackedByIndex: boolean
-    stackedOverDimension: string
-    stackResultDimension: string
-}
 
 /**
  * Note that it is too complicated to support 3d stack by value
@@ -58,7 +51,14 @@ export function enableDataStack(
         stackedCoordDimension?: string
         byIndex?: boolean
     }
-): DataStackResult {
+): Pick<
+    DataCalculationInfo<unknown>,
+    'stackedDimension'
+    | 'stackedByDimension'
+    | 'isStackedByIndex'
+    | 'stackedOverDimension'
+    | 'stackResultDimension'
+> {
     opt = opt || {};
     let byIndex = opt.byIndex;
     const stackedCoordDimension = opt.stackedCoordDimension;
@@ -154,7 +154,7 @@ export function enableDataStack(
     };
 }
 
-export function isDimensionStacked(data: List, stackedDim: string /*, stackedByDim*/) {
+export function isDimensionStacked(data: List, stackedDim: string /*, stackedByDim*/): boolean {
     // Each single series only maps to one pair of axis. So we do not need to
     // check stackByDim, whatever stacked by a dimension or stacked by index.
     return !!stackedDim && stackedDim === data.getCalculationInfo('stackedDimension');
@@ -165,7 +165,7 @@ export function isDimensionStacked(data: List, stackedDim: string /*, stackedByD
         // );
 }
 
-export function getStackedDimension(data: List, targetDim: string) {
+export function getStackedDimension(data: List, targetDim: string): DimensionName {
     return isDimensionStacked(data, targetDim)
         ? data.getCalculationInfo('stackResultDimension')
         : targetDim;

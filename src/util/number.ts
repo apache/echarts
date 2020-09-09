@@ -283,10 +283,11 @@ export function isRadianAroundZero(val: number): boolean {
 }
 
 // eslint-disable-next-line
-const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d\d)(?::(\d\d)(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
+const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d{1,2})(?::(\d{1,2})(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
 
 /**
- * @param value These values can be accepted:
+ * @param value valid type: number | string | Date, otherwise return `new Date(NaN)`
+ *   These values can be accepted:
  *   + An instance of Date, represent a time in its own time zone.
  *   + Or string in a subset of ISO 8601, only including:
  *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
@@ -298,9 +299,9 @@ const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(
  *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
  *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
  *   + a timestamp, which represent a time in UTC.
- * @return date
+ * @return date Never be null/undefined. If invalid, return `new Date(NaN)`.
  */
-export function parseDate(value: number | string | Date): Date {
+export function parseDate(value: unknown): Date {
     if (value instanceof Date) {
         return value;
     }
@@ -358,7 +359,7 @@ export function parseDate(value: number | string | Date): Date {
         return new Date(NaN);
     }
 
-    return new Date(Math.round(value));
+    return new Date(Math.round(value as number));
 }
 
 /**
@@ -535,10 +536,41 @@ export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
 }
 
 /**
- * parseFloat NaNs numeric-cast false positives (null|true|false|"")
- * ...but misinterprets leading-number strings, particularly hex literals ("0x...")
- * subtraction forces infinities to NaN
+ * [Numberic is defined as]:
+ *     `parseFloat(val) == val`
+ * For example:
+ * numeric:
+ *     typeof number except NaN, '-123', '123', '2e3', '-2e3', '011', 'Infinity', Infinity,
+ *     and they rounded by white-spaces or line-terminal like ' -123 \n ' (see es spec)
+ * not-numeric:
+ *     null, undefined, [], {}, true, false, 'NaN', NaN, '123ab',
+ *     empty string, string with only white-spaces or line-terminal (see es spec),
+ *     0x12, '0x12', '-0x12', 012, '012', '-012',
+ *     non-string, ...
+ *
+ * @test See full test cases in `test/ut/spec/util/number.js`.
+ * @return Must be a typeof number. If not numeric, return NaN.
  */
-export function isNumeric(v: any): v is number {
-    return v - parseFloat(v) >= 0;
+export function numericToNumber(val: unknown): number {
+    const valFloat = parseFloat(val as string);
+    return (
+        valFloat == val // eslint-disable-line eqeqeq
+        && (valFloat !== 0 || typeof val !== 'string' || val.indexOf('x') <= 0) // For case ' 0x0 '.
+    ) ? valFloat : NaN;
+}
+
+/**
+ * Definition of "numeric": see `numericToNumber`.
+ */
+export function isNumeric(val: unknown): val is number {
+    return !isNaN(numericToNumber(val));
+}
+
+/**
+ * Use random base to prevent users hard code depending on
+ * this auto generated marker id.
+ * @return An positive integer.
+ */
+export function getRandomIdBase(): number {
+    return Math.round(Math.random() * 9);
 }

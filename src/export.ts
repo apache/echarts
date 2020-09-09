@@ -29,6 +29,7 @@ import * as colorTool from 'zrender/src/tool/color';
 import * as graphicUtil from './util/graphic';
 import * as numberUtil from './util/number';
 import * as formatUtil from './util/format';
+import * as timeUtil from './util/time';
 import {throttle} from './util/throttle';
 import * as ecHelper from './helper';
 import parseGeoJSON from './coord/geo/parseGeoJson';
@@ -38,8 +39,6 @@ export {zrender};
 export {default as List} from './data/List';
 export {default as Model} from './model/Model';
 export {default as Axis} from './coord/Axis';
-export {numberUtil as number};
-export {formatUtil as format};
 export {throttle};
 export {ecHelper as helper};
 export {matrix};
@@ -49,6 +48,60 @@ export {default as env} from 'zrender/src/core/env';
 
 export {parseGeoJSON};
 export const parseGeoJson = parseGeoJSON;
+
+
+export const number = {};
+zrUtil.each(
+    [
+        'linearMap',
+        'round',
+        'asc',
+        'getPrecision',
+        'getPrecisionSafe',
+        'getPixelPrecision',
+        'getPercentWithPrecision',
+        'MAX_SAFE_INTEGER',
+        'remRadian',
+        'isRadianAroundZero',
+        'parseDate',
+        'quantity',
+        'quantityExponent',
+        'nice',
+        'quantile',
+        'reformIntervals',
+        'isNumeric',
+        'numericToNumber'
+    ],
+    function (name) {
+        (number as any)[name] = (numberUtil as any)[name];
+    }
+);
+
+
+export const format = {};
+zrUtil.each(
+    [
+        'addCommas',
+        'toCamelCase',
+        'normalizeCssArray',
+        'encodeHTML',
+        'formatTpl',
+        'getTooltipMarker',
+        'formatTime',
+        'capitalFirst',
+        'truncateText',
+        'getTextRect'
+    ],
+    function (name) {
+        (format as any)[name] = (formatUtil as any)[name];
+    }
+);
+
+
+export const time = {
+    parse: numberUtil.parseDate,
+    format: timeUtil.format
+};
 
 const ecUtil = {};
 zrUtil.each(
@@ -66,14 +119,17 @@ export {ecUtil as util};
 const GRAPHIC_KEYS = [
     'extendShape', 'extendPath', 'makePath', 'makeImage',
     'mergePath', 'resizePath', 'createIcon',
-    'setHoverStyle', 'setLabelStyle', 'createTextStyle',
-    'getFont', 'updateProps', 'initProps', 'getTransform',
+    // 'setHoverStyle',
+    // 'setLabelStyle', 'createTextStyle',
+    // 'getFont',
+    'updateProps', 'initProps', 'getTransform',
     'clipPointsByRect', 'clipRectByRect',
     'registerShape', 'getShapeClass',
     'Group',
     'Image',
     'Text',
     'Circle',
+    'Ellipse',
     'Sector',
     'Ring',
     'Polygon',
@@ -89,11 +145,10 @@ const GRAPHIC_KEYS = [
     'BoundingRect'
 ] as const;
 
-const graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
+export const graphic = {} as Record<typeof GRAPHIC_KEYS[number], any>;
 zrUtil.each(
     GRAPHIC_KEYS,
     function (name) {
         (graphic as any)[name] = (graphicUtil as any)[name];
     }
 );
-export {graphic};

@@ -20,7 +20,7 @@
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary
+    AnimationOptionMixin, Dictionary, ScaleDataValue
 } from '../util/types';
 
 
@@ -71,21 +71,15 @@ export interface AxisBaseOption extends ComponentOption,
     boundaryGap?: boolean | [number | string, number | string];
 
     // Min value of the axis. can be:
-    // + a number
+    // + ScaleDataValue
     // + 'dataMin': use the min value in data.
     // + null/undefined: auto decide min value (consider pretty look and boundaryGap).
-    min?: number | 'dataMin' | ((extent: {min: number, max: number}) => number);
+    min?: ScaleDataValue | 'dataMin' | ((extent: {min: number, max: number}) => ScaleDataValue);
     // Max value of the axis. can be:
-    // + a number
+    // + ScaleDataValue
     // + 'dataMax': use the max value in data.
     // + null/undefined: auto decide max value (consider pretty look and boundaryGap).
-    max?: number | 'dataMax' | ((extent: {min: number, max: number}) => number);
-    // Readonly prop, specifies start value of the range when using data zoom.
-    // Only for internal usage.
-    rangeStart?: number;
-    // Readonly prop, specifies end value of the range when using data zoom.
-    // Only for internal usage.
-    rangeEnd?: number;
+    max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
     // Optional value can be:
     // + `false`: always include value 0.
     // + `true`: the extent do not consider value 0.
@@ -133,7 +127,7 @@ interface AxisNameTextStyleOption extends TextCommonOption {
 }
 
 interface AxisLineOption {
-    show?: boolean,
+    show?: boolean | 'auto',
     onZero?: boolean,
     onZeroAxisIndex?: number,
     // The arrow at both ends the the axis.
@@ -144,7 +138,7 @@ interface AxisLineOption {
 }
 
 interface AxisTickOption {
-    show?: boolean,
+    show?: boolean | 'auto',
     // Whether axisTick is inside the grid or outside the grid.
     inside?: boolean,
     // The length of axisTick.
@@ -159,6 +153,24 @@ interface AxisTickOption {
     interval?: 'auto' | number | ((index: number, value: string) => boolean)
 }
 
+export type AxisLabelFormatterOption = string | ((value: OrdinalRawValue | number, index: number) => string);
+
+type TimeAxisLabelUnitFormatter = AxisLabelFormatterOption | string[];
+
+export type TimeAxisLabelFormatterOption = string
+    | ((value: number, index: number, extra: {level: number}) => string)
+    | {
+        year?: TimeAxisLabelUnitFormatter,
+        month?: TimeAxisLabelUnitFormatter,
+        week?: TimeAxisLabelUnitFormatter,
+        day?: TimeAxisLabelUnitFormatter,
+        hour?: TimeAxisLabelUnitFormatter,
+        minute?: TimeAxisLabelUnitFormatter,
+        second?: TimeAxisLabelUnitFormatter,
+        millisecond?: TimeAxisLabelUnitFormatter,
+        inherit?: boolean
+    };
+
 interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
@@ -170,7 +182,7 @@ interface AxisLabelOption extends Omit<TextCommonOption, 'color'> {
     showMaxLabel?: boolean,
     margin?: number,
     // value is supposed to be OptionDataPrimitive but for time axis, it is time stamp.
-    formatter?: string | ((value: OrdinalRawValue | number, index: number) => string),
+    formatter?: AxisLabelFormatterOption | TimeAxisLabelFormatterOption,
 
     // --------------------------------------------
     // [Properties below only for 'category' axis]:

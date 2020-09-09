@@ -26,12 +26,12 @@
 // merge relevant logic to this file?
 // check: "modelHelper" of tooltip and "BrushTargetManager".
 
-import {__DEV__} from '../config';
 import {createHashMap, retrieve, each, HashMap} from 'zrender/src/core/util';
 import SeriesModel from './Series';
 import type PolarModel from '../coord/polar/PolarModel';
 import type { SeriesOption, SeriesOnCartesianOptionMixin } from '../util/types';
 import type { AxisBaseModel } from '../coord/AxisBaseModel';
+import { SINGLE_REFERRING } from '../util/model';
 
 /**
  * @class
@@ -94,8 +94,8 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     cartesian2d: function (
         seriesModel: SeriesModel<SeriesOption & SeriesOnCartesianOptionMixin>, result, axisMap, categoryAxisMap
     ) {
-        const xAxisModel = seriesModel.getReferringComponents('xAxis')[0] as AxisBaseModel;
-        const yAxisModel = seriesModel.getReferringComponents('yAxis')[0] as AxisBaseModel;
+        const xAxisModel = seriesModel.getReferringComponents('xAxis', SINGLE_REFERRING).models[0] as AxisBaseModel;
+        const yAxisModel = seriesModel.getReferringComponents('yAxis', SINGLE_REFERRING).models[0] as AxisBaseModel;
 
         if (__DEV__) {
             if (!xAxisModel) {
@@ -129,7 +129,9 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     },
 
     singleAxis: function (seriesModel, result, axisMap, categoryAxisMap) {
-        const singleAxisModel = seriesModel.getReferringComponents('singleAxis')[0] as AxisBaseModel;
+        const singleAxisModel = seriesModel.getReferringComponents(
+            'singleAxis', SINGLE_REFERRING
+        ).models[0] as AxisBaseModel;
 
         if (__DEV__) {
             if (!singleAxisModel) {
@@ -147,7 +149,7 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
     },
 
     polar: function (seriesModel, result, axisMap, categoryAxisMap) {
-        const polarModel = seriesModel.getReferringComponents('polar')[0] as PolarModel;
+        const polarModel = seriesModel.getReferringComponents('polar', SINGLE_REFERRING).models[0] as PolarModel;
         const radiusAxisModel = polarModel.findAxisModel('radiusAxis');
         const angleAxisModel = polarModel.findAxisModel('angleAxis');
 

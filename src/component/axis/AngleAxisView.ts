@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import AxisView from './AxisView';
 import AxisBuilder from './AxisBuilder';
@@ -28,6 +29,7 @@ import Polar from '../../coord/polar/Polar';
 import ComponentView from '../../view/Component';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
+import { getECData } from '../../util/ecData';
 
 const elementList = [
     'axisLine',
@@ -259,7 +261,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
             const textEl = new graphic.Text({
                 silent: AxisBuilder.isLabelSilent(angleAxisModel),
-                style: graphic.createTextStyle(labelModel, {
+                style: createTextStyle(labelModel, {
                     x: p[0],
                     y: p[1],
                     fill: labelModel.getTextColor()
@@ -276,7 +278,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 const eventData = AxisBuilder.makeAxisEventDataBase(angleAxisModel);
                 eventData.targetType = 'axisLabel';
                 eventData.value = labelItem.rawLabel;
-                graphic.getECData(textEl).eventData = eventData;
+                getECData(textEl).eventData = eventData;
             }
 
         }, this);
@@ -359,7 +361,8 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
         const clockwise = angleAxisModel.get('clockwise');
 
-        for (let i = 1; i < ticksAngles.length; i++) {
+        for (let i = 1, len = ticksAngles.length; i <= len; i++) {
+            const coord = i === len ? ticksAngles[0].coord : ticksAngles[i].coord;
             const colorIndex = (lineCount++) % areaColors.length;
             splitAreas[colorIndex] = splitAreas[colorIndex] || [];
             splitAreas[colorIndex].push(new graphic.Sector({
@@ -369,12 +372,12 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     r0: r0,
                     r: r1,
                     startAngle: prevAngle,
-                    endAngle: -ticksAngles[i].coord * RADIAN,
+                    endAngle: -coord * RADIAN,
                     clockwise: clockwise
                 },
                 silent: true
             }));
-            prevAngle = -ticksAngles[i].coord * RADIAN;
+            prevAngle = -coord * RADIAN;
         }
 
         // Simple optimization

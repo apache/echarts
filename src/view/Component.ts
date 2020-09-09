@@ -25,6 +25,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
 import {Payload, ViewRootGroup, ECEvent, EventQueryItem} from '../util/types';
 import Element from 'zrender/src/Element';
+import SeriesModel from '../model/Series';
 
 interface ComponentView {
     /**
@@ -45,11 +46,15 @@ interface ComponentView {
 
 class ComponentView {
 
-    // [Caution]: for compat the previous "class extend"
-    // publich and protected fields must be initialized on
-    // prototype rather than in constructor. Otherwise the
-    // subclass overrided filed will be overwritten by this
-    // class. That is, they should not be initialized here.
+    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // the class members must not be initialized in constructor or declaration place.
+    // Otherwise there is bad case:
+    //   class A {xxx = 1;}
+    //   enableClassExtend(A);
+    //   class B extends A {}
+    //   var C = B.extend({xxx: 5});
+    //   var c = new C();
+    //   console.log(c.xxx); // expect 5 but always 1.
 
     readonly group: ViewRootGroup;
 
@@ -83,6 +88,14 @@ class ComponentView {
 
     updateVisual(model: ComponentModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         // Do nothing;
+    }
+
+    /**
+     * Hook for blur target series.
+     * Can be used in marker for blur the markers
+     */
+    blurSeries(seriesModels: SeriesModel[], ecModel: GlobalModel): void {
+         // Do nothing;
     }
 
     static registerClass: clazzUtil.ClassManager['registerClass'];

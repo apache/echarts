@@ -19,6 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
+import {getECData} from '../util/ecData';
+import {createTextStyle} from '../label/labelStyle';
 import {getLayoutRect} from '../util/layout';
 import ComponentModel from '../model/Component';
 import {
@@ -33,6 +35,8 @@ import {
 import ComponentView from '../view/Component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../ExtensionAPI';
+import {windowOpen} from '../util/format';
+
 
 export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
     show?: boolean
@@ -114,11 +118,12 @@ class TitleModel extends ComponentModel<TitleOption> {
         itemGap: 10,
         textStyle: {
             fontSize: 18,
-            fontWeight: 'bolder',
-            color: '#333'
+            fontWeight: 'bold',
+            color: '#464646'
         },
         subtextStyle: {
-            color: '#aaa'
+            fontSize: 12,
+            color: '#6E7079'
         }
     };
 }
@@ -150,7 +155,7 @@ class TitleView extends ComponentView {
         );
 
         const textEl = new graphic.Text({
-            style: graphic.createTextStyle(textStyleModel, {
+            style: createTextStyle(textStyleModel, {
                 text: titleModel.get('text'),
                 fill: textStyleModel.getTextColor()
             }, {disableBox: true}),
@@ -161,7 +166,7 @@ class TitleView extends ComponentView {
 
         const subText = titleModel.get('subtext');
         const subTextEl = new graphic.Text({
-            style: graphic.createTextStyle(subtextStyleModel, {
+            style: createTextStyle(subtextStyleModel, {
                 text: subText,
                 fill: subtextStyleModel.getTextColor(),
                 y: textRect.height + titleModel.get('itemGap'),
@@ -179,16 +184,16 @@ class TitleView extends ComponentView {
 
         if (link) {
             textEl.on('click', function () {
-                window.open(link, '_' + titleModel.get('target'));
+                windowOpen(link, '_' + titleModel.get('target'));
             });
         }
         if (sublink) {
             subTextEl.on('click', function () {
-                window.open(sublink, '_' + titleModel.get('subtarget'));
+                windowOpen(sublink, '_' + titleModel.get('subtarget'));
             });
         }
 
-        graphic.getECData(textEl).eventData = graphic.getECData(subTextEl).eventData = triggerEvent
+        getECData(textEl).eventData = getECData(subTextEl).eventData = triggerEvent
             ? {
                 componentType: 'title',
                 componentIndex: titleModel.componentIndex
@@ -243,6 +248,7 @@ class TitleView extends ComponentView {
 
         group.x = layoutRect.x;
         group.y = layoutRect.y;
+        group.markRedraw();
         const alignStyle = {
             align: textAlign,
             verticalAlign: textVerticalAlign

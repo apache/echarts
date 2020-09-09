@@ -22,7 +22,7 @@ import Group from 'zrender/src/graphic/Group';
 import * as componentUtil from '../util/component';
 import * as clazzUtil from '../util/clazz';
 import * as modelUtil from '../util/model';
-import * as graphicUtil from '../util/graphic';
+import { enterEmphasis, leaveEmphasis, getHighlightDigit } from '../util/states';
 import {createTask, TaskResetCallbackReturn} from '../stream/task';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import SeriesModel from '../model/Series';
@@ -95,11 +95,15 @@ interface ChartView {
 }
 class ChartView {
 
-    // [Caution]: for compat the previous "class extend"
-    // publich and protected fields must be initialized on
-    // prototype rather than in constructor. Otherwise the
-    // subclass overrided filed will be overwritten by this
-    // class. That is, they should not be initialized here.
+    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // the class members must not be initialized in constructor or declaration place.
+    // Otherwise there is bad case:
+    //   class A {xxx = 1;}
+    //   enableClassExtend(A);
+    //   class B extends A {}
+    //   var C = B.extend({xxx: 5});
+    //   var c = new C();
+    //   console.log(c.xxx); // expect 5 but always 1.
 
     // @readonly
     type: string;
@@ -109,6 +113,12 @@ class ChartView {
     readonly uid: string;
 
     readonly renderTask: SeriesTask;
+
+    /**
+     * Ignore label line update in global stage. Will handle it in chart itself.
+     * Used in pie / funnel
+     */
+    ignoreLabelLineUpdate: boolean;
 
     // ----------------------
     // Injectable properties
@@ -192,8 +202,7 @@ class ChartView {
  */
 function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
     if (el) {
-        state === 'emphasis' ? graphicUtil.enterEmphasis(el, highlightDigit)
-            : graphicUtil.leaveEmphasis(el, highlightDigit);
+        (state === 'emphasis' ? enterEmphasis : leaveEmphasis)(el, highlightDigit);
     }
 }
 
@@ -201,7 +210,7 @@ function toggleHighlight(data: List, payload: Payload, state: DisplayState) {
     const dataIndex = modelUtil.queryDataIndex(data, payload);
 
     const highlightDigit = (payload && payload.highlightKey != null)
-        ? graphicUtil.getHighlightDigit(payload.highlightKey)
+        ? getHighlightDigit(payload.highlightKey)
         : null;
 
     if (dataIndex != null) {

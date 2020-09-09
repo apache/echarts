@@ -25,16 +25,19 @@ import Axis2D from './Axis2D';
 import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
 import { AxisBaseModel } from '../AxisBaseModel';
+import {OrdinalSortInfo} from '../../util/types';
+import { SINGLE_REFERRING } from '../../util/model';
 
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
-interface CartesianAxisOption extends AxisBaseOption {
+export interface CartesianAxisOption extends AxisBaseOption {
     gridIndex?: number;
     gridId?: string;
     position?: CartesianAxisPosition;
     // Offset is for multiple axis on the same position.
     offset?: number;
+    categorySortInfo?: OrdinalSortInfo[];
 }
 
 class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
@@ -44,27 +47,8 @@ class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
 
     axis: Axis2D;
 
-    init(...args: any) {
-        super.init.apply(this, args);
-        this.resetRange();
-    }
-
-    mergeOption(...args: any) {
-        super.mergeOption.apply(this, args);
-        this.resetRange();
-    }
-
-    restoreData(...args: any) {
-        super.restoreData.apply(this, args);
-        this.resetRange();
-    }
-
     getCoordSysModel(): GridModel {
-        return this.ecModel.queryComponents({
-            mainType: 'grid',
-            index: this.option.gridIndex,
-            id: this.option.gridId
-        })[0] as GridModel;
+        return this.getReferringComponents('grid', SINGLE_REFERRING).models[0] as GridModel;
     }
 }
 
@@ -76,7 +60,8 @@ zrUtil.mixin(CartesianAxisModel, AxisModelCommonMixin);
 const extraOption: CartesianAxisOption = {
     // gridIndex: 0,
     // gridId: '',
-    offset: 0
+    offset: 0,
+    categorySortInfo: []
 };
 
 axisModelCreator<CartesianAxisOption, typeof CartesianAxisModel>('x', CartesianAxisModel, extraOption);

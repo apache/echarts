@@ -74,14 +74,16 @@ under the License.
                     },
                     tooltip: {
                         position: ['50%', '50%'],
-                        backgroundColor: 'trasparent',
+                        backgroundColor: 'transparent',
                         formatter: function (params) {
                             return '<div class="tooltip-content">\
                                 <h4>' + params.name + '</h4>\
                                 <h5>' + (params.percent * 100).toFixed(1) + '%</h5>\
-                                </div>\
+                                </div><script>console.log(1111)<\/script>\
                             ';
-                        }
+                        },
+                        borderWidth: 0,
+                        shadowColor: 'transparent'
                     },
                     series: [{
                         name: 'pie',
@@ -123,14 +125,16 @@ under the License.
                     },
                     tooltip: {
                         position: ['50%', '50%'],
-                        backgroundColor: 'trasparent',
+                        backgroundColor: 'transparent',
                         formatter: function (params) {
                             return '<div class="tooltip-content">\
                                 <h4>' + params.name + '</h4>\
                                 <h5>' + (params.percent * 100).toFixed(1) + '%</h5>\
                                 </div>\
                             ';
-                        }
+                        },
+                        borderWidth: 0,
+                        shadowColor: 'transparent'
                     },
                     series: [{
                         name: 'pie',

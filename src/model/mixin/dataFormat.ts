@@ -17,34 +17,43 @@
 * under the License.
 */
 
+import * as zrUtil from 'zrender/src/core/util';
 import {retrieveRawValue} from '../../data/helper/dataProvider';
-import {getTooltipMarker, formatTpl} from '../../util/format';
-import { getTooltipRenderMode } from '../../util/model';
-import { DataHost, DisplayState, TooltipRenderMode, CallbackDataParams, ColorString } from '../../util/types';
+import {formatTpl} from '../../util/format';
+import {
+    DataHost,
+    DisplayState,
+    CallbackDataParams,
+    ColorString,
+    ZRColor,
+    OptionDataValue,
+    SeriesDataType
+} from '../../util/types';
 import GlobalModel from '../Global';
-import Element from 'zrender/src/Element';
+import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
+import { makePrintable } from '../../util/log';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 
-interface DataFormatMixin extends DataHost {
+export interface DataFormatMixin extends DataHost {
     ecModel: GlobalModel;
     mainType: string;
     subType: string;
     componentIndex: number;
     id: string;
     name: string;
+    animatedValue: OptionDataValue[];
 }
 
-class DataFormatMixin {
+export class DataFormatMixin {
 
     /**
      * Get params for formatter
      */
     getDataParams(
         dataIndex: number,
-        dataType?: string,
-        el?: Element // May be used in override.
+        dataType?: SeriesDataType
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
@@ -53,12 +62,8 @@ class DataFormatMixin {
         const name = data.getName(dataIndex);
         const itemOpt = data.getRawDataItem(dataIndex);
         const style = data.getItemVisual(dataIndex, 'style');
-        const color = style && style.fill as ColorString;
+        const color = style && style[data.getItemVisual(dataIndex, 'drawType') || 'fill'] as ZRColor;
         const borderColor = style && style.stroke as ColorString;
-        const tooltipModel = this.ecModel.getComponent('tooltip');
-        // @ts-ignore FIXME:TooltipModel
-        const renderModeOption = tooltipModel && tooltipModel.get('renderMode');
-        const renderMode = getTooltipRenderMode(renderModeOption);
         const mainType = this.mainType;
         const isSeries = mainType === 'series';
         const userOutput = data.userOutput;
@@ -80,10 +85,6 @@ class DataFormatMixin {
             borderColor: borderColor,
             dimensionNames: userOutput ? userOutput.dimensionNames : null,
             encode: userOutput ? userOutput.encode : null,
-            marker: getTooltipMarker({
-                color: color,
-                renderMode: renderMode
-            }),
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
             $vars: ['seriesName', 'name', 'value']
@@ -95,36 +96,44 @@ class DataFormatMixin {
      * @param dataIndex
      * @param status 'normal' by default
      * @param dataType
-     * @param dimIndex Only used in some chart that
+     * @param labelDimIndex Only used in some chart that
      *        use formatter in different dimensions, like radar.
-     * @param labelProp 'label' by default
-     * @return If not formatter, return null/undefined
+     * @param formatter Formatter given outside.
+     * @return return null/undefined if no formatter
      */
     getFormattedLabel(
         dataIndex: number,
         status?: DisplayState,
-        dataType?: string,
-        dimIndex?: number,
-        labelProp?: string
+        dataType?: SeriesDataType,
+        labelDimIndex?: number,
+        formatter?: string | ((params: object) => string),
+        extendParams?: Partial<CallbackDataParams>
     ): string {
         status = status || 'normal';
         const data = this.getData(dataType);
-        const itemModel = data.getItemModel(dataIndex);
 
         const params = this.getDataParams(dataIndex, dataType);
-        if (dimIndex != null && (params.value instanceof Array)) {
-            params.value = params.value[dimIndex];
+
+        if (extendParams) {
+            zrUtil.extend(params, extendParams);
         }
 
-        // @ts-ignore FIXME:TooltipModel
-        const formatter = itemModel.get(status === 'normal'
-            ? [(labelProp || 'label'), 'formatter']
-            : [status, labelProp || 'label', 'formatter']
-        );
+        if (labelDimIndex != null && (params.value instanceof Array)) {
+            params.value = params.value[labelDimIndex];
+        }
+
+        if (!formatter) {
+            const itemModel = data.getItemModel(dataIndex);
+            // @ts-ignore
+            formatter = itemModel.get(status === 'normal'
+                ? ['label', 'formatter']
+                : [status, 'label', 'formatter']
+            );
+        }
 
         if (typeof formatter === 'function') {
             params.status = status;
-            params.dimensionIndex = dimIndex;
+            params.dimensionIndex = labelDimIndex;
             return formatter(params);
         }
         else if (typeof formatter === 'string') {
@@ -147,7 +156,7 @@ class DataFormatMixin {
      */
     getRawValue(
         idx: number,
-        dataType?: string
+        dataType?: SeriesDataType
     ): unknown {
         return retrieveRawValue(this.getData(dataType), idx);
     }
@@ -157,21 +166,75 @@ class DataFormatMixin {
      * @param {number} dataIndex
      * @param {boolean} [multipleSeries=false]
      * @param {string} [dataType]
-     * @param {string} [renderMode='html'] valid values: 'html' and 'richText'.
-     *                                     'html' is used for rendering tooltip in extra DOM form, and the result
-     *                                     string is used as DOM HTML content.
-     *                                     'richText' is used for rendering tooltip in rich text form, for those where
-     *                                     DOM operation is not supported.
      */
     formatTooltip(
         dataIndex: number,
         multipleSeries?: boolean,
-        dataType?: string,
-        renderMode?: TooltipRenderMode
-    ): string | {html: string, markers: {[markName: string]: string}} {
+        dataType?: string
+    ): TooltipFormatResult {
         // Empty function
         return;
     }
 };
 
-export default DataFormatMixin;
+type TooltipFormatResult =
+    // If `string`, means `TooltipFormatResultLegacyObject['html']`
+    string
+    // | TooltipFormatResultLegacyObject
+    | TooltipMarkupBlockFragment;
+
+// PENDING: previously we accept this type when calling `formatTooltip`,
+// but guess little chance has been used outside. Do we need to backward
+// compat it?
+// type TooltipFormatResultLegacyObject = {
+//     // `html` means the markup language text, either in 'html' or 'richText'.
+//     // The name `html` is not appropriate becuase in 'richText' it is not a HTML
+//     // string. But still support it for backward compat.
+//     html: string;
+//     markers: Dictionary<ColorString>;
+// };
+
+/**
+ * For backward compat, normalize the return from `formatTooltip`.
+ */
+export function normalizeTooltipFormatResult(
+    result: TooltipFormatResult
+    // markersExisting: Dictionary<ColorString>
+): {
+    // If `markupFragment` exists, `markupText` should be ignored.
+    markupFragment: TooltipMarkupBlockFragment;
+    // Can be `null`/`undefined`, means no tooltip.
+    markupText: string;
+    // Merged with `markersExisting`.
+    // markers: Dictionary<ColorString>;
+} {
+    let markupText;
+    // let markers: Dictionary<ColorString>;
+    let markupFragment: TooltipMarkupBlockFragment;
+    if (zrUtil.isObject(result)) {
+        if ((result as TooltipMarkupBlockFragment).type) {
+            markupFragment = result as TooltipMarkupBlockFragment;
+        }
+        else {
+            if (__DEV__) {
+                console.warn('The return type of `formatTooltip` is not supported: ' + makePrintable(result));
+            }
+        }
+        // else {
+        //     markupText = (result as TooltipFormatResultLegacyObject).html;
+        //     markers = (result as TooltipFormatResultLegacyObject).markers;
+        //     if (markersExisting) {
+        //         markers = zrUtil.merge(markersExisting, markers);
+        //     }
+        // }
+    }
+    else {
+        markupText = result;
+    }
+
+    return {
+        markupText: markupText,
+        // markers: markers || markersExisting,
+        markupFragment: markupFragment
+    };
+}

@@ -38,6 +38,7 @@ import ExtensionAPI from '../../ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import Model from '../../model/Model';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { createTextStyle } from '../../label/labelStyle';
 
 interface LayoutInfo {
     position: VectorArray
@@ -121,22 +122,13 @@ export function buildLabelElOption(
         // shape: {x: 0, y: 0, width: width, height: height, r: labelModel.get('borderRadius')},
         x: position[0],
         y: position[1],
-        // TODO: rich
-        style: {
+        style: createTextStyle(labelModel, {
             text: text,
-            textFont: font,
+            font: font,
             fill: labelModel.getTextColor(),
-            align: 'center',
             padding: paddings,
-            backgroundColor: bgColor as ColorString,
-            borderColor: labelModel.get('borderColor') || 'transparent',
-            borderRadius: labelModel.get('borderRadius'),
-            borderWidth: labelModel.get('borderWidth') || 0,
-            shadowBlur: labelModel.get('shadowBlur'),
-            shadowColor: labelModel.get('shadowColor'),
-            shadowOffsetX: labelModel.get('shadowOffsetX'),
-            shadowOffsetY: labelModel.get('shadowOffsetY')
-        },
+            backgroundColor: bgColor as ColorString
+        }),
         // Lable should be over axisPointer.
         z2: 10
     };
@@ -164,9 +156,11 @@ export function getValueLabel(
 ): string {
     value = axis.scale.parse(value);
     let text = (axis.scale as IntervalScale).getLabel(
-        // If `precision` is set, width can be fixed (like '12.00500'), which
-        // helps to debounce when when moving label.
-        value, {
+        {
+            value
+        }, {
+            // If `precision` is set, width can be fixed (like '12.00500'), which
+            // helps to debounce when when moving label.
             precision: opt.precision
         }
     );
@@ -174,7 +168,7 @@ export function getValueLabel(
 
     if (formatter) {
         const params = {
-            value: axisHelper.getAxisRawValue(axis, value),
+            value: axisHelper.getAxisRawValue(axis, {value}),
             axisDimension: axis.dim,
             axisIndex: (axis as Axis2D).index,  // Only Carteian Axis has index
             seriesData: [] as CallbackDataParams[]

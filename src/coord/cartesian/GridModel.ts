@@ -24,7 +24,7 @@ import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin } fro
 import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 
-interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
     show?: boolean;
 
     // Whether grid size contain label.
@@ -34,7 +34,7 @@ interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOption
     borderWidth?: number;
     borderColor?: ZRColor;
 
-    tooltop?: any; // FIXME:TS add this tooltip type
+    tooltip?: any; // FIXME:TS add this tooltip type
 }
 
 class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHostModel {

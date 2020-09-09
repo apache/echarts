@@ -28,7 +28,14 @@ import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
 import List from '../data/List';
 import * as scaleHelper from './helper';
-import { OrdinalRawValue, OrdinalNumber, DimensionLoose } from '../util/types';
+import {
+    OrdinalRawValue,
+    OrdinalNumber,
+    DimensionLoose,
+    OrdinalSortInfo,
+    OrdinalScaleTick,
+    ScaleTick
+} from '../util/types';
 import { AxisBaseOption } from '../coord/axisCommonTypes';
 import { isArray } from 'zrender/src/core/util';
 
@@ -39,6 +46,7 @@ class OrdinalScale extends Scale {
     readonly type = 'ordinal';
 
     private _ordinalMeta: OrdinalMeta;
+    private _categorySortInfo: OrdinalSortInfo[];
 
 
     constructor(setting?: {
@@ -54,6 +62,7 @@ class OrdinalScale extends Scale {
             ordinalMeta = new OrdinalMeta({categories: ordinalMeta});
         }
         this._ordinalMeta = ordinalMeta;
+        this._categorySortInfo = [];
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
     }
 
@@ -74,20 +83,24 @@ class OrdinalScale extends Scale {
      * Normalize given rank or name to linear [0, 1]
      */
     normalize(val: OrdinalRawValue | OrdinalNumber): number {
-        return scaleHelper.normalize(this.parse(val), this._extent);
+        val = this.getCategoryIndex(this.parse(val));
+        return scaleHelper.normalize(val, this._extent);
     }
 
     scale(val: number): OrdinalNumber {
+        val = this.getCategoryIndex(val);
         return Math.round(scaleHelper.scale(val, this._extent));
     }
 
-    getTicks(): OrdinalNumber[] {
+    getTicks(): OrdinalScaleTick[] {
         const ticks = [];
         const extent = this._extent;
         let rank = extent[0];
 
         while (rank <= extent[1]) {
-            ticks.push(rank);
+            ticks.push({
+                value: this.getCategoryIndex(rank)
+            });
             rank++;
         }
 
@@ -99,12 +112,49 @@ class OrdinalScale extends Scale {
         return;
     }
 
+    setCategorySortInfo(info: OrdinalSortInfo[]): void {
+        this._categorySortInfo = info;
+    }
+
+    getCategorySortInfo(): OrdinalSortInfo[] {
+        return this._categorySortInfo;
+    }
+
+    /**
+     * Get display order after sort
+     *
+     * @param {OrdinalNumber} n index of raw data
+     */
+    getCategoryIndex(n: OrdinalNumber): OrdinalNumber {
+        if (this._categorySortInfo.length) {
+            return this._categorySortInfo[n].beforeSortIndex;
+        }
+        else {
+            return n;
+        }
+    }
+
+    /**
+     * Get raw data index
+     *
+     * @param {OrdinalNumber} displayIndex index of display
+     */
+    getRawIndex(displayIndex: OrdinalNumber): OrdinalNumber {
+        if (this._categorySortInfo.length) {
+            return this._categorySortInfo[displayIndex].ordinalNumber;
+        }
+        else {
+            return displayIndex;
+        }
+    }
+
     /**
      * Get item on rank n
      */
-    getLabel(n: OrdinalNumber): string {
+    getLabel(tick: ScaleTick): string {
         if (!this.isBlank()) {
-            const cateogry = this._ordinalMeta.categories[n];
+            const rawIndex = this.getRawIndex(tick.value);
+            const cateogry = this._ordinalMeta.categories[rawIndex];
             // Note that if no data, ordinalMeta.categories is an empty array.
             // Return empty if it's not exist.
             return cateogry == null ? '' : cateogry + '';
@@ -117,6 +167,15 @@ class OrdinalScale extends Scale {
 
     unionExtentFromData(data: List, dim: DimensionLoose) {
         this.unionExtent(data.getApproximateExtent(dim));
+    }
+
+    /**
+     * @override
+     * If value is in extent range
+     */
+    isInExtentRange(value: number): boolean {
+        value = this.getCategoryIndex(value);
+        return this._extent[0] <= value && this._extent[1] >= value;
     }
 
     getOrdinalMeta(): OrdinalMeta {

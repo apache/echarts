@@ -42,26 +42,15 @@ under the License.
             var data;
 
             require([
-                'echarts',
-                'extension/dataTool',
-                // 'echarts/chart/boxplot',
-                // 'echarts/chart/scatter',
-                // 'echarts/component/title',
-                // 'echarts/component/legend',
-                // 'echarts/component/grid',
-                // 'echarts/component/tooltip',
-                // 'echarts/component/dataZoom'
-            ], function (echarts, dataTool) {
-                var prepareBoxplotData = dataTool.prepareBoxplotData;
-                chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+                'echarts'
+            ], function (echarts) {
+                chart = echarts.init(document.getElementById('main'));
 
                 function update(layout) {
 
                     // Generate data.
-                    data = [];
-                    for (var seriesIndex = 0; seriesIndex < 5; seriesIndex++) {
+                    sourceData = [];
+                    for (var seriesIndex = 0; seriesIndex < 3; seriesIndex++) {
                         var seriesData = [];
                         for (var i = 0; i < 18; i++) {
                             var cate = [];
@@ -70,21 +59,15 @@ under the License.
                             }
                             seriesData.push(cate);
                         }
-                        data.push(prepareBoxplotData(seriesData, {
-                            layout: layout
-                        }));
+                        sourceData.push(seriesData);
                     }
 
                     var categoryAxis = {
                         type: 'category',
-                        data: data[0].axisData,
                         boundaryGap: true,
                         nameGap: 30,
                         splitArea: {
                             show: true
-                        },
-                        axisLabel: {
-                            formatter: 'expr {value}'
                         },
                         splitLine: {
                             show: false
@@ -99,15 +82,49 @@ under the License.
                     };
 
                     chart.setOption({
-                        title: [
-                            {
-                                text: 'Multiple Categories',
-                                left: 'center',
+                        title: [{
+                            text: 'Multiple Categories',
+                            left: 'center',
+                        }],
+                        dataset: [{
+                            source: sourceData[0]
+                        }, {
+                            source: sourceData[1]
+                        }, {
+                            source: sourceData[2]
+                        }, {
+                            fromDatasetIndex: 0,
+                            transform: {
+                                type: 'boxplot',
+                                config: {
+                                    itemNameFormatter: function (params) {
+                                        return 'expr ' + params.value;
+                                    }
+                                }
                             }
-                        ],
+                        }, {
+                            fromDatasetIndex: 1,
+                            transform: {
+                                type: 'boxplot',
+                                config: {
+                                    itemNameFormatter: function (params) {
+                                        return 'expr ' + params.value;
+                                    }
+                                }
+                            }
+                        }, {
+                            fromDatasetIndex: 2,
+                            transform: {
+                                type: 'boxplot',
+                                config: {
+                                    itemNameFormatter: function (params) {
+                                        return 'expr ' + params.value;
+                                    }
+                                }
+                            }
+                        }],
                         legend: {
-                            top: '10%',
-                            data: ['category0', 'category1', 'category2', 'category3']
+                            top: '10%'
                         },
                         tooltip: {
                             trigger: 'axis',
@@ -149,17 +166,17 @@ under the License.
                                     borderColor: '#429',
                                     borderWidth: 3
                                 },
-                                data: data[0].boxData
+                                datasetIndex: 3
                             },
                             {
                                 name: 'category1',
                                 type: 'boxplot',
-                                data: data[1].boxData
+                                datasetIndex: 4
                             },
                             {
                                 name: 'category2',
                                 type: 'boxplot',
-                                data: data[2].boxData
+                                datasetIndex: 5
                             }
                         ]
                     });

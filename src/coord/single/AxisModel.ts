@@ -31,7 +31,7 @@ export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
 export interface SingleAxisOption extends AxisBaseOption, BoxLayoutOptionMixin {
     position?: SingleAxisPosition
-    orient: LayoutOrient
+    orient?: LayoutOrient
 }
 
 class SingleAxisModel extends ComponentModel<SingleAxisOption>

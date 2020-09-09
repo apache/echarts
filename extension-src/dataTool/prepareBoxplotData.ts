@@ -17,9 +17,21 @@
 * under the License.
 */
 
-// @ts-nocheck
-import * as numberUtil from '../../src/util/number';
 
+function asc<T extends number[]>(arr: T): T {
+    arr.sort(function (a, b) {
+        return a - b;
+    });
+    return arr;
+}
+
+function quantile(ascArr: number[], p: number): number {
+    const H = (ascArr.length - 1) * p + 1;
+    const h = Math.floor(H);
+    const v = +ascArr[h - 1];
+    const e = H - h;
+    return e ? v + e * (ascArr[h] - v) : v;
+}
 /**
  * See:
  *  <https://en.wikipedia.org/wiki/Box_plot#cite_note-frigge_hoaglin_iglewicz-2>
@@ -46,25 +58,35 @@ import * as numberUtil from '../../src/util/number';
  *      axisData: Array.<string>
  * }
  */
-export default function (rawData, opt) {
-    opt = opt || [];
+export default function (
+    rawData: number[][],
+    opt: {
+        boundIQR?: number | 'none',
+        layout?: 'horizontal' | 'vertical'
+    }
+): {
+    boxData: number[][]
+    outliers: number[][]
+    axisData: string[]
+} {
+    opt = opt || {};
     const boxData = [];
     const outliers = [];
-    const axisData = [];
+    const axisData: string[] = [];
     const boundIQR = opt.boundIQR;
     const useExtreme = boundIQR === 'none' || boundIQR === 0;
 
     for (let i = 0; i < rawData.length; i++) {
         axisData.push(i + '');
-        const ascList = numberUtil.asc(rawData[i].slice());
+        const ascList = asc(rawData[i].slice());
 
-        const Q1 = numberUtil.quantile(ascList, 0.25);
-        const Q2 = numberUtil.quantile(ascList, 0.5);
-        const Q3 = numberUtil.quantile(ascList, 0.75);
+        const Q1 = quantile(ascList, 0.25);
+        const Q2 = quantile(ascList, 0.5);
+        const Q3 = quantile(ascList, 0.75);
         const min = ascList[0];
         const max = ascList[ascList.length - 1];
 
-        const bound = (boundIQR == null ? 1.5 : boundIQR) * (Q3 - Q1);
+        const bound = (boundIQR == null ? 1.5 : boundIQR as number) * (Q3 - Q1);
 
         const low = useExtreme
             ? min

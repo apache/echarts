@@ -96,7 +96,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.coordinateSystem === this) {
                 const data = seriesModel.getData();
-                each(data.mapDimension(this.dimension, true), function (dim) {
+                each(data.mapDimensionsAll(this.dimension), function (dim) {
                     this._axis.scale.unionExtentFromData(data, dim);
                 }, this);
                 axisHelper.niceScaleExtent(this._axis.scale, this._axis.model);

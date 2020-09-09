@@ -250,6 +250,7 @@ describe('util/number', function () {
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123+08:00')).toEqual(1330808767123);
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123-0700')).toEqual(1330862767123);
             expect(+numberUtil.parseDate('2012-03-04T05:06:07.123-07:00')).toEqual(1330862767123);
+            expect(+numberUtil.parseDate('2012-03-04T5:6:7.123-07:00')).toEqual(1330862767123);
 
             // Other string
             expect(+numberUtil.parseDate('2012')).toEqual(+new Date('2012-01-01T00:00:00'));
@@ -466,6 +467,60 @@ describe('util/number', function () {
             expect(numberUtil.nice(0.10000000000000000656939, true)).toEqual(0.1);
             expect(numberUtil.nice(0.10000000000000000656939)).toEqual(0.2);
         });
+    });
+
+    describe('numeric', function () {
+
+        function testNumeric(rawVal, tarVal, beNumeric) {
+            expect(numberUtil.isNumeric(rawVal)).toEqual(beNumeric);
+            expect(numberUtil.numericToNumber(rawVal)).toEqual(tarVal);
+        }
+
+        testNumeric(123, 123, true);
+        testNumeric('123', 123, true);
+        testNumeric(-123, -123, true);
+        testNumeric('555', 555, true);
+        testNumeric('555.6', 555.6, true);
+        testNumeric('0555.6', 555.6, true);
+        testNumeric('-555.6', -555.6, true);
+        testNumeric(' 555 ', 555, true);
+        testNumeric(' -555 ', -555, true);
+        testNumeric(1e3, 1000, true, true);
+        testNumeric(-1e3, -1000, true, true);
+        testNumeric('1e3', 1000, true, true);
+        testNumeric('-1e3', -1000, true, true);
+        testNumeric(' \r \n 555 \t ', 555, true);
+        testNumeric(' \r \n -555.6 \t ', -555.6, true);
+        testNumeric(Infinity, Infinity, true, true);
+        testNumeric(-Infinity, -Infinity, true, true);
+        testNumeric('Infinity', Infinity, true, true);
+        testNumeric('-Infinity', -Infinity, true, true);
+
+        testNumeric(NaN, NaN);
+        testNumeric(-NaN, NaN);
+        testNumeric('NaN', NaN);
+        testNumeric('-NaN', NaN, false);
+        testNumeric(' NaN ', NaN, false);
+        testNumeric(true, NaN, false);
+        testNumeric(false, NaN, false);
+        testNumeric(undefined, NaN, false);
+        testNumeric(null, NaN, false);
+        testNumeric(new Date(2012, 5, 12), NaN, false);
+        testNumeric([], NaN, false);
+        testNumeric({}, NaN, false);
+        testNumeric(/1/, NaN, false);
+        testNumeric(/0/, NaN, false);
+        testNumeric('555a', NaN, false);
+        testNumeric('- 555', NaN, false);
+        testNumeric('0. 5', NaN, false);
+        testNumeric('0 .5', NaN, false);
+        testNumeric('0x11', NaN, false);
+        testNumeric('', NaN, false);
+        testNumeric('\n', NaN, false);
+        testNumeric('\n\r', NaN, false);
+        testNumeric('\t', NaN, false);
+        testNumeric(String.fromCharCode(12288), NaN, false);
+        testNumeric(function () {}, NaN, false);
     });
 
 });

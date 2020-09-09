@@ -98,13 +98,13 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
         animationDurationUpdate: 200,
 
         lineStyle: {
-            color: '#aaa',
+            color: '#B9BEC9',
             width: 1,
-            type: 'solid'
+            type: 'dashed'
         },
 
         shadowStyle: {
-            color: 'rgba(150,150,150,0.3)'
+            color: 'rgba(210,219,238,0.2)'
         },
 
         label: {
@@ -117,12 +117,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
             backgroundColor: 'auto', // default: axis line color
             borderColor: null,
             borderWidth: 0,
-            shadowBlur: 3,
-            shadowColor: '#aaa'
-            // Considering applicability, common style should
-            // better not have shadowOffset.
-            // shadowOffsetX: 0,
-            // shadowOffsetY: 2
+            borderRadius: 3
         },
 
         handle: {

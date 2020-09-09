@@ -22,7 +22,7 @@ import * as modelHelper from './modelHelper';
 import findPointFromSeries from './findPointFromSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../ExtensionAPI';
-import { Dictionary, Payload, CommonAxisPointerOption } from '../../util/types';
+import { Dictionary, Payload, CommonAxisPointerOption, HighlightPayload, DownplayPayload } from '../../util/types';
 import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
 import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';
 import { ZRenderType } from 'zrender/src/zrender';
@@ -41,7 +41,7 @@ interface DataIndex {
 
 type BatchItem = DataIndex;
 
-interface DataByAxis {
+export interface DataByAxis {
     // TODO: TYPE Value type
     value: string | number
     axisIndex: number
@@ -56,7 +56,7 @@ interface DataByAxis {
         formatter: AxisPointerOption['label']['formatter']
     }
 }
-interface DataByCoordSys {
+export interface DataByCoordSys {
     coordSysId: string
     coordSysIndex: number
     coordSysType: string
@@ -263,7 +263,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
     let minDiff = -1;
 
     each(axisInfo.seriesModels, function (series, idx) {
-        const dataDim = series.getData().mapDimension(dim, true);
+        const dataDim = series.getData().mapDimensionsAll(dim);
         let seriesNestestValue;
         let dataIndices;
 
@@ -479,11 +479,19 @@ function dispatchHighDownActually(
     });
 
     toDownplay.length && api.dispatchAction({
-        type: 'downplay', escapeConnect: true, batch: toDownplay
-    });
+        type: 'downplay',
+        escapeConnect: true,
+        // Not blur others when highlight in axisPointer.
+        notBlur: true,
+        batch: toDownplay
+    } as DownplayPayload);
     toHighlight.length && api.dispatchAction({
-        type: 'highlight', escapeConnect: true, batch: toHighlight
-    });
+        type: 'highlight',
+        escapeConnect: true,
+        // Not blur others when highlight in axisPointer.
+        notBlur: true,
+        batch: toHighlight
+    } as HighlightPayload);
 }
 
 function findInputAxisInfo(

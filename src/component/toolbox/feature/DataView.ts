@@ -19,7 +19,6 @@
 
 import * as echarts from '../../../echarts';
 import * as zrUtil from 'zrender/src/core/util';
-import lang from '../../../lang';
 import GlobalModel from '../../../model/Global';
 import SeriesModel from '../../../model/Series';
 import { ToolboxFeature, registerFeature, ToolboxFeatureOption } from '../featureManager';
@@ -28,8 +27,6 @@ import ExtensionAPI from '../../../ExtensionAPI';
 import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
-
-const dataViewLang = lang.toolbox.dataView;
 
 const BLOCK_SPLITER = new Array(60).join('-');
 const ITEM_SPLITER = '\t';
@@ -270,21 +267,21 @@ function parseContents(str: string, blockMetaList: SeriesGroupMeta[]) {
 
             if (blockMeta) {
                 newOption[axisKey] = newOption[axisKey] || [];
-                newOption[axisKey][blockMeta.axisIndex] = {
+                (newOption[axisKey] as any)[blockMeta.axisIndex] = {
                     data: result.categories
                 };
-                newOption.series = newOption.series.concat(result.series);
+                newOption.series = (newOption.series as SeriesOption[]).concat(result.series);
             }
         }
         else {
             const result = parseListContents(block);
-            newOption.series.push(result);
+            (newOption.series as SeriesOption[]).push(result);
         }
     });
     return newOption;
 }
 
-interface ToolboxDataViewFeatureOption extends ToolboxFeatureOption {
+export interface ToolboxDataViewFeatureOption extends ToolboxFeatureOption {
     readOnly?: boolean
 
     optionToContent?: (option: ECUnitOption) => string | HTMLElement
@@ -374,6 +371,15 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         addEventListener(closeButton, 'click', close);
 
         addEventListener(refreshButton, 'click', function () {
+            if ((contentToOption == null && optionToContent != null) ||
+                (contentToOption != null && optionToContent == null)) {
+                if (__DEV__) {
+                    console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.')
+                }
+                close();
+                return;
+            }
+
             let newOption;
             try {
                 if (typeof contentToOption === 'function') {
@@ -423,23 +429,27 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         this.remove(ecModel, api);
     }
 
-    static defaultOption: ToolboxDataViewFeatureOption = {
-        show: true,
-        readOnly: false,
-        optionToContent: null,
-        contentToOption: null,
+    static getDefaultOption(ecModel: GlobalModel) {
+        const defaultOption: ToolboxDataViewFeatureOption = {
+            show: true,
+            readOnly: false,
+            optionToContent: null,
+            contentToOption: null,
 
-        // eslint-disable-next-line
-        icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
-        title: zrUtil.clone(dataViewLang.title),
-        lang: zrUtil.clone(dataViewLang.lang),
-        backgroundColor: '#fff',
-        textColor: '#000',
-        textareaColor: '#fff',
-        textareaBorderColor: '#333',
-        buttonColor: '#c23531',
-        buttonTextColor: '#fff'
-    };
+            // eslint-disable-next-line
+            icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
+            title: ecModel.getLocale(['toolbox', 'dataView', 'title']),
+            lang: ecModel.getLocale(['toolbox', 'dataView', 'lang']),
+            backgroundColor: '#fff',
+            textColor: '#000',
+            textareaColor: '#fff',
+            textareaBorderColor: '#333',
+            buttonColor: '#c23531',
+            buttonTextColor: '#fff'
+        };
+
+        return defaultOption;
+    }
 }
 
 /**
@@ -485,7 +495,7 @@ echarts.registerAction({
             const originalData = seriesModel.get('data');
             newSeriesOptList.push({
                 name: seriesOpt.name,
-                data: tryMergeDataOption(seriesOpt.data, originalData)
+                data: tryMergeDataOption(seriesOpt.data as DataList, originalData as DataList)
             });
         }
     });

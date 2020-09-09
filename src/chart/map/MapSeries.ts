@@ -21,9 +21,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import createListSimply from '../helper/createListSimply';
 import SeriesModel from '../../model/Series';
-import {encodeHTML, addCommas} from '../../util/format';
-import {DataSelectableMixin, DataSelectableOptionMixin, SelectableTarget} from '../../component/helper/selectableMixin';
-import {retrieveRawAttr} from '../../data/helper/dataProvider';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import {
@@ -35,47 +32,42 @@ import {
     OptionDataItemObject,
     OptionDataValueNumeric,
     ParsedValue,
-    SeriesOnGeoOptionMixin
+    SeriesOnGeoOptionMixin,
+    StatesOptionMixin
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import List from '../../data/List';
 import Model from '../../model/Model';
 import Geo from '../../coord/geo/Geo';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
-export interface MapDataItemOption extends
-    OptionDataItemObject<OptionDataValueNumeric>,
-    SelectableTarget {
-
+export interface MapStateOption {
     itemStyle?: GeoItemStyleOption
+    // FIXME:TS formatter?
     label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: GeoItemStyleOption
-        label?: LabelOption
-    }
+}
+export interface MapDataItemOption extends MapStateOption, StatesOptionMixin<MapStateOption>,
+    OptionDataItemObject<OptionDataValueNumeric> {
+    cursor?: string
 }
 
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
 
 export interface MapSeriesOption extends
-    SeriesOption,
+    SeriesOption<MapStateOption>, MapStateOption,
+
     GeoCommonOptionMixin,
     // If `geoIndex` is not specified, a exclusive geo will be
     // created. Otherwise use the specified geo component, and
     // `map` and `mapType` are ignored.
     SeriesOnGeoOptionMixin,
     BoxLayoutOptionMixin,
-    DataSelectableOptionMixin,
     SeriesEncodeOptionMixin {
     type?: 'map'
 
     coordinateSystem?: string;
     silent?: boolean;
-
-    // FIXME:TS formatter?
-    label?: LabelOption;
-    itemStyle?: GeoItemStyleOption;
 
     tooltip?: SeriesTooltipOption;
 
@@ -93,11 +85,8 @@ export interface MapSeriesOption extends
 
     data?: OptionDataValueNumeric[] | OptionDataValueNumeric[][] | MapDataItemOption[]
 
-    emphasis?: {
-        // FIXME:TS formatter?
-        label?: LabelOption;
-        itemStyle?: GeoItemStyleOption;
-    };
+
+    nameProperty: string;
 }
 
 class MapSeries extends SeriesModel<MapSeriesOption> {
@@ -121,36 +110,26 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     seriesGroup: MapSeries[] = [];
 
 
-    getInitialData(option: MapSeriesOption): List {
+    getInitialData(this: MapSeries, option: MapSeriesOption): List {
         const data = createListSimply(this, {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-        const valueDim = data.mapDimension('value');
         const dataNameMap = zrUtil.createHashMap();
-        const selectTargetList = [];
         const toAppendNames = [] as string[];
 
         for (let i = 0, len = data.count(); i < len; i++) {
             const name = data.getName(i);
             dataNameMap.set(name, true);
-            selectTargetList.push({
-                name: name,
-                value: data.get(valueDim, i),
-                selected: retrieveRawAttr(data, i, 'selected')
-            });
         }
 
-        const geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap);
+        const geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap, this.option.nameProperty);
         zrUtil.each(geoSource.regions, function (region) {
             const name = region.name;
             if (!dataNameMap.get(name)) {
-                selectTargetList.push({name: name});
                 toAppendNames.push(name);
             }
         });
-
-        this.updateSelectedMap(selectTargetList);
 
         // Complete data with missing regions. The consequent processes (like visual
         // map and render) can not be performed without a "full data". For example,
@@ -167,7 +146,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     getHostGeoModel(): GeoModel {
         const geoIndex = this.option.geoIndex;
         return geoIndex != null
-            ? this.dependentModels.geo[geoIndex] as GeoModel
+            ? this.ecModel.getComponent('geo', geoIndex) as GeoModel
             : null;
     }
 
@@ -202,10 +181,14 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     /**
      * Map tooltip formatter
      */
-    formatTooltip(dataIndex: number): string {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string
+    ) {
         // FIXME orignalData and data is a bit confusing
         const data = this.getData();
-        const formattedValue = addCommas(this.getRawValue(dataIndex));
+        const value = this.getRawValue(dataIndex);
         const name = data.getName(dataIndex);
 
         const seriesGroup = this.seriesGroup;
@@ -214,14 +197,17 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             const otherIndex = seriesGroup[i].originalData.indexOfName(name);
             const valueDim = data.mapDimension('value');
             if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex) as number)) {
-                seriesNames.push(
-                    encodeHTML(seriesGroup[i].name)
-                );
+                seriesNames.push(seriesGroup[i].name);
             }
         }
 
-        return seriesNames.join(', ') + '<br />'
-            + encodeHTML(name + ' : ' + formattedValue);
+        return createTooltipMarkup('section', {
+            header: seriesNames.join(', '),
+            noHeader: !seriesNames.length,
+            blocks: [createTooltipMarkup('nameValue', {
+                name: name, value: value
+            })]
+        });
     }
 
     getTooltipPosition = function (this: MapSeries, dataIndex: number): number[] {
@@ -291,6 +277,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         scaleLimit: null,
 
+        selectedMode: true,
+
         label: {
             show: false,
             color: '#000'
@@ -310,13 +298,22 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             itemStyle: {
                 areaColor: 'rgba(255,215,0,0.8)'
             }
-        }
+        },
+
+        select: {
+            label: {
+                show: true,
+                color: 'rgb(100,0,0)'
+            },
+            itemStyle: {
+                color: 'rgba(255,215,0,0.8)'
+            }
+        },
+
+        nameProperty: 'name'
     };
 
 }
-
-interface MapSeries extends DataSelectableMixin<MapSeriesOption> {}
-zrUtil.mixin(MapSeries, DataSelectableMixin);
 
 SeriesModel.registerClass(MapSeries);
 

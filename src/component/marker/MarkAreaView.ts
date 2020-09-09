@@ -23,6 +23,7 @@ import * as colorUtil from 'zrender/src/tool/color';
 import List from '../../data/List';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
 import { retrieve, mergeAll, map, defaults, curry, filter, HashMap } from 'zrender/src/core/util';
@@ -38,6 +39,8 @@ import ExtensionAPI from '../../ExtensionAPI';
 import MarkerModel from './MarkerModel';
 import { makeInner } from '../../util/model';
 import { getVisualFromData } from '../../visual/helper';
+import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { getECData } from '../../util/ecData';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -273,7 +276,6 @@ class MarkAreaView extends MarkerView {
             })
             .update(function (newIdx, oldIdx) {
                 const polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
-                graphic.clearStates(polygon);
                 graphic.updateProps(polygon, {
                     shape: {
                         points: areaData.getItemLayout(newIdx)
@@ -290,25 +292,25 @@ class MarkAreaView extends MarkerView {
 
         areaData.eachItemGraphicEl(function (polygon: graphic.Polygon, idx) {
             const itemModel = areaData.getItemModel<MarkAreaMergedItemOption>(idx);
-            const labelModel = itemModel.getModel('label');
-            const labelHoverModel = itemModel.getModel(['emphasis', 'label']);
             const style = areaData.getItemVisual(idx, 'style');
             polygon.useStyle(areaData.getItemVisual(idx, 'style'));
 
-            graphic.setLabelStyle(
-                polygon, labelModel, labelHoverModel,
+            setLabelStyle(
+                polygon, getLabelStatesModels(itemModel),
                 {
                     labelFetcher: maModel,
                     labelDataIndex: idx,
                     defaultText: areaData.getName(idx) || '',
-                    autoColor: typeof style.fill === 'string'
+                    inheritColor: typeof style.fill === 'string'
                         ? colorUtil.modifyAlpha(style.fill, 1) : '#000'
                 }
             );
 
-            graphic.enableHoverEmphasis(polygon, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle());
+            setStatesStylesFromModel(polygon, itemModel);
 
-            graphic.getECData(polygon).dataModel = maModel;
+            enableHoverEmphasis(polygon);
+
+            getECData(polygon).dataModel = maModel;
         });
 
         inner(polygonGroup).data = areaData;

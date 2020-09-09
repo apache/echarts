@@ -20,13 +20,10 @@
 /* global Uint8Array */
 
 import env from 'zrender/src/core/env';
-import lang from '../../../lang';
 import { ToolboxFeature, ToolboxFeatureOption, registerFeature } from '../featureManager';
 import { ZRColor } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../ExtensionAPI';
-
-const saveAsImageLang = lang.toolbox.saveAsImage;
 
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
@@ -50,7 +47,8 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
         const model = this.model;
         const title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
-        const type = model.get('type', true) || 'png';
+        const isSvg = api.getZr().painter.getType() === 'svg';
+        const type = isSvg ? 'svg' : model.get('type', true) || 'png';
         const url = api.getConnectedDataURL({
             type: type,
             backgroundColor: model.get('backgroundColor', true)
@@ -96,20 +94,25 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         }
     }
 
-    static defaultOption: ToolboxSaveAsImageFeatureOption = {
-        show: true,
-        icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
-        title: saveAsImageLang.title,
-        type: 'png',
-        // Default use option.backgroundColor
-        // backgroundColor: '#fff',
-        connectedBackgroundColor: '#fff',
-        name: '',
-        excludeComponents: ['toolbox'],
-        pixelRatio: 1,
-        lang: saveAsImageLang.lang.slice()
-    };
+    static getDefaultOption(ecModel: GlobalModel) {
+         const defaultOption: ToolboxSaveAsImageFeatureOption = {
+            show: true,
+            icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
+            title: ecModel.getLocale(['toolbox', 'saveAsImage', 'title']),
+            type: 'png',
+            // Default use option.backgroundColor
+            // backgroundColor: '#fff',
+            connectedBackgroundColor: '#fff',
+            name: '',
+            excludeComponents: ['toolbox'],
+            pixelRatio: 1,
+            lang: ecModel.getLocale(['toolbox', 'saveAsImage', 'lang'])
+        };
+
+        return defaultOption;
+    }
 }
+
 SaveAsImage.prototype.unusable = !env.canvasSupported;
 
 registerFeature('saveAsImage', SaveAsImage);

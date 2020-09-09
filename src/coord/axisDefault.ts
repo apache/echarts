@@ -60,7 +60,7 @@ const defaultOption: AxisBaseOption = {
         onZero: true,
         onZeroAxisIndex: null,
         lineStyle: {
-            color: '#333',
+            color: '#6E7079',
             width: 1,
             type: 'solid'
         },
@@ -94,7 +94,7 @@ const defaultOption: AxisBaseOption = {
     splitLine: {
         show: true,
         lineStyle: {
-            color: ['#ccc'],
+            color: ['#E0E6F1'],
             width: 1,
             type: 'solid'
         }
@@ -102,7 +102,7 @@ const defaultOption: AxisBaseOption = {
     splitArea: {
         show: false,
         areaStyle: {
-            color: ['rgba(250,250,250,0.3)', 'rgba(200,200,200,0.3)']
+            color: ['rgba(250,250,250,0.2)', 'rgba(210,219,238,0.2)']
         }
     }
 };
@@ -132,6 +132,15 @@ const categoryAxis: AxisBaseOption = zrUtil.merge({
 const valueAxis: AxisBaseOption = zrUtil.merge({
     boundaryGap: [0, 0],
 
+    axisLine: {
+        // Not shown when other axis is categoryAxis in cartesian
+        show: 'auto'
+    },
+    axisTick: {
+        // Not shown when other axis is categoryAxis in cartesian
+        show: 'auto'
+    },
+
     // TODO
     // min/max: [30, datamin, 60] or [20, datamin] or [datamin, 60]
 
@@ -155,16 +164,28 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
         show: false,
 
         lineStyle: {
-            color: '#eee',
+            color: '#F4F7FD',
             width: 1
         }
     }
 }, defaultOption);
 
-const timeAxis: AxisBaseOption = zrUtil.defaults({
+const timeAxis: AxisBaseOption = zrUtil.merge({
     scale: true,
-    min: 'dataMin',
-    max: 'dataMax'
+    splitNumber: 6,
+    axisLabel: {
+        // To eliminate labels that are not nice
+        showMinLabel: false,
+        showMaxLabel: false,
+        rich: {
+            primary: {
+                fontWeight: 'bold'
+            }
+        }
+    },
+    splitLine: {
+        show: false
+    }
 }, valueAxis);
 
 const logAxis: AxisBaseOption = zrUtil.defaults({

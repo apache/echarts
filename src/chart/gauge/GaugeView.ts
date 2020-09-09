@@ -19,6 +19,8 @@
 
 import PointerPath from './PointerPath';
 import * as graphic from '../../util/graphic';
+import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import {createTextStyle} from '../../label/labelStyle';
 import ChartView from '../../view/Chart';
 import {parsePercent, round, linearMap} from '../../util/number';
 import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
@@ -256,13 +258,15 @@ class GaugeView extends ChartView {
                 const autoColor = getColor(i / splitNumber);
 
                 group.add(new graphic.Text({
-                    style: graphic.createTextStyle(labelModel, {
+                    style: createTextStyle(labelModel, {
                         text: label,
                         x: unitX * (r - splitLineLen - distance) + cx,
                         y: unitY * (r - splitLineLen - distance) + cy,
                         verticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                         align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
-                    }, {autoColor: autoColor}),
+                    }, {
+                        inheritColor: autoColor
+                    }),
                     silent: true
                 }));
             }
@@ -347,7 +351,6 @@ class GaugeView extends ChartView {
             })
             .update(function (newIdx, oldIdx) {
                 const pointer = oldData.getItemGraphicEl(oldIdx) as PointerPath;
-                graphic.clearStates(pointer);
 
                 graphic.updateProps(pointer, {
                     shape: {
@@ -367,6 +370,7 @@ class GaugeView extends ChartView {
         data.eachItemGraphicEl(function (pointer: PointerPath, idx) {
             const itemModel = data.getItemModel<GaugeDataItemOption>(idx);
             const pointerModel = itemModel.getModel('pointer');
+            const emphasisModel = itemModel.getModel('emphasis');
 
             pointer.setShape({
                 x: posInfo.cx,
@@ -385,9 +389,9 @@ class GaugeView extends ChartView {
                 ));
             }
 
-            graphic.enableHoverEmphasis(
-                pointer, itemModel.getModel(['emphasis', 'itemStyle']).getItemStyle()
-            );
+
+            setStatesStylesFromModel(pointer, itemModel);
+            enableHoverEmphasis(pointer, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
         });
 
         this._data = data;
@@ -417,14 +421,14 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.createTextStyle(titleModel, {
+                style: createTextStyle(titleModel, {
                     x: x,
                     y: y,
                     // FIXME First data name ?
                     text: data.getName(0),
                     align: 'center',
                     verticalAlign: 'middle'
-                }, {autoColor: autoColor, forceRich: true})
+                }, {inheritColor: autoColor})
             }));
         }
     }
@@ -453,7 +457,7 @@ class GaugeView extends ChartView {
 
             this.group.add(new graphic.Text({
                 silent: true,
-                style: graphic.createTextStyle(detailModel, {
+                style: createTextStyle(detailModel, {
                     x: x,
                     y: y,
                     text: formatLabel(
@@ -464,7 +468,7 @@ class GaugeView extends ChartView {
                     height: isNaN(height) ? null : height,
                     align: 'center',
                     verticalAlign: 'middle'
-                }, {autoColor: autoColor, forceRich: true})
+                }, {inheritColor: autoColor})
             }));
         }
     }

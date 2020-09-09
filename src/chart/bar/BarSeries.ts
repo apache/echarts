@@ -19,38 +19,38 @@
 
 import BaseBarSeriesModel, {BaseBarSeriesOption} from './BaseBarSeries';
 import SeriesModel from '../../model/Series';
-import { ItemStyleOption, OptionDataValue, LabelOption, SeriesStackOptionMixin } from '../../util/types';
+import {
+    ItemStyleOption,
+    OptionDataValue,
+    LabelOption,
+    SeriesStackOptionMixin,
+    StatesOptionMixin,
+    OptionDataItemObject
+} from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import List from '../../data/List';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
-type BarDataValue = OptionDataValue | OptionDataValue[];
 
-export interface BarItemStyleOption extends ItemStyleOption {
-    /**
-     * Border radius is not supported for bar on polar
-     */
-    barBorderRadius?: number | number[]
-}
-export interface BarDataItemOption {
-    name?: string
-
-    value?: BarDataValue
-
+export interface BarStateOption {
     itemStyle?: BarItemStyleOption
     label?: LabelOption
-
-    cursor?: string
-
-    emphasis?: {
-        itemStyle?: BarItemStyleOption
-        label?: LabelOption
-    }
 }
 
-export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionMixin {
+export interface BarItemStyleOption extends ItemStyleOption {
+    // Border radius is not supported for bar on polar
+    borderRadius?: number | number[]
+}
+export interface BarDataItemOption extends BarStateOption, StatesOptionMixin<BarStateOption>,
+    OptionDataItemObject<OptionDataValue> {
+    cursor?: string
+}
+
+export interface BarSeriesOption extends BaseBarSeriesOption<BarStateOption>, BarStateOption,
+    SeriesStackOptionMixin {
+
     type?: 'bar'
 
     coordinateSystem?: 'cartesian2d' | 'polar'
@@ -69,17 +69,9 @@ export interface BarSeriesOption extends BaseBarSeriesOption, SeriesStackOptionM
         borderRadius?: number | number[]
     }
 
-    data?: (BarDataItemOption | BarDataValue)[]
+    data?: (BarDataItemOption | OptionDataValue | OptionDataValue[])[]
 
-    label?: LabelOption
-
-    itemStyle?: BarItemStyleOption
-
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: BarItemStyleOption
-    }
-
+    realtimeSort?: boolean
 }
 
 class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
@@ -136,7 +128,15 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
             shadowOffsetX: 0,
             shadowOffsetY: 0,
             opacity: 1
-        }
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
+            }
+        },
+
+        realtimeSort: false
     });
 
 }

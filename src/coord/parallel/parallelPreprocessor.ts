@@ -21,6 +21,8 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
 import { ECUnitOption, SeriesOption } from '../../util/types';
+import { ParallelAxisOption } from './AxisModel';
+import { ParallelSeriesOption } from '../../chart/parallel/ParallelSeries';
 
 export default function (option: ECUnitOption): void {
     createParallelIfNeeded(option);
@@ -54,7 +56,7 @@ function createParallelIfNeeded(option: ECUnitOption): void {
  * @inner
  */
 function mergeAxisOptionFromParallel(option: ECUnitOption): void {
-    const axes = modelUtil.normalizeToArray(option.parallelAxis);
+    const axes = modelUtil.normalizeToArray(option.parallelAxis) as ParallelAxisOption[];
 
     zrUtil.each(axes, function (axisOption) {
         if (!zrUtil.isObject(axisOption)) {
@@ -62,7 +64,7 @@ function mergeAxisOptionFromParallel(option: ECUnitOption): void {
         }
 
         const parallelIndex = axisOption.parallelIndex || 0;
-        const parallelOption = modelUtil.normalizeToArray(option.parallel)[parallelIndex];
+        const parallelOption = modelUtil.normalizeToArray(option.parallel)[parallelIndex] as ParallelSeriesOption;
 
         if (parallelOption && parallelOption.parallelAxisDefault) {
             zrUtil.merge(axisOption, parallelOption.parallelAxisDefault, false);

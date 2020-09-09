@@ -19,9 +19,7 @@
 
 import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
-import {encodeHTML} from '../../util/format';
 import Model from '../../model/Model';
-import { __DEV__ } from '../../config';
 import {
     SeriesOption,
     BoxLayoutOptionMixin,
@@ -30,24 +28,46 @@ import {
     ItemStyleOption,
     LineStyleOption,
     LayoutOrient,
-    ColorString
+    ColorString,
+    StatesOptionMixin,
+    OptionDataItemObject,
+    GraphEdgeItemObject,
+    OptionDataValueNumeric
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { LayoutRect } from '../../util/layout';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
-type SankeyDataValue = OptionDataValue | OptionDataValue[];
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
+
+export interface SankeyNodeStateOption {
+    label?: LabelOption
+    itemStyle?: ItemStyleOption
+}
+
+export interface SankeyEdgeStateOption {
+    lineStyle?: SankeyEdgeStyleOption
+}
+
+interface SankeyBothStateOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
+}
 
 interface SankeyEdgeStyleOption extends LineStyleOption {
     curveness?: number
 }
 
-export interface SankeyNodeItemOption {
+interface ExtraStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+    }
+}
+
+export interface SankeyNodeItemOption extends SankeyNodeStateOption,
+    StatesOptionMixin<SankeyNodeStateOption, ExtraStateOption>,
+    OptionDataItemObject<OptionDataValue> {
     id?: string
-    name?: string
-    value?: SankeyDataValue
 
     localX?: number
     localY?: number
@@ -57,38 +77,22 @@ export interface SankeyNodeItemOption {
     draggable?: boolean
 
     focusNodeAdjacency?: FocusNodeAdjacency
-
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-    }
 }
 
-export interface SankeyEdgeItemOption {
-    /**
-     * Name or index of source node.
-     */
-    source?: string | number
-    /**
-     * Name or index of target node.
-     */
-    target?: string | number
-
+export interface SankeyEdgeItemOption extends
+        SankeyEdgeStateOption,
+        StatesOptionMixin<SankeyEdgeStateOption, ExtraStateOption>,
+        GraphEdgeItemObject<OptionDataValueNumeric> {
     focusNodeAdjacency?: FocusNodeAdjacency
-
-    lineStyle?: SankeyEdgeStyleOption
-    emphasis?: {
-        lineStyle?: SankeyEdgeStyleOption
-    }
 }
 
-export interface SankeyLevelOption {
+export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
     depth: number
 }
 
-export interface SankeySeriesOption extends SeriesOption, BoxLayoutOptionMixin {
+export interface SankeySeriesOption
+    extends SeriesOption<SankeyBothStateOption, ExtraStateOption>, SankeyBothStateOption,
+    BoxLayoutOptionMixin {
     type?: 'sankey'
 
     /**
@@ -122,15 +126,6 @@ export interface SankeySeriesOption extends SeriesOption, BoxLayoutOptionMixin {
     layoutIterations?: number
 
     nodeAlign?: 'justify' | 'left' | 'right'    // TODO justify should be auto
-
-    label?: LabelOption
-    itemStyle?: ItemStyleOption
-    lineStyle?: SankeyEdgeStyleOption
-    emphasis?: {
-        label?: LabelOption
-        itemStyle?: ItemStyleOption
-        lineStyle?: SankeyEdgeStyleOption
-    }
 
     data?: SankeyNodeItemOption[]
     nodes?: SankeyNodeItemOption[]
@@ -177,24 +172,30 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             return graph.data;
         }
         function beforeLink(nodeData: List, edgeData: List) {
-            nodeData.wrapMethod('getItemModel', function (model, idx) {
-                model.customizeGetParent(function (this: Model, path: string | string[]) {
-                    const parentModel = this.parentModel as SankeySeriesModel;
-                    const nodeDepth = parentModel.getData().getItemLayout(idx).depth;
-                    const levelModel = parentModel.levelModels[nodeDepth];
-                    return levelModel || this.parentModel;
-                });
+            nodeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
+                const seriesModel = model.parentModel as SankeySeriesModel;
+                const layout = seriesModel.getData().getItemLayout(idx);
+                if (layout) {
+                    const nodeDepth = layout.depth;
+                    const levelModel = seriesModel.levelModels[nodeDepth];
+                    if (levelModel) {
+                        model.parentModel = levelModel;
+                    }
+                }
                 return model;
             });
 
-            edgeData.wrapMethod('getItemModel', function (model, idx) {
-                model.customizeGetParent(function (this: Model, path: string | string[]) {
-                    const parentModel = this.parentModel as SankeySeriesModel;
-                    const edge = parentModel.getGraph().getEdgeByIndex(idx);
-                    const depth = edge.node1.getLayout().depth;
-                    const levelModel = parentModel.levelModels[depth];
-                    return levelModel || this.parentModel;
-                });
+            edgeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
+                const seriesModel = model.parentModel as SankeySeriesModel;
+                const edge = seriesModel.getGraph().getEdgeByIndex(idx);
+                const layout = edge.node1.getLayout();
+                if (layout) {
+                    const depth = layout.depth;
+                    const levelModel = seriesModel.levelModels[depth];
+                    if (levelModel) {
+                        model.parentModel = levelModel;
+                    }
+                }
                 return model;
             });
         }
@@ -224,28 +225,37 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         return this.getGraph().edgeData;
     }
 
-    /**
-     * @override
-     */
-    formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: 'node' | 'edge') {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: 'node' | 'edge'
+    ) {
+        function noValue(val: unknown): boolean {
+            return isNaN(val as number) || val == null;
+        }
         // dataType === 'node' or empty do not show tooltip by default
         if (dataType === 'edge') {
             const params = this.getDataParams(dataIndex, dataType);
             const rawDataOpt = params.data;
-            let html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
-            if (params.value) {
-                html += ' : ' + params.value;
-            }
-            return encodeHTML(html);
+            const edgeValue = params.value;
+            const edgeName = rawDataOpt.source + ' -- ' + rawDataOpt.target;
+            return createTooltipMarkup('nameValue', {
+                name: edgeName,
+                value: edgeValue,
+                noValue: noValue(edgeValue)
+            });
         }
-        else if (dataType === 'node') {
+        // dataType === 'node'
+        else {
             const node = this.getGraph().getNodeByIndex(dataIndex);
             const value = node.getLayout().value;
             const name = this.getDataParams(dataIndex, dataType).data.name;
-            const html = value ? name + ' : ' + value : '';
-            return encodeHTML(html);
+            return createTooltipMarkup('nameValue', {
+                name: name,
+                value: value,
+                noValue: noValue(value)
+            });
         }
-        return super.formatTooltip(dataIndex, multipleSeries);
     }
 
     optionUpdated() {
@@ -291,18 +301,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         label: {
             show: true,
             position: 'right',
-            color: '#000',
             fontSize: 12
         },
 
         levels: [],
 
         nodeAlign: 'justify',
-
-        itemStyle: {
-            borderWidth: 1,
-            borderColor: '#333'
-        },
 
         lineStyle: {
             color: '#314656',
@@ -316,6 +320,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             },
             lineStyle: {
                 opacity: 0.5
+            }
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
             }
         },
 

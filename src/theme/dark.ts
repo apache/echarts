@@ -17,7 +17,8 @@
 * under the License.
 */
 
-const contrastColor = '#eee';
+const contrastColor = '#B9B8CE';
+const backgroundColor = '#100C2A';
 const axisCommon = function () {
     return {
         axisLine: {
@@ -25,48 +26,50 @@ const axisCommon = function () {
                 color: contrastColor
             }
         },
-        axisTick: {
-            lineStyle: {
-                color: contrastColor
-            }
-        },
-        axisLabel: {
-            textStyle: {
-                color: contrastColor
-            }
-        },
         splitLine: {
             lineStyle: {
-                type: 'dashed',
-                color: '#aaa'
+                color: '#484753'
             }
         },
         splitArea: {
             areaStyle: {
-                color: contrastColor
+                color: ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.05)']
+            }
+        },
+        minorSplitLine: {
+            lineStyle: {
+                color: '#20203B'
             }
         }
     };
 };
 
 const colorPalette = [
-    '#dd6b66', '#759aa0', '#e69d87', '#8dc1a9', '#ea7e53',
-    '#eedd78', '#73a373', '#73b9bc', '#7289ab', '#91ca8c', '#f49f42'
+    '#4992ff',
+    '#7cffb2',
+    '#fddd60',
+    '#ff6e76',
+    '#58d9f9',
+    '#05c091',
+    '#ff8a45',
+    '#8d48e3',
+    '#dd79ff'
 ];
 const theme = {
+    darkMode: true,
+
     color: colorPalette,
-    backgroundColor: '#333',
-    tooltip: {
-        axisPointer: {
-            lineStyle: {
-                color: contrastColor
-            },
-            crossStyle: {
-                color: contrastColor
-            },
-            label: {
-                color: '#000'
-            }
+    backgroundColor: backgroundColor,
+    axisPointer: {
+        lineStyle: {
+            color: '#817f91'
+        },
+        crossStyle: {
+            color: '#817f91'
+        },
+        label: {
+            // TODO Contrast of label backgorundColor
+            color: '#fff'
         }
     },
     legend: {
@@ -79,7 +82,10 @@ const theme = {
     },
     title: {
         textStyle: {
-            color: contrastColor
+            color: '#EEF1FA'
+        },
+        subtextStyle: {
+            color: '#B9B8CE'
         }
     },
     toolbox: {
@@ -90,8 +96,48 @@ const theme = {
         }
     },
     dataZoom: {
+        borderColor: '#71708A',
         textStyle: {
             color: contrastColor
+        },
+        brushStyle: {
+            color: 'rgba(135,163,206,0.3)'
+        },
+        handleStyle: {
+            color: '#353450',
+            borderColor: '#C5CBE3'
+        },
+        moveHandleStyle: {
+            color: '#B0B6C3',
+            opacity: 0.3
+        },
+        fillerColor: 'rgba(135,163,206,0.2)',
+        emphasis: {
+            handleStyle: {
+                borderColor: '#91B7F2',
+                color: '#4D587D'
+            },
+            moveHandleStyle: {
+                color: '#636D9A',
+                opacity: 0.7
+            }
+        },
+        dataBackground: {
+            lineStyle: {
+                color: '#71708A',
+                width: 1
+            },
+            areaStyle: {
+                color: '#71708A'
+            }
+        },
+        selectedDataBackground: {
+            lineStyle: {
+                color: '#87A3CE'
+            },
+            areaStyle: {
+                color: '#87A3CE'
+            }
         }
     },
     visualMap: {
@@ -103,23 +149,28 @@ const theme = {
         lineStyle: {
             color: contrastColor
         },
-        itemStyle: {
-            normal: {
-                color: colorPalette[1]
-            }
-        },
         label: {
-            normal: {
-                textStyle: {
-                    color: contrastColor
-                }
+            textStyle: {
+                color: contrastColor
             }
         },
         controlStyle: {
-            normal: {
-                color: contrastColor,
-                borderColor: contrastColor
-            }
+            color: contrastColor,
+            borderColor: contrastColor
+        }
+    },
+    calendar: {
+        itemStyle: {
+            color: backgroundColor
+        },
+        dayLabel: {
+            color: contrastColor
+        },
+        monthLabel: {
+            color: contrastColor
+        },
+        yearLabel: {
+            color: contrastColor
         }
     },
     timeAxis: axisCommon(),

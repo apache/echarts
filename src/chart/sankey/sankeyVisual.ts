@@ -49,9 +49,14 @@ export default function (ecModel: GlobalModel) {
 
                 const mapValueToColor = mapping.mapValueToVisual(node.getLayout().value);
                 const customColor = node.getModel<SankeyNodeItemOption>().get(['itemStyle', 'color']);
-                customColor != null
-                    ? node.setVisual('color', customColor)
-                    : node.setVisual('color', mapValueToColor);
+                if (customColor != null) {
+                    node.setVisual('color', customColor);
+                    node.setVisual('style', {fill: customColor});
+                }
+                else {
+                    node.setVisual('color', mapValueToColor);
+                    node.setVisual('style', {fill: mapValueToColor});
+                }
             });
         }
     });

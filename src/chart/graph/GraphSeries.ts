@@ -21,7 +21,6 @@ import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
 import {defaultEmphasis} from '../../util/model';
 import Model from '../../model/Model';
-import {encodeHTML} from '../../util/format';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
@@ -40,7 +39,10 @@ import {
     BoxLayoutOptionMixin,
     LabelFormatterCallback,
     Dictionary,
-    LineLabelOption
+    LineLabelOption,
+    StatesOptionMixin,
+    GraphEdgeItemObject,
+    OptionDataValueNumeric
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -48,24 +50,39 @@ import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { ForceLayoutInstance } from './forceLayout';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
 
 interface GraphEdgeLineStyleOption extends LineStyleOption {
-    curveness: number
+    curveness?: number
 }
-export interface GraphNodeItemOption extends SymbolOptionMixin {
+
+export interface GraphNodeStateOption {
+    itemStyle?: ItemStyleOption
+    label?: LabelOption
+}
+
+interface ExtraNodeStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+        scale?: boolean
+    }
+}
+
+interface ExtraEdgeStateOption {
+    emphasis?: {
+        focus?: 'adjacency'
+    }
+}
+
+export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, ExtraNodeStateOption> {
+
     id?: string
     name?: string
     value?: GraphDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 
     /**
      * Fixed x position
@@ -87,29 +104,18 @@ export interface GraphNodeItemOption extends SymbolOptionMixin {
     category?: number | string
 
     draggable?: boolean
-
-    focusNodeAdjacency?: boolean
 }
 
-export interface GraphEdgeItemOption {
-    /**
-     * Name or index of source node.
-     */
-    source?: string | number
-    /**
-     * Name or index of target node.
-     */
-    target?: string | number
-
-    value?: number
-
+export interface GraphEdgeStateOption {
     lineStyle?: GraphEdgeLineStyleOption
     label?: LineLabelOption
+}
+export interface GraphEdgeItemOption extends
+        GraphEdgeStateOption,
+        StatesOptionMixin<GraphEdgeStateOption, ExtraEdgeStateOption>,
+        GraphEdgeItemObject<OptionDataValueNumeric> {
 
-    emphasis?: {
-        lineStyle?: GraphEdgeLineStyleOption
-        label?: LineLabelOption
-    }
+    value?: number
 
     /**
      * Symbol of both line ends
@@ -119,25 +125,16 @@ export interface GraphEdgeItemOption {
     symbolSize?: number | number[]
 
     ignoreForceLayout?: boolean
-
-    focusNodeAdjacency?: boolean
 }
 
-export interface GraphCategoryItemOption extends SymbolOptionMixin {
+export interface GraphCategoryItemOption extends SymbolOptionMixin,
+    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption> {
     name?: string
 
     value?: OptionDataValue
-
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
 }
 
-interface GraphSeriesOption extends SeriesOption,
+export interface GraphSeriesOption extends SeriesOption,
     SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin,
@@ -148,13 +145,12 @@ interface GraphSeriesOption extends SeriesOption,
 
     coordinateSystem?: string
 
-    hoverAnimation?: boolean
     legendHoverLink?: boolean
 
     layout?: 'none' | 'force' | 'circular'
 
-    data?: GraphNodeItemOption[]
-    nodes?: GraphNodeItemOption[]
+    data?: (GraphNodeItemOption | GraphDataValue)[]
+    nodes?: (GraphNodeItemOption | GraphDataValue)[]
 
     edges?: GraphEdgeItemOption[]
     links?: GraphEdgeItemOption[]
@@ -166,12 +162,12 @@ interface GraphSeriesOption extends SeriesOption,
     /**
      * Symbol size scale ratio in roam
      */
-    nodeScaleRatio: 0.6,
+    nodeScaleRatio?: 0.6,
 
     draggable?: boolean
 
-    edgeSymbol: string | string[]
-    edgeSymbolSize: number | number[]
+    edgeSymbol?: string | string[]
+    edgeSymbolSize?: number | number[]
 
     edgeLabel?: LineLabelOption & {
         formatter?: LabelFormatterCallback | string
@@ -184,6 +180,22 @@ interface GraphSeriesOption extends SeriesOption,
     lineStyle?: GraphEdgeLineStyleOption
 
     emphasis?: {
+        focus?: GraphNodeItemOption['emphasis']['focus']
+        scale?: boolean
+        label?: LabelOption
+        edgeLabel?: LabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    blur?: {
+        label?: LabelOption
+        edgeLabel?: LabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    select?: {
         label?: LabelOption
         edgeLabel?: LabelOption
         itemStyle?: ItemStyleOption
@@ -196,18 +208,18 @@ interface GraphSeriesOption extends SeriesOption,
     }
 
     // Configuration of force directed layout
-    force: {
-        initLayout: 'circular' | 'none'
+    force?: {
+        initLayout?: 'circular' | 'none'
         // Node repulsion. Can be an array to represent range.
-        repulsion: number | number[]
-        gravity: number
+        repulsion?: number | number[]
+        gravity?: number
         // Initial friction
-        friction: number
+        friction?: number
 
         // Edge length. Can be an array to represent range.
-        edgeLength: number | number[]
+        edgeLength?: number | number[]
 
-        layoutAnimation: boolean
+        layoutAnimation?: boolean
     }
 }
 
@@ -257,13 +269,13 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         defaultEmphasis(option, 'edgeLabel', ['show']);
     }
 
-    getInitialData(option: GraphSeriesOption, ecModel: GlobalModel) {
+    getInitialData(option: GraphSeriesOption, ecModel: GlobalModel): List {
         const edges = option.edges || option.links || [];
         const nodes = option.data || option.nodes || [];
         const self = this;
 
         if (nodes && edges) {
-            return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
+            return createGraphFromNodeEdge(nodes as GraphNodeItemOption[], edges, this, true, beforeLink).data;
         }
 
         function beforeLink(nodeData: List, edgeData: List) {
@@ -279,32 +291,32 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
                 return model;
             });
 
-            const edgeLabelModel = self.getModel('edgeLabel');
-            // For option `edgeLabel` can be found by label.xxx.xxx on item mode.
-            const fakeSeriesModel = new Model(
-                {label: edgeLabelModel.option},
-                edgeLabelModel.parentModel,
-                ecModel
-            );
-            const emphasisEdgeLabelModel = self.getModel(['emphasis', 'edgeLabel']);
-            const emphasisFakeSeriesModel = new Model(
-                {emphasis: {label: emphasisEdgeLabelModel.option}},
-                emphasisEdgeLabelModel.parentModel,
-                ecModel
-            );
+            // TODO Inherit resolveParentPath by default in Model#getModel?
+            const oldGetModel = Model.prototype.getModel;
+            function newGetModel(this: Model, path: any, parentModel?: Model) {
+                const model = oldGetModel.call(this, path, parentModel);
+                model.resolveParentPath = resolveParentPath;
+                return model;
+            }
 
-            edgeData.wrapMethod('getItemModel', function (model) {
-                model.customizeGetParent(edgeGetParent);
+            edgeData.wrapMethod('getItemModel', function (model: Model) {
+                model.resolveParentPath = resolveParentPath;
+                model.getModel = newGetModel;
                 return model;
             });
 
-            function edgeGetParent(this: Model, path: string | string[]) {
-                const pathArr = this.parsePath(path);
-                return (pathArr && pathArr[0] === 'label')
-                    ? fakeSeriesModel
-                    : (pathArr && pathArr[0] === 'emphasis' && pathArr[1] === 'label')
-                    ? emphasisFakeSeriesModel
-                    : this.parentModel;
+            function resolveParentPath(this: Model, pathArr: readonly string[]): string[] {
+                if (pathArr && (pathArr[0] === 'label' || pathArr[1] === 'label')) {
+                    const newPathArr = pathArr.slice();
+                    if (pathArr[0] === 'label') {
+                        newPathArr[0] = 'edgeLabel';
+                    }
+                    else if (pathArr[1] === 'label') {
+                        newPathArr[1] = 'edgeLabel';
+                    }
+                    return newPathArr;
+                }
+                return pathArr as string[];
             }
         }
     }
@@ -321,10 +333,11 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         return this._categoriesData;
     }
 
-    /**
-     * @override
-     */
-    formatTooltip(dataIndex: number, multipleSeries: boolean, dataType: string) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string
+    ) {
         if (dataType === 'edge') {
             const nodeData = this.getData();
             const params = this.getDataParams(dataIndex, dataType);
@@ -332,19 +345,23 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             const sourceName = nodeData.getName(edge.node1.dataIndex);
             const targetName = nodeData.getName(edge.node2.dataIndex);
 
-            const html = [];
-            sourceName != null && html.push(sourceName);
-            targetName != null && html.push(targetName);
-            let htmlStr = encodeHTML(html.join(' > '));
+            const nameArr = [];
+            sourceName != null && nameArr.push(sourceName);
+            targetName != null && nameArr.push(targetName);
 
-            if (params.value) {
-                htmlStr += ' : ' + encodeHTML(params.value);
-            }
-            return htmlStr;
+            return createTooltipMarkup('nameValue', {
+                name: nameArr.join(' > '),
+                value: params.value,
+                noValue: params.value == null
+            });
         }
-        else { // dataType === 'node' or empty
-            return super.formatTooltip.apply(this, arguments as any);
-        }
+        // dataType === 'node' or empty
+        const nodeMarkup = defaultSeriesFormatTooltip({
+            series: this,
+            dataIndex: dataIndex,
+            multipleSeries: multipleSeries
+        });
+        return nodeMarkup;
     }
 
     _updateCategoriesData() {
@@ -391,8 +408,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         // geoIndex: 0,
 
         legendHoverLink: true,
-
-        hoverAnimation: true,
 
         layout: null,
 
@@ -444,6 +459,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         zoom: 1,
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.6,
+
         // cursor: null,
 
         // categories: [],
@@ -470,8 +486,15 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             opacity: 0.5
         },
         emphasis: {
+            scale: true,
             label: {
                 show: true
+            }
+        },
+
+        select: {
+            itemStyle: {
+                borderColor: '#212121'
             }
         }
     };

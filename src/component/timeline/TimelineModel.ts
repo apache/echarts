@@ -19,7 +19,6 @@
 
 import ComponentModel from '../../model/Component';
 import List from '../../data/List';
-import * as modelUtil from '../../util/model';
 import {
     ComponentOption,
     BoxLayoutOptionMixin,
@@ -36,8 +35,9 @@ import {
     ZREasing
 } from '../../util/types';
 import Model from '../../model/Model';
-import GlobalModel from '../../model/Global';
+import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
 import { each, isObject, clone, isString } from 'zrender/src/core/util';
+import { convertOptionIdName, getDataItemValue } from '../../util/model';
 
 
 export interface TimelineControlStyle extends ItemStyleOption {
@@ -52,6 +52,12 @@ export interface TimelineControlStyle extends ItemStyleOption {
     stopIcon?: string
     prevIcon?: string
     nextIcon?: string
+
+    // Can be a percent value relative to itemSize
+    playBtnSize?: number | string
+    stopBtnSize?: number | string
+    nextBtnSize?: number | string
+    prevBtnSize?: number | string
 }
 
 export interface TimelineCheckpointStyle extends ItemStyleOption,
@@ -82,6 +88,13 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
         itemStyle?: ItemStyleOption
         label?: TimelineLabelOption
         checkpointStyle?: TimelineCheckpointStyle
+    }
+
+    // Style in progress
+    progress?: {
+        lineStyle?: TimelineLineStyleOption
+        itemStyle?: ItemStyleOption
+        label?: TimelineLabelOption
     }
 
     tooltip?: boolean
@@ -121,6 +134,10 @@ export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, S
 
     inverse?: boolean
 
+    // If not specified, options will be changed by "normalMerge".
+    // If specified, options will be changed by "replaceMerge".
+    replaceMerge?: GlobalModelSetOptionOpts['replaceMerge']
+
     lineStyle?: TimelineLineStyleOption
     itemStyle?: ItemStyleOption
     checkpointStyle?: TimelineCheckpointStyle
@@ -132,6 +149,14 @@ export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, S
         itemStyle?: ItemStyleOption
         checkpointStyle?: TimelineCheckpointStyle
         controlStyle?: TimelineControlStyle
+        label?: TimelineLabelOption
+    }
+
+
+    // Style in progress
+    progress?: {
+        lineStyle?: TimelineLineStyleOption
+        itemStyle?: ItemStyleOption
         label?: TimelineLabelOption
     }
 
@@ -222,7 +247,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
         if (axisType === 'category') {
             processedDataArr = [];
             each(dataArr, function (item, index) {
-                let value = modelUtil.getDataItemValue(item);
+                const value = convertOptionIdName(getDataItemValue(item), '');
                 let newItem;
 
                 if (isObject(item)) {
@@ -235,11 +260,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
 
                 processedDataArr.push(newItem);
 
-                if (!isString(value) && (value == null || isNaN(value as number))) {
-                    value = '';
-                }
-
-                names.push(value + '');
+                names.push(value);
             });
         }
         else {

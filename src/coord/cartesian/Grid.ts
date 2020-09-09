@@ -23,20 +23,19 @@
  * TODO Default cartesian
  */
 
-import {__DEV__} from '../../config';
-import {isObject, each, map, indexOf, retrieve, retrieve3} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
     niceScaleExtent,
-    estimateLabelUnionRect
+    estimateLabelUnionRect,
+    getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import CoordinateSystemManager from '../../CoordinateSystem';
-import {getStackedDimension} from '../../data/helper/dataStackHelper';
-import {ParsedModelFinder} from '../../util/model';
+import {ParsedModelFinder, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import GridModel from './GridModel';
@@ -47,7 +46,8 @@ import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
 import List from '../../data/List';
-import SeriesModel from '../../model/Series';
+import OrdinalScale from '../../scale/Ordinal';
+import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -253,9 +253,9 @@ class Grid implements CoordinateSystemMaster {
     } {
         const seriesModel = finder.seriesModel;
         const xAxisModel = finder.xAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('xAxis', SINGLE_REFERRING).models[0]);
         const yAxisModel = finder.yAxisModel
-            || (seriesModel && seriesModel.getReferringComponents('yAxis')[0]);
+            || (seriesModel && seriesModel.getReferringComponents('yAxis', SINGLE_REFERRING).models[0]);
         const gridModel = finder.gridModel;
         const coordsList = this._coordsList;
         let cartesian: Cartesian2D;
@@ -332,12 +332,12 @@ class Grid implements CoordinateSystemMaster {
         this._axesMap = axesMap;
 
         /// Create cartesian2d
-        each(axesMap.x, function (xAxis, xAxisIndex) {
-            each(axesMap.y, function (yAxis, yAxisIndex) {
+        each(axesMap.x, (xAxis, xAxisIndex) => {
+            each(axesMap.y, (yAxis, yAxisIndex) => {
                 const key = 'x' + xAxisIndex + 'y' + yAxisIndex;
                 const cartesian = new Cartesian2D(key);
 
-                cartesian.grid = this;
+                cartesian.master = this;
                 cartesian.model = gridModel;
 
                 this._coordsMap[key] = cartesian;
@@ -345,8 +345,8 @@ class Grid implements CoordinateSystemMaster {
 
                 cartesian.addAxis(xAxis);
                 cartesian.addAxis(yAxis);
-            }, this);
-        }, this);
+            });
+        });
 
         function createAxisCreator(dimName: Cartesian2DDimensionName) {
             return function (axisModel: CartesianAxisModel, idx: number): void {
@@ -407,15 +407,24 @@ class Grid implements CoordinateSystemMaster {
      * Update cartesian properties from series.
      */
     private _updateScale(ecModel: GlobalModel, gridModel: GridModel): void {
+        const sortedDataValue: number[] = [];
+        const sortedDataIndex: number[] = [];
+        let hasCategoryIndices = false;
+
         // Reset scale
         each(this._axesList, function (axis) {
             axis.scale.setExtent(Infinity, -Infinity);
+            if (axis.type === 'category') {
+                const categorySortInfo = axis.model.get('categorySortInfo');
+                (axis.scale as OrdinalScale).setCategorySortInfo(categorySortInfo);
+            }
         });
+
         ecModel.eachSeries(function (seriesModel) {
-            if (isCartesian2D(seriesModel)) {
-                const axesModels = findAxesModels(seriesModel);
-                const xAxisModel = axesModels[0];
-                const yAxisModel = axesModels[1];
+            if (isCartesian2DSeries(seriesModel)) {
+                const axesModelMap = findAxisModels(seriesModel);
+                const xAxisModel = axesModelMap.xAxisModel;
+                const yAxisModel = axesModelMap.yAxisModel;
 
                 if (!isAxisUsedInTheGrid(xAxisModel, gridModel)
                     || !isAxisUsedInTheGrid(yAxisModel, gridModel)
@@ -438,13 +447,8 @@ class Grid implements CoordinateSystemMaster {
         }, this);
 
         function unionExtent(data: List, axis: Axis2D): void {
-            each(data.mapDimension(axis.dim, true), function (dim) {
-                axis.scale.unionExtentFromData(
-                    // For example, the extent of the orginal dimension
-                    // is [0.1, 0.5], the extent of the `stackResultDimension`
-                    // is [7, 9], the final extent should not include [0.1, 0.5].
-                    data, getStackedDimension(data, dim)
-                );
+            each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
+                axis.scale.unionExtentFromData(data, dim);
             });
         }
     }
@@ -486,13 +490,13 @@ class Grid implements CoordinateSystemMaster {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
-            if (!isCartesian2D(seriesModel)) {
+            if (!isCartesian2DSeries(seriesModel)) {
                 return;
             }
 
-            const axesModels = findAxesModels(seriesModel);
-            const xAxisModel = axesModels[0];
-            const yAxisModel = axesModels[1];
+            const axesModelMap = findAxisModels(seriesModel);
+            const xAxisModel = axesModelMap.xAxisModel;
+            const yAxisModel = axesModelMap.yAxisModel;
 
             const gridModel = xAxisModel.getCoordSysModel();
 
@@ -610,28 +614,6 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
         : function (coord) {
             return axisExtentSum - coord + coordBase;
         };
-}
-
-const axesTypes = ['xAxis', 'yAxis'];
-function findAxesModels(seriesModel: SeriesModel): CartesianAxisModel[] {
-    return map(axesTypes, function (axisType) {
-        const axisModel = seriesModel.getReferringComponents(axisType)[0] as CartesianAxisModel;
-
-        if (__DEV__) {
-            if (!axisModel) {
-                throw new Error(axisType + ' "' + retrieve(
-                    seriesModel.get(axisType + 'Index' as any),
-                    seriesModel.get(axisType + 'Id' as any),
-                    0
-                ) + '" not found');
-            }
-        }
-        return axisModel;
-    });
-}
-
-function isCartesian2D(seriesModel: SeriesModel): boolean {
-    return seriesModel.get('coordinateSystem') === 'cartesian2d';
 }
 
 CoordinateSystemManager.register('cartesian2d', Grid);

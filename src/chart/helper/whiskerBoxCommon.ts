@@ -25,9 +25,9 @@ import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '.
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import type DataDimensionInfo from '../../data/DataDimensionInfo';
 import type List from '../../data/List';
 import type Axis2D from '../../coord/cartesian/Axis2D';
+import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
 
 interface CommonOption extends SeriesOption, SeriesOnCartesianOptionMixin {
     layout?: LayoutOrient
@@ -50,7 +50,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
      */
     _baseAxisDim: string;
 
-    defaultValueDimensions: Partial<DataDimensionInfo>[];
+    defaultValueDimensions: CoordDimensionDefinition['dimsDef'];
 
     /**
      * @override
@@ -117,7 +117,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
         }
 
         const defaultValueDimensions = this.defaultValueDimensions;
-        const coordDimensions = [{
+        const coordDimensions: CoordDimensionDefinition[] = [{
             name: baseAxisDim,
             type: getDimensionTypeByAxis(baseAxisType),
             ordinalMeta: ordinalMeta,
@@ -138,7 +138,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
                 coordDimensions: coordDimensions,
                 dimensionsCount: defaultValueDimensions.length + 1,
                 encodeDefaulter: zrUtil.curry(
-                    makeSeriesEncodeForAxisCoordSys, coordDimensions, this
+                    makeSeriesEncodeForAxisCoordSys, coordDimensions, this as any
                 )
             }
         );

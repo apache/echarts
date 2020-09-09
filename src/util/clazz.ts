@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import { Dictionary } from 'zrender/src/core/types';
 import { ComponentFullType, ComponentTypeInfo, ComponentMainType, ComponentSubType } from './types';
@@ -99,17 +98,26 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         // constructor.
         // If this constructor/$constructor is declared, it is responsible for
         // calling the super constructor.
-        const ExtendedClass = (class {
-            constructor() {
-                if (!proto.$constructor) {
+        function ExtendedClass(this: any, ...args: any[]) {
+            if (!proto.$constructor) {
+
+                if (!isESClass(superClass)) {
+                    // Will throw error if superClass is an es6 native class.
                     superClass.apply(this, arguments);
                 }
                 else {
-                    proto.$constructor.apply(this, arguments);
+                    const ins = zrUtil.createObject(
+                        // @ts-ignore
+                        ExtendedClass.prototype, new superClass(...args)
+                    );
+                    return ins;
                 }
             }
-            static [IS_EXTENDED_CLASS] = true;
-        }) as ExtendableConstructor;
+            else {
+                proto.$constructor.apply(this, arguments);
+            }
+        }
+        ExtendedClass[IS_EXTENDED_CLASS] = true;
 
         zrUtil.extend(ExtendedClass.prototype, proto);
 
@@ -119,8 +127,13 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         zrUtil.inherits(ExtendedClass, this);
         ExtendedClass.superClass = superClass;
 
-        return ExtendedClass as ExtendableConstructor;
+        return ExtendedClass as unknown as ExtendableConstructor;
     };
+}
+
+function isESClass(fn: unknown): boolean {
+    return typeof fn === 'function'
+        && /^class\s/.test(Function.prototype.toString.call(fn));
 }
 
 /**

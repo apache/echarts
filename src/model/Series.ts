@@ -17,24 +17,17 @@
 * under the License.
 */
 
-import {__DEV__} from '../config';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import {
-    formatTime,
-    encodeHTML,
-    addCommas,
-    getTooltipMarker
-} from '../util/format';
 import * as modelUtil from '../util/model';
 import {
     DataHost, DimensionName, StageHandlerProgressParams,
-    SeriesOption, TooltipRenderMode, ZRColor, BoxLayoutOptionMixin,
-    ScaleDataValue, Dictionary, ColorString
+    SeriesOption, ZRColor, BoxLayoutOptionMixin,
+    ScaleDataValue, Dictionary, OptionDataItemObject, SeriesDataType
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {ColorPaletteMixin} from './mixin/colorPalette';
-import DataFormatMixin from '../model/mixin/dataFormat';
+import { DataFormatMixin } from '../model/mixin/dataFormat';
 import Model from '../model/Model';
 import {
     getLayoutParams,
@@ -42,27 +35,28 @@ import {
     fetchLayoutMode
 } from '../util/layout';
 import {createTask} from '../stream/task';
-import {
-    prepareSource,
-    getSource
-} from '../data/helper/sourceHelper';
-import {retrieveRawValue} from '../data/helper/dataProvider';
 import GlobalModel from './Global';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
 import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../stream/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import List from '../data/List';
-import Source from '../data/Source';
 import Axis from '../coord/Axis';
-import { GradientObject } from 'zrender/src/graphic/Gradient';
 import type { BrushCommonSelectorsForSeries, BrushSelectableArea } from '../component/brush/selector';
 import makeStyleMapper from './mixin/makeStyleMapper';
+import { SourceManager } from '../data/helper/sourceManager';
+import { Source } from '../data/Source';
+import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatTooltip';
 
 const inner = modelUtil.makeInner<{
     data: List
     dataBeforeProcessed: List
+    sourceManager: SourceManager
 }, SeriesModel>();
+
+function getSelectionKey(data: List, dataIndex: number): string {
+    return data.getName(dataIndex) || data.getId(dataIndex);
+}
 
 interface SeriesModel {
     /**
@@ -109,11 +103,15 @@ interface SeriesModel {
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
 
-    // [Caution]: for compat the previous "class extend"
-    // publich and protected fields must be initialized on
-    // prototype rather than in constructor. Otherwise the
-    // subclass overrided filed will be overwritten by this
-    // class. That is, they should not be initialized here.
+    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // the class members must not be initialized in constructor or declaration place.
+    // Otherwise there is bad case:
+    //   class A {xxx = 1;}
+    //   enableClassExtend(A);
+    //   class B extends A {}
+    //   var C = B.extend({xxx: 5});
+    //   var c = new C();
+    //   console.log(c.xxx); // expect 5 but always 1.
 
     // @readonly
     type: string;
@@ -132,9 +130,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Injected outside
     pipelineContext: PipelineContext;
 
-
     // ---------------------------------------
-    // Props to tell echarts about how to do visual encoding.
+    // Props to tell visual/style.ts about how to do visual encoding.
     // ---------------------------------------
     // legend visual provider to the legend component
     legendVisualProvider: LegendVisualProvider;
@@ -146,7 +143,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Style mapping rules.
     visualStyleMapper: ReturnType<typeof makeStyleMapper>;
     // If ignore style on data. It's only for global visual/style.ts
-    // Perhaps series it self will handle it.
+    // Enabled when series it self will handle it.
     ignoreStyleOnData: boolean;
     // If use palette on each data.
     useColorPaletteOnData: boolean;
@@ -156,6 +153,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     defaultSymbol: string;
     // Symbol provide to legend.
     legendSymbol: string;
+
+    // ---------------------------------------
+    // Props about data selection
+    // ---------------------------------------
+    private _selectedDataIndicesMap: Dictionary<number> = {};
 
     readonly preventUsingHoverLayer: boolean;
 
@@ -185,7 +187,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
         this.mergeDefaultAndTheme(option, ecModel);
 
-        prepareSource(this);
+        const sourceManager = inner(this).sourceManager = new SourceManager(this);
+        sourceManager.prepareSource();
 
         const data = this.getInitialData(option, ecModel);
         wrapData(data, this);
@@ -210,6 +213,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         // this.restoreData();
 
         autoSeriesName(this);
+
+        this._initSelectedMapFromData(data);
     }
 
     /**
@@ -259,7 +264,9 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             );
         }
 
-        prepareSource(this);
+        const sourceManager = inner(this).sourceManager;
+        sourceManager.dirty();
+        sourceManager.prepareSource();
 
         const data = this.getInitialData(newSeriesOption, ecModel);
         wrapData(data, this);
@@ -269,6 +276,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         inner(this).dataBeforeProcessed = data;
 
         autoSeriesName(this);
+
+        this._initSelectedMapFromData(data);
     }
 
     fillDataTextStyle(data: ArrayLike<any>): void {
@@ -310,11 +319,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * data in the stream procedure. So we fetch data from upstream
      * each time `task.perform` called.
      */
-    getData(dataType?: string): List<this> {
+    getData(dataType?: SeriesDataType): List<this> {
         const task = getCurrentTask(this);
         if (task) {
             const data = task.context.data;
-            return dataType == null ? data : data.getLinkedData(dataType);
+            return (dataType == null ? data : data.getLinkedData(dataType)) as List<this>;
         }
         else {
             // When series is not alive (that may happen when click toolbox
@@ -323,6 +332,16 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             // elements want to know whether fade out.
             return inner(this).data as List<this>;
         }
+    }
+
+    getAllData(): ({
+        data: List,
+        type?: SeriesDataType
+    })[] {
+        const mainData = this.getData();
+        return (mainData && mainData.getLinkedDataAll)
+            ? mainData.getLinkedDataAll()
+            : [{ data: mainData }];
     }
 
     setData(data: List): void {
@@ -351,7 +370,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     getSource(): Source {
-        return getSource(this);
+        return inner(this).sourceManager.getSource();
     }
 
     /**
@@ -373,7 +392,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
     }
 
-    // FIXME
     /**
      * Default tooltip formatter
      *
@@ -386,158 +404,21 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      *        'richText' is used for rendering tooltip in rich text form, for those where
      *        DOM operation is not supported.
      * @return formatted tooltip with `html` and `markers`
+     *        Notice: The override method can also return string
      */
     formatTooltip(
         dataIndex: number,
         multipleSeries?: boolean,
-        dataType?: string,
-        renderMode?: TooltipRenderMode
-    ): {
-        html: string,
-        markers: Dictionary<ColorString>
-    } | string { // The override method can also return string
-
-        const series = this;
-        renderMode = renderMode || 'html';
-        const newLine = renderMode === 'html' ? '<br/>' : '\n';
-        const isRichText = renderMode === 'richText';
-        const markers: Dictionary<ColorString> = {};
-        let markerId = 0;
-
-        function formatArrayValue(value: any[]) {
-            // ??? TODO refactor these logic.
-            // check: category-no-encode-has-axis-data in dataset.html
-            const vertially = zrUtil.reduce(value, function (vertially, val, idx) {
-                const dimItem = data.getDimensionInfo(idx);
-                return vertially |= (dimItem && dimItem.tooltip !== false && dimItem.displayName != null) as any;
-            }, 0);
-
-            const result: string[] = [];
-
-            tooltipDims.length
-                ? zrUtil.each(tooltipDims, function (dim) {
-                    setEachItem(retrieveRawValue(data, dataIndex, dim), dim);
-                })
-                // By default, all dims is used on tooltip.
-                : zrUtil.each(value, setEachItem);
-
-            function setEachItem(val: any, dim: DimensionName | number): void {
-                const dimInfo = data.getDimensionInfo(dim);
-                // If `dimInfo.tooltip` is not set, show tooltip.
-                if (!dimInfo || dimInfo.otherDims.tooltip === false) {
-                    return;
-                }
-                const dimType = dimInfo.type;
-                const markName = 'sub' + series.seriesIndex + 'at' + markerId;
-                const dimHead = getTooltipMarker({
-                    color: colorStr,
-                    type: 'subItem',
-                    renderMode: renderMode,
-                    markerId: markName
-                });
-
-                const dimHeadStr = typeof dimHead === 'string' ? dimHead : dimHead.content;
-                const valStr = (vertially
-                        ? dimHeadStr + encodeHTML(dimInfo.displayName || '-') + ': '
-                        : ''
-                    )
-                    // FIXME should not format time for raw data?
-                    + encodeHTML(dimType === 'ordinal'
-                        ? val + ''
-                        : dimType === 'time'
-                        ? (multipleSeries ? '' : formatTime('yyyy/MM/dd hh:mm:ss', val))
-                        : addCommas(val)
-                    );
-                valStr && result.push(valStr);
-
-                if (isRichText) {
-                    markers[markName] = colorStr;
-                    ++markerId;
-                }
-            }
-
-            const newLine = vertially ? (isRichText ? '\n' : '<br/>') : '';
-            const content = newLine + result.join(newLine || ', ');
-            return {
-                renderMode: renderMode,
-                content: content,
-                style: markers
-            };
-        }
-
-        function formatSingleValue(val: any) {
-            // return encodeHTML(addCommas(val));
-            return {
-                renderMode: renderMode,
-                content: encodeHTML(addCommas(val)),
-                style: markers
-            };
-        }
-
-        const data = this.getData();
-        const tooltipDims = data.mapDimension('defaultedTooltip', true);
-        const tooltipDimLen = tooltipDims.length;
-        const value = this.getRawValue(dataIndex) as any;
-        const isValueArr = zrUtil.isArray(value);
-
-        const style = data.getItemVisual(dataIndex, 'style');
-        const color = style[this.visualDrawType];
-        let colorStr: ColorString;
-        if (zrUtil.isString(color)) {
-            colorStr = color;
-        }
-        else if (color && (color as GradientObject).colorStops) {
-            colorStr = ((color as GradientObject).colorStops[0] || {}).color;
-        }
-        colorStr = colorStr || 'transparent';
-
-        // Complicated rule for pretty tooltip.
-        const formattedValue = (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen))
-            ? formatArrayValue(value)
-            : tooltipDimLen
-            ? formatSingleValue(retrieveRawValue(data, dataIndex, tooltipDims[0]))
-            : formatSingleValue(isValueArr ? value[0] : value);
-        const content = formattedValue.content;
-
-        const markName = series.seriesIndex + 'at' + markerId;
-        const colorEl = getTooltipMarker({
-            color: colorStr,
-            type: 'item',
-            renderMode: renderMode,
-            markerId: markName
+        dataType?: SeriesDataType
+    ): ReturnType<DataFormatMixin['formatTooltip']> {
+        return defaultSeriesFormatTooltip({
+            series: this,
+            dataIndex: dataIndex,
+            multipleSeries: multipleSeries
         });
-        markers[markName] = colorStr;
-        ++markerId;
-
-        const name = data.getName(dataIndex);
-
-        let seriesName = this.name;
-        if (!modelUtil.isNameSpecified(this)) {
-            seriesName = '';
-        }
-        seriesName = seriesName
-            ? encodeHTML(seriesName) + (!multipleSeries ? newLine : ': ')
-            : '';
-
-        colorStr = typeof colorEl === 'string' ? colorEl : colorEl.content;
-        const html = !multipleSeries
-            ? seriesName + colorStr
-                + (name
-                    ? encodeHTML(name) + ': ' + content
-                    : content
-                )
-            : colorStr + seriesName + content;
-
-        return {
-            html: html,
-            markers: markers
-        };
     }
 
-    /**
-     * @return {boolean}
-     */
-    isAnimationEnabled() {
+    isAnimationEnabled(): boolean {
         if (env.node) {
             return false;
         }
@@ -547,7 +428,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                 animationEnabled = false;
             }
         }
-        return animationEnabled;
+        return !!animationEnabled;
     }
 
     restoreData() {
@@ -565,11 +446,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     /**
-     * Use `data.mapDimension(coordDim, true)` instead.
+     * Use `data.mapDimensionsAll(coordDim)` instead.
      * @deprecated
      */
     coordDimToDataDim(coordDim: DimensionName): DimensionName[] {
-        return this.getRawData().mapDimension(coordDim, true);
+        return this.getRawData().mapDimensionsAll(coordDim);
     }
 
     /**
@@ -584,6 +465,112 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      */
     getProgressiveThreshold(): number {
         return this.get('progressiveThreshold');
+    }
+
+    // PENGING If selectedMode is null ?
+    select(innerDataIndices: number[], dataType?: SeriesDataType): void {
+        this._innerSelect(this.getData(dataType), innerDataIndices);
+    }
+
+    unselect(innerDataIndices: number[], dataType?: SeriesDataType): void {
+        const selectedMap = this.option.selectedMap;
+        if (!selectedMap) {
+            return;
+        }
+        const data = this.getData(dataType);
+        for (let i = 0; i < innerDataIndices.length; i++) {
+            const dataIndex = innerDataIndices[i];
+            const nameOrId = getSelectionKey(data, dataIndex);
+            selectedMap[nameOrId] = false;
+            this._selectedDataIndicesMap[nameOrId] = -1;
+        }
+    }
+
+    toggleSelect(innerDataIndices: number[], dataType?: SeriesDataType): void {
+        const tmpArr: number[] = [];
+        for (let i = 0; i < innerDataIndices.length; i++) {
+            tmpArr[0] = innerDataIndices[i];
+            this.isSelected(innerDataIndices[i], dataType)
+                ? this.unselect(tmpArr, dataType)
+                : this.select(tmpArr, dataType);
+        }
+    }
+
+    getSelectedDataIndices(): number[] {
+        const selectedDataIndicesMap = this._selectedDataIndicesMap;
+        const nameOrIds = zrUtil.keys(selectedDataIndicesMap);
+        const dataIndices = [];
+        for (let i = 0; i < nameOrIds.length; i++) {
+            const dataIndex = selectedDataIndicesMap[nameOrIds[i]];
+            if (dataIndex >= 0) {
+                dataIndices.push(dataIndex);
+            }
+        }
+        return dataIndices;
+    }
+
+    isSelected(dataIndex: number, dataType?: SeriesDataType): boolean {
+        const selectedMap = this.option.selectedMap;
+        if (!selectedMap) {
+            return false;
+        }
+
+        const data = this.getData(dataType);
+        const nameOrId = getSelectionKey(data, dataIndex);
+        return selectedMap[nameOrId] || false;
+    }
+
+    private _innerSelect(data: List, innerDataIndices: number[]) {
+        const selectedMode = this.option.selectedMode;
+        const len = innerDataIndices.length;
+        if (!selectedMode || !len) {
+            return;
+        }
+
+        if (selectedMode === 'multiple') {
+            const selectedMap = this.option.selectedMap || (this.option.selectedMap = {});
+            for (let i = 0; i < len; i++) {
+                const dataIndex = innerDataIndices[i];
+                // TODO diffrent types of data share same object.
+                const nameOrId = getSelectionKey(data, dataIndex);
+                selectedMap[nameOrId] = true;
+                this._selectedDataIndicesMap[nameOrId] = data.getRawIndex(dataIndex);
+            }
+        }
+        else if (selectedMode === 'single' || selectedMode === true) {
+            const lastDataIndex = innerDataIndices[len - 1];
+            const nameOrId = getSelectionKey(data, lastDataIndex);
+            this.option.selectedMap = {
+                [nameOrId]: true
+            };
+            this._selectedDataIndicesMap = {
+                [nameOrId]: data.getRawIndex(lastDataIndex)
+            };
+        }
+    }
+
+    private _initSelectedMapFromData(data: List) {
+        // Ignore select info in data if selectedMap exists.
+        // NOTE It's only for legacy usage. edge data is not supported.
+        if (this.option.selectedMap) {
+            return;
+        }
+
+        const dataIndices: number[] = [];
+        if (data.hasItemOption) {
+            data.each(function (idx) {
+                const rawItem = data.getRawDataItem(idx);
+                if (typeof rawItem === 'object'
+                    && (rawItem as OptionDataItemObject<unknown>).selected
+                ) {
+                    dataIndices.push(idx);
+                }
+            });
+        }
+
+        if (dataIndices.length > 0) {
+            this._innerSelect(data, dataIndices);
+        }
     }
 
     // /**
@@ -628,7 +615,7 @@ function autoSeriesName(seriesModel: SeriesModel): void {
 
 function getSeriesAutoName(seriesModel: SeriesModel): string {
     const data = seriesModel.getRawData();
-    const dataDims = data.mapDimension('seriesName', true);
+    const dataDims = data.mapDimensionsAll('seriesName');
     const nameArr: string[] = [];
     zrUtil.each(dataDims, function (dataDim) {
         const dimInfo = data.getDimensionInfo(dataDim);
@@ -649,7 +636,7 @@ function dataTaskReset(context: SeriesTaskContext) {
 
 function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTaskContext): void {
     // Avoid repead cloneShallow when data just created in reset.
-    if (param.end > context.outputData.count()) {
+    if (context.outputData && param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
     }
 }
@@ -686,5 +673,6 @@ function getCurrentTask(seriesModel: SeriesModel): GeneralTask {
         return task;
     }
 }
+
 
 export default SeriesModel;

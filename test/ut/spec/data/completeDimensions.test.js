@@ -19,7 +19,7 @@
 */
 const completeDimensions = require('../../../../lib/data/helper/completeDimensions');
 const Source = require('../../../../lib/data/Source');
-const sourceType = require('../../../../lib/data/helper/sourceType');
+const types = require('../../../../lib/util/types');
 
 describe('completeDimensions', function () {
 
@@ -64,7 +64,7 @@ describe('completeDimensions', function () {
         var source = new Source({
             data: [],
             fromDataset: true,
-            sourceFormat: sourceType.SOURCE_FORMAT_ARRAY_ROWS,
+            sourceFormat: types.SOURCE_FORMAT_ARRAY_ROWS,
             dimensionsDetectCount: 11
         });
 

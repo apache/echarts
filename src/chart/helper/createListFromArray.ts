@@ -24,20 +24,22 @@ import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../CoordinateSystem';
 import {getCoordSysInfoBySeries} from '../../model/referHelper';
-import Source from '../../data/Source';
+import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
-import { SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition } from '../../util/types';
+import {
+    SOURCE_FORMAT_ORIGINAL, DimensionDefinitionLoose, DimensionDefinition, OptionSourceData, EncodeDefaulter
+} from '../../util/types';
 import SeriesModel from '../../model/Series';
 
-function createListFromArray(source: Source | any[], seriesModel: SeriesModel, opt?: {
+function createListFromArray(source: Source | OptionSourceData, seriesModel: SeriesModel, opt?: {
     generateCoord?: string
-    useEncodeDefaulter?: boolean
+    useEncodeDefaulter?: boolean | EncodeDefaulter
 }): List {
     opt = opt || {};
 
-    if (!(source instanceof Source)) {
-        source = Source.seriesDataToSource(source);
+    if (!isSourceInstance(source)) {
+        source = createSourceFromSeriesDataOption(source);
     }
 
     const coordSysName = seriesModel.get('coordinateSystem');
@@ -47,7 +49,7 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
 
     let coordSysDimDefs: DimensionDefinitionLoose[];
 
-    if (coordSysInfo) {
+    if (coordSysInfo && coordSysInfo.coordSysDims) {
         coordSysDimDefs = zrUtil.map(coordSysInfo.coordSysDims, function (dim) {
             const dimInfo = {
                 name: dim
@@ -71,10 +73,13 @@ function createListFromArray(source: Source | any[], seriesModel: SeriesModel, o
         )) || ['x', 'y'];
     }
 
+    const useEncodeDefaulter = opt.useEncodeDefaulter;
     const dimInfoList = createDimensions(source, {
         coordDimensions: coordSysDimDefs,
         generateCoord: opt.generateCoord,
-        encodeDefaulter: opt.useEncodeDefaulter
+        encodeDefaulter: zrUtil.isFunction(useEncodeDefaulter)
+            ? useEncodeDefaulter
+            : useEncodeDefaulter
             ? zrUtil.curry(makeSeriesEncodeForAxisCoordSys, coordSysDimDefs, seriesModel)
             : null
     });

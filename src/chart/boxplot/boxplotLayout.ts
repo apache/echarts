@@ -149,7 +149,7 @@ function layoutSingleSeries(seriesModel: BoxplotSeriesModel, offset: number, box
     const vDimIdx = 1 - cDimIdx;
     const coordDims = ['x', 'y'];
     const cDim = data.mapDimension(coordDims[cDimIdx]);
-    const vDims = data.mapDimension(coordDims[vDimIdx], true);
+    const vDims = data.mapDimensionsAll(coordDims[vDimIdx]);
 
     if (cDim == null || vDims.length < 5) {
         return;

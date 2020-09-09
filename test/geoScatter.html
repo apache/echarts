@@ -284,6 +284,7 @@ under the License.
                                 roam: true,
                                 left: 100,
                                 width: 300,
+                                selectedMode: 'single',
                                 // zoom: 1.5,
                                 scaleLimit: {
                                     min: 1.5,
@@ -307,7 +308,7 @@ under the License.
                             }, {
                                 map: 'china',
                                 roam: true,
-                                selectedMode: 'single',
+                                selectedMode: 'multiple',
                                 left: null,
                                 right: 100,
                                 width: 300,
@@ -328,7 +329,7 @@ under the License.
                             series: []
                         });
 
-                        chart.on('click', function (param) {
+                        chart.on('geoselectchanged', function (param) {
                             console.log(param);
                         });
                     };

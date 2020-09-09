@@ -17,11 +17,9 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import * as formatUtil from '../../util/format';
-import DataFormatMixin from '../../model/mixin/dataFormat';
+import { DataFormatMixin } from '../../model/mixin/dataFormat';
 import ComponentModel from '../../model/Component';
 import SeriesModel from '../../model/Series';
 import {
@@ -36,9 +34,7 @@ import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import List from '../../data/List';
 import { makeInner, defaultEmphasis } from '../../util/model';
-
-const addCommas = formatUtil.addCommas;
-const encodeHTML = formatUtil.encodeHTML;
+import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 
 function fillLabel(opt: DisplayStateHostOption) {
     defaultEmphasis(opt, 'label', ['show']);
@@ -201,26 +197,24 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
         }
     }
 
-    formatTooltip(dataIndex: number) {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string
+    ) {
         const data = this.getData();
         const value = this.getRawValue(dataIndex);
-        const formattedValue = zrUtil.isArray(value)
-            ? zrUtil.map(value, addCommas).join(', ') : addCommas(value as number);
-        const name = data.getName(dataIndex);
-        let html = encodeHTML(this.name);
-        if (value != null || name) {
-            html += '<br />';
-        }
-        if (name) {
-            html += encodeHTML(name);
-            if (value != null) {
-                html += ' : ';
-            }
-        }
-        if (value != null) {
-            html += encodeHTML(formattedValue);
-        }
-        return html;
+        const itemName = data.getName(dataIndex);
+
+        return createTooltipMarkup('section', {
+            header: this.name,
+            blocks: [createTooltipMarkup('nameValue', {
+                name: itemName,
+                value: value,
+                noName: !itemName,
+                noValue: value == null
+            })]
+        });
     }
 
     getData(): List<this> {

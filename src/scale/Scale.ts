@@ -21,7 +21,15 @@
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
 import List from '../data/List';
-import { DimensionName, ScaleDataValue, OptionDataValue } from '../util/types';
+import {
+    DimensionName,
+    ScaleDataValue,
+    OptionDataValue,
+    DimensionLoose,
+    ScaleTick
+} from '../util/types';
+import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
+
 
 abstract class Scale {
 
@@ -32,6 +40,9 @@ abstract class Scale {
     protected _extent: [number, number];
 
     private _isBlank: boolean;
+
+    // Inject
+    readonly rawExtentInfo: ScaleRawExtentInfo;
 
     constructor(setting?: Dictionary<any>) {
         this._setting = setting || {};
@@ -80,7 +91,7 @@ abstract class Scale {
     /**
      * Set extent from data
      */
-    unionExtentFromData(data: List, dim: DimensionName): void {
+    unionExtentFromData(data: List, dim: DimensionName | DimensionLoose): void {
         this.unionExtent(data.getApproximateExtent(dim));
     }
 
@@ -102,6 +113,13 @@ abstract class Scale {
         if (!isNaN(end)) {
             thisExtent[1] = end;
         }
+    }
+
+    /**
+     * If value is in extent range
+     */
+    isInExtentRange(value: number): boolean {
+        return this._extent[0] <= value && this._extent[1] >= value;
     }
 
     /**
@@ -149,9 +167,9 @@ abstract class Scale {
     /**
      * @return label of the tick.
      */
-    abstract getLabel(tick: any): string;
+    abstract getLabel(tick: ScaleTick): string;
 
-    abstract getTicks(expandToNicedExtent?: boolean): number[];
+    abstract getTicks(expandToNicedExtent?: boolean): ScaleTick[];
 
     abstract getMinorTicks(splitNumber: number): number[][];
 

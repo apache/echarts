@@ -22,8 +22,7 @@ import createDimensions from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import List from '../../data/List';
 import * as zrUtil from 'zrender/src/core/util';
-import {groupData} from '../../util/model';
-import {encodeHTML} from '../../util/format';
+import {groupData, SINGLE_REFERRING} from '../../util/model';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import {
     SeriesOption,
@@ -38,39 +37,31 @@ import {
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
 import Single from '../../coord/single/Single';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 const DATA_NAME_INDEX = 2;
-
-// export interface ThemeRiverSeriesDataItemOption {
-//     date: OptionDataValueDate
-//     value: OptionDataValueNumeric
-//     name: string
-// }
 
 interface ThemeRiverSeriesLabelOption extends LabelOption {
     margin?: number
 }
 
-export interface ThemeRiverSeriesOption extends SeriesOption, SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
+export interface ThemeRiverStateOption {
+    label?: ThemeRiverSeriesLabelOption
+    itemStyle?: ItemStyleOption
+}
+
+export interface ThemeRiverSeriesOption extends SeriesOption<ThemeRiverStateOption>, ThemeRiverStateOption,
+    SeriesOnSingleOptionMixin, BoxLayoutOptionMixin {
     type?: 'themeRiver'
 
     color?: ZRColor[]
 
-    coordinateSystem: 'singleAxis'
+    coordinateSystem?: 'singleAxis'
 
     /**
      * gap in axis's orthogonal orientation
      */
-    boundaryGap: (string | number)[]
-
-    label?: ThemeRiverSeriesLabelOption
-    itemStyle?: ItemStyleOption
-
-    emphasis?: {
-        label?: ThemeRiverSeriesLabelOption
-        itemStyle?: ItemStyleOption
-    }
-
+    boundaryGap?: (string | number)[]
     /**
      * [date, value, name]
      */
@@ -83,7 +74,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
     static readonly dependencies = ['singleAxis'];
 
-    nameMap: zrUtil.HashMap<number>;
+    nameMap: zrUtil.HashMap<number, string>;
 
     coordinateSystem: Single;
 
@@ -172,11 +163,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
      */
     getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): List {
 
-        const singleAxisModel = ecModel.queryComponents({
-            mainType: 'singleAxis',
-            index: this.get('singleAxisIndex'),
-            id: this.get('singleAxisId')
-        })[0];
+        const singleAxisModel = this.getReferringComponents('singleAxis', SINGLE_REFERRING).models[0];
 
         const axisType = singleAxisModel.get('type');
 
@@ -297,18 +284,16 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
         return {dataIndices: indices, nestestValue: nestestValue};
     }
 
-    /**
-     * @override
-     * @param {number} dataIndex  index of data
-     */
-    formatTooltip(dataIndex: number): string {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string
+    ) {
         const data = this.getData();
-        const htmlName = data.getName(dataIndex);
-        let htmlValue = data.get(data.mapDimension('value'), dataIndex);
-        if (isNaN(htmlValue as number) || htmlValue == null) {
-            htmlValue = '-';
-        }
-        return encodeHTML(htmlName + ' : ' + htmlValue);
+        const name = data.getName(dataIndex);
+        const value = data.get(data.mapDimension('value'), dataIndex);
+
+        return createTooltipMarkup('nameValue', { name: name, value: value });
     }
 
     static defaultOption: ThemeRiverSeriesOption = {
@@ -330,11 +315,11 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
             margin: 4,
             show: true,
             position: 'left',
-            color: '#000',
             fontSize: 11
         },
 
         emphasis: {
+
             label: {
                 show: true
             }

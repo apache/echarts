@@ -17,8 +17,6 @@
 * under the License.
 */
 
-// @ts-nocheck
-
 /**
  * This module is imported by echarts directly.
  *
@@ -30,37 +28,68 @@
 
 import ComponentModel from '../model/Component';
 import ComponentView from '../view/Component';
-import {detectSourceFormat} from '../data/helper/sourceHelper';
-import { SERIES_LAYOUT_BY_COLUMN } from '../util/types';
+import {
+    SERIES_LAYOUT_BY_COLUMN, ComponentOption, SeriesEncodeOptionMixin,
+    OptionSourceData, SeriesLayoutBy, OptionSourceHeader
+} from '../util/types';
+import { DataTransformOption, PipedDataTransformOption } from '../data/helper/transform';
+import GlobalModel from '../model/Global';
+import Model from '../model/Model';
+import { disableTransformOptionMerge, SourceManager } from '../data/helper/sourceManager';
 
-ComponentModel.extend({
 
-    type: 'dataset',
+export interface DatasetOption extends
+        Pick<ComponentOption, 'type' | 'id' | 'name'>,
+        Pick<SeriesEncodeOptionMixin, 'dimensions'> {
+    seriesLayoutBy?: SeriesLayoutBy;
+    sourceHeader?: OptionSourceHeader;
+    source?: OptionSourceData;
 
-    /**
-     * @protected
-     */
-    defaultOption: {
+    fromDatasetIndex?: number;
+    fromDatasetId?: string;
+    transform?: DataTransformOption | PipedDataTransformOption;
+    // When a transform result more than on results, the results can be referenced only by:
+    // Using `fromDatasetIndex`/`fromDatasetId` and `transfromResultIndex` to retrieve
+    // the results from other dataset.
+    fromTransformResult?: number;
+}
 
-        // 'row', 'column'
-        seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+export class DatasetModel<Opts extends DatasetOption = DatasetOption> extends ComponentModel<Opts> {
 
-        // null/'auto': auto detect header, see "module:echarts/data/helper/sourceHelper"
-        sourceHeader: null,
+    type = 'dataset';
+    static type = 'dataset';
 
-        dimensions: null,
+    static defaultOption: DatasetOption = {
+        seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN
+    };
 
-        source: null
-    },
+    private _sourceManager: SourceManager;
 
-    optionUpdated: function () {
-        detectSourceFormat(this);
+    init(option: Opts, parentModel: Model, ecModel: GlobalModel): void {
+        super.init(option, parentModel, ecModel);
+        this._sourceManager = new SourceManager(this);
+        disableTransformOptionMerge(this);
     }
 
-});
+    mergeOption(newOption: Opts, ecModel: GlobalModel): void {
+        super.mergeOption(newOption, ecModel);
+        disableTransformOptionMerge(this);
+    }
 
-ComponentView.extend({
+    optionUpdated() {
+        this._sourceManager.dirty();
+    }
 
-    type: 'dataset'
+    getSourceManager() {
+        return this._sourceManager;
+    }
+}
 
-});
+ComponentModel.registerClass(DatasetModel);
+
+class DatasetView extends ComponentView {
+    static type = 'dataset';
+    type = 'dataset';
+}
+
+ComponentView.registerClass(DatasetView);

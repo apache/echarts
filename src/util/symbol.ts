@@ -261,7 +261,7 @@ const symbolShapeMakers: Dictionary<SymbolShapeMaker> = {
     }
 };
 
-const symbolBuildProxies: Dictionary<ECSymbol> = {};
+export const symbolBuildProxies: Dictionary<ECSymbol> = {};
 zrUtil.each(symbolCtors, function (Ctor, name) {
     symbolBuildProxies[name] = new Ctor();
 });

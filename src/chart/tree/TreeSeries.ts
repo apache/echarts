@@ -19,7 +19,6 @@
 
 import SeriesModel from '../../model/Series';
 import Tree from '../../data/Tree';
-import {encodeHTML} from '../../util/format';
 import {
     SeriesOption,
     SymbolOptionMixin,
@@ -28,33 +27,39 @@ import {
     LineStyleOption,
     ItemStyleOption,
     LabelOption,
-    OptionDataValue
+    OptionDataValue,
+    StatesOptionMixin,
+    OptionDataItemObject
 } from '../../util/types';
 import List from '../../data/List';
 import View from '../../coord/View';
 import { LayoutRect } from '../../util/layout';
+import Model from '../../model/Model';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
 interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
 }
 
-export interface TreeSeriesNodeItemOption extends SymbolOptionMixin {
-    name?: string
-
+export interface TreeSeriesStateOption {
     itemStyle?: ItemStyleOption
     /**
      * Line style of the edge between node and it's parent.
      */
-    lineStyle?: LineStyleOption
+    lineStyle?: CurveLineStyleOption
     label?: LabelOption
+}
 
+interface ExtraStateOption {
     emphasis?: {
-        itemStyle?: ItemStyleOption
-        lineStyle?: LineStyleOption
-        label?: LabelOption
+        focus?: 'ancestor' | 'descendant'
+        scale?: boolean
     }
+}
 
-    value?: OptionDataValue | OptionDataValue[]
+export interface TreeSeriesNodeItemOption extends SymbolOptionMixin,
+    TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption, ExtraStateOption>,
+    OptionDataItemObject<OptionDataValue> {
 
     children?: TreeSeriesNodeItemOption[]
 
@@ -64,11 +69,17 @@ export interface TreeSeriesNodeItemOption extends SymbolOptionMixin {
     target?: string
 }
 
-export interface TreeSeriesOption extends
-    SeriesOption, SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
-    type?: 'tree'
+/**
+ * Configuration of leaves nodes.
+ */
+export interface TreeSeriesLeavesOption extends TreeSeriesStateOption, StatesOptionMixin<TreeSeriesStateOption> {
 
-    hoverAnimation?: boolean
+}
+
+export interface TreeSeriesOption extends
+    SeriesOption<TreeSeriesStateOption, ExtraStateOption>, TreeSeriesStateOption,
+    SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
+    type?: 'tree'
 
     layout?: 'orthogonal' | 'radial'
 
@@ -94,34 +105,7 @@ export interface TreeSeriesOption extends
      */
     initialTreeDepth?: number
 
-    /**
-     * Line style of links
-     */
-    lineStyle?: CurveLineStyleOption
-    /**
-     * Item style of nodes
-     */
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-
-    emphasis?: {
-        lineStyle?: CurveLineStyleOption
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-    }
-
-    leaves?: {
-        /**
-         * Item style of leave nodes
-         */
-        itemStyle?: ItemStyleOption
-        label?: LabelOption
-
-        emphasis?: {
-            itemStyle?: ItemStyleOption
-            label?: LabelOption
-        }
-    }
+    leaves?: TreeSeriesLeavesOption
 
     data?: TreeSeriesNodeItemOption[]
 }
@@ -156,15 +140,13 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         };
 
         const leaves = option.leaves || {};
+        const leavesModel = new Model(leaves, this, this.ecModel);
 
-        const tree = Tree.createTree(root, this, {
-            leaves: leaves
-        }, beforeLink);
+        const tree = Tree.createTree(root, this, {}, beforeLink);
 
         function beforeLink(nodeData: List) {
             nodeData.wrapMethod('getItemModel', function (model, idx) {
                 const node = tree.getNodeByDataIndex(idx);
-                const leavesModel = node.getLeavesModel();
                 if (!node.children.length || !node.isExpand) {
                     model.parentModel = leavesModel;
                 }
@@ -218,10 +200,11 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         this.option.center = center;
     }
 
-    /**
-     * @override
-     */
-    formatTooltip(dataIndex: number): string {
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string
+    ) {
         const tree = this.getData().tree;
         const realRoot = tree.root.children[0];
         let node = tree.getNodeByDataIndex(dataIndex);
@@ -231,9 +214,12 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
             name = node.parentNode.name + '.' + name;
             node = node.parentNode;
         }
-        return encodeHTML(name + (
-            (isNaN(value as number) || value == null) ? '' : ' : ' + value
-        ));
+
+        return createTooltipMarkup('nameValue', {
+            name: name,
+            value: value,
+            noValue: isNaN(value as number) || value == null
+        });
     }
 
     static defaultOption: TreeSeriesOption = {
@@ -289,21 +275,14 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         },
 
         label: {
-            show: true,
-            color: '#555'
-        },
-
-        leaves: {
-            label: {
-                show: true
-            }
+            show: true
         },
 
         animationEasing: 'linear',
 
         animationDuration: 700,
 
-        animationDurationUpdate: 1000
+        animationDurationUpdate: 500
     };
 }
 

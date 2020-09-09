@@ -23,40 +23,45 @@ import {CoordinateSystemMaster} from './coord/CoordinateSystem';
 import Element from 'zrender/src/Element';
 import ComponentModel from './model/Component';
 
-const availableMethods = {
-    getDom: 1,
-    getZr: 1,
-    getWidth: 1,
-    getHeight: 1,
-    getDevicePixelRatio: 1,
-    dispatchAction: 1,
-    isDisposed: 1,
-    on: 1,
-    off: 1,
-    getDataURL: 1,
-    getConnectedDataURL: 1,
-    getModel: 1,
-    getOption: 1,
-    getViewOfComponentModel: 1,
-    getViewOfSeriesModel: 1,
-    getId: 1
-};
+const availableMethods: (keyof EChartsType)[] = [
+    'getDom',
+    'getZr',
+    'getWidth',
+    'getHeight',
+    'getDevicePixelRatio',
+    'dispatchAction',
+    'isDisposed',
+    'on',
+    'off',
+    'getDataURL',
+    'getConnectedDataURL',
+    'getModel',
+    'getOption',
+    'getViewOfComponentModel',
+    'getViewOfSeriesModel',
+    'getId',
+    'updateLabelLayout'
+];
 
-interface ExtensionAPI extends Pick<EChartsType, keyof typeof availableMethods> {}
+interface ExtensionAPI extends Pick<EChartsType, (typeof availableMethods)[number]> {}
 
 abstract class ExtensionAPI {
 
     constructor(ecInstance: EChartsType) {
-        zrUtil.each(availableMethods, function (v, name: string) {
-            (this as any)[name] = zrUtil.bind((ecInstance as any)[name], ecInstance);
+        zrUtil.each(availableMethods, function (methodName: string) {
+            (this as any)[methodName] = zrUtil.bind((ecInstance as any)[methodName], ecInstance);
         }, this);
     }
 
     // Implemented in echarts.js
     abstract getCoordinateSystems(): CoordinateSystemMaster[];
-
-    // Implemented in echarts.js
     abstract getComponentByElement(el: Element): ComponentModel;
+    abstract enterEmphasis(el: Element, highlightDigit?: number): void;
+    abstract leaveEmphasis(el: Element, highlightDigit?: number): void;
+    abstract enterSelect(el: Element): void;
+    abstract leaveSelect(el: Element): void;
+    abstract enterBlur(el: Element): void;
+    abstract leaveBlur(el: Element): void;
 }
 
 export default ExtensionAPI;

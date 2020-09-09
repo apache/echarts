@@ -18,13 +18,14 @@
 */
 
 import * as graphicUtil from '../../util/graphic';
+import {getFont} from '../../label/labelStyle';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
 import ZRText from 'zrender/src/graphic/Text';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 
-type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
+export type LabelFontOption = Pick<LabelOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>;
 type LabelRectRelatedOption = Pick<LabelOption,
     'align' | 'verticalAlign' | 'padding' | 'lineHeight' | 'baseline' | 'rich'
 > & LabelFontOption;
@@ -49,7 +50,7 @@ class TextStyleMixin {
      * @return {string}
      */
     getFont(this: Model<LabelFontOption>) {
-        return graphicUtil.getFont({
+        return getFont({
             fontStyle: this.getShallow('fontStyle'),
             fontWeight: this.getShallow('fontWeight'),
             fontSize: this.getShallow('fontSize'),

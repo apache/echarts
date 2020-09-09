@@ -17,10 +17,11 @@
 * under the License.
 */
 
-import {__DEV__} from '../../config';
 import * as zrUtil from 'zrender/src/core/util';
 import {createSymbol} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
+import { enableHoverEmphasis } from '../../util/states';
+import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
@@ -39,7 +40,7 @@ import {
     SymbolOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
-import Displayable from 'zrender/src/graphic/Displayable';
+import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import SeriesModel from '../../model/Series';
@@ -145,6 +146,7 @@ class LegendView extends ComponentView {
         );
         this.group.x = layoutRect.x - mainRect.x;
         this.group.y = layoutRect.y - mainRect.y;
+        this.group.markRedraw();
 
         // Render background after group is layout.
         this.group.add(
@@ -201,7 +203,7 @@ class LegendView extends ComponentView {
             if (seriesModel) {
                 const data = seriesModel.getData();
                 const style = data.getVisual('style');
-                const color = style.fill;
+                const color = style[data.getVisual('drawType')] || style.fill;
                 const borderColor = style.stroke;
                 const borderWidth = style.lineWidth;
 
@@ -321,13 +323,13 @@ class LegendView extends ComponentView {
             const labelModel = legendModel.getModel('selectorLabel');
             const emphasisLabelModel = legendModel.getModel(['emphasis', 'selectorLabel']);
 
-            graphic.setLabelStyle(
-                labelText, labelModel, emphasisLabelModel,
+            setLabelStyle(
+                labelText, { normal: labelModel, emphasis: emphasisLabelModel },
                 {
                     defaultText: selectorItem.title
                 }
             );
-            graphic.enableHoverEmphasis(labelText);
+            enableHoverEmphasis(labelText);
         });
     }
 
@@ -432,7 +434,7 @@ class LegendView extends ComponentView {
         }
 
         itemGroup.add(new graphic.Text({
-            style: graphic.createTextStyle(textStyleModel, {
+            style: createTextStyle(textStyleModel, {
                 text: content,
                 x: textX,
                 y: itemHeight / 2,
@@ -474,7 +476,7 @@ class LegendView extends ComponentView {
 
         this.getContentGroup().add(itemGroup);
 
-        graphic.enableHoverEmphasis(itemGroup);
+        enableHoverEmphasis(itemGroup);
 
         // @ts-ignore
         itemGroup.__legendDataIndex = dataIndex;
@@ -606,6 +608,17 @@ function dispatchSelectAction(
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 
+function isUseHoverLayer(api: ExtensionAPI) {
+    const list = api.getZr().storage.getDisplayList();
+    let emphasisState: DisplayableState;
+    let i = 0;
+    const len = list.length;
+    while (i < len && !(emphasisState = list[i].states.emphasis)) {
+        i++;
+    }
+    return emphasisState && emphasisState.hoverLayer;
+}
+
 function dispatchHighlightAction(
     seriesName: string,
     dataName: string,
@@ -613,8 +626,7 @@ function dispatchHighlightAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    const el = api.getZr().storage.getDisplayList()[0];
-    if (!(el && el.useHoverLayer)) {
+    if (!isUseHoverLayer(api)) {
         api.dispatchAction({
             type: 'highlight',
             seriesName: seriesName,
@@ -631,8 +643,7 @@ function dispatchDownplayAction(
     excludeSeriesId: string[]
 ) {
     // If element hover will move to a hoverLayer.
-    const el = api.getZr().storage.getDisplayList()[0];
-    if (!(el && el.useHoverLayer)) {
+    if (!isUseHoverLayer(api)) {
         api.dispatchAction({
             type: 'downplay',
             seriesName: seriesName,

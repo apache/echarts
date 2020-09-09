@@ -21,8 +21,7 @@ export * from './src/echarts';
 export * from './src/export';
 
 import './src/component/dataset';
-
-
+import './src/component/transform';
 
 // ----------------------------------------------
 // All of the modules that are allowed to be

@@ -25,6 +25,7 @@ env:
 globals:
     jQuery: true
     Promise: true
+    __DEV__: true
 rules:
     # Check the rules in: node_modules/@typescript-eslint/eslint-plugin/README.md
     no-console:
@@ -115,7 +116,6 @@ rules:
             exceptions:
                 Property: true
     no-new-object: 2
-    no-spaced-func: 2
     no-trailing-spaces: 2
     no-extra-parens:
         - 2

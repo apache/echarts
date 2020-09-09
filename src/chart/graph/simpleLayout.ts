@@ -32,7 +32,7 @@ export default function (ecModel: GlobalModel, api: ExtensionAPI) {
 
             let dimensions: string[] = [];
             each(coordSys.dimensions, function (coordDim) {
-                dimensions = dimensions.concat(data.mapDimension(coordDim, true));
+                dimensions = dimensions.concat(data.mapDimensionsAll(coordDim));
             });
 
             for (let dataIndex = 0; dataIndex < data.count(); dataIndex++) {

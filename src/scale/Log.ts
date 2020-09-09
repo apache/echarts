@@ -25,7 +25,7 @@ import * as scaleHelper from './helper';
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
 import List from '../data/List';
-import { DimensionName } from '../util/types';
+import { DimensionName, ScaleTick } from '../util/types';
 
 const scaleProto = Scale.prototype;
 // FIXME:TS refactor: not good to call it directly with `this`?
@@ -60,14 +60,15 @@ class LogScale extends Scale {
     /**
      * @param Whether expand the ticks to niced extent.
      */
-    getTicks(expandToNicedExtent: boolean): number[] {
+    getTicks(expandToNicedExtent: boolean): ScaleTick[] {
         const originalScale = this._originalScale;
         const extent = this._extent;
         const originalExtent = originalScale.getExtent();
 
         const ticks = intervalScaleProto.getTicks.call(this, expandToNicedExtent);
 
-        return zrUtil.map(ticks, function (val) {
+        return zrUtil.map(ticks, function (tick) {
+            const val = tick.value;
             let powVal = numberUtil.round(mathPow(this.base, val));
 
             // Fix #4158
@@ -78,7 +79,9 @@ class LogScale extends Scale {
                 ? fixRoundingError(powVal, originalExtent[1])
                 : powVal;
 
-            return powVal;
+            return {
+                value: powVal
+            };
         }, this);
     }
 
