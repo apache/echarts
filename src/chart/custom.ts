@@ -18,7 +18,7 @@
 */
 
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, keys, isArrayLike, bind, logError, isFunction
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../util/graphic';
 import { setDefaultStateProxy, enableHoverEmphasis } from '../util/states';
@@ -80,6 +80,7 @@ import {
 import Transformable from 'zrender/src/core/Transformable';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
 import { cloneValue } from 'zrender/src/animation/Animator';
+import { morphPath } from 'zrender/src/tool/morphPath';
 
 
 const inner = makeInner<{
@@ -118,6 +119,13 @@ type TransitionTransformOption = {
     transition?: TransitionTransformProps;
     enterFrom?: Dictionary<unknown>;
     leaveTo?: Dictionary<unknown>;
+};
+type ShapeMorphingOption = {
+    /**
+     * If do shape morphing animation when type is changed.
+     * Only available on path.
+     */
+    shapeMorphing?: boolean
 };
 
 interface CustomBaseElementOption extends Partial<Pick<
@@ -167,10 +175,10 @@ interface CustomGroupOption extends CustomBaseElementOption {
     children: Omit<CustomElementOption, 'focus' | 'blurScope'>[];
     $mergeChildren: false | 'byName' | 'byIndex';
 }
-interface CustomZRPathOption extends CustomDisplayableOption {
+interface CustomZRPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     shape?: PathProps['shape'] & TransitionAnyOption;
 }
-interface CustomSVGPathOption extends CustomDisplayableOption {
+interface CustomSVGPathOption extends CustomDisplayableOption, ShapeMorphingOption {
     type: 'path';
     shape?: {
         // SVG Path, like 'M0,0 L0,-20 L70,-1 L70,0 Z'
@@ -1539,6 +1547,28 @@ function createOrUpdateItem(
     return el;
 }
 
+function applyShapeMorphingAnimation(oldEl: Element, el: Element, seriesModel: SeriesModel, dataIndex: number) {
+    if (!((oldEl instanceof graphicUtil.Path) && (el instanceof graphicUtil.Path))) {
+        if (__DEV__) {
+            logError('shapeMorphing can only be applied on two paths.');
+        }
+        return;
+    }
+    if (seriesModel.isAnimationEnabled()) {
+        const duration = seriesModel.get('animationDurationUpdate');
+        const delay = seriesModel.get('animationDelayUpdate');
+        const easing = seriesModel.get('animationEasingUpdate');
+        const durationNumber = isFunction(duration) ? duration(dataIndex) : duration;
+        if (durationNumber > 0) {
+            morphPath(oldEl, el, {
+                duration: durationNumber,
+                delay: isFunction(delay) ? delay(dataIndex) : delay,
+                easing: easing
+            });
+        }
+    }
+}
+
 function doCreateOrUpdateEl(
     el: Element,
     dataIndex: number,
@@ -1553,10 +1583,12 @@ function doCreateOrUpdateEl(
     }
 
     let toBeReplacedIdx = -1;
+    let oldEl: Element;
 
     if (el && doesElNeedRecreate(el, elOption)) {
         // Should keep at the original index, otherwise "merge by index" will be incorrect.
         toBeReplacedIdx = group.childrenRef().indexOf(el);
+        oldEl = el;
         el = null;
     }
 
@@ -1588,6 +1620,10 @@ function doCreateOrUpdateEl(
     );
 
     updateElNormal(el, dataIndex, elOption, elOption.style, attachedTxInfoTmp, seriesModel, isInit, false);
+    // Do shape morphing
+    if ((elOption as CustomZRPathOption).shapeMorphing && el && oldEl) {
+        applyShapeMorphingAnimation(oldEl, el, seriesModel, dataIndex);
+    }
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
